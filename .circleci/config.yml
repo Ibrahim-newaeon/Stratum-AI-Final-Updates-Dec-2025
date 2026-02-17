@@ -1,0 +1,10 @@
+# =============================================================================
+# Stratum AI uses GitHub Actions for CI/CD
+# See: .github/workflows/ci.yml
+# This file is kept to prevent CircleCI from showing errors if the project
+# is connected. It performs no actions.
+# =============================================================================
+version: 2.1
+workflows:
+  noop:
+    jobs: []

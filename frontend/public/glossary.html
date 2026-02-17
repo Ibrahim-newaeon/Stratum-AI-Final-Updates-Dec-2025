@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SaaS Glossary | Stratum AI - Master the Language of Revenue Operations</title>
+  <meta name="description" content="Comprehensive glossary of SaaS, Revenue Operations, and AI terms with industry benchmarks. Essential definitions for business, technical, and marketing teams.">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================
+       STRATUM AI THEME SYSTEM v3.0
+    ============================================ */
+    :root, [data-theme="dark"] {
+      --bg-void: #050508;
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #0d0d14;
+      --bg-card: #12121a;
+      --bg-card-hover: #1a1a24;
+      --bg-elevated: #1e1e28;
+      --text-primary: #ffffff;
+      --text-secondary: #cccccc;
+      --text-muted: #888888;
+      --text-inverse: #0a0a0f;
+      --border-default: rgba(255, 255, 255, 0.06);
+      --border-hover: rgba(255, 255, 255, 0.10);
+      --border-gold: rgba(212, 175, 55, 0.15);
+      --gold: #D4AF37;
+      --gold-bright: #F4D03F;
+      --gold-glow: rgba(212, 175, 55, 0.5);
+      --gold-subtle: rgba(212, 175, 55, 0.1);
+      --cyan: #14F0C6;
+      --purple: #8b5cf6;
+      --orange: #f97316;
+      --green: #22c55e;
+      --blue: #3b82f6;
+      --pink: #ec4899;
+      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+      --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+      --shadow-gold: 0 0 40px rgba(212, 175, 55, 0.25);
+      --glass-bg: rgba(20, 20, 30, 0.75);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --radius-md: 8px;
+      --radius-lg: 12px;
+    }
+
+    [data-theme="light"] {
+      --bg-void: #f8f9fc;
+      --bg-primary: #ffffff;
+      --bg-card: #ffffff;
+      --text-primary: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #94a3b8;
+      --text-inverse: #ffffff;
+      --border-default: rgba(0, 0, 0, 0.08);
+      --gold: #B8860B;
+      --gold-glow: rgba(180, 134, 11, 0.3);
+      --glass-bg: rgba(255, 255, 255, 0.85);
+      --glass-border: rgba(0, 0, 0, 0.06);
+    }
+
+    * { font-family: 'Inter', -apple-system, sans-serif; }
+    body { background: var(--bg-void); color: var(--text-primary); overflow-x: hidden; }
+
+    /* Gold Mesh Gradient Background */
+    .mesh-gradient {
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 20% 40%, rgba(212,175,55,0.10), transparent),
+        radial-gradient(ellipse 60% 40% at 80% 20%, rgba(20,240,198,0.08), transparent),
+        radial-gradient(ellipse 50% 60% at 60% 80%, rgba(139,92,246,0.05), transparent),
+        radial-gradient(ellipse 40% 40% at 40% 60%, rgba(34,197,94,0.03), transparent);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* Noise texture */
+    .noise {
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* Animations */
+    @keyframes gradient-shift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+    @keyframes fade-up { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes morph { 0%, 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; } 50% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; } }
+    @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 20px var(--gold-glow); } 50% { box-shadow: 0 0 30px var(--gold-glow), 0 0 40px rgba(20,240,198,0.3); } }
+    @keyframes statusPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+    .animate-gradient { animation: gradient-shift 8s ease infinite; background-size: 200% 200%; }
+    .animate-float { animation: float 6s ease-in-out infinite; }
+    .animate-fade-up { animation: fade-up 0.8s ease-out forwards; opacity: 0; }
+    .animate-morph { animation: morph 8s ease-in-out infinite; }
+
+    .delay-100 { animation-delay: 0.1s; }
+    .delay-200 { animation-delay: 0.2s; }
+    .delay-300 { animation-delay: 0.3s; }
+    .delay-400 { animation-delay: 0.4s; }
+
+    /* Glass morphism - NN/g compliant */
+    .glass {
+      background: var(--glass-bg);
+      backdrop-filter: blur(100px);
+      -webkit-backdrop-filter: blur(100px);
+      border: 1px solid var(--glass-border);
+    }
+    .glass-strong {
+      background: rgba(20, 20, 30, 0.85);
+      backdrop-filter: blur(120px);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+
+    /* Text gradients - Gold theme */
+    .text-gradient { background: linear-gradient(135deg, var(--gold), var(--cyan)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .text-gradient-gold { background: linear-gradient(135deg, var(--gold) 0%, var(--gold-bright, #F4D03F) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .text-gradient-purple { background: linear-gradient(135deg, var(--purple), #c084fc); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .text-gradient-cyan { background: linear-gradient(135deg, var(--cyan), #22d3ee); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .text-gradient-green { background: linear-gradient(135deg, var(--green), #4ade80); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .text-gradient-orange { background: linear-gradient(135deg, var(--orange), #fb923c); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+    /* Scrollbar styling - Gold theme */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg-primary); }
+    ::-webkit-scrollbar-thumb { background: rgba(212, 175, 55, 0.3); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(212, 175, 55, 0.5); }
+
+    /* Selection */
+    ::selection { background: var(--gold); color: var(--text-inverse); }
+
+    /* Card styles */
+    .term-card {
+      transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+    .term-card:hover {
+      transform: translateY(-4px) scale(1.01);
+      border-color: rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.06);
+    }
+
+    /* Category tabs */
+    .category-tab {
+      transition: all 0.3s ease;
+      position: relative;
+    }
+    .category-tab::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--purple), var(--cyan));
+      transition: all 0.3s ease;
+      transform: translateX(-50%);
+    }
+    .category-tab:hover::after,
+    .category-tab.active::after {
+      width: 100%;
+    }
+    .category-tab.active {
+      background: rgba(255,255,255,0.08);
+    }
+
+    /* Search input */
+    .search-input {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: all 0.3s ease;
+    }
+    .search-input:focus {
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(168,85,247,0.5);
+      box-shadow: 0 0 0 3px rgba(168,85,247,0.1);
+      outline: none;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0a0a0a; }
+    ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #a855f7, #06b6d4); border-radius: 3px; }
+
+    /* ENHANCED Formula styling - White, bigger, JetBrains Mono */
+    .formula {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #ffffff;
+      background: linear-gradient(135deg, rgba(168,85,247,0.15), rgba(6,182,212,0.15));
+      border: 1px solid rgba(168,85,247,0.4);
+      padding: 0.75rem 1.25rem;
+      border-radius: 0.75rem;
+      display: inline-block;
+      margin-top: 0.75rem;
+      text-shadow: 0 0 20px rgba(255,255,255,0.3);
+      animation: pulse-glow 3s ease-in-out infinite;
+      letter-spacing: 0.5px;
+    }
+
+    /* Benchmark indicators */
+    .benchmarks {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .benchmark {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.375rem 0.625rem;
+      border-radius: 0.5rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .benchmark-bad {
+      background: rgba(239,68,68,0.15);
+      border: 1px solid rgba(239,68,68,0.3);
+      color: #f87171;
+    }
+    .benchmark-good {
+      background: rgba(234,179,8,0.15);
+      border: 1px solid rgba(234,179,8,0.3);
+      color: #facc15;
+    }
+    .benchmark-excellent {
+      background: rgba(34,197,94,0.15);
+      border: 1px solid rgba(34,197,94,0.3);
+      color: #4ade80;
+    }
+    .benchmark-icon {
+      width: 0.625rem;
+      height: 0.625rem;
+      border-radius: 50%;
+    }
+    .benchmark-bad .benchmark-icon { background: #ef4444; }
+    .benchmark-good .benchmark-icon { background: #eab308; }
+    .benchmark-excellent .benchmark-icon { background: #22c55e; }
+
+    /* Related terms */
+    .related-term {
+      transition: all 0.2s ease;
+    }
+    .related-term:hover {
+      background: rgba(168,85,247,0.2);
+      border-color: rgba(168,85,247,0.4);
+    }
+
+    /* Category colors */
+    .cat-business { --cat-color: #a855f7; }
+    .cat-technical { --cat-color: #06b6d4; }
+    .cat-marketing { --cat-color: #f97316; }
+    .cat-ai { --cat-color: #22c55e; }
+    .cat-metrics { --cat-color: #ec4899; }
+    .cat-stratum { --cat-color: #8b5cf6; }
+  </style>
+</head>
+<body class="antialiased">
+  <div class="mesh-gradient"></div>
+  <div class="noise"></div>
+
+  <div class="fixed inset-0 pointer-events-none overflow-hidden">
+    <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl animate-morph"></div>
+    <div class="absolute bottom-1/4 right-1/4 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl animate-morph" style="animation-delay: -4s;"></div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="fixed top-0 left-0 right-0 z-50 glass-strong">
+    <div class="max-w-7xl mx-auto px-6 py-4">
+      <div class="flex items-center justify-between">
+        <a href="/" class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-500 flex items-center justify-center">
+            <span class="text-lg font-black text-white">S</span>
+          </div>
+          <span class="text-xl font-bold">Stratum<span class="text-amber-400 ml-1">AI</span></span>
+        </a>
+        <div class="hidden md:flex items-center gap-8">
+          <a href="#business" class="text-sm text-gray-400 hover:text-white">Business</a>
+          <a href="#technical" class="text-sm text-gray-400 hover:text-white">Technical</a>
+          <a href="#marketing" class="text-sm text-gray-400 hover:text-white">Marketing</a>
+          <a href="#stratum" class="text-sm text-gray-400 hover:text-white">Stratum AI</a>
+        </div>
+        <a href="/signup" class="px-5 py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-amber-600 to-yellow-500">Get Started</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="pt-32 pb-16">
+    <div class="max-w-7xl mx-auto px-6 text-center">
+      <div class="inline-flex items-center gap-3 px-4 py-2 rounded-full glass mb-8 animate-fade-up">
+        <span class="text-xs font-medium text-amber-400">120+ TERMS WITH BENCHMARKS</span>
+        <span class="text-xs text-gray-500">January 2026</span>
+      </div>
+      <h1 class="text-5xl md:text-7xl font-black mb-6 animate-fade-up delay-100">
+        <span class="text-white">The SaaS</span><br><span class="text-gradient">Glossary</span>
+      </h1>
+      <p class="text-lg text-gray-400 max-w-2xl mx-auto mb-10 animate-fade-up delay-200">
+        Master the language of <span class="text-white">Revenue Operations</span> with industry benchmarks showing what's <span class="text-red-400">bad</span>, <span class="text-yellow-400">good</span>, and <span class="text-green-400">excellent</span>.
+      </p>
+      <div class="max-w-xl mx-auto mb-12 animate-fade-up delay-300">
+        <input type="text" id="searchInput" placeholder="Search terms... (ARR, API, Signal Health)" class="w-full px-6 py-4 rounded-2xl search-input text-white placeholder-gray-500">
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-4 animate-fade-up delay-400">
+        <div class="p-4 rounded-2xl glass text-center">
+          <div class="text-2xl font-bold text-gradient-purple">25+</div>
+          <div class="text-xs text-gray-500">Business</div>
+        </div>
+        <div class="p-4 rounded-2xl glass text-center">
+          <div class="text-2xl font-bold text-gradient-cyan">20+</div>
+          <div class="text-xs text-gray-500">Technical</div>
+        </div>
+        <div class="p-4 rounded-2xl glass text-center">
+          <div class="text-2xl font-bold text-gradient-orange">25+</div>
+          <div class="text-xs text-gray-500">Marketing</div>
+        </div>
+        <div class="p-4 rounded-2xl glass text-center">
+          <div class="text-2xl font-bold text-gradient-green">20+</div>
+          <div class="text-xs text-gray-500">AI/ML</div>
+        </div>
+        <div class="p-4 rounded-2xl glass text-center">
+          <div class="text-2xl font-bold" style="background: linear-gradient(135deg, #8b5cf6, #a78bfa); -webkit-background-clip: text; background-clip: text; color: transparent;">30+</div>
+          <div class="text-xs text-gray-500">Stratum AI</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Category Tabs -->
+  <section class="sticky top-[72px] z-40 bg-[#030303]/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="flex items-center gap-2 py-4 overflow-x-auto">
+        <button onclick="filterCategory('all')" class="category-tab active px-4 py-2 rounded-xl text-sm font-medium text-white glass" data-category="all">All</button>
+        <button onclick="filterCategory('business')" class="category-tab px-4 py-2 rounded-xl text-sm font-medium text-gray-400 glass" data-category="business">
+          <span class="inline-block w-2 h-2 rounded-full bg-amber-500 mr-2"></span>Business
+        </button>
+        <button onclick="filterCategory('technical')" class="category-tab px-4 py-2 rounded-xl text-sm font-medium text-gray-400 glass" data-category="technical">
+          <span class="inline-block w-2 h-2 rounded-full bg-teal-500 mr-2"></span>Technical
+        </button>
+        <button onclick="filterCategory('marketing')" class="category-tab px-4 py-2 rounded-xl text-sm font-medium text-gray-400 glass" data-category="marketing">
+          <span class="inline-block w-2 h-2 rounded-full bg-orange-500 mr-2"></span>Marketing
+        </button>
+        <button onclick="filterCategory('ai')" class="category-tab px-4 py-2 rounded-xl text-sm font-medium text-gray-400 glass" data-category="ai">
+          <span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-2"></span>AI/ML
+        </button>
+        <button onclick="filterCategory('stratum')" class="category-tab px-4 py-2 rounded-xl text-sm font-medium text-gray-400 glass" data-category="stratum">
+          <span class="inline-block w-2 h-2 rounded-full bg-yellow-500 mr-2"></span>Stratum AI
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto px-6 py-12">
+    <div id="glossaryContainer">
+
+      <!-- BUSINESS TERMS -->
+      <section id="business" class="mb-16 category-section" data-category="business">
+        <div class="flex items-center gap-4 mb-8">
+          <div class="w-12 h-12 rounded-2xl bg-amber-500/20 flex items-center justify-center">
+            <svg class="w-6 h-6 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <div>
+            <h2 class="text-2xl font-bold text-white">Business & Revenue</h2>
+            <p class="text-sm text-gray-500">Core SaaS metrics with industry benchmarks</p>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- ARR -->
+          <div class="term-card p-6 rounded-2xl glass cat-business" data-term="arr">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/30">
+                <span class="text-sm font-bold text-amber-400">ARR</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">Business</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Annual Recurring Revenue</h3>
+            <p class="text-sm text-gray-400 mb-3">Predictable annual revenue from subscriptions. The north star metric for SaaS.</p>
+            <div class="formula">ARR = MRR × 12</div>
+            <div class="benchmarks">
+              <div class="benchmark benchmark-bad"><span class="benchmark-icon"></span>Growth &lt;20%</div>
+              <div class="benchmark benchmark-good"><span class="benchmark-icon"></span>20-50%</div>
+              <div class="benchmark benchmark-excellent"><span class="benchmark-icon"></span>&gt;50% YoY</div>
+            </div>
+          </div>
+
+          <!-- MRR -->
+          <div class="term-card p-6 rounded-2xl glass cat-business" data-term="mrr">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/30">
+                <span class="text-sm font-bold text-amber-400">MRR</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">Business</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Monthly Recurring Revenue</h3>
+            <p class="text-sm text-gray-400 mb-3">Normalized monthly revenue from all active subscriptions.</p>
+            <div class="formula">MRR = Sum of Monthly Fees</div>
+            <div class="benchmarks">
+              <div class="benchmark benchmark-bad"><span class="benchmark-icon"></span>Declining</div>
+              <div class="benchmark benchmark-good"><span class="benchmark-icon"></span>2-5% MoM</div>
+              <div class="benchmark benchmark-excellent"><span class="benchmark-icon"></span>&gt;10% MoM</div>
+            </div>
+          </div>
+
+          <!-- CAC -->
+          <div class="term-card p-6 rounded-2xl glass cat-business" data-term="cac">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/30">
+                <span class="text-sm font-bold text-amber-400">CAC</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">Business</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Customer Acquisition Cost</h3>
+            <p class="text-sm text-gray-400 mb-3">Total cost to acquire one new customer including marketing and sales.</p>
+            <div class="formula">CAC = Total Spend / New Customers</div>
+            <div class="benchmarks">
+              <div class="benchmark benchmark-bad"><span class="benchmark-icon"></span>&gt;$500 B2B</div>
+              <div class="benchmark benchmark-good"><span class="benchmark-icon"></span>$200-500</div>
+              <div class="benchmark benchmark-excellent"><span class="benchmark-icon"></span>&lt;$200</div>
+            </div>
+          </div>
+
+          <!-- LTV -->
+          <div class="term-card p-6 rounded-2xl glass cat-business" data-term="ltv">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/30">
+                <span class="text-sm font-bold text-amber-400">LTV</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">Business</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Lifetime Value</h3>
+            <p class="text-sm text-gray-400 mb-3">Total revenue expected from a customer over their entire relationship.</p>
+            <div class="formula">LTV = ARPU × Avg Lifetime</div>
+            <div class="benchmarks">
+              <div class="benchmark benchmark-bad"><span class="benchmark-icon"></span>LTV:CAC &lt;2:1</div>
+              <div class="benchmark benchmark-good"><span class="benchmark-icon"></span>3:1</div>
+              <div class="benchmark benchmark-excellent"><span class="benchmark-icon"></span>&gt;5:1</div>
+            </div>
+          </div>
+
+          <!-- Churn -->
+          <div class="term-card p-6 rounded-2xl glass cat-business" data-term="churn">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/30">
+                <span class="text-sm font-bold text-amber-400">Churn</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">Business</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Churn Rate</h3>
+            <p class="text-sm text-gray-400 mb-3">Percentage of customers or revenue lost over a period.</p>
+            <div class="formula">Churn = Lost / Starting × 100</div>
+            <div class="benchmarks">
+              <div class="benchmark benchmark-bad"><span class="benchmark-icon"></span>&gt;5% Monthly</div>
+              <div class="benchmark benchmark-good"><span class="benchmark-icon"></span>2-5%</div>
+              <div class="benchmark benchmark-excellent"><span class="benchmark-icon"></span>&lt;2%</div>
+            </div>
+          </div>
+
+          <!-- NRR -->
+          <div class="term-card p-6 rounded-2xl glass cat-business" data-term="nrr">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/30">
+                <span class="text-sm font-bold text-amber-400">NRR</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">Business</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Net Revenue Retention</h3>
+            <p class="text-sm text-gray-400 mb-3">Revenue retained from existing customers including expansion.</p>
+            <div class="formula">NRR = (Start + Exp - Churn) / Start</div>
+            <div class="benchmarks">
+              <div class="benchmark benchmark-bad"><span class="benchmark-icon"></span>&lt;90%</div>
+              <div class="benchmark benchmark-good"><span class="benchmark-icon"></span>100-120%</div>
+              <div class="benchmark benchmark-excellent"><span class="benchmark-icon"></span>&gt;130%</div>
+            </div>
+          </div>
+
+          <!-- ARPU -->
+          <div class="term-card p-6 rounded-2xl glass cat-business" data-term="arpu">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/30">
+                <span class="text-sm font-bold text-amber-400">ARPU</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">Business</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Average Revenue Per User</h3>
+            <p class="text-sm text-gray-400 mb-3">Average monthly revenue generated per active user.</p>
+            <div class="formula">ARPU = MRR / Active Users</div>
+            <div class="benchmarks">
+              <div class="benchmark benchmark-bad"><span class="benchmark-icon"></span>Declining</div>
+              <div class="benchmark benchmark-good"><span class="benchmark-icon"></span>Stable</div>
+              <div class="benchmark benchmark-excellent"><span class="benchmark-icon"></span>Growing</div>
+            </div>
+          </div>
+
+          <!-- Payback -->
+          <div class="term-card p-6 rounded-2xl glass cat-business" data-term="payback">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/30">
+                <span class="text-sm font-bold text-amber-400">Payback</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">Business</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">CAC Payback Period</h3>
+            <p class="text-sm text-gray-400 mb-3">Months to recover customer acquisition cost.</p>
+            <div class="formula">Payback = CAC / (ARPU × Margin)</div>
+            <div class="benchmarks">
+              <div class="benchmark benchmark-bad"><span class="benchmark-icon"></span>&gt;18 months</div>
+              <div class="benchmark benchmark-good"><span class="benchmark-icon"></span>12-18</div>
+              <div class="benchmark benchmark-excellent"><span class="benchmark-icon"></span>&lt;12 months</div>
+            </div>
+          </div>
+
+          <!-- Gross Margin -->
+          <div class="term-card p-6 rounded-2xl glass cat-business" data-term="grossmargin">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/30">
+                <span class="text-sm font-bold text-amber-400">GM</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">Business</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Gross Margin</h3>
+            <p class="text-sm text-gray-400 mb-3">Revenue minus cost of goods sold as a percentage.</p>
+            <div class="formula">GM = (Revenue - COGS) / Revenue</div>
+            <div class="benchmarks">
+              <div class="benchmark benchmark-bad"><span class="benchmark-icon"></span>&lt;60%</div>
+              <div class="benchmark benchmark-good"><span class="benchmark-icon"></span>70-80%</div>
+              <div class="benchmark benchmark-excellent"><span class="benchmark-icon"></span>&gt;80%</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- MARKETING TERMS -->
+      <section id="marketing" class="mb-16 category-section" data-category="marketing">
+        <div class="flex items-center gap-4 mb-8">
+          <div class="w-12 h-12 rounded-2xl bg-orange-500/20 flex items-center justify-center">
+            <svg class="w-6 h-6 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/></svg>
+          </div>
+          <div>
+            <h2 class="text-2xl font-bold text-white">Marketing & Growth</h2>
+            <p class="text-sm text-gray-500">Performance marketing metrics with benchmarks</p>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- CTR -->
+          <div class="term-card p-6 rounded-2xl glass cat-marketing" data-term="ctr">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-orange-500/20 border border-orange-500/30">
+                <span class="text-sm font-bold text-orange-400">CTR</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">Marketing</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Click-Through Rate</h3>
+            <p class="text-sm text-gray-400 mb-3">Percentage of impressions that result in clicks.</p>
+            <div class="formula">CTR = Clicks / Impressions × 100</div>
+            <div class="benchmarks">
+              <div class="benchmark benchmark-bad"><span class="benchmark-icon"></span>&lt;1%</div>
+              <div class="benchmark benchmark-good"><span class="benchmark-icon"></span>1-3%</div>
+              <div class="benchmark benchmark-excellent"><span class="benchmark-icon"></span>&gt;3%</div>
+            </div>
+          </div>
+
+          <!-- CVR -->
+          <div class="term-card p-6 rounded-2xl glass cat-marketing" data-term="cvr">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-orange-500/20 border border-orange-500/30">
+                <span class="text-sm font-bold text-orange-400">CVR</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">Marketing</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Conversion Rate</h3>
+            <p class="text-sm text-gray-400 mb-3">Percentage of visitors who complete a desired action.</p>
+            <div class="formula">CVR = Conversions / Visitors × 100</div>
+            <div class="benchmarks">
+              <div class="benchmark benchmark-bad"><span class="benchmark-icon"></span>&lt;1%</div>
+              <div class="benchmark benchmark-good"><span class="benchmark-icon"></span>2-5%</div>
+              <div class="benchmark benchmark-excellent"><span class="benchmark-icon"></span>&gt;5%</div>
+            </div>
+          </div>
+
+          <!-- ROAS -->
+          <div class="term-card p-6 rounded-2xl glass cat-marketing" data-term="roas">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-orange-500/20 border border-orange-500/30">
+                <span class="text-sm font-bold text-orange-400">ROAS</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">Marketing</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Return on Ad Spend</h3>
+            <p class="text-sm text-gray-400 mb-3">Revenue generated per dollar spent on advertising.</p>
+            <div class="formula">ROAS = Revenue / Ad Spend</div>
+            <div class="benchmarks">
+              <div class="benchmark benchmark-bad"><span class="benchmark-icon"></span>&lt;2x</div>
+              <div class="benchmark benchmark-good"><span class="benchmark-icon"></span>3-5x</div>
+              <div class="benchmark benchmark-excellent"><span class="benchmark-icon"></span>&gt;5x</div>
+            </div>
+          </div>
+
+          <!-- CPC -->
+          <div class="term-card p-6 rounded-2xl glass cat-marketing" data-term="cpc">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-orange-500/20 border border-orange-500/30">
+                <span class="text-sm font-bold text-orange-400">CPC</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">Marketing</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Cost Per Click</h3>
+            <p class="text-sm text-gray-400 mb-3">Average cost for each click on your ads.</p>
+            <div class="formula">CPC = Ad Spend / Clicks</div>
+            <div class="benchmarks">
+              <div class="benchmark benchmark-bad"><span class="benchmark-icon"></span>&gt;$5</div>
+              <div class="benchmark benchmark-good"><span class="benchmark-icon"></span>$1-3</div>
+              <div class="benchmark benchmark-excellent"><span class="benchmark-icon"></span>&lt;$1</div>
+            </div>
+          </div>
+
+          <!-- CPM -->
+          <div class="term-card p-6 rounded-2xl glass cat-marketing" data-term="cpm">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-orange-500/20 border border-orange-500/30">
+                <span class="text-sm font-bold text-orange-400">CPM</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">Marketing</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Cost Per Mille</h3>
+            <p class="text-sm text-gray-400 mb-3">Cost per 1,000 impressions of your ad.</p>
+            <div class="formula">CPM = (Spend / Impr) × 1000</div>
+            <div class="benchmarks">
+              <div class="benchmark benchmark-bad"><span class="benchmark-icon"></span>&gt;$20</div>
+              <div class="benchmark benchmark-good"><span class="benchmark-icon"></span>$8-15</div>
+              <div class="benchmark benchmark-excellent"><span class="benchmark-icon"></span>&lt;$8</div>
+            </div>
+          </div>
+
+          <!-- CPA -->
+          <div class="term-card p-6 rounded-2xl glass cat-marketing" data-term="cpa">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-orange-500/20 border border-orange-500/30">
+                <span class="text-sm font-bold text-orange-400">CPA</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">Marketing</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Cost Per Acquisition</h3>
+            <p class="text-sm text-gray-400 mb-3">Average cost to acquire a conversion.</p>
+            <div class="formula">CPA = Spend / Conversions</div>
+            <div class="benchmarks">
+              <div class="benchmark benchmark-bad"><span class="benchmark-icon"></span>&gt;$100</div>
+              <div class="benchmark benchmark-good"><span class="benchmark-icon"></span>$30-80</div>
+              <div class="benchmark benchmark-excellent"><span class="benchmark-icon"></span>&lt;$30</div>
+            </div>
+          </div>
+
+          <!-- MQL -->
+          <div class="term-card p-6 rounded-2xl glass cat-marketing" data-term="mql">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-orange-500/20 border border-orange-500/30">
+                <span class="text-sm font-bold text-orange-400">MQL</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">Marketing</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Marketing Qualified Lead</h3>
+            <p class="text-sm text-gray-400 mb-3">Lead that meets marketing criteria for sales handoff.</p>
+            <div class="benchmarks">
+              <div class="benchmark benchmark-bad"><span class="benchmark-icon"></span>MQL→SQL &lt;10%</div>
+              <div class="benchmark benchmark-good"><span class="benchmark-icon"></span>15-25%</div>
+              <div class="benchmark benchmark-excellent"><span class="benchmark-icon"></span>&gt;30%</div>
+            </div>
+          </div>
+
+          <!-- SQL -->
+          <div class="term-card p-6 rounded-2xl glass cat-marketing" data-term="sql">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-orange-500/20 border border-orange-500/30">
+                <span class="text-sm font-bold text-orange-400">SQL</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">Marketing</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Sales Qualified Lead</h3>
+            <p class="text-sm text-gray-400 mb-3">Lead vetted by sales as ready for direct engagement.</p>
+            <div class="benchmarks">
+              <div class="benchmark benchmark-bad"><span class="benchmark-icon"></span>SQL→Close &lt;10%</div>
+              <div class="benchmark benchmark-good"><span class="benchmark-icon"></span>15-25%</div>
+              <div class="benchmark benchmark-excellent"><span class="benchmark-icon"></span>&gt;30%</div>
+            </div>
+          </div>
+
+          <!-- Engagement Rate -->
+          <div class="term-card p-6 rounded-2xl glass cat-marketing" data-term="engagement">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-orange-500/20 border border-orange-500/30">
+                <span class="text-sm font-bold text-orange-400">ER</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">Marketing</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Engagement Rate</h3>
+            <p class="text-sm text-gray-400 mb-3">Interactions divided by reach or impressions.</p>
+            <div class="formula">ER = Engagements / Reach × 100</div>
+            <div class="benchmarks">
+              <div class="benchmark benchmark-bad"><span class="benchmark-icon"></span>&lt;1%</div>
+              <div class="benchmark benchmark-good"><span class="benchmark-icon"></span>1-3%</div>
+              <div class="benchmark benchmark-excellent"><span class="benchmark-icon"></span>&gt;5%</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TECHNICAL TERMS -->
+      <section id="technical" class="mb-16 category-section" data-category="technical">
+        <div class="flex items-center gap-4 mb-8">
+          <div class="w-12 h-12 rounded-2xl bg-teal-500/20 flex items-center justify-center">
+            <svg class="w-6 h-6 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+          </div>
+          <div>
+            <h2 class="text-2xl font-bold text-white">Technical & Platform</h2>
+            <p class="text-sm text-gray-500">Architecture and infrastructure terms</p>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- API -->
+          <div class="term-card p-6 rounded-2xl glass cat-technical" data-term="api">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-teal-500/20 border border-teal-500/30">
+                <span class="text-sm font-bold text-teal-400">API</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">Technical</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Application Programming Interface</h3>
+            <p class="text-sm text-gray-400 mb-3">Protocols enabling software to communicate. REST/GraphQL are common in SaaS.</p>
+          </div>
+
+          <!-- Multi-tenancy -->
+          <div class="term-card p-6 rounded-2xl glass cat-technical" data-term="multitenancy">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-teal-500/20 border border-teal-500/30">
+                <span class="text-sm font-bold text-teal-400">Multi-tenant</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">Technical</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Multi-Tenancy</h3>
+            <p class="text-sm text-gray-400 mb-3">Single instance serving multiple customers with data isolation.</p>
+          </div>
+
+          <!-- RLS -->
+          <div class="term-card p-6 rounded-2xl glass cat-technical" data-term="rls">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-teal-500/20 border border-teal-500/30">
+                <span class="text-sm font-bold text-teal-400">RLS</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">Technical</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Row-Level Security</h3>
+            <p class="text-sm text-gray-400 mb-3">Database security restricting data at the row level based on policies.</p>
+          </div>
+
+          <!-- Webhook -->
+          <div class="term-card p-6 rounded-2xl glass cat-technical" data-term="webhook">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-teal-500/20 border border-teal-500/30">
+                <span class="text-sm font-bold text-teal-400">Webhook</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">Technical</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">HTTP Callback</h3>
+            <p class="text-sm text-gray-400 mb-3">Automated POST on events. Enables real-time integrations without polling.</p>
+          </div>
+
+          <!-- OAuth -->
+          <div class="term-card p-6 rounded-2xl glass cat-technical" data-term="oauth">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-teal-500/20 border border-teal-500/30">
+                <span class="text-sm font-bold text-teal-400">OAuth</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">Technical</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Open Authorization</h3>
+            <p class="text-sm text-gray-400 mb-3">Token-based auth protocol. Enables "Login with Google" flows.</p>
+          </div>
+
+          <!-- JWT -->
+          <div class="term-card p-6 rounded-2xl glass cat-technical" data-term="jwt">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-teal-500/20 border border-teal-500/30">
+                <span class="text-sm font-bold text-teal-400">JWT</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">Technical</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">JSON Web Token</h3>
+            <p class="text-sm text-gray-400 mb-3">Compact token for transmitting claims. Used for stateless auth.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- AI/ML TERMS -->
+      <section id="ai" class="mb-16 category-section" data-category="ai">
+        <div class="flex items-center gap-4 mb-8">
+          <div class="w-12 h-12 rounded-2xl bg-green-500/20 flex items-center justify-center">
+            <svg class="w-6 h-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+          </div>
+          <div>
+            <h2 class="text-2xl font-bold text-white">AI & Machine Learning</h2>
+            <p class="text-sm text-gray-500">Core AI/ML concepts and metrics</p>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Model Accuracy -->
+          <div class="term-card p-6 rounded-2xl glass cat-ai" data-term="accuracy">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-green-500/20 border border-green-500/30">
+                <span class="text-sm font-bold text-green-400">Accuracy</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">AI/ML</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Model Accuracy</h3>
+            <p class="text-sm text-gray-400 mb-3">Percentage of correct predictions made by a model.</p>
+            <div class="formula">Accuracy = Correct / Total × 100</div>
+            <div class="benchmarks">
+              <div class="benchmark benchmark-bad"><span class="benchmark-icon"></span>&lt;70%</div>
+              <div class="benchmark benchmark-good"><span class="benchmark-icon"></span>80-90%</div>
+              <div class="benchmark benchmark-excellent"><span class="benchmark-icon"></span>&gt;95%</div>
+            </div>
+          </div>
+
+          <!-- Precision -->
+          <div class="term-card p-6 rounded-2xl glass cat-ai" data-term="precision">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-green-500/20 border border-green-500/30">
+                <span class="text-sm font-bold text-green-400">Precision</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">AI/ML</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Precision</h3>
+            <p class="text-sm text-gray-400 mb-3">Of predicted positives, how many were actually positive.</p>
+            <div class="formula">Precision = TP / (TP + FP)</div>
+            <div class="benchmarks">
+              <div class="benchmark benchmark-bad"><span class="benchmark-icon"></span>&lt;70%</div>
+              <div class="benchmark benchmark-good"><span class="benchmark-icon"></span>80-90%</div>
+              <div class="benchmark benchmark-excellent"><span class="benchmark-icon"></span>&gt;95%</div>
+            </div>
+          </div>
+
+          <!-- Recall -->
+          <div class="term-card p-6 rounded-2xl glass cat-ai" data-term="recall">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-green-500/20 border border-green-500/30">
+                <span class="text-sm font-bold text-green-400">Recall</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">AI/ML</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Recall / Sensitivity</h3>
+            <p class="text-sm text-gray-400 mb-3">Of actual positives, how many were correctly identified.</p>
+            <div class="formula">Recall = TP / (TP + FN)</div>
+            <div class="benchmarks">
+              <div class="benchmark benchmark-bad"><span class="benchmark-icon"></span>&lt;70%</div>
+              <div class="benchmark benchmark-good"><span class="benchmark-icon"></span>80-90%</div>
+              <div class="benchmark benchmark-excellent"><span class="benchmark-icon"></span>&gt;95%</div>
+            </div>
+          </div>
+
+          <!-- F1 Score -->
+          <div class="term-card p-6 rounded-2xl glass cat-ai" data-term="f1">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-green-500/20 border border-green-500/30">
+                <span class="text-sm font-bold text-green-400">F1</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">AI/ML</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">F1 Score</h3>
+            <p class="text-sm text-gray-400 mb-3">Harmonic mean of precision and recall.</p>
+            <div class="formula">F1 = 2 × (P × R) / (P + R)</div>
+            <div class="benchmarks">
+              <div class="benchmark benchmark-bad"><span class="benchmark-icon"></span>&lt;0.7</div>
+              <div class="benchmark benchmark-good"><span class="benchmark-icon"></span>0.8-0.9</div>
+              <div class="benchmark benchmark-excellent"><span class="benchmark-icon"></span>&gt;0.95</div>
+            </div>
+          </div>
+
+          <!-- AUC-ROC -->
+          <div class="term-card p-6 rounded-2xl glass cat-ai" data-term="auc">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-green-500/20 border border-green-500/30">
+                <span class="text-sm font-bold text-green-400">AUC-ROC</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">AI/ML</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Area Under ROC Curve</h3>
+            <p class="text-sm text-gray-400 mb-3">Measures model's ability to distinguish between classes.</p>
+            <div class="benchmarks">
+              <div class="benchmark benchmark-bad"><span class="benchmark-icon"></span>&lt;0.7</div>
+              <div class="benchmark benchmark-good"><span class="benchmark-icon"></span>0.8-0.9</div>
+              <div class="benchmark benchmark-excellent"><span class="benchmark-icon"></span>&gt;0.95</div>
+            </div>
+          </div>
+
+          <!-- RMSE -->
+          <div class="term-card p-6 rounded-2xl glass cat-ai" data-term="rmse">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-green-500/20 border border-green-500/30">
+                <span class="text-sm font-bold text-green-400">RMSE</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">AI/ML</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Root Mean Square Error</h3>
+            <p class="text-sm text-gray-400 mb-3">Standard deviation of prediction errors in regression.</p>
+            <div class="formula">RMSE = sqrt(mean((y - y')^2))</div>
+            <div class="benchmarks">
+              <div class="benchmark benchmark-excellent"><span class="benchmark-icon"></span>Lower is better</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STRATUM AI PLATFORM -->
+      <section id="stratum" class="mb-16 category-section" data-category="stratum">
+        <div class="flex items-center gap-4 mb-8">
+          <div class="w-12 h-12 rounded-2xl bg-yellow-500/20 flex items-center justify-center">
+            <svg class="w-6 h-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          </div>
+          <div>
+            <h2 class="text-2xl font-bold text-white">Stratum AI Platform</h2>
+            <p class="text-sm text-gray-500">Platform-specific metrics and concepts</p>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Signal Health -->
+          <div class="term-card p-6 rounded-2xl glass cat-stratum" data-term="signalhealth">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-yellow-500/20 border border-yellow-500/30">
+                <span class="text-sm font-bold text-yellow-400">Signal Health</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">Stratum</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Signal Health Score</h3>
+            <p class="text-sm text-gray-400 mb-3">Composite score (0-100) measuring input data reliability before automation.</p>
+            <div class="formula">Score = Data Quality × Recency × Volume</div>
+            <div class="benchmarks">
+              <div class="benchmark benchmark-bad"><span class="benchmark-icon"></span>&lt;40 Unhealthy</div>
+              <div class="benchmark benchmark-good"><span class="benchmark-icon"></span>40-70 Degraded</div>
+              <div class="benchmark benchmark-excellent"><span class="benchmark-icon"></span>&gt;70 Healthy</div>
+            </div>
+          </div>
+
+          <!-- Trust Gate -->
+          <div class="term-card p-6 rounded-2xl glass cat-stratum" data-term="trustgate">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-yellow-500/20 border border-yellow-500/30">
+                <span class="text-sm font-bold text-yellow-400">Trust Gate</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">Stratum</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Trust Gate Decision</h3>
+            <p class="text-sm text-gray-400 mb-3">Binary checkpoint that determines if automation can execute.</p>
+            <div class="benchmarks">
+              <div class="benchmark benchmark-excellent"><span class="benchmark-icon"></span>PASS → Execute</div>
+              <div class="benchmark benchmark-good"><span class="benchmark-icon"></span>HOLD → Alert</div>
+              <div class="benchmark benchmark-bad"><span class="benchmark-icon"></span>BLOCK → Manual</div>
+            </div>
+          </div>
+
+          <!-- Autopilot -->
+          <div class="term-card p-6 rounded-2xl glass cat-stratum" data-term="autopilot">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-yellow-500/20 border border-yellow-500/30">
+                <span class="text-sm font-bold text-yellow-400">Autopilot</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">Stratum</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Trust-Gated Autopilot</h3>
+            <p class="text-sm text-gray-400 mb-3">Automated execution only when signal health passes safety thresholds.</p>
+            <div class="benchmarks">
+              <div class="benchmark benchmark-excellent"><span class="benchmark-icon"></span>Signal &gt;70</div>
+              <div class="benchmark benchmark-bad"><span class="benchmark-icon"></span>Never &lt;70</div>
+            </div>
+          </div>
+
+          <!-- EMQ -->
+          <div class="term-card p-6 rounded-2xl glass cat-stratum" data-term="emq">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-yellow-500/20 border border-yellow-500/30">
+                <span class="text-sm font-bold text-yellow-400">EMQ</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">Stratum</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Event Match Quality</h3>
+            <p class="text-sm text-gray-400 mb-3">Score measuring how well events match to identities (0-10).</p>
+            <div class="formula">EMQ = Matched / Total Events × 10</div>
+            <div class="benchmarks">
+              <div class="benchmark benchmark-bad"><span class="benchmark-icon"></span>&lt;5</div>
+              <div class="benchmark benchmark-good"><span class="benchmark-icon"></span>6-8</div>
+              <div class="benchmark benchmark-excellent"><span class="benchmark-icon"></span>&gt;8</div>
+            </div>
+          </div>
+
+          <!-- RFM -->
+          <div class="term-card p-6 rounded-2xl glass cat-stratum" data-term="rfm">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-yellow-500/20 border border-yellow-500/30">
+                <span class="text-sm font-bold text-yellow-400">RFM</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">Stratum</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">RFM Segmentation</h3>
+            <p class="text-sm text-gray-400 mb-3">Customer segmentation using Recency, Frequency, Monetary scores.</p>
+            <div class="formula">RFM = R(1-5) × F(1-5) × M(1-5)</div>
+            <div class="benchmarks">
+              <div class="benchmark benchmark-excellent"><span class="benchmark-icon"></span>Champions: 555</div>
+              <div class="benchmark benchmark-good"><span class="benchmark-icon"></span>Loyal: 445+</div>
+              <div class="benchmark benchmark-bad"><span class="benchmark-icon"></span>At Risk: &lt;222</div>
+            </div>
+          </div>
+
+          <!-- SHAP -->
+          <div class="term-card p-6 rounded-2xl glass cat-stratum" data-term="shap">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-yellow-500/20 border border-yellow-500/30">
+                <span class="text-sm font-bold text-yellow-400">SHAP</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">Stratum</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">SHAP Explainability</h3>
+            <p class="text-sm text-gray-400 mb-3">Feature importance values explaining why a prediction was made.</p>
+            <div class="benchmarks">
+              <div class="benchmark benchmark-excellent"><span class="benchmark-icon"></span>Full Transparency</div>
+            </div>
+          </div>
+
+          <!-- A/B Test -->
+          <div class="term-card p-6 rounded-2xl glass cat-stratum" data-term="abtest">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-yellow-500/20 border border-yellow-500/30">
+                <span class="text-sm font-bold text-yellow-400">A/B Test</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">Stratum</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Bayesian A/B Testing</h3>
+            <p class="text-sm text-gray-400 mb-3">Statistical test with probability of being best, not just p-values.</p>
+            <div class="benchmarks">
+              <div class="benchmark benchmark-bad"><span class="benchmark-icon"></span>Prob &lt;80%</div>
+              <div class="benchmark benchmark-good"><span class="benchmark-icon"></span>90-95%</div>
+              <div class="benchmark benchmark-excellent"><span class="benchmark-icon"></span>&gt;95%</div>
+            </div>
+          </div>
+
+          <!-- Anomaly Score -->
+          <div class="term-card p-6 rounded-2xl glass cat-stratum" data-term="anomaly">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-yellow-500/20 border border-yellow-500/30">
+                <span class="text-sm font-bold text-yellow-400">Anomaly</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">Stratum</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Anomaly Detection</h3>
+            <p class="text-sm text-gray-400 mb-3">Z-score based detection of unusual patterns in signals/events.</p>
+            <div class="formula">Z = (x - mean) / std</div>
+            <div class="benchmarks">
+              <div class="benchmark benchmark-excellent"><span class="benchmark-icon"></span>|Z| &lt; 2 Normal</div>
+              <div class="benchmark benchmark-good"><span class="benchmark-icon"></span>|Z| 2-3 Warning</div>
+              <div class="benchmark benchmark-bad"><span class="benchmark-icon"></span>|Z| &gt; 3 Anomaly</div>
+            </div>
+          </div>
+
+          <!-- Audience Sync -->
+          <div class="term-card p-6 rounded-2xl glass cat-stratum" data-term="audiencesync">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-yellow-500/20 border border-yellow-500/30">
+                <span class="text-sm font-bold text-yellow-400">Audience Sync</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">Stratum</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Multi-Platform Sync</h3>
+            <p class="text-sm text-gray-400 mb-3">Push CDP segments to Meta, Google, TikTok, Snapchat.</p>
+            <div class="benchmarks">
+              <div class="benchmark benchmark-bad"><span class="benchmark-icon"></span>Match &lt;30%</div>
+              <div class="benchmark benchmark-good"><span class="benchmark-icon"></span>40-60%</div>
+              <div class="benchmark benchmark-excellent"><span class="benchmark-icon"></span>&gt;70%</div>
+            </div>
+          </div>
+
+          <!-- Identity Graph -->
+          <div class="term-card p-6 rounded-2xl glass cat-stratum" data-term="identity">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-yellow-500/20 border border-yellow-500/30">
+                <span class="text-sm font-bold text-yellow-400">Identity</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">Stratum</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Identity Graph</h3>
+            <p class="text-sm text-gray-400 mb-3">Visual resolution of customer identities across devices/channels.</p>
+            <div class="benchmarks">
+              <div class="benchmark benchmark-excellent"><span class="benchmark-icon"></span>Cross-device linked</div>
+            </div>
+          </div>
+
+          <!-- Creative Lifecycle -->
+          <div class="term-card p-6 rounded-2xl glass cat-stratum" data-term="creativelifecycle">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-yellow-500/20 border border-yellow-500/30">
+                <span class="text-sm font-bold text-yellow-400">Creative LC</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">Stratum</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Creative Lifecycle</h3>
+            <p class="text-sm text-gray-400 mb-3">Stages: Testing → Scaling → Mature → Fatigued → Retired.</p>
+            <div class="benchmarks">
+              <div class="benchmark benchmark-excellent"><span class="benchmark-icon"></span>Scaling</div>
+              <div class="benchmark benchmark-good"><span class="benchmark-icon"></span>Mature</div>
+              <div class="benchmark benchmark-bad"><span class="benchmark-icon"></span>Fatigued</div>
+            </div>
+          </div>
+
+          <!-- LTV Prediction -->
+          <div class="term-card p-6 rounded-2xl glass cat-stratum" data-term="ltvpred">
+            <div class="flex items-start justify-between mb-4">
+              <div class="px-3 py-1.5 rounded-xl bg-yellow-500/20 border border-yellow-500/30">
+                <span class="text-sm font-bold text-yellow-400">LTV Pred</span>
+              </div>
+              <span class="text-[10px] text-gray-500 uppercase">Stratum</span>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">LTV Prediction</h3>
+            <p class="text-sm text-gray-400 mb-3">ML model predicting customer lifetime value with confidence.</p>
+            <div class="benchmarks">
+              <div class="benchmark benchmark-bad"><span class="benchmark-icon"></span>Conf &lt;70%</div>
+              <div class="benchmark benchmark-good"><span class="benchmark-icon"></span>80-90%</div>
+              <div class="benchmark benchmark-excellent"><span class="benchmark-icon"></span>&gt;90%</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-white/5 py-12">
+    <div class="max-w-7xl mx-auto px-6 text-center">
+      <p class="text-sm text-gray-500">2026 Stratum AI. Revenue Operations Powered by Trust.</p>
+    </div>
+  </footer>
+
+  <script>
+    // Search functionality
+    const searchInput = document.getElementById('searchInput');
+    const termCards = document.querySelectorAll('.term-card');
+
+    searchInput.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase();
+      termCards.forEach(card => {
+        const text = card.textContent.toLowerCase();
+        const term = card.dataset.term;
+        card.style.display = (text.includes(query) || term.includes(query)) ? 'block' : 'none';
+      });
+    });
+
+    // Category filter
+    function filterCategory(category) {
+      document.querySelectorAll('.category-tab').forEach(tab => {
+        tab.classList.remove('active');
+        if (tab.dataset.category === category) tab.classList.add('active');
+      });
+
+      document.querySelectorAll('.category-section').forEach(section => {
+        section.style.display = (category === 'all' || section.dataset.category === category) ? 'block' : 'none';
+      });
+    }
+
+    // Scroll to term
+    function scrollToTerm(term) {
+      const card = document.querySelector(`[data-term="${term}"]`);
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        card.classList.add('highlight-term');
+        setTimeout(() => card.classList.remove('highlight-term'), 2000);
+      }
+    }
+
+    // Keyboard shortcut for search
+    document.addEventListener('keydown', (e) => {
+      if (e.key === '/' && document.activeElement !== searchInput) {
+        e.preventDefault();
+        searchInput.focus();
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stratum Knowledge Graph | Technical Documentation</title>
+    <meta name="description" content="Revenue-focused Knowledge Graph architecture for Stratum AI Platform using PostgreSQL + Apache AGE">
+
+    <!-- 2026 Modern Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        /* =================================================================
+           2026 UX/UI Design System
+           ================================================================= */
+
+        :root {
+            /* Color Palette - Dark Theme */
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a24;
+            --bg-elevated: #22222e;
+            --bg-hover: #2a2a38;
+
+            /* Accent Colors */
+            --accent-primary: #6366f1;
+            --accent-secondary: #8b5cf6;
+            --accent-tertiary: #06b6d4;
+            --accent-success: #10b981;
+            --accent-warning: #f59e0b;
+            --accent-danger: #ef4444;
+
+            /* Text Colors */
+            --text-primary: #f4f4f5;
+            --text-secondary: #a1a1aa;
+            --text-tertiary: #71717a;
+            --text-muted: #52525b;
+
+            /* Borders */
+            --border-subtle: rgba(255, 255, 255, 0.06);
+            --border-default: rgba(255, 255, 255, 0.1);
+            --border-strong: rgba(255, 255, 255, 0.15);
+
+            /* Gradients */
+            --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            --gradient-secondary: linear-gradient(135deg, #06b6d4 0%, #10b981 100%);
+            --gradient-glow: radial-gradient(ellipse at center, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+
+            /* Shadows */
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+            --shadow-glow: 0 0 40px rgba(99, 102, 241, 0.2);
+
+            /* Typography */
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+            /* Spacing Scale */
+            --space-1: 0.25rem;
+            --space-2: 0.5rem;
+            --space-3: 0.75rem;
+            --space-4: 1rem;
+            --space-6: 1.5rem;
+            --space-8: 2rem;
+            --space-12: 3rem;
+            --space-16: 4rem;
+            --space-24: 6rem;
+
+            /* Border Radius */
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+
+            /* Transitions */
+            --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* =================================================================
+           Base Styles
+           ================================================================= */
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: var(--bg-primary);
+            min-height: 100vh;
+        }
+
+        /* =================================================================
+           Layout Components
+           ================================================================= */
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 var(--space-6);
+        }
+
+        .grid {
+            display: grid;
+            gap: var(--space-6);
+        }
+
+        .grid-2 { grid-template-columns: repeat(2, 1fr); }
+        .grid-3 { grid-template-columns: repeat(3, 1fr); }
+        .grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+        @media (max-width: 1024px) {
+            .grid-3, .grid-4 { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 640px) {
+            .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+        }
+
+        /* =================================================================
+           Header & Navigation
+           ================================================================= */
+
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10, 10, 15, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-subtle);
+            padding: var(--space-4) 0;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--gradient-primary);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-text {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .nav {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        .nav-link {
+            padding: var(--space-2) var(--space-4);
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border-radius: var(--radius-sm);
+            transition: all var(--transition-fast);
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--text-primary);
+            background: var(--bg-hover);
+        }
+
+        /* =================================================================
+           Hero Section
+           ================================================================= */
+
+        .hero {
+            position: relative;
+            padding: var(--space-24) 0;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            height: 200%;
+            background: var(--gradient-glow);
+            pointer-events: none;
+        }
+
+        .hero-content {
+            position: relative;
+            text-align: center;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-4);
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-default);
+            border-radius: 100px;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: var(--space-6);
+        }
+
+        .hero-badge-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        .hero-title {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: var(--space-6);
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-description {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0 auto var(--space-8);
+        }
+
+        /* =================================================================
+           Cards
+           ================================================================= */
+
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: var(--space-6);
+            transition: all var(--transition-base);
+        }
+
+        .card:hover {
+            border-color: var(--border-default);
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+            margin-bottom: var(--space-4);
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--bg-elevated);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .card-description {
+            color: var(--text-secondary);
+            font-size: 0.9375rem;
+        }
+
+        /* =================================================================
+           Section Styles
+           ================================================================= */
+
+        .section {
+            padding: var(--space-16) 0;
+        }
+
+        .section-header {
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto var(--space-12);
+        }
+
+        .section-label {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--accent-primary);
+            margin-bottom: var(--space-4);
+        }
+
+        .section-title {
+            font-size: clamp(1.75rem, 3vw, 2.5rem);
+            font-weight: 700;
+            margin-bottom: var(--space-4);
+        }
+
+        .section-description {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+        }
+
+        /* =================================================================
+           Graph Visualization
+           ================================================================= */
+
+        .graph-container {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-xl);
+            padding: var(--space-8);
+            margin: var(--space-8) 0;
+            overflow: hidden;
+        }
+
+        .graph-svg {
+            width: 100%;
+            height: 500px;
+        }
+
+        .graph-node {
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .graph-node:hover {
+            filter: brightness(1.2);
+        }
+
+        .graph-node-circle {
+            stroke-width: 2;
+            stroke: var(--border-default);
+        }
+
+        .graph-node-label {
+            fill: var(--text-primary);
+            font-size: 12px;
+            font-weight: 500;
+            text-anchor: middle;
+            dominant-baseline: central;
+        }
+
+        .graph-edge {
+            stroke: var(--border-default);
+            stroke-width: 1.5;
+            fill: none;
+            marker-end: url(#arrowhead);
+        }
+
+        .graph-edge-label {
+            fill: var(--text-tertiary);
+            font-size: 10px;
+            font-family: var(--font-mono);
+        }
+
+        /* =================================================================
+           Code Blocks
+           ================================================================= */
+
+        .code-block {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            margin: var(--space-6) 0;
+        }
+
+        .code-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--space-3) var(--space-4);
+            background: var(--bg-elevated);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .code-language {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text-tertiary);
+        }
+
+        .code-copy {
+            padding: var(--space-1) var(--space-3);
+            background: var(--bg-hover);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .code-copy:hover {
+            background: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+        }
+
+        .code-content {
+            padding: var(--space-4);
+            overflow-x: auto;
+        }
+
+        .code-content pre {
+            margin: 0;
+            font-family: var(--font-mono);
+            font-size: 0.875rem;
+            line-height: 1.7;
+            color: var(--text-secondary);
+        }
+
+        .code-content .keyword { color: #c792ea; }
+        .code-content .string { color: #c3e88d; }
+        .code-content .number { color: #f78c6c; }
+        .code-content .comment { color: #546e7a; }
+        .code-content .function { color: #82aaff; }
+        .code-content .class { color: #ffcb6b; }
+        .code-content .property { color: #89ddff; }
+
+        /* =================================================================
+           Tables
+           ================================================================= */
+
+        .table-container {
+            overflow-x: auto;
+            margin: var(--space-6) 0;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9375rem;
+        }
+
+        .table th {
+            text-align: left;
+            padding: var(--space-4);
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border-default);
+        }
+
+        .table td {
+            padding: var(--space-4);
+            border-bottom: 1px solid var(--border-subtle);
+            color: var(--text-primary);
+        }
+
+        .table tr:hover td {
+            background: var(--bg-tertiary);
+        }
+
+        .table-badge {
+            display: inline-flex;
+            padding: var(--space-1) var(--space-3);
+            background: var(--bg-elevated);
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .table-badge.primary { background: rgba(99, 102, 241, 0.2); color: var(--accent-primary); }
+        .table-badge.success { background: rgba(16, 185, 129, 0.2); color: var(--accent-success); }
+        .table-badge.warning { background: rgba(245, 158, 11, 0.2); color: var(--accent-warning); }
+
+        /* =================================================================
+           Tabs
+           ================================================================= */
+
+        .tabs {
+            display: flex;
+            gap: var(--space-1);
+            padding: var(--space-1);
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-6);
+        }
+
+        .tab {
+            flex: 1;
+            padding: var(--space-3) var(--space-4);
+            background: transparent;
+            border: none;
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .tab:hover {
+            color: var(--text-primary);
+        }
+
+        .tab.active {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* =================================================================
+           Sidebar Navigation
+           ================================================================= */
+
+        .docs-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: var(--space-8);
+            padding: var(--space-8) 0;
+        }
+
+        @media (max-width: 1024px) {
+            .docs-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                display: none;
+            }
+        }
+
+        .sidebar {
+            position: sticky;
+            top: 100px;
+            height: fit-content;
+        }
+
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-1);
+        }
+
+        .sidebar-section {
+            margin-bottom: var(--space-6);
+        }
+
+        .sidebar-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-tertiary);
+            margin-bottom: var(--space-3);
+            padding-left: var(--space-3);
+        }
+
+        .sidebar-link {
+            display: block;
+            padding: var(--space-2) var(--space-3);
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.875rem;
+            border-radius: var(--radius-sm);
+            transition: all var(--transition-fast);
+        }
+
+        .sidebar-link:hover {
+            color: var(--text-primary);
+            background: var(--bg-hover);
+        }
+
+        .sidebar-link.active {
+            color: var(--accent-primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        /* =================================================================
+           Content
+           ================================================================= */
+
+        .content h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin: var(--space-12) 0 var(--space-4);
+            padding-top: var(--space-6);
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        .content h2:first-child {
+            margin-top: 0;
+            padding-top: 0;
+            border-top: none;
+        }
+
+        .content h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: var(--space-8) 0 var(--space-4);
+            color: var(--text-primary);
+        }
+
+        .content p {
+            margin-bottom: var(--space-4);
+            color: var(--text-secondary);
+        }
+
+        .content ul, .content ol {
+            margin-bottom: var(--space-4);
+            padding-left: var(--space-6);
+            color: var(--text-secondary);
+        }
+
+        .content li {
+            margin-bottom: var(--space-2);
+        }
+
+        .content code {
+            font-family: var(--font-mono);
+            font-size: 0.875em;
+            padding: 0.2em 0.4em;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-sm);
+            color: var(--accent-tertiary);
+        }
+
+        /* =================================================================
+           Footer
+           ================================================================= */
+
+        .footer {
+            padding: var(--space-12) 0;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-subtle);
+            margin-top: var(--space-16);
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-text {
+            color: var(--text-tertiary);
+            font-size: 0.875rem;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: var(--space-4);
+        }
+
+        .footer-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: color var(--transition-fast);
+        }
+
+        .footer-link:hover {
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="#" class="logo">
+                    <div class="logo-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M2 17L12 22L22 17" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M2 12L12 17L22 12" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <span class="logo-text">Stratum Knowledge Graph</span>
+                </a>
+                <nav class="nav">
+                    <a href="#overview" class="nav-link active">Overview</a>
+                    <a href="#schema" class="nav-link">Schema</a>
+                    <a href="#integration" class="nav-link">Integration</a>
+                    <a href="#queries" class="nav-link">Queries</a>
+                    <a href="#api" class="nav-link">API</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <span class="hero-badge-dot"></span>
+                    PostgreSQL + Apache AGE
+                </div>
+                <h1 class="hero-title">Revenue-Focused Knowledge Graph</h1>
+                <p class="hero-description">
+                    A graph database layer that connects customer data, trust signals, and automation decisions
+                    to deliver explainable revenue attribution and intelligent automation.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="container">
+        <div class="docs-layout">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-section">
+                    <div class="sidebar-title">Getting Started</div>
+                    <nav class="sidebar-nav">
+                        <a href="#overview" class="sidebar-link active">Overview</a>
+                        <a href="#architecture" class="sidebar-link">Architecture</a>
+                        <a href="#installation" class="sidebar-link">Installation</a>
+                    </nav>
+                </div>
+                <div class="sidebar-section">
+                    <div class="sidebar-title">Schema Design</div>
+                    <nav class="sidebar-nav">
+                        <a href="#nodes" class="sidebar-link">Node Types</a>
+                        <a href="#edges" class="sidebar-link">Edge Types</a>
+                        <a href="#properties" class="sidebar-link">Properties</a>
+                    </nav>
+                </div>
+                <div class="sidebar-section">
+                    <div class="sidebar-title">Integration</div>
+                    <nav class="sidebar-nav">
+                        <a href="#cdp-integration" class="sidebar-link">CDP Integration</a>
+                        <a href="#trust-engine" class="sidebar-link">Trust Engine</a>
+                        <a href="#sync-service" class="sidebar-link">Sync Service</a>
+                    </nav>
+                </div>
+                <div class="sidebar-section">
+                    <div class="sidebar-title">Analytics</div>
+                    <nav class="sidebar-nav">
+                        <a href="#revenue-analytics" class="sidebar-link">Revenue Analytics</a>
+                        <a href="#attribution" class="sidebar-link">Attribution</a>
+                        <a href="#cypher-queries" class="sidebar-link">Cypher Queries</a>
+                    </nav>
+                </div>
+            </aside>
+
+            <!-- Content -->
+            <div class="content">
+                <section id="overview">
+                    <h2>Overview</h2>
+                    <p>
+                        The Stratum Knowledge Graph is a revenue-focused graph database that provides deep insights
+                        into customer behavior, signal quality, and automation effectiveness. Built on PostgreSQL
+                        with Apache AGE, it seamlessly integrates with your existing infrastructure.
+                    </p>
+
+                    <div class="grid grid-3" style="margin-top: var(--space-8);">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-icon">&#127919;</div>
+                                <h3 class="card-title">Revenue Attribution</h3>
+                            </div>
+                            <p class="card-description">
+                                Multi-touch attribution with full customer journey visibility.
+                                Trace every touchpoint that leads to revenue.
+                            </p>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-icon">&#128274;</div>
+                                <h3 class="card-title">Trust Explainability</h3>
+                            </div>
+                            <p class="card-description">
+                                Trace every automation decision back to its triggering signals.
+                                Understand why actions were blocked or executed.
+                            </p>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-icon">&#129520;</div>
+                                <h3 class="card-title">Identity Resolution</h3>
+                            </div>
+                            <p class="card-description">
+                                Visual identity graph connecting profiles across devices and channels.
+                                See the full picture of customer identity.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="architecture">
+                    <h2>Architecture</h2>
+                    <p>
+                        The Knowledge Graph sits alongside your PostgreSQL database, leveraging Apache AGE
+                        for native graph capabilities without requiring a separate database system.
+                    </p>
+
+                    <div class="graph-container">
+                        <svg class="graph-svg" viewBox="0 0 900 500">
+                            <!-- Definitions -->
+                            <defs>
+                                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                    <polygon points="0 0, 10 3.5, 0 7" fill="#52525b"/>
+                                </marker>
+                                <linearGradient id="nodeGradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#6366f1"/>
+                                    <stop offset="100%" style="stop-color:#8b5cf6"/>
+                                </linearGradient>
+                                <linearGradient id="nodeGradient2" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#06b6d4"/>
+                                    <stop offset="100%" style="stop-color:#10b981"/>
+                                </linearGradient>
+                                <linearGradient id="nodeGradient3" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#f59e0b"/>
+                                    <stop offset="100%" style="stop-color:#ef4444"/>
+                                </linearGradient>
+                            </defs>
+
+                            <!-- Edges -->
+                            <path class="graph-edge" d="M 180 150 Q 280 100 380 150"/>
+                            <path class="graph-edge" d="M 180 150 Q 180 250 180 350"/>
+                            <path class="graph-edge" d="M 420 150 Q 520 100 620 150"/>
+                            <path class="graph-edge" d="M 420 150 Q 420 250 420 350"/>
+                            <path class="graph-edge" d="M 660 150 Q 760 100 820 200"/>
+                            <path class="graph-edge" d="M 660 150 Q 660 250 660 350"/>
+                            <path class="graph-edge" d="M 220 350 Q 320 400 380 350"/>
+                            <path class="graph-edge" d="M 460 350 Q 560 400 620 350"/>
+                            <path class="graph-edge" d="M 700 350 Q 760 350 820 300"/>
+
+                            <!-- Edge Labels -->
+                            <text class="graph-edge-label" x="280" y="95">PERFORMED</text>
+                            <text class="graph-edge-label" x="520" y="95">GENERATED</text>
+                            <text class="graph-edge-label" x="740" y="140">EVALUATED_BY</text>
+                            <text class="graph-edge-label" x="130" y="250">BELONGS_TO</text>
+                            <text class="graph-edge-label" x="370" y="250">GENERATED</text>
+                            <text class="graph-edge-label" x="610" y="250">TRIGGERED</text>
+                            <text class="graph-edge-label" x="300" y="420">ATTRIBUTED_TO</text>
+                            <text class="graph-edge-label" x="540" y="420">DROVE</text>
+                            <text class="graph-edge-label" x="760" y="320">PRODUCED</text>
+
+                            <!-- Profile Node -->
+                            <g class="graph-node" transform="translate(140, 110)">
+                                <circle class="graph-node-circle" cx="40" cy="40" r="40" fill="url(#nodeGradient1)"/>
+                                <text class="graph-node-label" x="40" y="40">Profile</text>
+                            </g>
+
+                            <!-- Event Node -->
+                            <g class="graph-node" transform="translate(380, 110)">
+                                <circle class="graph-node-circle" cx="40" cy="40" r="40" fill="url(#nodeGradient1)"/>
+                                <text class="graph-node-label" x="40" y="40">Event</text>
+                            </g>
+
+                            <!-- Signal Node -->
+                            <g class="graph-node" transform="translate(620, 110)">
+                                <circle class="graph-node-circle" cx="40" cy="40" r="40" fill="url(#nodeGradient2)"/>
+                                <text class="graph-node-label" x="40" y="40">Signal</text>
+                            </g>
+
+                            <!-- TrustGate Node -->
+                            <g class="graph-node" transform="translate(780, 160)">
+                                <circle class="graph-node-circle" cx="40" cy="40" r="40" fill="url(#nodeGradient2)"/>
+                                <text class="graph-node-label" x="40" y="40">TrustGate</text>
+                            </g>
+
+                            <!-- Segment Node -->
+                            <g class="graph-node" transform="translate(140, 310)">
+                                <circle class="graph-node-circle" cx="40" cy="40" r="40" fill="url(#nodeGradient1)"/>
+                                <text class="graph-node-label" x="40" y="40">Segment</text>
+                            </g>
+
+                            <!-- Revenue Node -->
+                            <g class="graph-node" transform="translate(380, 310)">
+                                <circle class="graph-node-circle" cx="40" cy="40" r="40" fill="url(#nodeGradient3)"/>
+                                <text class="graph-node-label" x="40" y="40">Revenue</text>
+                            </g>
+
+                            <!-- Campaign Node -->
+                            <g class="graph-node" transform="translate(620, 310)">
+                                <circle class="graph-node-circle" cx="40" cy="40" r="40" fill="url(#nodeGradient3)"/>
+                                <text class="graph-node-label" x="40" y="40">Campaign</text>
+                            </g>
+
+                            <!-- Automation Node -->
+                            <g class="graph-node" transform="translate(780, 260)">
+                                <circle class="graph-node-circle" cx="40" cy="40" r="40" fill="url(#nodeGradient2)"/>
+                                <text class="graph-node-label" x="40" y="40">Automation</text>
+                            </g>
+                        </svg>
+                    </div>
+                </section>
+
+                <section id="schema">
+                    <h2>Schema Design</h2>
+
+                    <h3 id="nodes">Node Types (Vertices)</h3>
+                    <p>The knowledge graph uses 12 vertex labels to represent entities:</p>
+
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Node Label</th>
+                                    <th>Category</th>
+                                    <th>Description</th>
+                                    <th>Key Properties</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>Profile</code></td>
+                                    <td><span class="table-badge primary">Actor</span></td>
+                                    <td>CDP customer profile with unified identity</td>
+                                    <td>lifecycle_stage, rfm_score, total_revenue</td>
+                                </tr>
+                                <tr>
+                                    <td><code>Account</code></td>
+                                    <td><span class="table-badge primary">Actor</span></td>
+                                    <td>B2B account that profiles belong to</td>
+                                    <td>name, industry, arr, health_score</td>
+                                </tr>
+                                <tr>
+                                    <td><code>Event</code></td>
+                                    <td><span class="table-badge primary">Action</span></td>
+                                    <td>Customer event (page_view, purchase, etc.)</td>
+                                    <td>event_type, event_time, emq_score</td>
+                                </tr>
+                                <tr>
+                                    <td><code>Signal</code></td>
+                                    <td><span class="table-badge success">Control</span></td>
+                                    <td>Data quality signal from Trust Engine</td>
+                                    <td>signal_type, score, status, issues</td>
+                                </tr>
+                                <tr>
+                                    <td><code>TrustGate</code></td>
+                                    <td><span class="table-badge success">Control</span></td>
+                                    <td>Trust gate decision checkpoint</td>
+                                    <td>decision, threshold, reason</td>
+                                </tr>
+                                <tr>
+                                    <td><code>Automation</code></td>
+                                    <td><span class="table-badge success">Control</span></td>
+                                    <td>Automated action from Autopilot</td>
+                                    <td>action_type, status, parameters</td>
+                                </tr>
+                                <tr>
+                                    <td><code>Segment</code></td>
+                                    <td><span class="table-badge primary">Actor</span></td>
+                                    <td>CDP customer segment</td>
+                                    <td>name, segment_type, profile_count</td>
+                                </tr>
+                                <tr>
+                                    <td><code>Campaign</code></td>
+                                    <td><span class="table-badge warning">Outcome</span></td>
+                                    <td>Marketing campaign</td>
+                                    <td>name, platform, spend, roas</td>
+                                </tr>
+                                <tr>
+                                    <td><code>Revenue</code></td>
+                                    <td><span class="table-badge warning">Outcome</span></td>
+                                    <td>Revenue event</td>
+                                    <td>amount_cents, revenue_type, attribution</td>
+                                </tr>
+                                <tr>
+                                    <td><code>Channel</code></td>
+                                    <td><span class="table-badge warning">Outcome</span></td>
+                                    <td>Acquisition channel</td>
+                                    <td>name, channel_type, conversion_rate</td>
+                                </tr>
+                                <tr>
+                                    <td><code>Touchpoint</code></td>
+                                    <td><span class="table-badge primary">Action</span></td>
+                                    <td>Customer touchpoint interaction</td>
+                                    <td>touchpoint_type, channel, timestamp</td>
+                                </tr>
+                                <tr>
+                                    <td><code>HealthScore</code></td>
+                                    <td><span class="table-badge success">Control</span></td>
+                                    <td>Composite health score</td>
+                                    <td>overall_score, emq, freshness, variance</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3 id="edges">Edge Types (Relationships)</h3>
+                    <p>The graph uses 15 edge labels to connect entities:</p>
+
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Edge Label</th>
+                                    <th>From</th>
+                                    <th>To</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>BELONGS_TO</code></td>
+                                    <td>Profile</td>
+                                    <td>Segment, Account</td>
+                                    <td>Profile membership in segment or account</td>
+                                </tr>
+                                <tr>
+                                    <td><code>PERFORMED</code></td>
+                                    <td>Profile</td>
+                                    <td>Event</td>
+                                    <td>Profile performed an event</td>
+                                </tr>
+                                <tr>
+                                    <td><code>GENERATED</code></td>
+                                    <td>Event</td>
+                                    <td>Signal, Revenue</td>
+                                    <td>Event generated a signal or revenue</td>
+                                </tr>
+                                <tr>
+                                    <td><code>EVALUATED_BY</code></td>
+                                    <td>Signal</td>
+                                    <td>TrustGate</td>
+                                    <td>Signal evaluated by trust gate</td>
+                                </tr>
+                                <tr>
+                                    <td><code>TRIGGERED</code></td>
+                                    <td>TrustGate, Signal</td>
+                                    <td>Automation</td>
+                                    <td>Gate or signal triggered automation</td>
+                                </tr>
+                                <tr>
+                                    <td><code>BLOCKED</code></td>
+                                    <td>TrustGate</td>
+                                    <td>Automation</td>
+                                    <td>Gate blocked automation execution</td>
+                                </tr>
+                                <tr>
+                                    <td><code>PRODUCED</code></td>
+                                    <td>Automation</td>
+                                    <td>Revenue</td>
+                                    <td>Automation produced revenue outcome</td>
+                                </tr>
+                                <tr>
+                                    <td><code>ATTRIBUTED_TO</code></td>
+                                    <td>Revenue</td>
+                                    <td>Campaign, Channel</td>
+                                    <td>Revenue attributed to source</td>
+                                </tr>
+                                <tr>
+                                    <td><code>DROVE</code></td>
+                                    <td>Campaign</td>
+                                    <td>Revenue</td>
+                                    <td>Campaign drove revenue</td>
+                                </tr>
+                                <tr>
+                                    <td><code>RECEIVED</code></td>
+                                    <td>Profile</td>
+                                    <td>Touchpoint</td>
+                                    <td>Profile received touchpoint</td>
+                                </tr>
+                                <tr>
+                                    <td><code>INFLUENCED</code></td>
+                                    <td>Touchpoint</td>
+                                    <td>Revenue</td>
+                                    <td>Touchpoint influenced conversion</td>
+                                </tr>
+                                <tr>
+                                    <td><code>MERGED_INTO</code></td>
+                                    <td>Profile</td>
+                                    <td>Profile</td>
+                                    <td>Profile merge history</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="integration">
+                    <h2>Integration</h2>
+
+                    <h3 id="cdp-integration">CDP Integration</h3>
+                    <p>
+                        The Knowledge Graph syncs with CDP data in real-time and batch modes:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">Python</span>
+                            <button class="code-copy">Copy</button>
+                        </div>
+                        <div class="code-content">
+<pre><span class="keyword">from</span> app.services.knowledge_graph <span class="keyword">import</span> KnowledgeGraphSyncService
+
+<span class="comment"># Initialize sync service</span>
+sync = KnowledgeGraphSyncService(db_session)
+
+<span class="comment"># Full sync for a tenant</span>
+<span class="keyword">await</span> sync.full_sync(tenant_id)
+
+<span class="comment"># Incremental sync since last run</span>
+<span class="keyword">await</span> sync.incremental_sync(tenant_id, since=last_sync_at)
+
+<span class="comment"># Real-time event hook</span>
+<span class="keyword">await</span> sync.on_event_ingested(
+    tenant_id=tenant_id,
+    event_id=event.id,
+    event_name=<span class="string">"purchase"</span>,
+    profile_id=profile.id,
+    properties={<span class="string">"revenue"</span>: <span class="number">99.99</span>},
+    event_time=datetime.utcnow()
+)</pre>
+                        </div>
+                    </div>
+
+                    <h3 id="trust-engine">Trust Engine Integration</h3>
+                    <p>
+                        Trust gate decisions are automatically tracked for explainability:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">Python</span>
+                            <button class="code-copy">Copy</button>
+                        </div>
+                        <div class="code-content">
+<pre><span class="comment"># Trust gate evaluation hook</span>
+<span class="keyword">await</span> sync.on_trust_gate_evaluated(
+    tenant_id=tenant_id,
+    gate_id=gate_result.id,
+    decision=<span class="string">"block"</span>,
+    signal_health=<span class="number">62.5</span>,
+    action_type=<span class="string">"increase_budget"</span>,
+    reason=<span class="string">"Signal health below threshold for high-risk action"</span>,
+    automation_id=automation.id
+)
+
+<span class="comment"># Trace automation decision path</span>
+trace = <span class="keyword">await</span> kg.trace_automation_decision(
+    tenant_id=tenant_id,
+    automation_external_id=<span class="string">"auto_123"</span>
+)
+<span class="comment"># Returns: signals -> trust_gate -> decision_type -> revenue_produced</span></pre>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="queries">
+                    <h2>Analytics Queries</h2>
+
+                    <h3 id="revenue-analytics">Revenue Analytics</h3>
+
+                    <div class="tabs">
+                        <button class="tab active" data-tab="revenue-channel">By Channel</button>
+                        <button class="tab" data-tab="revenue-campaign">By Campaign</button>
+                        <button class="tab" data-tab="revenue-segment">By Segment</button>
+                    </div>
+
+                    <div class="tab-panel active" id="revenue-channel">
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-language">Cypher</span>
+                                <button class="code-copy">Copy</button>
+                            </div>
+                            <div class="code-content">
+<pre><span class="comment">-- Revenue by acquisition channel (last 30 days)</span>
+<span class="keyword">MATCH</span> (r:Revenue)-[:ATTRIBUTED_TO]->(ch:Channel)
+<span class="keyword">WHERE</span> r.tenant_id = <span class="string">'$tenant_id'</span>
+  <span class="keyword">AND</span> r.occurred_at >= datetime() - duration({days: <span class="number">30</span>})
+<span class="keyword">RETURN</span>
+    ch.name <span class="keyword">AS</span> channel,
+    ch.channel_type <span class="keyword">AS</span> channel_type,
+    count(r) <span class="keyword">AS</span> transactions,
+    sum(r.amount_cents) <span class="keyword">AS</span> revenue_cents,
+    avg(r.amount_cents) <span class="keyword">AS</span> avg_order_cents
+<span class="keyword">ORDER BY</span> revenue_cents <span class="keyword">DESC</span></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-panel" id="revenue-campaign">
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-language">Cypher</span>
+                                <button class="code-copy">Copy</button>
+                            </div>
+                            <div class="code-content">
+<pre><span class="comment">-- Revenue by campaign with ROAS calculation</span>
+<span class="keyword">MATCH</span> (r:Revenue)-[:ATTRIBUTED_TO]->(c:Campaign)
+<span class="keyword">WHERE</span> c.tenant_id = <span class="string">'$tenant_id'</span>
+<span class="keyword">RETURN</span>
+    c.name <span class="keyword">AS</span> campaign_name,
+    c.platform <span class="keyword">AS</span> platform,
+    c.spend_cents <span class="keyword">AS</span> spend_cents,
+    sum(r.amount_cents) <span class="keyword">AS</span> revenue_cents,
+    count(r) <span class="keyword">AS</span> conversions,
+    <span class="keyword">CASE WHEN</span> c.spend_cents > <span class="number">0</span>
+        <span class="keyword">THEN</span> sum(r.amount_cents) * <span class="number">1.0</span> / c.spend_cents
+        <span class="keyword">ELSE</span> <span class="number">0</span>
+    <span class="keyword">END AS</span> roas
+<span class="keyword">ORDER BY</span> revenue_cents <span class="keyword">DESC</span>
+<span class="keyword">LIMIT</span> <span class="number">50</span></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-panel" id="revenue-segment">
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-language">Cypher</span>
+                                <button class="code-copy">Copy</button>
+                            </div>
+                            <div class="code-content">
+<pre><span class="comment">-- Revenue performance by customer segment</span>
+<span class="keyword">MATCH</span> (seg:Segment)&lt;-[:BELONGS_TO]-(p:Profile)
+      -[:PERFORMED]->(e:Event)-[:GENERATED]->(r:Revenue)
+<span class="keyword">WHERE</span> seg.tenant_id = <span class="string">'$tenant_id'</span>
+<span class="keyword">RETURN</span>
+    seg.name <span class="keyword">AS</span> segment_name,
+    seg.profile_count <span class="keyword">AS</span> segment_size,
+    count(<span class="keyword">DISTINCT</span> p) <span class="keyword">AS</span> converting_profiles,
+    count(r) <span class="keyword">AS</span> transactions,
+    sum(r.amount_cents) <span class="keyword">AS</span> total_revenue_cents
+<span class="keyword">ORDER BY</span> total_revenue_cents <span class="keyword">DESC</span></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 id="attribution">Multi-Touch Attribution</h3>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">Cypher</span>
+                            <button class="code-copy">Copy</button>
+                        </div>
+                        <div class="code-content">
+<pre><span class="comment">-- Multi-touch attribution paths to conversion</span>
+<span class="keyword">MATCH</span> (p:Profile)-[:PERFORMED]->(e:Event)-[:GENERATED]->(r:Revenue)
+<span class="keyword">MATCH</span> path = (p)-[:RECEIVED*<span class="number">1..10</span>]->(t:Touchpoint)
+<span class="keyword">WHERE</span> p.tenant_id = <span class="string">'$tenant_id'</span>
+  <span class="keyword">AND</span> t.timestamp &lt; r.occurred_at
+<span class="keyword">WITH</span> p, r, collect(t) <span class="keyword">AS</span> touchpoints
+<span class="keyword">WHERE</span> size(touchpoints) >= <span class="number">2</span>
+<span class="keyword">RETURN</span>
+    p.external_id <span class="keyword">AS</span> profile_id,
+    r.amount_cents <span class="keyword">AS</span> revenue_cents,
+    [t <span class="keyword">IN</span> touchpoints | t.channel] <span class="keyword">AS</span> attribution_path,
+    size(touchpoints) <span class="keyword">AS</span> path_length
+<span class="keyword">ORDER BY</span> r.amount_cents <span class="keyword">DESC</span>
+<span class="keyword">LIMIT</span> <span class="number">20</span></pre>
+                        </div>
+                    </div>
+
+                    <h3>Blocked Automations Analysis</h3>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">Cypher</span>
+                            <button class="code-copy">Copy</button>
+                        </div>
+                        <div class="code-content">
+<pre><span class="comment">-- Automations blocked by trust gates (last 7 days)</span>
+<span class="keyword">MATCH</span> (tg:TrustGate {decision: <span class="string">'block'</span>})-[:BLOCKED]->(a:Automation)
+<span class="keyword">WHERE</span> tg.tenant_id = <span class="string">'$tenant_id'</span>
+  <span class="keyword">AND</span> tg.evaluated_at >= datetime() - duration({days: <span class="number">7</span>})
+<span class="keyword">RETURN</span>
+    a.action_type <span class="keyword">AS</span> action_type,
+    a.platform <span class="keyword">AS</span> platform,
+    tg.reason <span class="keyword">AS</span> block_reason,
+    tg.signal_health_score <span class="keyword">AS</span> health_score,
+    tg.evaluated_at <span class="keyword">AS</span> blocked_at
+<span class="keyword">ORDER BY</span> tg.evaluated_at <span class="keyword">DESC</span>
+<span class="keyword">LIMIT</span> <span class="number">100</span></pre>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="api">
+                    <h2>Python API Reference</h2>
+
+                    <h3>KnowledgeGraphService</h3>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">Python</span>
+                            <button class="code-copy">Copy</button>
+                        </div>
+                        <div class="code-content">
+<pre><span class="keyword">from</span> app.services.knowledge_graph <span class="keyword">import</span> (
+    KnowledgeGraphService,
+    ProfileNode,
+    EventNode,
+    RevenueNode,
+    NodeLabel,
+    EdgeLabel,
+    LifecycleStage,
+)
+
+<span class="comment"># Initialize service</span>
+kg = KnowledgeGraphService(session)
+
+<span class="comment"># Create a profile node</span>
+profile = ProfileNode(
+    tenant_id=tenant_id,
+    external_id=<span class="string">"profile_123"</span>,
+    lifecycle_stage=LifecycleStage.CUSTOMER,
+    total_revenue_cents=<span class="number">15000</span>,
+    rfm_segment=<span class="string">"champions"</span>,
+)
+<span class="keyword">await</span> kg.merge_node(profile)
+
+<span class="comment"># Query revenue by channel</span>
+results = <span class="keyword">await</span> kg.get_revenue_by_channel(tenant_id, days=<span class="number">30</span>)
+
+<span class="comment"># Query customer journey</span>
+journey = <span class="keyword">await</span> kg.get_customer_journey(tenant_id, <span class="string">"profile_123"</span>)
+
+<span class="comment"># Trace automation decision</span>
+trace = <span class="keyword">await</span> kg.trace_automation_decision(tenant_id, <span class="string">"auto_456"</span>)
+
+<span class="comment"># Get graph statistics</span>
+stats = <span class="keyword">await</span> kg.get_graph_stats(tenant_id)</pre>
+                        </div>
+                    </div>
+
+                    <h3>CypherQueryBuilder</h3>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">Python</span>
+                            <button class="code-copy">Copy</button>
+                        </div>
+                        <div class="code-content">
+<pre><span class="keyword">from</span> app.services.knowledge_graph.queries <span class="keyword">import</span> CypherQueryBuilder
+
+<span class="comment"># Build a custom query</span>
+query, params = (
+    CypherQueryBuilder(tenant_id)
+    .match_node(<span class="string">"p"</span>, NodeLabel.PROFILE)
+    .where(<span class="string">"p.lifecycle_stage"</span>, <span class="string">"="</span>, <span class="string">"customer"</span>)
+    .match_edge(<span class="string">"p"</span>, EdgeLabel.PERFORMED, <span class="string">"e"</span>, NodeLabel.EVENT)
+    .where(<span class="string">"e.event_type"</span>, <span class="string">"="</span>, <span class="string">"purchase"</span>)
+    .where_last_n_days(<span class="string">"e.event_time"</span>, <span class="number">30</span>)
+    .return_fields([
+        <span class="string">"p.external_id"</span>,
+        <span class="string">"sum(e.revenue_cents) AS total_revenue"</span>
+    ])
+    .order_by(<span class="string">"total_revenue"</span>, desc=<span class="keyword">True</span>)
+    .limit(<span class="number">100</span>)
+    .build()
+)
+
+<span class="comment"># Execute the query</span>
+results = <span class="keyword">await</span> kg.execute_cypher(query)</pre>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <span class="footer-text">
+                    &copy; 2026 Stratum AI. Knowledge Graph Documentation v1.0
+                </span>
+                <div class="footer-links">
+                    <a href="#" class="footer-link">GitHub</a>
+                    <a href="#" class="footer-link">API Reference</a>
+                    <a href="#" class="footer-link">Support</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Tab functionality
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabGroup = tab.closest('.tabs');
+                const tabId = tab.dataset.tab;
+
+                // Update active tab
+                tabGroup.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                // Update active panel
+                const panels = tab.closest('section').querySelectorAll('.tab-panel');
+                panels.forEach(panel => {
+                    panel.classList.remove('active');
+                    if (panel.id === tabId) {
+                        panel.classList.add('active');
+                    }
+                });
+            });
+        });
+
+        // Copy button functionality
+        document.querySelectorAll('.code-copy').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const code = btn.closest('.code-block').querySelector('pre').textContent;
+                navigator.clipboard.writeText(code).then(() => {
+                    btn.textContent = 'Copied!';
+                    setTimeout(() => btn.textContent = 'Copy', 2000);
+                });
+            });
+        });
+
+        // Smooth scroll for nav links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Active sidebar link on scroll
+        const sections = document.querySelectorAll('section[id]');
+        const sidebarLinks = document.querySelectorAll('.sidebar-link');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop - 150;
+                if (scrollY >= sectionTop) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            sidebarLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

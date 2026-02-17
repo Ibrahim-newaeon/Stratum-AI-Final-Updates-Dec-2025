@@ -1,0 +1,178 @@
+# =============================================================================
+# Stratum AI - Staging Environment
+# =============================================================================
+# Usage: docker compose -f docker-compose.staging.yml up -d
+#
+# This mirrors production as closely as possible:
+# - Same images, same versions
+# - Production-like env vars (APP_ENV=staging)
+# - No volume mounts (uses built images)
+# - No --reload on API
+# - Health checks enforced
+# =============================================================================
+
+services:
+  # ===========================================================================
+  # PostgreSQL 16 Database
+  # ===========================================================================
+  db:
+    image: postgres:16-alpine
+    container_name: stratum_staging_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-stratum_staging}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:-stratum_staging}
+    volumes:
+      - staging_postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-stratum_staging}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - stratum_staging
+
+  # ===========================================================================
+  # Redis 7
+  # ===========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: stratum_staging_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - staging_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - stratum_staging
+
+  # ===========================================================================
+  # FastAPI Backend (Production mode - no reload, no volume mounts)
+  # ===========================================================================
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: stratum_staging_api
+    restart: unless-stopped
+    environment:
+      - APP_ENV=staging
+      - DEBUG=false
+      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY is required (min 32 chars)}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:?JWT_SECRET_KEY is required (min 32 chars)}
+      - PII_ENCRYPTION_KEY=${PII_ENCRYPTION_KEY:?PII_ENCRYPTION_KEY is required (min 32 chars)}
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-stratum_staging}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-stratum_staging}
+      - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER:-stratum_staging}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-stratum_staging}
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CORS_ORIGINS=${CORS_ORIGINS:-https://staging.stratum.ai}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - LOG_FORMAT=json
+      - SENTRY_DSN=${SENTRY_DSN:-}
+      - EMBED_SIGNING_KEY=${EMBED_SIGNING_KEY:-}
+      - WHATSAPP_APP_SECRET=${WHATSAPP_APP_SECRET:-}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - stratum_staging
+    command: >
+      sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2"
+
+  # ===========================================================================
+  # Celery Worker
+  # ===========================================================================
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: stratum_staging_worker
+    restart: unless-stopped
+    environment:
+      - APP_ENV=staging
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-stratum_staging}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-stratum_staging}
+      - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER:-stratum_staging}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-stratum_staging}
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A app.workers.celery_app inspect ping -d celery@$$HOSTNAME || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - stratum_staging
+    command: celery -A app.workers.celery_app worker --loglevel=info --concurrency=2
+
+  # ===========================================================================
+  # Celery Beat (Scheduler)
+  # ===========================================================================
+  scheduler:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: stratum_staging_scheduler
+    restart: unless-stopped
+    environment:
+      - APP_ENV=staging
+      - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER:-stratum_staging}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-stratum_staging}
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+    depends_on:
+      - worker
+    networks:
+      - stratum_staging
+    command: celery -A app.workers.celery_app beat --loglevel=info --schedule /tmp/celerybeat-schedule
+
+  # ===========================================================================
+  # Frontend (Production build served by nginx)
+  # ===========================================================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+    container_name: stratum_staging_frontend
+    restart: unless-stopped
+    environment:
+      - VITE_API_BASE_URL=${VITE_API_BASE_URL:-https://staging-api.stratum.ai}
+      - VITE_SENTRY_DSN=${VITE_SENTRY_DSN:-}
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    networks:
+      - stratum_staging
+
+networks:
+  stratum_staging:
+    driver: bridge
+
+volumes:
+  staging_postgres_data:
+  staging_redis_data:
