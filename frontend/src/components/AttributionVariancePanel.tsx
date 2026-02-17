@@ -8,7 +8,6 @@
 import React, { useState } from 'react'
 import {
   useAttributionVariance,
-  AttributionVarianceData,
   PlatformVarianceRow,
   MetricCard,
   getStatusLabel,

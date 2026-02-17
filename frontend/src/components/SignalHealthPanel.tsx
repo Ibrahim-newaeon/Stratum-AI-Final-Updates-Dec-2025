@@ -8,10 +8,8 @@
 import React, { useState } from 'react'
 import {
   useSignalHealth,
-  SignalHealthData,
   PlatformHealthRow,
   MetricCard,
-  getStatusColor,
   getStatusLabel,
 } from '@/api/trustLayer'
 import { useCanFeature } from '@/stores/featureFlagsStore'

@@ -17,11 +17,10 @@ import {
   AutopilotAction,
   ActionStatus,
   getActionTypeLabel,
-  getActionStatusColor,
   getActionStatusLabel,
   getPlatformIcon,
 } from '@/api/autopilot'
-import { useCanFeature, useAutopilotLevel } from '@/stores/featureFlagsStore'
+import { useAutopilotLevel } from '@/stores/featureFlagsStore'
 
 // =============================================================================
 // Types
@@ -215,7 +214,7 @@ const AutopilotLevelIndicator: React.FC<{ level: number; name: string }> = ({ le
 
 export const AutopilotPanel: React.FC<AutopilotPanelProps> = ({
   tenantId,
-  compact = false,
+  compact: _compact = false,
 }) => {
   const autopilotLevel = useAutopilotLevel()
   const [statusFilter, setStatusFilter] = useState<ActionStatus | ''>('')

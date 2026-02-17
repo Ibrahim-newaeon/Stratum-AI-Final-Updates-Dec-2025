@@ -11,17 +11,15 @@ import {
   ChevronRight,
   Check,
   Loader2,
-  Target,
   DollarSign,
   Users,
-  Calendar,
   AlertCircle,
   RefreshCw,
   UserPlus,
   UsersRound,
   Bookmark,
 } from 'lucide-react'
-import { cn, getPlatformColor } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 
 interface CampaignCreateModalProps {
   open: boolean
