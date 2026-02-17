@@ -3,7 +3,7 @@
 # =============================================================================
 
 # Development stage
-FROM node:20-alpine AS development
+FROM node:25-alpine AS development
 
 WORKDIR /app
 
@@ -25,7 +25,7 @@ CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
 # =============================================================================
 # Production build stage
 # =============================================================================
-FROM node:20-alpine AS build
+FROM node:25-alpine AS build
 
 WORKDIR /app
 
