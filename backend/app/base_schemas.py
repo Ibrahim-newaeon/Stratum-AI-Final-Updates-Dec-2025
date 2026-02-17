@@ -538,6 +538,7 @@ class CompetitorBase(BaseSchema):
     domain: str = Field(..., min_length=3, max_length=255)
     name: Optional[str] = Field(None, max_length=255)
     is_primary: bool = False
+    fb_page_name: Optional[str] = Field(None, max_length=255, description="Facebook page name for direct Ads Library search")
 
 
 class CompetitorCreate(CompetitorBase):

@@ -65,6 +65,7 @@ export function AddCompetitorModal({ isOpen, onClose, onSuccess }: AddCompetitor
     domain: '',
     country: 'SA',
     platforms: ['meta', 'google'] as string[],
+    fb_page_name: '',
   });
 
   // Scan state
@@ -77,8 +78,9 @@ export function AddCompetitorModal({ isOpen, onClose, onSuccess }: AddCompetitor
   const { refetch: refetchCompetitors } = useCompetitors();
 
   // Generate Meta Ads Library URL
-  const getMetaAdsLibraryUrl = (name: string, country: string) => {
-    return `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=${country}&q=${encodeURIComponent(name)}&search_type=keyword_unordered`;
+  const getMetaAdsLibraryUrl = (name: string, country: string, fbPageName?: string) => {
+    const query = fbPageName || name;
+    return `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=${country}&q=${encodeURIComponent(query)}&search_type=keyword_unordered`;
   };
 
   // Generate Google Ads Transparency URL - search by full website URL with country filter
@@ -114,6 +116,7 @@ export function AddCompetitorModal({ isOpen, onClose, onSuccess }: AddCompetitor
         domain: newCompetitor.domain,
         name: newCompetitor.name,
         country: newCompetitor.country,
+        fb_page_name: newCompetitor.fb_page_name || undefined,
       });
       setScanResult(result);
     } catch (err) {
@@ -148,7 +151,7 @@ export function AddCompetitorModal({ isOpen, onClose, onSuccess }: AddCompetitor
 
   // Reset form
   const resetForm = () => {
-    setNewCompetitor({ name: '', domain: '', country: 'SA', platforms: ['meta', 'google'] });
+    setNewCompetitor({ name: '', domain: '', country: 'SA', platforms: ['meta', 'google'], fb_page_name: '' });
     setScanResult(null);
     setScanError(null);
   };
@@ -221,6 +224,23 @@ export function AddCompetitorModal({ isOpen, onClose, onSuccess }: AddCompetitor
               />
               <p className="text-xs text-muted-foreground mt-1">
                 We'll scrape this website to find their Facebook & Instagram accounts
+              </p>
+            </div>
+
+            {/* Facebook Page Name */}
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Facebook Page Name
+              </label>
+              <input
+                type="text"
+                value={newCompetitor.fb_page_name}
+                onChange={(e) => setNewCompetitor((prev) => ({ ...prev, fb_page_name: e.target.value }))}
+                placeholder="e.g. Nike"
+                className="w-full px-4 py-2.5 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Used to search Meta Ads Library directly — no scraping needed
               </p>
             </div>
 
@@ -512,7 +532,7 @@ export function AddCompetitorModal({ isOpen, onClose, onSuccess }: AddCompetitor
                 {/* Quick Links */}
                 <div className="flex items-center gap-2">
                   <a
-                    href={getMetaAdsLibraryUrl(scanResult?.fb_page_name || scanResult?.ad_library?.page_name || newCompetitor.name, newCompetitor.country)}
+                    href={getMetaAdsLibraryUrl(scanResult?.fb_page_name || scanResult?.ad_library?.page_name || newCompetitor.name, newCompetitor.country, newCompetitor.fb_page_name)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 transition-colors"

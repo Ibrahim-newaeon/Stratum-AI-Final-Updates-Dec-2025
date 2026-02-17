@@ -328,15 +328,7 @@ export default function DashboardLayout() {
               style={{ borderBottom: `1px solid ${theme.border}` }}
             >
               <div className="flex items-center gap-3">
-                <div
-                  className="h-8 w-8 rounded-xl flex items-center justify-center"
-                  style={{ background: theme.primary }}
-                >
-                  <span className="text-white font-bold text-sm">S</span>
-                </div>
-                <span className="text-lg font-bold" style={{ color: theme.primary }}>
-                  Stratum AI
-                </span>
+                <img src="/images/stratum-logo.svg" alt="Stratum AI" className="h-7" style={{ filter: 'invert(1) brightness(2)' }} />
               </div>
               <button
                 onClick={() => setSidebarCollapsed(true)}

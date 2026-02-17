@@ -740,7 +740,7 @@ function App() {
                         }
                       />
                       <Route
-                        path="dashboard"
+                        path="custom-dashboard"
                         element={
                           <Suspense fallback={<LoadingSpinner />}>
                             <CustomDashboard />

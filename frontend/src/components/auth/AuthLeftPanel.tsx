@@ -35,12 +35,7 @@ export default function AuthLeftPanel({ className }: AuthLeftPanelProps) {
       {/* Top: Logo */}
       <div className="absolute top-12 left-12 flex items-center gap-2 z-20">
         <Link to="/" className="flex items-center gap-2 group">
-          <div className="w-10 h-10 bg-gradient-to-br from-[#FF1F6D] to-[#FF3D00] rounded-lg flex items-center justify-center rotate-45 shadow-[0_0_20px_rgba(255,31,109,0.5)]">
-            <span className="text-white text-lg -rotate-45 font-bold font-display">S</span>
-          </div>
-          <span className="font-display font-bold tracking-tighter text-2xl text-white">
-            STRATUM AI
-          </span>
+          <img src="/images/stratum-logo.svg" alt="Stratum AI" className="h-9" style={{ filter: 'invert(1) brightness(2)' }} />
         </Link>
       </div>
 

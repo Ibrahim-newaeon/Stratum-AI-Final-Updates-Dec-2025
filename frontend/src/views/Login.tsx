@@ -139,12 +139,7 @@ export default function Login() {
 
               {/* Mobile logo */}
               <div className="lg:hidden flex items-center justify-center gap-3 mb-6">
-                <div className="w-9 h-9 bg-gradient-to-br from-[#FF1F6D] to-[#FF3D00] rounded-lg flex items-center justify-center shadow-lg rotate-45">
-                  <span className="font-display font-bold text-white text-base -rotate-45">S</span>
-                </div>
-                <span className="font-display font-bold text-lg tracking-tight text-white">
-                  STRATUM AI
-                </span>
+                <img src="/images/stratum-logo.svg" alt="Stratum AI" className="h-7" style={{ filter: 'invert(1) brightness(2)' }} />
               </div>
 
               <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">

@@ -36,10 +36,7 @@ export function Footer() {
           {/* Brand */}
           <div className="col-span-2">
             <Link to="/" className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-gradient-stratum flex items-center justify-center">
-                <span className="text-white font-bold text-body">S</span>
-              </div>
-              <span className="text-h3 text-white font-semibold">Stratum AI</span>
+              <img src="/images/stratum-logo.svg" alt="Stratum AI" className="h-6" style={{ filter: 'invert(1) brightness(2)' }} />
             </Link>
             <p className="text-meta text-text-muted mb-6 max-w-xs">
               A premium AI command center for marketing teams. Calm. Powerful. Unforgettable.

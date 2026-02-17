@@ -64,6 +64,7 @@ export {
   useCompetitorKeywords,
   useCompetitorMetrics,
   useRefreshCompetitor,
+  useScanCompetitor,
 } from './competitors'
 
 // Predictions hooks
