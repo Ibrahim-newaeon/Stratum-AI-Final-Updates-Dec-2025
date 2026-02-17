@@ -5,9 +5,9 @@
  * Provides navigation, tenant context, and campaign builder access.
  */
 
-import { useState, useEffect } from 'react'
-import { Outlet, NavLink, useLocation, useNavigate, useParams } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
+import { useEffect, useState } from 'react';
+import { NavLink, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   HomeIcon,
   ChartBarIcon,
@@ -15,7 +15,6 @@ import {
   Bars3Icon,
   XMarkIcon,
   BellIcon,
-  BookOpenIcon,
   LinkIcon,
   BuildingStorefrontIcon,
   PlusCircleIcon,
@@ -29,26 +28,35 @@ import {
   CurrencyDollarIcon,
   ArrowTrendingUpIcon,
   DocumentChartBarIcon,
-} from '@heroicons/react/24/outline'
-import { cn } from '@/lib/utils'
-import { ThemeToggle } from '@/components/ui/ThemeToggle'
-import { useAuth } from '@/contexts/AuthContext'
-import { useTenantStore } from '@/stores/tenantStore'
+} from '@heroicons/react/24/outline';
+import { cn } from '@/lib/utils';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { CommandPalette } from '@/components/ui/command-palette';
+import { useAuth } from '@/contexts/AuthContext';
+import { useTenantStore } from '@/stores/tenantStore';
 
 // Tenant-scoped navigation items
 const getNavigation = (tenantId: string) => [
   { name: 'Overview', href: `/app/${tenantId}/overview`, icon: HomeIcon },
   { name: 'Campaigns', href: `/app/${tenantId}/campaigns`, icon: ChartBarIcon },
-]
+];
 
 // Campaign Builder sub-navigation
 const getCampaignBuilderNav = (tenantId: string) => [
   { name: 'Connect Platforms', href: `/app/${tenantId}/campaigns/connect`, icon: LinkIcon },
-  { name: 'Ad Accounts', href: `/app/${tenantId}/campaigns/accounts`, icon: BuildingStorefrontIcon },
+  {
+    name: 'Ad Accounts',
+    href: `/app/${tenantId}/campaigns/accounts`,
+    icon: BuildingStorefrontIcon,
+  },
   { name: 'Create Campaign', href: `/app/${tenantId}/campaigns/new`, icon: PlusCircleIcon },
   { name: 'Drafts', href: `/app/${tenantId}/campaigns/drafts`, icon: DocumentTextIcon },
-  { name: 'Publish Logs', href: `/app/${tenantId}/campaigns/logs`, icon: ClipboardDocumentListIcon },
-]
+  {
+    name: 'Publish Logs',
+    href: `/app/${tenantId}/campaigns/logs`,
+    icon: ClipboardDocumentListIcon,
+  },
+];
 
 // Analytics & Insights sub-navigation
 const getAnalyticsNav = (tenantId: string) => [
@@ -57,50 +65,54 @@ const getAnalyticsNav = (tenantId: string) => [
   { name: 'Pacing', href: `/app/${tenantId}/pacing`, icon: ArrowTrendingUpIcon },
   { name: 'Reporting', href: `/app/${tenantId}/reporting`, icon: DocumentChartBarIcon },
   { name: 'Integrations', href: `/app/${tenantId}/integrations`, icon: CircleStackIcon },
-]
+];
 
 export default function TenantLayout() {
-  const { t, i18n } = useTranslation()
-  const location = useLocation()
-  const navigate = useNavigate()
-  const { tenantId } = useParams<{ tenantId: string }>()
-  const { user, logout } = useAuth()
-  const { setTenantId, tenant } = useTenantStore()
+  const { t, i18n } = useTranslation();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { tenantId } = useParams<{ tenantId: string }>();
+  const { user, logout } = useAuth();
+  const { setTenantId, tenant } = useTenantStore();
 
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   // Set tenant context when tenantId changes
   useEffect(() => {
     if (tenantId) {
-      setTenantId(Number(tenantId))
+      setTenantId(Number(tenantId));
     }
-  }, [tenantId, setTenantId])
+  }, [tenantId, setTenantId]);
 
-  const navigation = tenantId ? getNavigation(tenantId) : []
-  const campaignBuilderNav = tenantId ? getCampaignBuilderNav(tenantId) : []
-  const analyticsNav = tenantId ? getAnalyticsNav(tenantId) : []
+  const navigation = tenantId ? getNavigation(tenantId) : [];
+  const campaignBuilderNav = tenantId ? getCampaignBuilderNav(tenantId) : [];
+  const analyticsNav = tenantId ? getAnalyticsNav(tenantId) : [];
 
   const toggleLanguage = () => {
-    const newLang = i18n.language === 'en' ? 'ar' : 'en'
-    i18n.changeLanguage(newLang)
-    document.documentElement.dir = newLang === 'ar' ? 'rtl' : 'ltr'
-  }
+    const newLang = i18n.language === 'en' ? 'ar' : 'en';
+    i18n.changeLanguage(newLang);
+    document.documentElement.dir = newLang === 'ar' ? 'rtl' : 'ltr';
+  };
 
   const handleLogout = () => {
-    logout()
-    navigate('/login')
-  }
+    logout();
+    navigate('/login');
+  };
 
   const handleBackToMain = () => {
-    navigate('/app/overview')
-  }
+    navigate('/app/overview');
+  };
 
   const getUserInitials = () => {
-    if (!user?.name) return 'U'
-    const names = user.name.split(' ')
-    return names.map(n => n[0]).join('').toUpperCase().slice(0, 2)
-  }
+    if (!user?.name) return 'U';
+    const names = user.name.split(' ');
+    return names
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -156,7 +168,7 @@ export default function TenantLayout() {
           <nav className="flex-1 overflow-y-auto p-4">
             <div className="space-y-1">
               {navigation.map((item) => {
-                const isActive = location.pathname === item.href
+                const isActive = location.pathname === item.href;
                 return (
                   <NavLink
                     key={item.name}
@@ -172,7 +184,7 @@ export default function TenantLayout() {
                     <item.icon className="h-5 w-5" />
                     {item.name}
                   </NavLink>
-                )
+                );
               })}
             </div>
 
@@ -183,7 +195,7 @@ export default function TenantLayout() {
               </h3>
               <div className="space-y-1">
                 {campaignBuilderNav.map((item) => {
-                  const isActive = location.pathname === item.href
+                  const isActive = location.pathname === item.href;
                   return (
                     <NavLink
                       key={item.name}
@@ -199,7 +211,7 @@ export default function TenantLayout() {
                       <item.icon className="h-4 w-4" />
                       {item.name}
                     </NavLink>
-                  )
+                  );
                 })}
               </div>
             </div>
@@ -211,7 +223,7 @@ export default function TenantLayout() {
               </h3>
               <div className="space-y-1">
                 {analyticsNav.map((item) => {
-                  const isActive = location.pathname === item.href
+                  const isActive = location.pathname === item.href;
                   return (
                     <NavLink
                       key={item.name}
@@ -227,7 +239,7 @@ export default function TenantLayout() {
                       <item.icon className="h-4 w-4" />
                       {item.name}
                     </NavLink>
-                  )
+                  );
                 })}
               </div>
             </div>
@@ -262,7 +274,10 @@ export default function TenantLayout() {
             <Bars3Icon className="h-6 w-6" />
           </button>
 
-          <div className="flex-1" />
+          <div className="flex-1 flex items-center justify-center">
+            {/* Command Palette - Global Search */}
+            <CommandPalette tenantId={tenantId} />
+          </div>
 
           {/* Header actions */}
           <div className="flex items-center gap-3">
@@ -293,17 +308,16 @@ export default function TenantLayout() {
                 </div>
                 <div className="hidden lg:block text-left">
                   <span className="text-sm font-medium block">{user?.name || 'User'}</span>
-                  <span className="text-xs text-muted-foreground capitalize">{user?.role || 'user'}</span>
+                  <span className="text-xs text-muted-foreground capitalize">
+                    {user?.role || 'analyst'}
+                  </span>
                 </div>
               </button>
 
               {/* Dropdown menu */}
               {userMenuOpen && (
                 <>
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setUserMenuOpen(false)}
-                  />
+                  <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
                   <div className="absolute right-0 mt-2 w-48 py-2 rounded-lg border bg-card shadow-lg z-50">
                     <div className="px-4 py-2 border-b">
                       <p className="text-sm font-medium">{user?.name}</p>
@@ -329,5 +343,5 @@ export default function TenantLayout() {
         </main>
       </div>
     </div>
-  )
+  );
 }

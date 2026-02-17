@@ -1,295 +1,411 @@
 /**
- * Login Page
- * Authentication entry point for Stratum AI
+ * Login Page - Stratum AI
+ * Split-screen layout: Trust Gauge left panel + glass card form
+ * Cyberpunk Dark theme — midnight navy + spectral pink/orange/gold
+ *
+ * Fixes applied:
+ * - BUG-001/002: Demo login now uses demoLogin() with client-side fallback
+ * - BUG-003: Autofill captured via onInput + form ref reading on submit
+ * - BUG-006: SSO button shows "Coming Soon" tooltip on hover
+ * - BUG-007: Remember Me persists session via localStorage flag
+ * - BUG-012: Page title no longer flickers (SEO title set immediately)
+ * - BUG-016: Inline validation for email & password fields
  */
 
-import { useState } from 'react'
-import { useNavigate, useLocation, Link } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
-import { Eye, EyeOff, Lock, Mail, AlertCircle, Loader2 } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
-import { cn } from '@/lib/utils'
+import { useRef, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import {
+  EnvelopeIcon,
+  ExclamationCircleIcon,
+  EyeIcon,
+  EyeSlashIcon,
+  FingerPrintIcon,
+  LockClosedIcon,
+  UserIcon,
+  BuildingOfficeIcon,
+} from '@heroicons/react/24/outline';
+import { useAuth } from '@/contexts/AuthContext';
+import { pageSEO, SEO } from '@/components/common/SEO';
+import AuthLeftPanel from '@/components/auth/AuthLeftPanel';
+import { authStyles } from '@/components/auth/authStyles';
 
 export default function Login() {
-  const { t } = useTranslation()
-  const navigate = useNavigate()
-  const location = useLocation()
-  const { login } = useAuth()
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { login, demoLogin } = useAuth();
 
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [rememberMe, setRememberMe] = useState(false)
+  const formRef = useRef<HTMLFormElement>(null);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingRole, setLoadingRole] = useState<string | null>(null); // BUG-019: per-button spinner
+  const [error, setError] = useState('');
+  const [rememberMe, setRememberMe] = useState(
+    () => localStorage.getItem('stratum_remember_me') === 'true'
+  );
+  const [touched, setTouched] = useState<{ email?: boolean; password?: boolean }>({});
+  const [ssoHover, setSsoHover] = useState(false);
 
-  // Get the redirect path from location state
-  const from = (location.state as any)?.from?.pathname || '/dashboard/overview'
+  const from = location.state?.from?.pathname || '/dashboard/overview';
+  const showVerificationBanner = location.state?.registered || location.state?.needsVerification;
+
+  // BUG-016: Inline validation helpers
+  const emailError = touched.email && !email.trim()
+    ? 'Email is required'
+    : touched.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+      ? 'Please enter a valid email'
+      : '';
+  const passwordError = touched.password && !password
+    ? 'Password is required'
+    : touched.password && password.length > 0 && password.length < 6
+      ? 'Password must be at least 6 characters'
+      : '';
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    setIsLoading(true)
+    e.preventDefault();
+    setError('');
+
+    // BUG-003: Read directly from form inputs to capture browser autofill
+    const formEl = formRef.current;
+    const actualEmail = formEl?.querySelector<HTMLInputElement>('#login-email')?.value || email;
+    const actualPassword = formEl?.querySelector<HTMLInputElement>('#login-password')?.value || password;
+
+    // Sync React state with autofilled values
+    if (actualEmail !== email) setEmail(actualEmail);
+    if (actualPassword !== password) setPassword(actualPassword);
+
+    // Validate
+    if (!actualEmail || !actualPassword) {
+      setTouched({ email: true, password: true });
+      setError('Please fill in all fields');
+      return;
+    }
+
+    setIsLoading(true);
 
     try {
-      const result = await login(email, password)
-
+      const result = await login(actualEmail, actualPassword);
       if (result.success) {
-        navigate(from, { replace: true })
+        // BUG-007: Persist remember-me preference
+        if (rememberMe) {
+          localStorage.setItem('stratum_remember_me', 'true');
+        } else {
+          localStorage.removeItem('stratum_remember_me');
+          // Session-only: don't remove tokens, but mark for cleanup on window close
+          sessionStorage.setItem('stratum_session_only', 'true');
+        }
+        navigate(from, { replace: true });
       } else {
-        setError(result.error || 'Login failed')
+        setError(result.error || 'Login failed');
       }
-    } catch (err) {
-      setError('An unexpected error occurred')
+    } catch {
+      setError('An unexpected error occurred');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
-  const handleDemoLogin = async (role: 'superadmin' | 'admin' | 'user') => {
-    const credentials = {
-      superadmin: { email: 'superadmin@stratum.ai', password: 'admin123' },
-      admin: { email: 'admin@company.com', password: 'admin123' },
-      user: { email: 'user@company.com', password: 'user123' },
-    }
-
-    const { email, password } = credentials[role]
-    setEmail(email)
-    setPassword(password)
-    setError('')
-    setIsLoading(true)
+  // BUG-001/002: Demo login now uses demoLogin() with client-side fallback
+  // BUG-019: Track which demo button is loading for per-button spinner
+  const handleDemoLogin = async (role: 'superadmin' | 'admin' | 'manager' | 'analyst' | 'viewer') => {
+    setError('');
+    setIsLoading(true);
+    setLoadingRole(role);
 
     try {
-      const result = await login(email, password)
+      const result = await demoLogin(role);
       if (result.success) {
-        navigate(from, { replace: true })
+        navigate(from, { replace: true });
       } else {
-        setError(result.error || 'Login failed')
+        setError(result.error || 'Demo login failed');
       }
-    } catch (err) {
-      setError('An unexpected error occurred')
+    } catch {
+      setError('An unexpected error occurred');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
+      setLoadingRole(null);
     }
-  }
+  };
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-stratum relative overflow-hidden">
-        <div className="absolute inset-0 bg-black/20" />
-        <div className="relative z-10 flex flex-col justify-between p-12 text-white">
-          <div>
-            <div className="flex items-center gap-3 mb-8">
-              <div className="h-12 w-12 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center shadow-glow">
-                <span className="text-white font-bold text-2xl">S</span>
-              </div>
-              <span className="text-3xl font-bold">Stratum AI</span>
-            </div>
-            <h1 className="text-4xl font-bold mb-4 leading-tight">
-              Unified Ad Intelligence
-              <br />
-              Platform
-            </h1>
-            <p className="text-lg text-white/80 max-w-md">
-              Built for cross-platform growth: AI-powered insights, real-time analytics, automated optimization, EMQ measurement, auto-resolution logic, and clear ROAS lift—always on.
-            </p>
-          </div>
+    <>
+      <SEO {...pageSEO.login} url="https://stratum-ai.com/login" />
+      <style>{authStyles}</style>
 
-          <div className="space-y-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-lg bg-white/10 backdrop-blur flex items-center justify-center">
-                <span className="text-2xl">M</span>
-              </div>
-              <div className="w-12 h-12 rounded-lg bg-white/10 backdrop-blur flex items-center justify-center">
-                <span className="text-2xl">G</span>
-              </div>
-              <div className="w-12 h-12 rounded-lg bg-white/10 backdrop-blur flex items-center justify-center">
-                <span className="text-2xl">T</span>
-              </div>
-              <div className="w-12 h-12 rounded-lg bg-white/10 backdrop-blur flex items-center justify-center">
-                <span className="text-2xl">S</span>
-              </div>
-              <div className="w-12 h-12 rounded-lg bg-white/10 backdrop-blur flex items-center justify-center">
-                <span className="text-2xl">L</span>
-              </div>
-            </div>
-            <p className="text-sm text-white/60">
-              Integrated with Meta, Google, TikTok, Snapchat, LinkedIn & more
-            </p>
-          </div>
-
-          {/* Decorative elements */}
-          <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-white/5 blur-3xl" />
-          <div className="absolute -bottom-40 -left-20 w-96 h-96 rounded-full bg-white/5 blur-3xl" />
+      <div className="bg-[#050B18] text-white min-h-screen flex font-sans selection:bg-[#FF1F6D]/30 overflow-hidden">
+        {/* Background mesh */}
+        <div className="fixed inset-0 auth-cyber-grid pointer-events-none" />
+        <div className="fixed inset-0 pointer-events-none overflow-hidden">
+          <div className="auth-float-1 absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(255, 31, 109, 0.08), transparent 60%)' }} />
+          <div className="auth-float-2 absolute bottom-[-15%] right-[-5%] w-[500px] h-[500px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(255, 140, 0, 0.06), transparent 60%)' }} />
+          <div className="auth-float-3 absolute top-[30%] right-[20%] w-[400px] h-[400px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(255, 215, 0, 0.05), transparent 60%)' }} />
         </div>
-      </div>
 
-      {/* Right side - Login Form */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-background">
-        <div className="w-full max-w-md">
-          {/* Mobile logo */}
-          <div className="lg:hidden flex items-center justify-center gap-2 mb-8">
-            <div className="h-10 w-10 rounded-lg bg-gradient-stratum flex items-center justify-center shadow-glow">
-              <span className="text-white font-bold text-xl">S</span>
-            </div>
-            <span className="text-2xl font-bold bg-gradient-stratum bg-clip-text text-transparent">
-              Stratum AI
-            </span>
-          </div>
+        <main className="relative z-10 w-full flex min-h-screen">
+          {/* Left Panel — hidden on mobile */}
+          <AuthLeftPanel className="hidden lg:flex" />
 
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold mb-2">Welcome back</h2>
-            <p className="text-muted-foreground">
-              Enter your credentials to access your account
-              <br />
-              <span className="mt-2 inline-block">
-                Don't have an account?{' '}
-                <Link to="/signup" className="text-primary hover:underline font-medium">
-                  Sign up
-                </Link>
-              </span>
-            </p>
-          </div>
+          {/* Right Panel — Form */}
+          <section className="lg:w-5/12 w-full flex flex-col items-center justify-center p-6 lg:p-8 bg-[#080E1C] relative">
+            {/* Subtle gradient overlay */}
+            <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-bl from-[#FF1F6D]/5 to-transparent pointer-events-none" />
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Error message */}
-            {error && (
-              <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
-                <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                <span>{error}</span>
+            <div className="w-full max-w-md auth-glass-card rounded-xl p-10 border-white/10 relative z-10 shadow-2xl auth-fade-up mb-12">
+              {/* Header */}
+              <div className="mb-10">
+                <h2 className="text-3xl font-display font-extrabold text-white mb-2 tracking-tight">
+                  Dashboard Access
+                </h2>
+                <p className="text-slate-400 text-sm">
+                  Enter your neural credentials to initialize session.
+                </p>
               </div>
-            )}
 
-            {/* Email field */}
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
-                Email address
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 rounded-lg border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-                  placeholder="name@company.com"
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-            </div>
-
-            {/* Password field */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label htmlFor="password" className="text-sm font-medium">
-                  Password
-                </label>
-                <Link
-                  to="/forgot-password"
-                  className="text-sm text-primary hover:underline"
-                >
-                  Forgot password?
-                </Link>
-              </div>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-12 py-3 rounded-lg border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-                  placeholder="Enter your password"
-                  required
-                  disabled={isLoading}
-                />
-                <button
-                  type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-            </div>
-
-            {/* Remember me */}
-            <div className="flex items-center gap-2">
-              <input
-                id="remember"
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
-              />
-              <label htmlFor="remember" className="text-sm text-muted-foreground">
-                Remember me for 30 days
-              </label>
-            </div>
-
-            {/* Submit button */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className={cn(
-                'w-full py-3 rounded-lg font-semibold text-white bg-gradient-stratum shadow-glow transition-all',
-                'hover:shadow-glow-lg hover:scale-[1.02]',
-                'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100'
-              )}
-            >
-              {isLoading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Signing in...
+              {/* Mobile logo */}
+              <div className="lg:hidden flex items-center justify-center gap-3 mb-6">
+                <div className="w-9 h-9 bg-gradient-to-br from-[#FF1F6D] to-[#FF3D00] rounded-lg flex items-center justify-center shadow-lg rotate-45">
+                  <span className="font-display font-bold text-white text-base -rotate-45">S</span>
+                </div>
+                <span className="font-display font-bold text-lg tracking-tight text-white">
+                  STRATUM AI
                 </span>
-              ) : (
-                'Sign in'
-              )}
-            </button>
-          </form>
+              </div>
 
-          {/* Demo accounts */}
-          <div className="mt-8 pt-8 border-t">
-            <p className="text-center text-sm text-muted-foreground mb-4">
-              Demo Accounts
-            </p>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                onClick={() => handleDemoLogin('superadmin')}
-                disabled={isLoading}
-                className="px-3 py-2 rounded-lg border text-sm font-medium hover:bg-muted transition-colors disabled:opacity-50"
-              >
-                Super Admin
-              </button>
-              <button
-                onClick={() => handleDemoLogin('admin')}
-                disabled={isLoading}
-                className="px-3 py-2 rounded-lg border text-sm font-medium hover:bg-muted transition-colors disabled:opacity-50"
-              >
-                Admin
-              </button>
-              <button
-                onClick={() => handleDemoLogin('user')}
-                disabled={isLoading}
-                className="px-3 py-2 rounded-lg border text-sm font-medium hover:bg-muted transition-colors disabled:opacity-50"
-              >
-                User
-              </button>
+              <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
+                {/* Verification Banner — shown after signup redirect */}
+                {showVerificationBanner && (
+                  <div className="auth-slide-in flex items-start gap-2 p-3 rounded-xl text-[13px] bg-amber-500/10 border border-amber-500/20 text-amber-400">
+                    <EnvelopeIcon className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <span>Please verify your email before signing in. Check your inbox for a verification link.</span>
+                      <Link to="/verify-email" className="block mt-1 text-[#FF1F6D] font-bold hover:underline text-[12px]">
+                        Resend verification email
+                      </Link>
+                    </div>
+                  </div>
+                )}
+
+                {/* Error Alert */}
+                {error && (
+                  <div className="auth-slide-in flex items-center gap-2 p-3 rounded-xl text-[13px] bg-red-500/10 border border-red-500/20 text-red-400">
+                    <ExclamationCircleIcon className="w-4 h-4 flex-shrink-0" />
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                {/* Neural Identifier (Email) */}
+                <div className="space-y-2 auth-fade-up-d1">
+                  <label
+                    htmlFor="login-email"
+                    className="text-[10px] uppercase font-bold tracking-[0.15em] text-slate-500 ml-1"
+                  >
+                    Neural Identifier
+                  </label>
+                  <div className="relative">
+                    <FingerPrintIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-slate-500 pointer-events-none" />
+                    <input
+                      id="login-email"
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      onInput={(e) => setEmail((e.target as HTMLInputElement).value)}
+                      onBlur={() => setTouched((t) => ({ ...t, email: true }))}
+                      placeholder="u_alpha_772"
+                      required
+                      disabled={isLoading}
+                      aria-invalid={!!emailError}
+                      aria-describedby={emailError ? 'login-email-error' : undefined}
+                      className="w-full h-[44px] bg-[#050B18]/80 border border-white/10 rounded-[12px] pl-12 pr-4 text-white text-sm outline-none transition-all placeholder:text-slate-600 focus:border-[#00F5FF] focus:shadow-[0_0_15px_rgba(0,245,255,0.3)]"
+                    />
+                  </div>
+                  {emailError && (
+                    <p id="login-email-error" className="text-xs text-red-400 mt-1 ml-1">{emailError}</p>
+                  )}
+                </div>
+
+                {/* Security Key (Password) */}
+                <div className="space-y-2 auth-fade-up-d2">
+                  <div className="flex justify-between items-center px-1">
+                    <label
+                      htmlFor="login-password"
+                      className="text-[10px] uppercase font-bold tracking-[0.15em] text-slate-500"
+                    >
+                      Security Key
+                    </label>
+                    <Link
+                      to="/forgot-password"
+                      className="text-[10px] uppercase font-bold tracking-[0.15em] text-[#FF1F6D] hover:text-white transition-colors"
+                    >
+                      Reset Key
+                    </Link>
+                  </div>
+                  <div className="relative">
+                    <LockClosedIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-slate-500 pointer-events-none" />
+                    <input
+                      id="login-password"
+                      name="password"
+                      type={showPassword ? 'text' : 'password'}
+                      autoComplete="current-password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      onInput={(e) => setPassword((e.target as HTMLInputElement).value)}
+                      onBlur={() => setTouched((t) => ({ ...t, password: true }))}
+                      placeholder="••••••••••••"
+                      required
+                      disabled={isLoading}
+                      aria-invalid={!!passwordError}
+                      aria-describedby={passwordError ? 'login-password-error' : undefined}
+                      className="w-full h-[44px] bg-[#050B18]/80 border border-white/10 rounded-[12px] pl-12 pr-11 text-white text-sm outline-none transition-all placeholder:text-slate-600 focus:border-[#FF8C00] focus:shadow-[0_0_15px_rgba(255,140,0,0.3)]"
+                    />
+                    <button
+                      type="button"
+                      tabIndex={-1}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/60 transition-colors"
+                      onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showPassword ? (
+                        <EyeSlashIcon className="w-[18px] h-[18px]" />
+                      ) : (
+                        <EyeIcon className="w-[18px] h-[18px]" />
+                      )}
+                    </button>
+                  </div>
+                  {passwordError && (
+                    <p id="login-password-error" className="text-xs text-red-400 mt-1 ml-1">{passwordError}</p>
+                  )}
+                </div>
+
+                {/* Remember Me */}
+                <div className="flex items-center gap-3 px-1 py-2 auth-fade-up-d2">
+                  <input
+                    type="checkbox"
+                    id="remember"
+                    checked={rememberMe}
+                    onChange={() => setRememberMe(!rememberMe)}
+                    className="w-4 h-4 rounded border-white/10 bg-[#050B18] text-[#FF1F6D] focus:ring-[#FF1F6D] focus:ring-offset-[#050B18] cursor-pointer"
+                  />
+                  <label
+                    htmlFor="remember"
+                    className="text-xs text-slate-400 font-medium cursor-pointer select-none"
+                  >
+                    Keep session active for 24h
+                  </label>
+                </div>
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="auth-fade-up-d3 w-full auth-gradient-btn auth-shimmer-btn text-white font-black h-14 rounded-xl tracking-[0.2em] text-sm flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
+                >
+                  {isLoading && !loadingRole ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="animate-spin w-[18px] h-[18px]" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      INITIALIZING...
+                    </span>
+                  ) : (
+                    <>INITIALIZE SESSION</>
+                  )}
+                </button>
+              </form>
+
+              {/* SSO Section */}
+              <div className="mt-12 pt-8 border-t border-white/5 flex flex-col items-center gap-4">
+                <p className="text-xs text-slate-500 font-medium tracking-wide">Or connect via Enterprise SSO</p>
+                {/* BUG-006: SSO Buttons — disabled with Coming Soon tooltip */}
+                <div className="flex gap-4 relative">
+                  {['hub', 'key', 'security'].map((icon) => (
+                    <button
+                      key={icon}
+                      type="button"
+                      disabled
+                      onMouseEnter={() => setSsoHover(true)}
+                      onMouseLeave={() => setSsoHover(false)}
+                      className="w-12 h-12 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors cursor-not-allowed opacity-60"
+                      aria-label="SSO authentication coming soon"
+                    >
+                      <BuildingOfficeIcon className="w-5 h-5 text-slate-300" />
+                    </button>
+                  ))}
+                  {ssoHover && (
+                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-[#FF1F6D] text-white text-[11px] font-bold py-1 px-3 rounded-lg whitespace-nowrap z-30 shadow-lg">
+                      Coming Soon
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
 
-          {/* Footer */}
-          <p className="text-center text-xs text-muted-foreground mt-8">
-            By signing in, you agree to our{' '}
-            <a href="#" className="text-primary hover:underline">Terms of Service</a>
-            {' '}and{' '}
-            <a href="#" className="text-primary hover:underline">Privacy Policy</a>
-          </p>
-        </div>
+            {/* Divider */}
+            <div className="w-full max-w-md px-10 mb-8">
+              <div className="h-[1px] w-full bg-white/10" />
+            </div>
+
+            {/* Demo Access Section */}
+            <div className="w-full max-w-md px-10 relative z-10">
+              <div className="text-center mb-4">
+                <span className="text-[10px] uppercase tracking-widest font-bold text-slate-500">
+                  Demo Access
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 mb-8">
+                {([
+                  { role: 'superadmin' as const, label: 'Super Admin', icon: '\u26A1' },
+                  { role: 'admin' as const, label: 'Admin', icon: '\uD83D\uDEE1\uFE0F' },
+                  { role: 'viewer' as const, label: 'Viewer', icon: '\uD83D\uDC64' },
+                ]).map((item) => (
+                  <button
+                    key={item.role}
+                    type="button"
+                    onClick={() => handleDemoLogin(item.role)}
+                    disabled={isLoading}
+                    className="group py-2.5 px-2 bg-white/[0.03] hover:bg-white/[0.06] text-[11px] font-semibold text-white/40 hover:text-white/70 rounded-xl border border-white/[0.06] hover:border-white/[0.12] transition-all disabled:opacity-50 flex flex-col items-center gap-1"
+                  >
+                    {/* BUG-019: Show spinner on the specific demo button that's loading */}
+                    {loadingRole === item.role ? (
+                      <svg className="animate-spin w-[14px] h-[14px] text-[#FF1F6D]" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                    ) : (
+                      <span className="text-[14px] opacity-60 group-hover:opacity-100 transition-opacity">
+                        {item.icon}
+                      </span>
+                    )}
+                    <span>{item.label}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Footer links */}
+              <div className="flex flex-col items-center gap-4">
+                <p className="text-center text-[13px] text-white/30">
+                  New entity?{' '}
+                  <Link
+                    to="/signup"
+                    className="text-[#FF1F6D] font-bold hover:text-white transition-colors"
+                  >
+                    Request access
+                  </Link>
+                </p>
+                <div className="flex gap-6">
+                  <a className="text-[10px] text-slate-500 hover:text-white transition-colors uppercase tracking-widest font-mono" href="/privacy">Privacy Protocol</a>
+                  <a className="text-[10px] text-slate-500 hover:text-white transition-colors uppercase tracking-widest font-mono" href="/terms">Legal Core</a>
+                  <a className="text-[10px] text-slate-500 hover:text-white transition-colors uppercase tracking-widest font-mono" href="/contact">Support</a>
+                </div>
+                <span className="text-[10px] text-slate-600 font-mono tracking-widest">&copy; 2026 STRATUM ARTIFICIAL INTELLIGENCE</span>
+              </div>
+            </div>
+          </section>
+        </main>
       </div>
-    </div>
-  )
+    </>
+  );
 }
