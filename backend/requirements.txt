@@ -53,7 +53,7 @@ google-auth==2.28.0
 
 # Web Scraping (Module D)
 beautifulsoup4==4.12.3
-lxml==5.1.0
+lxml==6.0.2
 
 # Validation & Serialization
 pydantic==2.6.1
