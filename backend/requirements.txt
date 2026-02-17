@@ -61,7 +61,7 @@ orjson==3.9.15
 email-validator==2.1.1
 
 # Logging & Monitoring
-structlog==24.1.0
+structlog==25.5.0
 python-json-logger==2.0.7
 sentry-sdk[fastapi]==1.40.4
 
