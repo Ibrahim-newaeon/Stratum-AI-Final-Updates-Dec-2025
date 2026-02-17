@@ -51,9 +51,7 @@ import {
 } from 'lucide-react'
 import { cn, getPlatformColor } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
-import axios from 'axios'
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+import apiClient from '@/api/client'
 
 // =============================================================================
 // Types
@@ -146,24 +144,19 @@ export default function SuperadminDashboard() {
   const [invoices, setInvoices] = useState<any[]>([])
   const [auditLogs, setAuditLogs] = useState<any[]>([])
 
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem('access_token')
-    return token ? { Authorization: `Bearer ${token}` } : {}
-  }
-
   const fetchData = useCallback(async () => {
     setIsLoading(true)
     setError(null)
 
     try {
       const [revenueRes, tenantsRes, healthRes, churnRes, plansRes, invoicesRes, auditRes] = await Promise.allSettled([
-        axios.get(`${API_BASE_URL}/api/v1/superadmin/revenue`, { headers: getAuthHeaders() }),
-        axios.get(`${API_BASE_URL}/api/v1/superadmin/tenants/portfolio`, { headers: getAuthHeaders() }),
-        axios.get(`${API_BASE_URL}/api/v1/superadmin/system/health`, { headers: getAuthHeaders() }),
-        axios.get(`${API_BASE_URL}/api/v1/superadmin/churn/risks`, { headers: getAuthHeaders() }),
-        axios.get(`${API_BASE_URL}/api/v1/superadmin/billing/plans`, { headers: getAuthHeaders() }),
-        axios.get(`${API_BASE_URL}/api/v1/superadmin/billing/invoices`, { headers: getAuthHeaders() }),
-        axios.get(`${API_BASE_URL}/api/v1/superadmin/audit?limit=100`, { headers: getAuthHeaders() }),
+        apiClient.get('/superadmin/revenue'),
+        apiClient.get('/superadmin/tenants/portfolio'),
+        apiClient.get('/superadmin/system/health'),
+        apiClient.get('/superadmin/churn/risks'),
+        apiClient.get('/superadmin/billing/plans'),
+        apiClient.get('/superadmin/billing/invoices'),
+        apiClient.get('/superadmin/audit', { params: { limit: 100 } }),
       ])
 
       // Handle each response individually

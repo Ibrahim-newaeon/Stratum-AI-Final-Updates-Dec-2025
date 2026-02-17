@@ -22,6 +22,7 @@ import {
   Bookmark,
 } from 'lucide-react'
 import { cn, getPlatformColor } from '@/lib/utils'
+import apiClient from '@/api/client'
 
 interface CampaignCreateModalProps {
   open: boolean
@@ -68,103 +69,11 @@ const PLATFORMS = [
   },
 ]
 
-// Mock ad accounts per platform
-const MOCK_AD_ACCOUNTS: Record<string, Array<{ id: string; name: string; currency: string }>> = {
-  meta: [
-    { id: 'act_123456789', name: 'Main Business Account', currency: 'USD' },
-    { id: 'act_987654321', name: 'E-commerce Store', currency: 'USD' },
-    { id: 'act_456789123', name: 'Saudi Arabia Account', currency: 'SAR' },
-  ],
-  google: [
-    { id: '123-456-7890', name: 'Google Ads - Primary', currency: 'USD' },
-    { id: '098-765-4321', name: 'Google Ads - MENA', currency: 'AED' },
-  ],
-  tiktok: [
-    { id: 'tt_adv_12345', name: 'TikTok Business Center', currency: 'USD' },
-    { id: 'tt_adv_67890', name: 'TikTok - GCC Region', currency: 'SAR' },
-  ],
-  snapchat: [
-    { id: 'snap_org_111', name: 'Snapchat Ad Account', currency: 'USD' },
-  ],
-  linkedin: [
-    { id: 'li_502123456', name: 'LinkedIn B2B Account', currency: 'USD' },
-    { id: 'li_502789012', name: 'LinkedIn - Enterprise', currency: 'EUR' },
-  ],
-}
-
-// Mock audiences per platform
-const MOCK_AUDIENCES: Record<string, {
+// Audience type definition for API responses
+interface PlatformAudiences {
   custom: Array<{ id: string; name: string; size: number }>;
   lookalike: Array<{ id: string; name: string; size: number; source: string }>;
   saved: Array<{ id: string; name: string; description: string }>;
-}> = {
-  meta: {
-    custom: [
-      { id: 'ca_001', name: 'Website Visitors - 30 Days', size: 125000 },
-      { id: 'ca_002', name: 'Email Subscribers', size: 45000 },
-      { id: 'ca_003', name: 'App Users', size: 78000 },
-      { id: 'ca_004', name: 'Purchase History - 90 Days', size: 32000 },
-    ],
-    lookalike: [
-      { id: 'la_001', name: '1% Lookalike - Purchasers', size: 2100000, source: 'Purchase History' },
-      { id: 'la_002', name: '2% Lookalike - High Value', size: 4200000, source: 'Top 10% Customers' },
-      { id: 'la_003', name: '1% Lookalike - Subscribers', size: 1900000, source: 'Email Subscribers' },
-    ],
-    saved: [
-      { id: 'sa_001', name: 'Tech Enthusiasts 25-44', description: 'Age 25-44, Interest in Technology' },
-      { id: 'sa_002', name: 'Fashion Shoppers', description: 'Interest in Fashion, Online Shopping' },
-      { id: 'sa_003', name: 'Parents with Kids', description: 'Parents, Age 30-50, Family interests' },
-    ],
-  },
-  google: {
-    custom: [
-      { id: 'gca_001', name: 'Converters - Last 30 Days', size: 15000 },
-      { id: 'gca_002', name: 'Cart Abandoners', size: 28000 },
-    ],
-    lookalike: [
-      { id: 'gla_001', name: 'Similar to Converters', size: 1500000, source: 'Conversion List' },
-    ],
-    saved: [
-      { id: 'gsa_001', name: 'In-Market: Software', description: 'In-market for Business Software' },
-      { id: 'gsa_002', name: 'Affinity: Tech Savvy', description: 'Technology enthusiasts' },
-    ],
-  },
-  tiktok: {
-    custom: [
-      { id: 'tca_001', name: 'Video Viewers - 7 Days', size: 250000 },
-      { id: 'tca_002', name: 'Profile Visitors', size: 180000 },
-    ],
-    lookalike: [
-      { id: 'tla_001', name: 'Lookalike - Engagers', size: 3000000, source: 'Video Engagers' },
-    ],
-    saved: [
-      { id: 'tsa_001', name: 'Gen Z Shoppers', description: 'Age 18-24, Shopping interest' },
-    ],
-  },
-  snapchat: {
-    custom: [
-      { id: 'sca_001', name: 'Snap Pixel Audience', size: 95000 },
-    ],
-    lookalike: [
-      { id: 'sla_001', name: 'Lookalike - Buyers', size: 1200000, source: 'Purchasers' },
-    ],
-    saved: [
-      { id: 'ssa_001', name: 'Millennials & Gen Z', description: 'Age 18-35' },
-    ],
-  },
-  linkedin: {
-    custom: [
-      { id: 'lca_001', name: 'Website Retargeting', size: 8500 },
-      { id: 'lca_002', name: 'Company List - Enterprise', size: 2500 },
-    ],
-    lookalike: [
-      { id: 'lla_001', name: 'Lookalike - Decision Makers', size: 450000, source: 'Engaged Leads' },
-    ],
-    saved: [
-      { id: 'lsa_001', name: 'IT Decision Makers', description: 'IT Directors, CTOs, CIOs' },
-      { id: 'lsa_002', name: 'Marketing Professionals', description: 'Marketing Managers, CMOs' },
-    ],
-  },
 }
 
 const STEPS = ['platform', 'basics', 'budget', 'targeting'] as const
@@ -229,29 +138,54 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
   const [isLoadingAccounts, setIsLoadingAccounts] = useState(false)
   const [adAccounts, setAdAccounts] = useState<Array<{ id: string; name: string; currency: string }>>([])
   const [audienceTab, setAudienceTab] = useState<'custom' | 'lookalike' | 'saved'>('custom')
+  const [platformAudiences, setPlatformAudiences] = useState<PlatformAudiences | null>(null)
+  const [isLoadingAudiences, setIsLoadingAudiences] = useState(false)
 
   const currentStepIndex = STEPS.indexOf(currentStep)
   const selectedPlatform = PLATFORMS.find(p => p.id === formData.platform)
-  const platformAudiences = formData.platform ? MOCK_AUDIENCES[formData.platform] : null
 
-  // Fetch ad accounts when platform changes
+  // Fetch ad accounts and audiences when platform changes
   useEffect(() => {
     if (formData.platform) {
+      // Fetch ad accounts
       setIsLoadingAccounts(true)
-      // Simulate API call
-      setTimeout(() => {
-        setAdAccounts(MOCK_AD_ACCOUNTS[formData.platform] || [])
-        setIsLoadingAccounts(false)
-        // Auto-select first account and set its currency
-        const accounts = MOCK_AD_ACCOUNTS[formData.platform] || []
-        if (accounts.length > 0) {
-          setFormData(prev => ({
-            ...prev,
-            account_id: accounts[0].id,
-            currency: accounts[0].currency,
+      apiClient.get(`/integrations/${formData.platform}/ad-accounts`)
+        .then((res) => {
+          const accounts = res.data?.data || res.data || []
+          const mapped = (Array.isArray(accounts) ? accounts : []).map((a: any) => ({
+            id: a.id || a.account_id || '',
+            name: a.name || '',
+            currency: a.currency || 'USD',
           }))
-        }
-      }, 500)
+          setAdAccounts(mapped)
+          if (mapped.length > 0) {
+            setFormData(prev => ({
+              ...prev,
+              account_id: mapped[0].id,
+              currency: mapped[0].currency,
+            }))
+          }
+        })
+        .catch(() => {
+          setAdAccounts([])
+        })
+        .finally(() => setIsLoadingAccounts(false))
+
+      // Fetch audiences
+      setIsLoadingAudiences(true)
+      apiClient.get(`/integrations/${formData.platform}/audiences`)
+        .then((res) => {
+          const data = res.data?.data || res.data || {}
+          setPlatformAudiences({
+            custom: Array.isArray(data.custom) ? data.custom : [],
+            lookalike: Array.isArray(data.lookalike) ? data.lookalike : [],
+            saved: Array.isArray(data.saved) ? data.saved : [],
+          })
+        })
+        .catch(() => {
+          setPlatformAudiences({ custom: [], lookalike: [], saved: [] })
+        })
+        .finally(() => setIsLoadingAudiences(false))
     }
   }, [formData.platform])
 
@@ -408,6 +342,7 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
     setErrors({})
     setSubmitError(null)
     setAdAccounts([])
+    setPlatformAudiences(null)
     onClose()
   }
 
@@ -751,7 +686,13 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
               </div>
 
               {/* Audiences Section */}
-              {platformAudiences && (
+              {isLoadingAudiences && (
+                <div className="flex items-center gap-2 px-4 py-4 rounded-lg border bg-muted">
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span className="text-sm text-muted-foreground">Loading audiences...</span>
+                </div>
+              )}
+              {!isLoadingAudiences && platformAudiences && (platformAudiences.custom.length > 0 || platformAudiences.lookalike.length > 0 || platformAudiences.saved.length > 0) && (
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-3">
                     {t('campaigns.create.audiences', 'Audiences')}

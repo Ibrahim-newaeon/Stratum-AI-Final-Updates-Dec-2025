@@ -80,12 +80,7 @@ export const useClientContext = create<ClientContextState>()(
   )
 );
 
-// ── Mock data (fetched from API in production) ──────────────────────────────
-const MOCK_ASSIGNED_CLIENTS: AssignedClient[] = [
-  { id: 1, name: 'Acme Commerce', domain: 'acme.com', is_primary: true },
-  { id: 2, name: 'TechStart Inc', domain: 'techstart.io', is_primary: false },
-  { id: 3, name: 'GreenLeaf Co', domain: 'greenleaf.co', is_primary: false },
-];
+import apiClient from '@/api/client';
 
 // ── Component ───────────────────────────────────────────────────────────────
 interface ClientContextSwitcherProps {
@@ -110,11 +105,19 @@ export default function ClientContextSwitcher({ className }: ClientContextSwitch
   const shouldShow =
     user?.role === 'manager' || user?.role === 'analyst';
 
-  // Load assigned clients on mount (would be API call in production)
+  // Load assigned clients on mount from API
   useEffect(() => {
     if (shouldShow && assignedClients.length === 0) {
-      // In production: GET /api/v1/users/me/assigned-clients
-      setAssignedClients(MOCK_ASSIGNED_CLIENTS);
+      apiClient.get('/users/me/assigned-clients')
+        .then((res) => {
+          const clients = res.data?.data || res.data || [];
+          if (Array.isArray(clients) && clients.length > 0) {
+            setAssignedClients(clients);
+          }
+        })
+        .catch(() => {
+          // Silently handle — empty client list will show "Select Client"
+        });
     }
   }, [shouldShow, assignedClients.length, setAssignedClients]);
 

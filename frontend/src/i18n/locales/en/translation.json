@@ -35,6 +35,7 @@
     "settings": "Settings",
     "tenants": "Organizations",
     "mlTraining": "ML Training",
+    "integrations": "Integrations",
     "capiSetup": "CAPI Setup",
     "dataQuality": "Data Quality",
     "emqDashboard": "EMQ Dashboard"

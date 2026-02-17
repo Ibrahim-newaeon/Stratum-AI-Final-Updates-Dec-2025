@@ -11,8 +11,9 @@
  * - Set primary client for a user
  */
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import apiClient from '@/api/client';
 import { meetsRoleRequirement } from '@/components/auth/ProtectedRoute';
 import {
   UserGroupIcon,
@@ -57,78 +58,77 @@ interface AvailableUser {
   role: 'manager' | 'analyst';
 }
 
-// Mock data (would be fetched from API)
-const MOCK_CLIENTS: ClientWithAssignments[] = [
-  {
-    id: 1,
-    name: 'Acme Commerce',
-    domain: 'acme.com',
-    status: 'active',
-    campaign_count: 12,
-    assignments: [
-      {
-        id: 1,
-        email: 'sarah@stratum.ai',
-        full_name: 'Sarah Manager',
-        role: 'manager',
-        is_primary: true,
-        assigned_at: '2025-01-15',
-      },
-      {
-        id: 2,
-        email: 'john@stratum.ai',
-        full_name: 'John Analyst',
-        role: 'analyst',
-        is_primary: false,
-        assigned_at: '2025-02-01',
-      },
-    ],
-  },
-  {
-    id: 2,
-    name: 'TechStart Inc',
-    domain: 'techstart.io',
-    status: 'active',
-    campaign_count: 5,
-    assignments: [
-      {
-        id: 3,
-        email: 'mike@stratum.ai',
-        full_name: 'Mike Manager',
-        role: 'manager',
-        is_primary: true,
-        assigned_at: '2025-01-20',
-      },
-    ],
-  },
-  {
-    id: 3,
-    name: 'GreenLeaf Co',
-    domain: 'greenleaf.co',
-    status: 'active',
-    campaign_count: 8,
-    assignments: [],
-  },
-];
-
-const MOCK_AVAILABLE_USERS: AvailableUser[] = [
-  { id: 1, email: 'sarah@stratum.ai', full_name: 'Sarah Manager', role: 'manager' },
-  { id: 2, email: 'john@stratum.ai', full_name: 'John Analyst', role: 'analyst' },
-  { id: 3, email: 'mike@stratum.ai', full_name: 'Mike Manager', role: 'manager' },
-  { id: 4, email: 'anna@stratum.ai', full_name: 'Anna Analyst', role: 'analyst' },
-  { id: 5, email: 'tom@stratum.ai', full_name: 'Tom Manager', role: 'manager' },
-];
 
 export default function ClientAssignments() {
   const { user } = useAuth();
-  const [clients, setClients] = useState<ClientWithAssignments[]>(MOCK_CLIENTS);
+  const [clients, setClients] = useState<ClientWithAssignments[]>([]);
+  const [availableUsers, setAvailableUsers] = useState<AvailableUser[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedClient, setSelectedClient] = useState<ClientWithAssignments | null>(null);
   const [assignSearch, setAssignSearch] = useState('');
   const [confirmRemove, setConfirmRemove] = useState<{ clientId: number; userId: number } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const isAdmin = user?.role && meetsRoleRequirement(user.role, 'admin');
+
+  // Fetch clients and available users from API
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const [clientsRes, usersRes] = await Promise.all([
+        apiClient.get('/clients', { params: { include_assignments: true } }),
+        apiClient.get('/users', { params: { roles: 'manager,analyst', limit: 100 } }),
+      ]);
+
+      const clientData = clientsRes.data?.data || clientsRes.data || [];
+      const userData = usersRes.data?.data || usersRes.data?.items || usersRes.data || [];
+
+      setClients(
+        (Array.isArray(clientData) ? clientData : []).map((c: any) => ({
+          id: c.id,
+          name: c.name || '—',
+          domain: c.domain || null,
+          status: c.status || 'active',
+          campaign_count: c.campaign_count ?? 0,
+          assignments: (c.assignments || []).map((a: any) => ({
+            id: a.id || a.user_id,
+            email: a.email || '',
+            full_name: a.full_name || a.name || '',
+            role: a.role || 'analyst',
+            is_primary: a.is_primary ?? false,
+            assigned_at: a.assigned_at || a.created_at || '',
+          })),
+        }))
+      );
+
+      setAvailableUsers(
+        (Array.isArray(userData) ? userData : []).map((u: any) => ({
+          id: u.id,
+          email: u.email || '',
+          full_name: u.full_name || u.name || '',
+          role: u.role || 'analyst',
+        }))
+      );
+    } catch (err: any) {
+      const status = err?.response?.status;
+      if (status === 401 || status === 403) {
+        setError('Authentication required. Please sign in again.');
+      } else {
+        setError('Unable to load client assignment data.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchData();
+    }
+  }, [isAdmin, fetchData]);
 
   const filteredClients = clients.filter(
     (c) =>
@@ -144,40 +144,56 @@ export default function ClientAssignments() {
 
   const getAvailableUsersForClient = (client: ClientWithAssignments) => {
     const assignedIds = new Set(client.assignments.map((a) => a.id));
-    return MOCK_AVAILABLE_USERS.filter(
+    return availableUsers.filter(
       (u) =>
         !assignedIds.has(u.id) &&
         u.full_name.toLowerCase().includes(assignSearch.toLowerCase())
     );
   };
 
-  const handleAssignUser = (clientId: number, userId: number) => {
-    const availableUser = MOCK_AVAILABLE_USERS.find((u) => u.id === userId);
-    if (!availableUser) return;
+  const handleAssignUser = async (clientId: number, userId: number) => {
+    const user = availableUsers.find((u) => u.id === userId);
+    if (!user) return;
 
-    setClients((prev) =>
-      prev.map((c) => {
-        if (c.id !== clientId) return c;
-        return {
-          ...c,
-          assignments: [
-            ...c.assignments,
-            {
-              id: availableUser.id,
-              email: availableUser.email,
-              full_name: availableUser.full_name,
-              role: availableUser.role,
-              is_primary: c.assignments.length === 0, // First assignment is primary
-              assigned_at: new Date().toISOString().split('T')[0],
-            },
-          ],
-        };
-      })
-    );
-    // In production: POST /api/v1/clients/{clientId}/assignments { user_id, is_primary }
+    const isPrimary = (clients.find((c) => c.id === clientId)?.assignments.length ?? 0) === 0;
+
+    try {
+      await apiClient.post(`/clients/${clientId}/assignments`, {
+        user_id: userId,
+        is_primary: isPrimary,
+      });
+
+      // Optimistic update
+      setClients((prev) =>
+        prev.map((c) => {
+          if (c.id !== clientId) return c;
+          return {
+            ...c,
+            assignments: [
+              ...c.assignments,
+              {
+                id: user.id,
+                email: user.email,
+                full_name: user.full_name,
+                role: user.role,
+                is_primary: isPrimary,
+                assigned_at: new Date().toISOString().split('T')[0],
+              },
+            ],
+          };
+        })
+      );
+    } catch {
+      // Silently handle — user stays unassigned
+    }
   };
 
-  const handleRemoveAssignment = (clientId: number, userId: number) => {
+  const handleRemoveAssignment = async (clientId: number, userId: number) => {
+    try {
+      await apiClient.delete(`/clients/${clientId}/assignments/${userId}`);
+    } catch {
+      // Continue with optimistic removal
+    }
     setClients((prev) =>
       prev.map((c) => {
         if (c.id !== clientId) return c;
@@ -188,10 +204,14 @@ export default function ClientAssignments() {
       })
     );
     setConfirmRemove(null);
-    // In production: DELETE /api/v1/clients/{clientId}/assignments/{userId}
   };
 
-  const handleTogglePrimary = (clientId: number, userId: number) => {
+  const handleTogglePrimary = async (clientId: number, userId: number) => {
+    try {
+      await apiClient.patch(`/clients/${clientId}/assignments/${userId}`, { is_primary: true });
+    } catch {
+      // Continue with optimistic update
+    }
     setClients((prev) =>
       prev.map((c) => {
         if (c.id !== clientId) return c;
@@ -204,7 +224,6 @@ export default function ClientAssignments() {
         };
       })
     );
-    // In production: PATCH /api/v1/clients/{clientId}/assignments/{userId} { is_primary: true }
   };
 
   const roleBadge = (role: string) => {
@@ -230,6 +249,35 @@ export default function ClientAssignments() {
           <p className="text-muted-foreground text-sm mt-1">
             Only Admin and Super Admin users can manage client assignments.
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-sm text-muted-foreground">Loading client assignments...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <ExclamationTriangleIcon className="w-12 h-12 text-red-400 mx-auto mb-3" />
+          <h3 className="text-lg font-medium text-foreground">Error</h3>
+          <p className="text-muted-foreground text-sm mt-1">{error}</p>
+          <button
+            onClick={fetchData}
+            className="mt-4 px-4 py-2 rounded-lg bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );

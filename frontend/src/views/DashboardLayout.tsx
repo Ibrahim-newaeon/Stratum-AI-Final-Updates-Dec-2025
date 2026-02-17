@@ -83,7 +83,7 @@ const SIDEBAR_VISIBILITY: Record<AppRole, string[]> = {
     'settings', 'users', 'tenants', 'audit', 'billing', 'profile',
     'cdp', 'knowledge-graph', 'newsletter', 'superadmin',
     'benchmarks', 'competitors', 'custom-autopilot', 'custom-reports',
-    'integrations', 'data-quality', 'emq', 'stratum', 'whatsapp',
+    'integrations', 'stratum', 'whatsapp',
   ],
   admin: [
     'dashboard', 'clients', 'campaigns', 'demographics', 'analytics',
@@ -91,7 +91,7 @@ const SIDEBAR_VISIBILITY: Record<AppRole, string[]> = {
     'settings', 'users', 'audit', 'billing', 'profile',
     'cdp', 'knowledge-graph', 'newsletter',
     'benchmarks', 'competitors', 'custom-autopilot', 'custom-reports',
-    'integrations', 'data-quality', 'emq', 'stratum', 'whatsapp',
+    'integrations', 'stratum', 'whatsapp',
     'tenants',
   ],
   manager: [
@@ -695,13 +695,6 @@ export default function DashboardLayout() {
                 { href: '/dashboard/tenants', icon: BuildingOffice2Icon, name: 'nav.tenants', section: 'tenants' },
                 { href: '/dashboard/ml-training', icon: CpuChipIcon, name: 'nav.mlTraining', section: 'ml' },
                 { href: '/dashboard/integrations', icon: SignalIcon, name: 'nav.integrations', section: 'integrations' },
-                { href: '/dashboard/data-quality', icon: ChartPieIcon, name: 'nav.dataQuality', section: 'data-quality' },
-                {
-                  href: '/dashboard/emq-dashboard',
-                  icon: CircleStackIcon,
-                  name: 'nav.emqDashboard',
-                  section: 'emq',
-                },
                 {
                   href: '/dashboard/settings',
                   icon: CogIcon,

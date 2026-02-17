@@ -6,8 +6,9 @@
  * Uses placeholder data until connected to real APIs.
  */
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import apiClient from '@/api/client';
 import {
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
@@ -65,90 +66,14 @@ interface ClientRequest {
   description: string;
 }
 
-// ── Placeholder Data ───────────────────────────────────────────────────────
-const MOCK_METRICS: MetricCard[] = [
-  {
-    title: 'ROAS',
-    value: '4.2x',
-    change: '+0.3x vs last month',
-    changeType: 'positive',
-    icon: ArrowTrendingUpIcon,
-  },
-  {
-    title: 'Total Spend',
-    value: '$24,580',
-    change: '+12% vs last month',
-    changeType: 'neutral',
-    icon: CurrencyDollarIcon,
-  },
-  {
-    title: 'Conversions',
-    value: '1,847',
-    change: '+18% vs last month',
-    changeType: 'positive',
-    icon: ChartBarIcon,
-  },
-  {
-    title: 'CTR',
-    value: '3.24%',
-    change: '-0.1% vs last month',
-    changeType: 'negative',
-    icon: CursorArrowRaysIcon,
-  },
-];
-
-const MOCK_CAMPAIGNS: Campaign[] = [
-  {
-    id: 'c1',
-    name: 'Summer Sale - Search',
-    platform: 'Google Ads',
-    status: 'active',
-    spend: '$8,420',
-    roas: '5.1x',
-    conversions: 642,
-    lastUpdated: '2 hours ago',
-  },
-  {
-    id: 'c2',
-    name: 'Brand Awareness - Social',
-    platform: 'Meta Ads',
-    status: 'active',
-    spend: '$6,230',
-    roas: '3.8x',
-    conversions: 489,
-    lastUpdated: '4 hours ago',
-  },
-  {
-    id: 'c3',
-    name: 'Retargeting - Display',
-    platform: 'Google Ads',
-    status: 'active',
-    spend: '$4,150',
-    roas: '4.5x',
-    conversions: 384,
-    lastUpdated: '6 hours ago',
-  },
-  {
-    id: 'c4',
-    name: 'Product Launch - Video',
-    platform: 'TikTok Ads',
-    status: 'paused',
-    spend: '$3,280',
-    roas: '2.9x',
-    conversions: 198,
-    lastUpdated: '1 day ago',
-  },
-  {
-    id: 'c5',
-    name: 'Holiday Promo - Shopping',
-    platform: 'Google Ads',
-    status: 'completed',
-    spend: '$2,500',
-    roas: '6.2x',
-    conversions: 134,
-    lastUpdated: '3 days ago',
-  },
-];
+// ── Icon mapping for metrics ──────────────────────────────────────────────
+const METRIC_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  roas: ArrowTrendingUpIcon,
+  total_spend: CurrencyDollarIcon,
+  spend: CurrencyDollarIcon,
+  conversions: ChartBarIcon,
+  ctr: CursorArrowRaysIcon,
+};
 
 const REQUEST_TYPES: { value: ClientRequest['type']; label: string }[] = [
   { value: 'budget_change', label: 'Budget Change' },
@@ -181,7 +106,96 @@ export default function PortalDashboard() {
     description: '',
   });
 
+  // ── Data state ──
+  const [metrics, setMetrics] = useState<MetricCard[]>([]);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const clientName = user?.name || user?.organization || 'Client';
+
+  // ── Fetch dashboard data ──
+  const fetchDashboardData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Fetch overview metrics
+      const overviewRes = await apiClient.get('/dashboard/overview');
+      const overview = overviewRes.data?.data || overviewRes.data;
+
+      // Map API response to MetricCard format
+      const mappedMetrics: MetricCard[] = [];
+      if (overview) {
+        if (overview.roas !== undefined) {
+          mappedMetrics.push({
+            title: 'ROAS',
+            value: `${Number(overview.roas || 0).toFixed(1)}x`,
+            change: overview.roas_change ? `${overview.roas_change > 0 ? '+' : ''}${overview.roas_change}x vs last month` : '',
+            changeType: (overview.roas_change ?? 0) > 0 ? 'positive' : (overview.roas_change ?? 0) < 0 ? 'negative' : 'neutral',
+            icon: ArrowTrendingUpIcon,
+          });
+        }
+        if (overview.total_spend !== undefined) {
+          const spend = Number(overview.total_spend || 0);
+          mappedMetrics.push({
+            title: 'Total Spend',
+            value: `$${spend.toLocaleString()}`,
+            change: overview.spend_change ? `${overview.spend_change > 0 ? '+' : ''}${overview.spend_change}% vs last month` : '',
+            changeType: 'neutral',
+            icon: CurrencyDollarIcon,
+          });
+        }
+        if (overview.conversions !== undefined) {
+          mappedMetrics.push({
+            title: 'Conversions',
+            value: Number(overview.conversions || 0).toLocaleString(),
+            change: overview.conversions_change ? `${overview.conversions_change > 0 ? '+' : ''}${overview.conversions_change}% vs last month` : '',
+            changeType: (overview.conversions_change ?? 0) > 0 ? 'positive' : (overview.conversions_change ?? 0) < 0 ? 'negative' : 'neutral',
+            icon: ChartBarIcon,
+          });
+        }
+        if (overview.ctr !== undefined) {
+          mappedMetrics.push({
+            title: 'CTR',
+            value: `${Number(overview.ctr || 0).toFixed(2)}%`,
+            change: overview.ctr_change ? `${overview.ctr_change > 0 ? '+' : ''}${overview.ctr_change}% vs last month` : '',
+            changeType: (overview.ctr_change ?? 0) > 0 ? 'positive' : (overview.ctr_change ?? 0) < 0 ? 'negative' : 'neutral',
+            icon: CursorArrowRaysIcon,
+          });
+        }
+      }
+      setMetrics(mappedMetrics);
+
+      // Fetch campaigns
+      const campaignsRes = await apiClient.get('/campaigns', { params: { limit: 10 } });
+      const campaignData = campaignsRes.data?.data || campaignsRes.data?.items || [];
+      const mappedCampaigns: Campaign[] = (Array.isArray(campaignData) ? campaignData : []).map((c: any) => ({
+        id: String(c.id),
+        name: c.name || '—',
+        platform: c.platform || '—',
+        status: c.status === 'active' ? 'active' : c.status === 'paused' ? 'paused' : 'completed',
+        spend: c.daily_budget_cents ? `$${(c.daily_budget_cents / 100).toLocaleString()}` : '—',
+        roas: c.roas ? `${Number(c.roas).toFixed(1)}x` : '—',
+        conversions: c.conversions ?? 0,
+        lastUpdated: c.updated_at ? new Date(c.updated_at).toLocaleDateString() : '—',
+      }));
+      setCampaigns(mappedCampaigns);
+    } catch (err: any) {
+      const status = err?.response?.status;
+      if (status === 401 || status === 403) {
+        setError('Authentication required. Please sign in again.');
+      } else {
+        setError('Unable to load dashboard data. Please try again.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
   const handleSubmitRequest = () => {
     // Placeholder: will connect to real API later
@@ -206,9 +220,40 @@ export default function PortalDashboard() {
         </p>
       </div>
 
+      {/* ── Loading State ──────────────────────────────────────────────── */}
+      {isLoading && (
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin mx-auto mb-3" style={{ borderColor: theme.primary, borderTopColor: 'transparent' }} />
+            <p className="text-sm" style={{ color: theme.textSecondary }}>Loading dashboard...</p>
+          </div>
+        </div>
+      )}
+
+      {/* ── Error State ────────────────────────────────────────────────── */}
+      {!isLoading && error && (
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <p className="text-sm mb-3" style={{ color: theme.danger }}>{error}</p>
+            <button
+              onClick={fetchDashboardData}
+              className="px-4 py-2 rounded-lg text-sm font-medium"
+              style={{ background: theme.primaryLight, color: theme.primary }}
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── Metric Cards ───────────────────────────────────────────────── */}
+      {!isLoading && !error && (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {MOCK_METRICS.map((metric) => {
+        {metrics.length === 0 ? (
+          <div className="col-span-full text-center py-8">
+            <p className="text-sm" style={{ color: theme.textMuted }}>No metrics data available yet.</p>
+          </div>
+        ) : metrics.map((metric) => {
           const Icon = metric.icon;
           return (
             <div
@@ -258,8 +303,10 @@ export default function PortalDashboard() {
           );
         })}
       </div>
+      )}
 
       {/* ── Recent Campaigns ───────────────────────────────────────────── */}
+      {!isLoading && !error && (
       <div
         className="rounded-xl overflow-hidden mb-6"
         style={{
@@ -275,7 +322,7 @@ export default function PortalDashboard() {
             </h2>
           </div>
           <span className="text-xs" style={{ color: theme.textMuted }}>
-            {MOCK_CAMPAIGNS.length} campaigns
+            {campaigns.length} campaigns
           </span>
         </div>
 
@@ -293,7 +340,12 @@ export default function PortalDashboard() {
         </div>
 
         {/* Rows */}
-        {MOCK_CAMPAIGNS.map((campaign) => {
+        {campaigns.length === 0 ? (
+          <div className="px-6 py-12 text-center">
+            <MegaphoneIcon className="h-8 w-8 mx-auto mb-2" style={{ color: theme.textMuted }} />
+            <p className="text-sm" style={{ color: theme.textMuted }}>No campaigns found.</p>
+          </div>
+        ) : campaigns.map((campaign) => {
           const badge = statusBadge(campaign.status);
           return (
             <div
@@ -343,6 +395,7 @@ export default function PortalDashboard() {
           </span>
         </div>
       </div>
+      )}
 
       {/* ── Request Changes Button ─────────────────────────────────────── */}
       <div className="flex justify-end">

@@ -46,8 +46,6 @@ const Settings = lazy(() => import('./views/Settings'));
 const Tenants = lazy(() => import('./views/Tenants'));
 const MLTraining = lazy(() => import('./views/MLTraining'));
 const CAPISetup = lazy(() => import('./views/CAPISetup'));
-const DataQuality = lazy(() => import('./views/DataQuality'));
-const DataQualityDashboard = lazy(() => import('./views/DataQualityDashboard'));
 const SuperadminDashboard = lazy(() => import('./views/SuperadminDashboard'));
 const CDPCalculator = lazy(() => import('./views/CDPCalculator'));
 
@@ -842,22 +840,6 @@ function App() {
                         element={
                           <Suspense fallback={<LoadingSpinner />}>
                             <CAPISetup />
-                          </Suspense>
-                        }
-                      />
-                      <Route
-                        path="data-quality"
-                        element={
-                          <Suspense fallback={<LoadingSpinner />}>
-                            <DataQuality />
-                          </Suspense>
-                        }
-                      />
-                      <Route
-                        path="emq-dashboard"
-                        element={
-                          <Suspense fallback={<LoadingSpinner />}>
-                            <DataQualityDashboard />
                           </Suspense>
                         }
                       />
