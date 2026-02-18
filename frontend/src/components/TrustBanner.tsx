@@ -6,7 +6,7 @@
  */
 
 import React from 'react'
-import { useTrustStatus, getStatusColor, getStatusLabel, TrustBanner as TrustBannerType } from '@/api/trustLayer'
+import { useTrustStatus, getStatusLabel, TrustBanner as TrustBannerType } from '@/api/trustLayer'
 import { useCanFeature } from '@/stores/featureFlagsStore'
 
 // =============================================================================
@@ -142,7 +142,7 @@ const StatusIndicator: React.FC<{ status: string; label: string }> = ({ status, 
 export const TrustBanner: React.FC<TrustBannerProps> = ({
   tenantId,
   date,
-  showDetails = true,
+  showDetails: _showDetails = true,
   onViewDetails,
 }) => {
   const canSignalHealth = useCanFeature('signal_health')
@@ -172,7 +172,6 @@ export const TrustBanner: React.FC<TrustBannerProps> = ({
   }
 
   const hasBanners = trustStatus.banners.length > 0
-  const showSummary = showDetails && (trustStatus.signal_health || trustStatus.attribution_variance)
 
   return (
     <div className="space-y-3">

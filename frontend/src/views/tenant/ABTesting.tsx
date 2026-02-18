@@ -10,7 +10,6 @@ import {
   useABTests,
   useABTest,
   useABTestResults,
-  useCreateABTest,
   useStartABTest,
   usePauseABTest,
   useStopABTest,
@@ -55,21 +54,21 @@ const testTypeLabels: Record<TestType, string> = {
 }
 
 export default function ABTesting() {
-  const { tenantId } = useParams<{ tenantId: string }>()
+  const { tenantId: _tenantId } = useParams<{ tenantId: string }>()
   const [activeTab, setActiveTab] = useState<TabType>('active')
   const [selectedTestId, setSelectedTestId] = useState<string | null>(null)
-  const [showNewTestModal, setShowNewTestModal] = useState(false)
+  const [_showNewTestModal, setShowNewTestModal] = useState(false)
   const [powerAnalysisParams, setPowerAnalysisParams] = useState({
     baselineConversionRate: 2.5,
     minimumDetectableEffect: 10,
-    confidenceLevel: 0.95 as const,
+    confidenceLevel: 0.95 as 0.9 | 0.95 | 0.99,
     dailyTraffic: 10000,
   })
 
   const { data: activeTests } = useABTests({ status: 'running' })
   const { data: completedTests } = useABTests({ status: 'completed' })
   const { data: draftTests } = useABTests({ status: 'draft' })
-  const { data: selectedTest } = useABTest(selectedTestId || '')
+  const { data: _selectedTest } = useABTest(selectedTestId || '')
   const { data: testResults } = useABTestResults(selectedTestId || '')
   const { data: ltvImpact } = useLTVImpact(selectedTestId || '')
 

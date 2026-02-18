@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react'
 import CountUp from 'react-countup'
-import { TrendingUp, TrendingDown, MoreHorizontal, Eye, Bell, Download } from 'lucide-react'
+import { TrendingUp, TrendingDown, Eye, Bell, Download } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface KPICardProps {

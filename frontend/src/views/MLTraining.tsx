@@ -56,7 +56,7 @@ export default function MLTraining() {
   const [trainingFiles, setTrainingFiles] = useState<TrainingFile[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [isTraining, setIsTraining] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState(0)
+  const [_uploadProgress, setUploadProgress] = useState(0)
   const [trainingResult, setTrainingResult] = useState<TrainingResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)

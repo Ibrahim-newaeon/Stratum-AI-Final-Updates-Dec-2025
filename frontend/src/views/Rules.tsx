@@ -7,14 +7,11 @@ import {
   Play,
   Pause,
   Edit,
-  Trash2,
   Copy,
   Zap,
   Clock,
   CheckCircle2,
-  XCircle,
   ChevronRight,
-  AlertTriangle,
   Bell,
   Tag,
   DollarSign,
@@ -22,9 +19,8 @@ import {
   MessageCircle,
   Loader2,
 } from 'lucide-react'
-import { cn, formatCompactNumber } from '@/lib/utils'
-import { useRules, useToggleRule, useDeleteRule, useCreateRule } from '@/api/hooks'
-import { useTenantStore } from '@/stores/tenantStore'
+import { cn } from '@/lib/utils'
+import { useRules, useToggleRule } from '@/api/hooks'
 
 type RuleStatus = 'active' | 'paused' | 'draft'
 type RuleAction = 'apply_label' | 'send_alert' | 'pause_campaign' | 'adjust_budget' | 'notify_slack' | 'notify_whatsapp'
@@ -148,14 +144,9 @@ export function Rules() {
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [showCreateModal, setShowCreateModal] = useState(false)
 
-  // Get tenant ID from tenant store
-  const tenantId = useTenantStore((state) => state.tenantId) ?? 1
-
   // Fetch rules from API
-  const { data: rulesData, isLoading } = useRules(tenantId)
-  const toggleRule = useToggleRule(tenantId)
-  const deleteRule = useDeleteRule(tenantId)
-  const createRule = useCreateRule(tenantId)
+  const { data: rulesData, isLoading } = useRules()
+  const toggleRule = useToggleRule()
 
   // Transform API data or fall back to mock
   const rules = useMemo((): Rule[] => {
@@ -178,9 +169,8 @@ export function Rules() {
   }, [rulesData])
 
   // Handle toggle rule status
-  const handleToggleRule = async (ruleId: number, currentStatus: RuleStatus) => {
-    const enabled = currentStatus !== 'active'
-    await toggleRule.mutateAsync({ ruleId: ruleId.toString(), enabled })
+  const handleToggleRule = async (ruleId: number, _currentStatus: RuleStatus) => {
+    await toggleRule.mutateAsync(ruleId.toString())
   }
 
   const filteredRules = rules.filter((rule) => {

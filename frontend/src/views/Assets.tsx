@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Search,
-  Filter,
   Upload,
   Grid,
   List,

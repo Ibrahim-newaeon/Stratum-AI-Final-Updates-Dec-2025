@@ -13,7 +13,6 @@ import {
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
   CalendarIcon,
-  FunnelIcon,
   InformationCircleIcon,
 } from '@heroicons/react/24/outline'
 
@@ -40,11 +39,11 @@ interface DriverBenchmark {
 }
 
 export default function Benchmarks() {
-  const [platform, setPlatform] = useState<Platform>('all')
+  const [platform, _setPlatform] = useState<Platform>('all')
   const [timeRange, setTimeRange] = useState<TimeRange>('30d')
   const [selectedMetric, setSelectedMetric] = useState<Metric>('emq')
 
-  const { data: benchmarksData } = useEmqBenchmarks(new Date().toISOString().split('T')[0], platform === 'all' ? undefined : platform)
+  const { data: _benchmarksData } = useEmqBenchmarks(new Date().toISOString().split('T')[0], platform === 'all' ? undefined : platform)
 
   // Sample benchmark data
   const platformBenchmarks: BenchmarkData[] = [

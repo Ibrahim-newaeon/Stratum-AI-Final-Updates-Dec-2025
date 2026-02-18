@@ -20,7 +20,6 @@ import {
   ChartBarIcon,
   ArrowPathIcon,
   EllipsisHorizontalIcon,
-  ExclamationTriangleIcon,
   XMarkIcon,
   CheckIcon,
   TrashIcon,
@@ -81,7 +80,7 @@ const PLATFORMS = [
 ]
 
 export function Competitors() {
-  const { t } = useTranslation()
+  const { t: _t } = useTranslation()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCompetitor, setSelectedCompetitor] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)

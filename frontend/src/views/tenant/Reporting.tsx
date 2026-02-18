@@ -14,11 +14,9 @@ import {
   useGenerateReport,
   usePauseReportSchedule,
   useResumeReportSchedule,
-  useCreateReportTemplate,
 } from '@/api/hooks'
 import {
   DocumentTextIcon,
-  CalendarIcon,
   PlayIcon,
   PauseIcon,
   PlusIcon,
@@ -34,7 +32,7 @@ import { cn } from '@/lib/utils'
 type TabType = 'templates' | 'schedules' | 'history' | 'delivery'
 
 export default function Reporting() {
-  const { tenantId } = useParams<{ tenantId: string }>()
+  const { tenantId: _tenantId } = useParams<{ tenantId: string }>()
   const [activeTab, setActiveTab] = useState<TabType>('templates')
 
   const { data: templates } = useReportTemplates()
@@ -114,7 +112,7 @@ export default function Reporting() {
               )}
 
               <div className="flex flex-wrap gap-2 mb-4">
-                {template.sections.map((section, idx) => (
+                {template.config?.sections?.map((section: string, idx: number) => (
                   <span
                     key={idx}
                     className="px-2 py-1 rounded-full text-xs bg-muted"
@@ -126,10 +124,10 @@ export default function Reporting() {
 
               <div className="flex items-center justify-between pt-4 border-t">
                 <span className="text-xs text-muted-foreground">
-                  Format: {template.outputFormat.toUpperCase()}
+                  Format: {template.defaultFormat.toUpperCase()}
                 </span>
                 <button
-                  onClick={() => generateReport.mutate({ templateId: template.id })}
+                  onClick={() => generateReport.mutate({ templateId: template.id, startDate: new Date().toISOString().split('T')[0], endDate: new Date().toISOString().split('T')[0] })}
                   disabled={generateReport.isPending}
                   className="flex items-center gap-1 text-sm text-primary hover:underline"
                 >
@@ -213,7 +211,7 @@ export default function Reporting() {
                         </button>
                       )}
                       <button
-                        onClick={() => generateReport.mutate({ templateId: schedule.templateId })}
+                        onClick={() => generateReport.mutate({ templateId: schedule.templateId, startDate: new Date().toISOString().split('T')[0], endDate: new Date().toISOString().split('T')[0] })}
                         className="p-1 rounded hover:bg-muted"
                         title="Run Now"
                       >
@@ -242,22 +240,22 @@ export default function Reporting() {
               </tr>
             </thead>
             <tbody className="divide-y">
-              {executions?.items.map((execution) => (
+              {executions?.map((execution) => (
                 <tr key={execution.id} className="hover:bg-muted/30">
                   <td className="px-4 py-3">
                     <p className="font-medium">
                       {templates?.find((t) => t.id === execution.templateId)?.name || 'Unknown'}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {execution.triggeredBy === 'schedule' ? 'Scheduled' : 'Manual'}
+                      {execution.executionType === 'scheduled' ? 'Scheduled' : 'Manual'}
                     </p>
                   </td>
                   <td className="px-4 py-3 text-sm">
                     {new Date(execution.startedAt).toLocaleString()}
                   </td>
                   <td className="px-4 py-3 text-sm">
-                    {new Date(execution.periodStart).toLocaleDateString()} -{' '}
-                    {new Date(execution.periodEnd).toLocaleDateString()}
+                    {new Date(execution.dateRangeStart).toLocaleDateString()} -{' '}
+                    {new Date(execution.dateRangeEnd).toLocaleDateString()}
                   </td>
                   <td className="px-4 py-3 text-center">
                     {execution.status === 'completed' ? (
@@ -277,9 +275,9 @@ export default function Reporting() {
                     )}
                   </td>
                   <td className="px-4 py-3 text-center">
-                    {execution.outputUrl && (
+                    {execution.fileUrl && (
                       <a
-                        href={execution.outputUrl}
+                        href={execution.fileUrl}
                         className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
                         target="_blank"
                         rel="noopener noreferrer"
@@ -316,12 +314,12 @@ export default function Reporting() {
               <span
                 className={cn(
                   'px-2 py-1 rounded-full text-xs',
-                  deliveryConfigs?.find((c) => c.channel === 'email')?.isEnabled
+                  deliveryConfigs?.find((c) => c.channel === 'email')?.isActive
                     ? 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
                     : 'bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300'
                 )}
               >
-                {deliveryConfigs?.find((c) => c.channel === 'email')?.isEnabled ? 'Enabled' : 'Disabled'}
+                {deliveryConfigs?.find((c) => c.channel === 'email')?.isActive ? 'Enabled' : 'Disabled'}
               </span>
             </div>
             <div className="p-4 rounded-lg bg-muted/50 text-sm">
@@ -348,12 +346,12 @@ export default function Reporting() {
               <span
                 className={cn(
                   'px-2 py-1 rounded-full text-xs',
-                  deliveryConfigs?.find((c) => c.channel === 'slack')?.isEnabled
+                  deliveryConfigs?.find((c) => c.channel === 'slack')?.isActive
                     ? 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
                     : 'bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300'
                 )}
               >
-                {deliveryConfigs?.find((c) => c.channel === 'slack')?.isEnabled ? 'Enabled' : 'Disabled'}
+                {deliveryConfigs?.find((c) => c.channel === 'slack')?.isActive ? 'Enabled' : 'Disabled'}
               </span>
             </div>
             <div className="p-4 rounded-lg bg-muted/50 text-sm">
@@ -380,12 +378,12 @@ export default function Reporting() {
               <span
                 className={cn(
                   'px-2 py-1 rounded-full text-xs',
-                  deliveryConfigs?.find((c) => c.channel === 'whatsapp')?.isEnabled
+                  deliveryConfigs?.find((c) => (c.channel as string) === 'whatsapp')?.isActive
                     ? 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
                     : 'bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300'
                 )}
               >
-                {deliveryConfigs?.find((c) => c.channel === 'whatsapp')?.isEnabled ? 'Enabled' : 'Disabled'}
+                {deliveryConfigs?.find((c) => (c.channel as string) === 'whatsapp')?.isActive ? 'Enabled' : 'Disabled'}
               </span>
             </div>
             <div className="p-4 rounded-lg bg-muted/50 text-sm">

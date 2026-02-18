@@ -16,7 +16,6 @@ import {
   UserIcon,
   ServerIcon,
   ShieldCheckIcon,
-  ExclamationTriangleIcon,
   DocumentTextIcon,
   ChevronDownIcon,
   ChevronUpIcon,

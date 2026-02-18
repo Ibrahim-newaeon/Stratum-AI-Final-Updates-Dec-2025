@@ -64,12 +64,12 @@ interface Scenario {
 }
 
 export function Predictions() {
-  const { t } = useTranslation()
+  const { t: _t } = useTranslation()
   const [activeTab, setActiveTab] = useState<'predictions' | 'optimization' | 'scenarios'>('predictions')
   const [timeHorizon, setTimeHorizon] = useState<'7d' | '30d' | '90d'>('30d')
   const [selectedCampaign, setSelectedCampaign] = useState<string>('all')
 
-  const { data: predictionsData, isLoading: predictionsLoading } = useLivePredictions()
+  const { data: predictionsData, isLoading: _predictionsLoading } = useLivePredictions()
   const { data: optimizationData } = useBudgetOptimization()
   const { data: alertsData } = usePredictionAlerts()
 
@@ -80,9 +80,9 @@ export function Predictions() {
     platform: 'Meta',
     metric: 'ROAS',
     currentValue: 3.2,
-    predictedValue: p.predictedRoas ?? 3.5,
+    predictedValue: p.predictedValue ?? 3.5,
     confidence: p.confidence ?? 85,
-    trend: (p.predictedRoas ?? 0) > 3.2 ? 'up' : 'down',
+    trend: (p.predictedValue ?? 0) > 3.2 ? 'up' : 'down',
     horizon: '30d',
     updatedAt: new Date(),
   })) ?? [
@@ -136,18 +136,18 @@ export function Predictions() {
     },
   ]
 
-  const optimizations: OptimizationRecommendation[] = optimizationData?.recommendations?.map((r) => ({
+  const optimizations: OptimizationRecommendation[] = optimizationData?.optimizedAllocation?.map((r) => ({
     id: r.campaignId,
     title: `Optimize ${r.campaignId}`,
-    description: r.action,
+    description: r.campaignName,
     currentBudget: r.currentBudget,
-    recommendedBudget: r.suggestedBudget,
+    recommendedBudget: r.recommendedBudget,
     expectedImpact: {
       metric: 'ROAS',
       change: r.expectedRoasChange,
       unit: '%',
     },
-    confidence: 85,
+    confidence: r.confidence ?? 85,
     priority: 'high' as const,
   })) ?? [
     {
@@ -189,10 +189,10 @@ export function Predictions() {
     { id: '4', name: 'Maximum Growth', budgetChange: 50, predictedRoas: 2.9, predictedRevenue: 240000, confidence: 62 },
   ]
 
-  const alerts = alertsData ?? [
+  const alerts = (alertsData?.map(a => ({ id: a.id, type: a.severity === 'warning' ? 'warning' : 'opportunity', message: a.message })) ?? [
     { id: '1', type: 'warning', message: 'Brand Awareness Q4 ROAS predicted to drop 10% in next 7 days' },
     { id: '2', type: 'opportunity', message: 'Summer Sale 2024 has scaling potential - consider budget increase' },
-  ]
+  ]) as Array<{ id: string; type: string; message: string }>
 
   const formatValue = (value: number, metric: string) => {
     if (metric === 'ROAS') return `${value.toFixed(1)}x`

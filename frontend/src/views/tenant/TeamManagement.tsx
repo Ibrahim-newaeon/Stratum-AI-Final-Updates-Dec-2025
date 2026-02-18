@@ -6,7 +6,7 @@
 
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useTenantUsers, useCreateUser, useUpdateUser, useDeleteUser } from '@/api/admin'
+import { useTenantUsers, useCreateUser, useUpdateUser, useDeleteUser, type UserRole } from '@/api/admin'
 import { useToast } from '@/components/ui/use-toast'
 import {
   UserPlusIcon,
@@ -60,7 +60,7 @@ export default function TeamManagement() {
     role: 'viewer',
   })
 
-  const users: TeamMember[] = usersData?.data || []
+  const users: TeamMember[] = (usersData as TeamMember[] | undefined) || []
 
   const filteredUsers = users.filter(
     (user) =>
@@ -83,8 +83,8 @@ export default function TeamManagement() {
         tenant_id: tenantIdNum,
         email: newUser.email,
         full_name: newUser.full_name,
-        role: newUser.role,
-      })
+        role: newUser.role as UserRole,
+      } as any)
       toast({
         title: 'Success',
         description: 'Team member invited successfully',
@@ -105,7 +105,7 @@ export default function TeamManagement() {
     try {
       await updateUserMutation.mutateAsync({
         id: userId,
-        role: newRole,
+        data: { role: newRole as UserRole },
       })
       toast({
         title: 'Success',

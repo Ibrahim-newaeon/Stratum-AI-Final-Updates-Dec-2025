@@ -46,7 +46,7 @@ import {
   DailyTrendChart,
   RegionalBreakdownChart,
 } from '@/components/charts'
-import { KPICardSkeleton, TableSkeleton, AlertSkeleton } from '@/components/ui/Skeleton'
+import { TableSkeleton, AlertSkeleton } from '@/components/ui/Skeleton'
 import { NoFilterResultsState } from '@/components/ui/EmptyState'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import {
@@ -56,7 +56,7 @@ import {
   PlatformSummary,
   DailyPerformance,
 } from '@/types/dashboard'
-import { useCampaigns, useAnomalies, useTenantOverview } from '@/api/hooks'
+import { useCampaigns, useTenantOverview } from '@/api/hooks'
 import { useTenantStore } from '@/stores/tenantStore'
 
 export function Overview() {
@@ -71,9 +71,8 @@ export function Overview() {
   const tenantId = useTenantStore((state) => state.tenantId) ?? 1
 
   // Fetch data from API with fallback to mock data
-  const { data: campaignsData, isLoading: campaignsLoading, refetch: refetchCampaigns } = useCampaigns(tenantId)
+  const { data: campaignsData, isLoading: campaignsLoading, refetch: refetchCampaigns } = useCampaigns()
   const { data: overviewData } = useTenantOverview(tenantId)
-  const { data: anomaliesData } = useAnomalies(tenantId)
 
   // Filter state
   const [filters, setFilters] = useState<DashboardFilters>({
@@ -117,19 +116,19 @@ export function Overview() {
     if (overviewData?.kpis) {
       const apiKpis = overviewData.kpis
       return {
-        totalSpend: apiKpis.total_spend ?? apiKpis.totalSpend ?? 0,
-        totalRevenue: apiKpis.total_revenue ?? apiKpis.totalRevenue ?? 0,
+        totalSpend: apiKpis.total_spend ?? 0,
+        totalRevenue: apiKpis.total_revenue ?? 0,
         overallROAS: apiKpis.roas ?? 0,
-        totalConversions: apiKpis.conversions ?? 0,
+        totalConversions: 0,
         overallCPA: apiKpis.cpa ?? 0,
-        avgCTR: apiKpis.ctr ?? 2.0,
-        avgCPM: apiKpis.cpm ?? 10.0,
-        totalImpressions: apiKpis.impressions ?? 0,
-        totalClicks: apiKpis.clicks ?? 0,
-        spendDelta: apiKpis.spendDelta ?? 12.5,
-        revenueDelta: apiKpis.revenueDelta ?? 23.4,
-        roasDelta: apiKpis.roasDelta ?? 9.7,
-        conversionsDelta: apiKpis.conversionsDelta ?? 21.5,
+        avgCTR: 2.0,
+        avgCPM: 0,
+        totalImpressions: 0,
+        totalClicks: 0,
+        spendDelta: 12.5,
+        revenueDelta: 23.4,
+        roasDelta: 9.7,
+        conversionsDelta: 21.5,
       }
     }
 

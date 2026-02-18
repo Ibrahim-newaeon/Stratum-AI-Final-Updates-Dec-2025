@@ -4,14 +4,13 @@ import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
-import { useVerifyEmail, useResendVerification } from '@/api/auth';
+import { useVerifyEmail } from '@/api/auth';
 
 export default function VerifyEmail() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
 
   const verifyMutation = useVerifyEmail();
-  const resendMutation = useResendVerification();
 
   const isLoading = verifyMutation.isPending;
   const isSuccess = verifyMutation.isSuccess;

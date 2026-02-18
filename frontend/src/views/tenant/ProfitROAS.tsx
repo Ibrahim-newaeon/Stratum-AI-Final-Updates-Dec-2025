@@ -13,7 +13,6 @@ import {
   useTrueROAS,
   useCOGSUploads,
   useUploadCOGS,
-  useCreateProduct,
 } from '@/api/hooks'
 import {
   CurrencyDollarIcon,
@@ -29,7 +28,7 @@ import { cn } from '@/lib/utils'
 type TabType = 'overview' | 'products' | 'margins' | 'cogs'
 
 export default function ProfitROAS() {
-  const { tenantId } = useParams<{ tenantId: string }>()
+  const { tenantId: _tenantId } = useParams<{ tenantId: string }>()
   const [activeTab, setActiveTab] = useState<TabType>('overview')
   const [dateRange] = useState({
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],

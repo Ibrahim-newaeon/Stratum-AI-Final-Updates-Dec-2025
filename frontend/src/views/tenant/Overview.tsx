@@ -51,12 +51,12 @@ export default function TenantOverview() {
   const updatePlaybookItem = useUpdatePlaybookItem(tid)
 
   // Fetch data
-  const { data: emqData, isLoading: emqLoading } = useEmqScore(tid)
+  const { data: emqData, isLoading: _emqLoading } = useEmqScore(tid)
   const { data: autopilotData } = useAutopilotState(tid)
   const { data: playbookData } = useEmqPlaybook(tid)
   const { data: incidentsData } = useEmqIncidents(tid, dateRange.start, dateRange.end)
-  const { data: overviewData } = useTenantOverview(tid.toString())
-  const { data: recommendationsData } = useTenantRecommendations(tid.toString())
+  const { data: overviewData } = useTenantOverview(tid)
+  const { data: recommendationsData } = useTenantRecommendations(tid)
 
   // Transform data for components
   const emqScore = emqData?.score ?? 85
@@ -67,7 +67,7 @@ export default function TenantOverview() {
     {
       id: 'spend',
       label: 'Spend',
-      value: overviewData?.kpis.totalSpend ?? 45000,
+      value: overviewData?.kpis.total_spend ?? 45000,
       format: 'currency',
       previousValue: 42000,
       confidence: emqScore,
@@ -75,7 +75,7 @@ export default function TenantOverview() {
     {
       id: 'revenue',
       label: 'Revenue',
-      value: overviewData?.kpis.totalRevenue ?? 180000,
+      value: overviewData?.kpis.total_revenue ?? 180000,
       format: 'currency',
       previousValue: 165000,
       confidence: emqScore,
@@ -99,18 +99,18 @@ export default function TenantOverview() {
     },
   ]
 
-  const playbook: PlaybookItem[] = playbookData ?? [
+  const playbook: PlaybookItem[] = (playbookData as unknown as PlaybookItem[]) ?? ([
     {
       id: '1',
       title: 'Fix Meta pixel data loss',
       description: 'Meta is reporting 15% lower conversions than GA4. Verify pixel implementation.',
       priority: 'critical',
-      owner: null,
+      owner: undefined,
       estimatedImpact: 8,
       estimatedTime: '30 min',
       platform: 'Meta',
       status: 'pending',
-      actionUrl: null,
+      actionUrl: undefined,
     },
     {
       id: '2',
@@ -122,9 +122,9 @@ export default function TenantOverview() {
       estimatedTime: '1 hour',
       platform: 'Google',
       status: 'in_progress',
-      actionUrl: null,
+      actionUrl: undefined,
     },
-  ]
+  ] as PlaybookItem[])
 
   const timeline: TimelineEvent[] = incidentsData?.map((i) => ({
     id: i.id,
@@ -159,21 +159,21 @@ export default function TenantOverview() {
     },
   ]
 
-  const actions: Action[] = recommendationsData?.map((r) => ({
+  const actions: Action[] = recommendationsData?.recommendations?.map((r) => ({
     id: r.id,
     type: r.priority === 'high' ? 'opportunity' : 'recommendation',
     title: r.title,
     description: r.description,
-    platform: r.platform ?? undefined,
+    platform: undefined,
     confidence: 85,
     estimatedImpact: {
       metric: 'ROAS',
-      value: r.expectedImpact,
+      value: r.expected_impact,
       unit: '%',
     },
-    status: r.status === 'approved' ? 'applied' : 'pending',
+    status: 'pending',
     priority: r.priority === 'high' ? 1 : 2,
-    createdAt: new Date(r.createdAt),
+    createdAt: new Date(),
   })) as Action[] ?? [
     {
       id: '1',

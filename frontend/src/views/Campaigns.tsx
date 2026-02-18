@@ -20,7 +20,6 @@ import {
 import { cn, formatCurrency, formatPercent, formatCompactNumber, getPlatformColor } from '@/lib/utils'
 import CampaignCreateModal from '@/components/campaigns/CampaignCreateModal'
 import { useCampaigns, usePauseCampaign, useActivateCampaign, useDeleteCampaign } from '@/api/hooks'
-import { useTenantStore } from '@/stores/tenantStore'
 
 interface Campaign {
   id: number
@@ -51,14 +50,11 @@ export function Campaigns() {
   const [selectedCampaigns, setSelectedCampaigns] = useState<number[]>([])
   const [createModalOpen, setCreateModalOpen] = useState(false)
 
-  // Get tenant ID from tenant store
-  const tenantId = useTenantStore((state) => state.tenantId) ?? 1
-
   // Fetch campaigns from API
-  const { data: campaignsData, isLoading } = useCampaigns(tenantId)
-  const pauseCampaign = usePauseCampaign(tenantId)
-  const activateCampaign = useActivateCampaign(tenantId)
-  const deleteCampaign = useDeleteCampaign(tenantId)
+  const { data: campaignsData, isLoading } = useCampaigns()
+  const pauseCampaign = usePauseCampaign()
+  const activateCampaign = useActivateCampaign()
+  const deleteCampaign = useDeleteCampaign()
 
   // Transform API data or fall back to mock
   const campaigns = useMemo((): Campaign[] => {

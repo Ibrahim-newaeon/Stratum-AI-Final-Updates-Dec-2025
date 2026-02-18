@@ -28,6 +28,7 @@ export interface FeatureFlags {
 
   // Platform
   superadmin_profitability: boolean
+  show_price_metrics: boolean
 
   // Limits
   max_campaigns: number

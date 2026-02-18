@@ -68,7 +68,7 @@ const getHealthStatus = (score: number) => {
 }
 
 export function LivePredictionsWidget({ className }: LivePredictionsWidgetProps) {
-  const { t } = useTranslation()
+  const { t: _t } = useTranslation()
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [portfolio, setPortfolio] = useState<PortfolioAnalysis | null>(null)

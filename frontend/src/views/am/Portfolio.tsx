@@ -18,10 +18,7 @@ import { useTenants } from '@/api/hooks'
 import {
   MagnifyingGlassIcon,
   FunnelIcon,
-  ChartBarIcon,
   ExclamationTriangleIcon,
-  CheckCircleIcon,
-  ClockIcon,
   ChevronRightIcon,
   DocumentArrowDownIcon,
   BellAlertIcon,
@@ -62,7 +59,7 @@ export default function Portfolio() {
   const { data: tenantsData } = useTenants()
 
   // Sample portfolio data
-  const tenants: TenantPortfolioItem[] = tenantsData?.map((t) => ({
+  const tenants: TenantPortfolioItem[] = tenantsData?.items?.map((t: any) => ({
     id: t.id,
     name: t.name,
     industry: t.industry || 'E-commerce',

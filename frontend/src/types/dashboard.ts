@@ -8,9 +8,9 @@
 export interface Campaign {
   campaign_id: string;
   campaign_name: string;
-  platform: 'Meta Ads' | 'Google Ads' | 'TikTok Ads' | 'Snapchat Ads';
+  platform: 'Meta Ads' | 'Google Ads' | 'TikTok Ads' | 'Snapchat Ads' | 'LinkedIn Ads';
   region: string;
-  campaign_type: 'Prospecting' | 'Retargeting' | 'Brand Awareness' | 'Conversion';
+  campaign_type: 'Prospecting' | 'Retargeting' | 'Brand Awareness' | 'Conversion' | 'Lead Generation';
   spend: number;
   revenue: number;
   conversions: number;

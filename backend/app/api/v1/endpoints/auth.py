@@ -37,7 +37,12 @@ from app.schemas import (
     UserCreate,
     UserResponse,
 )
-from app.services.whatsapp_client import get_whatsapp_client, WhatsAppAPIError
+from app.services.whatsapp_client import (
+    get_whatsapp_client,
+    is_whatsapp_configured,
+    WhatsAppAPIError,
+    WhatsAppNotConfiguredError,
+)
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -91,6 +96,14 @@ async def send_whatsapp_otp(
 
     The OTP is valid for 5 minutes and must be verified before registration.
     """
+    # Fail fast if WhatsApp is not configured
+    if not is_whatsapp_configured():
+        logger.error("WhatsApp OTP requested but WhatsApp credentials are not configured")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="WhatsApp messaging is not configured. Please contact your administrator.",
+        )
+
     phone_number = request.phone_number.strip()
 
     # Normalize phone number (ensure it starts with +)
@@ -118,7 +131,8 @@ async def send_whatsapp_otp(
         try:
             whatsapp_client = get_whatsapp_client()
             # Send template message with OTP
-            # Note: You need to create an approved WhatsApp template for OTP
+            # Note: You need to create an approved WhatsApp template named
+            # "verification_code" in Meta Business Suite before this works.
             await whatsapp_client.send_template_message(
                 recipient_phone=phone_number.replace('+', ''),  # Remove + for API
                 template_name="verification_code",  # Must be pre-approved template
@@ -133,10 +147,19 @@ async def send_whatsapp_otp(
                 ]
             )
             logger.info(f"WhatsApp OTP sent to {phone_number[:6]}***")
+        except WhatsAppNotConfiguredError:
+            logger.error(
+                "WhatsApp credentials not configured. OTP was stored in Redis "
+                "but could not be delivered. Set WHATSAPP_PHONE_NUMBER_ID and "
+                "WHATSAPP_ACCESS_TOKEN in your environment."
+            )
         except WhatsAppAPIError as e:
-            logger.error(f"WhatsApp API error sending OTP: {e.message}")
+            logger.error(
+                f"WhatsApp API error sending OTP to {phone_number[:6]}***: "
+                f"{e.message} (code={e.error_code}, subcode={e.error_subcode})"
+            )
         except Exception as e:
-            logger.error(f"Error sending WhatsApp OTP: {e}")
+            logger.error(f"Unexpected error sending WhatsApp OTP: {e}", exc_info=True)
 
     background_tasks.add_task(send_whatsapp_message)
 
