@@ -25,6 +25,7 @@ import {
   Cell,
 } from 'recharts';
 import { cn } from '@/lib/utils';
+import { usePriceMetrics } from '@/hooks/usePriceMetrics';
 import { useKGRevenueAttribution, useKGChannelBreakdown } from '@/api/knowledgeGraph';
 
 const fadeIn = {
@@ -40,6 +41,7 @@ const periods = [
 ];
 
 export default function KGRevenueAttribution() {
+  const { showPriceMetrics } = usePriceMetrics()
   const [period, setPeriod] = useState('30d');
 
   const { data: revenueData, isLoading: revenueLoading } = useKGRevenueAttribution(period);
@@ -130,11 +132,15 @@ export default function KGRevenueAttribution() {
 
         {/* Metric Cards */}
         <motion.div
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+          className={cn(
+            'grid grid-cols-1 sm:grid-cols-2 gap-4',
+            (showPriceMetrics ? metricCards.length : metricCards.filter(c => c.label !== 'Attributed Revenue').length) >= 4 && 'lg:grid-cols-4',
+            (showPriceMetrics ? metricCards.length : metricCards.filter(c => c.label !== 'Attributed Revenue').length) === 3 && 'lg:grid-cols-3'
+          )}
           {...fadeIn}
           transition={{ delay: 0.1 }}
         >
-          {metricCards.map((card) => (
+          {metricCards.filter(card => showPriceMetrics || card.label !== 'Attributed Revenue').map((card) => (
             <div
               key={card.label}
               className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm p-4"
@@ -153,8 +159,9 @@ export default function KGRevenueAttribution() {
         </motion.div>
 
         {/* Channel Breakdown + Model Comparison */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className={cn('grid grid-cols-1 gap-6', showPriceMetrics && 'lg:grid-cols-2')}>
           {/* Channel Breakdown Chart */}
+          {showPriceMetrics && (
           <motion.div
             className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm p-6"
             {...fadeIn}
@@ -205,6 +212,7 @@ export default function KGRevenueAttribution() {
               </BarChart>
             </ResponsiveContainer>
           </motion.div>
+          )}
 
           {/* Model Comparison Table */}
           <motion.div

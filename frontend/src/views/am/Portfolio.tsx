@@ -8,6 +8,7 @@
 import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
+import { usePriceMetrics } from '@/hooks/usePriceMetrics'
 import {
   ConfidenceBandBadge,
   AutopilotModeBanner,
@@ -51,6 +52,7 @@ interface TenantPortfolioItem {
 }
 
 export default function Portfolio() {
+  const { showPriceMetrics } = usePriceMetrics()
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<EmqStatus | 'all'>('all')
   const [sortField, setSortField] = useState<SortField>('emq')
@@ -268,7 +270,10 @@ export default function Portfolio() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+      <div className={cn(
+        'grid grid-cols-2 md:grid-cols-4 gap-4',
+        showPriceMetrics && 'lg:grid-cols-7'
+      )}>
         <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
           <div className="text-text-muted text-sm mb-1">Total Tenants</div>
           <div className="text-2xl font-bold text-white">{stats.total}</div>
@@ -285,14 +290,18 @@ export default function Portfolio() {
           <div className="text-text-muted text-sm mb-1">Critical</div>
           <div className="text-2xl font-bold text-danger">{stats.critical}</div>
         </div>
+        {showPriceMetrics && (
         <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
           <div className="text-text-muted text-sm mb-1">Budget at Risk</div>
           <div className="text-2xl font-bold text-danger">${stats.totalBudgetAtRisk.toLocaleString()}</div>
         </div>
+        )}
+        {showPriceMetrics && (
         <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
           <div className="text-text-muted text-sm mb-1">Portfolio MRR</div>
           <div className="text-2xl font-bold text-white">${stats.totalMRR.toLocaleString()}</div>
         </div>
+        )}
         <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
           <div className="text-text-muted text-sm mb-1">Renewals (30d)</div>
           <div className="text-2xl font-bold text-warning">{stats.upcomingRenewals}</div>
@@ -441,7 +450,7 @@ export default function Portfolio() {
                 <div className="flex flex-wrap items-center gap-4 text-sm">
                   <span className="text-text-muted">{tenant.industry}</span>
                   <AutopilotModeBanner mode={tenant.autopilotMode} compact />
-                  {tenant.budgetAtRisk > 0 && (
+                  {showPriceMetrics && tenant.budgetAtRisk > 0 && (
                     <BudgetAtRiskChip amount={tenant.budgetAtRisk} />
                   )}
                   {tenant.activeIncidents > 0 && (
@@ -462,6 +471,7 @@ export default function Portfolio() {
 
               {/* Metrics */}
               <div className="flex items-center gap-6 text-sm">
+                {showPriceMetrics && (
                 <div className="text-right">
                   <div className="text-text-muted">ROAS</div>
                   <div className="flex items-center gap-1">
@@ -474,10 +484,13 @@ export default function Portfolio() {
                     </span>
                   </div>
                 </div>
+                )}
+                {showPriceMetrics && (
                 <div className="text-right">
                   <div className="text-text-muted">Spend</div>
                   <div className="text-white font-medium">${(tenant.monthlySpend / 1000).toFixed(0)}k</div>
                 </div>
+                )}
                 <div className="text-right">
                   <div className="text-text-muted">Renewal</div>
                   <div className={cn(

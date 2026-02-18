@@ -8,6 +8,7 @@
 import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
+import { usePriceMetrics } from '@/hooks/usePriceMetrics'
 import {
   TrustStatusHeader,
   EmqScoreCard,
@@ -56,8 +57,11 @@ interface RecoveryMetric {
   isPositive: boolean
 }
 
+const COST_KPI_IDS = ['spend', 'revenue', 'roas', 'cpa']
+
 export default function TenantNarrative() {
   const { tenantId } = useParams<{ tenantId: string }>()
+  const { showPriceMetrics } = usePriceMetrics()
   const tid = parseInt(tenantId || '1', 10)
 
   const [activeTab, setActiveTab] = useState<'summary' | 'timeline' | 'blocked' | 'playbook'>('summary')
@@ -354,8 +358,11 @@ export default function TenantNarrative() {
       />
 
       {/* Recovery Metrics */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {recoveryMetrics.map((metric) => (
+      <div className={cn(
+        'grid grid-cols-2 gap-4',
+        showPriceMetrics ? 'md:grid-cols-4' : 'md:grid-cols-3'
+      )}>
+        {recoveryMetrics.filter(m => showPriceMetrics || m.label !== 'ROAS Impact').map((metric) => (
           <div key={metric.label} className="p-4 rounded-xl bg-surface-secondary border border-white/10">
             <div className="text-text-muted text-sm mb-1">{metric.label}</div>
             <div className="flex items-center gap-2">
@@ -384,7 +391,7 @@ export default function TenantNarrative() {
       </div>
 
       {/* KPI Strip */}
-      <KpiStrip kpis={kpis} emqScore={emqScore} />
+      <KpiStrip kpis={showPriceMetrics ? kpis : kpis.filter(k => !COST_KPI_IDS.includes(k.id))} emqScore={emqScore} />
 
       {/* Tabs */}
       <div className="flex items-center gap-2 border-b border-white/10 pb-4">

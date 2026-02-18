@@ -4,19 +4,25 @@
  */
 
 import React, { useState, useMemo } from 'react'
-import { ArrowUp, ArrowDown, Filter, Search } from 'lucide-react'
+import { ArrowUp, ArrowDown, Filter, Search, RefreshCw } from 'lucide-react'
 import { cn, formatCurrency } from '@/lib/utils'
 import { Campaign, TableSortConfig } from '@/types/dashboard'
 
 interface CampaignTableProps {
   campaigns: Campaign[]
   onCampaignClick?: (campaignId: string) => void
+  onSyncCampaign?: (campaignId: string) => void
+  syncingCampaignId?: string | null
+  showPriceMetrics?: boolean
   pageSize?: number
 }
 
 export const CampaignTable: React.FC<CampaignTableProps> = ({
   campaigns,
   onCampaignClick,
+  onSyncCampaign,
+  syncingCampaignId,
+  showPriceMetrics = true,
   pageSize = 10,
 }) => {
   const [sortConfig, setSortConfig] = useState<TableSortConfig>({
@@ -157,12 +163,17 @@ export const CampaignTable: React.FC<CampaignTableProps> = ({
             <tr>
               <ColumnHeader label="Campaign Name" sortKey="campaign_name" />
               <ColumnHeader label="Platform" sortKey="platform" />
-              <ColumnHeader label="Spend" sortKey="spend" align="right" />
-              <ColumnHeader label="Revenue" sortKey="revenue" align="right" />
-              <ColumnHeader label="ROAS" sortKey="roas" align="center" />
-              <ColumnHeader label="CPA" sortKey="cpa" align="right" />
+              {showPriceMetrics && <ColumnHeader label="Spend" sortKey="spend" align="right" />}
+              {showPriceMetrics && <ColumnHeader label="Revenue" sortKey="revenue" align="right" />}
+              {showPriceMetrics && <ColumnHeader label="ROAS" sortKey="roas" align="center" />}
+              {showPriceMetrics && <ColumnHeader label="CPA" sortKey="cpa" align="right" />}
               <ColumnHeader label="Conversions" sortKey="conversions" align="center" />
               <ColumnHeader label="CTR" sortKey="ctr" align="center" />
+              {onSyncCampaign && (
+                <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-center">
+                  Sync
+                </th>
+              )}
             </tr>
           </thead>
           <tbody className="bg-card divide-y divide-border">
@@ -183,26 +194,55 @@ export const CampaignTable: React.FC<CampaignTableProps> = ({
                     {campaign.platform}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground text-right">
-                  {formatCurrency(campaign.spend)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground text-right">
-                  {formatCurrency(campaign.revenue)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-center">
-                  <span className={cn('text-sm font-semibold', getROASColor(campaign.roas))}>
-                    {campaign.roas.toFixed(2)}x
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground text-right">
-                  {formatCurrency(campaign.cpa)}
-                </td>
+                {showPriceMetrics && (
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground text-right">
+                    {formatCurrency(campaign.spend)}
+                  </td>
+                )}
+                {showPriceMetrics && (
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground text-right">
+                    {formatCurrency(campaign.revenue)}
+                  </td>
+                )}
+                {showPriceMetrics && (
+                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <span className={cn('text-sm font-semibold', getROASColor(campaign.roas))}>
+                      {campaign.roas.toFixed(2)}x
+                    </span>
+                  </td>
+                )}
+                {showPriceMetrics && (
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground text-right">
+                    {formatCurrency(campaign.cpa)}
+                  </td>
+                )}
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground text-center">
                   {campaign.conversions.toLocaleString()}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground text-center">
                   {campaign.ctr.toFixed(2)}%
                 </td>
+                {onSyncCampaign && (
+                  <td className="px-4 py-4 whitespace-nowrap text-center">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onSyncCampaign(campaign.campaign_id)
+                      }}
+                      disabled={syncingCampaignId === campaign.campaign_id}
+                      className="inline-flex items-center justify-center w-8 h-8 rounded-md hover:bg-muted transition-colors disabled:opacity-50"
+                      aria-label={`Sync ${campaign.campaign_name}`}
+                      title={`Sync ${campaign.campaign_name} from ${campaign.platform}`}
+                    >
+                      <RefreshCw
+                        className={cn(
+                          'w-4 h-4 text-muted-foreground hover:text-primary',
+                          syncingCampaignId === campaign.campaign_id && 'animate-spin text-primary'
+                        )}
+                      />
+                    </button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

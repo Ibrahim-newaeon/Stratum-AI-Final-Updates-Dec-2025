@@ -30,6 +30,7 @@ import {
   BarChart3,
   Keyboard,
   LayoutDashboard,
+  DownloadCloud,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { cn, formatCurrency, formatCompactNumber } from '@/lib/utils'
@@ -55,6 +56,8 @@ import {
   KPIMetrics,
 } from '@/types/dashboard'
 import { useCampaigns, useTenantOverview } from '@/api/hooks'
+import { useSyncAllCampaigns, useSyncCampaign } from '@/api/campaigns'
+import { usePriceMetrics } from '@/hooks/usePriceMetrics'
 import { useTenantStore } from '@/stores/tenantStore'
 
 export function Overview() {
@@ -67,6 +70,14 @@ export function Overview() {
 
   // Get tenant ID from tenant store
   const tenantId = useTenantStore((state) => state.tenantId) ?? 1
+
+  // Price metrics toggle — hides spend, revenue, ROAS, CPA, CPM across dashboard
+  const { showPriceMetrics } = usePriceMetrics()
+
+  // Sync mutations
+  const syncAllMutation = useSyncAllCampaigns()
+  const syncCampaignMutation = useSyncCampaign()
+  const [syncingCampaignId, setSyncingCampaignId] = useState<string | null>(null)
 
   // Fetch data from API with fallback to mock data
   const { data: campaignsData, isLoading: campaignsLoading, refetch: refetchCampaigns } = useCampaigns()
@@ -185,6 +196,33 @@ export function Overview() {
     setLastUpdated(new Date())
     setLoading(false)
   }, [refetchCampaigns])
+
+  // Sync all campaigns from platforms
+  const handleSyncAll = useCallback(async () => {
+    syncAllMutation.mutate(undefined, {
+      onSuccess: () => {
+        // Refetch campaigns after a short delay to allow sync to start
+        setTimeout(() => {
+          refetchCampaigns()
+          setLastUpdated(new Date())
+        }, 2000)
+      },
+    })
+  }, [syncAllMutation, refetchCampaigns])
+
+  // Sync a single campaign from its platform
+  const handleSyncCampaign = useCallback((campaignId: string) => {
+    setSyncingCampaignId(campaignId)
+    syncCampaignMutation.mutate(campaignId, {
+      onSettled: () => {
+        setTimeout(() => {
+          setSyncingCampaignId(null)
+          refetchCampaigns()
+          setLastUpdated(new Date())
+        }, 2000)
+      },
+    })
+  }, [syncCampaignMutation, refetchCampaigns])
 
   // Handle filter changes
   const handleFilterChange = useCallback((newFilters: Partial<DashboardFilters>) => {
@@ -338,6 +376,31 @@ export function Overview() {
           </button>
 
           <button
+            onClick={handleSyncAll}
+            disabled={syncAllMutation.isPending}
+            className="inline-flex items-center px-4 py-2 border border-primary/30 rounded-lg text-sm font-medium bg-primary/5 text-primary hover:bg-primary/10 transition-colors disabled:opacity-50"
+            aria-label="Sync all campaigns from ad platforms"
+            title="Pull latest data from Meta, TikTok, Snapchat & Google"
+          >
+            {syncAllMutation.isPending ? (
+              <>
+                <DownloadCloud className="w-4 h-4 mr-2 animate-bounce" />
+                Syncing...
+              </>
+            ) : syncAllMutation.isSuccess ? (
+              <>
+                <CheckCircle className="w-4 h-4 mr-2 text-green-500" />
+                Synced!
+              </>
+            ) : (
+              <>
+                <DownloadCloud className="w-4 h-4 mr-2" />
+                Sync All Platforms
+              </>
+            )}
+          </button>
+
+          <button
             onClick={handleRefresh}
             disabled={loading}
             className="inline-flex items-center px-4 py-2 border rounded-lg text-sm font-medium bg-background hover:bg-muted transition-colors disabled:opacity-50"
@@ -376,52 +439,58 @@ export function Overview() {
       />
 
       {/* Primary KPI Cards */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        <KPICard
-          title="Total Spend"
-          value={formatCurrency(kpis.totalSpend)}
-          numericValue={kpis.totalSpend}
-          prefix="$"
-          delta={kpis.spendDelta}
-          deltaText="vs last period"
-          trend={kpis.spendDelta && kpis.spendDelta > 0 ? 'up' : 'down'}
-          icon={<DollarSign className="w-5 h-5" />}
-          loading={initialLoading}
-          onViewDetails={() => handleViewDetails('spend')}
-          onSetAlert={() => handleSetAlert('spend')}
-        />
+      <div className={cn('grid grid-cols-1 gap-5 sm:grid-cols-2', showPriceMetrics ? 'lg:grid-cols-4' : 'lg:grid-cols-2')}>
+        {showPriceMetrics && (
+          <KPICard
+            title="Total Spend"
+            value={formatCurrency(kpis.totalSpend)}
+            numericValue={kpis.totalSpend}
+            prefix="$"
+            delta={kpis.spendDelta}
+            deltaText="vs last period"
+            trend={kpis.spendDelta && kpis.spendDelta > 0 ? 'up' : 'down'}
+            icon={<DollarSign className="w-5 h-5" />}
+            loading={initialLoading}
+            onViewDetails={() => handleViewDetails('spend')}
+            onSetAlert={() => handleSetAlert('spend')}
+          />
+        )}
 
-        <KPICard
-          title="Total Revenue"
-          value={formatCurrency(kpis.totalRevenue)}
-          numericValue={kpis.totalRevenue}
-          prefix="$"
-          delta={kpis.revenueDelta}
-          deltaText="vs last period"
-          trend={kpis.revenueDelta && kpis.revenueDelta > 0 ? 'up' : 'down'}
-          trendIsGood={true}
-          icon={<TrendingUp className="w-5 h-5" />}
-          loading={initialLoading}
-          onViewDetails={() => handleViewDetails('revenue')}
-          onSetAlert={() => handleSetAlert('revenue')}
-        />
+        {showPriceMetrics && (
+          <KPICard
+            title="Total Revenue"
+            value={formatCurrency(kpis.totalRevenue)}
+            numericValue={kpis.totalRevenue}
+            prefix="$"
+            delta={kpis.revenueDelta}
+            deltaText="vs last period"
+            trend={kpis.revenueDelta && kpis.revenueDelta > 0 ? 'up' : 'down'}
+            trendIsGood={true}
+            icon={<TrendingUp className="w-5 h-5" />}
+            loading={initialLoading}
+            onViewDetails={() => handleViewDetails('revenue')}
+            onSetAlert={() => handleSetAlert('revenue')}
+          />
+        )}
 
-        <KPICard
-          title="ROAS"
-          value={`${kpis.overallROAS.toFixed(2)}x`}
-          numericValue={kpis.overallROAS}
-          suffix="x"
-          decimals={2}
-          delta={kpis.roasDelta}
-          deltaText="vs target"
-          trend={kpis.roasDelta && kpis.roasDelta > 0 ? 'up' : 'down'}
-          trendIsGood={true}
-          highlight={kpis.overallROAS >= 3.0}
-          icon={<Target className="w-5 h-5" />}
-          loading={initialLoading}
-          onViewDetails={() => handleViewDetails('roas')}
-          onSetAlert={() => handleSetAlert('roas')}
-        />
+        {showPriceMetrics && (
+          <KPICard
+            title="ROAS"
+            value={`${kpis.overallROAS.toFixed(2)}x`}
+            numericValue={kpis.overallROAS}
+            suffix="x"
+            decimals={2}
+            delta={kpis.roasDelta}
+            deltaText="vs target"
+            trend={kpis.roasDelta && kpis.roasDelta > 0 ? 'up' : 'down'}
+            trendIsGood={true}
+            highlight={kpis.overallROAS >= 3.0}
+            icon={<Target className="w-5 h-5" />}
+            loading={initialLoading}
+            onViewDetails={() => handleViewDetails('roas')}
+            onSetAlert={() => handleSetAlert('roas')}
+          />
+        )}
 
         <KPICard
           title="Total Conversions"
@@ -436,20 +505,32 @@ export function Overview() {
           onViewDetails={() => handleViewDetails('conversions')}
           onSetAlert={() => handleSetAlert('conversions')}
         />
+
+        {!showPriceMetrics && (
+          <KPICard
+            title="Impressions"
+            value={formatCompactNumber(kpis.totalImpressions)}
+            numericValue={kpis.totalImpressions}
+            icon={<Eye className="w-5 h-5" />}
+            loading={initialLoading}
+          />
+        )}
       </div>
 
       {/* Secondary KPI Cards */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-        <KPICard
-          title="CPA"
-          value={formatCurrency(kpis.overallCPA)}
-          numericValue={kpis.overallCPA}
-          prefix="$"
-          decimals={2}
-          size="small"
-          icon={<DollarSign className="w-4 h-4" />}
-          loading={initialLoading}
-        />
+      <div className={cn('grid grid-cols-2 gap-4 sm:grid-cols-3', showPriceMetrics ? 'lg:grid-cols-5' : 'lg:grid-cols-3')}>
+        {showPriceMetrics && (
+          <KPICard
+            title="CPA"
+            value={formatCurrency(kpis.overallCPA)}
+            numericValue={kpis.overallCPA}
+            prefix="$"
+            decimals={2}
+            size="small"
+            icon={<DollarSign className="w-4 h-4" />}
+            loading={initialLoading}
+          />
+        )}
 
         <KPICard
           title="CTR"
@@ -462,25 +543,29 @@ export function Overview() {
           loading={initialLoading}
         />
 
-        <KPICard
-          title="CPM"
-          value={formatCurrency(kpis.avgCPM)}
-          numericValue={kpis.avgCPM}
-          prefix="$"
-          decimals={2}
-          size="small"
-          icon={<BarChart3 className="w-4 h-4" />}
-          loading={initialLoading}
-        />
+        {showPriceMetrics && (
+          <KPICard
+            title="CPM"
+            value={formatCurrency(kpis.avgCPM)}
+            numericValue={kpis.avgCPM}
+            prefix="$"
+            decimals={2}
+            size="small"
+            icon={<BarChart3 className="w-4 h-4" />}
+            loading={initialLoading}
+          />
+        )}
 
-        <KPICard
-          title="Impressions"
-          value={formatCompactNumber(kpis.totalImpressions)}
-          numericValue={kpis.totalImpressions}
-          size="small"
-          icon={<Eye className="w-4 h-4" />}
-          loading={initialLoading}
-        />
+        {showPriceMetrics && (
+          <KPICard
+            title="Impressions"
+            value={formatCompactNumber(kpis.totalImpressions)}
+            numericValue={kpis.totalImpressions}
+            size="small"
+            icon={<Eye className="w-4 h-4" />}
+            loading={initialLoading}
+          />
+        )}
 
         <KPICard
           title="Clicks"
@@ -493,19 +578,21 @@ export function Overview() {
       </div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className={cn('grid grid-cols-1 gap-6', showPriceMetrics ? 'lg:grid-cols-2' : 'lg:grid-cols-1')}>
         <PlatformPerformanceChart
           data={[]}
           loading={initialLoading}
           onRefresh={handleRefresh}
         />
 
-        <ROASByPlatformChart
-          data={[]}
-          loading={initialLoading}
-          targetROAS={3.0}
-          onRefresh={handleRefresh}
-        />
+        {showPriceMetrics && (
+          <ROASByPlatformChart
+            data={[]}
+            loading={initialLoading}
+            targetROAS={3.0}
+            onRefresh={handleRefresh}
+          />
+        )}
       </div>
 
       {/* Second Row of Charts */}
@@ -552,6 +639,9 @@ export function Overview() {
                   onCampaignClick={(campaignId) => {
                     console.log('Navigate to campaign:', campaignId)
                   }}
+                  onSyncCampaign={handleSyncCampaign}
+                  syncingCampaignId={syncingCampaignId}
+                  showPriceMetrics={showPriceMetrics}
                 />
               </ErrorBoundary>
             </div>
@@ -565,18 +655,22 @@ export function Overview() {
       </div>
 
       {/* AI Predictions Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className={cn('grid grid-cols-1 gap-6', showPriceMetrics ? 'lg:grid-cols-3' : 'lg:grid-cols-1')}>
         <ErrorBoundary>
           <LivePredictionsWidget />
         </ErrorBoundary>
 
-        <ErrorBoundary>
-          <ROASAlertsWidget />
-        </ErrorBoundary>
+        {showPriceMetrics && (
+          <ErrorBoundary>
+            <ROASAlertsWidget />
+          </ErrorBoundary>
+        )}
 
-        <ErrorBoundary>
-          <BudgetOptimizerWidget />
-        </ErrorBoundary>
+        {showPriceMetrics && (
+          <ErrorBoundary>
+            <BudgetOptimizerWidget />
+          </ErrorBoundary>
+        )}
       </div>
 
       {/* Alerts Section */}

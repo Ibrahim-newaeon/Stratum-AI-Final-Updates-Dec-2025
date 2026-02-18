@@ -19,6 +19,7 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
+import { usePriceMetrics } from '@/hooks/usePriceMetrics';
 import { METRIC_REGISTRY, type MetricCategory } from '@/constants/metrics';
 
 // =============================================================================
@@ -336,7 +337,10 @@ interface ReportBuilderModalProps {
   onSave: (report: CustomReport) => void;
 }
 
+const COST_METRIC_IDS = ['budget', 'spent', 'forecast_spend', 'attributed_revenue', 'ltv']
+
 function ReportBuilderModal({ report, isOpen, onClose, onSave }: ReportBuilderModalProps) {
+  const { showPriceMetrics } = usePriceMetrics()
   const [activeTab, setActiveTab] = useState<'data' | 'visualizations' | 'schedule'>('data');
   const [formData, setFormData] = useState<CustomReport>(
     () =>
@@ -366,7 +370,10 @@ function ReportBuilderModal({ report, isOpen, onClose, onSave }: ReportBuilderMo
 
   if (!isOpen) return null;
 
-  const availableMetrics = AVAILABLE_METRICS[formData.dataSource] || [];
+  const allMetrics = AVAILABLE_METRICS[formData.dataSource] || [];
+  const availableMetrics = showPriceMetrics
+    ? allMetrics
+    : allMetrics.filter((m) => m.format !== 'currency' && !COST_METRIC_IDS.includes(m.id));
   const availableDimensions = AVAILABLE_DIMENSIONS[formData.dataSource] || [];
 
   const handleAddMetric = (metric: Metric) => {

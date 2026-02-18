@@ -7,6 +7,7 @@
 
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import { usePriceMetrics } from '@/hooks/usePriceMetrics'
 import { cn } from '@/lib/utils'
 import { useCompetitors, useShareOfVoice, useCreateCompetitor, useDeleteCompetitor } from '@/api/hooks'
 import apiClient from '@/api/client'
@@ -81,6 +82,7 @@ const PLATFORMS = [
 
 export function Competitors() {
   const { t: _t } = useTranslation()
+  const { showPriceMetrics } = usePriceMetrics()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCompetitor, setSelectedCompetitor] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -398,7 +400,8 @@ export function Competitors() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className={cn('grid gap-4 mb-4', showPriceMetrics ? 'grid-cols-2' : 'grid-cols-1')}>
+              {showPriceMetrics && (
               <div>
                 <div className="text-sm text-muted-foreground">Est. Ad Spend</div>
                 <div className="flex items-center gap-2">
@@ -416,6 +419,7 @@ export function Competitors() {
                   </span>
                 </div>
               </div>
+              )}
               <div>
                 <div className="text-sm text-muted-foreground">Share of Voice</div>
                 <div className="font-semibold">{competitor.shareOfVoice}%</div>
@@ -532,7 +536,7 @@ export function Competitors() {
                 <th className="p-4 text-center text-sm font-medium">Competitor</th>
                 <th className="p-4 text-center text-sm font-medium">Their Position</th>
                 <th className="p-4 text-right text-sm font-medium">Search Volume</th>
-                <th className="p-4 text-right text-sm font-medium">CPC</th>
+                {showPriceMetrics && <th className="p-4 text-right text-sm font-medium">CPC</th>}
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -565,7 +569,7 @@ export function Competitors() {
                   <td className="p-4 text-right text-muted-foreground">
                     {kw.searchVolume.toLocaleString()}
                   </td>
-                  <td className="p-4 text-right font-medium">${kw.cpc.toFixed(2)}</td>
+                  {showPriceMetrics && <td className="p-4 text-right font-medium">${kw.cpc.toFixed(2)}</td>}
                 </tr>
               ))}
             </tbody>

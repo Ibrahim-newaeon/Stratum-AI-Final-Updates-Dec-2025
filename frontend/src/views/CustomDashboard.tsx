@@ -12,6 +12,7 @@ import {
   LayoutDashboard,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { usePriceMetrics } from '@/hooks/usePriceMetrics'
 import { KPIWidget } from '@/components/widgets/KPIWidget'
 import { ChartWidget } from '@/components/widgets/ChartWidget'
 import { CampaignsWidget } from '@/components/widgets/CampaignsWidget'
@@ -26,8 +27,11 @@ import 'react-grid-layout/css/styles.css'
 const GRID_COLS = 12
 const ROW_HEIGHT = 80
 
+const COST_WIDGET_TYPES = ['kpi-spend', 'kpi-revenue', 'kpi-roas', 'chart-revenue', 'chart-spend']
+
 export function CustomDashboard() {
   const { t } = useTranslation()
+  const { showPriceMetrics } = usePriceMetrics()
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerWidth, setContainerWidth] = useState(1200)
   const [widgets, setWidgets] = useState<WidgetConfig[]>(() => {
@@ -125,7 +129,11 @@ export function CustomDashboard() {
     }
   }
 
-  const layout: Layout[] = widgets.map((widget) => ({
+  const visibleWidgets = showPriceMetrics
+    ? widgets
+    : widgets.filter((w) => !COST_WIDGET_TYPES.includes(w.type))
+
+  const layout: Layout[] = visibleWidgets.map((widget) => ({
     i: widget.id,
     x: widget.x,
     y: widget.y,
@@ -214,7 +222,7 @@ export function CustomDashboard() {
           compactType="vertical"
           preventCollision={false}
         >
-        {widgets.map((widget) => (
+        {visibleWidgets.map((widget) => (
           <div
             key={widget.id}
             className={cn(

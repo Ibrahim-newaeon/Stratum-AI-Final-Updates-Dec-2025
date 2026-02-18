@@ -6,6 +6,7 @@
  */
 
 import { useParams } from 'react-router-dom'
+import { usePriceMetrics } from '@/hooks/usePriceMetrics'
 import { useTenantStore } from '@/stores/tenantStore'
 import {
   ChartBarIcon,
@@ -57,6 +58,7 @@ function MetricCard({ title, value, change, changeType = 'neutral', icon: Icon }
 
 export default function TenantOverview() {
   const { tenantId } = useParams<{ tenantId: string }>()
+  const { showPriceMetrics } = usePriceMetrics()
   const { tenant } = useTenantStore()
 
   return (
@@ -70,7 +72,10 @@ export default function TenantOverview() {
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className={cn(
+        'grid grid-cols-1 md:grid-cols-2 gap-4',
+        showPriceMetrics && 'lg:grid-cols-4'
+      )}>
         <MetricCard
           title="Active Campaigns"
           value="12"
@@ -78,6 +83,7 @@ export default function TenantOverview() {
           changeType="positive"
           icon={ChartBarIcon}
         />
+        {showPriceMetrics && (
         <MetricCard
           title="Total Spend"
           value="$45,230"
@@ -85,6 +91,8 @@ export default function TenantOverview() {
           changeType="positive"
           icon={CurrencyDollarIcon}
         />
+        )}
+        {showPriceMetrics && (
         <MetricCard
           title="Total ROAS"
           value="4.2x"
@@ -92,6 +100,7 @@ export default function TenantOverview() {
           changeType="positive"
           icon={ArrowTrendingUpIcon}
         />
+        )}
         <MetricCard
           title="Connected Accounts"
           value="5"

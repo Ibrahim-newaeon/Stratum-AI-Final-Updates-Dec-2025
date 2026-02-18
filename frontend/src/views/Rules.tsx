@@ -20,6 +20,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { usePriceMetrics } from '@/hooks/usePriceMetrics'
 import { useRules, useToggleRule } from '@/api/hooks'
 
 type RuleStatus = 'active' | 'paused' | 'draft'
@@ -138,8 +139,11 @@ const operators = [
 
 const fields = ['roas', 'ctr', 'cpc', 'cpa', 'spend', 'impressions', 'clicks', 'conversions', 'fatigue_score']
 
+const COST_RELATED_FIELDS = ['spend', 'roas', 'cpc', 'cpa', 'budget', 'revenue', 'cost', 'profit', 'margin']
+
 export function Rules() {
   const { t } = useTranslation()
+  const { showPriceMetrics } = usePriceMetrics()
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -376,7 +380,9 @@ export function Rules() {
                 {getOperatorLabel(rule.condition.operator)}
               </span>
               <span className="px-2 py-1 rounded bg-background text-sm font-mono">
-                {rule.condition.value}
+                {!showPriceMetrics && COST_RELATED_FIELDS.includes(rule.condition.field)
+                  ? '***'
+                  : rule.condition.value}
               </span>
               <ChevronRight className="w-4 h-4 text-muted-foreground" />
               <span className="text-sm font-medium text-primary">THEN</span>

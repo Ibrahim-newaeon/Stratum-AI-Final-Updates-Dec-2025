@@ -7,6 +7,7 @@
 
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { usePriceMetrics } from '@/hooks/usePriceMetrics'
 import { cn } from '@/lib/utils'
 import { useLivePredictions, useBudgetOptimization, usePredictionAlerts } from '@/api/hooks'
 import { ConfidenceBandBadge } from '@/components/shared'
@@ -65,6 +66,7 @@ interface Scenario {
 
 export function Predictions() {
   const { t: _t } = useTranslation()
+  const { showPriceMetrics } = usePriceMetrics()
   const [activeTab, setActiveTab] = useState<'predictions' | 'optimization' | 'scenarios'>('predictions')
   const [timeHorizon, setTimeHorizon] = useState<'7d' | '30d' | '90d'>('30d')
   const [selectedCampaign, setSelectedCampaign] = useState<string>('all')
@@ -313,6 +315,7 @@ export function Predictions() {
           <div className="grid gap-4">
             {predictions
               .filter((p) => selectedCampaign === 'all' || p.id === selectedCampaign)
+              .filter((p) => showPriceMetrics || !['ROAS', 'CPA', 'Revenue', 'Spend'].includes(p.metric))
               .map((prediction) => {
                 const change = formatChange(prediction.currentValue, prediction.predictedValue)
                 return (
@@ -388,6 +391,13 @@ export function Predictions() {
       {/* Optimization Tab */}
       {activeTab === 'optimization' && (
         <div className="space-y-4">
+          {!showPriceMetrics ? (
+            <div className="text-center py-12 rounded-xl border bg-card">
+              <CurrencyDollarIcon className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground">Budget optimization is hidden when price metrics are disabled.</p>
+            </div>
+          ) : (
+          <>
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-lg font-semibold">Budget Optimization</h2>
@@ -471,6 +481,8 @@ export function Predictions() {
               </div>
             ))}
           </div>
+          </>
+          )}
         </div>
       )}
 
@@ -512,14 +524,18 @@ export function Predictions() {
                 </div>
 
                 <div className="space-y-3">
+                  {showPriceMetrics && (
                   <div>
                     <div className="text-sm text-muted-foreground">Predicted ROAS</div>
                     <div className="text-xl font-bold">{scenario.predictedRoas.toFixed(1)}x</div>
                   </div>
+                  )}
+                  {showPriceMetrics && (
                   <div>
                     <div className="text-sm text-muted-foreground">Predicted Revenue</div>
                     <div className="text-xl font-bold">${(scenario.predictedRevenue / 1000).toFixed(0)}K</div>
                   </div>
+                  )}
                   <div className="flex items-center gap-2">
                     <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                       <div

@@ -45,6 +45,7 @@ import {
   Calendar,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { usePriceMetrics } from '@/hooks/usePriceMetrics'
 import { useAuth } from '@/contexts/AuthContext'
 import apiClient from '@/api/client'
 
@@ -121,6 +122,7 @@ const mockAlerts: SystemAlert[] = [
 // =============================================================================
 export default function SuperadminDashboard() {
   const { t: _t } = useTranslation()
+  const { showPriceMetrics } = usePriceMetrics()
   const { user } = useAuth()
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -290,7 +292,8 @@ export default function SuperadminDashboard() {
       {activeTab === 'overview' && (
         <div className="space-y-6 motion-enter">
           {/* Revenue KPIs */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className={cn('grid grid-cols-2 gap-4', showPriceMetrics ? 'md:grid-cols-4' : 'md:grid-cols-1')}>
+            {showPriceMetrics && (
             <KPICard
               icon={DollarSign}
               label="MRR"
@@ -299,12 +302,15 @@ export default function SuperadminDashboard() {
               deltaLabel="vs last month"
               color="green"
             />
+            )}
+            {showPriceMetrics && (
             <KPICard
               icon={TrendingUp}
               label="ARR"
               value={revenueMetrics ? formatCurrency(revenueMetrics.arr) : '$0'}
               color="purple"
             />
+            )}
             <KPICard
               icon={Building2}
               label="Active Tenants"
@@ -312,31 +318,37 @@ export default function SuperadminDashboard() {
               subValue={`${revenueMetrics?.trial_tenants || 0} trials`}
               color="blue"
             />
+            {showPriceMetrics && (
             <KPICard
               icon={BarChart3}
               label="ARPA"
               value={revenueMetrics ? formatCurrency(revenueMetrics.arpa) : '$0'}
               color="amber"
             />
+            )}
           </div>
 
           {/* Secondary Metrics */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className={cn('grid grid-cols-2 gap-4', showPriceMetrics ? 'md:grid-cols-4' : 'md:grid-cols-2')}>
+            {showPriceMetrics && (
             <MetricCard
               label="NRR"
               value={`${revenueMetrics?.nrr || 0}%`}
               status={(revenueMetrics?.nrr || 0) >= 100 ? 'green' : 'amber'}
             />
+            )}
             <MetricCard
               label="Churn Rate"
               value={`${revenueMetrics?.churn_rate || 0}%`}
               status={(revenueMetrics?.churn_rate || 0) < 5 ? 'green' : 'red'}
             />
+            {showPriceMetrics && (
             <MetricCard
               label="Gross Margin"
               value={`${revenueMetrics?.gross_margin_pct || 0}%`}
               status="green"
             />
+            )}
             <MetricCard
               label="Total Tenants"
               value={revenueMetrics?.total_tenants || 0}
@@ -351,7 +363,7 @@ export default function SuperadminDashboard() {
               <h3 className="font-semibold mb-4 flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5 text-amber-500" />
                 Tenants at Churn Risk
-                {churnRisks.length > 0 && (
+                {showPriceMetrics && churnRisks.length > 0 && (
                   <span className="ml-auto text-sm font-normal text-amber-500">
                     ${churnRisks.reduce((sum, r) => sum + r.mrr_at_risk, 0).toLocaleString()}/mo at risk
                   </span>
@@ -378,7 +390,7 @@ export default function SuperadminDashboard() {
                         )}>
                           {(risk.risk_score * 100).toFixed(0)}% risk
                         </p>
-                        <p className="text-xs text-muted-foreground">${risk.mrr_at_risk}/mo</p>
+                        {showPriceMetrics && <p className="text-xs text-muted-foreground">${risk.mrr_at_risk}/mo</p>}
                       </div>
                     </div>
                   ))}
@@ -584,7 +596,7 @@ export default function SuperadminDashboard() {
                 <tr>
                   <th className="text-left py-3 px-4 font-medium">Tenant</th>
                   <th className="text-left py-3 px-4 font-medium">Plan</th>
-                  <th className="text-right py-3 px-4 font-medium">MRR</th>
+                  {showPriceMetrics && <th className="text-right py-3 px-4 font-medium">MRR</th>}
                   <th className="text-center py-3 px-4 font-medium">Users</th>
                   <th className="text-center py-3 px-4 font-medium">Signal Health</th>
                   <th className="text-center py-3 px-4 font-medium">Churn Risk</th>
@@ -594,7 +606,7 @@ export default function SuperadminDashboard() {
               <tbody className="divide-y">
                 {filteredTenants.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-8 text-center text-muted-foreground">
+                    <td colSpan={showPriceMetrics ? 7 : 6} className="py-8 text-center text-muted-foreground">
                       No tenants found
                     </td>
                   </tr>
@@ -619,9 +631,11 @@ export default function SuperadminDashboard() {
                       <td className="py-3 px-4">
                         <PlanBadge plan={tenant.plan} />
                       </td>
+                      {showPriceMetrics && (
                       <td className="text-right py-3 px-4 font-medium">
                         {formatCurrency(tenant.mrr)}
                       </td>
+                      )}
                       <td className="text-center py-3 px-4">
                         <div className="flex items-center justify-center gap-2">
                           <span>{tenant.users_count}/{tenant.users_limit}</span>
@@ -805,17 +819,19 @@ export default function SuperadminDashboard() {
       {activeTab === 'churn' && (
         <div className="space-y-6 motion-enter">
           {/* Summary */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className={cn('grid grid-cols-1 gap-4', showPriceMetrics ? 'md:grid-cols-3' : 'md:grid-cols-2')}>
             <div className="rounded-xl border bg-card p-5 shadow-card motion-card">
               <p className="text-muted-foreground text-sm mb-2">Tenants at Risk</p>
               <p className="text-3xl font-bold text-red-500">{churnRisks.length}</p>
             </div>
+            {showPriceMetrics && (
             <div className="rounded-xl border bg-card p-5 shadow-card motion-card">
               <p className="text-muted-foreground text-sm mb-2">MRR at Risk</p>
               <p className="text-3xl font-bold text-amber-500">
                 {formatCurrency(churnRisks.reduce((sum, r) => sum + r.mrr_at_risk, 0))}
               </p>
             </div>
+            )}
             <div className="rounded-xl border bg-card p-5 shadow-card motion-card">
               <p className="text-muted-foreground text-sm mb-2">Avg Risk Score</p>
               <p className="text-3xl font-bold">
@@ -853,7 +869,7 @@ export default function SuperadminDashboard() {
                       )}>
                         {(risk.risk_score * 100).toFixed(0)}%
                       </p>
-                      <p className="text-sm text-muted-foreground">{formatCurrency(risk.mrr_at_risk)}/mo at risk</p>
+                      {showPriceMetrics && <p className="text-sm text-muted-foreground">{formatCurrency(risk.mrr_at_risk)}/mo at risk</p>}
                     </div>
                   </div>
 
@@ -920,7 +936,8 @@ export default function SuperadminDashboard() {
           {/* Billing Overview */}
           {billingSubTab === 'overview' && (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className={cn('grid grid-cols-1 gap-4', showPriceMetrics ? 'md:grid-cols-4' : 'md:grid-cols-2')}>
+                {showPriceMetrics && (
                 <div className="p-5 rounded-xl bg-green-500/10 border border-green-500/20 shadow-card motion-card">
                   <p className="text-sm text-muted-foreground">MRR</p>
                   <p className="text-3xl font-bold text-green-500">
@@ -931,12 +948,15 @@ export default function SuperadminDashboard() {
                     +{revenueMetrics?.mrr_growth_pct || 0}% growth
                   </p>
                 </div>
+                )}
+                {showPriceMetrics && (
                 <div className="p-5 rounded-xl bg-purple-500/10 border border-purple-500/20 shadow-card motion-card">
                   <p className="text-sm text-muted-foreground">ARR</p>
                   <p className="text-3xl font-bold text-purple-500">
                     {revenueMetrics ? formatCurrency(revenueMetrics.arr) : '$0'}
                   </p>
                 </div>
+                )}
                 <div className="p-5 rounded-xl bg-blue-500/10 border border-blue-500/20 shadow-card motion-card">
                   <p className="text-sm text-muted-foreground">Pending</p>
                   <p className="text-3xl font-bold text-blue-500">
@@ -958,6 +978,7 @@ export default function SuperadminDashboard() {
               </div>
 
               {/* Plan Distribution */}
+              {showPriceMetrics && (
               <div className="rounded-xl border bg-card p-6 shadow-card motion-card">
                 <h3 className="font-semibold flex items-center gap-2 mb-4">
                   <PieChart className="w-5 h-5 text-primary" />
@@ -983,6 +1004,7 @@ export default function SuperadminDashboard() {
                   ))}
                 </div>
               </div>
+              )}
             </>
           )}
 
@@ -1001,7 +1023,7 @@ export default function SuperadminDashboard() {
                   <tr>
                     <th className="text-left py-3 px-4 font-medium">Plan</th>
                     <th className="text-left py-3 px-4 font-medium">Tier</th>
-                    <th className="text-right py-3 px-4 font-medium">Price</th>
+                    {showPriceMetrics && <th className="text-right py-3 px-4 font-medium">Price</th>}
                     <th className="text-center py-3 px-4 font-medium">Users</th>
                     <th className="text-center py-3 px-4 font-medium">Campaigns</th>
                     <th className="text-center py-3 px-4 font-medium">Connectors</th>
@@ -1016,10 +1038,12 @@ export default function SuperadminDashboard() {
                       <td className="py-3 px-4">
                         <PlanBadge plan={plan.tier} />
                       </td>
+                      {showPriceMetrics && (
                       <td className="py-3 px-4 text-right font-medium">
                         {formatCurrency(plan.price || 0)}
                         <span className="text-muted-foreground text-xs">/{plan.billing_period || 'mo'}</span>
                       </td>
+                      )}
                       <td className="py-3 px-4 text-center">{plan.limits?.max_users || '-'}</td>
                       <td className="py-3 px-4 text-center">{plan.limits?.max_campaigns || '-'}</td>
                       <td className="py-3 px-4 text-center">{plan.limits?.max_connectors || '-'}</td>
@@ -1072,7 +1096,7 @@ export default function SuperadminDashboard() {
                     <tr>
                       <th className="text-left py-3 px-4 font-medium">Invoice</th>
                       <th className="text-left py-3 px-4 font-medium">Tenant</th>
-                      <th className="text-right py-3 px-4 font-medium">Amount</th>
+                      {showPriceMetrics && <th className="text-right py-3 px-4 font-medium">Amount</th>}
                       <th className="text-center py-3 px-4 font-medium">Status</th>
                       <th className="text-left py-3 px-4 font-medium">Due Date</th>
                       <th className="text-right py-3 px-4 font-medium">Actions</th>
@@ -1083,7 +1107,7 @@ export default function SuperadminDashboard() {
                       <tr key={inv.id} className="hover:bg-muted/30">
                         <td className="py-3 px-4 font-medium">{inv.invoice_number}</td>
                         <td className="py-3 px-4">{inv.tenant_name}</td>
-                        <td className="py-3 px-4 text-right font-medium">{formatCurrency(inv.total)}</td>
+                        {showPriceMetrics && <td className="py-3 px-4 text-right font-medium">{formatCurrency(inv.total)}</td>}
                         <td className="py-3 px-4 text-center">
                           <span className={cn(
                             'px-2 py-1 rounded-full text-xs',

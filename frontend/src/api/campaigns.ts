@@ -153,6 +153,14 @@ export const campaignsApi = {
   },
 
   /**
+   * Sync all campaigns from all platforms
+   */
+  syncAllCampaigns: async (): Promise<{ task_id: string; message: string }> => {
+    const response = await apiClient.post<ApiResponse<{ task_id: string; message: string }>>('/campaigns/sync-all')
+    return response.data.data
+  },
+
+  /**
    * Bulk update campaign status
    */
   bulkUpdateStatus: async (
@@ -256,6 +264,17 @@ export function useSyncCampaign() {
     mutationFn: campaignsApi.syncCampaign,
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ['campaigns', id] })
+    },
+  })
+}
+
+export function useSyncAllCampaigns() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: campaignsApi.syncAllCampaigns,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['campaigns'] })
     },
   })
 }

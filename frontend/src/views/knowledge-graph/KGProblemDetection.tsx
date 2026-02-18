@@ -16,6 +16,7 @@ import {
   FunnelIcon,
 } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
+import { usePriceMetrics } from '@/hooks/usePriceMetrics';
 import { useKGProblems, useResolveKGProblem, type ProblemSeverity } from '@/api/knowledgeGraph';
 import { ProblemCard } from '@/components/shared/ProblemCard';
 
@@ -26,6 +27,7 @@ const fadeIn = {
 };
 
 export default function KGProblemDetection() {
+  const { showPriceMetrics } = usePriceMetrics()
   const [severityFilter, setSeverityFilter] = useState<ProblemSeverity | 'all'>('all');
 
   const { data, isLoading } = useKGProblems(
@@ -105,11 +107,14 @@ export default function KGProblemDetection() {
 
         {/* Metric Cards */}
         <motion.div
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+          className={cn(
+            'grid grid-cols-1 sm:grid-cols-2 gap-4',
+            showPriceMetrics ? 'lg:grid-cols-4' : 'lg:grid-cols-3'
+          )}
           {...fadeIn}
           transition={{ delay: 0.1 }}
         >
-          {metricCards.map((card) => (
+          {metricCards.filter(card => showPriceMetrics || card.label !== 'Revenue at Risk').map((card) => (
             <div
               key={card.label}
               className={cn(

@@ -37,6 +37,7 @@ import {
 import { cn, formatCurrency, formatCompactNumber } from '@/lib/utils'
 import { SimulateSlider } from '@/components/widgets/SimulateSlider'
 import { useInsights, useRecommendations, useAnomalies, useLivePredictions } from '@/api/hooks'
+import { usePriceMetrics } from '@/hooks/usePriceMetrics'
 import { useTenantStore } from '@/stores/tenantStore'
 
 // (Mock data removed — insights come from useInsights() API hook)
@@ -725,6 +726,7 @@ function AlertConfigurationModal({
   onClose: () => void
   onSave: (rule: AlertRule, isEdit: boolean) => void
 }) {
+  const { showPriceMetrics } = usePriceMetrics()
   const [isSaving, setIsSaving] = useState(false)
   const [hasChanges, setHasChanges] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -834,10 +836,10 @@ function AlertConfigurationModal({
     }
   }
 
-  const metrics = [
-    'CTR', 'CPA', 'CPC', 'CPM', 'ROAS', 'Conversions',
-    'Impressions', 'Clicks', 'Spend', 'Revenue'
-  ]
+  const priceMetricNames = ['CPA', 'CPC', 'CPM', 'ROAS', 'Spend', 'Revenue']
+  const metrics = showPriceMetrics
+    ? ['CTR', 'CPA', 'CPC', 'CPM', 'ROAS', 'Conversions', 'Impressions', 'Clicks', 'Spend', 'Revenue']
+    : ['CTR', 'Conversions', 'Impressions', 'Clicks'].filter((m) => !priceMetricNames.includes(m))
 
   const conditions = [
     { value: 'above', label: 'Goes above' },
@@ -1133,6 +1135,7 @@ function AlertConfigurationModal({
 
 export function Stratum() {
   const { t } = useTranslation()
+  const { showPriceMetrics } = usePriceMetrics()
   const [selectedTimeframe, setSelectedTimeframe] = useState('7d')
   const [selectedInsight, setSelectedInsight] = useState<Insight | null>(null)
   const [appliedInsights, setAppliedInsights] = useState<number[]>([])
@@ -1406,8 +1409,9 @@ export function Stratum() {
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Revenue Forecast */}
-        <div className="lg:col-span-2 rounded-xl border bg-card p-5">
+        {/* Revenue Forecast — hidden when price metrics are off */}
+        {!showPriceMetrics && <div className="lg:col-span-2" />}
+        {showPriceMetrics && <div className="lg:col-span-2 rounded-xl border bg-card p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="font-semibold">{t('stratum.revenueForecast')}</h3>
@@ -1526,7 +1530,7 @@ export function Stratum() {
               <p className="text-xs text-muted-foreground">Last 30 days</p>
             </div>
           </div>
-        </div>
+        </div>}
 
         {/* What-If Simulator */}
         <SimulateSlider />

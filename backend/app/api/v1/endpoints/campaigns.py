@@ -380,6 +380,25 @@ async def get_campaign_metrics(
     )
 
 
+@router.post("/sync-all")
+async def trigger_sync_all_campaigns(
+    request: Request,
+) -> APIResponse:
+    """
+    Trigger a manual sync for all campaigns across all platforms.
+    Queues a Celery task to fetch latest data from every ad platform.
+    """
+    from app.workers.tasks import sync_all_campaigns
+
+    task = sync_all_campaigns.delay()
+
+    return APIResponse(
+        success=True,
+        data={"task_id": task.id},
+        message="Sync all campaigns queued successfully",
+    )
+
+
 @router.post("/{campaign_id}/sync")
 async def trigger_campaign_sync(
     request: Request,

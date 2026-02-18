@@ -20,6 +20,7 @@ import {
 import { cn, formatCurrency, formatPercent, formatCompactNumber, getPlatformColor } from '@/lib/utils'
 import CampaignCreateModal from '@/components/campaigns/CampaignCreateModal'
 import { useCampaigns, usePauseCampaign, useActivateCampaign, useDeleteCampaign } from '@/api/hooks'
+import { usePriceMetrics } from '@/hooks/usePriceMetrics'
 
 interface Campaign {
   id: number
@@ -42,6 +43,7 @@ type SortDirection = 'asc' | 'desc'
 
 export function Campaigns() {
   const { t } = useTranslation()
+  const { showPriceMetrics } = usePriceMetrics()
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [platformFilter, setPlatformFilter] = useState<string>('all')
@@ -334,33 +336,39 @@ export function Campaigns() {
                   </button>
                 </th>
                 <th className="p-4 text-left text-sm font-medium">{t('campaigns.status')}</th>
-                <th className="p-4 text-right">
-                  <button
-                    onClick={() => handleSort('spend')}
-                    className="flex items-center gap-1 text-sm font-medium hover:text-primary ml-auto"
-                  >
-                    {t('campaigns.spend')}
-                    <SortIcon field="spend" />
-                  </button>
-                </th>
-                <th className="p-4 text-right">
-                  <button
-                    onClick={() => handleSort('revenue')}
-                    className="flex items-center gap-1 text-sm font-medium hover:text-primary ml-auto"
-                  >
-                    {t('campaigns.revenue')}
-                    <SortIcon field="revenue" />
-                  </button>
-                </th>
-                <th className="p-4 text-right">
-                  <button
-                    onClick={() => handleSort('roas')}
-                    className="flex items-center gap-1 text-sm font-medium hover:text-primary ml-auto"
-                  >
-                    ROAS
-                    <SortIcon field="roas" />
-                  </button>
-                </th>
+                {showPriceMetrics && (
+                  <th className="p-4 text-right">
+                    <button
+                      onClick={() => handleSort('spend')}
+                      className="flex items-center gap-1 text-sm font-medium hover:text-primary ml-auto"
+                    >
+                      {t('campaigns.spend')}
+                      <SortIcon field="spend" />
+                    </button>
+                  </th>
+                )}
+                {showPriceMetrics && (
+                  <th className="p-4 text-right">
+                    <button
+                      onClick={() => handleSort('revenue')}
+                      className="flex items-center gap-1 text-sm font-medium hover:text-primary ml-auto"
+                    >
+                      {t('campaigns.revenue')}
+                      <SortIcon field="revenue" />
+                    </button>
+                  </th>
+                )}
+                {showPriceMetrics && (
+                  <th className="p-4 text-right">
+                    <button
+                      onClick={() => handleSort('roas')}
+                      className="flex items-center gap-1 text-sm font-medium hover:text-primary ml-auto"
+                    >
+                      ROAS
+                      <SortIcon field="roas" />
+                    </button>
+                  </th>
+                )}
                 <th className="p-4 text-right">
                   <button
                     onClick={() => handleSort('conversions')}
@@ -391,29 +399,37 @@ export function Campaigns() {
                       {getPlatformBadge(campaign.platform)}
                       <div>
                         <p className="font-medium">{campaign.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatCurrency(campaign.spend)} / {formatCurrency(campaign.budget)}
-                        </p>
+                        {showPriceMetrics && (
+                          <p className="text-xs text-muted-foreground">
+                            {formatCurrency(campaign.spend)} / {formatCurrency(campaign.budget)}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </td>
                   <td className="p-4">{getStatusBadge(campaign.status)}</td>
-                  <td className="p-4 text-right font-medium">{formatCurrency(campaign.spend)}</td>
-                  <td className="p-4 text-right font-medium text-green-500">
-                    {formatCurrency(campaign.revenue)}
-                  </td>
-                  <td className="p-4 text-right">
-                    <span
-                      className={cn(
-                        'font-semibold',
-                        campaign.roas >= 4 && 'text-green-500',
-                        campaign.roas >= 3 && campaign.roas < 4 && 'text-primary',
-                        campaign.roas < 3 && 'text-amber-500'
-                      )}
-                    >
-                      {campaign.roas.toFixed(2)}x
-                    </span>
-                  </td>
+                  {showPriceMetrics && (
+                    <td className="p-4 text-right font-medium">{formatCurrency(campaign.spend)}</td>
+                  )}
+                  {showPriceMetrics && (
+                    <td className="p-4 text-right font-medium text-green-500">
+                      {formatCurrency(campaign.revenue)}
+                    </td>
+                  )}
+                  {showPriceMetrics && (
+                    <td className="p-4 text-right">
+                      <span
+                        className={cn(
+                          'font-semibold',
+                          campaign.roas >= 4 && 'text-green-500',
+                          campaign.roas >= 3 && campaign.roas < 4 && 'text-primary',
+                          campaign.roas < 3 && 'text-amber-500'
+                        )}
+                      >
+                        {campaign.roas.toFixed(2)}x
+                      </span>
+                    </td>
+                  )}
                   <td className="p-4 text-right">{formatCompactNumber(campaign.conversions)}</td>
                   <td className="p-4 text-right">{formatPercent(campaign.ctr)}</td>
                   <td className="p-4 text-center">
