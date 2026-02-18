@@ -214,6 +214,29 @@ class Settings(BaseSettings):
     sentry_dsn: Optional[str] = Field(default=None)
 
     # -------------------------------------------------------------------------
+    # SMTP / Email Configuration
+    # -------------------------------------------------------------------------
+    smtp_host: Optional[str] = Field(default=None, description="SMTP server hostname")
+    smtp_port: int = Field(default=587, description="SMTP server port")
+    smtp_user: Optional[str] = Field(default=None, description="SMTP username")
+    smtp_password: Optional[str] = Field(default=None, description="SMTP password")
+    smtp_tls: bool = Field(default=True, description="Use STARTTLS")
+    smtp_ssl: bool = Field(default=False, description="Use SSL")
+    email_from_name: str = Field(default="Stratum AI", description="Sender display name")
+    email_from_address: str = Field(
+        default="noreply@stratumhq.com", description="Sender email address"
+    )
+    frontend_url: str = Field(
+        default="http://localhost:5173", description="Frontend base URL for email links"
+    )
+    email_verification_expire_hours: int = Field(
+        default=24, description="Email verification token TTL in hours"
+    )
+    password_reset_expire_hours: int = Field(
+        default=1, description="Password reset token TTL in hours"
+    )
+
+    # -------------------------------------------------------------------------
     # Rate Limiting
     # -------------------------------------------------------------------------
     rate_limit_per_minute: int = Field(default=100)

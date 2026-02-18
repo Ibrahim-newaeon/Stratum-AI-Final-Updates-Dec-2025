@@ -1,7 +1,7 @@
 """Add autopilot enforcement tables
 
 Revision ID: 020_autopilot_enforcement
-Revises: 019_add_automated_reporting_tables
+Revises: 019_reporting
 Create Date: 2026-01-07 00:00:00.000000
 """
 
@@ -11,7 +11,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers
 revision = '020_autopilot_enforcement'
-down_revision = '019_add_automated_reporting_tables'
+down_revision = '019_reporting'
 branch_labels = None
 depends_on = None
 

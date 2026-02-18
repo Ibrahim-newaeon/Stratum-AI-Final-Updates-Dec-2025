@@ -772,6 +772,10 @@ class AllocationLearning:
     similar_past_allocations: List[Dict[str, Any]]
 
 
+# Alias for backward compatibility
+CampaignState = CampaignBudgetState
+
+
 class MultiObjectiveOptimizer:
     """
     Multi-objective optimization for budget allocation.
