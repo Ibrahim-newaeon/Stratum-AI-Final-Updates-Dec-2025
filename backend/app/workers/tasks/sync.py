@@ -17,7 +17,7 @@ from sqlalchemy import select
 from app.core.config import settings
 from app.db.session import SyncSessionLocal
 from app.models import Campaign, CampaignMetric, Tenant
-from app.workers.celery_app import with_distributed_lock
+from app.workers.locks import with_distributed_lock
 from app.workers.tasks.helpers import publish_event
 
 logger = get_task_logger(__name__)

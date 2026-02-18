@@ -23,7 +23,7 @@ from app.models import (
     RuleExecution,
     RuleStatus,
 )
-from app.workers.celery_app import with_distributed_lock
+from app.workers.locks import with_distributed_lock
 from app.workers.tasks.helpers import publish_event
 
 logger = get_task_logger(__name__)
