@@ -124,7 +124,8 @@ describe('TenantInsights', () => {
 
     it('should display Revenue KPI card', () => {
       renderInsights();
-      expect(screen.getByText('Revenue')).toBeInTheDocument();
+      // "Revenue" appears in both the KPI card and table headers
+      expect(screen.getAllByText('Revenue').length).toBeGreaterThanOrEqual(1);
       expect(screen.getByText('$125,000')).toBeInTheDocument();
     });
 
@@ -136,7 +137,8 @@ describe('TenantInsights', () => {
 
     it('should display ROAS KPI card', () => {
       renderInsights();
-      expect(screen.getByText('ROAS')).toBeInTheDocument();
+      // "ROAS" appears in both the KPI card and table headers
+      expect(screen.getAllByText('ROAS').length).toBeGreaterThanOrEqual(1);
       expect(screen.getByText('2.78x')).toBeInTheDocument();
     });
 
