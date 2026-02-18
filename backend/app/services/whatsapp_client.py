@@ -454,7 +454,28 @@ class WhatsAppClient:
         return events
 
 
+class WhatsAppNotConfiguredError(Exception):
+    """Raised when WhatsApp credentials are not configured."""
+    pass
+
+
 # Singleton instance for convenience
 def get_whatsapp_client() -> WhatsAppClient:
-    """Get a configured WhatsApp client instance."""
+    """Get a configured WhatsApp client instance.
+
+    Raises:
+        WhatsAppNotConfiguredError: If required WhatsApp credentials are missing.
+    """
+    if not settings.whatsapp_phone_number_id or not settings.whatsapp_access_token:
+        raise WhatsAppNotConfiguredError(
+            "WhatsApp is not configured. Set WHATSAPP_PHONE_NUMBER_ID and "
+            "WHATSAPP_ACCESS_TOKEN environment variables."
+        )
     return WhatsAppClient()
+
+
+def is_whatsapp_configured() -> bool:
+    """Check if WhatsApp credentials are properly configured."""
+    return bool(
+        settings.whatsapp_phone_number_id and settings.whatsapp_access_token
+    )
