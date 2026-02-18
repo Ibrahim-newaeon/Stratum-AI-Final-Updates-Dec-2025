@@ -17,7 +17,6 @@ import {
   VideoCameraIcon,
   XMarkIcon,
   CloudArrowUpIcon,
-  DocumentIcon,
 } from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
 import {
@@ -25,7 +24,6 @@ import {
   useCreateCampaignDraft,
   useSubmitDraft,
   useCampaignDraft,
-  type Platform as APIPlatform,
 } from '@/api/campaignBuilder'
 
 type Platform = 'meta' | 'google' | 'tiktok' | 'snapchat'
@@ -148,7 +146,7 @@ export default function CampaignBuilder() {
   // API mutation hooks
   const createDraft = useCreateCampaignDraft(tid)
   const submitDraft = useSubmitDraft(tid)
-  const { data: existingDraft } = useCampaignDraft(tid, draftId || '')
+  const { data: _existingDraft } = useCampaignDraft(tid, draftId || '')
 
   // Combine ad accounts with fallback to mock
   const adAccounts = useMemo(() => {

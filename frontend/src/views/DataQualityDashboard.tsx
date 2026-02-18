@@ -9,9 +9,7 @@ import {
   Activity,
   AlertTriangle,
   CheckCircle2,
-  ChevronDown,
   Database,
-  Filter,
   Info,
   Layers,
   Lock,
@@ -320,11 +318,11 @@ export function DataQualityDashboard() {
   // Data state - initialized with mock data as fallback
   const [kpis, setKpis] = useState<KPICard[]>(mockKPIs)
   const [platformEMQ, setPlatformEMQ] = useState<PlatformEMQ[]>(mockPlatformEMQ)
-  const [eventEMQ, setEventEMQ] = useState<EventEMQ[]>(mockEventEMQ)
-  const [parameterCoverage, setParameterCoverage] = useState<ParameterCoverage[]>(mockParameterCoverage)
-  const [serverBrowserSplit, setServerBrowserSplit] = useState<ServerBrowserSplit[]>(mockServerBrowserSplit)
-  const [integrityIssues, setIntegrityIssues] = useState<IntegrityIssue[]>(mockIntegrityIssues)
-  const [piiViolations, setPiiViolations] = useState<PIIViolation[]>(mockPIIViolations)
+  const [eventEMQ, _setEventEMQ] = useState<EventEMQ[]>(mockEventEMQ)
+  const [_parameterCoverage, _setParameterCoverage] = useState<ParameterCoverage[]>(mockParameterCoverage)
+  const [serverBrowserSplit, _setServerBrowserSplit] = useState<ServerBrowserSplit[]>(mockServerBrowserSplit)
+  const [integrityIssues, _setIntegrityIssues] = useState<IntegrityIssue[]>(mockIntegrityIssues)
+  const [piiViolations, _setPiiViolations] = useState<PIIViolation[]>(mockPIIViolations)
   const [alerts, setAlerts] = useState<Alert[]>(mockAlerts)
   const [recommendations, setRecommendations] = useState<Recommendation[]>(mockRecommendations)
 

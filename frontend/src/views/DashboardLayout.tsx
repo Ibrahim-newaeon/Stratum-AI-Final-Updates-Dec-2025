@@ -12,7 +12,6 @@ import {
   Bars3Icon,
   XMarkIcon,
   BellIcon,
-  UserCircleIcon,
   BookOpenIcon,
   ChatBubbleLeftRightIcon,
   Squares2X2Icon,
@@ -318,7 +317,7 @@ export default function DashboardLayout() {
       </div>
 
       {/* Learning Hub Sidebar */}
-      <LearningHub open={learningHubOpen} onClose={() => setLearningHubOpen(false)} />
+      <LearningHub isOpen={learningHubOpen} onClose={() => setLearningHubOpen(false)} />
     </div>
   )
 }

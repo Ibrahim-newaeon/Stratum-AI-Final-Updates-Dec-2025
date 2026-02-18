@@ -14,9 +14,6 @@ import {
   PolarAngleAxis,
   PolarRadiusAxis,
   Radar,
-  ScatterChart,
-  Scatter,
-  ZAxis,
 } from 'recharts'
 import {
   Trophy,
@@ -25,7 +22,6 @@ import {
   Target,
   Users,
   Globe,
-  Filter,
   Download,
   RefreshCw,
   Info,
@@ -48,15 +44,6 @@ const mockRadarData = [
   { metric: 'Reach', you: 65, industry: 80 },
   { metric: 'Engagement', you: 90, industry: 72 },
 ]
-
-// Mock market share trend
-const mockMarketShareTrend = Array.from({ length: 12 }, (_, i) => ({
-  month: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][i],
-  you: 15 + Math.random() * 5 + i * 0.3,
-  compA: 22 + Math.random() * 4 - i * 0.2,
-  compB: 20 + Math.random() * 3,
-  compC: 14 + Math.random() * 4 + i * 0.1,
-}))
 
 // Mock demographic data for heatmap
 const mockDemographics = [

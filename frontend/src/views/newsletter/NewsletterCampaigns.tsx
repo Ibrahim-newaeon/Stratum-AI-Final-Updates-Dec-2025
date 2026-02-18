@@ -3,7 +3,7 @@
  */
 
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   ChartBarIcon,
   DocumentDuplicateIcon,
@@ -118,7 +118,6 @@ function formatNumber(value: number): string {
 // ---------------------------------------------------------------------------
 
 export default function NewsletterCampaigns() {
-  const navigate = useNavigate();
 
   // Filter & pagination state
   const [statusFilter, setStatusFilter] = useState<CampaignStatus | undefined>(undefined);

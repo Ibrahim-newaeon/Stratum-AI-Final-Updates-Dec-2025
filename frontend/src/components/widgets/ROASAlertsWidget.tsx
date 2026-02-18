@@ -10,7 +10,6 @@ import {
   AlertTriangle,
   AlertCircle,
   TrendingUp,
-  TrendingDown,
   ArrowRight,
   RefreshCw,
   CheckCircle,
@@ -77,7 +76,7 @@ const severityConfig = {
 }
 
 export function ROASAlertsWidget({ className, limit = 5 }: ROASAlertsWidgetProps) {
-  const { t } = useTranslation()
+  const { t: _t } = useTranslation()
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [alerts, setAlerts] = useState<PredictionAlert[]>([])

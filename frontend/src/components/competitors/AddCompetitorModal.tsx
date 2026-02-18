@@ -10,8 +10,9 @@
  */
 
 import { useState } from 'react';
-import { useCreateCompetitor, useCompetitors, useScanCompetitor } from '@/api/hooks';
-import type { CompetitorScanResult } from '@/api/competitors';
+import { useMutation } from '@tanstack/react-query';
+import { useCreateCompetitor, useCompetitors } from '@/api/hooks';
+import { apiClient, ApiResponse } from '@/api/client';
 import {
   ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
@@ -24,6 +25,46 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
+
+// Local type definition (not yet exported from API module)
+interface CompetitorScanResult {
+  social_links?: {
+    facebook?: string
+    instagram?: string
+    twitter?: string
+    tiktok?: string
+    linkedin?: string
+  }
+  ad_library?: {
+    has_ads: boolean
+    ad_count: number
+    page_name?: string
+    search_query?: string
+    ads?: Array<{
+      id?: string
+      link_title?: string
+      page_name?: string
+      snapshot_url?: string
+      creative_body?: string
+      start_date?: string
+      platforms?: string[]
+    }>
+    search_url?: string
+    error?: string
+  }
+  scrape_error?: string
+  fb_page_name?: string
+  ig_account_name?: string
+}
+
+function useScanCompetitor() {
+  return useMutation({
+    mutationFn: async (params: { domain: string; name: string; country: string }) => {
+      const response = await apiClient.post<ApiResponse<CompetitorScanResult>>('/competitors/scan', params)
+      return response.data.data
+    },
+  })
+}
 
 // Countries for Meta Ads Library and Google Transparency
 const COUNTRIES = [

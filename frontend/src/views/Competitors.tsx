@@ -19,7 +19,6 @@ import {
   ChartBarIcon,
   ArrowPathIcon,
   EllipsisHorizontalIcon,
-  ExclamationTriangleIcon,
   XMarkIcon,
   CheckIcon,
   TrashIcon,
@@ -80,7 +79,7 @@ const PLATFORMS = [
 ]
 
 export function Competitors() {
-  const { t } = useTranslation()
+  const { t: _t } = useTranslation()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCompetitor, setSelectedCompetitor] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -156,7 +155,7 @@ export function Competitors() {
   }
 
   // Sample competitors
-  const competitors: Competitor[] = competitorsData?.map((c) => ({
+  const competitors: Competitor[] = competitorsData?.items.map((c) => ({
     id: c.id,
     name: c.name,
     domain: c.domain,
@@ -232,7 +231,10 @@ export function Competitors() {
   ]
 
   // Share of Voice data
-  const shareOfVoice = sovData ?? {
+  const shareOfVoice = sovData ? {
+    you: sovData[0]?.tenantShare ?? 15,
+    competitors: (sovData[0]?.data ?? []).map(d => ({ name: d.competitorName, share: d.share })),
+  } : {
     you: 15,
     competitors: [
       { name: 'MarketLeader Inc', share: 35 },

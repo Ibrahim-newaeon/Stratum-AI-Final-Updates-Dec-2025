@@ -14,10 +14,8 @@ import {
   DollarSign,
   AlertTriangle,
   TrendingUp,
-  TrendingDown,
   ChevronRight,
   Shield,
-  Clock,
   Globe,
   Database,
   Cpu,
@@ -26,12 +24,10 @@ import {
   RefreshCw,
   Plus,
   Search,
-  MoreVertical,
   CheckCircle2,
   XCircle,
   Eye,
   Edit,
-  Trash2,
   Ban,
   Settings,
   Key,
@@ -47,9 +43,8 @@ import {
   Receipt,
   Package,
   Calendar,
-  Filter,
 } from 'lucide-react'
-import { cn, getPlatformColor } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import axios from 'axios'
 
@@ -127,7 +122,7 @@ const mockAlerts: SystemAlert[] = [
 // Main Component
 // =============================================================================
 export default function SuperadminDashboard() {
-  const { t } = useTranslation()
+  const { t: _t } = useTranslation()
   const { user } = useAuth()
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -214,12 +209,6 @@ export default function SuperadminDashboard() {
         t.plan.toLowerCase().includes(query)
     )
   }, [tenants, searchQuery])
-
-  const formatNumber = (num: number) => {
-    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`
-    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`
-    return num.toString()
-  }
 
   const formatCurrency = (num: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -1097,7 +1086,7 @@ export default function SuperadminDashboard() {
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {invoices.map((inv, idx) => (
+                    {invoices.map((inv, _idx) => (
                       <tr key={inv.id} className="hover:bg-muted/30">
                         <td className="py-3 px-4 font-medium">{inv.invoice_number}</td>
                         <td className="py-3 px-4">{inv.tenant_name}</td>

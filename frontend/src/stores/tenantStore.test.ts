@@ -45,7 +45,7 @@ const createMockUser = (overrides: Partial<User> = {}): User => ({
   id: 1,
   email: 'user@stratum.ai',
   full_name: 'Test User',
-  role: 'user',
+  role: 'user' as UserRole,
   avatar_url: null,
   locale: 'en',
   timezone: 'UTC',
@@ -230,7 +230,7 @@ describe('tenantStore', () => {
     });
 
     it('should not enable superadmin mode when user role is user', () => {
-      const user = createMockUser({ role: 'user' });
+      const user = createMockUser({ role: 'user' as UserRole });
       useTenantStore.getState().setUser(user);
 
       expect(useTenantStore.getState().isSuperAdminMode).toBe(false);
@@ -279,7 +279,7 @@ describe('tenantStore', () => {
     });
 
     it('isAdmin should return false for regular user role', () => {
-      useTenantStore.getState().setUser(createMockUser({ role: 'user' }));
+      useTenantStore.getState().setUser(createMockUser({ role: 'user' as UserRole }));
 
       expect(useTenantStore.getState().isAdmin()).toBe(false);
     });
@@ -301,7 +301,7 @@ describe('tenantStore', () => {
     });
 
     it('hasRole should work for each UserRole type', () => {
-      const roles: UserRole[] = ['superadmin', 'admin', 'user', 'manager', 'media_buyer', 'analyst', 'account_manager', 'viewer'];
+      const roles: UserRole[] = ['superadmin', 'admin', 'user' as UserRole, 'manager', 'media_buyer', 'analyst', 'account_manager', 'viewer'];
 
       for (const role of roles) {
         useTenantStore.getState().setUser(createMockUser({ role }));
@@ -518,7 +518,7 @@ describe('tenantStore', () => {
 
       // Switch to regular user - note: setUser does not auto-disable superAdminMode
       // It only auto-enables for superadmin. The mode stays until explicitly changed or logout.
-      useTenantStore.getState().setUser(createMockUser({ role: 'user' }));
+      useTenantStore.getState().setUser(createMockUser({ role: 'user' as UserRole }));
       expect(useTenantStore.getState().user?.role).toBe('user');
     });
 

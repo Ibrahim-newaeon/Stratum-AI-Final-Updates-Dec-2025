@@ -14,7 +14,6 @@ import {
   TrendingUp,
   Sparkles,
   ChevronRight,
-  DollarSign,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -41,7 +40,7 @@ interface BudgetOptimizerWidgetProps {
 }
 
 export function BudgetOptimizerWidget({ className }: BudgetOptimizerWidgetProps) {
-  const { t } = useTranslation()
+  const { t: _t } = useTranslation()
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [reallocations, setReallocations] = useState<BudgetReallocation[]>([])

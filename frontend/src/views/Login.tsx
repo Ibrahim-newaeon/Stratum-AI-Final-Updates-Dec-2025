@@ -11,7 +11,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { cn } from '@/lib/utils'
 
 export default function Login() {
-  const { t } = useTranslation()
+  const { t: _t } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
   const { login } = useAuth()

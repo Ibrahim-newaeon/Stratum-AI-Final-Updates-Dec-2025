@@ -33,13 +33,10 @@ import {
   PhoneIcon,
   CalendarIcon,
   ShieldCheckIcon,
-  ExclamationTriangleIcon,
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
-  CheckCircleIcon,
   XCircleIcon,
   ClockIcon,
-  ChartBarIcon,
 } from '@heroicons/react/24/outline'
 
 interface BlockedAction {
@@ -72,7 +69,7 @@ export default function TenantNarrative() {
   }
 
   // Fetch data
-  const { data: tenantData } = useTenant(tenantId || '')
+  const { data: tenantData } = useTenant(tid)
   const { data: emqData } = useEmqScore(tid)
   const { data: autopilotData } = useAutopilotState(tid)
   const { data: playbookData } = useEmqPlaybook(tid)
@@ -86,7 +83,7 @@ export default function TenantNarrative() {
   const tenant = {
     id: tenantId,
     name: tenantData?.name ?? 'Fashion Forward',
-    industry: tenantData?.industry ?? 'Retail',
+    industry: (tenantData as any)?.industry ?? 'Retail',
     plan: 'Pro',
     primaryContact: {
       name: 'Jennifer Smith',
@@ -167,7 +164,7 @@ export default function TenantNarrative() {
     },
   ]
 
-  const playbook: PlaybookItem[] = playbookData ?? [
+  const playbook: PlaybookItem[] = (playbookData as unknown as PlaybookItem[] | undefined) ?? ([
     {
       id: '1',
       title: 'Fix TikTok conversion tracking',
@@ -178,19 +175,19 @@ export default function TenantNarrative() {
       estimatedTime: '2 hours',
       platform: 'TikTok',
       status: 'in_progress',
-      actionUrl: null,
+      actionUrl: undefined,
     },
     {
       id: '2',
       title: 'Resolve Meta pixel data loss',
       description: '8% event loss detected on purchase events.',
       priority: 'high',
-      owner: null,
+      owner: undefined,
       estimatedImpact: 6,
       estimatedTime: '1 hour',
       platform: 'Meta',
       status: 'pending',
-      actionUrl: null,
+      actionUrl: undefined,
     },
     {
       id: '3',
@@ -202,11 +199,11 @@ export default function TenantNarrative() {
       estimatedTime: '30 min',
       platform: 'Snapchat',
       status: 'pending',
-      actionUrl: null,
+      actionUrl: undefined,
     },
-  ]
+  ] as PlaybookItem[])
 
-  const timeline: TimelineEvent[] = incidentsData?.map((i) => ({
+  const timeline: TimelineEvent[] = (incidentsData?.map((i) => ({
     id: i.id,
     type: i.type,
     title: i.title,
@@ -216,7 +213,7 @@ export default function TenantNarrative() {
     severity: i.severity,
     recoveryHours: i.recoveryHours ?? undefined,
     emqImpact: i.emqImpact ?? undefined,
-  })) ?? [
+  })) as unknown as TimelineEvent[] | undefined) ?? ([
     {
       id: '1',
       type: 'incident_opened',
@@ -229,7 +226,7 @@ export default function TenantNarrative() {
     },
     {
       id: '2',
-      type: 'mode_change',
+      type: 'update',
       title: 'Autopilot mode → cuts_only',
       description: 'Automatic protection triggered',
       timestamp: new Date(Date.now() - 16 * 60 * 60 * 1000),
@@ -247,13 +244,13 @@ export default function TenantNarrative() {
     },
     {
       id: '4',
-      type: 'action_blocked',
+      type: 'update',
       title: '3 scaling actions blocked',
       description: 'Protected $12,000 budget at risk',
       timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000),
       severity: 'low',
     },
-  ]
+  ] as TimelineEvent[])
 
   const tabs = [
     { id: 'summary' as const, label: 'Client Summary' },

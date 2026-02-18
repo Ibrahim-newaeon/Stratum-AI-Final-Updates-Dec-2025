@@ -1,12 +1,10 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   User,
   Building,
   Bell,
   Shield,
-  Key,
-  Globe,
   Palette,
   Link2,
   CreditCard,
@@ -24,12 +22,12 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTenantStore } from '@/stores/tenantStore'
-import { useFeatureFlags, useExportData, useRequestDeletion } from '@/api/hooks'
+import { useExportData, useRequestDeletion } from '@/api/hooks'
 
 type SettingsTab = 'profile' | 'organization' | 'notifications' | 'security' | 'integrations' | 'preferences' | 'billing' | 'gdpr'
 
 export function Settings() {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile')
   const [showApiKey, setShowApiKey] = useState(false)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
@@ -770,11 +768,10 @@ function BillingSettings() {
 
 function GDPRSettings() {
   const { t } = useTranslation()
-  const tenantId = useTenantStore((state) => state.tenantId) ?? 1
 
   // API hooks for GDPR operations
-  const exportData = useExportData(tenantId)
-  const requestDeletion = useRequestDeletion(tenantId)
+  const exportData = useExportData()
+  const requestDeletion = useRequestDeletion()
 
   const [exportStatus, setExportStatus] = useState<'idle' | 'processing' | 'ready'>('idle')
 
@@ -782,10 +779,7 @@ function GDPRSettings() {
   const handleExport = async () => {
     setExportStatus('processing')
     try {
-      await exportData.mutateAsync({
-        format: 'json',
-        categories: ['all'],
-      })
+      await exportData.mutateAsync('json')
       setExportStatus('ready')
     } catch (error) {
       console.error('Export failed:', error)
@@ -800,10 +794,7 @@ function GDPRSettings() {
       return
     }
     try {
-      await requestDeletion.mutateAsync({
-        reason: 'User requested account deletion',
-        categories: ['all'],
-      })
+      await requestDeletion.mutateAsync('User requested account deletion')
       alert('Deletion request submitted. You will receive an email confirmation.')
     } catch (error) {
       console.error('Deletion request failed:', error)

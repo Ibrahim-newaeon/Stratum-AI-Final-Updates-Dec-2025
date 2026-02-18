@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Search,
-  Filter,
   Upload,
   Grid,
   List,
@@ -21,8 +20,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import { cn, formatCompactNumber, formatPercent } from '@/lib/utils'
-import { useAssets, useDeleteAsset, useBulkArchiveAssets } from '@/api/hooks'
-import { useTenantStore } from '@/stores/tenantStore'
+import { useAssets, useBulkArchiveAssets } from '@/api/hooks'
 
 type AssetType = 'image' | 'video' | 'copy'
 type AssetStatus = 'active' | 'paused' | 'fatigued' | 'draft'
@@ -132,13 +130,9 @@ export function Assets() {
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
   const [selectedAssets, setSelectedAssets] = useState<number[]>([])
 
-  // Get tenant ID from tenant store
-  const tenantId = useTenantStore((state) => state.tenantId) ?? 1
-
   // Fetch assets from API
-  const { data: assetsData, isLoading } = useAssets(tenantId)
-  const deleteAsset = useDeleteAsset(tenantId)
-  const bulkArchive = useBulkArchiveAssets(tenantId)
+  const { data: assetsData, isLoading: _isLoading } = useAssets()
+  const bulkArchive = useBulkArchiveAssets()
 
   // Transform API data or fall back to mock
   const assets = useMemo((): Asset[] => {

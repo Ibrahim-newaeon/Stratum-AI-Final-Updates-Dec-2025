@@ -1,4 +1,4 @@
-import { TrendingUp, TrendingDown, DollarSign, ShoppingCart, Eye, MousePointer, Target, Percent } from 'lucide-react'
+import { TrendingUp, TrendingDown, DollarSign, ShoppingCart, Eye, Target, Percent } from 'lucide-react'
 import { cn, formatCurrency, formatCompactNumber, formatPercent } from '@/lib/utils'
 
 interface KPIWidgetProps {

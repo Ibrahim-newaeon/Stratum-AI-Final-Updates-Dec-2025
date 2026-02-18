@@ -13,13 +13,11 @@ import {
   XCircle,
   Phone,
   UserCheck,
-  UserX,
   Eye,
   Radio,
   Trash2,
   Upload,
   Inbox,
-  Reply,
   ArrowLeft,
   Paperclip,
   Image,
@@ -28,8 +26,6 @@ import {
   Download,
   AlertCircle,
   X,
-  ChevronDown,
-  Globe,
   Loader2,
   Edit2,
   UserMinus,
@@ -296,7 +292,7 @@ interface Conversation {
 }
 
 export function WhatsApp() {
-  const { t } = useTranslation()
+  const { t: _t } = useTranslation()
   const [activeTab, setActiveTab] = useState<TabType>('contacts')
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
@@ -1217,7 +1213,7 @@ export function WhatsApp() {
                         {conv.contact.display_name || conv.contact.phone_number}
                       </span>
                       <span className="text-xs text-muted-foreground">
-                        {formatDate(conv.lastMessage.created_at)}
+                        {conv.lastMessage && formatDate(conv.lastMessage.created_at)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
@@ -1225,10 +1221,10 @@ export function WhatsApp() {
                         'text-sm truncate max-w-[300px]',
                         conv.unreadCount > 0 ? 'text-foreground font-medium' : 'text-muted-foreground'
                       )}>
-                        {conv.lastMessage.direction === 'outbound' && (
+                        {conv.lastMessage?.direction === 'outbound' && (
                           <span className="text-muted-foreground">You: </span>
                         )}
-                        {conv.lastMessage.content || `Template: ${conv.lastMessage.template_name}`}
+                        {conv.lastMessage?.content || (conv.lastMessage?.template_name ? `Template: ${conv.lastMessage.template_name}` : '')}
                       </p>
                       {conv.unreadCount > 0 && (
                         <span className="ml-2 w-5 h-5 rounded-full bg-green-500 text-white text-xs flex items-center justify-center">

@@ -38,7 +38,7 @@ const modelLabels: Record<AttributionModel, string> = {
 }
 
 export default function Attribution() {
-  const { tenantId } = useParams<{ tenantId: string }>()
+  const { tenantId: _tenantId } = useParams<{ tenantId: string }>()
   const [activeTab, setActiveTab] = useState<TabType>('overview')
   const [selectedModel, setSelectedModel] = useState<AttributionModel>('linear')
   const [dateRange] = useState({
@@ -46,14 +46,14 @@ export default function Attribution() {
     endDate: new Date().toISOString().split('T')[0],
   })
 
-  const { data: summary, isLoading: loadingSummary } = useAttributionSummary({
+  const { data: summary, isLoading: _loadingSummary } = useAttributionSummary({
     ...dateRange,
-    model: selectedModel,
+    model: selectedModel as any,
   })
   const { data: topPaths } = useTopConversionPaths({ ...dateRange, limit: 10 })
   const { data: comparison } = useCompareModels({
     ...dateRange,
-    models: ['first_touch', 'last_touch', 'linear', 'markov', 'shapley'],
+    models: ['first_touch', 'last_touch', 'linear', 'markov', 'shapley'] as any,
   })
   const { data: trainedModels } = useTrainedModels()
   const trainMarkov = useTrainMarkovModel()
@@ -121,15 +121,15 @@ export default function Attribution() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="rounded-xl border bg-card p-6 shadow-card">
                 <p className="text-sm text-muted-foreground">Total Conversions</p>
-                <p className="text-2xl font-bold">{summary.totalConversions.toLocaleString()}</p>
+                <p className="text-2xl font-bold">{(summary as any).totalConversions?.toLocaleString()}</p>
               </div>
               <div className="rounded-xl border bg-card p-6 shadow-card">
                 <p className="text-sm text-muted-foreground">Total Revenue</p>
-                <p className="text-2xl font-bold">${summary.totalRevenue.toLocaleString()}</p>
+                <p className="text-2xl font-bold">${(summary as any).totalRevenue?.toLocaleString()}</p>
               </div>
               <div className="rounded-xl border bg-card p-6 shadow-card">
                 <p className="text-sm text-muted-foreground">Unique Channels</p>
-                <p className="text-2xl font-bold">{summary.channelBreakdown.length}</p>
+                <p className="text-2xl font-bold">{(summary as any).channelBreakdown?.length}</p>
               </div>
               <div className="rounded-xl border bg-card p-6 shadow-card">
                 <p className="text-sm text-muted-foreground">Model</p>
@@ -143,7 +143,7 @@ export default function Attribution() {
             <div className="rounded-xl border bg-card p-6 shadow-card">
               <h2 className="text-lg font-semibold mb-4">Channel Attribution</h2>
               <div className="space-y-4">
-                {summary.channelBreakdown.map((channel) => (
+                {(summary as any).channelBreakdown?.map((channel: any) => (
                   <div key={channel.channel}>
                     <div className="flex justify-between text-sm mb-1">
                       <span className="font-medium">{channel.channel}</span>
@@ -263,7 +263,7 @@ export default function Attribution() {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {trainedModels?.map((model) => (
+                {(trainedModels as any[])?.map((model: any) => (
                   <tr key={model.id} className="hover:bg-muted/30">
                     <td className="px-4 py-3 font-medium">{model.name}</td>
                     <td className="px-4 py-3 text-sm capitalize">{model.modelType.replace('_', ' ')}</td>
@@ -312,11 +312,11 @@ export default function Attribution() {
               </tr>
             </thead>
             <tbody className="divide-y">
-              {topPaths?.map((path, idx) => (
+              {(topPaths as any[])?.map((path: any, idx: number) => (
                 <tr key={idx} className="hover:bg-muted/30">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2 flex-wrap">
-                      {path.path.map((channel, i) => (
+                      {path.path.map((channel: any, i: number) => (
                         <span key={i} className="flex items-center gap-1">
                           <span className="px-2 py-1 rounded bg-muted text-xs font-medium">
                             {channel}
@@ -371,7 +371,7 @@ export default function Attribution() {
                     <td className="px-4 py-3 font-medium">{channel.channel}</td>
                     {comparison.models.map((model) => (
                       <td key={model} className="px-4 py-3 text-right">
-                        ${channel.attributionByModel[model]?.toLocaleString() || '0'}
+                        ${channel.byModel[model]?.revenue?.toLocaleString() || '0'}
                       </td>
                     ))}
                   </tr>

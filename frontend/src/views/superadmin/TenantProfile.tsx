@@ -33,7 +33,6 @@ import {
   ArrowLeftIcon,
   BuildingOfficeIcon,
   UserGroupIcon,
-  CurrencyDollarIcon,
   CalendarIcon,
   Cog6ToothIcon,
   ExclamationTriangleIcon,
@@ -153,7 +152,7 @@ export default function TenantProfile() {
   }
 
   // Fetch data
-  const { data: tenantData } = useTenant(tenantId || '')
+  const { data: tenantData } = useTenant(tid)
   const { data: emqData } = useEmqScore(tid)
   const { data: autopilotData, refetch: refetchAutopilot } = useAutopilotState(tid)
   const { data: playbookData } = useEmqPlaybook(tid)
@@ -171,7 +170,7 @@ export default function TenantProfile() {
   const tenant = {
     id: tenantId,
     name: tenantData?.name ?? 'Fashion Forward',
-    industry: tenantData?.industry ?? 'Retail',
+    industry: (tenantData as any)?.industry ?? 'Retail',
     plan: tenantData?.plan ?? 'Pro',
     accountManager: 'Sarah Johnson',
     createdAt: new Date('2024-01-15'),
@@ -324,7 +323,7 @@ export default function TenantProfile() {
     },
   ]
 
-  const playbook: PlaybookItem[] = playbookData ?? [
+  const playbook: PlaybookItem[] = (playbookData as unknown as PlaybookItem[] | undefined) ?? ([
     {
       id: '1',
       title: 'Fix TikTok conversion variance',
@@ -335,23 +334,23 @@ export default function TenantProfile() {
       estimatedTime: '2 hours',
       platform: 'TikTok',
       status: 'in_progress',
-      actionUrl: null,
+      actionUrl: undefined,
     },
     {
       id: '2',
       title: 'Resolve Snapchat API timeout',
       description: 'Intermittent 504 errors causing data freshness issues',
       priority: 'high',
-      owner: null,
+      owner: undefined,
       estimatedImpact: 8,
       estimatedTime: '1 hour',
       platform: 'Snapchat',
       status: 'pending',
-      actionUrl: null,
+      actionUrl: undefined,
     },
-  ]
+  ] as PlaybookItem[])
 
-  const timeline: TimelineEvent[] = incidentsData?.map((i) => ({
+  const timeline: TimelineEvent[] = (incidentsData?.map((i) => ({
     id: i.id,
     type: i.type,
     title: i.title,
@@ -361,7 +360,7 @@ export default function TenantProfile() {
     severity: i.severity,
     recoveryHours: i.recoveryHours ?? undefined,
     emqImpact: i.emqImpact ?? undefined,
-  })) ?? [
+  })) as unknown as TimelineEvent[] | undefined) ?? ([
     {
       id: '1',
       type: 'incident_opened',
@@ -373,7 +372,7 @@ export default function TenantProfile() {
     },
     {
       id: '2',
-      type: 'mode_change',
+      type: 'update',
       title: 'Autopilot mode changed to Limited',
       description: 'Due to signal degradation',
       timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
@@ -390,7 +389,7 @@ export default function TenantProfile() {
       recoveryHours: 6,
       emqImpact: 8,
     },
-  ]
+  ] as TimelineEvent[])
 
   const handleAdminAction = (action: AdminAction) => {
     switch (action) {

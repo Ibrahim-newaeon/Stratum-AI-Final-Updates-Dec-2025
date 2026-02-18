@@ -67,7 +67,7 @@ export default function System() {
   } | null>(null)
 
   // Fetch system health from API
-  const { data: healthData, refetch, isLoading } = useSystemHealth()
+  const { data: healthData, refetch, isLoading: _isLoading } = useSystemHealth()
 
   // Auto-refresh every 30 seconds
   useEffect(() => {

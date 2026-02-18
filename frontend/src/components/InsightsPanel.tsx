@@ -21,7 +21,7 @@ import {
   CheckCircle2,
   X,
 } from 'lucide-react'
-import { useTenantRecommendations, type Recommendation } from '../api/hooks'
+import { useTenantRecommendations, type Recommendation } from '@/api/hooks/useTenantDashboard'
 import { useToast } from '@/components/ui/use-toast'
 
 interface InsightsPanelProps {

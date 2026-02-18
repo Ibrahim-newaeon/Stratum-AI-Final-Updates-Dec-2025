@@ -13,7 +13,7 @@ import {
   CheckCircleIcon,
   ExclamationCircleIcon,
 } from '@heroicons/react/24/outline';
-import { useSignup, useResendVerification, useSendWhatsAppOTP, useVerifyWhatsAppOTP } from '@/api/auth';
+import { useSignup, useSendWhatsAppOTP, useVerifyWhatsAppOTP } from '@/api/auth';
 
 const signupSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -35,16 +35,14 @@ export default function Signup() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [submittedEmail, setSubmittedEmail] = useState('');
+  const [_submittedEmail, setSubmittedEmail] = useState('');
   const [step, setStep] = useState<SignupStep>('details');
   const [formData, setFormData] = useState<SignupForm | null>(null);
   const [otpCode, setOtpCode] = useState('');
-  const [verificationToken, setVerificationToken] = useState('');
   const [otpError, setOtpError] = useState('');
   const [otpCountdown, setOtpCountdown] = useState(0);
 
   const signupMutation = useSignup();
-  const resendMutation = useResendVerification();
   const sendOTPMutation = useSendWhatsAppOTP();
   const verifyOTPMutation = useVerifyWhatsAppOTP();
 
@@ -56,7 +54,6 @@ export default function Signup() {
     register,
     handleSubmit,
     formState: { errors },
-    getValues,
   } = useForm<SignupForm>({
     resolver: zodResolver(signupSchema),
   });
@@ -105,7 +102,6 @@ export default function Signup() {
         onSuccess: (response) => {
           // OTP verified, now complete registration
           const token = response.verification_token || '';
-          setVerificationToken(token);
 
           signupMutation.mutate({
             name: formData.name,
@@ -134,12 +130,6 @@ export default function Signup() {
           },
         }
       );
-    }
-  };
-
-  const handleResendVerification = () => {
-    if (submittedEmail) {
-      resendMutation.mutate({ email: submittedEmail });
     }
   };
 
