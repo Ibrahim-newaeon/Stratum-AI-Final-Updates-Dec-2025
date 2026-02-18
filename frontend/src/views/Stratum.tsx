@@ -27,19 +27,14 @@ import {
   Settings,
   Loader2,
   X,
-  DollarSign,
-  Users,
   BarChart3,
   Clock,
   Zap,
   Bell,
   Mail,
   MessageSquare,
-  Trash2,
-  ToggleLeft,
-  ToggleRight,
 } from 'lucide-react'
-import { cn, formatCurrency, formatPercent, formatCompactNumber } from '@/lib/utils'
+import { cn, formatCurrency, formatCompactNumber } from '@/lib/utils'
 import { SimulateSlider } from '@/components/widgets/SimulateSlider'
 import { useInsights, useRecommendations, useAnomalies, useLivePredictions } from '@/api/hooks'
 import { useTenantStore } from '@/stores/tenantStore'
@@ -1153,14 +1148,14 @@ export function Stratum() {
 
   // Fetch data from API
   const { data: insightsData, isLoading: insightsLoading, refetch: refetchInsights } = useInsights(tenantId)
-  const { data: recommendationsData } = useRecommendations(tenantId)
+  const { data: _recommendationsData } = useRecommendations(tenantId)
   const { data: anomaliesData, isLoading: anomaliesLoading } = useAnomalies(tenantId)
-  const { data: predictionsData } = useLivePredictions(tenantId)
+  const { data: predictionsData } = useLivePredictions()
 
   // Transform API insights or fall back to mock
-  const insights = useMemo(() => {
-    if (insightsData?.items && insightsData.items.length > 0) {
-      return insightsData.items.slice(0, 3).map((i: any, idx: number) => ({
+  const insights: Insight[] = useMemo(() => {
+    if (insightsData?.actions && insightsData.actions.length > 0) {
+      return insightsData.actions.slice(0, 3).map((i: any, idx: number) => ({
         id: i.id || idx + 1,
         type: i.type || i.insight_type || 'suggestion',
         priority: i.priority || 'medium',
@@ -1174,9 +1169,10 @@ export function Stratum() {
   }, [insightsData])
 
   // Transform API anomalies or fall back to mock
-  const anomalies = useMemo(() => {
-    if (anomaliesData?.items && anomaliesData.items.length > 0) {
-      return anomaliesData.items.slice(0, 3).map((a: any) => ({
+  const anomalies: Anomaly[] = useMemo(() => {
+    if (anomaliesData?.anomalies && anomaliesData.anomalies.length > 0) {
+      return anomaliesData.anomalies.slice(0, 3).map((a: any, idx: number) => ({
+        id: idx + 1,
         date: new Date(a.detected_at || a.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         metric: a.metric || a.metric_name || 'Unknown',
         value: a.actual_value || a.value || 0,
@@ -1432,9 +1428,9 @@ export function Stratum() {
           </div>
 
           <div className="h-[300px]">
-            {predictionsData?.items?.length > 0 ? (
+            {predictionsData && predictionsData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={predictionsData.items.map((item: any) => ({
+                <AreaChart data={predictionsData.map((item: any) => ({
                   date: item.date,
                   actual: item.actual ?? item.actual_value ?? null,
                   predicted: item.predicted ?? item.predicted_value ?? null,

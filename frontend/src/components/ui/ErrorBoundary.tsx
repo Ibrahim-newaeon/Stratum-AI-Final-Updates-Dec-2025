@@ -12,6 +12,8 @@ interface Props {
   fallback?: ReactNode
   onError?: (error: Error, errorInfo: ErrorInfo) => void
   className?: string
+  /** Optional error message to display in the default fallback UI */
+  message?: string
 }
 
 interface State {

@@ -66,15 +66,6 @@ interface ClientRequest {
   description: string;
 }
 
-// ── Icon mapping for metrics ──────────────────────────────────────────────
-const METRIC_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  roas: ArrowTrendingUpIcon,
-  total_spend: CurrencyDollarIcon,
-  spend: CurrencyDollarIcon,
-  conversions: ChartBarIcon,
-  ctr: CursorArrowRaysIcon,
-};
-
 const REQUEST_TYPES: { value: ClientRequest['type']; label: string }[] = [
   { value: 'budget_change', label: 'Budget Change' },
   { value: 'creative_update', label: 'Creative Update' },

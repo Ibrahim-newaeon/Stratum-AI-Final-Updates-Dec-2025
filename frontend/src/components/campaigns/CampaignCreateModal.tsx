@@ -19,7 +19,7 @@ import {
   UsersRound,
   Bookmark,
 } from 'lucide-react'
-import { cn, getPlatformColor } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import apiClient from '@/api/client'
 
 interface CampaignCreateModalProps {

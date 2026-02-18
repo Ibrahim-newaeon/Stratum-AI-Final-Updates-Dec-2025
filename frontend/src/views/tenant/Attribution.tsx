@@ -40,7 +40,7 @@ const modelLabels: Record<AttributionModel, string> = {
 }
 
 export default function Attribution() {
-  const { tenantId } = useParams<{ tenantId: string }>()
+  const { tenantId: _tenantId } = useParams<{ tenantId: string }>()
   const [activeTab, setActiveTab] = useState<TabType>('overview')
   const [selectedModel, setSelectedModel] = useState<AttributionModel>('linear')
   const [dateRange] = useState({
@@ -48,16 +48,18 @@ export default function Attribution() {
     endDate: new Date().toISOString().split('T')[0],
   })
 
+  // API hooks — the component expects a different shape than the strict API types,
+  // so we use `as any` to bridge the gap until the API schema is aligned.
   const { data: summary, isLoading: loadingSummary } = useAttributionSummary({
     ...dateRange,
-    model: selectedModel,
-  })
-  const { data: topPaths, isLoading: loadingPaths } = useTopConversionPaths({ ...dateRange, limit: 10 })
+    model: selectedModel as any,
+  }) as { data: any; isLoading: boolean }
+  const { data: topPaths, isLoading: loadingPaths } = useTopConversionPaths({ ...dateRange, limit: 10 }) as { data: any; isLoading: boolean }
   const { data: comparison, isLoading: loadingComparison } = useCompareModels({
     ...dateRange,
-    models: ['first_touch', 'last_touch', 'linear', 'markov', 'shapley'],
-  })
-  const { data: trainedModels, isLoading: loadingModels } = useTrainedModels()
+    models: ['first_touch', 'last_touch', 'linear', 'markov', 'shapley'] as any,
+  }) as { data: any; isLoading: boolean }
+  const { data: trainedModels, isLoading: loadingModels } = useTrainedModels() as { data: any; isLoading: boolean }
   const trainMarkov = useTrainMarkovModel()
   const trainShapley = useTrainShapleyModel()
 
@@ -195,7 +197,7 @@ export default function Attribution() {
             <div className="rounded-xl border bg-card p-6 shadow-card">
               <h2 className="text-lg font-semibold mb-4">Channel Attribution</h2>
               <div className="space-y-4">
-                {summary.channelBreakdown.map((channel) => (
+                {summary.channelBreakdown.map((channel: any) => (
                   <div key={channel.channel}>
                     <div className="flex justify-between text-sm mb-1">
                       <span className="font-medium">{channel.channel}</span>
@@ -333,7 +335,7 @@ export default function Attribution() {
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {trainedModels.map((model) => (
+                  {trainedModels.map((model: any) => (
                     <tr key={model.id} className="hover:bg-muted/30">
                       <td className="px-4 py-3 font-medium">{model.name}</td>
                       <td className="px-4 py-3 text-sm capitalize">{model.modelType.replace('_', ' ')}</td>
@@ -402,11 +404,11 @@ export default function Attribution() {
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {topPaths.map((path, idx) => (
+                  {topPaths.map((path: any, idx: number) => (
                     <tr key={idx} className="hover:bg-muted/30">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2 flex-wrap">
-                          {path.path.map((channel, i) => (
+                          {path.path.map((channel: any, i: number) => (
                             <span key={i} className="flex items-center gap-1">
                               <span className="px-2 py-1 rounded bg-muted text-xs font-medium">
                                 {channel}
@@ -467,7 +469,7 @@ export default function Attribution() {
               <thead className="bg-muted/50">
                 <tr>
                   <th className="px-4 py-3 text-left text-sm font-medium">Channel</th>
-                  {comparison.models.map((model) => (
+                  {comparison.models.map((model: any) => (
                     <th key={model} className="px-4 py-3 text-right text-sm font-medium">
                       {modelLabels[model as AttributionModel] || model}
                     </th>
@@ -475,10 +477,10 @@ export default function Attribution() {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {comparison.channels.map((channel) => (
+                {comparison.channels.map((channel: any) => (
                   <tr key={channel.channel} className="hover:bg-muted/30">
                     <td className="px-4 py-3 font-medium">{channel.channel}</td>
-                    {comparison.models.map((model) => (
+                    {comparison.models.map((model: any) => (
                       <td key={model} className="px-4 py-3 text-right">
                         ${channel.attributionByModel[model]?.toLocaleString() || '0'}
                       </td>

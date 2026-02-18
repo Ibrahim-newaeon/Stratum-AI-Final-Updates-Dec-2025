@@ -21,7 +21,6 @@ import {
   EyeSlashIcon,
   FingerPrintIcon,
   LockClosedIcon,
-  UserIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/contexts/AuthContext';
 import { pageSEO, SEO } from '@/components/common/SEO';

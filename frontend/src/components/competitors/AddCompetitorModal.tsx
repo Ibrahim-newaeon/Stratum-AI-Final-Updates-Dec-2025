@@ -59,7 +59,7 @@ interface CompetitorScanResult {
 
 function useScanCompetitor() {
   return useMutation({
-    mutationFn: async (params: { domain: string; name: string; country: string }) => {
+    mutationFn: async (params: { domain: string; name: string; country: string; fb_page_name?: string }) => {
       const response = await apiClient.post<ApiResponse<CompetitorScanResult>>('/competitors/scan', params)
       return response.data.data
     },

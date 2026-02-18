@@ -20,7 +20,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import { cn, formatCompactNumber, formatPercent } from '@/lib/utils'
-import { useAssets, useDeleteAsset, useBulkArchiveAssets } from '@/api/hooks'
+import { useAssets, useBulkArchiveAssets } from '@/api/hooks'
 
 type AssetType = 'image' | 'video' | 'copy'
 type AssetStatus = 'active' | 'paused' | 'fatigued' | 'draft'
@@ -53,7 +53,6 @@ export function Assets() {
 
   // Fetch assets from API
   const { data: assetsData, isLoading } = useAssets()
-  const deleteAsset = useDeleteAsset()
   const bulkArchive = useBulkArchiveAssets()
 
   // Transform API data into view-layer Asset shape

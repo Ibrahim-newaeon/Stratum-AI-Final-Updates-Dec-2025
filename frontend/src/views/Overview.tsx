@@ -53,8 +53,6 @@ import {
   Campaign,
   DashboardFilters,
   KPIMetrics,
-  PlatformSummary,
-  DailyPerformance,
 } from '@/types/dashboard'
 import { useCampaigns, useTenantOverview } from '@/api/hooks'
 import { useTenantStore } from '@/stores/tenantStore'

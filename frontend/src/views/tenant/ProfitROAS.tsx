@@ -42,8 +42,6 @@ export default function ProfitROAS() {
   const { data: cogsUploads, isLoading: loadingCOGS } = useCOGSUploads()
   const uploadCOGS = useUploadCOGS()
 
-  const isLoading = loadingProducts || loadingMargins || loadingSummary || loadingROAS || loadingCOGS
-
   const tabs = [
     { id: 'overview' as TabType, label: 'Overview' },
     { id: 'products' as TabType, label: 'Products' },

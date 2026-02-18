@@ -31,6 +31,7 @@ export interface FeatureFlagsUpdate {
   max_campaigns?: number
   max_users?: number
   data_retention_days?: number
+  show_price_metrics?: boolean
 }
 
 // =============================================================================

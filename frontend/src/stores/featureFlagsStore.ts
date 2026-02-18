@@ -81,6 +81,7 @@ export const defaultFeatures: FeatureFlags = {
   max_campaigns: 20,
   max_users: 5,
   data_retention_days: 90,
+  show_price_metrics: true,
 }
 
 // =============================================================================

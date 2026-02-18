@@ -104,10 +104,11 @@ export default function Signup() {
           const token = response.verification_token || '';
 
           signupMutation.mutate({
-            name: formData.name,
+            full_name: formData.name,
             email: formData.email,
             password: formData.password,
             phone: formData.phone,
+            company_website: '',
             verification_token: token,
           });
         },

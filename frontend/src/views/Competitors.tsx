@@ -156,7 +156,8 @@ export function Competitors() {
   }
 
   // Map API competitors to view model
-  const competitors: Competitor[] = (competitorsData?.items || competitorsData || []).map((c: any) => ({
+  const rawCompetitors = Array.isArray(competitorsData) ? competitorsData : (competitorsData as any)?.items ?? []
+  const competitors: Competitor[] = rawCompetitors.map((c: any) => ({
     id: c.id,
     name: c.name,
     domain: c.domain,
@@ -203,11 +204,16 @@ export function Competitors() {
       .finally(() => setIsLoadingKeywords(false))
   }, [competitors.length])
 
-  // Share of Voice data — from API or empty defaults
-  const shareOfVoice = sovData ?? {
-    you: 0,
-    competitors: competitors.map((c) => ({ name: c.name, share: c.shareOfVoice })),
-  }
+  // Share of Voice data — transform API array into view shape
+  const shareOfVoice = sovData && sovData.length > 0
+    ? {
+        you: sovData[0].tenantShare,
+        competitors: sovData[0].data.map((d) => ({ name: d.competitorName, share: d.share })),
+      }
+    : {
+        you: 0,
+        competitors: competitors.map((c: Competitor) => ({ name: c.name, share: c.shareOfVoice })),
+      }
 
   const filteredCompetitors = competitors.filter((c) =>
     c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||

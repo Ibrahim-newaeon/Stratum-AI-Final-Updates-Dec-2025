@@ -10,7 +10,6 @@ import {
   Crown,
   ChevronDown,
   MoreHorizontal,
-  Check,
   X,
   AlertTriangle,
   Calendar,
@@ -66,7 +65,7 @@ const featureFlags = [
 ]
 
 export function Tenants() {
-  const { t } = useTranslation()
+  const { t: _t } = useTranslation()
   const [tenants, setTenants] = useState<Tenant[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [planFilter, setPlanFilter] = useState<string>('all')
