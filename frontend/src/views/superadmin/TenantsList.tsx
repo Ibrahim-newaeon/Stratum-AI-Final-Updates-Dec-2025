@@ -403,7 +403,7 @@ export default function TenantsList() {
               <th className="text-left p-4 text-text-muted font-medium">Budget at Risk</th>
               <th className="text-left p-4 text-text-muted font-medium">Incidents</th>
               <th className="text-left p-4 text-text-muted font-medium">Last Activity</th>
-              <th className="text-left p-4 text-text-muted font-medium"></th>
+              <th className="text-left p-4 text-text-muted font-medium" />
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
