@@ -245,7 +245,7 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
           newErrors.end_date = t('campaigns.create.errors.endDateInvalid')
         }
         break
-      case 'targeting':
+      case 'targeting': {
         const minAge = parseInt(formData.targeting_age_min)
         const maxAge = parseInt(formData.targeting_age_max)
         if (minAge < 13 || minAge > 100) {
@@ -258,6 +258,7 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
           newErrors.targeting_age_max = t('campaigns.create.errors.ageRangeInvalid')
         }
         break
+      }
     }
 
     setErrors(newErrors)

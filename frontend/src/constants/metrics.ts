@@ -1141,12 +1141,13 @@ export function formatMetricValue(value: number, format: MetricFormat): string {
       return `${value.toFixed(2)}%`;
     case 'decimal':
       return value.toFixed(2);
-    case 'duration':
+    case 'duration': {
       // Convert seconds to mm:ss
       if (value < 60) return `${value.toFixed(1)}s`;
       const mins = Math.floor(value / 60);
       const secs = Math.round(value % 60);
       return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
     case 'number':
     default:
       return new Intl.NumberFormat('en-US').format(Math.round(value));
