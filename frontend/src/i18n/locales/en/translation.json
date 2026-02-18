@@ -21,7 +21,8 @@
     "next": "Next",
     "previous": "Previous",
     "back": "Back",
-    "moreFilters": "More Filters"
+    "moreFilters": "More Filters",
+    "viewAll": "View All"
   },
   "nav": {
     "overview": "Overview",
@@ -35,6 +36,7 @@
     "settings": "Settings",
     "tenants": "Organizations",
     "mlTraining": "ML Training",
+    "integrations": "Integrations",
     "capiSetup": "CAPI Setup",
     "dataQuality": "Data Quality",
     "emqDashboard": "EMQ Dashboard"
@@ -200,7 +202,15 @@
     "performance": "Performance Metrics",
     "insights": "AI Insights",
     "predictions": "Predictions",
-    "optimization": "Optimization Recommendations"
+    "optimization": "Optimization Recommendations",
+    "aiInsights": "AI Insights",
+    "revenueForecast": "Revenue Forecast",
+    "forecastDescription": "AI-predicted revenue based on current campaign performance",
+    "forecastedRevenue": "Forecasted Revenue",
+    "confidence": "Confidence",
+    "modelAccuracy": "Model Accuracy",
+    "attributionModel": "Attribution Model",
+    "anomalyDetection": "Anomaly Detection"
   },
   "benchmarks": {
     "title": "Competitor Intelligence",

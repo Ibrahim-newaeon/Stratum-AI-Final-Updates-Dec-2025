@@ -102,21 +102,7 @@ export function PageLayout({ children }: PageLayoutProps) {
           <nav className="flex items-center justify-between">
             {/* Logo - Stratum Gold */}
             <Link to="/" className="flex items-center gap-3 group">
-              <div
-                className="w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-200 group-hover:scale-105"
-                style={{
-                  background: '#00c7be',
-                  boxShadow: '0 0 30px rgba(0, 199, 190, 0.2)',
-                }}
-              >
-                <span className="text-white font-bold text-lg">S</span>
-              </div>
-              <span
-                className="text-xl font-bold"
-                style={{ color: '#00c7be' }}
-              >
-                Stratum AI
-              </span>
+              <img src="/images/stratum-logo.svg" alt="Stratum AI" className="h-8" style={{ filter: 'invert(1) brightness(2)' }} />
             </Link>
 
             {/* Desktop Navigation Links */}
@@ -349,18 +335,7 @@ export function PageLayout({ children }: PageLayoutProps) {
             {/* Brand */}
             <div className="col-span-2">
               <Link to="/" className="flex items-center gap-3 mb-4">
-                <div
-                  className="w-10 h-10 rounded-2xl flex items-center justify-center"
-                  style={{ background: '#00c7be' }}
-                >
-                  <span className="text-white font-bold text-lg">S</span>
-                </div>
-                <span
-                  className="text-xl font-semibold"
-                  style={{ color: '#00c7be' }}
-                >
-                  Stratum AI
-                </span>
+                <img src="/images/stratum-logo.svg" alt="Stratum AI" className="h-7" style={{ filter: 'invert(1) brightness(2)' }} />
               </Link>
               <p className="text-sm mb-6 max-w-xs" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
                 AI-Powered Revenue Operating System with Trust-Gated Autopilot.

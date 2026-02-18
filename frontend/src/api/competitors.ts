@@ -72,6 +72,51 @@ export interface CreateCompetitorRequest {
   platforms?: string[]
 }
 
+export interface ScanCompetitorRequest {
+  domain: string
+  name: string
+  country: string
+  fb_page_name?: string
+}
+
+export interface CompetitorScanResult {
+  domain: string
+  social_links: {
+    facebook: string | null
+    instagram: string | null
+    twitter: string | null
+    linkedin: string | null
+    tiktok: string | null
+    youtube: string | null
+  }
+  meta_title: string | null
+  meta_description: string | null
+  fb_page_name: string | null
+  ig_account_name: string | null
+  ad_library: {
+    has_ads: boolean
+    ad_count: number
+    ads: Array<{
+      id?: string
+      page_name?: string
+      page_id?: string
+      creative_body?: string
+      link_title?: string
+      start_date?: string
+      snapshot_url?: string
+      platforms?: string[]
+      impressions?: unknown
+    }>
+    search_url: string
+    search_query: string | null
+    page_id: string | null
+    page_name: string | null
+    error: string | null
+  }
+  scanned_at: string
+  scrape_error: string | null
+}
+
 // API Functions
 export const competitorsApi = {
   /**
@@ -165,6 +210,14 @@ export const competitorsApi = {
     const response = await apiClient.post<ApiResponse<Competitor>>(`/competitors/${id}/refresh`)
     return response.data.data
   },
+
+  /**
+   * Scan a competitor website and search Meta Ad Library
+   */
+  scanCompetitor: async (data: ScanCompetitorRequest): Promise<CompetitorScanResult> => {
+    const response = await apiClient.post<ApiResponse<CompetitorScanResult>>('/competitors/scan', data)
+    return response.data.data
+  },
 }
 
 // React Query Hooks
@@ -253,5 +306,11 @@ export function useRefreshCompetitor() {
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ['competitors', id] })
     },
+  })
+}
+
+export function useScanCompetitor() {
+  return useMutation({
+    mutationFn: competitorsApi.scanCompetitor,
   })
 }

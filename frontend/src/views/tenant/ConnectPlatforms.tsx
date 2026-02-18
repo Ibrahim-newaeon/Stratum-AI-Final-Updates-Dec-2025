@@ -34,37 +34,12 @@ interface PlatformConnection {
   accountCount?: number
 }
 
-const platforms: PlatformConnection[] = [
-  {
-    id: 'meta',
-    name: 'Meta Ads',
-    logo: '/platforms/meta.svg',
-    status: 'connected',
-    connectedAt: '2024-01-15',
-    expiresAt: '2025-01-15',
-    accountCount: 3,
-  },
-  {
-    id: 'google',
-    name: 'Google Ads',
-    logo: '/platforms/google.svg',
-    status: 'connected',
-    connectedAt: '2024-02-10',
-    expiresAt: '2025-02-10',
-    accountCount: 2,
-  },
-  {
-    id: 'tiktok',
-    name: 'TikTok Ads',
-    logo: '/platforms/tiktok.svg',
-    status: 'disconnected',
-  },
-  {
-    id: 'snapchat',
-    name: 'Snapchat Ads',
-    logo: '/platforms/snapchat.svg',
-    status: 'disconnected',
-  },
+// Platform definitions (status comes from API only)
+const platformDefs = [
+  { id: 'meta', name: 'Meta Ads', logo: '/platforms/meta.svg' },
+  { id: 'google', name: 'Google Ads', logo: '/platforms/google.svg' },
+  { id: 'tiktok', name: 'TikTok Ads', logo: '/platforms/tiktok.svg' },
+  { id: 'snapchat', name: 'Snapchat Ads', logo: '/platforms/snapchat.svg' },
 ]
 
 const statusConfig = {
@@ -116,7 +91,7 @@ export default function ConnectPlatforms() {
   const refreshToken = useRefreshToken(tid)
   const disconnectPlatform = useDisconnectPlatform(tid)
 
-  // Build platforms with API data or fallback to mock
+  // Build platforms with API status only (no mock fallback)
   const platformsWithStatus: PlatformConnection[] = useMemo(() => {
     const statusMap: Record<string, typeof metaStatus> = {
       meta: metaStatus,
@@ -131,19 +106,16 @@ export default function ConnectPlatforms() {
       snapchat: snapchatAccounts,
     }
 
-    return platforms.map((p) => {
+    return platformDefs.map((p) => {
       const apiStatus = statusMap[p.id]
       const accounts = accountsMap[p.id]
 
-      if (apiStatus) {
-        return {
-          ...p,
-          status: apiStatus.status as PlatformConnection['status'],
-          connectedAt: apiStatus.connected_at?.split('T')[0],
-          accountCount: accounts?.length ?? 0,
-        }
+      return {
+        ...p,
+        status: (apiStatus?.status as PlatformConnection['status']) || 'disconnected',
+        connectedAt: apiStatus?.connected_at?.split('T')[0],
+        accountCount: accounts?.length ?? 0,
       }
-      return p
     })
   }, [metaStatus, googleStatus, tiktokStatus, snapchatStatus, metaAccounts, googleAccounts, tiktokAccounts, snapchatAccounts])
 

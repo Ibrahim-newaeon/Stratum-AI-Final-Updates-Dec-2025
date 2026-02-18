@@ -248,7 +248,7 @@ export default function Signup() {
   }
 
   return (
-    <div className="min-h-screen bg-surface-primary flex">
+    <div className="min-h-screen bg-surface-primary flex mx-auto" style={{ maxWidth: '1500px', width: '100%' }}>
       {/* Left side - Brand */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-stratum-500/20 via-surface-primary to-cyan-500/10" />

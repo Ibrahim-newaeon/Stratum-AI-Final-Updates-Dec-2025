@@ -9,7 +9,7 @@ All environment variables are validated and typed.
 from functools import lru_cache
 from typing import List, Literal, Optional
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -50,6 +50,28 @@ class Settings(BaseSettings):
     db_pool_size: int = Field(default=10)
     db_max_overflow: int = Field(default=20)
     db_pool_recycle: int = Field(default=3600)
+
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def ensure_async_driver(cls, v: str) -> str:
+        """Convert Railway/Heroku postgresql:// to postgresql+asyncpg:// for async engine."""
+        if isinstance(v, str):
+            if v.startswith("postgres://"):
+                return v.replace("postgres://", "postgresql+asyncpg://", 1)
+            if v.startswith("postgresql://") and "+asyncpg" not in v:
+                return v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return v
+
+    @field_validator("database_url_sync", mode="before")
+    @classmethod
+    def ensure_sync_driver(cls, v: str) -> str:
+        """Ensure sync URL uses standard postgresql:// driver."""
+        if isinstance(v, str):
+            if v.startswith("postgres://"):
+                return v.replace("postgres://", "postgresql://", 1)
+            if v.startswith("postgresql+asyncpg://"):
+                return v.replace("postgresql+asyncpg://", "postgresql://", 1)
+        return v
 
     # -------------------------------------------------------------------------
     # Redis Configuration
@@ -214,6 +236,18 @@ class Settings(BaseSettings):
     def is_production(self) -> bool:
         """Check if running in production mode."""
         return self.app_env == "production"
+
+    @model_validator(mode="after")
+    def derive_sync_url_from_async(self) -> "Settings":
+        """If DATABASE_URL_SYNC was not explicitly set, derive it from DATABASE_URL."""
+        default_sync = "postgresql://stratum:stratum_secure_password_2024@localhost:5432/stratum_ai"
+        if self.database_url_sync == default_sync and self.database_url != (
+            "postgresql+asyncpg://stratum:stratum_secure_password_2024@localhost:5432/stratum_ai"
+        ):
+            # DATABASE_URL was overridden (e.g. by Railway) but DATABASE_URL_SYNC was not
+            sync_url = self.database_url.replace("postgresql+asyncpg://", "postgresql://", 1)
+            object.__setattr__(self, "database_url_sync", sync_url)
+        return self
 
 
 @lru_cache

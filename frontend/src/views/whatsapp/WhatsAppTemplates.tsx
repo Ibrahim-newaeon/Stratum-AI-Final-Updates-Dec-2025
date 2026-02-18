@@ -38,75 +38,6 @@ interface Template {
   created_at: string;
 }
 
-const mockTemplates: Template[] = [
-  {
-    id: 1,
-    name: 'order_confirmation',
-    language: 'en',
-    category: 'UTILITY',
-    header_type: 'TEXT',
-    header_content: 'Order Confirmed!',
-    body_text:
-      'Hi {{1}}, your order #{{2}} has been confirmed and will be shipped within {{3}} business days.',
-    footer_text: 'Thank you for shopping with us!',
-    buttons: [{ type: 'URL', text: 'Track Order', url: 'https://track.example.com/{{1}}' }],
-    status: 'approved',
-    rejection_reason: null,
-    usage_count: 1245,
-    created_at: '2024-12-01T00:00:00Z',
-  },
-  {
-    id: 2,
-    name: 'appointment_reminder',
-    language: 'en',
-    category: 'UTILITY',
-    header_type: null,
-    header_content: null,
-    body_text:
-      'Hi {{1}}, this is a reminder for your appointment on {{2}} at {{3}}. Reply YES to confirm or NO to reschedule.',
-    footer_text: null,
-    buttons: [
-      { type: 'QUICK_REPLY', text: 'Confirm' },
-      { type: 'QUICK_REPLY', text: 'Reschedule' },
-    ],
-    status: 'approved',
-    rejection_reason: null,
-    usage_count: 856,
-    created_at: '2024-12-10T00:00:00Z',
-  },
-  {
-    id: 3,
-    name: 'promo_winter_sale',
-    language: 'en',
-    category: 'MARKETING',
-    header_type: 'IMAGE',
-    header_content: 'https://example.com/winter-sale.jpg',
-    body_text:
-      'Winter Sale is here! Get up to {{1}}% off on all items. Use code: {{2}} at checkout. Offer ends {{3}}.',
-    footer_text: 'Terms and conditions apply.',
-    buttons: [{ type: 'URL', text: 'Shop Now', url: 'https://shop.example.com' }],
-    status: 'pending',
-    rejection_reason: null,
-    usage_count: 0,
-    created_at: '2025-01-20T00:00:00Z',
-  },
-  {
-    id: 4,
-    name: 'verification_code',
-    language: 'en',
-    category: 'AUTHENTICATION',
-    header_type: null,
-    header_content: null,
-    body_text:
-      'Your verification code is {{1}}. This code expires in 15 minutes. Do not share this code with anyone.',
-    footer_text: null,
-    buttons: [{ type: 'URL', text: 'Copy Code', url: 'https://example.com/copy/{{1}}' }],
-    status: 'approved',
-    rejection_reason: null,
-    usage_count: 3421,
-    created_at: '2024-11-15T00:00:00Z',
-  },
-];
 
 const statusConfig = {
   approved: {
@@ -126,7 +57,7 @@ const categoryConfig = {
 };
 
 export default function WhatsAppTemplates() {
-  const [templates, setTemplates] = useState<Template[]>(mockTemplates);
+  const [templates, setTemplates] = useState<Template[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState<Template | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');

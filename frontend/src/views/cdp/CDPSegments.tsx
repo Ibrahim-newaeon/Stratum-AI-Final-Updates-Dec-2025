@@ -576,7 +576,7 @@ export default function CDPSegments() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Segments</h1>
-          <p className="text-muted-foreground mt-1">{data?.total || 0} segments</p>
+          <p className="text-muted-foreground mt-1 max-w-3xl">Create dynamic audience segments based on customer behavior, lifecycle stage, and profile attributes. Segments automatically update as new data flows in, ensuring your targeting stays fresh and your campaigns reach the right people at the right time.</p>
         </div>
         <button
           onClick={() => setShowBuilder(true)}

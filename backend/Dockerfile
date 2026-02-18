@@ -41,12 +41,12 @@ RUN mkdir -p /app/ml_service/training_data /app/uploads /app/temp && \
 # Switch to non-root user
 USER appuser
 
-# Expose port
-EXPOSE 8000
+# Expose port (Railway assigns dynamic PORT)
+EXPOSE ${PORT:-8000}
 
-# Health check
+# Health check (use /health/live — no DB/Redis dependency)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+    CMD curl -f http://localhost:${PORT:-8000}/health/live || exit 1
 
-# Default command
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Default command (shell form to expand $PORT from Railway)
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

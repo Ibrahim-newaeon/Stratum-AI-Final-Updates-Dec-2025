@@ -123,9 +123,7 @@ export function ConsentManager() {
             <Shield className="w-6 h-6 text-primary" />
             Consent Management
           </h2>
-          <p className="text-muted-foreground">
-            GDPR/CCPA compliant consent tracking and management
-          </p>
+          <p className="text-muted-foreground mt-1 max-w-3xl">Manage privacy consent across all channels in compliance with GDPR, CCPA, and regional regulations. Track opt-in and opt-out status for analytics, advertising, email, and SMS marketing. Export consent records for auditing and compliance reporting.</p>
         </div>
         <div className="flex gap-2">
           <button

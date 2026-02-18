@@ -14,6 +14,7 @@ import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import {
+  AlertTriangle,
   ArrowRight,
   BarChart3,
   Calendar,
@@ -86,6 +87,8 @@ export default function UnifiedDashboard() {
   const {
     data: overview,
     isLoading: overviewLoading,
+    isError: overviewError,
+    error: overviewErrorData,
   } = useDashboardOverview(period, true, appliedStartDate, appliedEndDate);
 
   const { data: campaigns, isLoading: campaignsLoading } = useDashboardCampaigns({
@@ -103,7 +106,7 @@ export default function UnifiedDashboard() {
     limit: 10,
   });
 
-  const { data: signalHealth, isLoading: signalHealthLoading } = useDashboardSignalHealth();
+  const { data: signalHealth, isLoading: signalHealthLoading, isError: signalHealthError } = useDashboardSignalHealth();
 
   const { data: quickActions } = useDashboardQuickActions();
 
@@ -153,6 +156,50 @@ export default function UnifiedDashboard() {
   );
 
   const isLoading = overviewLoading || signalHealthLoading;
+  const hasError = overviewError && signalHealthError;
+
+  // Show error state when all critical API calls fail
+  if (hasError && !isLoading) {
+    const errorStatus = (overviewErrorData as any)?.response?.status;
+    const isAuthError = errorStatus === 401 || errorStatus === 403;
+
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-8">
+          <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-6">
+            <AlertTriangle className="w-8 h-8 text-red-500" />
+          </div>
+          <h2 className="text-2xl font-bold mb-3">
+            {isAuthError ? 'Authentication Required' : 'Unable to Load Dashboard'}
+          </h2>
+          <p className="text-muted-foreground mb-6">
+            {isAuthError
+              ? 'Your session may have expired. Please sign in again to access the dashboard.'
+              : 'We couldn\'t connect to the server. Please check your connection and try again.'}
+          </p>
+          <div className="flex gap-3 justify-center">
+            {isAuthError ? (
+              <button
+                onClick={() => navigate('/login')}
+                className="inline-flex items-center px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+              >
+                Sign In
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </button>
+            ) : (
+              <button
+                onClick={handleRefresh}
+                className="inline-flex items-center px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Retry
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Check if user needs to complete onboarding
   if (overview && !overview.onboarding_complete) {

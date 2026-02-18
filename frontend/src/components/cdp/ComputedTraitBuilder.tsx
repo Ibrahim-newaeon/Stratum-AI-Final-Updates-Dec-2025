@@ -116,9 +116,7 @@ export function ComputedTraitBuilder() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Computed Traits</h2>
-          <p className="text-muted-foreground">
-            Define derived values calculated from profile events
-          </p>
+          <p className="text-muted-foreground mt-1 max-w-3xl">Build calculated profile properties from raw event data -- like lifetime value, purchase count, or days since last visit. Computed traits update automatically and can be used in segments, personalization rules, and campaign targeting.</p>
         </div>
         <div className="flex gap-2">
           <button

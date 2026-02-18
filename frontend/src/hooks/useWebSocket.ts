@@ -5,7 +5,7 @@
  * incidents, and action recommendations
  */
 
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 
 type MessageHandler = (data: any) => void
@@ -65,7 +65,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
         setConnectionState('connected')
         reconnectCountRef.current = 0
         onConnect?.()
-        console.log('[WebSocket] Connected')
+        console.warn('[WebSocket] Connected')
       }
 
       ws.onmessage = (event) => {
@@ -82,12 +82,12 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       ws.onclose = () => {
         setConnectionState('disconnected')
         onDisconnect?.()
-        console.log('[WebSocket] Disconnected')
+        console.warn('[WebSocket] Disconnected')
 
         // Attempt reconnection
         if (reconnectCountRef.current < reconnectAttempts) {
           reconnectCountRef.current++
-          console.log(`[WebSocket] Reconnecting... (${reconnectCountRef.current}/${reconnectAttempts})`)
+          console.warn(`[WebSocket] Reconnecting... (${reconnectCountRef.current}/${reconnectAttempts})`)
           reconnectTimeoutRef.current = setTimeout(connect, reconnectInterval)
         }
       }
@@ -181,7 +181,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
         break
 
       default:
-        console.log('[WebSocket] Unhandled message type:', message.type)
+        console.warn('[WebSocket] Unhandled message type:', message.type)
     }
   }, [queryClient])
 
@@ -227,7 +227,6 @@ export function useWebSocketChannel(
     if (isConnected) {
       send('subscribe', { channel })
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConnected, channel, ...deps])
 
   return { connectionState, isConnected }

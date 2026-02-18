@@ -98,11 +98,6 @@ const objectives: { value: Objective; label: string; description: string }[] = [
   { value: 'engagement', label: 'Engagement', description: 'Get more interactions' },
 ]
 
-const mockAdAccounts = [
-  { id: 'act_123', name: 'Main Business Account', platform: 'meta' as Platform },
-  { id: 'act_456', name: 'E-commerce Store', platform: 'meta' as Platform },
-  { id: 'gads_789', name: 'Company Google Ads', platform: 'google' as Platform },
-]
 
 export default function CampaignBuilder() {
   const { tenantId, draftId } = useParams<{ tenantId: string; draftId?: string }>()
@@ -148,9 +143,9 @@ export default function CampaignBuilder() {
   const submitDraft = useSubmitDraft(tid)
   const { data: _existingDraft } = useCampaignDraft(tid, draftId || '')
 
-  // Combine ad accounts with fallback to mock
+  // Combine ad accounts from all platforms (API data only)
   const adAccounts = useMemo(() => {
-    const apiAccounts = [
+    return [
       ...(metaAccounts || []).map((acc) => ({
         id: acc.id,
         name: acc.name,
@@ -172,7 +167,6 @@ export default function CampaignBuilder() {
         platform: 'snapchat' as Platform,
       })),
     ]
-    return apiAccounts.length > 0 ? apiAccounts : mockAdAccounts
   }, [metaAccounts, googleAccounts, tiktokAccounts, snapchatAccounts])
 
   const updateDraft = <K extends keyof CampaignDraft>(
@@ -383,25 +377,37 @@ export default function CampaignBuilder() {
             {draft.platform && (
               <div>
                 <h3 className="text-lg font-semibold mb-4">Select Ad Account</h3>
-                <div className="space-y-2">
-                  {adAccounts
-                    .filter(acc => acc.platform === draft.platform)
-                    .map((acc) => (
-                      <button
-                        key={acc.id}
-                        onClick={() => updateDraft('adAccountId', acc.id)}
-                        className={cn(
-                          'w-full p-4 rounded-lg border-2 text-left transition-all',
-                          draft.adAccountId === acc.id
-                            ? 'border-primary bg-primary/5'
-                            : 'border-border hover:border-primary/50'
-                        )}
-                      >
-                        <p className="font-medium">{acc.name}</p>
-                        <p className="text-sm text-muted-foreground">{acc.id}</p>
-                      </button>
-                    ))}
-                </div>
+                {adAccounts.filter(acc => acc.platform === draft.platform).length > 0 ? (
+                  <div className="space-y-2">
+                    {adAccounts
+                      .filter(acc => acc.platform === draft.platform)
+                      .map((acc) => (
+                        <button
+                          key={acc.id}
+                          onClick={() => updateDraft('adAccountId', acc.id)}
+                          className={cn(
+                            'w-full p-4 rounded-lg border-2 text-left transition-all',
+                            draft.adAccountId === acc.id
+                              ? 'border-primary bg-primary/5'
+                              : 'border-border hover:border-primary/50'
+                          )}
+                        >
+                          <p className="font-medium">{acc.name}</p>
+                          <p className="text-sm text-muted-foreground">{acc.id}</p>
+                        </button>
+                      ))}
+                  </div>
+                ) : (
+                  <div className="rounded-lg border-2 border-dashed border-border p-6 text-center">
+                    <p className="text-muted-foreground">No ad accounts found for {draft.platform}.</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Connect your {draft.platform.charAt(0).toUpperCase() + draft.platform.slice(1)} account first from the{' '}
+                      <a href={`/app/${tenantId}/campaigns/connect`} className="text-primary hover:underline">
+                        Connect Platforms
+                      </a>{' '}page.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>

@@ -768,9 +768,7 @@ export function FunnelBuilder() {
             <GitBranch className="w-6 h-6 text-primary" />
             Funnel Builder
           </h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Create and analyze conversion funnels to understand user journeys
-          </p>
+          <p className="text-muted-foreground mt-1 max-w-3xl">Visualize multi-step conversion paths and identify where users drop off. Build custom funnels from any sequence of events, analyze conversion rates at each step, and discover optimization opportunities to improve your revenue.</p>
         </div>
         <button
           onClick={() => setShowForm(true)}

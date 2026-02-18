@@ -69,8 +69,19 @@ export interface FeatureFlagsState {
 // Default Values
 // =============================================================================
 
-// Reserved for future use: default feature flag values
-// const _defaultFeatures: FeatureFlags = { ... }
+export const defaultFeatures: FeatureFlags = {
+  signal_health: false,
+  attribution_variance: false,
+  ai_recommendations: false,
+  anomaly_alerts: false,
+  creative_fatigue: false,
+  campaign_builder: false,
+  autopilot_level: 0,
+  superadmin_profitability: false,
+  max_campaigns: 20,
+  max_users: 5,
+  data_retention_days: 90,
+}
 
 // =============================================================================
 // Store

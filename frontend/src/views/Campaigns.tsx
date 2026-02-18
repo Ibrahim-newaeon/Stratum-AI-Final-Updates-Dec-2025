@@ -15,6 +15,7 @@ import {
   Trash2,
   ExternalLink,
   Loader2,
+  Target,
 } from 'lucide-react'
 import { cn, formatCurrency, formatPercent, formatCompactNumber, getPlatformColor } from '@/lib/utils'
 import CampaignCreateModal from '@/components/campaigns/CampaignCreateModal'
@@ -35,99 +36,6 @@ interface Campaign {
   ctr: number
   trend: 'up' | 'down' | 'stable'
 }
-
-const mockCampaigns: Campaign[] = [
-  {
-    id: 1,
-    name: 'Summer Sale 2024',
-    platform: 'google',
-    status: 'active',
-    spend: 12450,
-    budget: 15000,
-    revenue: 48750,
-    roas: 3.92,
-    impressions: 1245000,
-    clicks: 34560,
-    conversions: 890,
-    ctr: 2.78,
-    trend: 'up',
-  },
-  {
-    id: 2,
-    name: 'Brand Awareness Q4',
-    platform: 'meta',
-    status: 'active',
-    spend: 8900,
-    budget: 10000,
-    revenue: 35600,
-    roas: 4.0,
-    impressions: 2100000,
-    clicks: 42000,
-    conversions: 560,
-    ctr: 2.0,
-    trend: 'stable',
-  },
-  {
-    id: 3,
-    name: 'Product Launch - Widget Pro',
-    platform: 'google',
-    status: 'paused',
-    spend: 5600,
-    budget: 8000,
-    revenue: 15680,
-    roas: 2.8,
-    impressions: 890000,
-    clicks: 21340,
-    conversions: 234,
-    ctr: 2.4,
-    trend: 'down',
-  },
-  {
-    id: 4,
-    name: 'Retargeting - Cart Abandoners',
-    platform: 'meta',
-    status: 'active',
-    spend: 3200,
-    budget: 5000,
-    revenue: 19200,
-    roas: 6.0,
-    impressions: 450000,
-    clicks: 13500,
-    conversions: 320,
-    ctr: 3.0,
-    trend: 'up',
-  },
-  {
-    id: 5,
-    name: 'TikTok Influencer Collab',
-    platform: 'tiktok',
-    status: 'active',
-    spend: 7800,
-    budget: 12000,
-    revenue: 23400,
-    roas: 3.0,
-    impressions: 5600000,
-    clicks: 168000,
-    conversions: 420,
-    ctr: 3.0,
-    trend: 'up',
-  },
-  {
-    id: 6,
-    name: 'LinkedIn B2B Lead Gen',
-    platform: 'linkedin',
-    status: 'completed',
-    spend: 4500,
-    budget: 4500,
-    revenue: 13500,
-    roas: 3.0,
-    impressions: 320000,
-    clicks: 6400,
-    conversions: 128,
-    ctr: 2.0,
-    trend: 'stable',
-  },
-]
 
 type SortField = 'name' | 'spend' | 'revenue' | 'roas' | 'conversions'
 type SortDirection = 'asc' | 'desc'
@@ -167,7 +75,7 @@ export function Campaigns() {
         trend: c.trend || (c.roas >= 3.5 ? 'up' : c.roas < 2.5 ? 'down' : 'stable'),
       }))
     }
-    return mockCampaigns
+    return []
   }, [campaignsData])
 
   const handleSort = (field: SortField) => {
@@ -264,15 +172,34 @@ export function Campaigns() {
     )
   }
 
-  const getPlatformBadge = (platform: string) => (
-    <div
-      className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold"
-      style={{ backgroundColor: getPlatformColor(platform) }}
-      title={platform.charAt(0).toUpperCase() + platform.slice(1)}
-    >
-      {platform.charAt(0).toUpperCase()}
-    </div>
-  )
+  const getPlatformBadge = (platform: string) => {
+    const logoMap: Record<string, string> = {
+      meta: '/icons/meta.svg',
+      google: '/icons/google.svg',
+      tiktok: '/icons/tiktok.svg',
+      snapchat: '/icons/snapchat.svg',
+    }
+    const logo = logoMap[platform.toLowerCase()]
+    if (logo) {
+      return (
+        <img
+          src={logo}
+          alt={platform}
+          className="w-6 h-6 rounded-full"
+          title={platform.charAt(0).toUpperCase() + platform.slice(1)}
+        />
+      )
+    }
+    return (
+      <div
+        className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold"
+        style={{ backgroundColor: getPlatformColor(platform) }}
+        title={platform.charAt(0).toUpperCase() + platform.slice(1)}
+      >
+        {platform.charAt(0).toUpperCase()}
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -369,6 +296,17 @@ export function Campaigns() {
               {t('campaigns.deleteSelected')}
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!isLoading && campaigns.length === 0 && (
+        <div className="flex flex-col items-center justify-center p-12 rounded-xl border bg-card">
+          <Target className="w-12 h-12 text-muted-foreground mb-4" />
+          <h3 className="text-lg font-semibold mb-2">No campaigns yet</h3>
+          <p className="text-muted-foreground text-center max-w-md">
+            Create your first campaign to start tracking performance across platforms.
+          </p>
         </div>
       )}
 

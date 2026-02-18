@@ -27,113 +27,24 @@ import {
   Settings,
   Loader2,
   X,
+  DollarSign,
+  Users,
   BarChart3,
   Clock,
   Zap,
   Bell,
   Mail,
   MessageSquare,
+  Trash2,
+  ToggleLeft,
+  ToggleRight,
 } from 'lucide-react'
-import { cn, formatCurrency, formatCompactNumber } from '@/lib/utils'
+import { cn, formatCurrency, formatPercent, formatCompactNumber } from '@/lib/utils'
 import { SimulateSlider } from '@/components/widgets/SimulateSlider'
 import { useInsights, useRecommendations, useAnomalies, useLivePredictions } from '@/api/hooks'
 import { useTenantStore } from '@/stores/tenantStore'
 
-// Mock AI insights with extended details
-const mockInsights = [
-  {
-    id: 1,
-    type: 'opportunity',
-    priority: 'high',
-    title: 'High-performing audience segment identified',
-    description: 'Users aged 25-34 in urban areas show 45% higher conversion rate. Consider increasing budget allocation.',
-    impact: '+$12,500 estimated monthly revenue',
-    campaign: 'Summer Sale 2024',
-    // Extended details for modal
-    fullDescription: 'Our AI analysis has identified a high-value audience segment that is significantly outperforming other demographics. Users aged 25-34 in urban metropolitan areas are converting at 4.2% compared to the campaign average of 2.9%. This segment also shows higher average order values ($127 vs $89) and lower cost per acquisition ($18 vs $31).',
-    metrics: {
-      conversionRate: { current: 4.2, average: 2.9, change: 45 },
-      avgOrderValue: { current: 127, average: 89, change: 43 },
-      cpa: { current: 18, average: 31, change: -42 },
-      audienceSize: 245000,
-      potentialReach: 890000,
-    },
-    recommendations: [
-      'Increase budget allocation by 30% for this segment',
-      'Create dedicated ad creatives for urban millennials',
-      'Test lookalike audiences based on this segment',
-      'Implement retargeting campaigns for non-converters',
-    ],
-    historicalData: [
-      { date: 'Week 1', performance: 2.8 },
-      { date: 'Week 2', performance: 3.1 },
-      { date: 'Week 3', performance: 3.6 },
-      { date: 'Week 4', performance: 4.2 },
-    ],
-    confidence: 92,
-    detectedAt: '2 hours ago',
-  },
-  {
-    id: 2,
-    type: 'warning',
-    priority: 'medium',
-    title: 'Creative fatigue detected',
-    description: 'Banner "Summer_v3" has been shown 2.3M times. CTR dropped 23% in the last 7 days.',
-    impact: '-$3,200 estimated loss if unchanged',
-    campaign: 'Brand Awareness Q4',
-    fullDescription: 'The creative asset "Summer_v3" has reached saturation with your target audience. Frequency has exceeded optimal levels (7.2 vs recommended 4.0), and engagement metrics are declining rapidly. Immediate creative refresh is recommended to prevent further performance degradation.',
-    metrics: {
-      impressions: { current: 2300000, threshold: 1500000, change: 53 },
-      ctr: { current: 1.8, previous: 2.3, change: -23 },
-      frequency: { current: 7.2, optimal: 4.0, change: 80 },
-      estimatedLoss: 3200,
-    },
-    recommendations: [
-      'Pause current creative immediately',
-      'Rotate in 2-3 new creative variants',
-      'A/B test new creatives with fresh audiences',
-      'Set up automated creative rotation rules',
-    ],
-    historicalData: [
-      { date: 'Week 1', performance: 2.4 },
-      { date: 'Week 2', performance: 2.3 },
-      { date: 'Week 3', performance: 2.1 },
-      { date: 'Week 4', performance: 1.8 },
-    ],
-    confidence: 88,
-    detectedAt: '6 hours ago',
-  },
-  {
-    id: 3,
-    type: 'suggestion',
-    priority: 'low',
-    title: 'Optimal bidding time identified',
-    description: 'Historical data shows 18% better CPC between 6-9 PM. Consider dayparting adjustments.',
-    impact: '+$890 estimated monthly savings',
-    campaign: 'All campaigns',
-    fullDescription: 'Analysis of 90 days of bidding data reveals consistent patterns in cost efficiency. Evening hours (6-9 PM local time) show significantly lower competition and better conversion rates. Implementing dayparting could reduce your overall CPC while maintaining conversion volume.',
-    metrics: {
-      cpcPeak: { current: 2.45, offPeak: 2.01, savings: 18 },
-      conversionsPeak: { current: 312, projected: 298, change: -4 },
-      monthlySavings: 890,
-      optimalHours: '6PM - 9PM',
-    },
-    recommendations: [
-      'Increase bids by 15% during 6-9 PM',
-      'Reduce bids by 20% during 2-5 AM',
-      'Set up automated dayparting rules',
-      'Monitor for 2 weeks before full rollout',
-    ],
-    historicalData: [
-      { date: '6AM', performance: 2.8 },
-      { date: '12PM', performance: 2.4 },
-      { date: '6PM', performance: 2.0 },
-      { date: '9PM', performance: 2.1 },
-    ],
-    confidence: 76,
-    detectedAt: '1 day ago',
-  },
-]
+// (Mock data removed — insights come from useInsights() API hook)
 
 // Type for insight
 interface Insight {
@@ -152,161 +63,7 @@ interface Insight {
   detectedAt?: string
 }
 
-// Mock prediction data
-const mockPredictionData = Array.from({ length: 14 }, (_, i) => {
-  const date = new Date()
-  date.setDate(date.getDate() + i - 7)
-  const isPast = i < 7
-  return {
-    date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-    actual: isPast ? 4500 + Math.random() * 1500 + i * 100 : null,
-    predicted: 4200 + Math.random() * 800 + i * 150,
-    lowerBound: 3800 + Math.random() * 500 + i * 120,
-    upperBound: 4800 + Math.random() * 800 + i * 180,
-  }
-})
-
-// Mock attribution data
-const mockAttributionData = [
-  { name: 'First Touch', value: 35, color: '#0ea5e9' },
-  { name: 'Last Touch', value: 28, color: '#10b981' },
-  { name: 'Linear', value: 22, color: '#f59e0b' },
-  { name: 'Time Decay', value: 15, color: '#8b5cf6' },
-]
-
-// Mock anomaly data with extended details
-const mockAnomalies = [
-  {
-    id: 1,
-    date: 'Nov 28',
-    metric: 'CTR',
-    value: 4.2,
-    expected: 2.8,
-    deviation: '+50%',
-    type: 'positive',
-    // Extended details
-    fullDescription: 'Click-through rate spiked significantly above the expected baseline. This anomaly was detected across multiple ad groups in your "Summer Sale 2024" campaign. The spike correlates with a viral social media mention of your brand.',
-    campaign: 'Summer Sale 2024',
-    adGroup: 'Urban Millennials',
-    platform: 'Meta',
-    severity: 'high',
-    historicalData: [
-      { date: 'Nov 22', value: 2.6 },
-      { date: 'Nov 23', value: 2.7 },
-      { date: 'Nov 24', value: 2.9 },
-      { date: 'Nov 25', value: 2.8 },
-      { date: 'Nov 26', value: 3.1 },
-      { date: 'Nov 27', value: 3.4 },
-      { date: 'Nov 28', value: 4.2 },
-    ],
-    possibleCauses: [
-      'Viral social media mention detected on Twitter/X',
-      'Competitor went offline during this period',
-      'New creative variant showing strong engagement',
-      'Seasonal trend alignment',
-    ],
-    suggestedActions: [
-      'Scale budget by 25% to capitalize on momentum',
-      'Create lookalike audience from engaged users',
-      'Document successful creative for future campaigns',
-      'Set up automated scaling rules for similar events',
-    ],
-    relatedMetrics: {
-      impressions: { value: 125000, change: 12 },
-      clicks: { value: 5250, change: 68 },
-      conversions: { value: 312, change: 45 },
-      spend: { value: 2450, change: 15 },
-    },
-    detectedAt: '2 hours ago',
-    confidence: 94,
-  },
-  {
-    id: 2,
-    date: 'Nov 26',
-    metric: 'CPA',
-    value: 28.5,
-    expected: 18.2,
-    deviation: '+56%',
-    type: 'negative',
-    fullDescription: 'Cost per acquisition increased sharply, indicating potential issues with audience targeting or ad relevance. This spike occurred primarily in the "Brand Awareness Q4" campaign, specifically in the retargeting ad group.',
-    campaign: 'Brand Awareness Q4',
-    adGroup: 'Retargeting - Cart Abandoners',
-    platform: 'Google Ads',
-    severity: 'critical',
-    historicalData: [
-      { date: 'Nov 20', value: 17.8 },
-      { date: 'Nov 21', value: 18.1 },
-      { date: 'Nov 22', value: 18.5 },
-      { date: 'Nov 23', value: 19.2 },
-      { date: 'Nov 24', value: 22.1 },
-      { date: 'Nov 25', value: 25.3 },
-      { date: 'Nov 26', value: 28.5 },
-    ],
-    possibleCauses: [
-      'Audience fatigue in retargeting segment',
-      'Increased competition during Black Friday period',
-      'Landing page performance degradation detected',
-      'Ad relevance score dropped from 8 to 5',
-    ],
-    suggestedActions: [
-      'Pause underperforming ad groups immediately',
-      'Refresh creative assets in retargeting campaigns',
-      'Review and optimize landing page load time',
-      'Adjust bid strategy to target CPA mode',
-    ],
-    relatedMetrics: {
-      impressions: { value: 89000, change: -5 },
-      clicks: { value: 1890, change: -18 },
-      conversions: { value: 66, change: -34 },
-      spend: { value: 1881, change: 8 },
-    },
-    detectedAt: '1 day ago',
-    confidence: 89,
-  },
-  {
-    id: 3,
-    date: 'Nov 24',
-    metric: 'Conversions',
-    value: 156,
-    expected: 89,
-    deviation: '+75%',
-    type: 'positive',
-    fullDescription: 'Conversion volume exceeded expectations by a significant margin. This surge was driven by strong performance in the "Holiday Promotions" campaign, particularly from email retargeting and organic search traffic.',
-    campaign: 'Holiday Promotions',
-    adGroup: 'Email Retargeting',
-    platform: 'Multi-channel',
-    severity: 'medium',
-    historicalData: [
-      { date: 'Nov 18', value: 78 },
-      { date: 'Nov 19', value: 82 },
-      { date: 'Nov 20', value: 85 },
-      { date: 'Nov 21', value: 91 },
-      { date: 'Nov 22', value: 112 },
-      { date: 'Nov 23', value: 134 },
-      { date: 'Nov 24', value: 156 },
-    ],
-    possibleCauses: [
-      'Black Friday early access promotion launched',
-      'Email campaign achieved 45% open rate',
-      'Organic search rankings improved for key terms',
-      'Referral traffic spike from partner website',
-    ],
-    suggestedActions: [
-      'Extend promotion period by 48 hours',
-      'Increase inventory allocation for top products',
-      'Send follow-up email to engaged non-converters',
-      'Document winning email subject lines',
-    ],
-    relatedMetrics: {
-      impressions: { value: 234000, change: 28 },
-      clicks: { value: 12400, change: 42 },
-      revenue: { value: 18720, change: 82 },
-      roas: { value: 4.8, change: 35 },
-    },
-    detectedAt: '3 days ago',
-    confidence: 91,
-  },
-]
+// (Mock prediction & attribution data removed — data comes from API hooks)
 
 // Type for anomaly
 interface Anomaly {
@@ -1396,14 +1153,14 @@ export function Stratum() {
 
   // Fetch data from API
   const { data: insightsData, isLoading: insightsLoading, refetch: refetchInsights } = useInsights(tenantId)
-  const { data: _recommendationsData } = useRecommendations(tenantId)
-  const { data: anomaliesData, isLoading: _anomaliesLoading } = useAnomalies(tenantId)
-  const { data: _predictionsData } = useLivePredictions()
+  const { data: recommendationsData } = useRecommendations(tenantId)
+  const { data: anomaliesData, isLoading: anomaliesLoading } = useAnomalies(tenantId)
+  const { data: predictionsData } = useLivePredictions(tenantId)
 
   // Transform API insights or fall back to mock
   const insights = useMemo(() => {
-    if (insightsData?.actions && insightsData.actions.length > 0) {
-      return insightsData.actions.slice(0, 3).map((i: any, idx: number) => ({
+    if (insightsData?.items && insightsData.items.length > 0) {
+      return insightsData.items.slice(0, 3).map((i: any, idx: number) => ({
         id: i.id || idx + 1,
         type: i.type || i.insight_type || 'suggestion',
         priority: i.priority || 'medium',
@@ -1413,13 +1170,13 @@ export function Stratum() {
         campaign: i.campaign || i.campaign_name || 'All campaigns',
       }))
     }
-    return mockInsights
+    return []
   }, [insightsData])
 
   // Transform API anomalies or fall back to mock
   const anomalies = useMemo(() => {
-    if (anomaliesData?.anomalies && anomaliesData.anomalies.length > 0) {
-      return anomaliesData.anomalies.slice(0, 3).map((a: any) => ({
+    if (anomaliesData?.items && anomaliesData.items.length > 0) {
+      return anomaliesData.items.slice(0, 3).map((a: any) => ({
         date: new Date(a.detected_at || a.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         metric: a.metric || a.metric_name || 'Unknown',
         value: a.actual_value || a.value || 0,
@@ -1428,7 +1185,7 @@ export function Stratum() {
         type: a.is_positive || a.type === 'positive' ? 'positive' : 'negative',
       }))
     }
-    return mockAnomalies
+    return []
   }, [anomaliesData])
 
   // Handle refresh
@@ -1590,53 +1347,65 @@ export function Stratum() {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {insights.map((insight: any) => {
-            const isApplied = appliedInsights.includes(insight.id)
-            return (
-              <div
-                key={insight.id}
-                onClick={() => !isApplied && handleInsightClick(insight as Insight)}
-                className={cn(
-                  'p-4 rounded-lg border bg-background transition-all cursor-pointer',
-                  isApplied
-                    ? 'opacity-60 cursor-default border-green-500/50'
-                    : 'hover:shadow-md hover:border-primary/50'
-                )}
-              >
-                <div className="flex items-start justify-between mb-2">
-                  {isApplied ? (
-                    <CheckCircle2 className="w-5 h-5 text-green-500" />
-                  ) : (
-                    getInsightIcon(insight.type)
+        {insightsLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading insights...</span>
+          </div>
+        ) : insights.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {insights.map((insight) => {
+              const isApplied = appliedInsights.includes(insight.id)
+              return (
+                <div
+                  key={insight.id}
+                  onClick={() => !isApplied && handleInsightClick(insight as Insight)}
+                  className={cn(
+                    'p-4 rounded-lg border bg-background transition-all cursor-pointer',
+                    isApplied
+                      ? 'opacity-60 cursor-default border-green-500/50'
+                      : 'hover:shadow-md hover:border-primary/50'
                   )}
-                  {isApplied ? (
-                    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-500/10 text-green-500">
-                      Applied
-                    </span>
-                  ) : (
-                    getPriorityBadge(insight.priority)
-                  )}
-                </div>
-                <h4 className="font-medium text-sm mb-1">{insight.title}</h4>
-                <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
-                  {insight.description}
-                </p>
-                <div className="flex items-center justify-between">
-                  <span
-                    className={cn(
-                      'text-xs font-medium',
-                      insight.impact.startsWith('+') ? 'text-green-500' : 'text-red-500'
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    {isApplied ? (
+                      <CheckCircle2 className="w-5 h-5 text-green-500" />
+                    ) : (
+                      getInsightIcon(insight.type)
                     )}
-                  >
-                    {insight.impact}
-                  </span>
-                  {!isApplied && <ArrowRight className="w-4 h-4 text-muted-foreground" />}
+                    {isApplied ? (
+                      <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-500/10 text-green-500">
+                        Applied
+                      </span>
+                    ) : (
+                      getPriorityBadge(insight.priority)
+                    )}
+                  </div>
+                  <h4 className="font-medium text-sm mb-1">{insight.title}</h4>
+                  <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
+                    {insight.description}
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <span
+                      className={cn(
+                        'text-xs font-medium',
+                        insight.impact.startsWith('+') ? 'text-green-500' : 'text-red-500'
+                      )}
+                    >
+                      {insight.impact}
+                    </span>
+                    {!isApplied && <ArrowRight className="w-4 h-4 text-muted-foreground" />}
+                  </div>
                 </div>
-              </div>
-            )
-          })}
-        </div>
+              )
+            })}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <Sparkles className="w-10 h-10 text-muted-foreground/40 mb-3" />
+            <p className="text-sm text-muted-foreground">No insights available yet.</p>
+          </div>
+        )}
       </div>
 
       {/* Main Content Grid */}
@@ -1663,70 +1432,85 @@ export function Stratum() {
           </div>
 
           <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={mockPredictionData}>
-                <defs>
-                  <linearGradient id="colorPredicted" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis
-                  dataKey="date"
-                  tick={{ fontSize: 12 }}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
-                  tick={{ fontSize: 12 }}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(value) => `$${formatCompactNumber(value)}`}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '0.5rem',
-                  }}
-                  formatter={(value: number) => [formatCurrency(value), '']}
-                />
-                {/* Confidence interval */}
-                <Area
-                  type="monotone"
-                  dataKey="upperBound"
-                  stroke="transparent"
-                  fill="#10b981"
-                  fillOpacity={0.1}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="lowerBound"
-                  stroke="transparent"
-                  fill="#fff"
-                  fillOpacity={1}
-                />
-                {/* Predicted line */}
-                <Line
-                  type="monotone"
-                  dataKey="predicted"
-                  stroke="#10b981"
-                  strokeWidth={2}
-                  strokeDasharray="5 5"
-                  dot={false}
-                />
-                {/* Actual line */}
-                <Line
-                  type="monotone"
-                  dataKey="actual"
-                  stroke="#0ea5e9"
-                  strokeWidth={2}
-                  dot={{ fill: '#0ea5e9', strokeWidth: 0, r: 3 }}
-                  connectNulls={false}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            {predictionsData?.items?.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={predictionsData.items.map((item: any) => ({
+                  date: item.date,
+                  actual: item.actual ?? item.actual_value ?? null,
+                  predicted: item.predicted ?? item.predicted_value ?? null,
+                  lowerBound: item.lowerBound ?? item.lower_bound ?? null,
+                  upperBound: item.upperBound ?? item.upper_bound ?? null,
+                }))}>
+                  <defs>
+                    <linearGradient id="colorPredicted" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis
+                    dataKey="date"
+                    tick={{ fontSize: 12 }}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 12 }}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(value) => `$${formatCompactNumber(value)}`}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--card))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '0.5rem',
+                    }}
+                    formatter={(value: number) => [formatCurrency(value), '']}
+                  />
+                  {/* Confidence interval */}
+                  <Area
+                    type="monotone"
+                    dataKey="upperBound"
+                    stroke="transparent"
+                    fill="#10b981"
+                    fillOpacity={0.1}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="lowerBound"
+                    stroke="transparent"
+                    fill="#fff"
+                    fillOpacity={1}
+                  />
+                  {/* Predicted line */}
+                  <Line
+                    type="monotone"
+                    dataKey="predicted"
+                    stroke="#10b981"
+                    strokeWidth={2}
+                    strokeDasharray="5 5"
+                    dot={false}
+                  />
+                  {/* Actual line */}
+                  <Line
+                    type="monotone"
+                    dataKey="actual"
+                    stroke="#0ea5e9"
+                    strokeWidth={2}
+                    dot={{ fill: '#0ea5e9', strokeWidth: 0, r: 3 }}
+                    connectNulls={false}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center text-center p-6">
+                <TrendingUp className="w-10 h-10 text-muted-foreground/40 mb-3" />
+                <p className="text-sm text-muted-foreground max-w-xs">
+                  No forecast data available yet. Connect your ad platforms to see AI-powered revenue predictions.
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="mt-4 grid grid-cols-3 gap-4 pt-4 border-t">
@@ -1757,48 +1541,57 @@ export function Stratum() {
         {/* Attribution Model */}
         <div className="rounded-xl border bg-card p-5">
           <h3 className="font-semibold mb-4">{t('stratum.attributionModel')}</h3>
-          <div className="flex items-center gap-6">
-            <div className="w-48 h-48">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={mockAttributionData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={50}
-                    outerRadius={80}
-                    paddingAngle={2}
-                    dataKey="value"
-                  >
-                    {mockAttributionData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '0.5rem',
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="flex-1 space-y-3">
-              {mockAttributionData.map((item) => (
-                <div key={item.name} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: item.color }}
+          {([] as Array<{ name: string; value: number; color: string }>).length > 0 ? (
+            <div className="flex items-center gap-6">
+              <div className="w-48 h-48">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={[]}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={80}
+                      paddingAngle={2}
+                      dataKey="value"
+                    >
+                      {([] as Array<{ name: string; value: number; color: string }>).map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '0.5rem',
+                      }}
                     />
-                    <span className="text-sm">{item.name}</span>
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex-1 space-y-3">
+                {([] as Array<{ name: string; value: number; color: string }>).map((item) => (
+                  <div key={item.name} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: item.color }}
+                      />
+                      <span className="text-sm">{item.name}</span>
+                    </div>
+                    <span className="font-medium">{item.value}%</span>
                   </div>
-                  <span className="font-medium">{item.value}%</span>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="h-48 flex flex-col items-center justify-center text-center p-6">
+              <Target className="w-10 h-10 text-muted-foreground/40 mb-3" />
+              <p className="text-sm text-muted-foreground max-w-xs">
+                No attribution data available yet. Attribution insights will appear once campaign data is collected.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Anomaly Detection */}
@@ -1808,66 +1601,78 @@ export function Stratum() {
             <span className="text-xs text-muted-foreground">Last 7 days</span>
           </div>
 
-          <div className="space-y-3">
-            {anomalies.map((anomaly: any, i: number) => {
-              const isReviewed = reviewedAnomalies.includes(anomaly.id)
-              return (
-                <div
-                  key={anomaly.id || i}
-                  onClick={() => !isReviewed && handleAnomalyClick(anomaly as Anomaly)}
-                  className={cn(
-                    'p-3 rounded-lg border-l-4 transition-all',
-                    anomaly.type === 'positive'
-                      ? 'bg-green-500/10 border-green-500'
-                      : 'bg-red-500/10 border-red-500',
-                    isReviewed
-                      ? 'opacity-60 cursor-default'
-                      : 'cursor-pointer hover:shadow-md'
-                  )}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      {isReviewed ? (
-                        <CheckCircle2 className="w-4 h-4 text-muted-foreground" />
-                      ) : anomaly.type === 'positive' ? (
-                        <CheckCircle2 className="w-4 h-4 text-green-500" />
-                      ) : (
-                        <AlertTriangle className="w-4 h-4 text-red-500" />
-                      )}
-                      <span className="font-medium text-sm">{anomaly.metric}</span>
-                      {isReviewed && (
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-muted text-muted-foreground">
-                          Reviewed
-                        </span>
-                      )}
+          {anomaliesLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              <span className="ml-2 text-sm text-muted-foreground">Loading anomalies...</span>
+            </div>
+          ) : anomalies.length > 0 ? (
+            <div className="space-y-3">
+              {anomalies.map((anomaly, i) => {
+                const isReviewed = reviewedAnomalies.includes(anomaly.id)
+                return (
+                  <div
+                    key={anomaly.id || i}
+                    onClick={() => !isReviewed && handleAnomalyClick(anomaly as Anomaly)}
+                    className={cn(
+                      'p-3 rounded-lg border-l-4 transition-all',
+                      anomaly.type === 'positive'
+                        ? 'bg-green-500/10 border-green-500'
+                        : 'bg-red-500/10 border-red-500',
+                      isReviewed
+                        ? 'opacity-60 cursor-default'
+                        : 'cursor-pointer hover:shadow-md'
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {isReviewed ? (
+                          <CheckCircle2 className="w-4 h-4 text-muted-foreground" />
+                        ) : anomaly.type === 'positive' ? (
+                          <CheckCircle2 className="w-4 h-4 text-green-500" />
+                        ) : (
+                          <AlertTriangle className="w-4 h-4 text-red-500" />
+                        )}
+                        <span className="font-medium text-sm">{anomaly.metric}</span>
+                        {isReviewed && (
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-muted text-muted-foreground">
+                            Reviewed
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">{anomaly.date}</span>
+                        {!isReviewed && <ArrowRight className="w-3 h-3 text-muted-foreground" />}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground">{anomaly.date}</span>
-                      {!isReviewed && <ArrowRight className="w-3 h-3 text-muted-foreground" />}
-                    </div>
+                    <div className="mt-2 flex items-center justify-between text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Actual: </span>
+                        <span className="font-medium">{anomaly.value}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Expected: </span>
+                        <span className="font-medium">{anomaly.expected}</span>
+                      </div>
+                      <span
+                        className={cn(
+                          'font-semibold',
+                          anomaly.type === 'positive' ? 'text-green-500' : 'text-red-500'
+                        )}
+                      >
+                      {anomaly.deviation}
+                    </span>
                   </div>
-                  <div className="mt-2 flex items-center justify-between text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Actual: </span>
-                      <span className="font-medium">{anomaly.value}</span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Expected: </span>
-                      <span className="font-medium">{anomaly.expected}</span>
-                    </div>
-                    <span
-                      className={cn(
-                        'font-semibold',
-                        anomaly.type === 'positive' ? 'text-green-500' : 'text-red-500'
-                      )}
-                    >
-                    {anomaly.deviation}
-                  </span>
                 </div>
-              </div>
-              )
-            })}
-          </div>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <AlertTriangle className="w-10 h-10 text-muted-foreground/40 mb-3" />
+              <p className="text-sm text-muted-foreground">No anomalies detected recently.</p>
+            </div>
+          )}
         </div>
       </div>
 

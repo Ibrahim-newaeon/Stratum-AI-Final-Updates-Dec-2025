@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Building2,
@@ -10,16 +10,20 @@ import {
   Crown,
   ChevronDown,
   MoreHorizontal,
+  Check,
   X,
   AlertTriangle,
   Calendar,
   Settings,
   Shield,
+  RefreshCw,
   Filter,
   Globe,
   Zap,
+  Loader2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { apiClient } from '@/api/client'
 
 // Types
 interface Tenant {
@@ -45,70 +49,6 @@ interface TenantFormData {
   plan: 'free' | 'starter' | 'professional' | 'enterprise'
 }
 
-// Mock data for demonstration
-const mockTenants: Tenant[] = [
-  {
-    id: 1,
-    name: 'Acme Corporation',
-    slug: 'acme-corp',
-    domain: 'acme.stratum.ai',
-    plan: 'enterprise',
-    plan_expires_at: '2025-12-31T00:00:00Z',
-    max_users: 100,
-    max_campaigns: 1000,
-    settings: {},
-    feature_flags: { advanced_analytics: true, ai_insights: true, white_label: true },
-    created_at: '2024-01-15T10:00:00Z',
-    updated_at: '2024-11-20T15:30:00Z',
-    user_count: 45,
-  },
-  {
-    id: 2,
-    name: 'TechStart Inc',
-    slug: 'techstart',
-    domain: null,
-    plan: 'professional',
-    plan_expires_at: '2025-06-30T00:00:00Z',
-    max_users: 25,
-    max_campaigns: 200,
-    settings: {},
-    feature_flags: { advanced_analytics: true, ai_insights: true, white_label: false },
-    created_at: '2024-03-22T08:00:00Z',
-    updated_at: '2024-10-15T12:00:00Z',
-    user_count: 12,
-  },
-  {
-    id: 3,
-    name: 'Marketing Pro',
-    slug: 'marketing-pro',
-    domain: 'marketingpro.stratum.ai',
-    plan: 'starter',
-    plan_expires_at: '2025-03-15T00:00:00Z',
-    max_users: 10,
-    max_campaigns: 50,
-    settings: {},
-    feature_flags: { advanced_analytics: false, ai_insights: true, white_label: false },
-    created_at: '2024-05-10T14:00:00Z',
-    updated_at: '2024-11-01T09:00:00Z',
-    user_count: 8,
-  },
-  {
-    id: 4,
-    name: 'Digital Bloom',
-    slug: 'digital-bloom',
-    domain: null,
-    plan: 'free',
-    plan_expires_at: null,
-    max_users: 5,
-    max_campaigns: 10,
-    settings: {},
-    feature_flags: { advanced_analytics: false, ai_insights: false, white_label: false },
-    created_at: '2024-08-01T11:00:00Z',
-    updated_at: '2024-08-01T11:00:00Z',
-    user_count: 2,
-  },
-]
-
 const planConfig = {
   free: { color: 'bg-gray-500', label: 'Free', limits: { users: 5, campaigns: 10 } },
   starter: { color: 'bg-blue-500', label: 'Starter', limits: { users: 10, campaigns: 50 } },
@@ -126,8 +66,8 @@ const featureFlags = [
 ]
 
 export function Tenants() {
-  const { t: _t } = useTranslation()
-  const [tenants, setTenants] = useState<Tenant[]>(mockTenants)
+  const { t } = useTranslation()
+  const [tenants, setTenants] = useState<Tenant[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [planFilter, setPlanFilter] = useState<string>('all')
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -135,9 +75,33 @@ export function Tenants() {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showFeaturesModal, setShowFeaturesModal] = useState(false)
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null)
-  const [_isLoading, _setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [sortBy, setSortBy] = useState<'name' | 'created_at' | 'user_count'>('name')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+
+  // Fetch tenants from API
+  const fetchTenants = useCallback(async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const response = await apiClient.get('/api/v1/tenants', {
+        params: { limit: 100 },
+      })
+      const data = response.data?.data || response.data || []
+      setTenants(Array.isArray(data) ? data : [])
+    } catch (err: any) {
+      const message = err?.response?.data?.detail || err?.response?.data?.error || err?.message || 'Failed to load tenants'
+      setError(message)
+      setTenants([])
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchTenants()
+  }, [fetchTenants])
 
   // Filter and sort tenants
   const filteredTenants = useMemo(() => {
@@ -187,60 +151,98 @@ export function Tenants() {
     }
   }, [tenants])
 
-  const handleCreateTenant = (data: TenantFormData) => {
-    const newTenant: Tenant = {
-      id: Date.now(),
-      ...data,
-      plan_expires_at: data.plan === 'free' ? null : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-      max_users: planConfig[data.plan].limits.users,
-      max_campaigns: planConfig[data.plan].limits.campaigns,
-      settings: {},
-      feature_flags: {},
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      user_count: 0,
+  const handleCreateTenant = async (data: TenantFormData) => {
+    try {
+      await apiClient.post('/api/v1/tenants', {
+        name: data.name,
+        slug: data.slug,
+        domain: data.domain || null,
+        plan: data.plan,
+      })
+      setShowCreateModal(false)
+      fetchTenants()
+    } catch (err: any) {
+      const message = err?.response?.data?.detail || 'Failed to create tenant'
+      alert(message)
     }
-    setTenants([...tenants, newTenant])
-    setShowCreateModal(false)
   }
 
-  const handleUpdateTenant = (data: TenantFormData) => {
+  const handleUpdateTenant = async (data: TenantFormData) => {
     if (!selectedTenant) return
-    setTenants(
-      tenants.map((t) =>
-        t.id === selectedTenant.id
-          ? {
-              ...t,
-              ...data,
-              max_users: planConfig[data.plan].limits.users,
-              max_campaigns: planConfig[data.plan].limits.campaigns,
-              updated_at: new Date().toISOString(),
-            }
-          : t
-      )
+    try {
+      await apiClient.patch(`/api/v1/tenants/${selectedTenant.id}`, {
+        name: data.name,
+        slug: data.slug,
+        domain: data.domain || null,
+        plan: data.plan,
+      })
+      setShowEditModal(false)
+      setSelectedTenant(null)
+      fetchTenants()
+    } catch (err: any) {
+      const message = err?.response?.data?.detail || 'Failed to update tenant'
+      alert(message)
+    }
+  }
+
+  const handleDeleteTenant = async () => {
+    if (!selectedTenant) return
+    try {
+      await apiClient.delete(`/api/v1/tenants/${selectedTenant.id}`)
+      setShowDeleteModal(false)
+      setSelectedTenant(null)
+      fetchTenants()
+    } catch (err: any) {
+      const message = err?.response?.data?.detail || 'Failed to delete tenant'
+      alert(message)
+    }
+  }
+
+  const handleUpdateFeatures = async (features: Record<string, boolean>) => {
+    if (!selectedTenant) return
+    try {
+      await apiClient.patch(`/api/v1/tenants/${selectedTenant.id}/features`, features)
+      setShowFeaturesModal(false)
+      setSelectedTenant(null)
+      fetchTenants()
+    } catch (err: any) {
+      const message = err?.response?.data?.detail || 'Failed to update features'
+      alert(message)
+    }
+  }
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+          <p className="text-muted-foreground">Loading tenants...</p>
+        </div>
+      </div>
     )
-    setShowEditModal(false)
-    setSelectedTenant(null)
   }
 
-  const handleDeleteTenant = () => {
-    if (!selectedTenant) return
-    setTenants(tenants.filter((t) => t.id !== selectedTenant.id))
-    setShowDeleteModal(false)
-    setSelectedTenant(null)
-  }
-
-  const handleUpdateFeatures = (features: Record<string, boolean>) => {
-    if (!selectedTenant) return
-    setTenants(
-      tenants.map((t) =>
-        t.id === selectedTenant.id
-          ? { ...t, feature_flags: features, updated_at: new Date().toISOString() }
-          : t
-      )
+  // Error state
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center space-y-4 max-w-md">
+          <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mx-auto">
+            <AlertTriangle className="h-6 w-6 text-red-500" />
+          </div>
+          <h2 className="text-lg font-semibold">Failed to Load Tenants</h2>
+          <p className="text-muted-foreground text-sm">{error}</p>
+          <button
+            onClick={fetchTenants}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Retry
+          </button>
+        </div>
+      </div>
     )
-    setShowFeaturesModal(false)
-    setSelectedTenant(null)
   }
 
   return (
@@ -254,13 +256,22 @@ export function Tenants() {
           </h1>
           <p className="text-muted-foreground">Manage organizations and their subscriptions</p>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Add Tenant
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={fetchTenants}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border hover:bg-muted transition-colors"
+            title="Refresh"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Add Tenant
+          </button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -355,7 +366,9 @@ export function Tenants() {
             {filteredTenants.length === 0 && (
               <tr>
                 <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
-                  No tenants found matching your criteria
+                  {tenants.length === 0
+                    ? 'No tenants found. Create your first tenant to get started.'
+                    : 'No tenants found matching your criteria'}
                 </td>
               </tr>
             )}

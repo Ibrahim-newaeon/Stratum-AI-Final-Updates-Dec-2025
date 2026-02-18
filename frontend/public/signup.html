@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html class="scroll-smooth" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Stratum AI | Initialize Account</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#FF1F6D",
+                        secondary: "#FF8C00",
+                        "cyber-yellow": "#FFD700",
+                        "cyber-red": "#FF3D00",
+                        "cyber-cyan": "#00F5FF",
+                        "midnight": "#050B18",
+                        "cyber-blue": "#0A1628",
+                    },
+                    fontFamily: {
+                        display: ["Plus Jakarta Sans", "sans-serif"],
+                        sans: ["Inter", "sans-serif"],
+                        mono: ["JetBrains Mono", "monospace"],
+                    },
+                    borderRadius: {
+                        'xl': '24px',
+                        '2xl': '32px',
+                    }
+                },
+            },
+        };
+    </script>
+<style type="text/tailwindcss">
+        @layer components {
+            .container {
+                box-sizing: border-box;
+                margin-left: auto;
+                margin-right: auto;
+                max-width: 1500px;
+                width: 100%;
+            }
+            .glass-morphism {
+                background: rgba(10, 22, 40, 0.75);
+                backdrop-filter: blur(25px);
+                -webkit-backdrop-filter: blur(25px);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            .dark-grid-bg {
+                background-color: #050B18;
+                background-image:
+                    linear-gradient(rgba(255, 31, 109, 0.05) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255, 31, 109, 0.05) 1px, transparent 1px);
+                background-size: 50px 50px;
+            }
+            .gradient-text-vibrant {
+                background: linear-gradient(135deg, #FF1F6D 0%, #FF8C00 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+            .btn-initialize {
+                background: linear-gradient(135deg, #FF1F6D 0%, #FF3D00 100%);
+                box-shadow: 0 0 20px rgba(255, 31, 109, 0.4);
+            }
+            .btn-initialize:hover {
+                box-shadow: 0 0 35px rgba(255, 31, 109, 0.6);
+                transform: translateY(-1px);
+            }
+            .input-field {
+                background: rgba(5, 11, 24, 0.6);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                transition: all 0.3s ease;
+            }
+            .input-field:focus {
+                border-color: #00F5FF;
+                box-shadow: 0 0 15px rgba(0, 245, 255, 0.2);
+                outline: none;
+            }
+            .bioluminescent-cyan {
+                box-shadow: 0 0 15px rgba(0, 245, 255, 0.3);
+            }
+            .bioluminescent-yellow {
+                box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+            }
+            .structural-divider {
+                height: 1px;
+                background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+            }
+        }
+    </style>
+</head>
+<body class="bg-midnight text-white font-sans min-h-screen overflow-hidden">
+<div class="container flex h-screen">
+<div class="hidden lg:flex lg:w-7/12 relative dark-grid-bg items-center px-20 overflow-hidden">
+<div class="absolute top-1/4 -left-20 w-96 h-96 bg-primary/20 rounded-full blur-[120px]"></div>
+<div class="absolute bottom-1/4 -right-20 w-80 h-80 bg-secondary/20 rounded-full blur-[100px]"></div>
+<div class="relative z-10 space-y-10">
+<div class="flex items-center gap-3">
+<img src="/images/stratum-logo.svg" alt="Stratum AI" class="h-9" style="filter: invert(1) brightness(2);">
+</div>
+<div class="space-y-6">
+<h1 class="font-display text-7xl xl:text-8xl font-black leading-[0.9] tracking-tighter">
+                    Experience the <br/>
+<span class="gradient-text-vibrant">Next Generation</span>
+</h1>
+<p class="text-xl text-slate-400 max-w-xl leading-relaxed font-light">
+                    The first autonomous revenue engine that reasons before execution.
+                    Your dashboard is ready for initialization.
+                </p>
+</div>
+<div class="flex gap-12">
+<div class="space-y-2">
+<div class="text-4xl font-display font-bold text-primary">2026.4</div>
+<div class="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold">Protocol Version</div>
+</div>
+<div class="space-y-2">
+<div class="text-4xl font-display font-bold text-secondary">Active</div>
+<div class="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold">Node Status</div>
+</div>
+</div>
+</div>
+<div class="absolute inset-0 pointer-events-none opacity-10 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] z-20 bg-[length:100%_2px,3px_100%]"></div>
+</div>
+<div class="w-full lg:w-5/12 flex flex-col items-center justify-center p-6 bg-cyber-blue relative">
+<div class="lg:hidden absolute top-8 left-8 flex items-center gap-2">
+<img src="/images/stratum-logo.svg" alt="Stratum AI" class="h-7" style="filter: invert(1) brightness(2);">
+</div>
+<div class="w-full max-w-[448px] flex flex-col items-center">
+<div class="glass-morphism w-full rounded-xl p-10 space-y-8 relative overflow-hidden mb-12">
+<div class="absolute -top-10 -right-10 w-32 h-32 bg-cyber-cyan/10 rounded-full blur-3xl bioluminescent-cyan"></div>
+<div class="absolute -bottom-10 -left-10 w-32 h-32 bg-cyber-yellow/10 rounded-full blur-3xl bioluminescent-yellow"></div>
+<div class="space-y-2">
+<h2 class="text-2xl font-display font-extrabold tracking-tight text-white uppercase">Dashboard Registration</h2>
+<p class="text-sm text-slate-400 font-medium">Provision your secure workspace</p>
+</div>
+<form class="space-y-6">
+<div class="space-y-2">
+<label class="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Full Name</label>
+<div class="relative">
+<input class="input-field w-full h-[44px] px-4 rounded-[12px] text-white placeholder:text-slate-600 focus:ring-0" placeholder="John Doe" type="text"/>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 text-lg">person</span>
+</div>
+</div>
+<div class="space-y-2">
+<label class="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Work Identity</label>
+<div class="relative">
+<input class="input-field w-full h-[44px] px-4 rounded-[12px] text-white placeholder:text-slate-600 focus:ring-0" placeholder="name@company.ai" type="email"/>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 text-lg">alternate_email</span>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between items-center px-1">
+<label class="text-[10px] font-bold uppercase tracking-widest text-slate-500">Encryption Key</label>
+<span class="text-[9px] text-cyber-cyan font-mono uppercase tracking-tighter cursor-pointer hover:underline">Request Alpha Key</span>
+</div>
+<div class="relative">
+<input class="input-field w-full h-[44px] px-4 rounded-[12px] text-white placeholder:text-slate-600 focus:ring-0 font-mono" placeholder="••••••••••••" type="password"/>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 text-lg">lock</span>
+</div>
+</div>
+<div class="pt-4">
+<button class="btn-initialize w-full h-[56px] rounded-xl font-black text-sm tracking-[0.2em] uppercase transition-all duration-300" type="submit">
+                            Initialize Account
+                        </button>
+</div>
+</form>
+<div class="flex items-center gap-4 py-4">
+<div class="h-px bg-white/5 flex-grow"></div>
+<span class="text-[10px] font-bold text-slate-600 uppercase tracking-widest">or connect via</span>
+<div class="h-px bg-white/5 flex-grow"></div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<button class="flex items-center justify-center gap-2 h-[44px] rounded-[12px] border border-white/5 bg-white/5 hover:bg-white/10 transition-colors text-xs font-bold text-slate-300">
+<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12.48 10.92v3.28h7.84c-.24 1.84-.909 3.292-2.09 4.458-1.488 1.489-3.391 2.454-6.09 2.454-4.591 0-8.203-3.666-8.203-8.203s3.612-8.203 8.203-8.203c2.49 0 4.408.981 5.845 2.371l2.307-2.307C18.183 2.503 15.588 1 12.48 1 6.302 1 1.29 6.012 1.29 12.19s5.012 11.19 11.19 11.19c3.3 0 5.803-1.082 7.79-3.15 2.011-2.011 2.651-4.852 2.651-7.151 0-.68-.06-1.32-.18-1.89h-10.27z"></path></svg>
+                        Google
+                    </button>
+<button class="flex items-center justify-center gap-2 h-[44px] rounded-[12px] border border-white/5 bg-white/5 hover:bg-white/10 transition-colors text-xs font-bold text-slate-300">
+<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.042-1.416-4.042-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"></path></svg>
+                        GitHub
+                    </button>
+</div>
+<p class="text-[10px] text-center text-slate-500 uppercase tracking-widest font-medium">
+                    Already authenticated? <a class="text-primary hover:text-cyber-red transition-colors" href="/login">Resume Session</a>
+</p>
+</div>
+<div class="structural-divider w-full mb-8"></div>
+<div class="flex gap-10 items-center justify-center">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-cyber-cyan bioluminescent-cyan animate-pulse"></span>
+<span class="text-[9px] font-mono text-slate-400 uppercase tracking-tighter">API: Stable</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-cyber-yellow bioluminescent-yellow"></span>
+<span class="text-[9px] font-mono text-slate-400 uppercase tracking-tighter">Latency: 24ms</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-[9px] font-mono text-slate-600 uppercase tracking-tighter">v2.026.04.12</span>
+</div>
+</div>
+</div>
+<div class="absolute bottom-6 flex gap-6 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+<a class="hover:text-white transition-colors" href="/privacy">Privacy Protocol</a>
+<a class="hover:text-white transition-colors" href="/terms">Service Terms</a>
+<a class="hover:text-white transition-colors" href="/support">Help Terminal</a>
+</div>
+</div>
+</div>
+
+</body></html>

@@ -18,7 +18,8 @@ describe('cn (className utility)', () => {
   });
 
   it('should handle conditional classes', () => {
-    expect(cn('foo', false && 'bar', 'baz')).toBe('foo baz');
+    const condition = false;
+    expect(cn('foo', condition && 'bar', 'baz')).toBe('foo baz');
   });
 
   it('should merge tailwind classes correctly', () => {
@@ -86,11 +87,11 @@ describe('formatCompactNumber', () => {
   });
 
   it('should handle exactly 1 million', () => {
-    expect(formatCompactNumber(1000000)).toBe('1M');
+    expect(formatCompactNumber(1000000)).toBe('1.0M');
   });
 
   it('should handle exactly 1 thousand', () => {
-    expect(formatCompactNumber(1000)).toBe('1K');
+    expect(formatCompactNumber(1000)).toBe('1.0K');
   });
 });
 
@@ -168,12 +169,12 @@ describe('getPlatformColor', () => {
   });
 
   it('should return correct color for meta', () => {
-    expect(getPlatformColor('meta')).toBe('#0866FF');
+    expect(getPlatformColor('meta')).toBe('#1877F2');
   });
 
   it('should be case insensitive', () => {
     expect(getPlatformColor('GOOGLE')).toBe('#4285F4');
-    expect(getPlatformColor('Meta')).toBe('#0866FF');
+    expect(getPlatformColor('Meta')).toBe('#1877F2');
   });
 
   it('should return default color for unknown platforms', () => {

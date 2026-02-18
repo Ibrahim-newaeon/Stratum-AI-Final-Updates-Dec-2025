@@ -460,6 +460,7 @@ async def scan_competitor(
     name: str,
     country: str = "SA",
     access_token: Optional[str] = None,
+    fb_page_name: Optional[str] = None,
 ) -> dict[str, Any]:
     """
     Full competitor scan: scrape website + search Meta Ad Library.
@@ -469,6 +470,9 @@ async def scan_competitor(
         name: Competitor's name (for ad library search)
         country: Country code for ad library filtering
         access_token: Meta Graph API token (optional)
+        fb_page_name: Facebook page name for direct Ads Library search (optional).
+                      When provided, used as the primary search query instead of
+                      scraping the website to discover the Facebook page name.
 
     Returns:
         Dict with social_links, ad_library results, and metadata
@@ -477,13 +481,22 @@ async def scan_competitor(
     scan_result = await scrape_website(domain)
 
     # Step 2: Search Meta Ad Library using FB page display name or IG business account
-    # Priority: FB page display name (fetched) > FB URL slug > IG account > competitor name
+    # Priority: user-provided fb_page_name > FB page display name (fetched) > FB URL slug > IG account > competitor name
     search_query = name
-    fb_page_name: Optional[str] = None
+    _fb_page_name: Optional[str] = None
     fb_url_slug: Optional[str] = None
     ig_account_name: Optional[str] = None
 
-    if scan_result.social_links.facebook:
+    # If user provided a Facebook page name, use it directly as primary search query
+    if fb_page_name:
+        _fb_page_name = fb_page_name
+        search_query = fb_page_name
+        logger.info(
+            "using_provided_fb_page_name",
+            domain=domain,
+            fb_page_name=fb_page_name,
+        )
+    elif scan_result.social_links.facebook:
         fb_url = scan_result.social_links.facebook
         parsed = urlparse(fb_url)
         path_parts = [p for p in parsed.path.strip("/").split("/") if p]
@@ -494,11 +507,11 @@ async def scan_competitor(
         # This is what Meta Ad Library API needs to find ads — NOT the URL slug
         display_name = await fetch_fb_page_display_name(fb_url)
         if display_name:
-            fb_page_name = display_name
+            _fb_page_name = display_name
             search_query = display_name
         elif fb_url_slug:
             # Fallback to URL slug if we couldn't fetch the display name
-            fb_page_name = fb_url_slug
+            _fb_page_name = fb_url_slug
             search_query = fb_url_slug
 
     if scan_result.social_links.instagram:
@@ -509,13 +522,13 @@ async def scan_competitor(
         if path_parts:
             ig_account_name = path_parts[0]
             # If no FB page found, use IG account name
-            if not fb_page_name:
+            if not _fb_page_name:
                 search_query = ig_account_name
 
     logger.info(
         "ad_library_search_query",
         domain=domain,
-        fb_page=fb_page_name,
+        fb_page=_fb_page_name,
         fb_url_slug=fb_url_slug,
         ig_account=ig_account_name,
         search_query=search_query,
@@ -529,7 +542,7 @@ async def scan_competitor(
     )
 
     # If no ads found with FB page name, try IG account as fallback
-    if not ad_result.has_ads and ig_account_name and fb_page_name and ig_account_name != fb_page_name:
+    if not ad_result.has_ads and ig_account_name and _fb_page_name and ig_account_name != _fb_page_name:
         logger.info("ad_library_fallback_ig", ig_account=ig_account_name)
         ig_result = await search_meta_ad_library(
             query=ig_account_name,
@@ -551,7 +564,7 @@ async def scan_competitor(
             ad_result = name_result
 
     scan_result.ad_library_result = ad_result
-    scan_result.fb_page_name = fb_page_name
+    scan_result.fb_page_name = _fb_page_name
     scan_result.ig_account_name = ig_account_name
 
     return scan_result.to_dict()
