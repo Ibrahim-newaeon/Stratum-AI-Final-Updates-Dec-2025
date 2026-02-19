@@ -3,80 +3,84 @@
  * Manages user authentication state across the application
  */
 
-import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
+import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useTenantStore } from '@/stores/tenantStore';
 import { useIdleTimeout } from '@/hooks/useIdleTimeout';
 import IdleTimeoutWarning from '@/components/auth/IdleTimeoutWarning';
 
 const API_BASE = (window as any).__RUNTIME_CONFIG__?.VITE_API_URL || import.meta.env.VITE_API_URL || '/api/v1';
 
-/** Known demo credentials for client-side fallback when backend is unavailable */
+/**
+ * Demo credentials for client-side fallback when backend is unavailable.
+ * SECURITY: Never include real credentials here. These are demo-only placeholders.
+ * In production, demo mode should be disabled via environment variable.
+ */
 const DEMO_CREDENTIALS: Record<string, { email: string; password: string; user: User }> = {
   superadmin: {
-    email: 'ibrahim@new-aeon.com',
-    password: 'Newaeon@2025',
+    email: 'demo-superadmin@stratum.ai',
+    password: 'demo-only-not-real',
     user: {
       id: 'demo-sa-001',
-      email: 'ibrahim@new-aeon.com',
-      name: 'Ibrahim (Super Admin)',
+      email: 'demo-superadmin@stratum.ai',
+      name: 'Demo Super Admin',
       role: 'superadmin',
-      organization: 'New Aeon',
+      organization: 'Demo Organization',
       permissions: ['all'],
       tenant_id: 1,
       user_type: 'agency',
     },
   },
   admin: {
-    email: 'demo@stratum.ai',
-    password: 'demo1234',
+    email: 'demo-admin@stratum.ai',
+    password: 'demo-only-not-real',
     user: {
       id: 'demo-admin-001',
-      email: 'demo@stratum.ai',
+      email: 'demo-admin@stratum.ai',
       name: 'Demo Admin',
       role: 'admin',
-      organization: 'Acme Commerce',
+      organization: 'Demo Commerce',
       permissions: ['all'],
       tenant_id: 1,
       user_type: 'agency',
     },
   },
   manager: {
-    email: 'demo@stratum.ai',
-    password: 'demo1234',
+    email: 'demo-manager@stratum.ai',
+    password: 'demo-only-not-real',
     user: {
       id: 'demo-mgr-001',
-      email: 'manager@stratum.ai',
+      email: 'demo-manager@stratum.ai',
       name: 'Demo Manager',
       role: 'manager',
-      organization: 'Acme Commerce',
+      organization: 'Demo Commerce',
       permissions: ['read'],
       tenant_id: 1,
       user_type: 'agency',
     },
   },
   analyst: {
-    email: 'demo@stratum.ai',
-    password: 'demo1234',
+    email: 'demo-analyst@stratum.ai',
+    password: 'demo-only-not-real',
     user: {
       id: 'demo-analyst-001',
-      email: 'analyst@stratum.ai',
+      email: 'demo-analyst@stratum.ai',
       name: 'Demo Analyst',
       role: 'analyst',
-      organization: 'Acme Commerce',
+      organization: 'Demo Commerce',
       permissions: ['read'],
       tenant_id: 1,
       user_type: 'agency',
     },
   },
   viewer: {
-    email: 'demo@stratum.ai',
-    password: 'demo1234',
+    email: 'demo-viewer@stratum.ai',
+    password: 'demo-only-not-real',
     user: {
       id: 'demo-viewer-001',
-      email: 'viewer@stratum.ai',
+      email: 'demo-viewer@stratum.ai',
       name: 'Demo Client Viewer',
       role: 'viewer',
-      organization: 'Acme Commerce',
+      organization: 'Demo Commerce',
       permissions: ['read'],
       tenant_id: 1,
       user_type: 'portal',
@@ -355,19 +359,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     enabled: !!user, // Only active when logged in
   });
 
+  const value = useMemo(
+    () => ({
+      user,
+      isAuthenticated: !!user,
+      isLoading,
+      isDemoSession,
+      login,
+      demoLogin,
+      logout,
+      updateUser,
+    }),
+    [user, isLoading, isDemoSession, login, demoLogin, logout, updateUser]
+  );
+
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isAuthenticated: !!user,
-        isLoading,
-        isDemoSession,
-        login,
-        demoLogin,
-        logout,
-        updateUser,
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
       {isWarning && (
         <IdleTimeoutWarning secondsLeft={secondsLeft} onStay={resetTimer} />

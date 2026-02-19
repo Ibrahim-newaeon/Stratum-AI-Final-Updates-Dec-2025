@@ -5,7 +5,9 @@
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { usePublicPage } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
+import { sanitizeHtml } from '@/lib/sanitize';
 import {
   AcademicCapIcon,
   ArrowRightIcon,
@@ -103,6 +105,8 @@ const popularArticles = [
 
 export default function DocsPage() {
   const [searchQuery, setSearchQuery] = useState('');
+  const { data: page } = usePublicPage('docs');
+  const hasCMSContent = !!(page?.content && page.content.length > 0);
 
   return (
     <PageLayout>
@@ -159,127 +163,136 @@ export default function DocsPage() {
           </div>
         </section>
 
-        {/* Documentation Categories */}
-        <section className="py-16">
-          <div className="max-w-7xl mx-auto px-6 lg:px-8">
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {docCategories.map((category) => (
-                <div
-                  key={category.title}
-                  className="group p-6 rounded-2xl transition-all duration-300 hover:-translate-y-1"
-                  style={{
-                    background: 'rgba(10, 10, 15, 0.6)',
-                    border: '1px solid rgba(255, 255, 255, 0.06)',
-                  }}
-                >
-                  <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
-                    style={{
-                      background: `${category.color}15`,
-                      border: `1px solid ${category.color}30`,
-                    }}
-                  >
-                    <category.icon className="w-6 h-6" style={{ color: category.color }} />
-                  </div>
+        {/* Content */}
+        {hasCMSContent ? (
+          <section className="py-16 px-6">
+            <div className="max-w-4xl mx-auto prose prose-invert" dangerouslySetInnerHTML={{ __html: sanitizeHtml(page!.content!) }} />
+          </section>
+        ) : (
+          <>
+            {/* Documentation Categories */}
+            <section className="py-16">
+              <div className="max-w-7xl mx-auto px-6 lg:px-8">
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {docCategories.map((category) => (
+                    <div
+                      key={category.title}
+                      className="group p-6 rounded-2xl transition-all duration-300 hover:-translate-y-1"
+                      style={{
+                        background: 'rgba(10, 10, 15, 0.6)',
+                        border: '1px solid rgba(255, 255, 255, 0.06)',
+                      }}
+                    >
+                      <div
+                        className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
+                        style={{
+                          background: `${category.color}15`,
+                          border: `1px solid ${category.color}30`,
+                        }}
+                      >
+                        <category.icon className="w-6 h-6" style={{ color: category.color }} />
+                      </div>
 
-                  <h3 className="text-xl font-semibold text-white mb-2">{category.title}</h3>
-                  <p className="text-gray-400 text-sm mb-4">{category.description}</p>
+                      <h3 className="text-xl font-semibold text-white mb-2">{category.title}</h3>
+                      <p className="text-gray-400 text-sm mb-4">{category.description}</p>
 
-                  <ul className="space-y-2">
-                    {category.links.map((link) => (
-                      <li key={link.name}>
-                        <Link
-                          to={link.href}
-                          className="flex items-center gap-2 text-sm text-gray-300 hover:text-white transition-colors group/link"
-                        >
-                          <ArrowRightIcon className="w-3 h-3 opacity-0 -translate-x-2 group-hover/link:opacity-100 group-hover/link:translate-x-0 transition-all" />
-                          <span>{link.name}</span>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Popular Articles */}
-        <section className="py-16">
-          <div className="max-w-7xl mx-auto px-6 lg:px-8">
-            <h2 className="text-2xl font-bold text-white mb-8">Popular Articles</h2>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {popularArticles.map((article, index) => (
-                <Link
-                  key={article.title}
-                  to="#"
-                  className="flex items-center gap-4 p-4 rounded-xl transition-all duration-200 hover:bg-white/5 group"
-                  style={{
-                    background: 'rgba(10, 10, 15, 0.4)',
-                    border: '1px solid rgba(255, 255, 255, 0.04)',
-                  }}
-                >
-                  <span className="text-2xl font-bold text-gray-600">
-                    {String(index + 1).padStart(2, '0')}
-                  </span>
-                  <div className="flex-1">
-                    <h4 className="text-white font-medium group-hover:text-[#8B5CF6] transition-colors">
-                      {article.title}
-                    </h4>
-                    <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
-                      <span>{article.views} views</span>
-                      <span>{article.time} read</span>
+                      <ul className="space-y-2">
+                        {category.links.map((link) => (
+                          <li key={link.name}>
+                            <Link
+                              to={link.href}
+                              className="flex items-center gap-2 text-sm text-gray-300 hover:text-white transition-colors group/link"
+                            >
+                              <ArrowRightIcon className="w-3 h-3 opacity-0 -translate-x-2 group-hover/link:opacity-100 group-hover/link:translate-x-0 transition-all" />
+                              <span>{link.name}</span>
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* CTA Section */}
-        <section className="py-16">
-          <div className="max-w-4xl mx-auto px-6 lg:px-8">
-            <div
-              className="rounded-2xl p-8 md:p-12 text-center"
-              style={{
-                background:
-                  'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(0, 212, 255, 0.05) 100%)',
-                border: '1px solid rgba(139, 92, 246, 0.2)',
-              }}
-            >
-              <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
-                Can't find what you're looking for?
-              </h2>
-              <p className="text-gray-400 mb-8">
-                Our support team is here to help you with any questions.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link
-                  to="/contact"
-                  className="px-6 py-3 rounded-xl font-semibold text-white transition-all duration-200"
-                  style={{
-                    background: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)',
-                    boxShadow: '0 4px 20px rgba(139, 92, 246, 0.3)',
-                  }}
-                >
-                  Contact Support
-                </Link>
-                <Link
-                  to="/faq"
-                  className="px-6 py-3 rounded-xl font-semibold text-white transition-all duration-200"
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.06)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                  }}
-                >
-                  View FAQ
-                </Link>
+                  ))}
+                </div>
               </div>
-            </div>
-          </div>
-        </section>
+            </section>
+
+            {/* Popular Articles */}
+            <section className="py-16">
+              <div className="max-w-7xl mx-auto px-6 lg:px-8">
+                <h2 className="text-2xl font-bold text-white mb-8">Popular Articles</h2>
+
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {popularArticles.map((article, index) => (
+                    <Link
+                      key={article.title}
+                      to="#"
+                      className="flex items-center gap-4 p-4 rounded-xl transition-all duration-200 hover:bg-white/5 group"
+                      style={{
+                        background: 'rgba(10, 10, 15, 0.4)',
+                        border: '1px solid rgba(255, 255, 255, 0.04)',
+                      }}
+                    >
+                      <span className="text-2xl font-bold text-gray-600">
+                        {String(index + 1).padStart(2, '0')}
+                      </span>
+                      <div className="flex-1">
+                        <h4 className="text-white font-medium group-hover:text-[#8B5CF6] transition-colors">
+                          {article.title}
+                        </h4>
+                        <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                          <span>{article.views} views</span>
+                          <span>{article.time} read</span>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            {/* CTA Section */}
+            <section className="py-16">
+              <div className="max-w-4xl mx-auto px-6 lg:px-8">
+                <div
+                  className="rounded-2xl p-8 md:p-12 text-center"
+                  style={{
+                    background:
+                      'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(0, 212, 255, 0.05) 100%)',
+                    border: '1px solid rgba(139, 92, 246, 0.2)',
+                  }}
+                >
+                  <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+                    Can't find what you're looking for?
+                  </h2>
+                  <p className="text-gray-400 mb-8">
+                    Our support team is here to help you with any questions.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <Link
+                      to="/contact"
+                      className="px-6 py-3 rounded-xl font-semibold text-white transition-all duration-200"
+                      style={{
+                        background: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)',
+                        boxShadow: '0 4px 20px rgba(139, 92, 246, 0.3)',
+                      }}
+                    >
+                      Contact Support
+                    </Link>
+                    <Link
+                      to="/faq"
+                      className="px-6 py-3 rounded-xl font-semibold text-white transition-all duration-200"
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.06)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                      }}
+                    >
+                      View FAQ
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </>
+        )}
       </div>
     </PageLayout>
   );

@@ -9,7 +9,7 @@ template handling, and message operations.
 from typing import List, Optional, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.models import (
     WhatsAppContact,
@@ -91,7 +91,7 @@ class WhatsAppService:
         contact = await WhatsAppService.get_contact_by_id(db, contact_id, tenant_id)
         if contact:
             contact.is_verified = True
-            contact.verified_at = datetime.utcnow()
+            contact.verified_at = datetime.now(timezone.utc)
             await db.commit()
             return True
         return False
@@ -107,7 +107,7 @@ class WhatsAppService:
         contact = await WhatsAppService.get_contact_by_id(db, contact_id, tenant_id)
         if contact:
             contact.opt_in_status = WhatsAppOptInStatus.OPTED_IN
-            contact.opt_in_at = datetime.utcnow()
+            contact.opt_in_at = datetime.now(timezone.utc)
             contact.opt_in_method = method
             await db.commit()
             return True
@@ -121,7 +121,7 @@ class WhatsAppService:
         contact = await WhatsAppService.get_contact_by_id(db, contact_id, tenant_id)
         if contact:
             contact.opt_in_status = WhatsAppOptInStatus.OPTED_OUT
-            contact.opt_out_at = datetime.utcnow()
+            contact.opt_out_at = datetime.now(timezone.utc)
             await db.commit()
             return True
         return False
@@ -335,7 +335,7 @@ class WhatsAppService:
             conversation = WhatsAppConversation(
                 tenant_id=tenant_id,
                 contact_id=contact_id,
-                started_at=datetime.utcnow(),
+                started_at=datetime.now(timezone.utc),
                 is_active=True,
             )
             db.add(conversation)
@@ -380,7 +380,7 @@ class WhatsAppService:
         conversation = result.scalar_one_or_none()
         if conversation:
             conversation.is_active = False
-            conversation.ended_at = datetime.utcnow()
+            conversation.ended_at = datetime.now(timezone.utc)
             await db.commit()
             return True
         return False

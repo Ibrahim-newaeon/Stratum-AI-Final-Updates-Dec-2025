@@ -12,7 +12,7 @@ Supported channels:
 - S3 (AWS Storage)
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional, Protocol
 from uuid import UUID
 import logging
@@ -275,7 +275,7 @@ class SlackDelivery(DeliveryChannelHandler):
                     },
                     {
                         "type": "mrkdwn",
-                        "text": f"*Generated:*\n{datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}",
+                        "text": f"*Generated:*\n{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}",
                     },
                 ],
             },
@@ -367,7 +367,7 @@ class TeamsDelivery(DeliveryChannelHandler):
         facts = [
             {"title": "Report Type", "value": report_type},
             {"title": "Date Range", "value": date_range},
-            {"title": "Generated", "value": datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")},
+            {"title": "Generated", "value": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")},
         ]
 
         # Add metrics if available
@@ -506,7 +506,7 @@ class S3Delivery(DeliveryChannelHandler):
             prefix = config.get("prefix", recipient or "reports/")
 
             # Build S3 key
-            timestamp = datetime.utcnow().strftime("%Y/%m/%d")
+            timestamp = datetime.now(timezone.utc).strftime("%Y/%m/%d")
             filename = os.path.basename(execution.file_path)
             s3_key = f"{prefix.rstrip('/')}/{timestamp}/{filename}"
 
@@ -655,7 +655,7 @@ class DeliveryService:
 
                 if result.get("success"):
                     delivery.status = DeliveryStatus.SENT
-                    delivery.sent_at = datetime.utcnow()
+                    delivery.sent_at = datetime.now(timezone.utc)
                     delivery.message_id = result.get("message_id")
                     delivery.delivery_response = result
                     results["successful"] += 1
@@ -741,11 +741,11 @@ class DeliveryService:
         result = await handler.deliver(execution, channel_config, delivery.recipient)
 
         delivery.retry_count += 1
-        delivery.last_retry_at = datetime.utcnow()
+        delivery.last_retry_at = datetime.now(timezone.utc)
 
         if result.get("success"):
             delivery.status = DeliveryStatus.SENT
-            delivery.sent_at = datetime.utcnow()
+            delivery.sent_at = datetime.now(timezone.utc)
             delivery.message_id = result.get("message_id")
             delivery.error_message = None
         else:

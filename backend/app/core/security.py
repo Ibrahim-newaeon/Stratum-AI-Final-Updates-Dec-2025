@@ -231,8 +231,10 @@ def generate_api_key() -> str:
 
 
 def verify_api_key(api_key: str, stored_hash: str) -> bool:
-    """Verify an API key against its stored hash."""
-    return hashlib.sha256(api_key.encode()).hexdigest() == stored_hash
+    """Verify an API key against its stored hash using constant-time comparison."""
+    import hmac
+    computed_hash = hashlib.sha256(api_key.encode()).hexdigest()
+    return hmac.compare_digest(computed_hash, stored_hash)
 
 
 def hash_api_key(api_key: str) -> str:

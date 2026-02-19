@@ -4,6 +4,7 @@
  */
 
 import { useState } from 'react';
+import { usePageContent, type GlossaryPageContent } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
 import {
   ArrowPathIcon,
@@ -36,7 +37,21 @@ interface GlossaryCategory {
   terms: GlossaryTerm[];
 }
 
-const glossaryData: GlossaryCategory[] = [
+const glossaryIconMap: Record<string, typeof BookOpenIcon> = {
+  ShieldCheckIcon,
+  UserGroupIcon,
+  ArrowPathIcon,
+  BoltIcon,
+  ChartBarIcon,
+  SignalIcon,
+  CurrencyDollarIcon,
+  BeakerIcon,
+  Cog6ToothIcon,
+  CpuChipIcon,
+  BookOpenIcon,
+};
+
+const fallbackGlossaryData: GlossaryCategory[] = [
   {
     id: 'trust-engine',
     title: 'Trust Engine',
@@ -578,8 +593,24 @@ const glossaryData: GlossaryCategory[] = [
 ];
 
 export default function GlossaryPage() {
+  const { content } = usePageContent<GlossaryPageContent>('glossary');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+
+  // Use CMS data if available, otherwise fallback
+  const glossaryData: GlossaryCategory[] = content?.categories?.length
+    ? content.categories.map((cat) => ({
+        id: cat.id,
+        title: cat.name,
+        icon: glossaryIconMap[cat.iconName] || BookOpenIcon,
+        color: cat.color,
+        description: '',
+        terms: cat.terms.map((t) => ({
+          term: t.term,
+          definition: t.definition,
+        })),
+      }))
+    : fallbackGlossaryData;
 
   const filteredCategories = glossaryData
     .map((category) => ({

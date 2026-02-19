@@ -4,10 +4,11 @@
  */
 
 import { Link } from 'react-router-dom';
+import { usePageContent, type AboutPageContent } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SparklesIcon } from '@heroicons/react/24/outline';
 
-const team = [
+const fallbackTeam = [
   { name: 'Sarah Chen', role: 'CEO & Co-Founder', image: 'SC' },
   { name: 'Marcus Rodriguez', role: 'CTO & Co-Founder', image: 'MR' },
   { name: 'Emily Watson', role: 'VP of Product', image: 'EW' },
@@ -16,7 +17,7 @@ const team = [
   { name: 'James Park', role: 'VP of Customer Success', image: 'JP' },
 ];
 
-const values = [
+const fallbackValues = [
   {
     title: 'Trust First',
     description:
@@ -36,7 +37,21 @@ const values = [
   },
 ];
 
+const fallbackStats = [
+  { value: '150+', label: 'Growth Teams' },
+  { value: '$2B+', label: 'Ad Spend Managed' },
+  { value: '50+', label: 'Integrations' },
+  { value: '99.9%', label: 'Uptime' },
+];
+
 export default function About() {
+  const { content } = usePageContent<AboutPageContent>('about');
+
+  // Use CMS data if available, otherwise fallback
+  const team = content?.team?.length ? content.team : fallbackTeam;
+  const values = content?.values?.length ? content.values : fallbackValues;
+  const stats = content?.stats?.length ? content.stats : fallbackStats;
+
   return (
     <PageLayout>
       {/* Hero Section */}
@@ -116,12 +131,7 @@ export default function About() {
       <section className="py-12 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {[
-              { value: '150+', label: 'Growth Teams' },
-              { value: '$2B+', label: 'Ad Spend Managed' },
-              { value: '50+', label: 'Integrations' },
-              { value: '99.9%', label: 'Uptime' },
-            ].map((stat) => (
+            {stats.map((stat) => (
               <div key={stat.label} className="text-center">
                 <div className="text-4xl font-bold" style={{ color: '#f97316' }}>
                   {stat.value}

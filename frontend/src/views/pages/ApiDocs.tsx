@@ -4,6 +4,7 @@
  */
 
 import { Link } from 'react-router-dom';
+import { usePageContent, type ApiDocsPageContent } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
 import {
   BookOpenIcon,
@@ -12,7 +13,14 @@ import {
   CubeIcon,
 } from '@heroicons/react/24/outline';
 
-const quickLinks = [
+const iconMap: Record<string, typeof BookOpenIcon> = {
+  BookOpenIcon,
+  CodeBracketIcon,
+  CommandLineIcon,
+  CubeIcon,
+};
+
+const fallbackSections = [
   {
     icon: BookOpenIcon,
     title: 'Getting Started',
@@ -39,7 +47,7 @@ const quickLinks = [
   },
 ];
 
-const endpoints = [
+const fallbackEndpoints = [
   { method: 'GET', path: '/api/v1/signals', description: 'List all signals' },
   { method: 'POST', path: '/api/v1/signals', description: 'Create a new signal' },
   { method: 'GET', path: '/api/v1/signals/:id/health', description: 'Get signal health score' },
@@ -51,6 +59,26 @@ const endpoints = [
 ];
 
 export default function ApiDocs() {
+  const { content } = usePageContent<ApiDocsPageContent>('api-docs');
+
+  // Use CMS data if available, otherwise fallback
+  const quickLinks = content?.sections?.length
+    ? content.sections.map((s) => ({
+        icon: iconMap[s.iconName] || BookOpenIcon,
+        title: s.title,
+        description: s.description,
+        href: s.href,
+      }))
+    : fallbackSections;
+
+  const endpoints = content?.endpoints?.length
+    ? content.endpoints.map((e) => ({
+        method: e.method,
+        path: e.path,
+        description: e.description,
+      }))
+    : fallbackEndpoints;
+
   return (
     <PageLayout>
       {/* Hero Section */}

@@ -9,7 +9,7 @@
  *   if (hasFeature('predictive_churn')) { ... }
  */
 
-import { createContext, ReactNode, useContext } from 'react';
+import { createContext, ReactNode, useCallback, useContext, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/api/client';
 
@@ -130,7 +130,7 @@ export function TierProvider({ children }: TierProviderProps) {
   } = useQuery<TierInfo>({
     queryKey: ['tier', 'current'],
     queryFn: async () => {
-      const response = await api.get('/api/v1/tier/current');
+      const response = await api.get('/tier/current');
       return response.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -141,41 +141,54 @@ export function TierProvider({ children }: TierProviderProps) {
   const features = tierInfo?.features || [];
   const limits = tierInfo?.limits || null;
 
-  const hasFeature = (feature: string): boolean => {
-    return features.includes(feature);
-  };
+  const hasFeature = useCallback(
+    (feature: string): boolean => features.includes(feature),
+    [features]
+  );
 
-  const checkLimit = (limitName: keyof TierLimits, currentValue: number): boolean => {
-    if (!limits) return true;
-    const maxValue = limits[limitName];
-    return currentValue < maxValue;
-  };
+  const checkLimit = useCallback(
+    (limitName: keyof TierLimits, currentValue: number): boolean => {
+      if (!limits) return true;
+      const maxValue = limits[limitName];
+      return currentValue < maxValue;
+    },
+    [limits]
+  );
 
-  const getRemainingLimit = (limitName: keyof TierLimits, currentValue: number): number => {
-    if (!limits) return 999999;
-    const maxValue = limits[limitName];
-    return Math.max(0, maxValue - currentValue);
-  };
+  const getRemainingLimit = useCallback(
+    (limitName: keyof TierLimits, currentValue: number): number => {
+      if (!limits) return 999999;
+      const maxValue = limits[limitName];
+      return Math.max(0, maxValue - currentValue);
+    },
+    [limits]
+  );
 
-  const isAtLeastTier = (minimumTier: SubscriptionTier): boolean => {
-    const currentIndex = TIER_HIERARCHY.indexOf(tier);
-    const minIndex = TIER_HIERARCHY.indexOf(minimumTier);
-    return currentIndex >= minIndex;
-  };
+  const isAtLeastTier = useCallback(
+    (minimumTier: SubscriptionTier): boolean => {
+      const currentIndex = TIER_HIERARCHY.indexOf(tier);
+      const minIndex = TIER_HIERARCHY.indexOf(minimumTier);
+      return currentIndex >= minIndex;
+    },
+    [tier]
+  );
 
-  const value: TierContextValue = {
-    tier,
-    tierInfo: tierInfo || null,
-    features,
-    limits,
-    loading,
-    error: error,
-    hasFeature,
-    checkLimit,
-    getRemainingLimit,
-    isAtLeastTier,
-    refetch,
-  };
+  const value: TierContextValue = useMemo(
+    () => ({
+      tier,
+      tierInfo: tierInfo || null,
+      features,
+      limits,
+      loading,
+      error: error,
+      hasFeature,
+      checkLimit,
+      getRemainingLimit,
+      isAtLeastTier,
+      refetch,
+    }),
+    [tier, tierInfo, features, limits, loading, error, hasFeature, checkLimit, getRemainingLimit, isAtLeastTier, refetch]
+  );
 
   return <TierContext.Provider value={value}>{children}</TierContext.Provider>;
 }

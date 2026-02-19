@@ -9,6 +9,7 @@ Public endpoints (no auth):
 - GET /cms/posts/{slug} - Get single post by slug
 - GET /cms/categories - List active categories
 - GET /cms/tags - List all tags
+- GET /cms/pages/{slug} - Get published page by slug
 - POST /cms/contact - Submit contact form
 
 Admin endpoints (superadmin only):
@@ -59,6 +60,7 @@ from app.schemas.cms import (
     ContactSubmit,
     PageCreate,
     PageListResponse,
+    PagePublicResponse,
     PageResponse,
     PageUpdate,
     PostCreate,
@@ -477,6 +479,47 @@ async def submit_contact_form(
         success=True,
         data={"submitted": True},
         message="Thank you for reaching out. We will review your inquiry and our team will contact you at the earliest opportunity.",
+    )
+
+
+@router.get("/pages/{slug}", response_model=APIResponse[PagePublicResponse])
+async def get_public_page(
+    slug: str,
+    db: AsyncSession = Depends(get_async_session),
+) -> APIResponse[PagePublicResponse]:
+    """
+    Get a published page by slug (public endpoint, no auth required).
+    Returns page content and metadata for rendering on the frontend.
+    """
+    result = await db.execute(
+        select(CMSPage).where(
+            and_(
+                CMSPage.slug == slug,
+                CMSPage.status == CMSPageStatus.PUBLISHED.value,
+                CMSPage.is_deleted == False,
+            )
+        )
+    )
+    page = result.scalar_one_or_none()
+
+    if not page:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Page not found",
+        )
+
+    return APIResponse(
+        success=True,
+        data=PagePublicResponse(
+            title=page.title,
+            slug=page.slug,
+            content=page.content,
+            content_json=page.content_json,
+            template=page.template,
+            meta_title=page.meta_title,
+            meta_description=page.meta_description,
+            published_at=page.published_at,
+        ),
     )
 
 

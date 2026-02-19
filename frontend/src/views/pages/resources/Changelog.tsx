@@ -3,6 +3,7 @@
  * 2026 Theme - Electric Neon / OLED-Optimized
  */
 
+import { usePageContent, type ChangelogPageContent } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
 import {
   BugAntIcon,
@@ -12,7 +13,7 @@ import {
   WrenchScrewdriverIcon,
 } from '@heroicons/react/24/outline';
 
-const releases = [
+const fallbackReleases = [
   {
     version: '3.2.0',
     date: 'January 15, 2026',
@@ -118,6 +119,11 @@ const getTypeLabel = (type: string) => {
 };
 
 export default function ChangelogPage() {
+  const { content } = usePageContent<ChangelogPageContent>('changelog');
+
+  // Use CMS data if available, otherwise fallback
+  const releases = content?.releases?.length ? content.releases : fallbackReleases;
+
   return (
     <PageLayout>
       <div className="min-h-screen">

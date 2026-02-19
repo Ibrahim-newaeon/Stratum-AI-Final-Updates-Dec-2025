@@ -14,7 +14,7 @@ Handles:
 
 import asyncio
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Set, Optional, Any, List
 from dataclasses import dataclass, field
 from enum import Enum
@@ -59,7 +59,7 @@ class WebSocketMessage:
     """WebSocket message structure."""
     type: str
     payload: Any
-    timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
+    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat() + "Z")
 
     def to_json(self) -> str:
         return json.dumps({
@@ -74,7 +74,7 @@ class WebSocketMessage:
         return cls(
             type=parsed.get("type", "unknown"),
             payload=parsed.get("payload", {}),
-            timestamp=parsed.get("timestamp", datetime.utcnow().isoformat() + "Z"),
+            timestamp=parsed.get("timestamp", datetime.now(timezone.utc).isoformat() + "Z"),
         )
 
 
@@ -85,7 +85,7 @@ class ConnectedClient:
     tenant_id: Optional[int] = None
     user_id: Optional[int] = None
     subscribed_channels: Set[str] = field(default_factory=set)
-    connected_at: datetime = field(default_factory=datetime.utcnow)
+    connected_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class WebSocketManager:

@@ -5,6 +5,7 @@
 
 import { Link, useParams } from 'react-router-dom';
 import { PageLayout } from '@/components/landing/PageLayout';
+import { sanitizeHtml } from '@/lib/sanitize';
 import {
   ArrowLeftIcon,
   CalendarIcon,
@@ -183,7 +184,7 @@ export default function BlogPost() {
             style={{
               color: 'rgba(255, 255, 255, 0.8)',
             }}
-            dangerouslySetInnerHTML={{ __html: post.content || '' }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content || '') }}
           />
 
           {/* Tags */}

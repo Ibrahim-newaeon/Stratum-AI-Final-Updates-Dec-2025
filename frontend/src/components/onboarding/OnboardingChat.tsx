@@ -7,6 +7,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { sanitizeHtml } from '@/lib/sanitize';
 import {
   PaperAirplaneIcon,
   XMarkIcon,
@@ -329,7 +330,7 @@ export default function OnboardingChat({
                       <p
                         key={i}
                         className={i > 0 ? 'mt-2' : ''}
-                        dangerouslySetInnerHTML={{ __html: formattedLine }}
+                        dangerouslySetInnerHTML={{ __html: sanitizeHtml(formattedLine) }}
                       />
                     );
                   })}

@@ -353,6 +353,216 @@ export interface PageListResponse {
   total: number;
 }
 
+// Public Page Types
+export interface PagePublic {
+  title: string;
+  slug: string;
+  content?: string;
+  content_json?: Record<string, unknown>;
+  template: string;
+  meta_title?: string;
+  meta_description?: string;
+  published_at?: string;
+}
+
+// =============================================================================
+// CMS Page Content JSON Schemas (per template type)
+// =============================================================================
+
+export interface PricingPageContent {
+  tiers: Array<{
+    name: string;
+    price: string;
+    period: string;
+    description: string;
+    features: string[];
+    cta: string;
+    highlighted: boolean;
+    badge?: string;
+  }>;
+  faqs?: Array<{ question: string; answer: string }>;
+}
+
+export interface FeaturesPageContent {
+  features: Array<{
+    iconName: string;
+    title: string;
+    description: string;
+    color: string;
+  }>;
+}
+
+export interface IntegrationsPageContent {
+  categories: Array<{
+    name: string;
+    description: string;
+    platforms: Array<{
+      name: string;
+      description: string;
+      iconName: string;
+      color: string;
+    }>;
+  }>;
+}
+
+export interface ApiDocsPageContent {
+  sections: Array<{
+    title: string;
+    description: string;
+    iconName: string;
+    href: string;
+  }>;
+  endpoints: Array<{
+    method: string;
+    path: string;
+    description: string;
+    category: string;
+  }>;
+}
+
+export interface AboutPageContent {
+  mission?: string;
+  team: Array<{ name: string; role: string; image: string }>;
+  values: Array<{ title: string; description: string }>;
+  stats?: Array<{ value: string; label: string }>;
+}
+
+export interface CareersPageContent {
+  positions: Array<{
+    title: string;
+    department: string;
+    location: string;
+    type: string;
+    salary: string;
+    description: string;
+  }>;
+  benefits: Array<{
+    title: string;
+    description: string;
+    iconName: string;
+  }>;
+}
+
+export interface ComparisonPageContent {
+  differentiators: Array<{
+    title: string;
+    description: string;
+    iconName: string;
+  }>;
+  competitors: Array<{
+    id: string;
+    name: string;
+    tagline: string;
+    color: string;
+  }>;
+  features: Array<{
+    feature: string;
+    category: string;
+    stratum: string;
+    competitors: Record<string, string>;
+    tooltip?: string;
+  }>;
+}
+
+export interface ChangelogPageContent {
+  releases: Array<{
+    version: string;
+    date: string;
+    type: string;
+    highlights: string[];
+    changes: Array<{ type: string; text: string }>;
+  }>;
+}
+
+export interface CaseStudiesPageContent {
+  stats?: Array<{ value: string; label: string }>;
+  studies: Array<{
+    company: string;
+    industry: string;
+    logo: string;
+    challenge: string;
+    solution: string;
+    results: Array<{ metric: string; value: string }>;
+    quote?: string;
+    quotee?: string;
+  }>;
+}
+
+export interface ResourcesPageContent {
+  guides: Array<{
+    title: string;
+    description: string;
+    iconName: string;
+    href: string;
+    tag: string;
+  }>;
+  webinars: Array<{
+    title: string;
+    description: string;
+    date: string;
+    status: string;
+    href: string;
+  }>;
+  whitepapers: Array<{
+    title: string;
+    description: string;
+    pages: number;
+    href: string;
+  }>;
+}
+
+export interface StatusPageContent {
+  services: Array<{
+    name: string;
+    status: string;
+    uptime: string;
+    latency: string;
+  }>;
+  incidents: Array<{
+    title: string;
+    date: string;
+    severity: string;
+    status: string;
+    updates: Array<{ time: string; message: string }>;
+  }>;
+}
+
+export interface GlossaryPageContent {
+  categories: Array<{
+    id: string;
+    name: string;
+    iconName: string;
+    color: string;
+    terms: Array<{
+      term: string;
+      definition: string;
+      related?: string[];
+    }>;
+  }>;
+}
+
+export interface SolutionPageContent {
+  hero: {
+    badge: string;
+    title: string;
+    titleHighlight: string;
+    description: string;
+    ctaText: string;
+    ctaLink: string;
+  };
+  stats?: Array<{ value: string; label: string; description: string }>;
+  features: Array<{
+    iconName: string;
+    title: string;
+    description: string;
+  }>;
+  steps?: Array<{
+    step: number;
+    title: string;
+    description: string;
+  }>;
+}
+
 // Contact Types
 export interface CMSContact {
   id: string;
@@ -501,6 +711,7 @@ export const cmsKeys = {
   // Pages
   pages: () => [...cmsKeys.all, 'pages'] as const,
   pagesList: () => [...cmsKeys.pages(), 'list'] as const,
+  pagePublic: (slug: string) => [...cmsKeys.pages(), 'public', slug] as const,
   // Contacts
   contacts: () => [...cmsKeys.all, 'contacts'] as const,
   contactsList: (filters: ContactFilters) => [...cmsKeys.contacts(), 'list', filters] as const,
@@ -979,6 +1190,58 @@ export const useDeletePage = () => {
     },
   });
 };
+
+// =============================================================================
+// React Query Hooks - Public Pages
+// =============================================================================
+
+/**
+ * Fetch a published page by slug (public, no auth required).
+ * Returns null on 404 so fallback content kicks in.
+ */
+export const fetchPublicPage = async (slug: string): Promise<PagePublic | null> => {
+  try {
+    const response = await apiClient.get<ApiResponse<PagePublic>>(`/cms/pages/${slug}`);
+    return response.data.data ?? null;
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Hook to fetch a published CMS page by slug.
+ * Returns null when no CMS content exists (enables fallback pattern).
+ */
+export const usePublicPage = (slug: string) => {
+  return useQuery({
+    queryKey: cmsKeys.pagePublic(slug),
+    queryFn: () => fetchPublicPage(slug),
+    enabled: !!slug,
+    staleTime: 5 * 60 * 1000, // 5-minute cache — pages change infrequently
+    retry: false, // Don't retry on 404
+  });
+};
+
+/**
+ * Generic typed hook for CMS page content.
+ * Usage: const { page, content, isLoading } = usePageContent<PricingPageContent>('pricing');
+ *
+ * - `page` is the full PagePublic object (title, slug, meta, etc.) or null
+ * - `content` is the typed content_json or null
+ * - When CMS has no content, both are null → component uses hardcoded fallback
+ */
+export function usePageContent<T>(slug: string): {
+  page: PagePublic | null;
+  content: T | null;
+  isLoading: boolean;
+} {
+  const { data: page, isLoading } = usePublicPage(slug);
+  return {
+    page: page ?? null,
+    content: (page?.content_json as T) ?? null,
+    isLoading,
+  };
+}
 
 // =============================================================================
 // React Query Hooks - Admin Contacts

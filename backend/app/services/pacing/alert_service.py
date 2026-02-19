@@ -363,7 +363,7 @@ class PacingAlertService:
             return None
 
         alert.status = AlertStatus.ACKNOWLEDGED
-        alert.updated_at = datetime.utcnow()
+        alert.updated_at = datetime.now(timezone.utc)
         await self.db.commit()
         await self.db.refresh(alert)
 
@@ -391,10 +391,10 @@ class PacingAlertService:
             return None
 
         alert.status = AlertStatus.RESOLVED
-        alert.resolved_at = datetime.utcnow()
+        alert.resolved_at = datetime.now(timezone.utc)
         alert.resolved_by_user_id = user_id
         alert.resolution_notes = resolution_notes
-        alert.updated_at = datetime.utcnow()
+        alert.updated_at = datetime.now(timezone.utc)
 
         await self.db.commit()
         await self.db.refresh(alert)
@@ -423,10 +423,10 @@ class PacingAlertService:
             return None
 
         alert.status = AlertStatus.DISMISSED
-        alert.resolved_at = datetime.utcnow()
+        alert.resolved_at = datetime.now(timezone.utc)
         alert.resolved_by_user_id = user_id
         alert.resolution_notes = f"Dismissed: {reason}" if reason else "Dismissed"
-        alert.updated_at = datetime.utcnow()
+        alert.updated_at = datetime.now(timezone.utc)
 
         await self.db.commit()
         await self.db.refresh(alert)
@@ -537,7 +537,7 @@ class PacingAlertService:
                 existing.severity = AlertSeverity.CRITICAL
                 existing.title = title
                 existing.message = message
-                existing.updated_at = datetime.utcnow()
+                existing.updated_at = datetime.now(timezone.utc)
                 await self.db.commit()
                 logger.info(f"Escalated alert {existing.id} to CRITICAL")
             return None
@@ -603,9 +603,9 @@ class PacingAlertService:
 
             for alert in alerts_to_resolve:
                 alert.status = AlertStatus.RESOLVED
-                alert.resolved_at = datetime.utcnow()
+                alert.resolved_at = datetime.now(timezone.utc)
                 alert.resolution_notes = "Auto-resolved: Pacing returned to normal"
-                alert.updated_at = datetime.utcnow()
+                alert.updated_at = datetime.now(timezone.utc)
 
             if alerts_to_resolve:
                 await self.db.commit()
@@ -720,7 +720,7 @@ class AlertNotificationService:
 
         # Track what was sent
         alert.notifications_sent = results
-        alert.updated_at = datetime.utcnow()
+        alert.updated_at = datetime.now(timezone.utc)
         await self.db.commit()
 
         return results

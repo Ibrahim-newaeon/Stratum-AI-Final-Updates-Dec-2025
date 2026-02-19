@@ -5,7 +5,7 @@
  * prospects to explore the platform's capabilities.
  */
 
-import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 // Demo tenant data
 export const DEMO_TENANT = {
@@ -221,36 +221,39 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const enterDemoMode = () => {
+  const enterDemoMode = useCallback(() => {
     setIsDemoMode(true);
     localStorage.setItem('stratum_demo_mode', 'true');
     // Update URL without page reload
     const url = new URL(window.location.href);
     url.searchParams.set('demo', 'true');
     window.history.replaceState({}, '', url.toString());
-  };
+  }, []);
 
-  const exitDemoMode = () => {
+  const exitDemoMode = useCallback(() => {
     setIsDemoMode(false);
     localStorage.removeItem('stratum_demo_mode');
     // Remove demo param from URL
     const url = new URL(window.location.href);
     url.searchParams.delete('demo');
     window.history.replaceState({}, '', url.toString());
-  };
+  }, []);
 
-  const value: DemoContextType = {
-    isDemoMode,
-    enterDemoMode,
-    exitDemoMode,
-    demoTenant: DEMO_TENANT,
-    demoUser: DEMO_USER,
-    demoMetrics: DEMO_METRICS,
-    demoCampaigns: DEMO_CAMPAIGNS,
-    demoSegments: DEMO_SEGMENTS,
-    demoEvents: DEMO_EVENTS,
-    demoTrustGateHistory: DEMO_TRUST_GATE_HISTORY,
-  };
+  const value: DemoContextType = useMemo(
+    () => ({
+      isDemoMode,
+      enterDemoMode,
+      exitDemoMode,
+      demoTenant: DEMO_TENANT,
+      demoUser: DEMO_USER,
+      demoMetrics: DEMO_METRICS,
+      demoCampaigns: DEMO_CAMPAIGNS,
+      demoSegments: DEMO_SEGMENTS,
+      demoEvents: DEMO_EVENTS,
+      demoTrustGateHistory: DEMO_TRUST_GATE_HISTORY,
+    }),
+    [isDemoMode, enterDemoMode, exitDemoMode]
+  );
 
   return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;
 }

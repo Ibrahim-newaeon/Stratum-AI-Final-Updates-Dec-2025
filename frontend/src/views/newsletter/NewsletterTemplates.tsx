@@ -8,6 +8,7 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { sanitizeHtml } from '@/lib/sanitize';
 import {
   PlusIcon,
   PencilIcon,
@@ -196,7 +197,7 @@ export default function NewsletterTemplates() {
                         style={{ transform: 'scale(0.45)', width: '222%', height: '222%' }}
                       >
                         <div
-                          dangerouslySetInnerHTML={{ __html: template.content_html }}
+                          dangerouslySetInnerHTML={{ __html: sanitizeHtml(template.content_html) }}
                           className="bg-white text-black rounded"
                         />
                       </div>

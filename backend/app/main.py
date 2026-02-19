@@ -268,6 +268,11 @@ def create_application() -> FastAPI:
         """
         Server-Sent Events endpoint for real-time dashboard updates.
         Clients connect here to receive live notifications.
+
+        NOTE: Auth is handled via the Authorization header (processed by
+        TenantMiddleware). Do NOT add a query-string token parameter —
+        tokens in URLs leak via server logs, Referer headers, and
+        browser history.
         """
         import asyncio
         import redis.asyncio as redis
@@ -332,18 +337,28 @@ def create_application() -> FastAPI:
         - action_recommendation: New action recommendations
         - platform_status: Platform health updates
         """
-        # Validate token if provided (simplified - in production, verify JWT)
+        # SECURITY: Require a valid token for WebSocket connections.
+        # Anonymous connections could receive tenant-scoped data without auth.
         user_id = None
         if token:
             try:
-                from app.auth.jwt import decode_token
-                payload = decode_token(token)
+                from jose import jwt as jose_jwt
+                payload = jose_jwt.decode(
+                    token,
+                    settings.jwt_secret_key,
+                    algorithms=[settings.jwt_algorithm],
+                )
                 user_id = payload.get("sub")
                 if not tenant_id:
                     tenant_id = payload.get("tenant_id")
             except Exception:
-                # Invalid token - allow anonymous connection
-                pass
+                # Invalid token — reject the connection
+                await websocket.close(code=4001, reason="Invalid or expired token")
+                return
+        else:
+            # No token provided — reject unauthenticated connections
+            await websocket.close(code=4001, reason="Authentication required")
+            return
 
         # Connect the client
         client_id = await ws_manager.connect(

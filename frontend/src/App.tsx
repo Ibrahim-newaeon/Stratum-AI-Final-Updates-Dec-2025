@@ -720,13 +720,15 @@ function App() {
                       }
                     />
 
-                    {/* Protected dashboard routes - wrapped with onboarding guard */}
+                    {/* Protected dashboard routes - wrapped with onboarding guard + ErrorBoundary */}
                     <Route
                       path="/dashboard"
                       element={
                         <ProtectedRoute>
                           <OnboardingGuard>
-                            <DashboardLayout />
+                            <ErrorBoundary message="Something went wrong in the dashboard. Please try refreshing.">
+                              <DashboardLayout />
+                            </ErrorBoundary>
                           </OnboardingGuard>
                         </ProtectedRoute>
                       }
@@ -1174,13 +1176,15 @@ function App() {
                       />
                     </Route>
 
-                    {/* Tenant-scoped routes with :tenantId parameter - wrapped with onboarding guard */}
+                    {/* Tenant-scoped routes with :tenantId parameter - wrapped with onboarding guard + ErrorBoundary */}
                     <Route
                       path="/app/:tenantId"
                       element={
                         <ProtectedRoute>
                           <OnboardingGuard>
-                            <TenantLayout />
+                            <ErrorBoundary message="Something went wrong. Please try refreshing.">
+                              <TenantLayout />
+                            </ErrorBoundary>
                           </OnboardingGuard>
                         </ProtectedRoute>
                       }

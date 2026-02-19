@@ -4,10 +4,11 @@
  */
 
 import { Link } from 'react-router-dom';
+import { usePageContent, type CareersPageContent } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { BriefcaseIcon, CurrencyDollarIcon, MapPinIcon } from '@heroicons/react/24/outline';
 
-const jobs = [
+const fallbackPositions = [
   {
     title: 'Senior Backend Engineer',
     department: 'Engineering',
@@ -52,7 +53,7 @@ const jobs = [
   },
 ];
 
-const benefits = [
+const fallbackBenefits = [
   'Competitive salary + equity',
   'Unlimited PTO',
   'Remote-first culture',
@@ -64,6 +65,23 @@ const benefits = [
 ];
 
 export default function Careers() {
+  const { content } = usePageContent<CareersPageContent>('careers');
+
+  // Use CMS data if available, otherwise fallback
+  const jobs = content?.positions?.length
+    ? content.positions.map((p) => ({
+        title: p.title,
+        department: p.department,
+        location: p.location,
+        type: p.type,
+        salary: p.salary,
+      }))
+    : fallbackPositions;
+
+  const benefits = content?.benefits?.length
+    ? content.benefits.map((b) => b.title)
+    : fallbackBenefits;
+
   return (
     <PageLayout>
       {/* Hero Section */}

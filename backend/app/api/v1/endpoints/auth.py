@@ -138,8 +138,8 @@ class VerifyOTPResponse(BaseModel):
 
 
 def generate_otp(length: int = 6) -> str:
-    """Generate a random numeric OTP code."""
-    return ''.join(random.choices(string.digits, k=length))
+    """Generate a cryptographically secure random numeric OTP code."""
+    return ''.join(secrets.choice(string.digits) for _ in range(length))
 
 
 async def get_redis_client() -> redis.Redis:
@@ -280,7 +280,7 @@ async def verify_whatsapp_otp(request: VerifyOTPRequest):
         await redis_client.delete(otp_key)
 
         # Create a verification token (valid for 30 minutes)
-        verification_token = ''.join(random.choices(string.ascii_letters + string.digits, k=32))
+        verification_token = secrets.token_urlsafe(32)
         verification_key = f"phone_verified:{phone_number}"
         await redis_client.setex(verification_key, 1800, verification_token)  # 30 min expiry
 
@@ -352,7 +352,8 @@ async def login(
         additional_claims={
             "tenant_id": user.tenant_id,
             "role": user.role.value,
-            "email": login_data.email,  # Include for convenience
+            # NOTE: email intentionally excluded from JWT to prevent PII leakage
+            # JWTs are base64-encoded (not encrypted) and visible in request headers
         },
     )
     refresh_token = create_refresh_token(subject=user.id)

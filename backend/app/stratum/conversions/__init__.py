@@ -41,7 +41,7 @@ import hashlib
 import logging
 import re
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Optional
 
@@ -160,7 +160,7 @@ class ConversionEvent:
     Example:
         event = ConversionEvent(
             event_name=EventType.PURCHASE,
-            event_time=datetime.utcnow(),
+            event_time=datetime.now(timezone.utc),
             user_data=UserData(
                 email="customer@example.com",
                 phone="+1234567890",

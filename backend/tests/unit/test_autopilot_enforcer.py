@@ -27,8 +27,6 @@ from app.autopilot.enforcer import (
     InterventionAction,
     InterventionLog,
     ViolationType,
-    clear_enforcement_cache,
-    send_enforcement_notification,
 )
 
 # =============================================================================
@@ -39,9 +37,11 @@ from app.autopilot.enforcer import (
 @pytest.fixture
 def enforcer():
     """Create an AutopilotEnforcer instance without database."""
-    # Clear the global cache before each test to ensure clean state
-    clear_enforcement_cache()
-    return AutopilotEnforcer(db=None)
+    # Create a fresh enforcer instance for each test to ensure clean state
+    instance = AutopilotEnforcer(db=None)
+    instance._settings_cache.clear()
+    instance._pending_confirmations.clear()
+    return instance
 
 
 @pytest.fixture

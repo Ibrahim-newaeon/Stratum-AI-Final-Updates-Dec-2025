@@ -7,7 +7,7 @@ Service for generating reports from templates.
 Collects data from various sources and formats it according to the template.
 """
 
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID
 import json
@@ -499,7 +499,7 @@ class ReportGenerator:
 
             # Update execution
             execution.status = ExecutionStatus.COMPLETED
-            execution.completed_at = datetime.utcnow()
+            execution.completed_at = datetime.now(timezone.utc)
             execution.duration_seconds = (execution.completed_at - execution.started_at).total_seconds()
             execution.file_path = file_path
             execution.file_size_bytes = file_size
@@ -518,7 +518,7 @@ class ReportGenerator:
         except Exception as e:
             logger.error("report_generation_failed", error=str(e), execution_id=str(execution.id))
             execution.status = ExecutionStatus.FAILED
-            execution.completed_at = datetime.utcnow()
+            execution.completed_at = datetime.now(timezone.utc)
             execution.error_message = str(e)
             await self.db.commit()
 

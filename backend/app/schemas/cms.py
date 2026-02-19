@@ -452,6 +452,19 @@ class PageResponse(CMSBaseSchema):
     updated_at: datetime
 
 
+class PagePublicResponse(CMSBaseSchema):
+    """Public page response (no admin-only fields)."""
+
+    title: str
+    slug: str
+    content: Optional[str] = None
+    content_json: Optional[dict[str, Any]] = None
+    template: str
+    meta_title: Optional[str] = None
+    meta_description: Optional[str] = None
+    published_at: Optional[datetime] = None
+
+
 class PageListResponse(BaseModel):
     """List of pages."""
 

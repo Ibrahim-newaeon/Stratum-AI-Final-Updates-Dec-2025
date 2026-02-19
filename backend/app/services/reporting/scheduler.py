@@ -12,7 +12,7 @@ Features:
 - Automatic retry on failure
 """
 
-from datetime import datetime, timedelta, date, time
+from datetime import datetime, timedelta, date, time, timezone
 from typing import List, Dict, Any, Optional, Tuple
 from uuid import UUID
 import logging
@@ -274,7 +274,7 @@ class ReportScheduler:
     ) -> datetime:
         """Calculate the next run time for a schedule."""
         if after is None:
-            after = datetime.utcnow()
+            after = datetime.now(timezone.utc)
 
         tz = ZoneInfo(schedule.timezone)
         local_now = after.replace(tzinfo=ZoneInfo("UTC")).astimezone(tz)
@@ -391,7 +391,7 @@ class ReportScheduler:
         limit: int = 50,
     ) -> List[ScheduledReport]:
         """Get schedules that are due for execution."""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
         query = (
             select(ScheduledReport)
@@ -423,7 +423,7 @@ class ReportScheduler:
         from app.services.reporting.report_generator import ReportGenerator
         start_date, end_date = ReportGenerator.parse_date_range(
             schedule.date_range_type,
-            datetime.utcnow().date()
+            datetime.now(timezone.utc).date()
         )
 
         # Determine format
@@ -457,7 +457,7 @@ class ReportScheduler:
             )
 
             # Update schedule
-            schedule.last_run_at = datetime.utcnow()
+            schedule.last_run_at = datetime.now(timezone.utc)
             schedule.last_run_status = ExecutionStatus.COMPLETED
             schedule.run_count += 1
             schedule.next_run_at = self.calculate_next_run(schedule)
@@ -475,7 +475,7 @@ class ReportScheduler:
             logger.error(f"Schedule {schedule.id} failed: {str(e)}")
 
             # Update schedule with failure
-            schedule.last_run_at = datetime.utcnow()
+            schedule.last_run_at = datetime.now(timezone.utc)
             schedule.last_run_status = ExecutionStatus.FAILED
             schedule.failure_count += 1
             schedule.next_run_at = self.calculate_next_run(schedule)
@@ -647,7 +647,7 @@ class SchedulerWorker:
                     and_(
                         ScheduledReport.is_active == True,
                         ScheduledReport.is_paused == False,
-                        ScheduledReport.next_run_at <= datetime.utcnow(),
+                        ScheduledReport.next_run_at <= datetime.now(timezone.utc),
                     )
                 )
                 .distinct()

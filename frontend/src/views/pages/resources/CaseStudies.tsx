@@ -4,6 +4,7 @@
  */
 
 import { Link } from 'react-router-dom';
+import { usePageContent, type CaseStudiesPageContent } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
 import {
   AcademicCapIcon,
@@ -16,7 +17,7 @@ import {
   TrophyIcon,
 } from '@heroicons/react/24/outline';
 
-const caseStudies = [
+const fallbackCaseStudies = [
   {
     id: 'luxe-ecommerce',
     company: 'Luxe Commerce',
@@ -139,7 +140,7 @@ const caseStudies = [
   },
 ];
 
-const stats = [
+const fallbackStats = [
   { value: '$50M+', label: 'Ad Spend Optimized' },
   { value: '340%', label: 'Avg. ROAS Improvement' },
   { value: '10M+', label: 'Profiles Unified' },
@@ -147,6 +148,28 @@ const stats = [
 ];
 
 export default function CaseStudiesPage() {
+  const { content } = usePageContent<CaseStudiesPageContent>('case-studies');
+
+  // Use CMS data if available, otherwise fallback
+  const caseStudies = content?.studies?.length
+    ? content.studies.map((s, i) => ({
+        id: `study-${i}`,
+        company: s.company,
+        industry: s.industry,
+        icon: ShoppingBagIcon,
+        logo: s.logo,
+        color: '#8B5CF6',
+        headline: s.challenge,
+        description: s.solution,
+        metrics: s.results.map((r) => ({ label: r.metric, value: r.value })),
+        quote: s.quote || '',
+        author: s.quotee || '',
+        role: '',
+      }))
+    : fallbackCaseStudies;
+
+  const stats = content?.stats?.length ? content.stats : fallbackStats;
+
   return (
     <PageLayout>
       <div className="min-h-screen">

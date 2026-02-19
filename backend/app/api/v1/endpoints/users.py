@@ -181,6 +181,14 @@ async def list_users(
     Requires admin or manager role.
     """
     tenant_id = getattr(request.state, "tenant_id", None)
+    requester_role = getattr(request.state, "role", None)
+
+    # Enforce role-based access control
+    if requester_role not in ["admin", "manager", "superadmin"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only admins and managers can list users",
+        )
 
     result = await db.execute(
         select(User)

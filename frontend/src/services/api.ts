@@ -1,82 +1,14 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosError } from 'axios'
+/**
+ * Service-layer API namespaces.
+ *
+ * IMPORTANT: This module re-uses the canonical axios client from `@/api/client`
+ * so there is a single source of truth for auth tokens, tenant headers, and
+ * token refresh logic. Do NOT create a separate axios instance here.
+ */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'
+import { apiClient, setAccessToken, getAccessToken } from '@/api/client'
 
-// Create axios instance with default config
-const apiClient: AxiosInstance = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 30000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-})
-
-// Token management
-let accessToken: string | null = null
-
-export const setAccessToken = (token: string | null) => {
-  accessToken = token
-  if (token) {
-    localStorage.setItem('access_token', token)
-  } else {
-    localStorage.removeItem('access_token')
-  }
-}
-
-export const getAccessToken = (): string | null => {
-  if (!accessToken) {
-    accessToken = localStorage.getItem('access_token')
-  }
-  return accessToken
-}
-
-// Request interceptor - add auth token
-apiClient.interceptors.request.use(
-  (config) => {
-    const token = getAccessToken()
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
-    return config
-  },
-  (error) => Promise.reject(error)
-)
-
-// Response interceptor - handle errors and token refresh
-apiClient.interceptors.response.use(
-  (response) => response,
-  async (error: AxiosError) => {
-    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean }
-
-    // Handle 401 - try to refresh token
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true
-
-      try {
-        const refreshToken = localStorage.getItem('refresh_token')
-        if (refreshToken) {
-          const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
-            refresh_token: refreshToken,
-          })
-          const { access_token } = response.data
-          setAccessToken(access_token)
-
-          if (originalRequest.headers) {
-            originalRequest.headers.Authorization = `Bearer ${access_token}`
-          }
-          return apiClient(originalRequest)
-        }
-      } catch (refreshError) {
-        // Refresh failed - logout user
-        setAccessToken(null)
-        localStorage.removeItem('refresh_token')
-        window.location.href = '/login'
-      }
-    }
-
-    return Promise.reject(error)
-  }
-)
+export { setAccessToken, getAccessToken }
 
 // API Response types
 export interface ApiResponse<T> {

@@ -4,6 +4,7 @@
  */
 
 import { Link } from 'react-router-dom';
+import { usePageContent, type SolutionPageContent } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
 import {
   ArrowTrendingUpIcon,
@@ -47,6 +48,10 @@ const predictions = [
 ];
 
 export default function PredictionsSolution() {
+  // CMS integration: SEO metadata override (full content_json extraction deferred)
+  const { page } = usePageContent<SolutionPageContent>('solutions-predictions');
+  void page; // Will be used for SEO meta override in follow-up phase
+
   return (
     <PageLayout>
       {/* Hero Section */}

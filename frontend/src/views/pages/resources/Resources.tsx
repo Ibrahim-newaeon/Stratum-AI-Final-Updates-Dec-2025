@@ -4,6 +4,7 @@
  */
 
 import { Link } from 'react-router-dom';
+import { usePageContent, type ResourcesPageContent } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
 import {
   AcademicCapIcon,
@@ -53,7 +54,7 @@ const resourceCategories = [
   },
 ];
 
-const guides = [
+const fallbackGuides = [
   {
     title: 'Complete Guide to Trust-Gated Automation',
     description: 'Learn how to set up and optimize trust gates for maximum performance.',
@@ -84,7 +85,7 @@ const guides = [
   },
 ];
 
-const webinars = [
+const fallbackWebinars = [
   {
     title: 'Mastering Trust-Gated Automation in 2026',
     date: 'February 15, 2026',
@@ -108,7 +109,7 @@ const webinars = [
   },
 ];
 
-const whitepapers = [
+const fallbackWhitepapers = [
   {
     title: 'The State of Marketing Automation 2026',
     description: 'Industry report on automation trends and best practices.',
@@ -130,6 +131,38 @@ const whitepapers = [
 ];
 
 export default function ResourcesPage() {
+  const { content } = usePageContent<ResourcesPageContent>('resources');
+
+  // Use CMS data if available, otherwise fallback
+  const guides = content?.guides?.length
+    ? content.guides.map((g) => ({
+        title: g.title,
+        description: g.description,
+        type: g.tag,
+        readTime: '',
+        color: '#8B5CF6',
+      }))
+    : fallbackGuides;
+
+  const webinars = content?.webinars?.length
+    ? content.webinars.map((w) => ({
+        title: w.title,
+        date: w.date,
+        time: w.status === 'upcoming' ? 'TBD' : 'On-Demand',
+        speakers: [] as string[],
+        isUpcoming: w.status === 'upcoming',
+      }))
+    : fallbackWebinars;
+
+  const whitepapers = content?.whitepapers?.length
+    ? content.whitepapers.map((wp) => ({
+        title: wp.title,
+        description: wp.description,
+        pages: wp.pages,
+        downloads: '',
+      }))
+    : fallbackWhitepapers;
+
   return (
     <PageLayout>
       <div className="min-h-screen">

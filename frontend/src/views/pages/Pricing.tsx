@@ -4,11 +4,12 @@
  */
 
 import { Link } from 'react-router-dom';
+import { usePageContent, type PricingPageContent } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { CheckIcon } from '@heroicons/react/24/outline';
 import { pageSEO, SEO } from '@/components/common/SEO';
 
-const tiers = [
+const fallbackTiers = [
   {
     name: 'Starter',
     price: '$499',
@@ -68,10 +69,52 @@ const tiers = [
   },
 ];
 
+const fallbackFaqs = [
+  {
+    q: 'What counts as a monthly event?',
+    a: 'Events include any data point tracked through our platform: page views, purchases, form submissions, API calls, and more.',
+  },
+  {
+    q: 'Can I change plans later?',
+    a: 'Yes, you can upgrade or downgrade your plan at any time. Changes take effect on your next billing cycle.',
+  },
+  {
+    q: 'Is there a free trial?',
+    a: 'Yes, all plans include a 14-day free trial with full access to all features. No credit card required.',
+  },
+  {
+    q: 'What payment methods do you accept?',
+    a: 'We accept all major credit cards, ACH transfers, and wire transfers for annual Enterprise plans.',
+  },
+];
+
 export default function Pricing() {
+  const { page, content } = usePageContent<PricingPageContent>('pricing');
+
+  // Use CMS data if available, otherwise fallback
+  const tiers = content?.tiers?.length
+    ? content.tiers.map((t) => ({
+        name: t.name,
+        price: t.price,
+        period: t.period,
+        description: t.description,
+        features: t.features,
+        cta: t.cta,
+        href: t.highlighted ? '/signup?plan=professional' : t.name === 'Enterprise' ? '/contact' : `/signup?plan=${t.name.toLowerCase()}`,
+        highlighted: t.highlighted,
+      }))
+    : fallbackTiers;
+
+  const faqs = content?.faqs?.length
+    ? content.faqs.map((f) => ({ q: f.question, a: f.answer }))
+    : fallbackFaqs;
+
+  const seoTitle = page?.meta_title || pageSEO.pricing.title;
+  const seoDescription = page?.meta_description || pageSEO.pricing.description;
+
   return (
     <PageLayout>
-      <SEO {...pageSEO.pricing} url="https://stratum-ai.com/pricing" />
+      <SEO {...pageSEO.pricing} title={seoTitle} description={seoDescription} url="https://stratum-ai.com/pricing" />
       {/* Hero Section */}
       <section className="py-20 px-6">
         <div className="max-w-7xl mx-auto text-center">
@@ -179,24 +222,7 @@ export default function Pricing() {
             Frequently Asked Questions
           </h2>
           <div className="space-y-6">
-            {[
-              {
-                q: 'What counts as a monthly event?',
-                a: 'Events include any data point tracked through our platform: page views, purchases, form submissions, API calls, and more.',
-              },
-              {
-                q: 'Can I change plans later?',
-                a: 'Yes, you can upgrade or downgrade your plan at any time. Changes take effect on your next billing cycle.',
-              },
-              {
-                q: 'Is there a free trial?',
-                a: 'Yes, all plans include a 14-day free trial with full access to all features. No credit card required.',
-              },
-              {
-                q: 'What payment methods do you accept?',
-                a: 'We accept all major credit cards, ACH transfers, and wire transfers for annual Enterprise plans.',
-              },
-            ].map((faq) => (
+            {faqs.map((faq) => (
               <div
                 key={faq.q}
                 className="p-6 rounded-2xl"

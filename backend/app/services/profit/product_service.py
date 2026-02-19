@@ -11,7 +11,7 @@ Features:
 - External ID mapping
 """
 
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 import csv
@@ -176,7 +176,7 @@ class ProductCatalogService:
             if field in allowed_fields and value is not None:
                 setattr(product, field, value)
 
-        product.updated_at = datetime.utcnow()
+        product.updated_at = datetime.now(timezone.utc)
         await self.db.commit()
         await self.db.refresh(product)
 
@@ -189,7 +189,7 @@ class ProductCatalogService:
             return False
 
         product.status = ProductStatus.DISCONTINUED
-        product.updated_at = datetime.utcnow()
+        product.updated_at = datetime.now(timezone.utc)
         await self.db.commit()
 
         return True

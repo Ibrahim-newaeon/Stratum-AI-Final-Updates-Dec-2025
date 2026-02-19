@@ -4,6 +4,7 @@
  */
 
 import { Link } from 'react-router-dom';
+import { usePageContent, type FeaturesPageContent } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
 import {
   ArrowPathIcon,
@@ -20,7 +21,22 @@ import {
   UserGroupIcon,
 } from '@heroicons/react/24/outline';
 
-const features = [
+const iconMap: Record<string, typeof ShieldCheckIcon> = {
+  ShieldCheckIcon,
+  SignalIcon,
+  UserGroupIcon,
+  ArrowPathIcon,
+  ChartBarIcon,
+  CpuChipIcon,
+  BoltIcon,
+  ChartPieIcon,
+  CloudArrowUpIcon,
+  DocumentChartBarIcon,
+  CubeTransparentIcon,
+  SparklesIcon,
+};
+
+const fallbackFeatures = [
   {
     icon: ShieldCheckIcon,
     title: 'Trust-Gated Autopilot',
@@ -106,6 +122,18 @@ const features = [
 ];
 
 export default function Features() {
+  const { content } = usePageContent<FeaturesPageContent>('features');
+
+  // Use CMS data if available, otherwise fallback
+  const features = content?.features?.length
+    ? content.features.map((f) => ({
+        icon: iconMap[f.iconName] || SparklesIcon,
+        title: f.title,
+        description: f.description,
+        color: f.color,
+      }))
+    : fallbackFeatures;
+
   return (
     <PageLayout>
       {/* Hero Section */}

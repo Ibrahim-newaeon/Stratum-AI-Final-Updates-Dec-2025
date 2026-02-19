@@ -11,7 +11,7 @@ Features:
 - Historical COGS tracking
 """
 
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from typing import Any, Dict, List, Optional, BinaryIO
 from uuid import UUID
 import csv
@@ -323,7 +323,7 @@ class COGSService:
             if field in allowed_fields and value is not None:
                 setattr(rule, field, value)
 
-        rule.updated_at = datetime.utcnow()
+        rule.updated_at = datetime.now(timezone.utc)
         await self.db.commit()
         await self.db.refresh(rule)
 
@@ -430,13 +430,13 @@ class COGSIngestionService:
                 upload.error_details = errors
 
             upload.status = "completed"
-            upload.processed_at = datetime.utcnow()
+            upload.processed_at = datetime.now(timezone.utc)
 
         except Exception as e:
             logger.error(f"Failed to process COGS CSV: {e}")
             upload.status = "failed"
             upload.error_details = [{"error": str(e)}]
-            upload.processed_at = datetime.utcnow()
+            upload.processed_at = datetime.now(timezone.utc)
 
         await self.db.commit()
         await self.db.refresh(upload)

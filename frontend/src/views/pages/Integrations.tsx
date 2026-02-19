@@ -4,6 +4,7 @@
  */
 
 import { Link } from 'react-router-dom';
+import { usePageContent, type IntegrationsPageContent } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
 
 const categoryColors: Record<string, string> = {
@@ -14,7 +15,7 @@ const categoryColors: Record<string, string> = {
   Communication: '#3b82f6',
 };
 
-const integrations = {
+const fallbackIntegrations = {
   'Ad Platforms': [
     { name: 'Meta Ads', description: 'Facebook & Instagram advertising', logo: 'M' },
     { name: 'Google Ads', description: 'Search, Display & YouTube', logo: 'G' },
@@ -47,6 +48,24 @@ const integrations = {
 };
 
 export default function Integrations() {
+  const { content } = usePageContent<IntegrationsPageContent>('integrations');
+
+  // Use CMS data if available, otherwise fallback
+  const integrations: Record<string, { name: string; description: string; logo: string }[]> =
+    content?.categories?.length
+      ? content.categories.reduce(
+          (acc, cat) => {
+            acc[cat.name] = cat.platforms.map((p) => ({
+              name: p.name,
+              description: p.description,
+              logo: p.iconName,
+            }));
+            return acc;
+          },
+          {} as Record<string, { name: string; description: string; logo: string }[]>
+        )
+      : fallbackIntegrations;
+
   return (
     <PageLayout>
       {/* Hero Section */}

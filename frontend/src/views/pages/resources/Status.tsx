@@ -4,6 +4,7 @@
  */
 
 import { useState } from 'react';
+import { usePageContent, type StatusPageContent } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
 import {
   ArrowPathIcon,
@@ -38,7 +39,7 @@ interface Incident {
   updates: { time: string; message: string }[];
 }
 
-const services: Service[] = [
+const fallbackServices: Service[] = [
   {
     name: 'API Gateway',
     status: 'operational',
@@ -71,7 +72,7 @@ const services: Service[] = [
   { name: 'Webhooks', status: 'operational', uptime: '99.98%', latency: '65ms', icon: SignalIcon },
 ];
 
-const recentIncidents: Incident[] = [
+const fallbackIncidents: Incident[] = [
   {
     id: '1',
     title: 'Elevated API Latency',
@@ -148,8 +149,41 @@ const getSeverityColor = (severity: string) => {
   }
 };
 
+const serviceIconMap: Record<string, typeof ServerIcon> = {
+  ServerIcon,
+  CloudIcon,
+  ShieldCheckIcon,
+  CpuChipIcon,
+  ArrowPathIcon,
+  SignalIcon,
+};
+
 export default function StatusPage() {
+  const { content } = usePageContent<StatusPageContent>('status');
   const [expandedIncident, setExpandedIncident] = useState<string | null>(null);
+
+  // Use CMS data if available, otherwise fallback
+  const services: Service[] = content?.services?.length
+    ? content.services.map((s) => ({
+        name: s.name,
+        status: s.status as ServiceStatus,
+        uptime: s.uptime,
+        latency: s.latency,
+        icon: serviceIconMap[s.name.replace(/\s+/g, '')] || ServerIcon,
+      }))
+    : fallbackServices;
+
+  const recentIncidents: Incident[] = content?.incidents?.length
+    ? content.incidents.map((inc, i) => ({
+        id: String(i + 1),
+        title: inc.title,
+        status: inc.status as Incident['status'],
+        severity: inc.severity as Incident['severity'],
+        createdAt: inc.date,
+        updatedAt: inc.date,
+        updates: inc.updates,
+      }))
+    : fallbackIncidents;
 
   const allOperational = services.every((s) => s.status === 'operational');
 

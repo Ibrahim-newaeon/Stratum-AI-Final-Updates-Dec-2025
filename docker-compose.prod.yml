@@ -10,6 +10,8 @@ services:
   # ===========================================================================
   db:
     restart: always
+    # SECURITY: Do not expose DB port to host in production
+    ports: !reset []
     environment:
       POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
@@ -34,6 +36,8 @@ services:
   # ===========================================================================
   redis:
     restart: always
+    # SECURITY: Do not expose Redis port to host in production
+    ports: !reset []
     command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru --requirepass ${REDIS_PASSWORD:-}
     deploy:
       resources:

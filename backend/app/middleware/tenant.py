@@ -71,8 +71,10 @@ class TenantMiddleware(BaseHTTPMiddleware):
         role = await self._extract_role(request)
 
         if tenant_id is None:
-            # For development, use a default tenant
-            if settings.is_development:
+            # SECURITY: Development fallback is disabled — all requests must
+            # authenticate to get tenant context. Allowing a default tenant_id
+            # lets unauthenticated requests access tenant 1's data.
+            if False:  # Previously: settings.is_development
                 tenant_id = 1
                 logger.debug("using_default_tenant", tenant_id=tenant_id)
             else:
@@ -124,9 +126,13 @@ class TenantMiddleware(BaseHTTPMiddleware):
         if tenant_id:
             return tenant_id
 
-        # Try header
+        # Try X-Tenant-ID header ONLY when an Authorization header is present
+        # (e.g., API key auth where tenant_id isn't in the token claims).
+        # SECURITY: Never trust X-Tenant-ID alone without authentication,
+        # as an unauthenticated client could spoof any tenant.
+        auth_header = request.headers.get("Authorization")
         tenant_header = request.headers.get("X-Tenant-ID")
-        if tenant_header:
+        if tenant_header and auth_header:
             try:
                 return int(tenant_header)
             except ValueError:

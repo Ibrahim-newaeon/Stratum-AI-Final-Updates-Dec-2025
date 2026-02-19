@@ -371,7 +371,7 @@ class PacingService:
             existing.on_track = pacing["status_flags"]["on_track"]
             existing.at_risk = pacing["status_flags"]["at_risk"]
             existing.will_miss = pacing["status_flags"]["will_miss"]
-            existing.updated_at = datetime.utcnow()
+            existing.updated_at = datetime.now(timezone.utc)
 
             await self.db.commit()
             return existing
@@ -693,7 +693,7 @@ class TargetService:
             if target.metric_type in [TargetMetric.SPEND, TargetMetric.REVENUE, TargetMetric.PIPELINE_VALUE, TargetMetric.WON_REVENUE]:
                 target.target_value_cents = int(target.target_value * 100)
 
-        target.updated_at = datetime.utcnow()
+        target.updated_at = datetime.now(timezone.utc)
         await self.db.commit()
         await self.db.refresh(target)
 
@@ -706,7 +706,7 @@ class TargetService:
             return False
 
         target.is_active = False
-        target.updated_at = datetime.utcnow()
+        target.updated_at = datetime.now(timezone.utc)
         await self.db.commit()
 
         return True

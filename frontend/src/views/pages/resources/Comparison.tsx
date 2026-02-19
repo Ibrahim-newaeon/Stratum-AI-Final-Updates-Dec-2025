@@ -5,6 +5,7 @@
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { usePageContent, type ComparisonPageContent } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
 import {
   ArrowRightIcon,
@@ -16,6 +17,13 @@ import {
   ShieldCheckIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
+
+const diffIconMap: Record<string, typeof ShieldCheckIcon> = {
+  ShieldCheckIcon,
+  CpuChipIcon,
+  ChartBarIcon,
+  BoltIcon,
+};
 
 type ComparisonValue = 'yes' | 'no' | 'partial' | string;
 
@@ -34,14 +42,14 @@ interface FeatureRow {
   tooltip?: string;
 }
 
-const competitors: Competitor[] = [
+const fallbackCompetitors: Competitor[] = [
   { id: 'segment', name: 'Segment', tagline: 'CDP', color: '#52BD95' },
   { id: 'braze', name: 'Braze', tagline: 'Marketing Automation', color: '#F6C94A' },
   { id: 'mparticle', name: 'mParticle', tagline: 'CDP', color: '#E54D42' },
   { id: 'amplitude', name: 'Amplitude', tagline: 'Analytics', color: '#1E61CD' },
 ];
 
-const features: FeatureRow[] = [
+const fallbackFeatures: FeatureRow[] = [
   // Trust Engine
   {
     feature: 'Trust-Gated Automation',
@@ -180,7 +188,7 @@ const features: FeatureRow[] = [
   },
 ];
 
-const categories = [...new Set(features.map((f) => f.category))];
+// categories is computed inside the component after CMS resolution
 
 const renderValue = (value: ComparisonValue, isStratum = false) => {
   if (value === 'yes') {
@@ -231,7 +239,7 @@ const renderValue = (value: ComparisonValue, isStratum = false) => {
   return <span className="text-gray-400 text-sm">{value}</span>;
 };
 
-const differentiators = [
+const fallbackDifferentiators = [
   {
     title: 'Trust-Gated Automation',
     description:
@@ -263,8 +271,35 @@ const differentiators = [
 ];
 
 export default function ComparisonPage() {
+  const { content } = usePageContent<ComparisonPageContent>('compare');
   const [selectedCompetitor, setSelectedCompetitor] = useState<string>('segment');
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+
+  // Use CMS data if available, otherwise fallback
+  const competitors: Competitor[] = content?.competitors?.length
+    ? content.competitors
+    : fallbackCompetitors;
+
+  const features: FeatureRow[] = content?.features?.length
+    ? content.features.map((f) => ({
+        feature: f.feature,
+        category: f.category,
+        stratum: f.stratum as ComparisonValue,
+        competitors: f.competitors as Record<string, ComparisonValue>,
+        tooltip: f.tooltip,
+      }))
+    : fallbackFeatures;
+
+  const differentiators = content?.differentiators?.length
+    ? content.differentiators.map((d) => ({
+        title: d.title,
+        description: d.description,
+        icon: diffIconMap[d.iconName] || ShieldCheckIcon,
+        color: '#8B5CF6',
+      }))
+    : fallbackDifferentiators;
+
+  const categories = [...new Set(features.map((f) => f.category))];
 
   return (
     <PageLayout>

@@ -15,7 +15,7 @@ Each driver scores 0-100, weighted to produce final EMQ score.
 """
 
 from dataclasses import dataclass
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, timezone
 from typing import Optional, List, Dict, Tuple
 from enum import Enum
 
@@ -316,7 +316,7 @@ def calculate_data_freshness(metrics: PlatformMetrics, now: Optional[datetime] =
     name = "Data Freshness"
 
     if now is None:
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
     # Use the most recent of last_event or last_sync
     last_update = metrics.last_event_at or metrics.last_sync_at
@@ -390,7 +390,7 @@ def calculate_emq_score(
         EmqCalculationResult with score, drivers, and confidence band
     """
     if now is None:
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
     # Calculate all drivers
     drivers = [
@@ -458,7 +458,7 @@ def calculate_aggregate_emq(
             previous_score=None,
             confidence_band="unsafe",
             drivers=[],
-            calculated_at=datetime.utcnow(),
+            calculated_at=datetime.now(timezone.utc),
         )
 
     # Simple average for now (could weight by spend or volume)
@@ -522,7 +522,7 @@ def calculate_aggregate_emq(
         previous_score=round(avg_previous, 1) if avg_previous else None,
         confidence_band=confidence_band,
         drivers=aggregated_drivers,
-        calculated_at=datetime.utcnow(),
+        calculated_at=datetime.now(timezone.utc),
     )
 
 

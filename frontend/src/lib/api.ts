@@ -1,155 +1,50 @@
 /**
- * API utility module for making HTTP requests
+ * API utility module — DEPRECATED
+ *
+ * This module now re-exports the canonical API client from `@/api/client`.
+ * All new code should import directly from `@/api/client` instead.
+ *
+ * Kept for backward compatibility with existing imports.
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
+import { apiClient } from '@/api/client';
+export type { ApiResponse } from '@/api/client';
 
-interface ApiResponse<T> {
-  data: T
-  success: boolean
-  message?: string
-}
-
-interface ApiError {
-  message: string
-  status: number
-}
-
-class ApiClient {
-  private baseUrl: string
-
-  constructor(baseUrl: string = API_BASE_URL) {
-    this.baseUrl = baseUrl
-  }
-
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<ApiResponse<T>> {
-    const url = `${this.baseUrl}${endpoint}`
-
-    const defaultHeaders: HeadersInit = {
-      'Content-Type': 'application/json',
-    }
-
-    const config: RequestInit = {
-      ...options,
-      headers: {
-        ...defaultHeaders,
-        ...options.headers,
-      },
-    }
-
-    try {
-      const response = await fetch(url, config)
-
-      if (!response.ok) {
-        const error: ApiError = {
-          message: `HTTP error! status: ${response.status}`,
-          status: response.status,
-        }
-        throw error
-      }
-
-      const data = await response.json()
-      return { data, success: true }
-    } catch (error) {
-      console.error('API request failed:', error)
-      return {
-        data: null as T,
-        success: false,
-        message: error instanceof Error ? error.message : 'Unknown error',
-      }
-    }
-  }
-
-  async get<T>(endpoint: string, params?: Record<string, string>): Promise<ApiResponse<T>> {
-    let url = endpoint
+/**
+ * Thin wrapper that provides the same `.get()` / `.post()` interface as the
+ * old fetch-based `ApiClient` class, but delegates to the shared axios instance
+ * (which handles auth tokens, tenant headers, and token refresh).
+ */
+const api = {
+  async get<T = any>(endpoint: string, params?: Record<string, string>) {
+    let url = endpoint;
     if (params) {
-      const searchParams = new URLSearchParams(params)
-      url = `${endpoint}?${searchParams.toString()}`
+      const searchParams = new URLSearchParams(params);
+      url = `${endpoint}?${searchParams.toString()}`;
     }
-    return this.request<T>(url, { method: 'GET' })
-  }
+    const response = await apiClient.get<T>(url);
+    return response;
+  },
 
-  async post<T>(endpoint: string, data?: unknown): Promise<ApiResponse<T>> {
-    return this.request<T>(endpoint, {
-      method: 'POST',
-      body: data ? JSON.stringify(data) : undefined,
-    })
-  }
+  async post<T = any>(endpoint: string, data?: unknown) {
+    const response = await apiClient.post<T>(endpoint, data);
+    return response;
+  },
 
-  async put<T>(endpoint: string, data?: unknown): Promise<ApiResponse<T>> {
-    return this.request<T>(endpoint, {
-      method: 'PUT',
-      body: data ? JSON.stringify(data) : undefined,
-    })
-  }
+  async put<T = any>(endpoint: string, data?: unknown) {
+    const response = await apiClient.put<T>(endpoint, data);
+    return response;
+  },
 
-  async patch<T>(endpoint: string, data?: unknown): Promise<ApiResponse<T>> {
-    return this.request<T>(endpoint, {
-      method: 'PATCH',
-      body: data ? JSON.stringify(data) : undefined,
-    })
-  }
+  async patch<T = any>(endpoint: string, data?: unknown) {
+    const response = await apiClient.patch<T>(endpoint, data);
+    return response;
+  },
 
-  async delete<T>(endpoint: string): Promise<ApiResponse<T>> {
-    return this.request<T>(endpoint, { method: 'DELETE' })
-  }
+  async delete<T = any>(endpoint: string) {
+    const response = await apiClient.delete<T>(endpoint);
+    return response;
+  },
+};
 
-  // Asset-specific endpoints
-  async getAssets() {
-    return this.get('/assets')
-  }
-
-  async uploadAsset(file: File, metadata?: Record<string, unknown>) {
-    const formData = new FormData()
-    formData.append('file', file)
-    if (metadata) {
-      formData.append('metadata', JSON.stringify(metadata))
-    }
-
-    const url = `${this.baseUrl}/assets/upload`
-    const response = await fetch(url, {
-      method: 'POST',
-      body: formData,
-    })
-
-    return response.json()
-  }
-
-  async deleteAsset(assetId: number | string) {
-    return this.delete(`/assets/${assetId}`)
-  }
-
-  // Campaign endpoints
-  async getCampaigns() {
-    return this.get('/campaigns')
-  }
-
-  async getCampaignById(id: number | string) {
-    return this.get(`/campaigns/${id}`)
-  }
-
-  // Analytics endpoints
-  async getAnalytics(params?: { startDate?: string; endDate?: string; platform?: string }) {
-    return this.get('/analytics', params as Record<string, string>)
-  }
-
-  // EMQ endpoints
-  async getEMQData() {
-    return this.get('/emq')
-  }
-
-  async getEMQIssues() {
-    return this.get('/emq/issues')
-  }
-}
-
-// Export singleton instance
-const api = new ApiClient()
-export default api
-
-// Export class for custom instances
-export { ApiClient }
-export type { ApiResponse, ApiError }
+export default api;

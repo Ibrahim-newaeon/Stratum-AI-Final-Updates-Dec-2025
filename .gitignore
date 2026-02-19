@@ -49,6 +49,16 @@ backend/models/
 *.pkl
 sample_training_data.csv
 
+# Celery
+celerybeat-schedule
+celerybeat-schedule.*
+
+# Backup files
+*.bak
+
+# Vite cache
+.vite/
+
 # Claude Code
 CLAUDE.local.md
 .claude/state/

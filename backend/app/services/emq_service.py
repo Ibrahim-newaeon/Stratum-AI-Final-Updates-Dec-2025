@@ -12,7 +12,7 @@ Handles:
 """
 
 import json
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, timezone
 from typing import Optional, List, Dict, Any, Tuple
 from sqlalchemy import select, func, and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -195,7 +195,7 @@ class EmqService:
         else:
             confidence_band = "unsafe"
 
-        last_updated = max(r.updated_at for r in current_records) if current_records else datetime.utcnow()
+        last_updated = max(r.updated_at for r in current_records) if current_records else datetime.now(timezone.utc)
 
         return {
             "score": round(score, 1),
@@ -245,7 +245,7 @@ class EmqService:
             "previousScore": round(estimated_emq - 2.0, 1),
             "confidenceBand": "reliable" if estimated_emq >= 80 else "directional" if estimated_emq >= 60 else "unsafe",
             "drivers": self._get_estimated_drivers(estimated_emq),
-            "lastUpdated": datetime.utcnow().isoformat() + "Z",
+            "lastUpdated": datetime.now(timezone.utc).isoformat() + "Z",
         }
 
     def _get_default_emq_response(self) -> Dict[str, Any]:
@@ -255,7 +255,7 @@ class EmqService:
             "previousScore": 73.0,
             "confidenceBand": "directional",
             "drivers": self._get_estimated_drivers(75.0),
-            "lastUpdated": datetime.utcnow().isoformat() + "Z",
+            "lastUpdated": datetime.now(timezone.utc).isoformat() + "Z",
         }
 
     def _get_estimated_drivers(self, base_score: float) -> List[Dict[str, Any]]:
