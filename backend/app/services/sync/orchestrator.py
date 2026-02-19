@@ -2,7 +2,7 @@
 # Stratum AI - Platform Sync Orchestrator
 # =============================================================================
 """
-Coordinates campaign sync across Meta and TikTok.
+Coordinates campaign sync across Meta, TikTok, and Snapchat.
 
 Responsibilities:
 1. Load TenantPlatformConnection + enabled TenantAdAccount records
@@ -36,6 +36,7 @@ from app.models.campaign_builder import (
 )
 from app.services.oauth import get_oauth_service
 from app.services.sync.meta_sync import MetaCampaignSyncService, TokenExpiredError
+from app.services.sync.snapchat_sync import SnapchatCampaignSyncService
 from app.services.sync.tiktok_sync import TikTokCampaignSyncService
 
 logger = get_logger(__name__)
@@ -60,6 +61,7 @@ class PlatformSyncOrchestrator:
         self.db = db
         self._meta_sync = MetaCampaignSyncService()
         self._tiktok_sync = TikTokCampaignSyncService()
+        self._snapchat_sync = SnapchatCampaignSyncService()
 
     async def sync_platform(
         self,
@@ -121,6 +123,10 @@ class PlatformSyncOrchestrator:
                     )
                 elif platform == AdPlatform.TIKTOK:
                     synced, metrics = await self._sync_tiktok_account(
+                        tenant_id, access_token, acct_id, date_start, date_end
+                    )
+                elif platform == AdPlatform.SNAPCHAT:
+                    synced, metrics = await self._sync_snapchat_account(
                         tenant_id, access_token, acct_id, date_start, date_end
                     )
                 else:
@@ -192,6 +198,11 @@ class PlatformSyncOrchestrator:
             advertiser_id = os.getenv("TIKTOK_ADVERTISER_ID", "")
             account_ids = [advertiser_id] if advertiser_id else []
             return token, account_ids
+        elif platform == AdPlatform.SNAPCHAT:
+            token = os.getenv("SNAPCHAT_ACCESS_TOKEN")
+            ad_account_id = os.getenv("SNAPCHAT_AD_ACCOUNT_ID", "")
+            account_ids = [ad_account_id] if ad_account_id else []
+            return token, account_ids
         return None, []
 
     # ------------------------------------------------------------------
@@ -218,6 +229,10 @@ class PlatformSyncOrchestrator:
             )
         elif platform == AdPlatform.TIKTOK:
             campaigns_synced, metrics_upserted = await self._sync_tiktok_account(
+                tenant_id, access_token, account_id, date_start, date_end
+            )
+        elif platform == AdPlatform.SNAPCHAT:
+            campaigns_synced, metrics_upserted = await self._sync_snapchat_account(
                 tenant_id, access_token, account_id, date_start, date_end
             )
 
@@ -338,6 +353,72 @@ class PlatformSyncOrchestrator:
                     metrics_upserted += 1
             except Exception as e:
                 logger.warning("tiktok_reports_error", advertiser=advertiser_id, error=str(e))
+
+        # Recalculate aggregates
+        for campaign in campaign_map.values():
+            await self._recalculate_campaign_aggregates(campaign)
+
+        await self.db.commit()
+        return campaigns_synced, metrics_upserted
+
+    async def _sync_snapchat_account(
+        self,
+        tenant_id: int,
+        access_token: str,
+        ad_account_id: str,
+        date_start: date,
+        date_end: date,
+    ) -> tuple[int, int]:
+        # Fetch campaigns
+        raw_campaigns = await self._snapchat_sync.fetch_campaigns(access_token, ad_account_id)
+        campaigns_synced = 0
+        metrics_upserted = 0
+
+        campaign_map: dict[str, Campaign] = {}
+        campaign_ids: list[str] = []
+
+        for sc in raw_campaigns:
+            campaign = await self._upsert_campaign(
+                tenant_id=tenant_id,
+                platform=AdPlatform.SNAPCHAT,
+                external_id=sc.external_id,
+                account_id=ad_account_id,
+                name=sc.name,
+                status=sc.status,
+                objective=sc.objective,
+                daily_budget_cents=sc.daily_budget_cents,
+                lifetime_budget_cents=sc.lifetime_budget_cents,
+                start_date=sc.start_time,
+                end_date=sc.stop_time,
+                raw_data=sc.raw,
+            )
+            campaign_map[sc.external_id] = campaign
+            campaign_ids.append(sc.external_id)
+            campaigns_synced += 1
+
+        # Fetch stats for all campaigns
+        if campaign_ids:
+            try:
+                stats = await self._snapchat_sync.fetch_campaign_stats(
+                    access_token, campaign_ids, date_start, date_end
+                )
+                for row in stats:
+                    campaign = campaign_map.get(row.campaign_id)
+                    if not campaign:
+                        continue
+                    await self._upsert_metric(
+                        tenant_id=tenant_id,
+                        campaign_id=campaign.id,
+                        metric_date=row.date,
+                        spend_cents=row.spend_cents,
+                        impressions=row.impressions,
+                        clicks=row.clicks,
+                        conversions=row.conversions,
+                        revenue_cents=row.revenue_cents,
+                    )
+                    metrics_upserted += 1
+            except Exception as e:
+                logger.warning("snapchat_stats_error", account=ad_account_id, error=str(e))
 
         # Recalculate aggregates
         for campaign in campaign_map.values():

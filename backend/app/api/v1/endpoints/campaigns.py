@@ -399,6 +399,49 @@ async def trigger_sync_all_campaigns(
     )
 
 
+@router.post("/sync-platform/{platform}")
+async def trigger_platform_sync(
+    request: Request,
+    platform: str,
+    db: AsyncSession = Depends(get_async_session),
+) -> APIResponse:
+    """
+    Discover and sync all campaigns from a specific ad platform.
+
+    This calls the orchestrator to fetch campaigns directly from the
+    platform API (Meta, TikTok, Snapchat) and upsert them into the DB.
+    Use this to force-discover new campaigns that haven't been seen before.
+    """
+    from app.services.sync.orchestrator import PlatformSyncOrchestrator
+
+    tenant_id = getattr(request.state, "tenant_id", 1)
+
+    try:
+        ad_platform = AdPlatform(platform.lower())
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unknown platform: {platform}. Use: meta, tiktok, snapchat, google",
+        )
+
+    orchestrator = PlatformSyncOrchestrator(db)
+    result = await orchestrator.sync_platform(tenant_id, ad_platform, days_back=30)
+
+    return APIResponse(
+        success=len(result.errors) == 0,
+        data={
+            "platform": result.platform,
+            "campaigns_synced": result.campaigns_synced,
+            "metrics_upserted": result.metrics_upserted,
+            "duration_seconds": result.duration_seconds,
+            "errors": result.errors,
+        },
+        message=f"Platform sync completed: {result.campaigns_synced} campaigns synced"
+        if not result.errors
+        else f"Platform sync finished with errors: {', '.join(result.errors)}",
+    )
+
+
 @router.post("/{campaign_id}/sync")
 async def trigger_campaign_sync(
     request: Request,
