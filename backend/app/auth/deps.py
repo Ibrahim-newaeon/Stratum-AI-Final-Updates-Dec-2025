@@ -113,11 +113,19 @@ async def get_current_user(
             detail="User account is deactivated",
         )
 
-    # Decrypt PII for response
+    # Decrypt PII for response (gracefully handle key mismatch)
     from app.core.security import decrypt_pii
 
-    email = payload.get("email") or decrypt_pii(user.email)
-    full_name = decrypt_pii(user.full_name) if user.full_name else None
+    try:
+        email = payload.get("email") or decrypt_pii(user.email)
+    except Exception:
+        # Fallback: use raw stored value or email from JWT
+        email = payload.get("email") or user.email or f"user-{user.id}@unknown"
+
+    try:
+        full_name = decrypt_pii(user.full_name) if user.full_name else None
+    except Exception:
+        full_name = None
 
     # Store user info in request state for middleware/logging
     request.state.user_id = user.id
