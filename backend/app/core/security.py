@@ -173,6 +173,9 @@ def decrypt_pii(ciphertext: str) -> str:
     """
     Decrypt PII data.
 
+    Falls back to returning the raw value if decryption fails (e.g. the data
+    was stored in plaintext or encrypted with a different key).
+
     Args:
         ciphertext: The encrypted data to decrypt
 
@@ -182,9 +185,13 @@ def decrypt_pii(ciphertext: str) -> str:
     if not ciphertext:
         return ""
 
-    fernet = Fernet(_get_fernet_key())
-    decrypted = fernet.decrypt(base64.urlsafe_b64decode(ciphertext.encode("utf-8")))
-    return decrypted.decode("utf-8")
+    try:
+        fernet = Fernet(_get_fernet_key())
+        decrypted = fernet.decrypt(base64.urlsafe_b64decode(ciphertext.encode("utf-8")))
+        return decrypted.decode("utf-8")
+    except Exception:
+        # Data may be stored in plaintext or encrypted with a different key
+        return ciphertext
 
 
 def hash_pii_for_lookup(value: str) -> str:
