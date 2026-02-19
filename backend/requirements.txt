@@ -39,6 +39,8 @@ bcrypt==4.2.1  # Pin to 4.x for passlib compatibility
 cryptography==42.0.2
 pydantic[email]==2.6.1
 pydantic-settings==2.2.1
+pyotp==2.9.0
+qrcode[pil]==7.4.2
 
 # ML / Data Science
 scikit-learn==1.4.0
