@@ -219,6 +219,9 @@ export function useCreateRule() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['rules'] })
     },
+    onError: (error: any) => {
+      console.error('Operation failed:', error)
+    },
   })
 }
 
@@ -232,6 +235,9 @@ export function useUpdateRule() {
       queryClient.invalidateQueries({ queryKey: ['rules'] })
       queryClient.invalidateQueries({ queryKey: ['rules', variables.id] })
     },
+    onError: (error: any) => {
+      console.error('Operation failed:', error)
+    },
   })
 }
 
@@ -242,6 +248,9 @@ export function useDeleteRule() {
     mutationFn: rulesApi.deleteRule,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['rules'] })
+    },
+    onError: (error: any) => {
+      console.error('Operation failed:', error)
     },
   })
 }
@@ -255,6 +264,9 @@ export function useToggleRule() {
       queryClient.invalidateQueries({ queryKey: ['rules'] })
       queryClient.invalidateQueries({ queryKey: ['rules', id] })
     },
+    onError: (error: any) => {
+      console.error('Operation failed:', error)
+    },
   })
 }
 
@@ -265,6 +277,9 @@ export function useDuplicateRule() {
     mutationFn: rulesApi.duplicateRule,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['rules'] })
+    },
+    onError: (error: any) => {
+      console.error('Operation failed:', error)
     },
   })
 }

@@ -148,6 +148,10 @@ class PlatformSyncOrchestrator:
                             synced, metrics = await self._sync_tiktok_account(
                                 tenant_id, access_token, acct_id, date_start, date_end
                             )
+                        elif platform == AdPlatform.SNAPCHAT:
+                            synced, metrics = await self._sync_snapchat_account(
+                                tenant_id, access_token, acct_id, date_start, date_end
+                            )
                         else:
                             continue
                         result.campaigns_synced += synced
@@ -193,14 +197,13 @@ class PlatformSyncOrchestrator:
             account_ids = [f"act_{a}" if not a.startswith("act_") else a for a in account_ids]
             return token, account_ids
         elif platform == AdPlatform.TIKTOK:
-            token = os.getenv("TIKTOK_ACCESS_TOKEN")
-            # TikTok uses advertiser_id
-            advertiser_id = os.getenv("TIKTOK_ADVERTISER_ID", "")
+            token = settings.tiktok_access_token or os.getenv("TIKTOK_ACCESS_TOKEN")
+            advertiser_id = settings.tiktok_advertiser_id or os.getenv("TIKTOK_ADVERTISER_ID", "")
             account_ids = [advertiser_id] if advertiser_id else []
             return token, account_ids
         elif platform == AdPlatform.SNAPCHAT:
-            token = os.getenv("SNAPCHAT_ACCESS_TOKEN")
-            ad_account_id = os.getenv("SNAPCHAT_AD_ACCOUNT_ID", "")
+            token = settings.snapchat_access_token or os.getenv("SNAPCHAT_ACCESS_TOKEN")
+            ad_account_id = settings.snapchat_ad_account_id or os.getenv("SNAPCHAT_AD_ACCOUNT_ID", "")
             account_ids = [ad_account_id] if ad_account_id else []
             return token, account_ids
         return None, []

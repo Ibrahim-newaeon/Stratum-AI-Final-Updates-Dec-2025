@@ -35,6 +35,7 @@ const Onboarding = lazy(() => import('./views/Onboarding'));
 const UnifiedDashboard = lazy(() => import('./views/dashboard/UnifiedDashboard'));
 const CustomDashboard = lazy(() => import('./views/CustomDashboard'));
 const Campaigns = lazy(() => import('./views/Campaigns'));
+const CampaignDetail = lazy(() => import('./views/CampaignDetail'));
 const Stratum = lazy(() => import('./views/Stratum'));
 const Benchmarks = lazy(() => import('./views/Benchmarks'));
 const Assets = lazy(() => import('./views/Assets'));
@@ -752,6 +753,14 @@ function App() {
                         element={
                           <Suspense fallback={<LoadingSpinner />}>
                             <Campaigns />
+                          </Suspense>
+                        }
+                      />
+                      <Route
+                        path="campaigns/:id"
+                        element={
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <CampaignDetail />
                           </Suspense>
                         }
                       />

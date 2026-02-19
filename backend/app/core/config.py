@@ -117,11 +117,13 @@ class Settings(BaseSettings):
     tiktok_app_id: Optional[str] = Field(default=None)
     tiktok_secret: Optional[str] = Field(default=None)
     tiktok_access_token: Optional[str] = Field(default=None)
+    tiktok_advertiser_id: Optional[str] = Field(default=None)
 
     # Snapchat
     snapchat_client_id: Optional[str] = Field(default=None)
     snapchat_client_secret: Optional[str] = Field(default=None)
     snapchat_access_token: Optional[str] = Field(default=None)
+    snapchat_ad_account_id: Optional[str] = Field(default=None)
 
     # LinkedIn
     linkedin_client_id: Optional[str] = Field(
