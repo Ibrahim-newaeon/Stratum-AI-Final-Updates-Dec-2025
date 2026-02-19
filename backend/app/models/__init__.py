@@ -113,6 +113,15 @@ from app.models.attribution import (
     ModelTrainingRun,
 )
 
+# Client (Agency → Brand) models
+from app.models.client import (
+    ClientRequestStatus,
+    ClientRequestType,
+    Client,
+    ClientAssignment,
+    ClientRequest,
+)
+
 # Automated Reporting models
 from app.models.reporting import (
     ReportType,
@@ -216,6 +225,12 @@ __all__ = [
     "ModelStatus",
     "TrainedAttributionModel",
     "ModelTrainingRun",
+    # Client (Agency → Brand)
+    "ClientRequestStatus",
+    "ClientRequestType",
+    "Client",
+    "ClientAssignment",
+    "ClientRequest",
     # Automated Reporting
     "ReportType",
     "ReportFormat",

@@ -365,8 +365,19 @@ class User(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
         DateTime(timezone=True), nullable=True
     )
 
+    # Client portal (optional – set when user is a client portal user)
+    client_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("clients.id", ondelete="SET NULL"), nullable=True
+    )
+    user_type: Mapped[str] = mapped_column(
+        String(20), default="agency", nullable=False
+    )
+
     # Relationships
     tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="users")
+    client: Mapped[Optional["Client"]] = relationship(
+        "Client", back_populates="portal_users", foreign_keys=[client_id]
+    )
     audit_logs: Mapped[List["AuditLog"]] = relationship(
         "AuditLog", back_populates="user"
     )
@@ -400,6 +411,11 @@ class Campaign(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
         String(255), nullable=False
     )  # Platform's campaign ID
     account_id: Mapped[str] = mapped_column(String(255), nullable=False)
+
+    # Client association (optional – agency can assign campaigns to clients)
+    client_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("clients.id", ondelete="SET NULL"), nullable=True
+    )
 
     # Campaign Info
     name: Mapped[str] = mapped_column(String(500), nullable=False)
@@ -458,6 +474,9 @@ class Campaign(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
 
     # Relationships
     tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="campaigns")
+    client: Mapped[Optional["Client"]] = relationship(
+        "Client", back_populates="campaigns", foreign_keys=[client_id]
+    )
     metrics: Mapped[List["CampaignMetric"]] = relationship(
         "CampaignMetric", back_populates="campaign", cascade="all, delete-orphan"
     )
@@ -473,6 +492,7 @@ class Campaign(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
         Index("ix_campaigns_platform", "tenant_id", "platform"),
         Index("ix_campaigns_date_range", "tenant_id", "start_date", "end_date"),
         Index("ix_campaigns_roas", "tenant_id", "roas"),
+        Index("ix_campaigns_client", "client_id"),
     )
 
     def calculate_metrics(self) -> None:
