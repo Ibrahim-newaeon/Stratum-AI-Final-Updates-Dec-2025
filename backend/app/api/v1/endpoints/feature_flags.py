@@ -79,9 +79,9 @@ async def update_tenant_features(
     if getattr(request.state, "tenant_id", None) != tenant_id:
         raise HTTPException(status_code=403, detail="Access denied to this tenant")
 
-    # Check admin role
-    user_role = getattr(request.state, "user_role", None)
-    if user_role not in ["superadmin", "admin", "tenant_admin"]:
+    # Check admin role (middleware sets request.state.role)
+    user_role = getattr(request.state, "role", None)
+    if user_role not in ["superadmin", "admin", "tenant_admin", "manager"]:
         raise HTTPException(status_code=403, detail="Admin role required")
 
     user_id = getattr(request.state, "user_id", None)

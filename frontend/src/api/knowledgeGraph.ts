@@ -72,12 +72,13 @@ export function useKGProblems(filters?: { severity?: ProblemSeverity; status?: s
       if (filters?.status) params.append('status', filters.status);
 
       const response = await apiClient.get<{ data: KGProblemsData }>(
-        `/knowledge-graph/problems?${params}`
+        `/knowledge-graph/insights/problems?${params}`
       );
       return response.data.data;
     },
-    staleTime: 60 * 1000,
-    placeholderData: {
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+    initialData: {
       problems: [
         {
           id: '1',

@@ -29,6 +29,17 @@ class InviteUserRequest(BaseModel):
     role: str = Field(default="user", description="User role: admin, manager, user")
 
 
+def _safe_decrypt(value: Optional[str]) -> Optional[str]:
+    """Decrypt PII, returning the raw value if decryption fails."""
+    if not value:
+        return None
+    try:
+        return decrypt_pii(value)
+    except Exception:
+        # Value may be stored in plaintext or encrypted with a different key
+        return value
+
+
 class UpdateUserRequest(BaseModel):
     """Request schema for admin updating a user."""
     full_name: Optional[str] = None
@@ -68,9 +79,9 @@ async def get_current_user(
         data=UserProfileResponse(
             id=user.id,
             tenant_id=user.tenant_id,
-            email=decrypt_pii(user.email),
-            full_name=decrypt_pii(user.full_name) if user.full_name else None,
-            phone=decrypt_pii(user.phone) if user.phone else None,
+            email=_safe_decrypt(user.email) or "",
+            full_name=_safe_decrypt(user.full_name),
+            phone=_safe_decrypt(user.phone),
             role=user.role,
             locale=user.locale,
             timezone=user.timezone,
@@ -114,6 +125,12 @@ async def update_current_user(
     # Update fields
     update_dict = update_data.model_dump(exclude_unset=True)
 
+    # Handle preferences merging (don't overwrite, merge)
+    if "preferences" in update_dict and update_dict["preferences"]:
+        existing_prefs = user.preferences or {}
+        merged = {**existing_prefs, **update_dict["preferences"]}
+        update_dict["preferences"] = merged
+
     # Encrypt PII fields
     if "full_name" in update_dict and update_dict["full_name"]:
         update_dict["full_name"] = encrypt_pii(update_dict["full_name"])
@@ -132,9 +149,9 @@ async def update_current_user(
         data=UserProfileResponse(
             id=user.id,
             tenant_id=user.tenant_id,
-            email=decrypt_pii(user.email),
-            full_name=decrypt_pii(user.full_name) if user.full_name else None,
-            phone=decrypt_pii(user.phone) if user.phone else None,
+            email=_safe_decrypt(user.email) or "",
+            full_name=_safe_decrypt(user.full_name),
+            phone=_safe_decrypt(user.phone),
             role=user.role,
             locale=user.locale,
             timezone=user.timezone,
