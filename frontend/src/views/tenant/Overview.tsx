@@ -29,6 +29,7 @@ import {
 import { useTenantOverview, useTenantRecommendations } from '@/api/hooks'
 import { useApproveAction, useDismissAction, useQueueAction } from '@/api/autopilot'
 import { useToast } from '@/components/ui/use-toast'
+import { exportDashboardPDF } from '@/utils/pdfExport'
 import { DocumentArrowDownIcon, CalendarIcon } from '@heroicons/react/24/outline'
 
 export default function TenantOverview() {
@@ -217,12 +218,23 @@ export default function TenantOverview() {
   }
 
   // Handler: Assign playbook item
-  const handlePlaybookAssign = (item: PlaybookItem) => {
-    // TODO: Implement full assignment modal/flow
-    toast({
-      title: 'Assignment',
-      description: `Assigning "${item.title}" to team. Full assignment workflow coming soon.`,
-    })
+  const handlePlaybookAssign = async (item: PlaybookItem) => {
+    try {
+      await updatePlaybookItem.mutateAsync({
+        itemId: item.id,
+        updates: { status: 'in_progress', owner: item.owner || 'Team' },
+      })
+      toast({
+        title: 'Assigned',
+        description: `"${item.title}" has been assigned to ${item.owner || 'Team'} and marked as in progress.`,
+      })
+    } catch (error) {
+      toast({
+        title: 'Assignment Failed',
+        description: error instanceof Error ? error.message : 'Failed to assign playbook item.',
+        variant: 'destructive',
+      })
+    }
   }
 
   // Handler: Apply playbook fix
@@ -327,12 +339,18 @@ export default function TenantOverview() {
   }
 
   // Handler: Export report
-  const handleExportReport = () => {
-    // TODO: Implement full export functionality
-    toast({
-      title: 'Export Started',
-      description: 'Generating report for download. This feature is coming soon.',
-    })
+  const handleExportReport = async () => {
+    try {
+      toast({ title: 'Export Started', description: 'Generating PDF report...' })
+      await exportDashboardPDF(`Tenant_${tid}`)
+      toast({ title: 'Export Complete', description: 'Report PDF has been downloaded.' })
+    } catch (error) {
+      toast({
+        title: 'Export Failed',
+        description: error instanceof Error ? error.message : 'Failed to generate report PDF.',
+        variant: 'destructive',
+      })
+    }
   }
 
   return (

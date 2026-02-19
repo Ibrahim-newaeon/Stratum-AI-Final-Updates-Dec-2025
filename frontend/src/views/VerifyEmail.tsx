@@ -1,16 +1,19 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
-import { useVerifyEmail } from '@/api/auth';
+import { useVerifyEmail, useResendVerification } from '@/api/auth';
 
 export default function VerifyEmail() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
 
   const verifyMutation = useVerifyEmail();
+  const resendMutation = useResendVerification();
+  const [resendEmail, setResendEmail] = useState(searchParams.get('email') || '');
+  const [showResendForm, setShowResendForm] = useState(false);
 
   const isLoading = verifyMutation.isPending;
   const isSuccess = verifyMutation.isSuccess;
@@ -120,15 +123,55 @@ export default function VerifyEmail() {
             >
               Sign up again
             </Link>
-            <button
-              onClick={async () => {
-                // TODO: Implement resend verification
-                console.log('Resend verification');
-              }}
-              className="text-meta text-stratum-400 hover:text-stratum-300 transition-colors"
-            >
-              Resend verification email
-            </button>
+            {!showResendForm ? (
+              <button
+                onClick={() => setShowResendForm(true)}
+                className="text-meta text-stratum-400 hover:text-stratum-300 transition-colors"
+              >
+                Resend verification email
+              </button>
+            ) : (
+              <div className="space-y-3">
+                <input
+                  type="email"
+                  value={resendEmail}
+                  onChange={(e) => setResendEmail(e.target.value)}
+                  placeholder="Enter your email address"
+                  className="w-full px-4 py-2 rounded-lg bg-surface-secondary border border-white/10 text-white text-sm placeholder:text-text-muted focus:outline-none focus:border-stratum-500"
+                />
+                <button
+                  onClick={async () => {
+                    if (!resendEmail) return;
+                    resendMutation.mutate(
+                      { email: resendEmail },
+                      {
+                        onSuccess: () => {
+                          setShowResendForm(false);
+                        },
+                      }
+                    );
+                  }}
+                  disabled={resendMutation.isPending || !resendEmail}
+                  className="text-meta text-stratum-400 hover:text-stratum-300 transition-colors disabled:opacity-50"
+                >
+                  {resendMutation.isPending
+                    ? 'Sending...'
+                    : resendMutation.isSuccess
+                      ? 'Verification email sent!'
+                      : 'Send verification email'}
+                </button>
+                {resendMutation.isError && (
+                  <p className="text-xs text-danger">
+                    {resendMutation.error?.message || 'Failed to resend verification email.'}
+                  </p>
+                )}
+                {resendMutation.isSuccess && (
+                  <p className="text-xs text-success">
+                    Verification email sent. Please check your inbox.
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

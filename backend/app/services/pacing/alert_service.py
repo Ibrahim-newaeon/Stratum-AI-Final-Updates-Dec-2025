@@ -18,6 +18,7 @@ from uuid import UUID
 from sqlalchemy import select, and_, func, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.logging import get_logger
 from app.models.pacing import (
     DailyKPI,
@@ -28,7 +29,15 @@ from app.models.pacing import (
     AlertType,
     AlertStatus,
 )
+from app.models.settings import SlackIntegration
+from app.services.email_service import get_email_service
+from app.services.notifications.slack_service import SlackNotificationService
 from app.services.pacing.pacing_service import PacingService
+from app.services.whatsapp_client import (
+    WhatsAppClient,
+    is_whatsapp_configured,
+    get_whatsapp_client,
+)
 
 logger = get_logger(__name__)
 
@@ -571,8 +580,17 @@ class PacingAlertService:
 
         logger.info(f"Created {severity.value} alert: {title}")
 
-        # TODO: Send notifications (Slack, Email, WhatsApp)
-        # await self._send_notifications(alert)
+        # Dispatch notifications (Slack, Email, WhatsApp) based on target settings.
+        # Wrapped in try/except so a notification failure never prevents alert creation.
+        try:
+            notification_service = AlertNotificationService(self.db, self.tenant_id)
+            await notification_service.notify_alert(alert)
+        except Exception as exc:
+            logger.error(
+                "Failed to dispatch alert notifications",
+                alert_id=str(alert.id),
+                error=str(exc),
+            )
 
         return alert
 
@@ -649,50 +667,394 @@ class AlertNotificationService:
     Service for sending alert notifications.
 
     Supports:
-    - Slack webhooks
-    - Email via SMTP/SendGrid
-    - WhatsApp via Twilio
+    - Slack webhooks via SlackNotificationService
+    - Email via SMTP (EmailService)
+    - WhatsApp via Meta Business API (WhatsAppClient)
     """
 
-    def __init__(self, db: AsyncSession, tenant_id: int):
+    # Severity-to-color mapping for Slack attachments
+    _SEVERITY_COLORS: Dict[str, str] = {
+        "info": "#3b82f6",       # Blue
+        "warning": "#eab308",    # Yellow
+        "critical": "#ef4444",   # Red
+    }
+
+    _SEVERITY_EMOJI: Dict[str, str] = {
+        "info": ":information_source:",
+        "warning": ":warning:",
+        "critical": ":rotating_light:",
+    }
+
+    def __init__(self, db: AsyncSession, tenant_id: int) -> None:
         self.db = db
         self.tenant_id = tenant_id
+
+    # -----------------------------------------------------------------
+    # Slack
+    # -----------------------------------------------------------------
 
     async def send_slack_notification(
         self,
         alert: PacingAlert,
         webhook_url: str,
     ) -> bool:
-        """Send alert notification to Slack."""
-        # TODO: Implement Slack notification
-        logger.info(f"Would send Slack notification for alert {alert.id}")
-        return True
+        """Send a rich Block Kit alert notification to Slack.
+
+        Args:
+            alert: The pacing alert to notify about.
+            webhook_url: Slack incoming-webhook URL.
+
+        Returns:
+            True if the message was delivered successfully.
+        """
+        if not webhook_url:
+            logger.warning(
+                "Slack webhook URL is empty, skipping notification",
+                alert_id=str(alert.id),
+            )
+            return False
+
+        severity_val = alert.severity.value if alert.severity else "warning"
+        color = self._SEVERITY_COLORS.get(severity_val, "#6b7280")
+        emoji = self._SEVERITY_EMOJI.get(severity_val, ":bell:")
+        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+        dashboard_url = f"{settings.frontend_url}/dashboard/pacing"
+
+        blocks = [
+            {
+                "type": "header",
+                "text": {
+                    "type": "plain_text",
+                    "text": f"{alert.title}",
+                    "emoji": True,
+                },
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Severity:*\n{emoji} {severity_val.upper()}",
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Type:*\n{alert.alert_type.value.replace('_', ' ').title()}",
+                    },
+                ],
+            },
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": f"*Details:*\n{alert.message}",
+                },
+            },
+        ]
+
+        # Add pacing context fields when available
+        context_fields: List[Dict[str, str]] = []
+        if alert.mtd_actual is not None and alert.mtd_expected is not None:
+            context_fields.append(
+                {"type": "mrkdwn", "text": f"*MTD Actual:*\n${alert.mtd_actual:,.2f}"}
+            )
+            context_fields.append(
+                {"type": "mrkdwn", "text": f"*MTD Expected:*\n${alert.mtd_expected:,.2f}"}
+            )
+        if alert.deviation_pct is not None:
+            context_fields.append(
+                {"type": "mrkdwn", "text": f"*Deviation:*\n{alert.deviation_pct:+.1f}%"}
+            )
+        if alert.days_remaining is not None:
+            context_fields.append(
+                {"type": "mrkdwn", "text": f"*Days Remaining:*\n{alert.days_remaining}"}
+            )
+        if context_fields:
+            blocks.append({"type": "section", "fields": context_fields})
+
+        # Dashboard link + timestamp footer
+        blocks.append(
+            {
+                "type": "actions",
+                "elements": [
+                    {
+                        "type": "button",
+                        "text": {"type": "plain_text", "text": "View in Dashboard"},
+                        "url": dashboard_url,
+                    }
+                ],
+            }
+        )
+        blocks.append(
+            {
+                "type": "context",
+                "elements": [
+                    {"type": "mrkdwn", "text": f":clock1: {timestamp} | Stratum AI Pacing Alerts"}
+                ],
+            }
+        )
+
+        slack_service = SlackNotificationService(webhook_url)
+        try:
+            success = await slack_service.send_message(
+                text=f"[{severity_val.upper()}] {alert.title}",
+                attachments=[{"color": color, "blocks": blocks}],
+            )
+            if success:
+                logger.info(
+                    "Slack pacing alert sent",
+                    alert_id=str(alert.id),
+                    severity=severity_val,
+                )
+            else:
+                logger.error(
+                    "Slack pacing alert delivery failed",
+                    alert_id=str(alert.id),
+                )
+            return success
+        except Exception as exc:
+            logger.error(
+                "Slack notification error",
+                alert_id=str(alert.id),
+                error=str(exc),
+            )
+            return False
+        finally:
+            await slack_service.close()
+
+    # -----------------------------------------------------------------
+    # Email
+    # -----------------------------------------------------------------
 
     async def send_email_notification(
         self,
         alert: PacingAlert,
         recipients: List[str],
     ) -> bool:
-        """Send alert notification via email."""
-        # TODO: Implement email notification
-        logger.info(f"Would send email notification for alert {alert.id} to {recipients}")
-        return True
+        """Send an HTML alert email to one or more recipients.
+
+        Args:
+            alert: The pacing alert to notify about.
+            recipients: List of email addresses.
+
+        Returns:
+            True if all emails were sent successfully.
+        """
+        if not recipients:
+            logger.warning(
+                "No email recipients provided, skipping notification",
+                alert_id=str(alert.id),
+            )
+            return False
+
+        email_service = get_email_service()
+        severity_val = alert.severity.value if alert.severity else "warning"
+        dashboard_url = f"{settings.frontend_url}/dashboard/pacing"
+
+        # Pick severity-appropriate colours for the HTML banner
+        banner_colors: Dict[str, str] = {
+            "info": "#3b82f6",
+            "warning": "#eab308",
+            "critical": "#dc2626",
+        }
+        banner_bg: Dict[str, str] = {
+            "info": "#eff6ff",
+            "warning": "#fefce8",
+            "critical": "#fef2f2",
+        }
+        banner_border: Dict[str, str] = {
+            "info": "#bfdbfe",
+            "warning": "#fef08a",
+            "critical": "#fecaca",
+        }
+
+        color = banner_colors.get(severity_val, "#6b7280")
+        bg = banner_bg.get(severity_val, "#f8fafc")
+        border = banner_border.get(severity_val, "#e2e8f0")
+
+        # Build pacing context rows
+        context_rows = ""
+        if alert.mtd_actual is not None:
+            context_rows += (
+                f"<tr><td style='padding:4px 8px;color:#64748b;'>MTD Actual</td>"
+                f"<td style='padding:4px 8px;font-weight:600;'>${alert.mtd_actual:,.2f}</td></tr>"
+            )
+        if alert.mtd_expected is not None:
+            context_rows += (
+                f"<tr><td style='padding:4px 8px;color:#64748b;'>MTD Expected</td>"
+                f"<td style='padding:4px 8px;font-weight:600;'>${alert.mtd_expected:,.2f}</td></tr>"
+            )
+        if alert.projected_eom is not None:
+            context_rows += (
+                f"<tr><td style='padding:4px 8px;color:#64748b;'>Projected EOM</td>"
+                f"<td style='padding:4px 8px;font-weight:600;'>${alert.projected_eom:,.2f}</td></tr>"
+            )
+        if alert.deviation_pct is not None:
+            context_rows += (
+                f"<tr><td style='padding:4px 8px;color:#64748b;'>Deviation</td>"
+                f"<td style='padding:4px 8px;font-weight:600;'>{alert.deviation_pct:+.1f}%</td></tr>"
+            )
+        if alert.days_remaining is not None:
+            context_rows += (
+                f"<tr><td style='padding:4px 8px;color:#64748b;'>Days Remaining</td>"
+                f"<td style='padding:4px 8px;font-weight:600;'>{alert.days_remaining}</td></tr>"
+            )
+
+        context_table = ""
+        if context_rows:
+            context_table = (
+                f"<table style='width:100%;border-collapse:collapse;margin-top:16px;'>"
+                f"{context_rows}</table>"
+            )
+
+        subject = f"[Stratum AI] {severity_val.upper()} Pacing Alert: {alert.title}"
+
+        html_content = f"""<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.6;color:#333;max-width:600px;margin:0 auto;padding:20px;">
+  <div style="text-align:center;margin-bottom:30px;">
+    <h1 style="color:#2563eb;margin:0;">Stratum AI</h1>
+  </div>
+  <div style="background:{bg};border:1px solid {border};border-left:4px solid {color};border-radius:8px;padding:24px;margin-bottom:20px;">
+    <h2 style="margin-top:0;color:{color};">{alert.title}</h2>
+    <p style="margin-bottom:8px;"><strong>Severity:</strong> {severity_val.upper()}</p>
+    <p>{alert.message}</p>
+    {context_table}
+    <div style="text-align:center;margin:24px 0;">
+      <a href="{dashboard_url}" style="background:{color};color:white;padding:12px 24px;text-decoration:none;border-radius:6px;font-weight:600;display:inline-block;">
+        View in Dashboard
+      </a>
+    </div>
+  </div>
+  <div style="text-align:center;color:#94a3b8;font-size:12px;">
+    <p>&copy; {datetime.now(timezone.utc).year} Stratum AI. All rights reserved.</p>
+  </div>
+</body>
+</html>"""
+
+        text_content = (
+            f"[{severity_val.upper()}] {alert.title}\n\n"
+            f"{alert.message}\n\n"
+            f"View in Dashboard: {dashboard_url}\n"
+        )
+
+        all_sent = True
+        for recipient in recipients:
+            try:
+                message = email_service._create_message(
+                    to_email=recipient,
+                    subject=subject,
+                    html_content=html_content,
+                    text_content=text_content,
+                )
+                sent = email_service._send_email(recipient, message)
+                if sent:
+                    logger.info(
+                        "Email pacing alert sent",
+                        alert_id=str(alert.id),
+                        recipient=recipient[:20] + "...",
+                    )
+                else:
+                    logger.error(
+                        "Email pacing alert delivery failed",
+                        alert_id=str(alert.id),
+                        recipient=recipient[:20] + "...",
+                    )
+                    all_sent = False
+            except Exception as exc:
+                logger.error(
+                    "Email notification error",
+                    alert_id=str(alert.id),
+                    recipient=recipient[:20] + "...",
+                    error=str(exc),
+                )
+                all_sent = False
+
+        return all_sent
+
+    # -----------------------------------------------------------------
+    # WhatsApp
+    # -----------------------------------------------------------------
 
     async def send_whatsapp_notification(
         self,
         alert: PacingAlert,
         phone_numbers: List[str],
     ) -> bool:
-        """Send alert notification via WhatsApp."""
-        # TODO: Implement WhatsApp notification
-        logger.info(f"Would send WhatsApp notification for alert {alert.id} to {phone_numbers}")
-        return True
+        """Send an alert notification to one or more phone numbers via WhatsApp.
+
+        Uses the WhatsApp Business API text message endpoint. Falls back
+        gracefully if WhatsApp is not configured.
+
+        Args:
+            alert: The pacing alert to notify about.
+            phone_numbers: List of phone numbers (with country code).
+
+        Returns:
+            True if all messages were sent successfully.
+        """
+        if not phone_numbers:
+            logger.warning(
+                "No WhatsApp phone numbers provided, skipping notification",
+                alert_id=str(alert.id),
+            )
+            return False
+
+        if not is_whatsapp_configured():
+            logger.warning(
+                "WhatsApp is not configured, skipping notification",
+                alert_id=str(alert.id),
+            )
+            return False
+
+        severity_val = alert.severity.value if alert.severity else "warning"
+        text_body = (
+            f"[{severity_val.upper()}] Stratum AI Pacing Alert\n\n"
+            f"{alert.title}\n\n"
+            f"{alert.message}"
+        )
+        if alert.deviation_pct is not None:
+            text_body += f"\nDeviation: {alert.deviation_pct:+.1f}%"
+        if alert.days_remaining is not None:
+            text_body += f"\nDays Remaining: {alert.days_remaining}"
+
+        wa_client: WhatsAppClient = get_whatsapp_client()
+        all_sent = True
+        for phone in phone_numbers:
+            try:
+                await wa_client.send_text_message(
+                    recipient_phone=phone,
+                    text=text_body,
+                )
+                logger.info(
+                    "WhatsApp pacing alert sent",
+                    alert_id=str(alert.id),
+                    phone=phone[:6] + "****",
+                )
+            except Exception as exc:
+                logger.error(
+                    "WhatsApp notification error",
+                    alert_id=str(alert.id),
+                    phone=phone[:6] + "****",
+                    error=str(exc),
+                )
+                all_sent = False
+
+        return all_sent
+
+    # -----------------------------------------------------------------
+    # Orchestrator
+    # -----------------------------------------------------------------
 
     async def notify_alert(self, alert: PacingAlert) -> Dict[str, bool]:
-        """
-        Send notifications for an alert based on target settings.
+        """Send notifications for an alert based on target settings.
 
-        Returns dict of {channel: success} for each notification sent.
+        Resolves Slack webhook URL from the tenant's SlackIntegration
+        record and extracts email/phone recipients from the target's
+        ``notification_recipients`` JSON field.
+
+        Returns:
+            Dict mapping channel name to delivery success boolean.
         """
         # Get target to check notification settings
         result = await self.db.execute(
@@ -701,26 +1063,103 @@ class AlertNotificationService:
         target = result.scalar_one_or_none()
 
         if not target:
+            logger.warning(
+                "Target not found for alert notification",
+                alert_id=str(alert.id),
+            )
             return {}
 
-        results = {}
+        results: Dict[str, bool] = {}
 
+        # -- Slack --------------------------------------------------------
         if target.notify_slack:
-            # TODO: Get Slack webhook from tenant settings
-            results["slack"] = await self.send_slack_notification(alert, "")
+            slack_result = await self.db.execute(
+                select(SlackIntegration).where(
+                    and_(
+                        SlackIntegration.tenant_id == self.tenant_id,
+                        SlackIntegration.is_active == True,
+                    )
+                )
+            )
+            slack_integration = slack_result.scalar_one_or_none()
+            if slack_integration and slack_integration.webhook_url:
+                try:
+                    results["slack"] = await self.send_slack_notification(
+                        alert, slack_integration.webhook_url
+                    )
+                except Exception as exc:
+                    logger.error(
+                        "Slack notification dispatch failed",
+                        alert_id=str(alert.id),
+                        error=str(exc),
+                    )
+                    results["slack"] = False
+            else:
+                logger.info(
+                    "Slack not configured for tenant, skipping",
+                    tenant_id=self.tenant_id,
+                )
 
+        # -- Email --------------------------------------------------------
         if target.notify_email:
-            recipients = target.notification_recipients or []
-            if recipients:
-                results["email"] = await self.send_email_notification(alert, recipients)
+            raw_recipients = target.notification_recipients or []
+            # Filter to only strings that look like email addresses
+            email_recipients = [
+                r for r in raw_recipients
+                if isinstance(r, str) and "@" in r
+            ]
+            if email_recipients:
+                try:
+                    results["email"] = await self.send_email_notification(
+                        alert, email_recipients
+                    )
+                except Exception as exc:
+                    logger.error(
+                        "Email notification dispatch failed",
+                        alert_id=str(alert.id),
+                        error=str(exc),
+                    )
+                    results["email"] = False
+            else:
+                logger.info(
+                    "No email recipients found in notification_recipients",
+                    alert_id=str(alert.id),
+                )
 
+        # -- WhatsApp -----------------------------------------------------
         if target.notify_whatsapp:
-            # TODO: Get phone numbers from notification_recipients
-            results["whatsapp"] = await self.send_whatsapp_notification(alert, [])
+            raw_recipients = target.notification_recipients or []
+            # Phone numbers start with '+' and do not contain '@'
+            phone_numbers = [
+                r for r in raw_recipients
+                if isinstance(r, str) and r.startswith("+") and "@" not in r
+            ]
+            if phone_numbers:
+                try:
+                    results["whatsapp"] = await self.send_whatsapp_notification(
+                        alert, phone_numbers
+                    )
+                except Exception as exc:
+                    logger.error(
+                        "WhatsApp notification dispatch failed",
+                        alert_id=str(alert.id),
+                        error=str(exc),
+                    )
+                    results["whatsapp"] = False
+            else:
+                logger.info(
+                    "No phone numbers found in notification_recipients",
+                    alert_id=str(alert.id),
+                )
 
-        # Track what was sent
+        # Track what was sent on the alert record
         alert.notifications_sent = results
         alert.updated_at = datetime.now(timezone.utc)
         await self.db.commit()
 
+        logger.info(
+            "Alert notifications dispatched",
+            alert_id=str(alert.id),
+            results=results,
+        )
         return results

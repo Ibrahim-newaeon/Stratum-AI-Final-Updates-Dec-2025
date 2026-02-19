@@ -19,8 +19,21 @@ import json
 import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, insert
+from sqlalchemy import select, insert, func, update
+from sqlalchemy.orm import selectinload
 from pydantic import BaseModel, Field
+
+from app.models.autopilot import (
+    TenantEnforcementSettings as TenantEnforcementSettingsDB,
+    TenantEnforcementRule as TenantEnforcementRuleDB,
+    EnforcementAuditLog as EnforcementAuditLogDB,
+    PendingConfirmationToken as PendingConfirmationTokenDB,
+    EnforcementMode as DBEnforcementMode,
+    ViolationType as DBViolationType,
+    InterventionAction as DBInterventionAction,
+)
+from app.services.email_service import get_email_service
+from app.services.notifications.slack_service import SlackNotificationService
 
 
 logger = logging.getLogger(__name__)
@@ -154,12 +167,85 @@ class AutopilotEnforcer:
         self._pending_confirmations: Dict[str, Dict[str, Any]] = {}
 
     async def get_settings(self, tenant_id: int) -> EnforcementSettings:
-        """Get enforcement settings for tenant."""
+        """Get enforcement settings for tenant.
+
+        Uses in-memory cache as fast-path. On cache miss, loads from the
+        database. If no database row exists yet, creates one with defaults
+        and persists it.
+
+        Args:
+            tenant_id: Tenant ID to retrieve settings for.
+
+        Returns:
+            EnforcementSettings Pydantic model for the tenant.
+        """
+        # Fast-path: return from cache
         if tenant_id in self._settings_cache:
             return self._settings_cache[tenant_id]
 
-        # TODO: Load from database when table exists
-        # For now, return defaults
+        # Load from database
+        if self.db is not None:
+            result = await self.db.execute(
+                select(TenantEnforcementSettingsDB)
+                .options(selectinload(TenantEnforcementSettingsDB.rules))
+                .where(TenantEnforcementSettingsDB.tenant_id == tenant_id)
+            )
+            db_settings = result.scalars().first()
+
+            if db_settings is not None:
+                # Map custom rules from DB rows to Pydantic models
+                rules: List[EnforcementRule] = []
+                for db_rule in (db_settings.rules or []):
+                    rules.append(EnforcementRule(
+                        rule_id=db_rule.rule_id,
+                        rule_type=ViolationType(db_rule.rule_type.value
+                                                if isinstance(db_rule.rule_type, DBViolationType)
+                                                else db_rule.rule_type),
+                        threshold_value=db_rule.threshold_value,
+                        enforcement_mode=EnforcementMode(
+                            db_rule.enforcement_mode.value
+                            if isinstance(db_rule.enforcement_mode, DBEnforcementMode)
+                            else db_rule.enforcement_mode
+                        ),
+                        enabled=db_rule.enabled,
+                        description=db_rule.description,
+                    ))
+
+                settings = EnforcementSettings(
+                    tenant_id=tenant_id,
+                    enforcement_enabled=db_settings.enforcement_enabled,
+                    default_mode=EnforcementMode(
+                        db_settings.default_mode.value
+                        if isinstance(db_settings.default_mode, DBEnforcementMode)
+                        else db_settings.default_mode
+                    ),
+                    max_daily_budget=db_settings.max_daily_budget,
+                    max_campaign_budget=db_settings.max_campaign_budget,
+                    budget_increase_limit_pct=db_settings.budget_increase_limit_pct,
+                    min_roas_threshold=db_settings.min_roas_threshold,
+                    roas_lookback_days=db_settings.roas_lookback_days,
+                    max_budget_changes_per_day=db_settings.max_budget_changes_per_day,
+                    min_hours_between_changes=db_settings.min_hours_between_changes,
+                    rules=rules,
+                )
+                self._settings_cache[tenant_id] = settings
+                return settings
+
+            # No row exists -- create with defaults and persist
+            new_db_settings = TenantEnforcementSettingsDB(
+                tenant_id=tenant_id,
+                enforcement_enabled=True,
+                default_mode=DBEnforcementMode.ADVISORY,
+                budget_increase_limit_pct=30.0,
+                min_roas_threshold=1.0,
+                roas_lookback_days=7,
+                max_budget_changes_per_day=5,
+                min_hours_between_changes=4,
+            )
+            self.db.add(new_db_settings)
+            await self.db.flush()
+
+        # Return defaults (either just persisted or no DB session)
         settings = EnforcementSettings(tenant_id=tenant_id)
         self._settings_cache[tenant_id] = settings
         return settings
@@ -169,15 +255,69 @@ class AutopilotEnforcer:
         tenant_id: int,
         updates: Dict[str, Any],
     ) -> EnforcementSettings:
-        """Update enforcement settings for tenant."""
+        """Update enforcement settings for tenant.
+
+        Applies updates to both the in-memory Pydantic model and the
+        corresponding database row.
+
+        Args:
+            tenant_id: Tenant whose settings to update.
+            updates: Dictionary of field names to new values. Only fields
+                     present on EnforcementSettings are applied.
+
+        Returns:
+            Updated EnforcementSettings Pydantic model.
+        """
         settings = await self.get_settings(tenant_id)
 
+        # Apply updates to Pydantic model
         for key, value in updates.items():
             if hasattr(settings, key):
                 setattr(settings, key, value)
 
         self._settings_cache[tenant_id] = settings
-        # TODO: Persist to database
+
+        # Persist to database
+        if self.db is not None:
+            # Map Pydantic field names to DB column updates
+            db_field_map = {
+                "enforcement_enabled",
+                "default_mode",
+                "max_daily_budget",
+                "max_campaign_budget",
+                "budget_increase_limit_pct",
+                "min_roas_threshold",
+                "roas_lookback_days",
+                "max_budget_changes_per_day",
+                "min_hours_between_changes",
+            }
+            db_updates: Dict[str, Any] = {}
+            for key, value in updates.items():
+                if key in db_field_map:
+                    if key == "default_mode":
+                        db_updates[key] = DBEnforcementMode(value) if isinstance(value, str) else value
+                    else:
+                        db_updates[key] = value
+
+            if db_updates:
+                result = await self.db.execute(
+                    select(TenantEnforcementSettingsDB)
+                    .where(TenantEnforcementSettingsDB.tenant_id == tenant_id)
+                )
+                db_settings = result.scalars().first()
+
+                if db_settings is not None:
+                    for col, val in db_updates.items():
+                        setattr(db_settings, col, val)
+                    await self.db.flush()
+                else:
+                    # Create a new row if missing (edge case)
+                    new_row = TenantEnforcementSettingsDB(
+                        tenant_id=tenant_id,
+                        **db_updates,
+                    )
+                    self.db.add(new_row)
+                    await self.db.flush()
 
         return settings
 
@@ -435,10 +575,37 @@ class AutopilotEnforcer:
         days: int = 30,
         limit: int = 100,
     ) -> List[Dict[str, Any]]:
-        """Get intervention audit log for tenant."""
-        # TODO: Query from database
-        # For now, return empty list
-        return []
+        """Get intervention audit log for tenant.
+
+        Queries the enforcement_audit_logs table for entries within the
+        specified lookback window, ordered by most recent first.
+
+        Args:
+            tenant_id: Tenant ID to query.
+            days: Number of days to look back (default 30).
+            limit: Maximum number of entries to return (default 100).
+
+        Returns:
+            List of intervention log dictionaries.
+        """
+        if self.db is None:
+            return []
+
+        from datetime import timedelta
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+
+        result = await self.db.execute(
+            select(EnforcementAuditLogDB)
+            .where(
+                EnforcementAuditLogDB.tenant_id == tenant_id,
+                EnforcementAuditLogDB.timestamp >= cutoff,
+            )
+            .order_by(EnforcementAuditLogDB.timestamp.desc())
+            .limit(limit)
+        )
+        rows = result.scalars().all()
+
+        return [row.to_dict() for row in rows]
 
     # =========================================================================
     # Private Methods
@@ -510,10 +677,93 @@ class AutopilotEnforcer:
         tenant_id: int,
         entity_id: str,
     ) -> List[Dict[str, Any]]:
-        """Check action frequency rules."""
-        # TODO: Query recent actions from database
-        # For now, assume no violations
-        return []
+        """Check action frequency rules against recent DB records.
+
+        Queries the enforcement_audit_logs table to count how many
+        budget-related interventions have been logged for this entity
+        today and checks the minimum time gap between changes.
+
+        Args:
+            settings: Current enforcement settings for the tenant.
+            tenant_id: Tenant ID.
+            entity_id: Platform entity ID being acted upon.
+
+        Returns:
+            List of violation dictionaries if frequency caps exceeded.
+        """
+        violations: List[Dict[str, Any]] = []
+
+        if self.db is None:
+            return violations
+
+        from datetime import timedelta
+
+        now = datetime.now(timezone.utc)
+
+        # --- Check max budget changes per day ---
+        day_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+
+        count_result = await self.db.execute(
+            select(func.count(EnforcementAuditLogDB.id))
+            .where(
+                EnforcementAuditLogDB.tenant_id == tenant_id,
+                EnforcementAuditLogDB.entity_id == entity_id,
+                EnforcementAuditLogDB.timestamp >= day_start,
+                EnforcementAuditLogDB.action_type.in_([
+                    "budget_increase", "budget_decrease", "set_budget",
+                ]),
+            )
+        )
+        daily_count: int = count_result.scalar_one()
+
+        if daily_count >= settings.max_budget_changes_per_day:
+            violations.append({
+                "type": ViolationType.FREQUENCY_CAP_EXCEEDED.value,
+                "message": (
+                    f"Entity {entity_id} has reached the daily budget change limit "
+                    f"({daily_count}/{settings.max_budget_changes_per_day})"
+                ),
+                "threshold": settings.max_budget_changes_per_day,
+                "actual": daily_count,
+                "mode": settings.default_mode.value
+                        if isinstance(settings.default_mode, EnforcementMode)
+                        else settings.default_mode,
+            })
+
+        # --- Check minimum hours between changes ---
+        min_gap_cutoff = now - timedelta(hours=settings.min_hours_between_changes)
+
+        recent_result = await self.db.execute(
+            select(EnforcementAuditLogDB.timestamp)
+            .where(
+                EnforcementAuditLogDB.tenant_id == tenant_id,
+                EnforcementAuditLogDB.entity_id == entity_id,
+                EnforcementAuditLogDB.timestamp >= min_gap_cutoff,
+                EnforcementAuditLogDB.action_type.in_([
+                    "budget_increase", "budget_decrease", "set_budget",
+                ]),
+            )
+            .order_by(EnforcementAuditLogDB.timestamp.desc())
+            .limit(1)
+        )
+        last_change_row = recent_result.scalars().first()
+
+        if last_change_row is not None:
+            hours_since = (now - last_change_row).total_seconds() / 3600
+            violations.append({
+                "type": ViolationType.FREQUENCY_CAP_EXCEEDED.value,
+                "message": (
+                    f"Last budget change for entity {entity_id} was {hours_since:.1f}h ago; "
+                    f"minimum gap is {settings.min_hours_between_changes}h"
+                ),
+                "threshold": settings.min_hours_between_changes,
+                "actual": round(hours_since, 2),
+                "mode": settings.default_mode.value
+                        if isinstance(settings.default_mode, EnforcementMode)
+                        else settings.default_mode,
+            })
+
+        return violations
 
     async def _check_custom_rule(
         self,
@@ -581,10 +831,29 @@ class AutopilotEnforcer:
         user_id: Optional[int] = None,
         override_reason: Optional[str] = None,
     ) -> None:
-        """Log an enforcement intervention."""
+        """Log an enforcement intervention to the database.
+
+        Creates an in-memory InterventionLog for structured logging, then
+        persists the entry to the enforcement_audit_logs table. Also
+        triggers a notification for blocking interventions.
+
+        Args:
+            tenant_id: Tenant ID.
+            action_type: Type of action being checked.
+            entity_type: Entity type (campaign, adset, etc.).
+            entity_id: Platform entity ID.
+            violation_type: Which rule was violated.
+            intervention_action: What the enforcer did.
+            enforcement_mode: Active enforcement mode.
+            details: Structured context dictionary.
+            user_id: Optional user who triggered the action.
+            override_reason: Optional reason for an override.
+        """
+        now = datetime.now(timezone.utc)
+
         log_entry = InterventionLog(
             tenant_id=tenant_id,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=now,
             action_type=action_type,
             entity_type=entity_type,
             entity_id=entity_id,
@@ -601,8 +870,50 @@ class AutopilotEnforcer:
             f"entity={entity_type}/{entity_id} mode={enforcement_mode.value}"
         )
 
-        # TODO: Persist to database
-        # TODO: Send notification if configured
+        # Persist to database
+        if self.db is not None:
+            # Serialise details to ensure JSONB-safe content
+            safe_details = json.loads(json.dumps(details, default=str))
+
+            db_log = EnforcementAuditLogDB(
+                tenant_id=tenant_id,
+                timestamp=now,
+                action_type=action_type,
+                entity_type=entity_type,
+                entity_id=entity_id,
+                violation_type=DBViolationType(violation_type.value)
+                    if isinstance(violation_type, ViolationType)
+                    else DBViolationType(violation_type),
+                intervention_action=DBInterventionAction(intervention_action.value)
+                    if isinstance(intervention_action, InterventionAction)
+                    else DBInterventionAction(intervention_action),
+                enforcement_mode=DBEnforcementMode(enforcement_mode.value)
+                    if isinstance(enforcement_mode, EnforcementMode)
+                    else DBEnforcementMode(enforcement_mode),
+                details=safe_details,
+                user_id=user_id,
+                override_reason=override_reason,
+            )
+            self.db.add(db_log)
+            await self.db.flush()
+
+        # Send notification for blocking interventions
+        if intervention_action in (
+            InterventionAction.BLOCKED,
+            InterventionAction.AUTO_PAUSED,
+        ):
+            try:
+                await send_enforcement_notification(
+                    tenant_id=tenant_id,
+                    intervention=log_entry,
+                    notification_channels=["email"],
+                    db=self.db,
+                )
+            except Exception as exc:
+                logger.error(
+                    f"Failed to send enforcement notification: {exc}",
+                    exc_info=True,
+                )
 
 
 # =============================================================================
@@ -612,25 +923,158 @@ class AutopilotEnforcer:
 async def send_enforcement_notification(
     tenant_id: int,
     intervention: InterventionLog,
-    notification_channels: List[str] = None,
+    notification_channels: Optional[List[str]] = None,
+    db: Optional[AsyncSession] = None,
 ) -> bool:
     """
-    Send notification for enforcement intervention.
+    Send notification for enforcement intervention via email and/or Slack.
+
+    Queries the database for tenant admin users so their email addresses
+    can be used for email notifications. For Slack, uses the
+    SlackNotificationService with the tenant's configured webhook.
 
     Args:
-        tenant_id: Tenant ID
-        intervention: Intervention log entry
-        notification_channels: List of channels (email, slack, webhook)
+        tenant_id: Tenant ID.
+        intervention: Intervention log entry with full context.
+        notification_channels: Channels to use (email, slack). Defaults to email.
+        db: Optional AsyncSession for looking up admin emails.
 
     Returns:
-        True if notification sent successfully
+        True if at least one notification channel succeeded.
     """
     channels = notification_channels or ["email"]
+    any_sent = False
 
-    # TODO: Implement actual notification sending
+    action_label = (
+        intervention.intervention_action.value
+        if isinstance(intervention.intervention_action, InterventionAction)
+        else intervention.intervention_action
+    )
+    mode_label = (
+        intervention.enforcement_mode.value
+        if isinstance(intervention.enforcement_mode, EnforcementMode)
+        else intervention.enforcement_mode
+    )
+    violation_label = (
+        intervention.violation_type.value
+        if isinstance(intervention.violation_type, ViolationType)
+        else intervention.violation_type
+    )
+    timestamp_str = intervention.timestamp.strftime("%Y-%m-%d %H:%M UTC")
+
+    # ---- Email Channel ----
+    if "email" in channels and db is not None:
+        try:
+            from app.base_models import User, UserRole, Tenant
+
+            # Get tenant name
+            tenant_result = await db.execute(
+                select(Tenant.name).where(Tenant.id == tenant_id)
+            )
+            tenant_name: str = tenant_result.scalar_one_or_none() or f"Tenant {tenant_id}"
+
+            # Find admin/manager users for this tenant
+            admin_result = await db.execute(
+                select(User.email, User.full_name)
+                .where(
+                    User.tenant_id == tenant_id,
+                    User.is_active.is_(True),
+                    User.role.in_([UserRole.ADMIN, UserRole.MANAGER]),
+                )
+            )
+            admin_rows = admin_result.all()
+
+            if admin_rows:
+                email_service = get_email_service()
+                subject = (
+                    f"[Stratum AI] Enforcement {action_label}: "
+                    f"{intervention.entity_type}/{intervention.entity_id}"
+                )
+
+                html_content = f"""
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+             line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="text-align: center; margin-bottom: 30px;">
+    <h1 style="color: #2563eb; margin: 0;">Stratum AI</h1>
+  </div>
+  <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px;
+              padding: 30px; margin-bottom: 20px;">
+    <h2 style="margin-top: 0; color: #dc2626;">Enforcement Intervention</h2>
+    <table style="width: 100%; border-collapse: collapse;">
+      <tr><td style="padding: 6px 0; font-weight: 600;">Tenant</td>
+          <td style="padding: 6px 0;">{tenant_name}</td></tr>
+      <tr><td style="padding: 6px 0; font-weight: 600;">Action</td>
+          <td style="padding: 6px 0;">{action_label}</td></tr>
+      <tr><td style="padding: 6px 0; font-weight: 600;">Mode</td>
+          <td style="padding: 6px 0;">{mode_label}</td></tr>
+      <tr><td style="padding: 6px 0; font-weight: 600;">Violation</td>
+          <td style="padding: 6px 0;">{violation_label}</td></tr>
+      <tr><td style="padding: 6px 0; font-weight: 600;">Entity</td>
+          <td style="padding: 6px 0;">{intervention.entity_type} / {intervention.entity_id}</td></tr>
+      <tr><td style="padding: 6px 0; font-weight: 600;">Timestamp</td>
+          <td style="padding: 6px 0;">{timestamp_str}</td></tr>
+    </table>
+  </div>
+  <div style="text-align: center; color: #94a3b8; font-size: 12px;">
+    <p>This is an automated notification from the Stratum AI Autopilot Enforcer.</p>
+  </div>
+</body>
+</html>
+"""
+
+                text_content = (
+                    f"Stratum AI Enforcement Intervention\n\n"
+                    f"Tenant: {tenant_name}\n"
+                    f"Action: {action_label}\n"
+                    f"Mode: {mode_label}\n"
+                    f"Violation: {violation_label}\n"
+                    f"Entity: {intervention.entity_type} / {intervention.entity_id}\n"
+                    f"Timestamp: {timestamp_str}\n"
+                )
+
+                for row in admin_rows:
+                    email_addr: str = row[0]  # User.email
+                    try:
+                        message = email_service._create_message(
+                            to_email=email_addr,
+                            subject=subject,
+                            html_content=html_content,
+                            text_content=text_content,
+                        )
+                        sent = email_service._send_email(email_addr, message)
+                        if sent:
+                            any_sent = True
+                    except Exception as email_exc:
+                        logger.error(
+                            f"Failed to send enforcement email to {email_addr[:20]}...: {email_exc}"
+                        )
+
+        except Exception as exc:
+            logger.error(f"Error sending enforcement email notifications: {exc}", exc_info=True)
+
+    # ---- Slack Channel ----
+    if "slack" in channels:
+        try:
+            slack_svc = SlackNotificationService()
+            # Build a simple Slack alert
+            sent = await slack_svc.send_message(
+                text=(
+                    f"Enforcement {action_label} for tenant {tenant_id}: "
+                    f"{violation_label} on {intervention.entity_type}/{intervention.entity_id}"
+                ),
+            )
+            if sent:
+                any_sent = True
+            await slack_svc.close()
+        except Exception as slack_exc:
+            logger.error(f"Failed to send Slack enforcement notification: {slack_exc}")
+
     logger.info(
-        f"Sending enforcement notification to tenant {tenant_id} "
-        f"via {channels}: {intervention.intervention_action.value}"
+        f"Enforcement notification result: tenant={tenant_id} "
+        f"channels={channels} any_sent={any_sent}"
     )
 
-    return True
+    return any_sent

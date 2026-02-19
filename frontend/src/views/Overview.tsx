@@ -59,10 +59,13 @@ import { useCampaigns, useTenantOverview } from '@/api/hooks'
 import { useSyncAllCampaigns, useSyncCampaign } from '@/api/campaigns'
 import { usePriceMetrics } from '@/hooks/usePriceMetrics'
 import { useTenantStore } from '@/stores/tenantStore'
+import { exportDashboardPDF } from '@/utils/pdfExport'
+import { useToast } from '@/components/ui/use-toast'
 
 export function Overview() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
@@ -243,10 +246,19 @@ export function Overview() {
   }, [])
 
   // Export handler
-  const handleExport = useCallback(() => {
-    // TODO: Implement export functionality
-    console.log('Exporting dashboard data...')
-  }, [])
+  const handleExport = useCallback(async () => {
+    try {
+      toast({ title: 'Exporting', description: 'Generating PDF export of the dashboard...' })
+      await exportDashboardPDF('Dashboard')
+      toast({ title: 'Export Complete', description: 'Dashboard PDF has been downloaded.' })
+    } catch (error) {
+      toast({
+        title: 'Export Failed',
+        description: error instanceof Error ? error.message : 'Failed to export dashboard PDF.',
+        variant: 'destructive',
+      })
+    }
+  }, [toast])
 
   // KPI action handlers
   const handleViewDetails = useCallback((metric: string) => {

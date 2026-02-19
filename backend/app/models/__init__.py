@@ -122,6 +122,17 @@ from app.models.client import (
     ClientRequest,
 )
 
+# Autopilot Enforcement models
+from app.models.autopilot import (
+    EnforcementMode as AutopilotEnforcementMode,
+    ViolationType as AutopilotViolationType,
+    InterventionAction as AutopilotInterventionAction,
+    TenantEnforcementSettings,
+    TenantEnforcementRule,
+    EnforcementAuditLog,
+    PendingConfirmationToken,
+)
+
 # Automated Reporting models
 from app.models.reporting import (
     ReportType,
@@ -231,6 +242,14 @@ __all__ = [
     "Client",
     "ClientAssignment",
     "ClientRequest",
+    # Autopilot Enforcement
+    "AutopilotEnforcementMode",
+    "AutopilotViolationType",
+    "AutopilotInterventionAction",
+    "TenantEnforcementSettings",
+    "TenantEnforcementRule",
+    "EnforcementAuditLog",
+    "PendingConfirmationToken",
     # Automated Reporting
     "ReportType",
     "ReportFormat",
