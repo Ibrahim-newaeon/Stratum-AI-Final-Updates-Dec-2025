@@ -363,8 +363,6 @@ See It In Action
 <div class="flex justify-center mb-10">
 <div class="relative w-48 h-48 flex items-center justify-center">
 <svg class="w-full h-full -rotate-90">
-<circle cx="96" cy="96" fill="transparent" r="88" stroke="rgba(255,255,255,0.1)" stroke-width="8"></circle>
-<circle cx="96" cy="96" fill="transparent" r="88" stroke="white" stroke-dasharray="550" stroke-dashoffset="120" stroke-linecap="round" stroke-width="12"></circle>
 <defs>
 <linearGradient id="spectralGradient" x1="0%" x2="100%" y1="0%" y2="0%">
 <stop offset="0%" stop-color="#FF3D00"></stop>
@@ -373,9 +371,11 @@ See It In Action
 <stop offset="100%" stop-color="#FF1F6D"></stop>
 </linearGradient>
 </defs>
+<circle cx="96" cy="96" fill="transparent" r="88" stroke="rgba(255,255,255,0.1)" stroke-width="8"></circle>
+<circle id="trust-ring" cx="96" cy="96" fill="transparent" r="88" stroke="url(#spectralGradient)" stroke-dasharray="553" stroke-dashoffset="553" stroke-linecap="round" stroke-width="12" style="transition: stroke-dashoffset 2s cubic-bezier(0.16,1,0.3,1)"></circle>
 </svg>
 <div class="absolute text-center">
-<div class="text-4xl font-display font-black text-white">—%</div>
+<div id="trust-score-text" class="text-4xl font-display font-black text-white">0%</div>
 <div class="text-[10px] uppercase font-bold tracking-widest text-slate-400">Trust Score</div>
 </div>
 </div>
@@ -1178,6 +1178,39 @@ document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
     }, { threshold: 0.5 });
     counters.forEach(function(el) { counterObserver.observe(el); });
   }
+})();
+
+// Trust Score ring + counter animation
+(function() {
+  var ring = document.getElementById('trust-ring');
+  var text = document.getElementById('trust-score-text');
+  if (!ring || !text) return;
+  var targetPercent = 97.4;
+  var circumference = 553;
+  var targetOffset = circumference * (1 - targetPercent / 100); // ~14.4
+
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        // Animate the ring via CSS transition
+        ring.style.strokeDashoffset = targetOffset;
+        // Animate the counter text
+        var duration = 2000;
+        var startTime = null;
+        function step(timestamp) {
+          if (!startTime) startTime = timestamp;
+          var progress = Math.min((timestamp - startTime) / duration, 1);
+          var eased = 1 - Math.pow(1 - progress, 3);
+          var current = eased * targetPercent;
+          text.textContent = current.toFixed(1) + '%';
+          if (progress < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.3 });
+  observer.observe(ring.closest('.hero-float') || ring);
 })();
 </script>
 
