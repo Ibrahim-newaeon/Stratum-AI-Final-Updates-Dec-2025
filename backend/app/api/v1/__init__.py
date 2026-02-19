@@ -11,6 +11,7 @@ from app.api.v1.endpoints import (
     auth,
     campaigns,
     assets,
+    dashboard,
     rules,
     competitors,
     simulator,
@@ -185,6 +186,13 @@ api_router.include_router(
     tags=["Super Admin"],
 )
 
+# Dashboard (Overview metrics, signal health, campaigns, settings)
+# Note: dashboard.router already has prefix="/dashboard"
+api_router.include_router(
+    dashboard.router,
+    tags=["Dashboard"],
+)
+
 # Tenant Dashboard (Tenant-scoped analytics and settings)
 api_router.include_router(
     tenant_dashboard.router,
@@ -221,9 +229,9 @@ api_router.include_router(
 )
 
 # Feature Flags (Feature toggles and rollouts)
+# Note: feature_flags.router already has /tenant/{tenant_id} and /superadmin prefixes
 api_router.include_router(
     feature_flags.router,
-    prefix="/features",
     tags=["Feature Flags"],
 )
 
