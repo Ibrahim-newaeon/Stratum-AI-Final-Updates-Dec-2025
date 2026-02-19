@@ -84,7 +84,7 @@ export function Tenants() {
     setIsLoading(true)
     setError(null)
     try {
-      const response = await apiClient.get('/api/v1/tenants', {
+      const response = await apiClient.get('/tenants', {
         params: { limit: 100 },
       })
       const data = response.data?.data || response.data || []
@@ -152,7 +152,7 @@ export function Tenants() {
 
   const handleCreateTenant = async (data: TenantFormData) => {
     try {
-      await apiClient.post('/api/v1/tenants', {
+      await apiClient.post('/tenants', {
         name: data.name,
         slug: data.slug,
         domain: data.domain || null,
@@ -200,7 +200,7 @@ export function Tenants() {
   const handleUpdateFeatures = async (features: Record<string, boolean>) => {
     if (!selectedTenant) return
     try {
-      await apiClient.patch(`/api/v1/tenants/${selectedTenant.id}/features`, features)
+      await apiClient.patch(`/tenants/${selectedTenant.id}/features`, features)
       setShowFeaturesModal(false)
       setSelectedTenant(null)
       fetchTenants()
