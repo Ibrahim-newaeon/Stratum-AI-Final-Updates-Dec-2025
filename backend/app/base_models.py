@@ -49,6 +49,7 @@ from app.db.base import Base, SoftDeleteMixin, TenantMixin, TimestampMixin
 class UserRole(str, PyEnum):
     """User roles for access control."""
 
+    SUPERADMIN = "superadmin"
     ADMIN = "admin"
     MANAGER = "manager"
     ANALYST = "analyst"

@@ -20,7 +20,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     # Create enum types
-    op.execute("CREATE TYPE userrole AS ENUM ('admin', 'manager', 'analyst', 'viewer')")
+    op.execute("CREATE TYPE userrole AS ENUM ('superadmin', 'admin', 'manager', 'analyst', 'viewer')")
     op.execute("CREATE TYPE adplatform AS ENUM ('meta', 'google', 'tiktok', 'snapchat')")
     op.execute("CREATE TYPE campaignstatus AS ENUM ('draft', 'active', 'paused', 'completed', 'archived')")
     op.execute("CREATE TYPE assettype AS ENUM ('image', 'video', 'carousel', 'story', 'html5')")
@@ -64,7 +64,7 @@ def upgrade() -> None:
         sa.Column('full_name', sa.String(length=255), nullable=True),
         sa.Column('phone', sa.String(length=100), nullable=True),
         sa.Column('avatar_url', sa.String(length=500), nullable=True),
-        sa.Column('role', postgresql.ENUM('admin', 'manager', 'analyst', 'viewer', name='userrole', create_type=False), nullable=False),
+        sa.Column('role', postgresql.ENUM('superadmin', 'admin', 'manager', 'analyst', 'viewer', name='userrole', create_type=False), nullable=False),
         sa.Column('permissions', postgresql.JSONB(astext_type=sa.Text()), nullable=False, server_default='{}'),
         sa.Column('is_active', sa.Boolean(), nullable=False, server_default='true'),
         sa.Column('is_verified', sa.Boolean(), nullable=False, server_default='false'),
