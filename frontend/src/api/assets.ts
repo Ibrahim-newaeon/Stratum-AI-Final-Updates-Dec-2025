@@ -222,7 +222,7 @@ export function useCreateAsset() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['assets'] })
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error('Operation failed:', error)
     },
   })
@@ -237,7 +237,7 @@ export function useUploadAsset() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['assets'] })
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error('Operation failed:', error)
     },
   })
@@ -264,7 +264,7 @@ export function useDeleteAsset() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['assets'] })
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error('Operation failed:', error)
     },
   })
@@ -317,7 +317,7 @@ export function useBulkArchiveAssets() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['assets'] })
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error('Operation failed:', error)
     },
   })

@@ -30,7 +30,7 @@ export interface ProductCatalog {
   currency: string
   unitOfMeasure?: string
   tags: string[]
-  metadata: Record<string, any>
+  metadata: Record<string, unknown>
   createdAt: string
   updatedAt: string
 }
@@ -77,7 +77,7 @@ export interface MarginRule {
 export interface MarginCondition {
   field: string
   operator: 'eq' | 'ne' | 'gt' | 'lt' | 'gte' | 'lte' | 'in' | 'contains'
-  value: any
+  value: string | number | boolean | string[]
 }
 
 export interface DailyProfitMetrics {
@@ -166,7 +166,7 @@ export interface CreateProductRequest {
   defaultMarginPct?: number
   currency?: string
   tags?: string[]
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 export interface CreateMarginRuleRequest {
@@ -216,7 +216,7 @@ export const profitApi = {
   importProducts: async (file: File) => {
     const formData = new FormData()
     formData.append('file', file)
-    const response = await apiClient.post<ApiResponse<{ imported: number; errors: any[] }>>('/profit/products/import', formData, {
+    const response = await apiClient.post<ApiResponse<{ imported: number; errors: Array<{ row: number; field: string; message: string }> }>>('/profit/products/import', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
     return response.data.data

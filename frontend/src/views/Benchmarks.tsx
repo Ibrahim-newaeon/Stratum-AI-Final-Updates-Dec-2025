@@ -14,6 +14,7 @@ import {
   PolarAngleAxis,
   PolarRadiusAxis,
   Radar,
+  Cell,
 } from 'recharts'
 import {
   Trophy,
@@ -35,7 +36,84 @@ import {
 import { cn, formatCurrency, formatPercent, formatCompactNumber } from '@/lib/utils'
 import { SmartTooltip } from '@/components/guide/SmartTooltip'
 import { useCompetitors } from '@/api/hooks'
+import type { Competitor } from '@/api/competitors'
 import apiClient from '@/api/client'
+
+// ── Interfaces for benchmark data ──────────────────────────────────
+
+interface BenchmarkMetric {
+  label: string
+  yours: number
+  industry: number
+  percentile: number
+  trend: 'up' | 'down'
+  format?: 'percent' | 'currency'
+  invertTrend?: boolean
+  tooltip: string
+}
+
+interface RadarDataPoint {
+  metric: string
+  you: number
+  industry: number
+}
+
+interface GeoRegion {
+  region?: string
+  name?: string
+  impressions: number
+  ctr: number
+  roas?: number
+}
+
+interface LanguageBreakdown {
+  flag?: string
+  name?: string
+  language?: string
+  impressions: number
+  ctr: number
+  share?: number
+}
+
+interface DeviceBreakdown {
+  name?: string
+  device?: string
+  share: number
+  ctr: number
+  roas?: number
+}
+
+interface OsBreakdown {
+  name?: string
+  os?: string
+  share: number
+  ctr: number
+  roas?: number
+}
+
+interface BenchmarkData {
+  metrics: BenchmarkMetric[] | null
+  radarData: RadarDataPoint[] | null
+  geoData: GeoRegion[] | null
+  languageData: LanguageBreakdown[] | null
+  deviceData: DeviceBreakdown[] | null
+  osData: OsBreakdown[] | null
+}
+
+interface ChartCompetitorEntry {
+  name: string
+  domain?: string
+  country?: string
+  roas: number
+  ctr: number
+  cpc: number
+  share: number
+  color: string
+  isYou?: boolean
+  isAvg?: boolean
+}
+
+// ── Constants ──────────────────────────────────────────────────────
 
 // Colors for competitors in charts
 const COMPETITOR_COLORS = ['#8b5cf6', '#f59e0b', '#10b981', '#ef4444', '#6366f1', '#ec4899']
@@ -50,14 +128,7 @@ export function Benchmarks() {
   const { data: competitorsData, isLoading: isLoadingCompetitors, refetch: refetchCompetitors } = useCompetitors()
 
   // Benchmark data state (loaded from API when available)
-  const [benchmarkData, setBenchmarkData] = useState<{
-    metrics: any[] | null
-    radarData: any[] | null
-    geoData: any[] | null
-    languageData: any[] | null
-    deviceData: any[] | null
-    osData: any[] | null
-  }>({
+  const [benchmarkData, setBenchmarkData] = useState<BenchmarkData>({
     metrics: null,
     radarData: null,
     geoData: null,
@@ -107,15 +178,15 @@ export function Benchmarks() {
   }
 
   // Build competitor data for charts
-  const chartCompetitors = [
+  const chartCompetitors: ChartCompetitorEntry[] = [
     { name: 'Your Brand', roas: 3.5, ctr: 2.8, cpc: 1.2, share: 18, color: '#0ea5e9', isYou: true },
-    ...(competitorsData?.items || []).slice(0, 5).map((comp: any, index: number) => ({
+    ...(competitorsData?.items || []).slice(0, 5).map((comp: Competitor, index: number) => ({
       name: comp.name,
       domain: comp.domain,
       country: comp.country || 'SA',
-      roas: comp.estimatedRoas ?? (2.5 + (index * 0.4)),
-      ctr: comp.estimatedCtr ?? (1.8 + (index * 0.3)),
-      cpc: comp.estimatedCpc ?? (0.8 + (index * 0.2)),
+      roas: 2.5 + (index * 0.4),
+      ctr: 1.8 + (index * 0.3),
+      cpc: 0.8 + (index * 0.2),
       share: comp.shareOfVoice ?? (10 + (index * 5)),
       color: COMPETITOR_COLORS[index % COMPETITOR_COLORS.length],
     })),
@@ -126,7 +197,7 @@ export function Benchmarks() {
   const hasCompetitors = (competitorsData?.items?.length || 0) > 0
 
   // Radar chart data — from API or default "awaiting data" values
-  const radarData = benchmarkData.radarData || [
+  const radarData: RadarDataPoint[] = benchmarkData.radarData || [
     { metric: 'ROAS', you: 0, industry: 0 },
     { metric: 'CTR', you: 0, industry: 0 },
     { metric: 'CPC', you: 0, industry: 0 },
@@ -136,7 +207,7 @@ export function Benchmarks() {
   ]
 
   // Benchmark summary metric cards — from API or defaults indicating no data
-  const benchmarkMetrics = benchmarkData.metrics || [
+  const benchmarkMetrics: BenchmarkMetric[] = benchmarkData.metrics || [
     {
       label: 'ROAS',
       yours: 0,
@@ -244,7 +315,7 @@ export function Benchmarks() {
 
       {/* Benchmark Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {benchmarkMetrics.map((metric: any) => {
+        {benchmarkMetrics.map((metric: BenchmarkMetric) => {
           const hasData = metric.yours > 0 || metric.industry > 0
           const isAboveAvg = metric.invertTrend
             ? metric.yours < metric.industry
@@ -352,7 +423,7 @@ export function Benchmarks() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {(competitorsData?.items || []).slice(0, 6).map((competitor: any) => (
+            {(competitorsData?.items || []).slice(0, 6).map((competitor: Competitor) => (
               <div key={competitor.id} className="p-3 rounded-lg border bg-background">
                 <div className="flex items-center justify-between mb-2">
                   <div>
@@ -412,7 +483,7 @@ export function Benchmarks() {
                   }}
                 />
                 <Bar dataKey="roas" name="ROAS" radius={[0, 4, 4, 0]}>
-                  {chartCompetitors.map((entry: any, index: number) => (
+                  {chartCompetitors.map((entry: ChartCompetitorEntry, index: number) => (
                     <Cell
                       key={`cell-${index}`}
                       fill={entry.isYou ? '#0ea5e9' : entry.isAvg ? '#6b7280' : entry.color || '#94a3b8'}
@@ -486,7 +557,7 @@ export function Benchmarks() {
 
           {benchmarkData.languageData && benchmarkData.languageData.length > 0 ? (
             <div className="space-y-3">
-              {benchmarkData.languageData.map((lang: any, i: number) => (
+              {benchmarkData.languageData.map((lang: LanguageBreakdown, i: number) => (
                 <div key={i} className="flex items-center justify-between p-3 rounded-lg border bg-background">
                   <div className="flex items-center gap-3">
                     <span className="text-lg">{lang.flag || '🌐'}</span>
@@ -525,13 +596,13 @@ export function Benchmarks() {
 
           {benchmarkData.deviceData && benchmarkData.deviceData.length > 0 ? (
             <div className="space-y-3">
-              {benchmarkData.deviceData.map((device: any, i: number) => {
+              {benchmarkData.deviceData.map((device: DeviceBreakdown, i: number) => {
                 const pct = device.share || 0
                 return (
                   <div key={i} className="p-3 rounded-lg border bg-background">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        {getDeviceIcon(device.name || device.device)}
+                        {getDeviceIcon(device.name || device.device || '')}
                         <span className="font-medium text-sm">{device.name || device.device}</span>
                       </div>
                       <span className="text-sm font-semibold">{pct}%</span>
@@ -574,7 +645,7 @@ export function Benchmarks() {
 
         {benchmarkData.osData && benchmarkData.osData.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {benchmarkData.osData.map((os: any, i: number) => (
+            {benchmarkData.osData.map((os: OsBreakdown, i: number) => (
               <div key={i} className="p-4 rounded-lg border bg-background text-center">
                 <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-muted flex items-center justify-center">
                   <span className="text-lg font-bold text-muted-foreground">
@@ -613,7 +684,7 @@ export function Benchmarks() {
 
         {benchmarkData.geoData && benchmarkData.geoData.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            {benchmarkData.geoData.map((region: any, i: number) => (
+            {benchmarkData.geoData.map((region: GeoRegion, i: number) => (
               <div key={i} className="p-4 rounded-lg border bg-background">
                 <p className="font-medium text-sm mb-2">{region.region || region.name}</p>
                 <div className="space-y-1 text-sm">
@@ -646,6 +717,3 @@ export function Benchmarks() {
 }
 
 export default Benchmarks
-
-// Cell component for BarChart (needed for recharts)
-const Cell = ({ fill, ...props }: any) => <rect fill={fill} {...props} />

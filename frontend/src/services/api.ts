@@ -476,7 +476,8 @@ export const whatsappApi = {
 // SSE Events
 export const createEventSource = (endpoint: string): EventSource => {
   const token = getAccessToken()
-  const url = new URL(`${API_BASE_URL}${endpoint}`)
+  const baseURL = apiClient.defaults.baseURL || '/api/v1'
+  const url = new URL(`${baseURL}${endpoint}`, window.location.origin)
   if (token) {
     url.searchParams.set('token', token)
   }

@@ -30,7 +30,64 @@ import {
   useUpdateRule,
   type Rule,
   type RuleStatus as ApiRuleStatus,
+  type ConditionOperator,
+  type RuleAction as ApiRuleAction,
 } from '@/api/rules';
+
+/** Shape received from the CustomAutopilotRulesBuilder onSave callback */
+interface BuilderRulePayload {
+  name: string;
+  description: string;
+  status: RuleStatus;
+  conditionGroups: {
+    id: string;
+    logic: 'AND' | 'OR';
+    conditions: {
+      id: string;
+      field: string;
+      operator: string;
+      value: string;
+      valueType: 'number' | 'percentage' | 'currency';
+    }[];
+  }[];
+  conditionLogic: 'AND' | 'OR';
+  actions: {
+    id: string;
+    type: string;
+    config: Record<string, unknown>;
+    priority: number;
+  }[];
+  targeting: {
+    platforms: string[];
+    campaignTypes: string[];
+    specificCampaigns: string[];
+  };
+  schedule: {
+    enabled: boolean;
+    frequency: 'hourly' | 'daily' | 'weekly' | 'custom';
+    timezone: string;
+  };
+  trustGate: {
+    enabled: boolean;
+    minSignalHealth: number;
+    requireApproval: boolean;
+    dryRunFirst: boolean;
+  };
+  cooldownHours: number;
+  maxExecutionsPerDay: number;
+}
+
+/** Helper to extract an error message from an unknown caught value */
+function getErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof Error) {
+    return err.message || fallback;
+  }
+  if (typeof err === 'object' && err !== null && 'response' in err) {
+    const resp = (err as { response?: { data?: { detail?: string } } }).response;
+    if (resp?.data?.detail) return resp.data.detail;
+  }
+  return fallback;
+}
 
 type RuleStatus = 'active' | 'paused' | 'draft';
 
@@ -54,7 +111,7 @@ interface AutopilotRule {
   actions: {
     id: string;
     type: string;
-    config: Record<string, any>;
+    config: Record<string, unknown>;
     priority: number;
   }[];
   targeting: {
@@ -163,9 +220,21 @@ export default function CustomAutopilotRules() {
     return true;
   }), [rules, searchQuery, statusFilter]);
 
-  const handleSaveRule = async (rule: any) => {
+  const handleSaveRule = async (rule: BuilderRulePayload) => {
     setError(null);
     try {
+      const mappedConditions = rule.conditionGroups.flatMap((g) =>
+        g.conditions.map((c) => ({
+          metric: c.field,
+          operator: c.operator as ConditionOperator,
+          value: Number(c.value) || 0,
+        }))
+      );
+      const mappedActions = rule.actions.map((a) => ({
+        type: a.type as ApiRuleAction,
+        params: a.config ?? {},
+      }));
+
       if (editingRule) {
         await updateRule.mutateAsync({
           id: editingRule.id,
@@ -173,19 +242,10 @@ export default function CustomAutopilotRules() {
             name: rule.name,
             description: rule.description,
             status: rule.status as ApiRuleStatus,
-            conditions: rule.conditionGroups?.flatMap((g: any) =>
-              g.conditions.map((c: any) => ({
-                metric: c.field,
-                operator: c.operator,
-                value: Number(c.value) || 0,
-              }))
-            ) ?? [],
-            actions: rule.actions?.map((a: any) => ({
-              type: a.type,
-              params: a.config ?? {},
-            })) ?? [],
-            platforms: rule.targeting?.platforms,
-            campaignIds: rule.targeting?.specificCampaigns,
+            conditions: mappedConditions,
+            actions: mappedActions,
+            platforms: rule.targeting.platforms,
+            campaignIds: rule.targeting.specificCampaigns,
           },
         });
       } else {
@@ -193,19 +253,10 @@ export default function CustomAutopilotRules() {
           name: rule.name,
           description: rule.description,
           trigger: 'metric_threshold',
-          conditions: rule.conditionGroups?.flatMap((g: any) =>
-            g.conditions.map((c: any) => ({
-              metric: c.field,
-              operator: c.operator,
-              value: Number(c.value) || 0,
-            }))
-          ) ?? [],
-          actions: rule.actions?.map((a: any) => ({
-            type: a.type,
-            params: a.config ?? {},
-          })) ?? [],
-          platforms: rule.targeting?.platforms,
-          campaignIds: rule.targeting?.specificCampaigns,
+          conditions: mappedConditions,
+          actions: mappedActions,
+          platforms: rule.targeting.platforms,
+          campaignIds: rule.targeting.specificCampaigns,
         });
       }
 
@@ -213,8 +264,8 @@ export default function CustomAutopilotRules() {
       await refetch();
       setShowBuilder(false);
       setEditingRule(null);
-    } catch (err: any) {
-      const message = err?.response?.data?.detail || err?.message || 'Failed to save rule';
+    } catch (err: unknown) {
+      const message = getErrorMessage(err, 'Failed to save rule');
       setError(message);
       console.error('Rule save failed:', err);
     }
@@ -225,8 +276,8 @@ export default function CustomAutopilotRules() {
     try {
       await toggleRule.mutateAsync(ruleId);
       await refetch();
-    } catch (err: any) {
-      const message = err?.response?.data?.detail || err?.message || 'Failed to toggle rule';
+    } catch (err: unknown) {
+      const message = getErrorMessage(err, 'Failed to toggle rule');
       setError(message);
       console.error('Rule toggle failed:', err);
     }
@@ -238,8 +289,8 @@ export default function CustomAutopilotRules() {
       try {
         await deleteRule.mutateAsync(ruleId);
         await refetch();
-      } catch (err: any) {
-        const message = err?.response?.data?.detail || err?.message || 'Failed to delete rule';
+      } catch (err: unknown) {
+        const message = getErrorMessage(err, 'Failed to delete rule');
         setError(message);
         console.error('Rule delete failed:', err);
       }
@@ -256,20 +307,20 @@ export default function CustomAutopilotRules() {
         conditions: rule.conditionGroups.flatMap((g) =>
           g.conditions.map((c) => ({
             metric: c.field,
-            operator: c.operator as any,
+            operator: c.operator as ConditionOperator,
             value: Number(c.value) || 0,
           }))
         ),
         actions: rule.actions.map((a) => ({
-          type: a.type as any,
+          type: a.type as ApiRuleAction,
           params: a.config,
         })),
         platforms: rule.targeting.platforms,
         campaignIds: rule.targeting.specificCampaigns,
       });
       await refetch();
-    } catch (err: any) {
-      const message = err?.response?.data?.detail || err?.message || 'Failed to duplicate rule';
+    } catch (err: unknown) {
+      const message = getErrorMessage(err, 'Failed to duplicate rule');
       setError(message);
       console.error('Rule duplicate failed:', err);
     }
@@ -556,8 +607,8 @@ export default function CustomAutopilotRules() {
                     className="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-xs"
                   >
                     {action.type.replace('_', ' ')}
-                    {(action.config as any).amount &&
-                      ` ${(action.config as any).direction === 'decrease' ? '-' : '+'}${(action.config as any).amount}%`}
+                    {'amount' in action.config && action.config.amount != null &&
+                      ` ${action.config.direction === 'decrease' ? '-' : '+'}${String(action.config.amount)}%`}
                   </code>
                 ))}
               </div>

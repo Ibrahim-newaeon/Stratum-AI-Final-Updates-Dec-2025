@@ -49,7 +49,7 @@ export interface Recommendation {
   impact_estimate: string | null
   roas_impact: number | null
   confidence: number
-  actions: Array<{ action: string; label: string; params?: Record<string, any> }>
+  actions: Array<{ action: string; label: string; params?: Record<string, unknown> }>
   created_at: string
 }
 
@@ -132,11 +132,11 @@ export const tenantQueryKeys = {
     [...tenantQueryKeys.all, 'overview', tenantId, date] as const,
   recommendations: (tenantId: number, date?: string) =>
     [...tenantQueryKeys.all, 'recommendations', tenantId, date] as const,
-  alerts: (tenantId: number, filters?: Record<string, any>) =>
+  alerts: (tenantId: number, filters?: Record<string, unknown>) =>
     [...tenantQueryKeys.all, 'alerts', tenantId, filters] as const,
   settings: (tenantId: number) =>
     [...tenantQueryKeys.all, 'settings', tenantId] as const,
-  commandCenter: (tenantId: number, filters?: Record<string, any>) =>
+  commandCenter: (tenantId: number, filters?: Record<string, unknown>) =>
     [...tenantQueryKeys.all, 'commandCenter', tenantId, filters] as const,
 }
 
@@ -219,7 +219,7 @@ const acknowledgeAlert = async (
   tenantId: number,
   alertId: number
 ): Promise<{ alert_id: number; acknowledged_by: number; acknowledged_at: string }> => {
-  const response = await apiClient.post<ApiResponse<any>>(
+  const response = await apiClient.post<ApiResponse<{ alert_id: number; acknowledged_by: number; acknowledged_at: string }>>(
     `/tenant/${tenantId}/alerts/${alertId}/ack`
   )
   return response.data.data
@@ -231,7 +231,7 @@ const resolveAlert = async (
   notes?: string
 ): Promise<{ alert_id: number; resolved_by: number; resolved_at: string }> => {
   const params = notes ? `?resolution_notes=${encodeURIComponent(notes)}` : ''
-  const response = await apiClient.post<ApiResponse<any>>(
+  const response = await apiClient.post<ApiResponse<{ alert_id: number; resolved_by: number; resolved_at: string }>>(
     `/tenant/${tenantId}/alerts/${alertId}/resolve${params}`
   )
   return response.data.data

@@ -8,14 +8,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 
-type MessageHandler = (data: any) => void
 type ConnectionState = 'connecting' | 'connected' | 'disconnected' | 'error'
 
 interface WebSocketMessage {
   type: string
-  payload: any
+  payload: Record<string, unknown>
   timestamp: string
 }
+
+type MessageHandler = (data: WebSocketMessage) => void
 
 interface UseWebSocketOptions {
   url?: string
@@ -113,7 +114,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     setConnectionState('disconnected')
   }, [reconnectAttempts])
 
-  const send = useCallback((type: string, payload: any) => {
+  const send = useCallback((type: string, payload: Record<string, unknown>) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       const message: WebSocketMessage = {
         type,
@@ -133,7 +134,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
         // Update EMQ score in cache
         queryClient.setQueryData(
           ['emq', 'score', message.payload.tenantId],
-          (old: any) => ({
+          (old: Record<string, unknown> | undefined) => ({
             ...old,
             score: message.payload.score,
             previousScore: old?.score,
@@ -154,7 +155,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
         // Update autopilot state
         queryClient.setQueryData(
           ['autopilot', message.payload.tenantId],
-          (old: any) => ({
+          (old: Record<string, unknown> | undefined) => ({
             ...old,
             mode: message.payload.mode,
             changedAt: message.timestamp,
@@ -173,9 +174,9 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
         // Update platform status in cache
         queryClient.setQueryData(
           ['platforms', 'status'],
-          (old: any) => ({
+          (old: Record<string, unknown> | undefined) => ({
             ...old,
-            [message.payload.platform]: message.payload.status,
+            [message.payload.platform as string]: message.payload.status,
           })
         )
         break
@@ -211,11 +212,11 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
  */
 export function useWebSocketChannel(
   channel: string,
-  onMessage: MessageHandler,
-  deps: any[] = []
+  onMessage: (payload: Record<string, unknown>) => void,
+  deps: unknown[] = []
 ) {
   const { send, connectionState, isConnected } = useWebSocket({
-    onMessage: (message) => {
+    onMessage: (message: WebSocketMessage) => {
       if (message.type === channel || message.type.startsWith(`${channel}:`)) {
         onMessage(message.payload)
       }
@@ -243,11 +244,12 @@ export function useRealtimeEmq(tenantId: number) {
     'emq_update',
     (payload) => {
       if (payload.tenantId === tenantId) {
-        setScore(payload.score)
+        const newScore = typeof payload.score === 'number' ? payload.score : null
+        setScore(newScore)
         // Also update the query cache
-        queryClient.setQueryData(['emq', 'score', tenantId], (old: any) => ({
+        queryClient.setQueryData(['emq', 'score', tenantId], (old: Record<string, unknown> | undefined) => ({
           ...old,
-          score: payload.score,
+          score: newScore,
           previousScore: old?.score,
         }))
       }
@@ -262,7 +264,7 @@ export function useRealtimeEmq(tenantId: number) {
  * Hook for real-time incident notifications
  */
 export function useRealtimeIncidents(tenantId: number) {
-  const [latestIncident, setLatestIncident] = useState<any>(null)
+  const [latestIncident, setLatestIncident] = useState<Record<string, unknown> | null>(null)
 
   useWebSocketChannel(
     'incident',

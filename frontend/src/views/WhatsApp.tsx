@@ -33,6 +33,17 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { apiClient } from '@/api/client'
+import axios from 'axios'
+
+/** Extract a user-facing error message from an unknown caught value. */
+function getErrorMessage(err: unknown, fallback: string): string {
+  if (axios.isAxiosError(err)) {
+    const detail = (err.response?.data as Record<string, unknown> | undefined)?.detail
+    if (typeof detail === 'string') return detail
+  }
+  if (err instanceof Error) return err.message
+  return fallback
+}
 
 // Country codes with dial codes
 const COUNTRY_CODES = [
@@ -411,9 +422,9 @@ export function WhatsApp() {
         })
 
       setConversations(convos)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to fetch WhatsApp data:', err)
-      setError(err.response?.data?.detail || 'Failed to load data')
+      setError(getErrorMessage(err, 'Failed to load data'))
     } finally {
       setIsLoading(false)
     }
@@ -478,9 +489,9 @@ export function WhatsApp() {
       setShowBroadcastModal(false)
       setSelectedContactIds([])
       setBroadcastTemplate('')
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to send broadcast:', err)
-      alert(err.response?.data?.detail || 'Failed to send broadcast')
+      alert(getErrorMessage(err, 'Failed to send broadcast'))
     } finally {
       setIsSending(false)
     }
@@ -612,9 +623,9 @@ export function WhatsApp() {
       // Refresh contacts
       await fetchData()
       resetContactModal()
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to add contact:', err)
-      alert(err.response?.data?.detail || 'Failed to add contact')
+      alert(getErrorMessage(err, 'Failed to add contact'))
     } finally {
       setIsImporting(false)
     }
@@ -644,9 +655,9 @@ export function WhatsApp() {
       // Refresh contacts
       await fetchData()
       resetContactModal()
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to import contacts:', err)
-      alert('Failed to import contacts: ' + (err.response?.data?.detail || err.message))
+      alert('Failed to import contacts: ' + getErrorMessage(err, 'Unknown error'))
     } finally {
       setIsImporting(false)
     }
@@ -708,9 +719,9 @@ export function WhatsApp() {
       setShowEditModal(false)
       setEditingContact(null)
       setEditName('')
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to update contact:', err)
-      alert(err.response?.data?.detail || 'Failed to update contact')
+      alert(getErrorMessage(err, 'Failed to update contact'))
     } finally {
       setIsUpdating(false)
     }
@@ -723,9 +734,9 @@ export function WhatsApp() {
     try {
       await apiClient.delete(`/whatsapp/contacts/${contact.id}`)
       await fetchData()
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to delete contact:', err)
-      alert(err.response?.data?.detail || 'Failed to delete contact')
+      alert(getErrorMessage(err, 'Failed to delete contact'))
     }
   }
 
@@ -739,9 +750,9 @@ export function WhatsApp() {
         await apiClient.post(`/whatsapp/contacts/${contact.id}/opt-in`)
       }
       await fetchData()
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to update opt-in status:', err)
-      alert(err.response?.data?.detail || 'Failed to update opt-in status')
+      alert(getErrorMessage(err, 'Failed to update opt-in status'))
     }
   }
 
@@ -771,9 +782,9 @@ export function WhatsApp() {
         body_text: '',
         footer_text: '',
       })
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to create template:', err)
-      alert(err.response?.data?.detail || 'Failed to create template')
+      alert(getErrorMessage(err, 'Failed to create template'))
     } finally {
       setIsCreatingTemplate(false)
     }
@@ -785,9 +796,9 @@ export function WhatsApp() {
     try {
       await apiClient.delete(`/whatsapp/templates/${template.id}`)
       await fetchData()
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to delete template:', err)
-      alert(err.response?.data?.detail || 'Failed to delete template')
+      alert(getErrorMessage(err, 'Failed to delete template'))
     }
   }
 
@@ -1362,9 +1373,9 @@ export function WhatsApp() {
                       }
                       setChatMessages(prev => [...prev, newMessage])
                       setReplyText('')
-                    } catch (err: any) {
+                    } catch (err: unknown) {
                       console.error('Failed to send message:', err)
-                      alert(err.response?.data?.detail || 'Failed to send message')
+                      alert(getErrorMessage(err, 'Failed to send message'))
                     } finally {
                       setIsSending(false)
                     }

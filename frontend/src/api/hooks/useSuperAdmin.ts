@@ -88,7 +88,7 @@ export interface AuditLogEntry {
   tenant_name: string | null
   resource_type: string | null
   resource_id: string | null
-  details: Record<string, any>
+  details: Record<string, unknown>
   ip_address: string | null
   status: string
 }
@@ -125,17 +125,17 @@ export interface Subscription {
 export const superAdminQueryKeys = {
   all: ['superadmin'] as const,
   overview: (date?: string) => [...superAdminQueryKeys.all, 'overview', date] as const,
-  tenants: (filters?: Record<string, any>) =>
+  tenants: (filters?: Record<string, unknown>) =>
     [...superAdminQueryKeys.all, 'tenants', filters] as const,
   tenant: (tenantId: number) => [...superAdminQueryKeys.all, 'tenant', tenantId] as const,
   systemHealth: (date?: string) =>
     [...superAdminQueryKeys.all, 'systemHealth', date] as const,
   plans: () => [...superAdminQueryKeys.all, 'plans'] as const,
-  auditLogs: (filters?: Record<string, any>) =>
+  auditLogs: (filters?: Record<string, unknown>) =>
     [...superAdminQueryKeys.all, 'auditLogs', filters] as const,
-  invoices: (filters?: Record<string, any>) =>
+  invoices: (filters?: Record<string, unknown>) =>
     [...superAdminQueryKeys.all, 'invoices', filters] as const,
-  subscriptions: (filters?: Record<string, any>) =>
+  subscriptions: (filters?: Record<string, unknown>) =>
     [...superAdminQueryKeys.all, 'subscriptions', filters] as const,
 }
 
@@ -171,8 +171,8 @@ const fetchTenants = async (filters?: {
   return response.data.data
 }
 
-const fetchTenantDetails = async (tenantId: number): Promise<any> => {
-  const response = await apiClient.get<ApiResponse<any>>(`/superadmin/tenants/${tenantId}`)
+const fetchTenantDetails = async (tenantId: number): Promise<TenantSummary & Record<string, unknown>> => {
+  const response = await apiClient.get<ApiResponse<TenantSummary & Record<string, unknown>>>(`/superadmin/tenants/${tenantId}`)
   return response.data.data
 }
 

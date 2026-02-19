@@ -101,7 +101,7 @@ export interface JourneyVisualization {
     date: string
     events: Array<{
       type: 'touchpoint' | 'deal_created' | 'deal_won'
-      data: any
+      data: Record<string, unknown>
     }>
   }[]
 }
@@ -255,7 +255,7 @@ export const attributionApi = {
   getChannelTransitions: async (params: { startDate: string; endDate: string }) => {
     const response = await apiClient.get<ApiResponse<{
       transitions: ChannelInteraction[]
-      sankeyData: { nodes: any[]; links: any[] }
+      sankeyData: { nodes: { id: string; name: string }[]; links: { source: string; target: string; value: number }[] }
     }>>('/attribution/journeys/transitions', { params })
     return response.data.data
   },

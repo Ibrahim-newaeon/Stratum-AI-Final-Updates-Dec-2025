@@ -377,9 +377,10 @@ export function useDashboardOverview(
     enabled,
     staleTime: 60 * 1000, // 1 minute
     refetchInterval: 5 * 60 * 1000, // 5 minutes
-    retry: (failureCount, error: any) => {
+    retry: (failureCount, error: Error) => {
       // Don't retry on auth errors
-      if (error?.response?.status === 401 || error?.response?.status === 403) return false;
+      const axiosError = error as { response?: { status?: number } };
+      if (axiosError?.response?.status === 401 || axiosError?.response?.status === 403) return false;
       return failureCount < 2;
     },
   });
@@ -471,8 +472,9 @@ export function useDashboardSignalHealth(enabled = true) {
     enabled,
     staleTime: 30 * 1000, // 30 seconds
     refetchInterval: 60 * 1000, // 1 minute
-    retry: (failureCount, error: any) => {
-      if (error?.response?.status === 401 || error?.response?.status === 403) return false;
+    retry: (failureCount, error: Error) => {
+      const axiosError = error as { response?: { status?: number } };
+      if (axiosError?.response?.status === 401 || axiosError?.response?.status === 403) return false;
       return failureCount < 2;
     },
   });
