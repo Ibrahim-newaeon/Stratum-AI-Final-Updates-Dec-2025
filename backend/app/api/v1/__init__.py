@@ -54,6 +54,18 @@ from app.api.v1.endpoints import (
     cdp,
     changelog,
     clients,
+    # Previously unregistered endpoints
+    cms,
+    knowledge_graph,
+    tier,
+    webhooks,
+    payments,
+    stripe_webhook,
+    subscription,
+    slack,
+    onboarding_agent,
+    embed_widgets,
+    audience_sync,
 )
 
 api_router = APIRouter()
@@ -371,4 +383,84 @@ api_router.include_router(
     clients.router,
     prefix="/clients",
     tags=["Clients"],
+)
+
+# =============================================================================
+# Previously Unregistered Endpoints
+# =============================================================================
+
+# CMS (Content Management System - Blog, Pages, Contact)
+# Note: cms.router already has prefix="/cms"
+api_router.include_router(
+    cms.router,
+    tags=["CMS"],
+)
+
+# Knowledge Graph (Insights, Analytics, Problem Detection)
+api_router.include_router(
+    knowledge_graph.router,
+    prefix="/knowledge-graph",
+    tags=["Knowledge Graph"],
+)
+
+# Tier Management (Subscription tiers and feature gates)
+# Note: tier.router already has prefix="/tier"
+api_router.include_router(
+    tier.router,
+    tags=["Tier"],
+)
+
+# Webhooks (Inbound webhook processing)
+# Note: webhooks.router already has prefix="/webhooks"
+api_router.include_router(
+    webhooks.router,
+    tags=["Webhooks"],
+)
+
+# Payments (Stripe payment processing)
+# Note: payments.router already has prefix="/payments"
+api_router.include_router(
+    payments.router,
+    tags=["Payments"],
+)
+
+# Stripe Webhooks (Stripe event processing)
+api_router.include_router(
+    stripe_webhook.router,
+    tags=["Stripe Webhooks"],
+)
+
+# Subscription Management
+# Note: subscription.router already has prefix="/subscription"
+api_router.include_router(
+    subscription.router,
+    tags=["Subscription"],
+)
+
+# Slack Integration
+# Note: slack.router already has prefix="/slack"
+api_router.include_router(
+    slack.router,
+    tags=["Slack"],
+)
+
+# Onboarding Agent (AI-powered onboarding assistant)
+# Note: onboarding_agent.router already has prefix="/onboarding-agent"
+api_router.include_router(
+    onboarding_agent.router,
+    tags=["Onboarding Agent"],
+)
+
+# Embeddable Widgets (External dashboard widgets)
+# Note: embed_widgets.router already has prefix="/embed-widgets"
+api_router.include_router(
+    embed_widgets.router,
+    tags=["Embed Widgets"],
+)
+
+# CDP Audience Sync (Push segments to ad platforms)
+# Note: audience_sync.router already has prefix="/cdp/audience-sync"
+api_router.include_router(
+    audience_sync.router,
+    tags=["CDP Audience Sync"],
 )
