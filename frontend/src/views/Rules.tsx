@@ -21,7 +21,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { usePriceMetrics } from '@/hooks/usePriceMetrics'
-import { useRules, useToggleRule } from '@/api/hooks'
+import { useRules, useToggleRule, useDuplicateRule, useUpdateRule } from '@/api/hooks'
 
 type RuleStatus = 'active' | 'paused' | 'draft'
 type RuleAction = 'apply_label' | 'send_alert' | 'pause_campaign' | 'adjust_budget' | 'notify_slack' | 'notify_whatsapp'
@@ -148,9 +148,28 @@ export function Rules() {
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [showCreateModal, setShowCreateModal] = useState(false)
 
+  const [editingRule, setEditingRule] = useState<Rule | null>(null)
+
   // Fetch rules from API
   const { data: rulesData, isLoading } = useRules()
   const toggleRule = useToggleRule()
+  const duplicateRule = useDuplicateRule()
+  const updateRule = useUpdateRule()
+
+  // Handle duplicate rule
+  const handleDuplicateRule = async (ruleId: number) => {
+    try {
+      await duplicateRule.mutateAsync(ruleId.toString())
+    } catch {
+      // silently handled – query invalidation refreshes list
+    }
+  }
+
+  // Handle edit rule (open modal pre-filled)
+  const handleEditRule = (rule: Rule) => {
+    setEditingRule(rule)
+    setShowCreateModal(true)
+  }
 
   // Transform API data or fall back to mock
   const rules = useMemo((): Rule[] => {
@@ -358,11 +377,20 @@ export function Rules() {
                     {toggleRule.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
                   </button>
                 )}
-                <button className="p-2 rounded-lg hover:bg-muted transition-colors" title="Edit">
+                <button
+                  onClick={() => handleEditRule(rule)}
+                  className="p-2 rounded-lg hover:bg-muted transition-colors"
+                  title="Edit"
+                >
                   <Edit className="w-4 h-4" />
                 </button>
-                <button className="p-2 rounded-lg hover:bg-muted transition-colors" title="Duplicate">
-                  <Copy className="w-4 h-4" />
+                <button
+                  onClick={() => handleDuplicateRule(rule.id)}
+                  disabled={duplicateRule.isPending}
+                  className="p-2 rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
+                  title="Duplicate"
+                >
+                  {duplicateRule.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Copy className="w-4 h-4" />}
                 </button>
                 <button className="p-2 rounded-lg hover:bg-muted transition-colors">
                   <MoreHorizontal className="w-4 h-4" />
@@ -432,83 +460,164 @@ export function Rules() {
         </div>
       )}
 
-      {/* Create Rule Modal Placeholder */}
+      {/* Create / Edit Rule Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-background rounded-xl p-6 w-full max-w-2xl mx-4">
-            <h2 className="text-xl font-bold mb-4">{t('rules.createRule')}</h2>
+        <RuleModal
+          rule={editingRule}
+          fields={fields}
+          operators={operators}
+          onClose={() => { setShowCreateModal(false); setEditingRule(null) }}
+          onSave={async (data) => {
+            if (editingRule) {
+              await updateRule.mutateAsync({ id: editingRule.id.toString(), data })
+            }
+            setShowCreateModal(false)
+            setEditingRule(null)
+          }}
+          isSaving={updateRule.isPending}
+          t={t}
+        />
+      )}
+    </div>
+  )
+}
 
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium mb-1 block">{t('rules.ruleName')}</label>
-                <input
-                  type="text"
-                  className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  placeholder="e.g., Pause Low Performers"
-                />
-              </div>
+// =============================================================================
+// Rule Create/Edit Modal
+// =============================================================================
 
-              <div>
-                <label className="text-sm font-medium mb-1 block">{t('rules.description')}</label>
-                <textarea
-                  className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  rows={2}
-                  placeholder="Describe what this rule does..."
-                />
-              </div>
+interface RuleModalProps {
+  rule: Rule | null
+  fields: string[]
+  operators: { value: string; label: string }[]
+  onClose: () => void
+  onSave: (data: Record<string, unknown>) => Promise<void>
+  isSaving: boolean
+  t: (key: string) => string
+}
 
-              <div className="p-4 rounded-lg bg-muted/50">
-                <p className="text-sm font-medium mb-3">{t('rules.condition')}</p>
-                <div className="flex gap-2">
-                  <select className="flex-1 px-3 py-2 rounded-lg border bg-background">
-                    {fields.map((field) => (
-                      <option key={field} value={field}>
-                        {field.toUpperCase()}
-                      </option>
-                    ))}
-                  </select>
-                  <select className="w-24 px-3 py-2 rounded-lg border bg-background">
-                    {operators.map((op) => (
-                      <option key={op.value} value={op.value}>
-                        {op.label}
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    type="text"
-                    className="w-32 px-3 py-2 rounded-lg border bg-background"
-                    placeholder="Value"
-                  />
-                </div>
-              </div>
+function RuleModal({ rule, fields: fieldsList, operators: operatorsList, onClose, onSave, isSaving, t }: RuleModalProps) {
+  const isEditing = !!rule
+  const [name, setName] = useState(rule?.name || '')
+  const [description, setDescription] = useState(rule?.description || '')
+  const [conditionField, setConditionField] = useState(rule?.condition?.field || fieldsList[0])
+  const [conditionOperator, setConditionOperator] = useState(rule?.condition?.operator || operatorsList[0].value)
+  const [conditionValue, setConditionValue] = useState(rule?.condition?.value || '')
+  const [actionType, setActionType] = useState(rule?.action?.type || 'send_alert')
 
-              <div className="p-4 rounded-lg bg-muted/50">
-                <p className="text-sm font-medium mb-3">{t('rules.action')}</p>
-                <select className="w-full px-3 py-2 rounded-lg border bg-background">
-                  <option value="apply_label">Apply Label</option>
-                  <option value="send_alert">Send Alert</option>
-                  <option value="pause_campaign">Pause Campaign</option>
-                  <option value="adjust_budget">Adjust Budget</option>
-                  <option value="notify_slack">Notify Slack</option>
-                  <option value="notify_whatsapp">Notify WhatsApp</option>
-                </select>
-              </div>
-            </div>
+  const handleSubmit = async () => {
+    const data: Record<string, unknown> = {
+      name,
+      description,
+      condition_field: conditionField,
+      condition_operator: conditionOperator,
+      condition_value: conditionValue,
+      action_type: actionType,
+    }
+    await onSave(data)
+  }
 
-            <div className="flex justify-end gap-3 mt-6">
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="px-4 py-2 rounded-lg border hover:bg-muted transition-colors"
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-background rounded-xl p-6 w-full max-w-2xl mx-4">
+        <h2 className="text-xl font-bold mb-4">
+          {isEditing ? 'Edit Rule' : t('rules.createRule')}
+        </h2>
+
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium mb-1 block">{t('rules.ruleName')}</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+              placeholder="e.g., Pause Low Performers"
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium mb-1 block">{t('rules.description')}</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+              rows={2}
+              placeholder="Describe what this rule does..."
+            />
+          </div>
+
+          <div className="p-4 rounded-lg bg-muted/50">
+            <p className="text-sm font-medium mb-3">{t('rules.condition')}</p>
+            <div className="flex gap-2">
+              <select
+                value={conditionField}
+                onChange={(e) => setConditionField(e.target.value)}
+                className="flex-1 px-3 py-2 rounded-lg border bg-background"
               >
-                {t('common.cancel')}
-              </button>
-              <button className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
-                {t('rules.createRule')}
-              </button>
+                {fieldsList.map((field) => (
+                  <option key={field} value={field}>
+                    {field.toUpperCase()}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={conditionOperator}
+                onChange={(e) => setConditionOperator(e.target.value)}
+                className="w-24 px-3 py-2 rounded-lg border bg-background"
+              >
+                {operatorsList.map((op) => (
+                  <option key={op.value} value={op.value}>
+                    {op.label}
+                  </option>
+                ))}
+              </select>
+              <input
+                type="text"
+                value={conditionValue}
+                onChange={(e) => setConditionValue(e.target.value)}
+                className="w-32 px-3 py-2 rounded-lg border bg-background"
+                placeholder="Value"
+              />
             </div>
           </div>
+
+          <div className="p-4 rounded-lg bg-muted/50">
+            <p className="text-sm font-medium mb-3">{t('rules.action')}</p>
+            <select
+              value={actionType}
+              onChange={(e) => setActionType(e.target.value as RuleAction)}
+              className="w-full px-3 py-2 rounded-lg border bg-background"
+            >
+              <option value="apply_label">Apply Label</option>
+              <option value="send_alert">Send Alert</option>
+              <option value="pause_campaign">Pause Campaign</option>
+              <option value="adjust_budget">Adjust Budget</option>
+              <option value="notify_slack">Notify Slack</option>
+              <option value="notify_whatsapp">Notify WhatsApp</option>
+            </select>
+          </div>
         </div>
-      )}
+
+        <div className="flex justify-end gap-3 mt-6">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-lg border hover:bg-muted transition-colors"
+          >
+            {t('common.cancel')}
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={isSaving || !name.trim()}
+            className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+          >
+            {isSaving ? (
+              <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
+            ) : null}
+            {isEditing ? 'Save Changes' : t('rules.createRule')}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

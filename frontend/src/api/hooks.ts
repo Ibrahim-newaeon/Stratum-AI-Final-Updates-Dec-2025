@@ -147,6 +147,7 @@ export {
   useUpdateRule,
   useDeleteRule,
   useToggleRule,
+  useDuplicateRule,
   useExecuteRule,
   useRuleExecutions,
   useRuleTemplates,

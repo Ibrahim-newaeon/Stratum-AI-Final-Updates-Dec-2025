@@ -270,6 +270,107 @@ async def pause_rule(
     )
 
 
+@router.post("/{rule_id}/toggle", response_model=APIResponse[RuleResponse])
+async def toggle_rule(
+    request: Request,
+    rule_id: int,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Toggle a rule between active and paused status."""
+    tenant_id = getattr(request.state, "tenant_id", None)
+
+    result = await db.execute(
+        select(Rule).where(
+            Rule.id == rule_id,
+            Rule.tenant_id == tenant_id,
+            Rule.is_deleted == False,
+        )
+    )
+    rule = result.scalar_one_or_none()
+
+    if not rule:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Rule not found",
+        )
+
+    # Toggle: active → paused, paused/draft → active
+    if rule.status == RuleStatus.ACTIVE:
+        rule.status = RuleStatus.PAUSED
+        action_msg = "paused"
+    else:
+        rule.status = RuleStatus.ACTIVE
+        action_msg = "activated"
+
+    await db.commit()
+    await db.refresh(rule)
+
+    logger.info("rule_toggled", rule_id=rule_id, new_status=rule.status.value)
+
+    return APIResponse(
+        success=True,
+        data=RuleResponse.model_validate(rule),
+        message=f"Rule {action_msg}",
+    )
+
+
+@router.post("/{rule_id}/duplicate", response_model=APIResponse[RuleResponse], status_code=status.HTTP_201_CREATED)
+async def duplicate_rule(
+    request: Request,
+    rule_id: int,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Duplicate (copy) an existing rule as a new draft."""
+    tenant_id = getattr(request.state, "tenant_id", None)
+
+    result = await db.execute(
+        select(Rule).where(
+            Rule.id == rule_id,
+            Rule.tenant_id == tenant_id,
+            Rule.is_deleted == False,
+        )
+    )
+    original = result.scalar_one_or_none()
+
+    if not original:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Rule not found",
+        )
+
+    # Create a copy with draft status and reset counters
+    new_rule = Rule(
+        tenant_id=tenant_id,
+        name=f"{original.name} (Copy)",
+        description=original.description,
+        status=RuleStatus.DRAFT,
+        condition_field=original.condition_field,
+        condition_operator=original.condition_operator,
+        condition_value=original.condition_value,
+        condition_duration_hours=original.condition_duration_hours,
+        action_type=original.action_type,
+        action_config=original.action_config.copy() if original.action_config else {},
+        applies_to_campaigns=original.applies_to_campaigns.copy() if original.applies_to_campaigns else None,
+        applies_to_platforms=original.applies_to_platforms.copy() if original.applies_to_platforms else None,
+        cooldown_hours=original.cooldown_hours,
+        trigger_count=0,
+        last_evaluated_at=None,
+        last_triggered_at=None,
+    )
+
+    db.add(new_rule)
+    await db.commit()
+    await db.refresh(new_rule)
+
+    logger.info("rule_duplicated", original_id=rule_id, new_id=new_rule.id)
+
+    return APIResponse(
+        success=True,
+        data=RuleResponse.model_validate(new_rule),
+        message="Rule duplicated successfully",
+    )
+
+
 @router.post("/{rule_id}/test")
 async def test_rule(
     request: Request,

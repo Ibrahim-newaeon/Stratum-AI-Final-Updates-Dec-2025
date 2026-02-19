@@ -144,6 +144,14 @@ export const rulesApi = {
   },
 
   /**
+   * Duplicate (copy) a rule
+   */
+  duplicateRule: async (id: string): Promise<Rule> => {
+    const response = await apiClient.post<ApiResponse<Rule>>(`/rules/${id}/duplicate`)
+    return response.data.data
+  },
+
+  /**
    * Execute a rule manually
    */
   executeRule: async (id: string): Promise<RuleExecution> => {
@@ -246,6 +254,17 @@ export function useToggleRule() {
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ['rules'] })
       queryClient.invalidateQueries({ queryKey: ['rules', id] })
+    },
+  })
+}
+
+export function useDuplicateRule() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: rulesApi.duplicateRule,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rules'] })
     },
   })
 }
