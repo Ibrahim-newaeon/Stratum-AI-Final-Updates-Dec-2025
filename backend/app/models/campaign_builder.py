@@ -74,8 +74,8 @@ class TenantPlatformConnection(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
-    platform = Column(SQLEnum(AdPlatform), nullable=False)
-    status = Column(SQLEnum(ConnectionStatus), nullable=False, default=ConnectionStatus.DISCONNECTED)
+    platform = Column(String(50), nullable=False)
+    status = Column(String(50), nullable=False, default=ConnectionStatus.DISCONNECTED.value)
 
     # Token storage (encrypted in production)
     token_ref = Column(Text, nullable=True)  # Reference to encrypted token in secrets manager
@@ -118,7 +118,7 @@ class TenantAdAccount(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
     connection_id = Column(UUID(as_uuid=True), ForeignKey("tenant_platform_connection.id", ondelete="CASCADE"), nullable=False)
-    platform = Column(SQLEnum(AdPlatform), nullable=False)
+    platform = Column(String(50), nullable=False)
 
     # Platform identifiers
     platform_account_id = Column(String(255), nullable=False)  # e.g., act_123456789
@@ -167,12 +167,12 @@ class CampaignDraft(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
     ad_account_id = Column(UUID(as_uuid=True), ForeignKey("tenant_ad_account.id", ondelete="SET NULL"), nullable=True)
-    platform = Column(SQLEnum(AdPlatform), nullable=False)
+    platform = Column(String(50), nullable=False)
 
     # Draft identification
     name = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
-    status = Column(SQLEnum(DraftStatus), nullable=False, default=DraftStatus.DRAFT)
+    status = Column(String(50), nullable=False, default=DraftStatus.DRAFT.value)
 
     # Campaign configuration (canonical JSON format)
     draft_json = Column(JSONB, nullable=False, default=dict)
@@ -221,7 +221,7 @@ class CampaignPublishLog(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
     draft_id = Column(UUID(as_uuid=True), ForeignKey("campaign_draft.id", ondelete="SET NULL"), nullable=True)
-    platform = Column(SQLEnum(AdPlatform), nullable=False)
+    platform = Column(String(50), nullable=False)
     platform_account_id = Column(String(255), nullable=False)
 
     # Actor
@@ -235,7 +235,7 @@ class CampaignPublishLog(Base):
     response_json = Column(JSONB, nullable=True)
 
     # Result
-    result_status = Column(SQLEnum(PublishResult), nullable=False)
+    result_status = Column(String(50), nullable=False)
     platform_campaign_id = Column(String(255), nullable=True)  # If successful
 
     # Error details
