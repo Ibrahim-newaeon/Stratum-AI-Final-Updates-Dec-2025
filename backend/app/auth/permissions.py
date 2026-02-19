@@ -16,9 +16,28 @@ Permissions are granular and can be checked individually or in combination.
 
 from enum import Enum
 from functools import wraps
-from typing import Callable, List, Optional, Set
+from typing import Callable, List, Optional, Set, TYPE_CHECKING
 
 from fastapi import HTTPException, Request, status
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+
+class PermLevel(str, Enum):
+    """Permission level for resource-scoped access control."""
+
+    VIEW = "view"
+    EDIT = "edit"
+    FULL = "full"
+
+
+# Minimum roles for each PermLevel
+_PERM_LEVEL_ROLES: dict[PermLevel, set[str]] = {
+    PermLevel.VIEW: {"superadmin", "admin", "manager", "analyst", "account_manager", "viewer"},
+    PermLevel.EDIT: {"superadmin", "admin", "manager"},
+    PermLevel.FULL: {"superadmin", "admin"},
+}
 
 
 class Permission(str, Enum):
@@ -480,3 +499,126 @@ def check_permission(permission: Permission):
             return await func(*args, **kwargs)
         return wrapper
     return decorator
+
+
+# =============================================================================
+# Resource-Level Permission (PermLevel) Dependency
+# =============================================================================
+
+def require_permission(resource: str, level: PermLevel) -> Callable:
+    """
+    FastAPI dependency that checks the user's role against a PermLevel.
+
+    Args:
+        resource: Resource name (e.g., "clients", "clients.portal_users")
+        level: Required PermLevel (VIEW, EDIT, FULL)
+
+    Usage:
+        @router.post("/clients", dependencies=[Depends(require_permission("clients", PermLevel.FULL))])
+    """
+    async def _checker(request: Request) -> None:
+        role = getattr(request.state, "role", None)
+        user_id = getattr(request.state, "user_id", None)
+
+        if not role or not user_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication required",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        allowed_roles = _PERM_LEVEL_ROLES.get(level, set())
+        if role.lower() not in allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Insufficient permissions for {resource} ({level.value})",
+            )
+
+    return _checker
+
+
+# =============================================================================
+# Client-Scope Access Helpers
+# =============================================================================
+
+async def enforce_client_access(
+    *,
+    user_id: int,
+    user_role: str,
+    client_id: int,
+    tenant_id: int,
+    db: "AsyncSession",
+    user_client_id: Optional[int] = None,
+) -> None:
+    """
+    Raise 403 unless the user is allowed to access the given client.
+
+    Admins and superadmins have unrestricted access.
+    Other roles must be explicitly assigned to the client, or have a
+    matching ``client_id`` on their user record.
+    """
+    role = user_role if isinstance(user_role, str) else user_role.value
+    if role.lower() in {"superadmin", "admin"}:
+        return
+
+    # If the user's own profile is scoped to this client, allow
+    if user_client_id is not None and user_client_id == client_id:
+        return
+
+    # Check client_assignments table
+    from sqlalchemy import select
+    from app.models.client import ClientAssignment
+
+    result = await db.execute(
+        select(ClientAssignment.id).where(
+            ClientAssignment.user_id == user_id,
+            ClientAssignment.client_id == client_id,
+        )
+    )
+    if result.scalar_one_or_none() is not None:
+        return
+
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="You do not have access to this client",
+    )
+
+
+async def get_accessible_client_ids(
+    *,
+    user_id: int,
+    user_role: str,
+    tenant_id: int,
+    db: "AsyncSession",
+    client_id: Optional[int] = None,
+) -> Optional[List[int]]:
+    """
+    Return the list of client IDs the user may see, or *None* if
+    the user has unrestricted access (admin/superadmin).
+
+    Returns:
+        ``None``  – unrestricted (don't filter)
+        ``list``  – restrict query to these IDs only
+    """
+    role = user_role if isinstance(user_role, str) else user_role.value
+    if role.lower() in {"superadmin", "admin"}:
+        return None  # unrestricted
+
+    ids: list[int] = []
+
+    # User's own client scope
+    if client_id is not None:
+        ids.append(client_id)
+
+    # Assigned clients
+    from sqlalchemy import select
+    from app.models.client import ClientAssignment
+
+    result = await db.execute(
+        select(ClientAssignment.client_id).where(
+            ClientAssignment.user_id == user_id,
+        )
+    )
+    ids.extend(row[0] for row in result.all())
+
+    return list(set(ids))

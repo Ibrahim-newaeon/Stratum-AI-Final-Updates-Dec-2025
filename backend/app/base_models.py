@@ -130,6 +130,110 @@ class AuditAction(str, PyEnum):
     ANONYMIZE = "anonymize"
 
 
+class SubscriberStatus(str, PyEnum):
+    """Landing page subscriber review status."""
+
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+    CONVERTED = "converted"
+
+
+# =============================================================================
+# Landing Page Subscriber Model
+# =============================================================================
+class LandingPageSubscriber(Base, TimestampMixin):
+    """
+    Landing page / newsletter subscriber.
+    Stores lead information, attribution data, and newsletter preferences.
+    """
+
+    __tablename__ = "landing_page_subscribers"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+
+    # Contact Info
+    email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    email_hash: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    full_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    company_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    phone: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+
+    # Source & Tracking
+    source_page: Mapped[str] = mapped_column(String(50), default="landing", nullable=False)
+    language: Mapped[str] = mapped_column(String(10), default="en", nullable=False)
+    utm_source: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    utm_medium: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    utm_campaign: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    utm_term: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    utm_content: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    referrer_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    landing_url: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
+
+    # Click IDs (ad platform attribution)
+    fbclid: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    gclid: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    ttclid: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    sccid: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    fbc: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    fbp: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+
+    # Attribution
+    attributed_platform: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    lead_score: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
+    # CAPI (Conversion API)
+    capi_sent: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    capi_results: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    # Review Status
+    status: Mapped[str] = mapped_column(String(20), default="pending", nullable=False)
+    admin_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    reviewed_by_user_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    reviewed_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    # Conversion
+    converted_to_tenant_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("tenants.id", ondelete="SET NULL"), nullable=True
+    )
+    converted_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    verified_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    # Request Metadata
+    ip_address: Mapped[Optional[str]] = mapped_column(String(45), nullable=True)
+    user_agent: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+
+    # Newsletter Fields
+    subscribed_to_newsletter: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    unsubscribed_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    newsletter_preferences: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    last_email_sent_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    last_email_opened_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    email_send_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    email_open_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
+    __table_args__ = (
+        Index("ix_lps_email", "email"),
+        Index("ix_lps_status", "status"),
+        Index("ix_lps_platform", "attributed_platform"),
+        Index("ix_lps_newsletter", "subscribed_to_newsletter"),
+    )
+
+
 # =============================================================================
 # Tenant Model (Multi-tenancy Root)
 # =============================================================================

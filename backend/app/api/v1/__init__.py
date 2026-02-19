@@ -45,6 +45,15 @@ from app.api.v1.endpoints import (
     data_driven_attribution,
     reporting,
     audit_services,
+    newsletter,
+    mfa,
+    onboarding,
+    oauth,
+    notifications,
+    api_keys,
+    cdp,
+    changelog,
+    clients,
 )
 
 api_router = APIRouter()
@@ -299,4 +308,67 @@ api_router.include_router(
     audit_services.router,
     prefix="/audit",
     tags=["Audit Services"],
+)
+
+# Newsletter & Email Campaigns
+# Note: newsletter.router already has prefix="/newsletter"
+api_router.include_router(
+    newsletter.router,
+    tags=["Newsletter"],
+)
+
+# Multi-Factor Authentication (2FA/MFA)
+# Note: mfa.router already has prefix="/mfa"
+api_router.include_router(
+    mfa.router,
+    tags=["MFA"],
+)
+
+# Onboarding (Guided setup wizard)
+# Note: onboarding.router already has prefix="/onboarding"
+api_router.include_router(
+    onboarding.router,
+    tags=["Onboarding"],
+)
+
+# OAuth (Platform authorization flows)
+# Note: oauth.router already has prefix="/oauth"
+api_router.include_router(
+    oauth.router,
+    tags=["OAuth"],
+)
+
+# Notifications (In-app notifications)
+# Note: notifications.router already has prefix="/notifications"
+api_router.include_router(
+    notifications.router,
+    tags=["Notifications"],
+)
+
+# API Keys Management
+# Note: api_keys.router already has prefix="/api-keys"
+api_router.include_router(
+    api_keys.router,
+    tags=["API Keys"],
+)
+
+# CDP (Customer Data Platform)
+# Note: cdp.router already has prefix="/cdp"
+api_router.include_router(
+    cdp.router,
+    tags=["CDP"],
+)
+
+# Changelog
+# Note: changelog.router already has prefix="/changelog"
+api_router.include_router(
+    changelog.router,
+    tags=["Changelog"],
+)
+
+# Client Management
+api_router.include_router(
+    clients.router,
+    prefix="/clients",
+    tags=["Clients"],
 )
