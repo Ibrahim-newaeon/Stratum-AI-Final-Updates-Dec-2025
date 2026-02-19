@@ -31,6 +31,11 @@ PUBLIC_ENDPOINTS = {
     "/api/v1/auth/register",
     "/api/v1/auth/refresh",
     "/api/v1/auth/forgot-password",
+    "/api/v1/auth/reset-password",
+    "/api/v1/auth/verify-email",
+    "/api/v1/auth/resend-verification",
+    "/api/v1/auth/whatsapp/send-otp",
+    "/api/v1/auth/whatsapp/verify-otp",
 }
 
 
@@ -51,6 +56,10 @@ class TenantMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """Extract and validate tenant context."""
+
+        # Always allow CORS preflight requests through (they carry no auth)
+        if request.method == "OPTIONS":
+            return await call_next(request)
 
         # Skip public endpoints
         if self._is_public_endpoint(request.url.path):
@@ -91,8 +100,15 @@ class TenantMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
     def _is_public_endpoint(self, path: str) -> bool:
-        """Check if the endpoint is public."""
-        return path in PUBLIC_ENDPOINTS or path.startswith("/docs") or path.startswith("/redoc")
+        """Check if the endpoint is public (no tenant context needed)."""
+        if path in PUBLIC_ENDPOINTS:
+            return True
+        if path.startswith("/docs") or path.startswith("/redoc"):
+            return True
+        # Allow webhook endpoints (they authenticate via signature)
+        if path.startswith("/api/v1/webhooks/"):
+            return True
+        return False
 
     async def _extract_tenant_id(self, request: Request) -> Optional[int]:
         """
