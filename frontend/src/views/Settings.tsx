@@ -25,6 +25,7 @@ import {
   User,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import apiClient from '@/api/client';
 import { useTenantStore } from '@/stores/tenantStore';
 import { useExportData, useRequestDeletion } from '@/api/hooks';
 import { useCurrentUser, useUpdatePreferences } from '@/api/auth';
@@ -858,6 +859,11 @@ function IntegrationSettings() {
           <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
         </svg>
       ),
+      snapchat: (
+        <svg viewBox="0 0 24 24" className="w-6 h-6" fill="#FFFC00">
+          <path d="M12.206.793c.99 0 4.347.276 5.93 3.821.529 1.193.403 3.219.299 4.847l-.003.06c-.012.18-.022.345-.03.51.075.045.203.09.401.09.3-.016.659-.12 1.033-.301.165-.088.344-.104.464-.104.182 0 .359.029.509.09.45.149.734.479.734.838.015.449-.39.839-1.213 1.168-.089.029-.209.075-.344.119-.45.135-1.139.36-1.333.81-.09.224-.061.524.12.868l.015.015c.06.136 1.526 3.475 4.791 4.014.255.044.435.27.42.509-.015.25-.211.524-.652.689-.899.315-1.889.479-2.939.568-.074.074-.104.31-.134.609-.013.12-.029.246-.045.369-.03.27-.089.52-.254.72-.181.209-.404.299-.644.299-.104 0-.209-.015-.314-.044-.359-.088-.734-.169-1.168-.169-.272 0-.54.03-.823.09-.58.12-1.065.5-1.611.931-.898.719-1.922 1.531-3.683 1.531-1.762 0-2.787-.812-3.685-1.531-.546-.431-1.031-.811-1.611-.931-.284-.06-.551-.09-.823-.09-.434 0-.809.081-1.168.169-.104.029-.209.044-.314.044-.24 0-.464-.09-.644-.299-.165-.2-.225-.45-.254-.72-.016-.123-.032-.249-.045-.369-.03-.3-.06-.535-.134-.609-1.05-.089-2.04-.253-2.939-.568-.44-.165-.637-.439-.652-.689-.015-.239.165-.465.42-.509 3.264-.54 4.73-3.879 4.791-4.02l.016-.029c.18-.345.209-.644.119-.868-.195-.45-.884-.675-1.333-.81-.136-.044-.255-.09-.345-.119-.823-.33-1.228-.72-1.213-1.168 0-.36.284-.69.735-.838.149-.06.326-.09.508-.09.12 0 .3.016.465.104.374.181.733.301 1.032.301.197 0 .326-.045.402-.09-.009-.165-.019-.33-.03-.51l-.004-.06c-.104-1.627-.229-3.653.3-4.846C7.854 1.069 11.211.793 12.206.793z" />
+        </svg>
+      ),
       slack: (
         <svg viewBox="0 0 24 24" className="w-6 h-6" fill="currentColor">
           <path
@@ -870,13 +876,54 @@ function IntegrationSettings() {
     return icons[type] || <div className="w-6 h-6 rounded-full bg-muted" />;
   };
 
-  // Ad Platforms
-  const adPlatforms = [
-    { id: 'google-ads', name: 'Google Ads', connected: true, color: 'text-blue-500' },
-    { id: 'meta', name: 'Meta Ads', connected: true, color: 'text-blue-600' },
-    { id: 'tiktok', name: 'TikTok Ads', connected: false, color: 'text-gray-400' },
-    { id: 'slack', name: 'Slack', connected: true, color: 'text-purple-500' },
-  ];
+  // Ad Platforms — fetch real connection status from backend
+  const [adPlatforms, setAdPlatforms] = useState([
+    { id: 'google-ads', name: 'Google Ads', connected: false, color: 'text-blue-500' },
+    { id: 'meta', name: 'Meta Ads', connected: false, color: 'text-blue-600' },
+    { id: 'tiktok', name: 'TikTok Ads', connected: false, color: 'text-pink-500' },
+    { id: 'snapchat', name: 'Snapchat Ads', connected: false, color: 'text-yellow-500' },
+    { id: 'slack', name: 'Slack', connected: false, color: 'text-purple-500' },
+  ]);
+
+  useEffect(() => {
+    const fetchPlatformStatus = async () => {
+      try {
+        const res = await apiClient.get('/capi/platforms/status');
+        const data = res.data?.data || res.data;
+        // connected_platforms: {"meta": {connected: true}, "tiktok": {connected: true}, ...}
+        // setup_status.connected_platforms: ["meta", "tiktok", ...]
+        const connectedMap = data?.connected_platforms || {};
+        const connectedList: string[] = data?.setup_status?.connected_platforms || [];
+
+        const platformMap: Record<string, string> = {
+          'google-ads': 'google',
+          meta: 'meta',
+          tiktok: 'tiktok',
+          snapchat: 'snapchat',
+        };
+
+        setAdPlatforms((prev) =>
+          prev.map((p) => {
+            const backendKey = platformMap[p.id];
+            if (backendKey) {
+              const isConnected =
+                connectedMap[backendKey]?.connected === true ||
+                connectedList.includes(backendKey);
+              return {
+                ...p,
+                connected: isConnected,
+                color: isConnected ? p.color.replace('text-gray-400', p.color) : 'text-gray-400',
+              };
+            }
+            return p;
+          }),
+        );
+      } catch {
+        // If API fails, leave defaults
+      }
+    };
+    fetchPlatformStatus();
+  }, []);
 
   // Analytics & Tracking
   const analyticsIntegrations = [
