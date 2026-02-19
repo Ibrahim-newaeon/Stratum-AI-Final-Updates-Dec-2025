@@ -3,7 +3,7 @@
  * View all sent messages with delivery status tracking
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   ChatBubbleLeftRightIcon,
@@ -23,6 +23,7 @@ import {
   PaperAirplaneIcon,
 } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
+import { whatsappApi } from '@/services/api';
 
 interface Message {
   id: number;
@@ -67,13 +68,47 @@ const messageTypeIcons = {
 };
 
 export default function WhatsAppMessages() {
-  const [messages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [directionFilter, setDirectionFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
+  const [loading, setLoading] = useState(true);
   const pageSize = 10;
+
+  const fetchMessages = async () => {
+    setLoading(true);
+    try {
+      const res = await whatsappApi.listMessages({ page_size: 200 });
+      if (res?.data?.items) {
+        setMessages(
+          res.data.items.map((m: any) => ({
+            id: m.id,
+            contact_name: m.contact_name || m.recipient_phone || 'Unknown',
+            contact_phone: m.recipient_phone || m.contact_phone || '',
+            direction: m.direction || 'outbound',
+            message_type: m.message_type || 'template',
+            template_name: m.template_name || null,
+            content: m.body_text || m.content || '',
+            status: m.status || 'pending',
+            sent_at: m.sent_at || m.created_at || null,
+            delivered_at: m.delivered_at || null,
+            read_at: m.read_at || null,
+            error_message: m.error_message || null,
+          }))
+        );
+      }
+    } catch {
+      // Silently handle
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMessages();
+  }, []);
 
   const filteredMessages = messages.filter((msg) => {
     const matchesSearch =
@@ -134,12 +169,11 @@ export default function WhatsAppMessages() {
           Filters
         </button>
         <button
-          onClick={() => {
-            /* Refresh */
-          }}
-          className="flex items-center gap-2 px-4 py-3 bg-[rgba(255,_255,_255,_0.05)] border border-white/10 rounded-xl text-gray-400 hover:text-white transition-colors"
+          onClick={fetchMessages}
+          disabled={loading}
+          className="flex items-center gap-2 px-4 py-3 bg-[rgba(255,_255,_255,_0.05)] border border-white/10 rounded-xl text-gray-400 hover:text-white transition-colors disabled:opacity-50"
         >
-          <ArrowPathIcon className="w-5 h-5" />
+          <ArrowPathIcon className={cn('w-5 h-5', loading && 'animate-spin')} />
           Refresh
         </button>
       </div>

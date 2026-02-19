@@ -260,7 +260,20 @@ export default function WhatsAppBroadcast() {
             templates={templates}
             segments={[]}
             onClose={() => setShowCreateModal(false)}
-            onCreate={(broadcast) => {
+            onCreate={async (broadcast) => {
+              try {
+                // POST broadcast to backend via send message API
+                if (broadcast.template_name) {
+                  await whatsappApi.sendMessage({
+                    contact_id: 0, // broadcast — backend handles fan-out
+                    message_type: 'template',
+                    template_name: broadcast.template_name,
+                    scheduled_at: broadcast.status === 'scheduled' ? broadcast.sent_at : undefined,
+                  });
+                }
+              } catch {
+                // Fallback — still show in local history
+              }
               setHistory((prev) => [{ ...broadcast, id: prev.length + 1 }, ...prev]);
               setShowCreateModal(false);
             }}

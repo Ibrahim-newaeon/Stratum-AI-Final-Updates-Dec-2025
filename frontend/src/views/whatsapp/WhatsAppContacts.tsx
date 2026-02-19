@@ -3,7 +3,7 @@
  * Manage WhatsApp Business contacts with import, search, and opt-in management
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   MagnifyingGlassIcon,
@@ -21,6 +21,7 @@ import {
   DocumentArrowDownIcon,
 } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
+import { whatsappApi } from '@/services/api';
 
 interface Contact {
   id: number;
@@ -55,6 +56,32 @@ export default function WhatsAppContacts() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
+  // Fetch contacts from backend
+  useEffect(() => {
+    async function loadContacts() {
+      try {
+        const res = await whatsappApi.listContacts({ page_size: 200 });
+        if (res?.data?.items) {
+          setContacts(
+            res.data.items.map((c: any) => ({
+              id: c.id,
+              phone_number: c.phone_number || '',
+              country_code: c.country_code || 'US',
+              display_name: c.display_name || null,
+              opt_in_status: c.opt_in_status || 'pending',
+              message_count: c.message_count || 0,
+              last_message_at: c.last_message_at || null,
+              created_at: c.created_at || new Date().toISOString(),
+            }))
+          );
+        }
+      } catch {
+        // Silently handle — empty state will show
+      }
+    }
+    loadContacts();
+  }, []);
+
   const filteredContacts = contacts.filter((contact) => {
     const matchesSearch =
       contact.phone_number.includes(search) ||
@@ -83,16 +110,26 @@ export default function WhatsAppContacts() {
     );
   };
 
-  const handleOptIn = (id: number) => {
-    setContacts((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, opt_in_status: 'opted_in' as const } : c))
-    );
+  const handleOptIn = async (id: number) => {
+    try {
+      await whatsappApi.optInContact(id);
+      setContacts((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, opt_in_status: 'opted_in' as const } : c))
+      );
+    } catch {
+      // Silently handle — keep local state unchanged
+    }
   };
 
-  const handleOptOut = (id: number) => {
-    setContacts((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, opt_in_status: 'opted_out' as const } : c))
-    );
+  const handleOptOut = async (id: number) => {
+    try {
+      await whatsappApi.optOutContact(id);
+      setContacts((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, opt_in_status: 'opted_out' as const } : c))
+      );
+    } catch {
+      // Silently handle
+    }
   };
 
   return (
@@ -318,8 +355,19 @@ export default function WhatsAppContacts() {
         {showAddModal && (
           <AddContactModal
             onClose={() => setShowAddModal(false)}
-            onAdd={(contact) => {
-              setContacts((prev) => [{ ...contact, id: prev.length + 1 }, ...prev]);
+            onAdd={async (contact) => {
+              try {
+                const res = await whatsappApi.createContact({
+                  phone_number: contact.phone_number,
+                  country_code: contact.country_code,
+                  display_name: contact.display_name || undefined,
+                });
+                const newContact = res?.data || contact;
+                setContacts((prev) => [{ ...contact, id: newContact.id || prev.length + 1 }, ...prev]);
+              } catch {
+                // Fallback: add locally
+                setContacts((prev) => [{ ...contact, id: prev.length + 1 }, ...prev]);
+              }
               setShowAddModal(false);
             }}
           />

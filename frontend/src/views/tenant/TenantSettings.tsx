@@ -69,8 +69,7 @@ export default function TenantSettings() {
         timezone: settings.timezone,
         currency: settings.currency,
         email_notifications: settings.emailNotifications,
-        slack_notifications: settings.slackNotifications,
-      })
+      } as any)
       toast({
         title: 'Success',
         description: 'Settings saved successfully',

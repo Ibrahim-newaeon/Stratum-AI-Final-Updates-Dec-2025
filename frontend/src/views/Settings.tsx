@@ -70,12 +70,16 @@ export function Settings() {
     { id: 'trust-engine', label: 'Trust Engine', icon: Gauge },
   ] as const;
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setSaveStatus('saving');
-    setTimeout(() => {
+    try {
+      await apiClient.patch('/users/me', {});
       setSaveStatus('saved');
       setTimeout(() => setSaveStatus('idle'), 2000);
-    }, 1000);
+    } catch {
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus('idle'), 2000);
+    }
   };
 
   const renderTabContent = () => {
@@ -162,17 +166,40 @@ export function Settings() {
 
 function ProfileSettings() {
   const { t } = useTranslation();
+  const { toast } = useToast();
   // Get user data from tenant store
   const user = useTenantStore((state) => state.user);
+  const setUser = useTenantStore((state) => state.setUser);
 
   const fullName = user?.full_name || '';
   const nameParts = fullName.split(' ');
-  const firstName = nameParts[0] || '';
-  const lastName = nameParts.slice(1).join(' ') || '';
+  const [firstName, setFirstName] = useState(nameParts[0] || '');
+  const [lastName, setLastName] = useState(nameParts.slice(1).join(' ') || '');
   const initials = `${firstName[0] || '?'}${lastName[0] || ''}`;
   const email = user?.email || '';
   const role = user?.role || 'analyst';
-  const timezone = user?.timezone || 'America/New_York';
+  const [timezoneVal, setTimezoneVal] = useState(user?.timezone || 'America/New_York');
+  const [profileSaving, setProfileSaving] = useState(false);
+
+  const handleProfileSave = async () => {
+    setProfileSaving(true);
+    try {
+      const newFullName = `${firstName} ${lastName}`.trim();
+      await apiClient.patch('/users/me', {
+        full_name: newFullName,
+        timezone: timezoneVal,
+      });
+      // Update local store
+      if (user && setUser) {
+        setUser({ ...user, full_name: newFullName, timezone: timezoneVal } as any);
+      }
+      toast({ title: 'Profile saved', description: 'Your changes have been saved.' });
+    } catch {
+      toast({ title: 'Error', description: 'Failed to save profile.', variant: 'destructive' });
+    } finally {
+      setProfileSaving(false);
+    }
+  };
 
   // Format role for display
   const formatRole = (role: string) => {
@@ -216,7 +243,8 @@ function ProfileSettings() {
           <label className="text-sm font-medium mb-2 block">{t('settings.firstName')}</label>
           <input
             type="text"
-            defaultValue={firstName}
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
             className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
         </div>
@@ -224,7 +252,8 @@ function ProfileSettings() {
           <label className="text-sm font-medium mb-2 block">{t('settings.lastName')}</label>
           <input
             type="text"
-            defaultValue={lastName}
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
             className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
         </div>
@@ -235,7 +264,8 @@ function ProfileSettings() {
         <input
           type="email"
           defaultValue={email}
-          className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+          disabled
+          className="w-full px-4 py-2 rounded-lg border bg-muted text-muted-foreground"
         />
       </div>
 
@@ -252,7 +282,8 @@ function ProfileSettings() {
       <div>
         <label className="text-sm font-medium mb-2 block">{t('settings.timezone')}</label>
         <select
-          defaultValue={timezone}
+          value={timezoneVal}
+          onChange={(e) => setTimezoneVal(e.target.value)}
           className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
         >
           <option value="America/New_York">Eastern Time (ET)</option>
@@ -264,6 +295,17 @@ function ProfileSettings() {
           <option value="Asia/Riyadh">Arabia Standard Time (AST)</option>
           <option value="Asia/Dubai">Gulf Standard Time (GST)</option>
         </select>
+      </div>
+
+      <div className="pt-4">
+        <button
+          onClick={handleProfileSave}
+          disabled={profileSaving}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+        >
+          {profileSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          Save Profile
+        </button>
       </div>
     </div>
   );

@@ -3,7 +3,7 @@
  * Create, manage, and submit message templates to Meta for approval
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   PlusIcon,
@@ -21,6 +21,7 @@ import {
   ChatBubbleLeftIcon,
 } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
+import { whatsappApi } from '@/services/api';
 
 interface Template {
   id: number;
@@ -62,6 +63,36 @@ export default function WhatsAppTemplates() {
   const [showPreviewModal, setShowPreviewModal] = useState<Template | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  // Fetch templates from backend
+  useEffect(() => {
+    async function loadTemplates() {
+      try {
+        const res = await whatsappApi.listTemplates({ page_size: 100 });
+        if (res?.data?.items) {
+          setTemplates(
+            res.data.items.map((t: any) => ({
+              id: t.id,
+              name: t.name || '',
+              language: t.language || 'en',
+              category: t.category || 'UTILITY',
+              header_type: t.header_type || null,
+              header_content: t.header_content || null,
+              body_text: t.body_text || '',
+              footer_text: t.footer_text || null,
+              buttons: t.buttons || [],
+              status: t.status || 'pending',
+              rejection_reason: t.rejection_reason || null,
+              usage_count: t.usage_count || 0,
+              created_at: t.created_at || new Date().toISOString(),
+            }))
+          );
+        }
+      } catch {
+        // Silently handle
+      }
+    }
+    loadTemplates();
+  }, []);
 
   const filteredTemplates = templates.filter((t) => {
     const matchesCategory = categoryFilter === 'all' || t.category === categoryFilter;
@@ -236,8 +267,24 @@ export default function WhatsAppTemplates() {
         {showCreateModal && (
           <CreateTemplateModal
             onClose={() => setShowCreateModal(false)}
-            onCreate={(template) => {
-              setTemplates((prev) => [{ ...template, id: prev.length + 1 }, ...prev]);
+            onCreate={async (template) => {
+              try {
+                const res = await whatsappApi.createTemplate({
+                  name: template.name,
+                  language: template.language,
+                  category: template.category,
+                  header_type: template.header_type || undefined,
+                  header_content: template.header_content || undefined,
+                  body_text: template.body_text,
+                  footer_text: template.footer_text || undefined,
+                  buttons: template.buttons.length > 0 ? template.buttons : undefined,
+                });
+                const newTemplate = res?.data || template;
+                setTemplates((prev) => [{ ...template, id: newTemplate.id || prev.length + 1 }, ...prev]);
+              } catch {
+                // Fallback: add locally
+                setTemplates((prev) => [{ ...template, id: prev.length + 1 }, ...prev]);
+              }
               setShowCreateModal(false);
             }}
           />

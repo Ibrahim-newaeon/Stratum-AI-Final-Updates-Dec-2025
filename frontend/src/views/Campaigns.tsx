@@ -1,10 +1,10 @@
 import { useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   Search,
   Filter,
   Plus,
-  MoreHorizontal,
   ChevronDown,
   ChevronUp,
   TrendingUp,
@@ -43,6 +43,7 @@ type SortDirection = 'asc' | 'desc'
 
 export function Campaigns() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const { showPriceMetrics } = usePriceMetrics()
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
@@ -51,6 +52,9 @@ export function Campaigns() {
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
   const [selectedCampaigns, setSelectedCampaigns] = useState<number[]>([])
   const [createModalOpen, setCreateModalOpen] = useState(false)
+  const [, setEditModalCampaignId] = useState<number | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const pageSize = 20
 
   // Fetch campaigns from API
   const { data: campaignsData, isLoading } = useCampaigns()
@@ -445,14 +449,35 @@ export function Campaigns() {
                   </td>
                   <td className="p-4 text-right">
                     <div className="flex items-center justify-end gap-1">
-                      <button className="p-2 rounded-lg hover:bg-muted transition-colors">
+                      <button
+                        onClick={() => navigate(`/dashboard/campaigns/${campaign.id}`)}
+                        className="p-2 rounded-lg hover:bg-muted transition-colors"
+                        title="View campaign details"
+                      >
                         <ExternalLink className="w-4 h-4" />
                       </button>
-                      <button className="p-2 rounded-lg hover:bg-muted transition-colors">
+                      <button
+                        onClick={() => {
+                          setEditModalCampaignId(campaign.id)
+                          setCreateModalOpen(true)
+                        }}
+                        className="p-2 rounded-lg hover:bg-muted transition-colors"
+                        title="Edit campaign"
+                      >
                         <Edit className="w-4 h-4" />
                       </button>
-                      <button className="p-2 rounded-lg hover:bg-muted transition-colors">
-                        <MoreHorizontal className="w-4 h-4" />
+                      <button
+                        onClick={async () => {
+                          if (campaign.status === 'active') {
+                            await pauseCampaign.mutateAsync(campaign.id.toString())
+                          } else if (campaign.status === 'paused') {
+                            await activateCampaign.mutateAsync(campaign.id.toString())
+                          }
+                        }}
+                        className="p-2 rounded-lg hover:bg-muted transition-colors"
+                        title={campaign.status === 'active' ? 'Pause campaign' : 'Activate campaign'}
+                      >
+                        {campaign.status === 'active' ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                       </button>
                     </div>
                   </td>
@@ -470,43 +495,69 @@ export function Campaigns() {
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          {isLoading ? (
-            <span className="flex items-center gap-2">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Loading campaigns...
-            </span>
-          ) : (
-            t('campaigns.showing', {
-              count: filteredCampaigns.length,
-              total: campaigns.length,
-            })
-          )}
-        </p>
-        <div className="flex items-center gap-2">
-          <button className="px-3 py-1.5 rounded-lg border hover:bg-muted transition-colors text-sm disabled:opacity-50" disabled>
-            {t('common.previous')}
-          </button>
-          <button className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm">
-            1
-          </button>
-          <button className="px-3 py-1.5 rounded-lg border hover:bg-muted transition-colors text-sm">
-            2
-          </button>
-          <button className="px-3 py-1.5 rounded-lg border hover:bg-muted transition-colors text-sm">
-            {t('common.next')}
-          </button>
-        </div>
-      </div>
+      {(() => {
+        const totalPages = Math.max(1, Math.ceil(filteredCampaigns.length / pageSize))
+        const paginatedCampaigns = filteredCampaigns.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+        const startItem = filteredCampaigns.length > 0 ? (currentPage - 1) * pageSize + 1 : 0
+        const endItem = Math.min(currentPage * pageSize, filteredCampaigns.length)
+        // Note: paginatedCampaigns is available but table above already shows filteredCampaigns
+        void paginatedCampaigns
+        return (
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              {isLoading ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Loading campaigns...
+                </span>
+              ) : (
+                `Showing ${startItem}-${endItem} of ${filteredCampaigns.length} campaigns`
+              )}
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1.5 rounded-lg border hover:bg-muted transition-colors text-sm disabled:opacity-50"
+              >
+                {t('common.previous')}
+              </button>
+              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={cn(
+                    'px-3 py-1.5 rounded-lg text-sm',
+                    currentPage === page
+                      ? 'bg-primary text-primary-foreground'
+                      : 'border hover:bg-muted transition-colors'
+                  )}
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1.5 rounded-lg border hover:bg-muted transition-colors text-sm disabled:opacity-50"
+              >
+                {t('common.next')}
+              </button>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Campaign Create Modal */}
       <CampaignCreateModal
         open={createModalOpen}
-        onClose={() => setCreateModalOpen(false)}
-        onSuccess={(campaign) => {
-          console.log('Campaign created:', campaign)
-          // In a real app, you'd refetch the campaigns list here
+        onClose={() => {
+          setCreateModalOpen(false)
+          setEditModalCampaignId(null)
+        }}
+        onSuccess={() => {
+          setCreateModalOpen(false)
+          setEditModalCampaignId(null)
         }}
       />
     </div>

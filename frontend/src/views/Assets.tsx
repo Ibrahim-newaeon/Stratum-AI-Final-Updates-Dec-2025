@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Search,
@@ -20,7 +20,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import { cn, formatCompactNumber, formatPercent } from '@/lib/utils'
-import { useAssets, useBulkArchiveAssets } from '@/api/hooks'
+import { useAssets, useBulkArchiveAssets, useUploadAsset } from '@/api/hooks'
 
 type AssetType = 'image' | 'video' | 'copy'
 type AssetStatus = 'active' | 'paused' | 'fatigued' | 'draft'
@@ -51,9 +51,51 @@ export function Assets() {
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
   const [selectedAssets, setSelectedAssets] = useState<number[]>([])
 
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [, setPreviewAsset] = useState<Asset | null>(null)
+
   // Fetch assets from API
   const { data: assetsData, isLoading } = useAssets()
   const bulkArchive = useBulkArchiveAssets()
+  const uploadAsset = useUploadAsset()
+
+  // Handle file upload
+  const handleUpload = async (file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('name', file.name)
+    try {
+      await uploadAsset.mutateAsync(formData as any)
+    } catch {
+      // Error handled by query invalidation
+    }
+  }
+
+  // Handle download
+  const handleDownload = (asset: Asset) => {
+    if (asset.thumbnail) {
+      const link = document.createElement('a')
+      link.href = asset.thumbnail
+      link.download = asset.name || 'asset'
+      link.target = '_blank'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    }
+  }
+
+  // Handle bulk download
+  const handleBulkDownload = () => {
+    const selectedItems = assets.filter((a) => selectedAssets.includes(a.id))
+    selectedItems.forEach((asset) => handleDownload(asset))
+  }
+
+  // Handle copy asset link
+  const handleCopyLink = (asset: Asset) => {
+    if (asset.thumbnail) {
+      navigator.clipboard.writeText(asset.thumbnail)
+    }
+  }
 
   // Transform API data into view-layer Asset shape
   const assets = useMemo((): Asset[] => {
@@ -141,10 +183,25 @@ export function Assets() {
           <p className="text-muted-foreground">{t('assets.subtitle')}</p>
         </div>
 
-        <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
-          <Upload className="w-4 h-4" />
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploadAsset.isPending}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+        >
+          {uploadAsset.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
           <span>{t('assets.upload')}</span>
         </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*,video/*"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0]
+            if (file) handleUpload(file)
+            e.target.value = ''
+          }}
+        />
       </div>
 
       {/* Filters & Controls */}
@@ -223,7 +280,10 @@ export function Assets() {
           <p className="text-muted-foreground mb-6 max-w-md mx-auto">
             Upload your first creative asset to start tracking performance and fatigue scores across campaigns.
           </p>
-          <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
             <Upload className="w-4 h-4" />
             <span>{t('assets.upload')}</span>
           </button>
@@ -237,11 +297,20 @@ export function Assets() {
             {selectedAssets.length} {t('assets.selected')}
           </span>
           <div className="flex gap-2">
-            <button className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-background border hover:bg-muted transition-colors text-sm">
+            <button
+              onClick={() => {
+                // Tag functionality — could open a tag modal
+                alert(`Tag ${selectedAssets.length} assets — coming soon`)
+              }}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-background border hover:bg-muted transition-colors text-sm"
+            >
               <Tag className="w-4 h-4" />
               {t('assets.addTags')}
             </button>
-            <button className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-background border hover:bg-muted transition-colors text-sm">
+            <button
+              onClick={handleBulkDownload}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-background border hover:bg-muted transition-colors text-sm"
+            >
               <Download className="w-4 h-4" />
               {t('assets.download')}
             </button>
@@ -327,13 +396,25 @@ export function Assets() {
                 {/* Actions */}
                 <div className="flex items-center justify-between mt-4 pt-3 border-t">
                   <div className="flex gap-1">
-                    <button className="p-1.5 rounded hover:bg-muted transition-colors">
+                    <button
+                      onClick={() => setPreviewAsset(asset)}
+                      className="p-1.5 rounded hover:bg-muted transition-colors"
+                      title="Preview"
+                    >
                       <Eye className="w-4 h-4" />
                     </button>
-                    <button className="p-1.5 rounded hover:bg-muted transition-colors">
+                    <button
+                      onClick={() => handleCopyLink(asset)}
+                      className="p-1.5 rounded hover:bg-muted transition-colors"
+                      title="Copy link"
+                    >
                       <Copy className="w-4 h-4" />
                     </button>
-                    <button className="p-1.5 rounded hover:bg-muted transition-colors">
+                    <button
+                      onClick={() => handleDownload(asset)}
+                      className="p-1.5 rounded hover:bg-muted transition-colors"
+                      title="Download"
+                    >
                       <Download className="w-4 h-4" />
                     </button>
                   </div>

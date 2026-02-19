@@ -3,7 +3,7 @@
  * Comprehensive WhatsApp Business management interface
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   ChatBubbleLeftRightIcon,
@@ -17,6 +17,7 @@ import {
   PaperAirplaneIcon,
 } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
+import { whatsappApi } from '@/services/api';
 import WhatsAppContacts from './WhatsAppContacts';
 import WhatsAppTemplates from './WhatsAppTemplates';
 import WhatsAppBroadcast from './WhatsAppBroadcast';
@@ -79,6 +80,57 @@ const emptyStats = {
 
 export default function WhatsAppManager() {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
+  const [stats, setStats] = useState(emptyStats);
+
+  // Fetch overview stats from backend
+  useEffect(() => {
+    async function loadStats() {
+      try {
+        const [contactsRes, templatesRes, messagesRes] = await Promise.allSettled([
+          whatsappApi.listContacts({ page_size: 1 }),
+          whatsappApi.listTemplates({ page_size: 1 }),
+          whatsappApi.listMessages({ page_size: 1 }),
+        ]);
+
+        const newStats = { ...emptyStats };
+
+        if (contactsRes.status === 'fulfilled' && contactsRes.value?.data) {
+          const data = contactsRes.value.data;
+          newStats.totalContacts = data.total || data.items?.length || 0;
+          if (data.items) {
+            const items = data.items as any[];
+            newStats.optedIn = items.filter((c: any) => c.opt_in_status === 'opted_in').length;
+            newStats.optedOut = items.filter((c: any) => c.opt_in_status === 'opted_out').length;
+          }
+        }
+
+        if (templatesRes.status === 'fulfilled' && templatesRes.value?.data) {
+          const data = templatesRes.value.data;
+          newStats.templates = data.total || data.items?.length || 0;
+          if (data.items) {
+            const items = data.items as any[];
+            newStats.approvedTemplates = items.filter((t: any) => t.status === 'approved').length;
+            newStats.pendingTemplates = items.filter((t: any) => t.status === 'pending').length;
+          }
+        }
+
+        if (messagesRes.status === 'fulfilled' && messagesRes.value?.data) {
+          const data = messagesRes.value.data;
+          newStats.messagesSent = data.total || data.items?.length || 0;
+          if (data.items) {
+            const items = data.items as any[];
+            newStats.messagesDelivered = items.filter((m: any) => ['delivered', 'read'].includes(m.status)).length;
+            newStats.messagesRead = items.filter((m: any) => m.status === 'read').length;
+          }
+        }
+
+        setStats(newStats);
+      } catch {
+        // Keep default empty stats
+      }
+    }
+    loadStats();
+  }, []);
 
   const renderContent = () => {
     switch (activeTab) {
@@ -91,7 +143,7 @@ export default function WhatsAppManager() {
       case 'messages':
         return <WhatsAppMessages />;
       default:
-        return <OverviewDashboard stats={emptyStats} onNavigate={setActiveTab} />;
+        return <OverviewDashboard stats={stats} onNavigate={setActiveTab} />;
     }
   };
 
