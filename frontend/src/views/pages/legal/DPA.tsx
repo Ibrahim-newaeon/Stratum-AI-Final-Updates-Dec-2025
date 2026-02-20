@@ -4,6 +4,7 @@
 
 import { usePublicPage } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
+import { pageSEO, SEO } from '@/components/common/SEO';
 import { sanitizeHtml } from '@/lib/sanitize';
 import { DocumentCheckIcon } from '@heroicons/react/24/outline';
 
@@ -11,8 +12,12 @@ export default function DPA() {
   const { data: page } = usePublicPage('dpa');
   const hasCMSContent = !!(page?.content && page.content.length > 0);
 
+  const seoTitle = page?.meta_title || pageSEO.dpa.title;
+  const seoDescription = page?.meta_description || pageSEO.dpa.description;
+
   return (
     <PageLayout>
+      <SEO {...pageSEO.dpa} title={seoTitle} description={seoDescription} url="https://stratum-ai.com/dpa" />
       {/* Hero Section */}
       <section className="py-20 px-6">
         <div className="max-w-4xl mx-auto">

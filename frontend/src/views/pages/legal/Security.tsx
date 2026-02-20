@@ -4,6 +4,7 @@
 
 import { usePublicPage } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
+import { pageSEO, SEO } from '@/components/common/SEO';
 import { sanitizeHtml } from '@/lib/sanitize';
 import {
   DocumentCheckIcon,
@@ -51,8 +52,12 @@ export default function Security() {
   const { data: page } = usePublicPage('security');
   const hasCMSContent = !!(page?.content && page.content.length > 0);
 
+  const seoTitle = page?.meta_title || pageSEO.security.title;
+  const seoDescription = page?.meta_description || pageSEO.security.description;
+
   return (
     <PageLayout>
+      <SEO {...pageSEO.security} title={seoTitle} description={seoDescription} url="https://stratum-ai.com/security" />
       {/* Hero Section */}
       <section className="py-20 px-6">
         <div className="max-w-7xl mx-auto text-center">

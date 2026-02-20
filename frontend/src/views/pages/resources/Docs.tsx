@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { usePublicPage } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
+import { pageSEO, SEO } from '@/components/common/SEO';
 import { sanitizeHtml } from '@/lib/sanitize';
 import {
   AcademicCapIcon,
@@ -108,8 +109,12 @@ export default function DocsPage() {
   const { data: page } = usePublicPage('docs');
   const hasCMSContent = !!(page?.content && page.content.length > 0);
 
+  const seoTitle = page?.meta_title || pageSEO.docs.title;
+  const seoDescription = page?.meta_description || pageSEO.docs.description;
+
   return (
     <PageLayout>
+      <SEO {...pageSEO.docs} title={seoTitle} description={seoDescription} url="https://stratum-ai.com/docs" />
       <div className="min-h-screen">
         {/* Hero Section */}
         <section className="relative py-20 overflow-hidden">

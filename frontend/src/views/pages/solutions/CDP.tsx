@@ -3,6 +3,7 @@
  * Customer Data Platform landing page
  */
 
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { usePageContent, type SolutionPageContent } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
@@ -15,9 +16,27 @@ import {
   UserGroupIcon,
 } from '@heroicons/react/24/outline';
 
-const features = [
+const fallbackHero = {
+  badge: 'Customer Data Platform',
+  title: 'Turn Customer Data',
+  titleHighlight: 'Into Revenue',
+  description:
+    'Unify customer profiles across every touchpoint. Build powerful segments and sync them to all your ad platforms instantly.',
+  ctaText: 'Start Free Trial',
+  ctaLink: '/signup',
+};
+
+const fallbackStats = [
+  { value: '2.5M+', label: 'Profiles Unified', description: '' },
+  { value: '47%', label: 'Higher Match Rate', description: '' },
+  { value: '3.2x', label: 'ROAS Improvement', description: '' },
+  { value: '<100ms', label: 'Sync Latency', description: '' },
+];
+
+const fallbackFeatures = [
   {
     icon: UserGroupIcon,
+    iconName: 'UserGroupIcon',
     title: '360° Customer Profiles',
     description:
       'Unified view from anonymous visitor to loyal customer. Real-time enrichment from every interaction.',
@@ -25,6 +44,7 @@ const features = [
   },
   {
     icon: CubeTransparentIcon,
+    iconName: 'CubeTransparentIcon',
     title: 'Identity Resolution',
     description:
       'Connect the dots across devices and channels. Visual identity graph shows every connection.',
@@ -32,6 +52,7 @@ const features = [
   },
   {
     icon: ChartBarIcon,
+    iconName: 'ChartBarIcon',
     title: 'Smart Segmentation',
     description:
       'Build segments with behavioral rules, RFM scores, and lifecycle stages. Preview before you publish.',
@@ -39,6 +60,7 @@ const features = [
   },
   {
     icon: ArrowPathIcon,
+    iconName: 'ArrowPathIcon',
     title: 'Multi-Platform Sync',
     description:
       'Push segments to Meta, Google, TikTok & Snapchat instantly. Auto-sync keeps your audiences fresh.',
@@ -46,6 +68,7 @@ const features = [
   },
   {
     icon: SparklesIcon,
+    iconName: 'SparklesIcon',
     title: 'Predictive Analytics',
     description:
       'Churn prediction, LTV forecasting, and next-best-action recommendations powered by ML.',
@@ -53,6 +76,7 @@ const features = [
   },
   {
     icon: ShieldCheckIcon,
+    iconName: 'ShieldCheckIcon',
     title: 'Privacy-First',
     description:
       'Consent management, GDPR/CCPA compliance, and hashed PII for secure platform sync.',
@@ -60,10 +84,39 @@ const features = [
   },
 ];
 
+/** Map icon name strings from CMS to actual icon components */
+const iconMap: Record<string, typeof UserGroupIcon> = {
+  UserGroupIcon,
+  CubeTransparentIcon,
+  ChartBarIcon,
+  ArrowPathIcon,
+  SparklesIcon,
+  ShieldCheckIcon,
+};
+
 export default function CDPSolution() {
-  // CMS integration: SEO metadata override (full content_json extraction deferred)
-  const { page } = usePageContent<SolutionPageContent>('solutions-cdp');
-  void page; // Will be used for SEO meta override in follow-up phase
+  const { page, content } = usePageContent<SolutionPageContent>('solutions-cdp');
+
+  // SEO: override document title / meta description when CMS provides them
+  useEffect(() => {
+    if (page?.meta_title) document.title = page.meta_title;
+    if (page?.meta_description) {
+      document
+        .querySelector('meta[name="description"]')
+        ?.setAttribute('content', page.meta_description);
+    }
+  }, [page?.meta_title, page?.meta_description]);
+
+  // CMS data with hardcoded fallback
+  const hero = content?.hero ?? fallbackHero;
+  const stats = content?.stats?.length ? content.stats : fallbackStats;
+  const features = content?.features?.length
+    ? content.features.map((f) => ({
+        ...f,
+        icon: iconMap[f.iconName] ?? UserGroupIcon,
+        color: '#a855f7',
+      }))
+    : fallbackFeatures;
 
   return (
     <PageLayout>
@@ -81,30 +134,29 @@ export default function CDPSolution() {
                 }}
               >
                 <UserGroupIcon className="w-4 h-4" />
-                Customer Data Platform
+                {hero.badge}
               </div>
               <h1
                 className="text-4xl md:text-5xl font-bold mb-6"
                 style={{ fontFamily: "'Inter', sans-serif" }}
               >
-                <span className="text-white">Turn Customer Data</span>
+                <span className="text-white">{hero.title}</span>
                 <br />
-                <span style={{ color: '#f97316' }}>Into Revenue</span>
+                <span style={{ color: '#f97316' }}>{hero.titleHighlight}</span>
               </h1>
               <p className="text-lg mb-8" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                Unify customer profiles across every touchpoint. Build powerful segments and sync
-                them to all your ad platforms instantly.
+                {hero.description}
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link
-                  to="/signup"
+                  to={hero.ctaLink}
                   className="px-8 py-4 rounded-xl text-lg font-semibold text-white transition-all hover:opacity-90 text-center"
                   style={{
                     background: '#f97316',
                     boxShadow: '0 4px 20px rgba(249, 115, 22, 0.4)',
                   }}
                 >
-                  Start Free Trial
+                  {hero.ctaText}
                 </Link>
                 <Link
                   to="/cdp-calculator"
@@ -127,12 +179,7 @@ export default function CDPSolution() {
             >
               {/* Stats */}
               <div className="grid grid-cols-2 gap-6">
-                {[
-                  { value: '2.5M+', label: 'Profiles Unified' },
-                  { value: '47%', label: 'Higher Match Rate' },
-                  { value: '3.2x', label: 'ROAS Improvement' },
-                  { value: '<100ms', label: 'Sync Latency' },
-                ].map((stat) => (
+                {stats.map((stat) => (
                   <div key={stat.label} className="text-center">
                     <div className="text-3xl font-bold" style={{ color: '#f97316' }}>
                       {stat.value}

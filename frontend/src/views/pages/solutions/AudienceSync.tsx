@@ -3,6 +3,7 @@
  * Multi-platform audience synchronization
  */
 
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { usePageContent, type SolutionPageContent } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
@@ -15,6 +16,37 @@ import {
   ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
 
+const fallbackHero = {
+  badge: 'Audience Sync',
+  title: 'Sync Audiences to',
+  titleHighlight: 'Every Ad Platform',
+  description:
+    'Push your CDP segments to Meta, Google, TikTok, and Snapchat with one click. Keep audiences fresh with automatic syncing.',
+  ctaText: 'Start Free Trial',
+  ctaLink: '/signup',
+};
+
+const fallbackSteps = [
+  {
+    step: 1,
+    title: 'Build Your Segment',
+    description:
+      'Create segments in the CDP using behavioral rules, RFM scores, or lifecycle stages.',
+  },
+  {
+    step: 2,
+    title: 'Connect Platforms',
+    description:
+      'Authenticate your ad accounts with a few clicks. No engineering required.',
+  },
+  {
+    step: 3,
+    title: 'Sync & Optimize',
+    description:
+      'Push to platforms instantly. Set auto-refresh intervals to keep audiences fresh.',
+  },
+];
+
 const platforms = [
   { name: 'Meta', description: 'Custom Audiences API' },
   { name: 'Google', description: 'Customer Match API' },
@@ -22,49 +54,84 @@ const platforms = [
   { name: 'Snapchat', description: 'SAM Audience Match' },
 ];
 
-const features = [
+const fallbackFeatures = [
   {
     icon: BoltIcon,
+    iconName: 'BoltIcon',
     title: 'One-Click Sync',
     description: 'Push segments to any platform instantly. No engineering required.',
     color: '#f97316',
   },
   {
     icon: ClockIcon,
+    iconName: 'ClockIcon',
     title: 'Auto-Refresh',
     description: 'Configurable sync intervals keep your audiences fresh 24/7.',
     color: '#06b6d4',
   },
   {
     icon: ChartBarIcon,
+    iconName: 'ChartBarIcon',
     title: 'Match Rate Tracking',
     description: 'Monitor match rates and optimize identifier coverage.',
     color: '#34c759',
   },
   {
     icon: ShieldCheckIcon,
+    iconName: 'ShieldCheckIcon',
     title: 'Privacy-Safe',
     description: 'Hashed identifiers ensure PII never leaves your control.',
     color: '#a855f7',
   },
   {
     icon: CloudArrowUpIcon,
+    iconName: 'CloudArrowUpIcon',
     title: 'Flexible Export',
     description: 'Export as CSV or JSON with custom attributes anytime.',
     color: '#3b82f6',
   },
   {
     icon: ArrowPathIcon,
+    iconName: 'ArrowPathIcon',
     title: 'Sync History',
     description: 'Full audit trail of all sync operations and metrics.',
     color: '#ec4899',
   },
 ];
 
+/** Map icon name strings from CMS to actual icon components */
+const iconMap: Record<string, typeof BoltIcon> = {
+  BoltIcon,
+  ClockIcon,
+  ChartBarIcon,
+  ShieldCheckIcon,
+  CloudArrowUpIcon,
+  ArrowPathIcon,
+};
+
 export default function AudienceSyncSolution() {
-  // CMS integration: SEO metadata override (full content_json extraction deferred)
-  const { page } = usePageContent<SolutionPageContent>('solutions-audience-sync');
-  void page; // Will be used for SEO meta override in follow-up phase
+  const { page, content } = usePageContent<SolutionPageContent>('solutions-audience-sync');
+
+  // SEO: override document title / meta description when CMS provides them
+  useEffect(() => {
+    if (page?.meta_title) document.title = page.meta_title;
+    if (page?.meta_description) {
+      document
+        .querySelector('meta[name="description"]')
+        ?.setAttribute('content', page.meta_description);
+    }
+  }, [page?.meta_title, page?.meta_description]);
+
+  // CMS data with hardcoded fallback
+  const hero = content?.hero ?? fallbackHero;
+  const steps = content?.steps?.length ? content.steps : fallbackSteps;
+  const features = content?.features?.length
+    ? content.features.map((f) => ({
+        ...f,
+        icon: iconMap[f.iconName] ?? BoltIcon,
+        color: '#f97316',
+      }))
+    : fallbackFeatures;
 
   return (
     <PageLayout>
@@ -80,13 +147,13 @@ export default function AudienceSyncSolution() {
             }}
           >
             <ArrowPathIcon className="w-4 h-4" />
-            Audience Sync
+            {hero.badge}
           </div>
           <h1
             className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6"
             style={{ fontFamily: "'Inter', sans-serif" }}
           >
-            <span className="text-white">Sync Audiences to</span>
+            <span className="text-white">{hero.title}</span>
             <br />
             <span
               style={{
@@ -95,25 +162,24 @@ export default function AudienceSyncSolution() {
                 WebkitTextFillColor: 'transparent',
               }}
             >
-              Every Ad Platform
+              {hero.titleHighlight}
             </span>
           </h1>
           <p
             className="text-lg md:text-xl max-w-3xl mx-auto mb-10"
             style={{ color: 'rgba(255, 255, 255, 0.7)' }}
           >
-            Push your CDP segments to Meta, Google, TikTok, and Snapchat with one click. Keep
-            audiences fresh with automatic syncing.
+            {hero.description}
           </p>
           <Link
-            to="/signup"
+            to={hero.ctaLink}
             className="inline-flex px-8 py-4 rounded-xl text-lg font-semibold text-white transition-all hover:opacity-90"
             style={{
               background: '#f97316',
               boxShadow: '0 4px 20px rgba(249, 115, 22, 0.4)',
             }}
           >
-            Start Free Trial
+            {hero.ctaText}
           </Link>
         </div>
       </section>
@@ -156,26 +222,7 @@ export default function AudienceSyncSolution() {
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl font-bold text-white text-center mb-16">How It Works</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                step: '1',
-                title: 'Build Your Segment',
-                description:
-                  'Create segments in the CDP using behavioral rules, RFM scores, or lifecycle stages.',
-              },
-              {
-                step: '2',
-                title: 'Connect Platforms',
-                description:
-                  'Authenticate your ad accounts with a few clicks. No engineering required.',
-              },
-              {
-                step: '3',
-                title: 'Sync & Optimize',
-                description:
-                  'Push to platforms instantly. Set auto-refresh intervals to keep audiences fresh.',
-              },
-            ].map((item) => (
+            {steps.map((item) => (
               <div key={item.step} className="text-center">
                 <div
                   className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-bold mx-auto mb-4"

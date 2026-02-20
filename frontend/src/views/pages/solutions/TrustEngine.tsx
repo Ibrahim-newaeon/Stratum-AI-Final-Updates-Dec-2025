@@ -3,6 +3,7 @@
  * Trust-gated automation system
  */
 
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { usePageContent, type SolutionPageContent } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
@@ -15,10 +16,71 @@ import {
   XCircleIcon,
 } from '@heroicons/react/24/outline';
 
+const fallbackHero = {
+  badge: 'Trust Engine',
+  title: 'Automation with',
+  titleHighlight: 'Built-In Safety',
+  description:
+    'The Trust Engine ensures automations only execute when your data is healthy. No more blind optimization based on bad signals.',
+  ctaText: 'Start Free Trial',
+  ctaLink: '/signup',
+};
+
+const fallbackFeatures = [
+  {
+    iconName: 'XCircleIcon',
+    title: 'Prevent Bad Decisions',
+    description: 'Never optimize on corrupted data',
+    color: '#ef4444',
+  },
+  {
+    iconName: 'CheckCircleIcon',
+    title: 'Reduce Manual Oversight',
+    description: 'Automated safety checks 24/7',
+    color: '#34c759',
+  },
+  {
+    iconName: 'ShieldCheckIcon',
+    title: 'Audit Trail',
+    description: 'Full logging of all gate decisions',
+    color: '#a855f7',
+  },
+  {
+    iconName: 'BoltIcon',
+    title: 'Customizable Thresholds',
+    description: 'Set your own risk tolerance',
+    color: '#06b6d4',
+  },
+];
+
+const fallbackSteps = [
+  { step: 1, title: 'Signal Health Check', description: 'Continuous monitoring of data quality' },
+  { step: 2, title: 'Trust Gate', description: 'Pass / Hold / Block decision' },
+  { step: 3, title: 'Automation Decision', description: 'Execute only when safe' },
+];
+
 export default function TrustEngineSolution() {
-  // CMS integration: SEO metadata override (full content_json extraction deferred)
-  const { page } = usePageContent<SolutionPageContent>('solutions-trust-engine');
-  void page; // Will be used for SEO meta override in follow-up phase
+  const { page, content } = usePageContent<SolutionPageContent>('solutions-trust-engine');
+
+  // SEO: override document title / meta description when CMS provides them
+  useEffect(() => {
+    if (page?.meta_title) document.title = page.meta_title;
+    if (page?.meta_description) {
+      document
+        .querySelector('meta[name="description"]')
+        ?.setAttribute('content', page.meta_description);
+    }
+  }, [page?.meta_title, page?.meta_description]);
+
+  // CMS data with hardcoded fallback
+  const hero = content?.hero ?? fallbackHero;
+  const benefits = content?.features?.length
+    ? content.features.map((f, i) => ({
+        ...f,
+        color: fallbackFeatures[i]?.color ?? '#a855f7',
+      }))
+    : fallbackFeatures;
+  const steps = content?.steps?.length ? content.steps : fallbackSteps;
 
   return (
     <PageLayout>
@@ -36,29 +98,28 @@ export default function TrustEngineSolution() {
                 }}
               >
                 <ShieldCheckIcon className="w-4 h-4" />
-                Trust Engine
+                {hero.badge}
               </div>
               <h1
                 className="text-4xl md:text-5xl font-bold mb-6"
                 style={{ fontFamily: "'Inter', sans-serif" }}
               >
-                <span className="text-white">Automation with</span>
+                <span className="text-white">{hero.title}</span>
                 <br />
-                <span style={{ color: '#f97316' }}>Built-In Safety</span>
+                <span style={{ color: '#f97316' }}>{hero.titleHighlight}</span>
               </h1>
               <p className="text-lg mb-8" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                The Trust Engine ensures automations only execute when your data is healthy. No more
-                blind optimization based on bad signals.
+                {hero.description}
               </p>
               <Link
-                to="/signup"
+                to={hero.ctaLink}
                 className="inline-flex px-8 py-4 rounded-xl text-lg font-semibold text-white transition-all hover:opacity-90"
                 style={{
                   background: '#f97316',
                   boxShadow: '0 4px 20px rgba(249, 115, 22, 0.4)',
                 }}
               >
-                Start Free Trial
+                {hero.ctaText}
               </Link>
             </div>
             <div
@@ -150,37 +211,32 @@ export default function TrustEngineSolution() {
             }}
           >
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 items-center">
-              <div className="text-center">
-                <SignalIcon className="w-12 h-12 mx-auto mb-3" style={{ color: '#a855f7' }} />
-                <h3 className="font-semibold text-white">Signal Health Check</h3>
-                <p className="text-sm mt-2" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
-                  Continuous monitoring of data quality
-                </p>
-              </div>
-              <div className="hidden md:block text-center">
-                <div className="text-4xl" style={{ color: 'rgba(255, 255, 255, 0.3)' }}>
-                  →
-                </div>
-              </div>
-              <div className="text-center">
-                <ShieldCheckIcon className="w-12 h-12 mx-auto mb-3" style={{ color: '#06b6d4' }} />
-                <h3 className="font-semibold text-white">Trust Gate</h3>
-                <p className="text-sm mt-2" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
-                  Pass / Hold / Block decision
-                </p>
-              </div>
-              <div className="hidden md:block text-center">
-                <div className="text-4xl" style={{ color: 'rgba(255, 255, 255, 0.3)' }}>
-                  →
-                </div>
-              </div>
-              <div className="text-center">
-                <BoltIcon className="w-12 h-12 mx-auto mb-3" style={{ color: '#f97316' }} />
-                <h3 className="font-semibold text-white">Automation Decision</h3>
-                <p className="text-sm mt-2" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
-                  Execute only when safe
-                </p>
-              </div>
+              {steps.map((step, idx) => {
+                const stepIcons = [SignalIcon, ShieldCheckIcon, BoltIcon];
+                const stepColors = ['#a855f7', '#06b6d4', '#f97316'];
+                const StepIcon = stepIcons[idx] ?? SignalIcon;
+                return (
+                  <div key={step.step}>
+                    {idx > 0 && (
+                      <div className="hidden md:block text-center mb-8">
+                        <div className="text-4xl" style={{ color: 'rgba(255, 255, 255, 0.3)' }}>
+                          →
+                        </div>
+                      </div>
+                    )}
+                    <div className="text-center">
+                      <StepIcon
+                        className="w-12 h-12 mx-auto mb-3"
+                        style={{ color: stepColors[idx] ?? '#a855f7' }}
+                      />
+                      <h3 className="font-semibold text-white">{step.title}</h3>
+                      <p className="text-sm mt-2" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                        {step.description}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -257,28 +313,7 @@ export default function TrustEngineSolution() {
             <h2 className="text-3xl font-bold text-white mb-4">Why Trust-Gated Automation?</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              {
-                title: 'Prevent Bad Decisions',
-                desc: 'Never optimize on corrupted data',
-                color: '#ef4444',
-              },
-              {
-                title: 'Reduce Manual Oversight',
-                desc: 'Automated safety checks 24/7',
-                color: '#34c759',
-              },
-              {
-                title: 'Audit Trail',
-                desc: 'Full logging of all gate decisions',
-                color: '#a855f7',
-              },
-              {
-                title: 'Customizable Thresholds',
-                desc: 'Set your own risk tolerance',
-                color: '#06b6d4',
-              },
-            ].map((benefit) => (
+            {benefits.map((benefit) => (
               <div
                 key={benefit.title}
                 className="p-6 rounded-2xl text-center backdrop-blur-xl transition-all hover:scale-[1.02]"
@@ -290,7 +325,7 @@ export default function TrustEngineSolution() {
               >
                 <h3 className="font-semibold text-white mb-2">{benefit.title}</h3>
                 <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
-                  {benefit.desc}
+                  {benefit.description}
                 </p>
               </div>
             ))}

@@ -3,6 +3,7 @@
  * ML-powered predictions and forecasting
  */
 
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { usePageContent, type SolutionPageContent } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
@@ -14,9 +15,27 @@ import {
   UserMinusIcon,
 } from '@heroicons/react/24/outline';
 
-const predictions = [
+const fallbackHero = {
+  badge: 'ML Predictions',
+  title: 'Predict the Future',
+  titleHighlight: 'Act Today',
+  description:
+    'Machine learning models trained on your data deliver actionable predictions for churn, LTV, revenue, and optimal customer actions.',
+  ctaText: 'Start Free Trial',
+  ctaLink: '/signup',
+};
+
+const fallbackSteps = [
+  { step: 1, title: 'Connect Data', description: 'Link your customer and event data' },
+  { step: 2, title: 'Train Models', description: 'ML models learn from your patterns' },
+  { step: 3, title: 'Get Predictions', description: 'Real-time scores for every customer' },
+  { step: 4, title: 'Take Action', description: 'Automated workflows based on predictions' },
+];
+
+const fallbackFeatures = [
   {
     icon: UserMinusIcon,
+    iconName: 'UserMinusIcon',
     title: 'Churn Prediction',
     description:
       'Identify at-risk customers before they leave. Get actionable retention recommendations.',
@@ -25,6 +44,7 @@ const predictions = [
   },
   {
     icon: CurrencyDollarIcon,
+    iconName: 'CurrencyDollarIcon',
     title: 'LTV Forecasting',
     description:
       'Predict customer lifetime value at acquisition. Optimize acquisition spend accordingly.',
@@ -33,6 +53,7 @@ const predictions = [
   },
   {
     icon: ArrowTrendingUpIcon,
+    iconName: 'ArrowTrendingUpIcon',
     title: 'Revenue Forecasting',
     description: 'Accurate revenue predictions based on historical patterns and market signals.',
     accuracy: '89%',
@@ -40,6 +61,7 @@ const predictions = [
   },
   {
     icon: LightBulbIcon,
+    iconName: 'LightBulbIcon',
     title: 'Next-Best-Action',
     description: 'AI-powered recommendations for the optimal next engagement for each customer.',
     accuracy: '87%',
@@ -47,10 +69,39 @@ const predictions = [
   },
 ];
 
+/** Map icon name strings from CMS to actual icon components */
+const iconMap: Record<string, typeof UserMinusIcon> = {
+  UserMinusIcon,
+  CurrencyDollarIcon,
+  ArrowTrendingUpIcon,
+  LightBulbIcon,
+  SparklesIcon,
+};
+
 export default function PredictionsSolution() {
-  // CMS integration: SEO metadata override (full content_json extraction deferred)
-  const { page } = usePageContent<SolutionPageContent>('solutions-predictions');
-  void page; // Will be used for SEO meta override in follow-up phase
+  const { page, content } = usePageContent<SolutionPageContent>('solutions-predictions');
+
+  // SEO: override document title / meta description when CMS provides them
+  useEffect(() => {
+    if (page?.meta_title) document.title = page.meta_title;
+    if (page?.meta_description) {
+      document
+        .querySelector('meta[name="description"]')
+        ?.setAttribute('content', page.meta_description);
+    }
+  }, [page?.meta_title, page?.meta_description]);
+
+  // CMS data with hardcoded fallback
+  const hero = content?.hero ?? fallbackHero;
+  const steps = content?.steps?.length ? content.steps : fallbackSteps;
+  const predictions = content?.features?.length
+    ? content.features.map((f, i) => ({
+        ...f,
+        icon: iconMap[f.iconName] ?? SparklesIcon,
+        color: fallbackFeatures[i]?.color ?? '#a855f7',
+        accuracy: fallbackFeatures[i]?.accuracy ?? '',
+      }))
+    : fallbackFeatures;
 
   return (
     <PageLayout>
@@ -68,29 +119,28 @@ export default function PredictionsSolution() {
                 }}
               >
                 <SparklesIcon className="w-4 h-4" />
-                ML Predictions
+                {hero.badge}
               </div>
               <h1
                 className="text-4xl md:text-5xl font-bold mb-6"
                 style={{ fontFamily: "'Inter', sans-serif" }}
               >
-                <span className="text-white">Predict the Future</span>
+                <span className="text-white">{hero.title}</span>
                 <br />
-                <span style={{ color: '#f97316' }}>Act Today</span>
+                <span style={{ color: '#f97316' }}>{hero.titleHighlight}</span>
               </h1>
               <p className="text-lg mb-8" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                Machine learning models trained on your data deliver actionable predictions for
-                churn, LTV, revenue, and optimal customer actions.
+                {hero.description}
               </p>
               <Link
-                to="/signup"
+                to={hero.ctaLink}
                 className="inline-flex px-8 py-4 rounded-xl text-lg font-semibold text-white transition-all hover:opacity-90"
                 style={{
                   background: '#f97316',
                   boxShadow: '0 4px 20px rgba(249, 115, 22, 0.4)',
                 }}
               >
-                Start Free Trial
+                {hero.ctaText}
               </Link>
             </div>
             <div
@@ -227,12 +277,7 @@ export default function PredictionsSolution() {
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl font-bold text-white text-center mb-16">How It Works</h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            {[
-              { step: '1', title: 'Connect Data', desc: 'Link your customer and event data' },
-              { step: '2', title: 'Train Models', desc: 'ML models learn from your patterns' },
-              { step: '3', title: 'Get Predictions', desc: 'Real-time scores for every customer' },
-              { step: '4', title: 'Take Action', desc: 'Automated workflows based on predictions' },
-            ].map((item) => (
+            {steps.map((item) => (
               <div key={item.step} className="text-center">
                 <div
                   className="w-14 h-14 rounded-xl flex items-center justify-center text-xl font-bold mx-auto mb-4"
@@ -245,7 +290,7 @@ export default function PredictionsSolution() {
                 </div>
                 <h3 className="text-lg font-semibold text-white mb-2">{item.title}</h3>
                 <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
-                  {item.desc}
+                  {item.description}
                 </p>
               </div>
             ))}

@@ -135,6 +135,26 @@ export const pageSEO = {
     description:
       'Stratum AI documentation. Learn how to integrate, configure, and get the most out of the platform.',
   },
+  privacy: {
+    title: 'Privacy Policy',
+    description:
+      'Stratum AI Privacy Policy. Learn how we collect, use, and protect your personal data.',
+  },
+  terms: {
+    title: 'Terms of Service',
+    description:
+      'Stratum AI Terms of Service. Review the terms governing your use of our revenue operating system.',
+  },
+  security: {
+    title: 'Security',
+    description:
+      'Enterprise-grade security at Stratum AI. SOC 2 Type II certified, GDPR compliant, with encryption at rest and in transit.',
+  },
+  dpa: {
+    title: 'Data Processing Agreement',
+    description:
+      'Stratum AI Data Processing Agreement. Details on how we process personal data on behalf of our customers.',
+  },
 };
 
 export default SEO;
