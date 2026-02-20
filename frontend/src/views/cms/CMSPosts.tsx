@@ -25,6 +25,7 @@ import {
   useSubmitForReview,
   WORKFLOW_STATUS_CONFIG,
 } from '@/api/cms';
+import { useCMSPermissions } from '@/hooks/useCMSPermissions';
 
 const STATUS_FILTERS: { value: PostStatus | ''; label: string }[] = [
   { value: '', label: 'All Statuses' },
@@ -41,6 +42,7 @@ const STATUS_FILTERS: { value: PostStatus | ''; label: string }[] = [
 
 export default function CMSPosts() {
   const navigate = useNavigate();
+  const { hasPermission } = useCMSPermissions();
   const [filters, setFilters] = useState<AdminPostFilters>({
     page: 1,
     page_size: 20,
@@ -71,16 +73,19 @@ export default function CMSPosts() {
   const getQuickAction = (post: CMSPost) => {
     switch (post.status) {
       case 'draft':
+        if (!hasPermission('submit_for_review')) return null;
         return {
           label: 'Submit for Review',
           action: () => submitForReviewMutation.mutate({ postId: post.id }),
         };
       case 'approved':
+        if (!hasPermission('publish_post')) return null;
         return {
           label: 'Publish',
           action: () => publishMutation.mutate(post.id),
         };
       case 'published':
+        if (!hasPermission('publish_post')) return null;
         return {
           label: 'Unpublish',
           action: () => unpublishMutation.mutate(post.id),
@@ -105,13 +110,15 @@ export default function CMSPosts() {
             {total} post{total !== 1 ? 's' : ''} total
           </p>
         </div>
-        <Link
-          to="/cms/posts/new"
-          className="flex items-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
-        >
-          <PlusIcon className="w-5 h-5" />
-          New Post
-        </Link>
+        {hasPermission('create_post') && (
+          <Link
+            to="/cms/posts/new"
+            className="flex items-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
+          >
+            <PlusIcon className="w-5 h-5" />
+            New Post
+          </Link>
+        )}
       </div>
 
       {/* Filters Bar */}
@@ -249,13 +256,15 @@ export default function CMSPosts() {
                       >
                         <PencilSquareIcon className="w-4 h-4" />
                       </button>
-                      <button
-                        onClick={() => setDeleteConfirm(post.id)}
-                        className="p-1.5 text-white/40 hover:text-red-400 transition-colors"
-                        title="Delete"
-                      >
-                        <TrashIcon className="w-4 h-4" />
-                      </button>
+                      {hasPermission('delete_any_post') && (
+                        <button
+                          onClick={() => setDeleteConfirm(post.id)}
+                          className="p-1.5 text-white/40 hover:text-red-400 transition-colors"
+                          title="Delete"
+                        >
+                          <TrashIcon className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 );

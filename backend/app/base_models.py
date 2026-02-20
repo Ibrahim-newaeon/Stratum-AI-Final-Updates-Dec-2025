@@ -345,6 +345,7 @@ class User(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
         nullable=False
     )
     permissions: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=False)
+    cms_role: Mapped[Optional[str]] = mapped_column(String(30), nullable=True, default=None)
 
     # Status
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
@@ -386,6 +387,7 @@ class User(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
         UniqueConstraint("tenant_id", "email_hash", name="uq_user_tenant_email"),
         Index("ix_users_email_hash", "email_hash"),
         Index("ix_users_tenant_active", "tenant_id", "is_active", "is_deleted"),
+        Index("ix_users_cms_role", "cms_role"),
     )
 
 

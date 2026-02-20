@@ -352,6 +352,7 @@ async def login(
         additional_claims={
             "tenant_id": user.tenant_id,
             "role": user.role.value,
+            "cms_role": user.cms_role,
             # NOTE: email intentionally excluded from JWT to prevent PII leakage
             # JWTs are base64-encoded (not encrypted) and visible in request headers
         },
@@ -502,6 +503,7 @@ async def refresh_token(
         additional_claims={
             "tenant_id": user.tenant_id,
             "role": user.role.value,
+            "cms_role": user.cms_role,
         },
     )
     refresh_token = create_refresh_token(subject=user.id)

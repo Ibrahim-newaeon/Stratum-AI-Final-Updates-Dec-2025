@@ -11,6 +11,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { DemoProvider } from './contexts/DemoContext';
 import LoadingSpinner from './components/common/LoadingSpinner';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import CMSProtectedRoute from './components/auth/CMSProtectedRoute';
 import OnboardingGuard from './components/auth/OnboardingGuard';
 import { SkipToContent } from './components/ui/skip-to-content';
 import { useDocumentDirection } from './hooks/useDocumentDirection';
@@ -101,6 +102,7 @@ const CMSLandingFeatures = lazy(() => import('./views/cms/CMSLandingFeatures'));
 const CMSLandingFAQ = lazy(() => import('./views/cms/CMSLandingFAQ'));
 const CMSLandingPricing = lazy(() => import('./views/cms/CMSLandingPricing'));
 const CMSSettingsView = lazy(() => import('./views/cms/CMSSettings'));
+const CMSUsers = lazy(() => import('./views/cms/CMSUsers'));
 
 // Tenant-scoped views (Campaign Builder)
 const ConnectPlatforms = lazy(() => import('./views/tenant/ConnectPlatforms'));
@@ -303,15 +305,15 @@ function App() {
                       }
                     />
 
-                    {/* CMS Portal (protected - admin/superadmin only) */}
+                    {/* CMS Portal (protected - requires cms_role) */}
                     <Route
                       path="/cms"
                       element={
-                        <ProtectedRoute requiredRole="admin">
+                        <CMSProtectedRoute>
                           <Suspense fallback={<LoadingSpinner />}>
                             <CMSLayout />
                           </Suspense>
-                        </ProtectedRoute>
+                        </CMSProtectedRoute>
                       }
                     >
                       <Route
@@ -418,6 +420,15 @@ function App() {
                         element={
                           <Suspense fallback={<LoadingSpinner />}>
                             <CMSSettingsView />
+                          </Suspense>
+                        }
+                      />
+                      {/* CMS User Management */}
+                      <Route
+                        path="users"
+                        element={
+                          <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400" /></div>}>
+                            <CMSUsers />
                           </Suspense>
                         }
                       />

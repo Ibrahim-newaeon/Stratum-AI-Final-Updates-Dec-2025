@@ -217,6 +217,99 @@ def require_superadmin():
 
 
 # =============================================================================
+# CMS Auth Dependencies
+# =============================================================================
+
+
+async def get_cms_user(
+    request: Request,
+    current_user: Annotated[CurrentUser, Depends(get_current_user)],
+) -> CurrentUser:
+    """
+    Dependency that verifies the user has a CMS role assigned.
+
+    Stores the cms_role in request.state for downstream use.
+
+    Raises:
+        HTTPException(403): If the user has no CMS role assigned.
+    """
+    cms_role = current_user.user.cms_role
+    if not cms_role:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="CMS access denied: no CMS role assigned",
+        )
+    request.state.cms_role = cms_role
+    return current_user
+
+
+def require_cms_permission(*permissions: str) -> Any:
+    """
+    Dependency factory that requires the user to have specific CMS permissions.
+
+    Usage:
+        @router.get("/posts", dependencies=[Depends(require_cms_permission("view_all_posts"))])
+        async def list_posts(): ...
+
+    Args:
+        permissions: One or more permission strings to check (all must pass).
+
+    Returns:
+        A dependency function that validates CMS permissions.
+    """
+    from app.models.cms import CMSRole, CMS_PERMISSIONS, has_permission
+
+    async def cms_permission_checker(
+        request: Request,
+        current_user: Annotated[CurrentUser, Depends(get_cms_user)],
+    ) -> CurrentUser:
+        cms_role_str = current_user.user.cms_role
+        try:
+            cms_role = CMSRole(cms_role_str)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Invalid CMS role: {cms_role_str}",
+            )
+
+        for perm in permissions:
+            if not has_permission(cms_role, perm):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=f"CMS permission denied: '{perm}' not granted to role '{cms_role_str}'",
+                )
+        return current_user
+
+    return cms_permission_checker
+
+
+async def check_cms_permission(request: Request, permission: str) -> bool:
+    """
+    Simple async helper to check a CMS permission from request state.
+
+    Returns True if the permission is granted, False otherwise.
+    Useful for conditional logic inside endpoint handlers.
+
+    Args:
+        request: The FastAPI request (must have cms_role set in state via get_cms_user).
+        permission: The permission string to check.
+
+    Returns:
+        bool: True if permission granted, False otherwise.
+    """
+    from app.models.cms import CMSRole, has_permission
+
+    cms_role_str = getattr(request.state, "cms_role", None)
+    if not cms_role_str:
+        return False
+    try:
+        cms_role = CMSRole(cms_role_str)
+    except ValueError:
+        return False
+    return has_permission(cms_role, permission)
+
+
+# =============================================================================
 # Token Generation Utilities
 # =============================================================================
 

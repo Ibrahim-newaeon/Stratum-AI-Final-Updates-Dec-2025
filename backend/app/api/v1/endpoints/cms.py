@@ -27,6 +27,7 @@ from sqlalchemy import and_, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.base_models import User
 from app.core.logging import get_logger
 from app.db.session import get_async_session
 from app.models.cms import (
@@ -52,6 +53,9 @@ from app.schemas.cms import (
     CategoryListResponse,
     CategoryResponse,
     CategoryUpdate,
+    CMSAssignRoleRequest,
+    CMSInviteUserRequest,
+    CMSUpdateRoleRequest,
     ContactListResponse,
     ContactMarkRead,
     ContactMarkResponded,
@@ -108,10 +112,21 @@ def count_words(content: Optional[str]) -> Optional[int]:
     return len(re.findall(r"\w+", content))
 
 
-async def check_superadmin(request: Request) -> bool:
-    """Check if the current user is a superadmin."""
-    user_role = getattr(request.state, "role", None)
-    return user_role == "superadmin"
+async def check_cms_permission(request: Request, permission: str) -> bool:
+    """Check if the current user has a specific CMS permission."""
+    cms_role_str = getattr(request.state, "cms_role", None)
+    if not cms_role_str:
+        # Fallback: also allow platform superadmins (they get auto-assigned cms_role in migration)
+        user_role = getattr(request.state, "role", None)
+        if user_role == "superadmin":
+            return True
+        return False
+    try:
+        from app.models.cms import CMSRole, has_permission
+        role = CMSRole(cms_role_str)
+        return has_permission(role, permission)
+    except (ValueError, KeyError):
+        return False
 
 
 # =============================================================================
@@ -539,9 +554,9 @@ async def admin_list_posts(
     db: AsyncSession = Depends(get_async_session),
 ) -> APIResponse[PostListResponse]:
     """List all posts (admin endpoint)."""
-    if not await check_superadmin(request):
+    if not await check_cms_permission(request, "view_all_posts"):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+            status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
         )
 
     conditions = [CMSPost.is_deleted == False]
@@ -673,9 +688,9 @@ async def admin_get_post(
     db: AsyncSession = Depends(get_async_session),
 ) -> APIResponse[PostResponse]:
     """Get a single post by ID (admin endpoint)."""
-    if not await check_superadmin(request):
+    if not await check_cms_permission(request, "view_all_posts"):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+            status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
         )
 
     result = await db.execute(
@@ -776,9 +791,9 @@ async def admin_create_post(
     db: AsyncSession = Depends(get_async_session),
 ) -> APIResponse[PostResponse]:
     """Create a new post (admin endpoint)."""
-    if not await check_superadmin(request):
+    if not await check_cms_permission(request, "create_post"):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+            status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
         )
 
     # Generate slug if not provided
@@ -930,9 +945,9 @@ async def admin_update_post(
     db: AsyncSession = Depends(get_async_session),
 ) -> APIResponse[PostResponse]:
     """Update a post (admin endpoint)."""
-    if not await check_superadmin(request):
+    if not await check_cms_permission(request, "edit_any_post"):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+            status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
         )
 
     result = await db.execute(
@@ -1103,9 +1118,9 @@ async def admin_delete_post(
     db: AsyncSession = Depends(get_async_session),
 ) -> None:
     """Soft delete a post (admin endpoint)."""
-    if not await check_superadmin(request):
+    if not await check_cms_permission(request, "delete_any_post"):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+            status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
         )
 
     result = await db.execute(
@@ -1133,9 +1148,9 @@ async def admin_list_categories(
     db: AsyncSession = Depends(get_async_session),
 ) -> APIResponse[CategoryListResponse]:
     """List all categories (admin endpoint)."""
-    if not await check_superadmin(request):
+    if not await check_cms_permission(request, "manage_categories"):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+            status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
         )
 
     result = await db.execute(
@@ -1177,9 +1192,9 @@ async def admin_create_category(
     db: AsyncSession = Depends(get_async_session),
 ) -> APIResponse[CategoryResponse]:
     """Create a category (admin endpoint)."""
-    if not await check_superadmin(request):
+    if not await check_cms_permission(request, "manage_categories"):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+            status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
         )
 
     slug = body.slug or slugify(body.name)
@@ -1223,9 +1238,9 @@ async def admin_update_category(
     db: AsyncSession = Depends(get_async_session),
 ) -> APIResponse[CategoryResponse]:
     """Update a category (admin endpoint)."""
-    if not await check_superadmin(request):
+    if not await check_cms_permission(request, "manage_categories"):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+            status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
         )
 
     result = await db.execute(select(CMSCategory).where(CMSCategory.id == category_id))
@@ -1276,9 +1291,9 @@ async def admin_delete_category(
     db: AsyncSession = Depends(get_async_session),
 ) -> None:
     """Delete a category (admin endpoint)."""
-    if not await check_superadmin(request):
+    if not await check_cms_permission(request, "manage_categories"):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+            status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
         )
 
     result = await db.execute(select(CMSCategory).where(CMSCategory.id == category_id))
@@ -1302,9 +1317,9 @@ async def admin_list_tags(
     db: AsyncSession = Depends(get_async_session),
 ) -> APIResponse[TagListResponse]:
     """List all tags (admin endpoint)."""
-    if not await check_superadmin(request):
+    if not await check_cms_permission(request, "manage_tags"):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+            status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
         )
 
     result = await db.execute(select(CMSTag).order_by(desc(CMSTag.usage_count), CMSTag.name))
@@ -1340,9 +1355,9 @@ async def admin_create_tag(
     db: AsyncSession = Depends(get_async_session),
 ) -> APIResponse[TagResponse]:
     """Create a tag (admin endpoint)."""
-    if not await check_superadmin(request):
+    if not await check_cms_permission(request, "manage_tags"):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+            status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
         )
 
     slug = body.slug or slugify(body.name)
@@ -1381,9 +1396,9 @@ async def admin_update_tag(
     db: AsyncSession = Depends(get_async_session),
 ) -> APIResponse[TagResponse]:
     """Update a tag (admin endpoint)."""
-    if not await check_superadmin(request):
+    if not await check_cms_permission(request, "manage_tags"):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+            status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
         )
 
     result = await db.execute(select(CMSTag).where(CMSTag.id == tag_id))
@@ -1426,9 +1441,9 @@ async def admin_delete_tag(
     db: AsyncSession = Depends(get_async_session),
 ) -> None:
     """Delete a tag (admin endpoint)."""
-    if not await check_superadmin(request):
+    if not await check_cms_permission(request, "manage_tags"):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+            status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
         )
 
     result = await db.execute(select(CMSTag).where(CMSTag.id == tag_id))
@@ -1452,9 +1467,9 @@ async def admin_list_authors(
     db: AsyncSession = Depends(get_async_session),
 ) -> APIResponse[AuthorListResponse]:
     """List all authors (admin endpoint)."""
-    if not await check_superadmin(request):
+    if not await check_cms_permission(request, "manage_authors"):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+            status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
         )
 
     result = await db.execute(select(CMSAuthor).order_by(CMSAuthor.name))
@@ -1500,9 +1515,9 @@ async def admin_create_author(
     db: AsyncSession = Depends(get_async_session),
 ) -> APIResponse[AuthorResponse]:
     """Create an author (admin endpoint)."""
-    if not await check_superadmin(request):
+    if not await check_cms_permission(request, "manage_authors"):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+            status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
         )
 
     slug = body.slug or slugify(body.name)
@@ -1571,9 +1586,9 @@ async def admin_update_author(
     db: AsyncSession = Depends(get_async_session),
 ) -> APIResponse[AuthorResponse]:
     """Update an author (admin endpoint)."""
-    if not await check_superadmin(request):
+    if not await check_cms_permission(request, "manage_authors"):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+            status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
         )
 
     result = await db.execute(select(CMSAuthor).where(CMSAuthor.id == author_id))
@@ -1642,9 +1657,9 @@ async def admin_delete_author(
     db: AsyncSession = Depends(get_async_session),
 ) -> None:
     """Delete an author (admin endpoint)."""
-    if not await check_superadmin(request):
+    if not await check_cms_permission(request, "manage_authors"):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+            status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
         )
 
     result = await db.execute(select(CMSAuthor).where(CMSAuthor.id == author_id))
@@ -1668,9 +1683,9 @@ async def admin_list_pages(
     db: AsyncSession = Depends(get_async_session),
 ) -> APIResponse[PageListResponse]:
     """List all pages (admin endpoint)."""
-    if not await check_superadmin(request):
+    if not await check_cms_permission(request, "manage_pages"):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+            status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
         )
 
     result = await db.execute(
@@ -1717,9 +1732,9 @@ async def admin_create_page(
     db: AsyncSession = Depends(get_async_session),
 ) -> APIResponse[PageResponse]:
     """Create a page (admin endpoint)."""
-    if not await check_superadmin(request):
+    if not await check_cms_permission(request, "manage_pages"):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+            status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
         )
 
     slug = body.slug or slugify(body.title)
@@ -1773,9 +1788,9 @@ async def admin_update_page(
     db: AsyncSession = Depends(get_async_session),
 ) -> APIResponse[PageResponse]:
     """Update a page (admin endpoint)."""
-    if not await check_superadmin(request):
+    if not await check_cms_permission(request, "manage_pages"):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+            status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
         )
 
     result = await db.execute(
@@ -1844,9 +1859,9 @@ async def admin_delete_page(
     db: AsyncSession = Depends(get_async_session),
 ) -> None:
     """Soft delete a page (admin endpoint)."""
-    if not await check_superadmin(request):
+    if not await check_cms_permission(request, "manage_pages"):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+            status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
         )
 
     result = await db.execute(
@@ -1876,9 +1891,9 @@ async def admin_list_contacts(
     db: AsyncSession = Depends(get_async_session),
 ) -> APIResponse[ContactListResponse]:
     """List contact submissions (admin endpoint)."""
-    if not await check_superadmin(request):
+    if not await check_cms_permission(request, "view_all_posts"):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+            status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
         )
 
     conditions = []
@@ -1947,9 +1962,9 @@ async def admin_mark_contact_read(
     db: AsyncSession = Depends(get_async_session),
 ) -> APIResponse[ContactResponse]:
     """Mark contact as read (admin endpoint)."""
-    if not await check_superadmin(request):
+    if not await check_cms_permission(request, "manage_categories"):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+            status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
         )
 
     user_id = getattr(request.state, "user_id", None)
@@ -2003,9 +2018,9 @@ async def admin_mark_contact_responded(
     db: AsyncSession = Depends(get_async_session),
 ) -> APIResponse[ContactResponse]:
     """Mark contact as responded (admin endpoint)."""
-    if not await check_superadmin(request):
+    if not await check_cms_permission(request, "manage_categories"):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+            status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
         )
 
     result = await db.execute(
@@ -2058,9 +2073,9 @@ async def admin_mark_contact_spam(
     db: AsyncSession = Depends(get_async_session),
 ) -> APIResponse[ContactResponse]:
     """Mark contact as spam (admin endpoint)."""
-    if not await check_superadmin(request):
+    if not await check_cms_permission(request, "manage_categories"):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Superadmin access required"
+            status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
         )
 
     result = await db.execute(
@@ -2116,8 +2131,8 @@ async def submit_post_for_review(
     Transitions: DRAFT -> IN_REVIEW
     Allowed roles: Author, Contributor (with Author+ upgrade), Editor, Editor-in-Chief, Admin, Super Admin
     """
-    if not await check_superadmin(request):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+    if not await check_cms_permission(request, "submit_for_review"):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied")
 
     user_id = getattr(request.state, "user_id", None)
 
@@ -2189,8 +2204,8 @@ async def approve_post(
     Transitions: IN_REVIEW -> APPROVED
     Allowed roles: Reviewer, Editor-in-Chief, Admin, Super Admin
     """
-    if not await check_superadmin(request):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+    if not await check_cms_permission(request, "approve_post"):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied")
 
     user_id = getattr(request.state, "user_id", None)
 
@@ -2261,8 +2276,8 @@ async def reject_post(
     Transitions: IN_REVIEW -> REJECTED
     Allowed roles: Reviewer, Editor-in-Chief, Admin, Super Admin
     """
-    if not await check_superadmin(request):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+    if not await check_cms_permission(request, "reject_post"):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied")
 
     user_id = getattr(request.state, "user_id", None)
 
@@ -2331,8 +2346,8 @@ async def request_post_changes(
     Transitions: IN_REVIEW -> CHANGES_REQUESTED
     Allowed roles: Reviewer, Editor, Editor-in-Chief, Admin, Super Admin
     """
-    if not await check_superadmin(request):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+    if not await check_cms_permission(request, "request_changes"):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied")
 
     user_id = getattr(request.state, "user_id", None)
 
@@ -2398,8 +2413,8 @@ async def schedule_post(
     Transitions: APPROVED -> SCHEDULED
     Allowed roles: Editor, Editor-in-Chief, Admin, Super Admin
     """
-    if not await check_superadmin(request):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+    if not await check_cms_permission(request, "schedule_post"):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied")
 
     user_id = getattr(request.state, "user_id", None)
 
@@ -2474,8 +2489,8 @@ async def publish_post_immediately(
     Transitions: APPROVED/SCHEDULED -> PUBLISHED
     Allowed roles: Editor-in-Chief, Admin, Super Admin
     """
-    if not await check_superadmin(request):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+    if not await check_cms_permission(request, "publish_post"):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied")
 
     user_id = getattr(request.state, "user_id", None)
 
@@ -2545,8 +2560,8 @@ async def unpublish_post(
     Transitions: PUBLISHED -> UNPUBLISHED
     Allowed roles: Editor-in-Chief, Admin, Super Admin
     """
-    if not await check_superadmin(request):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+    if not await check_cms_permission(request, "publish_post"):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied")
 
     user_id = getattr(request.state, "user_id", None)
 
@@ -2607,8 +2622,8 @@ async def archive_post(
     Transitions: Any -> ARCHIVED
     Allowed roles: Editor-in-Chief, Admin, Super Admin
     """
-    if not await check_superadmin(request):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+    if not await check_cms_permission(request, "publish_post"):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied")
 
     user_id = getattr(request.state, "user_id", None)
 
@@ -2663,8 +2678,8 @@ async def get_post_workflow_history(
     Get workflow history for a post (2026 Workflow).
     Returns audit trail of all status changes and actions.
     """
-    if not await check_superadmin(request):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+    if not await check_cms_permission(request, "view_all_posts"):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied")
 
     # Verify post exists
     result = await db.execute(select(CMSPost).where(CMSPost.id == post_id))
@@ -2726,8 +2741,8 @@ async def get_post_versions(
     Get version history for a post (2026 Content Versioning).
     Returns all content snapshots for rollback and audit.
     """
-    if not await check_superadmin(request):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+    if not await check_cms_permission(request, "view_all_posts"):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied")
 
     # Verify post exists
     result = await db.execute(select(CMSPost).where(CMSPost.id == post_id))
@@ -2791,8 +2806,8 @@ async def restore_post_version(
     Restore a post to a previous version (2026 Content Versioning).
     Creates a new version with the restored content.
     """
-    if not await check_superadmin(request):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+    if not await check_cms_permission(request, "edit_any_post"):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied")
 
     user_id = getattr(request.state, "user_id", None)
 
@@ -2878,4 +2893,243 @@ async def restore_post_version(
             "new_version": post.version,
         },
         message=f"Post restored to version {version}",
+    )
+
+
+# =============================================================================
+# CMS User Management Endpoints
+# =============================================================================
+
+
+@router.get("/admin/users", response_model=APIResponse)
+async def list_cms_users(
+    request: Request,
+    db: AsyncSession = Depends(get_async_session),
+) -> APIResponse:
+    """List all users with CMS roles. Requires manage_users permission."""
+    if not await check_cms_permission(request, "manage_users"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="CMS permission denied: manage_users required",
+        )
+
+    query = (
+        select(User)
+        .where(
+            User.cms_role.isnot(None),
+            User.is_deleted == False,
+        )
+        .order_by(User.cms_role, User.full_name)
+    )
+
+    result = await db.execute(query)
+    users = result.scalars().all()
+
+    user_list = []
+    for u in users:
+        user_list.append(
+            {
+                "id": u.id,
+                "email": u.email or "",
+                "full_name": u.full_name or "",
+                "cms_role": u.cms_role,
+                "is_active": u.is_active,
+                "last_login_at": u.last_login_at.isoformat() if u.last_login_at else None,
+                "avatar_url": u.avatar_url if hasattr(u, "avatar_url") else None,
+            }
+        )
+
+    return APIResponse(
+        success=True,
+        data={"users": user_list, "total": len(user_list)},
+    )
+
+
+@router.get("/admin/me/permissions", response_model=APIResponse)
+async def get_my_cms_permissions(
+    request: Request,
+) -> APIResponse:
+    """Get current user's CMS permissions."""
+    cms_role_str = getattr(request.state, "cms_role", None)
+    if not cms_role_str:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No CMS role assigned",
+        )
+
+    try:
+        from app.models.cms import CMSRole, CMS_PERMISSIONS
+
+        role = CMSRole(cms_role_str)
+        permissions = CMS_PERMISSIONS.get(role, {})
+    except (ValueError, KeyError):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Invalid CMS role: {cms_role_str}",
+        )
+
+    return APIResponse(
+        success=True,
+        data={"role": cms_role_str, "permissions": permissions},
+    )
+
+
+@router.post("/admin/users/assign", response_model=APIResponse)
+async def assign_cms_role(
+    request: Request,
+    body: CMSAssignRoleRequest,
+    db: AsyncSession = Depends(get_async_session),
+) -> APIResponse:
+    """Assign a CMS role to an existing platform user."""
+    if not await check_cms_permission(request, "manage_users"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="CMS permission denied: manage_users required",
+        )
+
+    # Find the user
+    query = select(User).where(User.id == body.user_id, User.is_deleted == False)
+    result = await db.execute(query)
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    user.cms_role = body.cms_role
+    await db.commit()
+    await db.refresh(user)
+
+    return APIResponse(
+        success=True,
+        data={"id": user.id, "email": user.email or "", "cms_role": user.cms_role},
+        message=f"CMS role '{body.cms_role}' assigned to user {user.id}",
+    )
+
+
+@router.patch("/admin/users/{user_id}/role", response_model=APIResponse)
+async def update_cms_role(
+    request: Request,
+    user_id: int,
+    body: CMSUpdateRoleRequest,
+    db: AsyncSession = Depends(get_async_session),
+) -> APIResponse:
+    """Change a CMS user's role."""
+    if not await check_cms_permission(request, "manage_users"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="CMS permission denied: manage_users required",
+        )
+
+    # Prevent changing own role
+    current_user_id = getattr(request.state, "user_id", None)
+    if current_user_id == user_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot change your own CMS role",
+        )
+
+    query = select(User).where(User.id == user_id, User.is_deleted == False)
+    result = await db.execute(query)
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    if not user.cms_role:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User does not have a CMS role",
+        )
+
+    user.cms_role = body.cms_role
+    await db.commit()
+
+    return APIResponse(
+        success=True,
+        data={"id": user.id, "cms_role": user.cms_role},
+        message=f"CMS role updated to '{body.cms_role}'",
+    )
+
+
+@router.delete("/admin/users/{user_id}/role", response_model=APIResponse)
+async def revoke_cms_role(
+    request: Request,
+    user_id: int,
+    db: AsyncSession = Depends(get_async_session),
+) -> APIResponse:
+    """Revoke CMS access from a user."""
+    if not await check_cms_permission(request, "manage_users"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="CMS permission denied: manage_users required",
+        )
+
+    current_user_id = getattr(request.state, "user_id", None)
+    if current_user_id == user_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot revoke your own CMS access",
+        )
+
+    query = select(User).where(User.id == user_id, User.is_deleted == False)
+    result = await db.execute(query)
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    user.cms_role = None
+    await db.commit()
+
+    return APIResponse(
+        success=True,
+        message=f"CMS access revoked for user {user_id}",
+    )
+
+
+@router.post("/admin/users/invite", response_model=APIResponse)
+async def invite_cms_user(
+    request: Request,
+    body: CMSInviteUserRequest,
+    db: AsyncSession = Depends(get_async_session),
+) -> APIResponse:
+    """Create a new user account with a CMS role."""
+    if not await check_cms_permission(request, "manage_users"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="CMS permission denied: manage_users required",
+        )
+
+    import hashlib
+
+    from app.base_models import UserRole
+    from app.core.security import encrypt_pii, get_password_hash
+
+    # Check if email already exists
+    email_hash = hashlib.sha256(body.email.lower().strip().encode()).hexdigest()
+    existing = await db.execute(
+        select(User).where(User.email_hash == email_hash, User.is_deleted == False)
+    )
+    if existing.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="A user with this email already exists",
+        )
+
+    # Create the user
+    new_user = User(
+        email=encrypt_pii(body.email.lower().strip()),
+        email_hash=email_hash,
+        password_hash=get_password_hash(body.password),
+        full_name=encrypt_pii(body.full_name),
+        role=UserRole.VIEWER,  # Minimal platform role
+        cms_role=body.cms_role,
+        is_active=True,
+        is_verified=True,
+        tenant_id=1,  # Global CMS tenant
+    )
+    db.add(new_user)
+    await db.commit()
+    await db.refresh(new_user)
+
+    return APIResponse(
+        success=True,
+        data={"id": new_user.id, "email": body.email, "cms_role": new_user.cms_role},
+        message=f"CMS user created with role '{body.cms_role}'",
     )

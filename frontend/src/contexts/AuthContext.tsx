@@ -28,6 +28,7 @@ const DEMO_CREDENTIALS: Record<string, { email: string; password: string; user: 
       permissions: ['all'],
       tenant_id: 1,
       user_type: 'agency',
+      cms_role: 'super_admin',
     },
   },
   admin: {
@@ -42,6 +43,7 @@ const DEMO_CREDENTIALS: Record<string, { email: string; password: string; user: 
       permissions: ['all'],
       tenant_id: 1,
       user_type: 'agency',
+      cms_role: 'admin',
     },
   },
   manager: {
@@ -112,6 +114,10 @@ export interface User {
   user_type?: 'agency' | 'portal';
   /** Client ID for portal (VIEWER) users */
   client_id?: number | null;
+  /** CMS-specific role (separate from platform role) */
+  cms_role?: string | null;
+  /** CMS permission map fetched from the backend */
+  cms_permissions?: Record<string, boolean>;
 }
 
 interface AuthContextType {
@@ -230,6 +236,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           tenant_id: tenantId,
           user_type: userData.data.user_type || 'agency',
           client_id: userData.data.client_id ?? null,
+          cms_role: userData.data.cms_role ?? null,
         };
       } else {
         // Fallback if /me fails - create user from token claims
@@ -241,6 +248,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           permissions: ['all'],
           tenant_id: jwtTenantId ?? null,
           user_type: 'agency',
+          cms_role: (jwtPayload.cms_role as string) ?? null,
         };
       }
 

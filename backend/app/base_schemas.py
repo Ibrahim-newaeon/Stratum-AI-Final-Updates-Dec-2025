@@ -208,6 +208,7 @@ class UserResponse(UserBase, TimestampMixin):
     is_verified: bool
     last_login_at: Optional[datetime]
     avatar_url: Optional[str]
+    cms_role: Optional[str] = None
 
 
 class UserProfileResponse(UserResponse):

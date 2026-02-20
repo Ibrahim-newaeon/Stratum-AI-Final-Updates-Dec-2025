@@ -30,8 +30,8 @@ export default function CMSLogin() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // If already logged in as admin, redirect to CMS
-  if (user && (user.role === 'superadmin' || user.role === 'admin')) {
+  // If already logged in with a CMS role, redirect to CMS
+  if (user && user.cms_role) {
     navigate('/cms');
     return null;
   }
@@ -45,15 +45,16 @@ export default function CMSLogin() {
       const result = await login(email, password);
 
       if (result.success) {
-        // Check if user has CMS access (superadmin or admin)
-        const userRole = (result as any).user?.role;
-        if (userRole === 'superadmin' || userRole === 'admin') {
+        // After login, re-read the user from auth context (stored in localStorage)
+        const storedUser = localStorage.getItem('stratum_auth');
+        const parsedUser = storedUser ? JSON.parse(storedUser) : null;
+        if (parsedUser?.cms_role) {
           navigate('/cms');
         } else {
-          setError('Access denied. CMS requires admin privileges.');
+          setError('No CMS role assigned. Contact your CMS administrator.');
           localStorage.removeItem('access_token');
           localStorage.removeItem('refresh_token');
-          localStorage.removeItem('user');
+          localStorage.removeItem('stratum_auth');
         }
       } else {
         setError(result.error || 'Invalid credentials');

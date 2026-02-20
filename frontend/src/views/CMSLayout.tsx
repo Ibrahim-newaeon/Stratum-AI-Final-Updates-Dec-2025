@@ -25,36 +25,49 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
+import { useCMSPermissions, CMSPermissions } from '@/hooks/useCMSPermissions';
+import { UsersIcon } from '@heroicons/react/24/outline';
 
 interface NavItem {
   name: string;
   href: string;
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   badge?: string;
+  /** Permission key required to see this item (null = always visible) */
+  permission?: keyof CMSPermissions | null;
 }
 
 const navigation: NavItem[] = [
-  { name: 'Dashboard', href: '/cms', icon: HomeIcon },
-  { name: 'Posts', href: '/cms/posts', icon: DocumentTextIcon },
-  { name: 'Pages', href: '/cms/pages', icon: RectangleStackIcon },
-  { name: 'Categories', href: '/cms/categories', icon: TagIcon },
-  { name: 'Authors', href: '/cms/authors', icon: UserCircleIcon },
-  { name: 'Contact Submissions', href: '/cms/contacts', icon: EnvelopeIcon },
+  { name: 'Dashboard', href: '/cms', icon: HomeIcon, permission: null },
+  { name: 'Posts', href: '/cms/posts', icon: DocumentTextIcon, permission: 'view_own_posts' },
+  { name: 'Pages', href: '/cms/pages', icon: RectangleStackIcon, permission: 'manage_pages' },
+  { name: 'Categories', href: '/cms/categories', icon: TagIcon, permission: 'manage_categories' },
+  { name: 'Authors', href: '/cms/authors', icon: UserCircleIcon, permission: 'manage_authors' },
+  { name: 'Contact Submissions', href: '/cms/contacts', icon: EnvelopeIcon, permission: 'view_all_posts' },
 ];
 
 const landingContent: NavItem[] = [
-  { name: 'Features', href: '/cms/landing/features', icon: SparklesIcon },
-  { name: 'FAQ', href: '/cms/landing/faq', icon: QuestionMarkCircleIcon },
-  { name: 'Pricing', href: '/cms/landing/pricing', icon: CurrencyDollarIcon },
+  { name: 'Features', href: '/cms/landing/features', icon: SparklesIcon, permission: 'manage_pages' },
+  { name: 'FAQ', href: '/cms/landing/faq', icon: QuestionMarkCircleIcon, permission: 'manage_pages' },
+  { name: 'Pricing', href: '/cms/landing/pricing', icon: CurrencyDollarIcon, permission: 'manage_pages' },
 ];
 
 export default function CMSLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { hasPermission } = useCMSPermissions();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [landingExpanded, setLandingExpanded] = useState(
     location.pathname.includes('/cms/landing')
+  );
+
+  // Filter navigation items based on CMS permissions
+  const filteredNavigation = navigation.filter(
+    (item) => !item.permission || hasPermission(item.permission)
+  );
+  const filteredLandingContent = landingContent.filter(
+    (item) => !item.permission || hasPermission(item.permission)
   );
 
   const handleLogout = () => {
@@ -86,7 +99,7 @@ export default function CMSLayout() {
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {/* Main nav */}
         <div className="space-y-1">
-          {navigation.map((item) => (
+          {filteredNavigation.map((item) => (
             <NavLink
               key={item.name}
               to={item.href}
@@ -113,6 +126,7 @@ export default function CMSLayout() {
         </div>
 
         {/* Landing Content Section */}
+        {filteredLandingContent.length > 0 && (
         <div className="pt-4 mt-4 border-t border-white/10">
           <button
             onClick={() => setLandingExpanded(!landingExpanded)}
@@ -125,7 +139,7 @@ export default function CMSLayout() {
           </button>
           {landingExpanded && (
             <div className="mt-1 space-y-1">
-              {landingContent.map((item) => (
+              {filteredLandingContent.map((item) => (
                 <NavLink
                   key={item.name}
                   to={item.href}
@@ -146,8 +160,31 @@ export default function CMSLayout() {
             </div>
           )}
         </div>
+        )}
+
+        {/* Users Management */}
+        {hasPermission('manage_users') && (
+        <div className="pt-4 mt-4 border-t border-white/10">
+          <NavLink
+            to="/cms/users"
+            onClick={() => setSidebarOpen(false)}
+            className={({ isActive: active }) =>
+              cn(
+                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all',
+                active
+                  ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                  : 'text-white/60 hover:text-white hover:bg-white/5'
+              )
+            }
+          >
+            <UsersIcon className="w-5 h-5" />
+            Users
+          </NavLink>
+        </div>
+        )}
 
         {/* Settings */}
+        {hasPermission('access_settings') && (
         <div className="pt-4 mt-4 border-t border-white/10">
           <NavLink
             to="/cms/settings"
@@ -165,6 +202,7 @@ export default function CMSLayout() {
             Settings
           </NavLink>
         </div>
+        )}
       </nav>
 
       {/* User section */}

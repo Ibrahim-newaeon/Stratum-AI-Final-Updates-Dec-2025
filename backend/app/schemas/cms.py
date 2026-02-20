@@ -549,3 +549,72 @@ class CMSAPIResponse(BaseModel):
     data: Optional[Any] = None
     message: Optional[str] = None
     errors: Optional[list[dict[str, Any]]] = None
+
+
+# =============================================================================
+# CMS User Management Schemas
+# =============================================================================
+
+
+class CMSUserResponse(CMSBaseSchema):
+    """CMS user in API responses."""
+
+    id: int
+    email: str
+    full_name: Optional[str] = None
+    cms_role: str
+    is_active: bool
+    last_login_at: Optional[datetime] = None
+    avatar_url: Optional[str] = None
+
+
+class CMSAssignRoleRequest(BaseModel):
+    """Assign CMS role to existing user."""
+
+    user_id: int
+    cms_role: str
+
+    @field_validator("cms_role")
+    @classmethod
+    def validate_cms_role(cls, v: str) -> str:
+        from app.models.cms import CMSRole
+
+        valid = [r.value for r in CMSRole]
+        if v not in valid:
+            raise ValueError(f"Invalid CMS role. Must be one of: {valid}")
+        return v
+
+
+class CMSUpdateRoleRequest(BaseModel):
+    """Update CMS user role."""
+
+    cms_role: str
+
+    @field_validator("cms_role")
+    @classmethod
+    def validate_cms_role(cls, v: str) -> str:
+        from app.models.cms import CMSRole
+
+        valid = [r.value for r in CMSRole]
+        if v not in valid:
+            raise ValueError(f"Invalid CMS role. Must be one of: {valid}")
+        return v
+
+
+class CMSInviteUserRequest(BaseModel):
+    """Invite new user with CMS role."""
+
+    email: str = Field(..., max_length=255)
+    full_name: str = Field(..., max_length=255)
+    password: str = Field(..., min_length=8, max_length=128)
+    cms_role: str
+
+    @field_validator("cms_role")
+    @classmethod
+    def validate_cms_role(cls, v: str) -> str:
+        from app.models.cms import CMSRole
+
+        valid = [r.value for r in CMSRole]
+        if v not in valid:
+            raise ValueError(f"Invalid CMS role. Must be one of: {valid}")
+        return v
