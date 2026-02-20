@@ -4,6 +4,11 @@
 """
 Celery task for processing and applying approved autopilot actions.
 Handles safe execution of budget changes, pauses, and other campaign modifications.
+
+When ``settings.use_mock_ad_data`` is True (default), executors return
+simulated responses.  When False, executors make real API calls to
+Meta Marketing API, Google Ads REST API, and TikTok Business API using
+tokens stored in the application settings.
 """
 
 from datetime import datetime, timezone
@@ -42,30 +47,54 @@ class PlatformExecutor:
         """
         Execute an action on the platform.
 
+        Delegates to ``_live_execute`` when ``settings.use_mock_ad_data``
+        is False, otherwise falls back to ``_mock_execute``.
+
         Returns:
             Dict with keys: success, before_value, after_value, platform_response, error
         """
-        raise NotImplementedError
+        from app.core.config import settings
 
+        if settings.use_mock_ad_data:
+            return self._mock_execute(action_type, entity_type, entity_id, action_details)
 
-class MetaExecutor(PlatformExecutor):
-    """Executor for Meta (Facebook/Instagram) platform actions."""
+        return await self._live_execute(action_type, entity_type, entity_id, action_details)
 
-    async def execute_action(
+    def _mock_execute(
         self,
         action_type: str,
         entity_type: str,
         entity_id: str,
         action_details: Dict[str, Any],
     ) -> Dict[str, Any]:
-        """Execute action on Meta platform."""
-        # In production, this would use the Meta Marketing API
-        # For now, simulate successful execution
+        """Mock execution - must be overridden by subclasses."""
+        raise NotImplementedError
 
-        logger.info(f"[META] Executing {action_type} on {entity_type} {entity_id}")
+    async def _live_execute(
+        self,
+        action_type: str,
+        entity_type: str,
+        entity_id: str,
+        action_details: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """Live execution against the real platform API - must be overridden by subclasses."""
+        raise NotImplementedError
 
-        # Simulate API call
-        before_value = {"status": "ACTIVE", "daily_budget": 10000}
+
+class MetaExecutor(PlatformExecutor):
+    """Executor for Meta (Facebook/Instagram) platform actions."""
+
+    def _mock_execute(
+        self,
+        action_type: str,
+        entity_type: str,
+        entity_id: str,
+        action_details: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """Simulate successful execution for Meta platform."""
+        logger.info(f"[META] Mock executing {action_type} on {entity_type} {entity_id}")
+
+        before_value: Dict[str, Any] = {"status": "ACTIVE", "daily_budget": 10000}
         after_value = before_value.copy()
 
         if action_type == ActionType.BUDGET_INCREASE.value:
@@ -86,25 +115,171 @@ class MetaExecutor(PlatformExecutor):
             "success": True,
             "before_value": before_value,
             "after_value": after_value,
-            "platform_response": {"request_id": "meta_123", "status": "success"},
+            "platform_response": {"request_id": "meta_mock_123", "status": "success"},
             "error": None,
         }
 
-
-class GoogleExecutor(PlatformExecutor):
-    """Executor for Google Ads platform actions."""
-
-    async def execute_action(
+    async def _live_execute(
         self,
         action_type: str,
         entity_type: str,
         entity_id: str,
         action_details: Dict[str, Any],
     ) -> Dict[str, Any]:
-        """Execute action on Google Ads platform."""
-        logger.info(f"[GOOGLE] Executing {action_type} on {entity_type} {entity_id}")
+        """Execute action on Meta Marketing API.
 
-        before_value = {"status": "ENABLED", "budget_micros": 10000000}
+        Uses ``httpx`` to call the Graph API.  Budget values are sent in
+        cents (the Meta API unit) and status changes use PAUSED/ACTIVE.
+
+        Args:
+            action_type: One of the ActionType enum values.
+            entity_type: campaign, adset, or creative.
+            entity_id: The Meta object ID.
+            action_details: Dict with amount/percentage keys for budget ops.
+
+        Returns:
+            Standardised result dict.
+        """
+        import httpx
+        from app.core.config import settings
+
+        logger.info(f"[META] Live executing {action_type} on {entity_type} {entity_id}")
+
+        base_url = f"https://graph.facebook.com/{settings.meta_api_version}"
+        access_token = settings.meta_access_token
+
+        if not access_token:
+            return {
+                "success": False,
+                "before_value": None,
+                "after_value": None,
+                "platform_response": None,
+                "error": "Meta access token is not configured",
+            }
+
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                # Step 1: GET current state to capture before_value
+                get_resp = await client.get(
+                    f"{base_url}/{entity_id}",
+                    params={
+                        "fields": "status,daily_budget",
+                        "access_token": access_token,
+                    },
+                )
+                if get_resp.status_code != 200:
+                    error_body = get_resp.text
+                    logger.error(f"[META] GET entity failed: {error_body}")
+                    return {
+                        "success": False,
+                        "before_value": None,
+                        "after_value": None,
+                        "platform_response": {"status_code": get_resp.status_code, "body": error_body},
+                        "error": f"Failed to fetch entity state: HTTP {get_resp.status_code}",
+                    }
+
+                before_value = get_resp.json()
+
+                # Step 2: Determine the update payload
+                update_payload: Dict[str, Any] = {}
+
+                if action_type in [ActionType.BUDGET_INCREASE.value, ActionType.BUDGET_DECREASE.value]:
+                    amount = action_details.get("amount", 0)
+                    current_budget = int(before_value.get("daily_budget", 0))
+
+                    if action_type == ActionType.BUDGET_INCREASE.value:
+                        new_budget = current_budget + int(amount * 100)  # amount in dollars -> cents
+                    else:
+                        new_budget = max(0, current_budget - int(amount * 100))
+
+                    update_payload["daily_budget"] = new_budget
+
+                elif action_type in [
+                    ActionType.PAUSE_CAMPAIGN.value,
+                    ActionType.PAUSE_ADSET.value,
+                    ActionType.PAUSE_CREATIVE.value,
+                ]:
+                    update_payload["status"] = "PAUSED"
+
+                elif action_type in [
+                    ActionType.ENABLE_CAMPAIGN.value,
+                    ActionType.ENABLE_ADSET.value,
+                    ActionType.ENABLE_CREATIVE.value,
+                ]:
+                    update_payload["status"] = "ACTIVE"
+
+                if not update_payload:
+                    return {
+                        "success": False,
+                        "before_value": before_value,
+                        "after_value": None,
+                        "platform_response": None,
+                        "error": f"Unsupported action type for Meta: {action_type}",
+                    }
+
+                # Step 3: POST update
+                update_payload["access_token"] = access_token
+                post_resp = await client.post(
+                    f"{base_url}/{entity_id}",
+                    data=update_payload,
+                )
+
+                if post_resp.status_code != 200:
+                    error_body = post_resp.text
+                    logger.error(f"[META] POST update failed: {error_body}")
+                    return {
+                        "success": False,
+                        "before_value": before_value,
+                        "after_value": None,
+                        "platform_response": {"status_code": post_resp.status_code, "body": error_body},
+                        "error": f"Failed to update entity: HTTP {post_resp.status_code}",
+                    }
+
+                platform_response = post_resp.json()
+
+                # Step 4: GET updated state for after_value
+                after_resp = await client.get(
+                    f"{base_url}/{entity_id}",
+                    params={
+                        "fields": "status,daily_budget",
+                        "access_token": access_token,
+                    },
+                )
+                after_value = after_resp.json() if after_resp.status_code == 200 else update_payload
+
+                return {
+                    "success": True,
+                    "before_value": before_value,
+                    "after_value": after_value,
+                    "platform_response": platform_response,
+                    "error": None,
+                }
+
+        except Exception as exc:
+            logger.error(f"[META] Live execution error: {exc}", exc_info=True)
+            return {
+                "success": False,
+                "before_value": None,
+                "after_value": None,
+                "platform_response": None,
+                "error": str(exc),
+            }
+
+
+class GoogleExecutor(PlatformExecutor):
+    """Executor for Google Ads platform actions."""
+
+    def _mock_execute(
+        self,
+        action_type: str,
+        entity_type: str,
+        entity_id: str,
+        action_details: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """Simulate successful execution for Google Ads platform."""
+        logger.info(f"[GOOGLE] Mock executing {action_type} on {entity_type} {entity_id}")
+
+        before_value: Dict[str, Any] = {"status": "ENABLED", "budget_micros": 10000000}
         after_value = before_value.copy()
 
         if action_type == ActionType.BUDGET_INCREASE.value:
@@ -125,25 +300,264 @@ class GoogleExecutor(PlatformExecutor):
             "success": True,
             "before_value": before_value,
             "after_value": after_value,
-            "platform_response": {"operation_name": "operations/123", "status": "DONE"},
+            "platform_response": {"operation_name": "operations/mock_123", "status": "DONE"},
             "error": None,
         }
 
+    async def _get_access_token(self) -> Optional[str]:
+        """Obtain an access token by refreshing via Google OAuth.
 
-class TikTokExecutor(PlatformExecutor):
-    """Executor for TikTok Ads platform actions."""
+        Uses the ``google_ads_refresh_token``, ``google_ads_client_id``,
+        and ``google_ads_client_secret`` from settings.
 
-    async def execute_action(
+        Returns:
+            Access token string or None if refresh fails.
+        """
+        import httpx
+        from app.core.config import settings
+
+        if not settings.google_ads_refresh_token:
+            return None
+
+        if not settings.google_ads_client_id or not settings.google_ads_client_secret:
+            logger.error("[GOOGLE] Client ID/Secret not configured for token refresh")
+            return None
+
+        try:
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                resp = await client.post(
+                    "https://oauth2.googleapis.com/token",
+                    data={
+                        "client_id": settings.google_ads_client_id,
+                        "client_secret": settings.google_ads_client_secret,
+                        "refresh_token": settings.google_ads_refresh_token,
+                        "grant_type": "refresh_token",
+                    },
+                )
+                if resp.status_code == 200:
+                    return resp.json().get("access_token")
+                else:
+                    logger.error(f"[GOOGLE] Token refresh failed: {resp.text}")
+                    return None
+        except Exception as exc:
+            logger.error(f"[GOOGLE] Token refresh error: {exc}", exc_info=True)
+            return None
+
+    async def _live_execute(
         self,
         action_type: str,
         entity_type: str,
         entity_id: str,
         action_details: Dict[str, Any],
     ) -> Dict[str, Any]:
-        """Execute action on TikTok Ads platform."""
-        logger.info(f"[TIKTOK] Executing {action_type} on {entity_type} {entity_id}")
+        """Execute action on Google Ads REST API.
 
-        before_value = {"operation_status": "ENABLE", "budget": 100.00}
+        Uses v18 of the Google Ads REST API.  Budget mutations target
+        campaignBudgets resources (amount_micros) and status mutations
+        target campaigns resources.
+
+        ``entity_id`` is expected to encode the required identifiers:
+        - For budget changes: ``{customer_id}/campaignBudgets/{budget_id}``
+          or action_details should contain ``customer_id`` and ``budget_id``.
+        - For status changes: ``{customer_id}/campaigns/{campaign_id}``
+          or action_details should contain ``customer_id``.
+
+        Args:
+            action_type: One of the ActionType enum values.
+            entity_type: campaign, adset, etc.
+            entity_id: Platform entity ID or composite key.
+            action_details: Dict with amount, customer_id, budget_id keys.
+
+        Returns:
+            Standardised result dict.
+        """
+        import httpx
+        from app.core.config import settings
+
+        logger.info(f"[GOOGLE] Live executing {action_type} on {entity_type} {entity_id}")
+
+        base_url = "https://googleads.googleapis.com/v18"
+        developer_token = settings.google_ads_developer_token
+
+        if not developer_token:
+            return {
+                "success": False,
+                "before_value": None,
+                "after_value": None,
+                "platform_response": None,
+                "error": "Google Ads developer token is not configured",
+            }
+
+        access_token = await self._get_access_token()
+        if not access_token:
+            return {
+                "success": False,
+                "before_value": None,
+                "after_value": None,
+                "platform_response": None,
+                "error": "Failed to obtain Google Ads access token",
+            }
+
+        customer_id = action_details.get("customer_id") or settings.google_ads_customer_id
+        if not customer_id:
+            return {
+                "success": False,
+                "before_value": None,
+                "after_value": None,
+                "platform_response": None,
+                "error": "Google Ads customer ID is not configured",
+            }
+
+        # Strip hyphens from customer ID (Google API expects plain digits)
+        customer_id = str(customer_id).replace("-", "")
+
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "developer-token": developer_token,
+            "Content-Type": "application/json",
+        }
+
+        try:
+            async with httpx.AsyncClient(timeout=30.0, headers=headers) as client:
+                # Budget operations
+                if action_type in [ActionType.BUDGET_INCREASE.value, ActionType.BUDGET_DECREASE.value]:
+                    budget_id = action_details.get("budget_id", entity_id)
+                    resource_name = f"customers/{customer_id}/campaignBudgets/{budget_id}"
+
+                    # GET current budget (via searchStream GAQL)
+                    search_url = f"{base_url}/customers/{customer_id}/googleAds:searchStream"
+                    query = (
+                        f"SELECT campaign_budget.amount_micros "
+                        f"FROM campaign_budget "
+                        f"WHERE campaign_budget.resource_name = '{resource_name}' "
+                        f"LIMIT 1"
+                    )
+                    search_resp = await client.post(search_url, json={"query": query})
+                    current_micros = 0
+                    before_value: Dict[str, Any] = {"budget_micros": 0}
+
+                    if search_resp.status_code == 200:
+                        stream_data = search_resp.json()
+                        for batch in stream_data:
+                            for row in batch.get("results", []):
+                                current_micros = int(
+                                    row.get("campaignBudget", {}).get("amountMicros", 0)
+                                )
+                        before_value = {"budget_micros": current_micros}
+
+                    amount = action_details.get("amount", 0)
+                    if action_type == ActionType.BUDGET_INCREASE.value:
+                        new_micros = current_micros + int(amount * 1_000_000)
+                    else:
+                        new_micros = max(0, current_micros - int(amount * 1_000_000))
+
+                    # PATCH budget
+                    patch_url = f"{base_url}/{resource_name}"
+                    patch_resp = await client.patch(
+                        patch_url,
+                        json={"amount_micros": str(new_micros)},
+                        params={"updateMask": "amount_micros"},
+                    )
+
+                    if patch_resp.status_code not in (200, 204):
+                        error_body = patch_resp.text
+                        logger.error(f"[GOOGLE] Budget PATCH failed: {error_body}")
+                        return {
+                            "success": False,
+                            "before_value": before_value,
+                            "after_value": None,
+                            "platform_response": {"status_code": patch_resp.status_code, "body": error_body},
+                            "error": f"Budget update failed: HTTP {patch_resp.status_code}",
+                        }
+
+                    after_value: Dict[str, Any] = {"budget_micros": new_micros}
+                    return {
+                        "success": True,
+                        "before_value": before_value,
+                        "after_value": after_value,
+                        "platform_response": patch_resp.json() if patch_resp.text else {"status": "OK"},
+                        "error": None,
+                    }
+
+                # Status operations (pause/enable)
+                elif action_type in [
+                    ActionType.PAUSE_CAMPAIGN.value,
+                    ActionType.PAUSE_ADSET.value,
+                    ActionType.ENABLE_CAMPAIGN.value,
+                    ActionType.ENABLE_ADSET.value,
+                ]:
+                    campaign_id = action_details.get("campaign_id", entity_id)
+                    resource_name = f"customers/{customer_id}/campaigns/{campaign_id}"
+
+                    # Determine target status
+                    if action_type in [ActionType.PAUSE_CAMPAIGN.value, ActionType.PAUSE_ADSET.value]:
+                        new_status = "PAUSED"
+                    else:
+                        new_status = "ENABLED"
+
+                    before_value = {"status": "ENABLED" if new_status == "PAUSED" else "PAUSED"}
+
+                    patch_url = f"{base_url}/{resource_name}"
+                    patch_resp = await client.patch(
+                        patch_url,
+                        json={"status": new_status},
+                        params={"updateMask": "status"},
+                    )
+
+                    if patch_resp.status_code not in (200, 204):
+                        error_body = patch_resp.text
+                        logger.error(f"[GOOGLE] Status PATCH failed: {error_body}")
+                        return {
+                            "success": False,
+                            "before_value": before_value,
+                            "after_value": None,
+                            "platform_response": {"status_code": patch_resp.status_code, "body": error_body},
+                            "error": f"Status update failed: HTTP {patch_resp.status_code}",
+                        }
+
+                    after_value = {"status": new_status}
+                    return {
+                        "success": True,
+                        "before_value": before_value,
+                        "after_value": after_value,
+                        "platform_response": patch_resp.json() if patch_resp.text else {"status": "OK"},
+                        "error": None,
+                    }
+
+                else:
+                    return {
+                        "success": False,
+                        "before_value": None,
+                        "after_value": None,
+                        "platform_response": None,
+                        "error": f"Unsupported action type for Google: {action_type}",
+                    }
+
+        except Exception as exc:
+            logger.error(f"[GOOGLE] Live execution error: {exc}", exc_info=True)
+            return {
+                "success": False,
+                "before_value": None,
+                "after_value": None,
+                "platform_response": None,
+                "error": str(exc),
+            }
+
+
+class TikTokExecutor(PlatformExecutor):
+    """Executor for TikTok Ads platform actions."""
+
+    def _mock_execute(
+        self,
+        action_type: str,
+        entity_type: str,
+        entity_id: str,
+        action_details: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """Simulate successful execution for TikTok platform."""
+        logger.info(f"[TIKTOK] Mock executing {action_type} on {entity_type} {entity_id}")
+
+        before_value: Dict[str, Any] = {"operation_status": "ENABLE", "budget": 100.00}
         after_value = before_value.copy()
 
         if action_type == ActionType.BUDGET_INCREASE.value:
@@ -165,13 +579,165 @@ class TikTokExecutor(PlatformExecutor):
             "error": None,
         }
 
+    async def _live_execute(
+        self,
+        action_type: str,
+        entity_type: str,
+        entity_id: str,
+        action_details: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """Execute action on TikTok Ads API.
+
+        Uses v1.3 of the TikTok Business API.  Budget and status changes
+        are performed via the ``campaign/update/`` endpoint.
+
+        ``action_details`` should include ``advertiser_id`` (falls back to
+        ``settings.tiktok_advertiser_id``).  ``entity_id`` is the
+        campaign/adgroup ID.
+
+        Args:
+            action_type: One of the ActionType enum values.
+            entity_type: campaign, adset, etc.
+            entity_id: The TikTok campaign or ad group ID.
+            action_details: Dict with amount, advertiser_id keys.
+
+        Returns:
+            Standardised result dict.
+        """
+        import httpx
+        from app.core.config import settings
+
+        logger.info(f"[TIKTOK] Live executing {action_type} on {entity_type} {entity_id}")
+
+        base_url = "https://business-api.tiktok.com/open_api/v1.3"
+        access_token = settings.tiktok_access_token
+        advertiser_id = action_details.get("advertiser_id") or settings.tiktok_advertiser_id
+
+        if not access_token:
+            return {
+                "success": False,
+                "before_value": None,
+                "after_value": None,
+                "platform_response": None,
+                "error": "TikTok access token is not configured",
+            }
+
+        if not advertiser_id:
+            return {
+                "success": False,
+                "before_value": None,
+                "after_value": None,
+                "platform_response": None,
+                "error": "TikTok advertiser ID is not configured",
+            }
+
+        headers = {
+            "Access-Token": access_token,
+            "Content-Type": "application/json",
+        }
+
+        try:
+            async with httpx.AsyncClient(timeout=30.0, headers=headers) as client:
+                # Step 1: GET current campaign info for before_value
+                info_url = f"{base_url}/campaign/get/"
+                info_params = {
+                    "advertiser_id": advertiser_id,
+                    "filtering": json.dumps({"campaign_ids": [entity_id]}),
+                }
+                info_resp = await client.get(info_url, params=info_params)
+
+                before_value: Dict[str, Any] = {"operation_status": "ENABLE", "budget": 0}
+                if info_resp.status_code == 200:
+                    info_data = info_resp.json()
+                    if info_data.get("code") == 0:
+                        campaigns = info_data.get("data", {}).get("list", [])
+                        if campaigns:
+                            camp = campaigns[0]
+                            before_value = {
+                                "operation_status": camp.get("operation_status", "ENABLE"),
+                                "budget": camp.get("budget", 0),
+                            }
+
+                # Step 2: Build update payload
+                update_url = f"{base_url}/campaign/update/"
+                update_payload: Dict[str, Any] = {
+                    "advertiser_id": advertiser_id,
+                    "campaign_id": entity_id,
+                }
+
+                if action_type in [ActionType.BUDGET_INCREASE.value, ActionType.BUDGET_DECREASE.value]:
+                    amount = action_details.get("amount", 0)
+                    current_budget = float(before_value.get("budget", 0))
+
+                    if action_type == ActionType.BUDGET_INCREASE.value:
+                        new_budget = current_budget + amount
+                    else:
+                        new_budget = max(0, current_budget - amount)
+
+                    update_payload["budget"] = new_budget
+
+                elif action_type in [ActionType.PAUSE_CAMPAIGN.value, ActionType.PAUSE_ADSET.value]:
+                    update_payload["operation_status"] = "DISABLE"
+
+                elif action_type in [ActionType.ENABLE_CAMPAIGN.value, ActionType.ENABLE_ADSET.value]:
+                    update_payload["operation_status"] = "ENABLE"
+
+                else:
+                    return {
+                        "success": False,
+                        "before_value": before_value,
+                        "after_value": None,
+                        "platform_response": None,
+                        "error": f"Unsupported action type for TikTok: {action_type}",
+                    }
+
+                # Step 3: POST update
+                post_resp = await client.post(update_url, json=update_payload)
+                resp_data = post_resp.json()
+
+                if resp_data.get("code") != 0:
+                    error_msg = resp_data.get("message", "Unknown TikTok API error")
+                    logger.error(f"[TIKTOK] Update failed: {error_msg}")
+                    return {
+                        "success": False,
+                        "before_value": before_value,
+                        "after_value": None,
+                        "platform_response": resp_data,
+                        "error": error_msg,
+                    }
+
+                # Build after_value from what we sent
+                after_value = before_value.copy()
+                if "budget" in update_payload:
+                    after_value["budget"] = update_payload["budget"]
+                if "operation_status" in update_payload:
+                    after_value["operation_status"] = update_payload["operation_status"]
+
+                return {
+                    "success": True,
+                    "before_value": before_value,
+                    "after_value": after_value,
+                    "platform_response": resp_data,
+                    "error": None,
+                }
+
+        except Exception as exc:
+            logger.error(f"[TIKTOK] Live execution error: {exc}", exc_info=True)
+            return {
+                "success": False,
+                "before_value": None,
+                "after_value": None,
+                "platform_response": None,
+                "error": str(exc),
+            }
+
 
 # Platform executor registry
-PLATFORM_EXECUTORS = {
+PLATFORM_EXECUTORS: Dict[str, PlatformExecutor] = {
     "meta": MetaExecutor(),
     "google": GoogleExecutor(),
     "tiktok": TikTokExecutor(),
-    "snapchat": MetaExecutor(),  # Use similar executor for now
+    "snapchat": MetaExecutor(),  # Snapchat uses Meta-like executor for now
 }
 
 

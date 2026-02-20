@@ -506,7 +506,16 @@ class AutopilotEnforcer:
         """
         Auto-pause a campaign that violates ROAS/budget thresholds.
 
-        Returns True if campaign was paused.
+        Delegates the actual pause operation to the appropriate platform
+        executor from the ``PLATFORM_EXECUTORS`` registry.  The platform
+        is inferred from ``metrics["platform"]``; if not present the
+        method tries each registered executor.
+
+        The call is wrapped in a try/except so that executor failures
+        do not break the enforcement flow -- the intervention is still
+        logged and the method returns False on failure.
+
+        Returns True if campaign was paused successfully.
         """
         settings = await self.get_settings(tenant_id)
 
@@ -516,7 +525,7 @@ class AutopilotEnforcer:
         if settings.default_mode != EnforcementMode.HARD_BLOCK:
             return False
 
-        # Log the auto-pause
+        # Log the auto-pause intervention regardless of execution outcome
         await self._log_intervention(
             tenant_id=tenant_id,
             action_type="auto_pause",
@@ -528,10 +537,51 @@ class AutopilotEnforcer:
             details={"reason": reason, "metrics": metrics},
         )
 
-        logger.info(f"Auto-paused campaign {campaign_id} for tenant {tenant_id}: {reason}")
+        # Delegate to the platform executor for the actual pause
+        try:
+            from app.tasks.apply_actions_queue import PLATFORM_EXECUTORS
 
-        # TODO: Actually pause the campaign via platform API
-        return True
+            platform = metrics.get("platform")
+
+            if platform and platform in PLATFORM_EXECUTORS:
+                executor = PLATFORM_EXECUTORS[platform]
+            else:
+                # If platform is unknown, try meta as a sensible default
+                # since it is the most common platform
+                executor = PLATFORM_EXECUTORS.get("meta")
+                if executor is None:
+                    logger.warning(
+                        f"No executor available for platform={platform} "
+                        f"when auto-pausing campaign {campaign_id}"
+                    )
+                    return False
+
+            exec_result = await executor.execute_action(
+                action_type="pause_campaign",
+                entity_type="campaign",
+                entity_id=campaign_id,
+                action_details=metrics,
+            )
+
+            if exec_result.get("success"):
+                logger.info(
+                    f"Auto-paused campaign {campaign_id} for tenant {tenant_id}: {reason}"
+                )
+                return True
+            else:
+                logger.error(
+                    f"Platform executor failed to auto-pause campaign {campaign_id}: "
+                    f"{exec_result.get('error', 'unknown error')}"
+                )
+                return False
+
+        except Exception as exc:
+            # Do not let executor failures break the enforcement flow
+            logger.error(
+                f"Error auto-pausing campaign {campaign_id} via platform executor: {exc}",
+                exc_info=True,
+            )
+            return False
 
     async def set_kill_switch(
         self,

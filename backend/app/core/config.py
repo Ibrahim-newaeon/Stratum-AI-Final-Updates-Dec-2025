@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     app_env: Literal["development", "staging", "production"] = Field(
         default="development"
     )
-    debug: bool = Field(default=True)
+    debug: bool = Field(default=False)
     secret_key: str = Field(
         default="dev-secret-key-change-in-production",
         min_length=32,
@@ -274,6 +274,36 @@ class Settings(BaseSettings):
             # DATABASE_URL was overridden (e.g. by Railway) but DATABASE_URL_SYNC was not
             sync_url = self.database_url.replace("postgresql+asyncpg://", "postgresql://", 1)
             object.__setattr__(self, "database_url_sync", sync_url)
+        return self
+
+    @model_validator(mode="after")
+    def enforce_production_safety(self) -> "Settings":
+        """Reject insecure default values in production and staging environments."""
+        if self.app_env in ("production", "staging"):
+            if self.secret_key == "dev-secret-key-change-in-production":
+                raise ValueError(
+                    f"secret_key must be changed from its default value in {self.app_env}"
+                )
+            if self.jwt_secret_key == "jwt-secret-dev":
+                raise ValueError(
+                    f"jwt_secret_key must be changed from its default value in {self.app_env}"
+                )
+            if self.pii_encryption_key == "dev-encryption-key-32bytes":
+                raise ValueError(
+                    f"pii_encryption_key must be changed from its default value in {self.app_env}"
+                )
+            if (
+                self.whatsapp_verify_token == "stratum-whatsapp-verify-token"
+                and self.whatsapp_phone_number_id is not None
+            ):
+                raise ValueError(
+                    f"whatsapp_verify_token must be changed from its default value in {self.app_env} "
+                    "when WhatsApp is configured"
+                )
+            if self.use_mock_ad_data is True:
+                raise ValueError(
+                    f"use_mock_ad_data must be False in {self.app_env} — production must use real API data"
+                )
         return self
 
 

@@ -202,3 +202,11 @@ async def check_database_health() -> dict:
     except Exception as e:
         logger.error("database_health_check_failed", error=str(e))
         return {"status": "unhealthy", "database": "disconnected", "error": str(e)}
+
+
+# =============================================================================
+# Legacy Alias
+# =============================================================================
+# Several task modules import this name. It is an alias for AsyncSessionLocal
+# used as an async context manager (matching the interface of async_session_context).
+async_session_factory = async_session_context

@@ -20,6 +20,16 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - stratum_network
 
@@ -40,6 +50,16 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - stratum_network
 
@@ -54,7 +74,7 @@ services:
     restart: unless-stopped
     environment:
       - APP_ENV=${APP_ENV:-development}
-      - DEBUG=${DEBUG:-true}
+      - DEBUG=${DEBUG:-false}
       - SECRET_KEY=${SECRET_KEY:-dev-secret-key-change-in-production}
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-stratum}:${POSTGRES_PASSWORD:-stratum_secure_password_2024}@db:5432/${POSTGRES_DB:-stratum_ai}
       - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER:-stratum}:${POSTGRES_PASSWORD:-stratum_secure_password_2024}@db:5432/${POSTGRES_DB:-stratum_ai}
@@ -127,10 +147,20 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - stratum_network
     command: >
-      sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+      sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers ${UVICORN_WORKERS:-2}"
 
   # ===========================================================================
   # Celery Worker (Background Tasks)
@@ -191,6 +221,22 @@ services:
         condition: service_healthy
       api:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A app.workers.celery_app inspect ping --timeout 10"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - stratum_network
     command: celery -A app.workers.celery_app worker --loglevel=info --concurrency=4
@@ -214,6 +260,22 @@ services:
       - ./backend:/app
     depends_on:
       - worker
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A app.workers.celery_app inspect ping --timeout 10"]
+      interval: 60s
+      timeout: 15s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - stratum_network
     command: celery -A app.workers.celery_app beat --loglevel=info
@@ -239,6 +301,16 @@ services:
       - "5173:5173"
     depends_on:
       - api
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - stratum_network
     command: npm run dev -- --host 0.0.0.0
@@ -255,10 +327,21 @@ services:
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/1
       - FLOWER_PORT=5555
+      - FLOWER_BASIC_AUTH=${FLOWER_USER:-admin}:${FLOWER_PASSWORD:-changeme}
     ports:
       - "5555:5555"
     depends_on:
       - worker
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - stratum_network
     command: celery -A app.workers.celery_app flower --port=5555

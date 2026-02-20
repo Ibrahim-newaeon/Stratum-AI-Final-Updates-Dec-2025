@@ -24,6 +24,7 @@ from app.core.logging import get_logger, setup_logging
 from app.core.websocket import ws_manager
 from app.db.session import async_engine, check_database_health
 from app.middleware.audit import AuditMiddleware
+from app.middleware.security import SecurityHeadersMiddleware
 from app.middleware.tenant import TenantMiddleware
 from app.middleware.rate_limit import RateLimitMiddleware
 from app.api.v1 import api_router
@@ -123,8 +124,8 @@ def create_application() -> FastAPI:
         CORSMiddleware,
         allow_origins=settings.cors_origins_list,
         allow_credentials=settings.cors_allow_credentials,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type", "X-Request-ID", "X-Tenant-ID", "Accept", "Origin"],
         expose_headers=["X-Request-ID", "X-Rate-Limit-Remaining"],
     )
 
@@ -143,6 +144,9 @@ def create_application() -> FastAPI:
 
     # Audit logging for state-changing requests
     app.add_middleware(AuditMiddleware)
+
+    # Security headers (CSP, HSTS, X-Frame-Options, etc.)
+    app.add_middleware(SecurityHeadersMiddleware)
 
     # Request timing middleware
     @app.middleware("http")
