@@ -250,12 +250,27 @@ class Tenant(Base, TimestampMixin, SoftDeleteMixin):
     slug: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     domain: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 
+    # Status & Health (added by migration 009 — SuperAdmin system)
+    status: Mapped[str] = mapped_column(String(20), default="active", server_default="active", nullable=False)
+    health_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    churn_risk_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    last_activity_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_admin_login_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    onboarding_completed: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+
     # Subscription & Billing
     plan: Mapped[str] = mapped_column(String(50), default="free", nullable=False)
     plan_expires_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
     stripe_customer_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    mrr_cents: Mapped[int] = mapped_column(Integer, default=0, server_default="0", nullable=False)
+    trial_ends_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    billing_email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    billing_address: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    vat_number: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    timezone: Mapped[str] = mapped_column(String(50), default="UTC", server_default="UTC")
+    currency: Mapped[str] = mapped_column(String(3), default="USD", server_default="USD")
 
     # Settings
     settings: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=False)
@@ -264,6 +279,8 @@ class Tenant(Base, TimestampMixin, SoftDeleteMixin):
     # Limits
     max_users: Mapped[int] = mapped_column(Integer, default=5, nullable=False)
     max_campaigns: Mapped[int] = mapped_column(Integer, default=50, nullable=False)
+    max_connectors: Mapped[int] = mapped_column(Integer, default=3, server_default="3")
+    max_refresh_frequency_mins: Mapped[int] = mapped_column(Integer, default=60, server_default="60")
 
     # Relationships
     users: Mapped[List["User"]] = relationship(
