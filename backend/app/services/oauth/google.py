@@ -333,26 +333,3 @@ class GoogleOAuthService(OAuthService):
         if expires_in is None:
             return None
         return datetime.now(UTC) + timedelta(seconds=expires_in)
-
-    def _get_mock_accounts(self) -> list[AdAccountInfo]:
-        """Return mock accounts for development/testing."""
-        return [
-            AdAccountInfo(
-                account_id="1234567890",
-                name="Demo Google Ads Account",
-                business_name="Demo Company",
-                currency="USD",
-                timezone="America/New_York",
-                status="active",
-                permissions=["STANDARD"],
-            ),
-            AdAccountInfo(
-                account_id="0987654321",
-                name="Test Campaign Account",
-                business_name="Test Business",
-                currency="USD",
-                timezone="America/Los_Angeles",
-                status="active",
-                permissions=["STANDARD"],
-            ),
-        ]

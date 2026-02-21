@@ -326,24 +326,3 @@ class TikTokOAuthService(OAuthService):
         if expires_in is None:
             return None
         return datetime.now(UTC) + timedelta(seconds=expires_in)
-
-    def _get_mock_accounts(self) -> list[AdAccountInfo]:
-        """Return mock accounts for development/testing."""
-        return [
-            AdAccountInfo(
-                account_id="7000000000000000001",
-                name="Demo TikTok Ads Account",
-                business_name="Demo Company",
-                currency="USD",
-                timezone="America/New_York",
-                status="active",
-            ),
-            AdAccountInfo(
-                account_id="7000000000000000002",
-                name="Test TikTok Business",
-                business_name="Test Business",
-                currency="USD",
-                timezone="America/Los_Angeles",
-                status="active",
-            ),
-        ]

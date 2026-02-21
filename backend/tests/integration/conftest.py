@@ -29,11 +29,11 @@ from sqlalchemy.orm import sessionmaker, Session
 # Set database URLs for tests
 os.environ["DATABASE_URL"] = os.environ.get(
     "TEST_DATABASE_URL",
-    "postgresql+asyncpg://stratum:stratum_secure_password_2024@localhost:5432/stratum_ai_test"
+    "postgresql+asyncpg://stratum:password@localhost:5432/stratum_ai_test"
 )
 os.environ["DATABASE_URL_SYNC"] = os.environ.get(
     "TEST_DATABASE_URL_SYNC",
-    "postgresql://stratum:stratum_secure_password_2024@localhost:5432/stratum_ai_test"
+    "postgresql://stratum:password@localhost:5432/stratum_ai_test"
 )
 
 

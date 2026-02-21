@@ -25,7 +25,7 @@ load_dotenv(backend_path / ".env")
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL_SYNC",
-    "postgresql://stratum:stratum_secure_password_2024@localhost:5432/stratum_ai"
+    "postgresql://stratum:password@localhost:5432/stratum_ai"
 )
 
 def load_warehouse_data():

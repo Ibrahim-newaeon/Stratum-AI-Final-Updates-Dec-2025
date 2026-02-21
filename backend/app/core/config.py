@@ -43,10 +43,10 @@ class Settings(BaseSettings):
     # Database Configuration
     # -------------------------------------------------------------------------
     database_url: str = Field(
-        default="postgresql+asyncpg://stratum:stratum_secure_password_2024@localhost:5432/stratum_ai"
+        default="postgresql+asyncpg://stratum:password@localhost:5432/stratum_ai"
     )
     database_url_sync: str = Field(
-        default="postgresql://stratum:stratum_secure_password_2024@localhost:5432/stratum_ai"
+        default="postgresql://stratum:password@localhost:5432/stratum_ai"
     )
     db_pool_size: int = Field(default=10)
     db_max_overflow: int = Field(default=20)
@@ -278,9 +278,9 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def derive_sync_url_from_async(self) -> "Settings":
         """If DATABASE_URL_SYNC was not explicitly set, derive it from DATABASE_URL."""
-        default_sync = "postgresql://stratum:stratum_secure_password_2024@localhost:5432/stratum_ai"
+        default_sync = "postgresql://stratum:password@localhost:5432/stratum_ai"
         if self.database_url_sync == default_sync and self.database_url != (
-            "postgresql+asyncpg://stratum:stratum_secure_password_2024@localhost:5432/stratum_ai"
+            "postgresql+asyncpg://stratum:password@localhost:5432/stratum_ai"
         ):
             # DATABASE_URL was overridden (e.g. by Railway) but DATABASE_URL_SYNC was not
             sync_url = self.database_url.replace("postgresql+asyncpg://", "postgresql://", 1)

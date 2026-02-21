@@ -91,8 +91,8 @@ DEBUG=true
 SECRET_KEY=your-secret-key-change-in-production
 
 # Database
-DATABASE_URL=postgresql+asyncpg://stratum:stratum@db:5432/stratum
-DATABASE_SYNC_URL=postgresql://stratum:stratum@db:5432/stratum
+DATABASE_URL=postgresql+asyncpg://stratum:password@db:5432/stratum
+DATABASE_SYNC_URL=postgresql://stratum:password@db:5432/stratum
 
 # Redis
 REDIS_URL=redis://redis:6379/0

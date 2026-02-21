@@ -8,7 +8,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-stratum}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-stratum_secure_password_2024}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
       POSTGRES_DB: ${POSTGRES_DB:-stratum_ai}
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -79,8 +79,8 @@ services:
       - APP_ENV=${APP_ENV:-development}
       - DEBUG=${DEBUG:-false}
       - SECRET_KEY=${SECRET_KEY:-dev-secret-key-change-in-production}
-      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-stratum}:${POSTGRES_PASSWORD:-stratum_secure_password_2024}@db:5432/${POSTGRES_DB:-stratum_ai}
-      - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER:-stratum}:${POSTGRES_PASSWORD:-stratum_secure_password_2024}@db:5432/${POSTGRES_DB:-stratum_ai}
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-stratum}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-stratum_ai}
+      - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER:-stratum}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-stratum_ai}
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/1
       - ML_PROVIDER=${ML_PROVIDER:-local}
@@ -179,8 +179,8 @@ services:
       - no-new-privileges:true
     environment:
       - APP_ENV=${APP_ENV:-development}
-      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-stratum}:${POSTGRES_PASSWORD:-stratum_secure_password_2024}@db:5432/${POSTGRES_DB:-stratum_ai}
-      - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER:-stratum}:${POSTGRES_PASSWORD:-stratum_secure_password_2024}@db:5432/${POSTGRES_DB:-stratum_ai}
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-stratum}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-stratum_ai}
+      - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER:-stratum}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-stratum_ai}
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/1
       - CELERY_RESULT_BACKEND=redis://redis:6379/2
@@ -261,7 +261,7 @@ services:
       - no-new-privileges:true
     environment:
       - APP_ENV=${APP_ENV:-development}
-      - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER:-stratum}:${POSTGRES_PASSWORD:-stratum_secure_password_2024}@db:5432/${POSTGRES_DB:-stratum_ai}
+      - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER:-stratum}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-stratum_ai}
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/1
       - CELERY_RESULT_BACKEND=redis://redis:6379/2
@@ -342,7 +342,7 @@ services:
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/1
       - FLOWER_PORT=5555
-      - FLOWER_BASIC_AUTH=${FLOWER_USER:-admin}:${FLOWER_PASSWORD:-changeme}
+      - FLOWER_BASIC_AUTH=${FLOWER_USER:-admin}:${FLOWER_PASSWORD:?FLOWER_PASSWORD must be set}
     ports:
       - "5555:5555"
     depends_on:

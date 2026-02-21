@@ -311,24 +311,3 @@ class SnapchatOAuthService(OAuthService):
         if expires_in is None:
             return None
         return datetime.now(UTC) + timedelta(seconds=expires_in)
-
-    def _get_mock_accounts(self) -> list[AdAccountInfo]:
-        """Return mock accounts for development/testing."""
-        return [
-            AdAccountInfo(
-                account_id="abc123-snap-001",
-                name="Demo Snapchat Ads Account",
-                business_name="Demo Organization",
-                currency="USD",
-                timezone="America/New_York",
-                status="active",
-            ),
-            AdAccountInfo(
-                account_id="abc123-snap-002",
-                name="Test Snapchat Business",
-                business_name="Test Organization",
-                currency="USD",
-                timezone="America/Los_Angeles",
-                status="active",
-            ),
-        ]

@@ -20,7 +20,7 @@ from datetime import datetime
 # Database connection
 DATABASE_URL = os.environ.get(
     "DATABASE_URL_SYNC",
-    "postgresql://stratum:stratum_secure_password_2024@localhost:5432/stratum_ai"
+    "postgresql://stratum:password@localhost:5432/stratum_ai"
 )
 
 # Datasets base path
