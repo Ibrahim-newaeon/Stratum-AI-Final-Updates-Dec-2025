@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { usePageContent, type SolutionPageContent } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
+import { SEO } from '@/components/common/SEO';
 import {
   BoltIcon,
   CheckCircleIcon,
@@ -84,6 +85,7 @@ export default function TrustEngineSolution() {
 
   return (
     <PageLayout>
+      <SEO title="Trust Engine" description="Signal health monitoring and trust-gated automation. Ensure your automations only execute when data is reliable." url="https://stratum-ai.com/solutions/trust-engine" />
       {/* Hero Section */}
       <section className="py-20 px-6">
         <div className="max-w-7xl mx-auto">

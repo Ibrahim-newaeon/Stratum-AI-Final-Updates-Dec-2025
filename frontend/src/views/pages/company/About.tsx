@@ -6,6 +6,7 @@
 import { Link } from 'react-router-dom';
 import { usePageContent, type AboutPageContent } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
+import { pageSEO, SEO } from '@/components/common/SEO';
 import { SparklesIcon } from '@heroicons/react/24/outline';
 
 const fallbackTeam = [
@@ -54,6 +55,7 @@ export default function About() {
 
   return (
     <PageLayout>
+      <SEO {...pageSEO.about} url="https://stratum-ai.com/about" />
       {/* Hero Section */}
       <section className="py-20 px-6">
         <div className="max-w-7xl mx-auto text-center">

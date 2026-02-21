@@ -6,6 +6,7 @@
 import { Link } from 'react-router-dom';
 import { usePageContent, type CareersPageContent } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
+import { SEO } from '@/components/common/SEO';
 import { BriefcaseIcon, CurrencyDollarIcon, MapPinIcon } from '@heroicons/react/24/outline';
 
 const fallbackPositions = [
@@ -84,6 +85,7 @@ export default function Careers() {
 
   return (
     <PageLayout>
+      <SEO title="Careers" description="Join the Stratum AI team. Help build the future of trust-gated marketing automation." url="https://stratum-ai.com/careers" />
       {/* Hero Section */}
       <section className="py-20 px-6">
         <div className="max-w-7xl mx-auto text-center">

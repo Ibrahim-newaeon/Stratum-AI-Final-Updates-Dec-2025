@@ -5,6 +5,7 @@
 
 import { useState } from 'react';
 import { PageLayout } from '@/components/landing/PageLayout';
+import { pageSEO, SEO } from '@/components/common/SEO';
 import {
   ChatBubbleLeftRightIcon,
   CheckCircleIcon,
@@ -79,6 +80,7 @@ export default function Contact() {
 
   return (
     <PageLayout>
+      <SEO {...pageSEO.contact} url="https://stratum-ai.com/contact" />
       {/* Hero Section */}
       <section className="py-20 px-6">
         <div className="max-w-7xl mx-auto text-center">

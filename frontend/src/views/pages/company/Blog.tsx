@@ -6,6 +6,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { PageLayout } from '@/components/landing/PageLayout';
+import { SEO } from '@/components/common/SEO';
 import { CalendarIcon, ClockIcon, NewspaperIcon, UserIcon } from '@heroicons/react/24/outline';
 import { useCategories, usePosts } from '@/api/cms';
 
@@ -34,6 +35,7 @@ export default function Blog() {
 
   return (
     <PageLayout>
+      <SEO title="Blog" description="Marketing intelligence insights, product updates, and best practices from the Stratum AI team." url="https://stratum-ai.com/blog" />
       {/* Hero Section */}
       <section className="py-20 px-6">
         <div className="max-w-7xl mx-auto text-center">

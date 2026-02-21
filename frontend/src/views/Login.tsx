@@ -12,9 +12,10 @@
  * - BUG-016: Inline validation for email & password fields
  */
 
-import { useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
+  ClockIcon,
   EnvelopeIcon,
   ExclamationCircleIcon,
   EyeIcon,
@@ -42,6 +43,32 @@ export default function Login() {
     () => localStorage.getItem('stratum_remember_me') === 'true'
   );
   const [touched, setTouched] = useState<{ email?: boolean; password?: boolean }>({});
+  const [lockoutSeconds, setLockoutSeconds] = useState(0);
+
+  // Countdown timer for lockout
+  useEffect(() => {
+    if (lockoutSeconds <= 0) return;
+    const timer = setInterval(() => {
+      setLockoutSeconds((s) => {
+        if (s <= 1) {
+          setError('');
+          return 0;
+        }
+        return s - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [lockoutSeconds]);
+
+  const formatCountdown = useCallback((secs: number) => {
+    const mins = Math.floor(secs / 60);
+    const remaining = secs % 60;
+    return mins > 0
+      ? `${mins}m ${remaining.toString().padStart(2, '0')}s`
+      : `${remaining}s`;
+  }, []);
+
+  const isLockedOut = lockoutSeconds > 0;
 
   const from = location.state?.from?.pathname || '/dashboard/overview';
   const showVerificationBanner = location.state?.registered || location.state?.needsVerification;
@@ -78,6 +105,7 @@ export default function Login() {
       return;
     }
 
+    if (isLockedOut) return; // Prevent submit during lockout
     setIsLoading(true);
 
     try {
@@ -92,6 +120,10 @@ export default function Login() {
           sessionStorage.setItem('stratum_session_only', 'true');
         }
         navigate(from, { replace: true });
+      } else if (result.lockoutSeconds) {
+        // HTTP 429 — account locked out
+        setLockoutSeconds(result.lockoutSeconds);
+        setError('Too many failed login attempts.');
       } else {
         setError(result.error || 'Login failed');
       }
@@ -155,8 +187,21 @@ export default function Login() {
                   </div>
                 )}
 
+                {/* Lockout Alert — shows countdown timer */}
+                {isLockedOut && (
+                  <div className="auth-slide-in flex items-center gap-3 p-4 rounded-xl text-[13px] bg-amber-500/10 border border-amber-500/20 text-amber-400">
+                    <ClockIcon className="w-5 h-5 flex-shrink-0 animate-pulse" />
+                    <div className="flex-1">
+                      <p className="font-bold text-amber-300 text-sm mb-0.5">Account temporarily locked</p>
+                      <p className="text-amber-400/80">Too many failed attempts. Try again in{' '}
+                        <span className="font-mono font-bold text-amber-300">{formatCountdown(lockoutSeconds)}</span>
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Error Alert */}
-                {error && (
+                {error && !isLockedOut && (
                   <div className="auth-slide-in flex items-center gap-2 p-3 rounded-xl text-[13px] bg-red-500/10 border border-red-500/20 text-red-400">
                     <ExclamationCircleIcon className="w-4 h-4 flex-shrink-0" />
                     <span>{error}</span>
@@ -268,10 +313,15 @@ export default function Login() {
                 {/* Submit Button */}
                 <button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isLoading || isLockedOut}
                   className="auth-fade-up-d3 w-full auth-gradient-btn auth-shimmer-btn text-white font-black h-14 rounded-xl tracking-[0.2em] text-sm flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
                 >
-                  {isLoading ? (
+                  {isLockedOut ? (
+                    <span className="flex items-center gap-2">
+                      <ClockIcon className="w-[18px] h-[18px]" />
+                      LOCKED — {formatCountdown(lockoutSeconds)}
+                    </span>
+                  ) : isLoading ? (
                     <span className="flex items-center gap-2">
                       <svg className="animate-spin w-[18px] h-[18px]" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />

@@ -125,8 +125,8 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   isDemoSession: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  demoLogin: (role: 'superadmin' | 'admin' | 'manager' | 'analyst' | 'viewer') => Promise<{ success: boolean; error?: string }>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string; lockoutSeconds?: number }>;
+  demoLogin: (role: 'superadmin' | 'admin' | 'manager' | 'analyst' | 'viewer') => Promise<{ success: boolean; error?: string; lockoutSeconds?: number }>;
   logout: () => void;
   updateUser: (userData: Partial<User>) => void;
 }
@@ -168,7 +168,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (
     email: string,
     password: string
-  ): Promise<{ success: boolean; error?: string }> => {
+  ): Promise<{ success: boolean; error?: string; lockoutSeconds?: number }> => {
     try {
       // Call the actual backend API
       const response = await fetch(`${API_BASE}/auth/login`, {
@@ -182,6 +182,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await response.json();
 
       if (!response.ok) {
+        // Handle 429 Too Many Requests — account lockout
+        if (response.status === 429) {
+          const retryAfter = response.headers.get('Retry-After');
+          let lockoutSeconds = 900; // default 15 minutes
+          if (retryAfter) {
+            const parsed = parseInt(retryAfter, 10);
+            if (!isNaN(parsed) && parsed > 0) lockoutSeconds = parsed;
+          } else if (typeof data.detail === 'string') {
+            // Try to extract seconds from detail message: "Try again in 123 seconds."
+            const match = data.detail.match(/(\d+)\s*seconds?/i);
+            if (match) lockoutSeconds = parseInt(match[1], 10);
+          }
+          return {
+            success: false,
+            error: 'Too many failed login attempts.',
+            lockoutSeconds,
+          };
+        }
+
         // Handle Pydantic validation errors (array of {type, loc, msg, input, ctx})
         let errorMessage = 'Login failed';
         if (data.detail) {

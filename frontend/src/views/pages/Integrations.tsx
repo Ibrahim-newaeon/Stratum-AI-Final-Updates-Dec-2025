@@ -6,6 +6,7 @@
 import { Link } from 'react-router-dom';
 import { usePageContent, type IntegrationsPageContent } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
+import { SEO } from '@/components/common/SEO';
 
 const categoryColors: Record<string, string> = {
   'Ad Platforms': '#f97316',
@@ -68,6 +69,7 @@ export default function Integrations() {
 
   return (
     <PageLayout>
+      <SEO title="Integrations" description="Connect Stratum AI with Meta, Google, TikTok, Snapchat, and 30+ marketing platforms. Unified data, one dashboard." url="https://stratum-ai.com/integrations" />
       {/* Hero Section */}
       <section className="py-20 px-6">
         <div className="max-w-7xl mx-auto text-center">

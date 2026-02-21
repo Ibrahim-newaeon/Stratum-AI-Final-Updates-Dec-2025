@@ -10,6 +10,7 @@ import {
   ExclamationCircleIcon,
 } from '@heroicons/react/24/outline';
 import { useForgotPassword } from '@/api/auth';
+import { SEO } from '@/components/common/SEO';
 
 const forgotPasswordSchema = z.object({
   email: z.string().email('Please enter a valid email'),
@@ -78,6 +79,8 @@ export default function ForgotPassword() {
   }
 
   return (
+    <>
+    <SEO title="Forgot Password" description="Reset your Stratum AI account password. We'll send you a secure link to create a new one." noIndex url="https://stratum-ai.com/forgot-password" />
     <div className="min-h-screen bg-surface-primary flex items-center justify-center p-6">
       <div className="max-w-md w-full">
         <div className="motion-enter">
@@ -156,5 +159,6 @@ export default function ForgotPassword() {
         </div>
       </div>
     </div>
+    </>
   );
 }

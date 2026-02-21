@@ -51,11 +51,12 @@ export default function ControlTower() {
 
   // KPIs - use API data with fallbacks
   const portfolioKpis = {
-    mrr: revenueData?.mrr ?? overviewData?.totalRevenue ?? 125000,
-    arr: revenueData?.arr ?? (overviewData?.totalRevenue ?? 125000) * 12,
-    churnRisk: churnRisksData?.length ?? overviewData?.atRiskTenants ?? 3,
-    margin: 68,
-    totalBudgetAtRisk: portfolioData?.atRiskBudget ?? overviewData?.totalBudgetAtRisk ?? 45000,
+    mrr: revenueData?.mrr ?? overviewData?.totalRevenue ?? 0,
+    mrrGrowthPct: revenueData?.mrrGrowth ?? 0,
+    arr: revenueData?.arr ?? (revenueData?.mrr ? revenueData.mrr * 12 : 0),
+    churnRisk: churnRisksData?.length ?? overviewData?.atRiskTenants ?? 0,
+    margin: 0,
+    totalBudgetAtRisk: portfolioData?.atRiskBudget ?? overviewData?.totalBudgetAtRisk ?? 0,
   }
 
   // Tenant health data
@@ -134,10 +135,12 @@ export default function ControlTower() {
           <div className="text-2xl font-bold text-white">
             ${(portfolioKpis.mrr / 1000).toFixed(0)}K
           </div>
-          <div className="flex items-center gap-1 text-success text-sm mt-1">
+          {portfolioKpis.mrrGrowthPct !== 0 && (
+          <div className={cn('flex items-center gap-1 text-sm mt-1', portfolioKpis.mrrGrowthPct >= 0 ? 'text-success' : 'text-danger')}>
             <ArrowTrendingUpIcon className="w-4 h-4" />
-            +12% vs last month
+            {portfolioKpis.mrrGrowthPct >= 0 ? '+' : ''}{portfolioKpis.mrrGrowthPct}% vs last month
           </div>
+          )}
         </div>
 
         <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
@@ -148,9 +151,8 @@ export default function ControlTower() {
           <div className="text-2xl font-bold text-white">
             {portfolioData?.totalTenants ?? tenantHealth.length}
           </div>
-          <div className="flex items-center gap-1 text-success text-sm mt-1">
-            <ArrowTrendingUpIcon className="w-4 h-4" />
-            +3 this month
+          <div className="text-sm text-text-muted mt-1">
+            across all plans
           </div>
         </div>
 
@@ -172,12 +174,11 @@ export default function ControlTower() {
             <ChartBarIcon className="w-4 h-4" />
             <span className="text-sm">Margin</span>
           </div>
-          <div className="text-2xl font-bold text-success">
+          <div className={cn('text-2xl font-bold', portfolioKpis.margin >= 50 ? 'text-success' : 'text-warning')}>
             {portfolioKpis.margin}%
           </div>
-          <div className="flex items-center gap-1 text-success text-sm mt-1">
-            <ArrowTrendingUpIcon className="w-4 h-4" />
-            +2% vs target
+          <div className="text-sm text-text-muted mt-1">
+            gross margin
           </div>
         </div>
 

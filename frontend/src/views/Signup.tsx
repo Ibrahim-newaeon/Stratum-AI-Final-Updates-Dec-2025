@@ -14,6 +14,7 @@ import {
   ExclamationCircleIcon,
 } from '@heroicons/react/24/outline';
 import { useSignup, useSendWhatsAppOTP, useVerifyWhatsAppOTP } from '@/api/auth';
+import { pageSEO, SEO } from '@/components/common/SEO';
 
 const signupSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -249,6 +250,8 @@ export default function Signup() {
   }
 
   return (
+    <>
+    <SEO {...pageSEO.signup} url="https://stratum-ai.com/signup" />
     <div className="min-h-screen bg-surface-primary flex mx-auto" style={{ maxWidth: '1500px', width: '100%' }}>
       {/* Left side - Brand */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
@@ -519,5 +522,6 @@ export default function Signup() {
         </div>
       </div>
     </div>
+    </>
   );
 }
