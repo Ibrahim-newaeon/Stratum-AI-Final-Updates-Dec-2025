@@ -147,12 +147,15 @@ async def get_revenue_metrics(
     # Calculate ARPA
     arpa = total_mrr / max(active_count, 1)
 
-    # Placeholder metrics (would be calculated from historical data)
-    mrr_growth = 8.5  # 8.5% month-over-month
-    gross_margin = 72.0  # 72% gross margin
-    nrr = 105.0  # 105% net revenue retention
-    logo_churn = 3.2  # 3.2% logo churn
-    revenue_churn = 2.1  # 2.1% revenue churn
+    # These metrics require historical revenue data (monthly snapshots).
+    # Until the tenant_revenue_monthly table is migrated, return 0.
+    # Do NOT return fabricated numbers — dashboards must show real data.
+    mrr_growth = 0.0
+    gross_margin = 0.0
+    nrr = 0.0
+    logo_churn = 0.0
+    revenue_churn = 0.0
+    trial_conversion_rate = 0.0
 
     return APIResponse(
         success=True,
@@ -168,7 +171,8 @@ async def get_revenue_metrics(
             "active_tenants": active_count,
             "trial_tenants": trial_count,
             "total_tenants": len(tenants),
-            "trial_conversion_rate": 45.0,  # Placeholder
+            "trial_conversion_rate": trial_conversion_rate,
+            "_note": "Growth/churn metrics require tenant_revenue_monthly migration",
         },
     )
 
@@ -325,41 +329,61 @@ async def get_system_health(
     """
     require_superadmin(request)
 
-    # These would come from system_health_hourly table and real metrics
-    # Using placeholders for now
+    # Collect real system health where possible
+    import redis.asyncio as aioredis
+    from app.core.config import settings
+
+    # Check Redis/Celery queue depth (real data)
+    queue_depth = 0
+    redis_healthy = False
+    try:
+        redis_client = aioredis.from_url(settings.redis_url, decode_responses=True)
+        queue_depth = await redis_client.llen("celery") or 0
+        redis_healthy = await redis_client.ping()
+        await redis_client.close()
+    except Exception:
+        pass
+
+    # Check DB connectivity (real data)
+    db_healthy = False
+    try:
+        from sqlalchemy import text
+        await db.execute(text("SELECT 1"))
+        db_healthy = True
+    except Exception:
+        pass
+
     return APIResponse(
         success=True,
         data={
             "pipeline": {
-                "success_rate_24h": 99.2,
-                "success_rate_7d": 99.5,
-                "jobs_total_24h": 1250,
-                "jobs_failed_24h": 10,
+                "success_rate_24h": None,
+                "success_rate_7d": None,
+                "jobs_total_24h": None,
+                "jobs_failed_24h": None,
+                "_note": "Requires system_health_hourly table migration",
             },
             "api": {
-                "requests_24h": 45000,
-                "error_rate": 0.3,
-                "latency_p50_ms": 45,
-                "latency_p99_ms": 320,
+                "requests_24h": None,
+                "error_rate": None,
+                "latency_p50_ms": None,
+                "latency_p99_ms": None,
+                "_note": "Wire Prometheus metrics for real data",
             },
             "queue": {
-                "depth": 12,
-                "latency_ms": 150,
+                "depth": queue_depth,
+                "latency_ms": None,
             },
             "platforms": {
-                "meta": {"status": "healthy", "success_rate": 99.8, "rate_limit_remaining": 85},
-                "google": {"status": "healthy", "success_rate": 99.5, "rate_limit_remaining": 90},
-                "tiktok": {"status": "healthy", "success_rate": 98.9, "rate_limit_remaining": 78},
-                "snap": {"status": "risk", "success_rate": 95.2, "rate_limit_remaining": 45},
+                "meta": {"status": "unknown"},
+                "google": {"status": "unknown"},
+                "tiktok": {"status": "unknown"},
+                "snap": {"status": "unknown"},
+                "_note": "Wire platform health checks for real status",
             },
-            "resources": {
-                "cpu_percent": 35,
-                "memory_percent": 62,
-                "disk_percent": 48,
-            },
-            "warehouse": {
-                "cost_daily_usd": 45.50,
-                "storage_gb": 125,
+            "services": {
+                "database": "healthy" if db_healthy else "unhealthy",
+                "redis": "healthy" if redis_healthy else "unhealthy",
             },
         },
     )
@@ -1169,7 +1193,7 @@ async def get_superadmin_dashboard(
             "revenue": {
                 "mrr": total_mrr,
                 "arr": total_mrr * 12,
-                "growth_pct": 8.5,
+                "growth_pct": None,  # Requires revenue history
             },
             "tenants": {
                 "total": total_tenants,
@@ -1182,14 +1206,16 @@ async def get_superadmin_dashboard(
                 "total_campaigns": total_campaigns,
             },
             "health": {
-                "platform_status": "healthy",
-                "pipeline_success_rate": 99.2,
-                "api_uptime": 99.9,
+                "platform_status": None,
+                "pipeline_success_rate": None,
+                "api_uptime": None,
+                "_note": "Wire Prometheus/system_health_hourly for real data",
             },
             "alerts": {
-                "critical": 0,
-                "high": 2,
-                "medium": 5,
+                "critical": None,
+                "high": None,
+                "medium": None,
+                "_note": "Wire alerts table for real counts",
             },
         },
     )

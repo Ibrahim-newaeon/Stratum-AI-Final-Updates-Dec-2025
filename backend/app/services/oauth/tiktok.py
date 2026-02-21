@@ -236,10 +236,6 @@ class TikTokOAuthService(OAuthService):
                     error_msg = response_data.get("message", "Unknown error")
                     self.logger.error("Failed to get advertisers", error=response_data)
 
-                    # Return mock data in development
-                    if settings.is_development:
-                        return self._get_mock_accounts()
-
                     raise Exception(f"Failed to get advertisers: {error_msg}")
 
                 advertisers = response_data.get("data", {}).get("list", [])

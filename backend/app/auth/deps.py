@@ -15,7 +15,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
-from app.core.security import decode_token
+from app.core.security import decode_token, is_token_blacklisted
 from app.db.session import get_async_session
 from app.models import User, UserRole
 
@@ -78,6 +78,15 @@ async def get_current_user(
 
     if not payload:
         raise credentials_exception
+
+    # Check if token has been revoked (logout)
+    try:
+        if await is_token_blacklisted(payload, token):
+            raise credentials_exception
+    except credentials_exception.__class__:
+        raise
+    except Exception:
+        pass  # Redis unavailable — allow request to proceed
 
     if payload.get("type") != "access":
         raise HTTPException(

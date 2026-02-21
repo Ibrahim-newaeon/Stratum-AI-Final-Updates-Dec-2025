@@ -234,9 +234,6 @@ class SnapchatOAuthService(OAuthService):
                     error_data = await resp.text()
                     self.logger.error("Failed to get organizations", error=error_data)
 
-                    if settings.is_development:
-                        return self._get_mock_accounts()
-
                     raise Exception(f"Failed to get organizations: {error_data}")
 
                 org_data = await resp.json()

@@ -732,7 +732,11 @@ class TikTokExecutor(PlatformExecutor):
 
 
 class SnapchatExecutor(PlatformExecutor):
-    """Stub executor for Snapchat -- not yet implemented."""
+    """Executor for Snapchat Ads platform actions.
+
+    Uses the Snapchat Marketing API v1 to modify campaigns and ad squads.
+    Budget values are in micro-currency (1 USD = 1_000_000 micro).
+    """
 
     def _mock_execute(
         self,
@@ -741,10 +745,33 @@ class SnapchatExecutor(PlatformExecutor):
         entity_id: str,
         action_details: Dict[str, Any],
     ) -> Dict[str, Any]:
-        raise NotImplementedError(
-            "Snapchat executor is not implemented. "
-            "Cannot safely execute actions on the Snapchat platform."
-        )
+        """Simulate successful execution for Snapchat platform."""
+        logger.info(f"[SNAP] Mock executing {action_type} on {entity_type} {entity_id}")
+
+        before_value: Dict[str, Any] = {"status": "ACTIVE", "daily_budget_micro": 10000000}
+        after_value = before_value.copy()
+
+        if action_type == ActionType.BUDGET_INCREASE.value:
+            amount = action_details.get("amount", 0)
+            after_value["daily_budget_micro"] = before_value["daily_budget_micro"] + int(amount * 1_000_000)
+
+        elif action_type == ActionType.BUDGET_DECREASE.value:
+            amount = action_details.get("amount", 0)
+            after_value["daily_budget_micro"] = max(0, before_value["daily_budget_micro"] - int(amount * 1_000_000))
+
+        elif action_type in [ActionType.PAUSE_CAMPAIGN.value, ActionType.PAUSE_ADSET.value]:
+            after_value["status"] = "PAUSED"
+
+        elif action_type in [ActionType.ENABLE_CAMPAIGN.value, ActionType.ENABLE_ADSET.value]:
+            after_value["status"] = "ACTIVE"
+
+        return {
+            "success": True,
+            "before_value": before_value,
+            "after_value": after_value,
+            "platform_response": {"request_id": "snap_mock_123", "request_status": "SUCCESS"},
+            "error": None,
+        }
 
     async def _live_execute(
         self,
@@ -753,10 +780,147 @@ class SnapchatExecutor(PlatformExecutor):
         entity_id: str,
         action_details: Dict[str, Any],
     ) -> Dict[str, Any]:
-        raise NotImplementedError(
-            "Snapchat executor is not implemented. "
-            "Cannot safely execute actions on the Snapchat platform."
-        )
+        """Execute action on Snapchat Marketing API.
+
+        Uses the Snapchat Ads API v1 endpoints:
+        - GET /campaigns/{id} or /adsquads/{id} for before_value
+        - PUT /campaigns/{id} or /adsquads/{id} for updates
+
+        Args:
+            action_type: One of the ActionType enum values.
+            entity_type: campaign or adsquad.
+            entity_id: The Snapchat entity ID.
+            action_details: Dict with amount/percentage keys for budget ops.
+
+        Returns:
+            Standardised result dict.
+        """
+        import httpx
+        from app.core.config import settings
+
+        logger.info(f"[SNAP] Live executing {action_type} on {entity_type} {entity_id}")
+
+        base_url = "https://adsapi.snapchat.com/v1"
+        access_token = settings.snapchat_access_token
+
+        if not access_token:
+            return {
+                "success": False,
+                "before_value": None,
+                "after_value": None,
+                "platform_response": None,
+                "error": "Snapchat access token is not configured",
+            }
+
+        # Map entity types to Snapchat API resource paths
+        resource_map = {
+            "campaign": "campaigns",
+            "adset": "adsquads",
+            "ad_squad": "adsquads",
+            "adsquad": "adsquads",
+        }
+        resource = resource_map.get(entity_type, "campaigns")
+
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                headers = {"Authorization": f"Bearer {access_token}"}
+
+                # Step 1: GET current state
+                get_resp = await client.get(
+                    f"{base_url}/{resource}/{entity_id}",
+                    headers=headers,
+                )
+                if get_resp.status_code != 200:
+                    error_body = get_resp.text
+                    logger.error(f"[SNAP] GET entity failed: {error_body}")
+                    return {
+                        "success": False,
+                        "before_value": None,
+                        "after_value": None,
+                        "platform_response": {"status_code": get_resp.status_code, "body": error_body},
+                        "error": f"Failed to fetch entity state: HTTP {get_resp.status_code}",
+                    }
+
+                resp_json = get_resp.json()
+                # Snapchat wraps responses: {"campaigns": [{"campaign": {...}}]}
+                items = resp_json.get(resource, [])
+                entity_data = items[0].get(resource[:-1], {}) if items else {}
+                before_value = {
+                    "status": entity_data.get("status"),
+                    "daily_budget_micro": entity_data.get("daily_budget_micro", 0),
+                }
+
+                # Step 2: Build update payload
+                update_payload = dict(entity_data)
+
+                if action_type in [ActionType.BUDGET_INCREASE.value, ActionType.BUDGET_DECREASE.value]:
+                    amount = action_details.get("amount", 0)
+                    current_budget = int(entity_data.get("daily_budget_micro", 0))
+
+                    if action_type == ActionType.BUDGET_INCREASE.value:
+                        new_budget = current_budget + int(amount * 1_000_000)
+                    else:
+                        new_budget = max(0, current_budget - int(amount * 1_000_000))
+
+                    update_payload["daily_budget_micro"] = new_budget
+
+                elif action_type in [
+                    ActionType.PAUSE_CAMPAIGN.value,
+                    ActionType.PAUSE_ADSET.value,
+                ]:
+                    update_payload["status"] = "PAUSED"
+
+                elif action_type in [
+                    ActionType.ENABLE_CAMPAIGN.value,
+                    ActionType.ENABLE_ADSET.value,
+                ]:
+                    update_payload["status"] = "ACTIVE"
+
+                # Step 3: PUT update
+                put_body = {resource: [{resource[:-1]: update_payload}]}
+                put_resp = await client.put(
+                    f"{base_url}/{resource}/{entity_id}",
+                    headers=headers,
+                    json=put_body,
+                )
+
+                resp_data = put_resp.json() if put_resp.status_code == 200 else {"body": put_resp.text}
+
+                if put_resp.status_code != 200:
+                    error_msg = resp_data.get("body", str(put_resp.status_code))
+                    logger.error(f"[SNAP] PUT update failed: {error_msg}")
+                    return {
+                        "success": False,
+                        "before_value": before_value,
+                        "after_value": None,
+                        "platform_response": resp_data,
+                        "error": f"Failed to update entity: HTTP {put_resp.status_code}",
+                    }
+
+                # Build after_value from update payload
+                after_value = before_value.copy()
+                if "daily_budget_micro" in update_payload:
+                    after_value["daily_budget_micro"] = update_payload["daily_budget_micro"]
+                if "status" in update_payload:
+                    after_value["status"] = update_payload["status"]
+
+                return {
+                    "success": True,
+                    "before_value": before_value,
+                    "after_value": after_value,
+                    "platform_response": resp_data,
+                    "error": None,
+                }
+
+        except Exception as exc:
+            logger.error(f"[SNAP] Live execution error: {exc}", exc_info=True)
+            return {
+                "success": False,
+                "before_value": None,
+                "after_value": None,
+                "platform_response": None,
+                "error": str(exc),
+            }
 
 
 # Platform executor registry

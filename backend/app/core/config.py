@@ -97,7 +97,7 @@ class Settings(BaseSettings):
     # Ad Platform Configuration
     # -------------------------------------------------------------------------
     use_mock_ad_data: bool = Field(
-        default=True, description="Use mock data instead of real ad platform APIs"
+        default=False, description="Use mock data instead of real ad platform APIs (dev only)"
     )
 
     # Meta/Facebook

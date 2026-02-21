@@ -194,11 +194,13 @@ def decrypt_pii(ciphertext: str) -> str:
         fernet = Fernet(_get_fernet_key())
         decrypted = fernet.decrypt(base64.urlsafe_b64decode(ciphertext.encode("utf-8")))
         return decrypted.decode("utf-8")
-    except InvalidToken:
-        raise  # Tampered or wrong-key data must raise
-    except Exception:
-        # Data may be stored in plaintext or encrypted with a different key
-        return ciphertext
+    except (InvalidToken, Exception) as exc:
+        # Never silently return ciphertext as plaintext — that leaks encrypted
+        # data into contexts that expect decrypted values (logs, API responses).
+        raise ValueError(
+            f"PII decryption failed: {type(exc).__name__}. "
+            "Data may be corrupted or encrypted with a different key."
+        ) from exc
 
 
 def hash_pii_for_lookup(value: str) -> str:
@@ -247,6 +249,133 @@ def verify_api_key(api_key: str, stored_hash: str) -> bool:
 def hash_api_key(api_key: str) -> str:
     """Hash an API key for storage."""
     return hashlib.sha256(api_key.encode()).hexdigest()
+
+
+# =============================================================================
+# JWT Token Blacklist (Redis-backed)
+# =============================================================================
+
+TOKEN_BLACKLIST_PREFIX = "token_blacklist:"
+
+
+async def blacklist_token(token: str, payload: dict[str, Any]) -> None:
+    """
+    Add a JWT token to the Redis blacklist.
+
+    The entry expires when the token itself would expire, so Redis
+    automatically cleans up stale entries.
+
+    Args:
+        token: The raw JWT string
+        payload: Decoded token payload (must contain 'exp')
+    """
+    import redis.asyncio as aioredis
+
+    exp = payload.get("exp")
+    if not exp:
+        return
+
+    ttl = int(exp - datetime.now(timezone.utc).timestamp())
+    if ttl <= 0:
+        return  # Already expired
+
+    jti = payload.get("jti", token[-32:])  # Use jti if present, else token suffix
+    key = f"{TOKEN_BLACKLIST_PREFIX}{jti}"
+
+    client = aioredis.from_url(settings.redis_url, decode_responses=True)
+    try:
+        await client.setex(key, ttl, "1")
+    finally:
+        await client.close()
+
+
+async def is_token_blacklisted(payload: dict[str, Any], token: str) -> bool:
+    """
+    Check whether a token has been blacklisted.
+
+    Args:
+        payload: Decoded token payload
+        token: The raw JWT string
+
+    Returns:
+        True if the token is blacklisted
+    """
+    import redis.asyncio as aioredis
+
+    jti = payload.get("jti", token[-32:])
+    key = f"{TOKEN_BLACKLIST_PREFIX}{jti}"
+
+    client = aioredis.from_url(settings.redis_url, decode_responses=True)
+    try:
+        return await client.exists(key) == 1
+    finally:
+        await client.close()
+
+
+# =============================================================================
+# Login Rate Limiting (Redis-backed)
+# =============================================================================
+
+LOGIN_ATTEMPT_PREFIX = "login_attempts:"
+LOGIN_LOCKOUT_PREFIX = "login_lockout:"
+MAX_LOGIN_ATTEMPTS = 5
+LOGIN_ATTEMPT_WINDOW_SECONDS = 300  # 5 minutes
+LOGIN_LOCKOUT_SECONDS = 900  # 15 minutes
+
+
+async def check_login_rate_limit(email_hash: str) -> tuple[bool, int]:
+    """
+    Check if login attempts for this email hash are rate-limited.
+
+    Returns:
+        Tuple of (is_allowed, remaining_lockout_seconds)
+    """
+    import redis.asyncio as aioredis
+
+    client = aioredis.from_url(settings.redis_url, decode_responses=True)
+    try:
+        lockout_key = f"{LOGIN_LOCKOUT_PREFIX}{email_hash}"
+        lockout_ttl = await client.ttl(lockout_key)
+        if lockout_ttl > 0:
+            return False, lockout_ttl
+        return True, 0
+    finally:
+        await client.close()
+
+
+async def record_failed_login(email_hash: str) -> int:
+    """
+    Record a failed login attempt. Returns the current attempt count.
+    If MAX_LOGIN_ATTEMPTS is reached, sets a lockout.
+    """
+    import redis.asyncio as aioredis
+
+    client = aioredis.from_url(settings.redis_url, decode_responses=True)
+    try:
+        key = f"{LOGIN_ATTEMPT_PREFIX}{email_hash}"
+        attempts = await client.incr(key)
+        if attempts == 1:
+            await client.expire(key, LOGIN_ATTEMPT_WINDOW_SECONDS)
+
+        if attempts >= MAX_LOGIN_ATTEMPTS:
+            lockout_key = f"{LOGIN_LOCKOUT_PREFIX}{email_hash}"
+            await client.setex(lockout_key, LOGIN_LOCKOUT_SECONDS, "1")
+            await client.delete(key)
+
+        return attempts
+    finally:
+        await client.close()
+
+
+async def clear_login_attempts(email_hash: str) -> None:
+    """Clear failed login attempts after successful login."""
+    import redis.asyncio as aioredis
+
+    client = aioredis.from_url(settings.redis_url, decode_responses=True)
+    try:
+        await client.delete(f"{LOGIN_ATTEMPT_PREFIX}{email_hash}")
+    finally:
+        await client.close()
 
 
 # =============================================================================

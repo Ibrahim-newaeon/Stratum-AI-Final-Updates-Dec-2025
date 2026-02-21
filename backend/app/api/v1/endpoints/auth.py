@@ -22,12 +22,16 @@ import redis.asyncio as redis
 from app.core.logging import get_logger
 from app.core.config import settings
 from app.core.security import (
+    blacklist_token,
+    check_login_rate_limit,
+    clear_login_attempts,
     create_access_token,
     create_refresh_token,
     decode_token,
     decrypt_pii,
     get_password_hash,
     hash_pii_for_lookup,
+    record_failed_login,
     verify_password,
 )
 from app.db.session import get_async_session
@@ -326,6 +330,21 @@ async def login(
     # Hash email for lookup (PII is stored encrypted)
     email_hash = hash_pii_for_lookup(login_data.email.lower())
 
+    # Check rate limiting / account lockout
+    try:
+        is_allowed, lockout_remaining = await check_login_rate_limit(email_hash)
+        if not is_allowed:
+            logger.warning("login_locked_out", email_hash=email_hash[:16], lockout_remaining=lockout_remaining)
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=f"Too many failed login attempts. Try again in {lockout_remaining} seconds.",
+                headers={"Retry-After": str(lockout_remaining)},
+            )
+    except HTTPException:
+        raise
+    except Exception:
+        pass  # Redis unavailable — allow login to proceed
+
     # Find user(s) by email hash
     # Note: email_hash is unique per tenant, so the same email may exist
     # across multiple tenants. We match by password to find the correct user.
@@ -345,11 +364,22 @@ async def login(
             break
 
     if not user:
+        # Record failed attempt
+        try:
+            await record_failed_login(email_hash)
+        except Exception:
+            pass  # Redis unavailable
         logger.warning("login_failed", email_hash=email_hash[:16])
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
         )
+
+    # Clear failed attempts on successful login
+    try:
+        await clear_login_attempts(email_hash)
+    except Exception:
+        pass  # Redis unavailable
 
     # Update last login
     user.last_login_at = datetime.now(timezone.utc)
@@ -410,6 +440,21 @@ async def register(
         Created user information
     """
     from app.core.security import encrypt_pii
+    from app.models import Tenant
+
+    # Validate tenant_id server-side — never trust client-provided value blindly
+    tenant_result = await db.execute(
+        select(Tenant).where(
+            Tenant.id == user_data.tenant_id,
+            Tenant.is_deleted == False,
+        )
+    )
+    tenant = tenant_result.scalar_one_or_none()
+    if not tenant:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid tenant",
+        )
 
     # Check if email already exists
     email_hash = hash_pii_for_lookup(user_data.email.lower())
@@ -537,10 +582,21 @@ async def logout(
     """
     Log out the current user.
 
-    In a production system, this would invalidate the refresh token.
+    Blacklists the current access token in Redis so it cannot be reused.
     """
     user_id = getattr(request.state, "user_id", None)
     tenant_id = getattr(request.state, "tenant_id", None)
+
+    # Blacklist the access token so it cannot be reused
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        token = auth_header[7:]
+        payload = decode_token(token)
+        if payload:
+            try:
+                await blacklist_token(token, payload)
+            except Exception:
+                pass  # Redis unavailable — token will expire naturally
 
     if user_id:
         # Log logout event

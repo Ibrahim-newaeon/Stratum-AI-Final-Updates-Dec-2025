@@ -213,8 +213,10 @@ class GoogleOAuthService(OAuthService):
             List of AdAccountInfo
         """
         if not self.developer_token:
-            self.logger.warning("Developer token not configured, returning mock data")
-            return self._get_mock_accounts()
+            raise ValueError(
+                "Google Ads developer token is not configured. "
+                "Set GOOGLE_ADS_DEVELOPER_TOKEN in your environment."
+            )
 
         accounts = []
 
@@ -231,9 +233,6 @@ class GoogleOAuthService(OAuthService):
                 if resp.status != 200:
                     error_data = await resp.text()
                     self.logger.error("Failed to list customers", error=error_data)
-                    # Return mock data in development
-                    if settings.is_development:
-                        return self._get_mock_accounts()
                     raise Exception(f"Failed to list customers: {error_data}")
 
                 data = await resp.json()

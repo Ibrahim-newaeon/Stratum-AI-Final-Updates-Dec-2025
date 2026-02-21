@@ -96,7 +96,6 @@ jobs:
           PYTHONPATH: .
         run: |
           pytest tests/unit -v --tb=short -m "unit or not integration"
-        continue-on-error: true  # Pre-existing test issues (import errors, config validation); will be fixed incrementally
 
       - name: Run integration tests
         env:
@@ -130,13 +129,11 @@ jobs:
         run: |
           pip install bandit
           bandit -r app/ -ll -ii
-        continue-on-error: true  # Pre-existing security findings; will be addressed incrementally
 
       - name: Dependency audit (pip-audit)
         run: |
           pip install pip-audit
           pip-audit --strict --desc on
-        continue-on-error: true  # Pre-existing dependency vulnerabilities; will be addressed incrementally
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
@@ -191,7 +188,6 @@ jobs:
 
       - name: Run unit tests with coverage
         run: npm run test:coverage -- --reporter=verbose
-        continue-on-error: true  # Pre-existing test failures; will be fixed incrementally
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
@@ -320,7 +316,6 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true  # Pre-existing test credentials detected; uses .gitleaksignore for allowlisting
 
   # ===========================================================================
   # Release Gate (all required checks must pass)
