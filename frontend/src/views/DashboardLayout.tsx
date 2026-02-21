@@ -658,7 +658,6 @@ export default function DashboardLayout() {
                           name: 'Dashboard',
                           end: true,
                         },
-                        { href: '/dashboard/superadmin/cms', icon: DocumentTextIcon, name: 'CMS' },
                         { href: '/dashboard/superadmin/users', icon: UserGroupIcon, name: 'Users' },
                       ].map((item) => (
                         <NavLink

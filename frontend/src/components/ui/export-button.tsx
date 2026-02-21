@@ -7,6 +7,26 @@ import { AlertCircle, Check, Download, FileSpreadsheet, FileText, Loader2 } from
 import { cn } from '@/lib/utils';
 import { PdfExportOptions, usePdfExport } from '@/hooks/usePdfExport';
 
+/**
+ * Normalize a value for CSV output.
+ *
+ * - Numbers are rounded to 2 decimal places to avoid floating-point noise
+ *   (e.g., 1234567.8899999999 → 1234567.89).
+ * - Strings that look like formatted currency/percentages ($1.2M, 45.6%)
+ *   are kept as-is since they're already human-readable.
+ * - null/undefined become empty strings.
+ */
+function normalizeCsvValue(value: unknown): string | number {
+  if (value === null || value === undefined) {
+    return '';
+  }
+  if (typeof value === 'number') {
+    // Round to 2 decimal places to avoid floating-point noise in CSV
+    return Math.round(value * 100) / 100;
+  }
+  return String(value);
+}
+
 interface ExportButtonProps {
   /** Reference to the element to export */
   targetRef: React.RefObject<HTMLElement>;
@@ -90,18 +110,18 @@ export function ExportButton({
       // Get headers from first object
       const headers = Object.keys(csvData[0]);
 
-      // Build CSV content
+      // Build CSV content with normalised values
       const csvContent = [
         headers.join(','),
         ...csvData.map((row) =>
           headers
             .map((header) => {
-              const value = row[header];
-              // Handle values with commas or quotes
-              if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
-                return `"${value.replace(/"/g, '""')}"`;
+              const normalized = normalizeCsvValue(row[header]);
+              // Handle string values with commas or quotes
+              if (typeof normalized === 'string' && (normalized.includes(',') || normalized.includes('"'))) {
+                return `"${normalized.replace(/"/g, '""')}"`;
               }
-              return value ?? '';
+              return normalized;
             })
             .join(',')
         ),

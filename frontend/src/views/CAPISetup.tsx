@@ -144,7 +144,7 @@ export function CAPISetup() {
         })
         setPlatformStatuses(statuses)
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to fetch statuses:', err)
       // Don't show error on initial load - platforms just aren't connected yet
     } finally {
@@ -178,8 +178,9 @@ export function CAPISetup() {
       } else {
         setError(data.data?.message || 'Connection failed')
       }
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to connect. Please check your credentials.')
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { detail?: string } } };
+      setError(axiosErr.response?.data?.detail || 'Failed to connect. Please check your credentials.')
     } finally {
       setConnecting(false)
     }
@@ -198,9 +199,10 @@ export function CAPISetup() {
         })
         setSuccess(`Disconnected from ${PLATFORMS.find(p => p.id === platform)?.name}`)
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to disconnect:', err)
-      setError(err.response?.data?.detail || 'Failed to disconnect')
+      const axiosErr = err as { response?: { data?: { detail?: string } } };
+      setError(axiosErr.response?.data?.detail || 'Failed to disconnect')
     }
   }
 
@@ -212,15 +214,19 @@ export function CAPISetup() {
       const data = response.data
 
       if (data.success && data.data) {
-        const results: TestResult[] = Object.entries(data.data).map(([platform, result]: [string, any]) => ({
-          platform,
-          status: result.status === 'connected' ? 'success' : 'error',
-          message: result.message || (result.status === 'connected' ? 'Connection OK' : 'Connection failed'),
-        }))
+        const results: TestResult[] = Object.entries(data.data).map(([platform, result]) => {
+          const r = result as { status?: string; message?: string };
+          return {
+            platform,
+            status: (r.status === 'connected' ? 'success' : 'error') as TestResult['status'],
+            message: r.message || (r.status === 'connected' ? 'Connection OK' : 'Connection failed'),
+          };
+        })
         setTestResults(results)
       }
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to test connections')
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { detail?: string } } };
+      setError(axiosErr.response?.data?.detail || 'Failed to test connections')
     } finally {
       setIsTesting(false)
     }

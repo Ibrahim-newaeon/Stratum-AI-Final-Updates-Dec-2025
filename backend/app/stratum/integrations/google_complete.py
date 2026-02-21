@@ -35,7 +35,7 @@ For Stratum's Trust-Gated Autopilot, we primarily use:
 import hashlib
 import logging
 from dataclasses import dataclass, field
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, timedelta, timezone
 from enum import Enum
 from typing import Any, Optional
 
@@ -75,7 +75,7 @@ class ChangeEvent:
     changed_fields: list[str]
     old_value: Optional[dict[str, Any]] = None
     new_value: Optional[dict[str, Any]] = None
-    change_time: datetime = field(default_factory=datetime.utcnow)
+    change_time: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     user_email: Optional[str] = None  # Who made the change
 
 

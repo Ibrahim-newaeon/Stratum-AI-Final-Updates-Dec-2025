@@ -87,7 +87,7 @@ export default function TenantNarrative() {
   const tenant = {
     id: tenantId,
     name: tenantData?.name ?? 'Fashion Forward',
-    industry: (tenantData as any)?.industry ?? 'Retail',
+    industry: (tenantData as (typeof tenantData & { industry?: string }) | undefined)?.industry ?? 'Retail',
     plan: 'Pro',
     primaryContact: {
       name: 'Jennifer Smith',

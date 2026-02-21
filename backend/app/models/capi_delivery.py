@@ -10,7 +10,7 @@ These tables provide persistent storage for:
 - Deduplication tracking (optional persistent mode)
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import uuid4
 
 from sqlalchemy import (
@@ -69,7 +69,7 @@ class CAPIDeliveryLog(Base):
     currency = Column(String(3), nullable=True)  # Currency code
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -132,8 +132,8 @@ class CAPIDeadLetterEntry(Base):
     first_failure_at = Column(DateTime(timezone=True), nullable=False)
     last_failure_at = Column(DateTime(timezone=True), nullable=False)
     recovered_at = Column(DateTime(timezone=True), nullable=True)
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -234,8 +234,8 @@ class CAPIDeliveryDailyStats(Base):
     error_counts = Column(JSONB, nullable=True)  # {error_category: count}
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])

@@ -122,8 +122,9 @@ export default function MLTraining() {
       // Show success
       setError(null)
       alert(`Successfully uploaded ${response.data.rows_processed || 'N/A'} rows of training data`)
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.detail || 'Failed to upload file. Please try again.'
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { detail?: string } } };
+      const errorMessage = axiosErr.response?.data?.detail || 'Failed to upload file. Please try again.'
       setError(errorMessage)
       console.error('Upload error:', err)
     } finally {
@@ -146,8 +147,9 @@ export default function MLTraining() {
 
       await fetchTrainingData()
       alert(`Generated ${response.data.rows} rows of sample training data`)
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.detail || 'Failed to generate sample data'
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { detail?: string } } };
+      const errorMessage = axiosErr.response?.data?.detail || 'Failed to generate sample data'
       setError(errorMessage)
       console.error('Generate sample error:', err)
     } finally {
@@ -169,8 +171,9 @@ export default function MLTraining() {
 
       setTrainingResult(response.data)
       await fetchModels()
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.detail || 'Training failed. Please ensure you have uploaded training data.'
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { detail?: string } } };
+      const errorMessage = axiosErr.response?.data?.detail || 'Training failed. Please ensure you have uploaded training data.'
       setError(errorMessage)
       console.error('Training error:', err)
     } finally {
@@ -186,8 +189,9 @@ export default function MLTraining() {
     try {
       await apiClient.delete(`/ml/models/${modelName}`)
       await fetchModels()
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.detail || 'Failed to delete model'
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { detail?: string } } };
+      const errorMessage = axiosErr.response?.data?.detail || 'Failed to delete model'
       setError(errorMessage)
       console.error('Delete error:', err)
     }

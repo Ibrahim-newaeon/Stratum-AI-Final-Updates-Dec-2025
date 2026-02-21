@@ -336,6 +336,19 @@ def get_available_features(tier: SubscriptionTier) -> list[str]:
     return [f.value for f in TIER_FEATURES.get(tier, set())]
 
 
+def get_tier_features(tier: SubscriptionTier) -> list[str]:
+    """
+    Get the list of feature names available for a subscription tier.
+
+    Args:
+        tier: The subscription tier
+
+    Returns:
+        List of feature name strings enabled for the tier
+    """
+    return [f.value for f in TIER_FEATURES.get(tier, set())]
+
+
 def get_tier_info(tier: SubscriptionTier) -> dict:
     """Get complete tier information."""
     return {

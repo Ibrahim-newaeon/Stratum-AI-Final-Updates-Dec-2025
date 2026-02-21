@@ -13,6 +13,7 @@ Features:
 - Webhook event handling
 """
 
+import asyncio
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import Enum
@@ -192,7 +193,8 @@ async def create_customer(
         customer_metadata["tenant_id"] = str(tenant_id)
 
     try:
-        customer = stripe.Customer.create(
+        customer = await asyncio.to_thread(
+            stripe.Customer.create,
             email=email,
             name=name,
             metadata=customer_metadata,
@@ -221,7 +223,7 @@ async def get_customer(customer_id: str) -> Optional[StripeCustomer]:
         raise ValueError("Stripe is not configured")
 
     try:
-        customer = stripe.Customer.retrieve(customer_id)
+        customer = await asyncio.to_thread(stripe.Customer.retrieve, customer_id)
 
         if customer.deleted:
             return None
@@ -258,7 +260,7 @@ async def update_customer(
         update_params["metadata"] = metadata
 
     try:
-        customer = stripe.Customer.modify(customer_id, **update_params)
+        customer = await asyncio.to_thread(stripe.Customer.modify, customer_id, **update_params)
 
         return StripeCustomer(
             id=customer.id,
@@ -337,7 +339,7 @@ async def create_checkout_session(
         session_params["customer_email"] = customer_email
 
     try:
-        session = stripe.checkout.Session.create(**session_params)
+        session = await asyncio.to_thread(stripe.checkout.Session.create, **session_params)
 
         logger.info(
             "stripe_checkout_created",
@@ -374,7 +376,8 @@ async def create_portal_session(
         raise ValueError("Stripe is not configured")
 
     try:
-        session = stripe.billing_portal.Session.create(
+        session = await asyncio.to_thread(
+            stripe.billing_portal.Session.create,
             customer=customer_id,
             return_url=return_url,
         )
@@ -398,7 +401,7 @@ async def get_subscription(subscription_id: str) -> Optional[StripeSubscription]
         raise ValueError("Stripe is not configured")
 
     try:
-        sub = stripe.Subscription.retrieve(subscription_id)
+        sub = await asyncio.to_thread(stripe.Subscription.retrieve, subscription_id)
 
         # Get the price ID from the first item
         price_id = sub.items.data[0].price.id if sub.items.data else None
@@ -431,7 +434,8 @@ async def get_customer_subscriptions(customer_id: str) -> list[StripeSubscriptio
         raise ValueError("Stripe is not configured")
 
     try:
-        subscriptions = stripe.Subscription.list(
+        subscriptions = await asyncio.to_thread(
+            stripe.Subscription.list,
             customer=customer_id,
             status="all",
             limit=10,
@@ -492,10 +496,11 @@ async def update_subscription_tier(
 
     try:
         # Get current subscription
-        sub = stripe.Subscription.retrieve(subscription_id)
+        sub = await asyncio.to_thread(stripe.Subscription.retrieve, subscription_id)
 
         # Update the subscription item with new price
-        stripe.Subscription.modify(
+        await asyncio.to_thread(
+            stripe.Subscription.modify,
             subscription_id,
             items=[
                 {
@@ -541,13 +546,14 @@ async def cancel_subscription(
     try:
         if at_period_end:
             # Schedule cancellation at period end
-            stripe.Subscription.modify(
+            await asyncio.to_thread(
+                stripe.Subscription.modify,
                 subscription_id,
                 cancel_at_period_end=True,
             )
         else:
             # Cancel immediately
-            stripe.Subscription.cancel(subscription_id)
+            await asyncio.to_thread(stripe.Subscription.cancel, subscription_id)
 
         logger.info(
             "stripe_subscription_canceled",
@@ -569,7 +575,8 @@ async def reactivate_subscription(subscription_id: str) -> StripeSubscription:
         raise ValueError("Stripe is not configured")
 
     try:
-        stripe.Subscription.modify(
+        await asyncio.to_thread(
+            stripe.Subscription.modify,
             subscription_id,
             cancel_at_period_end=False,
         )
@@ -596,7 +603,8 @@ async def get_customer_invoices(
         raise ValueError("Stripe is not configured")
 
     try:
-        invoices = stripe.Invoice.list(
+        invoices = await asyncio.to_thread(
+            stripe.Invoice.list,
             customer=customer_id,
             limit=limit,
         )
@@ -630,7 +638,7 @@ async def get_upcoming_invoice(customer_id: str) -> Optional[Invoice]:
         raise ValueError("Stripe is not configured")
 
     try:
-        inv = stripe.Invoice.upcoming(customer=customer_id)
+        inv = await asyncio.to_thread(stripe.Invoice.upcoming, customer=customer_id)
 
         return Invoice(
             id="upcoming",
@@ -665,7 +673,8 @@ async def get_customer_payment_methods(customer_id: str) -> list[dict[str, Any]]
         raise ValueError("Stripe is not configured")
 
     try:
-        methods = stripe.PaymentMethod.list(
+        methods = await asyncio.to_thread(
+            stripe.PaymentMethod.list,
             customer=customer_id,
             type="card",
         )
@@ -683,9 +692,8 @@ async def get_customer_payment_methods(customer_id: str) -> list[dict[str, Any]]
                     "exp_year": card.exp_year,
                     "is_default": pm.id
                     == (
-                        stripe.Customer.retrieve(
-                            customer_id
-                        ).invoice_settings.default_payment_method
+                        (await asyncio.to_thread(stripe.Customer.retrieve, customer_id))
+                        .invoice_settings.default_payment_method
                     ),
                 }
             )
@@ -705,7 +713,8 @@ async def set_default_payment_method(
         raise ValueError("Stripe is not configured")
 
     try:
-        stripe.Customer.modify(
+        await asyncio.to_thread(
+            stripe.Customer.modify,
             customer_id,
             invoice_settings={"default_payment_method": payment_method_id},
         )
@@ -726,7 +735,7 @@ async def detach_payment_method(payment_method_id: str) -> None:
         raise ValueError("Stripe is not configured")
 
     try:
-        stripe.PaymentMethod.detach(payment_method_id)
+        await asyncio.to_thread(stripe.PaymentMethod.detach, payment_method_id)
 
         logger.info("stripe_payment_method_detached", payment_method_id=payment_method_id)
     except stripe.StripeError as e:

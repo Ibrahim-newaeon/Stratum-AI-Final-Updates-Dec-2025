@@ -1,23 +1,48 @@
+import { useMemo } from 'react'
 import { TrendingUp, TrendingDown } from 'lucide-react'
 import { cn, formatCurrency, getPlatformColor } from '@/lib/utils'
+import { useDashboardSimulation } from '@/contexts/DashboardSimulationContext'
 
 interface CampaignsWidgetProps {
   className?: string
 }
 
-const mockCampaigns = [
-  { id: 1, name: 'Summer Sale 2024', platform: 'google', roas: 4.2, spend: 12450, trend: 'up' },
-  { id: 2, name: 'Brand Awareness Q4', platform: 'meta', roas: 3.8, spend: 8900, trend: 'up' },
-  { id: 3, name: 'Retargeting - Cart', platform: 'meta', roas: 5.2, spend: 3200, trend: 'up' },
-  { id: 4, name: 'TikTok Influencer', platform: 'tiktok', roas: 3.0, spend: 7800, trend: 'down' },
-  { id: 5, name: 'LinkedIn B2B', platform: 'linkedin', roas: 2.8, spend: 4500, trend: 'stable' },
-]
-
 export function CampaignsWidget({ className }: CampaignsWidgetProps) {
+  const { campaigns } = useDashboardSimulation()
+
+  const topCampaigns = useMemo(() => {
+    if (!campaigns || campaigns.length === 0) return []
+
+    return campaigns
+      .filter((c) => c.status === 'Active')
+      .sort((a, b) => b.roas - a.roas)
+      .slice(0, 5)
+      .map((c) => ({
+        id: c.campaign_id,
+        name: c.campaign_name,
+        platform: c.platform.replace(' Ads', '').toLowerCase(),
+        roas: c.roas,
+        spend: c.spend,
+        trend: c.roas >= 3.5 ? 'up' : c.roas < 2.0 ? 'down' : 'stable',
+      }))
+  }, [campaigns])
+
+  if (topCampaigns.length === 0) {
+    return (
+      <div className={cn('h-full p-4 flex items-center justify-center', className)}>
+        <div className="animate-pulse space-y-3 w-full">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-14 bg-muted rounded" />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className={cn('h-full p-4 overflow-auto', className)}>
       <div className="space-y-3">
-        {mockCampaigns.map((campaign) => (
+        {topCampaigns.map((campaign) => (
           <div
             key={campaign.id}
             className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"

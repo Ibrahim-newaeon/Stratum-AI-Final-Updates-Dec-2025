@@ -6,6 +6,7 @@ Authentication and authorization endpoints.
 Handles login, registration, token refresh, password reset, and WhatsApp verification.
 """
 
+import hmac
 import random
 import secrets
 import string
@@ -269,7 +270,7 @@ async def verify_whatsapp_otp(request: VerifyOTPRequest):
                 detail="OTP expired or not found. Please request a new code.",
             )
 
-        if stored_otp != request.otp_code:
+        if not hmac.compare_digest(str(stored_otp), str(request.otp_code)):
             await redis_client.close()
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -325,7 +326,9 @@ async def login(
     # Hash email for lookup (PII is stored encrypted)
     email_hash = hash_pii_for_lookup(login_data.email.lower())
 
-    # Find user by email hash
+    # Find user(s) by email hash
+    # Note: email_hash is unique per tenant, so the same email may exist
+    # across multiple tenants. We match by password to find the correct user.
     result = await db.execute(
         select(User).where(
             User.email_hash == email_hash,
@@ -333,9 +336,15 @@ async def login(
             User.is_active == True,
         )
     )
-    user = result.scalar_one_or_none()
+    candidates = result.scalars().all()
 
-    if not user or not verify_password(login_data.password, user.password_hash):
+    user = None
+    for candidate in candidates:
+        if verify_password(login_data.password, candidate.password_hash):
+            user = candidate
+            break
+
+    if not user:
         logger.warning("login_failed", email_hash=email_hash[:16])
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

@@ -77,7 +77,11 @@ class AuditMiddleware(BaseHTTPMiddleware):
 
         # Only log successful state changes
         if response.status_code in range(200, 300):
-            await self._log_audit_event(request, request_body, response)
+            try:
+                await self._log_audit_event(request, request_body, response)
+            except Exception as e:
+                # Audit logging must never break the request
+                logger.error("audit_dispatch_failed", error=str(e))
 
         return response
 
@@ -177,8 +181,11 @@ class AuditMiddleware(BaseHTTPMiddleware):
         Remove sensitive fields from audit log data.
         PII and credentials should not be stored in plain text.
         """
-        if not data:
+        if data is None:
             return None
+
+        if not data:
+            return {}
 
         # Fields to redact
         sensitive_fields = {
@@ -215,8 +222,10 @@ class AuditMiddleware(BaseHTTPMiddleware):
             from app.core.config import settings
 
             client = redis.from_url(settings.redis_url)
-            await client.lpush("audit_log_queue", json.dumps(audit_entry))
-            await client.close()
+            try:
+                await client.lpush("audit_log_queue", json.dumps(audit_entry))
+            finally:
+                await client.close()
         except Exception as e:
             # Audit logging should never break the request
             logger.warning("audit_queue_failed", error=str(e))

@@ -18,7 +18,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Query, BackgroundTasks, Header
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_
+from sqlalchemy import func as sa_func, select, and_
 from pydantic import BaseModel, Field
 
 from app.db.session import get_async_session
@@ -44,6 +44,15 @@ from app.schemas.response import APIResponse
 
 router = APIRouter(prefix="/integrations", tags=["integrations"])
 logger = get_logger(__name__)
+
+
+def _verify_tenant_access(request: Request, tenant_id: int) -> None:
+    """Verify the authenticated user has access to the specified tenant."""
+    auth_tenant_id = getattr(request.state, "tenant_id", None)
+    if auth_tenant_id is None:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    if auth_tenant_id != tenant_id:
+        raise HTTPException(status_code=403, detail="Access denied")
 
 
 # =============================================================================
@@ -153,6 +162,7 @@ class WebhookPayload(BaseModel):
     summary="Initiate HubSpot OAuth",
 )
 async def hubspot_connect(
+    http_request: Request,
     request: HubSpotConnectRequest,
     tenant_id: int = Query(..., description="Tenant ID"),
     db: AsyncSession = Depends(get_async_session),
@@ -161,6 +171,7 @@ async def hubspot_connect(
     Start HubSpot OAuth authorization flow.
     Returns authorization URL to redirect user to HubSpot.
     """
+    _verify_tenant_access(http_request, tenant_id)
     client = HubSpotClient(db, tenant_id)
 
     # Generate state token for CSRF protection
@@ -230,10 +241,12 @@ async def hubspot_callback(
     summary="Get HubSpot connection status",
 )
 async def hubspot_status(
+    request: Request,
     tenant_id: int = Query(..., description="Tenant ID"),
     db: AsyncSession = Depends(get_async_session),
 ):
     """Get current HubSpot connection status for tenant."""
+    _verify_tenant_access(request, tenant_id)
     client = HubSpotClient(db, tenant_id)
     status = await client.get_connection_status()
 
@@ -249,10 +262,12 @@ async def hubspot_status(
     summary="Disconnect HubSpot",
 )
 async def hubspot_disconnect(
+    request: Request,
     tenant_id: int = Query(..., description="Tenant ID"),
     db: AsyncSession = Depends(get_async_session),
 ):
     """Disconnect HubSpot integration for tenant."""
+    _verify_tenant_access(request, tenant_id)
     client = HubSpotClient(db, tenant_id)
     success = await client.disconnect()
 
@@ -276,6 +291,7 @@ async def hubspot_disconnect(
     summary="Trigger HubSpot sync",
 )
 async def hubspot_sync(
+    http_request: Request,
     request: SyncRequest,
     tenant_id: int = Query(..., description="Tenant ID"),
     background_tasks: BackgroundTasks = None,
@@ -285,6 +301,7 @@ async def hubspot_sync(
     Trigger manual sync of HubSpot contacts and deals.
     Can run as background task for large syncs.
     """
+    _verify_tenant_access(http_request, tenant_id)
     sync_service = HubSpotSyncService(db, tenant_id)
 
     # For now, run synchronously (in production, use background task)
@@ -375,10 +392,12 @@ async def hubspot_webhook(
     summary="Get pipeline summary",
 )
 async def pipeline_summary(
+    request: Request,
     tenant_id: int = Query(..., description="Tenant ID"),
     db: AsyncSession = Depends(get_async_session),
 ):
     """Get CRM pipeline summary with stage counts and values."""
+    _verify_tenant_access(request, tenant_id)
     sync_service = HubSpotSyncService(db, tenant_id)
     summary = await sync_service.get_pipeline_summary()
 
@@ -394,6 +413,7 @@ async def pipeline_summary(
     summary="Get Pipeline ROAS metrics",
 )
 async def pipeline_roas(
+    request: Request,
     tenant_id: int = Query(..., description="Tenant ID"),
     start_date: str = Query(..., description="Start date (YYYY-MM-DD)"),
     end_date: str = Query(..., description="End date (YYYY-MM-DD)"),
@@ -410,6 +430,8 @@ async def pipeline_roas(
     - Won ROAS (won revenue / spend)
     - Funnel conversion rates
     """
+    _verify_tenant_access(request, tenant_id)
+
     from datetime import datetime as dt
 
     start = dt.strptime(start_date, "%Y-%m-%d").date()
@@ -473,6 +495,7 @@ async def pipeline_roas(
     summary="Get attribution report",
 )
 async def attribution_report(
+    request: Request,
     tenant_id: int = Query(..., description="Tenant ID"),
     start_date: str = Query(..., description="Start date (YYYY-MM-DD)"),
     end_date: str = Query(..., description="End date (YYYY-MM-DD)"),
@@ -484,6 +507,8 @@ async def attribution_report(
 
     Shows which campaigns/platforms are driving closed revenue.
     """
+    _verify_tenant_access(request, tenant_id)
+
     from datetime import datetime as dt
 
     start = dt.strptime(start_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
@@ -512,6 +537,7 @@ async def attribution_report(
     summary="List CRM contacts",
 )
 async def list_contacts(
+    request: Request,
     tenant_id: int = Query(..., description="Tenant ID"),
     lifecycle_stage: Optional[str] = Query(None, description="Filter by lifecycle stage"),
     has_attribution: Optional[bool] = Query(None, description="Filter by attribution status"),
@@ -520,6 +546,7 @@ async def list_contacts(
     db: AsyncSession = Depends(get_async_session),
 ):
     """List synced CRM contacts with optional filters."""
+    _verify_tenant_access(request, tenant_id)
     conditions = [CRMContact.tenant_id == tenant_id]
 
     if lifecycle_stage:
@@ -540,11 +567,13 @@ async def list_contacts(
     )
     contacts = result.scalars().all()
 
-    # Count total
+    # Count total using SQL COUNT instead of loading all rows
     count_result = await db.execute(
-        select(CRMContact).where(and_(*conditions))
+        select(sa_func.count()).select_from(
+            select(CRMContact).where(and_(*conditions)).subquery()
+        )
     )
-    total = len(count_result.scalars().all())
+    total = count_result.scalar() or 0
 
     return APIResponse(
         success=True,
@@ -577,6 +606,7 @@ async def list_contacts(
     summary="List CRM deals",
 )
 async def list_deals(
+    request: Request,
     tenant_id: int = Query(..., description="Tenant ID"),
     stage: Optional[str] = Query(None, description="Filter by stage"),
     is_won: Optional[bool] = Query(None, description="Filter by won status"),
@@ -586,6 +616,7 @@ async def list_deals(
     db: AsyncSession = Depends(get_async_session),
 ):
     """List synced CRM deals with optional filters."""
+    _verify_tenant_access(request, tenant_id)
     conditions = [CRMDeal.tenant_id == tenant_id]
 
     if stage:
@@ -609,11 +640,13 @@ async def list_deals(
     )
     deals = result.scalars().all()
 
-    # Count total
+    # Count total using SQL COUNT instead of loading all rows
     count_result = await db.execute(
-        select(CRMDeal).where(and_(*conditions))
+        select(sa_func.count()).select_from(
+            select(CRMDeal).where(and_(*conditions)).subquery()
+        )
     )
-    total = len(count_result.scalars().all())
+    total = count_result.scalar() or 0
 
     return APIResponse(
         success=True,
@@ -654,6 +687,7 @@ async def list_deals(
     summary="Run identity matching",
 )
 async def run_identity_matching(
+    request: Request,
     tenant_id: int = Query(..., description="Tenant ID"),
     db: AsyncSession = Depends(get_async_session),
 ):
@@ -661,6 +695,7 @@ async def run_identity_matching(
     Run identity matching to link CRM contacts to ad touchpoints.
     This enables attribution reporting.
     """
+    _verify_tenant_access(request, tenant_id)
     identity_matcher = IdentityMatcher(db, tenant_id)
     results = await identity_matcher.match_contacts_to_touchpoints()
 
@@ -681,6 +716,7 @@ async def run_identity_matching(
     summary="Get writeback status",
 )
 async def get_writeback_status(
+    request: Request,
     tenant_id: int = Query(..., description="Tenant ID"),
     db: AsyncSession = Depends(get_async_session),
 ):
@@ -689,6 +725,7 @@ async def get_writeback_status(
 
     Returns current settings, property setup status, and last sync details.
     """
+    _verify_tenant_access(request, tenant_id)
     writeback_service = HubSpotWritebackService(db, tenant_id)
     status = await writeback_service.get_writeback_status()
 
@@ -704,6 +741,7 @@ async def get_writeback_status(
     summary="Setup custom properties",
 )
 async def setup_writeback_properties(
+    request: Request,
     tenant_id: int = Query(..., description="Tenant ID"),
     db: AsyncSession = Depends(get_async_session),
 ):
@@ -717,6 +755,7 @@ async def setup_writeback_properties(
 
     Should be run once during initial setup.
     """
+    _verify_tenant_access(request, tenant_id)
     writeback_service = HubSpotWritebackService(db, tenant_id)
 
     try:
@@ -771,6 +810,7 @@ async def setup_writeback_properties(
     summary="Run writeback sync",
 )
 async def run_writeback_sync(
+    request: Request,
     tenant_id: int = Query(..., description="Tenant ID"),
     sync_contacts: bool = Query(True, description="Sync contact attribution"),
     sync_deals: bool = Query(True, description="Sync deal attribution"),
@@ -788,6 +828,7 @@ async def run_writeback_sync(
     By default, only syncs records modified since last sync (incremental).
     Use full_sync=true to sync all records.
     """
+    _verify_tenant_access(request, tenant_id)
     writeback_service = HubSpotWritebackService(db, tenant_id)
 
     # Get last sync time for incremental
@@ -879,11 +920,13 @@ async def run_writeback_sync(
     summary="Get writeback sync history",
 )
 async def get_writeback_history(
+    request: Request,
     tenant_id: int = Query(..., description="Tenant ID"),
     limit: int = Query(20, ge=1, le=100),
     db: AsyncSession = Depends(get_async_session),
 ):
     """Get history of writeback sync operations."""
+    _verify_tenant_access(request, tenant_id)
     result = await db.execute(
         select(CRMWritebackSync)
         .where(CRMWritebackSync.tenant_id == tenant_id)
@@ -922,6 +965,7 @@ async def get_writeback_history(
     summary="Update writeback config",
 )
 async def update_writeback_config(
+    request: Request,
     tenant_id: int = Query(..., description="Tenant ID"),
     enabled: Optional[bool] = Query(None, description="Enable/disable writeback"),
     sync_contacts: Optional[bool] = Query(None, description="Sync contacts"),
@@ -931,6 +975,7 @@ async def update_writeback_config(
     db: AsyncSession = Depends(get_async_session),
 ):
     """Update writeback configuration settings."""
+    _verify_tenant_access(request, tenant_id)
     # Get connection
     conn_result = await db.execute(
         select(CRMConnection).where(

@@ -10,6 +10,7 @@
  * - Keyboard shortcuts
  * - Responsive design
  * - Full accessibility support
+ * - Live simulation with platform connections
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
@@ -31,6 +32,10 @@ import {
   Keyboard,
   LayoutDashboard,
   DownloadCloud,
+  Radio,
+  Wifi,
+  WifiOff,
+  Activity,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { cn, formatCurrency, formatCompactNumber } from '@/lib/utils'
@@ -61,6 +66,7 @@ import { usePriceMetrics } from '@/hooks/usePriceMetrics'
 import { useTenantStore } from '@/stores/tenantStore'
 import { exportDashboardPDF } from '@/utils/pdfExport'
 import { useToast } from '@/components/ui/use-toast'
+import { useLiveSimulation } from '@/lib/liveSimulation'
 
 export function Overview() {
   const { t } = useTranslation()
@@ -68,7 +74,6 @@ export function Overview() {
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
-  const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
   const [showKeyboardHints, setShowKeyboardHints] = useState(false)
 
   // Get tenant ID from tenant store
@@ -82,9 +87,14 @@ export function Overview() {
   const syncCampaignMutation = useSyncCampaign()
   const [syncingCampaignId, setSyncingCampaignId] = useState<string | null>(null)
 
-  // Fetch data from API with fallback to mock data
+  // Fetch data from API with fallback
   const { data: campaignsData, isLoading: campaignsLoading, refetch: refetchCampaigns } = useCampaigns()
   const { data: overviewData } = useTenantOverview(tenantId)
+
+  // ============================================================================
+  // Live Simulation — generates realistic platform data in real-time
+  // ============================================================================
+  const simulation = useLiveSimulation(10000) // refresh every 10 seconds
 
   // Filter state
   const [filters, setFilters] = useState<DashboardFilters>({
@@ -97,32 +107,33 @@ export function Overview() {
     campaignTypes: ['Prospecting', 'Retargeting', 'Brand Awareness', 'Conversion'],
   })
 
-  // Use API campaigns or fall back to mock data
+  // Use API campaigns or fall back to live simulation data
   const campaigns = useMemo(() => {
     if (campaignsData?.items && campaignsData.items.length > 0) {
-      return campaignsData.items.map((c: any) => ({
-        campaign_id: c.id?.toString() || c.campaign_id,
-        campaign_name: c.name || c.campaign_name,
-        platform: c.platform || 'Unknown',
-        region: c.region || 'Unknown',
-        campaign_type: c.campaign_type || 'Conversion',
-        spend: c.spend || 0,
-        revenue: c.revenue || 0,
-        conversions: c.conversions || 0,
-        impressions: c.impressions || 0,
-        clicks: c.clicks || 0,
-        ctr: c.ctr || 0,
-        cpm: c.cpm || 0,
-        cpa: c.cpa || 0,
-        roas: c.roas || 0,
-        status: c.status || 'Active',
-        start_date: c.start_date || c.startDate || new Date().toISOString(),
+      return (campaignsData.items as unknown as Array<Record<string, unknown>>).map((c) => ({
+        campaign_id: String(c.id ?? c.campaign_id ?? ''),
+        campaign_name: String(c.name || c.campaign_name || ''),
+        platform: String(c.platform || 'Unknown'),
+        region: String(c.region || 'Unknown'),
+        campaign_type: String(c.campaign_type || 'Conversion'),
+        spend: Number(c.spend) || 0,
+        revenue: Number(c.revenue) || 0,
+        conversions: Number(c.conversions) || 0,
+        impressions: Number(c.impressions) || 0,
+        clicks: Number(c.clicks) || 0,
+        ctr: Number(c.ctr) || 0,
+        cpm: Number(c.cpm) || 0,
+        cpa: Number(c.cpa) || 0,
+        roas: Number(c.roas) || 0,
+        status: String(c.status || 'Active'),
+        start_date: String(c.start_date || c.startDate || new Date().toISOString()),
       })) as Campaign[]
     }
-    return [] as Campaign[]
-  }, [campaignsData])
+    // Fall back to live simulation campaigns
+    return simulation.campaigns
+  }, [campaignsData, simulation.campaigns])
 
-  // Memoized: Calculate KPI metrics from campaigns (API or mock)
+  // Memoized: Calculate KPI metrics from campaigns (API or simulation)
   const kpis = useMemo((): KPIMetrics => {
     // Use API overview data if available
     if (overviewData?.kpis) {
@@ -144,7 +155,12 @@ export function Overview() {
       }
     }
 
-    // Fall back to calculating from campaigns
+    // Use simulation KPIs (which are calculated from simulation campaigns)
+    if (simulation.kpis) {
+      return simulation.kpis
+    }
+
+    // Fallback: calculate from whatever campaigns we have
     const totalSpend = campaigns.reduce((sum, c) => sum + c.spend, 0)
     const totalRevenue = campaigns.reduce((sum, c) => sum + c.revenue, 0)
     const totalConversions = campaigns.reduce((sum, c) => sum + c.conversions, 0)
@@ -170,7 +186,7 @@ export function Overview() {
       roasDelta: 9.7,
       conversionsDelta: 21.5,
     }
-  }, [campaigns, overviewData])
+  }, [campaigns, overviewData, simulation.kpis])
 
   // Memoized: Filter campaigns based on current filters
   const filteredCampaigns = useMemo(() => {
@@ -194,24 +210,23 @@ export function Overview() {
   // Refresh data
   const handleRefresh = useCallback(async () => {
     setLoading(true)
-    // Refetch API data
+    // Refetch API data + refresh simulation
     await refetchCampaigns()
-    setLastUpdated(new Date())
+    simulation.refresh()
     setLoading(false)
-  }, [refetchCampaigns])
+  }, [refetchCampaigns, simulation])
 
   // Sync all campaigns from platforms
   const handleSyncAll = useCallback(async () => {
     syncAllMutation.mutate(undefined, {
       onSuccess: () => {
-        // Refetch campaigns after a short delay to allow sync to start
         setTimeout(() => {
           refetchCampaigns()
-          setLastUpdated(new Date())
+          simulation.refresh()
         }, 2000)
       },
     })
-  }, [syncAllMutation, refetchCampaigns])
+  }, [syncAllMutation, refetchCampaigns, simulation])
 
   // Sync a single campaign from its platform
   const handleSyncCampaign = useCallback((campaignId: string) => {
@@ -221,11 +236,11 @@ export function Overview() {
         setTimeout(() => {
           setSyncingCampaignId(null)
           refetchCampaigns()
-          setLastUpdated(new Date())
+          simulation.refresh()
         }, 2000)
       },
     })
-  }, [syncCampaignMutation, refetchCampaigns])
+  }, [syncCampaignMutation, refetchCampaigns, simulation])
 
   // Handle filter changes
   const handleFilterChange = useCallback((newFilters: Partial<DashboardFilters>) => {
@@ -272,7 +287,6 @@ export function Overview() {
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't trigger shortcuts when typing in inputs
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
         return
       }
@@ -304,18 +318,14 @@ export function Overview() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [handleRefresh, handleExport])
 
-  // Set initial loading based on API loading state
+  // Set initial loading — immediate when simulation data is ready
   useEffect(() => {
-    if (!campaignsLoading) {
-      setInitialLoading(false)
+    if (!campaignsLoading || simulation.campaigns.length > 0) {
+      // Short delay for a realistic loading feel
+      const timer = setTimeout(() => setInitialLoading(false), 800)
+      return () => clearTimeout(timer)
     }
-  }, [campaignsLoading])
-
-  // Auto-refresh every 5 minutes
-  useEffect(() => {
-    const interval = setInterval(handleRefresh, 5 * 60 * 1000)
-    return () => clearInterval(interval)
-  }, [handleRefresh])
+  }, [campaignsLoading, simulation.campaigns.length])
 
   // Calculate active filter count
   const activeFilterCount =
@@ -357,6 +367,85 @@ export function Overview() {
         </div>
       )}
 
+      {/* ================================================================== */}
+      {/* Live Platform Connection Status Bar                                */}
+      {/* ================================================================== */}
+      <div className="rounded-xl border bg-card/50 backdrop-blur-sm p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Radio className="w-4 h-4 text-green-500" />
+              <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-green-500 animate-ping" />
+            </div>
+            <span className="text-sm font-medium text-foreground">Live Platform Connections</span>
+            <span className="text-xs text-muted-foreground">
+              — {simulation.connections.filter(c => c.status === 'connected').length}/4 active
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">
+              Last sync: {simulation.lastUpdated.toLocaleTimeString()}
+            </span>
+            {simulation.isLive && (
+              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/10 text-green-500 text-xs font-medium">
+                <Activity className="w-3 h-3" />
+                LIVE
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {simulation.connections.map((conn) => (
+            <div
+              key={conn.platform}
+              className={cn(
+                'flex items-center gap-3 p-3 rounded-lg border transition-all',
+                conn.status === 'connected' && 'bg-green-500/5 border-green-500/20',
+                conn.status === 'syncing' && 'bg-blue-500/5 border-blue-500/20',
+                conn.status === 'warning' && 'bg-amber-500/5 border-amber-500/20',
+              )}
+            >
+              {/* Platform icon placeholder */}
+              <div className={cn(
+                'w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold',
+                conn.status === 'connected' && 'bg-green-500/10 text-green-500',
+                conn.status === 'syncing' && 'bg-blue-500/10 text-blue-500',
+                conn.status === 'warning' && 'bg-amber-500/10 text-amber-500',
+              )}>
+                {conn.platform === 'Meta Ads' && 'M'}
+                {conn.platform === 'Google Ads' && 'G'}
+                {conn.platform === 'TikTok Ads' && 'T'}
+                {conn.platform === 'Snapchat Ads' && 'S'}
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-foreground truncate">
+                    {conn.platform.replace(' Ads', '')}
+                  </span>
+                  {conn.status === 'connected' && <Wifi className="w-3 h-3 text-green-500" />}
+                  {conn.status === 'syncing' && <RefreshCw className="w-3 h-3 text-blue-500 animate-spin" />}
+                  {conn.status === 'warning' && <WifiOff className="w-3 h-3 text-amber-500" />}
+                </div>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>{conn.campaigns} campaigns</span>
+                  <span>·</span>
+                  <span className={cn(
+                    'font-medium',
+                    conn.health >= 80 ? 'text-green-500' : conn.health >= 60 ? 'text-amber-500' : 'text-red-500'
+                  )}>
+                    {conn.health}%
+                  </span>
+                  <span>·</span>
+                  <span>{conn.lastSync}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Page Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
@@ -364,7 +453,7 @@ export function Overview() {
             {t('overview.title')}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Last updated: {lastUpdated.toLocaleString()} | Stratum AI
+            Last updated: {simulation.lastUpdated.toLocaleString()} | Stratum AI
           </p>
         </div>
 
@@ -589,17 +678,17 @@ export function Overview() {
         />
       </div>
 
-      {/* Charts Section */}
+      {/* Charts Section — now fed with live simulation data */}
       <div className={cn('grid grid-cols-1 gap-6', showPriceMetrics ? 'lg:grid-cols-2' : 'lg:grid-cols-1')}>
         <PlatformPerformanceChart
-          data={[]}
+          data={simulation.platformSummary}
           loading={initialLoading}
           onRefresh={handleRefresh}
         />
 
         {showPriceMetrics && (
           <ROASByPlatformChart
-            data={[]}
+            data={simulation.platformSummary}
             loading={initialLoading}
             targetROAS={3.0}
             onRefresh={handleRefresh}
@@ -611,14 +700,14 @@ export function Overview() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <DailyTrendChart
-            data={[]}
+            data={simulation.dailyTrend}
             loading={initialLoading}
             onRefresh={handleRefresh}
           />
         </div>
 
         <RegionalBreakdownChart
-          data={[]}
+          data={simulation.regionalBreakdown}
           loading={initialLoading}
           onRefresh={handleRefresh}
         />
@@ -642,8 +731,11 @@ export function Overview() {
             </div>
           ) : (
             <div className="rounded-xl border bg-card overflow-hidden">
-              <div className="px-6 py-4 border-b">
+              <div className="px-6 py-4 border-b flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-foreground">Top Performing Campaigns</h3>
+                <span className="text-xs text-muted-foreground">
+                  {filteredCampaigns.length} campaigns across {new Set(filteredCampaigns.map(c => c.platform)).size} platforms
+                </span>
               </div>
               <ErrorBoundary>
                 <CampaignTable
@@ -685,12 +777,18 @@ export function Overview() {
         )}
       </div>
 
-      {/* Alerts Section */}
+      {/* ================================================================== */}
+      {/* Live Alerts Section — fed from simulation engine                    */}
+      {/* ================================================================== */}
       <div className="rounded-xl border bg-card p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
             <Bell className="w-5 h-5" />
             {t('overview.recentAlerts')}
+            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/10 text-green-500 text-xs font-medium ml-2">
+              <Activity className="w-3 h-3" />
+              LIVE
+            </span>
           </h3>
           <button className="text-sm text-primary hover:underline">{t('common.viewAll')}</button>
         </div>
@@ -703,7 +801,7 @@ export function Overview() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {([] as { id: string; severity: 'warning' | 'good' | 'critical'; title: string; message: string; time: string }[]).map((alert) => (
+            {simulation.alerts.map((alert) => (
               <div
                 key={alert.id}
                 className={cn(

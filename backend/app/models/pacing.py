@@ -11,7 +11,7 @@ Models:
 - Forecast: Stored forecasts for trend analysis
 """
 
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from typing import Optional
 from uuid import uuid4
 import enum
@@ -129,8 +129,8 @@ class Target(Base):
     notification_recipients = Column(JSONB, nullable=True)  # List of user IDs or emails
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
     created_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
     # Relationships
@@ -215,8 +215,8 @@ class DailyKPI(Base):
     is_weekend = Column(Boolean, nullable=False)
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -283,8 +283,8 @@ class PacingAlert(Base):
     notifications_sent = Column(JSONB, nullable=True)  # Track what was sent where
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -342,7 +342,7 @@ class Forecast(Base):
     mape = Column(Float, nullable=True)  # Mean Absolute Percentage Error
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -407,8 +407,8 @@ class PacingSummary(Base):
     will_miss = Column(Boolean, nullable=False)
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])

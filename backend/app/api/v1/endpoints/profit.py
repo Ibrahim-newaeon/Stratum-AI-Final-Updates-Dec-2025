@@ -620,7 +620,7 @@ async def get_profit_trend(
     end_date: date = Query(..., description="End date"),
     platform: Optional[str] = Query(None),
     campaign_id: Optional[str] = Query(None),
-    granularity: str = Query("daily", regex="^(daily|weekly|monthly)$"),
+    granularity: str = Query("daily", pattern="^(daily|weekly|monthly)$"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> Dict[str, Any]:
@@ -642,7 +642,7 @@ async def get_product_profitability(
     end_date: date = Query(..., description="End date"),
     platform: Optional[str] = Query(None),
     limit: int = Query(20, ge=1, le=100),
-    sort_by: str = Query("gross_profit", regex="^(gross_profit|net_profit|gross_profit_roas)$"),
+    sort_by: str = Query("gross_profit", pattern="^(gross_profit|net_profit|gross_profit_roas)$"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> Dict[str, Any]:
@@ -680,7 +680,7 @@ async def get_campaign_profitability(
 async def generate_profit_report(
     start_date: date = Query(..., description="Report start date"),
     end_date: date = Query(..., description="Report end date"),
-    report_type: str = Query("custom", regex="^(daily|weekly|monthly|custom)$"),
+    report_type: str = Query("custom", pattern="^(daily|weekly|monthly|custom)$"),
     platform: Optional[str] = Query(None),
     campaign_id: Optional[str] = Query(None),
     category: Optional[str] = Query(None),

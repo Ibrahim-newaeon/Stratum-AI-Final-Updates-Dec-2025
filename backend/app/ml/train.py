@@ -22,6 +22,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import joblib
 import numpy as np
 import pandas as pd
+import structlog
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor, HistGradientBoostingRegressor
 from sklearn.linear_model import Ridge, ElasticNet
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
@@ -31,7 +32,7 @@ from sklearn.impute import SimpleImputer
 
 from app.core.logging import get_logger
 
-logger = get_logger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 # =============================================================================
@@ -88,26 +89,26 @@ class ModelTrainer:
         results = {}
 
         # Prepare data with enhanced feature engineering
-        print("Preparing data with enhanced features...")
+        logger.info("preparing_data")
         df = self._prepare_data(df)
-        print(f"  Prepared {len(df)} rows with {len(df.columns)} columns")
+        logger.info("data_prepared", rows=len(df), columns=len(df.columns))
 
         # Train ROAS predictor (enhanced with creative/audience features)
-        print("\nTraining enhanced ROAS predictor...")
+        logger.info("training_roas_predictor")
         results["roas_predictor"] = self.train_roas_predictor(df)
 
         # Train platform-specific models if enabled
         if include_platform_models and "platform" in df.columns:
-            print("\nTraining platform-specific ROAS models...")
+            logger.info("training_platform_specific_models")
             platform_results = self.train_platform_specific_models(df)
             results["platform_models"] = platform_results
 
         # Train conversion predictor
-        print("\nTraining conversion predictor...")
+        logger.info("training_conversion_predictor")
         results["conversion_predictor"] = self.train_conversion_predictor(df)
 
         # Train budget impact predictor
-        print("\nTraining budget impact predictor...")
+        logger.info("training_budget_impact_predictor")
         results["budget_impact"] = self.train_budget_impact_predictor(df)
 
         return results
@@ -422,7 +423,7 @@ class ModelTrainer:
         numeric_cols = df[feature_cols].select_dtypes(include=[np.number]).columns.tolist()
         feature_cols = numeric_cols
 
-        logger.info(f"ROAS predictor using {len(feature_cols)} features")
+        logger.info("roas_predictor_features", num_features=len(feature_cols))
 
         # =====================================================================
         # Prepare data
@@ -435,7 +436,7 @@ class ModelTrainer:
         X, y = X[mask], y[mask]
 
         if len(X) < 100:
-            logger.warning(f"Limited training data: {len(X)} samples")
+            logger.warning("limited_training_data", num_samples=len(X))
 
         # Train-test split
         X_train, X_test, y_train, y_test = train_test_split(
@@ -489,7 +490,7 @@ class ModelTrainer:
         grid_search.fit(X_train_scaled, y_train)
 
         model = grid_search.best_estimator_
-        logger.info(f"Best params: {grid_search.best_params_}")
+        logger.info("best_params_found", params=grid_search.best_params_)
 
         # =====================================================================
         # Evaluate
@@ -713,9 +714,7 @@ class ModelTrainer:
         with open(metadata_path, "w") as f:
             json.dump(metadata, f, indent=2)
 
-        print(f"  Saved: {model_path}")
-        print(f"  R² Score: {metrics.get('r2', 'N/A'):.4f}")
-        print(f"  Features: {len(features)}")
+        logger.info("model_saved", path=str(model_path), r2_score=round(metrics.get("r2", 0), 4), num_features=len(features))
 
 
     def train_platform_specific_models(self, df: pd.DataFrame) -> Dict[str, Any]:
@@ -730,16 +729,16 @@ class ModelTrainer:
             return results
 
         platforms = df["platform"].dropna().unique()
-        logger.info(f"Training platform-specific models for: {list(platforms)}")
+        logger.info("training_platform_models", platforms=list(platforms))
 
         for platform in platforms:
             platform_df = df[df["platform"] == platform].copy()
 
             if len(platform_df) < 50:
-                logger.warning(f"Insufficient data for {platform} ({len(platform_df)} rows), skipping")
+                logger.warning("insufficient_platform_data", platform=platform, rows=len(platform_df))
                 continue
 
-            logger.info(f"Training {platform} model with {len(platform_df)} samples")
+            logger.info("training_platform_model", platform=platform, num_samples=len(platform_df))
 
             try:
                 # Use simplified feature set for platform-specific models
@@ -770,7 +769,7 @@ class ModelTrainer:
                 X, y = X[mask], y[mask]
 
                 if len(X) < 30:
-                    logger.warning(f"Insufficient valid data for {platform} after filtering")
+                    logger.warning("insufficient_valid_platform_data", platform=platform)
                     continue
 
                 # Train-test split
@@ -815,10 +814,10 @@ class ModelTrainer:
                 )
 
                 results[platform] = metrics
-                logger.info(f"  {platform} R²: {metrics['r2']:.4f}")
+                logger.info("platform_model_trained", platform=platform, r2=round(metrics["r2"], 4))
 
             except Exception as e:
-                logger.error(f"Error training {platform} model: {e}")
+                logger.error("platform_model_training_error", platform=platform, error=str(e))
                 results[platform] = {"error": str(e)}
 
         return results
@@ -867,7 +866,7 @@ def train_from_sample_data(
     from app.ml.data_loader import TrainingDataLoader
 
     # Generate sample data
-    print(f"Generating sample data: {num_campaigns} campaigns, {days} days...")
+    logger.info("generating_sample_data", num_campaigns=num_campaigns, days=days)
     df = TrainingDataLoader.generate_sample_data(
         num_campaigns=num_campaigns,
         days_per_campaign=days,
@@ -894,21 +893,17 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.csv:
-        print(f"Training from CSV: {args.csv}")
+        logger.info("training_from_csv", csv_path=args.csv)
         results = train_from_csv(args.csv, args.output)
     elif args.sample:
-        print("Training from sample data...")
+        logger.info("training_from_sample_data")
         results = train_from_sample_data(args.campaigns, args.days, args.output)
     else:
-        print("Specify --csv <file> or --sample")
+        logger.error("no_training_source_specified")
         exit(1)
 
-    print("\n" + "=" * 50)
-    print("Training Complete!")
-    print("=" * 50)
+    logger.info("training_complete")
     for model_name, metrics in results.items():
-        print(f"\n{model_name}:")
         if isinstance(metrics, dict):
-            for key, value in metrics.items():
-                if key != "feature_importances":
-                    print(f"  {key}: {value}")
+            safe_metrics = {k: v for k, v in metrics.items() if k != "feature_importances"}
+            logger.info("model_results", model=model_name, **safe_metrics)

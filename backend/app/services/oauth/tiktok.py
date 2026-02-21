@@ -64,7 +64,7 @@ class TikTokOAuthService(OAuthService):
     def __init__(self) -> None:
         super().__init__()
         self.app_id = settings.tiktok_app_id
-        self.app_secret = settings.tiktok_app_secret or settings.tiktok_secret
+        self.app_secret = settings.tiktok_secret
 
     def get_authorization_url(
         self,
@@ -134,10 +134,14 @@ class TikTokOAuthService(OAuthService):
                 token_data = response_data.get("data", {})
 
         # TikTok access tokens expire in 24 hours (86400 seconds)
+        access_token = token_data.get("access_token")
+        if not access_token:
+            raise Exception("No access token in response")
+
         expires_in = token_data.get("expires_in", 86400)
 
         return OAuthTokens(
-            access_token=token_data.get("access_token"),
+            access_token=access_token,
             refresh_token=token_data.get("refresh_token"),
             expires_in=expires_in,
             expires_at=self._calculate_expiry(expires_in),
@@ -220,12 +224,12 @@ class TikTokOAuthService(OAuthService):
             # For now, we'll use the advertiser info endpoint
 
             url = f"{TIKTOK_API_URL}/oauth2/advertiser/get/"
-            params = {
+            post_data = {
                 "app_id": self.app_id,
                 "secret": self.app_secret,
             }
 
-            async with session.get(url, headers=headers, params=params) as resp:
+            async with session.post(url, headers=headers, json=post_data) as resp:
                 response_data = await resp.json()
 
                 if response_data.get("code") != 0:

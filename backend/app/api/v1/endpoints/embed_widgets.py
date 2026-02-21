@@ -17,7 +17,8 @@ from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.feature_gate import get_current_tier
@@ -57,11 +58,11 @@ router = APIRouter(prefix="/embed-widgets", tags=["embed-widgets"])
 # =============================================================================
 
 
-def get_widget_service(db: Session = Depends(get_db)) -> EmbedWidgetService:
+def get_widget_service(db: AsyncSession = Depends(get_db)) -> EmbedWidgetService:
     return EmbedWidgetService(db)
 
 
-def get_token_service(db: Session = Depends(get_db)) -> EmbedTokenService:
+def get_token_service(db: AsyncSession = Depends(get_db)) -> EmbedTokenService:
     return EmbedTokenService(db)
 
 
@@ -74,10 +75,15 @@ def get_security_service() -> EmbedSecurityService:
     return EmbedSecurityService(settings.embed_signing_key)
 
 
-# Temporary: Get tenant_id from request (should come from auth)
-def get_tenant_id() -> int:
-    # In production, this comes from the authenticated user's context
-    return 1
+def get_tenant_id(request: Request) -> int:
+    """Extract tenant_id from request state (set by tenant middleware)."""
+    tenant_id = getattr(request.state, "tenant_id", None)
+    if tenant_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Tenant context not found. Authenticate first.",
+        )
+    return int(tenant_id)
 
 
 # =============================================================================
@@ -205,18 +211,18 @@ async def create_token(
 async def list_tokens(
     widget_id: UUID,
     tenant_id: int = Depends(get_tenant_id),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
     """List all tokens for a widget (without actual token values)."""
-    tokens = (
-        db.query(EmbedToken)
-        .filter(
+    result = await db.execute(
+        select(EmbedToken)
+        .where(
             EmbedToken.widget_id == widget_id,
             EmbedToken.tenant_id == tenant_id,
         )
         .order_by(EmbedToken.created_at.desc())
-        .all()
     )
+    tokens = result.scalars().all()
 
     return tokens
 
@@ -311,7 +317,7 @@ async def get_embed_code(
     token_id: UUID = Query(..., description="Token ID to use for the embed"),
     tenant_id: int = Depends(get_tenant_id),
     service: EmbedWidgetService = Depends(get_widget_service),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Generate embed code snippets for a widget.
@@ -323,14 +329,13 @@ async def get_embed_code(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Widget not found")
 
     # Get token
-    token = (
-        db.query(EmbedToken)
-        .filter(
+    result = await db.execute(
+        select(EmbedToken).where(
             EmbedToken.id == token_id,
             EmbedToken.widget_id == widget_id,
         )
-        .first()
     )
+    token = result.scalar_one_or_none()
 
     if not token:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Token not found")
@@ -403,7 +408,7 @@ async def get_widget_data(
     widget_id: UUID,
     token: str = Query(..., description="Embed token"),
     request: Request = None,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Public endpoint to fetch widget data for embedding.
@@ -458,7 +463,7 @@ async def get_widget_data(
     )
 
 
-def _get_widget_data(widget: EmbedWidget, db: Session) -> dict:
+def _get_widget_data(widget: EmbedWidget, db: AsyncSession) -> dict:
     """
     Fetch actual widget data based on widget type.
 

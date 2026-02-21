@@ -43,8 +43,12 @@ class MockCurrentUser:
 async def cdp_client(app, db_session, test_tenant) -> AsyncClient:
     """
     Create an async HTTP client for CDP API testing with mocked auth.
+
+    Adds a JWT token so TenantMiddleware can extract tenant context
+    before the request reaches endpoint-level auth dependencies.
     """
     from app.auth.deps import get_current_user
+    from app.core.security import create_access_token
     from app.db.session import get_async_session
 
     # Override the database dependency
@@ -58,9 +62,23 @@ async def cdp_client(app, db_session, test_tenant) -> AsyncClient:
     app.dependency_overrides[get_async_session] = get_test_session
     app.dependency_overrides[get_current_user] = mock_get_current_user
 
+    # Create a JWT so TenantMiddleware can extract tenant_id
+    token = create_access_token(
+        subject=1,
+        additional_claims={
+            "email": "test@example.com",
+            "tenant_id": test_tenant["id"],
+            "role": "admin",
+        },
+    )
+
     async with AsyncClient(
         transport=ASGITransport(app=app),
         base_url="http://testserver",
+        headers={
+            "Authorization": f"Bearer {token}",
+            "X-Tenant-ID": str(test_tenant["id"]),
+        },
     ) as ac:
         yield ac
 
@@ -521,10 +539,10 @@ class TestCDPHealth:
     @pytest.mark.asyncio
     async def test_health_check(
         self,
-        client: AsyncClient,
+        cdp_client: AsyncClient,
     ):
         """Test CDP health check endpoint."""
-        response = await client.get("/api/v1/cdp/health")
+        response = await cdp_client.get("/api/v1/cdp/health")
 
         assert response.status_code == 200
         data = response.json()

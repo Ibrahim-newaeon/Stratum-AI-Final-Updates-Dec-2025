@@ -12,7 +12,7 @@ This service handles:
 - Canonical identity management
 """
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timezone
 from decimal import Decimal
 from typing import Optional
 from uuid import UUID
@@ -506,7 +506,7 @@ class IdentityResolutionService:
                     p.identifiers[0].identifier_type if p.identifiers else "anonymous_id"
                 ),
                 -p.total_events,
-                p.created_at,
+                p.created_at or datetime.min.replace(tzinfo=timezone.utc),
             ),
         )
 
@@ -743,7 +743,13 @@ async def resolve_identity_on_event(
         if merge:
             merge_result = merge
 
-    # Update canonical identity
-    await service.update_canonical_identity(profile.id)
+    # Update canonical identity — use the surviving profile ID if a merge
+    # occurred, because the original profile may have been deleted during merge.
+    canonical_profile_id = (
+        merge_result.surviving_profile_id
+        if merge_result and merge_result.surviving_profile_id
+        else profile.id
+    )
+    await service.update_canonical_identity(canonical_profile_id)
 
     return merge_result

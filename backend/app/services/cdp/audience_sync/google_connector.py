@@ -467,6 +467,9 @@ class GoogleAudienceConnector(BaseAudienceConnector):
         Get Google Ads user list information.
         """
         try:
+            # Validate audience_id is a safe integer to prevent GAQL injection
+            audience_id = int(audience_id)
+
             url = f"{self.BASE_URL}/{self.API_VERSION}/customers/{self.customer_id}/googleAds:searchStream"
 
             query = f"""

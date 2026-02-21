@@ -206,6 +206,7 @@ class TestEnvironmentProperties:
             secret_key="x" * 32,
             jwt_secret_key="y" * 32,
             pii_encryption_key="z" * 32,
+            use_mock_ad_data="false",
         )
         assert s.is_production is True
         assert s.is_development is False

@@ -131,6 +131,12 @@ async def get_revenue_metrics(
     )
     tenants = result.scalars().all()
 
+    # TODO: The Tenant model is missing these columns that the dashboard
+    # relies on: mrr_cents, status, health_score, churn_risk_score,
+    # last_admin_login_at. All getattr() calls below return defaults (0/None),
+    # making the dashboard metrics non-functional. A migration is needed to
+    # add these columns to the tenants table (see base_models.py Tenant class).
+
     # Calculate MRR
     total_mrr = sum(getattr(t, 'mrr_cents', 0) or 0 for t in tenants) / 100
 
@@ -211,8 +217,8 @@ async def get_tenant_portfolio(
     limit: int = Query(50, ge=1, le=100),
     status_filter: Optional[str] = Query(None),
     plan_filter: Optional[str] = Query(None),
-    sort_by: str = Query("mrr", regex="^(mrr|name|created_at|churn_risk|users)$"),
-    sort_order: str = Query("desc", regex="^(asc|desc)$"),
+    sort_by: str = Query("mrr", pattern="^(mrr|name|created_at|churn_risk|users)$"),
+    sort_order: str = Query("desc", pattern="^(asc|desc)$"),
 ):
     """
     Get tenant portfolio table with health indicators.
@@ -586,9 +592,11 @@ async def get_audit_logs(
 
         # Get total count
         count_query = "SELECT COUNT(*) FROM audit_logs WHERE 1=1"
+        count_params = {}
         if tenant_id:
-            count_query += f" AND tenant_id = {tenant_id}"
-        count_result = await db.execute(text(count_query))
+            count_query += " AND tenant_id = :tenant_id"
+            count_params["tenant_id"] = tenant_id
+        count_result = await db.execute(text(count_query), count_params)
         total = count_result.scalar() or 0
 
         return APIResponse(
@@ -996,10 +1004,10 @@ async def perform_subscription_action(
         elif action_req.action == "extend_trial" and action_req.extend_days:
             await db.execute(text("""
                 UPDATE subscriptions
-                SET current_period_end = current_period_end + interval ':days days',
+                SET current_period_end = current_period_end + make_interval(days => :days),
                     updated_at = NOW()
                 WHERE id = :id
-            """.replace(":days", str(action_req.extend_days))), {"id": subscription_id})
+            """), {"id": subscription_id, "days": int(action_req.extend_days)})
 
         elif action_req.action == "resume":
             await db.execute(text("""
@@ -1064,7 +1072,7 @@ async def get_tenant_usage(
             SELECT COUNT(*) FROM platform_connectors WHERE tenant_id = :tenant_id AND status = 'connected'
         """), {"tenant_id": tenant_id})
         connectors_count = connector_result.scalar() or 0
-    except:
+    except Exception:
         connectors_count = 0
 
     # Get limits from tenant or default
@@ -1130,6 +1138,8 @@ async def get_superadmin_dashboard(
     tenants = result.scalars().all()
 
     total_tenants = len(tenants)
+    # NOTE: Tenant.status and Tenant.mrr_cents are not yet on the model;
+    # getattr defaults keep this safe but return placeholder values.
     active_tenants = len([t for t in tenants if getattr(t, 'status', 'active') == 'active'])
     trial_tenants = len([t for t in tenants if t.plan == 'trial'])
     total_mrr = sum((getattr(t, 'mrr_cents', 0) or 0) for t in tenants) / 100

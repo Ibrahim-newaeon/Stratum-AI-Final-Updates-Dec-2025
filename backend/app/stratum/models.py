@@ -9,7 +9,7 @@ These models provide a consistent interface across all supported platforms
 normalized data regardless of the source platform.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Optional
 
@@ -235,7 +235,7 @@ class SignalHealth(BaseModel):
     cdp_emq_score: Optional[float] = Field(default=None, ge=0, le=100)  # CDP EMQ integration
     status: str = "healthy"  # healthy, degraded, critical
     issues: list[str] = Field(default_factory=list)
-    last_updated: datetime = Field(default_factory=datetime.utcnow)
+    last_updated: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     def is_autopilot_safe(self, threshold: float = 70.0) -> bool:
         """Check if signal health allows autopilot operations."""
@@ -256,7 +256,7 @@ class AutomationAction(BaseModel):
     action_type: str  # update_budget, update_status, update_bid, etc.
     parameters: dict[str, Any] = Field(default_factory=dict)
     status: str = "pending"  # pending, executing, completed, failed
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     executed_at: Optional[datetime] = None
     result: Optional[dict[str, Any]] = None
     error_message: Optional[str] = None
@@ -273,7 +273,7 @@ class WebhookEvent(BaseModel):
     platform: Platform
     event_type: str
     payload: dict[str, Any]
-    received_at: datetime = Field(default_factory=datetime.utcnow)
+    received_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     class Config:
         use_enum_values = True

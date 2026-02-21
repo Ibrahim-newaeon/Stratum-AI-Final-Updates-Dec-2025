@@ -158,21 +158,21 @@ export function Competitors() {
   }
 
   // Map API competitors to view model
-  const rawCompetitors = Array.isArray(competitorsData) ? competitorsData : (competitorsData as any)?.items ?? []
-  const competitors: Competitor[] = rawCompetitors.map((c: any) => ({
-    id: c.id,
-    name: c.name,
-    domain: c.domain,
+  const rawCompetitors = Array.isArray(competitorsData) ? competitorsData : (competitorsData as unknown as { items?: unknown[] })?.items ?? []
+  const competitors: Competitor[] = (rawCompetitors as Array<Record<string, unknown>>).map((c) => ({
+    id: String(c.id),
+    name: String(c.name ?? ''),
+    domain: String(c.domain ?? ''),
     logo: null,
-    adSpend: c.estimatedSpend ?? 0,
-    adSpendTrend: c.spendTrend ?? 0,
-    shareOfVoice: c.shareOfVoice ?? 0,
-    keywordOverlap: c.keywordOverlap ?? 0,
-    creativesTracked: c.activeCreatives ?? 0,
-    lastRefresh: new Date(c.lastUpdated ?? c.lastRefreshedAt ?? Date.now()),
-    status: c.isActive !== false ? 'active' : 'paused',
-    country: c.country,
-    platforms: c.platforms,
+    adSpend: Number(c.estimatedSpend ?? 0),
+    adSpendTrend: Number(c.spendTrend ?? 0),
+    shareOfVoice: Number(c.shareOfVoice ?? 0),
+    keywordOverlap: Number(c.keywordOverlap ?? 0),
+    creativesTracked: Number(c.activeCreatives ?? 0),
+    lastRefresh: new Date(String(c.lastUpdated ?? c.lastRefreshedAt ?? Date.now())),
+    status: c.isActive !== false ? 'active' as const : 'paused' as const,
+    country: c.country as string | undefined,
+    platforms: c.platforms as string[] | undefined,
   }))
 
   // Keyword overlaps — fetched from API
@@ -190,13 +190,13 @@ export function Competitors() {
       .then((res) => {
         const data = res.data?.data || res.data || []
         if (Array.isArray(data)) {
-          setKeywordOverlaps(data.map((kw: any) => ({
-            keyword: kw.keyword,
-            yourPosition: kw.yourPosition ?? kw.your_position ?? 0,
-            competitorPosition: kw.competitorPosition ?? kw.competitor_position ?? 0,
-            searchVolume: kw.searchVolume ?? kw.search_volume ?? 0,
-            cpc: kw.cpc ?? 0,
-            competitor: kw.competitor ?? kw.competitorName ?? kw.competitor_name ?? '',
+          setKeywordOverlaps(data.map((kw: Record<string, unknown>) => ({
+            keyword: String(kw.keyword ?? ''),
+            yourPosition: Number(kw.yourPosition ?? kw.your_position ?? 0),
+            competitorPosition: Number(kw.competitorPosition ?? kw.competitor_position ?? 0),
+            searchVolume: Number(kw.searchVolume ?? kw.search_volume ?? 0),
+            cpc: Number(kw.cpc ?? 0),
+            competitor: String(kw.competitor ?? kw.competitorName ?? kw.competitor_name ?? ''),
           })))
         }
       })
@@ -501,13 +501,13 @@ export function Competitors() {
                 .then((res) => {
                   const data = res.data?.data || res.data || []
                   if (Array.isArray(data)) {
-                    setKeywordOverlaps(data.map((kw: any) => ({
-                      keyword: kw.keyword,
-                      yourPosition: kw.yourPosition ?? kw.your_position ?? 0,
-                      competitorPosition: kw.competitorPosition ?? kw.competitor_position ?? 0,
-                      searchVolume: kw.searchVolume ?? kw.search_volume ?? 0,
-                      cpc: kw.cpc ?? 0,
-                      competitor: kw.competitor ?? kw.competitorName ?? kw.competitor_name ?? '',
+                    setKeywordOverlaps(data.map((kw: Record<string, unknown>) => ({
+                      keyword: String(kw.keyword ?? ''),
+                      yourPosition: Number(kw.yourPosition ?? kw.your_position ?? 0),
+                      competitorPosition: Number(kw.competitorPosition ?? kw.competitor_position ?? 0),
+                      searchVolume: Number(kw.searchVolume ?? kw.search_volume ?? 0),
+                      cpc: Number(kw.cpc ?? 0),
+                      competitor: String(kw.competitor ?? kw.competitorName ?? kw.competitor_name ?? ''),
                     })))
                   }
                 })

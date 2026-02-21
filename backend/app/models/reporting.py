@@ -11,7 +11,7 @@ Models:
 - ReportDelivery: Delivery tracking for each channel
 """
 
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from typing import Optional
 from uuid import uuid4
 import enum
@@ -138,8 +138,8 @@ class ReportTemplate(Base):
     last_modified_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -232,8 +232,8 @@ class ScheduledReport(Base):
     created_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -268,7 +268,7 @@ class ReportExecution(Base):
     status = Column(SQLEnum(ExecutionStatus), nullable=False, default=ExecutionStatus.PENDING)
 
     # Timing
-    started_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    started_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     completed_at = Column(DateTime(timezone=True), nullable=True)
     duration_seconds = Column(Float, nullable=True)
 
@@ -334,7 +334,7 @@ class ReportDelivery(Base):
     recipient_type = Column(String(50), nullable=True)  # user, group, webhook
 
     # Timing
-    queued_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    queued_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     sent_at = Column(DateTime(timezone=True), nullable=True)
     delivered_at = Column(DateTime(timezone=True), nullable=True)
 
@@ -415,8 +415,8 @@ class DeliveryChannelConfig(Base):
     """
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])

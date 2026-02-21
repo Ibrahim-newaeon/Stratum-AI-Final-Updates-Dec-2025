@@ -25,6 +25,7 @@ from app.models.trust_layer import FactActionsQueue, FactSignalHealthDaily, Sign
 from app.autopilot.service import ActionStatus, ActionType, SAFE_ACTIONS
 from app.features.flags import get_autopilot_caps, AutopilotLevel
 from app.core.websocket import publish_action_status_update
+from app.core.config import settings
 
 
 logger = logging.getLogger(__name__)
@@ -53,8 +54,6 @@ class PlatformExecutor:
         Returns:
             Dict with keys: success, before_value, after_value, platform_response, error
         """
-        from app.core.config import settings
-
         if settings.use_mock_ad_data:
             return self._mock_execute(action_type, entity_type, entity_id, action_details)
 
@@ -732,12 +731,40 @@ class TikTokExecutor(PlatformExecutor):
             }
 
 
+class SnapchatExecutor(PlatformExecutor):
+    """Stub executor for Snapchat -- not yet implemented."""
+
+    def _mock_execute(
+        self,
+        action_type: str,
+        entity_type: str,
+        entity_id: str,
+        action_details: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        raise NotImplementedError(
+            "Snapchat executor is not implemented. "
+            "Cannot safely execute actions on the Snapchat platform."
+        )
+
+    async def _live_execute(
+        self,
+        action_type: str,
+        entity_type: str,
+        entity_id: str,
+        action_details: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        raise NotImplementedError(
+            "Snapchat executor is not implemented. "
+            "Cannot safely execute actions on the Snapchat platform."
+        )
+
+
 # Platform executor registry
 PLATFORM_EXECUTORS: Dict[str, PlatformExecutor] = {
     "meta": MetaExecutor(),
     "google": GoogleExecutor(),
     "tiktok": TikTokExecutor(),
-    "snapchat": MetaExecutor(),  # Snapchat uses Meta-like executor for now
+    "snapchat": SnapchatExecutor(),
 }
 
 
@@ -750,13 +777,11 @@ async def check_signal_health(db: AsyncSession, tenant_id: int) -> bool:
     Check if signal health allows action execution.
     Returns True if OK/Risk, False if Degraded/Critical.
     """
-    from datetime import date
-
     result = await db.execute(
         select(FactSignalHealthDaily).where(
             and_(
                 FactSignalHealthDaily.tenant_id == tenant_id,
-                FactSignalHealthDaily.date == date.today(),
+                FactSignalHealthDaily.date == datetime.now(timezone.utc).date(),
             )
         )
     )
@@ -953,7 +978,7 @@ def apply_actions_queue(self, tenant_id: Optional[int] = None):
                 await db.rollback()
                 raise self.retry(exc=e)
 
-    return asyncio.get_event_loop().run_until_complete(run_apply())
+    return asyncio.run(run_apply())
 
 
 async def log_action_audit(db: AsyncSession, action: FactActionsQueue, result: Dict[str, Any]):
@@ -1103,4 +1128,4 @@ def apply_single_action(self, action_id: str, user_id: Optional[int] = None):
                 await db.rollback()
                 raise self.retry(exc=e)
 
-    return asyncio.get_event_loop().run_until_complete(run_single())
+    return asyncio.run(run_single())

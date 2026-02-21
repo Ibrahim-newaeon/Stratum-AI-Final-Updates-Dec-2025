@@ -7,7 +7,7 @@ Database models for the Trust Layer:
 - FactAttributionVarianceDaily: Daily attribution variance metrics
 """
 
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from typing import Optional
 from uuid import uuid4
 
@@ -74,8 +74,8 @@ class FactSignalHealthDaily(Base):
     actions = Column(Text, nullable=True)  # JSON array of recommended actions
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships - use foreign_keys to resolve ambiguity
     tenant = relationship("Tenant", foreign_keys=[tenant_id], back_populates="signal_health_records")
@@ -119,8 +119,8 @@ class FactAttributionVarianceDaily(Base):
     notes = Column(Text, nullable=True)
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships - use foreign_keys to resolve ambiguity
     tenant = relationship("Tenant", foreign_keys=[tenant_id], back_populates="attribution_variance_records")
@@ -165,7 +165,7 @@ class FactActionsQueue(Base):
     applied_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     approved_at = Column(DateTime(timezone=True), nullable=True)
     applied_at = Column(DateTime(timezone=True), nullable=True)
 

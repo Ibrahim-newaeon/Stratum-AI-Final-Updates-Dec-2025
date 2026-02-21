@@ -135,7 +135,7 @@ async def process_info() -> dict[str, Any]:
 @router.get("/allocations")
 async def top_allocations(
     limit: int = Query(default=30, le=100),
-    group_by: str = Query(default="lineno", regex="^(lineno|filename|traceback)$"),
+    group_by: str = Query(default="lineno", pattern="^(lineno|filename|traceback)$"),
 ) -> dict[str, Any]:
     """Get top memory allocations from tracemalloc."""
     auditor = _require_auditor()

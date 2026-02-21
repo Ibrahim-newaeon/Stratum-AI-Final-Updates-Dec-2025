@@ -152,14 +152,17 @@ class OAuthService(ABC):
             redirect_uri=redirect_uri,
         )
 
+        client = None
         try:
             client = await self._get_redis_client()
             key = f"{OAUTH_STATE_PREFIX}{state_token}"
             await client.setex(key, OAUTH_STATE_EXPIRY, state.to_json())
-            await client.close()
         except Exception as e:
             self.logger.error("Failed to store OAuth state", error=str(e))
             raise
+        finally:
+            if client is not None:
+                await client.close()
 
         return state
 
@@ -173,18 +176,15 @@ class OAuthService(ABC):
         Returns:
             OAuthState if valid, None if invalid or expired
         """
+        client = None
         try:
             client = await self._get_redis_client()
             key = f"{OAUTH_STATE_PREFIX}{state_token}"
 
-            data = await client.get(key)
+            # Atomic get-and-delete to prevent TOCTOU race (Redis 6.2+)
+            data = await client.getdel(key)
             if not data:
-                await client.close()
                 return None
-
-            # Delete state (single use)
-            await client.delete(key)
-            await client.close()
 
             state = OAuthState.from_json(data)
 
@@ -202,6 +202,9 @@ class OAuthService(ABC):
         except Exception as e:
             self.logger.error("Failed to validate OAuth state", error=str(e))
             return None
+        finally:
+            if client is not None:
+                await client.close()
 
     # =========================================================================
     # Token Encryption

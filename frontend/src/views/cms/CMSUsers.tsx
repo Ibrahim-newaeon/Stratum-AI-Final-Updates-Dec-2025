@@ -103,10 +103,11 @@ export default function CMSUsers() {
       setInviteForm({ email: '', full_name: '', password: '', cms_role: 'author' });
       setInviteError(null);
     },
-    onError: (err: any) => {
+    onError: (err: unknown) => {
+      const axiosErr = err as { response?: { data?: { detail?: string; message?: string } } };
       const msg =
-        err?.response?.data?.detail ||
-        err?.response?.data?.message ||
+        axiosErr?.response?.data?.detail ||
+        axiosErr?.response?.data?.message ||
         'Failed to invite user';
       setInviteError(typeof msg === 'string' ? msg : JSON.stringify(msg));
     },

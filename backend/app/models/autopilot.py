@@ -84,7 +84,7 @@ class TenantEnforcementSettings(Base, TimestampMixin):
         ForeignKey("tenants.id", ondelete="CASCADE"),
         nullable=False,
         unique=True,
-        index=True,
+        # index=True removed: unique constraint already creates an index
     )
 
     # Kill switch
@@ -123,7 +123,8 @@ class TenantEnforcementSettings(Base, TimestampMixin):
         cascade="all, delete-orphan",
     )
 
-    __table_args__ = (Index("ix_tenant_enforcement_settings_tenant_id", "tenant_id"),)
+    # unique=True on tenant_id already creates an index; no explicit Index needed
+    __table_args__ = ()
 
     def to_dict(self) -> dict:
         """Convert to dictionary for API responses."""
@@ -169,7 +170,6 @@ class TenantEnforcementRule(Base, TimestampMixin):
         Integer,
         ForeignKey("tenants.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
 
     # Rule configuration
@@ -241,7 +241,6 @@ class EnforcementAuditLog(Base):
         Integer,
         ForeignKey("tenants.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
 
     # Timestamp
@@ -336,9 +335,8 @@ class PendingConfirmationToken(Base):
         Integer,
         ForeignKey("tenants.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
-    token = Column(String(64), nullable=False, unique=True, index=True)
+    token = Column(String(64), nullable=False, unique=True)
 
     # Context
     action_type = Column(String(100), nullable=False)
@@ -350,7 +348,7 @@ class PendingConfirmationToken(Base):
     expires_at = Column(DateTime(timezone=True), nullable=False)
 
     __table_args__ = (
-        Index("ix_pending_confirmation_tokens_token", "token"),
+        # unique=True on token already creates an index; no need for a separate one
         Index("ix_pending_confirmation_tokens_tenant_id", "tenant_id"),
         Index("ix_pending_confirmation_tokens_expires_at", "expires_at"),
     )

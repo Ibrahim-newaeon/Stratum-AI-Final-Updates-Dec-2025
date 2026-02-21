@@ -12,7 +12,7 @@ Models:
 - ProfitROASReport: Aggregated profit ROAS reports
 """
 
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from typing import Optional
 from uuid import uuid4
 import enum
@@ -94,8 +94,8 @@ class ProductCatalog(Base):
     attributes = Column(JSONB, nullable=True)  # Custom attributes
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -150,8 +150,8 @@ class ProductMargin(Base):
     source_reference = Column(String(255), nullable=True)  # File name, API endpoint, etc.
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
     created_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
     # Relationships
@@ -203,8 +203,8 @@ class MarginRule(Base):
     is_active = Column(Boolean, default=True, nullable=False)
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -275,8 +275,8 @@ class DailyProfitMetrics(Base):
     is_estimated = Column(Boolean, default=False, nullable=False)  # True if using default margins
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -346,7 +346,7 @@ class ProfitROASReport(Base):
     data_completeness_pct = Column(Float, nullable=True)
 
     # Report metadata
-    generated_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    generated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     generated_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
     # Relationships
@@ -389,7 +389,7 @@ class COGSUpload(Base):
     products_updated = Column(Integer, default=0)
 
     # Timestamps
-    uploaded_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    uploaded_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     processed_at = Column(DateTime(timezone=True), nullable=True)
     uploaded_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 

@@ -24,12 +24,13 @@ if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
 
 
-class PermLevel(str, Enum):
-    """Permission level for resource-scoped access control."""
+class PermLevel(int, Enum):
+    """Permission level for resource-scoped access control (integer-comparable)."""
 
-    VIEW = "view"
-    EDIT = "edit"
-    FULL = "full"
+    NONE = 0
+    VIEW = 1
+    EDIT = 2
+    FULL = 3
 
 
 # Minimum roles for each PermLevel
@@ -106,6 +107,12 @@ class Permission(str, Enum):
     RULE_DELETE = "rule:delete"
     RULE_EXECUTE = "rule:execute"
 
+    # Client permissions
+    CLIENT_READ = "client:read"
+    CLIENT_WRITE = "client:write"
+    CLIENT_DELETE = "client:delete"
+    CLIENT_PORTAL = "client:portal"
+
 
 # =============================================================================
 # Role to Permission Mapping
@@ -163,6 +170,11 @@ ROLE_PERMISSIONS: dict[str, Set[Permission]] = {
         Permission.RULE_WRITE,
         Permission.RULE_DELETE,
         Permission.RULE_EXECUTE,
+        # All client permissions
+        Permission.CLIENT_READ,
+        Permission.CLIENT_WRITE,
+        Permission.CLIENT_DELETE,
+        Permission.CLIENT_PORTAL,
     },
 
     # Tenant Admin: Full tenant access
@@ -199,6 +211,11 @@ ROLE_PERMISSIONS: dict[str, Set[Permission]] = {
         Permission.RULE_WRITE,
         Permission.RULE_DELETE,
         Permission.RULE_EXECUTE,
+        # All client permissions
+        Permission.CLIENT_READ,
+        Permission.CLIENT_WRITE,
+        Permission.CLIENT_DELETE,
+        Permission.CLIENT_PORTAL,
     },
 
     # Manager: Campaign and team management
@@ -223,6 +240,9 @@ ROLE_PERMISSIONS: dict[str, Set[Permission]] = {
         Permission.RULE_READ,
         Permission.RULE_WRITE,
         Permission.RULE_EXECUTE,
+        Permission.CLIENT_READ,
+        Permission.CLIENT_WRITE,
+        Permission.CLIENT_PORTAL,
     },
 
     # Media Buyer: Campaign execution focus
@@ -255,6 +275,7 @@ ROLE_PERMISSIONS: dict[str, Set[Permission]] = {
         Permission.ALERT_READ,
         Permission.ASSET_READ,
         Permission.RULE_READ,
+        Permission.CLIENT_READ,
     },
 
     # Account Manager: Client relationship focus
@@ -279,6 +300,189 @@ ROLE_PERMISSIONS: dict[str, Set[Permission]] = {
         Permission.ANALYTICS_READ,
         Permission.ALERT_READ,
         Permission.ASSET_READ,
+        Permission.CLIENT_READ,
+    },
+}
+
+
+# =============================================================================
+# RBAC Matrix: resource → role → PermLevel
+# =============================================================================
+
+# Import UserRole lazily to avoid circular imports
+from app.base_models import UserRole
+
+RBAC_MATRIX: dict[str, dict[UserRole, PermLevel]] = {
+    "campaigns": {
+        UserRole.SUPERADMIN: PermLevel.FULL,
+        UserRole.ADMIN: PermLevel.FULL,
+        UserRole.MANAGER: PermLevel.EDIT,
+        UserRole.ANALYST: PermLevel.EDIT,
+        UserRole.VIEWER: PermLevel.VIEW,
+    },
+    "campaigns.delete": {
+        UserRole.SUPERADMIN: PermLevel.FULL,
+        UserRole.ADMIN: PermLevel.FULL,
+        UserRole.MANAGER: PermLevel.NONE,
+        UserRole.ANALYST: PermLevel.NONE,
+        UserRole.VIEWER: PermLevel.NONE,
+    },
+    "clients": {
+        UserRole.SUPERADMIN: PermLevel.FULL,
+        UserRole.ADMIN: PermLevel.FULL,
+        UserRole.MANAGER: PermLevel.EDIT,
+        UserRole.ANALYST: PermLevel.VIEW,
+        UserRole.VIEWER: PermLevel.VIEW,
+    },
+    "clients.portal_users": {
+        UserRole.SUPERADMIN: PermLevel.FULL,
+        UserRole.ADMIN: PermLevel.FULL,
+        UserRole.MANAGER: PermLevel.EDIT,
+        UserRole.ANALYST: PermLevel.NONE,
+        UserRole.VIEWER: PermLevel.NONE,
+    },
+    "analytics": {
+        UserRole.SUPERADMIN: PermLevel.FULL,
+        UserRole.ADMIN: PermLevel.FULL,
+        UserRole.MANAGER: PermLevel.EDIT,
+        UserRole.ANALYST: PermLevel.EDIT,
+        UserRole.VIEWER: PermLevel.VIEW,
+    },
+    "reports": {
+        UserRole.SUPERADMIN: PermLevel.FULL,
+        UserRole.ADMIN: PermLevel.FULL,
+        UserRole.MANAGER: PermLevel.FULL,
+        UserRole.ANALYST: PermLevel.EDIT,
+        UserRole.VIEWER: PermLevel.VIEW,
+    },
+    "reports.download": {
+        UserRole.SUPERADMIN: PermLevel.FULL,
+        UserRole.ADMIN: PermLevel.FULL,
+        UserRole.MANAGER: PermLevel.FULL,
+        UserRole.ANALYST: PermLevel.FULL,
+        UserRole.VIEWER: PermLevel.FULL,
+    },
+    "tenants.settings": {
+        UserRole.SUPERADMIN: PermLevel.FULL,
+        UserRole.ADMIN: PermLevel.FULL,
+        UserRole.MANAGER: PermLevel.NONE,
+        UserRole.ANALYST: PermLevel.NONE,
+        UserRole.VIEWER: PermLevel.NONE,
+    },
+    "users.manage": {
+        UserRole.SUPERADMIN: PermLevel.FULL,
+        UserRole.ADMIN: PermLevel.FULL,
+        UserRole.MANAGER: PermLevel.NONE,
+        UserRole.ANALYST: PermLevel.NONE,
+        UserRole.VIEWER: PermLevel.NONE,
+    },
+    "connectors": {
+        UserRole.SUPERADMIN: PermLevel.FULL,
+        UserRole.ADMIN: PermLevel.FULL,
+        UserRole.MANAGER: PermLevel.EDIT,
+        UserRole.ANALYST: PermLevel.VIEW,
+        UserRole.VIEWER: PermLevel.NONE,
+    },
+    "billing": {
+        UserRole.SUPERADMIN: PermLevel.FULL,
+        UserRole.ADMIN: PermLevel.FULL,
+        UserRole.MANAGER: PermLevel.VIEW,
+        UserRole.ANALYST: PermLevel.NONE,
+        UserRole.VIEWER: PermLevel.NONE,
+    },
+    "audit": {
+        UserRole.SUPERADMIN: PermLevel.FULL,
+        UserRole.ADMIN: PermLevel.VIEW,
+        UserRole.MANAGER: PermLevel.NONE,
+        UserRole.ANALYST: PermLevel.NONE,
+        UserRole.VIEWER: PermLevel.NONE,
+    },
+}
+
+
+def get_permission_level(role: UserRole, resource: str) -> PermLevel:
+    """
+    Look up the PermLevel for a role on a specific resource.
+
+    Falls back to PermLevel.NONE if the resource or role is not in the matrix.
+    """
+    resource_map = RBAC_MATRIX.get(resource)
+    if resource_map is None:
+        return PermLevel.NONE
+    return resource_map.get(role, PermLevel.NONE)
+
+
+# =============================================================================
+# Role Hierarchy (numeric for comparisons)
+# =============================================================================
+
+ROLE_HIERARCHY: dict[UserRole, int] = {
+    UserRole.SUPERADMIN: 100,
+    UserRole.ADMIN: 80,
+    UserRole.MANAGER: 60,
+    UserRole.ANALYST: 40,
+    UserRole.VIEWER: 10,
+}
+
+
+def can_manage_role(actor_role: UserRole, target_role: UserRole) -> bool:
+    """
+    Check whether *actor_role* can assign / manage *target_role*.
+
+    Only SUPERADMIN and ADMIN may manage roles, and they may only
+    assign roles **strictly below** their own hierarchy level
+    (prevents privilege escalation).
+    """
+    if actor_role not in {UserRole.SUPERADMIN, UserRole.ADMIN}:
+        return False
+    if actor_role == UserRole.SUPERADMIN:
+        return True  # superadmin can assign anything
+    return ROLE_HIERARCHY[target_role] < ROLE_HIERARCHY[actor_role]
+
+
+# =============================================================================
+# Resource Scope per Role
+# =============================================================================
+
+_ROLE_SCOPE: dict[UserRole, str] = {
+    UserRole.SUPERADMIN: "global",
+    UserRole.ADMIN: "tenant",
+    UserRole.MANAGER: "assigned",
+    UserRole.ANALYST: "assigned",
+    UserRole.VIEWER: "own_client",
+}
+
+
+def get_resource_scope(role: UserRole) -> str:
+    """Return the scope label for a given role."""
+    return _ROLE_SCOPE.get(role, "none")
+
+
+# =============================================================================
+# Sidebar Visibility per Role
+# =============================================================================
+
+SIDEBAR_VISIBILITY: dict[UserRole, set[str]] = {
+    UserRole.SUPERADMIN: {
+        "dashboard", "campaigns", "analytics", "clients", "users",
+        "settings", "connectors", "billing", "audit", "tenants",
+        "reports", "alerts", "profile",
+    },
+    UserRole.ADMIN: {
+        "dashboard", "campaigns", "analytics", "clients", "users",
+        "settings", "connectors", "billing", "audit", "reports",
+        "alerts", "profile",
+    },
+    UserRole.MANAGER: {
+        "dashboard", "campaigns", "analytics", "clients",
+        "connectors", "reports", "alerts", "profile",
+    },
+    UserRole.ANALYST: {
+        "dashboard", "campaigns", "analytics", "reports",
+        "alerts", "profile",
+    },
+    UserRole.VIEWER: {
+        "dashboard", "campaigns", "analytics", "profile",
     },
 }
 
@@ -565,17 +769,19 @@ async def enforce_client_access(
     if user_client_id is not None and user_client_id == client_id:
         return
 
-    # Check client_assignments table
-    from sqlalchemy import select
-    from app.models.client import ClientAssignment
-
-    result = await db.execute(
-        select(ClientAssignment.id).where(
-            ClientAssignment.user_id == user_id,
-            ClientAssignment.client_id == client_id,
-        )
+    # Look up accessible client IDs (uses the same logic as get_accessible_client_ids)
+    accessible = await get_accessible_client_ids(
+        user_id=user_id,
+        user_role=user_role,
+        tenant_id=tenant_id,
+        db=db,
+        client_id=user_client_id,
     )
-    if result.scalar_one_or_none() is not None:
+
+    if accessible is None:
+        return  # unrestricted
+
+    if client_id in accessible:
         return
 
     raise HTTPException(
@@ -600,18 +806,25 @@ async def get_accessible_client_ids(
         ``None``  – unrestricted (don't filter)
         ``list``  – restrict query to these IDs only
     """
+    from sqlalchemy import select
+
     role = user_role if isinstance(user_role, str) else user_role.value
     if role.lower() in {"superadmin", "admin"}:
         return None  # unrestricted
 
-    ids: list[int] = []
+    # Viewer: scoped to their own client_id
+    if role.lower() == "viewer":
+        if client_id is not None:
+            return [client_id]
+        # Look up the viewer's client_id from User table
+        from app.base_models import User as UserModel
+        result = await db.execute(
+            select(UserModel.client_id).where(UserModel.id == user_id)
+        )
+        user_client_id = result.scalar_one_or_none()
+        return [user_client_id] if user_client_id else []
 
-    # User's own client scope
-    if client_id is not None:
-        ids.append(client_id)
-
-    # Assigned clients
-    from sqlalchemy import select
+    # Manager / Analyst: scoped to assigned clients
     from app.models.client import ClientAssignment
 
     result = await db.execute(
@@ -619,6 +832,4 @@ async def get_accessible_client_ids(
             ClientAssignment.user_id == user_id,
         )
     )
-    ids.extend(row[0] for row in result.all())
-
-    return list(set(ids))
+    return list(result.scalars().all())

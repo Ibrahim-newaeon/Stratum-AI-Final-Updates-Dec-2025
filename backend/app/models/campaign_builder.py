@@ -9,7 +9,7 @@ Database models for the Campaign Builder feature:
 - CampaignPublishLog: Audit trail for publish attempts
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, Dict, Any, List
 from uuid import uuid4
 
@@ -90,8 +90,8 @@ class TenantPlatformConnection(Base):
     # Timestamps
     connected_at = Column(DateTime(timezone=True), nullable=True)
     last_refreshed_at = Column(DateTime(timezone=True), nullable=True)
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Error tracking
     last_error = Column(Text, nullable=True)
@@ -143,8 +143,8 @@ class TenantAdAccount(Base):
     sync_error = Column(Text, nullable=True)
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id], back_populates="ad_accounts")
@@ -193,8 +193,8 @@ class CampaignDraft(Base):
     published_at = Column(DateTime(timezone=True), nullable=True)
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id], back_populates="campaign_drafts")
@@ -228,7 +228,7 @@ class CampaignPublishLog(Base):
     published_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
     # Event timing
-    event_time = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    event_time = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Request/Response (for debugging)
     request_json = Column(JSONB, nullable=True)

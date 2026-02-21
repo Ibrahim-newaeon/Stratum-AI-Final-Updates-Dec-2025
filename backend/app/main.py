@@ -16,10 +16,13 @@ from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, Query, sta
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse, ORJSONResponse
+from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST
 from sse_starlette.sse import EventSourceResponse
+from starlette.responses import Response
 import structlog
 
 from app.core.config import settings
+from app.core.exceptions import StratumError
 from app.core.logging import get_logger, setup_logging
 from app.core.websocket import ws_manager
 from app.db.session import async_engine, check_database_health
@@ -28,6 +31,26 @@ from app.middleware.security import SecurityHeadersMiddleware
 from app.middleware.tenant import TenantMiddleware
 from app.middleware.rate_limit import RateLimitMiddleware
 from app.api.v1 import api_router
+
+# Prometheus Metrics
+REQUEST_COUNT = Counter(
+    "http_requests_total",
+    "Total HTTP requests",
+    ["method", "endpoint", "status_code"],
+)
+REQUEST_LATENCY = Histogram(
+    "http_request_duration_seconds",
+    "HTTP request latency in seconds",
+    ["method", "endpoint"],
+)
+ACTIVE_CONNECTIONS = Gauge(
+    "active_connections",
+    "Number of active connections",
+)
+ACTIVE_WEBSOCKETS = Gauge(
+    "active_websocket_connections",
+    "Number of active WebSocket connections",
+)
 
 # Setup logging
 setup_logging()
@@ -119,6 +142,28 @@ def create_application() -> FastAPI:
     # Middleware (order matters - executed in reverse order)
     # -------------------------------------------------------------------------
 
+    # Prometheus request metrics (outermost — wraps all other middleware)
+    @app.middleware("http")
+    async def prometheus_middleware(request: Request, call_next):
+        """Track request count and latency for Prometheus."""
+        start_time = time.time()
+        ACTIVE_CONNECTIONS.inc()
+        try:
+            response = await call_next(request)
+            duration = time.time() - start_time
+            REQUEST_COUNT.labels(
+                method=request.method,
+                endpoint=request.url.path,
+                status_code=response.status_code,
+            ).inc()
+            REQUEST_LATENCY.labels(
+                method=request.method,
+                endpoint=request.url.path,
+            ).observe(duration)
+            return response
+        finally:
+            ACTIVE_CONNECTIONS.dec()
+
     # CORS
     app.add_middleware(
         CORSMiddleware,
@@ -178,6 +223,29 @@ def create_application() -> FastAPI:
     # -------------------------------------------------------------------------
     # Exception Handlers
     # -------------------------------------------------------------------------
+    @app.exception_handler(StratumError)
+    async def stratum_error_handler(request: Request, exc: StratumError):
+        """Handle all Stratum domain exceptions with structured response."""
+        logger.warning(
+            "domain_error",
+            error_code=exc.error_code,
+            detail=exc.detail,
+            path=request.url.path,
+            method=request.method,
+            context=exc.context,
+        )
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={
+                "success": False,
+                "error": {
+                    "code": exc.error_code,
+                    "message": exc.detail,
+                    "context": exc.context if settings.debug else {},
+                },
+            },
+        )
+
     @app.exception_handler(Exception)
     async def global_exception_handler(request: Request, exc: Exception):
         """Global exception handler for unhandled errors."""
@@ -263,6 +331,17 @@ def create_application() -> FastAPI:
     async def liveness_check():
         """Liveness probe - returns 200 if the service is alive."""
         return {"status": "alive"}
+
+    # -------------------------------------------------------------------------
+    # Prometheus Metrics Endpoint
+    # -------------------------------------------------------------------------
+    @app.get("/metrics", include_in_schema=False)
+    async def metrics():
+        """Prometheus metrics endpoint."""
+        return Response(
+            content=generate_latest(),
+            media_type=CONTENT_TYPE_LATEST,
+        )
 
     # -------------------------------------------------------------------------
     # Server-Sent Events for Real-Time Updates

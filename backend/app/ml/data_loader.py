@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
+import structlog
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -25,7 +26,7 @@ from app.models import (
     Tenant,
 )
 
-logger = get_logger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 class TrainingDataLoader:
@@ -418,12 +419,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.generate:
-        print(f"Generating sample data: {args.campaigns} campaigns, {args.days} days each...")
+        logger.info("generating_sample_data", campaigns=args.campaigns, days=args.days)
         df = TrainingDataLoader.generate_sample_data(
             num_campaigns=args.campaigns,
             days_per_campaign=args.days,
         )
         df.to_csv(args.output, index=False)
-        print(f"Saved to {args.output}")
-        print(f"Total rows: {len(df)}")
-        print(f"Columns: {list(df.columns)}")
+        logger.info("sample_data_saved", output=args.output, total_rows=len(df), columns=list(df.columns))

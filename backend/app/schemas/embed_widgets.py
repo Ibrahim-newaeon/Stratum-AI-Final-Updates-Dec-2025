@@ -103,9 +103,9 @@ class WidgetCustomBranding(BaseModel):
     """Custom branding options (Enterprise only)."""
 
     custom_logo_url: Optional[str] = Field(default=None, max_length=512)
-    custom_accent_color: Optional[str] = Field(default=None, regex=r"^#[0-9A-Fa-f]{6}$")
-    custom_background_color: Optional[str] = Field(default=None, regex=r"^#[0-9A-Fa-f]{6}$")
-    custom_text_color: Optional[str] = Field(default=None, regex=r"^#[0-9A-Fa-f]{6}$")
+    custom_accent_color: Optional[str] = Field(default=None, pattern=r"^#[0-9A-Fa-f]{6}$")
+    custom_background_color: Optional[str] = Field(default=None, pattern=r"^#[0-9A-Fa-f]{6}$")
+    custom_text_color: Optional[str] = Field(default=None, pattern=r"^#[0-9A-Fa-f]{6}$")
 
 
 class WidgetCreate(BaseModel):

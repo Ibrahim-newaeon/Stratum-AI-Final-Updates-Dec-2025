@@ -24,11 +24,12 @@ from enum import Enum
 import joblib
 import numpy as np
 import pandas as pd
+import structlog
 
 from app.core.logging import get_logger
 from app.ml.train import ModelTrainer
 
-logger = get_logger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 class RetrainingTrigger(str, Enum):
@@ -133,7 +134,7 @@ class RetrainingPipeline:
                         for v in versions
                     ]
             except Exception as e:
-                logger.error(f"Error loading model history: {e}")
+                logger.error("model_history_load_error", error=str(e))
 
     def _save_model_history(self):
         """Save model version history to disk."""
@@ -229,7 +230,7 @@ class RetrainingPipeline:
         Returns:
             Retraining results
         """
-        logger.info(f"Starting retraining for {model_name} (trigger: {trigger.value})")
+        logger.info("retraining_started", model_name=model_name, trigger=trigger.value)
 
         version_id = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         results = {
@@ -273,14 +274,14 @@ class RetrainingPipeline:
             if comparison.get("should_promote", False) or not validate_before_promote:
                 self._promote_model(model_name, version_id, metrics, trigger, training_data)
                 results["status"] = "promoted"
-                logger.info(f"Model {model_name} v{version_id} promoted to production")
+                logger.info("model_promoted", model_name=model_name, version_id=version_id)
             else:
                 results["status"] = "staged"
-                logger.info(f"Model {model_name} v{version_id} kept in staging")
+                logger.info("model_staged", model_name=model_name, version_id=version_id)
                 results["reason"] = comparison.get("reason", "Did not meet promotion criteria")
 
         except Exception as e:
-            logger.error(f"Retraining failed: {e}")
+            logger.error("retraining_failed", error=str(e))
             results["status"] = "failed"
             results["error"] = str(e)
 
@@ -428,7 +429,7 @@ class RetrainingPipeline:
             True if rollback successful
         """
         if model_name not in self._model_history:
-            logger.error(f"No history found for model {model_name}")
+            logger.error("no_model_history_found", model_name=model_name)
             return False
 
         versions = self._model_history[model_name]
@@ -442,7 +443,7 @@ class RetrainingPipeline:
             target = retired[-1] if retired else None
 
         if not target:
-            logger.error(f"No rollback target found for {model_name}")
+            logger.error("no_rollback_target", model_name=model_name)
             return False
 
         # Find archived version
@@ -462,7 +463,7 @@ class RetrainingPipeline:
                     for f in archive_dir.iterdir():
                         shutil.copy2(f, self.models_path / f.name)
 
-                    logger.info(f"Rolled back {model_name} to version {target.version_id}")
+                    logger.info("model_rolled_back", model_name=model_name, version_id=target.version_id)
 
                     # Update status
                     target.status = ModelStatus.ACTIVE
@@ -473,7 +474,7 @@ class RetrainingPipeline:
                     self._save_model_history()
                     return True
 
-        logger.error(f"Archive not found for version {target.version_id}")
+        logger.error("archive_not_found", version_id=target.version_id)
         return False
 
     def get_model_status(self, model_name: str) -> Dict[str, Any]:
@@ -541,20 +542,20 @@ class RetrainingPipeline:
             needs_retrain, trigger, reason = self.check_retraining_needed(model_name)
             if needs_retrain:
                 models_to_retrain.append((model_name, trigger, reason))
-                logger.info(f"{model_name}: needs retraining ({reason})")
+                logger.info("retraining_needed", model_name=model_name, reason=reason)
             else:
-                logger.info(f"{model_name}: up to date")
+                logger.info("model_up_to_date", model_name=model_name)
 
         if not models_to_retrain:
             return {"status": "no_retraining_needed", "models": models_to_check}
 
         # Load training data
-        logger.info("Loading training data...")
+        logger.info("loading_training_data")
         training_data = training_data_loader()
 
         # Retrain each model that needs it
         for model_name, trigger, reason in models_to_retrain:
-            logger.info(f"Retraining {model_name}...")
+            logger.info("retraining_model", model_name=model_name)
             result = self.retrain_model(model_name, training_data, trigger)
             results[model_name] = result
 
@@ -623,28 +624,25 @@ if __name__ == "__main__":
 
     if args.check:
         needs, trigger, reason = pipeline.check_retraining_needed(args.check)
-        print(f"Model: {args.check}")
-        print(f"Needs retraining: {needs}")
-        print(f"Trigger: {trigger.value}")
-        print(f"Reason: {reason}")
+        logger.info("retraining_check", model=args.check, needs_retraining=needs, trigger=trigger.value, reason=reason)
 
     elif args.status:
         status = pipeline.get_model_status(args.status)
-        print(json.dumps(status, indent=2))
+        logger.info("model_status", **status)
 
     elif args.rollback:
         success = pipeline.rollback(args.rollback)
-        print(f"Rollback {'successful' if success else 'failed'}")
+        logger.info("rollback_result", model=args.rollback, success=success)
 
     elif args.run_all:
-        print("Running scheduled retraining...")
+        logger.info("scheduled_retraining_started")
         from app.ml.data_loader import TrainingDataLoader
 
         def load_data():
             return TrainingDataLoader.generate_sample_data(100, 30)
 
         results = pipeline.run_scheduled_retraining(load_data)
-        print(json.dumps(results, indent=2, default=str))
+        logger.info("scheduled_retraining_complete", **{k: v for k, v in results.items() if k != "results"})
 
     else:
         parser.print_help()

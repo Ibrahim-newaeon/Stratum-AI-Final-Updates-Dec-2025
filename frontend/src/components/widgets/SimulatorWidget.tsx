@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Calculator, TrendingUp } from 'lucide-react'
 import { cn, formatCurrency } from '@/lib/utils'
-import { useDashboardOverview } from '@/api/dashboard'
+import { useDashboardSimulation } from '@/contexts/DashboardSimulationContext'
 
 interface SimulatorWidgetProps {
   className?: string
@@ -9,11 +9,11 @@ interface SimulatorWidgetProps {
 
 export function SimulatorWidget({ className }: SimulatorWidgetProps) {
   const [budgetChange, setBudgetChange] = useState(0)
-  const { data: overview } = useDashboardOverview('30d')
+  const { kpis } = useDashboardSimulation()
 
-  // Use real data from dashboard API, fall back to 0 when not yet loaded
-  const currentBudget = overview?.metrics?.spend?.value ?? 0
-  const currentROAS = overview?.metrics?.roas?.value ?? 0
+  // Use live simulation KPIs
+  const currentBudget = kpis?.totalSpend ?? 0
+  const currentROAS = kpis?.overallROAS ?? 0
   const hasData = currentBudget > 0 && currentROAS > 0
 
   const newBudget = currentBudget * (1 + budgetChange / 100)
@@ -29,11 +29,9 @@ export function SimulatorWidget({ className }: SimulatorWidgetProps) {
 
       {!hasData ? (
         <div className="flex-1 flex items-center justify-center text-center">
-          <div>
-            <Calculator className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
-            <p className="text-sm text-muted-foreground">
-              Connect your ad platforms to simulate budget scenarios
-            </p>
+          <div className="animate-pulse space-y-3 w-full">
+            <div className="h-6 bg-muted rounded w-1/2 mx-auto" />
+            <div className="h-20 bg-muted rounded" />
           </div>
         </div>
       ) : (

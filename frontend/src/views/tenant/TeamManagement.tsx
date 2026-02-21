@@ -80,11 +80,12 @@ export default function TeamManagement() {
 
     try {
       await createUserMutation.mutateAsync({
-        tenant_id: tenantIdNum,
+        tenantId: tenantIdNum,
         email: newUser.email,
-        full_name: newUser.full_name,
+        name: newUser.full_name,
+        password: crypto.randomUUID(),
         role: newUser.role as UserRole,
-      } as any)
+      })
       toast({
         title: 'Success',
         description: 'Team member invited successfully',

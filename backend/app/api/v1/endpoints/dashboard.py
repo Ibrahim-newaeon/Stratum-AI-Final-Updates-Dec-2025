@@ -429,12 +429,32 @@ async def get_dashboard_overview(
     campaigns = campaigns_result.scalars().all()
     has_campaigns = len(campaigns) > 0
 
-    # Aggregate current period metrics
-    current_spend = sum(c.total_spend_cents or 0 for c in campaigns) / 100
-    current_revenue = sum(c.revenue_cents or 0 for c in campaigns) / 100
-    current_conversions = sum(c.conversions or 0 for c in campaigns)
-    current_impressions = sum(c.impressions or 0 for c in campaigns)
-    current_clicks = sum(c.clicks or 0 for c in campaigns)
+    # Aggregate current period metrics from CampaignMetric (time-series) for
+    # the selected date range instead of summing all-time Campaign totals.
+    from app.models import CampaignMetric
+
+    period_agg_result = await db.execute(
+        select(
+            func.coalesce(func.sum(CampaignMetric.spend_cents), 0).label("spend"),
+            func.coalesce(func.sum(CampaignMetric.revenue_cents), 0).label("revenue"),
+            func.coalesce(func.sum(CampaignMetric.conversions), 0).label("conversions"),
+            func.coalesce(func.sum(CampaignMetric.impressions), 0).label("impressions"),
+            func.coalesce(func.sum(CampaignMetric.clicks), 0).label("clicks"),
+        ).where(
+            and_(
+                CampaignMetric.tenant_id == tenant_id,
+                CampaignMetric.date >= start_date,
+                CampaignMetric.date <= end_date,
+            )
+        )
+    )
+    period_agg = period_agg_result.one()
+
+    current_spend = (period_agg.spend or 0) / 100
+    current_revenue = (period_agg.revenue or 0) / 100
+    current_conversions = int(period_agg.conversions or 0)
+    current_impressions = int(period_agg.impressions or 0)
+    current_clicks = int(period_agg.clicks or 0)
 
     # Calculate derived metrics
     current_roas = current_revenue / current_spend if current_spend > 0 else 0
@@ -1108,7 +1128,7 @@ async def get_signal_health(
         latest_date = latest_row["latest_date"] if latest_row else None
 
         if latest_date:
-            days_stale = (date.today() - latest_date).days
+            days_stale = (datetime.now(UTC).date() - latest_date).days
             data_freshness = days_stale * 24 * 60  # Convert to minutes
             freshness_score = max(0, 100 - (days_stale * 15))  # -15 per day stale
         else:
@@ -1207,7 +1227,7 @@ async def export_dashboard(
     # Get date range
     start_date, end_date = get_date_range(request.period)
 
-    # Get campaigns
+    # Get campaigns with their metrics filtered by the selected date range
     campaigns_result = await db.execute(
         select(Campaign).where(
             and_(
@@ -1217,6 +1237,30 @@ async def export_dashboard(
         )
     )
     campaigns = campaigns_result.scalars().all()
+
+    # Aggregate metrics from CampaignMetric (time-series) within the date range
+    # This ensures exports reflect the selected period, not all-time totals
+    from app.base_models import CampaignMetric
+
+    period_metrics_result = await db.execute(
+        select(
+            CampaignMetric.campaign_id,
+            func.sum(CampaignMetric.spend_cents).label("spend_cents"),
+            func.sum(CampaignMetric.revenue_cents).label("revenue_cents"),
+            func.sum(CampaignMetric.conversions).label("conversions"),
+            func.sum(CampaignMetric.impressions).label("impressions"),
+            func.sum(CampaignMetric.clicks).label("clicks"),
+        ).where(
+            and_(
+                CampaignMetric.tenant_id == tenant_id,
+                CampaignMetric.date >= start_date,
+                CampaignMetric.date <= end_date,
+            )
+        ).group_by(CampaignMetric.campaign_id)
+    )
+    period_metrics_by_campaign = {
+        row.campaign_id: row for row in period_metrics_result.mappings().all()
+    }
 
     # Build export data
     export_data = {
@@ -1228,44 +1272,61 @@ async def export_dashboard(
         },
     }
 
-    # Add metrics summary
+    # Add metrics summary — use period-filtered data from CampaignMetric
     if request.include_metrics:
-        total_spend = sum(c.total_spend_cents or 0 for c in campaigns) / 100
-        total_revenue = sum(c.revenue_cents or 0 for c in campaigns) / 100
-        total_conversions = sum(c.conversions or 0 for c in campaigns)
-        total_impressions = sum(c.impressions or 0 for c in campaigns)
-        total_clicks = sum(c.clicks or 0 for c in campaigns)
+        total_spend_cents = sum(
+            (m.get("spend_cents") or 0) for m in period_metrics_by_campaign.values()
+        )
+        total_revenue_cents = sum(
+            (m.get("revenue_cents") or 0) for m in period_metrics_by_campaign.values()
+        )
+        total_conversions = sum(
+            (m.get("conversions") or 0) for m in period_metrics_by_campaign.values()
+        )
+        total_impressions = sum(
+            (m.get("impressions") or 0) for m in period_metrics_by_campaign.values()
+        )
+        total_clicks = sum(
+            (m.get("clicks") or 0) for m in period_metrics_by_campaign.values()
+        )
+
+        # Convert cents to dollars at the end to avoid floating point accumulation
+        total_spend = total_spend_cents / 100
+        total_revenue = total_revenue_cents / 100
 
         export_data["metrics"] = {
-            "total_spend": total_spend,
-            "total_revenue": total_revenue,
-            "roas": total_revenue / total_spend if total_spend > 0 else 0,
+            "total_spend": round(total_spend, 2),
+            "total_revenue": round(total_revenue, 2),
+            "roas": round(total_revenue / total_spend, 2) if total_spend > 0 else 0,
             "conversions": total_conversions,
-            "cpa": total_spend / total_conversions if total_conversions > 0 else 0,
+            "cpa": round(total_spend / total_conversions, 2) if total_conversions > 0 else 0,
             "impressions": total_impressions,
             "clicks": total_clicks,
-            "ctr": (total_clicks / total_impressions * 100) if total_impressions > 0 else 0,
+            "ctr": round((total_clicks / total_impressions * 100), 2) if total_impressions > 0 else 0,
         }
 
-    # Add campaigns
+    # Add campaigns — use period-filtered metrics, not all-time totals
     if request.include_campaigns:
-        export_data["campaigns"] = [
-            {
+        export_data["campaigns"] = []
+        for c in campaigns:
+            pm = period_metrics_by_campaign.get(c.id)
+            c_spend_cents = (pm.get("spend_cents") or 0) if pm else 0
+            c_revenue_cents = (pm.get("revenue_cents") or 0) if pm else 0
+            c_spend = c_spend_cents / 100
+            c_revenue = c_revenue_cents / 100
+
+            export_data["campaigns"].append({
                 "id": c.id,
                 "name": c.name,
                 "platform": c.platform.value,
                 "status": c.status.value,
-                "spend": (c.total_spend_cents or 0) / 100,
-                "revenue": (c.revenue_cents or 0) / 100,
-                "conversions": c.conversions or 0,
-                "impressions": c.impressions or 0,
-                "clicks": c.clicks or 0,
-                "roas": ((c.revenue_cents or 0) / (c.total_spend_cents or 1))
-                if (c.total_spend_cents or 0) > 0
-                else 0,
-            }
-            for c in campaigns
-        ]
+                "spend": round(c_spend, 2),
+                "revenue": round(c_revenue, 2),
+                "conversions": (pm.get("conversions") or 0) if pm else 0,
+                "impressions": (pm.get("impressions") or 0) if pm else 0,
+                "clicks": (pm.get("clicks") or 0) if pm else 0,
+                "roas": round(c_revenue / c_spend, 2) if c_spend > 0 else 0,
+            })
 
     # Add recommendations (mock for demo)
     if request.include_recommendations:

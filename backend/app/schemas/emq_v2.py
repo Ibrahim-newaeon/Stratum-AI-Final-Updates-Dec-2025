@@ -41,7 +41,7 @@ class EmqScoreResponse(EMQBaseSchema):
     """EMQ score response with drivers."""
 
     score: float = Field(..., ge=0, le=100, description="Overall EMQ score")
-    previousScore: float = Field(..., ge=0, le=100, description="Previous period score")
+    previousScore: Optional[float] = Field(default=None, ge=0, le=100, description="Previous period score")
     confidenceBand: Literal["reliable", "directional", "unsafe"]
     drivers: List[EmqDriver]
     lastUpdated: str = Field(..., description="ISO timestamp of last update")

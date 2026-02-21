@@ -10,6 +10,7 @@ Production-ready with retry logic, circuit breakers, and rate limiting.
 import hashlib
 import hmac
 import json
+import statistics
 import threading
 import time
 import asyncio
@@ -719,8 +720,8 @@ class GoogleCAPIConnector(BaseCAPIConnector):
             address = user_data["address"]
             user_identifiers.append({
                 "addressInfo": {
-                    "hashedFirstName": self.hasher.hash_value(address.get("first_name", "")),
-                    "hashedLastName": self.hasher.hash_value(address.get("last_name", "")),
+                    "hashedFirstName": self.hasher.hash_value(address.get("first_name", ""), PIIField.FIRST_NAME),
+                    "hashedLastName": self.hasher.hash_value(address.get("last_name", ""), PIIField.LAST_NAME),
                     "countryCode": address.get("country", "US"),
                     "postalCode": address.get("postal_code", ""),
                 }
@@ -1005,7 +1006,7 @@ class SnapchatCAPIConnector(BaseCAPIConnector):
                     try:
                         error_data = response.json()
                         error_msg = error_data.get("message", f"HTTP {response.status_code}")
-                    except:
+                    except (ValueError, KeyError, AttributeError):
                         error_msg = f"HTTP {response.status_code}"
 
                     return CAPIResponse(
@@ -1034,10 +1035,18 @@ class SnapchatCAPIConnector(BaseCAPIConnector):
         )
         user_data = self.format_user_data(event.get("user_data", {}))
 
+        # Snapchat expects timestamps in milliseconds
+        event_time = event.get("event_time")
+        if isinstance(event_time, int) and event_time < 10_000_000_000:
+            # Seconds to milliseconds
+            event_time = event_time * 1000
+        elif not event_time:
+            event_time = int(time.time() * 1000)
+
         return {
             "pixel_id": self.pixel_id,
             "event_type": mapping.platform_events.get("snapchat"),
-            "event_time": event.get("event_time", int(time.time() * 1000)),
+            "event_time": event_time,
             "hashed_email": user_data.get("em"),
             "hashed_phone": user_data.get("ph"),
             "price": mapping.parameters.get("value"),
@@ -1196,7 +1205,7 @@ class LinkedInCAPIConnector(BaseCAPIConnector):
                     try:
                         error_data = response.json()
                         error_msg = error_data.get("message", f"HTTP {response.status_code}")
-                    except:
+                    except (ValueError, KeyError, AttributeError):
                         error_msg = f"HTTP {response.status_code}"
 
                     return CAPIResponse(

@@ -28,6 +28,10 @@ from app.core.logging import get_logger
 
 logger = get_logger(__name__)
 
+# Unique identifier for this process instance, used to prevent double-delivery
+# when the same instance both sends locally and receives via Redis pub/sub.
+_instance_id = __import__("uuid").uuid4().hex[:8]
+
 
 class MessageType(str, Enum):
     """WebSocket message types."""
@@ -324,10 +328,12 @@ class WebSocketManager:
             return
 
         try:
-            await self._redis.publish(
-                f"ws:{channel}",
-                message.to_json(),
-            )
+            # Include origin instance_id so the sender can skip re-delivery
+            envelope = json.dumps({
+                "origin": _instance_id,
+                "message": message.to_json(),
+            })
+            await self._redis.publish(f"ws:{channel}", envelope)
         except Exception as e:
             logger.warning("redis_publish_failed", error=str(e))
 
@@ -358,8 +364,15 @@ class WebSocketManager:
         """Handle a message received from Redis."""
         try:
             channel = message["channel"].decode("utf-8")
-            data = message["data"].decode("utf-8")
-            ws_message = WebSocketMessage.from_json(data)
+            raw_data = message["data"].decode("utf-8")
+
+            # Parse envelope to check origin instance
+            envelope = json.loads(raw_data)
+            origin = envelope.get("origin")
+            if origin == _instance_id:
+                # Skip: this instance already delivered the message locally
+                return
+            ws_message = WebSocketMessage.from_json(envelope.get("message", raw_data))
 
             # Determine target clients
             if channel.startswith("ws:tenant:"):

@@ -510,7 +510,7 @@ function ReportBuilderModal({ report, isOpen, onClose, onSave }: ReportBuilderMo
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        dateRange: { ...formData.dateRange, type: e.target.value as any },
+                        dateRange: { ...formData.dateRange, type: e.target.value as CustomReport['dateRange']['type'] },
                       })
                     }
                     className="w-full px-3 py-2 rounded-lg border bg-background focus:ring-2 focus:ring-primary"
@@ -794,7 +794,7 @@ function ReportBuilderModal({ report, isOpen, onClose, onSave }: ReportBuilderMo
                         onChange={(e) =>
                           setFormData({
                             ...formData,
-                            schedule: { ...formData.schedule, frequency: e.target.value as any },
+                            schedule: { ...formData.schedule, frequency: e.target.value as ReportSchedule['frequency'] },
                           })
                         }
                         className="w-full px-3 py-2 rounded-lg border bg-background"
@@ -825,7 +825,7 @@ function ReportBuilderModal({ report, isOpen, onClose, onSave }: ReportBuilderMo
                         onChange={(e) =>
                           setFormData({
                             ...formData,
-                            schedule: { ...formData.schedule, format: e.target.value as any },
+                            schedule: { ...formData.schedule, format: e.target.value as ReportSchedule['format'] },
                           })
                         }
                         className="w-full px-3 py-2 rounded-lg border bg-background"

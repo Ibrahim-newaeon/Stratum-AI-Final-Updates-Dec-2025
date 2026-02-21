@@ -456,8 +456,8 @@ async def get_tenant_overview(
 
     user_role = getattr(request.state, "role", None)
 
-    # Only superadmin can see all tenants
-    if user_role != UserRole.ADMIN.value:
+    # Only admin or superadmin can see all tenants
+    if user_role not in (UserRole.ADMIN.value, "superadmin"):
         from fastapi import HTTPException, status
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -541,8 +541,8 @@ async def get_executive_summary(
 
     user_role = getattr(request.state, "role", None)
 
-    # Only superadmin can see executive summary
-    if user_role != UserRole.ADMIN.value:
+    # Only admin or superadmin can see executive summary
+    if user_role not in (UserRole.ADMIN.value, "superadmin"):
         from fastapi import HTTPException, status
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

@@ -65,7 +65,7 @@ export function Assets() {
     formData.append('file', file)
     formData.append('name', file.name)
     try {
-      await uploadAsset.mutateAsync(formData as any)
+      await uploadAsset.mutateAsync({ file } as { file: File; folderId?: string })
     } catch {
       // Error handled by query invalidation
     }
@@ -100,19 +100,19 @@ export function Assets() {
   // Transform API data into view-layer Asset shape
   const assets = useMemo((): Asset[] => {
     if (!assetsData?.items || assetsData.items.length === 0) return []
-    return assetsData.items.map((a: any) => ({
+    return (assetsData.items as unknown as Array<Record<string, unknown>>).map((a) => ({
       id: Number(a.id) || 0,
-      name: a.name || a.filename || '',
-      type: a.type || a.asset_type || 'image',
-      status: a.status || 'active',
-      thumbnail: a.thumbnail_url || a.url || `https://placehold.co/300x250/0ea5e9/white?text=${encodeURIComponent(a.name || 'Asset')}`,
-      impressions: a.impressions || 0,
-      ctr: a.ctr || 0,
-      fatigueScore: a.fatigue_score || a.fatigueScore || 0,
-      campaigns: a.campaigns || [],
-      createdAt: a.created_at || a.createdAt || new Date().toISOString(),
-      dimensions: a.dimensions || (a.width && a.height ? `${a.width}x${a.height}` : undefined),
-      duration: a.duration,
+      name: String(a.name || a.filename || ''),
+      type: String(a.type || a.asset_type || 'image') as Asset['type'],
+      status: String(a.status || 'active') as Asset['status'],
+      thumbnail: String(a.thumbnail_url || a.url || `https://placehold.co/300x250/0ea5e9/white?text=${encodeURIComponent(String(a.name || 'Asset'))}`),
+      impressions: Number(a.impressions) || 0,
+      ctr: Number(a.ctr) || 0,
+      fatigueScore: Number(a.fatigue_score || a.fatigueScore) || 0,
+      campaigns: (a.campaigns || []) as string[],
+      createdAt: String(a.created_at || a.createdAt || new Date().toISOString()),
+      dimensions: a.dimensions ? String(a.dimensions) : (a.width && a.height ? `${a.width}x${a.height}` : undefined),
+      duration: a.duration != null ? String(a.duration) : undefined,
     }))
   }, [assetsData])
 

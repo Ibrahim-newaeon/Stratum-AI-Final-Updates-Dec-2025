@@ -95,14 +95,17 @@ def send_whatsapp_message(
 
         try:
             # Send via WhatsApp Business API
-            from app.services.whatsapp.client import WhatsAppClient
+            import asyncio
+            from app.services.whatsapp_client import get_whatsapp_client
 
-            client = WhatsAppClient(tenant_id)
-            result = client.send_template_message(
-                to=to_number,
-                template=template_name,
-                language=template.language,
-                components=_build_template_components(template, variables, media_url),
+            client = get_whatsapp_client()
+            result = asyncio.get_event_loop().run_until_complete(
+                client.send_template_message(
+                    recipient_phone=to_number,
+                    template_name=template_name,
+                    language_code=template.language,
+                    components=_build_template_components(template, variables, media_url),
+                )
             )
 
             message.external_id = result.get("message_id")

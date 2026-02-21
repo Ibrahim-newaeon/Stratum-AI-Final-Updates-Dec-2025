@@ -53,7 +53,7 @@ Example:
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timezone
 from enum import Enum
 from typing import Any, Optional
 
@@ -110,7 +110,7 @@ class RuleContext:
     max_budget_change_percent: float = 50.0
 
     # Timing
-    current_time: datetime = field(default_factory=datetime.utcnow)
+    current_time: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     days_since_last_change: int = 0
 
 

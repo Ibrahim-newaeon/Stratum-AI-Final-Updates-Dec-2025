@@ -15,7 +15,7 @@ All models are multi-tenant with tenant_id column.
 """
 
 import enum
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Optional
 from uuid import uuid4
@@ -154,8 +154,8 @@ class CDPProfile(Base, TimestampMixin):
     external_id = Column(String(255), nullable=True)
 
     # Activity timestamps
-    first_seen_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
-    last_seen_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    first_seen_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    last_seen_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
 
     # Flexible profile data
     profile_data = Column(JSONB, nullable=False, default=dict)
@@ -250,9 +250,9 @@ class CDPProfileIdentifier(Base):
 
     # Verification & timestamps
     verified_at = Column(DateTime(timezone=True), nullable=True)
-    first_seen_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
-    last_seen_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
-    created_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    first_seen_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    last_seen_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
 
     # Relationships
     profile = relationship("CDPProfile", back_populates="identifiers")
@@ -310,7 +310,7 @@ class CDPEvent(Base):
     # Event identification
     event_name = Column(String(255), nullable=False)
     event_time = Column(DateTime(timezone=True), nullable=False)
-    received_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    received_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
 
     # Deduplication
     idempotency_key = Column(String(128), nullable=True)
@@ -328,7 +328,7 @@ class CDPEvent(Base):
     emq_score = Column(Numeric(5, 2), nullable=True)
 
     # Timestamp (no updated_at - events are immutable)
-    created_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
 
     # Relationships
     profile = relationship("CDPProfile", back_populates="events")
@@ -546,7 +546,7 @@ class CDPIdentityLink(Base):
     verified_at = Column(DateTime(timezone=True), nullable=True)
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
 
     # Relationships
     source_identifier = relationship(
@@ -630,7 +630,7 @@ class CDPProfileMerge(Base):
     rolled_back_at = Column(DateTime(timezone=True), nullable=True)
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
 
     # Relationships
     surviving_profile = relationship("CDPProfile", foreign_keys=[surviving_profile_id])
@@ -691,8 +691,8 @@ class CDPCanonicalIdentity(Base):
     verification_method = Column(String(50), nullable=True)
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
-    updated_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
 
     # Relationships
     profile = relationship("CDPProfile", backref="canonical_identity")
@@ -852,7 +852,7 @@ class CDPSegmentMembership(Base):
     )
 
     # Membership metadata
-    added_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    added_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
     removed_at = Column(DateTime(timezone=True), nullable=True)  # For tracking history
     is_active = Column(Boolean, nullable=False, default=True)
 
@@ -1067,7 +1067,7 @@ class CDPFunnelEntry(Base):
     )
 
     # Entry status
-    entered_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    entered_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
     converted_at = Column(DateTime(timezone=True), nullable=True)  # When completed all steps
     is_converted = Column(Boolean, nullable=False, default=False)
 
@@ -1083,8 +1083,8 @@ class CDPFunnelEntry(Base):
     total_duration_seconds = Column(Integer, nullable=True)  # Time from step 1 to final step
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
-    updated_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
 
     # Relationships
     funnel = relationship("CDPFunnel", backref="entries")

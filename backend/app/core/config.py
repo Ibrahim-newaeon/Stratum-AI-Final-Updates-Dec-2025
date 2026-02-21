@@ -6,6 +6,8 @@ Centralized configuration management using Pydantic Settings.
 All environment variables are validated and typed.
 """
 
+import re
+import warnings
 from functools import lru_cache
 from typing import List, Literal, Optional
 
@@ -33,7 +35,6 @@ class Settings(BaseSettings):
     debug: bool = Field(default=False)
     secret_key: str = Field(
         default="dev-secret-key-change-in-production",
-        min_length=32,
         description="Secret key for signing",
     )
     api_v1_prefix: str = Field(default="/api/v1")
@@ -233,12 +234,22 @@ class Settings(BaseSettings):
     frontend_url: str = Field(
         default="http://localhost:5173", description="Frontend base URL for email links"
     )
+    oauth_redirect_base_url: str = Field(
+        default="http://localhost:8000", description="Base URL for OAuth redirect callbacks"
+    )
     email_verification_expire_hours: int = Field(
         default=24, description="Email verification token TTL in hours"
     )
     password_reset_expire_hours: int = Field(
         default=1, description="Password reset token TTL in hours"
     )
+
+    # -------------------------------------------------------------------------
+    # Stripe Payments Configuration
+    # -------------------------------------------------------------------------
+    stripe_secret_key: Optional[str] = Field(default=None, description="Stripe secret API key")
+    stripe_publishable_key: Optional[str] = Field(default=None, description="Stripe publishable key")
+    stripe_webhook_secret: Optional[str] = Field(default=None, description="Stripe webhook signing secret")
 
     # -------------------------------------------------------------------------
     # Rate Limiting
@@ -277,6 +288,46 @@ class Settings(BaseSettings):
         return self
 
     @model_validator(mode="after")
+    def validate_security_keys(self) -> "Settings":
+        """Emit warnings for short keys, weak patterns, and insecure DB passwords."""
+        # --- Short key warnings (< 32 chars) ---
+        key_checks = {
+            "SECRET_KEY": self.secret_key,
+            "JWT_SECRET_KEY": self.jwt_secret_key,
+            "PII_ENCRYPTION_KEY": self.pii_encryption_key,
+        }
+        for label, value in key_checks.items():
+            if len(value) < 32:
+                warnings.warn(
+                    f"SECURITY WARNING: {label} must be set and be at least 32 "
+                    f"characters long (current length: {len(value)})"
+                )
+
+        # --- Weak pattern detection in secret_key ---
+        weak_patterns = ["dev", "changeme", "test", "placeholder", "insecure"]
+        for pattern in weak_patterns:
+            if pattern in self.secret_key.lower():
+                warnings.warn(
+                    f"SECURITY WARNING: SECRET_KEY contains weak pattern '{pattern}'. "
+                    "Use a strong random key in production."
+                )
+                break  # one warning is enough
+
+        # --- Insecure database password detection ---
+        insecure_passwords = ["changeme", "password", "123456", "admin", "root"]
+        db_url = self.database_url or ""
+        match = re.search(r"://[^:]+:([^@]+)@", db_url)
+        if match:
+            db_password = match.group(1)
+            if db_password in insecure_passwords:
+                warnings.warn(
+                    f"SECURITY WARNING: database URL contains insecure password '{db_password}'. "
+                    "Use a strong password in production."
+                )
+
+        return self
+
+    @model_validator(mode="after")
     def enforce_production_safety(self) -> "Settings":
         """Reject insecure default values in production and staging environments."""
         if self.app_env in ("production", "staging"):
@@ -294,7 +345,7 @@ class Settings(BaseSettings):
                 )
             if (
                 self.whatsapp_verify_token == "stratum-whatsapp-verify-token"
-                and self.whatsapp_phone_number_id is not None
+                and self.whatsapp_phone_number_id  # truthy check: None and "" both skip
             ):
                 raise ValueError(
                     f"whatsapp_verify_token must be changed from its default value in {self.app_env} "

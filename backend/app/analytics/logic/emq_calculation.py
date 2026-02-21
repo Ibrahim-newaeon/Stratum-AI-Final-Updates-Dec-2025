@@ -329,11 +329,16 @@ def calculate_data_freshness(metrics: PlatformMetrics, now: Optional[datetime] =
     else:
         # Handle timezone-aware vs naive datetime comparison
         if last_update.tzinfo is not None and now.tzinfo is None:
-            # last_update is timezone-aware, now is naive - make now naive by using last_update's timezone
-            now = now.replace(tzinfo=last_update.tzinfo)
+            # now is naive, assume UTC and make it aware for proper comparison
+            now = now.replace(tzinfo=timezone.utc)
         elif last_update.tzinfo is None and now.tzinfo is not None:
-            # last_update is naive, now is timezone-aware - strip timezone from now
-            now = now.replace(tzinfo=None)
+            # last_update is naive, assume UTC and make it aware for proper comparison
+            last_update = last_update.replace(tzinfo=timezone.utc)
+        # Ensure both are in UTC for accurate delta calculation
+        if last_update.tzinfo is not None:
+            last_update = last_update.astimezone(timezone.utc)
+        if now.tzinfo is not None:
+            now = now.astimezone(timezone.utc)
 
         hours_since_update = (now - last_update).total_seconds() / 3600
 

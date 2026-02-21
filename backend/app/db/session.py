@@ -210,3 +210,12 @@ async def check_database_health() -> dict:
 # Several task modules import this name. It is an alias for AsyncSessionLocal
 # used as an async context manager (matching the interface of async_session_context).
 async_session_factory = async_session_context
+
+# Legacy alias used by worker modules (e.g. crm_sync_tasks)
+async_session_maker = async_session_context
+
+# Alias for embed_widgets and other modules that import get_db
+get_db = get_async_session
+
+# Legacy alias used by Celery worker modules (e.g. campaign_builder_tasks)
+SessionLocal = SyncSessionLocal

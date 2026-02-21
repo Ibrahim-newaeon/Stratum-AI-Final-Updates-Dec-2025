@@ -204,8 +204,8 @@ async def list_users(
             UserResponse(
                 id=u.id,
                 tenant_id=u.tenant_id,
-                email=decrypt_pii(u.email),
-                full_name=decrypt_pii(u.full_name) if u.full_name else None,
+                email=_safe_decrypt(u.email) or "",
+                full_name=_safe_decrypt(u.full_name) if u.full_name else None,
                 role=u.role,
                 locale=u.locale,
                 timezone=u.timezone,
@@ -262,9 +262,11 @@ async def invite_user(
     role_map = {
         "admin": UserRole.ADMIN,
         "manager": UserRole.MANAGER,
-        "user": UserRole.USER,
+        "analyst": UserRole.ANALYST,
+        "viewer": UserRole.VIEWER,
+        "user": UserRole.ANALYST,
     }
-    user_role = role_map.get(invite_data.role.lower(), UserRole.USER)
+    user_role = role_map.get(invite_data.role.lower(), UserRole.ANALYST)
 
     # Create user with temporary password (will need to set password on first login)
     temp_password = secrets.token_urlsafe(16)
@@ -299,7 +301,7 @@ async def invite_user(
             )
             inviter = inviter_result.scalar_one_or_none()
             if inviter and inviter.full_name:
-                inviter_name = decrypt_pii(inviter.full_name)
+                inviter_name = _safe_decrypt(inviter.full_name) or "An administrator"
 
         # Get tenant name
         if tenant_id:
@@ -396,7 +398,9 @@ async def update_user(
         role_map = {
             "admin": UserRole.ADMIN,
             "manager": UserRole.MANAGER,
-            "user": UserRole.USER,
+            "analyst": UserRole.ANALYST,
+            "viewer": UserRole.VIEWER,
+            "user": UserRole.ANALYST,
         }
         user.role = role_map.get(update_data.role.lower(), user.role)
 
@@ -413,8 +417,8 @@ async def update_user(
         data=UserResponse(
             id=user.id,
             tenant_id=user.tenant_id,
-            email=decrypt_pii(user.email),
-            full_name=decrypt_pii(user.full_name) if user.full_name else None,
+            email=_safe_decrypt(user.email) or "",
+            full_name=_safe_decrypt(user.full_name) if user.full_name else None,
             role=user.role,
             locale=user.locale,
             timezone=user.timezone,

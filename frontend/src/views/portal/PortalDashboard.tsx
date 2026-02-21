@@ -172,8 +172,9 @@ export default function PortalDashboard() {
         lastUpdated: c.updated_at ? new Date(c.updated_at).toLocaleDateString() : '—',
       }));
       setCampaigns(mappedCampaigns);
-    } catch (err: any) {
-      const status = err?.response?.status;
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { status?: number } };
+      const status = axiosErr?.response?.status;
       if (status === 401 || status === 403) {
         setError('Authentication required. Please sign in again.');
       } else {

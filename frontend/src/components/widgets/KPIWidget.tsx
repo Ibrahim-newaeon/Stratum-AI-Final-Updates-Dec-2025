@@ -1,18 +1,10 @@
 import { TrendingUp, TrendingDown, DollarSign, ShoppingCart, Eye, Target, Percent } from 'lucide-react'
 import { cn, formatCurrency, formatCompactNumber, formatPercent } from '@/lib/utils'
+import { useDashboardSimulation } from '@/contexts/DashboardSimulationContext'
 
 interface KPIWidgetProps {
   type: 'spend' | 'revenue' | 'roas' | 'conversions' | 'ctr' | 'impressions'
   className?: string
-}
-
-const mockData = {
-  spend: { value: 45678, change: 12.5, trend: 'up' as const },
-  revenue: { value: 156789, change: 18.2, trend: 'up' as const },
-  roas: { value: 3.43, change: 5.1, trend: 'up' as const },
-  conversions: { value: 2847, change: -3.2, trend: 'down' as const },
-  ctr: { value: 2.84, change: 0.3, trend: 'up' as const },
-  impressions: { value: 12500000, change: 8.7, trend: 'up' as const },
 }
 
 const config = {
@@ -24,10 +16,40 @@ const config = {
   impressions: { label: 'Impressions', icon: Eye, format: (v: number) => formatCompactNumber(v), color: 'text-pink-500' },
 }
 
+function getKPIData(type: string, kpis: NonNullable<ReturnType<typeof useDashboardSimulation>['kpis']>): { value: number; change: number } {
+  switch (type) {
+    case 'spend':
+      return { value: kpis.totalSpend, change: kpis.spendDelta ?? 0 }
+    case 'revenue':
+      return { value: kpis.totalRevenue, change: kpis.revenueDelta ?? 0 }
+    case 'roas':
+      return { value: kpis.overallROAS, change: kpis.roasDelta ?? 0 }
+    case 'conversions':
+      return { value: kpis.totalConversions, change: kpis.conversionsDelta ?? 0 }
+    case 'ctr':
+      return { value: kpis.avgCTR, change: Math.round((kpis.avgCTR * 0.05) * 10) / 10 }
+    case 'impressions':
+      return { value: kpis.totalImpressions, change: Math.round((kpis.totalImpressions > 0 ? 8.7 : 0) * 10) / 10 }
+    default:
+      return { value: 0, change: 0 }
+  }
+}
+
 export function KPIWidget({ type, className }: KPIWidgetProps) {
-  const data = mockData[type]
+  const { kpis } = useDashboardSimulation()
   const cfg = config[type]
   const Icon = cfg.icon
+
+  if (!kpis) {
+    return (
+      <div className={cn('h-full p-4 flex items-center justify-center', className)}>
+        <div className="animate-pulse h-12 w-24 bg-muted rounded" />
+      </div>
+    )
+  }
+
+  const data = getKPIData(type, kpis)
+  const trend = data.change >= 0 ? 'up' : 'down'
 
   return (
     <div className={cn('h-full p-4 flex flex-col justify-between', className)}>
@@ -39,12 +61,12 @@ export function KPIWidget({ type, className }: KPIWidgetProps) {
       <div className="mt-2">
         <p className="text-2xl font-bold tabular-nums">{cfg.format(data.value)}</p>
         <div className="flex items-center gap-1 mt-1">
-          {data.trend === 'up' ? (
+          {trend === 'up' ? (
             <TrendingUp className="w-4 h-4 text-green-500" />
           ) : (
             <TrendingDown className="w-4 h-4 text-red-500" />
           )}
-          <span className={cn('text-sm font-medium', data.trend === 'up' ? 'text-green-500' : 'text-red-500')}>
+          <span className={cn('text-sm font-medium', trend === 'up' ? 'text-green-500' : 'text-red-500')}>
             {data.change > 0 ? '+' : ''}{data.change}%
           </span>
           <span className="text-xs text-muted-foreground">vs last period</span>

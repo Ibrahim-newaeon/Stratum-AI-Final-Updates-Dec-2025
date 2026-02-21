@@ -1,25 +1,42 @@
+import { useMemo } from 'react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts'
 import { cn, getPlatformColor } from '@/lib/utils'
+import { useDashboardSimulation } from '@/contexts/DashboardSimulationContext'
 
 interface PlatformBreakdownWidgetProps {
   className?: string
 }
 
-const mockData = [
-  { name: 'Google', value: 35, color: getPlatformColor('google') },
-  { name: 'Meta', value: 30, color: getPlatformColor('meta') },
-  { name: 'TikTok', value: 20, color: '#000000' },
-  { name: 'LinkedIn', value: 10, color: getPlatformColor('linkedin') },
-  { name: 'Snapchat', value: 5, color: '#FFFC00' },
-]
-
 export function PlatformBreakdownWidget({ className }: PlatformBreakdownWidgetProps) {
+  const { platformSummary } = useDashboardSimulation()
+
+  const chartData = useMemo(() => {
+    if (!platformSummary || platformSummary.length === 0) return []
+
+    const totalSpend = platformSummary.reduce((sum, p) => sum + p.spend, 0)
+    if (totalSpend === 0) return []
+
+    return platformSummary.map((p) => ({
+      name: p.platform.replace(' Ads', ''),
+      value: Math.round(p.spend / totalSpend * 100),
+      color: getPlatformColor(p.platform.replace(' Ads', '').toLowerCase()),
+    }))
+  }, [platformSummary])
+
+  if (chartData.length === 0) {
+    return (
+      <div className={cn('h-full p-4 flex items-center justify-center', className)}>
+        <div className="animate-pulse h-32 w-32 bg-muted rounded-full" />
+      </div>
+    )
+  }
+
   return (
     <div className={cn('h-full p-4', className)}>
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
-            data={mockData}
+            data={chartData}
             cx="50%"
             cy="50%"
             innerRadius={50}
@@ -27,7 +44,7 @@ export function PlatformBreakdownWidget({ className }: PlatformBreakdownWidgetPr
             paddingAngle={2}
             dataKey="value"
           >
-            {mockData.map((entry, index) => (
+            {chartData.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={entry.color} />
             ))}
           </Pie>

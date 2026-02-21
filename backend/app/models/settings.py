@@ -8,7 +8,7 @@ Models for tenant settings features:
 - Changelog: Product updates and release notes
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Optional
 
@@ -280,7 +280,7 @@ class ChangelogReadStatus(Base, TimestampMixin):
     )
 
     read_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
     )
 
     __table_args__ = (Index("ix_changelog_read_user", "user_id", "changelog_id", unique=True),)

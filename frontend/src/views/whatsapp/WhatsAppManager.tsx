@@ -25,6 +25,21 @@ import WhatsAppMessages from './WhatsAppMessages';
 
 type TabId = 'overview' | 'contacts' | 'templates' | 'broadcast' | 'messages';
 
+interface WhatsAppContact {
+  opt_in_status: string;
+  [key: string]: unknown;
+}
+
+interface WhatsAppTemplate {
+  status: string;
+  [key: string]: unknown;
+}
+
+interface WhatsAppMessage {
+  status: string;
+  [key: string]: unknown;
+}
+
 interface TabConfig {
   id: TabId;
   label: string;
@@ -98,9 +113,9 @@ export default function WhatsAppManager() {
           const data = contactsRes.value.data;
           newStats.totalContacts = data.total || data.items?.length || 0;
           if (data.items) {
-            const items = data.items as any[];
-            newStats.optedIn = items.filter((c: any) => c.opt_in_status === 'opted_in').length;
-            newStats.optedOut = items.filter((c: any) => c.opt_in_status === 'opted_out').length;
+            const items = data.items as WhatsAppContact[];
+            newStats.optedIn = items.filter((c) => c.opt_in_status === 'opted_in').length;
+            newStats.optedOut = items.filter((c) => c.opt_in_status === 'opted_out').length;
           }
         }
 
@@ -108,9 +123,9 @@ export default function WhatsAppManager() {
           const data = templatesRes.value.data;
           newStats.templates = data.total || data.items?.length || 0;
           if (data.items) {
-            const items = data.items as any[];
-            newStats.approvedTemplates = items.filter((t: any) => t.status === 'approved').length;
-            newStats.pendingTemplates = items.filter((t: any) => t.status === 'pending').length;
+            const items = data.items as WhatsAppTemplate[];
+            newStats.approvedTemplates = items.filter((t) => t.status === 'approved').length;
+            newStats.pendingTemplates = items.filter((t) => t.status === 'pending').length;
           }
         }
 
@@ -118,9 +133,9 @@ export default function WhatsAppManager() {
           const data = messagesRes.value.data;
           newStats.messagesSent = data.total || data.items?.length || 0;
           if (data.items) {
-            const items = data.items as any[];
-            newStats.messagesDelivered = items.filter((m: any) => ['delivered', 'read'].includes(m.status)).length;
-            newStats.messagesRead = items.filter((m: any) => m.status === 'read').length;
+            const items = data.items as WhatsAppMessage[];
+            newStats.messagesDelivered = items.filter((m) => ['delivered', 'read'].includes(m.status)).length;
+            newStats.messagesRead = items.filter((m) => m.status === 'read').length;
           }
         }
 

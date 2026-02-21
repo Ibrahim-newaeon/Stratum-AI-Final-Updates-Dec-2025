@@ -14,7 +14,7 @@ Database models for audit-recommended services:
 - LTV Predictions
 """
 
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from typing import Optional
 from uuid import uuid4
 import enum
@@ -123,8 +123,8 @@ class EMQMeasurement(Base):
     recommendations = Column(JSONB, nullable=True)
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -179,7 +179,7 @@ class OfflineConversionBatch(Base):
     # Timestamps
     started_at = Column(DateTime(timezone=True), nullable=True)
     completed_at = Column(DateTime(timezone=True), nullable=True)
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Created by
     created_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
@@ -226,7 +226,7 @@ class OfflineConversion(Base):
     last_upload_error = Column(Text, nullable=True)
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     uploaded_at = Column(DateTime(timezone=True), nullable=True)
 
     # Relationships
@@ -288,8 +288,8 @@ class ModelExperiment(Base):
     # Timestamps
     started_at = Column(DateTime(timezone=True), nullable=True)
     ended_at = Column(DateTime(timezone=True), nullable=True)
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Created by
     created_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
@@ -324,7 +324,7 @@ class ExperimentPrediction(Base):
     features = Column(JSONB, nullable=True)
 
     # Timestamps
-    predicted_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    predicted_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     actual_recorded_at = Column(DateTime(timezone=True), nullable=True)
 
     __table_args__ = (
@@ -360,7 +360,7 @@ class ConversionLatency(Base):
 
     # Timestamps
     event_time = Column(DateTime(timezone=True), nullable=False)
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -395,8 +395,8 @@ class ConversionLatencyStats(Base):
     max_latency_ms = Column(Integer, nullable=True)
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -433,17 +433,17 @@ class Creative(Base):
     asset_url = Column(Text, nullable=True)
     thumbnail_url = Column(Text, nullable=True)
 
-    # Metadata
-    metadata = Column(JSONB, nullable=True)
+    # Metadata (named 'creative_metadata' to avoid conflict with SQLAlchemy reserved 'metadata')
+    creative_metadata = Column("metadata", JSONB, nullable=True)
 
     # Status
     is_active = Column(Boolean, default=True, nullable=False)
-    first_seen_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    last_seen_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    first_seen_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    last_seen_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -494,8 +494,8 @@ class CreativePerformance(Base):
     reach = Column(Integer, default=0, nullable=False)
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     creative = relationship("Creative", foreign_keys=[creative_id])
@@ -538,7 +538,7 @@ class CreativeFatigueAlert(Base):
     acknowledged_at = Column(DateTime(timezone=True), nullable=True)
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     creative = relationship("Creative", foreign_keys=[creative_id])
@@ -555,11 +555,12 @@ class CreativeFatigueAlert(Base):
 # Competitor Benchmarking
 # =============================================================================
 
-class CompetitorBenchmark(Base):
+class CompetitorBenchmarkAudit(Base):
     """
-    Stores competitor benchmark comparisons.
+    Stores detailed competitor benchmark audit comparisons.
+    Extended version with percentile rankings and recommendations.
     """
-    __tablename__ = "competitor_benchmarks"
+    __tablename__ = "competitor_benchmark_audits"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
@@ -588,7 +589,7 @@ class CompetitorBenchmark(Base):
     recommendations = Column(JSONB, nullable=True)
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -643,8 +644,8 @@ class BudgetReallocationPlan(Base):
     rollback_reason = Column(Text, nullable=True)
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Created by
     created_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
@@ -735,8 +736,8 @@ class AudienceRecord(Base):
     is_active = Column(Boolean, default=True, nullable=False)
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -764,7 +765,7 @@ class AudienceOverlapRecord(Base):
     overlap_size = Column(Integer, nullable=True)
 
     # Analysis date
-    analyzed_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    analyzed_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -826,8 +827,8 @@ class CustomerLTVPrediction(Base):
     model_version = Column(String(50), nullable=True)
 
     # Timestamps
-    predicted_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    predicted_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -866,7 +867,7 @@ class LTVCohortAnalysis(Base):
     segment_distribution = Column(JSONB, nullable=True)
 
     # Analysis date
-    analyzed_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    analyzed_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -919,7 +920,7 @@ class ModelRetrainingJob(Base):
     duration_seconds = Column(Float, nullable=True)
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])

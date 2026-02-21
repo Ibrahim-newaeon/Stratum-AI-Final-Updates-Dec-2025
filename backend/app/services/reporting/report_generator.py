@@ -135,8 +135,8 @@ class ReportDataCollector:
                 and_(
                     CRMDeal.tenant_id == self.tenant_id,
                     CRMDeal.is_won == True,
-                    CRMDeal.won_at >= datetime.combine(start_date, datetime.min.time()),
-                    CRMDeal.won_at <= datetime.combine(end_date, datetime.max.time()),
+                    CRMDeal.won_at >= datetime.combine(start_date, datetime.min.time(), tzinfo=timezone.utc),
+                    CRMDeal.won_at <= datetime.combine(end_date, datetime.max.time(), tzinfo=timezone.utc),
                 )
             )
         )
@@ -283,34 +283,46 @@ class ReportDataCollector:
             },
         }
 
+        # Accumulate in cents to avoid floating point errors, convert at the end
+        total_revenue_cents = 0
+        total_cogs_cents = 0
+        total_gross_profit_cents = 0
+        total_spend_cents = 0
+
         for m in metrics:
-            revenue = (m.revenue_cents or 0) / 100
-            cogs = (m.cogs_cents or 0) / 100
-            spend = (m.spend_cents or 0) / 100
-            gross_profit = (m.gross_profit_cents or 0) / 100
+            revenue_cents = m.revenue_cents or 0
+            cogs_cents = m.cogs_cents or 0
+            spend_cents = m.spend_cents or 0
+            gross_profit_cents = m.gross_profit_cents or 0
 
             data["daily"].append({
                 "date": m.date.isoformat(),
-                "revenue": revenue,
-                "cogs": cogs,
-                "gross_profit": gross_profit,
-                "spend": spend,
+                "revenue": round(revenue_cents / 100, 2),
+                "cogs": round(cogs_cents / 100, 2),
+                "gross_profit": round(gross_profit_cents / 100, 2),
+                "spend": round(spend_cents / 100, 2),
                 "profit_roas": m.profit_roas,
             })
 
-            data["summary"]["total_revenue"] += revenue
-            data["summary"]["total_cogs"] += cogs
-            data["summary"]["total_gross_profit"] += gross_profit
-            data["summary"]["total_spend"] += spend
+            total_revenue_cents += revenue_cents
+            total_cogs_cents += cogs_cents
+            total_gross_profit_cents += gross_profit_cents
+            total_spend_cents += spend_cents
 
-        if data["summary"]["total_spend"] > 0:
+        # Convert totals from cents to dollars at the end for precision
+        data["summary"]["total_revenue"] = round(total_revenue_cents / 100, 2)
+        data["summary"]["total_cogs"] = round(total_cogs_cents / 100, 2)
+        data["summary"]["total_gross_profit"] = round(total_gross_profit_cents / 100, 2)
+        data["summary"]["total_spend"] = round(total_spend_cents / 100, 2)
+
+        if total_spend_cents > 0:
             data["summary"]["profit_roas"] = round(
-                data["summary"]["total_gross_profit"] / data["summary"]["total_spend"], 2
+                total_gross_profit_cents / total_spend_cents, 2
             )
 
-        if data["summary"]["total_revenue"] > 0:
+        if total_revenue_cents > 0:
             data["summary"]["gross_margin_pct"] = round(
-                data["summary"]["total_gross_profit"] / data["summary"]["total_revenue"] * 100, 1
+                total_gross_profit_cents / total_revenue_cents * 100, 1
             )
 
         return data
@@ -356,23 +368,34 @@ class ReportDataCollector:
             },
         }
 
+        # Accumulate monetary values in cents to avoid floating point errors
+        total_pipeline_cents = 0
+        total_won_cents = 0
+
         for m in metrics:
+            pipeline_cents = m.pipeline_value_cents or 0
+            won_cents = m.won_revenue_cents or 0
+
             data["daily"].append({
                 "date": m.date.isoformat(),
                 "leads": m.leads_created,
                 "mqls": m.mqls_created,
                 "sqls": m.sqls_created,
                 "won": m.deals_won,
-                "pipeline_value": (m.pipeline_value_cents or 0) / 100,
-                "won_revenue": (m.won_revenue_cents or 0) / 100,
+                "pipeline_value": round(pipeline_cents / 100, 2),
+                "won_revenue": round(won_cents / 100, 2),
             })
 
             data["summary"]["total_leads"] += m.leads_created or 0
             data["summary"]["total_mqls"] += m.mqls_created or 0
             data["summary"]["total_sqls"] += m.sqls_created or 0
             data["summary"]["total_won"] += m.deals_won or 0
-            data["summary"]["total_pipeline_value"] += (m.pipeline_value_cents or 0) / 100
-            data["summary"]["total_won_revenue"] += (m.won_revenue_cents or 0) / 100
+            total_pipeline_cents += pipeline_cents
+            total_won_cents += won_cents
+
+        # Convert monetary totals from cents at the end for precision
+        data["summary"]["total_pipeline_value"] = round(total_pipeline_cents / 100, 2)
+        data["summary"]["total_won_revenue"] = round(total_won_cents / 100, 2)
 
         # Calculate funnel rates
         if data["summary"]["total_leads"] > 0:
@@ -611,22 +634,32 @@ class ReportGenerator:
         date_range_type: str,
         reference_date: Optional[date] = None,
     ) -> Tuple[date, date]:
-        """Parse relative date range into absolute dates."""
-        ref = reference_date or date.today()
+        """Parse relative date range into absolute dates.
 
-        if date_range_type == "yesterday":
+        Date ranges are aligned with the dashboard's get_date_range() so that
+        exports and scheduled reports match the dashboard display:
+        - last_7_days: today - 6 days through today (7 days inclusive)
+        - last_30_days: today - 29 days through today (30 days inclusive)
+        """
+        ref = reference_date or datetime.now(timezone.utc).date()
+
+        if date_range_type == "today":
+            return ref, ref
+        elif date_range_type == "yesterday":
             d = ref - timedelta(days=1)
             return d, d
         elif date_range_type == "last_7_days":
-            return ref - timedelta(days=7), ref - timedelta(days=1)
+            return ref - timedelta(days=6), ref
         elif date_range_type == "last_30_days":
-            return ref - timedelta(days=30), ref - timedelta(days=1)
+            return ref - timedelta(days=29), ref
+        elif date_range_type == "last_90_days":
+            return ref - timedelta(days=89), ref
         elif date_range_type == "last_month":
             first_of_month = ref.replace(day=1)
             last_month_end = first_of_month - timedelta(days=1)
             last_month_start = last_month_end.replace(day=1)
             return last_month_start, last_month_end
-        elif date_range_type == "month_to_date":
+        elif date_range_type in ("this_month", "month_to_date"):
             return ref.replace(day=1), ref
         elif date_range_type == "quarter_to_date":
             quarter_start_month = ((ref.month - 1) // 3) * 3 + 1
@@ -634,5 +667,5 @@ class ReportGenerator:
         elif date_range_type == "year_to_date":
             return ref.replace(month=1, day=1), ref
         else:
-            # Default to last 30 days
-            return ref - timedelta(days=30), ref - timedelta(days=1)
+            # Default to last 7 days (aligned with dashboard default)
+            return ref - timedelta(days=6), ref

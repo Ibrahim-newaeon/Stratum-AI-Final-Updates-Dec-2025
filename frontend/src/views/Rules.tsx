@@ -174,18 +174,18 @@ export function Rules() {
   // Transform API data or fall back to mock
   const rules = useMemo((): Rule[] => {
     if (rulesData?.items && rulesData.items.length > 0) {
-      return rulesData.items.map((r: any) => ({
+      return (rulesData.items as unknown as Array<Record<string, unknown>>).map((r) => ({
         id: Number(r.id) || 0,
-        name: r.name || '',
-        description: r.description || '',
-        status: r.status || r.is_active ? 'active' : 'paused',
-        condition: r.condition || r.conditions?.[0] || { field: 'roas', operator: 'less_than', value: '2.0' },
-        action: r.action || r.actions?.[0] || { type: 'send_alert', config: {} },
-        appliesTo: r.applies_to || r.campaigns || [],
-        triggerCount: r.trigger_count || r.triggerCount || 0,
-        lastTriggered: r.last_triggered || r.lastTriggered || null,
-        cooldownHours: r.cooldown_hours || r.cooldownHours || 24,
-        createdAt: r.created_at || r.createdAt || new Date().toISOString(),
+        name: String(r.name || ''),
+        description: String(r.description || ''),
+        status: (r.status || r.is_active ? 'active' : 'paused') as Rule['status'],
+        condition: (r.condition || (r.conditions as unknown as unknown[])?.[0] || { field: 'roas', operator: 'less_than', value: '2.0' }) as Rule['condition'],
+        action: (r.action || (r.actions as unknown as unknown[])?.[0] || { type: 'send_alert', config: {} }) as Rule['action'],
+        appliesTo: (r.applies_to || r.campaigns || []) as string[],
+        triggerCount: Number(r.trigger_count || r.triggerCount) || 0,
+        lastTriggered: (r.last_triggered || r.lastTriggered || null) as string | null,
+        cooldownHours: Number(r.cooldown_hours || r.cooldownHours) || 24,
+        createdAt: String(r.created_at || r.createdAt || new Date().toISOString()),
       }))
     }
     return mockRules

@@ -9,7 +9,7 @@ and handling webhook interactions with the Meta Graph API.
 from typing import List, Dict, Any, Optional
 import httpx
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.core.config import settings
 
@@ -421,13 +421,12 @@ class WhatsAppClient:
                     # Parse incoming messages
                     for message in value.get("messages", []):
                         contact = value.get("contacts", [{}])[0]
+                        msg_ts = int(message.get("timestamp", 0))
                         events.append({
                             "type": "message",
                             "from": message.get("from"),
                             "wamid": message.get("id"),
-                            "timestamp": datetime.fromtimestamp(
-                                int(message.get("timestamp", 0))
-                            ),
+                            "timestamp": datetime.fromtimestamp(msg_ts, tz=timezone.utc) if msg_ts else datetime.now(timezone.utc),
                             "message_type": message.get("type"),
                             "content": message.get(message.get("type"), {}),
                             "contact_name": contact.get("profile", {}).get("name"),
@@ -435,13 +434,12 @@ class WhatsAppClient:
 
                     # Parse status updates
                     for status in value.get("statuses", []):
+                        status_ts = int(status.get("timestamp", 0))
                         events.append({
                             "type": "status",
                             "wamid": status.get("id"),
                             "status": status.get("status"),
-                            "timestamp": datetime.fromtimestamp(
-                                int(status.get("timestamp", 0))
-                            ),
+                            "timestamp": datetime.fromtimestamp(status_ts, tz=timezone.utc) if status_ts else datetime.now(timezone.utc),
                             "recipient_id": status.get("recipient_id"),
                             "conversation": status.get("conversation"),
                             "pricing": status.get("pricing"),

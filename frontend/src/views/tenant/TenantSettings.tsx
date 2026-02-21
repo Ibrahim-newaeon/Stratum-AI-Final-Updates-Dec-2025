@@ -69,7 +69,7 @@ export default function TenantSettings() {
         timezone: settings.timezone,
         currency: settings.currency,
         email_notifications: settings.emailNotifications,
-      } as any)
+      })
       toast({
         title: 'Success',
         description: 'Settings saved successfully',

@@ -172,14 +172,14 @@ async def get_mfa_status(
     service = MFAService(db)
 
     try:
-        status = await service.get_mfa_status(current_user.id)
+        mfa_status = await service.get_mfa_status(current_user.id)
 
         return MFAStatusResponse(
-            enabled=status.enabled,
-            verified_at=status.verified_at.isoformat() if status.verified_at else None,
-            backup_codes_remaining=status.backup_codes_remaining,
-            is_locked=status.is_locked,
-            lockout_until=status.lockout_until.isoformat() if status.lockout_until else None,
+            enabled=mfa_status.enabled,
+            verified_at=mfa_status.verified_at.isoformat() if mfa_status.verified_at else None,
+            backup_codes_remaining=mfa_status.backup_codes_remaining,
+            is_locked=mfa_status.is_locked,
+            lockout_until=mfa_status.lockout_until.isoformat() if mfa_status.lockout_until else None,
         )
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
@@ -203,8 +203,8 @@ async def initiate_mfa_setup(
 
     try:
         # Check if MFA is already enabled
-        status = await service.get_mfa_status(current_user.id)
-        if status.enabled:
+        mfa_status = await service.get_mfa_status(current_user.id)
+        if mfa_status.enabled:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="MFA is already enabled. Disable it first to reconfigure.",

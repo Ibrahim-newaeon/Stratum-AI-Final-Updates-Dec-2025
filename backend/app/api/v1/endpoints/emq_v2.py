@@ -120,7 +120,7 @@ async def get_emq_score(
 
     response_data = EmqScoreResponse(
         score=data["score"],
-        previousScore=data["previousScore"] or data["score"] - 2.0,
+        previousScore=data.get("previousScore"),
         confidenceBand=data["confidenceBand"],
         drivers=drivers,
         lastUpdated=data["lastUpdated"],
@@ -530,7 +530,9 @@ async def update_autopilot_mode(
         },
     }
 
-    config = mode_config[update.mode]
+    config = mode_config.get(update.mode)
+    if config is None:
+        raise HTTPException(status_code=400, detail=f"Invalid mode: {update.mode}")
 
     # In production, this would persist the override to database
     response_data = AutopilotStateResponse(
@@ -548,7 +550,7 @@ async def update_autopilot_mode(
 # Super Admin Endpoints
 # =============================================================================
 @router.get(
-    "/benchmarks",
+    "/emq/benchmarks",
     response_model=APIResponse[List[EmqBenchmarkResponse]],
     summary="Get EMQ Benchmarks",
     description="Get platform-wide EMQ benchmarks (super admin only).",
@@ -575,7 +577,7 @@ async def get_benchmarks(
 
 
 @router.get(
-    "/portfolio",
+    "/emq/portfolio",
     response_model=APIResponse[EmqPortfolioResponse],
     summary="Get Portfolio Overview",
     description="Get portfolio-wide EMQ overview (super admin only).",

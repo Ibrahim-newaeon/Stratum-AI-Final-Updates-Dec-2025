@@ -236,9 +236,9 @@ api_router.include_router(
 )
 
 # Autopilot Enforcement (Budget/ROAS restrictions)
+# Note: autopilot_enforcement.router already has prefix="/tenant/{tenant_id}/autopilot/enforcement"
 api_router.include_router(
     autopilot_enforcement.router,
-    prefix="/autopilot/enforcement",
     tags=["Autopilot Enforcement"],
 )
 

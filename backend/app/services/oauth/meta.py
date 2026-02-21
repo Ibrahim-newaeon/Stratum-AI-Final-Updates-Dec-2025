@@ -178,8 +178,12 @@ class MetaOAuthService(OAuthService):
             # Long-lived tokens expire in ~60 days
             expires_in = long_lived_data.get("expires_in", 5184000)  # Default 60 days
 
+            long_lived_token = long_lived_data.get("access_token")
+            if not long_lived_token:
+                raise Exception("No access token in long-lived token response")
+
             return OAuthTokens(
-                access_token=long_lived_data.get("access_token"),
+                access_token=long_lived_token,
                 expires_in=expires_in,
                 expires_at=self._calculate_expiry(expires_in),
                 token_type=long_lived_data.get("token_type", "Bearer"),

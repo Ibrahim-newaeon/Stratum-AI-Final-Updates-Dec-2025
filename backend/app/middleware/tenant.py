@@ -65,18 +65,27 @@ class TenantMiddleware(BaseHTTPMiddleware):
         if self._is_public_endpoint(request.url.path):
             return await call_next(request)
 
+        # Decode JWT once and cache the payload on request.state
+        jwt_payload = self._decode_jwt_once(request)
+        request.state._jwt_payload = jwt_payload
+
         # Try to extract tenant context
         tenant_id = await self._extract_tenant_id(request)
-        user_id = await self._extract_user_id(request)
-        role = await self._extract_role(request)
+        user_id = jwt_payload.get("sub") if jwt_payload else None
+        if user_id is not None:
+            try:
+                user_id = int(user_id)
+            except (ValueError, TypeError):
+                user_id = None
+        role = jwt_payload.get("role") if jwt_payload else None
+        cms_role = jwt_payload.get("cms_role") if jwt_payload else None
 
         if tenant_id is None:
-            # SECURITY: Development fallback is disabled — all requests must
-            # authenticate to get tenant context. Allowing a default tenant_id
-            # lets unauthenticated requests access tenant 1's data.
-            if False:  # Previously: settings.is_development
-                tenant_id = 1
-                logger.debug("using_default_tenant", tenant_id=tenant_id)
+            # Superadmins operate across all tenants and may not carry a
+            # tenant_id in their JWT.  Let them through so platform-wide
+            # endpoints (e.g. /superadmin/*, /emq/benchmarks) can be reached.
+            if role == "superadmin":
+                logger.debug("superadmin_bypass_tenant_check", user_id=user_id)
             else:
                 return JSONResponse(
                     status_code=status.HTTP_401_UNAUTHORIZED,
@@ -91,6 +100,7 @@ class TenantMiddleware(BaseHTTPMiddleware):
         request.state.tenant_id = tenant_id
         request.state.user_id = user_id
         request.state.role = role or "analyst"  # Default role if not in token
+        request.state.cms_role = cms_role  # CMS role (None if not a CMS user)
 
         # Bind to structured logging context
         import structlog
@@ -101,6 +111,23 @@ class TenantMiddleware(BaseHTTPMiddleware):
 
         return await call_next(request)
 
+    def _decode_jwt_once(self, request: Request) -> Optional[dict]:
+        """Decode the JWT token once and return the payload dict, or None."""
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
+            return None
+
+        token = auth_header.split(" ")[1]
+
+        try:
+            return jwt.decode(
+                token,
+                settings.jwt_secret_key,
+                algorithms=[settings.jwt_algorithm],
+            )
+        except JWTError:
+            return None
+
     def _is_public_endpoint(self, path: str) -> bool:
         """Check if the endpoint is public (no tenant context needed)."""
         if path in PUBLIC_ENDPOINTS:
@@ -109,6 +136,9 @@ class TenantMiddleware(BaseHTTPMiddleware):
             return True
         # Allow webhook endpoints (they authenticate via signature)
         if path.startswith("/api/v1/webhooks/"):
+            return True
+        # CMS public endpoints — content is global, not tenant-scoped
+        if path.startswith("/api/v1/cms/") and "/admin/" not in path:
             return True
         return False
 
@@ -142,59 +172,14 @@ class TenantMiddleware(BaseHTTPMiddleware):
         return self._extract_from_subdomain(request)
 
     async def _extract_from_jwt(self, request: Request) -> Optional[int]:
-        """Extract tenant_id from JWT token."""
-        auth_header = request.headers.get("Authorization")
-        if not auth_header or not auth_header.startswith("Bearer "):
+        """Extract tenant_id from the cached JWT payload."""
+        payload = getattr(request.state, "_jwt_payload", None)
+        if payload is None:
             return None
+        return payload.get("tenant_id")
 
-        token = auth_header.split(" ")[1]
-
-        try:
-            payload = jwt.decode(
-                token,
-                settings.jwt_secret_key,
-                algorithms=[settings.jwt_algorithm],
-            )
-            return payload.get("tenant_id")
-        except JWTError:
-            return None
-
-    async def _extract_user_id(self, request: Request) -> Optional[int]:
-        """Extract user_id from JWT token."""
-        auth_header = request.headers.get("Authorization")
-        if not auth_header or not auth_header.startswith("Bearer "):
-            return None
-
-        token = auth_header.split(" ")[1]
-
-        try:
-            payload = jwt.decode(
-                token,
-                settings.jwt_secret_key,
-                algorithms=[settings.jwt_algorithm],
-            )
-            sub = payload.get("sub")
-            return int(sub) if sub else None
-        except (JWTError, ValueError):
-            return None
-
-    async def _extract_role(self, request: Request) -> Optional[str]:
-        """Extract role from JWT token."""
-        auth_header = request.headers.get("Authorization")
-        if not auth_header or not auth_header.startswith("Bearer "):
-            return None
-
-        token = auth_header.split(" ")[1]
-
-        try:
-            payload = jwt.decode(
-                token,
-                settings.jwt_secret_key,
-                algorithms=[settings.jwt_algorithm],
-            )
-            return payload.get("role")
-        except JWTError:
-            return None
+    # _extract_user_id, _extract_role, _extract_cms_role are now handled
+    # inline in dispatch() using the cached JWT payload from _decode_jwt_once().
 
     def _extract_from_subdomain(self, request: Request) -> Optional[int]:
         """

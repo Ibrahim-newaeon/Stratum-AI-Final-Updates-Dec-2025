@@ -79,7 +79,7 @@ import hashlib
 import logging
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Optional, Union
 
@@ -389,7 +389,7 @@ class ServerEvent:
     """
 
     event_name: StandardEvent
-    event_time: datetime = field(default_factory=datetime.utcnow)
+    event_time: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     user_data: UserData = field(default_factory=UserData)
 
     # Content data

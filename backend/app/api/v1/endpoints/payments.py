@@ -72,13 +72,13 @@ class SubscriptionResponse(BaseModel):
     """Current subscription information."""
 
     has_subscription: bool
-    subscription_id: Optional[str]
-    status: Optional[str]
-    tier: Optional[str]
-    current_period_start: Optional[str]
-    current_period_end: Optional[str]
+    subscription_id: Optional[str] = None
+    status: Optional[str] = None
+    tier: Optional[str] = None
+    current_period_start: Optional[str] = None
+    current_period_end: Optional[str] = None
     cancel_at_period_end: bool = False
-    trial_end: Optional[str]
+    trial_end: Optional[str] = None
 
 
 class UpgradeRequest(BaseModel):

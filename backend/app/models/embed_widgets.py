@@ -20,7 +20,7 @@ Tier Alignment:
 import enum
 import hashlib
 import secrets
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import uuid4
 
 from sqlalchemy import (
@@ -341,7 +341,7 @@ class EmbedWidgetView(Base):
     token_id = Column(UUID(as_uuid=True), nullable=False, index=True)
 
     # View details (anonymized)
-    view_date = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    view_date = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
     origin_domain = Column(String(255), nullable=True)
 
     # Geo (country-level only)

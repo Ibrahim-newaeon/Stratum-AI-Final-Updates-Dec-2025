@@ -19,7 +19,7 @@ from making costly mistakes based on unreliable signals.
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Optional
 
@@ -88,7 +88,7 @@ class TrustGateResult:
     allowed_actions: list[str]
     restricted_actions: list[str]
     recommendations: list[str]
-    evaluated_at: datetime = field(default_factory=datetime.utcnow)
+    evaluated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for API responses."""

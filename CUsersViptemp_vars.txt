@@ -1,0 +1,211 @@
+╔════════════════════════════ Variables for backend ═══════════════════════════╗
+║ APP_ENV                      │ production                                    ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ APP_NAME                     │ stratum-ai                                    ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ APP_VERSION                  │ 1.0.0                                         ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ CELERY_BROKER_URL            │ redis://                                      ║
+║                              │ default:iqQKuUQoauyydIGLFXcuvEbqElhYACKa@redi ║
+║                              │ s.railway.internal:6379                       ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ CELERY_RESULT_BACKEND        │ redis://                                      ║
+║                              │ default:iqQKuUQoauyydIGLFXcuvEbqElhYACKa@redi ║
+║                              │ s.railway.internal:6379                       ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ CORS_ORIGINS                 │ https://stratum-ai-final-updates-             ║
+║                              │ dec-2025-teal.vercel.app,https://             ║
+║                              │ stratumai.app,https://www.stratumai.app       ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ DATABASE_URL                 │ postgresql://                                 ║
+║                              │ postgres:lEGaBJmgkDLAVDxWcQVJiNYxYrcHQJjc@pos ║
+║                              │ tgres.railway.internal:5432/railway           ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ DATABASE_URL_SYNC            │ postgresql://                                 ║
+║                              │ postgres:lEGaBJmgkDLAVDxWcQVJiNYxYrcHQJjc@pos ║
+║                              │ tgres.railway.internal:5432/railway           ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ DEBUG                        │ false                                         ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ EMAIL_FROM_ADDRESS           │ CS@stratumai.app                              ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ EMAIL_FROM_NAME              │ Stratum AI                                    ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ ENABLE_WHATSAPP              │ true                                          ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ FRONTEND_URL                 │ https://front-production-f178.up.railway.app  ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ GATEWAY_API_KEY              │ eyJpIjoidWZrZXlja20iLCJoIjoiY2FwaWcuc3RhcGUuY ║
+║                              │ 2giLCJrIjoiMTBjY2Q4ODcwMzE5NTBjOTk1NDIwMmMwOD ║
+║                              │ I4NmNjODg2MjFiNGE5MXVma2V5Y2ttIn0=            ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ GOOGLE_ADS_ACCESS_TOKEN      │ ya29.a0AUMWg_JXv5VUgtUVdWn9QM3a3cxaRwUYlDGlvj ║
+║                              │ ozFrwsvLeh9zR6Xt-                             ║
+║                              │ VYUWKPsK_r75NY6nyHcEo61syZt2Yr8rywuVz6vmidAKP ║
+║                              │ 5-                                            ║
+║                              │ umq7SaoYOyGUAg5I6X0sC5vvQvlcM9lEGE9UY0HIDjXK8 ║
+║                              │ _S6bp2Wpr8KxfokQ3U9U4aFonciSfjxR56sYmRdzcHQUr ║
+║                              │ Pgg3yZAaCgYKAR0SARASFQHGX2MibGvmjuByi1aJTPRTe ║
+║                              │ O81Yg0206                                     ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ GOOGLE_ADS_CLIENT_ID         │ 819777120735-                                 ║
+║                              │ 882pb97qirldnplc0s5l77eelap1u98v.apps.googleu ║
+║                              │ sercontent.com                                ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ GOOGLE_ADS_CLIENT_SECRET     │ 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           ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ GOOGLE_ADS_CUSTOMER_ID       │ 780-145-9983                                  ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ GOOGLE_ADS_DEVELOPER_TOKEN   │ 0lZOSnPI-6ufuNsFYcBndw                        ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ GOOGLE_ADS_MCC_ID            │ 780-145-9983                                  ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ GOOGLE_ADS_REFRESH_TOKEN     │ 1//04pk97s6hL_QaCgYIARAAGAQSNwF-              ║
+║                              │ L9Iru7wHeOf64vukbm0kH3AcBt2NUADomzWsrF8MFixhk ║
+║                              │ 9dguV6UJue6_Fs8Z5eZb-c-dpE                    ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ JWT_SECRET_KEY               │ IyqeMsE7dBETjGeoQipYMDfKITlbCpR_vU9FCSY2kFo   ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ LOG_FORMAT                   │ json                                          ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ LOG_LEVEL                    │ INFO                                          ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ MARKET_INTEL_PROVIDER        │ mock                                          ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ META_ACCESS_TOKEN            │ EAAMC4M41IUkBQoznfqmYxP0vEeEGu2scZBAQ9BSNnubE ║
+║                              │ JNaO93sWIyBTNRhqTN0yfiqpv73EWxNVOhO30GeNSuaWe ║
+║                              │ HX2AMHiRBSBTazctVVLWFIAxJqeDybX4HTpa7ZCA5OFvh ║
+║                              │ DSAwOTvaIZC6o5TdxMSMZASwPiJWlINPwJQJuHoxqINwx ║
+║                              │ DHeuBV7YzqhBzANdwTwLe                         ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ META_AD_ACCOUNT_IDS          │ 3414670198642836,219729065690704,179043333183 ║
+║                              │ 075,435816620682608,489339008679770,138554146 ║
+║                              │ 1728897,2592251594327632,219729055689704,9600 ║
+║                              │ 03157726427,301876697707107,25763052142479,41 ║
+║                              │ 6255550603836                                 ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ META_APP_ID                  │ 847589485650249                               ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ META_APP_SECRET              │ ac41d45ecc8be075cec126298bf35c09              ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ META_CAPI_ACCESS_TOKEN       │ EAAM32FkP5zQBQv5Sva9hRRwScNejGQsBQ6BGOrSEJ6Ua ║
+║                              │ CZChZCZBitZC2E8VemDJpIrFbrqZBgbYwMS5tZAFPtSpQ ║
+║                              │ wsvyWspeXTSUTq10hvCUw6AGgIarD91NMrxCwSsMhdNYz ║
+║                              │ IAU3qgp49OpOzPk6WqFo5cM5BFDvTQNz5fSMrinbEYQ5e ║
+║                              │ WLQdHzoyqaR0B8MKQZDZD                         ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ META_PIXEL_ID                │ 718008315275576                               ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ MIDAS_GA4_MEASUREMENT_ID     │ G-WBXD5P7ESQ                                  ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ MIDAS_GA4_TAG_ID             │ GT-WR9RD65G                                   ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ MIDAS_GOOGLE_ADS_ID          │ AW-17911726898                                ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ MIDAS_GTM_SERVER_CONTAINER   │ GTM-MCH82TW8                                  ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ MIDAS_GTM_WEB_CONTAINER      │ GTM-WSGQNQ36                                  ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ ML_PROVIDER                  │ local                                         ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ PII_ENCRYPTION_KEY           │ pT0tE_ywBdJyZut_5BKtkmBqqeprzpZvBPq4HijS2yVGG ║
+║                              │ fioPw-Wxn5Pby2yP7nB                           ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ RAILWAY_ENVIRONMENT          │ production                                    ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ RAILWAY_ENVIRONMENT_ID       │ e39bd8b0-de46-456a-a394-643bc0523750          ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ RAILWAY_ENVIRONMENT_NAME     │ production                                    ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ RAILWAY_PRIVATE_DOMAIN       │ backend.railway.internal                      ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ RAILWAY_PROJECT_ID           │ 003956a7-5748-4ed4-8dd7-e37fbbc19183          ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ RAILWAY_PROJECT_NAME         │ stratum-ai                                    ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ RAILWAY_PUBLIC_DOMAIN        │ app.stratumai.app                             ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ RAILWAY_SERVICE_BACKEND_URL  │ app.stratumai.app                             ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ RAILWAY_SERVICE_ID           │ 29c54cc5-3493-421e-aa7f-b4c663d9cbc5          ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ RAILWAY_SERVICE_NAME         │ backend                                       ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ RAILWAY_STATIC_URL           │ app.stratumai.app                             ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ RATE_LIMIT_BURST             │ 60                                            ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ RATE_LIMIT_PER_MINUTE        │ 300                                           ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ REDIS_URL                    │ redis://                                      ║
+║                              │ default:iqQKuUQoauyydIGLFXcuvEbqElhYACKa@redi ║
+║                              │ s.railway.internal:6379                       ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ SECRET_KEY                   │ JCOx6J-                                       ║
+║                              │ DZSeXN5hGygtXJ3vzUxGwG1Tkp__cnohiHHKxHfX54kkq ║
+║                              │ eemDOE3cyoda                                  ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ SMTP_HOST                    │ smtp.gmail.com                                ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ SMTP_PASSWORD	               │ ddyhjfmmnwneunjw                              ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ SMTP_PORT                    │ 587                                           ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ SMTP_TLS                     │ true                                          ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ SMTP_USER                    │ CS@stratumai.app                              ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ SNAPCHAT_AD_ACCOUNT_ID       │ 280aeb9a-db52-46c5-9d37-6cecc96b41ea          ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ SNAPCHAT_APP_ID              │ ba209f94-5ee3-4269-b31f-be4ea1f0daec          ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ SNAPCHAT_CAPI_TOKEN          │ eyJhbGciOiJIUzI1NiIsImtpZCI6IkNhbnZhc1MyU0hNQ ║
+║                              │ UNQcm9kIiwidHlwIjoiSldUIn0.eyJhdWQiOiJjYW52YX ║
+║                              │ MtY2FudmFzYXBpIiwiaXNzIjoiY2FudmFzLXMyc3Rva2V ║
+║                              │ uIiwibmJmIjoxNzYzNjg5NzAxLCJzdWIiOiJkZWMyNzA3 ║
+║                              │ OS1jZmM3LTRkZjAtOTIxZS1lYzNlNWQyZTEwM2N-      ║
+║                              │ UFJPRFVDVElPTn42YTU3NTZjZC0wMWVjLTRiNzAtOGI1Y ║
+║                              │ S1jNzQzMzRjMDk4NzcifQ.sUeZsuC59svgl_OxqHb0l5H ║
+║                              │ vnVydmXaZ9m1tYlisOJ8                          ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ SNAPCHAT_PIXEL_ID            │ a9e1a4a7-9c95-419e-a369-57627e7520b6          ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ SNAPCHAT_SECRET              │ bdc3f103494777ab482c                          ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ SUBSCRIPTION_TIER            │ starter                                       ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ TIKTOK_ACCESS_TOKEN          │ b78b4f19e6d2055df13f521b653ad55c95b87348      ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ TIKTOK_ADVERTISER_ID         │ 7424464484565254161                           ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ TIKTOK_AD_ACCOUNT_ID         │ 6917640367596634114                           ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ TIKTOK_APP_ID                │ D35OBK3C77U8MLHVTIV0                          ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ TIKTOK_APP_SECRET            │ 43cd325112270b4f5ff1570a0d08bdeba77abfb0      ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ TIKTOK_CAPI_TOKEN            │ eyJpIjoia2J2eHZncHMiLCJoIjoiZ3cuc3RhcGUuZnIiL ║
+║                              │ CJrIjoiZmM5OWIwOGIxYWZiMDM2MjFiZmM4MmNiZmQ5YT ║
+║                              │ Q5NTI2NTZjYjc5Zmtidnh2Z3BzIn0=                ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ TIKTOK_PIXEL_ID              │ D35OBK3C77U8MLHVTIV0                          ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ USE_MOCK_AD_DATA             │ false                                         ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ WHATSAPP_ACCESS_TOKEN        │ EAAVeAmsZApfYBQ5lwDDVZAAibvVLMwYBpVW1tq4v4cZA ║
+║                              │ 8FjfQpv6XrmBREq0wZAvS7T1Gbuu0LmrhRyUWLZBGC3Dv ║
+║                              │ ep4M4kpns0aToDxt2GZAKgXULBYyDXlZCVrJLX9OnNQdo ║
+║                              │ nNYfJEDep7RPkarV2aD0lrXERVChm5RVZAemOxcnyCdo6 ║
+║                              │ jDANXTSbgmnY7etgtzgZDZD                       ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ WHATSAPP_API_VERSION         │ v24.0                                         ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ WHATSAPP_APP_SECRET          │ 61dd1a6c547487058c522db3e57145ec              ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ WHATSAPP_BUSINESS_ACCOUNT_ID │ 25676959581929399                             ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ WHATSAPP_PHONE_NUMBER_ID     │ 966289803226237                               ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ WHATSAPP_VERIFY_TOKEN        │ stratum-whatsapp-verify-token                 ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+

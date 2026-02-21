@@ -35,7 +35,6 @@ class TestTenantDataIsolation:
         other_tenant = Tenant(
             name="Other Tenant",
             slug="other-tenant",
-            is_active=True,
             plan="professional",
         )
         db_session.add(other_tenant)
@@ -78,7 +77,7 @@ class TestTenantDataIsolation:
         other_tenant = Tenant(
             name="Other Tenant",
             slug="other-tenant-2",
-            is_active=True,
+            plan="professional",
         )
         db_session.add(other_tenant)
         await db_session.flush()
@@ -88,8 +87,7 @@ class TestTenantDataIsolation:
             name="Other Tenant Campaign",
             status="draft",
             platform="meta",
-            objective="conversions",
-            daily_budget=200.0,
+            draft_json={"objective": "conversions", "daily_budget": 200.0},
         )
         db_session.add(other_campaign)
         await db_session.flush()
@@ -145,7 +143,7 @@ class TestTenantDataIsolation:
         other_tenant = Tenant(
             name="Other Tenant Health",
             slug="other-tenant-health",
-            is_active=True,
+            plan="professional",
         )
         db_session.add(other_tenant)
         await db_session.flush()

@@ -160,7 +160,7 @@ export default function UnifiedDashboard() {
 
   // Show error state when all critical API calls fail
   if (hasError && !isLoading) {
-    const errorStatus = (overviewErrorData as any)?.response?.status;
+    const errorStatus = (overviewErrorData as Error & { response?: { status?: number } })?.response?.status;
     const isAuthError = errorStatus === 401 || errorStatus === 403;
 
     return (

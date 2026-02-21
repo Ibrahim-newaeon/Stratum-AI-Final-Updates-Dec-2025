@@ -276,10 +276,11 @@ export default function CMS() {
         await createAuthor.mutateAsync({ name });
         // Force refetch authors list after successful creation
         await refetchAuthors();
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const axiosErr = error as { response?: { data?: { detail?: string } }; message?: string };
         alert(
-          error?.response?.data?.detail ||
-            error?.message ||
+          axiosErr?.response?.data?.detail ||
+            axiosErr?.message ||
             'Failed to create author. The name might already exist.'
         );
       }

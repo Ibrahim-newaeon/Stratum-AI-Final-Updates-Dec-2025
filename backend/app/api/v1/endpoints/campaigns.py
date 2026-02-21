@@ -414,7 +414,9 @@ async def trigger_platform_sync(
     """
     from app.services.sync.orchestrator import PlatformSyncOrchestrator
 
-    tenant_id = getattr(request.state, "tenant_id", 1)
+    tenant_id = getattr(request.state, "tenant_id", None)
+    if tenant_id is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant not identified")
 
     try:
         ad_platform = AdPlatform(platform.lower())

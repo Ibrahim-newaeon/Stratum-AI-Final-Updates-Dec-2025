@@ -81,18 +81,19 @@ async def stripe_webhook(request: Request):
             detail="Missing Stripe signature",
         )
 
+    # Verify webhook secret is configured
+    if not settings.stripe_webhook_secret:
+        logger.error("stripe_webhook_secret_not_configured")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Webhook secret not configured",
+        )
+
     # Verify webhook signature
     try:
-        if settings.stripe_webhook_secret:
-            event = stripe.Webhook.construct_event(
-                payload, sig_header, settings.stripe_webhook_secret
-            )
-        else:
-            # In development, allow without verification
-            import json
-
-            event = stripe.Event.construct_from(json.loads(payload), stripe.api_key)
-            logger.warning("stripe_webhook_signature_not_verified")
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, settings.stripe_webhook_secret
+        )
     except stripe.SignatureVerificationError as e:
         logger.error("stripe_webhook_invalid_signature", error=str(e))
         raise HTTPException(

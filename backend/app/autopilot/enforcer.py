@@ -11,7 +11,7 @@ Enforcement Modes:
 - hard_block: Prevent action via API, log override attempts
 """
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Any, List, Optional, Tuple
 from enum import Enum
 from dataclasses import dataclass, field
@@ -215,7 +215,7 @@ class AutopilotEnforcer:
                     tenant_id=tenant_id,
                     enforcement_enabled=db_settings.enforcement_enabled,
                     default_mode=EnforcementMode(
-                        db_settings.default_mode.value
+                        db_settings.default_mode
                         if isinstance(db_settings.default_mode, DBEnforcementMode)
                         else db_settings.default_mode
                     ),
@@ -299,13 +299,15 @@ class AutopilotEnforcer:
                     else:
                         db_updates[key] = value
 
-            if db_updates:
-                result = await self.db.execute(
-                    select(TenantEnforcementSettingsDB)
-                    .where(TenantEnforcementSettingsDB.tenant_id == tenant_id)
-                )
-                db_settings = result.scalars().first()
+            # Load or create the DB settings row
+            result = await self.db.execute(
+                select(TenantEnforcementSettingsDB)
+                .options(selectinload(TenantEnforcementSettingsDB.rules))
+                .where(TenantEnforcementSettingsDB.tenant_id == tenant_id)
+            )
+            db_settings = result.scalars().first()
 
+            if db_updates:
                 if db_settings is not None:
                     for col, val in db_updates.items():
                         setattr(db_settings, col, val)
@@ -318,6 +320,32 @@ class AutopilotEnforcer:
                     )
                     self.db.add(new_row)
                     await self.db.flush()
+                    db_settings = new_row
+
+            # Sync custom rules to DB if "rules" was in the updates
+            if "rules" in updates and db_settings is not None:
+                # Remove existing rules
+                for existing_rule in list(db_settings.rules or []):
+                    await self.db.delete(existing_rule)
+                await self.db.flush()
+
+                # Add new rules from the Pydantic models
+                for rule in updates["rules"]:
+                    rule_dict = rule.dict() if hasattr(rule, 'dict') else rule
+                    db_rule = TenantEnforcementRuleDB(
+                        settings_id=db_settings.id,
+                        tenant_id=tenant_id,
+                        rule_id=rule_dict["rule_id"],
+                        rule_type=DBViolationType(rule_dict["rule_type"]),
+                        threshold_value=rule_dict["threshold_value"],
+                        enforcement_mode=DBEnforcementMode(
+                            rule_dict.get("enforcement_mode", "advisory")
+                        ),
+                        enabled=rule_dict.get("enabled", True),
+                        description=rule_dict.get("description"),
+                    )
+                    self.db.add(db_rule)
+                await self.db.flush()
 
         return settings
 
@@ -410,16 +438,34 @@ class AutopilotEnforcer:
 
         elif strictest_mode == EnforcementMode.SOFT_BLOCK:
             # Generate confirmation token
-            import uuid
-            token = str(uuid.uuid4())
-            self._pending_confirmations[token] = {
+            import secrets as _secrets
+            token = _secrets.token_hex(32)
+            now = datetime.now(timezone.utc)
+            expires = now + timedelta(seconds=3600)
+
+            confirmation_data = {
                 "tenant_id": tenant_id,
                 "action_type": action_type,
                 "entity_id": entity_id,
                 "violations": violations,
-                "created_at": datetime.now(timezone.utc).isoformat(),
-                "expires_at": (datetime.now(timezone.utc).replace(hour=23, minute=59)).isoformat(),
+                "created_at": now.isoformat(),
+                "expires_at": expires.isoformat(),
             }
+            self._pending_confirmations[token] = confirmation_data
+
+            # Persist to database so it survives across requests
+            if self.db is not None:
+                db_token = PendingConfirmationTokenDB(
+                    tenant_id=tenant_id,
+                    token=token,
+                    action_type=action_type,
+                    entity_id=entity_id,
+                    violations=json.loads(json.dumps(violations, default=str)),
+                    created_at=now,
+                    expires_at=expires,
+                )
+                self.db.add(db_token)
+                await self.db.flush()
 
             return EnforcementResult(
                 allowed=False,
@@ -469,10 +515,31 @@ class AutopilotEnforcer:
         Returns:
             Tuple of (success, error_message)
         """
-        if confirmation_token not in self._pending_confirmations:
-            return False, "Invalid or expired confirmation token"
+        # Try in-memory first, then fall back to database
+        confirmation = self._pending_confirmations.get(confirmation_token)
 
-        confirmation = self._pending_confirmations[confirmation_token]
+        if confirmation is None and self.db is not None:
+            # Look up from database
+            result = await self.db.execute(
+                select(PendingConfirmationTokenDB).where(
+                    PendingConfirmationTokenDB.token == confirmation_token,
+                    PendingConfirmationTokenDB.expires_at >= datetime.now(timezone.utc),
+                )
+            )
+            db_token = result.scalars().first()
+            if db_token is not None:
+                confirmation = {
+                    "tenant_id": db_token.tenant_id,
+                    "action_type": db_token.action_type,
+                    "entity_id": db_token.entity_id,
+                    "violations": db_token.violations,
+                }
+                # Clean up the DB token after use
+                await self.db.delete(db_token)
+                await self.db.flush()
+
+        if confirmation is None:
+            return False, "Invalid or expired confirmation token"
 
         if confirmation["tenant_id"] != tenant_id:
             return False, "Token does not belong to this tenant"
@@ -491,8 +558,8 @@ class AutopilotEnforcer:
             override_reason=override_reason,
         )
 
-        # Remove used token
-        del self._pending_confirmations[confirmation_token]
+        # Remove from in-memory cache if present
+        self._pending_confirmations.pop(confirmation_token, None)
 
         return True, None
 
@@ -681,7 +748,7 @@ class AutopilotEnforcer:
                 "message": f"Budget ${proposed_budget:.2f} exceeds max ${settings.max_campaign_budget:.2f}",
                 "threshold": settings.max_campaign_budget,
                 "actual": proposed_budget,
-                "mode": settings.default_mode.value,
+                "mode": settings.default_mode,
             })
 
         # Check budget increase limit
@@ -693,7 +760,7 @@ class AutopilotEnforcer:
                     "message": f"Budget increase {increase_pct:.1f}% exceeds limit {settings.budget_increase_limit_pct}%",
                     "threshold": settings.budget_increase_limit_pct,
                     "actual": increase_pct,
-                    "mode": settings.default_mode.value,
+                    "mode": settings.default_mode,
                 })
 
         return violations
@@ -714,7 +781,7 @@ class AutopilotEnforcer:
                 "message": f"ROAS {current_roas:.2f} is below minimum threshold {settings.min_roas_threshold:.2f}",
                 "threshold": settings.min_roas_threshold,
                 "actual": current_roas,
-                "mode": settings.default_mode.value,
+                "mode": settings.default_mode,
                 "entity_type": entity_type,
                 "entity_id": entity_id,
             })
@@ -775,7 +842,7 @@ class AutopilotEnforcer:
                 ),
                 "threshold": settings.max_budget_changes_per_day,
                 "actual": daily_count,
-                "mode": settings.default_mode.value
+                "mode": settings.default_mode
                         if isinstance(settings.default_mode, EnforcementMode)
                         else settings.default_mode,
             })
@@ -808,7 +875,7 @@ class AutopilotEnforcer:
                 ),
                 "threshold": settings.min_hours_between_changes,
                 "actual": round(hours_since, 2),
-                "mode": settings.default_mode.value
+                "mode": settings.default_mode
                         if isinstance(settings.default_mode, EnforcementMode)
                         else settings.default_mode,
             })
@@ -856,10 +923,11 @@ class AutopilotEnforcer:
     def _get_strictest_mode(
         self,
         violations: List[Dict[str, Any]],
-        default_mode: EnforcementMode,
+        default_mode,
     ) -> EnforcementMode:
         """Get the strictest enforcement mode from violations."""
-        modes = [v.get("mode", default_mode.value) for v in violations]
+        default_val = default_mode.value if hasattr(default_mode, 'value') else default_mode
+        modes = [v.get("mode", default_val) for v in violations]
 
         if EnforcementMode.HARD_BLOCK.value in modes:
             return EnforcementMode.HARD_BLOCK
@@ -915,9 +983,11 @@ class AutopilotEnforcer:
             override_reason=override_reason,
         )
 
+        _action_val = intervention_action.value if hasattr(intervention_action, 'value') else intervention_action
+        _mode_val = enforcement_mode.value if hasattr(enforcement_mode, 'value') else enforcement_mode
         logger.info(
-            f"Enforcement intervention: tenant={tenant_id} action={intervention_action.value} "
-            f"entity={entity_type}/{entity_id} mode={enforcement_mode.value}"
+            f"Enforcement intervention: tenant={tenant_id} action={_action_val} "
+            f"entity={entity_type}/{entity_id} mode={_mode_val}"
         )
 
         # Persist to database

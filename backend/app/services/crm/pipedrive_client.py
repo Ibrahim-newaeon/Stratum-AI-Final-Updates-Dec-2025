@@ -355,7 +355,6 @@ class PipedriveClient:
         }
 
         if updated_since:
-            params["filter_id"] = None  # Would need filter API
             params["since_timestamp"] = updated_since.isoformat()
 
         return await self.api_request("GET", "/persons", params=params)

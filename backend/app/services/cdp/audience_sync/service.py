@@ -487,20 +487,40 @@ class AudienceSyncService:
         self,
         segment_id: UUID,
         limit: int = 1000000,
+        batch_size: int = 1000,
     ) -> list[CDPProfile]:
-        """Get all profiles in a segment."""
-        result = await self.db.execute(
-            select(CDPProfile)
-            .join(CDPSegmentMembership)
-            .where(
-                CDPSegmentMembership.segment_id == segment_id,
-                CDPSegmentMembership.is_active == True,
-                CDPProfile.tenant_id == self.tenant_id,
+        """Get all profiles in a segment using batched fetching to avoid OOM.
+
+        Fetches profiles in batches of `batch_size` to keep memory usage
+        bounded, up to `limit` total profiles.
+        """
+        all_profiles: list[CDPProfile] = []
+        offset = 0
+        remaining = limit
+
+        while remaining > 0:
+            fetch_size = min(batch_size, remaining)
+            result = await self.db.execute(
+                select(CDPProfile)
+                .join(CDPSegmentMembership)
+                .where(
+                    CDPSegmentMembership.segment_id == segment_id,
+                    CDPSegmentMembership.is_active == True,
+                    CDPProfile.tenant_id == self.tenant_id,
+                )
+                .options(selectinload(CDPProfile.identifiers))
+                .order_by(CDPProfile.id)
+                .limit(fetch_size)
+                .offset(offset)
             )
-            .options(selectinload(CDPProfile.identifiers))
-            .limit(limit)
-        )
-        return list(result.scalars().all())
+            batch = list(result.scalars().all())
+            if not batch:
+                break
+            all_profiles.extend(batch)
+            offset += len(batch)
+            remaining -= len(batch)
+
+        return all_profiles
 
     async def _profiles_to_audience_users(
         self,

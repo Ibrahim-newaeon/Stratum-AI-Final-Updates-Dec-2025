@@ -12,7 +12,7 @@ import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional, Union
 
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from jose import JWTError, jwt
@@ -129,6 +129,11 @@ def decode_token(token: str) -> Optional[dict[str, Any]]:
 # PII Encryption (GDPR Compliance)
 # =============================================================================
 
+def _get_pii_salt() -> bytes:
+    """Return the salt used for PII key derivation."""
+    return b"stratum_ai_pii_salt_v1"
+
+
 def _get_fernet_key() -> bytes:
     """
     Derive a Fernet-compatible key from the encryption key setting.
@@ -136,7 +141,7 @@ def _get_fernet_key() -> bytes:
     """
     # Use a fixed salt for deterministic key derivation
     # In production, consider using a per-tenant salt stored securely
-    salt = b"stratum_ai_pii_salt_v1"
+    salt = _get_pii_salt()
 
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
@@ -189,6 +194,8 @@ def decrypt_pii(ciphertext: str) -> str:
         fernet = Fernet(_get_fernet_key())
         decrypted = fernet.decrypt(base64.urlsafe_b64decode(ciphertext.encode("utf-8")))
         return decrypted.decode("utf-8")
+    except InvalidToken:
+        raise  # Tampered or wrong-key data must raise
     except Exception:
         # Data may be stored in plaintext or encrypted with a different key
         return ciphertext

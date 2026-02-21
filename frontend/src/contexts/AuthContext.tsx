@@ -8,7 +8,7 @@ import { useTenantStore } from '@/stores/tenantStore';
 import { useIdleTimeout } from '@/hooks/useIdleTimeout';
 import IdleTimeoutWarning from '@/components/auth/IdleTimeoutWarning';
 
-const API_BASE = (window as any).__RUNTIME_CONFIG__?.VITE_API_URL || import.meta.env.VITE_API_URL || '/api/v1';
+const API_BASE = window.__RUNTIME_CONFIG__?.VITE_API_URL || import.meta.env.VITE_API_URL || '/api/v1';
 
 /**
  * Demo credentials for client-side fallback when backend is unavailable.

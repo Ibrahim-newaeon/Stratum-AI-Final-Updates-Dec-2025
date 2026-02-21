@@ -170,7 +170,7 @@ export default function TenantProfile() {
   const tenant = {
     id: tenantId,
     name: tenantData?.name ?? 'Fashion Forward',
-    industry: (tenantData as any)?.industry ?? 'Retail',
+    industry: (tenantData as (typeof tenantData & { industry?: string }) | undefined)?.industry ?? 'Retail',
     plan: tenantData?.plan ?? 'Pro',
     accountManager: 'Sarah Johnson',
     createdAt: new Date('2024-01-15'),

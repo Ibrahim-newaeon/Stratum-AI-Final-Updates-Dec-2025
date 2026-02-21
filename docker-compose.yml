@@ -72,6 +72,9 @@ services:
       dockerfile: Dockerfile
     container_name: stratum_api
     restart: unless-stopped
+    user: "1000:1000"
+    security_opt:
+      - no-new-privileges:true
     environment:
       - APP_ENV=${APP_ENV:-development}
       - DEBUG=${DEBUG:-false}
@@ -171,6 +174,9 @@ services:
       dockerfile: Dockerfile
     container_name: stratum_worker
     restart: unless-stopped
+    user: "1000:1000"
+    security_opt:
+      - no-new-privileges:true
     environment:
       - APP_ENV=${APP_ENV:-development}
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-stratum}:${POSTGRES_PASSWORD:-stratum_secure_password_2024}@db:5432/${POSTGRES_DB:-stratum_ai}
@@ -250,6 +256,9 @@ services:
       dockerfile: Dockerfile
     container_name: stratum_scheduler
     restart: unless-stopped
+    user: "1000:1000"
+    security_opt:
+      - no-new-privileges:true
     environment:
       - APP_ENV=${APP_ENV:-development}
       - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER:-stratum}:${POSTGRES_PASSWORD:-stratum_secure_password_2024}@db:5432/${POSTGRES_DB:-stratum_ai}
@@ -290,6 +299,9 @@ services:
       target: development
     container_name: stratum_frontend
     restart: unless-stopped
+    user: "1000:1000"
+    security_opt:
+      - no-new-privileges:true
     environment:
       - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:8000}
       - VITE_WS_URL=${VITE_WS_URL:-ws://localhost:8000}
@@ -324,6 +336,9 @@ services:
       dockerfile: Dockerfile
     container_name: stratum_flower
     restart: unless-stopped
+    user: "1000:1000"
+    security_opt:
+      - no-new-privileges:true
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/1
       - FLOWER_PORT=5555

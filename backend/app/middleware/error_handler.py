@@ -41,17 +41,12 @@ class ErrorHandlerMiddleware(BaseHTTPMiddleware):
                 request_id=request_id,
             )
 
-            # Include CORS headers directly so browsers can read the error.
-            # CORSMiddleware's send_wrapper is bypassed when exceptions
-            # propagate through stacked BaseHTTPMiddleware layers.
-            cors_headers = {}
-            if origin:
-                cors_headers = {
-                    "access-control-allow-origin": "*",
-                    "access-control-allow-methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-                    "access-control-allow-headers": "Content-Type, Authorization, X-Request-ID, X-Tenant-ID, Accept, Origin, Cache-Control",
-                    "access-control-expose-headers": "X-Request-ID, X-Rate-Limit-Remaining",
-                }
+            # Do NOT add manual CORS headers here.  FastAPI's CORSMiddleware
+            # is responsible for setting the correct Access-Control-Allow-Origin
+            # (matching the request Origin against the configured allow list).
+            # Hard-coding "*" would bypass the allow-list and expose error
+            # details to any origin.
+            cors_headers: dict[str, str] = {}
 
             return JSONResponse(
                 status_code=500,

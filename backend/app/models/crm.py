@@ -12,7 +12,7 @@ Models:
 - DailyPipelineMetrics: Aggregated pipeline/revenue metrics
 """
 
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from typing import Optional
 from uuid import uuid4
 import enum
@@ -115,8 +115,8 @@ class CRMConnection(Base):
     last_sync_deals_count = Column(Integer, default=0)
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -191,8 +191,8 @@ class CRMContact(Base):
     # Timestamps
     crm_created_at = Column(DateTime(timezone=True), nullable=True)
     crm_updated_at = Column(DateTime(timezone=True), nullable=True)
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -267,8 +267,8 @@ class CRMDeal(Base):
     # Timestamps
     crm_created_at = Column(DateTime(timezone=True), nullable=True)
     crm_updated_at = Column(DateTime(timezone=True), nullable=True)
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -365,7 +365,7 @@ class Touchpoint(Base):
     attribution_weight = Column(Float, default=1.0)
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -442,8 +442,8 @@ class DailyPipelineMetrics(Base):
     avg_time_to_close_days = Column(Float, nullable=True)
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -512,8 +512,8 @@ class CRMWritebackConfig(Base):
     next_sync_at = Column(DateTime(timezone=True), nullable=True)
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -544,7 +544,7 @@ class CRMWritebackSync(Base):
     status = Column(SQLEnum(WritebackStatus), nullable=False, default=WritebackStatus.PENDING)
 
     # Timing
-    started_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    started_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     completed_at = Column(DateTime(timezone=True), nullable=True)
     duration_seconds = Column(Float, nullable=True)
 
@@ -576,4 +576,51 @@ class CRMWritebackSync(Base):
     __table_args__ = (
         Index("ix_writeback_sync_tenant_date", "tenant_id", "started_at"),
         Index("ix_writeback_sync_status", "tenant_id", "status"),
+    )
+
+
+# =============================================================================
+# CRM Sync Log
+# =============================================================================
+class CRMSyncLog(Base):
+    """
+    Tracks CRM synchronization history per tenant/provider.
+
+    Records the result of each sync run (full or incremental) including
+    record counts, duration, and any errors encountered.
+    """
+    __tablename__ = "crm_sync_logs"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    provider = Column(SQLEnum(CRMProvider), nullable=False)
+
+    # Sync details
+    sync_type = Column(String(50), nullable=False)  # "full", "incremental"
+    status = Column(String(50), nullable=False)  # "success", "partial", "failed"
+    started_at = Column(DateTime(timezone=True), nullable=False)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+    duration_ms = Column(Integer, nullable=True)
+
+    # Record counts
+    records_processed = Column(Integer, default=0, nullable=False)
+    records_created = Column(Integer, default=0, nullable=False)
+    records_updated = Column(Integer, default=0, nullable=False)
+    records_failed = Column(Integer, default=0, nullable=False)
+
+    # Error tracking
+    error_message = Column(Text, nullable=True)
+
+    # Flexible metadata for sync results
+    sync_metadata = Column(JSONB, nullable=True)
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    # Relationships
+    tenant = relationship("Tenant", foreign_keys=[tenant_id])
+
+    __table_args__ = (
+        Index("ix_crm_sync_log_tenant_provider", "tenant_id", "provider"),
+        Index("ix_crm_sync_log_started", "tenant_id", "started_at"),
     )

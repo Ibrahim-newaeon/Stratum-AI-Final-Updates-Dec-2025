@@ -7,7 +7,7 @@ CDP, Trust Engine, and Revenue Attribution systems.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
 from typing import Any, Optional
@@ -105,8 +105,8 @@ class GraphNode(BaseModel):
     id: Optional[str] = Field(default=None, description="AGE vertex ID")
     tenant_id: UUID = Field(..., description="Tenant isolation")
     external_id: str = Field(..., description="External system ID")
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     properties: dict[str, Any] = Field(default_factory=dict)
 
     @computed_field
@@ -149,7 +149,7 @@ class GraphEdge(BaseModel):
     end_node_id: str = Field(..., description="Target vertex ID")
     label: EdgeLabel = Field(..., description="Relationship type")
     tenant_id: UUID = Field(..., description="Tenant isolation")
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     properties: dict[str, Any] = Field(default_factory=dict)
 
     def to_cypher_properties(self) -> dict[str, Any]:
@@ -375,7 +375,7 @@ class ChannelNode(GraphNode):
 class BelongsToEdge(GraphEdge):
     """Profile belongs to Segment or Account."""
     label: EdgeLabel = EdgeLabel.BELONGS_TO
-    added_at: datetime = Field(default_factory=datetime.utcnow)
+    added_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     match_score: Optional[float] = Field(default=None, ge=0, le=1)
 
 

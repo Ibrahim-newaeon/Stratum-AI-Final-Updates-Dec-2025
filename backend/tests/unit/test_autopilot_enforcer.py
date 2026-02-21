@@ -15,6 +15,7 @@ Tests cover:
 """
 
 from datetime import UTC, datetime
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -27,6 +28,7 @@ from app.autopilot.enforcer import (
     InterventionAction,
     InterventionLog,
     ViolationType,
+    send_enforcement_notification,
 )
 
 # =============================================================================
@@ -758,8 +760,15 @@ class TestNotificationService:
     """Tests for enforcement notification service."""
 
     @pytest.mark.asyncio
-    async def test_send_notification(self):
+    @patch("app.autopilot.enforcer.SlackNotificationService")
+    async def test_send_notification(self, mock_slack_cls):
         """Test sending enforcement notification."""
+        # Configure mock Slack service to succeed
+        mock_slack_instance = AsyncMock()
+        mock_slack_instance.send_message = AsyncMock(return_value=True)
+        mock_slack_instance.close = AsyncMock()
+        mock_slack_cls.return_value = mock_slack_instance
+
         intervention = InterventionLog(
             tenant_id=1,
             timestamp=datetime.now(UTC),

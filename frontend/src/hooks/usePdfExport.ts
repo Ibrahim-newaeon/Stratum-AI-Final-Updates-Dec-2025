@@ -24,6 +24,83 @@ export interface PdfExportResult {
   error?: string;
 }
 
+/**
+ * Format a UTC timestamp with timezone label for PDF headers.
+ * Includes timezone abbreviation to avoid ambiguity across timezones.
+ */
+function formatTimestampUTC(): string {
+  const now = new Date();
+  const utcStr = now.toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'UTC',
+  });
+  return `${utcStr} UTC`;
+}
+
+/**
+ * Before taking a screenshot, temporarily reveal any elements hidden by
+ * cost/price toggle so they appear in the exported PDF. Elements must have
+ * the attribute data-export-include="true" to be affected.
+ *
+ * Returns a cleanup function that restores original display values.
+ */
+function revealHiddenExportElements(container: HTMLElement): () => void {
+  const hiddenEls = container.querySelectorAll<HTMLElement>(
+    '[data-export-include="true"]'
+  );
+  const originals: string[] = [];
+
+  hiddenEls.forEach((el, i) => {
+    originals[i] = el.style.display;
+    if (window.getComputedStyle(el).display === 'none') {
+      el.style.display = '';
+    }
+  });
+
+  return () => {
+    hiddenEls.forEach((el, i) => {
+      el.style.display = originals[i];
+    });
+  };
+}
+
+/**
+ * Temporarily swap abbreviated values ($1.2M) with full-precision values
+ * for the screenshot. Elements must have a data-export-value attribute
+ * containing the raw number (e.g., data-export-value="1234567.89").
+ *
+ * Returns a cleanup function that restores original text.
+ */
+function swapAbbreviatedValues(container: HTMLElement): () => void {
+  const els = container.querySelectorAll<HTMLElement>('[data-export-value]');
+  const originals: string[] = [];
+
+  els.forEach((el, i) => {
+    originals[i] = el.textContent || '';
+    const raw = el.getAttribute('data-export-value');
+    if (raw !== null) {
+      const num = parseFloat(raw);
+      if (!isNaN(num)) {
+        // Format with full precision using locale-aware number formatting
+        const isCurrency = el.hasAttribute('data-export-currency');
+        el.textContent = isCurrency
+          ? `$${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+          : num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+    }
+  });
+
+  return () => {
+    els.forEach((el, i) => {
+      el.textContent = originals[i];
+    });
+  };
+}
+
 export function usePdfExport() {
   const [isExporting, setIsExporting] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -51,6 +128,10 @@ export function usePdfExport() {
       setIsExporting(true);
       setProgress(10);
 
+      // Reveal hidden elements and swap abbreviated values before screenshot
+      const restoreHidden = revealHiddenExportElements(elementRef);
+      const restoreValues = swapAbbreviatedValues(elementRef);
+
       try {
         // Dynamically import PDF libraries for better code splitting
         setProgress(20);
@@ -68,6 +149,10 @@ export function usePdfExport() {
           backgroundColor: '#0a0a0a', // Match dark theme
           logging: false,
         });
+
+        // Restore DOM immediately after screenshot
+        restoreValues();
+        restoreHidden();
 
         setProgress(60);
 
@@ -104,17 +189,11 @@ export function usePdfExport() {
         const titleText = subtitle ? `${title} - ${subtitle}` : title;
         pdf.text(titleText, pageWidth / 2, 13, { align: 'center' });
 
-        // Timestamp
+        // Timestamp with UTC timezone label
         if (includeTimestamp) {
           pdf.setTextColor(150, 150, 150);
           pdf.setFontSize(8);
-          const timestamp = new Date().toLocaleString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-          });
+          const timestamp = formatTimestampUTC();
           pdf.text(timestamp, pageWidth - margin, 13, { align: 'right' });
         }
 
@@ -158,6 +237,9 @@ export function usePdfExport() {
 
         return { success: true, filename: finalFilename };
       } catch (error) {
+        // Ensure DOM is restored on error
+        restoreValues();
+        restoreHidden();
         // Error returned in result object
         return {
           success: false,
@@ -219,6 +301,10 @@ export function usePdfExport() {
             pdf.addPage();
           }
 
+          // Reveal hidden elements and swap abbreviated values
+          const restoreHidden = revealHiddenExportElements(element);
+          const restoreValues = swapAbbreviatedValues(element);
+
           // Create canvas
           const canvas = await html2canvas(element, {
             scale: quality,
@@ -227,6 +313,10 @@ export function usePdfExport() {
             backgroundColor: '#0a0a0a',
             logging: false,
           });
+
+          // Restore DOM immediately after screenshot
+          restoreValues();
+          restoreHidden();
 
           // Add header
           pdf.setFillColor(10, 10, 10);
@@ -245,13 +335,7 @@ export function usePdfExport() {
           if (includeTimestamp) {
             pdf.setTextColor(150, 150, 150);
             pdf.setFontSize(8);
-            const timestamp = new Date().toLocaleString('en-US', {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-            });
+            const timestamp = formatTimestampUTC();
             pdf.text(timestamp, pageWidth - margin, 13, { align: 'right' });
           }
 

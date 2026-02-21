@@ -89,8 +89,9 @@ export function Tenants() {
       })
       const data = response.data?.data || response.data || []
       setTenants(Array.isArray(data) ? data : [])
-    } catch (err: any) {
-      const message = err?.response?.data?.detail || err?.response?.data?.error || err?.message || 'Failed to load tenants'
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { detail?: string; error?: string } }; message?: string };
+      const message = axiosErr?.response?.data?.detail || axiosErr?.response?.data?.error || axiosErr?.message || 'Failed to load tenants'
       setError(message)
       setTenants([])
     } finally {
@@ -160,8 +161,9 @@ export function Tenants() {
       })
       setShowCreateModal(false)
       fetchTenants()
-    } catch (err: any) {
-      const message = err?.response?.data?.detail || 'Failed to create tenant'
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { detail?: string } } };
+      const message = axiosErr?.response?.data?.detail || 'Failed to create tenant'
       alert(message)
     }
   }
@@ -178,8 +180,9 @@ export function Tenants() {
       setShowEditModal(false)
       setSelectedTenant(null)
       fetchTenants()
-    } catch (err: any) {
-      const message = err?.response?.data?.detail || 'Failed to update tenant'
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { detail?: string } } };
+      const message = axiosErr?.response?.data?.detail || 'Failed to update tenant'
       alert(message)
     }
   }
@@ -191,8 +194,9 @@ export function Tenants() {
       setShowDeleteModal(false)
       setSelectedTenant(null)
       fetchTenants()
-    } catch (err: any) {
-      const message = err?.response?.data?.detail || 'Failed to delete tenant'
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { detail?: string } } };
+      const message = axiosErr?.response?.data?.detail || 'Failed to delete tenant'
       alert(message)
     }
   }
@@ -204,8 +208,9 @@ export function Tenants() {
       setShowFeaturesModal(false)
       setSelectedTenant(null)
       fetchTenants()
-    } catch (err: any) {
-      const message = err?.response?.data?.detail || 'Failed to update features'
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { detail?: string } } };
+      const message = axiosErr?.response?.data?.detail || 'Failed to update features'
       alert(message)
     }
   }

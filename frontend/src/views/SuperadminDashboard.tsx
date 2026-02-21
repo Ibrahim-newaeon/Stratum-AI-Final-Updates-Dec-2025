@@ -178,8 +178,9 @@ export default function SuperadminDashboard() {
       if (auditRes.status === 'fulfilled' && auditRes.value.data.success) {
         setAuditLogs(auditRes.value.data.data.logs || [])
       }
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to load dashboard data')
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { detail?: string } } };
+      setError(axiosErr.response?.data?.detail || 'Failed to load dashboard data')
     } finally {
       setIsLoading(false)
     }
@@ -272,7 +273,7 @@ export default function SuperadminDashboard() {
         ].map(tab => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
+            onClick={() => setActiveTab(tab.id as typeof activeTab)}
             className={cn(
               'flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all whitespace-nowrap',
               activeTab === tab.id
@@ -919,7 +920,7 @@ export default function SuperadminDashboard() {
             ].map(tab => (
               <button
                 key={tab.id}
-                onClick={() => setBillingSubTab(tab.id as any)}
+                onClick={() => setBillingSubTab(tab.id as typeof billingSubTab)}
                 className={cn(
                   'flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-all',
                   billingSubTab === tab.id

@@ -57,18 +57,21 @@ def publish_event(tenant_id: int, event_type: str, payload: dict[str, Any]) -> N
         import redis
 
         redis_client = redis.from_url(settings.redis_url)
-        channel = f"events:tenant:{tenant_id}"
+        try:
+            channel = f"events:tenant:{tenant_id}"
 
-        message = json.dumps(
-            {
-                "type": event_type,
-                "tenant_id": tenant_id,
-                "payload": payload,
-            }
-        )
+            message = json.dumps(
+                {
+                    "type": event_type,
+                    "tenant_id": tenant_id,
+                    "payload": payload,
+                }
+            )
 
-        redis_client.publish(channel, message)
-        logger.debug(f"Published {event_type} event to {channel}")
+            redis_client.publish(channel, message)
+            logger.debug(f"Published {event_type} event to {channel}")
+        finally:
+            redis_client.close()
 
     except Exception as e:
         logger.warning(f"Failed to publish event: {e}")

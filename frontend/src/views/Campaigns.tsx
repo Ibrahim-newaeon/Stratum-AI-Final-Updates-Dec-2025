@@ -65,20 +65,20 @@ export function Campaigns() {
   // Transform API data or fall back to mock
   const campaigns = useMemo((): Campaign[] => {
     if (campaignsData?.items && campaignsData.items.length > 0) {
-      return campaignsData.items.map((c: any) => ({
+      return (campaignsData.items as unknown as Array<Record<string, unknown>>).map((c) => ({
         id: Number(c.id) || Number(c.campaign_id) || 0,
-        name: c.name || c.campaign_name || '',
-        platform: c.platform?.toLowerCase() || 'google',
-        status: c.status?.toLowerCase() || 'active',
-        spend: c.spend || 0,
-        budget: c.budget || c.daily_budget || 10000,
-        revenue: c.revenue || 0,
-        roas: c.roas || (c.spend > 0 ? c.revenue / c.spend : 0),
-        impressions: c.impressions || 0,
-        clicks: c.clicks || 0,
-        conversions: c.conversions || 0,
-        ctr: c.ctr || (c.impressions > 0 ? (c.clicks / c.impressions) * 100 : 0),
-        trend: c.trend || (c.roas >= 3.5 ? 'up' : c.roas < 2.5 ? 'down' : 'stable'),
+        name: String(c.name || c.campaign_name || ''),
+        platform: String(c.platform || 'google').toLowerCase(),
+        status: String(c.status || 'active').toLowerCase() as Campaign['status'],
+        spend: Number(c.spend) || 0,
+        budget: Number(c.budget || c.daily_budget) || 10000,
+        revenue: Number(c.revenue) || 0,
+        roas: Number(c.roas) || (Number(c.spend) > 0 ? Number(c.revenue) / Number(c.spend) : 0),
+        impressions: Number(c.impressions) || 0,
+        clicks: Number(c.clicks) || 0,
+        conversions: Number(c.conversions) || 0,
+        ctr: Number(c.ctr) || (Number(c.impressions) > 0 ? (Number(c.clicks) / Number(c.impressions)) * 100 : 0),
+        trend: String(c.trend || (Number(c.roas) >= 3.5 ? 'up' : Number(c.roas) < 2.5 ? 'down' : 'stable')) as Campaign['trend'],
       }))
     }
     return []

@@ -4,7 +4,7 @@
  * Reusable animation variants and utilities for consistent motion design.
  */
 
-import { Transition, Variants } from 'framer-motion';
+import { Transition, Variant, Variants } from 'framer-motion';
 
 // =============================================================================
 // Transition Presets
@@ -641,16 +641,16 @@ export const createFadeIn = (
     hidden: {
       opacity: 0,
       [axis]: value,
-    } as any,
+    } as Variant,
     visible: {
       opacity: 1,
       [axis]: 0,
       transition: transitions.smooth,
-    } as any,
+    } as Variant,
     exit: {
       opacity: 0,
       [axis]: -value / 2,
       transition: transitions.fast,
-    } as any,
+    } as Variant,
   };
 };

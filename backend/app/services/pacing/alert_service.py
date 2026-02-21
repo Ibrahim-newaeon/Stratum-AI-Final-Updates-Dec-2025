@@ -352,6 +352,46 @@ class PacingAlertService:
         )
         return list(result.scalars().all())
 
+    async def get_alerts_by_status(
+        self,
+        status: "AlertStatus",
+        target_id: Optional[UUID] = None,
+        severity: Optional[AlertSeverity] = None,
+        alert_type: Optional[AlertType] = None,
+    ) -> List[PacingAlert]:
+        """
+        Get alerts filtered by any status (active, acknowledged, resolved).
+
+        Args:
+            status: Alert status to filter by
+            target_id: Optional target filter
+            severity: Optional severity filter
+            alert_type: Optional alert type filter
+
+        Returns:
+            List of alerts matching the status and filters
+        """
+        conditions = [
+            PacingAlert.tenant_id == self.tenant_id,
+            PacingAlert.status == status,
+        ]
+
+        if target_id:
+            conditions.append(PacingAlert.target_id == target_id)
+
+        if severity:
+            conditions.append(PacingAlert.severity == severity)
+
+        if alert_type:
+            conditions.append(PacingAlert.alert_type == alert_type)
+
+        result = await self.db.execute(
+            select(PacingAlert)
+            .where(and_(*conditions))
+            .order_by(PacingAlert.created_at.desc())
+        )
+        return list(result.scalars().all())
+
     async def acknowledge_alert(
         self,
         alert_id: UUID,

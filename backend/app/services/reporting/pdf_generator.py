@@ -400,15 +400,15 @@ class PDFGenerator:
                     <div class="label">Active Targets</div>
                 </div>
                 <div class="summary-card">
-                    <div class="value class="metric-good">{summary.get('on_track', 0)}</div>
+                    <div class="value metric-good">{summary.get('on_track', 0)}</div>
                     <div class="label">On Track</div>
                 </div>
                 <div class="summary-card">
-                    <div class="value class="metric-neutral">{summary.get('at_risk', 0)}</div>
+                    <div class="value metric-neutral">{summary.get('at_risk', 0)}</div>
                     <div class="label">At Risk</div>
                 </div>
                 <div class="summary-card">
-                    <div class="value class="metric-bad">{summary.get('off_track', 0)}</div>
+                    <div class="value metric-bad">{summary.get('off_track', 0)}</div>
                     <div class="label">Off Track</div>
                 </div>
             </div>

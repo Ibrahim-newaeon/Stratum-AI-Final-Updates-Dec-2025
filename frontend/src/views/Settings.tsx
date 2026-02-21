@@ -191,7 +191,7 @@ function ProfileSettings() {
       });
       // Update local store
       if (user && setUser) {
-        setUser({ ...user, full_name: newFullName, timezone: timezoneVal } as any);
+        setUser({ ...user, full_name: newFullName, timezone: timezoneVal });
       }
       toast({ title: 'Profile saved', description: 'Your changes have been saved.' });
     } catch {
@@ -374,10 +374,11 @@ function OrganizationSettings() {
           description: 'Invitation sent successfully',
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const axiosErr = error as { response?: { data?: { detail?: string } } };
       toast({
         title: 'Error',
-        description: error.response?.data?.detail || 'Failed to invite user',
+        description: axiosErr.response?.data?.detail || 'Failed to invite user',
         variant: 'destructive',
       });
     } finally {
@@ -395,8 +396,9 @@ function OrganizationSettings() {
       if (response.data.success) {
         setTeamMembers(teamMembers.filter((m) => m.id !== userId));
       }
-    } catch (error: any) {
-      alert(error.response?.data?.detail || 'Failed to remove user');
+    } catch (error: unknown) {
+      const axiosErr = error as { response?: { data?: { detail?: string } } };
+      alert(axiosErr.response?.data?.detail || 'Failed to remove user');
     } finally {
       setRemovingUserId(null);
     }
@@ -694,8 +696,9 @@ function SecuritySettings({
       const data = res.data?.data || res.data;
       setMfaSetupData(data);
       setMfaStep('setup');
-    } catch (err: any) {
-      setMfaError(err.response?.data?.detail || 'Failed to start MFA setup');
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { detail?: string } } };
+      setMfaError(axiosErr.response?.data?.detail || 'Failed to start MFA setup');
     } finally {
       setMfaLoading(false);
     }
@@ -718,8 +721,9 @@ function SecuritySettings({
       } else {
         setMfaError(data?.message || 'Invalid code. Try again.');
       }
-    } catch (err: any) {
-      setMfaError(err.response?.data?.detail || 'Verification failed');
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { detail?: string } } };
+      setMfaError(axiosErr.response?.data?.detail || 'Verification failed');
     } finally {
       setMfaLoading(false);
       setMfaCode('');
@@ -743,8 +747,9 @@ function SecuritySettings({
       } else {
         setMfaError(data?.message || 'Invalid code. MFA not disabled.');
       }
-    } catch (err: any) {
-      setMfaError(err.response?.data?.detail || 'Failed to disable MFA');
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { detail?: string } } };
+      setMfaError(axiosErr.response?.data?.detail || 'Failed to disable MFA');
     } finally {
       setMfaLoading(false);
       setMfaCode('');

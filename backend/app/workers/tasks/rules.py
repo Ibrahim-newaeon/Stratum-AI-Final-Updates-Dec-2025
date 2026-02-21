@@ -224,8 +224,8 @@ def _execute_action(rule: Rule, campaign: Campaign, db: Session) -> dict[str, An
                 result["label_added"] = new_label
 
         elif action_type == "pause_campaign":
-            campaign.status = "paused"
             result["previous_status"] = campaign.status
+            campaign.status = "paused"
 
         elif action_type == "send_alert":
             # Queue alert notification

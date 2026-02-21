@@ -72,26 +72,31 @@ class ProblemsListResponse(BaseModel):
 class RevenueByChannelResponse(BaseModel):
     """Revenue breakdown by channel."""
     channel: str
-    channel_type: Optional[str]
-    transactions: int
-    revenue_cents: int
-    avg_order_cents: float
+    transaction_count: int = 0
+    revenue: float = 0.0
+    avg_order_value: float = 0.0
 
 
 class RevenueBySegmentResponse(BaseModel):
     """Revenue breakdown by segment."""
+    segment_id: str = ""
     segment_name: str
-    segment_size: int
-    converting_profiles: int
-    transactions: int
-    total_revenue_cents: int
+    profile_count: int = 0
+    total_revenue: float = 0.0
+    avg_revenue_per_profile: float = 0.0
 
 
 class CustomerJourneyResponse(BaseModel):
     """Customer journey data."""
     profile_id: str
-    lifecycle: str
-    journey: list[dict[str, Any]]
+    lifecycle_stage: Optional[str] = "unknown"
+    first_seen_at: Optional[str] = None
+    last_seen_at: Optional[str] = None
+    total_events: int = 0
+    total_revenue: float = 0.0
+    touchpoints: list[dict[str, Any]] = []
+    stage_transitions: list[dict[str, Any]] = []
+    journey_duration_days: Optional[float] = None
 
 
 class GraphStatsResponse(BaseModel):
@@ -216,10 +221,9 @@ async def get_revenue_by_channel(
     return [
         RevenueByChannelResponse(
             channel=r.get("channel", "Unknown"),
-            channel_type=r.get("channel_type"),
-            transactions=r.get("transactions", 0),
-            revenue_cents=r.get("revenue_cents", 0),
-            avg_order_cents=r.get("avg_order_cents", 0),
+            transaction_count=r.get("transaction_count", 0),
+            revenue=r.get("revenue", 0.0),
+            avg_order_value=r.get("avg_order_value", 0.0),
         )
         for r in results
     ]
@@ -241,11 +245,11 @@ async def get_revenue_by_segment(
 
     return [
         RevenueBySegmentResponse(
+            segment_id=r.get("segment_id", ""),
             segment_name=r.get("segment_name", "Unknown"),
-            segment_size=r.get("segment_size", 0),
-            converting_profiles=r.get("converting_profiles", 0),
-            transactions=r.get("transactions", 0),
-            total_revenue_cents=r.get("total_revenue_cents", 0),
+            profile_count=r.get("profile_count", 0),
+            total_revenue=r.get("total_revenue", 0.0),
+            avg_revenue_per_profile=r.get("avg_revenue_per_profile", 0.0),
         )
         for r in results
     ]
@@ -270,8 +274,14 @@ async def get_customer_journey(
 
     return CustomerJourneyResponse(
         profile_id=journey.get("profile_id", profile_id),
-        lifecycle=journey.get("lifecycle", "unknown"),
-        journey=journey.get("journey", []),
+        lifecycle_stage=journey.get("lifecycle_stage", "unknown"),
+        first_seen_at=journey.get("first_seen_at"),
+        last_seen_at=journey.get("last_seen_at"),
+        total_events=journey.get("total_events", 0),
+        total_revenue=journey.get("total_revenue", 0.0),
+        touchpoints=journey.get("touchpoints", []),
+        stage_transitions=journey.get("stage_transitions", []),
+        journey_duration_days=journey.get("journey_duration_days"),
     )
 
 

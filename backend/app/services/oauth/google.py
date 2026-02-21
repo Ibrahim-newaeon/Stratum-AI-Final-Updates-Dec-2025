@@ -134,10 +134,14 @@ class GoogleOAuthService(OAuthService):
 
                 token_data = await resp.json()
 
+        access_token = token_data.get("access_token")
+        if not access_token:
+            raise Exception("No access token in response")
+
         expires_in = token_data.get("expires_in", 3600)
 
         return OAuthTokens(
-            access_token=token_data.get("access_token"),
+            access_token=access_token,
             refresh_token=token_data.get("refresh_token"),
             expires_in=expires_in,
             expires_at=self._calculate_expiry(expires_in),

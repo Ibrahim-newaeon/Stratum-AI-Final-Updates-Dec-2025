@@ -18,11 +18,12 @@ from enum import Enum
 import math
 
 import numpy as np
+import structlog
 from scipy import stats
 
 from app.core.logging import get_logger
 
-logger = get_logger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 class TestType(str, Enum):

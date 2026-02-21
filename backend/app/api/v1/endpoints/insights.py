@@ -53,16 +53,17 @@ async def check_signal_health_for_autopilot(db: AsyncSession, tenant_id: int, ta
     service = SignalHealthService(db)
     health_data = await service.get_signal_health(tenant_id, target_date)
 
-    blocked = health_data["status"] in ["degraded", "critical"]
+    status = health_data.get("status", "unknown")
+    blocked = status in ["degraded", "critical"]
     reason = None
 
     if blocked:
-        reason = f"Signal health is {health_data['status']}. Automation blocked for data quality protection."
+        reason = f"Signal health is {status}. Automation blocked for data quality protection."
 
     return {
         "blocked": blocked,
         "reason": reason,
-        "status": health_data["status"],
+        "status": status,
     }
 
 

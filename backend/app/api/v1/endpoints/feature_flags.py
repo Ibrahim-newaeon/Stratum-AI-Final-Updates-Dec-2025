@@ -28,6 +28,9 @@ from app.features.flags import (
     FEATURE_DESCRIPTIONS,
 )
 from app.schemas.response import APIResponse
+from app.core.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 # =============================================================================
@@ -143,7 +146,15 @@ async def superadmin_update_tenant_features(
     service = FeatureFlagsService(db)
     features = await service.update_tenant_features(tenant_id, updates, user_id)
 
-    # TODO: Log to audit_log
+    # Audit log: record feature flag change
+    logger.info(
+        "feature_flags_updated",
+        tenant_id=tenant_id,
+        user_id=user_id,
+        updated_flags=list(updates.dict(exclude_unset=True).keys()),
+        action="UPDATE",
+        resource_type="feature_flags",
+    )
 
     return APIResponse(
         success=True,

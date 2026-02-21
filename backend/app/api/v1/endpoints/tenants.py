@@ -38,7 +38,7 @@ def require_admin(request: Request) -> int:
             detail="Not authenticated",
         )
 
-    if user_role != UserRole.ADMIN.value:
+    if user_role not in (UserRole.ADMIN.value, UserRole.SUPERADMIN.value):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin access required",
@@ -65,7 +65,7 @@ async def list_tenants(
     query = select(Tenant).where(Tenant.is_deleted == False)
 
     # Non-admin users can only see their own tenant
-    if user_role != UserRole.ADMIN.value:
+    if user_role not in (UserRole.ADMIN.value, UserRole.SUPERADMIN.value):
         query = query.where(Tenant.id == tenant_id)
 
     # Search filter
@@ -156,7 +156,7 @@ async def get_tenant(
     user_tenant_id = getattr(request.state, "tenant_id", None)
 
     # Non-admin can only view their own tenant
-    if user_role != UserRole.ADMIN.value and tenant_id != user_tenant_id:
+    if user_role not in (UserRole.ADMIN.value, UserRole.SUPERADMIN.value) and tenant_id != user_tenant_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied",
@@ -279,14 +279,14 @@ async def update_tenant(
     user_tenant_id = getattr(request.state, "tenant_id", None)
 
     # Check permissions
-    if user_role not in [UserRole.ADMIN.value, UserRole.MANAGER.value]:
+    if user_role not in [UserRole.ADMIN.value, UserRole.SUPERADMIN.value, UserRole.MANAGER.value]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin or manager access required",
         )
 
     # Non-admin can only update their own tenant
-    if user_role != UserRole.ADMIN.value and tenant_id != user_tenant_id:
+    if user_role not in (UserRole.ADMIN.value, UserRole.SUPERADMIN.value) and tenant_id != user_tenant_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied",
@@ -392,7 +392,7 @@ async def get_tenant_users(
     user_tenant_id = getattr(request.state, "tenant_id", None)
 
     # Non-admin can only view their own tenant
-    if user_role != UserRole.ADMIN.value and tenant_id != user_tenant_id:
+    if user_role not in (UserRole.ADMIN.value, UserRole.SUPERADMIN.value) and tenant_id != user_tenant_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied",
@@ -434,7 +434,7 @@ async def get_tenant_users(
 async def update_tenant_plan(
     request: Request,
     tenant_id: int,
-    plan: str = Query(..., regex="^(free|starter|professional|enterprise)$"),
+    plan: str = Query(..., pattern="^(free|starter|professional|enterprise)$"),
     db: AsyncSession = Depends(get_async_session),
 ):
     """

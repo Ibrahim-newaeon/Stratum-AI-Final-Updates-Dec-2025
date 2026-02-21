@@ -4,7 +4,7 @@
  */
 
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,8 +32,7 @@ export default function CMSLogin() {
 
   // If already logged in with a CMS role, redirect to CMS
   if (user && user.cms_role) {
-    navigate('/cms');
-    return null;
+    return <Navigate to="/cms" replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {

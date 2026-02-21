@@ -918,7 +918,7 @@ export function CustomAutopilotRulesBuilder({ rule, onSave, onCancel, isLoading 
                     onChange={(e) =>
                       setFormData((prev) => ({
                         ...prev,
-                        schedule: { ...prev.schedule, frequency: e.target.value as any },
+                        schedule: { ...prev.schedule, frequency: e.target.value as RuleSchedule['frequency'] },
                       }))
                     }
                     className="w-full px-3 py-2 rounded-lg border bg-background text-sm"

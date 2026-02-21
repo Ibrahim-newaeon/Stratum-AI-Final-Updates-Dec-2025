@@ -21,6 +21,7 @@ from cryptography.fernet import Fernet, InvalidToken
 from app.core.config import settings
 from app.core.security import (
     _get_fernet_key,
+    _get_pii_salt,
     create_access_token,
     decode_token,
     decrypt_pii,

@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { usePriceMetrics } from '@/hooks/usePriceMetrics'
+import { DashboardSimulationProvider } from '@/contexts/DashboardSimulationContext'
 import { KPIWidget } from '@/components/widgets/KPIWidget'
 import { ChartWidget } from '@/components/widgets/ChartWidget'
 import { CampaignsWidget } from '@/components/widgets/CampaignsWidget'
@@ -20,6 +21,9 @@ import { PlatformBreakdownWidget } from '@/components/widgets/PlatformBreakdownW
 import { AlertsWidget } from '@/components/widgets/AlertsWidget'
 import { QuickActionsWidget } from '@/components/widgets/QuickActionsWidget'
 import { SimulatorWidget } from '@/components/widgets/SimulatorWidget'
+import { LivePredictionsWidget } from '@/components/widgets/LivePredictionsWidget'
+import { ROASAlertsWidget } from '@/components/widgets/ROASAlertsWidget'
+import { BudgetOptimizerWidget } from '@/components/widgets/BudgetOptimizerWidget'
 import { WidgetConfig, WidgetType, defaultWidgets, availableWidgets } from '@/components/widgets'
 
 import 'react-grid-layout/css/styles.css'
@@ -29,7 +33,7 @@ const ROW_HEIGHT = 80
 
 const COST_WIDGET_TYPES = ['kpi-spend', 'kpi-revenue', 'kpi-roas', 'chart-revenue', 'chart-spend']
 
-export function CustomDashboard() {
+function CustomDashboardContent() {
   const { t } = useTranslation()
   const { showPriceMetrics } = usePriceMetrics()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -124,6 +128,12 @@ export function CustomDashboard() {
         return <QuickActionsWidget />
       case 'simulator':
         return <SimulatorWidget />
+      case 'live-predictions':
+        return <LivePredictionsWidget className="h-full" />
+      case 'roas-alerts':
+        return <ROASAlertsWidget className="h-full" />
+      case 'budget-optimizer':
+        return <BudgetOptimizerWidget className="h-full" />
       default:
         return <div className="p-4 text-muted-foreground">Unknown widget</div>
     }
@@ -250,7 +260,7 @@ export function CustomDashboard() {
             </div>
 
             {/* Widget Content */}
-            <div className="h-[calc(100%-40px)]">
+            <div className="h-[calc(100%-40px)] overflow-auto">
               {renderWidget(widget)}
             </div>
           </div>
@@ -288,6 +298,14 @@ export function CustomDashboard() {
         </div>
       )}
     </div>
+  )
+}
+
+export function CustomDashboard() {
+  return (
+    <DashboardSimulationProvider>
+      <CustomDashboardContent />
+    </DashboardSimulationProvider>
   )
 }
 

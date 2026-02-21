@@ -34,6 +34,8 @@ async def list_competitors(
     request: Request,
     db: AsyncSession = Depends(get_async_session),
     is_primary: Optional[bool] = None,
+    skip: int = Query(0, ge=0, description="Number of records to skip"),
+    limit: int = Query(50, ge=1, le=200, description="Maximum number of records to return"),
 ):
     """List tracked competitors."""
     tenant_id = getattr(request.state, "tenant_id", None)
@@ -46,6 +48,7 @@ async def list_competitors(
         query = query.where(CompetitorBenchmark.is_primary == is_primary)
 
     query = query.order_by(CompetitorBenchmark.share_of_voice.desc().nullslast())
+    query = query.offset(skip).limit(limit)
 
     result = await db.execute(query)
     competitors = result.scalars().all()

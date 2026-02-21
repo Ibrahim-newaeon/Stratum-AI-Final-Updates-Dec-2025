@@ -320,7 +320,7 @@ class MetaAudienceConnector(BaseAudienceConnector):
                 batches = self._chunk_list(data_rows, self.BATCH_SIZE)
 
                 total_sent = 0
-                for batch in batches:
+                for batch_idx, batch in enumerate(batches):
                     payload = {
                         "payload": {
                             "schema": schema,
@@ -328,8 +328,8 @@ class MetaAudienceConnector(BaseAudienceConnector):
                         },
                         "session": {
                             "session_id": session_id,
-                            "batch_seq": batches.index(batch) + 1,
-                            "last_batch_flag": batch == batches[-1],
+                            "batch_seq": batch_idx + 1,
+                            "last_batch_flag": batch_idx == len(batches) - 1,
                         },
                         "access_token": self.access_token,
                     }
