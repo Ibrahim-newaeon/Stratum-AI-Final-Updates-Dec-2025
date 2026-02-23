@@ -45,8 +45,8 @@ USER appuser
 EXPOSE ${PORT:-8000}
 
 # Health check (use /health/live — no DB/Redis dependency)
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:${PORT:-8000}/health/live || exit 1
 
-# Default command (shell form to expand $PORT from Railway)
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Run migrations then start server (shell form to expand $PORT from Railway)
+CMD ["sh", "-c", "python -m alembic upgrade head 2>&1 || echo 'Migration warning (non-fatal)'; uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
