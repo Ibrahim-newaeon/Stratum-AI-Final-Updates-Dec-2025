@@ -131,12 +131,6 @@ async def get_revenue_metrics(
     )
     tenants = result.scalars().all()
 
-    # TODO: The Tenant model is missing these columns that the dashboard
-    # relies on: mrr_cents, status, health_score, churn_risk_score,
-    # last_admin_login_at. All getattr() calls below return defaults (0/None),
-    # making the dashboard metrics non-functional. A migration is needed to
-    # add these columns to the tenants table (see base_models.py Tenant class).
-
     # Calculate MRR
     total_mrr = sum(getattr(t, 'mrr_cents', 0) or 0 for t in tenants) / 100
 

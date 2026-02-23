@@ -125,12 +125,9 @@ export default function System() {
 
       if (type === 'pause') {
         setQueueStates(prev => ({ ...prev, [queueId]: 'paused' }))
-        console.log(`Queue "${queueName}" paused successfully`)
       } else if (type === 'resume') {
         setQueueStates(prev => ({ ...prev, [queueId]: 'running' }))
-        console.log(`Queue "${queueName}" resumed successfully`)
       } else if (type === 'retry') {
-        console.log(`Retrying failed jobs in queue "${queueName}"`)
         // Trigger refetch to get updated queue status
         await refetch()
       }

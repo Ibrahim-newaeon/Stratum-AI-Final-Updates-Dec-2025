@@ -129,8 +129,6 @@ export default function ConnectPlatforms() {
       }
     } catch (error) {
       console.error('Failed to start connection:', error)
-      // Fallback for demo mode
-      console.log(`OAuth flow would start for ${platformId}`)
     } finally {
       setConnecting(null)
     }
@@ -142,7 +140,6 @@ export default function ConnectPlatforms() {
         await disconnectPlatform.mutateAsync(platformId as Platform)
       } catch (error) {
         console.error('Failed to disconnect:', error)
-        console.log(`Disconnected ${platformId} (demo mode)`)
       }
     }
   }
@@ -150,10 +147,8 @@ export default function ConnectPlatforms() {
   const handleRefresh = async (platformId: string) => {
     try {
       await refreshToken.mutateAsync(platformId as Platform)
-      console.log('Token refreshed successfully')
     } catch (error) {
       console.error('Failed to refresh token:', error)
-      console.log(`Refreshing token for ${platformId} (demo mode)`)
     }
   }
 

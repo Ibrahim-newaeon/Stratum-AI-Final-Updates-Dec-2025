@@ -92,12 +92,12 @@ async def get_kpi_tiles(
     )
     prev = prev_result.one()
 
-    def calc_change(current_val, prev_val):
+    def calc_change(current_val: float, prev_val: float) -> float | None:
         if not prev_val or prev_val == 0:
             return None
         return ((current_val or 0) - prev_val) / prev_val * 100
 
-    def get_trend(change):
+    def get_trend(change: float | None) -> str:
         if change is None:
             return "stable"
         return "up" if change > 0 else "down" if change < 0 else "stable"

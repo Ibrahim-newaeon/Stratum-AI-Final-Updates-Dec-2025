@@ -264,11 +264,11 @@ export default function TenantNarrative() {
   ]
 
   const handleExportPDF = () => {
-    console.log('Exporting client-safe narrative PDF...')
+    // TODO: implement PDF export
   }
 
   const handleScheduleCall = () => {
-    console.log('Opening calendar...')
+    // TODO: implement calendar integration
   }
 
   return (
@@ -505,8 +505,8 @@ export default function TenantNarrative() {
         <div data-tour="fix-playbook">
           <EmqFixPlaybookPanel
             items={playbook}
-            onItemClick={(item) => console.log('Clicked:', item)}
-            onAssign={(item) => console.log('Assign:', item)}
+            onItemClick={() => {}}
+            onAssign={() => {}}
             maxItems={10}
           />
         </div>

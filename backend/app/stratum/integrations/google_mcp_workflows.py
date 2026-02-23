@@ -49,6 +49,9 @@ Integration Opportunities
 """
 
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -203,7 +206,7 @@ class SheetsReportingIntegration:
         # Or use Google Sheets API directly
         # (Stratum can include Sheets API client)
 
-        print(f"Would update sheet {sheet_id} with {len(rows)} rows")
+        logger.info("Would update sheet %s with %d rows", sheet_id, len(rows))
         return {"status": "updated", "rows": len(rows)}
 
 

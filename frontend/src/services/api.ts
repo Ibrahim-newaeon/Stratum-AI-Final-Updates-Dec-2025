@@ -67,12 +67,12 @@ export const campaignsApi = {
     return response.data
   },
 
-  create: async (data: any) => {
+  create: async (data: Record<string, unknown>) => {
     const response = await apiClient.post('/campaigns', data)
     return response.data
   },
 
-  update: async (id: number, data: any) => {
+  update: async (id: number, data: Record<string, unknown>) => {
     const response = await apiClient.put(`/campaigns/${id}`, data)
     return response.data
   },
@@ -100,7 +100,7 @@ export const assetsApi = {
     return response.data
   },
 
-  upload: async (file: File, metadata?: any) => {
+  upload: async (file: File, metadata?: Record<string, unknown>) => {
     const formData = new FormData()
     formData.append('file', file)
     if (metadata) {
@@ -136,12 +136,12 @@ export const rulesApi = {
     return response.data
   },
 
-  create: async (data: any) => {
+  create: async (data: Record<string, unknown>) => {
     const response = await apiClient.post('/rules', data)
     return response.data
   },
 
-  update: async (id: number, data: any) => {
+  update: async (id: number, data: Record<string, unknown>) => {
     const response = await apiClient.put(`/rules/${id}`, data)
     return response.data
   },
@@ -344,7 +344,7 @@ export const userApi = {
     return response.data
   },
 
-  updateProfile: async (data: any) => {
+  updateProfile: async (data: Record<string, unknown>) => {
     const response = await apiClient.put('/users/me', data)
     return response.data
   },
@@ -359,7 +359,7 @@ export const userApi = {
     return response.data
   },
 
-  updateNotificationPreferences: async (data: any) => {
+  updateNotificationPreferences: async (data: Record<string, unknown>) => {
     const response = await apiClient.put('/users/me/notifications', data)
     return response.data
   },
@@ -426,7 +426,7 @@ export const whatsappApi = {
     footer_text?: string
     header_variables?: string[]
     body_variables?: string[]
-    buttons?: any[]
+    buttons?: Record<string, unknown>[]
   }) => {
     const response = await apiClient.post('/whatsapp/templates', data)
     return response.data
@@ -437,7 +437,7 @@ export const whatsappApi = {
     contact_id: number
     message_type: string
     template_name?: string
-    template_variables?: Record<string, any>
+    template_variables?: Record<string, unknown>
     content?: string
     media_url?: string
     scheduled_at?: string

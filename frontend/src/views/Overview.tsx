@@ -276,12 +276,12 @@ export function Overview() {
   }, [toast])
 
   // KPI action handlers
-  const handleViewDetails = useCallback((metric: string) => {
-    console.log('View details for:', metric)
+  const handleViewDetails = useCallback((_metric: string) => {
+    // TODO: implement view details navigation
   }, [])
 
-  const handleSetAlert = useCallback((metric: string) => {
-    console.log('Set alert for:', metric)
+  const handleSetAlert = useCallback((_metric: string) => {
+    // TODO: implement alert configuration
   }, [])
 
   // Keyboard shortcuts
@@ -740,8 +740,8 @@ export function Overview() {
               <ErrorBoundary>
                 <CampaignTable
                   campaigns={filteredCampaigns}
-                  onCampaignClick={(campaignId) => {
-                    console.log('Navigate to campaign:', campaignId)
+                  onCampaignClick={(_campaignId) => {
+                    // TODO: implement campaign navigation
                   }}
                   onSyncCampaign={handleSyncCampaign}
                   syncingCampaignId={syncingCampaignId}

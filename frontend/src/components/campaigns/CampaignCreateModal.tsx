@@ -25,7 +25,7 @@ import apiClient from '@/api/client'
 interface CampaignCreateModalProps {
   open: boolean
   onClose: () => void
-  onSuccess?: (campaign: any) => void
+  onSuccess?: (campaign: Record<string, unknown>) => void
 }
 
 // Platform configurations
@@ -150,10 +150,10 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
       apiClient.get(`/integrations/${formData.platform}/ad-accounts`)
         .then((res) => {
           const accounts = res.data?.data || res.data || []
-          const mapped = (Array.isArray(accounts) ? accounts : []).map((a: any) => ({
-            id: a.id || a.account_id || '',
-            name: a.name || '',
-            currency: a.currency || 'USD',
+          const mapped = (Array.isArray(accounts) ? accounts : []).map((a: Record<string, unknown>) => ({
+            id: (a.id || a.account_id || '') as string,
+            name: (a.name || '') as string,
+            currency: (a.currency || 'USD') as string,
           }))
           setAdAccounts(mapped)
           if (mapped.length > 0) {
@@ -187,7 +187,7 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
     }
   }, [formData.platform])
 
-  const updateFormData = (field: keyof FormData, value: any) => {
+  const updateFormData = (field: keyof FormData, value: FormData[keyof FormData]) => {
     setFormData(prev => ({ ...prev, [field]: value }))
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }))

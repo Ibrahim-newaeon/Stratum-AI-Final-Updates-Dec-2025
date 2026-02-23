@@ -558,8 +558,8 @@ export default function TenantProfile() {
             />
             <EmqFixPlaybookPanel
               items={playbook}
-              onItemClick={(item) => console.log('Clicked:', item)}
-              onAssign={(item) => console.log('Assign:', item)}
+              onItemClick={() => {}}
+              onAssign={() => {}}
               maxItems={5}
             />
           </div>

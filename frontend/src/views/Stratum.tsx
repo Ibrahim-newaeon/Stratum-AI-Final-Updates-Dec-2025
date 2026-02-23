@@ -83,6 +83,19 @@ interface Anomaly {
   confidence?: number
 }
 
+/** Prediction data point for revenue forecast chart (API may use camelCase or snake_case). */
+interface PredictionDataPoint {
+  date: string
+  actual?: number | null
+  actual_value?: number | null
+  predicted?: number | null
+  predicted_value?: number | null
+  lowerBound?: number | null
+  lower_bound?: number | null
+  upperBound?: number | null
+  upper_bound?: number | null
+}
+
 // Insight Detail Modal Component
 function InsightDetailModal({
   insight,
@@ -1229,12 +1242,10 @@ export function Stratum() {
       setCreatedAlerts(prev => prev.map(alert =>
         alert.id === rule.id ? rule : alert
       ))
-      console.log('Alert rule updated:', rule)
     } else {
       // Create new alert
       const ruleWithId = { ...rule, id: `alert-${Date.now()}` }
       setCreatedAlerts(prev => [...prev, ruleWithId])
-      console.log('Alert rule created:', ruleWithId)
     }
     // Close modal and reset state
     setAlertConfigAnomaly(null)
@@ -1434,7 +1445,7 @@ export function Stratum() {
           <div className="h-[300px]">
             {predictionsData && predictionsData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={predictionsData.map((item: any) => ({
+                <AreaChart data={(predictionsData as unknown as PredictionDataPoint[]).map((item) => ({
                   date: item.date,
                   actual: item.actual ?? item.actual_value ?? null,
                   predicted: item.predicted ?? item.predicted_value ?? null,

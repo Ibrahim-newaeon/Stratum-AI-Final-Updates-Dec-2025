@@ -4,7 +4,7 @@
  * View and manage campaign drafts with approval workflow.
  */
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import {
   DocumentTextIcon,
@@ -91,7 +91,7 @@ const mockDrafts: CampaignDraft[] = [
   },
 ]
 
-const statusConfig: Record<DraftStatus, { icon: any; label: string; color: string }> = {
+const statusConfig: Record<DraftStatus, { icon: React.ComponentType<{ className?: string }>; label: string; color: string }> = {
   draft: { icon: DocumentTextIcon, label: 'Draft', color: 'text-gray-600 bg-gray-100 dark:bg-gray-800' },
   submitted: { icon: ClockIcon, label: 'Pending Approval', color: 'text-amber-600 bg-amber-100 dark:bg-amber-900/30' },
   approved: { icon: CheckCircleIcon, label: 'Approved', color: 'text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30' },

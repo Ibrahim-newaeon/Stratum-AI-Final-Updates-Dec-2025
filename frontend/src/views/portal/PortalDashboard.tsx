@@ -190,8 +190,7 @@ export default function PortalDashboard() {
   }, [fetchDashboardData]);
 
   const handleSubmitRequest = () => {
-    // Placeholder: will connect to real API later
-    console.log('Client request submitted:', requestForm);
+    // TODO: connect to real API
     setRequestSubmitted(true);
     setTimeout(() => {
       setShowRequestModal(false);

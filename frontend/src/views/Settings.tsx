@@ -1309,7 +1309,7 @@ function IntegrationSettings() {
     showDescription = false,
     onConnect,
   }: {
-    integration: any;
+    integration: { id: string; name: string; connected: boolean; color: string; description?: string };
     showDescription?: boolean;
     onConnect?: () => void;
   }) => (

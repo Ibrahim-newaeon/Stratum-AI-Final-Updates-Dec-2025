@@ -78,7 +78,7 @@ services:
     environment:
       - APP_ENV=${APP_ENV:-development}
       - DEBUG=${DEBUG:-false}
-      - SECRET_KEY=${SECRET_KEY:-dev-secret-key-change-in-production}
+      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY must be set}
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-stratum}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-stratum_ai}
       - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER:-stratum}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-stratum_ai}
       - REDIS_URL=redis://redis:6379/0
@@ -87,8 +87,8 @@ services:
       - ML_MODELS_PATH=/app/ml_service/models
       - USE_MOCK_AD_DATA=${USE_MOCK_AD_DATA:-true}
       - MARKET_INTEL_PROVIDER=${MARKET_INTEL_PROVIDER:-mock}
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-jwt-secret-dev}
-      - PII_ENCRYPTION_KEY=${PII_ENCRYPTION_KEY:-dev-encryption-key-32bytes}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:?JWT_SECRET_KEY must be set}
+      - PII_ENCRYPTION_KEY=${PII_ENCRYPTION_KEY:?PII_ENCRYPTION_KEY must be set}
       - CORS_ORIGINS=http://localhost:3000,http://localhost:5173
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - LOG_FORMAT=${LOG_FORMAT:-json}

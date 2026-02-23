@@ -4,7 +4,7 @@
  * Audit log of all campaign publish attempts with status and details.
  */
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import {
   CheckCircleIcon,
@@ -78,7 +78,7 @@ const mockLogs: PublishLog[] = [
   },
 ]
 
-const statusConfig: Record<PublishStatus, { icon: any; label: string; color: string }> = {
+const statusConfig: Record<PublishStatus, { icon: React.ComponentType<{ className?: string }>; label: string; color: string }> = {
   success: { icon: CheckCircleIcon, label: 'Published', color: 'text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30' },
   failed: { icon: XCircleIcon, label: 'Failed', color: 'text-red-600 bg-red-100 dark:bg-red-900/30' },
   pending: { icon: ClockIcon, label: 'Pending', color: 'text-amber-600 bg-amber-100 dark:bg-amber-900/30' },

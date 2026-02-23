@@ -193,7 +193,7 @@ async def send_whatsapp_otp(
         )
 
     # Send OTP via WhatsApp (in background to not block response)
-    async def send_whatsapp_message():
+    async def send_whatsapp_message() -> None:
         try:
             whatsapp_client = get_whatsapp_client()
             # Send authentication template with OTP code
@@ -691,7 +691,7 @@ async def forgot_password(
 
     if delivery_method == "whatsapp" and request_data.phone_number:
         # Send via WhatsApp
-        async def send_whatsapp_reset():
+        async def send_whatsapp_reset() -> None:
             try:
                 if not is_whatsapp_configured():
                     logger.warning("WhatsApp not configured for password reset delivery")
@@ -709,7 +709,7 @@ async def forgot_password(
         background_tasks.add_task(send_whatsapp_reset)
     else:
         # Send via email (default)
-        async def send_reset_email():
+        async def send_reset_email() -> None:
             try:
                 email_service = get_email_service()
                 email_service.send_password_reset_email(
