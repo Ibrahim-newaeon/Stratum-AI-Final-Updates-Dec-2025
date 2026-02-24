@@ -9,7 +9,7 @@ Uses synchronous migrations for simplicity and reliability.
 from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy import pool, create_engine, text
+from sqlalchemy import pool, create_engine
 from sqlalchemy.engine import Connection
 
 from app.core.config import settings
@@ -80,15 +80,6 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        # Widen alembic_version.version_num from default VARCHAR(32) to VARCHAR(128)
-        # so descriptive revision IDs (e.g. '041_add_superadmin_to_userrole_enum')
-        # don't trigger StringDataRightTruncation on existing databases.
-        connection.execute(text(
-            "ALTER TABLE IF EXISTS alembic_version "
-            "ALTER COLUMN version_num TYPE VARCHAR(128)"
-        ))
-        connection.commit()
-
         do_run_migrations(connection)
 
     connectable.dispose()
