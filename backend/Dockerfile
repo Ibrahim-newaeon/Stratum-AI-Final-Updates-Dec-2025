@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /build
+# deps-version: 2 — bump to force Railway cache invalidation
 COPY requirements-prod.txt .
 RUN pip install --prefix=/install --no-cache-dir -r requirements-prod.txt
 
