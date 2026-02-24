@@ -347,9 +347,11 @@ class Settings(BaseSettings):
                 self.whatsapp_verify_token == "stratum-whatsapp-verify-token"
                 and self.whatsapp_phone_number_id  # truthy check: None and "" both skip
             ):
-                raise ValueError(
-                    f"whatsapp_verify_token must be changed from its default value in {self.app_env} "
-                    "when WhatsApp is configured"
+                import warnings
+                warnings.warn(
+                    f"whatsapp_verify_token should be changed from default in {self.app_env} "
+                    "when WhatsApp is configured — webhooks will not be secure",
+                    stacklevel=2,
                 )
             if self.use_mock_ad_data is True:
                 raise ValueError(

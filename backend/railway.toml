@@ -1,9 +1,10 @@
 [build]
 builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
+noCache = true
 
 [deploy]
-startCommand = "python -m alembic upgrade head || echo 'Migration skipped'; uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"
+startCommand = "timeout 30 python -m alembic upgrade head || echo 'Migration skipped'; python -c 'from app.main import app; print(\"Import OK\")' || echo 'IMPORT FAILED'; uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"
 healthcheckPath = "/health/live"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"

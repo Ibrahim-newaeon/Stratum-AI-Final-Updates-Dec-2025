@@ -6,8 +6,8 @@ Add tenant_revenue_monthly table for tracking MRR/ARR growth, churn,
 and revenue metrics over time. Required by the SuperAdmin dashboard
 for revenue analytics (growth, NRR, logo churn, revenue churn).
 
-Revision ID: 043
-Revises: 042
+Revision ID: 043_add_tenant_revenue_monthly
+Revises: 042_add_cms_role_to_users
 Create Date: 2026-02-21 00:00:00.000000
 """
 
@@ -15,8 +15,8 @@ from alembic import op
 import sqlalchemy as sa
 
 # revision identifiers
-revision = '043'
-down_revision = '042'
+revision = '043_add_tenant_revenue_monthly'
+down_revision = '042_add_cms_role_to_users'
 branch_labels = None
 depends_on = None
 

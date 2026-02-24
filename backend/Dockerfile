@@ -1,33 +1,18 @@
 # =============================================================================
-# Stratum AI - Backend Dockerfile (multi-stage for fast builds)
+# Stratum AI - Backend Dockerfile (single-stage for Railway compatibility)
 # =============================================================================
-
-# ---- Stage 1: Builder (compile native deps, then discard build tools) ----
-FROM python:3.11-slim-bookworm AS builder
-
-ENV PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
-
-# Build tools only needed during pip install (not in final image)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /build
-COPY requirements-prod.txt .
-RUN pip install --prefix=/install --no-cache-dir -r requirements-prod.txt
-
-# ---- Stage 2: Runtime (slim, no gcc/build-essential) ----
 FROM python:3.11-slim-bookworm
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app \
-    PIP_NO_CACHE_DIR=1
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# Only runtime libraries (libpq5 for psycopg2, curl for healthcheck)
+# Install build deps + runtime libs in one layer
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
     libpq5 \
     curl \
     && rm -rf /var/lib/apt/lists/*
@@ -39,8 +24,9 @@ RUN groupadd --gid 1000 appgroup && \
 # Set working directory
 WORKDIR /app
 
-# Copy installed Python packages from builder stage
-COPY --from=builder /install /usr/local
+# Install Python dependencies (this layer rebuilds when requirements change)
+COPY requirements-prod.txt .
+RUN pip install --no-cache-dir -r requirements-prod.txt
 
 # Copy application code (.dockerignore excludes tests, cache, etc.)
 COPY --chown=appuser:appgroup . .
