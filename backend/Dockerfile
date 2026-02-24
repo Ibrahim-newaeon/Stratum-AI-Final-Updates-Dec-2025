@@ -15,7 +15,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /build
-# deps-version: 3 — bump to force Railway cache invalidation
+# ARG creates a real cache-breaking layer (Railway ignores comment changes)
+ARG DEPS_VERSION=3
+RUN echo "deps-version: ${DEPS_VERSION}"
 COPY requirements-prod.txt .
 RUN pip install --prefix=/install --no-cache-dir -r requirements-prod.txt
 
