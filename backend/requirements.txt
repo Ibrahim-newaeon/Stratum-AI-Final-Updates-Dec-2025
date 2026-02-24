@@ -43,7 +43,7 @@ qrcode[pil]==7.4.2
 
 # ML / Data Science
 scikit-learn==1.8.0
-pandas==2.2.0
+pandas==3.0.1
 numpy==1.26.4
 joblib==1.5.3
 xgboost==2.0.3
