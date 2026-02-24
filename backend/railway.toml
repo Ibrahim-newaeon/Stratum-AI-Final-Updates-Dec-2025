@@ -1,6 +1,7 @@
 [build]
 builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
+dockerfileNoCache = true
 
 [deploy]
 startCommand = "python -m alembic upgrade head || echo 'Migration skipped'; uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"
