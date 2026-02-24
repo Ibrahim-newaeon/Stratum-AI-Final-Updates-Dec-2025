@@ -1,5 +1,6 @@
 # =============================================================================
 # Stratum AI - Production Dependencies (no dev/test tools)
+# Last updated: 2026-02-24 — force rebuild with all packages
 # =============================================================================
 
 # FastAPI Framework
