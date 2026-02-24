@@ -121,7 +121,7 @@ export const authApi = {
    * Register a new user
    */
   signup: async (data: SignupRequest): Promise<SignupResponse> => {
-    const response = await apiClient.post<ApiResponse<SignupResponse>>('/auth/signup', data);
+    const response = await apiClient.post<ApiResponse<SignupResponse>>('/auth/register', data);
     return response.data.data;
   },
 
@@ -212,7 +212,7 @@ export const authApi = {
    * Get current user profile
    */
   getCurrentUser: async (): Promise<User> => {
-    const response = await apiClient.get<ApiResponse<User>>('/auth/me');
+    const response = await apiClient.get<ApiResponse<User>>('/users/me');
     return response.data.data;
   },
 
