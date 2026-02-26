@@ -41,9 +41,8 @@ USER appuser
 # Expose port (Railway assigns dynamic PORT)
 EXPOSE ${PORT:-8000}
 
-# Health check (use /health/live — no DB/Redis dependency)
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:${PORT:-8000}/health/live || exit 1
+# Disable Docker healthcheck - Railway manages healthchecks externally
+HEALTHCHECK NONE
 
-# Run migrations then start server (shell form to expand $PORT from Railway)
-CMD ["sh", "-c", "python -m alembic upgrade head 2>&1 || echo 'Migration warning (non-fatal)'; uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Start server (migrations run via railway.toml startCommand)
+CMD ["sh", "-c", "echo 'Container starting...' && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --log-level info"]
