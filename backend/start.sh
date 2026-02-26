@@ -20,5 +20,20 @@ if [ "$SEED_SUPERADMIN" = "true" ]; then
     SUPERADMIN_PASSWORD="${SUPERADMIN_PASSWORD:-StratumAdmin2026!}" python scripts/seed_superadmin.py 2>&1 || echo "Seed warning (non-fatal)"
 fi
 
+# Ensure all superadmin users have cms_role set
+if [ -n "$DATABASE_URL_SYNC" ]; then
+    echo "Ensuring superadmin CMS roles..."
+    python -c "
+import sqlalchemy, os
+engine = sqlalchemy.create_engine(os.environ['DATABASE_URL_SYNC'])
+with engine.connect() as conn:
+    result = conn.execute(sqlalchemy.text(
+        \"UPDATE users SET cms_role = 'super_admin' WHERE role = 'superadmin' AND (cms_role IS NULL OR cms_role = '') AND is_deleted = false\"
+    ))
+    conn.commit()
+    print(f'Updated {result.rowcount} superadmin(s) with cms_role')
+" 2>&1 || echo "CMS role fix skipped"
+fi
+
 echo "Starting uvicorn on port ${PORT:-8000}..."
 exec uvicorn app.main:app --host 0.0.0.0 --port "${PORT:-8000}" --log-level info
