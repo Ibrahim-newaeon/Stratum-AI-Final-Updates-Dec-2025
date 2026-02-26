@@ -29,8 +29,9 @@ FROM node:25-alpine AS build
 
 WORKDIR /app
 
-ARG VITE_API_BASE_URL=http://localhost:8000
-ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+# VITE_API_URL must match what the frontend code reads via import.meta.env
+ARG VITE_API_URL=https://api.stratumai.app/api/v1
+ENV VITE_API_URL=$VITE_API_URL
 
 COPY package*.json ./
 RUN npm ci --legacy-peer-deps
@@ -38,12 +39,15 @@ RUN npm ci --legacy-peer-deps
 COPY . .
 RUN npm run build
 
-# Production stage
+# Production stage - Nginx serves static files
 FROM nginx:alpine AS production
 
 COPY --from=build /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/templates/default.conf.template
 
-EXPOSE 80
+# Railway assigns dynamic PORT; nginx:alpine uses envsubst on templates
+ENV PORT=80
+
+EXPOSE ${PORT}
 
 CMD ["nginx", "-g", "daemon off;"]
