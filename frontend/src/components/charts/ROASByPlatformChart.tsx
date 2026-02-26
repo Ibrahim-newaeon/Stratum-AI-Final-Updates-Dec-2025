@@ -107,7 +107,7 @@ function ROASByPlatformChartInner({
             />
             <Tooltip
               contentStyle={chartTheme.tooltip.contentStyle}
-              formatter={(value: number) => [chartFormatters.roas(value), 'ROAS']}
+              formatter={(value: number | undefined) => { const v = value ?? 0; return [chartFormatters.roas(v), 'ROAS'] }}
               cursor={{ fill: 'hsl(var(--primary) / 0.05)' }}
             />
             <ReferenceLine

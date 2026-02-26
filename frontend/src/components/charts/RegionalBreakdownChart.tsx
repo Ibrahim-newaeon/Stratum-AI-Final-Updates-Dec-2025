@@ -102,7 +102,7 @@ function RegionalBreakdownChartInner({
             </Pie>
             <Tooltip
               contentStyle={chartTheme.tooltip.contentStyle}
-              formatter={(value: number) => [`${value}%`, 'Share']}
+              formatter={(value: number | undefined) => { const v = value ?? 0; return [`${v}%`, 'Share'] }}
             />
             <Legend
               content={<CustomLegend />}

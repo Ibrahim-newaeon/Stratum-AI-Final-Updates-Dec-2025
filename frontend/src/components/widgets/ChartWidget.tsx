@@ -81,7 +81,7 @@ export function ChartWidget({ type, className }: ChartWidgetProps) {
           <YAxis tick={chartStyle.axis} tickLine={false} axisLine={false} />
           <Tooltip
             contentStyle={chartStyle.tooltip}
-            formatter={(value: number) => [`$${value.toLocaleString()}`, type === 'revenue' ? 'Revenue' : 'Spend']}
+            formatter={(value: number | undefined) => { const v = value ?? 0; return [`$${v.toLocaleString()}`, type === 'revenue' ? 'Revenue' : 'Spend'] }}
           />
           <Area
             type="monotone"
