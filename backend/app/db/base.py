@@ -10,11 +10,12 @@ from datetime import datetime, timezone
 from typing import Any
 
 import enum as _enum
+import re as _re
 
-from sqlalchemy import DateTime, Integer, MetaData, String, event, func
+from sqlalchemy import DateTime, Integer, MetaData, String, event, func, cast as sa_cast
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import TypeDecorator
+from sqlalchemy import Enum as _SAEnum, TypeDecorator
 
 # Naming convention for constraints (important for Alembic)
 convention = {
@@ -31,14 +32,19 @@ class StrEnumType(TypeDecorator):
     TypeDecorator that stores Python str-enums using their .value (lowercase).
 
     asyncpg + SQLAlchemy native Enum sends .name (UPPERCASE) which doesn't
-    match PostgreSQL enum values (lowercase). This type uses String as the
-    impl and explicitly converts via .value/.name mapping.
+    match PostgreSQL enum values (lowercase). This type:
+    1. Converts Python enum -> lowercase .value on bind
+    2. Adds CAST(... AS pg_enum_type) so PostgreSQL can compare
+    3. Converts DB string -> Python enum on result
     """
     impl = String(50)
     cache_ok = True
 
     def __init__(self, enum_class: type, **kw):
         self.enum_class = enum_class
+        # Derive PG enum type name: CamelCase -> snake_case
+        name = enum_class.__name__
+        self._pg_enum_name = _re.sub(r'(?<!^)(?=[A-Z])', '_', name).lower()
         super().__init__()
 
     def process_bind_param(self, value, dialect):
@@ -57,6 +63,10 @@ class StrEnumType(TypeDecorator):
             return self.enum_class(value)
         except (ValueError, KeyError):
             return value
+
+    def bind_expression(self, bindvalue):
+        """Cast the VARCHAR bind value to the PG ENUM type for comparison."""
+        return sa_cast(bindvalue, _SAEnum(name=self._pg_enum_name, create_type=False))
 
 
 class Base(DeclarativeBase):
