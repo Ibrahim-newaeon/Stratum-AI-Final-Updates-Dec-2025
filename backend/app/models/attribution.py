@@ -46,7 +46,7 @@ class DailyAttributedRevenue(Base):
     date = Column(Date, nullable=False)
 
     # Attribution model used
-    attribution_model = Column(SQLEnum(AttributionModel), nullable=False)
+    attribution_model = Column(SQLEnum(AttributionModel, name='attribution_model', create_constraint=False), nullable=False)
 
     # Dimension (what we're attributing to)
     dimension_type = Column(String(50), nullable=False)  # platform, campaign, adset, ad
@@ -167,7 +167,7 @@ class AttributionSnapshot(Base):
     # Snapshot metadata
     snapshot_date = Column(Date, nullable=False)
     snapshot_type = Column(String(50), nullable=False)  # daily, weekly, monthly
-    attribution_model = Column(SQLEnum(AttributionModel), nullable=False)
+    attribution_model = Column(SQLEnum(AttributionModel, name='attribution_model', create_constraint=False), nullable=False)
 
     # Period covered
     period_start = Column(Date, nullable=False)
@@ -292,11 +292,11 @@ class TrainedAttributionModel(Base):
 
     # Model identification
     model_name = Column(String(255), nullable=False)
-    model_type = Column(SQLEnum(DataDrivenModelType), nullable=False)
+    model_type = Column(SQLEnum(DataDrivenModelType, name='data_driven_model_type', create_constraint=False), nullable=False)
     channel_type = Column(String(50), nullable=False)  # platform, campaign
 
     # Status
-    status = Column(SQLEnum(ModelStatus), nullable=False, default=ModelStatus.TRAINING)
+    status = Column(SQLEnum(ModelStatus, name='model_status', create_constraint=False), nullable=False, default=ModelStatus.TRAINING)
     is_active = Column(Boolean, default=False, nullable=False)  # Currently used for attribution
 
     # Training period
@@ -358,9 +358,9 @@ class ModelTrainingRun(Base):
     model_id = Column(UUID(as_uuid=True), ForeignKey("trained_attribution_models.id", ondelete="CASCADE"), nullable=True)
 
     # Run details
-    model_type = Column(SQLEnum(DataDrivenModelType), nullable=False)
+    model_type = Column(SQLEnum(DataDrivenModelType, name='data_driven_model_type', create_constraint=False), nullable=False)
     channel_type = Column(String(50), nullable=False)
-    status = Column(SQLEnum(ModelStatus), nullable=False, default=ModelStatus.TRAINING)
+    status = Column(SQLEnum(ModelStatus, name='model_status', create_constraint=False), nullable=False, default=ModelStatus.TRAINING)
 
     # Training period
     training_start = Column(Date, nullable=False)

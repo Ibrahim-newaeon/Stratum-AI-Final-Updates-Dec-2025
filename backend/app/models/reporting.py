@@ -104,7 +104,7 @@ class ReportTemplate(Base):
     # Template identification
     name = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
-    report_type = Column(SQLEnum(ReportType), nullable=False)
+    report_type = Column(SQLEnum(ReportType, name='report_type', create_constraint=False), nullable=False)
 
     # Status
     is_active = Column(Boolean, default=True, nullable=False)
@@ -126,7 +126,7 @@ class ReportTemplate(Base):
     """
 
     # Output settings
-    default_format = Column(SQLEnum(ReportFormat), default=ReportFormat.PDF, nullable=False)
+    default_format = Column(SQLEnum(ReportFormat, name='report_format', create_constraint=False), default=ReportFormat.PDF, nullable=False)
     available_formats = Column(ARRAY(String), default=["pdf", "csv"], nullable=False)
 
     # Styling
@@ -177,7 +177,7 @@ class ScheduledReport(Base):
     is_paused = Column(Boolean, default=False, nullable=False)
 
     # Schedule configuration
-    frequency = Column(SQLEnum(ScheduleFrequency), nullable=False)
+    frequency = Column(SQLEnum(ScheduleFrequency, name='schedule_frequency', create_constraint=False), nullable=False)
     cron_expression = Column(String(100), nullable=True)  # For custom frequency
     timezone = Column(String(50), default="UTC", nullable=False)
 
@@ -190,7 +190,7 @@ class ScheduledReport(Base):
     minute = Column(Integer, default=0, nullable=False)
 
     # Report configuration overrides
-    format_override = Column(SQLEnum(ReportFormat), nullable=True)
+    format_override = Column(SQLEnum(ReportFormat, name='report_format', create_constraint=False), nullable=True)
     config_override = Column(JSONB, nullable=True)  # Overrides template config
 
     # Date range for report (relative)
@@ -223,7 +223,7 @@ class ScheduledReport(Base):
 
     # Execution tracking
     last_run_at = Column(DateTime(timezone=True), nullable=True)
-    last_run_status = Column(SQLEnum(ExecutionStatus), nullable=True)
+    last_run_status = Column(SQLEnum(ExecutionStatus, name='execution_status', create_constraint=False), nullable=True)
     next_run_at = Column(DateTime(timezone=True), nullable=True)
     run_count = Column(Integer, default=0, nullable=False)
     failure_count = Column(Integer, default=0, nullable=False)
@@ -265,7 +265,7 @@ class ReportExecution(Base):
 
     # Execution details
     execution_type = Column(String(50), nullable=False)  # scheduled, manual, api
-    status = Column(SQLEnum(ExecutionStatus), nullable=False, default=ExecutionStatus.PENDING)
+    status = Column(SQLEnum(ExecutionStatus, name='execution_status', create_constraint=False), nullable=False, default=ExecutionStatus.PENDING)
 
     # Timing
     started_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
@@ -273,8 +273,8 @@ class ReportExecution(Base):
     duration_seconds = Column(Float, nullable=True)
 
     # Report parameters
-    report_type = Column(SQLEnum(ReportType), nullable=False)
-    format = Column(SQLEnum(ReportFormat), nullable=False)
+    report_type = Column(SQLEnum(ReportType, name='report_type', create_constraint=False), nullable=False)
+    format = Column(SQLEnum(ReportFormat, name='report_format', create_constraint=False), nullable=False)
     date_range_start = Column(Date, nullable=False)
     date_range_end = Column(Date, nullable=False)
     config_used = Column(JSONB, nullable=True)  # Snapshot of config at execution time
@@ -326,8 +326,8 @@ class ReportDelivery(Base):
     execution_id = Column(UUID(as_uuid=True), ForeignKey("report_executions.id", ondelete="CASCADE"), nullable=False)
 
     # Delivery details
-    channel = Column(SQLEnum(DeliveryChannel), nullable=False)
-    status = Column(SQLEnum(DeliveryStatus), nullable=False, default=DeliveryStatus.PENDING)
+    channel = Column(SQLEnum(DeliveryChannel, name='delivery_channel', create_constraint=False), nullable=False)
+    status = Column(SQLEnum(DeliveryStatus, name='delivery_status', create_constraint=False), nullable=False, default=DeliveryStatus.PENDING)
 
     # Recipient info
     recipient = Column(String(500), nullable=False)  # Email, channel name, webhook URL
@@ -372,7 +372,7 @@ class DeliveryChannelConfig(Base):
     tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
 
     # Channel
-    channel = Column(SQLEnum(DeliveryChannel), nullable=False)
+    channel = Column(SQLEnum(DeliveryChannel, name='delivery_channel', create_constraint=False), nullable=False)
     name = Column(String(255), nullable=False)  # Friendly name
 
     # Status

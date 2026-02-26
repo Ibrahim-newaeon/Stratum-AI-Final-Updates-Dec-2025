@@ -113,7 +113,7 @@ class EMQMeasurement(Base):
     combined_match_rate = Column(Float, nullable=True)
 
     # Status
-    status = Column(SQLEnum(EMQStatus), default=EMQStatus.PENDING, nullable=False)
+    status = Column(SQLEnum(EMQStatus, name='emq_status', create_constraint=False), default=EMQStatus.PENDING, nullable=False)
     error_message = Column(Text, nullable=True)
 
     # Raw response
@@ -164,7 +164,7 @@ class OfflineConversionBatch(Base):
     duplicate_records = Column(Integer, default=0, nullable=False)
 
     # Status
-    status = Column(SQLEnum(ConversionUploadStatus), default=ConversionUploadStatus.PENDING, nullable=False)
+    status = Column(SQLEnum(ConversionUploadStatus, name='conversion_upload_status', create_constraint=False), default=ConversionUploadStatus.PENDING, nullable=False)
     error_message = Column(Text, nullable=True)
     error_details = Column(JSONB, nullable=True)
 
@@ -266,7 +266,7 @@ class ModelExperiment(Base):
     traffic_split = Column(Float, default=0.1, nullable=False)
 
     # Status
-    status = Column(SQLEnum(ExperimentStatus), default=ExperimentStatus.DRAFT, nullable=False)
+    status = Column(SQLEnum(ExperimentStatus, name='experiment_status', create_constraint=False), default=ExperimentStatus.DRAFT, nullable=False)
 
     # Configuration
     min_samples = Column(Integer, default=1000, nullable=False)
@@ -631,7 +631,7 @@ class BudgetReallocationPlan(Base):
     projected_revenue_change = Column(Float, nullable=True)
 
     # Status
-    status = Column(SQLEnum(ReallocationStatus), default=ReallocationStatus.PROPOSED, nullable=False)
+    status = Column(SQLEnum(ReallocationStatus, name='reallocation_status', create_constraint=False), default=ReallocationStatus.PROPOSED, nullable=False)
 
     # Approval
     approved_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
@@ -812,7 +812,7 @@ class CustomerLTVPrediction(Base):
     predicted_ltv_lifetime_cents = Column(BigInteger, nullable=True)
 
     # Segment
-    segment = Column(SQLEnum(CustomerSegment), nullable=True)
+    segment = Column(SQLEnum(CustomerSegment, name='customer_segment', create_constraint=False), nullable=True)
 
     # Risk
     churn_probability = Column(Float, nullable=True)

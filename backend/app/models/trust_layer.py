@@ -66,7 +66,7 @@ class FactSignalHealthDaily(Base):
     api_error_rate = Column(Float, nullable=True)  # API error rate percentage (0-100)
 
     # Computed status
-    status = Column(SQLEnum(SignalHealthStatus), nullable=False, default=SignalHealthStatus.OK)
+    status = Column(SQLEnum(SignalHealthStatus, name='signal_health_status', create_constraint=False), nullable=False, default=SignalHealthStatus.OK)
 
     # Additional context
     notes = Column(Text, nullable=True)
@@ -113,7 +113,7 @@ class FactAttributionVarianceDaily(Base):
 
     # Confidence and status
     confidence = Column(Float, nullable=False, default=0.0)  # 0-1
-    status = Column(SQLEnum(AttributionVarianceStatus), nullable=False, default=AttributionVarianceStatus.HEALTHY)
+    status = Column(SQLEnum(AttributionVarianceStatus, name='attribution_variance_status', create_constraint=False), nullable=False, default=AttributionVarianceStatus.HEALTHY)
 
     # Additional context
     notes = Column(Text, nullable=True)
