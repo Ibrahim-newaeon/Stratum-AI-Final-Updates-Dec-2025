@@ -21,8 +21,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN groupadd --gid 1000 appgroup && \
     useradd --uid 1000 --gid appgroup --shell /bin/bash --create-home appuser
 
-# Set working directory
+# Set working directory and grant ownership to appuser
 WORKDIR /app
+RUN chown appuser:appgroup /app
 
 # Install Python dependencies (this layer rebuilds when requirements change)
 COPY requirements-prod.txt .
@@ -30,6 +31,9 @@ RUN pip install --no-cache-dir -r requirements-prod.txt
 
 # Copy application code (.dockerignore excludes tests, cache, etc.)
 COPY --chown=appuser:appgroup . .
+
+# Ensure start.sh is executable
+RUN chmod +x /app/start.sh
 
 # Create directories for file uploads and ML data
 RUN mkdir -p /app/ml_service/training_data /app/uploads /app/temp && \
@@ -44,11 +48,5 @@ EXPOSE ${PORT:-8000}
 # Disable Docker healthcheck - Railway manages healthchecks externally
 HEALTHCHECK NONE
 
-# Create entrypoint script for proper variable expansion
-RUN echo '#!/bin/sh' > /app/start.sh && \
-    echo 'set -e' >> /app/start.sh && \
-    echo 'echo "Starting on port: ${PORT:-8000}"' >> /app/start.sh && \
-    echo 'exec uvicorn app.main:app --host 0.0.0.0 --port "${PORT:-8000}" --log-level info' >> /app/start.sh && \
-    chmod +x /app/start.sh
-
-CMD ["/app/start.sh"]
+# Use start.sh entrypoint for proper shell variable expansion
+ENTRYPOINT ["/app/start.sh"]
