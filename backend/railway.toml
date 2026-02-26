@@ -4,7 +4,7 @@ dockerfilePath = "Dockerfile"
 noCache = true
 
 [deploy]
-startCommand = "echo 'Starting uvicorn on port ${PORT}...' && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --log-level info"
+startCommand = "echo PORT=$PORT && echo PWD=$(pwd) && echo PYTHONPATH=$PYTHONPATH && ls -la app/main.py 2>&1 && python -c 'print(\"Python OK\")' && python -c 'from app.main import app; print(\"Import OK\")' 2>&1 && exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --log-level info"
 healthcheckPath = "/health/live"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
