@@ -85,7 +85,7 @@ class CRMConnection(Base):
     tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
 
     # Provider details
-    provider = Column(SQLEnum(CRMProvider, name='crm_provider', create_constraint=False), nullable=False)
+    provider = Column(SQLEnum(CRMProvider, name='crm_provider', create_type=False), nullable=False)
     provider_account_id = Column(String(255), nullable=True)  # HubSpot portal ID, etc.
     provider_account_name = Column(String(255), nullable=True)
 
@@ -98,7 +98,7 @@ class CRMConnection(Base):
     scopes = Column(Text, nullable=True)  # Comma-separated scopes
 
     # Connection status
-    status = Column(SQLEnum(CRMConnectionStatus, name='crm_connection_status', create_constraint=False), nullable=False, default=CRMConnectionStatus.PENDING)
+    status = Column(SQLEnum(CRMConnectionStatus, name='crm_connection_status', create_type=False), nullable=False, default=CRMConnectionStatus.PENDING)
     status_message = Column(Text, nullable=True)
 
     # Sync configuration
@@ -234,7 +234,7 @@ class CRMDeal(Base):
     # Deal details
     deal_name = Column(String(500), nullable=True)
     stage = Column(String(100), nullable=True)  # Raw stage from CRM
-    stage_normalized = Column(SQLEnum(DealStage, name='deal_stage', create_constraint=False), nullable=True)  # Normalized stage
+    stage_normalized = Column(SQLEnum(DealStage, name='deal_stage', create_type=False), nullable=True)  # Normalized stage
 
     # Financials
     amount = Column(Float, nullable=True)  # Deal value
@@ -255,7 +255,7 @@ class CRMDeal(Base):
     attributed_adset_id = Column(String(255), nullable=True)
     attributed_ad_id = Column(String(255), nullable=True)
     attributed_platform = Column(String(50), nullable=True)  # meta, google, etc.
-    attribution_model = Column(SQLEnum(AttributionModel, name='attribution_model', create_constraint=False), default=AttributionModel.LAST_TOUCH)
+    attribution_model = Column(SQLEnum(AttributionModel, name='attribution_model', create_type=False), default=AttributionModel.LAST_TOUCH)
     attribution_confidence = Column(Float, nullable=True)  # 0-1
 
     # Attribution touchpoint link
@@ -503,7 +503,7 @@ class CRMWritebackConfig(Base):
 
     # Last sync tracking
     last_sync_at = Column(DateTime(timezone=True), nullable=True)
-    last_sync_status = Column(SQLEnum(WritebackStatus, name='writeback_status', create_constraint=False), nullable=True)
+    last_sync_status = Column(SQLEnum(WritebackStatus, name='writeback_status', create_type=False), nullable=True)
     last_sync_contacts = Column(Integer, nullable=True)
     last_sync_deals = Column(Integer, nullable=True)
     last_sync_errors = Column(Integer, nullable=True)
@@ -541,7 +541,7 @@ class CRMWritebackSync(Base):
 
     # Sync details
     sync_type = Column(String(50), nullable=False)  # full, incremental, manual, scheduled
-    status = Column(SQLEnum(WritebackStatus, name='writeback_status', create_constraint=False), nullable=False, default=WritebackStatus.PENDING)
+    status = Column(SQLEnum(WritebackStatus, name='writeback_status', create_type=False), nullable=False, default=WritebackStatus.PENDING)
 
     # Timing
     started_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
@@ -593,7 +593,7 @@ class CRMSyncLog(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
-    provider = Column(SQLEnum(CRMProvider, name='crm_provider', create_constraint=False), nullable=False)
+    provider = Column(SQLEnum(CRMProvider, name='crm_provider', create_type=False), nullable=False)
 
     # Sync details
     sync_type = Column(String(50), nullable=False)  # "full", "incremental"
