@@ -9,9 +9,12 @@ All models inherit from this base for consistent behavior.
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import DateTime, Integer, MetaData, event, func
+import enum as _enum
+
+from sqlalchemy import DateTime, Integer, MetaData, String, event, func
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy import TypeDecorator
 
 # Naming convention for constraints (important for Alembic)
 convention = {
@@ -21,6 +24,39 @@ convention = {
     "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
     "pk": "pk_%(table_name)s",
 }
+
+
+class StrEnumType(TypeDecorator):
+    """
+    TypeDecorator that stores Python str-enums using their .value (lowercase).
+
+    asyncpg + SQLAlchemy native Enum sends .name (UPPERCASE) which doesn't
+    match PostgreSQL enum values (lowercase). This type uses String as the
+    impl and explicitly converts via .value/.name mapping.
+    """
+    impl = String(50)
+    cache_ok = True
+
+    def __init__(self, enum_class: type, **kw):
+        self.enum_class = enum_class
+        super().__init__()
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return None
+        if isinstance(value, self.enum_class):
+            return value.value
+        if isinstance(value, _enum.Enum):
+            return value.value
+        return str(value)
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return None
+        try:
+            return self.enum_class(value)
+        except (ValueError, KeyError):
+            return value
 
 
 class Base(DeclarativeBase):

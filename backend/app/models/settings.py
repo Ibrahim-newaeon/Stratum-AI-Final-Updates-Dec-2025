@@ -15,7 +15,6 @@ from typing import Optional
 from sqlalchemy import (
     Boolean,
     DateTime,
-    Enum as SQLEnum,
     ForeignKey,
     Index,
     Integer,
@@ -25,7 +24,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db.base_class import Base, TenantMixin, TimestampMixin
+from app.db.base_class import Base, StrEnumType, TenantMixin, TimestampMixin
 
 # =============================================================================
 # Enums
@@ -109,7 +108,7 @@ class Webhook(Base, TimestampMixin, TenantMixin):
 
     # Status and health
     status: Mapped[WebhookStatus] = mapped_column(
-        SQLEnum(WebhookStatus, name="webhook_status", native_enum=False),
+        StrEnumType(WebhookStatus),
         default=WebhookStatus.ACTIVE,
         nullable=False,
     )
@@ -190,12 +189,12 @@ class Notification(Base, TimestampMixin, TenantMixin):
 
     # Classification
     type: Mapped[NotificationType] = mapped_column(
-        SQLEnum(NotificationType, name="notification_type", native_enum=False),
+        StrEnumType(NotificationType),
         default=NotificationType.INFO,
         nullable=False,
     )
     category: Mapped[NotificationCategory] = mapped_column(
-        SQLEnum(NotificationCategory, name="notification_category", native_enum=False),
+        StrEnumType(NotificationCategory),
         default=NotificationCategory.SYSTEM,
         nullable=False,
     )
@@ -244,7 +243,7 @@ class ChangelogEntry(Base, TimestampMixin):
 
     # Classification
     type: Mapped[ChangelogType] = mapped_column(
-        SQLEnum(ChangelogType, name="changelog_type", native_enum=False),
+        StrEnumType(ChangelogType),
         default=ChangelogType.FEATURE,
         nullable=False,
     )

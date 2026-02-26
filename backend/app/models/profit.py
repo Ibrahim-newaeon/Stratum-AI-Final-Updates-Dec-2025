@@ -19,12 +19,12 @@ import enum
 
 from sqlalchemy import (
     Column, String, Integer, Date, DateTime, Float, Text, ForeignKey,
-    Index, Enum as SQLEnum, Boolean, BigInteger, UniqueConstraint
+    Index, Boolean, BigInteger, UniqueConstraint
 )
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 
-from app.db.base_class import Base
+from app.db.base_class import Base, StrEnumType
 
 
 # =============================================================================
@@ -85,7 +85,7 @@ class ProductCatalog(Base):
     currency = Column(String(3), default="USD", nullable=False)
 
     # Status
-    status = Column(SQLEnum(ProductStatus, name='product_status', native_enum=False), default=ProductStatus.ACTIVE, nullable=False)
+    status = Column(StrEnumType(ProductStatus), default=ProductStatus.ACTIVE, nullable=False)
 
     # External IDs (for matching with platform data)
     external_ids = Column(JSONB, nullable=True)  # {"shopify_id": "...", "meta_product_id": "..."}
@@ -132,7 +132,7 @@ class ProductMargin(Base):
     cogs_percentage = Column(Float, nullable=True)  # COGS as % of revenue (alternative)
 
     # Margin data (derived or specified)
-    margin_type = Column(SQLEnum(MarginType, name='margin_type', native_enum=False), default=MarginType.FIXED_AMOUNT, nullable=False)
+    margin_type = Column(StrEnumType(MarginType), default=MarginType.FIXED_AMOUNT, nullable=False)
     margin_cents = Column(BigInteger, nullable=True)  # Profit per unit in cents
     margin_percentage = Column(Float, nullable=True)  # Gross margin %
 
@@ -146,7 +146,7 @@ class ProductMargin(Base):
     total_cogs_cents = Column(BigInteger, nullable=True)  # COGS + shipping + handling + fees
 
     # Source tracking
-    source = Column(SQLEnum(COGSSource, name='cogs_source', native_enum=False), default=COGSSource.MANUAL, nullable=False)
+    source = Column(StrEnumType(COGSSource), default=COGSSource.MANUAL, nullable=False)
     source_reference = Column(String(255), nullable=True)  # File name, API endpoint, etc.
 
     # Timestamps
@@ -191,7 +191,7 @@ class MarginRule(Base):
     campaign_id = Column(String(255), nullable=True)
 
     # Margin specification
-    margin_type = Column(SQLEnum(MarginType, name='margin_type', native_enum=False), default=MarginType.PERCENTAGE, nullable=False)
+    margin_type = Column(StrEnumType(MarginType), default=MarginType.PERCENTAGE, nullable=False)
     default_margin_percentage = Column(Float, nullable=True)  # e.g., 30% gross margin
     default_cogs_percentage = Column(Float, nullable=True)  # e.g., 70% COGS
 
@@ -270,7 +270,7 @@ class DailyProfitMetrics(Base):
     net_margin_pct = Column(Float, nullable=True)
 
     # Data quality
-    cogs_source = Column(SQLEnum(COGSSource, name='cogs_source', native_enum=False), nullable=True)
+    cogs_source = Column(StrEnumType(COGSSource), nullable=True)
     margin_rule_id = Column(UUID(as_uuid=True), ForeignKey("margin_rules.id", ondelete="SET NULL"), nullable=True)
     is_estimated = Column(Boolean, default=False, nullable=False)  # True if using default margins
 
@@ -375,7 +375,7 @@ class COGSUpload(Base):
     # Upload metadata
     filename = Column(String(500), nullable=True)
     file_type = Column(String(50), nullable=False)  # csv, xlsx, api
-    source = Column(SQLEnum(COGSSource, name='cogs_source', native_enum=False), nullable=False)
+    source = Column(StrEnumType(COGSSource), nullable=False)
 
     # Processing results
     status = Column(String(50), nullable=False)  # pending, processing, completed, failed

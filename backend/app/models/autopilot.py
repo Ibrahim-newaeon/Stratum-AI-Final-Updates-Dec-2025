@@ -17,7 +17,6 @@ from sqlalchemy import (
     Boolean,
     Column,
     DateTime,
-    Enum as SQLEnum,
     Float,
     ForeignKey,
     Index,
@@ -29,7 +28,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import relationship
 
-from app.db.base_class import Base, TimestampMixin
+from app.db.base_class import Base, StrEnumType, TimestampMixin
 
 # =============================================================================
 # Enums
@@ -92,12 +91,7 @@ class TenantEnforcementSettings(Base, TimestampMixin):
 
     # Default mode
     default_mode = Column(
-        SQLEnum(
-            EnforcementMode,
-            name="enforcement_mode",
-            native_enum=False,
-            values_callable=lambda x: [e.value for e in x],
-        ),
+        StrEnumType(EnforcementMode),
         nullable=False,
         default=EnforcementMode.ADVISORY,
     )
@@ -175,22 +169,12 @@ class TenantEnforcementRule(Base, TimestampMixin):
     # Rule configuration
     rule_id = Column(String(100), nullable=False)
     rule_type = Column(
-        SQLEnum(
-            ViolationType,
-            name="violation_type",
-            native_enum=False,
-            values_callable=lambda x: [e.value for e in x],
-        ),
+        StrEnumType(ViolationType),
         nullable=False,
     )
     threshold_value = Column(Float, nullable=False)
     enforcement_mode = Column(
-        SQLEnum(
-            EnforcementMode,
-            name="enforcement_mode",
-            native_enum=False,
-            values_callable=lambda x: [e.value for e in x],
-        ),
+        StrEnumType(EnforcementMode),
         nullable=False,
         default=EnforcementMode.ADVISORY,
     )
@@ -253,32 +237,17 @@ class EnforcementAuditLog(Base):
 
     # Violation details
     violation_type = Column(
-        SQLEnum(
-            ViolationType,
-            name="violation_type",
-            native_enum=False,
-            values_callable=lambda x: [e.value for e in x],
-        ),
+        StrEnumType(ViolationType),
         nullable=False,
     )
 
     # Intervention details
     intervention_action = Column(
-        SQLEnum(
-            InterventionAction,
-            name="intervention_action",
-            native_enum=False,
-            values_callable=lambda x: [e.value for e in x],
-        ),
+        StrEnumType(InterventionAction),
         nullable=False,
     )
     enforcement_mode = Column(
-        SQLEnum(
-            EnforcementMode,
-            name="enforcement_mode",
-            native_enum=False,
-            values_callable=lambda x: [e.value for e in x],
-        ),
+        StrEnumType(EnforcementMode),
         nullable=False,
     )
 

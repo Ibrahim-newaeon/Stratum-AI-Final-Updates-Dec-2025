@@ -13,13 +13,13 @@ from uuid import uuid4
 
 from sqlalchemy import (
     Column, String, Integer, Date, DateTime, Float, Text, ForeignKey,
-    Index, Enum as SQLEnum
+    Index
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import enum
 
-from app.db.base_class import Base
+from app.db.base_class import Base, StrEnumType
 
 
 # =============================================================================
@@ -66,7 +66,7 @@ class FactSignalHealthDaily(Base):
     api_error_rate = Column(Float, nullable=True)  # API error rate percentage (0-100)
 
     # Computed status
-    status = Column(SQLEnum(SignalHealthStatus, name='signal_health_status', native_enum=False), nullable=False, default=SignalHealthStatus.OK)
+    status = Column(StrEnumType(SignalHealthStatus), nullable=False, default=SignalHealthStatus.OK)
 
     # Additional context
     notes = Column(Text, nullable=True)
@@ -113,7 +113,7 @@ class FactAttributionVarianceDaily(Base):
 
     # Confidence and status
     confidence = Column(Float, nullable=False, default=0.0)  # 0-1
-    status = Column(SQLEnum(AttributionVarianceStatus, name='attribution_variance_status', native_enum=False), nullable=False, default=AttributionVarianceStatus.HEALTHY)
+    status = Column(StrEnumType(AttributionVarianceStatus), nullable=False, default=AttributionVarianceStatus.HEALTHY)
 
     # Additional context
     notes = Column(Text, nullable=True)
