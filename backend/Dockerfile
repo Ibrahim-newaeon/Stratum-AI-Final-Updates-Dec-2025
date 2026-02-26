@@ -44,5 +44,11 @@ EXPOSE ${PORT:-8000}
 # Disable Docker healthcheck - Railway manages healthchecks externally
 HEALTHCHECK NONE
 
-# Start server (migrations run via railway.toml startCommand)
-CMD ["sh", "-c", "echo 'Container starting...' && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --log-level info"]
+# Create entrypoint script for proper variable expansion
+RUN echo '#!/bin/sh' > /app/start.sh && \
+    echo 'set -e' >> /app/start.sh && \
+    echo 'echo "Starting on port: ${PORT:-8000}"' >> /app/start.sh && \
+    echo 'exec uvicorn app.main:app --host 0.0.0.0 --port "${PORT:-8000}" --log-level info' >> /app/start.sh && \
+    chmod +x /app/start.sh
+
+CMD ["/app/start.sh"]
