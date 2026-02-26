@@ -109,7 +109,7 @@ class Webhook(Base, TimestampMixin, TenantMixin):
 
     # Status and health
     status: Mapped[WebhookStatus] = mapped_column(
-        SQLEnum(WebhookStatus, name="webhook_status"),
+        SQLEnum(WebhookStatus, name="webhook_status", native_enum=False),
         default=WebhookStatus.ACTIVE,
         nullable=False,
     )
@@ -190,12 +190,12 @@ class Notification(Base, TimestampMixin, TenantMixin):
 
     # Classification
     type: Mapped[NotificationType] = mapped_column(
-        SQLEnum(NotificationType, name="notification_type"),
+        SQLEnum(NotificationType, name="notification_type", native_enum=False),
         default=NotificationType.INFO,
         nullable=False,
     )
     category: Mapped[NotificationCategory] = mapped_column(
-        SQLEnum(NotificationCategory, name="notification_category"),
+        SQLEnum(NotificationCategory, name="notification_category", native_enum=False),
         default=NotificationCategory.SYSTEM,
         nullable=False,
     )
@@ -244,7 +244,7 @@ class ChangelogEntry(Base, TimestampMixin):
 
     # Classification
     type: Mapped[ChangelogType] = mapped_column(
-        SQLEnum(ChangelogType, name="changelog_type"),
+        SQLEnum(ChangelogType, name="changelog_type", native_enum=False),
         default=ChangelogType.FEATURE,
         nullable=False,
     )

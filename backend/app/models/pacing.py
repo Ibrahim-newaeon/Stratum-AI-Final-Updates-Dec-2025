@@ -97,7 +97,7 @@ class Target(Base):
     description = Column(Text, nullable=True)
 
     # Period
-    period_type = Column(SQLEnum(TargetPeriod, name='target_period', create_type=False), nullable=False, default=TargetPeriod.MONTHLY)
+    period_type = Column(SQLEnum(TargetPeriod, name='target_period', native_enum=False), nullable=False, default=TargetPeriod.MONTHLY)
     period_start = Column(Date, nullable=False)
     period_end = Column(Date, nullable=False)
 
@@ -107,7 +107,7 @@ class Target(Base):
     adset_id = Column(String(255), nullable=True)
 
     # Target metrics
-    metric_type = Column(SQLEnum(TargetMetric, name='target_metric', create_type=False), nullable=False)
+    metric_type = Column(SQLEnum(TargetMetric, name='target_metric', native_enum=False), nullable=False)
     target_value = Column(Float, nullable=False)
     target_value_cents = Column(BigInteger, nullable=True)  # For monetary values
 
@@ -248,9 +248,9 @@ class PacingAlert(Base):
     target_id = Column(UUID(as_uuid=True), ForeignKey("targets.id", ondelete="CASCADE"), nullable=True)
 
     # Alert details
-    alert_type = Column(SQLEnum(AlertType, name='alert_type', create_type=False), nullable=False)
-    severity = Column(SQLEnum(AlertSeverity, name='alert_severity', create_type=False), nullable=False, default=AlertSeverity.WARNING)
-    status = Column(SQLEnum(AlertStatus, name='alert_status', create_type=False), nullable=False, default=AlertStatus.ACTIVE)
+    alert_type = Column(SQLEnum(AlertType, name='alert_type', native_enum=False), nullable=False)
+    severity = Column(SQLEnum(AlertSeverity, name='alert_severity', native_enum=False), nullable=False, default=AlertSeverity.WARNING)
+    status = Column(SQLEnum(AlertStatus, name='alert_status', native_enum=False), nullable=False, default=AlertStatus.ACTIVE)
 
     # Alert message
     title = Column(String(255), nullable=False)
@@ -323,7 +323,7 @@ class Forecast(Base):
     campaign_id = Column(String(255), nullable=True)
 
     # Metric being forecasted
-    metric_type = Column(SQLEnum(TargetMetric, name='target_metric', create_type=False), nullable=False)
+    metric_type = Column(SQLEnum(TargetMetric, name='target_metric', native_enum=False), nullable=False)
 
     # Forecast values
     forecasted_value = Column(Float, nullable=False)

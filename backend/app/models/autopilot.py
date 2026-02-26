@@ -95,7 +95,7 @@ class TenantEnforcementSettings(Base, TimestampMixin):
         SQLEnum(
             EnforcementMode,
             name="enforcement_mode",
-            create_type=False,
+            native_enum=False,
             values_callable=lambda x: [e.value for e in x],
         ),
         nullable=False,
@@ -178,7 +178,7 @@ class TenantEnforcementRule(Base, TimestampMixin):
         SQLEnum(
             ViolationType,
             name="violation_type",
-            create_type=False,
+            native_enum=False,
             values_callable=lambda x: [e.value for e in x],
         ),
         nullable=False,
@@ -188,7 +188,7 @@ class TenantEnforcementRule(Base, TimestampMixin):
         SQLEnum(
             EnforcementMode,
             name="enforcement_mode",
-            create_type=False,
+            native_enum=False,
             values_callable=lambda x: [e.value for e in x],
         ),
         nullable=False,
@@ -256,7 +256,7 @@ class EnforcementAuditLog(Base):
         SQLEnum(
             ViolationType,
             name="violation_type",
-            create_type=False,
+            native_enum=False,
             values_callable=lambda x: [e.value for e in x],
         ),
         nullable=False,
@@ -267,7 +267,7 @@ class EnforcementAuditLog(Base):
         SQLEnum(
             InterventionAction,
             name="intervention_action",
-            create_type=False,
+            native_enum=False,
             values_callable=lambda x: [e.value for e in x],
         ),
         nullable=False,
@@ -276,7 +276,7 @@ class EnforcementAuditLog(Base):
         SQLEnum(
             EnforcementMode,
             name="enforcement_mode",
-            create_type=False,
+            native_enum=False,
             values_callable=lambda x: [e.value for e in x],
         ),
         nullable=False,
