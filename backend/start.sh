@@ -14,5 +14,11 @@ if [ -n "$DATABASE_URL_SYNC" ]; then
     timeout 120 python -m alembic upgrade head 2>&1 || echo "Migration warning (non-fatal)"
 fi
 
+# Seed superadmin if SEED_SUPERADMIN=true
+if [ "$SEED_SUPERADMIN" = "true" ]; then
+    echo "Seeding superadmin user..."
+    SUPERADMIN_PASSWORD="${SUPERADMIN_PASSWORD:-StratumAdmin2026!}" python scripts/seed_superadmin.py 2>&1 || echo "Seed warning (non-fatal)"
+fi
+
 echo "Starting uvicorn on port ${PORT:-8000}..."
 exec uvicorn app.main:app --host 0.0.0.0 --port "${PORT:-8000}" --log-level info
