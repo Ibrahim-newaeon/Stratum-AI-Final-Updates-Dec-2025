@@ -4,7 +4,7 @@ dockerfilePath = "Dockerfile"
 noCache = true
 
 [deploy]
-startCommand = "python -c \"import sqlalchemy; e=sqlalchemy.create_engine('$DATABASE_URL_SYNC'); c=e.connect(); c.execute(sqlalchemy.text('CREATE TABLE IF NOT EXISTS alembic_version (version_num VARCHAR(128) NOT NULL, CONSTRAINT alembic_version_pkc PRIMARY KEY (version_num))')); c.execute(sqlalchemy.text('ALTER TABLE alembic_version ALTER COLUMN version_num TYPE VARCHAR(128)')); c.commit(); c.close(); print('alembic_version ready')\" 2>/dev/null || true; timeout 60 python -m alembic upgrade head || echo 'Migration skipped'; uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"
+startCommand = "python fix_alembic_version.py; timeout 60 python -m alembic upgrade head || echo 'Migration skipped'; uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"
 healthcheckPath = "/health/live"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"

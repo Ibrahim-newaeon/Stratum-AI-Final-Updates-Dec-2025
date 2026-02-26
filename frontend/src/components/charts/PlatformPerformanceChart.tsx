@@ -76,15 +76,14 @@ function PlatformPerformanceChartInner({
             />
             <Tooltip
               contentStyle={chartTheme.tooltip.contentStyle}
-              formatter={(value: number | undefined, name: string) => {
-                const v = value ?? 0;
+              formatter={((value: number, name: string) => {
                 return [
                   name === 'spend' || name === 'revenue'
-                    ? chartFormatters.currency(v)
-                    : v.toLocaleString(),
+                    ? chartFormatters.currency(value)
+                    : value.toLocaleString(),
                   name.charAt(0).toUpperCase() + name.slice(1),
                 ]
-              }}
+              }) as any}
               cursor={{ fill: 'hsl(var(--primary) / 0.05)' }}
             />
             <Legend

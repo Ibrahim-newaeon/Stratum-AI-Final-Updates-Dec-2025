@@ -1477,7 +1477,7 @@ export function Stratum() {
                       border: '1px solid hsl(var(--border))',
                       borderRadius: '0.5rem',
                     }}
-                    formatter={(value: number | undefined) => { const v = value ?? 0; return [formatCurrency(v), ''] }}
+                    formatter={((value: number) => { return [formatCurrency(value), ''] }) as any}
                   />
                   {/* Confidence interval */}
                   <Area

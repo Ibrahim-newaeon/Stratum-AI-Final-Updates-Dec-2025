@@ -54,7 +54,7 @@ export function PlatformBreakdownWidget({ className }: PlatformBreakdownWidgetPr
               border: '1px solid hsl(var(--border))',
               borderRadius: '8px',
             }}
-            formatter={(value: number | undefined) => { const v = value ?? 0; return [`${v}%`, 'Share'] }}
+            formatter={((value: number) => { return [`${value}%`, 'Share'] }) as any}
           />
           <Legend
             verticalAlign="bottom"
