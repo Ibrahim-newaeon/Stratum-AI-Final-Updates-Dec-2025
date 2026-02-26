@@ -30,7 +30,7 @@ FROM node:25-alpine AS build
 WORKDIR /app
 
 # VITE_API_URL must match what the frontend code reads via import.meta.env
-ARG VITE_API_URL=https://api.stratumai.app/api/v1
+ARG VITE_API_URL=https://app.stratumai.app/api/v1
 ENV VITE_API_URL=$VITE_API_URL
 
 COPY package*.json ./
