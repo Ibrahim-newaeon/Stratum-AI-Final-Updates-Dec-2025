@@ -576,33 +576,41 @@ function App() {
                     <Route
                       path="/privacy"
                       element={
-                        <Suspense fallback={<LoadingSpinner />}>
-                          <PrivacyPage />
-                        </Suspense>
+                        <ErrorBoundary message="Failed to load the page">
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <PrivacyPage />
+                          </Suspense>
+                        </ErrorBoundary>
                       }
                     />
                     <Route
                       path="/terms"
                       element={
-                        <Suspense fallback={<LoadingSpinner />}>
-                          <TermsPage />
-                        </Suspense>
+                        <ErrorBoundary message="Failed to load the page">
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <TermsPage />
+                          </Suspense>
+                        </ErrorBoundary>
                       }
                     />
                     <Route
                       path="/security"
                       element={
-                        <Suspense fallback={<LoadingSpinner />}>
-                          <SecurityPage />
-                        </Suspense>
+                        <ErrorBoundary message="Failed to load the page">
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <SecurityPage />
+                          </Suspense>
+                        </ErrorBoundary>
                       }
                     />
                     <Route
                       path="/dpa"
                       element={
-                        <Suspense fallback={<LoadingSpinner />}>
-                          <DPAPage />
-                        </Suspense>
+                        <ErrorBoundary message="Failed to load the page">
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <DPAPage />
+                          </Suspense>
+                        </ErrorBoundary>
                       }
                     />
 
@@ -610,57 +618,71 @@ function App() {
                     <Route
                       path="/docs"
                       element={
-                        <Suspense fallback={<LoadingSpinner />}>
-                          <DocsPage />
-                        </Suspense>
+                        <ErrorBoundary message="Failed to load the documentation page">
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <DocsPage />
+                          </Suspense>
+                        </ErrorBoundary>
                       }
                     />
                     <Route
                       path="/changelog"
                       element={
-                        <Suspense fallback={<LoadingSpinner />}>
-                          <ChangelogPage />
-                        </Suspense>
+                        <ErrorBoundary message="Failed to load the page">
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <ChangelogPage />
+                          </Suspense>
+                        </ErrorBoundary>
                       }
                     />
                     <Route
                       path="/case-studies"
                       element={
-                        <Suspense fallback={<LoadingSpinner />}>
-                          <CaseStudiesPage />
-                        </Suspense>
+                        <ErrorBoundary message="Failed to load the page">
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <CaseStudiesPage />
+                          </Suspense>
+                        </ErrorBoundary>
                       }
                     />
                     <Route
                       path="/resources"
                       element={
-                        <Suspense fallback={<LoadingSpinner />}>
-                          <ResourcesPage />
-                        </Suspense>
+                        <ErrorBoundary message="Failed to load the page">
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <ResourcesPage />
+                          </Suspense>
+                        </ErrorBoundary>
                       }
                     />
                     <Route
                       path="/status"
                       element={
-                        <Suspense fallback={<LoadingSpinner />}>
-                          <StatusPage />
-                        </Suspense>
+                        <ErrorBoundary message="Failed to load the page">
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <StatusPage />
+                          </Suspense>
+                        </ErrorBoundary>
                       }
                     />
                     <Route
                       path="/compare"
                       element={
-                        <Suspense fallback={<LoadingSpinner />}>
-                          <ComparisonPage />
-                        </Suspense>
+                        <ErrorBoundary message="Failed to load the page">
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <ComparisonPage />
+                          </Suspense>
+                        </ErrorBoundary>
                       }
                     />
                     <Route
                       path="/glossary"
                       element={
-                        <Suspense fallback={<LoadingSpinner />}>
-                          <GlossaryPage />
-                        </Suspense>
+                        <ErrorBoundary message="Failed to load the page">
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <GlossaryPage />
+                          </Suspense>
+                        </ErrorBoundary>
                       }
                     />
 
@@ -668,9 +690,11 @@ function App() {
                     <Route
                       path="/announcements/audience-sync"
                       element={
-                        <Suspense fallback={<LoadingSpinner />}>
-                          <AudienceSyncLaunch />
-                        </Suspense>
+                        <ErrorBoundary message="Failed to load the page">
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <AudienceSyncLaunch />
+                          </Suspense>
+                        </ErrorBoundary>
                       }
                     />
 
