@@ -40,11 +40,16 @@ class StrEnumType(TypeDecorator):
     impl = String(50)
     cache_ok = True
 
-    def __init__(self, enum_class: type, **kw):
+    def __init__(self, enum_class: type, pg_type_name: str | None = None, **kw):
         self.enum_class = enum_class
-        # Derive PG enum type name: CamelCase -> snake_case
-        name = enum_class.__name__
-        self._pg_enum_name = _re.sub(r'(?<!^)(?=[A-Z])', '_', name).lower()
+        if pg_type_name:
+            self._pg_enum_name = pg_type_name
+        else:
+            # Derive PG enum type name: CamelCase -> snake_case
+            # Two-step regex handles acronyms: CRMProvider -> crm_provider
+            name = enum_class.__name__
+            s1 = _re.sub(r'(.)([A-Z][a-z]+)', r'\1_\2', name)
+            self._pg_enum_name = _re.sub(r'([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
         super().__init__()
 
     def process_bind_param(self, value, dialect):
