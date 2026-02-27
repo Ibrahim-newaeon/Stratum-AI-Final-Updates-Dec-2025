@@ -201,33 +201,28 @@ export default function UnifiedDashboard() {
     );
   }
 
-  // Check if user needs to complete onboarding
-  if (overview && !overview.onboarding_complete) {
-    return (
-      <div className="min-h-[80vh] flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto p-8">
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
-            <Settings className="w-8 h-8 text-primary" />
-          </div>
-          <h2 className="text-2xl font-bold mb-3">Complete Your Setup</h2>
-          <p className="text-muted-foreground mb-6">
-            Let's get your account set up so you can start optimizing your campaigns with Stratum
-            AI.
-          </p>
-          <button
-            onClick={() => navigate('/onboarding')}
-            className="inline-flex items-center px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
-          >
-            Start Setup
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
+      {/* Onboarding banner — non-blocking, shown above dashboard */}
+      {overview && !overview.onboarding_complete && (
+        <div className="flex items-center justify-between p-4 rounded-lg border bg-primary/5 border-primary/20">
+          <div className="flex items-center gap-3">
+            <Settings className="w-5 h-5 text-primary" />
+            <p className="text-sm">
+              <span className="font-medium">Setup incomplete.</span>{' '}
+              Complete onboarding to unlock all features.
+            </p>
+          </div>
+          <button
+            onClick={() => navigate('/onboarding')}
+            className="inline-flex items-center px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+          >
+            Complete Setup
+            <ArrowRight className="w-4 h-4 ml-1" />
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>

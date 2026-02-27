@@ -231,7 +231,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const jwtTenantId = jwtPayload.tenant_id as number | undefined;
 
       // Fetch user profile
-      const userResponse = await fetch(`${API_BASE}/auth/me`, {
+      const userResponse = await fetch(`${API_BASE}/users/me`, {
         headers: {
           Authorization: `Bearer ${data.data.access_token}`,
         },
