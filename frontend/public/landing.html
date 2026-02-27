@@ -213,6 +213,14 @@
     .anim-scale-in {
         opacity: 0;
     }
+    /* Fallback: force visibility after JS timeout */
+    .anim-force-visible .anim-fade-up,
+    .anim-force-visible .anim-fade-left,
+    .anim-force-visible .anim-fade-right,
+    .anim-force-visible .anim-scale-in {
+        opacity: 1 !important;
+        transform: none !important;
+    }
     .anim-fade-up.anim-visible {
         animation: fadeInUp 0.8s ease-out forwards;
     }
@@ -342,15 +350,15 @@ See It In Action
 </div>
 <div class="flex gap-12 pt-8">
 <div>
-<div class="text-3xl font-display font-bold text-primary" data-count="3.2" data-suffix="x">0x</div>
+<div class="text-3xl font-display font-bold text-primary" data-count="3.2" data-suffix="x">3.2x</div>
 <div class="text-xs uppercase tracking-widest text-slate-400 font-bold">ROAS Improvement</div>
 </div>
 <div>
-<div class="text-3xl font-display font-bold text-secondary" data-count="42" data-prefix="$" data-suffix="K">$0K</div>
+<div class="text-3xl font-display font-bold text-secondary" data-count="42" data-prefix="$" data-suffix="K">$42K</div>
 <div class="text-xs uppercase tracking-widest text-slate-400 font-bold">Monthly Savings</div>
 </div>
 <div>
-<div class="text-3xl font-display font-bold text-cyber-yellow" data-count="97" data-suffix="%">0%</div>
+<div class="text-3xl font-display font-bold text-cyber-yellow" data-count="97" data-suffix="%">97%</div>
 <div class="text-xs uppercase tracking-widest text-slate-400 font-bold">Trust Score</div>
 </div>
 </div>
@@ -378,10 +386,10 @@ See It In Action
 </linearGradient>
 </defs>
 <circle cx="96" cy="96" fill="transparent" r="88" stroke="rgba(255,255,255,0.1)" stroke-width="8"></circle>
-<circle id="trust-ring" cx="96" cy="96" fill="transparent" r="88" stroke="url(#spectralGradient)" stroke-dasharray="553" stroke-dashoffset="553" stroke-linecap="round" stroke-width="12" style="transition: stroke-dashoffset 2s cubic-bezier(0.16,1,0.3,1)"></circle>
+<circle id="trust-ring" cx="96" cy="96" fill="transparent" r="88" stroke="url(#spectralGradient)" stroke-dasharray="553" stroke-dashoffset="14.4" stroke-linecap="round" stroke-width="12" style="transition: stroke-dashoffset 2s cubic-bezier(0.16,1,0.3,1)"></circle>
 </svg>
 <div class="absolute text-center">
-<div id="trust-score-text" class="text-4xl font-display font-black text-white">0%</div>
+<div id="trust-score-text" class="text-4xl font-display font-black text-white">97.4%</div>
 <div class="text-[10px] uppercase font-bold tracking-widest text-slate-400">Trust Score</div>
 </div>
 </div>
@@ -1154,7 +1162,7 @@ document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
           observer.unobserve(entry.target);
         }
       });
-    }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+    }, { threshold: 0.05, rootMargin: '0px 0px 0px 0px' });
     animatedElements.forEach(function(el) { observer.observe(el); });
   }
 })();
@@ -1172,6 +1180,12 @@ document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
           var suffix = el.getAttribute('data-suffix') || '';
           var duration = 2000;
           var start = 0;
+          // Reset to 0 at start of animation
+          if (target % 1 !== 0) {
+            el.textContent = prefix + '0.0' + suffix;
+          } else {
+            el.textContent = prefix + '0' + suffix;
+          }
           var startTime = null;
           function step(timestamp) {
             if (!startTime) startTime = timestamp;
@@ -1179,7 +1193,7 @@ document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
             var eased = 1 - Math.pow(1 - progress, 3);
             var current = start + (target - start) * eased;
             if (target % 1 !== 0) {
-              el.textContent = prefix + current.toFixed(2) + suffix;
+              el.textContent = prefix + current.toFixed(1) + suffix;
             } else {
               el.textContent = prefix + Math.round(current).toLocaleString() + suffix;
             }
@@ -1189,7 +1203,7 @@ document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
           counterObserver.unobserve(el);
         }
       });
-    }, { threshold: 0.5 });
+    }, { threshold: 0.1 });
     counters.forEach(function(el) { counterObserver.observe(el); });
   }
 })();
@@ -1206,6 +1220,13 @@ document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
   var observer = new IntersectionObserver(function(entries) {
     entries.forEach(function(entry) {
       if (entry.isIntersecting) {
+        // Reset to 0 first, then animate
+        ring.style.transition = 'none';
+        ring.setAttribute('stroke-dashoffset', circumference);
+        text.textContent = '0%';
+        // Force reflow
+        ring.getBoundingClientRect();
+        ring.style.transition = 'stroke-dashoffset 2s cubic-bezier(0.16,1,0.3,1)';
         // Animate the ring via CSS transition
         ring.style.strokeDashoffset = targetOffset;
         // Animate the counter text
@@ -1223,9 +1244,15 @@ document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
         observer.unobserve(entry.target);
       }
     });
-  }, { threshold: 0.3 });
+  }, { threshold: 0.1 });
   observer.observe(ring.closest('.hero-float') || ring);
 })();
+
+// Fallback: Force all animated elements visible after 2s
+// Ensures content shows even if IntersectionObserver doesn't fire
+setTimeout(function() {
+  document.body.classList.add('anim-force-visible');
+}, 2000);
 </script>
 
 </body></html>
