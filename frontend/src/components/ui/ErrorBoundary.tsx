@@ -46,6 +46,11 @@ export class ErrorBoundary extends Component<Props, State> {
         return this.props.fallback
       }
 
+      const isChunkError = this.state.error?.message?.includes('Failed to fetch dynamically imported module')
+        || this.state.error?.message?.includes('Loading chunk')
+        || this.state.error?.message?.includes('Loading CSS chunk')
+        || this.state.error?.name === 'ChunkLoadError';
+
       return (
         <div className={cn(
           'flex flex-col items-center justify-center p-8 rounded-xl border bg-card',
@@ -55,17 +60,24 @@ export class ErrorBoundary extends Component<Props, State> {
             <AlertTriangle className="w-6 h-6 text-destructive" />
           </div>
           <h3 className="text-lg font-semibold text-foreground mb-2">
-            Something went wrong
+            {isChunkError ? 'New version available' : 'Something went wrong'}
           </h3>
           <p className="text-sm text-muted-foreground text-center mb-4 max-w-sm">
-            We encountered an error while rendering this component. Please try again.
+            {isChunkError
+              ? 'A new version of the app has been deployed. Please reload the page.'
+              : this.props.message || 'We encountered an error while rendering this component. Please try again.'}
           </p>
+          {this.state.error && (
+            <p className="text-xs text-muted-foreground/60 text-center mb-4 max-w-md font-mono break-all">
+              {this.state.error.message}
+            </p>
+          )}
           <button
-            onClick={this.handleRetry}
+            onClick={isChunkError ? () => window.location.reload() : this.handleRetry}
             className="inline-flex items-center px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
           >
             <RefreshCw className="w-4 h-4 mr-2" />
-            Try Again
+            {isChunkError ? 'Reload Page' : 'Try Again'}
           </button>
         </div>
       )
