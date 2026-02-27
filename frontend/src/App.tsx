@@ -1,5 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
-import { lazy, Suspense } from 'react';
+import { ComponentType, lazy, Suspense } from 'react';
 import { HelmetProvider } from 'react-helmet-async';
 import DashboardLayout from './views/DashboardLayout';
 import TenantLayout from './views/TenantLayout';
@@ -24,178 +24,201 @@ function DocumentDirectionHandler() {
   return null;
 }
 
+/**
+ * Lazy import with automatic retry on chunk load failure.
+ * After a new deploy, old chunk hashes no longer exist on the server.
+ * This wrapper catches the import error and reloads the page once
+ * so the browser fetches the fresh index.html with new chunk references.
+ */
+function lazyWithRetry(importFn: () => Promise<{ default: ComponentType<any> }>) {
+  return lazy(() =>
+    importFn().catch(() => {
+      // Only auto-reload once to avoid infinite loops
+      const reloaded = sessionStorage.getItem('chunk_reload');
+      if (!reloaded) {
+        sessionStorage.setItem('chunk_reload', '1');
+        window.location.reload();
+      }
+      // Clear the flag after a short delay so future deploys also get retried
+      setTimeout(() => sessionStorage.removeItem('chunk_reload'), 10000);
+      // Re-throw so ErrorBoundary shows the error if reload didn't help
+      return importFn();
+    })
+  );
+}
+
 // Lazy load pages for code splitting
-const Landing = lazy(() => import('./views/Landing'));
-const LandingAr = lazy(() => import('./views/LandingAr'));
-const Login = lazy(() => import('./views/Login'));
-const Signup = lazy(() => import('./views/Signup'));
-const ForgotPassword = lazy(() => import('./views/ForgotPassword'));
-const ResetPassword = lazy(() => import('./views/ResetPassword'));
-const VerifyEmail = lazy(() => import('./views/VerifyEmail'));
-const Onboarding = lazy(() => import('./views/Onboarding'));
-const UnifiedDashboard = lazy(() => import('./views/dashboard/UnifiedDashboard'));
-const CustomDashboard = lazy(() => import('./views/CustomDashboard'));
-const Campaigns = lazy(() => import('./views/Campaigns'));
-const CampaignDetail = lazy(() => import('./views/CampaignDetail'));
-const Stratum = lazy(() => import('./views/Stratum'));
-const Benchmarks = lazy(() => import('./views/Benchmarks'));
-const Assets = lazy(() => import('./views/Assets'));
-const Rules = lazy(() => import('./views/Rules'));
-const Competitors = lazy(() => import('./views/Competitors'));
-const Predictions = lazy(() => import('./views/Predictions'));
-const WhatsApp = lazy(() => import('./views/whatsapp/WhatsAppManager'));
-const Settings = lazy(() => import('./views/Settings'));
-const Tenants = lazy(() => import('./views/Tenants'));
-const MLTraining = lazy(() => import('./views/MLTraining'));
-const CAPISetup = lazy(() => import('./views/CAPISetup'));
-const SuperadminDashboard = lazy(() => import('./views/SuperadminDashboard'));
-const CDPCalculator = lazy(() => import('./views/CDPCalculator'));
+const Landing = lazyWithRetry(() => import('./views/Landing'));
+const LandingAr = lazyWithRetry(() => import('./views/LandingAr'));
+const Login = lazyWithRetry(() => import('./views/Login'));
+const Signup = lazyWithRetry(() => import('./views/Signup'));
+const ForgotPassword = lazyWithRetry(() => import('./views/ForgotPassword'));
+const ResetPassword = lazyWithRetry(() => import('./views/ResetPassword'));
+const VerifyEmail = lazyWithRetry(() => import('./views/VerifyEmail'));
+const Onboarding = lazyWithRetry(() => import('./views/Onboarding'));
+const UnifiedDashboard = lazyWithRetry(() => import('./views/dashboard/UnifiedDashboard'));
+const CustomDashboard = lazyWithRetry(() => import('./views/CustomDashboard'));
+const Campaigns = lazyWithRetry(() => import('./views/Campaigns'));
+const CampaignDetail = lazyWithRetry(() => import('./views/CampaignDetail'));
+const Stratum = lazyWithRetry(() => import('./views/Stratum'));
+const Benchmarks = lazyWithRetry(() => import('./views/Benchmarks'));
+const Assets = lazyWithRetry(() => import('./views/Assets'));
+const Rules = lazyWithRetry(() => import('./views/Rules'));
+const Competitors = lazyWithRetry(() => import('./views/Competitors'));
+const Predictions = lazyWithRetry(() => import('./views/Predictions'));
+const WhatsApp = lazyWithRetry(() => import('./views/whatsapp/WhatsAppManager'));
+const Settings = lazyWithRetry(() => import('./views/Settings'));
+const Tenants = lazyWithRetry(() => import('./views/Tenants'));
+const MLTraining = lazyWithRetry(() => import('./views/MLTraining'));
+const CAPISetup = lazyWithRetry(() => import('./views/CAPISetup'));
+const SuperadminDashboard = lazyWithRetry(() => import('./views/SuperadminDashboard'));
+const CDPCalculator = lazyWithRetry(() => import('./views/CDPCalculator'));
 
 // CDP (Customer Data Platform) views
-const CDPDashboard = lazy(() => import('./views/cdp/CDPDashboard'));
-const CDPProfiles = lazy(() => import('./views/cdp/CDPProfiles'));
-const CDPSegments = lazy(() => import('./views/cdp/CDPSegments'));
-const CDPEvents = lazy(() => import('./views/cdp/CDPEvents'));
-const CDPIdentityGraph = lazy(() => import('./views/cdp/CDPIdentityGraph'));
-const CDPAudienceSync = lazy(() => import('./views/cdp/CDPAudienceSync'));
-const CDPRfm = lazy(() => import('./views/cdp/CDPRfm'));
-const CDPFunnels = lazy(() => import('./views/cdp/CDPFunnels'));
-const CDPComputedTraits = lazy(() => import('./views/cdp/CDPComputedTraits'));
-const CDPConsent = lazy(() => import('./views/cdp/CDPConsent'));
-const CDPPredictiveChurn = lazy(() => import('./views/cdp/CDPPredictiveChurn'));
+const CDPDashboard = lazyWithRetry(() => import('./views/cdp/CDPDashboard'));
+const CDPProfiles = lazyWithRetry(() => import('./views/cdp/CDPProfiles'));
+const CDPSegments = lazyWithRetry(() => import('./views/cdp/CDPSegments'));
+const CDPEvents = lazyWithRetry(() => import('./views/cdp/CDPEvents'));
+const CDPIdentityGraph = lazyWithRetry(() => import('./views/cdp/CDPIdentityGraph'));
+const CDPAudienceSync = lazyWithRetry(() => import('./views/cdp/CDPAudienceSync'));
+const CDPRfm = lazyWithRetry(() => import('./views/cdp/CDPRfm'));
+const CDPFunnels = lazyWithRetry(() => import('./views/cdp/CDPFunnels'));
+const CDPComputedTraits = lazyWithRetry(() => import('./views/cdp/CDPComputedTraits'));
+const CDPConsent = lazyWithRetry(() => import('./views/cdp/CDPConsent'));
+const CDPPredictiveChurn = lazyWithRetry(() => import('./views/cdp/CDPPredictiveChurn'));
 
 // Newsletter / Email Campaigns views
-const NewsletterDashboard = lazy(() => import('./views/newsletter/NewsletterDashboard'));
-const NewsletterCampaigns = lazy(() => import('./views/newsletter/NewsletterCampaigns'));
-const NewsletterCampaignEditor = lazy(() => import('./views/newsletter/NewsletterCampaignEditor'));
-const NewsletterTemplates = lazy(() => import('./views/newsletter/NewsletterTemplates'));
-const NewsletterSubscribers = lazy(() => import('./views/newsletter/NewsletterSubscribers'));
-const NewsletterAnalytics = lazy(() => import('./views/newsletter/NewsletterAnalytics'));
+const NewsletterDashboard = lazyWithRetry(() => import('./views/newsletter/NewsletterDashboard'));
+const NewsletterCampaigns = lazyWithRetry(() => import('./views/newsletter/NewsletterCampaigns'));
+const NewsletterCampaignEditor = lazyWithRetry(() => import('./views/newsletter/NewsletterCampaignEditor'));
+const NewsletterTemplates = lazyWithRetry(() => import('./views/newsletter/NewsletterTemplates'));
+const NewsletterSubscribers = lazyWithRetry(() => import('./views/newsletter/NewsletterSubscribers'));
+const NewsletterAnalytics = lazyWithRetry(() => import('./views/newsletter/NewsletterAnalytics'));
 
 // Knowledge Graph views
-const KnowledgeGraphInsights = lazy(() => import('./views/KnowledgeGraphInsights'));
-const KGProblemDetection = lazy(() => import('./views/knowledge-graph/KGProblemDetection'));
-const KGRevenueAttribution = lazy(() => import('./views/knowledge-graph/KGRevenueAttribution'));
+const KnowledgeGraphInsights = lazyWithRetry(() => import('./views/KnowledgeGraphInsights'));
+const KGProblemDetection = lazyWithRetry(() => import('./views/knowledge-graph/KGProblemDetection'));
+const KGRevenueAttribution = lazyWithRetry(() => import('./views/knowledge-graph/KGRevenueAttribution'));
 
 // Super Admin views
-const ControlTower = lazy(() => import('./views/superadmin/ControlTower'));
-const SuperAdminTenantsList = lazy(() => import('./views/superadmin/TenantsList'));
-const SuperAdminTenantProfile = lazy(() => import('./views/superadmin/TenantProfile'));
-const SuperAdminBenchmarks = lazy(() => import('./views/superadmin/Benchmarks'));
-const SuperAdminAudit = lazy(() => import('./views/superadmin/Audit'));
-const SuperAdminBilling = lazy(() => import('./views/superadmin/Billing'));
-const SuperAdminSystem = lazy(() => import('./views/superadmin/System'));
+const ControlTower = lazyWithRetry(() => import('./views/superadmin/ControlTower'));
+const SuperAdminTenantsList = lazyWithRetry(() => import('./views/superadmin/TenantsList'));
+const SuperAdminTenantProfile = lazyWithRetry(() => import('./views/superadmin/TenantProfile'));
+const SuperAdminBenchmarks = lazyWithRetry(() => import('./views/superadmin/Benchmarks'));
+const SuperAdminAudit = lazyWithRetry(() => import('./views/superadmin/Audit'));
+const SuperAdminBilling = lazyWithRetry(() => import('./views/superadmin/Billing'));
+const SuperAdminSystem = lazyWithRetry(() => import('./views/superadmin/System'));
 // SuperAdminCMS removed — CMS is now a separate portal at /cms
-const SuperAdminUsers = lazy(() => import('./views/superadmin/Users'));
+const SuperAdminUsers = lazyWithRetry(() => import('./views/superadmin/Users'));
 
 // CMS (Content Management System) - Separate Portal
-const CMSLogin = lazy(() => import('./views/CMSLogin'));
-const CMSLayout = lazy(() => import('./views/CMSLayout'));
-const CMSDashboard = lazy(() => import('./views/cms/CMSDashboard'));
-const CMSPosts = lazy(() => import('./views/cms/CMSPosts'));
-const CMSPostEditor = lazy(() => import('./views/cms/CMSPostEditor'));
-const CMSPages = lazy(() => import('./views/cms/CMSPages'));
-const CMSCategories = lazy(() => import('./views/cms/CMSCategories'));
-const CMSAuthors = lazy(() => import('./views/cms/CMSAuthors'));
-const CMSContacts = lazy(() => import('./views/cms/CMSContacts'));
-const CMSLandingFeatures = lazy(() => import('./views/cms/CMSLandingFeatures'));
-const CMSLandingFAQ = lazy(() => import('./views/cms/CMSLandingFAQ'));
-const CMSLandingPricing = lazy(() => import('./views/cms/CMSLandingPricing'));
-const CMSSettingsView = lazy(() => import('./views/cms/CMSSettings'));
-const CMSUsers = lazy(() => import('./views/cms/CMSUsers'));
+const CMSLogin = lazyWithRetry(() => import('./views/CMSLogin'));
+const CMSLayout = lazyWithRetry(() => import('./views/CMSLayout'));
+const CMSDashboard = lazyWithRetry(() => import('./views/cms/CMSDashboard'));
+const CMSPosts = lazyWithRetry(() => import('./views/cms/CMSPosts'));
+const CMSPostEditor = lazyWithRetry(() => import('./views/cms/CMSPostEditor'));
+const CMSPages = lazyWithRetry(() => import('./views/cms/CMSPages'));
+const CMSCategories = lazyWithRetry(() => import('./views/cms/CMSCategories'));
+const CMSAuthors = lazyWithRetry(() => import('./views/cms/CMSAuthors'));
+const CMSContacts = lazyWithRetry(() => import('./views/cms/CMSContacts'));
+const CMSLandingFeatures = lazyWithRetry(() => import('./views/cms/CMSLandingFeatures'));
+const CMSLandingFAQ = lazyWithRetry(() => import('./views/cms/CMSLandingFAQ'));
+const CMSLandingPricing = lazyWithRetry(() => import('./views/cms/CMSLandingPricing'));
+const CMSSettingsView = lazyWithRetry(() => import('./views/cms/CMSSettings'));
+const CMSUsers = lazyWithRetry(() => import('./views/cms/CMSUsers'));
 
 // Tenant-scoped views (Campaign Builder)
-const ConnectPlatforms = lazy(() => import('./views/tenant/ConnectPlatforms'));
-const AdAccounts = lazy(() => import('./views/tenant/AdAccounts'));
-const CampaignBuilder = lazy(() => import('./views/tenant/CampaignBuilder'));
-const CampaignDrafts = lazy(() => import('./views/tenant/CampaignDrafts'));
-const PublishLogs = lazy(() => import('./views/tenant/PublishLogs'));
-const TenantOverview = lazy(() => import('./views/tenant/TenantOverview'));
-const TenantCampaigns = lazy(() => import('./views/tenant/TenantCampaigns'));
-const TenantSettings = lazy(() => import('./views/tenant/TenantSettings'));
-const TeamManagement = lazy(() => import('./views/tenant/TeamManagement'));
-const TenantInsights = lazy(() => import('./views/tenant/Insights'));
-const TenantAuditLog = lazy(() => import('./views/tenant/AuditLog'));
+const ConnectPlatforms = lazyWithRetry(() => import('./views/tenant/ConnectPlatforms'));
+const AdAccounts = lazyWithRetry(() => import('./views/tenant/AdAccounts'));
+const CampaignBuilder = lazyWithRetry(() => import('./views/tenant/CampaignBuilder'));
+const CampaignDrafts = lazyWithRetry(() => import('./views/tenant/CampaignDrafts'));
+const PublishLogs = lazyWithRetry(() => import('./views/tenant/PublishLogs'));
+const TenantOverview = lazyWithRetry(() => import('./views/tenant/TenantOverview'));
+const TenantCampaigns = lazyWithRetry(() => import('./views/tenant/TenantCampaigns'));
+const TenantSettings = lazyWithRetry(() => import('./views/tenant/TenantSettings'));
+const TeamManagement = lazyWithRetry(() => import('./views/tenant/TeamManagement'));
+const TenantInsights = lazyWithRetry(() => import('./views/tenant/Insights'));
+const TenantAuditLog = lazyWithRetry(() => import('./views/tenant/AuditLog'));
 
 // Role-based tenant views
-const TenantAdminOverview = lazy(() => import('./views/tenant/Overview'));
-const MediaBuyerConsole = lazy(() => import('./views/tenant/Console'));
-const SignalHub = lazy(() => import('./views/tenant/SignalHub'));
+const TenantAdminOverview = lazyWithRetry(() => import('./views/tenant/Overview'));
+const MediaBuyerConsole = lazyWithRetry(() => import('./views/tenant/Console'));
+const SignalHub = lazyWithRetry(() => import('./views/tenant/SignalHub'));
 
 // Sprint feature views
-const Integrations = lazy(() => import('./views/tenant/Integrations'));
-const Pacing = lazy(() => import('./views/tenant/Pacing'));
-const ProfitROAS = lazy(() => import('./views/tenant/ProfitROAS'));
-const Attribution = lazy(() => import('./views/tenant/Attribution'));
-const Reporting = lazy(() => import('./views/tenant/Reporting'));
+const Integrations = lazyWithRetry(() => import('./views/tenant/Integrations'));
+const Pacing = lazyWithRetry(() => import('./views/tenant/Pacing'));
+const ProfitROAS = lazyWithRetry(() => import('./views/tenant/ProfitROAS'));
+const Attribution = lazyWithRetry(() => import('./views/tenant/Attribution'));
+const Reporting = lazyWithRetry(() => import('./views/tenant/Reporting'));
 
 // P1 Feature views - A/B Testing, DLQ, Model Explainability
-const ABTesting = lazy(() => import('./views/tenant/ABTesting'));
-const DeadLetterQueue = lazy(() => import('./views/tenant/DeadLetterQueue'));
-const ModelExplainability = lazy(() => import('./views/tenant/ModelExplainability'));
+const ABTesting = lazyWithRetry(() => import('./views/tenant/ABTesting'));
+const DeadLetterQueue = lazyWithRetry(() => import('./views/tenant/DeadLetterQueue'));
+const ModelExplainability = lazyWithRetry(() => import('./views/tenant/ModelExplainability'));
 
 // Enterprise feature views
-const CustomAutopilotRules = lazy(() => import('./views/CustomAutopilotRules'));
-const CustomReportBuilder = lazy(() => import('./views/CustomReportBuilder'));
+const CustomAutopilotRules = lazyWithRetry(() => import('./views/CustomAutopilotRules'));
+const CustomReportBuilder = lazyWithRetry(() => import('./views/CustomReportBuilder'));
 
 // Embed Widgets
-const EmbedWidgets = lazy(() => import('./views/tenant/EmbedWidgets'));
+const EmbedWidgets = lazyWithRetry(() => import('./views/tenant/EmbedWidgets'));
 
 // Account Manager views
-const AMPortfolio = lazy(() => import('./views/am/Portfolio'));
-const AMTenantNarrative = lazy(() => import('./views/am/TenantNarrative'));
+const AMPortfolio = lazyWithRetry(() => import('./views/am/Portfolio'));
+const AMTenantNarrative = lazyWithRetry(() => import('./views/am/TenantNarrative'));
 
 // Portal views (client VIEWER users)
-const PortalLayout = lazy(() => import('./views/portal/PortalLayout'));
-const PortalDashboard = lazy(() => import('./views/portal/PortalDashboard'));
+const PortalLayout = lazyWithRetry(() => import('./views/portal/PortalLayout'));
+const PortalDashboard = lazyWithRetry(() => import('./views/portal/PortalDashboard'));
 
 // Accept Invite (portal user onboarding)
-const AcceptInvite = lazy(() => import('./views/AcceptInvite'));
+const AcceptInvite = lazyWithRetry(() => import('./views/AcceptInvite'));
 
 // Client Assignments (admin UI)
-const ClientAssignments = lazy(() => import('./views/tenant/ClientAssignments'));
+const ClientAssignments = lazyWithRetry(() => import('./views/tenant/ClientAssignments'));
 
 // Tier-specific landing pages
-const TierLandingPage = lazy(() => import('./views/plans/TierLandingPage'));
+const TierLandingPage = lazyWithRetry(() => import('./views/plans/TierLandingPage'));
 
 // Public pages (Product)
-const FeaturesPage = lazy(() => import('./views/pages/Features'));
-const PricingPage = lazy(() => import('./views/pages/Pricing'));
-const IntegrationsPage = lazy(() => import('./views/pages/Integrations'));
-const ApiDocsPage = lazy(() => import('./views/pages/ApiDocs'));
+const FeaturesPage = lazyWithRetry(() => import('./views/pages/Features'));
+const PricingPage = lazyWithRetry(() => import('./views/pages/Pricing'));
+const IntegrationsPage = lazyWithRetry(() => import('./views/pages/Integrations'));
+const ApiDocsPage = lazyWithRetry(() => import('./views/pages/ApiDocs'));
 
 // Public pages (Solutions)
-const CDPSolutionPage = lazy(() => import('./views/pages/solutions/CDP'));
-const AudienceSyncPage = lazy(() => import('./views/pages/solutions/AudienceSync'));
-const PredictionsSolutionPage = lazy(() => import('./views/pages/solutions/PredictionsSolution'));
-const TrustEnginePage = lazy(() => import('./views/pages/solutions/TrustEngine'));
+const CDPSolutionPage = lazyWithRetry(() => import('./views/pages/solutions/CDP'));
+const AudienceSyncPage = lazyWithRetry(() => import('./views/pages/solutions/AudienceSync'));
+const PredictionsSolutionPage = lazyWithRetry(() => import('./views/pages/solutions/PredictionsSolution'));
+const TrustEnginePage = lazyWithRetry(() => import('./views/pages/solutions/TrustEngine'));
 
 // Public pages (Company)
-const AboutPage = lazy(() => import('./views/pages/company/About'));
-const CareersPage = lazy(() => import('./views/pages/company/Careers'));
-const BlogPage = lazy(() => import('./views/pages/company/Blog'));
-const BlogPostPage = lazy(() => import('./views/pages/company/BlogPost'));
-const ContactPage = lazy(() => import('./views/pages/company/Contact'));
-const FAQPage = lazy(() => import('./views/pages/company/FAQ'));
+const AboutPage = lazyWithRetry(() => import('./views/pages/company/About'));
+const CareersPage = lazyWithRetry(() => import('./views/pages/company/Careers'));
+const BlogPage = lazyWithRetry(() => import('./views/pages/company/Blog'));
+const BlogPostPage = lazyWithRetry(() => import('./views/pages/company/BlogPost'));
+const ContactPage = lazyWithRetry(() => import('./views/pages/company/Contact'));
+const FAQPage = lazyWithRetry(() => import('./views/pages/company/FAQ'));
 
 // Public pages (Legal)
-const PrivacyPage = lazy(() => import('./views/pages/legal/Privacy'));
-const TermsPage = lazy(() => import('./views/pages/legal/Terms'));
-const SecurityPage = lazy(() => import('./views/pages/legal/Security'));
-const DPAPage = lazy(() => import('./views/pages/legal/DPA'));
+const PrivacyPage = lazyWithRetry(() => import('./views/pages/legal/Privacy'));
+const TermsPage = lazyWithRetry(() => import('./views/pages/legal/Terms'));
+const SecurityPage = lazyWithRetry(() => import('./views/pages/legal/Security'));
+const DPAPage = lazyWithRetry(() => import('./views/pages/legal/DPA'));
 
 // Public pages (Resources)
-const DocsPage = lazy(() => import('./views/pages/resources/Docs'));
-const ChangelogPage = lazy(() => import('./views/pages/resources/Changelog'));
-const CaseStudiesPage = lazy(() => import('./views/pages/resources/CaseStudies'));
-const ResourcesPage = lazy(() => import('./views/pages/resources/Resources'));
-const StatusPage = lazy(() => import('./views/pages/resources/Status'));
-const ComparisonPage = lazy(() => import('./views/pages/resources/Comparison'));
-const GlossaryPage = lazy(() => import('./views/pages/resources/Glossary'));
-const NotFound = lazy(() => import('./views/NotFound'));
+const DocsPage = lazyWithRetry(() => import('./views/pages/resources/Docs'));
+const ChangelogPage = lazyWithRetry(() => import('./views/pages/resources/Changelog'));
+const CaseStudiesPage = lazyWithRetry(() => import('./views/pages/resources/CaseStudies'));
+const ResourcesPage = lazyWithRetry(() => import('./views/pages/resources/Resources'));
+const StatusPage = lazyWithRetry(() => import('./views/pages/resources/Status'));
+const ComparisonPage = lazyWithRetry(() => import('./views/pages/resources/Comparison'));
+const GlossaryPage = lazyWithRetry(() => import('./views/pages/resources/Glossary'));
+const NotFound = lazyWithRetry(() => import('./views/NotFound'));
 
 // Announcement pages
-const AudienceSyncLaunch = lazy(() => import('./views/pages/announcements/AudienceSyncLaunch'));
+const AudienceSyncLaunch = lazyWithRetry(() => import('./views/pages/announcements/AudienceSyncLaunch'));
 
 function App() {
   return (
