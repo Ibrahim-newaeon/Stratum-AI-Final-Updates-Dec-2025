@@ -211,15 +211,14 @@
     .anim-fade-left,
     .anim-fade-right,
     .anim-scale-in {
-        opacity: 0;
+        /* Visible by default; JS hides them before animating */
+        opacity: 1;
     }
-    /* Fallback: force visibility after JS timeout */
-    .anim-force-visible .anim-fade-up,
-    .anim-force-visible .anim-fade-left,
-    .anim-force-visible .anim-fade-right,
-    .anim-force-visible .anim-scale-in {
-        opacity: 1 !important;
-        transform: none !important;
+    .anim-fade-up.anim-hidden,
+    .anim-fade-left.anim-hidden,
+    .anim-fade-right.anim-hidden,
+    .anim-scale-in.anim-hidden {
+        opacity: 0;
     }
     .anim-fade-up.anim-visible {
         animation: fadeInUp 0.8s ease-out forwards;
@@ -573,17 +572,27 @@ See It In Action
 <div class="grid grid-cols-2 gap-6">
 <div>
 <label class="text-sm font-medium text-slate-300 mb-2 block">Current ROAS</label>
-<div class="bg-midnight/50 rounded-xl px-4 py-3 flex items-center justify-between border border-white/10">
-<span class="font-bold text-white" id="roas-display">2.5x</span>
-<span class="material-symbols-outlined text-sm text-slate-400">unfold_more</span>
-</div>
+<select id="roas-select" class="w-full bg-midnight/50 rounded-xl px-4 py-3 font-bold text-white border border-white/10 appearance-none cursor-pointer focus:ring-2 focus:ring-primary outline-none" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%239ca3af%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22M6%209l6%206%206-6%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 12px center;">
+<option value="1.5" class="bg-midnight text-white">1.5x</option>
+<option value="2.0" class="bg-midnight text-white">2.0x</option>
+<option value="2.5" selected class="bg-midnight text-white">2.5x</option>
+<option value="3.0" class="bg-midnight text-white">3.0x</option>
+<option value="3.5" class="bg-midnight text-white">3.5x</option>
+<option value="4.0" class="bg-midnight text-white">4.0x</option>
+<option value="5.0" class="bg-midnight text-white">5.0x</option>
+</select>
 </div>
 <div>
 <label class="text-sm font-medium text-slate-300 mb-2 block">Gross Margin</label>
-<div class="bg-midnight/50 rounded-xl px-4 py-3 flex items-center justify-between border border-white/10">
-<span class="font-bold text-white">40%</span>
-<span class="material-symbols-outlined text-sm text-slate-400">unfold_more</span>
-</div>
+<select id="margin-select" class="w-full bg-midnight/50 rounded-xl px-4 py-3 font-bold text-white border border-white/10 appearance-none cursor-pointer focus:ring-2 focus:ring-primary outline-none" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%239ca3af%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22M6%209l6%206%206-6%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 12px center;">
+<option value="0.20" class="bg-midnight text-white">20%</option>
+<option value="0.30" class="bg-midnight text-white">30%</option>
+<option value="0.40" selected class="bg-midnight text-white">40%</option>
+<option value="0.50" class="bg-midnight text-white">50%</option>
+<option value="0.60" class="bg-midnight text-white">60%</option>
+<option value="0.70" class="bg-midnight text-white">70%</option>
+<option value="0.80" class="bg-midnight text-white">80%</option>
+</select>
 </div>
 </div>
 <div class="grid grid-cols-2 gap-4 pt-6">
@@ -1066,20 +1075,26 @@ function toggleMobileMenu() {
   var spendDisplay = document.getElementById('spend-display');
   var revenueDisplay = document.getElementById('revenue-display');
   var profitDisplay = document.getElementById('profit-display');
+  var roasSelect = document.getElementById('roas-select');
+  var marginSelect = document.getElementById('margin-select');
 
-  if (slider) {
-    slider.addEventListener('input', function() {
-      var spend = parseInt(this.value);
-      var roas = 2.5;
-      var margin = 0.4;
-      var improvement = 0.12;
-      var additionalRevenue = Math.round(spend * roas * improvement);
-      var additionalProfit = Math.round(additionalRevenue * margin);
+  function updateROI() {
+    var spend = parseInt(slider.value);
+    var roas = parseFloat(roasSelect.value);
+    var margin = parseFloat(marginSelect.value);
+    var improvement = 0.12;
+    var additionalRevenue = Math.round(spend * roas * improvement);
+    var additionalProfit = Math.round(additionalRevenue * margin);
 
-      spendDisplay.textContent = '$' + spend.toLocaleString();
-      revenueDisplay.textContent = '$' + additionalRevenue.toLocaleString();
-      profitDisplay.textContent = '$' + additionalProfit.toLocaleString();
-    });
+    spendDisplay.textContent = '$' + spend.toLocaleString();
+    revenueDisplay.textContent = '$' + additionalRevenue.toLocaleString();
+    profitDisplay.textContent = '$' + additionalProfit.toLocaleString();
+  }
+
+  if (slider && roasSelect && marginSelect) {
+    slider.addEventListener('input', updateROI);
+    roasSelect.addEventListener('change', updateROI);
+    marginSelect.addEventListener('change', updateROI);
   }
 })();
 
@@ -1155,15 +1170,27 @@ document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
 (function() {
   var animatedElements = document.querySelectorAll('.anim-fade-up, .anim-fade-left, .anim-fade-right, .anim-scale-in');
   if ('IntersectionObserver' in window && animatedElements.length) {
+    // Hide elements first (progressive enhancement - visible by default in CSS)
+    animatedElements.forEach(function(el) { el.classList.add('anim-hidden'); });
     var observer = new IntersectionObserver(function(entries) {
       entries.forEach(function(entry) {
         if (entry.isIntersecting) {
+          entry.target.classList.remove('anim-hidden');
           entry.target.classList.add('anim-visible');
           observer.unobserve(entry.target);
         }
       });
     }, { threshold: 0.05, rootMargin: '0px 0px 0px 0px' });
     animatedElements.forEach(function(el) { observer.observe(el); });
+    // Fallback: show all hidden elements after 3s
+    setTimeout(function() {
+      animatedElements.forEach(function(el) {
+        if (el.classList.contains('anim-hidden')) {
+          el.classList.remove('anim-hidden');
+          el.classList.add('anim-visible');
+        }
+      });
+    }, 3000);
   }
 })();
 
@@ -1248,11 +1275,6 @@ document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
   observer.observe(ring.closest('.hero-float') || ring);
 })();
 
-// Fallback: Force all animated elements visible after 2s
-// Ensures content shows even if IntersectionObserver doesn't fire
-setTimeout(function() {
-  document.body.classList.add('anim-force-visible');
-}, 2000);
 </script>
 
 </body></html>
