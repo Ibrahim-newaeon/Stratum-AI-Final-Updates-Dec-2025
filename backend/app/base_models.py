@@ -384,6 +384,18 @@ class User(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
         DateTime(timezone=True), nullable=True
     )
 
+    # MFA / 2FA (TOTP)
+    totp_secret: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    totp_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    totp_verified_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    backup_codes: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    failed_totp_attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    totp_lockout_until: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
     # Client portal (optional – set when user is a client portal user)
     client_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("clients.id", ondelete="SET NULL"), nullable=True
