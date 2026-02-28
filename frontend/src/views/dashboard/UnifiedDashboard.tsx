@@ -1,13 +1,12 @@
 /**
  * Stratum AI - Unified Dashboard
  *
- * Main dashboard component that integrates all backend APIs:
- * - Overview metrics with real data
- * - Signal health & trust gate status
- * - AI recommendations with approve/reject
- * - Activity feed
- * - Platform performance
- * - Quick actions
+ * Main dashboard overview with widget layout:
+ * - Onboarding checklist (when incomplete)
+ * - Quick actions bar
+ * - Signal score trend + Budget pacing (side-by-side)
+ * - Autopilot actions log
+ * - Anomaly feed
  */
 
 import { useCallback, useState } from 'react';
@@ -16,40 +15,26 @@ import { useQueryClient } from '@tanstack/react-query';
 import {
   AlertTriangle,
   ArrowRight,
-  BarChart3,
   Calendar,
   ChevronDown,
-  DollarSign,
   Loader2,
-  MousePointerClick,
   RefreshCw,
-  Settings,
-  Target,
-  TrendingUp,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { usePriceMetrics } from '@/hooks/usePriceMetrics';
 import {
   TimePeriod,
-  useApproveRecommendation,
-  useDashboardActivity,
-  useDashboardCampaigns,
   useDashboardOverview,
   useDashboardQuickActions,
-  useDashboardRecommendations,
   useDashboardSignalHealth,
-  useRejectRecommendation,
 } from '@/api/dashboard';
 
-// Components
-import { SignalHealthCard } from './widgets/SignalHealthCard';
-import { TrustGateStatus } from './widgets/TrustGateStatus';
-import { RecommendationsCard } from './widgets/RecommendationsCard';
-import { ActivityFeed } from './widgets/ActivityFeed';
-import { MetricCard } from './widgets/MetricCard';
-import { PlatformBreakdown } from './widgets/PlatformBreakdown';
-import { CampaignPerformanceTable } from './widgets/CampaignPerformanceTable';
+// Widgets
+import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist';
 import { QuickActionsBar } from './widgets/QuickActionsBar';
+import { SignalScoreTrend } from './widgets/SignalScoreTrend';
+import { BudgetPacingCard } from './widgets/BudgetPacingCard';
+import { AutopilotActionsCard } from './widgets/AutopilotActionsCard';
+import { AnomalyFeedCard } from './widgets/AnomalyFeedCard';
 
 // Period options
 const periodOptions: { value: TimePeriod; label: string }[] = [
@@ -81,9 +66,8 @@ export default function UnifiedDashboard() {
   const [customEndDate, setCustomEndDate] = useState('');
   const [appliedStartDate, setAppliedStartDate] = useState<string | undefined>();
   const [appliedEndDate, setAppliedEndDate] = useState<string | undefined>();
-  const { showPriceMetrics } = usePriceMetrics();
 
-  // Fetch all dashboard data
+  // Fetch dashboard data
   const {
     data: overview,
     isLoading: overviewLoading,
@@ -91,28 +75,10 @@ export default function UnifiedDashboard() {
     error: overviewErrorData,
   } = useDashboardOverview(period, true, appliedStartDate, appliedEndDate);
 
-  const { data: campaigns, isLoading: campaignsLoading } = useDashboardCampaigns({
-    period,
-    page_size: 5,
-    sort_by: 'spend',
-    sort_order: 'desc',
-  });
-
-  const { data: recommendations, isLoading: recommendationsLoading } = useDashboardRecommendations({
-    limit: 5,
-  });
-
-  const { data: activity, isLoading: activityLoading } = useDashboardActivity({
-    limit: 10,
-  });
-
-  const { data: signalHealth, isLoading: signalHealthLoading, isError: signalHealthError } = useDashboardSignalHealth();
+  const { data: signalHealth, isLoading: signalHealthLoading, isError: signalHealthError } =
+    useDashboardSignalHealth();
 
   const { data: quickActions } = useDashboardQuickActions();
-
-  // Mutations
-  const approveRecommendation = useApproveRecommendation();
-  const rejectRecommendation = useRejectRecommendation();
 
   // Handlers
   const handleRefresh = useCallback(() => {
@@ -141,26 +107,13 @@ export default function UnifiedDashboard() {
     }
   }, [customStartDate, customEndDate]);
 
-  const handleApproveRecommendation = useCallback(
-    async (id: string) => {
-      await approveRecommendation.mutateAsync(id);
-    },
-    [approveRecommendation]
-  );
-
-  const handleRejectRecommendation = useCallback(
-    async (id: string) => {
-      await rejectRecommendation.mutateAsync(id);
-    },
-    [rejectRecommendation]
-  );
-
   const isLoading = overviewLoading || signalHealthLoading;
   const hasError = overviewError && signalHealthError;
 
   // Show error state when all critical API calls fail
   if (hasError && !isLoading) {
-    const errorStatus = (overviewErrorData as Error & { response?: { status?: number } })?.response?.status;
+    const errorStatus = (overviewErrorData as Error & { response?: { status?: number } })?.response
+      ?.status;
     const isAuthError = errorStatus === 401 || errorStatus === 403;
 
     return (
@@ -175,7 +128,7 @@ export default function UnifiedDashboard() {
           <p className="text-muted-foreground mb-6">
             {isAuthError
               ? 'Your session may have expired. Please sign in again to access the dashboard.'
-              : 'We couldn\'t connect to the server. Please check your connection and try again.'}
+              : "We couldn't connect to the server. Please check your connection and try again."}
           </p>
           <div className="flex gap-3 justify-center">
             {isAuthError ? (
@@ -203,25 +156,8 @@ export default function UnifiedDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Onboarding banner — non-blocking, shown above dashboard */}
-      {overview && !overview.onboarding_complete && (
-        <div className="flex items-center justify-between p-4 rounded-lg border bg-primary/5 border-primary/20">
-          <div className="flex items-center gap-3">
-            <Settings className="w-5 h-5 text-primary" />
-            <p className="text-sm">
-              <span className="font-medium">Setup incomplete.</span>{' '}
-              Complete onboarding to unlock all features.
-            </p>
-          </div>
-          <button
-            onClick={() => navigate('/onboarding')}
-            className="inline-flex items-center px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
-          >
-            Complete Setup
-            <ArrowRight className="w-4 h-4 ml-1" />
-          </button>
-        </div>
-      )}
+      {/* Onboarding Checklist (when incomplete) */}
+      {overview && !overview.onboarding_complete && <OnboardingChecklist variant="inline" />}
 
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -236,7 +172,10 @@ export default function UnifiedDashboard() {
           {/* Period Selector */}
           <div className="relative">
             <button
-              onClick={() => { setShowPeriodDropdown(!showPeriodDropdown); setShowCustomPicker(false); }}
+              onClick={() => {
+                setShowPeriodDropdown(!showPeriodDropdown);
+                setShowCustomPicker(false);
+              }}
               className="inline-flex items-center px-4 py-2 border rounded-lg text-sm font-medium bg-background hover:bg-muted transition-colors"
             >
               {period === 'custom' && appliedStartDate && appliedEndDate
@@ -247,7 +186,13 @@ export default function UnifiedDashboard() {
 
             {showPeriodDropdown && (
               <>
-                <div className="fixed inset-0 z-10" onClick={() => { setShowPeriodDropdown(false); setShowCustomPicker(false); }} />
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={() => {
+                    setShowPeriodDropdown(false);
+                    setShowCustomPicker(false);
+                  }}
+                />
                 <div className="absolute right-0 mt-2 w-64 bg-card border rounded-lg shadow-lg z-20 py-1">
                   {periodOptions.map((option) => (
                     <button
@@ -267,7 +212,9 @@ export default function UnifiedDashboard() {
                   {showCustomPicker && (
                     <div className="border-t px-4 py-3 space-y-3">
                       <div className="space-y-2">
-                        <label className="block text-xs font-medium text-muted-foreground">Start Date</label>
+                        <label className="block text-xs font-medium text-muted-foreground">
+                          Start Date
+                        </label>
                         <input
                           type="date"
                           value={customStartDate}
@@ -277,7 +224,9 @@ export default function UnifiedDashboard() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="block text-xs font-medium text-muted-foreground">End Date</label>
+                        <label className="block text-xs font-medium text-muted-foreground">
+                          End Date
+                        </label>
                         <input
                           type="date"
                           value={customEndDate}
@@ -320,181 +269,17 @@ export default function UnifiedDashboard() {
       {/* Quick Actions Bar */}
       {quickActions && <QuickActionsBar actions={quickActions.actions} />}
 
-      {/* Trust Gate & Signal Health Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <TrustGateStatus signalHealth={signalHealth} loading={signalHealthLoading} />
-        </div>
-        <div>
-          <SignalHealthCard signalHealth={signalHealth} loading={signalHealthLoading} />
-        </div>
+      {/* Signal Score Trend + Budget Pacing (side by side) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <SignalScoreTrend signalHealth={signalHealth} loading={signalHealthLoading} />
+        <BudgetPacingCard />
       </div>
 
-      {/* Key Metrics */}
-      {(() => {
-        const hidden = overview?.hidden_metrics || [];
-        const priceHidden = !showPriceMetrics ? ['spend', 'revenue', 'roas', 'cpa'] : [];
-        const allHidden = [...hidden, ...priceHidden];
-        const primaryCards = [
-          !allHidden.includes('spend') && (
-            <MetricCard
-              key="spend"
-              title="Total Spend"
-              value={overview?.metrics.spend.formatted || '$0'}
-              change={overview?.metrics.spend.change_percent}
-              trend={overview?.metrics.spend.trend}
-              icon={<DollarSign className="w-5 h-5" />}
-              loading={overviewLoading}
-            />
-          ),
-          !allHidden.includes('revenue') && (
-            <MetricCard
-              key="revenue"
-              title="Revenue"
-              value={overview?.metrics.revenue.formatted || '$0'}
-              change={overview?.metrics.revenue.change_percent}
-              trend={overview?.metrics.revenue.trend}
-              icon={<TrendingUp className="w-5 h-5" />}
-              loading={overviewLoading}
-              positive
-            />
-          ),
-          !allHidden.includes('roas') && (
-            <MetricCard
-              key="roas"
-              title="ROAS"
-              value={overview?.metrics.roas.formatted || '0x'}
-              change={overview?.metrics.roas.change_percent}
-              trend={overview?.metrics.roas.trend}
-              icon={<Target className="w-5 h-5" />}
-              loading={overviewLoading}
-              highlight={(overview?.metrics.roas.value ?? 0) >= 3}
-              positive
-            />
-          ),
-          !allHidden.includes('conversions') && (
-            <MetricCard
-              key="conversions"
-              title="Conversions"
-              value={overview?.metrics.conversions.formatted || '0'}
-              change={overview?.metrics.conversions.change_percent}
-              trend={overview?.metrics.conversions.trend}
-              icon={<MousePointerClick className="w-5 h-5" />}
-              loading={overviewLoading}
-              positive
-            />
-          ),
-        ].filter(Boolean);
+      {/* Autopilot Actions (full width) */}
+      <AutopilotActionsCard />
 
-        return primaryCards.length > 0 ? (
-          <div className={cn(
-            'grid gap-4',
-            primaryCards.length === 4 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' :
-            primaryCards.length === 3 ? 'grid-cols-1 sm:grid-cols-3' :
-            primaryCards.length === 2 ? 'grid-cols-1 sm:grid-cols-2' :
-            'grid-cols-1'
-          )}>
-            {primaryCards}
-          </div>
-        ) : null;
-      })()}
-
-      {/* Secondary Metrics Row */}
-      {(() => {
-        const hidden = overview?.hidden_metrics || [];
-        const priceHidden2 = !showPriceMetrics ? ['spend', 'revenue', 'roas', 'cpa'] : [];
-        const allHidden2 = [...hidden, ...priceHidden2];
-        const secondaryCards = [
-          !allHidden2.includes('cpa') && (
-            <MetricCard
-              key="cpa"
-              title="CPA"
-              value={overview?.metrics.cpa.formatted || '$0'}
-              change={overview?.metrics.cpa.change_percent}
-              trend={overview?.metrics.cpa.trend}
-              icon={<DollarSign className="w-4 h-4" />}
-              size="small"
-              loading={overviewLoading}
-            />
-          ),
-          !allHidden2.includes('ctr') && (
-            <MetricCard
-              key="ctr"
-              title="CTR"
-              value={overview?.metrics.ctr.formatted || '0%'}
-              change={overview?.metrics.ctr.change_percent}
-              trend={overview?.metrics.ctr.trend}
-              icon={<MousePointerClick className="w-4 h-4" />}
-              size="small"
-              loading={overviewLoading}
-            />
-          ),
-          !allHidden2.includes('impressions') && (
-            <MetricCard
-              key="impressions"
-              title="Impressions"
-              value={overview?.metrics.impressions.formatted || '0'}
-              icon={<BarChart3 className="w-4 h-4" />}
-              size="small"
-              loading={overviewLoading}
-            />
-          ),
-          !allHidden2.includes('clicks') && (
-            <MetricCard
-              key="clicks"
-              title="Clicks"
-              value={overview?.metrics.clicks.formatted || '0'}
-              icon={<MousePointerClick className="w-4 h-4" />}
-              size="small"
-              loading={overviewLoading}
-            />
-          ),
-        ].filter(Boolean);
-
-        return secondaryCards.length > 0 ? (
-          <div className={cn(
-            'grid gap-4',
-            secondaryCards.length === 4 ? 'grid-cols-2 sm:grid-cols-4' :
-            secondaryCards.length === 3 ? 'grid-cols-3' :
-            secondaryCards.length === 2 ? 'grid-cols-2' :
-            'grid-cols-1'
-          )}>
-            {secondaryCards}
-          </div>
-        ) : null;
-      })()}
-
-      {/* Platform Breakdown */}
-      <PlatformBreakdown platforms={overview?.platforms || []} loading={overviewLoading} />
-
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Campaigns Table - Takes 2 columns */}
-        <div className="lg:col-span-2">
-          <CampaignPerformanceTable
-            campaigns={campaigns?.campaigns || []}
-            loading={campaignsLoading}
-            onViewAll={() => navigate('/dashboard/campaigns')}
-          />
-        </div>
-
-        {/* Right Column - Recommendations & Activity */}
-        <div className="space-y-6">
-          <RecommendationsCard
-            recommendations={recommendations?.recommendations || []}
-            loading={recommendationsLoading}
-            onApprove={handleApproveRecommendation}
-            onReject={handleRejectRecommendation}
-            onViewAll={() => navigate('/dashboard/recommendations')}
-          />
-
-          <ActivityFeed
-            activities={activity?.activities || []}
-            loading={activityLoading}
-            onViewAll={() => navigate('/dashboard/activity')}
-          />
-        </div>
-      </div>
+      {/* Anomaly Feed (full width) */}
+      <AnomalyFeedCard />
     </div>
   );
 }

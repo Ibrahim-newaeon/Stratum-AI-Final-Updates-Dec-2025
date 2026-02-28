@@ -10,3 +10,7 @@ export { ActivityFeed } from './ActivityFeed';
 export { PlatformBreakdown } from './PlatformBreakdown';
 export { CampaignPerformanceTable } from './CampaignPerformanceTable';
 export { QuickActionsBar } from './QuickActionsBar';
+export { BudgetPacingCard } from './BudgetPacingCard';
+export { AutopilotActionsCard } from './AutopilotActionsCard';
+export { SignalScoreTrend } from './SignalScoreTrend';
+export { AnomalyFeedCard } from './AnomalyFeedCard';
