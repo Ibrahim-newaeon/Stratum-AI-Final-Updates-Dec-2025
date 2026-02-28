@@ -169,136 +169,158 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     email: string,
     password: string
   ): Promise<{ success: boolean; error?: string; lockoutSeconds?: number }> => {
-    try {
-      // Call the actual backend API
-      const response = await fetch(`${API_BASE}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
+    const MAX_RETRIES = 2;
 
-      const data = await response.json();
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        // Call the actual backend API
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
 
-      if (!response.ok) {
-        // Handle 429 Too Many Requests — account lockout
-        if (response.status === 429) {
-          const retryAfter = response.headers.get('Retry-After');
-          let lockoutSeconds = 900; // default 15 minutes
-          if (retryAfter) {
-            const parsed = parseInt(retryAfter, 10);
-            if (!isNaN(parsed) && parsed > 0) lockoutSeconds = parsed;
-          } else if (typeof data.detail === 'string') {
-            // Try to extract seconds from detail message: "Try again in 123 seconds."
-            const match = data.detail.match(/(\d+)\s*seconds?/i);
-            if (match) lockoutSeconds = parseInt(match[1], 10);
+        const response = await fetch(`${API_BASE}/auth/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password }),
+          signal: controller.signal,
+        });
+        clearTimeout(timeout);
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          // Handle 429 Too Many Requests — account lockout
+          if (response.status === 429) {
+            const retryAfter = response.headers.get('Retry-After');
+            let lockoutSeconds = 900; // default 15 minutes
+            if (retryAfter) {
+              const parsed = parseInt(retryAfter, 10);
+              if (!isNaN(parsed) && parsed > 0) lockoutSeconds = parsed;
+            } else if (typeof data.detail === 'string') {
+              // Try to extract seconds from detail message: "Try again in 123 seconds."
+              const match = data.detail.match(/(\d+)\s*seconds?/i);
+              if (match) lockoutSeconds = parseInt(match[1], 10);
+            }
+            return {
+              success: false,
+              error: 'Too many failed login attempts.',
+              lockoutSeconds,
+            };
           }
-          return {
-            success: false,
-            error: 'Too many failed login attempts.',
-            lockoutSeconds,
+
+          // Handle Pydantic validation errors (array of {type, loc, msg, input, ctx})
+          let errorMessage = 'Login failed';
+          if (data.detail) {
+            if (typeof data.detail === 'string') {
+              errorMessage = data.detail;
+            } else if (Array.isArray(data.detail) && data.detail.length > 0) {
+              // Extract message from first validation error
+              errorMessage = data.detail[0].msg || data.detail[0].message || 'Validation error';
+            } else if (typeof data.detail === 'object' && data.detail.msg) {
+              errorMessage = data.detail.msg;
+            }
+          }
+          return { success: false, error: errorMessage };
+        }
+
+        // Store tokens
+        if (data.data?.access_token) {
+          localStorage.setItem(ACCESS_TOKEN_KEY, data.data.access_token);
+        }
+        if (data.data?.refresh_token) {
+          localStorage.setItem(REFRESH_TOKEN_KEY, data.data.refresh_token);
+        }
+
+        // Extract tenant_id from JWT so we can sync it to the tenant store
+        const jwtPayload = data.data?.access_token
+          ? decodeJwtPayload(data.data.access_token)
+          : {};
+        const jwtTenantId = jwtPayload.tenant_id as number | undefined;
+
+        // Fetch user profile
+        const userResponse = await fetch(`${API_BASE}/users/me`, {
+          headers: {
+            Authorization: `Bearer ${data.data.access_token}`,
+          },
+        });
+
+        let userInfo: User;
+
+        if (userResponse.ok) {
+          const userData = await userResponse.json();
+          const tenantId = userData.data.tenant_id ?? jwtTenantId ?? null;
+          // Map backend role to valid frontend role (fallback to 'analyst')
+          const backendRole = userData.data.role || 'analyst';
+          const validRoles = ['superadmin', 'admin', 'manager', 'analyst', 'viewer'];
+          const mappedRole = validRoles.includes(backendRole) ? backendRole : 'analyst';
+          userInfo = {
+            id: String(userData.data.id),
+            email: userData.data.email,
+            name: userData.data.full_name || userData.data.email,
+            role: mappedRole as User['role'],
+            permissions: ['all'],
+            tenant_id: tenantId,
+            user_type: userData.data.user_type || 'agency',
+            client_id: userData.data.client_id ?? null,
+            cms_role: userData.data.cms_role ?? null,
+          };
+        } else {
+          // Fallback if /me fails - create user from token claims
+          userInfo = {
+            id: String(jwtPayload.sub ?? '1'),
+            email: email,
+            name: email.split('@')[0],
+            role: (jwtPayload.role as User['role']) ?? 'admin',
+            permissions: ['all'],
+            tenant_id: jwtTenantId ?? null,
+            user_type: 'agency',
+            cms_role: (jwtPayload.cms_role as string) ?? null,
           };
         }
 
-        // Handle Pydantic validation errors (array of {type, loc, msg, input, ctx})
-        let errorMessage = 'Login failed';
-        if (data.detail) {
-          if (typeof data.detail === 'string') {
-            errorMessage = data.detail;
-          } else if (Array.isArray(data.detail) && data.detail.length > 0) {
-            // Extract message from first validation error
-            errorMessage = data.detail[0].msg || data.detail[0].message || 'Validation error';
-          } else if (typeof data.detail === 'object' && data.detail.msg) {
-            errorMessage = data.detail.msg;
-          }
+        setUser(userInfo);
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(userInfo));
+
+        // Sync tenant context to Zustand store so other components pick it up
+        const tenantStore = useTenantStore.getState();
+        if (userInfo.tenant_id) {
+          tenantStore.setTenantId(userInfo.tenant_id);
         }
-        return { success: false, error: errorMessage };
+        // Also sync user to tenant store for role-based features
+        tenantStore.setUser({
+          id: Number(userInfo.id),
+          email: userInfo.email,
+          full_name: userInfo.name,
+          role: userInfo.role,
+          avatar_url: userInfo.avatar ?? null,
+          locale: 'en',
+          timezone: 'UTC',
+          is_active: true,
+          is_verified: true,
+          last_login_at: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+        });
+
+        return { success: true };
+      } catch (error) {
+        // On last attempt, return the actual error details
+        if (attempt === MAX_RETRIES) {
+          const msg =
+            error instanceof DOMException && error.name === 'AbortError'
+              ? 'Connection timed out. The server may be starting up — please try again in a few seconds.'
+              : error instanceof TypeError
+                ? `Cannot reach server (${API_BASE}). Check your connection.`
+                : `Connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
+          console.error('[Auth] Login failed after retries:', error);
+          return { success: false, error: msg };
+        }
+        // Wait briefly before retrying (1s, then 2s)
+        await new Promise((r) => setTimeout(r, (attempt + 1) * 1000));
       }
-
-      // Store tokens
-      if (data.data?.access_token) {
-        localStorage.setItem(ACCESS_TOKEN_KEY, data.data.access_token);
-      }
-      if (data.data?.refresh_token) {
-        localStorage.setItem(REFRESH_TOKEN_KEY, data.data.refresh_token);
-      }
-
-      // Extract tenant_id from JWT so we can sync it to the tenant store
-      const jwtPayload = data.data?.access_token
-        ? decodeJwtPayload(data.data.access_token)
-        : {};
-      const jwtTenantId = jwtPayload.tenant_id as number | undefined;
-
-      // Fetch user profile
-      const userResponse = await fetch(`${API_BASE}/users/me`, {
-        headers: {
-          Authorization: `Bearer ${data.data.access_token}`,
-        },
-      });
-
-      let userInfo: User;
-
-      if (userResponse.ok) {
-        const userData = await userResponse.json();
-        const tenantId = userData.data.tenant_id ?? jwtTenantId ?? null;
-        // Map backend role to valid frontend role (fallback to 'analyst')
-        const backendRole = userData.data.role || 'analyst';
-        const validRoles = ['superadmin', 'admin', 'manager', 'analyst', 'viewer'];
-        const mappedRole = validRoles.includes(backendRole) ? backendRole : 'analyst';
-        userInfo = {
-          id: String(userData.data.id),
-          email: userData.data.email,
-          name: userData.data.full_name || userData.data.email,
-          role: mappedRole as User['role'],
-          permissions: ['all'],
-          tenant_id: tenantId,
-          user_type: userData.data.user_type || 'agency',
-          client_id: userData.data.client_id ?? null,
-          cms_role: userData.data.cms_role ?? null,
-        };
-      } else {
-        // Fallback if /me fails - create user from token claims
-        userInfo = {
-          id: String(jwtPayload.sub ?? '1'),
-          email: email,
-          name: email.split('@')[0],
-          role: (jwtPayload.role as User['role']) ?? 'admin',
-          permissions: ['all'],
-          tenant_id: jwtTenantId ?? null,
-          user_type: 'agency',
-          cms_role: (jwtPayload.cms_role as string) ?? null,
-        };
-      }
-
-      setUser(userInfo);
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(userInfo));
-
-      // Sync tenant context to Zustand store so other components pick it up
-      const tenantStore = useTenantStore.getState();
-      if (userInfo.tenant_id) {
-        tenantStore.setTenantId(userInfo.tenant_id);
-      }
-      // Also sync user to tenant store for role-based features
-      tenantStore.setUser({
-        id: Number(userInfo.id),
-        email: userInfo.email,
-        full_name: userInfo.name,
-        role: userInfo.role,
-        avatar_url: userInfo.avatar ?? null,
-        locale: 'en',
-        timezone: 'UTC',
-        is_active: true,
-        is_verified: true,
-        last_login_at: new Date().toISOString(),
-        created_at: new Date().toISOString(),
-      });
-
-      return { success: true };
-    } catch (error) {
-      // Error returned in result object
-      return { success: false, error: 'Network error. Please try again.' };
     }
+
+    return { success: false, error: 'Login failed. Please try again.' };
   };
 
   /** Client-side demo login — creates a mock session without hitting the backend */
