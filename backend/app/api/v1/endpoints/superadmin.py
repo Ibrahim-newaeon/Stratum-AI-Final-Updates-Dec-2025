@@ -15,6 +15,7 @@ Features:
 
 from datetime import datetime, timedelta, timezone, date
 from typing import List, Optional
+from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel
@@ -1213,3 +1214,250 @@ async def get_superadmin_dashboard(
             },
         },
     )
+
+
+# =============================================================================
+# Seed Platform Connections from Env Vars
+# =============================================================================
+class SeedPlatformsRequest(BaseModel):
+    """Request to bootstrap platform connections from env vars."""
+    tenant_id: int = 1
+    trigger_sync: bool = True
+
+
+@router.post("/seed-platforms", response_model=APIResponse)
+async def seed_platforms(
+    body: SeedPlatformsRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Bootstrap TenantPlatformConnection and TenantAdAccount records from
+    environment-variable tokens.  SuperAdmin only.
+
+    This replaces the normal OAuth callback flow for initial setup when
+    tokens are already provisioned as Railway env vars.
+    """
+    user_id = require_superadmin(request)
+
+    from app.core.config import settings
+    from app.core.security import encrypt_pii
+    from app.models.campaign_builder import (
+        TenantPlatformConnection,
+        TenantAdAccount,
+        ConnectionStatus,
+    )
+    from app.base_models import AdPlatform
+
+    # Verify tenant exists
+    tenant_result = await db.execute(
+        select(Tenant).where(Tenant.id == body.tenant_id)
+    )
+    tenant = tenant_result.scalar_one_or_none()
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant not found")
+
+    # Platform config: (platform, access_token_setting, account_ids_fn, extra_fields)
+    platform_configs = [
+        {
+            "platform": "meta",
+            "access_token": settings.meta_access_token,
+            "account_ids_fn": lambda: _parse_meta_account_ids(settings.meta_ad_account_ids),
+            "extra": {
+                "meta_app_id": settings.meta_app_id,
+                "meta_app_secret": settings.meta_app_secret,
+            },
+        },
+        {
+            "platform": "google",
+            "access_token": settings.google_ads_refresh_token,
+            "account_ids_fn": lambda: _parse_google_account_ids(settings.google_ads_customer_id),
+            "extra": {
+                "google_ads_developer_token": settings.google_ads_developer_token,
+                "google_ads_client_id": settings.google_ads_client_id,
+                "google_ads_client_secret": settings.google_ads_client_secret,
+            },
+        },
+        {
+            "platform": "tiktok",
+            "access_token": settings.tiktok_access_token,
+            "account_ids_fn": lambda: [settings.tiktok_advertiser_id] if settings.tiktok_advertiser_id else [],
+            "extra": {
+                "tiktok_app_id": settings.tiktok_app_id,
+                "tiktok_secret": settings.tiktok_secret,
+            },
+        },
+        {
+            "platform": "snapchat",
+            "access_token": settings.snapchat_access_token,
+            "account_ids_fn": lambda: [settings.snapchat_ad_account_id] if settings.snapchat_ad_account_id else [],
+            "extra": {
+                "snapchat_client_id": settings.snapchat_client_id,
+                "snapchat_client_secret": settings.snapchat_client_secret,
+            },
+        },
+    ]
+
+    connections_created = []
+    accounts_created = []
+    sync_results = []
+    now = datetime.now(timezone.utc)
+
+    for cfg in platform_configs:
+        token = cfg["access_token"]
+        if not token:
+            continue
+
+        platform_name = cfg["platform"]
+
+        # --- Upsert TenantPlatformConnection ---
+        conn_result = await db.execute(
+            select(TenantPlatformConnection).where(
+                TenantPlatformConnection.tenant_id == body.tenant_id,
+                TenantPlatformConnection.platform == platform_name,
+            )
+        )
+        conn = conn_result.scalar_one_or_none()
+
+        if conn:
+            conn.access_token_encrypted = encrypt_pii(token)
+            conn.status = ConnectionStatus.CONNECTED.value
+            conn.connected_at = now
+            conn.updated_at = now
+            conn.last_error = None
+            conn.error_count = 0
+        else:
+            conn = TenantPlatformConnection(
+                id=uuid4(),
+                tenant_id=body.tenant_id,
+                platform=platform_name,
+                status=ConnectionStatus.CONNECTED.value,
+                access_token_encrypted=encrypt_pii(token),
+                connected_at=now,
+                granted_by_user_id=user_id,
+                scopes=[],
+            )
+            db.add(conn)
+
+        # Store refresh token for Google (uses refresh_token flow)
+        if platform_name == "google" and settings.google_ads_refresh_token:
+            conn.refresh_token_encrypted = encrypt_pii(settings.google_ads_refresh_token)
+
+        # Flush to get conn.id for ad accounts
+        await db.flush()
+        connections_created.append(platform_name)
+
+        # --- Create TenantAdAccount records ---
+        account_ids = cfg["account_ids_fn"]()
+        for acct_id in account_ids:
+            if not acct_id:
+                continue
+            acct_result = await db.execute(
+                select(TenantAdAccount).where(
+                    TenantAdAccount.tenant_id == body.tenant_id,
+                    TenantAdAccount.platform == platform_name,
+                    TenantAdAccount.platform_account_id == acct_id,
+                )
+            )
+            existing_acct = acct_result.scalar_one_or_none()
+
+            if existing_acct:
+                existing_acct.is_enabled = True
+                existing_acct.connection_id = conn.id
+                existing_acct.updated_at = now
+            else:
+                new_acct = TenantAdAccount(
+                    id=uuid4(),
+                    tenant_id=body.tenant_id,
+                    connection_id=conn.id,
+                    platform=platform_name,
+                    platform_account_id=acct_id,
+                    name=f"{platform_name.title()} - {acct_id}",
+                    is_enabled=True,
+                    currency="USD",
+                    timezone="UTC",
+                )
+                db.add(new_acct)
+
+            accounts_created.append({"platform": platform_name, "account_id": acct_id})
+
+    await db.commit()
+
+    # --- Trigger sync (optional) ---
+    if body.trigger_sync and connections_created:
+        from app.services.sync.orchestrator import PlatformSyncOrchestrator
+        from app.base_models import AdPlatform as AP
+
+        orchestrator = PlatformSyncOrchestrator(db)
+        platform_map = {
+            "meta": AP.META,
+            "google": AP.GOOGLE,
+            "tiktok": AP.TIKTOK,
+            "snapchat": AP.SNAPCHAT,
+        }
+        for pname in connections_created:
+            ap = platform_map.get(pname)
+            if not ap:
+                continue
+            try:
+                sr = await orchestrator.sync_platform(body.tenant_id, ap, days_back=30)
+                sync_results.append({
+                    "platform": pname,
+                    "campaigns_synced": sr.campaigns_synced,
+                    "metrics_upserted": sr.metrics_upserted,
+                    "errors": sr.errors,
+                    "duration_seconds": round(sr.duration_seconds, 2),
+                })
+            except Exception as e:
+                logger.error("seed_sync_failed", platform=pname, error=str(e))
+                sync_results.append({
+                    "platform": pname,
+                    "campaigns_synced": 0,
+                    "metrics_upserted": 0,
+                    "errors": [str(e)],
+                })
+
+    # Audit log
+    await create_audit_log(
+        db,
+        action="seed_platforms",
+        user_id=user_id,
+        tenant_id=body.tenant_id,
+        resource_type="platform_connections",
+        details={
+            "connections": connections_created,
+            "accounts": accounts_created,
+        },
+    )
+
+    return APIResponse(
+        success=True,
+        data={
+            "connections_created": connections_created,
+            "accounts_created": accounts_created,
+            "sync_results": sync_results,
+        },
+        message=f"Seeded {len(connections_created)} platform(s) with {len(accounts_created)} ad account(s)",
+    )
+
+
+def _parse_meta_account_ids(raw: Optional[str]) -> list[str]:
+    """Parse comma-separated Meta ad account IDs, adding act_ prefix if missing."""
+    if not raw:
+        return []
+    ids = []
+    for part in raw.split(","):
+        aid = part.strip()
+        if not aid:
+            continue
+        if not aid.startswith("act_"):
+            aid = f"act_{aid}"
+        ids.append(aid)
+    return ids
+
+
+def _parse_google_account_ids(raw: Optional[str]) -> list[str]:
+    """Parse Google Ads customer ID, stripping hyphens."""
+    if not raw:
+        return []
+    return [raw.replace("-", "").strip()]
