@@ -24,16 +24,16 @@ export default function Privacy() {
           <div
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm mb-6"
             style={{
-              background: 'rgba(52, 199, 89, 0.1)',
-              border: '1px solid rgba(52, 199, 89, 0.3)',
-              color: '#34c759',
+              background: 'rgba(255, 179, 71, 0.1)',
+              border: '1px solid rgba(255, 179, 71, 0.3)',
+              color: '#FFB347',
             }}
           >
             <ShieldCheckIcon className="w-4 h-4" />
             Legal
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Privacy Policy</h1>
-          <p style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Last updated: January 15, 2026</p>
+          <p style={{ color: 'rgba(139, 141, 158, 0.7)' }}>Last updated: January 15, 2026</p>
         </div>
       </section>
 
@@ -48,8 +48,8 @@ export default function Privacy() {
             <div
               className="prose prose-invert max-w-none p-8 rounded-3xl"
               style={{
-                background: 'rgba(255, 255, 255, 0.04)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
+                background: '#12131F',
+                border: '1px solid #1E1F30',
               }}
             >
               <div className="space-y-8" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>

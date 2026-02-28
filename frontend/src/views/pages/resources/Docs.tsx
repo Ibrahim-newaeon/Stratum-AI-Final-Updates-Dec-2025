@@ -1,6 +1,6 @@
 /**
  * Documentation Portal Page
- * 2026 Theme - Electric Neon / OLED-Optimized
+ * StratumAI Dark Enterprise Theme
  */
 
 import { useState } from 'react';
@@ -26,7 +26,7 @@ const docCategories = [
     title: 'Getting Started',
     description: 'Quick start guides to get you up and running',
     icon: PlayIcon,
-    color: '#00FF88',
+    color: '#00D4AA',
     links: [
       { name: 'Quick Start Guide', href: '/docs/quickstart' },
       { name: 'Installation', href: '/docs/installation' },
@@ -38,7 +38,7 @@ const docCategories = [
     title: 'API Reference',
     description: 'Complete API documentation with examples',
     icon: CodeBracketIcon,
-    color: '#8B5CF6',
+    color: '#FFB347',
     links: [
       { name: 'REST API', href: '/api-docs' },
       { name: 'Webhooks', href: '/docs/webhooks' },
@@ -123,44 +123,40 @@ export default function DocsPage() {
               <div
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
                 style={{
-                  background: 'rgba(139, 92, 246, 0.1)',
-                  border: '1px solid rgba(139, 92, 246, 0.2)',
+                  background: 'rgba(255,179,71,0.1)',
+                  border: '1px solid rgba(255,179,71,0.3)',
                 }}
               >
-                <BookOpenIcon className="w-4 h-4 text-[#8B5CF6]" />
-                <span className="text-sm font-medium text-[#8B5CF6]">Documentation</span>
+                <BookOpenIcon className="w-4 h-4 text-[#FFB347]" />
+                <span className="text-sm font-medium text-[#FFB347]">Documentation</span>
               </div>
 
               <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
                 Learn how to build with{' '}
                 <span
-                  style={{
-                    background: 'linear-gradient(135deg, #8B5CF6 0%, #00D4FF 50%, #FF6B6B 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                  }}
+                  style={{ color: '#FF4D4D' }}
                 >
                   Stratum AI
                 </span>
               </h1>
 
-              <p className="text-lg text-gray-400 mb-8">
+              <p className="text-lg mb-8" style={{ color: '#8B8D9E' }}>
                 Comprehensive guides, API references, and tutorials to help you integrate and
                 maximize the power of trust-gated automation.
               </p>
 
               {/* Search Bar */}
               <div className="relative max-w-xl mx-auto">
-                <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: 'rgba(139,141,158,0.7)' }} />
                 <input
                   type="text"
                   placeholder="Search documentation..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 rounded-xl text-white placeholder-gray-500 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#8B5CF6]/50"
+                  className="w-full pl-12 pr-4 py-4 rounded-xl text-white placeholder-gray-500 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#FF4D4D]/50"
                   style={{
-                    background: 'rgba(10, 10, 15, 0.8)',
-                    border: '1px solid rgba(139, 92, 246, 0.2)',
+                    background: '#12131F',
+                    border: '1px solid #1E1F30',
                   }}
                 />
               </div>
@@ -184,8 +180,8 @@ export default function DocsPage() {
                       key={category.title}
                       className="group p-6 rounded-2xl transition-all duration-300 hover:-translate-y-1"
                       style={{
-                        background: 'rgba(10, 10, 15, 0.6)',
-                        border: '1px solid rgba(255, 255, 255, 0.06)',
+                        background: '#12131F',
+                        border: '1px solid #1E1F30',
                       }}
                     >
                       <div
@@ -199,14 +195,15 @@ export default function DocsPage() {
                       </div>
 
                       <h3 className="text-xl font-semibold text-white mb-2">{category.title}</h3>
-                      <p className="text-gray-400 text-sm mb-4">{category.description}</p>
+                      <p className="text-sm mb-4" style={{ color: '#8B8D9E' }}>{category.description}</p>
 
                       <ul className="space-y-2">
                         {category.links.map((link) => (
                           <li key={link.name}>
                             <Link
                               to={link.href}
-                              className="flex items-center gap-2 text-sm text-gray-300 hover:text-white transition-colors group/link"
+                              className="flex items-center gap-2 text-sm hover:text-white transition-colors group/link"
+                              style={{ color: '#8B8D9E' }}
                             >
                               <ArrowRightIcon className="w-3 h-3 opacity-0 -translate-x-2 group-hover/link:opacity-100 group-hover/link:translate-x-0 transition-all" />
                               <span>{link.name}</span>
@@ -232,18 +229,18 @@ export default function DocsPage() {
                       to="#"
                       className="flex items-center gap-4 p-4 rounded-xl transition-all duration-200 hover:bg-white/5 group"
                       style={{
-                        background: 'rgba(10, 10, 15, 0.4)',
-                        border: '1px solid rgba(255, 255, 255, 0.04)',
+                        background: '#12131F',
+                        border: '1px solid #1E1F30',
                       }}
                     >
-                      <span className="text-2xl font-bold text-gray-600">
+                      <span className="text-2xl font-bold" style={{ color: 'rgba(139,141,158,0.5)' }}>
                         {String(index + 1).padStart(2, '0')}
                       </span>
                       <div className="flex-1">
-                        <h4 className="text-white font-medium group-hover:text-[#8B5CF6] transition-colors">
+                        <h4 className="text-white font-medium group-hover:text-[#FF4D4D] transition-colors">
                           {article.title}
                         </h4>
-                        <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                        <div className="flex items-center gap-3 mt-1 text-xs" style={{ color: 'rgba(139,141,158,0.7)' }}>
                           <span>{article.views} views</span>
                           <span>{article.time} read</span>
                         </div>
@@ -260,24 +257,23 @@ export default function DocsPage() {
                 <div
                   className="rounded-2xl p-8 md:p-12 text-center"
                   style={{
-                    background:
-                      'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(0, 212, 255, 0.05) 100%)',
-                    border: '1px solid rgba(139, 92, 246, 0.2)',
+                    background: '#12131F',
+                    border: '1px solid #1E1F30',
                   }}
                 >
                   <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
                     Can't find what you're looking for?
                   </h2>
-                  <p className="text-gray-400 mb-8">
+                  <p className="mb-8" style={{ color: '#8B8D9E' }}>
                     Our support team is here to help you with any questions.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4 justify-center">
                     <Link
                       to="/contact"
-                      className="px-6 py-3 rounded-xl font-semibold text-white transition-all duration-200"
+                      className="px-6 py-3 rounded-full font-semibold text-white transition-all duration-200"
                       style={{
-                        background: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)',
-                        boxShadow: '0 4px 20px rgba(139, 92, 246, 0.3)',
+                        background: '#FF4D4D',
+                        boxShadow: '0 4px 20px rgba(255,77,77,0.3)',
                       }}
                     >
                       Contact Support
@@ -287,7 +283,7 @@ export default function DocsPage() {
                       className="px-6 py-3 rounded-xl font-semibold text-white transition-all duration-200"
                       style={{
                         background: 'rgba(255, 255, 255, 0.06)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        border: '1px solid #1E1F30',
                       }}
                     >
                       View FAQ

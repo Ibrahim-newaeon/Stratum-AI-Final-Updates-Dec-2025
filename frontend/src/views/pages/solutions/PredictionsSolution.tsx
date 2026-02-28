@@ -115,9 +115,9 @@ export default function PredictionsSolution() {
               <div
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm mb-6"
                 style={{
-                  background: 'rgba(236, 72, 153, 0.1)',
-                  border: '1px solid rgba(236, 72, 153, 0.3)',
-                  color: '#ec4899',
+                  background: 'rgba(255, 179, 71, 0.1)',
+                  border: '1px solid rgba(255, 179, 71, 0.3)',
+                  color: '#FFB347',
                 }}
               >
                 <SparklesIcon className="w-4 h-4" />
@@ -129,17 +129,17 @@ export default function PredictionsSolution() {
               >
                 <span className="text-white">{hero.title}</span>
                 <br />
-                <span style={{ color: '#f97316' }}>{hero.titleHighlight}</span>
+                <span style={{ color: '#FF4D4D' }}>{hero.titleHighlight}</span>
               </h1>
-              <p className="text-lg mb-8" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+              <p className="text-lg mb-8" style={{ color: '#8B8D9E' }}>
                 {hero.description}
               </p>
               <Link
                 to={hero.ctaLink}
-                className="inline-flex px-8 py-4 rounded-xl text-lg font-semibold text-white transition-all hover:opacity-90"
+                className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-all hover:opacity-90"
                 style={{
-                  background: '#f97316',
-                  boxShadow: '0 4px 20px rgba(249, 115, 22, 0.4)',
+                  background: '#FF4D4D',
+                  boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
                 }}
               >
                 {hero.ctaText}
@@ -148,8 +148,8 @@ export default function PredictionsSolution() {
             <div
               className="rounded-3xl p-8"
               style={{
-                background: 'rgba(255, 255, 255, 0.04)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
+                background: '#12131F',
+                border: '1px solid #1E1F30',
               }}
             >
               {/* Prediction Preview */}
@@ -225,7 +225,7 @@ export default function PredictionsSolution() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Prediction Models</h2>
-            <p className="text-lg" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+            <p className="text-lg" style={{ color: '#8B8D9E' }}>
               Enterprise-grade ML models continuously trained on your data.
             </p>
           </div>
@@ -233,11 +233,11 @@ export default function PredictionsSolution() {
             {predictions.map((pred) => (
               <div
                 key={pred.title}
-                className="p-6 rounded-2xl transition-all hover:scale-[1.02] backdrop-blur-xl"
+                className="p-6 rounded-2xl transition-all hover:scale-[1.02]"
                 style={{
-                  background: `${pred.color}15`,
-                  border: `1px solid ${pred.color}30`,
-                  boxShadow: `0 8px 32px ${pred.color}10`,
+                  background: '#12131F',
+                  border: '1px solid #1E1F30',
+                  borderLeft: `3px solid ${pred.color}`,
                 }}
               >
                 <div className="flex items-start gap-4">
@@ -263,7 +263,7 @@ export default function PredictionsSolution() {
                         {pred.accuracy} accuracy
                       </span>
                     </div>
-                    <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+                    <p className="text-sm" style={{ color: '#8B8D9E' }}>
                       {pred.description}
                     </p>
                   </div>
@@ -284,14 +284,14 @@ export default function PredictionsSolution() {
                 <div
                   className="w-14 h-14 rounded-xl flex items-center justify-center text-xl font-bold mx-auto mb-4"
                   style={{
-                    background: 'linear-gradient(135deg, #ec4899 0%, #a855f7 100%)',
+                    background: '#FF4D4D',
                     color: '#ffffff',
                   }}
                 >
                   {item.step}
                 </div>
                 <h3 className="text-lg font-semibold text-white mb-2">{item.title}</h3>
-                <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+                <p className="text-sm" style={{ color: '#8B8D9E' }}>
                   {item.description}
                 </p>
               </div>
@@ -304,24 +304,22 @@ export default function PredictionsSolution() {
       <section className="py-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <div
-            className="p-12 rounded-3xl backdrop-blur-xl"
+            className="p-12 rounded-3xl"
             style={{
-              background:
-                'linear-gradient(135deg, rgba(236, 72, 153, 0.15) 0%, rgba(168, 85, 247, 0.15) 100%)',
-              border: '1px solid rgba(236, 72, 153, 0.3)',
-              boxShadow: '0 8px 32px rgba(236, 72, 153, 0.15), 0 8px 32px rgba(168, 85, 247, 0.15)',
+              background: '#12131F',
+              border: '1px solid #1E1F30',
             }}
           >
             <h2 className="text-3xl font-bold text-white mb-4">Start Predicting Today</h2>
-            <p className="text-lg mb-8" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+            <p className="text-lg mb-8" style={{ color: '#8B8D9E' }}>
               See predictions for your customers within 48 hours.
             </p>
             <Link
               to="/signup"
-              className="inline-flex px-8 py-4 rounded-xl text-lg font-semibold text-white transition-all hover:opacity-90"
+              className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-all hover:opacity-90"
               style={{
-                background: '#f97316',
-                boxShadow: '0 4px 20px rgba(249, 115, 22, 0.4)',
+                background: '#FF4D4D',
+                boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
               }}
             >
               Get Started Free

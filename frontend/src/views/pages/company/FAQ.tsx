@@ -211,19 +211,19 @@ export default function FAQ() {
       {/* Hero Section */}
       <section className="py-20 px-6">
         <div className="max-w-7xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-400 text-sm mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm mb-6" style={{ background: 'rgba(255, 179, 71, 0.1)', border: '1px solid rgba(255, 179, 71, 0.3)', color: '#FFB347' }}>
             <QuestionMarkCircleIcon className="w-4 h-4" />
             Help Center
           </div>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
             <span className="text-white">Frequently Asked</span>
             <br />
-            <span className="bg-gradient-stratum bg-clip-text text-transparent">Questions</span>
+            <span className="text-[#FF4D4D]">Questions</span>
           </h1>
-          <p className="text-lg md:text-xl text-white/70 max-w-2xl mx-auto mb-8">
+          <p className="text-lg md:text-xl text-[#8B8D9E] max-w-2xl mx-auto mb-8">
             Everything you need to know about Stratum AI. Can&apos;t find what you&apos;re looking
             for?{' '}
-            <a href="/contact" className="text-orange-500 hover:underline">
+            <a href="/contact" className="text-[#FF4D4D] hover:underline">
               Contact our team
             </a>
           </p>
@@ -236,7 +236,8 @@ export default function FAQ() {
               placeholder="Search questions..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-white/40 outline-none transition-all focus:ring-2 focus:ring-purple-500/50"
+              className="w-full pl-12 pr-4 py-4 rounded-2xl text-white placeholder-white/40 outline-none transition-all focus:ring-2 focus:ring-[#FF4D4D]/50"
+              style={{ background: '#12131F', border: '1px solid #1E1F30' }}
             />
           </div>
         </div>
@@ -265,11 +266,11 @@ export default function FAQ() {
                   key={category.id}
                   onClick={() => setSelectedCategory(category.id)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                    isSelected ? 'text-white' : 'text-white/60 hover:text-white'
+                    isSelected ? 'text-white' : 'text-[#8B8D9E] hover:text-white'
                   }`}
                   style={{
-                    background: isSelected ? `${accentColor}20` : 'rgba(255, 255, 255, 0.04)',
-                    border: `1px solid ${isSelected ? `${accentColor}40` : 'rgba(255, 255, 255, 0.08)'}`,
+                    background: isSelected ? `${accentColor}20` : '#12131F',
+                    border: `1px solid ${isSelected ? `${accentColor}40` : '#1E1F30'}`,
                   }}
                 >
                   <Icon
@@ -290,7 +291,7 @@ export default function FAQ() {
           {filteredFaqs.length === 0 ? (
             <div className="text-center py-12">
               <QuestionMarkCircleIcon className="w-12 h-12 text-white/20 mx-auto mb-4" />
-              <p className="text-white/60">No questions found matching your search.</p>
+              <p className="text-[#8B8D9E]">No questions found matching your search.</p>
             </div>
           ) : (
             <div
@@ -349,7 +350,7 @@ export default function FAQ() {
                     </h3>
 
                     {/* Answer */}
-                    <p className="text-sm text-white/60 leading-relaxed">{faq.answer}</p>
+                    <p className="text-sm text-[#8B8D9E] leading-relaxed">{faq.answer}</p>
                   </div>
                 );
               })}
@@ -361,24 +362,25 @@ export default function FAQ() {
       {/* Contact CTA */}
       <section className="py-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="p-8 rounded-3xl bg-gradient-to-br from-purple-500/10 to-cyan-500/10 border border-white/10">
+          <div className="p-8 rounded-3xl" style={{ background: '#12131F', border: '1px solid #1E1F30' }}>
             <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
               Still have questions?
             </h2>
-            <p className="text-white/60 mb-6 max-w-xl mx-auto">
+            <p className="text-[#8B8D9E] mb-6 max-w-xl mx-auto">
               Our team is here to help. Reach out and we&apos;ll get back to you as soon as
               possible.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
                 href="/contact"
-                className="px-6 py-3 rounded-xl font-semibold text-white bg-orange-500 hover:bg-orange-600 transition-colors shadow-lg shadow-orange-500/40"
+                className="px-6 py-3 rounded-full font-semibold text-white bg-[#FF4D4D] hover:bg-[#FF6B6B] transition-colors shadow-lg shadow-[rgba(255,77,77,0.3)]"
               >
                 Contact Support
               </a>
               <a
                 href="mailto:sales@stratum.ai"
-                className="px-6 py-3 rounded-xl font-semibold text-white bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
+                className="px-6 py-3 rounded-xl font-semibold text-white hover:bg-white/10 transition-colors"
+                style={{ background: '#12131F', border: '1px solid #1E1F30' }}
               >
                 Email Us
               </a>

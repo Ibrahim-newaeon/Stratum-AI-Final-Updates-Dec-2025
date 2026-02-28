@@ -1,6 +1,6 @@
 /**
  * Resources Hub Page
- * 2026 Theme - Electric Neon / OLED-Optimized
+ * StratumAI Dark Enterprise Theme
  */
 
 import { Link } from 'react-router-dom';
@@ -24,7 +24,7 @@ const resourceCategories = [
     title: 'Documentation',
     description: 'Technical guides and API references',
     icon: BookOpenIcon,
-    color: '#8B5CF6',
+    color: '#FFB347',
     href: '/docs',
     cta: 'Browse Docs',
   },
@@ -40,7 +40,7 @@ const resourceCategories = [
     title: 'Blog',
     description: 'Latest news and industry insights',
     icon: NewspaperIcon,
-    color: '#00FF88',
+    color: '#00D4AA',
     href: '/blog',
     cta: 'Read Blog',
   },
@@ -60,7 +60,7 @@ const fallbackGuides = [
     description: 'Learn how to set up and optimize trust gates for maximum performance.',
     type: 'Guide',
     readTime: '15 min',
-    color: '#8B5CF6',
+    color: '#FFB347',
   },
   {
     title: 'CDP Implementation Playbook',
@@ -74,7 +74,7 @@ const fallbackGuides = [
     description: 'Best practices for maintaining healthy signal scores.',
     type: 'Guide',
     readTime: '12 min',
-    color: '#00FF88',
+    color: '#00D4AA',
   },
   {
     title: 'Multi-Platform Audience Sync Setup',
@@ -140,7 +140,7 @@ export default function ResourcesPage() {
         description: g.description,
         type: g.tag,
         readTime: '',
-        color: '#8B5CF6',
+        color: '#FFB347',
       }))
     : fallbackGuides;
 
@@ -184,17 +184,13 @@ export default function ResourcesPage() {
               <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
                 Learn, Grow, and{' '}
                 <span
-                  style={{
-                    background: 'linear-gradient(135deg, #8B5CF6 0%, #00D4FF 50%, #FF6B6B 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                  }}
+                  style={{ color: '#FF4D4D' }}
                 >
                   Succeed
                 </span>
               </h1>
 
-              <p className="text-lg text-gray-400">
+              <p className="text-lg" style={{ color: '#8B8D9E' }}>
                 Everything you need to master trust-gated automation and transform your marketing
                 performance.
               </p>
@@ -212,8 +208,8 @@ export default function ResourcesPage() {
                   to={cat.href}
                   className="group p-6 rounded-2xl transition-all duration-300 hover:-translate-y-1"
                   style={{
-                    background: 'rgba(10, 10, 15, 0.6)',
-                    border: '1px solid rgba(255, 255, 255, 0.06)',
+                    background: '#12131F',
+                    border: '1px solid #1E1F30',
                   }}
                 >
                   <div
@@ -226,7 +222,7 @@ export default function ResourcesPage() {
                     <cat.icon className="w-6 h-6" style={{ color: cat.color }} />
                   </div>
                   <h3 className="text-lg font-semibold text-white mb-1">{cat.title}</h3>
-                  <p className="text-gray-400 text-sm mb-4">{cat.description}</p>
+                  <p className="text-sm mb-4" style={{ color: '#8B8D9E' }}>{cat.description}</p>
                   <div
                     className="flex items-center gap-2 text-sm font-medium group-hover:gap-3 transition-all"
                     style={{ color: cat.color }}
@@ -245,7 +241,7 @@ export default function ResourcesPage() {
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-2xl font-bold text-white">Guides & Tutorials</h2>
-              <Link to="/docs" className="text-sm text-[#8B5CF6] hover:underline">
+              <Link to="/docs" className="text-sm text-[#FFB347] hover:underline">
                 View All
               </Link>
             </div>
@@ -257,8 +253,8 @@ export default function ResourcesPage() {
                   to="#"
                   className="group flex items-start gap-4 p-5 rounded-xl transition-all duration-200 hover:bg-white/5"
                   style={{
-                    background: 'rgba(10, 10, 15, 0.4)',
-                    border: '1px solid rgba(255, 255, 255, 0.04)',
+                    background: '#12131F',
+                    border: '1px solid #1E1F30',
                   }}
                 >
                   <div
@@ -281,12 +277,12 @@ export default function ResourcesPage() {
                       >
                         {guide.type}
                       </span>
-                      <span className="text-xs text-gray-500">{guide.readTime} read</span>
+                      <span className="text-xs" style={{ color: 'rgba(139,141,158,0.7)' }}>{guide.readTime} read</span>
                     </div>
-                    <h4 className="text-white font-medium group-hover:text-[#8B5CF6] transition-colors">
+                    <h4 className="text-white font-medium group-hover:text-[#FF4D4D] transition-colors">
                       {guide.title}
                     </h4>
-                    <p className="text-gray-400 text-sm mt-1">{guide.description}</p>
+                    <p className="text-sm mt-1" style={{ color: '#8B8D9E' }}>{guide.description}</p>
                   </div>
                 </Link>
               ))}
@@ -307,12 +303,10 @@ export default function ResourcesPage() {
                   key={webinar.title}
                   className="p-5 rounded-xl"
                   style={{
-                    background: webinar.isUpcoming
-                      ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(0, 212, 255, 0.05) 100%)'
-                      : 'rgba(10, 10, 15, 0.4)',
+                    background: '#12131F',
                     border: webinar.isUpcoming
-                      ? '1px solid rgba(139, 92, 246, 0.2)'
-                      : '1px solid rgba(255, 255, 255, 0.04)',
+                      ? '1px solid #1E1F30'
+                      : '1px solid #1E1F30',
                   }}
                 >
                   {webinar.isUpcoming && (
@@ -325,15 +319,15 @@ export default function ResourcesPage() {
                     </span>
                   )}
                   <h4 className="text-white font-medium mb-2">{webinar.title}</h4>
-                  <p className="text-gray-500 text-sm mb-3">
+                  <p className="text-sm mb-3" style={{ color: 'rgba(139,141,158,0.7)' }}>
                     {webinar.date} • {webinar.time}
                   </p>
-                  <p className="text-gray-400 text-xs mb-4">
+                  <p className="text-xs mb-4" style={{ color: '#8B8D9E' }}>
                     Speakers: {webinar.speakers.join(', ')}
                   </p>
                   <button
                     className="flex items-center gap-2 text-sm font-medium transition-colors"
-                    style={{ color: webinar.isUpcoming ? '#8B5CF6' : '#00D4FF' }}
+                    style={{ color: webinar.isUpcoming ? '#FFB347' : '#00D4FF' }}
                   >
                     {webinar.isUpcoming ? (
                       <>
@@ -366,8 +360,8 @@ export default function ResourcesPage() {
                   key={paper.title}
                   className="p-5 rounded-xl"
                   style={{
-                    background: 'rgba(10, 10, 15, 0.4)',
-                    border: '1px solid rgba(255, 255, 255, 0.04)',
+                    background: '#12131F',
+                    border: '1px solid #1E1F30',
                   }}
                 >
                   <div
@@ -380,9 +374,9 @@ export default function ResourcesPage() {
                     <DocumentTextIcon className="w-5 h-5 text-[#FF6B6B]" />
                   </div>
                   <h4 className="text-white font-medium mb-2">{paper.title}</h4>
-                  <p className="text-gray-400 text-sm mb-3">{paper.description}</p>
+                  <p className="text-sm mb-3" style={{ color: '#8B8D9E' }}>{paper.description}</p>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs" style={{ color: 'rgba(139,141,158,0.7)' }}>
                       {paper.pages} pages • {paper.downloads} downloads
                     </span>
                     <button className="flex items-center gap-1 text-sm font-medium text-[#FF6B6B]">
@@ -402,30 +396,30 @@ export default function ResourcesPage() {
             <div
               className="p-8 rounded-2xl text-center"
               style={{
-                background:
-                  'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(0, 212, 255, 0.05) 100%)',
-                border: '1px solid rgba(139, 92, 246, 0.2)',
+                background: '#12131F',
+                border: '1px solid #1E1F30',
               }}
             >
-              <MicrophoneIcon className="w-10 h-10 mx-auto mb-4 text-[#8B5CF6]" />
+              <MicrophoneIcon className="w-10 h-10 mx-auto mb-4 text-[#FFB347]" />
               <h3 className="text-xl font-bold text-white mb-2">Stay in the Loop</h3>
-              <p className="text-gray-400 mb-6">
+              <p className="mb-6" style={{ color: '#8B8D9E' }}>
                 Get the latest resources, guides, and product updates delivered to your inbox.
               </p>
               <div className="flex gap-3 max-w-md mx-auto">
                 <input
                   type="email"
                   placeholder="Enter your email"
-                  className="flex-1 px-4 py-3 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#8B5CF6]/50"
+                  className="flex-1 px-4 py-3 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF4D4D]/50"
                   style={{
-                    background: 'rgba(0, 0, 0, 0.4)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    background: '#0A0B14',
+                    border: '1px solid #1E1F30',
                   }}
                 />
                 <button
-                  className="px-6 py-3 rounded-xl font-semibold text-white transition-all duration-200"
+                  className="px-6 py-3 rounded-full font-semibold text-white transition-all duration-200"
                   style={{
-                    background: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)',
+                    background: '#FF4D4D',
+                    boxShadow: '0 4px 20px rgba(255,77,77,0.3)',
                   }}
                 >
                   Subscribe

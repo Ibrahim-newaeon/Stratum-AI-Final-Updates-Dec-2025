@@ -1,6 +1,6 @@
 /**
  * Comparison / Battle Cards Page
- * 2026 Theme - Electric Neon / OLED-Optimized
+ * StratumAI Dark Enterprise Theme
  */
 
 import { useState } from 'react';
@@ -236,7 +236,7 @@ const renderValue = (value: ComparisonValue, isStratum = false) => {
       </div>
     );
   }
-  return <span className="text-gray-400 text-sm">{value}</span>;
+  return <span className="text-sm" style={{ color: '#8B8D9E' }}>{value}</span>;
 };
 
 const fallbackDifferentiators = [
@@ -245,7 +245,7 @@ const fallbackDifferentiators = [
     description:
       'Only execute when signal health passes safety thresholds. No other platform offers this level of automation confidence.',
     icon: ShieldCheckIcon,
-    color: '#8B5CF6',
+    color: '#FFB347',
   },
   {
     title: 'Identity Graph Visualization',
@@ -259,7 +259,7 @@ const fallbackDifferentiators = [
     description:
       'Native Recency, Frequency, Monetary analysis without additional tools or integrations.',
     icon: ChartBarIcon,
-    color: '#00FF88',
+    color: '#00D4AA',
   },
   {
     title: 'Signal Health Monitoring',
@@ -295,7 +295,7 @@ export default function ComparisonPage() {
         title: d.title,
         description: d.description,
         icon: diffIconMap[d.iconName] || ShieldCheckIcon,
-        color: '#8B5CF6',
+        color: '#FFB347',
       }))
     : fallbackDifferentiators;
 
@@ -311,28 +311,24 @@ export default function ComparisonPage() {
               <div
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
                 style={{
-                  background: 'rgba(139, 92, 246, 0.1)',
-                  border: '1px solid rgba(139, 92, 246, 0.2)',
+                  background: 'rgba(255,179,71,0.1)',
+                  border: '1px solid rgba(255,179,71,0.3)',
                 }}
               >
-                <ChartBarIcon className="w-4 h-4 text-[#8B5CF6]" />
-                <span className="text-sm font-medium text-[#8B5CF6]">Compare</span>
+                <ChartBarIcon className="w-4 h-4 text-[#FFB347]" />
+                <span className="text-sm font-medium text-[#FFB347]">Compare</span>
               </div>
 
               <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
                 How Stratum AI{' '}
                 <span
-                  style={{
-                    background: 'linear-gradient(135deg, #8B5CF6 0%, #00D4FF 50%, #FF6B6B 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                  }}
+                  style={{ color: '#FF4D4D' }}
                 >
                   Compares
                 </span>
               </h1>
 
-              <p className="text-lg text-gray-400">
+              <p className="text-lg" style={{ color: '#8B8D9E' }}>
                 See how Stratum AI stacks up against other marketing platforms. Trust-gated
                 automation is our unique differentiator.
               </p>
@@ -358,7 +354,7 @@ export default function ComparisonPage() {
                 >
                   <diff.icon className="w-8 h-8 mb-3" style={{ color: diff.color }} />
                   <h3 className="text-white font-semibold mb-2">{diff.title}</h3>
-                  <p className="text-gray-400 text-sm">{diff.description}</p>
+                  <p className="text-sm" style={{ color: '#8B8D9E' }}>{diff.description}</p>
                 </div>
               ))}
             </div>
@@ -369,20 +365,21 @@ export default function ComparisonPage() {
         <section className="py-8">
           <div className="max-w-5xl mx-auto px-6 lg:px-8">
             <div className="flex items-center justify-center gap-3 mb-8 flex-wrap">
-              <span className="text-gray-400 text-sm">Compare with:</span>
+              <span className="text-sm" style={{ color: '#8B8D9E' }}>Compare with:</span>
               {competitors.map((comp) => (
                 <button
                   key={comp.id}
                   onClick={() => setSelectedCompetitor(comp.id)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                    selectedCompetitor === comp.id ? 'text-white' : 'text-gray-400'
+                    selectedCompetitor === comp.id ? 'text-white' : ''
                   }`}
                   style={{
                     background:
                       selectedCompetitor === comp.id
                         ? `${comp.color}20`
-                        : 'rgba(255, 255, 255, 0.04)',
-                    border: `1px solid ${selectedCompetitor === comp.id ? `${comp.color}40` : 'rgba(255, 255, 255, 0.08)'}`,
+                        : '#12131F',
+                    border: `1px solid ${selectedCompetitor === comp.id ? `${comp.color}40` : '#1E1F30'}`,
+                    color: selectedCompetitor === comp.id ? undefined : '#8B8D9E',
                   }}
                 >
                   {comp.name}
@@ -394,24 +391,20 @@ export default function ComparisonPage() {
             <div
               className="rounded-2xl overflow-hidden"
               style={{
-                background: 'rgba(10, 10, 15, 0.6)',
-                border: '1px solid rgba(255, 255, 255, 0.06)',
+                background: '#12131F',
+                border: '1px solid #1E1F30',
               }}
             >
               {/* Header */}
               <div
                 className="grid grid-cols-3 gap-4 p-4 border-b"
-                style={{ borderColor: 'rgba(255, 255, 255, 0.06)' }}
+                style={{ borderColor: '#1E1F30' }}
               >
-                <div className="text-gray-400 text-sm font-medium">Feature</div>
+                <div className="text-sm font-medium" style={{ color: '#8B8D9E' }}>Feature</div>
                 <div className="text-center">
                   <span
                     className="text-sm font-bold"
-                    style={{
-                      background: 'linear-gradient(135deg, #8B5CF6 0%, #00D4FF 100%)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                    }}
+                    style={{ color: '#FF4D4D' }}
                   >
                     Stratum AI
                   </span>
@@ -432,13 +425,13 @@ export default function ComparisonPage() {
                   {/* Category Header */}
                   <button
                     className="w-full flex items-center justify-between p-4 border-b transition-colors hover:bg-white/5"
-                    style={{ borderColor: 'rgba(255, 255, 255, 0.06)' }}
+                    style={{ borderColor: '#1E1F30' }}
                     onClick={() =>
                       setExpandedCategory(expandedCategory === category ? null : category)
                     }
                   >
                     <span className="text-white font-medium">{category}</span>
-                    <span className="text-gray-500 text-xs">
+                    <span className="text-xs" style={{ color: 'rgba(139,141,158,0.7)' }}>
                       {features.filter((f) => f.category === category).length} features
                     </span>
                   </button>
@@ -452,16 +445,16 @@ export default function ComparisonPage() {
                           key={feature.feature}
                           className="grid grid-cols-3 gap-4 p-4 border-b items-center"
                           style={{
-                            borderColor: 'rgba(255, 255, 255, 0.03)',
+                            borderColor: 'rgba(30, 31, 48, 0.5)',
                             background: i % 2 === 0 ? 'transparent' : 'rgba(255, 255, 255, 0.02)',
                           }}
                         >
                           <div className="flex items-center gap-2">
-                            <span className="text-gray-300 text-sm">{feature.feature}</span>
+                            <span className="text-sm" style={{ color: '#8B8D9E' }}>{feature.feature}</span>
                             {feature.tooltip && (
                               <span
                                 className="text-[10px] font-medium px-1.5 py-0.5 rounded"
-                                style={{ background: 'rgba(139, 92, 246, 0.2)', color: '#A78BFA' }}
+                                style={{ background: 'rgba(255,179,71,0.1)', color: '#FFB347' }}
                               >
                                 Unique
                               </span>
@@ -483,24 +476,23 @@ export default function ComparisonPage() {
             <div
               className="rounded-2xl p-8 md:p-12 text-center"
               style={{
-                background:
-                  'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(0, 212, 255, 0.05) 100%)',
-                border: '1px solid rgba(139, 92, 246, 0.2)',
+                background: '#12131F',
+                border: '1px solid #1E1F30',
               }}
             >
               <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
                 Ready to experience the difference?
               </h2>
-              <p className="text-gray-400 mb-8">
+              <p className="mb-8" style={{ color: '#8B8D9E' }}>
                 Start with a free trial and see why trust-gated automation changes everything.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
                   to="/signup"
-                  className="px-8 py-4 rounded-xl font-semibold text-white transition-all duration-200 flex items-center justify-center gap-2"
+                  className="px-8 py-4 rounded-full font-semibold text-white transition-all duration-200 flex items-center justify-center gap-2"
                   style={{
-                    background: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)',
-                    boxShadow: '0 4px 20px rgba(139, 92, 246, 0.3)',
+                    background: '#FF4D4D',
+                    boxShadow: '0 4px 20px rgba(255,77,77,0.3)',
                   }}
                 >
                   Start Free Trial
@@ -511,7 +503,7 @@ export default function ComparisonPage() {
                   className="px-8 py-4 rounded-xl font-semibold text-white transition-all duration-200"
                   style={{
                     background: 'rgba(255, 255, 255, 0.06)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    border: '1px solid #1E1F30',
                   }}
                 >
                   Request Demo

@@ -1,7 +1,7 @@
 /**
  * PageLayout Component
  * Shared layout for all public-facing pages with header and footer
- * Theme: Apple Glass Dark (#000000 + frosted glass)
+ * Theme: StratumAI Dark Enterprise (#0A0B14 + solid surfaces)
  */
 
 import { useEffect, useState } from 'react';
@@ -74,28 +74,26 @@ export function PageLayout({ children }: PageLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#000000' }}>
-      {/* Ambient orbs background */}
+    <div className="min-h-screen flex flex-col" style={{ background: '#0A0B14' }}>
+      {/* Ambient background — subtle blobs */}
       <div
         className="fixed inset-0 pointer-events-none z-0"
         style={{
           background: `
-            radial-gradient(ellipse 40% 40% at 20% 30%, rgba(0, 199, 190, 0.08), transparent),
-            radial-gradient(ellipse 30% 30% at 80% 70%, rgba(139, 92, 246, 0.06), transparent),
-            radial-gradient(ellipse 35% 35% at 60% 20%, rgba(20, 240, 198, 0.05), transparent)
+            radial-gradient(ellipse 40% 40% at 20% 30%, rgba(139, 92, 246, 0.03), transparent),
+            radial-gradient(ellipse 30% 30% at 80% 70%, rgba(255, 77, 77, 0.02), transparent),
+            radial-gradient(ellipse 35% 35% at 60% 20%, rgba(0, 212, 170, 0.02), transparent)
           `,
         }}
       />
-      {/* Apple Glass Dark Header */}
+      {/* StratumAI Dark Enterprise Header */}
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${
           isScrolled ? 'py-3' : 'py-4'
         }`}
         style={{
-          background: isScrolled ? 'rgba(0, 0, 0, 0.8)' : 'rgba(0, 0, 0, 0.5)',
-          backdropFilter: 'blur(40px)',
-          WebkitBackdropFilter: 'blur(40px)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          background: '#0A0B14',
+          borderBottom: '1px solid #1A1B2E',
         }}
       >
         <div className="max-w-[1400px] mx-auto px-6 lg:px-8">
@@ -115,7 +113,7 @@ export function PageLayout({ children }: PageLayoutProps) {
                     isActiveLink(link.href) ? 'font-semibold' : ''
                   }`}
                   style={{
-                    color: isActiveLink(link.href) ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
+                    color: isActiveLink(link.href) ? '#ffffff' : '#8B8D9E',
                     letterSpacing: '0.01em',
                   }}
                 >
@@ -124,7 +122,7 @@ export function PageLayout({ children }: PageLayoutProps) {
                     className={`nav-link-underline absolute bottom-0 left-0 h-0.5 rounded-full transition-all duration-200 ${
                       isActiveLink(link.href) ? 'w-full' : 'w-0'
                     }`}
-                    style={{ background: '#00c7be' }}
+                    style={{ background: '#FF4D4D' }}
                   />
                 </Link>
               ))}
@@ -137,7 +135,7 @@ export function PageLayout({ children }: PageLayoutProps) {
                 <button
                   onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
                   className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-white/5"
-                  style={{ color: 'rgba(255, 255, 255, 0.6)' }}
+                  style={{ color: '#8B8D9E' }}
                   aria-label="Change language"
                 >
                   <GlobeAltIcon className="w-4 h-4" />
@@ -147,8 +145,8 @@ export function PageLayout({ children }: PageLayoutProps) {
                   <div
                     className="absolute top-full mt-2 right-0 py-2 rounded-xl min-w-[120px] z-50"
                     style={{
-                      background: 'rgba(10, 10, 10, 0.98)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      background: '#12131F',
+                      border: '1px solid #1E1F30',
                       boxShadow: '0 10px 40px rgba(0, 0, 0, 0.5)',
                     }}
                   >
@@ -158,12 +156,12 @@ export function PageLayout({ children }: PageLayoutProps) {
                         currentLanguage === 'en' ? 'text-white' : ''
                       }`}
                       style={{
-                        color: currentLanguage === 'en' ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
+                        color: currentLanguage === 'en' ? '#ffffff' : '#8B8D9E',
                       }}
                     >
                       <span>English</span>
                       {currentLanguage === 'en' && (
-                        <span className="w-2 h-2 rounded-full bg-green-500" />
+                        <span className="w-2 h-2 rounded-full" style={{ background: '#00D4AA' }} />
                       )}
                     </button>
                     <button
@@ -172,12 +170,12 @@ export function PageLayout({ children }: PageLayoutProps) {
                         currentLanguage === 'ar' ? 'text-white' : ''
                       }`}
                       style={{
-                        color: currentLanguage === 'ar' ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
+                        color: currentLanguage === 'ar' ? '#ffffff' : '#8B8D9E',
                       }}
                     >
                       <span>العربية</span>
                       {currentLanguage === 'ar' && (
-                        <span className="w-2 h-2 rounded-full bg-green-500" />
+                        <span className="w-2 h-2 rounded-full" style={{ background: '#00D4AA' }} />
                       )}
                     </button>
                   </div>
@@ -187,16 +185,16 @@ export function PageLayout({ children }: PageLayoutProps) {
               <Link
                 to="/login"
                 className="text-sm font-medium py-2 px-4 transition-all duration-200 hover:text-white"
-                style={{ color: 'rgba(255, 255, 255, 0.6)' }}
+                style={{ color: '#8B8D9E' }}
               >
                 Sign In
               </Link>
               <Link
                 to="/signup"
-                className="cta-button px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-all duration-200 hover:brightness-110"
+                className="cta-button px-5 py-2.5 rounded-full text-sm font-semibold text-white transition-all duration-200 hover:brightness-110"
                 style={{
-                  background: '#00c7be',
-                  boxShadow: '0 0 30px rgba(0, 199, 190, 0.2)',
+                  background: '#FF4D4D',
+                  boxShadow: '0 0 30px rgba(255, 77, 77, 0.2)',
                 }}
               >
                 Start Free Trial
@@ -208,7 +206,7 @@ export function PageLayout({ children }: PageLayoutProps) {
               className="lg:hidden p-2 rounded-lg transition-all duration-200"
               style={{
                 background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                border: '1px solid #1E1F30',
               }}
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               aria-label="Toggle mobile menu"
@@ -221,15 +219,13 @@ export function PageLayout({ children }: PageLayoutProps) {
             </button>
           </nav>
 
-          {/* Mobile Menu - Apple Glass Dark */}
+          {/* Mobile Menu — solid dark surface */}
           {isMobileMenuOpen && (
             <div
               className="lg:hidden mt-4 py-4 rounded-3xl"
               style={{
-                background: 'rgba(255, 255, 255, 0.03)',
-                backdropFilter: 'blur(40px)',
-                WebkitBackdropFilter: 'blur(40px)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
+                background: '#12131F',
+                border: '1px solid #1E1F30',
                 boxShadow: '0 25px 50px rgba(0, 0, 0, 0.4)',
               }}
             >
@@ -240,7 +236,7 @@ export function PageLayout({ children }: PageLayoutProps) {
                     to={link.href}
                     className="py-3 px-4 rounded-lg text-sm font-medium transition-colors"
                     style={{
-                      color: isActiveLink(link.href) ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
+                      color: isActiveLink(link.href) ? '#ffffff' : '#8B8D9E',
                       background: isActiveLink(link.href)
                         ? 'rgba(255, 255, 255, 0.05)'
                         : 'transparent',
@@ -250,11 +246,11 @@ export function PageLayout({ children }: PageLayoutProps) {
                     {link.name}
                   </Link>
                 ))}
-                <hr style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} className="my-2" />
+                <hr style={{ borderColor: '#1E1F30' }} className="my-2" />
 
                 {/* Mobile Language Toggle */}
                 <div className="px-4 py-2">
-                  <p className="text-xs mb-2" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
+                  <p className="text-xs mb-2" style={{ color: 'rgba(139, 141, 158, 0.5)' }}>
                     Language
                   </p>
                   <div className="flex gap-2">
@@ -266,13 +262,13 @@ export function PageLayout({ children }: PageLayoutProps) {
                       style={{
                         background:
                           currentLanguage === 'en'
-                            ? 'rgba(0, 199, 190, 0.15)'
+                            ? 'rgba(255, 77, 77, 0.15)'
                             : 'rgba(255, 255, 255, 0.03)',
                         border:
                           currentLanguage === 'en'
-                            ? '1px solid rgba(0, 199, 190, 0.3)'
-                            : '1px solid rgba(255, 255, 255, 0.08)',
-                        color: currentLanguage === 'en' ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
+                            ? '1px solid rgba(255, 77, 77, 0.3)'
+                            : '1px solid #1E1F30',
+                        color: currentLanguage === 'en' ? '#ffffff' : '#8B8D9E',
                       }}
                     >
                       English
@@ -285,13 +281,13 @@ export function PageLayout({ children }: PageLayoutProps) {
                       style={{
                         background:
                           currentLanguage === 'ar'
-                            ? 'rgba(0, 199, 190, 0.15)'
+                            ? 'rgba(255, 77, 77, 0.15)'
                             : 'rgba(255, 255, 255, 0.03)',
                         border:
                           currentLanguage === 'ar'
-                            ? '1px solid rgba(0, 199, 190, 0.3)'
-                            : '1px solid rgba(255, 255, 255, 0.08)',
-                        color: currentLanguage === 'ar' ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
+                            ? '1px solid rgba(255, 77, 77, 0.3)'
+                            : '1px solid #1E1F30',
+                        color: currentLanguage === 'ar' ? '#ffffff' : '#8B8D9E',
                       }}
                     >
                       العربية
@@ -299,19 +295,19 @@ export function PageLayout({ children }: PageLayoutProps) {
                   </div>
                 </div>
 
-                <hr style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} className="my-2" />
+                <hr style={{ borderColor: '#1E1F30' }} className="my-2" />
                 <Link
                   to="/login"
                   className="py-3 px-4 rounded-lg text-sm font-medium"
-                  style={{ color: 'rgba(255, 255, 255, 0.6)' }}
+                  style={{ color: '#8B8D9E' }}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Sign In
                 </Link>
                 <Link
                   to="/signup"
-                  className="py-3 px-4 rounded-lg text-sm font-semibold text-white text-center hover:brightness-110 transition-all"
-                  style={{ background: '#00c7be' }}
+                  className="py-3 px-4 rounded-full text-sm font-semibold text-white text-center hover:brightness-110 transition-all"
+                  style={{ background: '#FF4D4D' }}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Start Free Trial
@@ -328,8 +324,8 @@ export function PageLayout({ children }: PageLayoutProps) {
       {/* Main Content */}
       <main className="flex-1 relative z-10">{children}</main>
 
-      {/* Apple Glass Dark Footer */}
-      <footer style={{ background: '#000000', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+      {/* StratumAI Dark Enterprise Footer */}
+      <footer style={{ background: '#0A0B14', borderTop: '1px solid #1E1F30' }}>
         <div className="max-w-7xl mx-auto px-6 py-16">
           <div className="grid grid-cols-2 md:grid-cols-6 gap-8 mb-12">
             {/* Brand */}
@@ -337,7 +333,7 @@ export function PageLayout({ children }: PageLayoutProps) {
               <Link to="/" className="flex items-center gap-3 mb-4">
                 <img src="/images/stratum-logo.svg" alt="Stratum AI" className="h-7" style={{ filter: 'invert(1) brightness(2)' }} />
               </Link>
-              <p className="text-sm mb-6 max-w-xs" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+              <p className="text-sm mb-6 max-w-xs" style={{ color: 'rgba(139, 141, 158, 0.7)' }}>
                 AI-Powered Revenue Operating System with Trust-Gated Autopilot.
               </p>
 
@@ -347,8 +343,8 @@ export function PageLayout({ children }: PageLayoutProps) {
                   href="https://linkedin.com/company/stratumhq"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="transition-colors hover:text-[#00c7be]"
-                  style={{ color: 'rgba(255, 255, 255, 0.5)' }}
+                  className="transition-colors hover:text-[#FF4D4D]"
+                  style={{ color: 'rgba(139, 141, 158, 0.7)' }}
                   aria-label="Follow us on LinkedIn"
                 >
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -359,8 +355,8 @@ export function PageLayout({ children }: PageLayoutProps) {
                   href="https://instagram.com/stratumhq"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="transition-colors hover:text-[#00c7be]"
-                  style={{ color: 'rgba(255, 255, 255, 0.5)' }}
+                  className="transition-colors hover:text-[#FF4D4D]"
+                  style={{ color: 'rgba(139, 141, 158, 0.7)' }}
                   aria-label="Follow us on Instagram"
                 >
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -416,8 +412,8 @@ export function PageLayout({ children }: PageLayoutProps) {
                     <li key={link.name}>
                       <Link
                         to={link.href}
-                        className="text-sm transition-colors hover:text-[#00c7be]"
-                        style={{ color: 'rgba(255, 255, 255, 0.5)' }}
+                        className="text-sm transition-colors hover:text-[#FF4D4D]"
+                        style={{ color: 'rgba(139, 141, 158, 0.7)' }}
                       >
                         {link.name}
                       </Link>
@@ -431,18 +427,18 @@ export function PageLayout({ children }: PageLayoutProps) {
           {/* Bottom bar */}
           <div
             className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4"
-            style={{ borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}
+            style={{ borderTop: '1px solid rgba(30, 31, 48, 0.5)' }}
           >
-            <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
+            <p className="text-xs" style={{ color: 'rgba(139, 141, 158, 0.5)' }}>
               &copy; {new Date().getFullYear()} Stratum AI. All rights reserved.
             </p>
 
             <div className="flex items-center gap-6">
               <span
                 className="flex items-center gap-2 text-xs"
-                style={{ color: 'rgba(255, 255, 255, 0.4)' }}
+                style={{ color: 'rgba(139, 141, 158, 0.5)' }}
               >
-                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#00D4AA' }} />
                 All systems operational
               </span>
             </div>
@@ -450,7 +446,7 @@ export function PageLayout({ children }: PageLayoutProps) {
         </div>
       </footer>
 
-      {/* Stratum Gold Dark CSS */}
+      {/* StratumAI Dark Enterprise CSS */}
       <style>{`
         .nav-link:hover {
           color: #ffffff !important;
@@ -462,7 +458,11 @@ export function PageLayout({ children }: PageLayoutProps) {
 
         .cta-button:hover {
           transform: translateY(-2px);
-          box-shadow: 0 0 40px rgba(0, 199, 190, 0.3) !important;
+          box-shadow: 0 0 40px rgba(255, 77, 77, 0.3) !important;
+        }
+
+        .enterprise-card:hover {
+          border-color: rgba(255, 77, 77, 0.15) !important;
         }
 
         /* BUG-018: Anchor sections offset by header height so they don't hide behind nav */

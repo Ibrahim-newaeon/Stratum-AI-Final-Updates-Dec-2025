@@ -1,6 +1,6 @@
 /**
  * Case Studies Page
- * 2026 Theme - Electric Neon / OLED-Optimized
+ * StratumAI Dark Enterprise Theme
  */
 
 import { Link } from 'react-router-dom';
@@ -24,7 +24,7 @@ const fallbackCaseStudies = [
     industry: 'E-Commerce',
     icon: ShoppingBagIcon,
     logo: 'L',
-    color: '#8B5CF6',
+    color: '#FFB347',
     headline: '340% increase in ROAS with Trust-Gated Automation',
     description:
       'How a luxury fashion retailer transformed their ad performance by only executing when signal health was optimal.',
@@ -64,7 +64,7 @@ const fallbackCaseStudies = [
     industry: 'Healthcare',
     icon: HeartIcon,
     logo: 'H',
-    color: '#00FF88',
+    color: '#00D4AA',
     headline: 'Unified 2M+ patient profiles across channels',
     description:
       'How a healthcare network used CDP to create personalized patient journeys while maintaining HIPAA compliance.',
@@ -158,7 +158,7 @@ export default function CaseStudiesPage() {
         industry: s.industry,
         icon: ShoppingBagIcon,
         logo: s.logo,
-        color: '#8B5CF6',
+        color: '#FFB347',
         headline: s.challenge,
         description: s.solution,
         metrics: s.results.map((r) => ({ label: r.metric, value: r.value })),
@@ -191,17 +191,13 @@ export default function CaseStudiesPage() {
               <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
                 Success Stories from{' '}
                 <span
-                  style={{
-                    background: 'linear-gradient(135deg, #8B5CF6 0%, #00D4FF 50%, #FF6B6B 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                  }}
+                  style={{ color: '#FF4D4D' }}
                 >
                   Industry Leaders
                 </span>
               </h1>
 
-              <p className="text-lg text-gray-400">
+              <p className="text-lg" style={{ color: '#8B8D9E' }}>
                 Discover how companies across industries use Stratum AI to transform their marketing
                 performance with trust-gated automation.
               </p>
@@ -213,15 +209,11 @@ export default function CaseStudiesPage() {
                 <div key={stat.label} className="text-center">
                   <div
                     className="text-3xl md:text-4xl font-bold mb-2"
-                    style={{
-                      background: 'linear-gradient(135deg, #8B5CF6 0%, #00D4FF 100%)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                    }}
+                    style={{ color: '#FF4D4D' }}
                   >
                     {stat.value}
                   </div>
-                  <div className="text-gray-400 text-sm">{stat.label}</div>
+                  <div className="text-sm" style={{ color: '#8B8D9E' }}>{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -237,8 +229,8 @@ export default function CaseStudiesPage() {
                   <div
                     className="h-full p-6 rounded-2xl transition-all duration-300 hover:-translate-y-2"
                     style={{
-                      background: 'rgba(10, 10, 15, 0.6)',
-                      border: '1px solid rgba(255, 255, 255, 0.06)',
+                      background: '#12131F',
+                      border: '1px solid #1E1F30',
                     }}
                   >
                     {/* Header */}
@@ -254,18 +246,18 @@ export default function CaseStudiesPage() {
                         </div>
                         <div>
                           <h3 className="font-semibold text-white">{study.company}</h3>
-                          <span className="text-xs text-gray-500">{study.industry}</span>
+                          <span className="text-xs" style={{ color: 'rgba(139,141,158,0.7)' }}>{study.industry}</span>
                         </div>
                       </div>
-                      <study.icon className="w-5 h-5 text-gray-600" />
+                      <study.icon className="w-5 h-5" style={{ color: 'rgba(139,141,158,0.5)' }} />
                     </div>
 
                     {/* Headline */}
-                    <h4 className="text-lg font-semibold text-white mb-3 group-hover:text-[#8B5CF6] transition-colors">
+                    <h4 className="text-lg font-semibold text-white mb-3 group-hover:text-[#FF4D4D] transition-colors">
                       {study.headline}
                     </h4>
 
-                    <p className="text-gray-400 text-sm mb-4">{study.description}</p>
+                    <p className="text-sm mb-4" style={{ color: '#8B8D9E' }}>{study.description}</p>
 
                     {/* Metrics */}
                     <div className="grid grid-cols-3 gap-2 mb-4">
@@ -273,12 +265,12 @@ export default function CaseStudiesPage() {
                         <div
                           key={metric.label}
                           className="p-2 rounded-lg text-center"
-                          style={{ background: 'rgba(255, 255, 255, 0.04)' }}
+                          style={{ background: '#12131F', border: '1px solid #1E1F30' }}
                         >
                           <div className="text-lg font-bold" style={{ color: study.color }}>
                             {metric.value}
                           </div>
-                          <div className="text-[10px] text-gray-500">{metric.label}</div>
+                          <div className="text-[10px]" style={{ color: 'rgba(139,141,158,0.7)' }}>{metric.label}</div>
                         </div>
                       ))}
                     </div>
@@ -291,14 +283,14 @@ export default function CaseStudiesPage() {
                         borderLeft: `2px solid ${study.color}`,
                       }}
                     >
-                      <p className="text-sm text-gray-300 italic">"{study.quote}"</p>
-                      <p className="text-xs text-gray-500 mt-2">
+                      <p className="text-sm italic" style={{ color: '#8B8D9E' }}>"{study.quote}"</p>
+                      <p className="text-xs mt-2" style={{ color: 'rgba(139,141,158,0.7)' }}>
                         {study.author}, {study.role}
                       </p>
                     </div>
 
                     {/* Read more */}
-                    <div className="flex items-center gap-2 text-sm font-medium text-[#8B5CF6] group-hover:gap-3 transition-all">
+                    <div className="flex items-center gap-2 text-sm font-medium text-[#FFB347] group-hover:gap-3 transition-all">
                       <span>Read Full Story</span>
                       <ArrowRightIcon className="w-4 h-4" />
                     </div>
@@ -315,25 +307,24 @@ export default function CaseStudiesPage() {
             <div
               className="rounded-2xl p-8 md:p-12 text-center"
               style={{
-                background:
-                  'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(0, 212, 255, 0.05) 100%)',
-                border: '1px solid rgba(139, 92, 246, 0.2)',
+                background: '#12131F',
+                border: '1px solid #1E1F30',
               }}
             >
               <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
                 Ready to write your success story?
               </h2>
-              <p className="text-gray-400 mb-8">
+              <p className="mb-8" style={{ color: '#8B8D9E' }}>
                 Join hundreds of companies using Stratum AI to transform their marketing
                 performance.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
                   to="/signup"
-                  className="px-8 py-4 rounded-xl font-semibold text-white transition-all duration-200"
+                  className="px-8 py-4 rounded-full font-semibold text-white transition-all duration-200"
                   style={{
-                    background: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)',
-                    boxShadow: '0 4px 20px rgba(139, 92, 246, 0.3)',
+                    background: '#FF4D4D',
+                    boxShadow: '0 4px 20px rgba(255,77,77,0.3)',
                   }}
                 >
                   Start Free Trial
@@ -343,7 +334,7 @@ export default function CaseStudiesPage() {
                   className="px-8 py-4 rounded-xl font-semibold text-white transition-all duration-200"
                   style={{
                     background: 'rgba(255, 255, 255, 0.06)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    border: '1px solid #1E1F30',
                   }}
                 >
                   Talk to Sales

@@ -1,6 +1,6 @@
 /**
  * Glossary Page - Platform Terminology & Values
- * 2026 Theme - Electric Neon / OLED-Optimized
+ * StratumAI Dark Enterprise Theme
  */
 
 import { useState } from 'react';
@@ -56,7 +56,7 @@ const fallbackGlossaryData: GlossaryCategory[] = [
     id: 'trust-engine',
     title: 'Trust Engine',
     icon: ShieldCheckIcon,
-    color: '#8B5CF6',
+    color: '#FFB347',
     description:
       'Core decision-making component that evaluates signal health before automation execution.',
     terms: [
@@ -212,7 +212,7 @@ const fallbackGlossaryData: GlossaryCategory[] = [
     id: 'audience-sync',
     title: 'Audience Sync',
     icon: ArrowPathIcon,
-    color: '#00FF88',
+    color: '#00D4AA',
     description: 'Push CDP segments to ad platforms for targeting and suppression.',
     terms: [
       {
@@ -547,7 +547,7 @@ const fallbackGlossaryData: GlossaryCategory[] = [
     id: 'platforms',
     title: 'Ad Platforms',
     icon: CpuChipIcon,
-    color: '#00FF88',
+    color: '#00D4AA',
     description: 'Supported advertising platforms and their specific terminology.',
     terms: [
       {
@@ -634,28 +634,24 @@ export default function GlossaryPage() {
             <div
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
               style={{
-                background: 'rgba(139, 92, 246, 0.1)',
-                border: '1px solid rgba(139, 92, 246, 0.2)',
+                background: 'rgba(255,179,71,0.1)',
+                border: '1px solid rgba(255,179,71,0.3)',
               }}
             >
-              <BookOpenIcon className="w-4 h-4 text-[#8B5CF6]" />
-              <span className="text-sm font-medium text-[#8B5CF6]">Glossary</span>
+              <BookOpenIcon className="w-4 h-4 text-[#FFB347]" />
+              <span className="text-sm font-medium text-[#FFB347]">Glossary</span>
             </div>
 
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
               Platform{' '}
               <span
-                style={{
-                  background: 'linear-gradient(135deg, #8B5CF6 0%, #00D4FF 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}
+                style={{ color: '#FF4D4D' }}
               >
                 Terminology
               </span>
             </h1>
 
-            <p className="text-lg text-gray-400 mb-8">
+            <p className="text-lg mb-8" style={{ color: '#8B8D9E' }}>
               Complete reference of {totalTerms}+ terms, metrics, and values used across Stratum AI.
             </p>
 
@@ -664,18 +660,18 @@ export default function GlossaryPage() {
               <div
                 className="relative"
                 style={{
-                  background: 'rgba(10, 10, 15, 0.6)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  background: '#12131F',
+                  border: '1px solid #1E1F30',
                   borderRadius: '12px',
                 }}
               >
-                <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: 'rgba(139,141,158,0.7)' }} />
                 <input
                   type="text"
                   placeholder="Search terms..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 bg-transparent text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#8B5CF6]/50 rounded-xl"
+                  className="w-full pl-12 pr-4 py-4 bg-transparent text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF4D4D]/50 rounded-xl"
                 />
               </div>
             </div>
@@ -685,7 +681,7 @@ export default function GlossaryPage() {
         {/* Category Navigation */}
         <section
           className="py-4 sticky top-16 z-10"
-          style={{ background: 'rgba(0, 0, 0, 0.8)', backdropFilter: 'blur(12px)' }}
+          style={{ background: '#0A0B14' }}
         >
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
             <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
@@ -693,9 +689,10 @@ export default function GlossaryPage() {
                 onClick={() => setActiveCategory(null)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
                   activeCategory === null
-                    ? 'bg-[#8B5CF6] text-white'
-                    : 'bg-white/5 text-gray-400 hover:text-white'
+                    ? 'bg-[#FFB347] text-white'
+                    : 'bg-white/5 hover:text-white'
                 }`}
+                style={activeCategory !== null ? { color: '#8B8D9E' } : {}}
               >
                 All Categories
               </button>
@@ -706,9 +703,9 @@ export default function GlossaryPage() {
                   className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all flex items-center gap-2 ${
                     activeCategory === category.id
                       ? 'text-white'
-                      : 'bg-white/5 text-gray-400 hover:text-white'
+                      : 'bg-white/5 hover:text-white'
                   }`}
-                  style={activeCategory === category.id ? { background: category.color } : {}}
+                  style={activeCategory === category.id ? { background: category.color } : { color: '#8B8D9E' }}
                 >
                   <category.icon className="w-4 h-4" />
                   {category.title}
@@ -740,7 +737,7 @@ export default function GlossaryPage() {
                     </div>
                     <div>
                       <h2 className="text-xl font-bold text-white">{category.title}</h2>
-                      <p className="text-sm text-gray-400">{category.description}</p>
+                      <p className="text-sm" style={{ color: '#8B8D9E' }}>{category.description}</p>
                     </div>
                   </div>
 
@@ -751,16 +748,16 @@ export default function GlossaryPage() {
                         key={index}
                         className="p-5 rounded-xl"
                         style={{
-                          background: 'rgba(10, 10, 15, 0.6)',
-                          border: '1px solid rgba(255, 255, 255, 0.06)',
+                          background: '#12131F',
+                          border: '1px solid #1E1F30',
                         }}
                       >
                         <h3 className="text-lg font-semibold text-white mb-2">{term.term}</h3>
-                        <p className="text-gray-400 mb-3">{term.definition}</p>
+                        <p className="mb-3" style={{ color: '#8B8D9E' }}>{term.definition}</p>
 
                         {term.values && (
                           <div className="space-y-2 mt-4">
-                            <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                            <span className="text-xs font-medium uppercase tracking-wide" style={{ color: 'rgba(139,141,158,0.7)' }}>
                               Values
                             </span>
                             <div className="grid gap-2">
@@ -779,7 +776,7 @@ export default function GlossaryPage() {
                                   >
                                     {value.value}
                                   </code>
-                                  <span className="text-sm text-gray-400">{value.description}</span>
+                                  <span className="text-sm" style={{ color: '#8B8D9E' }}>{value.description}</span>
                                 </div>
                               ))}
                             </div>
@@ -789,12 +786,12 @@ export default function GlossaryPage() {
                         {term.example && (
                           <div
                             className="mt-4 p-3 rounded-lg"
-                            style={{ background: 'rgba(139, 92, 246, 0.1)' }}
+                            style={{ background: 'rgba(255,179,71,0.1)' }}
                           >
-                            <span className="text-xs font-medium text-[#8B5CF6] uppercase tracking-wide">
+                            <span className="text-xs font-medium text-[#FFB347] uppercase tracking-wide">
                               Example
                             </span>
-                            <p className="text-sm text-gray-300 mt-1">{term.example}</p>
+                            <p className="text-sm mt-1" style={{ color: '#8B8D9E' }}>{term.example}</p>
                           </div>
                         )}
                       </div>
@@ -805,7 +802,7 @@ export default function GlossaryPage() {
 
               {filteredCategories.length === 0 && (
                 <div className="text-center py-12">
-                  <p className="text-gray-400">No terms found matching "{searchQuery}"</p>
+                  <p style={{ color: '#8B8D9E' }}>No terms found matching "{searchQuery}"</p>
                 </div>
               )}
             </div>
@@ -818,23 +815,23 @@ export default function GlossaryPage() {
             <div
               className="p-8 rounded-2xl"
               style={{
-                background:
-                  'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(0, 212, 255, 0.05) 100%)',
-                border: '1px solid rgba(139, 92, 246, 0.2)',
+                background: '#12131F',
+                border: '1px solid #1E1F30',
               }}
             >
               <h3 className="text-xl font-bold text-white mb-2">
                 Can't find what you're looking for?
               </h3>
-              <p className="text-gray-400 mb-6">
+              <p className="mb-6" style={{ color: '#8B8D9E' }}>
                 Check our documentation or reach out to our support team.
               </p>
               <div className="flex gap-4 justify-center">
                 <a
                   href="/docs"
-                  className="px-6 py-3 rounded-xl font-semibold text-white transition-all duration-200"
+                  className="px-6 py-3 rounded-full font-semibold text-white transition-all duration-200"
                   style={{
-                    background: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)',
+                    background: '#FF4D4D',
+                    boxShadow: '0 4px 20px rgba(255,77,77,0.3)',
                   }}
                 >
                   View Docs
@@ -844,7 +841,7 @@ export default function GlossaryPage() {
                   className="px-6 py-3 rounded-xl font-semibold text-white transition-all duration-200"
                   style={{
                     background: 'rgba(255, 255, 255, 0.06)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    border: '1px solid #1E1F30',
                   }}
                 >
                   Contact Support

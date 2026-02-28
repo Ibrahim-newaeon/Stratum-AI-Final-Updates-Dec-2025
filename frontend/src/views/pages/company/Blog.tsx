@@ -42,9 +42,9 @@ export default function Blog() {
           <div
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm mb-6"
             style={{
-              background: 'rgba(59, 130, 246, 0.1)',
-              border: '1px solid rgba(59, 130, 246, 0.3)',
-              color: '#3b82f6',
+              background: 'rgba(255, 179, 71, 0.1)',
+              border: '1px solid rgba(255, 179, 71, 0.3)',
+              color: '#FFB347',
             }}
           >
             <NewspaperIcon className="w-4 h-4" />
@@ -57,18 +57,14 @@ export default function Blog() {
             <span className="text-white">Insights &</span>
             <br />
             <span
-              style={{
-                background: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 50%, #f97316 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
+              style={{ color: '#FF4D4D' }}
             >
               Resources
             </span>
           </h1>
           <p
             className="text-lg md:text-xl max-w-2xl mx-auto"
-            style={{ color: 'rgba(255, 255, 255, 0.7)' }}
+            style={{ color: '#8B8D9E' }}
           >
             Latest news, guides, and insights from the Stratum AI team.
           </p>
@@ -83,8 +79,8 @@ export default function Blog() {
               onClick={() => setSelectedCategory(undefined)}
               className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
               style={{
-                background: !selectedCategory ? '#f97316' : 'rgba(255, 255, 255, 0.06)',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
+                background: !selectedCategory ? '#FF4D4D' : 'rgba(255, 255, 255, 0.06)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
                 color: '#ffffff',
               }}
             >
@@ -97,8 +93,8 @@ export default function Blog() {
                 className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
                 style={{
                   background:
-                    selectedCategory === category.slug ? '#f97316' : 'rgba(255, 255, 255, 0.06)',
-                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                    selectedCategory === category.slug ? '#FF4D4D' : 'rgba(255, 255, 255, 0.06)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
                   color: '#ffffff',
                 }}
               >
@@ -119,8 +115,8 @@ export default function Blog() {
                   key={i}
                   className="p-6 rounded-2xl animate-pulse"
                   style={{
-                    background: 'rgba(255, 255, 255, 0.04)',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    background: '#12131F',
+                    border: '1px solid #1E1F30',
                   }}
                 >
                   <div className="h-4 bg-white/10 rounded w-1/4 mb-4" />
@@ -132,7 +128,7 @@ export default function Blog() {
             </div>
           ) : posts.length === 0 ? (
             <div className="text-center py-12">
-              <p style={{ color: 'rgba(255, 255, 255, 0.6)' }}>No posts found.</p>
+              <p style={{ color: '#8B8D9E' }}>No posts found.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -141,8 +137,8 @@ export default function Blog() {
                   <article
                     className="p-6 rounded-2xl transition-all hover:scale-[1.02] cursor-pointer group h-full"
                     style={{
-                      background: 'rgba(255, 255, 255, 0.04)',
-                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      background: '#12131F',
+                      border: '1px solid #1E1F30',
                     }}
                   >
                     {post.featured_image_url && (
@@ -159,8 +155,8 @@ export default function Blog() {
                         <span
                           className="text-xs px-2 py-1 rounded"
                           style={{
-                            background: 'rgba(168, 85, 247, 0.1)',
-                            color: '#a855f7',
+                            background: 'rgba(255, 179, 71, 0.1)',
+                            color: '#FFB347',
                           }}
                         >
                           {post.category.name}
@@ -169,24 +165,24 @@ export default function Blog() {
                       {post.reading_time_minutes && (
                         <span
                           className="text-xs flex items-center gap-1"
-                          style={{ color: 'rgba(255, 255, 255, 0.5)' }}
+                          style={{ color: 'rgba(139, 141, 158, 0.7)' }}
                         >
                           <ClockIcon className="w-3 h-3" />
                           {post.reading_time_minutes} min read
                         </span>
                       )}
                     </div>
-                    <h2 className="text-lg font-semibold text-white mb-3 group-hover:text-orange-500 transition-colors">
+                    <h2 className="text-lg font-semibold text-white mb-3 group-hover:text-[#FF4D4D] transition-colors">
                       {post.title}
                     </h2>
                     {post.excerpt && (
-                      <p className="text-sm mb-4" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+                      <p className="text-sm mb-4" style={{ color: '#8B8D9E' }}>
                         {post.excerpt}
                       </p>
                     )}
                     <div
                       className="flex items-center gap-4 text-xs"
-                      style={{ color: 'rgba(255, 255, 255, 0.5)' }}
+                      style={{ color: 'rgba(139, 141, 158, 0.7)' }}
                     >
                       {post.author && (
                         <span className="flex items-center gap-1">
@@ -213,13 +209,12 @@ export default function Blog() {
           <div
             className="p-12 rounded-3xl"
             style={{
-              background:
-                'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
+              background: '#12131F',
+              border: '1px solid #1E1F30',
             }}
           >
             <h2 className="text-3xl font-bold text-white mb-4">Subscribe to Our Newsletter</h2>
-            <p className="text-lg mb-8" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+            <p className="text-lg mb-8" style={{ color: '#8B8D9E' }}>
               Get the latest insights and updates delivered to your inbox.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
@@ -229,14 +224,14 @@ export default function Blog() {
                 className="flex-1 px-4 py-3 rounded-xl text-white placeholder-white/40 outline-none"
                 style={{
                   background: 'rgba(255, 255, 255, 0.06)',
-                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
                 }}
               />
               <button
-                className="px-6 py-3 rounded-xl font-semibold text-white transition-all hover:opacity-90"
+                className="px-6 py-3 rounded-full font-semibold text-white transition-all hover:opacity-90"
                 style={{
-                  background: '#f97316',
-                  boxShadow: '0 4px 20px rgba(249, 115, 22, 0.4)',
+                  background: '#FF4D4D',
+                  boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
                 }}
               >
                 Subscribe

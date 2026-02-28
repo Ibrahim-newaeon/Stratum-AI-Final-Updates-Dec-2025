@@ -59,15 +59,15 @@ export default function Contact() {
               <CheckCircleIcon className="w-10 h-10 text-green-500" />
             </div>
             <h1 className="text-3xl font-bold text-white mb-4">Message Sent!</h1>
-            <p className="text-lg mb-8" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+            <p className="text-lg mb-8" style={{ color: '#8B8D9E' }}>
               Thank you for reaching out. We'll get back to you as soon as possible.
             </p>
             <button
               onClick={() => setSubmitted(false)}
-              className="px-6 py-3 rounded-xl font-semibold text-white transition-all hover:opacity-90"
+              className="px-6 py-3 rounded-full font-semibold text-white transition-all hover:opacity-90"
               style={{
-                background: '#f97316',
-                boxShadow: '0 4px 20px rgba(249, 115, 22, 0.4)',
+                background: '#FF4D4D',
+                boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
               }}
             >
               Send Another Message
@@ -87,9 +87,9 @@ export default function Contact() {
           <div
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm mb-6"
             style={{
-              background: 'rgba(6, 182, 212, 0.1)',
-              border: '1px solid rgba(6, 182, 212, 0.3)',
-              color: '#06b6d4',
+              background: 'rgba(255, 179, 71, 0.1)',
+              border: '1px solid rgba(255, 179, 71, 0.3)',
+              color: '#FFB347',
             }}
           >
             <ChatBubbleLeftRightIcon className="w-4 h-4" />
@@ -102,18 +102,14 @@ export default function Contact() {
             <span className="text-white">Get in</span>
             <br />
             <span
-              style={{
-                background: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 50%, #f97316 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
+              style={{ color: '#FF4D4D' }}
             >
               Touch
             </span>
           </h1>
           <p
             className="text-lg md:text-xl max-w-2xl mx-auto"
-            style={{ color: 'rgba(255, 255, 255, 0.7)' }}
+            style={{ color: '#8B8D9E' }}
           >
             Have questions? We&apos;d love to hear from you. Send us a message and we&apos;ll
             respond as soon as possible.
@@ -130,21 +126,21 @@ export default function Contact() {
               <div
                 className="p-6 rounded-2xl"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  background: '#12131F',
+                  border: '1px solid #1E1F30',
                 }}
               >
-                <EnvelopeIcon className="w-8 h-8 mb-4" style={{ color: '#f97316' }} />
+                <EnvelopeIcon className="w-8 h-8 mb-4" style={{ color: '#FF4D4D' }} />
                 <h3 className="text-lg font-semibold text-white mb-2">Email Us</h3>
-                <p style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+                <p style={{ color: '#8B8D9E' }}>
                   <a href="mailto:hello@stratum.ai" className="hover:text-white transition-colors">
                     hello@stratum.ai
                   </a>
                 </p>
-                <p className="text-sm mt-2" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                <p className="text-sm mt-2" style={{ color: 'rgba(139, 141, 158, 0.7)' }}>
                   For sales inquiries
                 </p>
-                <p style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+                <p style={{ color: '#8B8D9E' }}>
                   <a href="mailto:sales@stratum.ai" className="hover:text-white transition-colors">
                     sales@stratum.ai
                   </a>
@@ -154,13 +150,13 @@ export default function Contact() {
               <div
                 className="p-6 rounded-2xl"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  background: '#12131F',
+                  border: '1px solid #1E1F30',
                 }}
               >
-                <MapPinIcon className="w-8 h-8 mb-4" style={{ color: '#a855f7' }} />
+                <MapPinIcon className="w-8 h-8 mb-4" style={{ color: '#FFB347' }} />
                 <h3 className="text-lg font-semibold text-white mb-2">Headquarters</h3>
-                <p style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+                <p style={{ color: '#8B8D9E' }}>
                   548 Market Street
                   <br />
                   Suite 35000
@@ -172,19 +168,19 @@ export default function Contact() {
               <div
                 className="p-6 rounded-2xl"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  background: '#12131F',
+                  border: '1px solid #1E1F30',
                 }}
               >
-                <ChatBubbleLeftRightIcon className="w-8 h-8 mb-4" style={{ color: '#06b6d4' }} />
+                <ChatBubbleLeftRightIcon className="w-8 h-8 mb-4" style={{ color: '#FFB347' }} />
                 <h3 className="text-lg font-semibold text-white mb-2">Support</h3>
-                <p style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+                <p style={{ color: '#8B8D9E' }}>
                   For existing customers, visit our{' '}
-                  <a href="#" className="text-orange-500 hover:underline">
+                  <a href="#" className="text-[#FF4D4D] hover:underline">
                     Help Center
                   </a>{' '}
                   or email{' '}
-                  <a href="mailto:support@stratum.ai" className="text-orange-500 hover:underline">
+                  <a href="mailto:support@stratum.ai" className="text-[#FF4D4D] hover:underline">
                     support@stratum.ai
                   </a>
                 </p>
@@ -197,8 +193,8 @@ export default function Contact() {
                 onSubmit={handleSubmit}
                 className="p-8 rounded-3xl"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  background: '#12131F',
+                  border: '1px solid #1E1F30',
                 }}
               >
                 <h2 className="text-2xl font-bold text-white mb-6">Send us a Message</h2>
@@ -226,7 +222,7 @@ export default function Contact() {
                       className="w-full px-4 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-all focus:ring-2"
                       style={{
                         background: 'rgba(255, 255, 255, 0.06)',
-                        border: '1px solid rgba(255, 255, 255, 0.12)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
                       }}
                       placeholder="Your name"
                       required
@@ -241,7 +237,7 @@ export default function Contact() {
                       className="w-full px-4 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-all focus:ring-2"
                       style={{
                         background: 'rgba(255, 255, 255, 0.06)',
-                        border: '1px solid rgba(255, 255, 255, 0.12)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
                       }}
                       placeholder="your@email.com"
                       required
@@ -258,7 +254,7 @@ export default function Contact() {
                       className="w-full px-4 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-all focus:ring-2"
                       style={{
                         background: 'rgba(255, 255, 255, 0.06)',
-                        border: '1px solid rgba(255, 255, 255, 0.12)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
                       }}
                       placeholder="Your company"
                     />
@@ -271,7 +267,7 @@ export default function Contact() {
                       className="w-full px-4 py-3 rounded-xl text-white outline-none transition-all focus:ring-2"
                       style={{
                         background: 'rgba(255, 255, 255, 0.06)',
-                        border: '1px solid rgba(255, 255, 255, 0.12)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
                       }}
                       required
                     >
@@ -292,7 +288,7 @@ export default function Contact() {
                     className="w-full px-4 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-all focus:ring-2 min-h-[150px]"
                     style={{
                       background: 'rgba(255, 255, 255, 0.06)',
-                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
                     }}
                     placeholder="How can we help you?"
                     required
@@ -301,10 +297,10 @@ export default function Contact() {
                 <button
                   type="submit"
                   disabled={submitContact.isPending}
-                  className="w-full py-4 rounded-xl font-semibold text-white transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-4 rounded-full font-semibold text-white transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{
-                    background: '#f97316',
-                    boxShadow: '0 4px 20px rgba(249, 115, 22, 0.4)',
+                    background: '#FF4D4D',
+                    boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
                   }}
                 >
                   {submitContact.isPending ? 'Sending...' : 'Send Message'}

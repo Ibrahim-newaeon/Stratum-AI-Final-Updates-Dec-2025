@@ -108,17 +108,17 @@ export default function TrustEngineSolution() {
               >
                 <span className="text-white">{hero.title}</span>
                 <br />
-                <span style={{ color: '#f97316' }}>{hero.titleHighlight}</span>
+                <span style={{ color: '#FF4D4D' }}>{hero.titleHighlight}</span>
               </h1>
-              <p className="text-lg mb-8" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+              <p className="text-lg mb-8" style={{ color: '#8B8D9E' }}>
                 {hero.description}
               </p>
               <Link
                 to={hero.ctaLink}
-                className="inline-flex px-8 py-4 rounded-xl text-lg font-semibold text-white transition-all hover:opacity-90"
+                className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-all hover:opacity-90"
                 style={{
-                  background: '#f97316',
-                  boxShadow: '0 4px 20px rgba(249, 115, 22, 0.4)',
+                  background: '#FF4D4D',
+                  boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
                 }}
               >
                 {hero.ctaText}
@@ -127,8 +127,8 @@ export default function TrustEngineSolution() {
             <div
               className="rounded-3xl p-8"
               style={{
-                background: 'rgba(255, 255, 255, 0.04)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
+                background: '#12131F',
+                border: '1px solid #1E1F30',
               }}
             >
               {/* Trust Gate Visualization */}
@@ -151,10 +151,10 @@ export default function TrustEngineSolution() {
                     >
                       <CheckCircleIcon className="w-8 h-8" style={{ color: '#34c759' }} />
                     </div>
-                    <div className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                    <div className="text-xs" style={{ color: 'rgba(139, 141, 158, 0.7)' }}>
                       HEALTHY
                     </div>
-                    <div className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                    <div className="text-xs" style={{ color: 'rgba(139, 141, 158, 0.7)' }}>
                       ≥70
                     </div>
                   </div>
@@ -168,10 +168,10 @@ export default function TrustEngineSolution() {
                     >
                       <ExclamationTriangleIcon className="w-8 h-8" style={{ color: '#eab308' }} />
                     </div>
-                    <div className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                    <div className="text-xs" style={{ color: 'rgba(139, 141, 158, 0.7)' }}>
                       DEGRADED
                     </div>
-                    <div className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                    <div className="text-xs" style={{ color: 'rgba(139, 141, 158, 0.7)' }}>
                       40-69
                     </div>
                   </div>
@@ -185,10 +185,10 @@ export default function TrustEngineSolution() {
                     >
                       <XCircleIcon className="w-8 h-8" style={{ color: '#ef4444' }} />
                     </div>
-                    <div className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                    <div className="text-xs" style={{ color: 'rgba(139, 141, 158, 0.7)' }}>
                       UNHEALTHY
                     </div>
-                    <div className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                    <div className="text-xs" style={{ color: 'rgba(139, 141, 158, 0.7)' }}>
                       {'<40'}
                     </div>
                   </div>
@@ -208,8 +208,8 @@ export default function TrustEngineSolution() {
           <div
             className="rounded-3xl p-8"
             style={{
-              background: 'rgba(255, 255, 255, 0.04)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
+              background: '#12131F',
+              border: '1px solid #1E1F30',
             }}
           >
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 items-center">
@@ -232,7 +232,7 @@ export default function TrustEngineSolution() {
                         style={{ color: stepColors[idx] ?? '#a855f7' }}
                       />
                       <h3 className="font-semibold text-white">{step.title}</h3>
-                      <p className="text-sm mt-2" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                      <p className="text-sm mt-2" style={{ color: 'rgba(139, 141, 158, 0.7)' }}>
                         {step.description}
                       </p>
                     </div>
@@ -299,7 +299,7 @@ export default function TrustEngineSolution() {
                   </span>
                 </div>
                 <div className="text-2xl font-bold text-white mb-2">{gate.action}</div>
-                <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                <p className="text-sm" style={{ color: '#8B8D9E' }}>
                   {gate.description}
                 </p>
               </div>
@@ -318,15 +318,15 @@ export default function TrustEngineSolution() {
             {benefits.map((benefit) => (
               <div
                 key={benefit.title}
-                className="p-6 rounded-2xl text-center backdrop-blur-xl transition-all hover:scale-[1.02]"
+                className="p-6 rounded-2xl text-center transition-all hover:scale-[1.02]"
                 style={{
-                  background: `${benefit.color}15`,
-                  border: `1px solid ${benefit.color}30`,
-                  boxShadow: `0 8px 32px ${benefit.color}10`,
+                  background: '#12131F',
+                  border: '1px solid #1E1F30',
+                  borderLeft: `3px solid ${benefit.color}`,
                 }}
               >
                 <h3 className="font-semibold text-white mb-2">{benefit.title}</h3>
-                <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+                <p className="text-sm" style={{ color: '#8B8D9E' }}>
                   {benefit.description}
                 </p>
               </div>
@@ -339,24 +339,22 @@ export default function TrustEngineSolution() {
       <section className="py-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <div
-            className="p-12 rounded-3xl backdrop-blur-xl"
+            className="p-12 rounded-3xl"
             style={{
-              background:
-                'linear-gradient(135deg, rgba(52, 199, 89, 0.15) 0%, rgba(6, 182, 212, 0.15) 100%)',
-              border: '1px solid rgba(52, 199, 89, 0.3)',
-              boxShadow: '0 8px 32px rgba(52, 199, 89, 0.15), 0 8px 32px rgba(6, 182, 212, 0.15)',
+              background: '#12131F',
+              border: '1px solid #1E1F30',
             }}
           >
             <h2 className="text-3xl font-bold text-white mb-4">Automate with Confidence</h2>
-            <p className="text-lg mb-8" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+            <p className="text-lg mb-8" style={{ color: '#8B8D9E' }}>
               Let the Trust Engine handle the safety checks while you focus on growth.
             </p>
             <Link
               to="/signup"
-              className="inline-flex px-8 py-4 rounded-xl text-lg font-semibold text-white transition-all hover:opacity-90"
+              className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-all hover:opacity-90"
               style={{
-                background: '#f97316',
-                boxShadow: '0 4px 20px rgba(249, 115, 22, 0.4)',
+                background: '#FF4D4D',
+                boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
               }}
             >
               Get Started Free

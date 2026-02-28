@@ -64,9 +64,9 @@ export default function Security() {
           <div
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm mb-6"
             style={{
-              background: 'rgba(52, 199, 89, 0.1)',
-              border: '1px solid rgba(52, 199, 89, 0.3)',
-              color: '#34c759',
+              background: 'rgba(0, 212, 170, 0.1)',
+              border: '1px solid rgba(0, 212, 170, 0.3)',
+              color: '#00D4AA',
             }}
           >
             <ShieldCheckIcon className="w-4 h-4" />
@@ -79,18 +79,14 @@ export default function Security() {
             <span className="text-white">Enterprise-Grade</span>
             <br />
             <span
-              style={{
-                background: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 50%, #f97316 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
+              style={{ color: '#FF4D4D' }}
             >
               Security
             </span>
           </h1>
           <p
             className="text-lg md:text-xl max-w-2xl mx-auto"
-            style={{ color: 'rgba(255, 255, 255, 0.7)' }}
+            style={{ color: '#8B8D9E' }}
           >
             Your data security is our top priority. We implement industry-leading security measures
             to protect your information.
@@ -114,13 +110,13 @@ export default function Security() {
                     key={feature.title}
                     className="p-6 rounded-2xl"
                     style={{
-                      background: 'rgba(255, 255, 255, 0.04)',
-                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      background: '#12131F',
+                      border: '1px solid #1E1F30',
                     }}
                   >
-                    <feature.icon className="w-10 h-10 mb-4" style={{ color: '#34c759' }} />
+                    <feature.icon className="w-10 h-10 mb-4" style={{ color: '#00D4AA' }} />
                     <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
-                    <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+                    <p className="text-sm" style={{ color: '#8B8D9E' }}>
                       {feature.description}
                     </p>
                   </div>
@@ -135,8 +131,8 @@ export default function Security() {
               <div
                 className="p-8 rounded-3xl"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  background: '#12131F',
+                  border: '1px solid #1E1F30',
                 }}
               >
                 <h2 className="text-2xl font-bold text-white mb-6">Our Security Practices</h2>
@@ -194,9 +190,9 @@ export default function Security() {
                     key={cert}
                     className="px-6 py-3 rounded-xl"
                     style={{
-                      background: 'rgba(52, 199, 89, 0.1)',
-                      border: '1px solid rgba(52, 199, 89, 0.3)',
-                      color: '#34c759',
+                      background: 'rgba(0, 212, 170, 0.1)',
+                      border: '1px solid rgba(0, 212, 170, 0.3)',
+                      color: '#00D4AA',
                     }}
                   >
                     {cert}
@@ -212,17 +208,16 @@ export default function Security() {
               <div
                 className="p-12 rounded-3xl"
                 style={{
-                  background:
-                    'linear-gradient(135deg, rgba(52, 199, 89, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  background: '#12131F',
+                  border: '1px solid #1E1F30',
                 }}
               >
                 <h2 className="text-3xl font-bold text-white mb-4">Security Questions?</h2>
-                <p className="text-lg mb-6" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                <p className="text-lg mb-6" style={{ color: '#8B8D9E' }}>
                   Contact our security team for questions, vulnerability reports, or to request our SOC
                   2 report.
                 </p>
-                <p style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                <p style={{ color: '#8B8D9E' }}>
                   <strong className="text-white">Email:</strong>{' '}
                   <a href="mailto:security@stratum.ai" className="text-orange-500 hover:underline">
                     security@stratum.ai

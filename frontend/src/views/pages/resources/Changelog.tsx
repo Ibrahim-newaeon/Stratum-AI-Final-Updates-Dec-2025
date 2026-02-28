@@ -1,6 +1,6 @@
 /**
  * Changelog / Release Notes Page
- * 2026 Theme - Electric Neon / OLED-Optimized
+ * StratumAI Dark Enterprise Theme
  */
 
 import { usePageContent, type ChangelogPageContent } from '@/api/cms';
@@ -91,28 +91,28 @@ const fallbackReleases = [
 const getTypeIcon = (type: string) => {
   switch (type) {
     case 'feature':
-      return <SparklesIcon className="w-4 h-4 text-[#00FF88]" />;
+      return <SparklesIcon className="w-4 h-4 text-[#00D4AA]" />;
     case 'improvement':
       return <RocketLaunchIcon className="w-4 h-4 text-[#00D4FF]" />;
     case 'fix':
       return <BugAntIcon className="w-4 h-4 text-[#FFB800]" />;
     case 'security':
-      return <ShieldCheckIcon className="w-4 h-4 text-[#8B5CF6]" />;
+      return <ShieldCheckIcon className="w-4 h-4 text-[#FFB347]" />;
     default:
-      return <WrenchScrewdriverIcon className="w-4 h-4 text-gray-400" />;
+      return <WrenchScrewdriverIcon className="w-4 h-4" style={{ color: '#8B8D9E' }} />;
   }
 };
 
 const getTypeLabel = (type: string) => {
   switch (type) {
     case 'feature':
-      return { text: 'New', color: '#00FF88' };
+      return { text: 'New', color: '#00D4AA' };
     case 'improvement':
       return { text: 'Improved', color: '#00D4FF' };
     case 'fix':
       return { text: 'Fixed', color: '#FFB800' };
     case 'security':
-      return { text: 'Security', color: '#8B5CF6' };
+      return { text: 'Security', color: '#FFB347' };
     default:
       return { text: 'Changed', color: '#94A3B8' };
   }
@@ -133,28 +133,24 @@ export default function ChangelogPage() {
             <div
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
               style={{
-                background: 'rgba(0, 255, 136, 0.1)',
-                border: '1px solid rgba(0, 255, 136, 0.2)',
+                background: 'rgba(0, 212, 170, 0.1)',
+                border: '1px solid rgba(0, 212, 170, 0.2)',
               }}
             >
-              <SparklesIcon className="w-4 h-4 text-[#00FF88]" />
-              <span className="text-sm font-medium text-[#00FF88]">Changelog</span>
+              <SparklesIcon className="w-4 h-4 text-[#00D4AA]" />
+              <span className="text-sm font-medium text-[#00D4AA]">Changelog</span>
             </div>
 
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
               What's New in{' '}
               <span
-                style={{
-                  background: 'linear-gradient(135deg, #8B5CF6 0%, #00D4FF 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}
+                style={{ color: '#FF4D4D' }}
               >
                 Stratum AI
               </span>
             </h1>
 
-            <p className="text-lg text-gray-400">
+            <p className="text-lg" style={{ color: '#8B8D9E' }}>
               Stay up to date with the latest features, improvements, and fixes.
             </p>
           </div>
@@ -170,7 +166,7 @@ export default function ChangelogPage() {
                   {index < releases.length - 1 && (
                     <div
                       className="absolute left-[15px] top-12 bottom-0 w-px"
-                      style={{ background: 'rgba(139, 92, 246, 0.2)' }}
+                      style={{ background: '#1E1F30' }}
                     />
                   )}
 
@@ -181,9 +177,9 @@ export default function ChangelogPage() {
                       style={{
                         background:
                           release.type === 'major'
-                            ? 'linear-gradient(135deg, #8B5CF6 0%, #00D4FF 100%)'
-                            : 'rgba(139, 92, 246, 0.2)',
-                        border: '2px solid rgba(139, 92, 246, 0.4)',
+                            ? '#FF4D4D'
+                            : 'rgba(255,179,71,0.2)',
+                        border: '2px solid rgba(255,179,71,0.4)',
                       }}
                     >
                       <span className="text-white text-xs font-bold">
@@ -198,15 +194,15 @@ export default function ChangelogPage() {
                           <span
                             className="px-2 py-0.5 rounded text-xs font-medium"
                             style={{
-                              background: 'rgba(139, 92, 246, 0.2)',
-                              color: '#A78BFA',
+                              background: 'rgba(255,179,71,0.1)',
+                              color: '#FFB347',
                             }}
                           >
                             Major Release
                           </span>
                         )}
                       </div>
-                      <p className="text-gray-500 text-sm">{release.date}</p>
+                      <p className="text-sm" style={{ color: 'rgba(139,141,158,0.7)' }}>{release.date}</p>
                     </div>
                   </div>
 
@@ -215,12 +211,11 @@ export default function ChangelogPage() {
                     <div
                       className="ml-12 mb-6 p-4 rounded-xl"
                       style={{
-                        background:
-                          'linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(0, 212, 255, 0.04) 100%)',
-                        border: '1px solid rgba(139, 92, 246, 0.15)',
+                        background: '#12131F',
+                        border: '1px solid #1E1F30',
                       }}
                     >
-                      <h3 className="text-sm font-semibold text-[#8B5CF6] mb-3">Highlights</h3>
+                      <h3 className="text-sm font-semibold text-[#FFB347] mb-3">Highlights</h3>
                       <ul className="space-y-2">
                         {release.highlights.map((highlight, i) => (
                           <li key={i} className="flex items-start gap-2 text-white text-sm">
@@ -241,8 +236,8 @@ export default function ChangelogPage() {
                           key={i}
                           className="flex items-start gap-3 p-3 rounded-lg transition-colors hover:bg-white/5"
                           style={{
-                            background: 'rgba(10, 10, 15, 0.4)',
-                            border: '1px solid rgba(255, 255, 255, 0.04)',
+                            background: '#12131F',
+                            border: '1px solid #1E1F30',
                           }}
                         >
                           {getTypeIcon(change.type)}
@@ -255,7 +250,7 @@ export default function ChangelogPage() {
                           >
                             {label.text}
                           </span>
-                          <span className="text-gray-300 text-sm flex-1">{change.text}</span>
+                          <span className="text-sm flex-1" style={{ color: '#8B8D9E' }}>{change.text}</span>
                         </div>
                       );
                     })}
@@ -272,28 +267,29 @@ export default function ChangelogPage() {
             <div
               className="p-8 rounded-2xl"
               style={{
-                background: 'rgba(10, 10, 15, 0.6)',
-                border: '1px solid rgba(139, 92, 246, 0.15)',
+                background: '#12131F',
+                border: '1px solid #1E1F30',
               }}
             >
               <h3 className="text-xl font-bold text-white mb-2">Stay Updated</h3>
-              <p className="text-gray-400 mb-6">
+              <p className="mb-6" style={{ color: '#8B8D9E' }}>
                 Get notified when we release new features and improvements.
               </p>
               <div className="flex gap-3 max-w-md mx-auto">
                 <input
                   type="email"
                   placeholder="Enter your email"
-                  className="flex-1 px-4 py-3 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#8B5CF6]/50"
+                  className="flex-1 px-4 py-3 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF4D4D]/50"
                   style={{
-                    background: 'rgba(0, 0, 0, 0.4)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    background: '#0A0B14',
+                    border: '1px solid #1E1F30',
                   }}
                 />
                 <button
-                  className="px-6 py-3 rounded-xl font-semibold text-white transition-all duration-200"
+                  className="px-6 py-3 rounded-full font-semibold text-white transition-all duration-200"
                   style={{
-                    background: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)',
+                    background: '#FF4D4D',
+                    boxShadow: '0 4px 20px rgba(255,77,77,0.3)',
                   }}
                 >
                   Subscribe

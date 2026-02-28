@@ -125,18 +125,14 @@ export default function Pricing() {
             <span className="text-white">Simple, Transparent</span>
             <br />
             <span
-              style={{
-                background: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 50%, #f97316 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
+              style={{ color: '#FF4D4D' }}
             >
               Pricing
             </span>
           </h1>
           <p
             className="text-lg md:text-xl max-w-2xl mx-auto"
-            style={{ color: 'rgba(255, 255, 255, 0.7)' }}
+            style={{ color: '#8B8D9E' }}
           >
             Choose the plan that fits your team. All plans include a 14-day free trial.
           </p>
@@ -154,17 +150,16 @@ export default function Pricing() {
                   tier.highlighted ? 'ring-2' : ''
                 }`}
                 style={{
-                  background: tier.highlighted
-                    ? 'linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%)'
-                    : 'rgba(255, 255, 255, 0.04)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  background: '#12131F',
+                  border: '1px solid #1E1F30',
+                  borderTop: tier.highlighted ? '3px solid #FF4D4D' : undefined,
                 }}
               >
                 {tier.highlighted && (
                   <div
                     className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-xs font-semibold"
                     style={{
-                      background: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
+                      background: '#FF4D4D',
                       color: '#ffffff',
                     }}
                   >
@@ -176,9 +171,9 @@ export default function Pricing() {
                   <h3 className="text-xl font-semibold text-white mb-2">{tier.name}</h3>
                   <div className="flex items-baseline gap-1">
                     <span className="text-4xl font-bold text-white">{tier.price}</span>
-                    <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>{tier.period}</span>
+                    <span style={{ color: 'rgba(139, 141, 158, 0.7)' }}>{tier.period}</span>
                   </div>
-                  <p className="mt-3 text-sm" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+                  <p className="mt-3 text-sm" style={{ color: '#8B8D9E' }}>
                     {tier.description}
                   </p>
                 </div>
@@ -188,7 +183,7 @@ export default function Pricing() {
                     <li key={feature} className="flex items-start gap-3">
                       <CheckIcon
                         className="w-5 h-5 flex-shrink-0 mt-0.5"
-                        style={{ color: '#34c759' }}
+                        style={{ color: '#00D4AA' }}
                       />
                       <span className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>
                         {feature}
@@ -199,12 +194,14 @@ export default function Pricing() {
 
                 <Link
                   to={tier.href}
-                  className="block w-full py-3 px-6 rounded-xl text-center font-semibold transition-all"
+                  className={`block w-full py-3 px-6 text-center font-semibold transition-all ${
+                    tier.highlighted ? 'rounded-full' : 'rounded-xl'
+                  }`}
                   style={{
-                    background: tier.highlighted ? '#f97316' : 'rgba(255, 255, 255, 0.06)',
+                    background: tier.highlighted ? '#FF4D4D' : 'rgba(255, 255, 255, 0.06)',
                     color: '#ffffff',
-                    border: tier.highlighted ? 'none' : '1px solid rgba(255, 255, 255, 0.12)',
-                    boxShadow: tier.highlighted ? '0 4px 20px rgba(249, 115, 22, 0.4)' : 'none',
+                    border: tier.highlighted ? 'none' : '1px solid rgba(255, 255, 255, 0.2)',
+                    boxShadow: tier.highlighted ? '0 4px 20px rgba(255, 77, 77, 0.3)' : 'none',
                   }}
                 >
                   {tier.cta}
@@ -227,12 +224,12 @@ export default function Pricing() {
                 key={faq.q}
                 className="p-6 rounded-2xl"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  background: '#12131F',
+                  border: '1px solid #1E1F30',
                 }}
               >
                 <h3 className="text-lg font-semibold text-white mb-2">{faq.q}</h3>
-                <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+                <p className="text-sm" style={{ color: '#8B8D9E' }}>
                   {faq.a}
                 </p>
               </div>

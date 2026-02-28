@@ -1,6 +1,6 @@
 /**
  * System Status Page
- * 2026 Theme - Electric Neon / OLED-Optimized
+ * StratumAI Dark Enterprise Theme
  */
 
 import { useState } from 'react';
@@ -217,17 +217,13 @@ export default function StatusPage() {
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
               Stratum AI{' '}
               <span
-                style={{
-                  background: 'linear-gradient(135deg, #8B5CF6 0%, #00D4FF 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}
+                style={{ color: '#FF4D4D' }}
               >
                 System Status
               </span>
             </h1>
 
-            <p className="text-gray-400">
+            <p style={{ color: '#8B8D9E' }}>
               Real-time status and uptime monitoring for all Stratum AI services.
             </p>
           </div>
@@ -239,8 +235,8 @@ export default function StatusPage() {
             <div
               className="p-6 rounded-2xl"
               style={{
-                background: 'rgba(10, 10, 15, 0.6)',
-                border: '1px solid rgba(255, 255, 255, 0.06)',
+                background: '#12131F',
+                border: '1px solid #1E1F30',
               }}
             >
               <div className="flex items-center justify-between mb-4">
@@ -269,7 +265,7 @@ export default function StatusPage() {
                   </div>
                 ))}
               </div>
-              <div className="flex justify-between mt-2 text-xs text-gray-500">
+              <div className="flex justify-between mt-2 text-xs" style={{ color: 'rgba(139,141,158,0.7)' }}>
                 <span>14 days ago</span>
                 <span>Today</span>
               </div>
@@ -287,21 +283,21 @@ export default function StatusPage() {
                   key={service.name}
                   className="flex items-center justify-between p-4 rounded-xl"
                   style={{
-                    background: 'rgba(10, 10, 15, 0.6)',
-                    border: '1px solid rgba(255, 255, 255, 0.06)',
+                    background: '#12131F',
+                    border: '1px solid #1E1F30',
                   }}
                 >
                   <div className="flex items-center gap-4">
-                    <service.icon className="w-5 h-5 text-gray-400" />
+                    <service.icon className="w-5 h-5" style={{ color: '#8B8D9E' }} />
                     <span className="text-white font-medium">{service.name}</span>
                   </div>
                   <div className="flex items-center gap-6">
                     <div className="text-right">
-                      <span className="text-xs text-gray-500">Uptime</span>
+                      <span className="text-xs" style={{ color: 'rgba(139,141,158,0.7)' }}>Uptime</span>
                       <p className="text-sm text-white font-mono">{service.uptime}</p>
                     </div>
                     <div className="text-right">
-                      <span className="text-xs text-gray-500">Latency</span>
+                      <span className="text-xs" style={{ color: 'rgba(139,141,158,0.7)' }}>Latency</span>
                       <p className="text-sm text-white font-mono">{service.latency}</p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -329,13 +325,13 @@ export default function StatusPage() {
               <div
                 className="p-8 rounded-xl text-center"
                 style={{
-                  background: 'rgba(10, 10, 15, 0.6)',
-                  border: '1px solid rgba(255, 255, 255, 0.06)',
+                  background: '#12131F',
+                  border: '1px solid #1E1F30',
                 }}
               >
                 <CheckCircleIcon className="w-12 h-12 mx-auto mb-4 text-[#00FF88]" />
                 <p className="text-white font-medium">No incidents reported</p>
-                <p className="text-gray-400 text-sm mt-1">
+                <p className="text-sm mt-1" style={{ color: '#8B8D9E' }}>
                   All systems have been operating normally.
                 </p>
               </div>
@@ -346,8 +342,8 @@ export default function StatusPage() {
                     key={incident.id}
                     className="rounded-xl overflow-hidden"
                     style={{
-                      background: 'rgba(10, 10, 15, 0.6)',
-                      border: '1px solid rgba(255, 255, 255, 0.06)',
+                      background: '#12131F',
+                      border: '1px solid #1E1F30',
                     }}
                   >
                     <button
@@ -375,18 +371,18 @@ export default function StatusPage() {
                           {incident.status}
                         </span>
                       </div>
-                      <span className="text-gray-500 text-sm">{incident.createdAt}</span>
+                      <span className="text-sm" style={{ color: 'rgba(139,141,158,0.7)' }}>{incident.createdAt}</span>
                     </button>
 
                     {expandedIncident === incident.id && (
-                      <div className="px-4 pb-4 border-t border-white/5">
+                      <div className="px-4 pb-4 border-t" style={{ borderColor: '#1E1F30' }}>
                         <div className="mt-4 space-y-3">
                           {incident.updates.map((update, i) => (
                             <div key={i} className="flex gap-3">
-                              <span className="text-xs text-gray-500 w-12 flex-shrink-0">
+                              <span className="text-xs w-12 flex-shrink-0" style={{ color: 'rgba(139,141,158,0.7)' }}>
                                 {update.time}
                               </span>
-                              <span className="text-sm text-gray-300">{update.message}</span>
+                              <span className="text-sm" style={{ color: '#8B8D9E' }}>{update.message}</span>
                             </div>
                           ))}
                         </div>
@@ -405,28 +401,29 @@ export default function StatusPage() {
             <div
               className="p-8 rounded-2xl"
               style={{
-                background: 'rgba(10, 10, 15, 0.6)',
-                border: '1px solid rgba(139, 92, 246, 0.15)',
+                background: '#12131F',
+                border: '1px solid #1E1F30',
               }}
             >
               <h3 className="text-xl font-bold text-white mb-2">Subscribe to Status Updates</h3>
-              <p className="text-gray-400 mb-6">
+              <p className="mb-6" style={{ color: '#8B8D9E' }}>
                 Get notified about incidents and maintenance windows.
               </p>
               <div className="flex gap-3 max-w-md mx-auto">
                 <input
                   type="email"
                   placeholder="Enter your email"
-                  className="flex-1 px-4 py-3 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#8B5CF6]/50"
+                  className="flex-1 px-4 py-3 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF4D4D]/50"
                   style={{
-                    background: 'rgba(0, 0, 0, 0.4)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    background: '#0A0B14',
+                    border: '1px solid #1E1F30',
                   }}
                 />
                 <button
-                  className="px-6 py-3 rounded-xl font-semibold text-white transition-all duration-200"
+                  className="px-6 py-3 rounded-full font-semibold text-white transition-all duration-200"
                   style={{
-                    background: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)',
+                    background: '#FF4D4D',
+                    boxShadow: '0 4px 20px rgba(255,77,77,0.3)',
                   }}
                 >
                   Subscribe

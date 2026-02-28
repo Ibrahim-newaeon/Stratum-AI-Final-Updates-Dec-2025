@@ -1,6 +1,6 @@
 /**
  * Audience Sync Launch Announcement Page
- * Linked from the landing page announcement strip
+ * StratumAI Dark Enterprise Theme
  */
 
 import { Link } from 'react-router-dom';
@@ -63,7 +63,7 @@ const features = [
     title: 'One-Click Sync',
     description:
       'Push your CDP segments to all ad platforms with a single click. No manual exports or uploads required.',
-    color: '#f97316',
+    color: '#FF4D4D',
   },
   {
     icon: ClockIcon,
@@ -84,7 +84,7 @@ const features = [
     title: 'Match Rate Analytics',
     description:
       'Track match rates, profiles synced, and audience health across all platforms in one dashboard.',
-    color: '#a855f7',
+    color: '#FFB347',
   },
   {
     icon: ShieldCheckIcon,
@@ -103,7 +103,7 @@ export default function AudienceSyncLaunch() {
           <Link
             to="/"
             className="inline-flex items-center gap-2 text-sm transition-colors"
-            style={{ color: 'rgba(255, 255, 255, 0.6)' }}
+            style={{ color: '#8B8D9E' }}
           >
             <ArrowLeftIcon className="w-4 h-4" />
             Back to Home
@@ -117,16 +117,15 @@ export default function AudienceSyncLaunch() {
           <div
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm mb-6"
             style={{
-              background:
-                'linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(6, 182, 212, 0.2) 100%)',
-              border: '1px solid rgba(168, 85, 247, 0.3)',
+              background: 'rgba(255,179,71,0.1)',
+              border: '1px solid rgba(255,179,71,0.3)',
             }}
           >
             <span
               className="w-2 h-2 rounded-full animate-pulse"
               style={{ background: '#34c759' }}
             />
-            <span style={{ color: '#a855f7' }}>New Feature</span>
+            <span style={{ color: '#FFB347' }}>New Feature</span>
           </div>
 
           <h1
@@ -136,11 +135,7 @@ export default function AudienceSyncLaunch() {
             <span className="text-white">Multi-Platform</span>
             <br />
             <span
-              style={{
-                background: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 50%, #f97316 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
+              style={{ color: '#FF4D4D' }}
             >
               Audience Sync
             </span>
@@ -148,7 +143,7 @@ export default function AudienceSyncLaunch() {
 
           <p
             className="text-lg md:text-xl max-w-2xl mx-auto mb-8"
-            style={{ color: 'rgba(255, 255, 255, 0.7)' }}
+            style={{ color: '#8B8D9E' }}
           >
             Push your CDP segments to Meta, Google, TikTok, and Snapchat with one click. Keep your
             audiences fresh with automated syncing and maximize your ad targeting precision.
@@ -157,10 +152,10 @@ export default function AudienceSyncLaunch() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               to="/signup"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-semibold text-white transition-all hover:scale-105"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full font-semibold text-white transition-all hover:scale-105"
               style={{
-                background: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
-                boxShadow: '0 4px 20px rgba(168, 85, 247, 0.4)',
+                background: '#FF4D4D',
+                boxShadow: '0 4px 20px rgba(255,77,77,0.3)',
               }}
             >
               Start Free Trial
@@ -171,7 +166,7 @@ export default function AudienceSyncLaunch() {
               className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-semibold transition-all"
               style={{
                 background: 'rgba(255, 255, 255, 0.06)',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
+                border: '1px solid #1E1F30',
                 color: '#ffffff',
               }}
             >
@@ -194,21 +189,21 @@ export default function AudienceSyncLaunch() {
                 key={platform.name}
                 className="p-6 rounded-2xl text-center transition-all hover:scale-105 group"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  background: '#12131F',
+                  border: '1px solid #1E1F30',
                 }}
               >
                 <div
                   className="w-16 h-16 rounded-xl mx-auto mb-4 flex items-center justify-center transition-colors"
                   style={{
                     background: 'rgba(255, 255, 255, 0.08)',
-                    color: 'rgba(255, 255, 255, 0.7)',
+                    color: '#8B8D9E',
                   }}
                 >
                   {platform.logo}
                 </div>
                 <h3 className="text-lg font-semibold text-white mb-1">{platform.name}</h3>
-                <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                <p className="text-sm" style={{ color: 'rgba(139,141,158,0.7)' }}>
                   {platform.description}
                 </p>
               </div>
@@ -223,7 +218,7 @@ export default function AudienceSyncLaunch() {
           <h2 className="text-2xl font-bold text-white text-center mb-4">Why Audience Sync?</h2>
           <p
             className="text-center max-w-2xl mx-auto mb-12"
-            style={{ color: 'rgba(255, 255, 255, 0.6)' }}
+            style={{ color: 'rgba(139,141,158,0.7)' }}
           >
             Stop wasting time with manual exports and CSV uploads. Stratum's Audience Sync keeps
             your targeting fresh and your campaigns optimized.
@@ -233,16 +228,16 @@ export default function AudienceSyncLaunch() {
             {features.map((feature) => (
               <div
                 key={feature.title}
-                className="p-6 rounded-2xl backdrop-blur-xl transition-all hover:scale-[1.02]"
+                className="p-6 rounded-2xl transition-all hover:scale-[1.02]"
                 style={{
-                  background: `${feature.color}15`,
-                  border: `1px solid ${feature.color}30`,
-                  boxShadow: `0 8px 32px ${feature.color}10`,
+                  background: '#12131F',
+                  border: '1px solid #1E1F30',
+                  borderLeft: `3px solid ${feature.color}`,
                 }}
               >
                 <feature.icon className="w-10 h-10 mb-4" style={{ color: feature.color }} />
                 <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
-                <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+                <p className="text-sm" style={{ color: 'rgba(139,141,158,0.7)' }}>
                   {feature.description}
                 </p>
               </div>
@@ -287,14 +282,14 @@ export default function AudienceSyncLaunch() {
                 <div
                   className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
                   style={{
-                    background: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
+                    background: '#FF4D4D',
                   }}
                 >
                   <span className="text-white font-bold text-lg">{item.step}</span>
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-white mb-2">{item.title}</h3>
-                  <p style={{ color: 'rgba(255, 255, 255, 0.6)' }}>{item.description}</p>
+                  <p style={{ color: 'rgba(139,141,158,0.7)' }}>{item.description}</p>
                 </div>
               </div>
             ))}
@@ -306,27 +301,25 @@ export default function AudienceSyncLaunch() {
       <section className="py-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <div
-            className="p-12 rounded-3xl backdrop-blur-xl"
+            className="p-12 rounded-3xl"
             style={{
-              background:
-                'linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(6, 182, 212, 0.15) 100%)',
-              border: '1px solid rgba(168, 85, 247, 0.3)',
-              boxShadow: '0 8px 32px rgba(168, 85, 247, 0.15), 0 8px 32px rgba(6, 182, 212, 0.15)',
+              background: '#12131F',
+              border: '1px solid #1E1F30',
             }}
           >
             <h2 className="text-3xl font-bold text-white mb-4">
               Ready to Supercharge Your Targeting?
             </h2>
-            <p className="text-lg mb-8" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+            <p className="text-lg mb-8" style={{ color: '#8B8D9E' }}>
               Start your 14-day free trial and sync your first audience in minutes.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 to="/signup"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-semibold text-white transition-all hover:scale-105"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full font-semibold text-white transition-all hover:scale-105"
                 style={{
-                  background: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
-                  boxShadow: '0 4px 20px rgba(168, 85, 247, 0.4)',
+                  background: '#FF4D4D',
+                  boxShadow: '0 4px 20px rgba(255,77,77,0.3)',
                 }}
               >
                 Start Free Trial
@@ -337,7 +330,7 @@ export default function AudienceSyncLaunch() {
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-semibold transition-all"
                 style={{
                   background: 'rgba(255, 255, 255, 0.06)',
-                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  border: '1px solid #1E1F30',
                   color: '#ffffff',
                 }}
               >

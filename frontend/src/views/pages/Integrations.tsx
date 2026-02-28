@@ -80,28 +80,24 @@ export default function Integrations() {
             <span className="text-white">Connect Your</span>
             <br />
             <span
-              style={{
-                background: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 50%, #f97316 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
+              style={{ color: '#FF4D4D' }}
             >
               Entire Stack
             </span>
           </h1>
           <p
             className="text-lg md:text-xl max-w-2xl mx-auto mb-10"
-            style={{ color: 'rgba(255, 255, 255, 0.7)' }}
+            style={{ color: '#8B8D9E' }}
           >
             Stratum AI integrates with 50+ platforms to unify your marketing data and automate
             across channels.
           </p>
           <Link
             to="/signup"
-            className="inline-flex px-8 py-4 rounded-xl text-lg font-semibold text-white transition-all hover:opacity-90"
+            className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-all hover:opacity-90"
             style={{
-              background: '#f97316',
-              boxShadow: '0 4px 20px rgba(249, 115, 22, 0.4)',
+              background: '#FF4D4D',
+              boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
             }}
           >
             Start Free Trial
@@ -121,11 +117,11 @@ export default function Integrations() {
                   {items.map((integration) => (
                     <div
                       key={integration.name}
-                      className="p-6 rounded-2xl transition-all hover:scale-[1.02] group backdrop-blur-xl"
+                      className="p-6 rounded-2xl transition-all hover:scale-[1.02] group"
                       style={{
-                        background: `${color}15`,
-                        border: `1px solid ${color}30`,
-                        boxShadow: `0 8px 32px ${color}10`,
+                        background: '#12131F',
+                        border: '1px solid #1E1F30',
+                        borderLeft: `3px solid ${color}`,
                       }}
                     >
                       <div className="flex items-center gap-4">
@@ -140,7 +136,7 @@ export default function Integrations() {
                         </div>
                         <div>
                           <h3 className="font-semibold text-white">{integration.name}</h3>
-                          <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                          <p className="text-sm" style={{ color: 'rgba(139, 141, 158, 0.7)' }}>
                             {integration.description}
                           </p>
                         </div>
@@ -160,12 +156,12 @@ export default function Integrations() {
           <div
             className="p-12 rounded-3xl"
             style={{
-              background: 'rgba(255, 255, 255, 0.04)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
+              background: '#12131F',
+              border: '1px solid #1E1F30',
             }}
           >
             <h2 className="text-3xl font-bold text-white mb-4">Need a Custom Integration?</h2>
-            <p className="text-lg mb-8" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+            <p className="text-lg mb-8" style={{ color: '#8B8D9E' }}>
               Our API allows you to connect any data source. Contact us to discuss your needs.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -174,17 +170,17 @@ export default function Integrations() {
                 className="px-8 py-4 rounded-xl font-semibold text-white transition-all hover:bg-white/10"
                 style={{
                   background: 'rgba(255, 255, 255, 0.06)',
-                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
                 }}
               >
                 View API Docs
               </Link>
               <Link
                 to="/contact"
-                className="px-8 py-4 rounded-xl font-semibold text-white transition-all hover:opacity-90"
+                className="px-8 py-4 rounded-full font-semibold text-white transition-all hover:opacity-90"
                 style={{
-                  background: '#f97316',
-                  boxShadow: '0 4px 20px rgba(249, 115, 22, 0.4)',
+                  background: '#FF4D4D',
+                  boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
                 }}
               >
                 Contact Sales

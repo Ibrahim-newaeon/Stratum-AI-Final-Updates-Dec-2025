@@ -87,9 +87,9 @@ export default function ApiDocs() {
           <div
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm mb-6"
             style={{
-              background: 'rgba(6, 182, 212, 0.1)',
-              border: '1px solid rgba(6, 182, 212, 0.3)',
-              color: '#06b6d4',
+              background: 'rgba(255, 179, 71, 0.1)',
+              border: '1px solid rgba(255, 179, 71, 0.3)',
+              color: '#FFB347',
             }}
           >
             <CodeBracketIcon className="w-4 h-4" />
@@ -102,18 +102,14 @@ export default function ApiDocs() {
             <span className="text-white">Build with the</span>
             <br />
             <span
-              style={{
-                background: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 50%, #f97316 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
+              style={{ color: '#FF4D4D' }}
             >
               Stratum API
             </span>
           </h1>
           <p
             className="text-lg md:text-xl max-w-2xl mx-auto"
-            style={{ color: 'rgba(255, 255, 255, 0.7)' }}
+            style={{ color: '#8B8D9E' }}
           >
             Everything you need to integrate Stratum AI into your applications.
           </p>
@@ -130,13 +126,13 @@ export default function ApiDocs() {
                 href={link.href}
                 className="p-6 rounded-2xl transition-all hover:scale-[1.02] group"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  background: '#12131F',
+                  border: '1px solid #1E1F30',
                 }}
               >
                 <link.icon className="w-8 h-8 mb-4" style={{ color: '#06b6d4' }} />
                 <h3 className="text-lg font-semibold text-white mb-2">{link.title}</h3>
-                <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+                <p className="text-sm" style={{ color: '#8B8D9E' }}>
                   {link.description}
                 </p>
               </a>
@@ -152,14 +148,14 @@ export default function ApiDocs() {
           <div
             className="rounded-2xl overflow-hidden"
             style={{
-              background: 'rgba(255, 255, 255, 0.04)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
+              background: '#12131F',
+              border: '1px solid #1E1F30',
             }}
           >
-            <div className="p-4 border-b" style={{ borderColor: 'rgba(255, 255, 255, 0.08)' }}>
+            <div className="p-4 border-b" style={{ borderColor: '#1E1F30' }}>
               <h3 className="font-semibold text-white">Popular Endpoints</h3>
             </div>
-            <div className="divide-y" style={{ borderColor: 'rgba(255, 255, 255, 0.08)' }}>
+            <div className="divide-y" style={{ borderColor: '#1E1F30' }}>
               {endpoints.map((endpoint) => (
                 <div
                   key={`${endpoint.method}-${endpoint.path}`}
@@ -170,15 +166,15 @@ export default function ApiDocs() {
                     style={{
                       background:
                         endpoint.method === 'GET'
-                          ? 'rgba(52, 199, 89, 0.2)'
+                          ? 'rgba(0, 212, 170, 0.2)'
                           : 'rgba(59, 130, 246, 0.2)',
-                      color: endpoint.method === 'GET' ? '#34c759' : '#3b82f6',
+                      color: endpoint.method === 'GET' ? '#00D4AA' : '#3b82f6',
                     }}
                   >
                     {endpoint.method}
                   </span>
                   <code className="text-sm text-white font-mono flex-1">{endpoint.path}</code>
-                  <span className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                  <span className="text-sm" style={{ color: 'rgba(139, 141, 158, 0.7)' }}>
                     {endpoint.description}
                   </span>
                 </div>
@@ -195,30 +191,30 @@ export default function ApiDocs() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div>
               <h3 className="text-xl font-semibold text-white mb-4">1. Get your API key</h3>
-              <p className="mb-6" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+              <p className="mb-6" style={{ color: '#8B8D9E' }}>
                 Sign up for Stratum AI and generate an API key from your dashboard settings.
               </p>
               <h3 className="text-xl font-semibold text-white mb-4">2. Install the SDK</h3>
               <div
                 className="p-4 rounded-xl font-mono text-sm mb-6"
                 style={{
-                  background: 'rgba(0, 0, 0, 0.4)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  color: '#34c759',
+                  background: '#0A0B14',
+                  border: '1px solid #1E1F30',
+                  color: '#00D4AA',
                 }}
               >
                 npm install @stratum-ai/sdk
               </div>
               <h3 className="text-xl font-semibold text-white mb-4">3. Make your first request</h3>
-              <p style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+              <p style={{ color: '#8B8D9E' }}>
                 Use the SDK to connect to the API and start tracking signals.
               </p>
             </div>
             <div
               className="p-6 rounded-2xl font-mono text-sm overflow-x-auto"
               style={{
-                background: 'rgba(0, 0, 0, 0.4)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                background: '#0A0B14',
+                border: '1px solid #1E1F30',
               }}
             >
               <pre style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
@@ -248,21 +244,20 @@ if (health.score >= 70) {
           <div
             className="p-12 rounded-3xl"
             style={{
-              background:
-                'linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
+              background: '#12131F',
+              border: '1px solid #1E1F30',
             }}
           >
             <h2 className="text-3xl font-bold text-white mb-4">Ready to Start Building?</h2>
-            <p className="text-lg mb-8" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+            <p className="text-lg mb-8" style={{ color: '#8B8D9E' }}>
               Get your API key and start integrating in minutes.
             </p>
             <Link
               to="/signup"
-              className="inline-flex px-8 py-4 rounded-xl text-lg font-semibold text-white transition-all hover:opacity-90"
+              className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-all hover:opacity-90"
               style={{
-                background: '#f97316',
-                boxShadow: '0 4px 20px rgba(249, 115, 22, 0.4)',
+                background: '#FF4D4D',
+                boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
               }}
             >
               Get API Key

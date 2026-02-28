@@ -92,9 +92,9 @@ export default function Careers() {
           <div
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm mb-6"
             style={{
-              background: 'rgba(52, 199, 89, 0.1)',
-              border: '1px solid rgba(52, 199, 89, 0.3)',
-              color: '#34c759',
+              background: 'rgba(255, 179, 71, 0.1)',
+              border: '1px solid rgba(255, 179, 71, 0.3)',
+              color: '#FFB347',
             }}
           >
             <BriefcaseIcon className="w-4 h-4" />
@@ -107,18 +107,14 @@ export default function Careers() {
             <span className="text-white">Build the Future</span>
             <br />
             <span
-              style={{
-                background: 'linear-gradient(135deg, #a855f7 0%, #06b6d4 50%, #f97316 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
+              style={{ color: '#FF4D4D' }}
             >
               With Us
             </span>
           </h1>
           <p
             className="text-lg md:text-xl max-w-2xl mx-auto"
-            style={{ color: 'rgba(255, 255, 255, 0.7)' }}
+            style={{ color: '#8B8D9E' }}
           >
             Join a team of passionate builders creating the next generation of revenue intelligence.
           </p>
@@ -135,8 +131,8 @@ export default function Careers() {
                 key={benefit}
                 className="p-4 rounded-xl text-center"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  background: '#12131F',
+                  border: '1px solid #1E1F30',
                 }}
               >
                 <span className="text-sm text-white">{benefit}</span>
@@ -156,8 +152,8 @@ export default function Careers() {
                 key={job.title}
                 className="p-6 rounded-2xl transition-all hover:scale-[1.01] cursor-pointer"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  background: '#12131F',
+                  border: '1px solid #1E1F30',
                 }}
               >
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -167,22 +163,22 @@ export default function Careers() {
                       <span
                         className="text-sm px-2 py-1 rounded"
                         style={{
-                          background: 'rgba(168, 85, 247, 0.1)',
-                          color: '#a855f7',
+                          background: 'rgba(255, 179, 71, 0.1)',
+                          color: '#FFB347',
                         }}
                       >
                         {job.department}
                       </span>
                       <span
                         className="flex items-center gap-1 text-sm"
-                        style={{ color: 'rgba(255, 255, 255, 0.5)' }}
+                        style={{ color: 'rgba(139, 141, 158, 0.7)' }}
                       >
                         <MapPinIcon className="w-4 h-4" />
                         {job.location}
                       </span>
                       <span
                         className="flex items-center gap-1 text-sm"
-                        style={{ color: 'rgba(255, 255, 255, 0.5)' }}
+                        style={{ color: 'rgba(139, 141, 158, 0.7)' }}
                       >
                         <CurrencyDollarIcon className="w-4 h-4" />
                         {job.salary}
@@ -193,7 +189,7 @@ export default function Careers() {
                     className="px-6 py-2 rounded-lg text-sm font-medium transition-all hover:bg-white/10"
                     style={{
                       background: 'rgba(255, 255, 255, 0.06)',
-                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
                       color: '#ffffff',
                     }}
                   >
@@ -212,22 +208,21 @@ export default function Careers() {
           <div
             className="p-12 rounded-3xl"
             style={{
-              background:
-                'linear-gradient(135deg, rgba(52, 199, 89, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
+              background: '#12131F',
+              border: '1px solid #1E1F30',
             }}
           >
             <h2 className="text-3xl font-bold text-white mb-4">Don&apos;t See Your Role?</h2>
-            <p className="text-lg mb-8" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+            <p className="text-lg mb-8" style={{ color: '#8B8D9E' }}>
               We&apos;re always looking for talented people. Send us your resume and we&apos;ll
               reach out when a matching role opens up.
             </p>
             <Link
               to="/contact"
-              className="inline-flex px-8 py-4 rounded-xl text-lg font-semibold text-white transition-all hover:opacity-90"
+              className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-all hover:opacity-90"
               style={{
-                background: '#f97316',
-                boxShadow: '0 4px 20px rgba(249, 115, 22, 0.4)',
+                background: '#FF4D4D',
+                boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
               }}
             >
               Get in Touch
