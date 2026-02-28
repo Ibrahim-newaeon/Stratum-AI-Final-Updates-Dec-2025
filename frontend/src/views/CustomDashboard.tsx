@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useRef, useEffect, Component, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import GridLayout, { Layout } from 'react-grid-layout'
 import {
@@ -10,6 +10,7 @@ import {
   GripVertical,
   Trash2,
   LayoutDashboard,
+  AlertTriangle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { usePriceMetrics } from '@/hooks/usePriceMetrics'
@@ -27,21 +28,75 @@ import { BudgetOptimizerWidget } from '@/components/widgets/BudgetOptimizerWidge
 import { WidgetConfig, WidgetType, defaultWidgets, availableWidgets } from '@/components/widgets'
 
 import 'react-grid-layout/css/styles.css'
+import 'react-resizable/css/styles.css'
 
 const GRID_COLS = 12
 const ROW_HEIGHT = 80
 
 const COST_WIDGET_TYPES = ['kpi-spend', 'kpi-revenue', 'kpi-roas', 'chart-revenue', 'chart-spend']
 
+// Error boundary to prevent one broken widget from crashing the entire dashboard
+class WidgetErrorBoundary extends Component<
+  { children: ReactNode; widgetTitle: string },
+  { hasError: boolean }
+> {
+  constructor(props: { children: ReactNode; widgetTitle: string }) {
+    super(props)
+    this.state = { hasError: false }
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="h-full flex items-center justify-center p-4 text-center">
+          <div>
+            <AlertTriangle className="w-6 h-6 text-amber-500 mx-auto mb-2" />
+            <p className="text-xs text-muted-foreground">
+              Failed to load {this.props.widgetTitle}
+            </p>
+          </div>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
+
+function loadSavedWidgets(): WidgetConfig[] {
+  try {
+    const saved = localStorage.getItem('stratum-dashboard-layout')
+    if (!saved) return defaultWidgets
+    const parsed = JSON.parse(saved)
+    if (!Array.isArray(parsed) || parsed.length === 0) return defaultWidgets
+    // Validate each widget has required fields
+    const valid = parsed.every(
+      (w: unknown) =>
+        w &&
+        typeof w === 'object' &&
+        'id' in w &&
+        'type' in w &&
+        'x' in w &&
+        'y' in w &&
+        'w' in w &&
+        'h' in w
+    )
+    return valid ? parsed : defaultWidgets
+  } catch {
+    localStorage.removeItem('stratum-dashboard-layout')
+    return defaultWidgets
+  }
+}
+
 function CustomDashboardContent() {
   const { t } = useTranslation()
   const { showPriceMetrics } = usePriceMetrics()
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerWidth, setContainerWidth] = useState(1200)
-  const [widgets, setWidgets] = useState<WidgetConfig[]>(() => {
-    const saved = localStorage.getItem('stratum-dashboard-layout')
-    return saved ? JSON.parse(saved) : defaultWidgets
-  })
+  const [widgets, setWidgets] = useState<WidgetConfig[]>(loadSavedWidgets)
   const [isEditing, setIsEditing] = useState(false)
   const [showAddWidget, setShowAddWidget] = useState(false)
 
@@ -106,6 +161,7 @@ function CustomDashboardContent() {
 
   const renderWidget = (widget: WidgetConfig) => {
     const type = widget.type
+    if (!type) return <div className="p-4 text-muted-foreground">Unknown widget</div>
 
     if (type.startsWith('kpi-')) {
       const kpiType = type.replace('kpi-', '') as 'spend' | 'revenue' | 'roas' | 'conversions' | 'ctr' | 'impressions'
@@ -162,9 +218,9 @@ function CustomDashboardContent() {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <LayoutDashboard className="w-7 h-7 text-primary" />
-            {t('dashboard.title')}
+            {t('dashboard.title', 'Dashboard')}
           </h1>
-          <p className="text-muted-foreground">{t('dashboard.welcome')}</p>
+          <p className="text-muted-foreground">{t('dashboard.welcome', 'Your performance at a glance')}</p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -261,7 +317,9 @@ function CustomDashboardContent() {
 
             {/* Widget Content */}
             <div className="h-[calc(100%-40px)] overflow-auto">
-              {renderWidget(widget)}
+              <WidgetErrorBoundary widgetTitle={widget.title}>
+                {renderWidget(widget)}
+              </WidgetErrorBoundary>
             </div>
           </div>
         ))}
