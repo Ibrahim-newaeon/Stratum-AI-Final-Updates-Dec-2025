@@ -92,6 +92,21 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 )
 
+// Token refresh mutex — prevents multiple concurrent 401s from each
+// attempting their own refresh.  The first 401 triggers the refresh;
+// subsequent 401s wait for the same promise to resolve.
+let isRefreshing = false
+let refreshSubscribers: ((token: string) => void)[] = []
+
+function subscribeTokenRefresh(cb: (token: string) => void) {
+  refreshSubscribers.push(cb)
+}
+
+function onTokenRefreshed(newToken: string) {
+  refreshSubscribers.forEach((cb) => cb(newToken))
+  refreshSubscribers = []
+}
+
 // Response interceptor - handle errors and token refresh
 apiClient.interceptors.response.use(
   (response) => response,
@@ -102,25 +117,58 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true
 
+      // If a refresh is already in progress, queue this request
+      if (isRefreshing) {
+        return new Promise((resolve) => {
+          subscribeTokenRefresh((newToken: string) => {
+            if (originalRequest.headers) {
+              originalRequest.headers.Authorization = `Bearer ${newToken}`
+            }
+            resolve(apiClient(originalRequest))
+          })
+        })
+      }
+
+      isRefreshing = true
+
       try {
         const refreshToken = localStorage.getItem('refresh_token')
         if (refreshToken) {
           const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
             refresh_token: refreshToken,
           })
-          const { access_token } = response.data
-          setAccessToken(access_token)
+
+          // Backend returns APIResponse wrapper: { success, data: { access_token, refresh_token, ... } }
+          const tokenData = response.data?.data ?? response.data
+          const newAccessToken = tokenData.access_token
+          const newRefreshToken = tokenData.refresh_token
+
+          if (!newAccessToken) {
+            throw new Error('No access_token in refresh response')
+          }
+
+          setAccessToken(newAccessToken)
+
+          // Persist the rotated refresh token so future refreshes work
+          if (newRefreshToken) {
+            localStorage.setItem('refresh_token', newRefreshToken)
+          }
+
+          isRefreshing = false
+          onTokenRefreshed(newAccessToken)
 
           if (originalRequest.headers) {
-            originalRequest.headers.Authorization = `Bearer ${access_token}`
+            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
           }
           return apiClient(originalRequest)
         }
       } catch (refreshError) {
+        isRefreshing = false
+        refreshSubscribers = []
         // Refresh failed - logout user
         setAccessToken(null)
         localStorage.removeItem('refresh_token')
-        window.location.href = '/login'
+        window.location.href = '/login?reason=session_expired'
       }
     }
 
