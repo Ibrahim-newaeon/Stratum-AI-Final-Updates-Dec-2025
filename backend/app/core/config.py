@@ -206,8 +206,18 @@ class Settings(BaseSettings):
 
     @property
     def cors_origins_list(self) -> List[str]:
-        """Get CORS origins as a list."""
-        return [origin.strip() for origin in self.cors_origins.split(",")]
+        """Get CORS origins as a list, always including frontend_url."""
+        origins = [
+            origin.strip().rstrip("/")
+            for origin in self.cors_origins.split(",")
+            if origin.strip()
+        ]
+        # Always include frontend_url so cross-origin requests from the
+        # frontend are never blocked due to a missing CORS_ORIGINS entry.
+        frontend = self.frontend_url.strip().rstrip("/")
+        if frontend and frontend not in origins:
+            origins.append(frontend)
+        return origins
 
     # -------------------------------------------------------------------------
     # Observability

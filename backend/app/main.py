@@ -139,10 +139,22 @@ def create_application() -> FastAPI:
     )
 
     # -------------------------------------------------------------------------
-    # Middleware (order matters - executed in reverse order)
+    # Middleware Stack
+    # -------------------------------------------------------------------------
+    # Starlette's add_middleware uses insert(0, ...) so the LAST call
+    # becomes the OUTERMOST middleware.  Order below is innermost → outermost.
+    # Execution: CORS → timing → Security → Audit → Tenant → RateLimit
+    #            → Gzip → prometheus → ExceptionMiddleware → Router
     # -------------------------------------------------------------------------
 
-    # Prometheus request metrics (outermost — wraps all other middleware)
+    # Log allowed CORS origins at startup for easier debugging
+    logger.info(
+        "cors_origins_configured",
+        origins=settings.cors_origins_list,
+        frontend_url=settings.frontend_url,
+    )
+
+    # Prometheus request metrics (innermost — closest to the route handlers)
     @app.middleware("http")
     async def prometheus_middleware(request: Request, call_next):
         """Track request count and latency for Prometheus."""
@@ -163,16 +175,6 @@ def create_application() -> FastAPI:
             return response
         finally:
             ACTIVE_CONNECTIONS.dec()
-
-    # CORS
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=settings.cors_origins_list,
-        allow_credentials=settings.cors_allow_credentials,
-        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-        allow_headers=["Authorization", "Content-Type", "X-Request-ID", "X-Tenant-ID", "Accept", "Origin"],
-        expose_headers=["X-Request-ID", "X-Rate-Limit-Remaining"],
-    )
 
     # Gzip compression
     app.add_middleware(GZipMiddleware, minimum_size=1000)
@@ -219,6 +221,18 @@ def create_application() -> FastAPI:
         )
 
         return response
+
+    # CORS — MUST be last add_middleware call so it is the outermost
+    # middleware.  This ensures Access-Control-Allow-Origin is set on
+    # ALL responses, including early 401s from TenantMiddleware.
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_origins_list,
+        allow_credentials=settings.cors_allow_credentials,
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type", "X-Request-ID", "X-Tenant-ID", "Accept", "Origin"],
+        expose_headers=["X-Request-ID", "X-Rate-Limit-Remaining"],
+    )
 
     # -------------------------------------------------------------------------
     # Exception Handlers
