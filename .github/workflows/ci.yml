@@ -143,7 +143,7 @@ jobs:
           fail_ci_if_error: false
 
       - name: Upload coverage artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: backend-coverage
@@ -197,7 +197,7 @@ jobs:
           fail_ci_if_error: false
 
       - name: Upload coverage artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: frontend-coverage
@@ -210,7 +210,7 @@ jobs:
           VITE_API_BASE_URL: http://localhost:8000
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: frontend-build
           path: frontend/dist
@@ -249,7 +249,7 @@ jobs:
         run: npm run test:e2e -- --project=chromium
 
       - name: Upload E2E test results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: playwright-report
@@ -420,7 +420,7 @@ jobs:
             -i grafana/k6 run - < tests/load/autopilot-enforcement-load-test.js
 
       - name: Upload load test results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: load-test-results
