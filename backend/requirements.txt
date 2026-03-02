@@ -76,7 +76,7 @@ faker==40.4.0
 
 # Development
 black==26.1.0
-isort==5.13.2
+isort==8.0.1
 mypy==1.19.1
 ruff==0.15.2
 
