@@ -1499,22 +1499,22 @@ async def seed_demo_data(
         text("DELETE FROM campaigns WHERE tenant_id = :tid"),
 
         # Step 2: Insert campaigns
-        text("""INSERT INTO campaigns (tenant_id, platform, external_id, account_id, name, status, objective, daily_budget_cents, total_spend_cents, impressions, clicks, conversions, revenue_cents, ctr, roas, start_date, currency, labels)
+        text("""INSERT INTO campaigns (tenant_id, platform, external_id, account_id, name, status, objective, daily_budget_cents, total_spend_cents, impressions, clicks, conversions, revenue_cents, ctr, roas, start_date, currency, labels, created_at, updated_at)
 VALUES
-(:tid, 'meta',   'camp_meta_001',  'act_100001', 'Summer Sale - Lookalike Audiences',  'active', 'conversions', 15000, 1350000, 2800000, 56000, 1680, 5400000, 2.0, 4.0, CURRENT_DATE - 90, 'USD', '["high-performer","retargeting"]'),
-(:tid, 'google', 'camp_goog_001',  'act_200001', 'Brand Search - Exact Match',         'active', 'conversions', 12000, 1080000, 1500000, 105000, 3150, 4320000, 7.0, 4.0, CURRENT_DATE - 90, 'USD', '["brand","search"]'),
-(:tid, 'meta',   'camp_meta_002',  'act_100001', 'Retargeting - Cart Abandoners',      'active', 'conversions', 8000, 720000, 1200000, 36000, 1440, 2880000, 3.0, 4.0, CURRENT_DATE - 90, 'USD', '["retargeting"]'),
-(:tid, 'google', 'camp_goog_002',  'act_200001', 'Shopping - Product Listing Ads',     'active', 'sales',       20000, 1800000, 3500000, 52500, 1050, 3960000, 1.5, 2.2, CURRENT_DATE - 90, 'USD', '["shopping"]'),
-(:tid, 'tiktok', 'camp_tik_001',   'act_300001', 'UGC Creative - Gen Z Audience',      'active', 'conversions', 10000, 900000, 4500000, 67500, 900, 1800000, 1.5, 2.0, CURRENT_DATE - 90, 'USD', '["ugc","genZ"]'),
-(:tid, 'meta',   'camp_meta_003',  'act_100001', 'Video Views - Product Demo',         'active', 'video_views', 6000, 540000, 3200000, 32000, 480, 1080000, 1.0, 2.0, CURRENT_DATE - 90, 'USD', '["video","awareness"]'),
-(:tid, 'snapchat','camp_snap_001', 'act_400001', 'Story Ads - Flash Sale',             'active', 'conversions', 7000, 630000, 2100000, 42000, 630, 1260000, 2.0, 2.0, CURRENT_DATE - 90, 'USD', '["stories"]'),
-(:tid, 'linkedin','camp_li_001',   'act_500001', 'Lead Gen - Decision Makers',         'active', 'leads',       15000, 1350000, 800000, 8000, 400, 2700000, 1.0, 2.0, CURRENT_DATE - 90, 'USD', '["b2b","leads"]'),
-(:tid, 'google', 'camp_goog_003',  'act_200001', 'Display - Remarketing',              'active', 'conversions', 5000, 450000, 5000000, 25000, 375, 900000, 0.5, 2.0, CURRENT_DATE - 90, 'USD', '["display","remarketing"]'),
-(:tid, 'tiktok', 'camp_tik_002',   'act_300001', 'Spark Ads - Influencer Collab',      'active', 'engagement',  8000, 720000, 3800000, 57000, 570, 1440000, 1.5, 2.0, CURRENT_DATE - 90, 'USD', '["influencer"]'),
-(:tid, 'meta',   'camp_meta_004',  'act_100001', 'Cold Audience - Interest Targeting', 'active', 'conversions', 12000, 1080000, 2000000, 20000, 200, 540000, 1.0, 0.5, CURRENT_DATE - 90, 'USD', '["prospecting"]'),
-(:tid, 'snapchat','camp_snap_002', 'act_400001', 'AR Lens - Brand Awareness',          'paused', 'awareness',   9000, 810000, 1800000, 9000, 90, 324000, 0.5, 0.4, CURRENT_DATE - 90, 'USD', '["ar","awareness"]'),
-(:tid, 'google', 'camp_goog_004',  'act_200001', 'Broad Match - New Markets',          'active', 'conversions', 10000, 900000, 1800000, 18000, 180, 720000, 1.0, 0.8, CURRENT_DATE - 90, 'USD', '["expansion"]'),
-(:tid, 'tiktok', 'camp_tik_003',   'act_300001', 'Hashtag Challenge - Brand Launch',   'paused', 'awareness',   15000, 1350000, 6000000, 60000, 300, 675000, 1.0, 0.5, CURRENT_DATE - 90, 'USD', '["hashtag","brand"]')"""),
+(:tid, 'meta',   'camp_meta_001',  'act_100001', 'Summer Sale - Lookalike Audiences',  'active', 'conversions', 15000, 1350000, 2800000, 56000, 1680, 5400000, 2.0, 4.0, CURRENT_DATE - 90, 'USD', '["high-performer","retargeting"]', NOW(), NOW()),
+(:tid, 'google', 'camp_goog_001',  'act_200001', 'Brand Search - Exact Match',         'active', 'conversions', 12000, 1080000, 1500000, 105000, 3150, 4320000, 7.0, 4.0, CURRENT_DATE - 90, 'USD', '["brand","search"]', NOW(), NOW()),
+(:tid, 'meta',   'camp_meta_002',  'act_100001', 'Retargeting - Cart Abandoners',      'active', 'conversions', 8000, 720000, 1200000, 36000, 1440, 2880000, 3.0, 4.0, CURRENT_DATE - 90, 'USD', '["retargeting"]', NOW(), NOW()),
+(:tid, 'google', 'camp_goog_002',  'act_200001', 'Shopping - Product Listing Ads',     'active', 'sales',       20000, 1800000, 3500000, 52500, 1050, 3960000, 1.5, 2.2, CURRENT_DATE - 90, 'USD', '["shopping"]', NOW(), NOW()),
+(:tid, 'tiktok', 'camp_tik_001',   'act_300001', 'UGC Creative - Gen Z Audience',      'active', 'conversions', 10000, 900000, 4500000, 67500, 900, 1800000, 1.5, 2.0, CURRENT_DATE - 90, 'USD', '["ugc","genZ"]', NOW(), NOW()),
+(:tid, 'meta',   'camp_meta_003',  'act_100001', 'Video Views - Product Demo',         'active', 'video_views', 6000, 540000, 3200000, 32000, 480, 1080000, 1.0, 2.0, CURRENT_DATE - 90, 'USD', '["video","awareness"]', NOW(), NOW()),
+(:tid, 'snapchat','camp_snap_001', 'act_400001', 'Story Ads - Flash Sale',             'active', 'conversions', 7000, 630000, 2100000, 42000, 630, 1260000, 2.0, 2.0, CURRENT_DATE - 90, 'USD', '["stories"]', NOW(), NOW()),
+(:tid, 'linkedin','camp_li_001',   'act_500001', 'Lead Gen - Decision Makers',         'active', 'leads',       15000, 1350000, 800000, 8000, 400, 2700000, 1.0, 2.0, CURRENT_DATE - 90, 'USD', '["b2b","leads"]', NOW(), NOW()),
+(:tid, 'google', 'camp_goog_003',  'act_200001', 'Display - Remarketing',              'active', 'conversions', 5000, 450000, 5000000, 25000, 375, 900000, 0.5, 2.0, CURRENT_DATE - 90, 'USD', '["display","remarketing"]', NOW(), NOW()),
+(:tid, 'tiktok', 'camp_tik_002',   'act_300001', 'Spark Ads - Influencer Collab',      'active', 'engagement',  8000, 720000, 3800000, 57000, 570, 1440000, 1.5, 2.0, CURRENT_DATE - 90, 'USD', '["influencer"]', NOW(), NOW()),
+(:tid, 'meta',   'camp_meta_004',  'act_100001', 'Cold Audience - Interest Targeting', 'active', 'conversions', 12000, 1080000, 2000000, 20000, 200, 540000, 1.0, 0.5, CURRENT_DATE - 90, 'USD', '["prospecting"]', NOW(), NOW()),
+(:tid, 'snapchat','camp_snap_002', 'act_400001', 'AR Lens - Brand Awareness',          'paused', 'awareness',   9000, 810000, 1800000, 9000, 90, 324000, 0.5, 0.4, CURRENT_DATE - 90, 'USD', '["ar","awareness"]', NOW(), NOW()),
+(:tid, 'google', 'camp_goog_004',  'act_200001', 'Broad Match - New Markets',          'active', 'conversions', 10000, 900000, 1800000, 18000, 180, 720000, 1.0, 0.8, CURRENT_DATE - 90, 'USD', '["expansion"]', NOW(), NOW()),
+(:tid, 'tiktok', 'camp_tik_003',   'act_300001', 'Hashtag Challenge - Brand Launch',   'paused', 'awareness',   15000, 1350000, 6000000, 60000, 300, 675000, 1.0, 0.5, CURRENT_DATE - 90, 'USD', '["hashtag","brand"]', NOW(), NOW())"""),
 
         # Step 3: Generate daily metrics
         text("""INSERT INTO campaign_metrics (tenant_id, campaign_id, date, impressions, clicks, conversions, spend_cents, revenue_cents)
