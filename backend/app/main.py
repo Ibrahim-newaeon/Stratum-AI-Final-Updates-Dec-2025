@@ -107,6 +107,21 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
             detail="App will run without real-time WebSocket support",
         )
 
+    # Auto-train ML models if none exist (e.g., fresh Railway deploy)
+    try:
+        from pathlib import Path
+        models_path = Path(settings.ml_models_path)
+        if not models_path.exists() or not list(models_path.glob("*.pkl")):
+            logger.info("ml_models_not_found", path=str(models_path), detail="Training from sample data")
+            from app.ml.train import ModelTrainer
+            from app.ml.data_loader import TrainingDataLoader
+            df = TrainingDataLoader.generate_sample_data(num_campaigns=100, days_per_campaign=30)
+            trainer = ModelTrainer(str(models_path))
+            trainer.train_all(df, include_platform_models=False)
+            logger.info("ml_models_auto_trained", models=list(str(p.name) for p in models_path.glob("*.pkl")))
+    except Exception as e:
+        logger.warning("ml_auto_train_failed", error=str(e), detail="ML predictions will be unavailable")
+
     yield
 
     # Shutdown
