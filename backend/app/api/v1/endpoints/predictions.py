@@ -5,6 +5,8 @@
 API endpoints for live predictions, ROAS optimization, and alerts.
 """
 
+import hashlib
+import json
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
@@ -212,11 +214,16 @@ async def get_live_predictions(
 
     # Store prediction (non-blocking — don't fail the response if caching fails)
     try:
+        input_payload = {"campaign_count": len(campaigns)}
+        input_hash = hashlib.sha256(
+            json.dumps(input_payload, sort_keys=True).encode()
+        ).hexdigest()[:64]
         prediction_record = MLPrediction(
             tenant_id=tenant_id,
             prediction_type="portfolio_analysis",
             model_type="roas_optimizer",
-            input_data={"campaign_count": len(campaigns)},
+            input_data=input_payload,
+            input_hash=input_hash,
             prediction_result=analysis,
             confidence_score=_calculate_prediction_confidence(campaign_data, analysis),
             model_version="roas_optimizer_v1.0",
