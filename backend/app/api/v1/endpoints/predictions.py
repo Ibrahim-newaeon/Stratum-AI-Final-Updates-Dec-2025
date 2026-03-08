@@ -210,17 +210,22 @@ async def get_live_predictions(
                 "recommendation": "Review recommendations and take action",
             })
 
-    # Store prediction
-    prediction_record = MLPrediction(
-        tenant_id=tenant_id,
-        prediction_type="portfolio_analysis",
-        input_data={"campaign_count": len(campaigns)},
-        prediction_result=analysis,
-        confidence_score=_calculate_prediction_confidence(campaign_data, analysis),
-        model_version="roas_optimizer_v1.0",
-    )
-    db.add(prediction_record)
-    await db.commit()
+    # Store prediction (non-blocking — don't fail the response if caching fails)
+    try:
+        prediction_record = MLPrediction(
+            tenant_id=tenant_id,
+            prediction_type="portfolio_analysis",
+            model_type="roas_optimizer",
+            input_data={"campaign_count": len(campaigns)},
+            prediction_result=analysis,
+            confidence_score=_calculate_prediction_confidence(campaign_data, analysis),
+            model_version="roas_optimizer_v1.0",
+        )
+        db.add(prediction_record)
+        await db.commit()
+    except Exception as e:
+        logger.warning("prediction_cache_failed", error=str(e))
+        await db.rollback()
 
     return APIResponse(
         success=True,
