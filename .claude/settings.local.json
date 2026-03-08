@@ -173,7 +173,15 @@
       "Bash(powershell.exe -NoProfile -Command \"Select-Object -Last 20\")",
       "Bash(powershell.exe -NoProfile -Command \"Select-Object -Last 10\")",
       "Bash(powershell.exe -NoProfile -Command \"$input | Select-Object -Last 5\")",
-      "Bash(Select-String -Pattern \"passed|failed|error|FAILED\")"
+      "Bash(Select-String -Pattern \"passed|failed|error|FAILED\")",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiZXhwIjoxNzcyMjQyMTY5LCJpYXQiOjE3NzIyNDAzNjksInR5cGUiOiJhY2Nlc3MiLCJ0ZW5hbnRfaWQiOjEsInJvbGUiOiJzdXBlcmFkbWluIiwiY21zX3JvbGUiOiJzdXBlcl9hZG1pbiJ9._rFQ1mKlMeMR2RzkPdhsthvER93dcEBLjdrg50hwFtI\")",
+      "Bash(ACCESS_TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiZXhwIjoxNzcyMjQzNDQwLCJpYXQiOjE3NzIyNDE2NDAsInR5cGUiOiJhY2Nlc3MiLCJ0ZW5hbnRfaWQiOjEsInJvbGUiOiJzdXBlcmFkbWluIiwiY21zX3JvbGUiOiJzdXBlcl9hZG1pbiJ9.rIiR1DAheJnLYS_aw2xSmzOM-VjSA_G8cnhqZvg9-TU\")",
+      "Bash(REFRESH_TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiZXhwIjoxNzcyODQ2NDQxLCJpYXQiOjE3NzIyNDE2NDEsInR5cGUiOiJyZWZyZXNoIiwianRpIjoiai00a3VkTWI2TWdLVF9CRjY0NERuQXBiYnN5ckszbWRDdDlKR1VOSmVWZyJ9.u0i7HzDr56A-3sKAbRFYYbA3lCsKFd5M47MoarDXrjM\")",
+      "WebFetch(domain:stratumai.app)",
+      "WebFetch(domain:app.stratumai.app)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiZXhwIjoxNzcyMjQ4Nzc5LCJpYXQiOjE3NzIyNDY5NzksInR5cGUiOiJhY2Nlc3MiLCJ0ZW5hbnRfaWQiOjEsInJvbGUiOiJzdXBlcmFkbWluIiwiY21zX3JvbGUiOiJzdXBlcl9hZG1pbiJ9.XR1kGJ7ksHfsFuyEGs3FENtp7kqO4uGve-Y215m_r8Q\")",
+      "Bash(railway --version:*)",
+      "Bash(test:*)"
     ],
     "deny": [],
     "ask": []

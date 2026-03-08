@@ -94,9 +94,9 @@ python3 -c "import secrets; print(secrets.token_urlsafe(48))"
 Set these in `.env`:
 
 ```env
-SECRET_KEY=<generated-key-1>
-JWT_SECRET_KEY=<generated-key-2>
-PII_ENCRYPTION_KEY=<generated-key-3>
+SECRET_KEY=<9MKsX4yiMQeO8GEKlk8NcIZ62ZjlaqNFmubTpt_8YHtGxK3Uci9Xe6Jt3gv2sZU1>
+JWT_SECRET_KEY=<jt9eSFc6WbQGAEqO6juc0lGgMnScfqXYSLh8kAeaLD4=>
+PII_ENCRYPTION_KEY=<5eb4a5259d6721ea6601b3b93fd58dc67cb25a63f62310a10c9a5818d76298c0>
 ```
 
 ### Step 3: Configure database credentials
