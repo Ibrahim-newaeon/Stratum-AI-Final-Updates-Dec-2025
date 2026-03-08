@@ -108,10 +108,10 @@ export default function UnifiedDashboard() {
   }, [customStartDate, customEndDate]);
 
   const isLoading = overviewLoading || signalHealthLoading;
-  const hasError = overviewError && signalHealthError;
+  const hasError = overviewError || signalHealthError;
 
-  // Show error state when all critical API calls fail
-  if (hasError && !isLoading) {
+  // Show error state when critical API calls fail (but not while still loading)
+  if (hasError && !isLoading && !overview && !signalHealth) {
     const errorStatus = (overviewErrorData as Error & { response?: { status?: number } })?.response
       ?.status;
     const isAuthError = errorStatus === 401 || errorStatus === 403;

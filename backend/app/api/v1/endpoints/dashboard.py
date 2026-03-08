@@ -392,7 +392,53 @@ async def get_dashboard_overview(
     """
     tenant_id = current_user.tenant_id
 
-    # Get date range
+    # Get date range — wrapped to handle database errors gracefully
+    try:
+        return await _build_dashboard_overview(
+            tenant_id, period, custom_start, custom_end, db
+        )
+    except Exception as e:
+        logger.error("dashboard_overview_error", error=str(e), tenant_id=tenant_id)
+        # Return safe empty dashboard so the frontend can still render
+        start_date, end_date = get_date_range(period, custom_start, custom_end)
+        zero_metric = MetricValue(value=0, previous_value=0, change_percent=0, trend="stable", formatted="$0.00")
+        return APIResponse(
+            success=True,
+            data=DashboardOverviewResponse(
+                onboarding_complete=False,
+                has_connected_platforms=False,
+                has_campaigns=False,
+                period=period.value,
+                period_label="Last 7 Days",
+                date_range={"start": start_date.isoformat(), "end": end_date.isoformat()},
+                metrics=OverviewMetrics(
+                    spend=zero_metric, revenue=zero_metric, roas=zero_metric,
+                    conversions=zero_metric, cpa=zero_metric, impressions=zero_metric,
+                    clicks=zero_metric, ctr=zero_metric,
+                ),
+                signal_health=SignalHealthSummary(
+                    overall_score=0, status="unknown", emq_score=None,
+                    data_freshness_minutes=None, api_health=False, issues=["Dashboard data temporarily unavailable"],
+                    autopilot_enabled=False,
+                ),
+                platforms=[],
+                total_campaigns=0,
+                active_campaigns=0,
+                pending_recommendations=0,
+                active_alerts=0,
+                hidden_metrics=[],
+            ),
+        )
+
+
+async def _build_dashboard_overview(
+    tenant_id: int,
+    period: TimePeriod,
+    custom_start,
+    custom_end,
+    db: AsyncSession,
+):
+    """Build the dashboard overview response (extracted for error handling)."""
     start_date, end_date = get_date_range(period, custom_start, custom_end)
     prev_start, prev_end = get_previous_period(start_date, end_date)
 
@@ -1066,6 +1112,26 @@ async def get_signal_health(
     """
     tenant_id = current_user.tenant_id
 
+    try:
+        return await _build_signal_health(tenant_id, db)
+    except Exception as e:
+        logger.error("signal_health_error", error=str(e), tenant_id=tenant_id)
+        return APIResponse(
+            success=True,
+            data=SignalHealthSummary(
+                overall_score=0,
+                status="unknown",
+                emq_score=None,
+                data_freshness_minutes=None,
+                api_health=False,
+                issues=["Signal health data temporarily unavailable"],
+                autopilot_enabled=False,
+            ),
+        )
+
+
+async def _build_signal_health(tenant_id: int, db: AsyncSession):
+    """Build signal health response (extracted for error handling)."""
     # Get onboarding settings for thresholds
     onboarding_result = await db.execute(
         select(TenantOnboarding).where(TenantOnboarding.tenant_id == tenant_id)
