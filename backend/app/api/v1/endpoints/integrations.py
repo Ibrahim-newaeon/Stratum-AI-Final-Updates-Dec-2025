@@ -38,11 +38,15 @@ from app.services.crm.hubspot_client import HubSpotClient
 from app.services.crm.hubspot_sync import HubSpotSyncService
 from app.services.crm.identity_matching import IdentityMatcher
 from app.services.crm.hubspot_writeback import HubSpotWritebackService
+from app.auth.permissions import require_super_admin
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.schemas.response import APIResponse
 
 router = APIRouter(prefix="/integrations", tags=["integrations"])
+
+# Dependency for superadmin-only endpoints
+_superadmin_deps = [Depends(require_super_admin)]
 logger = get_logger(__name__)
 
 
@@ -160,6 +164,7 @@ class WebhookPayload(BaseModel):
     "/hubspot/connect",
     response_model=APIResponse[HubSpotConnectResponse],
     summary="Initiate HubSpot OAuth",
+    dependencies=_superadmin_deps,
 )
 async def hubspot_connect(
     http_request: Request,
@@ -239,6 +244,7 @@ async def hubspot_callback(
     "/hubspot/status",
     response_model=APIResponse[HubSpotStatusResponse],
     summary="Get HubSpot connection status",
+    dependencies=_superadmin_deps,
 )
 async def hubspot_status(
     request: Request,
@@ -260,6 +266,7 @@ async def hubspot_status(
     "/hubspot/disconnect",
     response_model=APIResponse[Dict[str, Any]],
     summary="Disconnect HubSpot",
+    dependencies=_superadmin_deps,
 )
 async def hubspot_disconnect(
     request: Request,
@@ -289,6 +296,7 @@ async def hubspot_disconnect(
     "/hubspot/sync",
     response_model=APIResponse[SyncResponse],
     summary="Trigger HubSpot sync",
+    dependencies=_superadmin_deps,
 )
 async def hubspot_sync(
     http_request: Request,
@@ -390,6 +398,7 @@ async def hubspot_webhook(
     "/pipeline/summary",
     response_model=APIResponse[PipelineSummaryResponse],
     summary="Get pipeline summary",
+    dependencies=_superadmin_deps,
 )
 async def pipeline_summary(
     request: Request,
@@ -411,6 +420,7 @@ async def pipeline_summary(
     "/pipeline/roas",
     response_model=APIResponse[PipelineROASResponse],
     summary="Get Pipeline ROAS metrics",
+    dependencies=_superadmin_deps,
 )
 async def pipeline_roas(
     request: Request,
@@ -493,6 +503,7 @@ async def pipeline_roas(
     "/attribution/report",
     response_model=APIResponse[AttributionReportResponse],
     summary="Get attribution report",
+    dependencies=_superadmin_deps,
 )
 async def attribution_report(
     request: Request,
@@ -535,6 +546,7 @@ async def attribution_report(
     "/contacts",
     response_model=APIResponse[Dict[str, Any]],
     summary="List CRM contacts",
+    dependencies=_superadmin_deps,
 )
 async def list_contacts(
     request: Request,
@@ -604,6 +616,7 @@ async def list_contacts(
     "/deals",
     response_model=APIResponse[Dict[str, Any]],
     summary="List CRM deals",
+    dependencies=_superadmin_deps,
 )
 async def list_deals(
     request: Request,
@@ -685,6 +698,7 @@ async def list_deals(
     "/identity/match",
     response_model=APIResponse[Dict[str, Any]],
     summary="Run identity matching",
+    dependencies=_superadmin_deps,
 )
 async def run_identity_matching(
     request: Request,
@@ -714,6 +728,7 @@ async def run_identity_matching(
     "/hubspot/writeback/status",
     response_model=APIResponse[Dict[str, Any]],
     summary="Get writeback status",
+    dependencies=_superadmin_deps,
 )
 async def get_writeback_status(
     request: Request,
@@ -739,6 +754,7 @@ async def get_writeback_status(
     "/hubspot/writeback/setup-properties",
     response_model=APIResponse[Dict[str, Any]],
     summary="Setup custom properties",
+    dependencies=_superadmin_deps,
 )
 async def setup_writeback_properties(
     request: Request,
@@ -808,6 +824,7 @@ async def setup_writeback_properties(
     "/hubspot/writeback/sync",
     response_model=APIResponse[Dict[str, Any]],
     summary="Run writeback sync",
+    dependencies=_superadmin_deps,
 )
 async def run_writeback_sync(
     request: Request,
@@ -918,6 +935,7 @@ async def run_writeback_sync(
     "/hubspot/writeback/history",
     response_model=APIResponse[Dict[str, Any]],
     summary="Get writeback sync history",
+    dependencies=_superadmin_deps,
 )
 async def get_writeback_history(
     request: Request,
