@@ -40,7 +40,7 @@ cryptography==46.0.5
 pydantic[email]==2.12.5
 pydantic-settings==2.13.1
 pyotp==2.9.0
-qrcode[pil]==7.4.2
+qrcode[pil]==8.2
 
 # ML / Data Science
 scikit-learn==1.8.0
