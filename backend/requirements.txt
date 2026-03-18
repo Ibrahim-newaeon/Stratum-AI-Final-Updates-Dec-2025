@@ -24,7 +24,7 @@ alembic==1.18.4
 greenlet==3.3.2
 
 # Redis & Caching
-redis[asyncio]==5.0.1
+redis[asyncio]==7.2.1
 
 # Celery
 celery==5.6.2
