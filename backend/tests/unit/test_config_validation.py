@@ -248,7 +248,11 @@ class TestCORSConfiguration:
     """Tests for CORS origins parsing."""
 
     def test_cors_origins_list_splits_correctly(self) -> None:
-        """Comma-separated CORS origins are split into a list."""
+        """Comma-separated CORS origins are split into a list.
+
+        The cors_origins_list property always appends frontend_url
+        (default http://localhost:5173) if not already present.
+        """
         s, _ = _make_settings(
             cors_origins="https://app.stratum.ai,https://staging.stratum.ai",
             secret_key="x" * 32,
@@ -258,14 +262,19 @@ class TestCORSConfiguration:
         assert s.cors_origins_list == [
             "https://app.stratum.ai",
             "https://staging.stratum.ai",
+            "http://localhost:5173",
         ]
 
     def test_cors_origins_handles_spaces(self) -> None:
-        """CORS origins with spaces around commas are trimmed."""
+        """CORS origins with spaces around commas are trimmed.
+
+        The cors_origins_list property always appends frontend_url
+        (default http://localhost:5173) if not already present.
+        """
         s, _ = _make_settings(
             cors_origins="https://a.com , https://b.com",
             secret_key="x" * 32,
             jwt_secret_key="y" * 32,
             pii_encryption_key="z" * 32,
         )
-        assert s.cors_origins_list == ["https://a.com", "https://b.com"]
+        assert s.cors_origins_list == ["https://a.com", "https://b.com", "http://localhost:5173"]

@@ -673,12 +673,25 @@ class TestAutoPause:
             },
         )
 
-        paused = await enforcer.auto_pause_campaign(
-            tenant_id=1,
-            campaign_id="camp_123",
-            reason="ROAS below threshold",
-            metrics={"roas": 0.5, "spend": 1000.0},
-        )
+        # Mock the platform executor so we don't need real API credentials
+        mock_executor = AsyncMock()
+        mock_executor.execute_action = AsyncMock(return_value={"success": True})
+
+        with patch(
+            "app.autopilot.enforcer.PLATFORM_EXECUTORS",
+            {"meta": mock_executor},
+            create=True,
+        ):
+            with patch(
+                "app.tasks.apply_actions_queue.PLATFORM_EXECUTORS",
+                {"meta": mock_executor},
+            ):
+                paused = await enforcer.auto_pause_campaign(
+                    tenant_id=1,
+                    campaign_id="camp_123",
+                    reason="ROAS below threshold",
+                    metrics={"roas": 0.5, "spend": 1000.0},
+                )
 
         assert paused is True
 
