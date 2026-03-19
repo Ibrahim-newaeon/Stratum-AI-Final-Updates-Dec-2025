@@ -71,6 +71,7 @@ import { TrustGateIndicator } from '@/components/ui/TrustGateIndicator';
 import { OnboardingChat, OnboardingChatButton } from '@/components/onboarding';
 import { FeedbackWidget } from '@/components/feedback/FeedbackWidget';
 import ClientContextSwitcher from '@/components/client/ClientContextSwitcher';
+import TenantSwitcher from '@/components/tenant/TenantSwitcher';
 
 /**
  * Sidebar visibility per role — mirrors backend SIDEBAR_VISIBILITY.
@@ -788,6 +789,9 @@ export default function DashboardLayout() {
 
             {/* Header actions */}
             <div className="flex items-center gap-2">
+              {/* Tenant/Workspace Switcher (visible when user has multiple tenants) */}
+              <TenantSwitcher />
+
               {/* Client Context Switcher (visible for MANAGER/ANALYST roles) */}
               <ClientContextSwitcher />
 

@@ -36,6 +36,7 @@ from app.base_models import (
     WhatsAppTemplate,
     WhatsAppMessage,
     WhatsAppConversation,
+    UserTenantMembership,
 )
 
 # Trust Layer models
@@ -185,6 +186,7 @@ __all__ = [
     "WhatsAppTemplate",
     "WhatsAppMessage",
     "WhatsAppConversation",
+    "UserTenantMembership",
     "FactSignalHealthDaily",
     "FactAttributionVarianceDaily",
     "FactActionsQueue",

@@ -413,14 +413,41 @@ async def login(
 
     logger.info("user_logged_in", user_id=user.id, tenant_id=user.tenant_id)
 
+    # Fetch available tenants for multi-account switcher
+    from app.models import UserTenantMembership, Tenant as TenantModel
+    membership_result = await db.execute(
+        select(UserTenantMembership, TenantModel)
+        .join(TenantModel, UserTenantMembership.tenant_id == TenantModel.id)
+        .where(
+            UserTenantMembership.user_id == user.id,
+            UserTenantMembership.is_active == True,
+            TenantModel.is_deleted == False,
+        )
+        .order_by(UserTenantMembership.is_default.desc(), TenantModel.name)
+    )
+    membership_rows = membership_result.all()
+    available_tenants = [
+        {
+            "tenant_id": t.id,
+            "tenant_name": t.name,
+            "tenant_slug": t.slug,
+            "tenant_plan": t.plan,
+            "role": m.role.value if hasattr(m.role, 'value') else str(m.role),
+            "is_default": m.is_default,
+            "is_active": m.is_active,
+        }
+        for m, t in membership_rows
+    ]
+
     return APIResponse(
         success=True,
-        data=TokenResponse(
-            access_token=access_token,
-            refresh_token=refresh_token,
-            token_type="bearer",
-            expires_in=30 * 60,  # 30 minutes
-        ),
+        data={
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer",
+            "expires_in": 30 * 60,  # 30 minutes
+            "available_tenants": available_tenants,
+        },
         message="Login successful",
     )
 
@@ -614,6 +641,168 @@ async def logout(
         logger.info("user_logged_out", user_id=user_id)
 
     return APIResponse(success=True, message="Logged out successfully")
+
+
+# =============================================================================
+# Multi-Tenant Switcher
+# =============================================================================
+
+
+@router.get("/tenants", response_model=APIResponse[list])
+async def list_my_tenants(
+    request: Request,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    List all tenants the current user has access to.
+    Returns tenant info with the user's role in each tenant.
+    """
+    from app.models import Tenant, UserTenantMembership
+
+    user_id = getattr(request.state, "user_id", None)
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required",
+        )
+
+    result = await db.execute(
+        select(UserTenantMembership, Tenant)
+        .join(Tenant, UserTenantMembership.tenant_id == Tenant.id)
+        .where(
+            UserTenantMembership.user_id == user_id,
+            UserTenantMembership.is_active == True,
+            Tenant.is_deleted == False,
+        )
+        .order_by(UserTenantMembership.is_default.desc(), Tenant.name)
+    )
+    rows = result.all()
+
+    tenants = []
+    for membership, tenant in rows:
+        tenants.append({
+            "tenant_id": tenant.id,
+            "tenant_name": tenant.name,
+            "tenant_slug": tenant.slug,
+            "tenant_plan": tenant.plan,
+            "role": membership.role.value if hasattr(membership.role, 'value') else str(membership.role),
+            "is_default": membership.is_default,
+            "is_active": membership.is_active,
+        })
+
+    return APIResponse(
+        success=True,
+        data=tenants,
+        message=f"Found {len(tenants)} tenant(s)",
+    )
+
+
+@router.post("/switch-tenant", response_model=APIResponse)
+async def switch_tenant(
+    request: Request,
+    switch_data: dict,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Switch active tenant context. Issues new JWT tokens scoped to the target tenant.
+    The user must have an active membership in the target tenant.
+    """
+    from app.models import Tenant, UserTenantMembership
+
+    user_id = getattr(request.state, "user_id", None)
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required",
+        )
+
+    target_tenant_id = switch_data.get("tenant_id")
+    if not target_tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="tenant_id is required",
+        )
+
+    # Verify user has active membership in target tenant
+    result = await db.execute(
+        select(UserTenantMembership, Tenant)
+        .join(Tenant, UserTenantMembership.tenant_id == Tenant.id)
+        .where(
+            UserTenantMembership.user_id == user_id,
+            UserTenantMembership.tenant_id == target_tenant_id,
+            UserTenantMembership.is_active == True,
+            Tenant.is_deleted == False,
+        )
+    )
+    row = result.first()
+
+    if not row:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have access to this tenant",
+        )
+
+    membership, tenant = row
+
+    # Get the user to access cms_role
+    user_result = await db.execute(
+        select(User).where(User.id == user_id)
+    )
+    user = user_result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found",
+        )
+
+    # Use the role from the membership for the target tenant
+    target_role = membership.role.value if hasattr(membership.role, 'value') else str(membership.role)
+
+    # Issue new tokens scoped to the target tenant
+    access_token = create_access_token(
+        subject=user.id,
+        additional_claims={
+            "tenant_id": tenant.id,
+            "role": target_role,
+            "cms_role": user.cms_role,
+        },
+    )
+    refresh_token = create_refresh_token(subject=user.id)
+
+    # Audit log the switch
+    audit_log = AuditLog(
+        tenant_id=tenant.id,
+        user_id=user.id,
+        action=AuditAction.LOGIN,
+        resource_type="tenant_switch",
+        resource_id=str(tenant.id),
+        ip_address=request.client.host if request.client else None,
+        user_agent=request.headers.get("User-Agent", "")[:500],
+        new_value={"switched_from": getattr(request.state, "tenant_id", None)},
+    )
+    db.add(audit_log)
+    await db.commit()
+
+    logger.info(
+        "tenant_switched",
+        user_id=user.id,
+        from_tenant=getattr(request.state, "tenant_id", None),
+        to_tenant=tenant.id,
+    )
+
+    return APIResponse(
+        success=True,
+        data={
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer",
+            "expires_in": 30 * 60,
+            "tenant_id": tenant.id,
+            "tenant_name": tenant.name,
+            "role": target_role,
+        },
+        message=f"Switched to {tenant.name}",
+    )
 
 
 # =============================================================================

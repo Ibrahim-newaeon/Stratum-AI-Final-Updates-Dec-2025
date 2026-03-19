@@ -41,6 +41,7 @@ import { useNavigate } from 'react-router-dom'
 import { cn, formatCurrency, formatCompactNumber } from '@/lib/utils'
 import { KPICard } from '@/components/dashboard/KPICard'
 import { CampaignTable } from '@/components/dashboard/CampaignTable'
+import { AccountBreakdown } from '@/components/dashboard/AccountBreakdown'
 import { FilterBar } from '@/components/dashboard/FilterBar'
 import { SimulateSlider } from '@/components/widgets/SimulateSlider'
 import { LivePredictionsWidget } from '@/components/widgets/LivePredictionsWidget'
@@ -751,6 +752,11 @@ export function Overview() {
             </div>
           )}
         </div>
+
+        {/* Account Breakdown */}
+        <ErrorBoundary>
+          <AccountBreakdown tenantId={tenantId} />
+        </ErrorBoundary>
 
         {/* Simulator Widget */}
         <ErrorBoundary>

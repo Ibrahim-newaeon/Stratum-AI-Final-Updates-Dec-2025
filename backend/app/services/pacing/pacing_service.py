@@ -120,6 +120,7 @@ class PacingService:
         mtd_actual = await self._get_mtd_actual(
             target.metric_type,
             target.platform,
+            getattr(target, 'account_id', None),
             target.campaign_id,
             target.period_start,
             as_of_date,
@@ -205,6 +206,7 @@ class PacingService:
             },
             "scope": {
                 "platform": target.platform,
+                "account_id": getattr(target, 'account_id', None),
                 "campaign_id": target.campaign_id,
             },
             "target_value": target.target_value,
@@ -246,6 +248,7 @@ class PacingService:
         as_of_date: Optional[date] = None,
         metric_type: Optional[TargetMetric] = None,
         platform: Optional[str] = None,
+        account_id: Optional[str] = None,
         active_only: bool = True,
     ) -> Dict[str, Any]:
         """
@@ -274,6 +277,9 @@ class PacingService:
 
         if platform:
             conditions.append(Target.platform == platform)
+
+        if account_id:
+            conditions.append(Target.account_id == account_id)
 
         # Filter to targets that include current date
         conditions.append(Target.period_start <= as_of_date)
@@ -509,6 +515,7 @@ class PacingService:
         self,
         metric: TargetMetric,
         platform: Optional[str],
+        account_id: Optional[str],
         campaign_id: Optional[str],
         period_start: date,
         as_of_date: date,
@@ -524,6 +531,11 @@ class PacingService:
             conditions.append(DailyKPI.platform == platform)
         else:
             conditions.append(DailyKPI.platform.is_(None))
+
+        if account_id:
+            conditions.append(DailyKPI.account_id == account_id)
+        else:
+            conditions.append(DailyKPI.account_id.is_(None))
 
         if campaign_id:
             conditions.append(DailyKPI.campaign_id == campaign_id)
@@ -586,6 +598,7 @@ class TargetService:
         period_end: date,
         period_type: TargetPeriod = TargetPeriod.MONTHLY,
         platform: Optional[str] = None,
+        account_id: Optional[str] = None,
         campaign_id: Optional[str] = None,
         description: Optional[str] = None,
         min_value: Optional[float] = None,
@@ -608,6 +621,7 @@ class TargetService:
             period_start=period_start,
             period_end=period_end,
             platform=platform,
+            account_id=account_id,
             campaign_id=campaign_id,
             metric_type=metric_type,
             target_value=target_value,
@@ -643,6 +657,7 @@ class TargetService:
         active_only: bool = True,
         metric_type: Optional[TargetMetric] = None,
         platform: Optional[str] = None,
+        account_id: Optional[str] = None,
         period_type: Optional[TargetPeriod] = None,
     ) -> List[Target]:
         """List targets with optional filters."""
@@ -656,6 +671,9 @@ class TargetService:
 
         if platform:
             conditions.append(Target.platform == platform)
+
+        if account_id:
+            conditions.append(Target.account_id == account_id)
 
         if period_type:
             conditions.append(Target.period_type == period_type)

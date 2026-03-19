@@ -175,6 +175,48 @@ export interface QuickActionsResponse {
   actions: QuickAction[];
 }
 
+// Account breakdown item
+export interface AccountBreakdownItem {
+  platform: string;
+  account_id: string;
+  account_name: string;
+  business_name: string | null;
+  currency: string;
+  is_enabled: boolean;
+  spend: number;
+  revenue: number;
+  roas: number;
+  impressions: number;
+  clicks: number;
+  conversions: number;
+  ctr: number;
+  campaign_count: number;
+}
+
+// Account signal health item
+export interface AccountSignalHealthItem {
+  platform: string;
+  account_id: string;
+  account_name: string;
+  business_name: string | null;
+  status: string;
+  emq_score: number | null;
+  event_loss_pct: number | null;
+  freshness_minutes: number | null;
+  api_error_rate: number | null;
+  issues: string | null;
+  actions: string | null;
+  notes: string | null;
+}
+
+export interface AccountSignalHealthResponse {
+  date: string;
+  overall_status: string;
+  status_counts: Record<string, number>;
+  total_accounts: number;
+  accounts: AccountSignalHealthItem[];
+}
+
 // Export format types
 export type ExportFormat = 'csv' | 'json';
 
@@ -310,6 +352,37 @@ export const dashboardApi = {
   getSignalHealth: async (): Promise<SignalHealthSummary> => {
     const response = await apiClient.get<ApiResponse<SignalHealthSummary>>(
       '/dashboard/signal-health'
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Get performance breakdown by ad account
+   */
+  getAccountBreakdown: async (platform?: string): Promise<AccountBreakdownItem[]> => {
+    const params: Record<string, string> = {};
+    if (platform) params.platform = platform;
+    const response = await apiClient.get<ApiResponse<AccountBreakdownItem[]>>(
+      '/analytics/account-breakdown',
+      { params }
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Get signal health breakdown by ad account
+   */
+  getAccountSignalHealth: async (
+    tenantId: number,
+    platform?: string,
+    date?: string,
+  ): Promise<AccountSignalHealthResponse> => {
+    const params: Record<string, string> = {};
+    if (platform) params.platform = platform;
+    if (date) params.date = date;
+    const response = await apiClient.get<ApiResponse<AccountSignalHealthResponse>>(
+      `/trust-layer/tenant/${tenantId}/signal-health/by-account`,
+      { params }
     );
     return response.data.data;
   },
@@ -477,6 +550,36 @@ export function useDashboardSignalHealth(enabled = true) {
       if (axiosError?.response?.status === 401 || axiosError?.response?.status === 403) return false;
       return failureCount < 2;
     },
+  });
+}
+
+/**
+ * Get account performance breakdown
+ */
+export function useAccountBreakdown(platform?: string, enabled = true) {
+  return useQuery({
+    queryKey: ['dashboard', 'account-breakdown', platform],
+    queryFn: () => dashboardApi.getAccountBreakdown(platform),
+    enabled,
+    staleTime: 60 * 1000,
+  });
+}
+
+/**
+ * Get account-level signal health
+ */
+export function useAccountSignalHealth(
+  tenantId: number,
+  platform?: string,
+  date?: string,
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: ['dashboard', 'account-signal-health', tenantId, platform, date],
+    queryFn: () => dashboardApi.getAccountSignalHealth(tenantId, platform, date),
+    enabled: enabled && !!tenantId,
+    staleTime: 60 * 1000,
+    refetchInterval: 5 * 60 * 1000,
   });
 }
 

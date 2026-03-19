@@ -310,6 +310,11 @@ class Tenant(Base, TimestampMixin, SoftDeleteMixin):
         "FactActionsQueue", back_populates="tenant", foreign_keys="[FactActionsQueue.tenant_id]"
     )
 
+    # Multi-tenant memberships
+    tenant_memberships: Mapped[List["UserTenantMembership"]] = relationship(
+        "UserTenantMembership", back_populates="tenant", foreign_keys="[UserTenantMembership.tenant_id]"
+    )
+
     # Campaign Builder relationships
     platform_connections: Mapped[List["TenantPlatformConnection"]] = relationship(
         "TenantPlatformConnection", back_populates="tenant", foreign_keys="[TenantPlatformConnection.tenant_id]"
@@ -413,11 +418,55 @@ class User(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
         "AuditLog", back_populates="user"
     )
 
+    # Multi-tenant memberships (user can belong to multiple tenants)
+    tenant_memberships: Mapped[List["UserTenantMembership"]] = relationship(
+        "UserTenantMembership", back_populates="user", foreign_keys="[UserTenantMembership.user_id]"
+    )
+
     __table_args__ = (
         UniqueConstraint("tenant_id", "email_hash", name="uq_user_tenant_email"),
         Index("ix_users_email_hash", "email_hash"),
         Index("ix_users_tenant_active", "tenant_id", "is_active", "is_deleted"),
         Index("ix_users_cms_role", "cms_role"),
+    )
+
+
+# =============================================================================
+# User-Tenant Membership (Multi-Account Switcher)
+# =============================================================================
+class UserTenantMembership(Base, TimestampMixin):
+    """
+    Junction table allowing a user to belong to multiple tenants.
+    Each membership can have a different role per tenant.
+    The is_default flag indicates which tenant to land on after login.
+    """
+
+    __tablename__ = "user_tenant_memberships"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    tenant_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False
+    )
+    role: Mapped[UserRole] = mapped_column(
+        Enum(UserRole, values_callable=lambda x: [e.value for e in x]),
+        default=UserRole.ANALYST,
+        nullable=False,
+    )
+    is_default: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+    # Relationships
+    user: Mapped["User"] = relationship("User", back_populates="tenant_memberships", foreign_keys=[user_id])
+    tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="tenant_memberships", foreign_keys=[tenant_id])
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "tenant_id", name="uq_user_tenant_membership"),
+        Index("ix_utm_user_id", "user_id"),
+        Index("ix_utm_tenant_id", "tenant_id"),
+        Index("ix_utm_user_active", "user_id", "is_active"),
     )
 
 

@@ -42,6 +42,7 @@ async def list_campaigns(
     status: Optional[CampaignStatus] = None,
     search: Optional[str] = None,
     labels: Optional[List[str]] = Query(None),
+    account_id: Optional[str] = Query(None, description="Filter by ad account ID"),
 ):
     """
     List campaigns with filtering and pagination.
@@ -69,6 +70,8 @@ async def list_campaigns(
         query = query.where(Campaign.status == status)
     if search:
         query = query.where(Campaign.name.ilike(f"%{search}%"))
+    if account_id:
+        query = query.where(Campaign.account_id == account_id)
     if labels:
         # PostgreSQL JSONB contains any of the labels
         for label in labels:

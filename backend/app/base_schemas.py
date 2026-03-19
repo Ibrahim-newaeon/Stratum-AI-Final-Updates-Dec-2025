@@ -155,6 +155,39 @@ class TenantResponse(TenantBase, TimestampMixin):
 
 
 # =============================================================================
+# User-Tenant Membership Schemas (Multi-Account Switcher)
+# =============================================================================
+class TenantMembershipResponse(BaseSchema):
+    """A tenant the user has access to, with their role in that tenant."""
+
+    tenant_id: int
+    tenant_name: str
+    tenant_slug: str
+    tenant_plan: str
+    role: str
+    is_default: bool
+    is_active: bool
+
+
+class SwitchTenantRequest(BaseSchema):
+    """Request to switch active tenant context."""
+
+    tenant_id: int
+
+
+class SwitchTenantResponse(BaseSchema):
+    """Response after switching tenant - includes new tokens."""
+
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+    expires_in: int
+    tenant_id: int
+    tenant_name: str
+    role: str
+
+
+# =============================================================================
 # User Schemas
 # =============================================================================
 class UserBase(BaseSchema):

@@ -84,6 +84,8 @@ class FactSignalHealthDaily(Base):
         Index("ix_fact_signal_health_daily_tenant_date", "tenant_id", "date"),
         Index("ix_fact_signal_health_daily_tenant_platform", "tenant_id", "platform"),
         Index("ix_fact_signal_health_daily_status", "tenant_id", "status"),
+        Index("ix_fact_signal_health_daily_tenant_account", "tenant_id", "account_id"),
+        Index("ix_fact_signal_health_daily_tenant_platform_account", "tenant_id", "platform", "account_id"),
     )
 
 

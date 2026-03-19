@@ -54,6 +54,7 @@ class TargetCreate(BaseModel):
     period_start: date
     period_end: date
     platform: Optional[str] = None
+    account_id: Optional[str] = Field(None, description="Ad account ID for account-level targets")
     campaign_id: Optional[str] = None
     min_value: Optional[float] = None
     max_value: Optional[float] = None
@@ -92,6 +93,7 @@ class TargetResponse(BaseModel):
     period_start: date
     period_end: date
     platform: Optional[str]
+    account_id: Optional[str]
     campaign_id: Optional[str]
     min_value: Optional[float]
     max_value: Optional[float]
@@ -109,6 +111,7 @@ class ForecastRequest(BaseModel):
     metric_type: TargetMetric
     forecast_days: int = Field(default=30, ge=1, le=90)
     platform: Optional[str] = None
+    account_id: Optional[str] = Field(None, description="Ad account ID for account-level forecasting")
     campaign_id: Optional[str] = None
     as_of_date: Optional[date] = None
 
@@ -155,6 +158,7 @@ async def create_target(
         period_start=target_data.period_start,
         period_end=target_data.period_end,
         platform=target_data.platform,
+        account_id=target_data.account_id,
         campaign_id=target_data.campaign_id,
         min_value=target_data.min_value,
         max_value=target_data.max_value,
@@ -182,6 +186,7 @@ async def list_targets(
     active_only: bool = Query(True, description="Only show active targets"),
     metric_type: Optional[TargetMetric] = Query(None, description="Filter by metric type"),
     platform: Optional[str] = Query(None, description="Filter by platform"),
+    account_id: Optional[str] = Query(None, description="Filter by ad account ID"),
     period_type: Optional[TargetPeriod] = Query(None, description="Filter by period type"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -193,6 +198,7 @@ async def list_targets(
         active_only=active_only,
         metric_type=metric_type,
         platform=platform,
+        account_id=account_id,
         period_type=period_type,
     )
 
@@ -209,6 +215,7 @@ async def list_targets(
                 "period_start": t.period_start.isoformat(),
                 "period_end": t.period_end.isoformat(),
                 "platform": t.platform,
+                "account_id": t.account_id,
                 "campaign_id": t.campaign_id,
                 "is_active": t.is_active,
             }
@@ -243,6 +250,7 @@ async def get_target(
             "period_start": target.period_start.isoformat(),
             "period_end": target.period_end.isoformat(),
             "platform": target.platform,
+            "account_id": target.account_id,
             "campaign_id": target.campaign_id,
             "min_value": target.min_value,
             "max_value": target.max_value,
@@ -339,6 +347,7 @@ async def get_all_pacing(
     as_of_date: Optional[date] = Query(None, description="Date to calculate pacing for"),
     metric_type: Optional[TargetMetric] = Query(None, description="Filter by metric type"),
     platform: Optional[str] = Query(None, description="Filter by platform"),
+    account_id: Optional[str] = Query(None, description="Filter by ad account ID"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> Dict[str, Any]:
@@ -353,6 +362,7 @@ async def get_all_pacing(
         as_of_date=as_of_date,
         metric_type=metric_type,
         platform=platform,
+        account_id=account_id,
     )
 
 
@@ -500,6 +510,7 @@ async def get_alerts(
                 "deviation_pct": a.deviation_pct,
                 "days_remaining": a.days_remaining,
                 "platform": a.platform,
+                "account_id": getattr(a, 'account_id', None),
                 "campaign_id": a.campaign_id,
                 "created_at": a.created_at.isoformat(),
             }

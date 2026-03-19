@@ -31,6 +31,7 @@ async def get_kpi_tiles(
     request: Request,
     db: AsyncSession = Depends(get_async_session),
     period: str = Query("30d", pattern="^(today|7d|30d|90d)$"),
+    account_id: Optional[str] = Query(None, description="Filter by ad account ID"),
 ):
     """
     Get KPI tiles for the dashboard overview.
@@ -58,8 +59,8 @@ async def get_kpi_tiles(
         prev_start = today - timedelta(days=180)
         prev_end = today - timedelta(days=91)
 
-    # Current period metrics
-    current_result = await db.execute(
+    # Build base queries with optional account_id filter
+    current_query = (
         select(
             func.sum(CampaignMetric.spend_cents).label("spend"),
             func.sum(CampaignMetric.revenue_cents).label("revenue"),
@@ -73,10 +74,8 @@ async def get_kpi_tiles(
             CampaignMetric.date <= today,
         )
     )
-    current = current_result.one()
 
-    # Previous period metrics
-    prev_result = await db.execute(
+    prev_query = (
         select(
             func.sum(CampaignMetric.spend_cents).label("spend"),
             func.sum(CampaignMetric.revenue_cents).label("revenue"),
@@ -90,6 +89,21 @@ async def get_kpi_tiles(
             CampaignMetric.date <= prev_end,
         )
     )
+
+    if account_id:
+        current_query = current_query.join(
+            Campaign, Campaign.id == CampaignMetric.campaign_id
+        ).where(Campaign.account_id == account_id)
+        prev_query = prev_query.join(
+            Campaign, Campaign.id == CampaignMetric.campaign_id
+        ).where(Campaign.account_id == account_id)
+
+    # Current period metrics
+    current_result = await db.execute(current_query)
+    current = current_result.one()
+
+    # Previous period metrics
+    prev_result = await db.execute(prev_query)
     prev = prev_result.one()
 
     def calc_change(current_val: float, prev_val: float) -> float | None:
@@ -180,6 +194,7 @@ async def get_demographics(
     db: AsyncSession = Depends(get_async_session),
     campaign_id: Optional[int] = None,
     platform: Optional[AdPlatform] = None,
+    account_id: Optional[str] = Query(None, description="Filter by ad account ID"),
 ):
     """
     Get demographic breakdown for campaigns.
@@ -197,6 +212,8 @@ async def get_demographics(
         query = query.where(Campaign.id == campaign_id)
     if platform:
         query = query.where(Campaign.platform == platform)
+    if account_id:
+        query = query.where(Campaign.account_id == account_id)
 
     result = await db.execute(query)
     campaigns = result.scalars().all()
@@ -389,20 +406,110 @@ async def get_platform_breakdown(
     return APIResponse(success=True, data=breakdown)
 
 
+@router.get("/account-breakdown")
+async def get_account_breakdown(
+    request: Request,
+    db: AsyncSession = Depends(get_async_session),
+    platform: Optional[AdPlatform] = None,
+):
+    """
+    Get performance breakdown by ad account.
+
+    Groups campaign data by account_id, optionally filtered by platform.
+    Returns metrics per ad account for cross-account comparison.
+    """
+    tenant_id = getattr(request.state, "tenant_id", None)
+
+    conditions = [
+        Campaign.tenant_id == tenant_id,
+        Campaign.is_deleted == False,
+    ]
+    if platform:
+        conditions.append(Campaign.platform == platform)
+
+    result = await db.execute(
+        select(
+            Campaign.platform,
+            Campaign.account_id,
+            func.sum(Campaign.total_spend_cents).label("spend"),
+            func.sum(Campaign.revenue_cents).label("revenue"),
+            func.sum(Campaign.impressions).label("impressions"),
+            func.sum(Campaign.clicks).label("clicks"),
+            func.sum(Campaign.conversions).label("conversions"),
+            func.count(Campaign.id).label("campaign_count"),
+        )
+        .where(*conditions)
+        .group_by(Campaign.platform, Campaign.account_id)
+        .order_by(func.sum(Campaign.total_spend_cents).desc())
+    )
+    rows = result.all()
+
+    # Try to enrich with account names from TenantAdAccount
+    from app.models.campaign_builder import TenantAdAccount
+    account_names_result = await db.execute(
+        select(
+            TenantAdAccount.platform_account_id,
+            TenantAdAccount.name,
+            TenantAdAccount.business_name,
+            TenantAdAccount.currency,
+            TenantAdAccount.is_enabled,
+        ).where(TenantAdAccount.tenant_id == tenant_id)
+    )
+    account_lookup = {
+        row.platform_account_id: {
+            "name": row.name,
+            "business_name": row.business_name,
+            "currency": row.currency,
+            "is_enabled": row.is_enabled,
+        }
+        for row in account_names_result.all()
+    }
+
+    breakdown = []
+    for row in rows:
+        spend = (row.spend or 0) / 100
+        revenue = (row.revenue or 0) / 100
+        roas = revenue / spend if spend > 0 else 0
+        ctr = ((row.clicks or 0) / (row.impressions or 1)) * 100
+
+        account_info = account_lookup.get(row.account_id, {})
+
+        breakdown.append({
+            "platform": row.platform.value if hasattr(row.platform, 'value') else str(row.platform),
+            "account_id": row.account_id,
+            "account_name": account_info.get("name", row.account_id),
+            "business_name": account_info.get("business_name"),
+            "currency": account_info.get("currency", "USD"),
+            "is_enabled": account_info.get("is_enabled", True),
+            "spend": spend,
+            "revenue": revenue,
+            "roas": round(roas, 2),
+            "impressions": row.impressions or 0,
+            "clicks": row.clicks or 0,
+            "conversions": row.conversions or 0,
+            "ctr": round(ctr, 2),
+            "campaign_count": row.campaign_count,
+        })
+
+    return APIResponse(success=True, data=breakdown)
+
+
 @router.get("/trends")
 async def get_performance_trends(
     request: Request,
     db: AsyncSession = Depends(get_async_session),
     days: int = Query(30, ge=7, le=90),
     metric: str = Query("spend", pattern="^(spend|revenue|impressions|clicks|conversions|roas)$"),
+    account_id: Optional[str] = Query(None, description="Filter by ad account ID"),
 ):
     """
     Get daily performance trends for a specified metric.
+    Optionally filter by ad account.
     """
     tenant_id = getattr(request.state, "tenant_id", None)
     start_date = date.today() - timedelta(days=days)
 
-    result = await db.execute(
+    query = (
         select(
             CampaignMetric.date,
             func.sum(CampaignMetric.spend_cents).label("spend"),
@@ -415,9 +522,16 @@ async def get_performance_trends(
             CampaignMetric.tenant_id == tenant_id,
             CampaignMetric.date >= start_date,
         )
-        .group_by(CampaignMetric.date)
-        .order_by(CampaignMetric.date)
     )
+
+    if account_id:
+        query = query.join(Campaign, Campaign.id == CampaignMetric.campaign_id).where(
+            Campaign.account_id == account_id
+        )
+
+    query = query.group_by(CampaignMetric.date).order_by(CampaignMetric.date)
+
+    result = await db.execute(query)
     rows = result.all()
 
     trends = []

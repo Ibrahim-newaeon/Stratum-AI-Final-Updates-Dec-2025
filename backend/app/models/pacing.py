@@ -101,8 +101,9 @@ class Target(Base):
     period_start = Column(Date, nullable=False)
     period_end = Column(Date, nullable=False)
 
-    # Scope (optional - null means account-wide)
+    # Scope (optional - null means tenant-wide)
     platform = Column(String(50), nullable=True)  # meta, google, etc.
+    account_id = Column(String(255), nullable=True)  # Platform account ID (e.g., "act_123456789")
     campaign_id = Column(String(255), nullable=True)
     adset_id = Column(String(255), nullable=True)
 
@@ -142,8 +143,9 @@ class Target(Base):
         Index("ix_targets_tenant_period", "tenant_id", "period_start", "period_end"),
         Index("ix_targets_tenant_metric", "tenant_id", "metric_type"),
         Index("ix_targets_tenant_active", "tenant_id", "is_active"),
+        Index("ix_targets_tenant_account", "tenant_id", "account_id"),
         UniqueConstraint(
-            "tenant_id", "period_start", "period_end", "metric_type", "platform", "campaign_id",
+            "tenant_id", "period_start", "period_end", "metric_type", "platform", "account_id", "campaign_id",
             name="uq_target_scope"
         ),
     )
@@ -225,8 +227,10 @@ class DailyKPI(Base):
         Index("ix_daily_kpis_tenant_date", "tenant_id", "date"),
         Index("ix_daily_kpis_tenant_platform_date", "tenant_id", "platform", "date"),
         Index("ix_daily_kpis_tenant_campaign_date", "tenant_id", "campaign_id", "date"),
+        Index("ix_daily_kpis_tenant_account_date", "tenant_id", "account_id", "date"),
+        Index("ix_daily_kpis_tenant_platform_account_date", "tenant_id", "platform", "account_id", "date"),
         UniqueConstraint(
-            "tenant_id", "date", "platform", "campaign_id",
+            "tenant_id", "date", "platform", "account_id", "campaign_id",
             name="uq_daily_kpi_scope"
         ),
     )
@@ -272,6 +276,7 @@ class PacingAlert(Base):
 
     # Scope
     platform = Column(String(50), nullable=True)
+    account_id = Column(String(255), nullable=True)  # Platform account ID
     campaign_id = Column(String(255), nullable=True)
 
     # Resolution
@@ -296,6 +301,7 @@ class PacingAlert(Base):
         Index("ix_pacing_alerts_tenant_date", "tenant_id", "pacing_date"),
         Index("ix_pacing_alerts_tenant_type", "tenant_id", "alert_type"),
         Index("ix_pacing_alerts_target", "target_id"),
+        Index("ix_pacing_alerts_tenant_account", "tenant_id", "account_id"),
     )
 
 
@@ -320,6 +326,7 @@ class Forecast(Base):
 
     # Scope
     platform = Column(String(50), nullable=True)
+    account_id = Column(String(255), nullable=True)  # Platform account ID
     campaign_id = Column(String(255), nullable=True)
 
     # Metric being forecasted
@@ -351,6 +358,7 @@ class Forecast(Base):
         Index("ix_forecasts_tenant_date", "tenant_id", "forecast_date"),
         Index("ix_forecasts_tenant_for_date", "tenant_id", "forecast_for_date"),
         Index("ix_forecasts_tenant_metric", "tenant_id", "metric_type"),
+        Index("ix_forecasts_tenant_account", "tenant_id", "account_id"),
     )
 
 

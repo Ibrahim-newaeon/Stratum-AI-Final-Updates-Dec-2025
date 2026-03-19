@@ -232,6 +232,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           localStorage.setItem(REFRESH_TOKEN_KEY, data.data.refresh_token);
         }
 
+        // Store available tenants for the switcher
+        if (data.data?.available_tenants && Array.isArray(data.data.available_tenants)) {
+          localStorage.setItem('stratum_available_tenants', JSON.stringify(data.data.available_tenants));
+        }
+
         // Extract tenant_id from JWT so we can sync it to the tenant store
         const jwtPayload = data.data?.access_token
           ? decodeJwtPayload(data.data.access_token)
@@ -385,6 +390,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('stratum_onboarding_dismissed');
     localStorage.removeItem('stratum_onboarding_skipped');
     localStorage.removeItem('stratum_onboarding_demo_dismissed');
+    localStorage.removeItem('stratum_available_tenants');
     // Clear Zustand tenant store on logout
     useTenantStore.getState().logout();
   };
