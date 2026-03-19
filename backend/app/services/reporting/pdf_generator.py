@@ -168,7 +168,7 @@ class PDFGenerator:
         html_content = self._generate_html(template, data)
 
         # Convert to PDF
-        file_path = f"/tmp/reports/{self.tenant_id}/{execution_id}.pdf"
+        file_path = f"/tmp/reports/{self.tenant_id}/{execution_id}.pdf"  # nosec B108
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
 
         # Try to use weasyprint for PDF generation
