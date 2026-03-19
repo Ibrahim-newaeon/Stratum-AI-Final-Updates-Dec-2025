@@ -62,3 +62,5 @@ celerybeat-schedule.*
 # Claude Code
 CLAUDE.local.md
 .claude/state/
+.claude/settings.local.json
+.claude/session_memory.md

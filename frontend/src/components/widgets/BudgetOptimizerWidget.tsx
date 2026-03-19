@@ -5,7 +5,6 @@
  */
 
 import { useState, useEffect } from 'react'
-import { useTranslation } from 'react-i18next'
 import {
   Wallet,
   RefreshCw,
@@ -54,10 +53,10 @@ function getSimulationOptimization(): {
   const kpis = calculateKPIs(liveCampaigns)
 
   const reallocations: BudgetReallocation[] = liveCampaigns.slice(0, 8).map((c, i) => {
-    let action: 'increase' | 'decrease' | 'maintain' = 'maintain'
-    let changePercent = 0
-    let recommendedBudget = c.spend
-    let reason = ''
+    let action: 'increase' | 'decrease' | 'maintain'
+    let changePercent: number
+    let recommendedBudget: number
+    let reason: string
 
     if (c.roas >= 3.5) {
       action = 'increase'
@@ -118,7 +117,6 @@ function getSimulationOptimization(): {
 }
 
 export function BudgetOptimizerWidget({ className }: BudgetOptimizerWidgetProps) {
-  const { t: _t } = useTranslation()
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [reallocations, setReallocations] = useState<BudgetReallocation[]>([])

@@ -22,7 +22,7 @@ const chartStyle = {
 export function ChartWidget({ type, className }: ChartWidgetProps) {
   const { dailyTrend } = useDashboardSimulation()
 
-  const chartData = useMemo(() => {
+  const chartData = useMemo((): Record<string, unknown>[] => {
     if (!dailyTrend || dailyTrend.length === 0) return []
 
     if (type === 'performance') {
