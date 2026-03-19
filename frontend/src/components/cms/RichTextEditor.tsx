@@ -100,7 +100,7 @@ export function RichTextEditor({
     ],
     content: contentJson || content,
     editable,
-    onUpdate: ({ editor }) => {
+    onUpdate: ({ editor }: { editor: any }) => {
       if (onChange) {
         const html = editor.getHTML();
         const json = editor.getJSON();

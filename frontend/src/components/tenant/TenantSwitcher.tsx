@@ -36,7 +36,7 @@ interface TenantMembership {
 }
 
 export default function TenantSwitcher() {
-  const { user, updateUser } = useAuth();
+  const { updateUser } = useAuth();
   const { tenantId, setTenantId, setTenant } = useTenantStore();
   const [tenants, setTenants] = useState<TenantMembership[]>([]);
   const [isOpen, setIsOpen] = useState(false);

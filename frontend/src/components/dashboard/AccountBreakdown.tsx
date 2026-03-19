@@ -7,7 +7,7 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { useAccountBreakdown, useAccountSignalHealth, type AccountBreakdownItem } from '@/api/dashboard';
+import { useAccountBreakdown, useAccountSignalHealth } from '@/api/dashboard';
 import { cn } from '@/lib/utils';
 import {
   ChevronDown,
