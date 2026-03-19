@@ -276,7 +276,7 @@ class ModelABTestingService:
 
         # Deterministic hash-based assignment
         hash_input = f"{experiment_id}:{entity_id}"
-        hash_value = int(hashlib.md5(hash_input.encode()).hexdigest(), 16)
+        hash_value = int(hashlib.md5(hash_input.encode(), usedforsecurity=False).hexdigest(), 16)
         bucket = (hash_value % 1000) / 1000.0
 
         if bucket < experiment.traffic_split:

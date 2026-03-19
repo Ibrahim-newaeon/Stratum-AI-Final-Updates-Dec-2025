@@ -432,7 +432,7 @@ class ServerEvent:
         if not self.event_id:
             # Deterministic ID for deduplication (MD5 for consistency, not security)
             unique_string = f"{self.event_name.value}_{self.event_time.isoformat()}_{self.user_data.external_id or uuid.uuid4()}"
-            self.event_id = hashlib.md5(unique_string.encode()).hexdigest()[:16]  # noqa: S324
+            self.event_id = hashlib.md5(unique_string.encode(), usedforsecurity=False).hexdigest()[:16]  # noqa: S324
 
     def get_content_ids(self) -> list[str]:
         """Extract content IDs for platform formatting."""

@@ -194,7 +194,7 @@ class ConversionEvent:
         if not self.event_id:
             # Create deterministic ID for deduplication (MD5 for consistency, not security)
             id_string = f"{self.event_name.value}_{self.event_time.isoformat()}_{self.user_data.external_id or ''}"
-            self.event_id = hashlib.md5(id_string.encode()).hexdigest()[:16]  # noqa: S324
+            self.event_id = hashlib.md5(id_string.encode(), usedforsecurity=False).hexdigest()[:16]  # noqa: S324
 
 
 class MetaConversionsAPI:

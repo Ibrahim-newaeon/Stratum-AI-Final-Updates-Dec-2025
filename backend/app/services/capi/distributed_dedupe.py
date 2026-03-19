@@ -284,7 +284,7 @@ class DistributedEventDeduplicator:
         ]
 
         content = "|".join(str(c) for c in components)
-        return hashlib.md5(content.encode()).hexdigest()
+        return hashlib.md5(content.encode(), usedforsecurity=False).hexdigest()
 
     async def mark_as_seen(self, event: Dict[str, Any], platform: str = "") -> bool:
         """

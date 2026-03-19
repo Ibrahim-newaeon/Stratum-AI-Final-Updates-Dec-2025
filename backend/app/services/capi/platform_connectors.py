@@ -1903,7 +1903,7 @@ class EventDeduplicator:
         ]
 
         content = "|".join(components)
-        return hashlib.md5(content.encode()).hexdigest()
+        return hashlib.md5(content.encode(), usedforsecurity=False).hexdigest()
 
     def _cleanup_expired(self):
         """Remove expired entries."""

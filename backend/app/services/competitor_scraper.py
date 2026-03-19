@@ -175,7 +175,7 @@ async def fetch_fb_page_display_name(fb_url: str) -> Optional[str]:
             follow_redirects=True,
             timeout=12.0,
             headers={"User-Agent": USER_AGENT},
-            verify=False,
+            verify=False,  # nosec B501
         ) as client:
             response = await client.get(fb_url)
             if response.status_code != 200:
@@ -240,7 +240,7 @@ async def scrape_website(domain: str) -> CompetitorScanResult:
             follow_redirects=True,
             timeout=REQUEST_TIMEOUT,
             headers={"User-Agent": USER_AGENT},
-            verify=False,  # Some sites have cert issues
+            verify=False,  # nosec B501 - Some sites have cert issues
         ) as client:
             response = await client.get(url)
             response.raise_for_status()

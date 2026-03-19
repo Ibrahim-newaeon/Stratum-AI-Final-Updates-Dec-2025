@@ -363,7 +363,7 @@ class MockMarketService(MarketDataProvider):
         """Generate mock competitor data."""
 
         # Use domain as seed for consistent data
-        seed = int(hashlib.md5(domain.encode()).hexdigest()[:8], 16)
+        seed = int(hashlib.md5(domain.encode(), usedforsecurity=False).hexdigest()[:8], 16)
         rng = random.Random(seed)
 
         # Generate realistic company name from domain
