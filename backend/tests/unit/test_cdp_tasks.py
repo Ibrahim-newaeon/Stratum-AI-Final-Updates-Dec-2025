@@ -190,21 +190,21 @@ def _check_step_conditions(event, conditions) -> bool:
         field_value = props.get(field)
 
         if (
-            operator == "equals"
-            and field_value != value
-            or operator == "not_equals"
-            and field_value == value
+            (operator == "equals"
+            and field_value != value)
+            or (operator == "not_equals"
+            and field_value == value)
             or (
-                operator == "greater_than"
-                and not (field_value and float(field_value) > float(value))
-                or operator == "less_than"
-                and not (field_value and float(field_value) < float(value))
+                (operator == "greater_than"
+                and not (field_value and float(field_value) > float(value)))
+                or (operator == "less_than"
+                and not (field_value and float(field_value) < float(value)))
             )
             or (
-                operator == "contains"
-                and not (field_value and str(value) in str(field_value))
-                or operator == "exists"
-                and field_value is None
+                (operator == "contains"
+                and not (field_value and str(value) in str(field_value)))
+                or (operator == "exists"
+                and field_value is None)
             )
         ):
             return False

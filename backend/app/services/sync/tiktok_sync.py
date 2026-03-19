@@ -209,8 +209,8 @@ class TikTokCampaignSyncService:
             name=raw.get("campaign_name", "Unnamed"),
             status=status,
             objective=raw.get("objective_type") or raw.get("objective"),
-            daily_budget_cents=int(round(float(daily_budget) * 100)) if daily_budget else None,
-            lifetime_budget_cents=int(round(float(lifetime_budget) * 100)) if lifetime_budget else None,
+            daily_budget_cents=round(float(daily_budget) * 100) if daily_budget else None,
+            lifetime_budget_cents=round(float(lifetime_budget) * 100) if lifetime_budget else None,
             raw=raw,
         )
 
@@ -230,9 +230,9 @@ class TikTokCampaignSyncService:
         return TikTokReportRow(
             campaign_id=str(dimensions.get("campaign_id", "")),
             date=row_date,
-            spend_cents=int(round(spend_dollars * 100)),
+            spend_cents=round(spend_dollars * 100),
             impressions=int(float(metrics.get("impressions", "0"))),
             clicks=int(float(metrics.get("clicks", "0"))),
             conversions=int(float(metrics.get("conversion", "0"))),
-            revenue_cents=int(round(revenue_dollars * 100)),
+            revenue_cents=round(revenue_dollars * 100),
         )

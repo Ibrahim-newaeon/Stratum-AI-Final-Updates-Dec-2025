@@ -199,7 +199,7 @@ class MetaCampaignSyncService:
     def _map_insight(raw: dict[str, Any]) -> MetaInsightRow:
         # Spend comes as dollar string e.g. "12.34"
         spend_dollars = float(raw.get("spend", "0"))
-        spend_cents = int(round(spend_dollars * 100))
+        spend_cents = round(spend_dollars * 100)
 
         conversions = 0
         revenue_cents = 0
@@ -220,7 +220,7 @@ class MetaCampaignSyncService:
                 "purchase",
                 "omni_purchase",
             ):
-                revenue_cents += int(round(float(av.get("value", "0")) * 100))
+                revenue_cents += round(float(av.get("value", "0")) * 100)
 
         row_date = date.fromisoformat(raw.get("date_start", raw.get("date_stop", "2024-01-01")))
 

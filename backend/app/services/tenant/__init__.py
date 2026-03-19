@@ -10,10 +10,10 @@ from .limits import TenantLimitService, check_tenant_limit
 from .provisioning import TenantProvisioner, TenantProvisioningService
 
 __all__ = [
-    "TenantProvisioningService",
-    "TenantProvisioner",
     "LicenseValidationService",
     "LicenseValidator",
     "TenantLimitService",
+    "TenantProvisioner",
+    "TenantProvisioningService",
     "check_tenant_limit",
 ]

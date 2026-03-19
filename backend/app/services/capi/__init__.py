@@ -26,13 +26,13 @@ from .platform_connectors import (
 )
 
 __all__ = [
-    "CAPIService",
     "AIEventMapper",
-    "PIIHasher",
+    "CAPIService",
     "DataQualityAnalyzer",
-    "MetaCAPIConnector",
     "GoogleCAPIConnector",
-    "TikTokCAPIConnector",
-    "SnapchatCAPIConnector",
     "LinkedInCAPIConnector",
+    "MetaCAPIConnector",
+    "PIIHasher",
+    "SnapchatCAPIConnector",
+    "TikTokCAPIConnector",
 ]

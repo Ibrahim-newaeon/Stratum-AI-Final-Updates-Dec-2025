@@ -404,7 +404,7 @@ async def list_schedules(
     """List scheduled reports."""
     scheduler = ReportScheduler(db, current_user.tenant_id)
 
-    schedules, total = await scheduler.list_schedules(
+    schedules, _total = await scheduler.list_schedules(
         is_active=is_active,
         template_id=template_id,
         limit=limit,

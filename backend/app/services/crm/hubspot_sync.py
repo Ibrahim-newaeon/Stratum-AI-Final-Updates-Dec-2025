@@ -391,10 +391,7 @@ class HubSpotSyncService:
 
         # Parse stage
         stage = properties.get("dealstage", "")
-        stage_normalized = HUBSPOT_STAGE_MAPPING.get(
-            stage.lower().replace(" ", "").replace("_", ""),
-            None,
-        )
+        stage_normalized = HUBSPOT_STAGE_MAPPING.get(stage.lower().replace(" ", "").replace("_", ""))
 
         # Parse close date
         close_date = None

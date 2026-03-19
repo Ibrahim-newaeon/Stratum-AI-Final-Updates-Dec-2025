@@ -16,7 +16,7 @@ from app.services.sync.tiktok_sync import TikTokCampaignSyncService
 
 __all__ = [
     "MetaCampaignSyncService",
-    "TikTokCampaignSyncService",
     "PlatformSyncOrchestrator",
     "SyncResult",
+    "TikTokCampaignSyncService",
 ]

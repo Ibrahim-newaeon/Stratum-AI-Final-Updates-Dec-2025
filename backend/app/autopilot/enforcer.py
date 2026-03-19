@@ -214,11 +214,7 @@ class AutopilotEnforcer:
                 settings = EnforcementSettings(
                     tenant_id=tenant_id,
                     enforcement_enabled=db_settings.enforcement_enabled,
-                    default_mode=EnforcementMode(
-                        db_settings.default_mode
-                        if isinstance(db_settings.default_mode, DBEnforcementMode)
-                        else db_settings.default_mode
-                    ),
+                    default_mode=EnforcementMode(db_settings.default_mode),
                     max_daily_budget=db_settings.max_daily_budget,
                     max_campaign_budget=db_settings.max_campaign_budget,
                     budget_increase_limit_pct=db_settings.budget_increase_limit_pct,
@@ -842,9 +838,7 @@ class AutopilotEnforcer:
                 ),
                 "threshold": settings.max_budget_changes_per_day,
                 "actual": daily_count,
-                "mode": settings.default_mode
-                        if isinstance(settings.default_mode, EnforcementMode)
-                        else settings.default_mode,
+                "mode": settings.default_mode,
             })
 
         # --- Check minimum hours between changes ---
@@ -875,9 +869,7 @@ class AutopilotEnforcer:
                 ),
                 "threshold": settings.min_hours_between_changes,
                 "actual": round(hours_since, 2),
-                "mode": settings.default_mode
-                        if isinstance(settings.default_mode, EnforcementMode)
-                        else settings.default_mode,
+                "mode": settings.default_mode,
             })
 
         return violations

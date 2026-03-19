@@ -193,7 +193,7 @@ async def create_platform_audience(
     service = AudienceSyncService(db, tenant_id)
 
     try:
-        platform_audience, sync_job = await service.create_platform_audience(
+        platform_audience, _sync_job = await service.create_platform_audience(
             segment_id=request.segment_id,
             platform=request.platform,
             ad_account_id=request.ad_account_id,
@@ -231,7 +231,7 @@ async def get_platform_audience(
 ) -> PlatformAudienceResponse:
     """Get platform audience details."""
     service = AudienceSyncService(db, tenant_id)
-    audiences, _ = await service.list_platform_audiences(limit=1, offset=0)
+    _audiences, _ = await service.list_platform_audiences(limit=1, offset=0)
 
     # Query directly
     from sqlalchemy import select

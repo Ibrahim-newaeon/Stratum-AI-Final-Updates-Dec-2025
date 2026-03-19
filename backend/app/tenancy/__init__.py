@@ -19,8 +19,8 @@ from app.tenancy.deps import (
 
 __all__ = [
     "TenantContext",
-    "get_tenant_context",
     "get_tenant",
+    "get_tenant_context",
     "get_tenant_id",
     "require_tenant",
     "tenant_query",

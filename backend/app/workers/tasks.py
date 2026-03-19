@@ -71,48 +71,48 @@ from app.workers.tasks import (  # noqa: F401 – re-exports
 )
 
 __all__ = [
-    # Sync
-    "sync_campaign_data",
-    "sync_all_campaigns",
-    # Rules
-    "evaluate_rules",
-    "evaluate_all_rules",
-    # Competitors
-    "fetch_competitor_data",
-    "refresh_all_competitors",
-    # Forecast
-    "generate_forecast",
-    "generate_daily_forecasts",
     # Creative
     "calculate_all_fatigue_scores",
-    # Audit
-    "process_audit_log_queue",
-    # WhatsApp
-    "send_whatsapp_message",
-    "process_scheduled_whatsapp_messages",
-    # ML
-    "run_live_predictions",
-    "run_all_tenant_predictions",
-    "generate_roas_alerts",
     # Billing
     "calculate_cost_allocation",
+    # Scores
+    "calculate_daily_scores",
+    "calculate_task_confidence",
     "calculate_usage_rollup",
     # Monitoring
     "check_pipeline_health",
-    # Scores
-    "calculate_daily_scores",
+    "compute_all_cdp_funnels",
+    "compute_all_cdp_segments",
+    "compute_cdp_funnel",
+    "compute_cdp_rfm",
     # CDP
     "compute_cdp_segment",
-    "compute_all_cdp_segments",
-    "compute_cdp_rfm",
     "compute_cdp_traits",
-    "compute_cdp_funnel",
-    "compute_all_cdp_funnels",
-    # CMS
-    "publish_scheduled_cms_posts",
-    "publish_cms_post",
     "create_cms_post_version",
+    "evaluate_all_rules",
+    # Rules
+    "evaluate_rules",
+    # Competitors
+    "fetch_competitor_data",
+    "generate_daily_forecasts",
+    # Forecast
+    "generate_forecast",
+    "generate_roas_alerts",
+    # Audit
+    "process_audit_log_queue",
+    "process_scheduled_whatsapp_messages",
+    "publish_cms_post",
     # Helpers
     "publish_event",
-    "calculate_task_confidence",
+    # CMS
+    "publish_scheduled_cms_posts",
+    "refresh_all_competitors",
+    "run_all_tenant_predictions",
+    # ML
+    "run_live_predictions",
+    # WhatsApp
+    "send_whatsapp_message",
+    "sync_all_campaigns",
+    # Sync
+    "sync_campaign_data",
 ]

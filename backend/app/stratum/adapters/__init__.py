@@ -40,25 +40,25 @@ from app.stratum.adapters.whatsapp_adapter import (
 )
 
 __all__ = [
-    # Base adapter
-    "BaseAdapter",
-    "RateLimiter",
     # Errors
     "AdapterError",
-    "AuthenticationError",
-    "RateLimitError",
-    "PlatformError",
-    "ValidationError",
     # Registry
     "AdapterRegistry",
-    "get_adapter",
+    "AuthenticationError",
+    # Base adapter
+    "BaseAdapter",
+    "Contact",
+    "Conversation",
+    "ConversationType",
+    "Message",
+    "MessageStatus",
+    "MessageType",
+    "PlatformError",
+    "RateLimitError",
+    "RateLimiter",
+    "Template",
+    "ValidationError",
     # WhatsApp
     "WhatsAppAdapter",
-    "MessageType",
-    "MessageStatus",
-    "ConversationType",
-    "Contact",
-    "Message",
-    "Conversation",
-    "Template",
+    "get_adapter",
 ]

@@ -939,18 +939,18 @@ async def shutdown_event():
 # =============================================================================
 
 __all__ = [
-    # FastAPI app
-    "app",
+    # Models
+    "EcommerceEvent",
     # Configuration
     "WebhookConfig",
+    # FastAPI app
+    "app",
     "config",
+    "dispatch_event",
     # Event handling
     "register_handler",
-    "dispatch_event",
+    "verify_internal_signature",
     # Signature verification
     "verify_meta_signature",
     "verify_tiktok_signature",
-    "verify_internal_signature",
-    # Models
-    "EcommerceEvent",
 ]

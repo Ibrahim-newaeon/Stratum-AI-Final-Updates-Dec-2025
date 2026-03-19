@@ -19,11 +19,11 @@ from .snapchat_connector import SnapchatAudienceConnector
 from .tiktok_connector import TikTokAudienceConnector
 
 __all__ = [
+    "AudienceSyncResult",
     "AudienceSyncService",
     "BaseAudienceConnector",
-    "AudienceSyncResult",
-    "MetaAudienceConnector",
     "GoogleAudienceConnector",
-    "TikTokAudienceConnector",
+    "MetaAudienceConnector",
     "SnapchatAudienceConnector",
+    "TikTokAudienceConnector",
 ]

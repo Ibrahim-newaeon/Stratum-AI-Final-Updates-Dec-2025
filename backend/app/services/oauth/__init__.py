@@ -14,13 +14,13 @@ from app.services.oauth.snapchat import SnapchatOAuthService
 from app.services.oauth.tiktok import TikTokOAuthService
 
 __all__ = [
+    "AdAccountInfo",
+    "GoogleOAuthService",
+    "MetaOAuthService",
     "OAuthService",
     "OAuthState",
     "OAuthTokens",
-    "AdAccountInfo",
-    "MetaOAuthService",
-    "GoogleOAuthService",
-    "TikTokOAuthService",
     "SnapchatOAuthService",
+    "TikTokOAuthService",
     "get_oauth_service",
 ]

@@ -12,11 +12,11 @@ from app.services.whatsapp_client import (
 )
 
 __all__ = [
-    "MockAdNetwork",
     "MarketIntelligenceService",
-    "WhatsAppService",
+    "MockAdNetwork",
     "WhatsAppClient",
     "WhatsAppNotConfiguredError",
+    "WhatsAppService",
     "get_whatsapp_client",
     "is_whatsapp_configured",
 ]

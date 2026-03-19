@@ -10,8 +10,8 @@ from app.services.profit.cogs_service import COGSService, COGSIngestionService
 from app.services.profit.product_service import ProductCatalogService
 
 __all__ = [
-    "ProfitCalculationService",
-    "COGSService",
     "COGSIngestionService",
+    "COGSService",
     "ProductCatalogService",
+    "ProfitCalculationService",
 ]

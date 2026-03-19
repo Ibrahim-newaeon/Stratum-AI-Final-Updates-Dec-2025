@@ -239,10 +239,10 @@ class SnapchatCampaignSyncService:
             status=status,
             objective=raw.get("objective"),
             daily_budget_cents=(
-                int(round(daily_budget_micro / 10000)) if daily_budget_micro else None
+                round(daily_budget_micro / 10000) if daily_budget_micro else None
             ),
             lifetime_budget_cents=(
-                int(round(lifetime_budget_micro / 10000)) if lifetime_budget_micro else None
+                round(lifetime_budget_micro / 10000) if lifetime_budget_micro else None
             ),
             start_time=start_time,
             stop_time=stop_time,
@@ -253,6 +253,6 @@ class SnapchatCampaignSyncService:
     def _micro_to_cents(micro_val: Any) -> int:
         """Convert Snapchat micro-currency to cents. 1 USD = 1_000_000 micro."""
         try:
-            return int(round(float(micro_val) / 10000))
+            return round(float(micro_val) / 10000)
         except (ValueError, TypeError):
             return 0

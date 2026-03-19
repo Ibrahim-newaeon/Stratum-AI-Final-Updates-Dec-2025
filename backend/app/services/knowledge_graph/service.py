@@ -140,7 +140,7 @@ class KnowledgeGraphService:
         Returns:
             Node properties or None if not found
         """
-        query, params = (
+        query, _params = (
             CypherQueryBuilder(tenant_id)
             .match_node("n", label, {"external_id": external_id})
             .return_fields(["n"])
@@ -289,7 +289,7 @@ class KnowledgeGraphService:
         Returns:
             List of channel revenue data
         """
-        query, params = RevenueAnalyticsQueries.revenue_by_channel(tenant_id, days)
+        query, _params = RevenueAnalyticsQueries.revenue_by_channel(tenant_id, days)
         result = await self.session.execute(text(query))
 
         return [self._parse_agtype(row[0]) for row in result]
@@ -311,7 +311,7 @@ class KnowledgeGraphService:
         Returns:
             List of campaign revenue data with ROAS
         """
-        query, params = RevenueAnalyticsQueries.revenue_by_campaign(
+        query, _params = RevenueAnalyticsQueries.revenue_by_campaign(
             tenant_id, platform, days
         )
         result = await self.session.execute(text(query))
@@ -333,7 +333,7 @@ class KnowledgeGraphService:
         Returns:
             Journey data with events and revenue
         """
-        query, params = RevenueAnalyticsQueries.customer_journey(
+        query, _params = RevenueAnalyticsQueries.customer_journey(
             tenant_id, profile_external_id
         )
         result = await self.session.execute(text(query))
@@ -358,7 +358,7 @@ class KnowledgeGraphService:
         Returns:
             List of segment performance data
         """
-        query, params = RevenueAnalyticsQueries.segment_revenue_performance(
+        query, _params = RevenueAnalyticsQueries.segment_revenue_performance(
             tenant_id, days
         )
         result = await self.session.execute(text(query))
@@ -378,7 +378,7 @@ class KnowledgeGraphService:
         Returns:
             List of RFM segment data
         """
-        query, params = RevenueAnalyticsQueries.rfm_segment_trends(tenant_id)
+        query, _params = RevenueAnalyticsQueries.rfm_segment_trends(tenant_id)
         result = await self.session.execute(text(query))
 
         return [self._parse_agtype(row[0]) for row in result]
@@ -402,7 +402,7 @@ class KnowledgeGraphService:
         Returns:
             List of blocked automation data with reasons
         """
-        query, params = RevenueAnalyticsQueries.blocked_automations(tenant_id, days)
+        query, _params = RevenueAnalyticsQueries.blocked_automations(tenant_id, days)
         result = await self.session.execute(text(query))
 
         return [self._parse_agtype(row[0]) for row in result]
@@ -422,7 +422,7 @@ class KnowledgeGraphService:
         Returns:
             Signal health vs revenue correlation data
         """
-        query, params = RevenueAnalyticsQueries.signal_health_impact(tenant_id, days)
+        query, _params = RevenueAnalyticsQueries.signal_health_impact(tenant_id, days)
         result = await self.session.execute(text(query))
 
         return [self._parse_agtype(row[0]) for row in result]
@@ -490,7 +490,7 @@ class KnowledgeGraphService:
         Returns:
             List of attribution paths with revenue
         """
-        query, params = RevenueAnalyticsQueries.multi_touch_attribution_paths(
+        query, _params = RevenueAnalyticsQueries.multi_touch_attribution_paths(
             tenant_id, min_touchpoints, limit
         )
         result = await self.session.execute(text(query))

@@ -220,7 +220,7 @@ def chart_object_distribution(object_stats: list[dict[str, Any]]) -> str:
         values.append(other_count)
 
     colors = CHART_PALETTE[:len(labels)]
-    wedges, texts, autotexts = ax1.pie(
+    wedges, _texts, _autotexts = ax1.pie(
         values,
         labels=None,
         autopct="%1.1f%%",
@@ -1450,33 +1450,33 @@ def generate_html_report(
             </div>
         </div>
 
-        {''.join(f"""
+        {''.join(f'''
         <div class="cat-card" style="border-left-color: {cat['color']};">
             <div class="cat-header">
                 <span class="cat-icon" style="color: {cat['color']};">{cat['icon']}</span>
                 <span class="cat-name">{cat['name']}</span>
                 <span class="cat-status" style="background: {cat['color']}22; color: {cat['color']};">{cat['status'].upper()}</span>
             </div>
-            {''.join(f'<div class="finding">{f}</div>' for f in cat.get('findings', []))}
+            {"".join(f'<div class="finding">{f}</div>' for f in cat.get('findings', []))}
             {f'<ul class="rec-list">{"".join(f"<li>{r}</li>" for r in cat.get("recommendations", []))}</ul>' if cat.get('recommendations') else ''}
         </div>
-        """ for cat in analysis['categories'])}
+        ''' for cat in analysis['categories'])}
 
-        {f"""
+        {f'''
         <div class="quick-wins">
             <h3>Priority Action Items</h3>
             <ol>
-                {''.join(f'<li>{qw}</li>' for qw in analysis['quick_wins'])}
+                {"".join(f'<li>{qw}</li>' for qw in analysis["quick_wins"])}
             </ol>
         </div>
-        """ if analysis['quick_wins'] else f"""
-        <div class="quick-wins" style="border-color: {COLORS['success']}44;">
-            <h3 style="color: {COLORS['success']};">No Critical Actions Required</h3>
-            <p style="color: {COLORS['text_muted']}; font-size: 13px; margin: 0;">
+        ''' if analysis['quick_wins'] else f'''
+        <div class="quick-wins" style="border-color: {COLORS["success"]}44;">
+            <h3 style="color: {COLORS["success"]};">No Critical Actions Required</h3>
+            <p style="color: {COLORS["text_muted"]}; font-size: 13px; margin: 0;">
                 All memory categories are within healthy thresholds. Continue monitoring with periodic snapshots to detect gradual changes.
             </p>
         </div>
-        """}
+        '''}
     </div>
 
     <!-- System & Timeline Charts -->

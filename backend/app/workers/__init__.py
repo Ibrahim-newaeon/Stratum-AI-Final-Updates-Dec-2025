@@ -21,8 +21,8 @@ from app.workers.tasks import (
 
 __all__ = [
     "celery_app",
-    "sync_campaign_data",
     "evaluate_rules",
     "fetch_competitor_data",
     "generate_forecast",
+    "sync_campaign_data",
 ]

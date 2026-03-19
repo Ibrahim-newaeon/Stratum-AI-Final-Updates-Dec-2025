@@ -465,5 +465,5 @@ class CAPIService:
             "available_platforms": available,
             "setup_complete": len(connected) > 0,
             "events_processed": len(self._event_buffer),
-            "data_quality_score": self._event_buffer and self.get_data_quality_report().overall_score or 0,
+            "data_quality_score": (self._event_buffer and self.get_data_quality_report().overall_score) or 0,
         }

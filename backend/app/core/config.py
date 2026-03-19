@@ -310,7 +310,7 @@ class Settings(BaseSettings):
             if len(value) < 32:
                 warnings.warn(
                     f"SECURITY WARNING: {label} must be set and be at least 32 "
-                    f"characters long (current length: {len(value)})"
+                    f"characters long (current length: {len(value)})", stacklevel=2
                 )
 
         # --- Weak pattern detection in secret_key ---
@@ -319,7 +319,7 @@ class Settings(BaseSettings):
             if pattern in self.secret_key.lower():
                 warnings.warn(
                     f"SECURITY WARNING: SECRET_KEY contains weak pattern '{pattern}'. "
-                    "Use a strong random key in production."
+                    "Use a strong random key in production.", stacklevel=2
                 )
                 break  # one warning is enough
 
@@ -332,7 +332,7 @@ class Settings(BaseSettings):
             if db_password in insecure_passwords:
                 warnings.warn(
                     f"SECURITY WARNING: database URL contains insecure password '{db_password}'. "
-                    "Use a strong password in production."
+                    "Use a strong password in production.", stacklevel=2
                 )
 
         return self

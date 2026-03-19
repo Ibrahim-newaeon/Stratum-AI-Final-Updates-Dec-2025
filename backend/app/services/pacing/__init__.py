@@ -10,9 +10,9 @@ from app.services.pacing.pacing_service import PacingService, TargetService
 from app.services.pacing.alert_service import PacingAlertService, AlertNotificationService
 
 __all__ = [
+    "AlertNotificationService",
     "ForecastingService",
+    "PacingAlertService",
     "PacingService",
     "TargetService",
-    "PacingAlertService",
-    "AlertNotificationService",
 ]

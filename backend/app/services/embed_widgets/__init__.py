@@ -10,7 +10,7 @@ from .token_service import EmbedTokenService
 from .widget_service import EmbedWidgetService
 
 __all__ = [
+    "EmbedSecurityService",
     "EmbedTokenService",
     "EmbedWidgetService",
-    "EmbedSecurityService",
 ]

@@ -1163,20 +1163,20 @@ class EcommerceTracker:
 # =============================================================================
 
 __all__ = [
-    # Standard event types
-    "StandardEvent",
     "EVENT_MAPPING",
-    # Data classes
-    "UserData",
     "ContentItem",
-    "ServerEvent",
-    # Platform senders
-    "MetaEventsSender",
-    "GoogleEventsSender",
-    "TikTokEventsSender",
-    "SnapchatEventsSender",
-    # Unified API
-    "UnifiedEventsAPI",
     # High-level tracker
     "EcommerceTracker",
+    "GoogleEventsSender",
+    # Platform senders
+    "MetaEventsSender",
+    "ServerEvent",
+    "SnapchatEventsSender",
+    # Standard event types
+    "StandardEvent",
+    "TikTokEventsSender",
+    # Unified API
+    "UnifiedEventsAPI",
+    # Data classes
+    "UserData",
 ]

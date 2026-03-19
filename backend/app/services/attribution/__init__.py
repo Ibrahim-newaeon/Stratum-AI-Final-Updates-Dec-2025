@@ -32,17 +32,17 @@ from app.services.attribution.model_training import (
 )
 
 __all__ = [
+    "AttributionCalculator",
     # Rule-based attribution
     "AttributionService",
-    "AttributionCalculator",
+    "DataDrivenModelType",
+    "JourneyAggregator",
     # Journey analysis
     "JourneyService",
-    "JourneyAggregator",
+    "MarkovAttributionService",
     # Data-driven attribution
     "MarkovChainModel",
-    "MarkovAttributionService",
-    "ShapleyValueModel",
-    "ShapleyAttributionService",
-    "DataDrivenModelType",
     "ModelTrainingService",
+    "ShapleyAttributionService",
+    "ShapleyValueModel",
 ]

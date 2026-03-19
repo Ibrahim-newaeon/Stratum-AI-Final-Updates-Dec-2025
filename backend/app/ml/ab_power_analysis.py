@@ -177,13 +177,13 @@ class ABPowerAnalyzer:
             )
 
         # Round up
-        sample_size = int(math.ceil(sample_size))
+        sample_size = math.ceil(sample_size)
 
         # Calculate days to significance
         days = None
         if traffic_per_day and traffic_per_day > 0:
             total_samples = sample_size * 2
-            days = int(math.ceil(total_samples / traffic_per_day))
+            days = math.ceil(total_samples / traffic_per_day)
 
         return PowerAnalysisResult(
             sample_size_per_variant=sample_size,

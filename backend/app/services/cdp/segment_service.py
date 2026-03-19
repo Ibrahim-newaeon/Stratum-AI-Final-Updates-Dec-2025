@@ -83,7 +83,7 @@ class SegmentEvaluator:
 
         Returns: (matches: bool, score: Optional[float])
         """
-        if not rules or not rules.get("conditions") and not rules.get("groups"):
+        if not rules or (not rules.get("conditions") and not rules.get("groups")):
             return False, None
 
         logic = rules.get("logic", "and").lower()

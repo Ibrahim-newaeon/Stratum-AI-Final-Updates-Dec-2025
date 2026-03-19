@@ -86,48 +86,48 @@ from app.workers.tasks.whatsapp import (
 )
 
 __all__ = [
-    # Sync tasks
-    "sync_campaign_data",
-    "sync_all_campaigns",
-    # Rules tasks
-    "evaluate_rules",
-    "evaluate_all_rules",
-    # Competitor tasks
-    "fetch_competitor_data",
-    "refresh_all_competitors",
-    # Forecast tasks
-    "generate_forecast",
-    "generate_daily_forecasts",
     # Creative tasks
     "calculate_all_fatigue_scores",
-    # Audit tasks
-    "process_audit_log_queue",
-    # WhatsApp tasks
-    "send_whatsapp_message",
-    "process_scheduled_whatsapp_messages",
-    # ML tasks
-    "run_live_predictions",
-    "run_all_tenant_predictions",
-    "generate_roas_alerts",
     # Billing tasks
     "calculate_cost_allocation",
+    # Score tasks
+    "calculate_daily_scores",
+    "calculate_task_confidence",
     "calculate_usage_rollup",
     # Monitoring tasks
     "check_pipeline_health",
-    # Score tasks
-    "calculate_daily_scores",
+    "compute_all_cdp_funnels",
+    "compute_all_cdp_segments",
+    "compute_cdp_funnel",
+    "compute_cdp_rfm",
     # CDP tasks
     "compute_cdp_segment",
-    "compute_all_cdp_segments",
-    "compute_cdp_rfm",
     "compute_cdp_traits",
-    "compute_cdp_funnel",
-    "compute_all_cdp_funnels",
-    # CMS tasks
-    "publish_scheduled_cms_posts",
-    "publish_cms_post",
     "create_cms_post_version",
+    "evaluate_all_rules",
+    # Rules tasks
+    "evaluate_rules",
+    # Competitor tasks
+    "fetch_competitor_data",
+    "generate_daily_forecasts",
+    # Forecast tasks
+    "generate_forecast",
+    "generate_roas_alerts",
+    # Audit tasks
+    "process_audit_log_queue",
+    "process_scheduled_whatsapp_messages",
+    "publish_cms_post",
     # Helpers
     "publish_event",
-    "calculate_task_confidence",
+    # CMS tasks
+    "publish_scheduled_cms_posts",
+    "refresh_all_competitors",
+    "run_all_tenant_predictions",
+    # ML tasks
+    "run_live_predictions",
+    # WhatsApp tasks
+    "send_whatsapp_message",
+    "sync_all_campaigns",
+    # Sync tasks
+    "sync_campaign_data",
 ]

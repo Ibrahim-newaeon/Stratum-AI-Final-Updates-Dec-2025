@@ -24,19 +24,19 @@ from app.stratum.core.signal_health import SignalHealthCalculator
 from app.stratum.core.trust_gate import GateDecision, TrustGate, TrustGateResult
 
 __all__ = [
+    "AutopilotEngine",
+    "AutopilotRule",
+    "BudgetPacingRule",
+    "GateDecision",
+    "PerformanceScalingRule",
+    "RuleContext",
+    # Autopilot
+    "RuleType",
     # Signal Health
     "SignalHealthCalculator",
+    "StatusManagementRule",
     # Trust Gate
     "TrustGate",
     "TrustGateResult",
-    "GateDecision",
-    # Autopilot
-    "RuleType",
-    "RuleContext",
-    "AutopilotRule",
-    "BudgetPacingRule",
-    "PerformanceScalingRule",
-    "StatusManagementRule",
-    "AutopilotEngine",
     "TrustGatedAutopilot",
 ]

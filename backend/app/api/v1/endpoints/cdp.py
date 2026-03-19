@@ -662,7 +662,7 @@ async def ingest_events(
                         continue
 
                 # Find or create profile
-                profile, is_new = await find_or_create_profile(db, tenant_id, event.identifiers)
+                profile, _is_new = await find_or_create_profile(db, tenant_id, event.identifiers)
 
                 # Link identifiers to profile
                 await link_identifiers_to_profile(db, tenant_id, profile, event.identifiers)

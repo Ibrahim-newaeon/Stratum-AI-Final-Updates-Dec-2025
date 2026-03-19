@@ -489,7 +489,7 @@ class TestSoftBlockConfirmation:
         assert success1 is True
 
         # Second confirmation fails
-        success2, error2 = await enforcer.confirm_action(
+        success2, _error2 = await enforcer.confirm_action(
             tenant_id=1,
             confirmation_token=token,
             user_id=42,

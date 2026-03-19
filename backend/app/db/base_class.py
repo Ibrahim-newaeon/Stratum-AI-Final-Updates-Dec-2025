@@ -5,4 +5,4 @@
 
 from app.db.base import Base, TimestampMixin, SoftDeleteMixin, TenantMixin, StrEnumType
 
-__all__ = ["Base", "TimestampMixin", "SoftDeleteMixin", "TenantMixin", "StrEnumType"]
+__all__ = ["Base", "SoftDeleteMixin", "StrEnumType", "TenantMixin", "TimestampMixin"]
