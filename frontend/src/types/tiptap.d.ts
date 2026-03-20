@@ -1,6 +1,8 @@
 declare module '@tiptap/react' {
   export const EditorContent: any;
   export const useEditor: any;
+}
+declare module '@tiptap/react/menus' {
   export const BubbleMenu: any;
 }
 declare module '@tiptap/starter-kit' {
