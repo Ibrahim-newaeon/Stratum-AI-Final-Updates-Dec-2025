@@ -146,16 +146,19 @@ export async function fetchWithRetry<T>(
       const response = await fetch(url, options);
 
       if (!response.ok) {
-        // Don't retry 4xx errors (except 429 rate limit)
+        const err = new Error(`HTTP ${response.status}: ${response.statusText}`);
+
+        // Don't retry 4xx errors (except 429 rate limit) - throw immediately
         if (response.status >= 400 && response.status < 500 && response.status !== 429) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          throw Object.assign(err, { nonRetryable: true });
         }
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        throw err;
       }
 
       return response.json();
     } catch (error) {
-      if (attempt === maxRetries) {
+      // Non-retryable errors (4xx) or exhausted retries → throw immediately
+      if ((error as any)?.nonRetryable || attempt === maxRetries) {
         throw error;
       }
 
