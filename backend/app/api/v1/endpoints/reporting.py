@@ -16,7 +16,7 @@ from typing import Any, Dict, List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.tenancy.deps import get_current_user, get_db
@@ -73,6 +73,8 @@ class TemplateUpdate(BaseModel):
 
 class TemplateResponse(BaseModel):
     """Response schema for a report template."""
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     name: str
     description: Optional[str]
@@ -84,9 +86,6 @@ class TemplateResponse(BaseModel):
     is_system: bool
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 # -------------------------------------------------------------------------
@@ -133,6 +132,8 @@ class ScheduleUpdate(BaseModel):
 
 class ScheduleResponse(BaseModel):
     """Response schema for a scheduled report."""
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     template_id: UUID
     name: str
@@ -156,9 +157,6 @@ class ScheduleResponse(BaseModel):
     failure_count: int
     created_at: datetime
 
-    class Config:
-        from_attributes = True
-
 
 # -------------------------------------------------------------------------
 # Execution Schemas
@@ -177,6 +175,8 @@ class GenerateReportRequest(BaseModel):
 
 class ExecutionResponse(BaseModel):
     """Response schema for a report execution."""
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     template_id: Optional[UUID]
     schedule_id: Optional[UUID]
@@ -194,9 +194,6 @@ class ExecutionResponse(BaseModel):
     row_count: Optional[int]
     metrics_summary: Optional[Dict[str, Any]]
     error_message: Optional[str]
-
-    class Config:
-        from_attributes = True
 
 
 # -------------------------------------------------------------------------

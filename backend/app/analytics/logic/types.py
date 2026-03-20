@@ -9,7 +9,7 @@ Based on AI_Logic_Formulas_Pseudocode.md and Data_Schema_Events_and_Tables.md.
 from datetime import datetime
 from typing import Dict, List, Optional, Literal
 from enum import Enum
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # =============================================================================
@@ -70,6 +70,8 @@ class AlertSeverity(str, Enum):
 # =============================================================================
 class EntityMetrics(BaseModel):
     """Core daily metrics for any entity level."""
+    model_config = ConfigDict(use_enum_values=True)
+
     entity_id: str
     entity_name: str
     entity_level: EntityLevel
@@ -98,9 +100,6 @@ class EntityMetrics(BaseModel):
     # Quality metrics
     emq_score: Optional[float] = None  # 0-100
     event_loss_pct: Optional[float] = None  # 0-100
-
-    class Config:
-        use_enum_values = True
 
 
 class BaselineMetrics(BaseModel):

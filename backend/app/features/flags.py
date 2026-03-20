@@ -17,7 +17,7 @@ Feature Flags:
 
 from typing import Dict, Any, Optional, List
 from enum import Enum
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class AutopilotLevel(int, Enum):
@@ -117,6 +117,8 @@ DEFAULT_FEATURES_BY_PLAN: Dict[str, Dict[str, Any]] = {
 class FeatureFlags(BaseModel):
     """Complete feature flags configuration for a tenant."""
 
+    model_config = ConfigDict(use_enum_values=True)
+
     # Trust Layer
     signal_health: bool = Field(default=False, description="Signal health monitoring")
     attribution_variance: bool = Field(default=False, description="Attribution variance tracking")
@@ -137,9 +139,6 @@ class FeatureFlags(BaseModel):
     max_campaigns: int = Field(default=20, description="Maximum number of campaigns")
     max_users: int = Field(default=5, description="Maximum number of users")
     data_retention_days: int = Field(default=90, description="Data retention in days")
-
-    class Config:
-        use_enum_values = True
 
 
 class FeatureFlagsUpdate(BaseModel):

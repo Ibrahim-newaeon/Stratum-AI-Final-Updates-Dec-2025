@@ -14,7 +14,7 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, Request, status
 
 logger = logging.getLogger(__name__)
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from app.core.subscription import (
     EXPIRY_WARNING_DAYS,
@@ -36,6 +36,22 @@ router = APIRouter(prefix="/subscription", tags=["subscription"])
 class SubscriptionStatusResponse(BaseModel):
     """Response model for subscription status."""
 
+    model_config = ConfigDict(json_schema_extra={
+        "example": {
+            "tenant_id": 1,
+            "plan": "professional",
+            "tier": "professional",
+            "status": "expiring_soon",
+            "expires_at": "2024-02-01T00:00:00Z",
+            "days_until_expiry": 7,
+            "days_in_grace": None,
+            "is_access_restricted": False,
+            "restriction_reason": None,
+            "warning_message": "Your subscription expires in 7 days. Renew now to avoid interruption.",
+            "pricing": {"name": "Professional", "price": 999, "currency": "USD"},
+        }
+    })
+
     tenant_id: int
     plan: str
     tier: str
@@ -47,23 +63,6 @@ class SubscriptionStatusResponse(BaseModel):
     restriction_reason: Optional[str]
     warning_message: Optional[str]
     pricing: Optional[dict]
-
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "tenant_id": 1,
-                "plan": "professional",
-                "tier": "professional",
-                "status": "expiring_soon",
-                "expires_at": "2024-02-01T00:00:00Z",
-                "days_until_expiry": 7,
-                "days_in_grace": None,
-                "is_access_restricted": False,
-                "restriction_reason": None,
-                "warning_message": "Your subscription expires in 7 days. Renew now to avoid interruption.",
-                "pricing": {"name": "Professional", "price": 999, "currency": "USD"},
-            }
-        }
 
 
 class SubscriptionConfigResponse(BaseModel):

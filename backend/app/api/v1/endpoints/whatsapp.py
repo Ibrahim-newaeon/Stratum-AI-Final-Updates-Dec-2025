@@ -13,7 +13,7 @@ from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -76,6 +76,8 @@ class WhatsAppContactCreate(BaseModel):
 
 
 class WhatsAppContactResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     phone_number: str
     country_code: str
@@ -87,9 +89,6 @@ class WhatsAppContactResponse(BaseModel):
     message_count: int
     last_message_at: Optional[datetime]
     created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 class WhatsAppTemplateCreate(BaseModel):
@@ -106,6 +105,8 @@ class WhatsAppTemplateCreate(BaseModel):
 
 
 class WhatsAppTemplateResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     name: str
     language: str
@@ -114,9 +115,6 @@ class WhatsAppTemplateResponse(BaseModel):
     status: str
     usage_count: int
     created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 class WhatsAppMessageSend(BaseModel):
@@ -144,6 +142,8 @@ class WhatsAppBroadcastResponse(BaseModel):
 
 
 class WhatsAppMessageResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     contact_id: int
     direction: str
@@ -156,11 +156,10 @@ class WhatsAppMessageResponse(BaseModel):
     read_at: Optional[datetime]
     created_at: datetime
 
-    class Config:
-        from_attributes = True
-
 
 class WhatsAppConversationResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     contact_id: int
     origin_type: str
@@ -169,9 +168,6 @@ class WhatsAppConversationResponse(BaseModel):
     expires_at: datetime
     message_count: int
     is_active: bool
-
-    class Config:
-        from_attributes = True
 
 
 # =============================================================================

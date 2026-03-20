@@ -11,7 +11,7 @@ from enum import Enum
 from typing import Any, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 # =============================================================================
 # Enums
@@ -63,8 +63,9 @@ class DomainWhitelistCreate(BaseModel):
     )
     description: Optional[str] = None
 
-    @validator("domain_pattern")
-    def validate_domain_pattern(cls, v):
+    @field_validator("domain_pattern")
+    @classmethod
+    def validate_domain_pattern(cls, v: str) -> str:
         # Allow wildcards like *.domain.com
         pattern = r"^(\*\.)?[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
         if not re.match(pattern, v):
@@ -75,15 +76,14 @@ class DomainWhitelistCreate(BaseModel):
 class DomainWhitelistResponse(BaseModel):
     """Domain whitelist entry response."""
 
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     domain_pattern: str
     is_verified: bool
     is_active: bool
     description: Optional[str]
     created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 # =============================================================================
@@ -129,11 +129,14 @@ class WidgetCreate(BaseModel):
     # Custom branding (Enterprise only - validated at service layer)
     custom_branding: Optional[WidgetCustomBranding] = None
 
-    @validator("custom_width", "custom_height", always=True)
-    def validate_custom_dimensions(cls, v, values):
-        if values.get("widget_size") == WidgetSize.CUSTOM and v is None:
-            raise ValueError("Custom dimensions required when widget_size is 'custom'")
-        return v
+    @model_validator(mode="after")
+    def validate_custom_dimensions(self) -> "WidgetCreate":
+        if self.widget_size == WidgetSize.CUSTOM:
+            if self.custom_width is None:
+                raise ValueError("Custom dimensions required when widget_size is 'custom'")
+            if self.custom_height is None:
+                raise ValueError("Custom dimensions required when widget_size is 'custom'")
+        return self
 
 
 class WidgetUpdate(BaseModel):
@@ -152,6 +155,8 @@ class WidgetUpdate(BaseModel):
 
 class WidgetResponse(BaseModel):
     """Widget configuration response."""
+
+    model_config = ConfigDict(from_attributes=True)
 
     id: UUID
     name: str
@@ -174,9 +179,6 @@ class WidgetResponse(BaseModel):
     custom_background_color: Optional[str] = None
     custom_text_color: Optional[str] = None
 
-    class Config:
-        from_attributes = True
-
 
 # =============================================================================
 # Token Schemas
@@ -188,22 +190,26 @@ class TokenCreate(BaseModel):
 
     allowed_domains: list[str] = Field(
         ...,
-        min_items=1,
-        max_items=10,
+        min_length=1,
+        max_length=10,
         description="Domains where this token can be used",
     )
     expires_in_days: int = Field(default=30, ge=1, le=365)
 
-    @validator("allowed_domains", each_item=True)
-    def validate_domains(cls, v):
+    @field_validator("allowed_domains")
+    @classmethod
+    def validate_domains(cls, v: list[str]) -> list[str]:
         pattern = r"^(\*\.)?[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
-        if not re.match(pattern, v):
-            raise ValueError(f"Invalid domain: {v}")
-        return v.lower()
+        for domain in v:
+            if not re.match(pattern, domain):
+                raise ValueError(f"Invalid domain: {domain}")
+        return [d.lower() for d in v]
 
 
 class TokenCreateResponse(BaseModel):
     """Response after creating a token (includes the actual token once)."""
+
+    model_config = ConfigDict(from_attributes=True)
 
     id: UUID
     token: str  # Only returned once at creation!
@@ -213,12 +219,11 @@ class TokenCreateResponse(BaseModel):
     expires_at: datetime
     rate_limit_per_minute: int
 
-    class Config:
-        from_attributes = True
-
 
 class TokenResponse(BaseModel):
     """Token information response (without actual token)."""
+
+    model_config = ConfigDict(from_attributes=True)
 
     id: UUID
     token_prefix: str
@@ -229,9 +234,6 @@ class TokenResponse(BaseModel):
     total_requests: int
     total_errors: int
     created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 class TokenRefresh(BaseModel):

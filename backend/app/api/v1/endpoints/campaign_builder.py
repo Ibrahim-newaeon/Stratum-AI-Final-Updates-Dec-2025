@@ -19,7 +19,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Query, Backgroun
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, or_
 from sqlalchemy.orm import selectinload
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.db.session import get_async_session
 from app.models.campaign_builder import (
@@ -37,6 +37,8 @@ router = APIRouter(prefix="/tenant/{tenant_id}", tags=["campaign-builder"])
 # =============================================================================
 
 class ConnectorStatusResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     platform: str
     status: str
     connected_at: Optional[datetime] = None
@@ -44,11 +46,10 @@ class ConnectorStatusResponse(BaseModel):
     scopes: List[str] = []
     last_error: Optional[str] = None
 
-    class Config:
-        from_attributes = True
-
 
 class AdAccountResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     platform: str
     platform_account_id: str
@@ -59,9 +60,6 @@ class AdAccountResponse(BaseModel):
     is_enabled: bool
     daily_budget_cap: Optional[float] = None
     last_synced_at: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True
 
 
 class AdAccountUpdateRequest(BaseModel):
@@ -84,6 +82,8 @@ class CampaignDraftUpdate(BaseModel):
 
 
 class CampaignDraftResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     tenant_id: int
     platform: str
@@ -101,11 +101,10 @@ class CampaignDraftResponse(BaseModel):
     platform_campaign_id: Optional[str] = None
     published_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
-
 
 class PublishLogResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     draft_id: Optional[UUID] = None
     platform: str
@@ -116,9 +115,6 @@ class PublishLogResponse(BaseModel):
     error_code: Optional[str] = None
     error_message: Optional[str] = None
     retry_count: int
-
-    class Config:
-        from_attributes = True
 
 
 # =============================================================================

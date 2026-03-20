@@ -22,7 +22,7 @@ import smtplib
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, insert, func, update
 from sqlalchemy.orm import selectinload
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.autopilot import (
     TenantEnforcementSettings as TenantEnforcementSettingsDB,
@@ -85,6 +85,8 @@ class EnforcementRule(BaseModel):
 
 class EnforcementSettings(BaseModel):
     """Tenant-level enforcement configuration."""
+    model_config = ConfigDict(use_enum_values=True)
+
     tenant_id: int
     enforcement_enabled: bool = True  # Kill switch
     default_mode: EnforcementMode = EnforcementMode.ADVISORY
@@ -104,9 +106,6 @@ class EnforcementSettings(BaseModel):
 
     # Custom rules
     rules: List[EnforcementRule] = Field(default_factory=list)
-
-    class Config:
-        use_enum_values = True
 
 
 # =============================================================================

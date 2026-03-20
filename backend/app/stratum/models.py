@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class Platform(str, Enum):
@@ -67,6 +67,8 @@ class OptimizationGoal(str, Enum):
 class UnifiedAccount(BaseModel):
     """Unified advertising account model."""
 
+    model_config = ConfigDict(use_enum_values=True)
+
     platform: Platform
     account_id: str
     account_name: str
@@ -77,12 +79,11 @@ class UnifiedAccount(BaseModel):
     last_synced: Optional[datetime] = None
     raw_data: Optional[dict[str, Any]] = None
 
-    class Config:
-        use_enum_values = True
-
 
 class UnifiedCampaign(BaseModel):
     """Unified campaign model across platforms."""
+
+    model_config = ConfigDict(use_enum_values=True)
 
     platform: Platform
     account_id: str
@@ -103,12 +104,11 @@ class UnifiedCampaign(BaseModel):
     last_synced: Optional[datetime] = None
     raw_data: Optional[dict[str, Any]] = None
 
-    class Config:
-        use_enum_values = True
-
 
 class UnifiedAdSet(BaseModel):
     """Unified ad set / ad group model."""
+
+    model_config = ConfigDict(use_enum_values=True)
 
     platform: Platform
     account_id: str
@@ -129,12 +129,11 @@ class UnifiedAdSet(BaseModel):
     last_synced: Optional[datetime] = None
     raw_data: Optional[dict[str, Any]] = None
 
-    class Config:
-        use_enum_values = True
-
 
 class UnifiedAd(BaseModel):
     """Unified ad model."""
+
+    model_config = ConfigDict(use_enum_values=True)
 
     platform: Platform
     account_id: str
@@ -153,9 +152,6 @@ class UnifiedAd(BaseModel):
     updated_at: Optional[datetime] = None
     last_synced: Optional[datetime] = None
     raw_data: Optional[dict[str, Any]] = None
-
-    class Config:
-        use_enum_values = True
 
 
 class PerformanceMetrics(BaseModel):
@@ -203,6 +199,8 @@ class PerformanceMetrics(BaseModel):
 class EMQScore(BaseModel):
     """Event Match Quality score for a platform/event combination."""
 
+    model_config = ConfigDict(use_enum_values=True)
+
     platform: Platform
     event_name: str
     score: float = Field(ge=0, le=10, description="EMQ score 0-10")
@@ -211,9 +209,6 @@ class EMQScore(BaseModel):
     phone_match_rate: Optional[float] = None
     external_id_match_rate: Optional[float] = None
     last_updated: Optional[datetime] = None
-
-    class Config:
-        use_enum_values = True
 
     def is_healthy(self) -> bool:
         """Check if EMQ is in healthy range (>= 7.0)."""
@@ -249,6 +244,8 @@ class SignalHealth(BaseModel):
 class AutomationAction(BaseModel):
     """Represents an automation action to be executed."""
 
+    model_config = ConfigDict(use_enum_values=True)
+
     platform: Platform
     account_id: str
     entity_type: str  # campaign, adset, ad
@@ -263,17 +260,13 @@ class AutomationAction(BaseModel):
     trust_gate_passed: bool = False
     signal_health_at_execution: Optional[float] = None
 
-    class Config:
-        use_enum_values = True
-
 
 class WebhookEvent(BaseModel):
     """Normalized webhook event from any platform."""
+
+    model_config = ConfigDict(use_enum_values=True)
 
     platform: Platform
     event_type: str
     payload: dict[str, Any]
     received_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
-    class Config:
-        use_enum_values = True

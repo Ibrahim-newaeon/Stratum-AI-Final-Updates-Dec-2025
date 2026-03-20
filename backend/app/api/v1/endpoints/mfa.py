@@ -16,7 +16,7 @@ Endpoints:
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.deps import get_current_user
@@ -37,52 +37,57 @@ router = APIRouter(prefix="/mfa", tags=["MFA"])
 class MFAStatusResponse(BaseModel):
     """MFA status response."""
 
+    model_config = ConfigDict(json_schema_extra={
+        "example": {
+            "enabled": True,
+            "verified_at": "2024-01-15T10:30:00Z",
+            "backup_codes_remaining": 8,
+            "is_locked": False,
+            "lockout_until": None,
+        }
+    })
+
     enabled: bool
     verified_at: Optional[str] = None
     backup_codes_remaining: int
     is_locked: bool
     lockout_until: Optional[str] = None
 
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "enabled": True,
-                "verified_at": "2024-01-15T10:30:00Z",
-                "backup_codes_remaining": 8,
-                "is_locked": False,
-                "lockout_until": None,
-            }
-        }
-
 
 class MFASetupResponse(BaseModel):
     """MFA setup response with QR code."""
+
+    model_config = ConfigDict(json_schema_extra={
+        "example": {
+            "secret": "JBSWY3DPEHPK3PXP",
+            "provisioning_uri": "otpauth://totp/Stratum%20AI:user@example.com?secret=JBSWY3DPEHPK3PXP&issuer=Stratum%20AI",
+            "qr_code_base64": "iVBORw0KGgoAAAANSUhEUgAA...",
+        }
+    })
 
     secret: str = Field(..., description="TOTP secret (for manual entry)")
     provisioning_uri: str = Field(..., description="otpauth:// URI")
     qr_code_base64: str = Field(..., description="QR code as base64 PNG")
 
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "secret": "JBSWY3DPEHPK3PXP",
-                "provisioning_uri": "otpauth://totp/Stratum%20AI:user@example.com?secret=JBSWY3DPEHPK3PXP&issuer=Stratum%20AI",
-                "qr_code_base64": "iVBORw0KGgoAAAANSUhEUgAA...",
-            }
-        }
-
 
 class MFAVerifyRequest(BaseModel):
     """Request to verify TOTP code."""
 
-    code: str = Field(..., min_length=6, max_length=8, description="6-digit TOTP code")
+    model_config = ConfigDict(json_schema_extra={"example": {"code": "123456"}})
 
-    class Config:
-        json_schema_extra = {"example": {"code": "123456"}}
+    code: str = Field(..., min_length=6, max_length=8, description="6-digit TOTP code")
 
 
 class MFAVerifyResponse(BaseModel):
     """Response after enabling MFA."""
+
+    model_config = ConfigDict(json_schema_extra={
+        "example": {
+            "success": True,
+            "message": "MFA enabled successfully",
+            "backup_codes": ["ABCD-1234", "EFGH-5678", "IJKL-9012"],
+        }
+    })
 
     success: bool
     message: str
@@ -90,60 +95,47 @@ class MFAVerifyResponse(BaseModel):
         default_factory=list, description="Backup codes (only shown once)"
     )
 
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "success": True,
-                "message": "MFA enabled successfully",
-                "backup_codes": ["ABCD-1234", "EFGH-5678", "IJKL-9012"],
-            }
-        }
-
 
 class MFADisableRequest(BaseModel):
     """Request to disable MFA."""
 
-    code: str = Field(..., description="TOTP code or backup code")
+    model_config = ConfigDict(json_schema_extra={"example": {"code": "123456"}})
 
-    class Config:
-        json_schema_extra = {"example": {"code": "123456"}}
+    code: str = Field(..., description="TOTP code or backup code")
 
 
 class MFAValidateRequest(BaseModel):
     """Request to validate code during login."""
 
+    model_config = ConfigDict(json_schema_extra={"example": {"user_id": 123, "code": "123456"}})
+
     user_id: int = Field(..., description="User ID from login step 1")
     code: str = Field(..., description="TOTP code or backup code")
-
-    class Config:
-        json_schema_extra = {"example": {"user_id": 123, "code": "123456"}}
 
 
 class MFAValidateResponse(BaseModel):
     """Response from code validation."""
 
+    model_config = ConfigDict(json_schema_extra={"example": {"valid": True, "message": "Code verified"}})
+
     valid: bool
     message: str
-
-    class Config:
-        json_schema_extra = {"example": {"valid": True, "message": "Code verified"}}
 
 
 class BackupCodesResponse(BaseModel):
     """Response with new backup codes."""
 
+    model_config = ConfigDict(json_schema_extra={
+        "example": {
+            "success": True,
+            "message": "Backup codes regenerated",
+            "backup_codes": ["ABCD-1234", "EFGH-5678"],
+        }
+    })
+
     success: bool
     message: str
     backup_codes: list[str] = Field(default_factory=list)
-
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "success": True,
-                "message": "Backup codes regenerated",
-                "backup_codes": ["ABCD-1234", "EFGH-5678"],
-            }
-        }
 
 
 class MFARequiredResponse(BaseModel):

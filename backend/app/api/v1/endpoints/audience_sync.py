@@ -16,7 +16,7 @@ from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import structlog
@@ -54,6 +54,8 @@ class PlatformAudienceCreate(BaseModel):
 class PlatformAudienceResponse(BaseModel):
     """Response schema for platform audience."""
 
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     segment_id: UUID
     platform: str
@@ -72,12 +74,11 @@ class PlatformAudienceResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
-
 
 class SyncJobResponse(BaseModel):
     """Response schema for sync job."""
+
+    model_config = ConfigDict(from_attributes=True)
 
     id: UUID
     platform_audience_id: UUID
@@ -94,9 +95,6 @@ class SyncJobResponse(BaseModel):
     error_message: Optional[str]
     triggered_by: Optional[str]
     created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 class TriggerSyncRequest(BaseModel):
