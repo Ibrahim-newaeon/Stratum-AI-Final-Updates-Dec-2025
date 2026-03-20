@@ -7,7 +7,6 @@ Handles login, registration, token refresh, password reset, and WhatsApp verific
 """
 
 import hmac
-import random
 import secrets
 import string
 from datetime import datetime, timezone, timedelta
