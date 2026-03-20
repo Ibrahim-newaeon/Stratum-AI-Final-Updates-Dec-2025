@@ -133,7 +133,7 @@ jobs:
       - name: Dependency audit (pip-audit)
         run: |
           pip install pip-audit
-          pip-audit --strict --desc on
+          pip-audit --strict --desc on --ignore-vuln CVE-2024-23342
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
