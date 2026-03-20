@@ -74,14 +74,48 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
         debug=settings.debug,
     )
 
-    # Initialize Sentry (production only)
-    if settings.sentry_dsn and settings.is_production:
+    # Initialize Sentry (production and staging)
+    if settings.sentry_dsn and settings.app_env in ("production", "staging"):
+        from sentry_sdk.integrations.fastapi import FastApiIntegration
+        from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+        from sentry_sdk.integrations.celery import CeleryIntegration
+        from sentry_sdk.integrations.redis import RedisIntegration
+        from sentry_sdk.integrations.logging import LoggingIntegration
+
+        def _before_send(event: dict, hint: dict) -> dict | None:
+            """Strip PII from Sentry events before transmission."""
+            if "request" in event and "data" in event["request"]:
+                data = event["request"]["data"]
+                if isinstance(data, dict):
+                    for key in list(data.keys()):
+                        if any(
+                            s in key.lower()
+                            for s in ("password", "token", "secret", "ssn", "credit_card")
+                        ):
+                            data[key] = "[REDACTED]"
+            return event
+
         sentry_sdk.init(
             dsn=settings.sentry_dsn,
             environment=settings.app_env,
-            traces_sample_rate=0.1,
+            release=settings.sentry_release,
+            traces_sample_rate=settings.sentry_traces_sample_rate,
+            profiles_sample_rate=settings.sentry_profiles_sample_rate,
+            send_default_pii=False,
+            before_send=_before_send,
+            integrations=[
+                FastApiIntegration(transaction_style="endpoint"),
+                SqlalchemyIntegration(),
+                CeleryIntegration(monitor_beat_tasks=True),
+                RedisIntegration(),
+                LoggingIntegration(level=None, event_level="ERROR"),
+            ],
         )
-        logger.info("sentry_initialized")
+        logger.info(
+            "sentry_initialized",
+            environment=settings.app_env,
+            release=settings.sentry_release,
+        )
 
     # Verify database connection (with timeout to prevent blocking startup)
     try:
@@ -100,7 +134,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     try:
         await ws_manager.start()
         logger.info("websocket_manager_started")
-    except Exception as e:
+    except (ConnectionError, TimeoutError, OSError) as e:
         logger.warning(
             "websocket_manager_start_failed",
             error=str(e),
@@ -119,7 +153,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
             trainer = ModelTrainer(str(models_path))
             trainer.train_all(df, include_platform_models=False)
             logger.info("ml_models_auto_trained", models=list(str(p.name) for p in models_path.glob("*.pkl")))
-    except Exception as e:
+    except (OSError, ValueError, ImportError, RuntimeError) as e:
         logger.warning("ml_auto_train_failed", error=str(e), detail="ML predictions will be unavailable")
 
     yield
@@ -332,7 +366,7 @@ def create_application() -> FastAPI:
             await redis_client.ping()
             redis_status = "healthy"
             await redis_client.close()
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError) as e:
             redis_status = f"unhealthy: {str(e)}"
 
         overall_status = "healthy" if db_health["status"] == "healthy" and redis_status == "healthy" else "unhealthy"
@@ -463,8 +497,9 @@ def create_application() -> FastAPI:
                 user_id = payload.get("sub")
                 if not tenant_id:
                     tenant_id = payload.get("tenant_id")
-            except Exception:
-                # Invalid token — reject the connection
+            except (Exception,) as _jwt_err:
+                # Invalid/expired token — reject the connection
+                # Intentionally broad: jose.JWTError + any decode edge case
                 await websocket.close(code=4001, reason="Invalid or expired token")
                 return
         else:
@@ -499,7 +534,7 @@ def create_application() -> FastAPI:
                 reason="client_disconnect",
             )
 
-        except Exception as e:
+        except (ConnectionError, OSError, RuntimeError) as e:
             await ws_manager.disconnect(client_id)
             logger.error(
                 "websocket_connection_error",

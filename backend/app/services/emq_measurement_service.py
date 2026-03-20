@@ -481,7 +481,7 @@ class RealEMQService:
                 result = self.get_platform_emq(platform, period_hours)
                 if result.score > 0:  # Only include platforms with data
                     platform_results.append(result)
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, ZeroDivisionError, OSError) as e:
                 logger.warning(f"Failed to get EMQ for {platform}: {e}")
 
         if not platform_results:
@@ -928,8 +928,8 @@ class CrossPlatformEMQAnalyzer:
             try:
                 result = self.emq_service.get_platform_emq(platform)
                 current_scores[platform] = result.score
-            except Exception:
-                pass
+            except (KeyError, AttributeError, ValueError) as exc:
+                logger.warning(f"Failed to get EMQ score for {platform}: {exc}")
 
         # Calculate correlation matrix
         correlations = {}

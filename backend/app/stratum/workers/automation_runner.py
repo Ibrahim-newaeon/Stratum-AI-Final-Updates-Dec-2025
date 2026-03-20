@@ -220,15 +220,19 @@ async def execute_action(
         else:
             logger.info(f"Action {execution_id} completed successfully")
 
-    except Exception as e:
+    except (ConnectionError, TimeoutError, OSError) as e:
+        result["status"] = "error"
+        result["error"] = str(e)
+        result["completed_at"] = datetime.now(UTC).isoformat()
+        logger.error(f"Action {execution_id} network error: {e}")
+
+        # Retry on transient errors
+        raise self.retry(exc=e, countdown=60)
+    except (ValueError, KeyError, TypeError, RuntimeError) as e:
         result["status"] = "error"
         result["error"] = str(e)
         result["completed_at"] = datetime.now(UTC).isoformat()
         logger.error(f"Action {execution_id} error: {e}")
-
-        # Retry on transient errors
-        if "rate limit" in str(e).lower() or "timeout" in str(e).lower():
-            raise self.retry(exc=e, countdown=60)
 
     return result
 
@@ -288,16 +292,17 @@ async def execute_action_batch(
                     action_result["status"] = "failed"
                     action_result["error"] = executed.error_message
 
-            except Exception as e:
+            except (ConnectionError, TimeoutError, OSError, ValueError, KeyError, TypeError, RuntimeError) as e:
                 results["failed"] += 1
                 action_result["status"] = "error"
                 action_result["error"] = str(e)
+                logger.error(f"Batch {batch_id} action error: {e}")
 
             results["actions"].append(action_result)
 
         await adapter.cleanup()
 
-    except Exception as e:
+    except (ConnectionError, TimeoutError, OSError, ValueError, RuntimeError) as e:
         results["error"] = str(e)
         logger.error(f"Batch {batch_id} failed: {e}")
 
@@ -422,7 +427,10 @@ async def run_autopilot_for_account(
 
         await adapter.cleanup()
 
-    except Exception as e:
+    except (ConnectionError, TimeoutError, OSError) as e:
+        result["error"] = str(e)
+        logger.error(f"Autopilot network error for {platform}/{account_id}: {e}")
+    except (ValueError, KeyError, TypeError, RuntimeError) as e:
         result["error"] = str(e)
         logger.error(f"Autopilot error for {platform}/{account_id}: {e}")
 
@@ -479,8 +487,9 @@ async def run_autopilot_all() -> dict[str, Any]:
                 platform_results.append(account_result)
                 result["accounts_processed"] += 1
                 result["total_actions"] += account_result.get("actions_approved", 0)
-            except Exception as e:
+            except (ConnectionError, TimeoutError, OSError, ValueError, KeyError, TypeError, RuntimeError) as e:
                 platform_results.append({"account_id": account_id, "error": str(e)})
+                logger.error(f"Autopilot error for {platform}/{account_id}: {e}")
 
         result["platforms"][platform] = platform_results
 
@@ -619,7 +628,11 @@ async def rollback_action(
 
         logger.info(f"Rollback {rollback_id} completed: {result['status']}")
 
-    except Exception as e:
+    except (ConnectionError, TimeoutError, OSError) as e:
+        result["status"] = "error"
+        result["error"] = str(e)
+        logger.error(f"Rollback {rollback_id} network error: {e}")
+    except (ValueError, KeyError, TypeError, RuntimeError) as e:
         result["status"] = "error"
         result["error"] = str(e)
         logger.error(f"Rollback {rollback_id} failed: {e}")

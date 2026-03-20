@@ -215,17 +215,24 @@ async def sync_platform_data(
                 results["accounts_synced"] += 1
                 logger.info(f"Synced {platform} account {account_id}")
 
-            except Exception as e:
-                error_msg = f"Error syncing account {account_id}: {e!s}"
+            except (ConnectionError, TimeoutError, OSError) as e:
+                error_msg = f"Network error syncing account {account_id}: {e!s}"
+                logger.error(error_msg)
+                results["errors"].append(error_msg)
+            except (ValueError, KeyError, TypeError) as e:
+                error_msg = f"Data error syncing account {account_id}: {e!s}"
                 logger.error(error_msg)
                 results["errors"].append(error_msg)
 
         await adapter.cleanup()
 
-    except Exception as e:
+    except (ConnectionError, TimeoutError, OSError) as e:
         logger.error(f"Failed to initialize {platform} adapter: {e}")
         results["errors"].append(str(e))
         raise self.retry(exc=e, countdown=60)  # Retry after 60 seconds
+    except (ValueError, RuntimeError) as e:
+        logger.error(f"Failed to initialize {platform} adapter: {e}")
+        results["errors"].append(str(e))
 
     return results
 
@@ -269,8 +276,12 @@ async def sync_all_platforms(self) -> dict[str, Any]:
         try:
             task_result = await sync_platform_data(platform, account_ids, platform_config)
             results["platforms"][platform] = task_result
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError) as e:
             results["platforms"][platform] = {"status": "error", "error": str(e)}
+            logger.error(f"Network error syncing {platform}: {e}")
+        except (ValueError, KeyError, TypeError, RuntimeError) as e:
+            results["platforms"][platform] = {"status": "error", "error": str(e)}
+            logger.error(f"Error syncing {platform}: {e}")
 
     results["completed_at"] = datetime.now(UTC).isoformat()
     return results
@@ -338,8 +349,11 @@ async def update_metrics(
 
         await adapter.cleanup()
 
-    except Exception as e:
-        logger.error(f"Failed to update metrics: {e}")
+    except (ConnectionError, TimeoutError, OSError) as e:
+        logger.error(f"Network error updating metrics: {e}")
+        results["error"] = str(e)
+    except (ValueError, KeyError, TypeError) as e:
+        logger.error(f"Data error updating metrics: {e}")
         results["error"] = str(e)
 
     return results
@@ -408,8 +422,11 @@ async def refresh_emq(
 
         logger.info(f"Refreshed {len(emq_scores)} EMQ scores for {platform} {account_id}")
 
-    except Exception as e:
-        logger.error(f"Failed to refresh EMQ: {e}")
+    except (ConnectionError, TimeoutError, OSError) as e:
+        logger.error(f"Network error refreshing EMQ: {e}")
+        results["error"] = str(e)
+    except (ValueError, KeyError, TypeError) as e:
+        logger.error(f"Data error refreshing EMQ: {e}")
         results["error"] = str(e)
 
     return results

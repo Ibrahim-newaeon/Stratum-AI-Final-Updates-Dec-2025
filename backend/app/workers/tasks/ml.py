@@ -84,7 +84,7 @@ def run_live_predictions(self, tenant_id: int):
                 db.add(ml_pred)
                 predictions.append(prediction)
 
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, RuntimeError) as e:
                 logger.error(f"Prediction failed for campaign {campaign.id}: {e}")
 
         db.commit()
@@ -185,7 +185,7 @@ def generate_roas_alerts(self, tenant_id: int):
                             alert,
                         )
 
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, RuntimeError) as e:
                 logger.error(f"Alert generation failed for campaign {campaign.id}: {e}")
 
     logger.info(f"Generated {len(alerts)} ROAS alerts for tenant {tenant_id}")

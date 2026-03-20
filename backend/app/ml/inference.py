@@ -134,7 +134,7 @@ class LocalInferenceStrategy(InferenceStrategy):
             logger.info("model_loaded", model_name=model_name)
             return model
 
-        except Exception as e:
+        except (OSError, ValueError, TypeError, KeyError, RuntimeError) as e:
             logger.error("model_load_failed", model_name=model_name, error=str(e))
             return None
 
@@ -181,7 +181,7 @@ class LocalInferenceStrategy(InferenceStrategy):
 
         except ModelUnavailableError:
             raise  # Re-raise model unavailable errors
-        except Exception as e:
+        except (ValueError, TypeError, RuntimeError, KeyError) as e:
             logger.error("local_inference_failed", model_name=model_name, error=str(e))
             raise ModelUnavailableError(
                 model_name=model_name,
@@ -258,7 +258,7 @@ class VertexAIStrategy(InferenceStrategy):
 
                 logger.info("vertex_ai_client_initialized", project=self.project)
 
-            except Exception as e:
+            except (ImportError, OSError, ValueError, RuntimeError) as e:
                 logger.error("vertex_ai_init_failed", error=str(e))
                 return None
 
@@ -313,7 +313,7 @@ class VertexAIStrategy(InferenceStrategy):
                 "error": "No predictions returned",
             }
 
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError, ValueError, RuntimeError) as e:
             logger.error("vertex_ai_prediction_failed", model_name=model_name, error=str(e))
 
             # Fall back to local
@@ -334,7 +334,7 @@ class VertexAIStrategy(InferenceStrategy):
         try:
             client = self._get_client()
             return client is not None
-        except Exception:
+        except (ConnectionError, TimeoutError, OSError, RuntimeError):
             return False
 
 
@@ -439,7 +439,7 @@ class ModelRegistry:
                     return result
             except ModelUnavailableError:
                 logger.info(f"platform_model_unavailable_using_ensemble", platform=platform)
-            except Exception as e:
+            except (ValueError, TypeError, RuntimeError, KeyError, OSError) as e:
                 logger.warning(f"platform_model_error_using_ensemble", platform=platform, error=str(e))
 
         # Fall back to ensemble model
@@ -451,7 +451,7 @@ class ModelRegistry:
             return result
         except ModelUnavailableError:
             raise
-        except Exception as e:
+        except (ValueError, TypeError, RuntimeError, KeyError, OSError) as e:
             raise ModelUnavailableError(
                 model_name="roas_predictor",
                 message=f"ROAS prediction failed: {str(e)}",

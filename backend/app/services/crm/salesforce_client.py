@@ -430,7 +430,7 @@ class SalesforceClient:
                         SALESFORCE_REVOKE_URL,
                         data={"token": token},
                     )
-            except Exception as e:
+            except (aiohttp.ClientError, ConnectionError, TimeoutError, OSError) as e:
                 logger.warning("salesforce_revoke_failed", error=str(e))
 
         # Delete connection

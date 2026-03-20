@@ -288,7 +288,7 @@ class TikTokOAuthService(OAuthService):
                                 )
                             )
 
-                except Exception as e:
+                except (ConnectionError, TimeoutError, OSError, ValueError, KeyError) as e:
                     self.logger.warning(f"Failed to get advertiser info for {adv_id}", error=str(e))
                     accounts.append(
                         AdAccountInfo(

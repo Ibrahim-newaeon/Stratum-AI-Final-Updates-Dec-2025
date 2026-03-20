@@ -119,8 +119,8 @@ class LinkedInAdsClient:
                 error_data = {}
                 try:
                     error_data = e.response.json()
-                except Exception:
-                    pass
+                except (ValueError, UnicodeDecodeError):
+                    pass  # Non-JSON error response from LinkedIn API
 
                 logger.error(
                     f"LinkedIn API error: {error_data.get('message', str(e))}",

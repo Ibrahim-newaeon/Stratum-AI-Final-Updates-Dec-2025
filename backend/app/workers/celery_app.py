@@ -44,6 +44,19 @@ celery_app.conf.update(
     # Result settings
     result_expires=86400,  # Results expire after 24 hours
 
+    # Dead letter queue — tasks that exhaust all retries are routed here
+    # instead of being silently discarded.  A dedicated consumer (or manual
+    # inspection via Flower / CLI) can replay or investigate failures.
+    task_default_queue="default",
+    task_queues={
+        "default": {},
+        "sync": {},
+        "rules": {},
+        "intel": {},
+        "ml": {},
+        "dead_letter": {},
+    },
+
     # Task routing
     task_routes={
         "app.workers.tasks.sync_campaign_data": {"queue": "sync"},
@@ -145,7 +158,40 @@ celery_app.conf.beat_schedule = {
 }
 
 
+# ---------------------------------------------------------------------------
+# Dead-letter callback — routes permanently failed tasks to the DLQ
+# ---------------------------------------------------------------------------
+def _on_task_failure(self, exc, task_id, args, kwargs, einfo):
+    """Called when a task exhausts all retries.  Publishes metadata to the
+    dead_letter queue so failures are never silently lost."""
+    import json
+    import logging
+
+    dl_logger = logging.getLogger("celery.dead_letter")
+    dl_logger.error(
+        "Task %s[%s] permanently failed: %s", self.name, task_id, exc
+    )
+
+    try:
+        celery_app.send_task(
+            "dead_letter_sink",
+            queue="dead_letter",
+            kwargs={
+                "original_task": self.name,
+                "task_id": task_id,
+                "args": json.dumps(args, default=str),
+                "kwargs": json.dumps(kwargs, default=str),
+                "exception": str(exc),
+                "traceback": str(einfo) if einfo else None,
+            },
+        )
+    except Exception:
+        dl_logger.exception("Could not publish to dead_letter queue")
+
+
+# ---------------------------------------------------------------------------
 # Task decorators for common patterns
+# ---------------------------------------------------------------------------
 def retriable_task(**kwargs):
     """Decorator for tasks with exponential backoff retry."""
     default_kwargs = {
@@ -155,6 +201,7 @@ def retriable_task(**kwargs):
         "retry_backoff_max": 600,
         "retry_jitter": True,
         "max_retries": 3,
+        "on_failure": _on_task_failure,
     }
     default_kwargs.update(kwargs)
     return celery_app.task(**default_kwargs)
@@ -164,4 +211,19 @@ def idempotent_task(**kwargs):
     """Decorator for idempotent tasks (safe to retry)."""
     kwargs.setdefault("acks_late", True)
     kwargs.setdefault("reject_on_worker_lost", True)
+    kwargs.setdefault("on_failure", _on_task_failure)
     return celery_app.task(**kwargs)
+
+
+# Sink task that simply stores DLQ entries (logged for now; can be extended
+# to persist to a database table for dashboard visibility).
+@celery_app.task(name="dead_letter_sink", queue="dead_letter", ignore_result=True)
+def dead_letter_sink(**payload):
+    """Store dead-letter entries.  Override this task to write to a DB table."""
+    import logging
+    logging.getLogger("celery.dead_letter").warning(
+        "Dead letter received: task=%s id=%s error=%s",
+        payload.get("original_task"),
+        payload.get("task_id"),
+        payload.get("exception"),
+    )

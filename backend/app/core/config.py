@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     # Application Settings
     # -------------------------------------------------------------------------
     app_name: str = Field(default="Stratum AI", description="Application name")
-    app_env: Literal["development", "staging", "production"] = Field(
+    app_env: Literal["development", "staging", "production", "test"] = Field(
         default="development"
     )
     debug: bool = Field(default=False)
@@ -227,6 +227,15 @@ class Settings(BaseSettings):
     )
     log_format: Literal["json", "console"] = Field(default="json")
     sentry_dsn: Optional[str] = Field(default=None)
+    sentry_traces_sample_rate: float = Field(
+        default=0.1, description="Sentry performance traces sample rate (0.0-1.0)"
+    )
+    sentry_profiles_sample_rate: float = Field(
+        default=0.1, description="Sentry profiling sample rate (0.0-1.0)"
+    )
+    sentry_release: Optional[str] = Field(
+        default=None, description="Sentry release tag (e.g. git SHA or version)"
+    )
 
     # -------------------------------------------------------------------------
     # SMTP / Email Configuration
@@ -260,6 +269,9 @@ class Settings(BaseSettings):
     stripe_secret_key: Optional[str] = Field(default=None, description="Stripe secret API key")
     stripe_publishable_key: Optional[str] = Field(default=None, description="Stripe publishable key")
     stripe_webhook_secret: Optional[str] = Field(default=None, description="Stripe webhook signing secret")
+    stripe_starter_price_id: Optional[str] = Field(default=None, description="Stripe Price ID for Starter tier")
+    stripe_professional_price_id: Optional[str] = Field(default=None, description="Stripe Price ID for Professional tier")
+    stripe_enterprise_price_id: Optional[str] = Field(default=None, description="Stripe Price ID for Enterprise tier")
 
     # -------------------------------------------------------------------------
     # Rate Limiting

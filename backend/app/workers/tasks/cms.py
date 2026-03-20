@@ -49,7 +49,7 @@ def publish_scheduled_cms_posts():
                 # Trigger individual publish task
                 publish_cms_post.delay(str(post.id))
                 published_count += 1
-            except Exception as e:
+            except (ConnectionError, TimeoutError, OSError) as e:
                 logger.error(f"Failed to queue post {post.id}: {e}")
 
     logger.info(f"Queued {published_count} posts for publishing")
@@ -216,7 +216,7 @@ def _invalidate_cdn_cache(post) -> None:
             settings.cdn_provider,
             len(paths),
         )
-    except Exception as e:
+    except (ConnectionError, TimeoutError, OSError, RuntimeError) as e:
         # Cache invalidation is best-effort; never fail the publish
         logger.warning("CDN cache invalidation failed for post '%s': %s", post.slug, e)
 

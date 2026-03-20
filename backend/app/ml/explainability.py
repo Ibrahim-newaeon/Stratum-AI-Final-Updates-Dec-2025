@@ -141,7 +141,7 @@ class ModelExplainer:
 
             logger.info(f"Loaded model {self.model_name} with {len(self.feature_names)} features")
 
-        except Exception as e:
+        except (OSError, ValueError, TypeError, KeyError, RuntimeError) as e:
             logger.error(f"Error loading model {self.model_name}: {e}")
 
     def _init_shap_explainer(self, X_background: np.ndarray):
@@ -167,7 +167,7 @@ class ModelExplainer:
 
             logger.info(f"Initialized SHAP explainer for {self.model_name}")
 
-        except Exception as e:
+        except (ValueError, TypeError, RuntimeError) as e:
             logger.error(f"Error initializing SHAP explainer: {e}")
             self.shap_explainer = None
 
@@ -281,7 +281,7 @@ class ModelExplainer:
                         human_explanation=self._explain_feature(name, value, contrib),
                     ))
 
-            except Exception as e:
+            except (ValueError, TypeError, RuntimeError) as e:
                 logger.warning(f"SHAP calculation failed, using fallback: {e}")
                 contributions = self._fallback_contributions(features)
         else:
@@ -488,7 +488,7 @@ class ModelExplainer:
                     if i < len(mean_abs_shap):
                         feature_importance[name] = float(mean_abs_shap[i])
 
-            except Exception as e:
+            except (ValueError, TypeError, RuntimeError) as e:
                 logger.warning(f"SHAP global calculation failed: {e}")
                 feature_importance = self._fallback_importance()
         else:

@@ -254,7 +254,7 @@ class MetaExecutor(PlatformExecutor):
                     "error": None,
                 }
 
-        except Exception as exc:
+        except (ConnectionError, TimeoutError, OSError, ValueError, KeyError, RuntimeError) as exc:
             logger.error(f"[META] Live execution error: {exc}", exc_info=True)
             return {
                 "success": False,
@@ -338,7 +338,7 @@ class GoogleExecutor(PlatformExecutor):
                 else:
                     logger.error(f"[GOOGLE] Token refresh failed: {resp.text}")
                     return None
-        except Exception as exc:
+        except (ConnectionError, TimeoutError, OSError, ValueError, RuntimeError) as exc:
             logger.error(f"[GOOGLE] Token refresh error: {exc}", exc_info=True)
             return None
 
@@ -532,7 +532,7 @@ class GoogleExecutor(PlatformExecutor):
                         "error": f"Unsupported action type for Google: {action_type}",
                     }
 
-        except Exception as exc:
+        except (ConnectionError, TimeoutError, OSError, ValueError, KeyError, RuntimeError) as exc:
             logger.error(f"[GOOGLE] Live execution error: {exc}", exc_info=True)
             return {
                 "success": False,
@@ -720,7 +720,7 @@ class TikTokExecutor(PlatformExecutor):
                     "error": None,
                 }
 
-        except Exception as exc:
+        except (ConnectionError, TimeoutError, OSError, ValueError, KeyError, RuntimeError) as exc:
             logger.error(f"[TIKTOK] Live execution error: {exc}", exc_info=True)
             return {
                 "success": False,
@@ -912,7 +912,7 @@ class SnapchatExecutor(PlatformExecutor):
                     "error": None,
                 }
 
-        except Exception as exc:
+        except (ConnectionError, TimeoutError, OSError, ValueError, KeyError, RuntimeError) as exc:
             logger.error(f"[SNAP] Live execution error: {exc}", exc_info=True)
             return {
                 "success": False,
@@ -1121,7 +1121,7 @@ def apply_actions_queue(self, tenant_id: Optional[int] = None):
                                 status="failed",
                             )
 
-                    except Exception as e:
+                    except (ConnectionError, TimeoutError, OSError, ValueError, KeyError, RuntimeError, json.JSONDecodeError) as e:
                         logger.error(f"Error processing action {action.id}: {str(e)}")
                         action.status = ActionStatus.FAILED.value
                         action.error = str(e)

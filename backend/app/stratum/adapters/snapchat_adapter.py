@@ -297,8 +297,10 @@ class SnapchatAdapter(BaseAdapter):
 
             return accounts
 
-        except Exception as e:
+        except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
             raise PlatformError(f"Failed to fetch accounts: {e}")
+        except (ValueError, KeyError, TypeError) as e:
+            raise PlatformError(f"Failed to parse account data: {e}")
 
     async def get_campaigns(
         self, account_id: str, status_filter: Optional[list[EntityStatus]] = None
@@ -345,8 +347,10 @@ class SnapchatAdapter(BaseAdapter):
             logger.info(f"Fetched {len(campaigns)} campaigns from Snapchat account {account_id}")
             return campaigns
 
-        except Exception as e:
+        except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
             raise PlatformError(f"Failed to fetch campaigns: {e}")
+        except (ValueError, KeyError, TypeError) as e:
+            raise PlatformError(f"Failed to parse campaign data: {e}")
 
     async def get_adsets(
         self, account_id: str, campaign_id: Optional[str] = None
@@ -379,8 +383,10 @@ class SnapchatAdapter(BaseAdapter):
 
             return all_adsets
 
-        except Exception as e:
+        except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
             raise PlatformError(f"Failed to fetch ad squads: {e}")
+        except (ValueError, KeyError, TypeError) as e:
+            raise PlatformError(f"Failed to parse ad squad data: {e}")
 
     def _parse_adsquads(
         self, response: dict[str, Any], account_id: str, campaign_id: str
@@ -436,8 +442,10 @@ class SnapchatAdapter(BaseAdapter):
 
             return all_ads
 
-        except Exception as e:
+        except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
             raise PlatformError(f"Failed to fetch ads: {e}")
+        except (ValueError, KeyError, TypeError) as e:
+            raise PlatformError(f"Failed to parse ad data: {e}")
 
     def _parse_ads(
         self, response: dict[str, Any], account_id: str, campaign_id: str, adset_id: str
@@ -577,8 +585,10 @@ class SnapchatAdapter(BaseAdapter):
 
             return metrics_map
 
-        except Exception as e:
+        except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
             raise PlatformError(f"Failed to fetch metrics: {e}")
+        except (ValueError, KeyError, TypeError) as e:
+            raise PlatformError(f"Failed to parse metrics data: {e}")
 
     async def get_emq_scores(self, account_id: str) -> list[EMQScore]:
         """
@@ -618,8 +628,11 @@ class SnapchatAdapter(BaseAdapter):
 
             return emq_scores
 
-        except Exception as e:
+        except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
             logger.warning(f"Failed to fetch Snapchat EMQ data: {e}")
+            return []
+        except (ValueError, KeyError, TypeError) as e:
+            logger.warning(f"Failed to parse Snapchat EMQ data: {e}")
             return []
 
     # ========================================================================
@@ -651,10 +664,15 @@ class SnapchatAdapter(BaseAdapter):
             logger.info(f"Successfully executed {action.action_type} on Snapchat")
             return action
 
-        except Exception as e:
+        except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
             action.status = "failed"
             action.error_message = str(e)
-            logger.error(f"Action failed: {e}")
+            logger.error(f"Action failed due to network error: {e}")
+            return action
+        except (ValueError, KeyError, TypeError) as e:
+            action.status = "failed"
+            action.error_message = str(e)
+            logger.error(f"Action failed due to data error: {e}")
             return action
 
     async def _update_budget(self, action: AutomationAction) -> dict[str, Any]:

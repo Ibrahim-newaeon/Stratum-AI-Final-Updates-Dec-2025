@@ -460,7 +460,13 @@ class RulesEngine:
                     error=e.message,
                 )
 
-            except Exception as e:
+            except (ConnectionError, TimeoutError, OSError, ValueError) as e:
+                logger.warning(
+                    "whatsapp_notification_unexpected_error",
+                    rule_id=rule.id,
+                    contact_id=contact.id,
+                    error=str(e),
+                )
                 failed_count += 1
                 results.append({
                     "contact_id": contact.id,

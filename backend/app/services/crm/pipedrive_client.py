@@ -320,7 +320,7 @@ class PipedriveClient:
 
             return response.json() if response.text else {}
 
-        except Exception as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             logger.error("pipedrive_api_exception", error=str(e), endpoint=endpoint)
             return None
 

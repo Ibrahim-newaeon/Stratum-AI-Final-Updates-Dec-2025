@@ -305,7 +305,7 @@ class ZohoClient:
                         self.revoke_url,
                         data={"token": refresh_token},
                     )
-            except Exception as e:
+            except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
                 logger.warning("zoho_token_revoke_failed", error=str(e))
 
         # Clear tokens and mark as revoked
@@ -403,7 +403,7 @@ class ZohoClient:
 
             return response.json() if response.text else {}
 
-        except Exception as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             logger.error("zoho_api_exception", error=str(e), endpoint=endpoint)
             return None
 

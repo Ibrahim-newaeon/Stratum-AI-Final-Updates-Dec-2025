@@ -133,7 +133,7 @@ class MetadataScraper(MarketDataProvider):
                 fetched_at=datetime.now(timezone.utc),
                 error=f"HTTP error: {str(e)}",
             )
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             logger.error("metadata_scrape_error", domain=domain, error=str(e))
             return CompetitorData(
                 domain=domain,
@@ -167,7 +167,7 @@ class MetadataScraper(MarketDataProvider):
                     if platform_domain in link_domain:
                         found_links[platform_name] = href
                         break
-            except Exception:
+            except (ValueError, AttributeError):
                 continue
 
         return found_links
@@ -248,7 +248,7 @@ class SerpApiProvider(MarketDataProvider):
                 fetched_at=datetime.now(timezone.utc),
             )
 
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError, ValueError, KeyError) as e:
             logger.error("serpapi_fetch_error", domain=domain, error=str(e))
             return CompetitorData(
                 domain=domain,
@@ -337,7 +337,7 @@ class DataForSEOProvider(MarketDataProvider):
                 fetched_at=datetime.now(timezone.utc),
             )
 
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError, ValueError, KeyError) as e:
             logger.error("dataforseo_fetch_error", domain=domain, error=str(e))
             return CompetitorData(
                 domain=domain,

@@ -684,9 +684,12 @@ class UnifiedConversionsAPI:
                 client = self.platforms[platform_name]
                 result = await client.send_event(event)
                 results[platform_name] = result
-            except Exception as e:
+            except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
                 results[platform_name] = {"error": str(e)}
-                logger.error(f"Error sending to {platform_name}: {e}")
+                logger.error(f"Network error sending to {platform_name}: {e}")
+            except (ValueError, KeyError, TypeError) as e:
+                results[platform_name] = {"error": str(e)}
+                logger.error(f"Data error sending to {platform_name}: {e}")
 
         return results
 
@@ -713,12 +716,16 @@ class UnifiedConversionsAPI:
                         try:
                             await client.send_event(event)
                             result["sent"] += 1
-                        except Exception as e:
+                        except (requests.RequestException, ConnectionError, TimeoutError, OSError, ValueError, KeyError, TypeError) as e:
                             result["errors"].append(str(e))
 
                 results[platform_name] = result
-            except Exception as e:
+            except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
                 results[platform_name] = {"error": str(e)}
+                logger.error(f"Network error sending batch to {platform_name}: {e}")
+            except (ValueError, KeyError, TypeError) as e:
+                results[platform_name] = {"error": str(e)}
+                logger.error(f"Data error sending batch to {platform_name}: {e}")
 
         return results
 

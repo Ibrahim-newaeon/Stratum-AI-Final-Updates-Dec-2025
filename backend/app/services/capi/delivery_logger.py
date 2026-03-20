@@ -23,6 +23,7 @@ from uuid import uuid4
 from enum import Enum
 
 from sqlalchemy import select, and_, func, desc
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import async_session_factory
@@ -246,7 +247,7 @@ class DeliveryLogger:
                 await db.commit()
                 logger.debug(f"Flushed {len(entries_to_flush)} delivery log entries to database")
 
-        except Exception as e:
+        except (SQLAlchemyError, ValueError, OSError) as e:
             logger.error(f"Failed to flush delivery logs to database: {e}")
             # Re-add entries to buffer for retry
             self._buffer.extend(entries_to_flush)
@@ -325,7 +326,7 @@ class DeliveryLogger:
                     for row in rows
                 ]
 
-        except Exception as e:
+        except (SQLAlchemyError, ValueError, OSError) as e:
             logger.error(f"Failed to get delivery history: {e}")
             return []
 
@@ -437,7 +438,7 @@ class DeliveryLogger:
                         metrics.by_event_type[row.event_name] = {"success": 0, "failed": 0}
                     metrics.by_event_type[row.event_name][row.status] = row.count
 
-        except Exception as e:
+        except (SQLAlchemyError, ValueError, OSError) as e:
             logger.error(f"Failed to get delivery metrics: {e}")
 
         return metrics
@@ -470,7 +471,7 @@ class DeliveryLogger:
                 logger.info(f"Cleaned up {deleted} delivery logs older than {retention_days} days")
                 return deleted
 
-        except Exception as e:
+        except (SQLAlchemyError, OSError) as e:
             logger.error(f"Failed to cleanup old delivery logs: {e}")
             return 0
 

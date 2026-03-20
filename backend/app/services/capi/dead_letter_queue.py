@@ -179,7 +179,7 @@ class DeadLetterQueue:
             self._connected = True
             logger.info("Dead Letter Queue connected to Redis")
             return True
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError) as e:
             logger.warning(f"Failed to connect DLQ to Redis: {e}")
             self._connected = False
             return False
@@ -307,7 +307,7 @@ class DeadLetterQueue:
                 )
 
                 return
-            except Exception as e:
+            except (ConnectionError, TimeoutError, OSError) as e:
                 logger.warning(f"Failed to store DLQ entry in Redis: {e}")
 
         # Fallback to memory
@@ -333,7 +333,7 @@ class DeadLetterQueue:
                 data = await self._redis.get(entry_key)
                 if data:
                     return DLQEntry.from_dict(json.loads(data))
-            except Exception as e:
+            except (ConnectionError, TimeoutError, OSError, ValueError) as e:
                 logger.warning(f"Failed to get DLQ entry from Redis: {e}")
 
         # Check memory
@@ -383,7 +383,7 @@ class DeadLetterQueue:
                         entries.append(entry)
 
                 return entries
-            except Exception as e:
+            except (ConnectionError, TimeoutError, OSError) as e:
                 logger.warning(f"Failed to get pending DLQ entries from Redis: {e}")
 
         # Fallback to memory
@@ -481,7 +481,7 @@ class DeadLetterQueue:
                     entry = await self.get_entry(entry_id)
                     if entry:
                         entries.append(entry)
-            except Exception as e:
+            except (ConnectionError, TimeoutError, OSError) as e:
                 logger.warning(f"Failed to get DLQ stats from Redis: {e}")
                 entries = self._memory_queue
         else:
@@ -552,7 +552,7 @@ class DeadLetterQueue:
                     removed += 1
 
                 return removed
-            except Exception as e:
+            except (ConnectionError, TimeoutError, OSError) as e:
                 logger.warning(f"Failed to cleanup expired DLQ entries: {e}")
 
         # Fallback to memory cleanup

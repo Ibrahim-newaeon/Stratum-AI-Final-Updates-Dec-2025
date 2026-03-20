@@ -85,7 +85,9 @@ async def get_current_user(
             raise credentials_exception
     except credentials_exception.__class__:
         raise
-    except Exception:
+    except (ConnectionError, OSError, TimeoutError) as exc:
+        import structlog
+        structlog.get_logger().warning("redis_unavailable_blacklist_check_skipped", error=str(exc))
         pass  # Redis unavailable — allow request to proceed
 
     if payload.get("type") != "access":
@@ -127,13 +129,17 @@ async def get_current_user(
 
     try:
         email = payload.get("email") or decrypt_pii(user.email)
-    except Exception:
+    except (ValueError, TypeError, UnicodeDecodeError) as exc:
+        import structlog
+        structlog.get_logger().warning("pii_decryption_fallback", field="email", user_id=user.id, error=str(exc))
         # Fallback: use raw stored value or email from JWT
         email = payload.get("email") or user.email or f"user-{user.id}@unknown"
 
     try:
         full_name = decrypt_pii(user.full_name) if user.full_name else None
-    except Exception:
+    except (ValueError, TypeError, UnicodeDecodeError) as exc:
+        import structlog
+        structlog.get_logger().warning("pii_decryption_fallback", field="full_name", user_id=user.id, error=str(exc))
         full_name = None
 
     # Store user info in request state for middleware/logging

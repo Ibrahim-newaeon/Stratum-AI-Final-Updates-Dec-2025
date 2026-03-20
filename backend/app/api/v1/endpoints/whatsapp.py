@@ -17,6 +17,8 @@ from pydantic import BaseModel, Field
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from sqlalchemy.exc import SQLAlchemyError
+
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.db.session import get_async_session
@@ -335,7 +337,8 @@ async def bulk_import_contacts(
             created_ids.append(contact.id)
             success_count += 1
 
-        except Exception as e:
+        except (SQLAlchemyError, ValueError) as e:
+            logger.warning("bulk_import_contact_failed", index=idx, error=str(e))
             errors.append({
                 "index": idx,
                 "phone": contact_data.phone_number,
@@ -499,8 +502,8 @@ async def verify_contact(
     except WhatsAppAPIError as e:
         logger.error(f"Failed to send verification code: {e.message}")
         # Don't fail the request - code is stored and can be resent
-    except Exception as e:
-        logger.error(f"WhatsApp API error sending verification: {e}")
+    except (ConnectionError, TimeoutError, OSError) as e:
+        logger.error("whatsapp_verification_send_failed", error=str(e))
 
     return APIResponse(
         success=True,
@@ -715,8 +718,8 @@ async def create_template(
         template.rejection_reason = e.message
         await db.commit()
         logger.error(f"Failed to submit template to Meta: {e.message}")
-    except Exception as e:
-        logger.error(f"Error submitting template to Meta: {e}")
+    except (ConnectionError, TimeoutError, OSError) as e:
+        logger.error("whatsapp_template_submit_failed", error=str(e))
 
     logger.info(f"Created WhatsApp template {template.id} for tenant {tenant_id}")
 

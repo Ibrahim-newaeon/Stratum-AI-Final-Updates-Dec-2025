@@ -199,7 +199,7 @@ class SnapchatCampaignSyncService:
 
                 except TokenExpiredError:
                     raise
-                except Exception as e:
+                except (ConnectionError, TimeoutError, OSError, ValueError, KeyError) as e:
                     logger.warning("snapchat_stats_error", campaign=campaign_id, error=str(e))
 
                 await asyncio.sleep(0.1)

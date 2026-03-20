@@ -21,6 +21,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any, Optional
 from uuid import UUID
 
+import httpx
 import structlog
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -255,7 +256,7 @@ class AudienceSyncService:
                         credentials,
                     )
                     await connector.delete_audience(platform_audience.platform_audience_id)
-            except Exception as e:
+            except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
                 self.logger.warning(
                     "platform_audience_delete_failed",
                     error=str(e),

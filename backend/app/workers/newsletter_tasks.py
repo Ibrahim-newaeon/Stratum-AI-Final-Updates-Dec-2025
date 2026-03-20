@@ -292,7 +292,7 @@ def process_scheduled_campaigns(self) -> dict:
 
         return {"dispatched": dispatched, "count": len(dispatched)}
 
-    except Exception as exc:
+    except (ConnectionError, TimeoutError, OSError, ValueError) as exc:
         logger.error(f"Error processing scheduled campaigns: {exc}")
         db.rollback()
         return {"error": str(exc)}

@@ -644,6 +644,6 @@ class KnowledgeGraphService:
             result = await self.session.execute(text(query))
             row = result.fetchone()
             return row is not None
-        except Exception as e:
-            logger.error(f"Knowledge graph health check failed: {e}")
+        except (ConnectionError, TimeoutError, OSError) as e:
+            logger.error("knowledge_graph_health_check_failed", error=str(e))
             return False

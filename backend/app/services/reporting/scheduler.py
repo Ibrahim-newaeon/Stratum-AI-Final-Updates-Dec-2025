@@ -519,7 +519,8 @@ class ReportScheduler:
             try:
                 await self.execute_schedule(schedule)
                 results["succeeded"] += 1
-            except Exception as e:
+            except (ConnectionError, TimeoutError, OSError, ValueError, KeyError) as e:
+                logger.error("schedule_execution_failed", schedule_id=str(schedule.id), error=str(e))
                 results["failed"] += 1
                 results["errors"].append({
                     "schedule_id": str(schedule.id),
@@ -627,7 +628,7 @@ class SchedulerWorker:
         while self._running:
             try:
                 await self._process_all_tenants()
-            except Exception as e:
+            except (ConnectionError, TimeoutError, OSError, ValueError, KeyError) as e:
                 logger.error(f"Scheduler worker error: {str(e)}")
 
             await asyncio.sleep(self.check_interval)

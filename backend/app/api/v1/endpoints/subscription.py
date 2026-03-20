@@ -8,9 +8,12 @@ These endpoints allow users to check their subscription status,
 view expiry warnings, and access billing information.
 """
 
+import logging
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Request, status
+
+logger = logging.getLogger(__name__)
 from pydantic import BaseModel
 
 from app.core.subscription import (
@@ -278,7 +281,8 @@ async def get_subscription_usage_summary(request: Request):
         limit_service = TenantLimitService(db)
         try:
             usage = await limit_service.get_usage_summary(tenant_id)
-        except Exception:
+        except (ConnectionError, TimeoutError, OSError, ValueError) as exc:
+            logger.warning(f"Failed to fetch usage summary for tenant {tenant_id}: {exc}")
             usage = {}
         break
 

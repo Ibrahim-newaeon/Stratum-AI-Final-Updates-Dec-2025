@@ -153,11 +153,13 @@ def get_price_id_for_tier(tier: SubscriptionTier) -> Optional[str]:
 
 def get_tier_for_price_id(price_id: str) -> Optional[SubscriptionTier]:
     """Get subscription tier for a Stripe Price ID."""
-    if price_id == settings.stripe_starter_price_id:
+    if not price_id:
+        return None
+    if price_id == getattr(settings, "stripe_starter_price_id", None):
         return SubscriptionTier.STARTER
-    elif price_id == settings.stripe_professional_price_id:
+    elif price_id == getattr(settings, "stripe_professional_price_id", None):
         return SubscriptionTier.PROFESSIONAL
-    elif price_id == settings.stripe_enterprise_price_id:
+    elif price_id == getattr(settings, "stripe_enterprise_price_id", None):
         return SubscriptionTier.ENTERPRISE
     return None
 

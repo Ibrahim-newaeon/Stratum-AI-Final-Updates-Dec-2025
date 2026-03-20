@@ -253,7 +253,7 @@ def _execute_action(rule: Rule, campaign: Campaign, db: Session) -> dict[str, An
                     "new": campaign.daily_budget_cents,
                 }
 
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
         result["success"] = False
         result["error"] = str(e)
         logger.error(f"Action execution failed: {e}")

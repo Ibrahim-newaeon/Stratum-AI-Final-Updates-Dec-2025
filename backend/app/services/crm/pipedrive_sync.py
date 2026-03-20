@@ -97,7 +97,7 @@ class PipedriveSyncService:
                 results=results,
             )
 
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError, ValueError) as e:
             results["errors"].append(str(e))
             await self._log_sync(results, start_time, "failed", str(e))
             logger.error(
@@ -143,7 +143,7 @@ class PipedriveSyncService:
                             results["persons_created"] += 1
                         else:
                             results["persons_updated"] += 1
-                    except Exception as e:
+                    except (ValueError, TypeError, KeyError) as e:
                         logger.warning(
                             "pipedrive_person_sync_error",
                             person_id=person.get("id"),
@@ -282,7 +282,7 @@ class PipedriveSyncService:
                         await self._process_deal(deal)
                         results["deals_synced"] += 1
                         results["deals_created"] += 1
-                    except Exception as e:
+                    except (ValueError, TypeError, KeyError) as e:
                         logger.warning(
                             "pipedrive_deal_sync_error",
                             deal_id=deal.get("id"),

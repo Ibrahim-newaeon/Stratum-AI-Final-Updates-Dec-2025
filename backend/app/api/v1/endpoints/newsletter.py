@@ -10,9 +10,12 @@ and public tracking/unsubscribe endpoints.
 
 import base64
 import hashlib
+import logging
 import secrets
 from datetime import datetime, UTC
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel, Field
@@ -189,7 +192,7 @@ def _decode_unsubscribe_token(token: str) -> tuple[int, int]:
         payload = base64.urlsafe_b64decode(token.encode()).decode()
         parts = payload.split(":")
         return int(parts[0]), int(parts[1])
-    except Exception:
+    except (ValueError, TypeError, IndexError):
         raise HTTPException(status_code=400, detail="Invalid unsubscribe token")
 
 
@@ -498,8 +501,9 @@ async def send_campaign(
         from app.workers.newsletter_tasks import send_newsletter_campaign
 
         send_newsletter_campaign.delay(campaign_id)
-    except Exception:
-        pass  # Worker may not be running in dev; campaign status is already set
+    except (ImportError, ConnectionError, TimeoutError, OSError) as exc:
+        logger.warning(f"Failed to dispatch newsletter campaign {campaign_id}: {exc}")
+        # Worker may not be running in dev; campaign status is already set
 
     return {
         "success": True,
@@ -795,8 +799,9 @@ async def track_open(
             subscriber.email_open_count += 1
 
         await db.commit()
-    except Exception:
-        pass  # Don't break the pixel response on tracking errors
+    except (ConnectionError, TimeoutError, OSError) as exc:
+        logger.warning(f"Email open tracking failed: {exc}")
+        # Don't break the pixel response on tracking errors
 
     return Response(
         content=TRACKING_PIXEL,
@@ -831,8 +836,8 @@ async def track_click(
             campaign.total_clicked += 1
 
         await db.commit()
-    except Exception:
-        pass
+    except (ConnectionError, TimeoutError, OSError) as exc:
+        logger.warning(f"Click tracking failed for campaign {campaign_id}: {exc}")
 
     # Redirect to actual URL
     return Response(

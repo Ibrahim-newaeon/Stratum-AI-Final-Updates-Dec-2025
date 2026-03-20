@@ -157,7 +157,7 @@ class OAuthService(ABC):
             client = await self._get_redis_client()
             key = f"{OAUTH_STATE_PREFIX}{state_token}"
             await client.setex(key, OAUTH_STATE_EXPIRY, state.to_json())
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError) as e:
             self.logger.error("Failed to store OAuth state", error=str(e))
             raise
         finally:
@@ -199,7 +199,7 @@ class OAuthService(ABC):
 
             return state
 
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError, ValueError, KeyError) as e:
             self.logger.error("Failed to validate OAuth state", error=str(e))
             return None
         finally:

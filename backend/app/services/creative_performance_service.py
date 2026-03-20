@@ -539,8 +539,10 @@ class CreativePerformanceService:
                         _, p_value = stats.ttest_ind(vals1, vals2)
                         significance = p_value < 0.05
                         confidence = (1 - p_value) * 100 if p_value else 0
-                    except Exception:
-                        pass
+                    except (ValueError, TypeError, ZeroDivisionError) as exc:
+                        logger.warning(f"Statistical test failed for creatives: {exc}")
+                        significance = False
+                        confidence = 0.0
 
         return CreativeComparison(
             creative_ids=creative_ids,

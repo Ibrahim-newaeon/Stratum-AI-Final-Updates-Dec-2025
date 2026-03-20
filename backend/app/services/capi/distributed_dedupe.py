@@ -136,7 +136,7 @@ class DistributedEventDeduplicator:
             logger.info("Distributed deduplicator connected to Redis")
             return True
 
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError) as e:
             self._connection_attempts += 1
             self._last_connection_attempt = datetime.now(timezone.utc)
             logger.warning(f"Failed to connect to Redis (attempt {self._connection_attempts}): {e}")
@@ -189,7 +189,7 @@ class DistributedEventDeduplicator:
                     self._stats.redis_misses += 1
                     return False
 
-            except Exception as e:
+            except (ConnectionError, TimeoutError, OSError) as e:
                 logger.warning(f"Redis error during dedupe check: {e}")
                 self._connected = False
                 self._stats.fallback_to_memory += 1
@@ -310,7 +310,7 @@ class DistributedEventDeduplicator:
                     ex=self._ttl_seconds,
                 )
                 return True
-            except Exception as e:
+            except (ConnectionError, TimeoutError, OSError) as e:
                 logger.warning(f"Failed to mark event as seen in Redis: {e}")
 
         # Fallback to memory
@@ -337,7 +337,7 @@ class DistributedEventDeduplicator:
             try:
                 await self._redis.delete(full_key)
                 return True
-            except Exception as e:
+            except (ConnectionError, TimeoutError, OSError) as e:
                 logger.warning(f"Failed to remove event from Redis: {e}")
 
         # Fallback to memory
@@ -368,8 +368,8 @@ class DistributedEventDeduplicator:
                 cursor, keys = await self._redis.scan(cursor, match=pattern, count=100)
                 count = len(keys)
                 stats["redis_keys_sample"] = count
-            except Exception:
-                pass
+            except (ConnectionError, TimeoutError, OSError) as e:
+                logger.warning(f"Failed to sample Redis keys for dedupe stats: {e}")
 
         return stats
 

@@ -151,7 +151,7 @@ class BaseAdapter(ABC):
         try:
             accounts = await self.get_accounts()
             return len(accounts) > 0
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError, ValueError, RuntimeError) as e:
             logger.error(f"{self.platform.value} health check failed: {e}")
             return False
 

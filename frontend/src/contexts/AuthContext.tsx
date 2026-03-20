@@ -11,9 +11,21 @@ import IdleTimeoutWarning from '@/components/auth/IdleTimeoutWarning';
 const API_BASE = window.__RUNTIME_CONFIG__?.VITE_API_URL || import.meta.env.VITE_API_URL || '/api/v1';
 
 /**
+ * Whether demo login is enabled. Controlled by VITE_ENABLE_DEMO_MODE env var.
+ * Defaults to false in production builds. Evaluated lazily so runtime config
+ * can be injected after module load.
+ */
+function isDemoModeEnabled(): boolean {
+  return (
+    (window as any).__RUNTIME_CONFIG__?.VITE_ENABLE_DEMO_MODE === 'true' ||
+    import.meta.env.VITE_ENABLE_DEMO_MODE === 'true'
+  );
+}
+
+/**
  * Demo credentials for client-side fallback when backend is unavailable.
  * SECURITY: Never include real credentials here. These are demo-only placeholders.
- * In production, demo mode should be disabled via environment variable.
+ * Gated behind VITE_ENABLE_DEMO_MODE environment variable.
  */
 const DEMO_CREDENTIALS: Record<string, { email: string; password: string; user: User }> = {
   superadmin: {
@@ -331,6 +343,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   /** Client-side demo login — creates a mock session without hitting the backend */
   const demoLogin = useCallback(
     async (role: 'superadmin' | 'admin' | 'manager' | 'analyst' | 'viewer'): Promise<{ success: boolean; error?: string }> => {
+      if (!isDemoModeEnabled()) return { success: false, error: 'Demo mode is disabled' };
+
       const demo = DEMO_CREDENTIALS[role];
       if (!demo) return { success: false, error: 'Unknown demo role' };
 

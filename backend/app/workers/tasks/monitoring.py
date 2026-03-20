@@ -81,8 +81,9 @@ def check_pipeline_health():
             redis_client = redis.from_url(settings.redis_url)
             redis_client.ping()
             redis_status = "healthy"
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError) as e:
             redis_status = f"unhealthy: {e!s}"
+            logger.warning("Redis health check failed: %s", e)
             issues.append(
                 {
                     "type": "redis_connection",
@@ -95,8 +96,9 @@ def check_pipeline_health():
             # Note: This is async, so we check differently in sync context
             db.execute(select(func.count(Tenant.id)))
             db_status = "healthy"
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError) as e:
             db_status = f"unhealthy: {e!s}"
+            logger.warning("Database health check failed: %s", e)
             issues.append(
                 {
                     "type": "database_connection",
@@ -124,8 +126,8 @@ def check_pipeline_health():
 
             redis_client = redis.from_url(settings.redis_url)
             redis_client.publish("monitoring:pipeline_health", json.dumps(health_status))
-        except Exception:
-            pass
+        except (ConnectionError, TimeoutError, OSError) as e:
+            logger.warning("Failed to publish pipeline health to Redis: %s", e)
 
     logger.info(f"Pipeline health check complete: {health_status['status']}")
     return health_status

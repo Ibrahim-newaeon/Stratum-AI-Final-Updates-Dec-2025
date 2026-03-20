@@ -296,7 +296,7 @@ class BaseCAPIConnector(ABC):
                            for e in response.errors):
                         break
 
-            except Exception as e:
+            except (ConnectionError, TimeoutError, OSError, httpx.HTTPError) as e:
                 last_error = [{"message": str(e)}]
                 latency_ms = (time.time() - start_time) * 1000
                 logger.warning(f"{self.PLATFORM_NAME} CAPI retry {retry + 1}/{self.MAX_RETRIES}: {e}")
@@ -405,7 +405,7 @@ class MetaCAPIConnector(BaseCAPIConnector):
                         message=error.get("message", "Connection failed"),
                     )
 
-        except Exception as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             logger.error(f"Meta CAPI connection error: {e}")
             return ConnectionResult(
                 status=ConnectionStatus.ERROR,
@@ -451,7 +451,7 @@ class MetaCAPIConnector(BaseCAPIConnector):
                         platform=self.PLATFORM_NAME,
                     )
 
-        except Exception as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             logger.error(f"Meta CAPI send error: {e}")
             return CAPIResponse(
                 success=False,
@@ -568,7 +568,7 @@ class GoogleCAPIConnector(BaseCAPIConnector):
                     self._token_expires = time.time() + data.get("expires_in", 3600) - 60
                     return self._access_token
 
-        except Exception as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             logger.error(f"Google OAuth token refresh error: {e}")
 
         return self.developer_token
@@ -618,7 +618,7 @@ class GoogleCAPIConnector(BaseCAPIConnector):
                         details={"customer_id": self.customer_id},
                     )
 
-        except Exception as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             logger.error(f"Google Ads connection error: {e}")
             # Still allow connection with valid credentials
             if self.customer_id and self.developer_token:
@@ -694,7 +694,7 @@ class GoogleCAPIConnector(BaseCAPIConnector):
                         platform=self.PLATFORM_NAME,
                     )
 
-        except Exception as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             logger.error(f"Google Ads CAPI send error: {e}")
             return CAPIResponse(
                 success=False,
@@ -838,7 +838,7 @@ class TikTokCAPIConnector(BaseCAPIConnector):
                         platform=self.PLATFORM_NAME,
                     )
 
-        except Exception as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             logger.error(f"TikTok CAPI error: {e}")
             return CAPIResponse(
                 success=False,
@@ -942,7 +942,7 @@ class SnapchatCAPIConnector(BaseCAPIConnector):
                         details={"pixel_id": self.pixel_id},
                     )
 
-        except Exception as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             logger.error(f"Snapchat connection error: {e}")
             # Allow connection with valid credentials format
             if self.pixel_id and self.access_token:
@@ -1017,7 +1017,7 @@ class SnapchatCAPIConnector(BaseCAPIConnector):
                         platform=self.PLATFORM_NAME,
                     )
 
-        except Exception as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             logger.error(f"Snapchat CAPI error: {e}")
             return CAPIResponse(
                 success=False,
@@ -1134,7 +1134,7 @@ class LinkedInCAPIConnector(BaseCAPIConnector):
                         details={"conversion_id": self.conversion_id},
                     )
 
-        except Exception as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             logger.error(f"LinkedIn connection error: {e}")
             if self.conversion_id and self.access_token:
                 self._connected = True
@@ -1216,7 +1216,7 @@ class LinkedInCAPIConnector(BaseCAPIConnector):
                         platform=self.PLATFORM_NAME,
                     )
 
-        except Exception as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             logger.error(f"LinkedIn CAPI error: {e}")
             return CAPIResponse(
                 success=False,
@@ -1348,7 +1348,7 @@ class WhatsAppCAPIConnector(BaseCAPIConnector):
                         message=error.get("message", "Connection failed"),
                     )
 
-        except Exception as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             logger.error(f"WhatsApp API connection error: {e}")
             return ConnectionResult(
                 status=ConnectionStatus.ERROR,
@@ -1373,7 +1373,7 @@ class WhatsAppCAPIConnector(BaseCAPIConnector):
                     processed += 1
                 else:
                     errors.append({"message": f"Failed to send event: {event.get('event_name')}"})
-            except Exception as e:
+            except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
                 errors.append({"message": str(e)})
 
         return CAPIResponse(
@@ -1430,7 +1430,7 @@ class WhatsAppCAPIConnector(BaseCAPIConnector):
                     logger.error(f"WhatsApp send error: {response.json()}")
                     return False
 
-        except Exception as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             logger.error(f"WhatsApp message send error: {e}")
             return False
 
@@ -1583,7 +1583,7 @@ class ConnectorHealthMonitor:
                 for callback in self._alert_callbacks:
                     try:
                         callback(health)
-                    except Exception as e:
+                    except (ValueError, TypeError, RuntimeError, OSError) as e:
                         logger.error(f"Alert callback error: {e}")
 
     def register_alert_callback(self, callback: Any):

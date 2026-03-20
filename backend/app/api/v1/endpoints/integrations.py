@@ -235,7 +235,7 @@ async def hubspot_callback(
             message="HubSpot connected successfully",
         )
 
-    except Exception as e:
+    except (ConnectionError, TimeoutError, OSError, ValueError) as e:
         logger.error("hubspot_oauth_failed", error=str(e), tenant_id=tenant_id)
         raise HTTPException(status_code=400, detail=f"OAuth failed: {str(e)}")
 
@@ -359,7 +359,7 @@ async def hubspot_webhook(
     # Parse payload
     try:
         payload = await request.json()
-    except Exception:
+    except (ValueError, KeyError, TypeError):
         raise HTTPException(status_code=400, detail="Invalid JSON payload")
 
     # HubSpot sends array of events
@@ -815,8 +815,8 @@ async def setup_writeback_properties(
             data=results,
             message="Custom properties created successfully",
         )
-    except Exception as e:
-        logger.error(f"Failed to setup writeback properties: {e}")
+    except (ConnectionError, TimeoutError, OSError, ValueError) as e:
+        logger.error("setup_writeback_properties_failed", error=str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -921,13 +921,13 @@ async def run_writeback_sync(
             message="Writeback sync completed",
         )
 
-    except Exception as e:
+    except (ConnectionError, TimeoutError, OSError, ValueError) as e:
         sync_record.status = WritebackStatus.FAILED
         sync_record.completed_at = datetime.now(timezone.utc)
         sync_record.error_message = str(e)
         await db.commit()
 
-        logger.error(f"Writeback sync failed: {e}")
+        logger.error("writeback_sync_failed", error=str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
 

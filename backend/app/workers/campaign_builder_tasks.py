@@ -387,7 +387,7 @@ def connector_health_check(self, tenant_id: Optional[int] = None):
                         conn.status = ConnectionStatus.ERROR
                     results.append({"tenant_id": conn.tenant_id, "platform": conn.platform.value, "healthy": False})
 
-            except Exception as e:
+            except (ConnectionError, TimeoutError, OSError) as e:
                 logger.error(f"Health check failed for connection {conn.id}: {e}")
                 conn.last_error = str(e)
                 conn.error_count += 1

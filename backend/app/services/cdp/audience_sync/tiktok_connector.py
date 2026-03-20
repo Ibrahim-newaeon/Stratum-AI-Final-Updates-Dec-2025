@@ -145,7 +145,7 @@ class TikTokAudienceConnector(BaseAudienceConnector):
                 error_details=error_body,
                 duration_ms=int((time.time() - start_time) * 1000),
             )
-        except Exception as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             self.logger.error("tiktok_audience_create_error", error=str(e))
             return AudienceSyncResult(
                 success=False,
@@ -252,7 +252,7 @@ class TikTokAudienceConnector(BaseAudienceConnector):
                 duration_ms=duration_ms,
             )
 
-        except Exception as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             self.logger.error("tiktok_audience_add_error", error=str(e))
             return AudienceSyncResult(
                 success=False,
@@ -338,7 +338,7 @@ class TikTokAudienceConnector(BaseAudienceConnector):
                 duration_ms=duration_ms,
             )
 
-        except Exception as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             self.logger.error("tiktok_audience_remove_error", error=str(e))
             return AudienceSyncResult(
                 success=False,
@@ -415,7 +415,7 @@ class TikTokAudienceConnector(BaseAudienceConnector):
                 duration_ms=duration_ms,
             )
 
-        except Exception as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             self.logger.error("tiktok_audience_replace_error", error=str(e))
             return AudienceSyncResult(
                 success=False,
@@ -463,7 +463,7 @@ class TikTokAudienceConnector(BaseAudienceConnector):
                 platform_response=result,
             )
 
-        except Exception as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             self.logger.error("tiktok_audience_delete_error", error=str(e))
             return AudienceSyncResult(
                 success=False,
@@ -510,6 +510,6 @@ class TikTokAudienceConnector(BaseAudienceConnector):
 
             return {"error": result.get("message", "Not found")}
 
-        except Exception as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             self.logger.error("tiktok_audience_info_error", error=str(e))
             return {"error": str(e)}

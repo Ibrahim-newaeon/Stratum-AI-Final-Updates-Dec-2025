@@ -108,7 +108,7 @@ class LicenseValidationService:
             license_info = await self._validate_online(license_key, current_domain)
             self._cache_license(license_key, license_info)
             return license_info
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError, ValueError) as e:
             logger.warning("online_license_validation_failed", error=str(e))
 
         # Fall back to offline validation
@@ -116,7 +116,7 @@ class LicenseValidationService:
             license_info = self._validate_offline(license_key, current_domain)
             self._cache_license(license_key, license_info)
             return license_info
-        except Exception as e:
+        except (ValueError, TypeError, KeyError) as e:
             logger.error("offline_license_validation_failed", error=str(e))
             return LicenseInfo(
                 status=LicenseStatus.INVALID,
@@ -371,7 +371,7 @@ class LicenseValidationService:
                     },
                 )
                 return response.status_code == 200
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError) as e:
             logger.warning("heartbeat_failed", error=str(e))
             return False
 

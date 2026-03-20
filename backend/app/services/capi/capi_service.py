@@ -107,7 +107,7 @@ class CAPIService:
 
             return result
 
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError, ValueError) as e:
             logger.error(f"Error connecting to {platform}: {e}")
             return ConnectionResult(
                 status=ConnectionStatus.ERROR,
@@ -142,7 +142,8 @@ class CAPIService:
             try:
                 result = await connector.test_connection()
                 results[platform] = result
-            except Exception as e:
+            except (ConnectionError, TimeoutError, OSError) as e:
+                logger.error(f"Error testing connection for {platform}: {e}")
                 results[platform] = ConnectionResult(
                     status=ConnectionStatus.ERROR,
                     platform=platform,
@@ -236,7 +237,7 @@ class CAPIService:
             try:
                 result = await connector.send_events(events)
                 return platform, result
-            except Exception as e:
+            except (ConnectionError, TimeoutError, OSError) as e:
                 logger.error(f"Error sending to {platform}: {e}")
                 return platform, CAPIResponse(
                     success=False,

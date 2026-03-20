@@ -184,7 +184,7 @@ class LTVPredictor:
                 if scaler_path.exists():
                     self.scaler = joblib.load(scaler_path)
                 logger.info("Loaded LTV prediction model")
-            except Exception as e:
+            except (OSError, ValueError, TypeError, KeyError, RuntimeError) as e:
                 logger.warning(f"Could not load LTV model: {e}")
 
     def predict(self, behavior: CustomerBehavior) -> LTVPrediction:

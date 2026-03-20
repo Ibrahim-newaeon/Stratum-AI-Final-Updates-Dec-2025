@@ -243,10 +243,11 @@ class KnowledgeGraphService:
             results.sort(key=lambda x: x["revenue"], reverse=True)
             return results
 
-        except Exception:
+        except (ValueError, TypeError, KeyError, ZeroDivisionError, OSError) as exc:
             logger.exception(
                 "knowledge_graph.revenue_by_channel_failed",
                 tenant_id=str(tenant_id),
+                error=str(exc),
             )
             return []
 
@@ -328,10 +329,11 @@ class KnowledgeGraphService:
 
             return results
 
-        except Exception:
+        except (ValueError, TypeError, KeyError, ZeroDivisionError, OSError) as exc:
             logger.exception(
                 "knowledge_graph.segment_revenue_failed",
                 tenant_id=str(tenant_id),
+                error=str(exc),
             )
             return []
 
@@ -465,11 +467,12 @@ class KnowledgeGraphService:
                 "journey_duration_days": journey_duration_days,
             }
 
-        except Exception:
+        except (ValueError, TypeError, KeyError, ZeroDivisionError, OSError) as exc:
             logger.exception(
                 "knowledge_graph.customer_journey_failed",
                 tenant_id=str(tenant_id),
                 profile_id=profile_id,
+                error=str(exc),
             )
             return None
 
@@ -544,10 +547,11 @@ class KnowledgeGraphService:
 
             return blocked
 
-        except Exception:
+        except (ValueError, TypeError, KeyError, OSError) as exc:
             logger.exception(
                 "knowledge_graph.blocked_automations_failed",
                 tenant_id=str(tenant_id),
+                error=str(exc),
             )
             return []
 
@@ -678,11 +682,12 @@ class KnowledgeGraphService:
                 "signal_health_context": signal_health_context,
             }
 
-        except Exception:
+        except (ValueError, TypeError, KeyError, OSError) as exc:
             logger.exception(
                 "knowledge_graph.trace_automation_failed",
                 tenant_id=str(tenant_id),
                 automation_id=automation_id,
+                error=str(exc),
             )
             return None
 
@@ -818,10 +823,11 @@ class KnowledgeGraphService:
                 "campaign_touchpoint_edges": campaign_touchpoint_edges,
             }
 
-        except Exception:
+        except (ValueError, TypeError, KeyError, OSError) as exc:
             logger.exception(
                 "knowledge_graph.stats_failed",
                 tenant_id=str(tenant_id),
+                error=str(exc),
             )
             return {
                 "profiles_count": 0,
@@ -842,8 +848,8 @@ class KnowledgeGraphService:
 
             await self.db.execute(text("SELECT 1"))
             return True
-        except Exception:
-            logger.exception("knowledge_graph.health_check_failed")
+        except (ConnectionError, TimeoutError, OSError) as exc:
+            logger.exception("knowledge_graph.health_check_failed", error=str(exc))
             return False
 
 
@@ -1389,10 +1395,11 @@ class KnowledgeGraphInsightsEngine:
                         )
                     )
 
-        except Exception:
+        except (ValueError, TypeError, KeyError, ZeroDivisionError, OSError) as exc:
             logger.exception(
                 "knowledge_graph.detect_problems_failed",
                 tenant_id=str(tenant_id),
+                error=str(exc),
             )
 
         # Sort by severity: critical > high > medium > low

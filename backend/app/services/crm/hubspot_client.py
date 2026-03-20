@@ -231,7 +231,7 @@ class HubSpotClient:
                     await client.delete(
                         f"{HUBSPOT_API_BASE}/oauth/v1/refresh-tokens/{decrypt_pii(connection.refresh_token_enc)}"
                     )
-            except Exception as e:
+            except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
                 logger.warning("hubspot_token_revoke_failed", error=str(e))
 
         # Clear tokens and mark as revoked
@@ -329,7 +329,7 @@ class HubSpotClient:
 
             return response.json() if response.text else {}
 
-        except Exception as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             logger.error("hubspot_api_exception", error=str(e), endpoint=endpoint)
             return None
 

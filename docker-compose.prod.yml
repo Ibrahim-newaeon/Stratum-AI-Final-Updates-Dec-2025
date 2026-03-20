@@ -61,8 +61,8 @@ services:
       - APP_ENV=production
       - DEBUG=false
       - SECRET_KEY=${SECRET_KEY:?SECRET_KEY is required}
-      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-stratum_ai}
-      - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-stratum_ai}
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB:-stratum_ai}?prepared_statement_cache_size=0
+      - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB:-stratum_ai}
       - REDIS_URL=redis://:${REDIS_PASSWORD:-}@redis:6379/0
       - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-}@redis:6379/1
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:?JWT_SECRET_KEY is required}
@@ -73,6 +73,8 @@ services:
       - SENTRY_DSN=${SENTRY_DSN:-}
     volumes:
       - ./ml_service/models:/app/ml_service/models:ro
+    depends_on:
+      - pgbouncer
     command: >
       sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4"
     deploy:
@@ -95,8 +97,8 @@ services:
     restart: always
     environment:
       - APP_ENV=production
-      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-stratum_ai}
-      - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-stratum_ai}
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB:-stratum_ai}?prepared_statement_cache_size=0
+      - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB:-stratum_ai}
       - REDIS_URL=redis://:${REDIS_PASSWORD:-}@redis:6379/0
       - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-}@redis:6379/1
       - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-}@redis:6379/2
@@ -104,6 +106,8 @@ services:
       - SENTRY_DSN=${SENTRY_DSN:-}
     volumes:
       - ./ml_service/models:/app/ml_service/models:ro
+    depends_on:
+      - pgbouncer
     command: celery -A app.workers.celery_app worker --loglevel=warning --concurrency=2
     deploy:
       resources:
@@ -125,7 +129,7 @@ services:
     restart: always
     environment:
       - APP_ENV=production
-      - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-stratum_ai}
+      - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB:-stratum_ai}
       - REDIS_URL=redis://:${REDIS_PASSWORD:-}@redis:6379/0
       - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-}@redis:6379/1
       - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-}@redis:6379/2
@@ -184,8 +188,9 @@ services:
       MAX_CLIENT_CONN: 200
       DEFAULT_POOL_SIZE: 25
       MIN_POOL_SIZE: 5
-    ports:
-      - "6432:6432"
+    # NOTE: No host port exposure — PgBouncer is internal to the Docker network only
+    expose:
+      - "6432"
     depends_on:
       - db
     deploy:

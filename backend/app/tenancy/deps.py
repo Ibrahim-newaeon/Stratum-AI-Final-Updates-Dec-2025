@@ -16,9 +16,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import Select
 
+from app.core.logging import get_logger
 from app.db.session import get_async_session
 from app.tenancy.context import TenantContext, get_tenant_context
 from app.models import User
+
+logger = get_logger(__name__)
 
 # Type variable for generic model queries
 T = TypeVar("T")
@@ -278,9 +281,9 @@ async def _log_super_admin_bypass(
             db.add(audit_entry)
             await db.commit()
             break
-    except Exception:
+    except (OSError, ValueError, TypeError, RuntimeError) as exc:
         # Don't fail the request if audit logging fails
-        # In production, this should be logged to an error tracking service
+        logger.warning("audit_logging_failed", error=str(exc))
         pass
 
 

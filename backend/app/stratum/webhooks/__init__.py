@@ -153,7 +153,7 @@ async def dispatch_event(event_type: str, data: dict[str, Any]):
                 await handler(data)
             else:
                 handler(data)
-        except Exception as e:
+        except (ValueError, KeyError, TypeError, RuntimeError) as e:
             logger.error(f"Handler error for {event_type}: {e}")
 
 
@@ -828,8 +828,10 @@ async def process_ecommerce_event(event_data: dict[str, Any]):
 
         # Dispatch for additional processing
         await dispatch_event("ecommerce_event", {"event": event_data, "results": results})
-    except Exception as e:
-        logger.error(f"Error forwarding event: {e}")
+    except (ConnectionError, TimeoutError, OSError) as e:
+        logger.error(f"Network error forwarding event: {e}")
+    except (ValueError, KeyError, TypeError) as e:
+        logger.error(f"Data error forwarding event: {e}")
 
 
 # =============================================================================

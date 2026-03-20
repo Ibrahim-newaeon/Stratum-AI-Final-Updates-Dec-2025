@@ -71,7 +71,7 @@ def calculate_all_fatigue_scores():
                         )
                         alerts_sent += 1
 
-                except Exception as e:
+                except (ValueError, TypeError, KeyError, RuntimeError) as e:
                     logger.error(f"Fatigue calc failed for asset {asset.id}: {e}")
 
         db.commit()

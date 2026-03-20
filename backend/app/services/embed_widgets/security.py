@@ -131,7 +131,7 @@ class EmbedSecurityService:
                 hostname = hostname.split("/")[0]
 
             hostname = hostname.lower()
-        except Exception:
+        except (ValueError, IndexError):
             return False
 
         # Check against allowed domains
@@ -168,8 +168,8 @@ class EmbedSecurityService:
                 parts = referer.split("/")
                 if len(parts) >= 3:
                     origin = f"{parts[0]}//{parts[2]}"
-            except Exception:
-                pass
+            except (IndexError, TypeError, ValueError):
+                pass  # Malformed referer — origin remains empty, will be validated below
 
         # Get token from header or query param
         token = request.headers.get("X-Embed-Token", "")

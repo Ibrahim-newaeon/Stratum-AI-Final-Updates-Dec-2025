@@ -39,6 +39,8 @@ from datetime import UTC, datetime, timedelta, timezone
 from enum import Enum
 from typing import Any, Optional
 
+import requests
+
 logger = logging.getLogger("stratum.google")
 
 
@@ -179,8 +181,10 @@ class GoogleAdsChangeHistory:
             self._last_poll_time = datetime.now(UTC)
             logger.info(f"Google Ads: Found {len(changes)} changes since {since}")
 
-        except Exception as e:
-            logger.error(f"Error polling Google Ads changes: {e}")
+        except (ConnectionError, TimeoutError, OSError) as e:
+            logger.error(f"Network error polling Google Ads changes: {e}")
+        except (ValueError, KeyError, TypeError, AttributeError) as e:
+            logger.error(f"Error parsing Google Ads changes: {e}")
 
         return changes
 
@@ -229,8 +233,10 @@ class GoogleAdsChangeHistory:
                 if changes:
                     await callback(changes)
 
-            except Exception as e:
-                logger.error(f"Change watcher error: {e}")
+            except (ConnectionError, TimeoutError, OSError) as e:
+                logger.error(f"Change watcher network error: {e}")
+            except (ValueError, KeyError, TypeError, RuntimeError) as e:
+                logger.error(f"Change watcher processing error: {e}")
 
             await asyncio.sleep(poll_interval)
 
@@ -402,8 +408,11 @@ class GoogleOfflineConversions:
             logger.info(f"Google Offline Conversions: Uploaded {result['uploaded']}")
             return result
 
-        except Exception as e:
-            logger.error(f"Offline conversion upload failed: {e}")
+        except (ConnectionError, TimeoutError, OSError) as e:
+            logger.error(f"Offline conversion upload network error: {e}")
+            return {"uploaded": 0, "errors": [str(e)]}
+        except (ValueError, KeyError, TypeError, AttributeError) as e:
+            logger.error(f"Offline conversion upload data error: {e}")
             return {"uploaded": 0, "errors": [str(e)]}
 
     def _build_user_identifiers(self, conv: OfflineConversion) -> list[Any]:
@@ -568,8 +577,11 @@ class GA4MeasurementProtocol:
                 logger.warning(f"GA4 MP: Unexpected status {response.status_code}")
                 return {"success": False, "status": response.status_code}
 
-        except Exception as e:
-            logger.error(f"GA4 MP error: {e}")
+        except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
+            logger.error(f"GA4 MP network error: {e}")
+            return {"success": False, "error": str(e)}
+        except (ValueError, KeyError, TypeError) as e:
+            logger.error(f"GA4 MP data error: {e}")
             return {"success": False, "error": str(e)}
 
     async def send_purchase(
@@ -839,8 +851,10 @@ class GoogleAdsRecommendations:
 
             logger.info(f"Google Ads: Found {len(recommendations)} recommendations")
 
-        except Exception as e:
-            logger.error(f"Error fetching recommendations: {e}")
+        except (ConnectionError, TimeoutError, OSError) as e:
+            logger.error(f"Network error fetching recommendations: {e}")
+        except (ValueError, KeyError, TypeError, AttributeError) as e:
+            logger.error(f"Error parsing recommendations: {e}")
 
         return recommendations
 
@@ -864,6 +878,9 @@ class GoogleAdsRecommendations:
             logger.info(f"Applied recommendation: {recommendation_resource_name}")
             return {"success": True, "results": len(response.results)}
 
-        except Exception as e:
-            logger.error(f"Failed to apply recommendation: {e}")
+        except (ConnectionError, TimeoutError, OSError) as e:
+            logger.error(f"Network error applying recommendation: {e}")
+            return {"success": False, "error": str(e)}
+        except (ValueError, KeyError, TypeError, AttributeError) as e:
+            logger.error(f"Data error applying recommendation: {e}")
             return {"success": False, "error": str(e)}

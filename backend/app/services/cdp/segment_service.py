@@ -153,7 +153,7 @@ class SegmentEvaluator:
 
             return self._compare_values(actual_value, operator, value)
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError) as e:
             logger.warning(
                 "cdp_segment_condition_error",
                 field=field,

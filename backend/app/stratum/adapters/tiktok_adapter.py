@@ -278,8 +278,10 @@ class TikTokAdapter(BaseAdapter):
 
             return accounts
 
-        except Exception as e:
+        except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
             raise PlatformError(f"Failed to fetch accounts: {e}")
+        except (ValueError, KeyError, TypeError) as e:
+            raise PlatformError(f"Failed to parse account data: {e}")
 
     async def get_campaigns(
         self, account_id: str, status_filter: Optional[list[EntityStatus]] = None
@@ -316,8 +318,10 @@ class TikTokAdapter(BaseAdapter):
             logger.info(f"Fetched {len(campaigns)} campaigns from TikTok account {account_id}")
             return campaigns
 
-        except Exception as e:
+        except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
             raise PlatformError(f"Failed to fetch campaigns: {e}")
+        except (ValueError, KeyError, TypeError) as e:
+            raise PlatformError(f"Failed to parse campaign data: {e}")
 
     async def get_adsets(
         self, account_id: str, campaign_id: Optional[str] = None
@@ -350,8 +354,10 @@ class TikTokAdapter(BaseAdapter):
 
             return adsets
 
-        except Exception as e:
+        except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
             raise PlatformError(f"Failed to fetch ad groups: {e}")
+        except (ValueError, KeyError, TypeError) as e:
+            raise PlatformError(f"Failed to parse ad group data: {e}")
 
     async def get_ads(self, account_id: str, adset_id: Optional[str] = None) -> list[UnifiedAd]:
         """
@@ -381,8 +387,10 @@ class TikTokAdapter(BaseAdapter):
 
             return ads
 
-        except Exception as e:
+        except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
             raise PlatformError(f"Failed to fetch ads: {e}")
+        except (ValueError, KeyError, TypeError) as e:
+            raise PlatformError(f"Failed to parse ad data: {e}")
 
     async def get_metrics(
         self,
@@ -496,8 +504,10 @@ class TikTokAdapter(BaseAdapter):
 
             return metrics_map
 
-        except Exception as e:
+        except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
             raise PlatformError(f"Failed to fetch metrics: {e}")
+        except (ValueError, KeyError, TypeError) as e:
+            raise PlatformError(f"Failed to parse metrics data: {e}")
 
     async def get_emq_scores(self, account_id: str) -> list[EMQScore]:
         """
@@ -539,8 +549,11 @@ class TikTokAdapter(BaseAdapter):
 
             return emq_scores
 
-        except Exception as e:
+        except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
             logger.warning(f"Failed to fetch EMQ scores: {e}")
+            return []
+        except (ValueError, KeyError, TypeError) as e:
+            logger.warning(f"Failed to parse EMQ data: {e}")
             return []
 
     # ========================================================================
@@ -576,10 +589,15 @@ class TikTokAdapter(BaseAdapter):
             logger.info(f"Successfully executed {action.action_type} on TikTok")
             return action
 
-        except Exception as e:
+        except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
             action.status = "failed"
             action.error_message = str(e)
-            logger.error(f"Action failed: {e}")
+            logger.error(f"Action failed due to network error: {e}")
+            return action
+        except (ValueError, KeyError, TypeError) as e:
+            action.status = "failed"
+            action.error_message = str(e)
+            logger.error(f"Action failed due to data error: {e}")
             return action
 
     async def _update_budget(self, action: AutomationAction) -> dict[str, Any]:
@@ -813,7 +831,7 @@ class TikTokAdapter(BaseAdapter):
                 except ValueError:
                     continue
             return None
-        except Exception:
+        except (ValueError, TypeError, AttributeError):
             return None
 
     def _map_status_to_platform(self, status: EntityStatus) -> str:

@@ -11,6 +11,7 @@ Features:
 - Historical alert tracking
 """
 
+import smtplib
 from datetime import date, datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 from uuid import UUID
@@ -625,7 +626,7 @@ class PacingAlertService:
         try:
             notification_service = AlertNotificationService(self.db, self.tenant_id)
             await notification_service.notify_alert(alert)
-        except Exception as exc:
+        except (ConnectionError, TimeoutError, OSError, ValueError) as exc:
             logger.error(
                 "Failed to dispatch alert notifications",
                 alert_id=str(alert.id),
@@ -851,7 +852,7 @@ class AlertNotificationService:
                     alert_id=str(alert.id),
                 )
             return success
-        except Exception as exc:
+        except (ConnectionError, TimeoutError, OSError) as exc:
             logger.error(
                 "Slack notification error",
                 alert_id=str(alert.id),
@@ -1001,7 +1002,7 @@ class AlertNotificationService:
                         recipient=recipient[:20] + "...",
                     )
                     all_sent = False
-            except Exception as exc:
+            except (ConnectionError, TimeoutError, OSError, smtplib.SMTPException) as exc:
                 logger.error(
                     "Email notification error",
                     alert_id=str(alert.id),
@@ -1071,7 +1072,7 @@ class AlertNotificationService:
                     alert_id=str(alert.id),
                     phone=phone[:6] + "****",
                 )
-            except Exception as exc:
+            except (ConnectionError, TimeoutError, OSError, ValueError) as exc:
                 logger.error(
                     "WhatsApp notification error",
                     alert_id=str(alert.id),
@@ -1127,7 +1128,7 @@ class AlertNotificationService:
                     results["slack"] = await self.send_slack_notification(
                         alert, slack_integration.webhook_url
                     )
-                except Exception as exc:
+                except (ConnectionError, TimeoutError, OSError) as exc:
                     logger.error(
                         "Slack notification dispatch failed",
                         alert_id=str(alert.id),
@@ -1153,7 +1154,7 @@ class AlertNotificationService:
                     results["email"] = await self.send_email_notification(
                         alert, email_recipients
                     )
-                except Exception as exc:
+                except (ConnectionError, TimeoutError, OSError, smtplib.SMTPException) as exc:
                     logger.error(
                         "Email notification dispatch failed",
                         alert_id=str(alert.id),
@@ -1179,7 +1180,7 @@ class AlertNotificationService:
                     results["whatsapp"] = await self.send_whatsapp_notification(
                         alert, phone_numbers
                     )
-                except Exception as exc:
+                except (ConnectionError, TimeoutError, OSError, ValueError) as exc:
                     logger.error(
                         "WhatsApp notification dispatch failed",
                         alert_id=str(alert.id),

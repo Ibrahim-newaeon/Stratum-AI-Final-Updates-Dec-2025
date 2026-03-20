@@ -20,6 +20,7 @@ from uuid import uuid4
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel
 from sqlalchemy import select, func, desc, and_, or_
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
@@ -336,8 +337,8 @@ async def get_system_health(
         queue_depth = await redis_client.llen("celery") or 0
         redis_healthy = await redis_client.ping()
         await redis_client.close()
-    except Exception:
-        pass
+    except (ConnectionError, TimeoutError, OSError) as exc:
+        logger.warning(f"Redis health check failed: {exc}")
 
     # Check DB connectivity (real data)
     db_healthy = False
@@ -345,8 +346,8 @@ async def get_system_health(
         from sqlalchemy import text
         await db.execute(text("SELECT 1"))
         db_healthy = True
-    except Exception:
-        pass
+    except (ConnectionError, TimeoutError, OSError) as exc:
+        logger.warning(f"DB health check failed: {exc}")
 
     return APIResponse(
         success=True,
@@ -627,8 +628,8 @@ async def get_audit_logs(
                 "limit": limit,
             },
         )
-    except Exception as e:
-        logger.warning(f"Audit logs query failed: {e}")
+    except (SQLAlchemyError, ValueError) as e:
+        logger.warning("audit_logs_query_failed", error=str(e))
         return APIResponse(
             success=True,
             data={
@@ -684,8 +685,8 @@ async def create_audit_log(
             "error_message": error_message,
         })
         await db.commit()
-    except Exception as e:
-        logger.warning(f"Failed to create audit log: {e}")
+    except (SQLAlchemyError, ValueError) as e:
+        logger.warning("create_audit_log_failed", error=str(e))
 
 
 # =============================================================================
@@ -736,8 +737,8 @@ async def get_subscription_plans(
             })
 
         return APIResponse(success=True, data={"plans": plans})
-    except Exception as e:
-        logger.warning(f"Plans query failed: {e}")
+    except (SQLAlchemyError, ValueError) as e:
+        logger.warning("plans_query_failed", error=str(e))
         # Return default plans
         return APIResponse(
             success=True,
@@ -815,8 +816,8 @@ async def update_subscription_plan(
             )
 
         return APIResponse(success=True, message=f"Plan {plan_id} updated")
-    except Exception as e:
-        logger.error(f"Failed to update plan: {e}")
+    except (SQLAlchemyError, ValueError) as e:
+        logger.error("update_plan_failed", error=str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -903,8 +904,8 @@ async def get_invoices(
                 },
             },
         )
-    except Exception as e:
-        logger.warning(f"Invoices query failed: {e}")
+    except (SQLAlchemyError, ValueError) as e:
+        logger.warning("invoices_query_failed", error=str(e))
         return APIResponse(
             success=True,
             data={
@@ -974,8 +975,8 @@ async def get_subscriptions(
             success=True,
             data={"subscriptions": subscriptions, "total": len(subscriptions)},
         )
-    except Exception as e:
-        logger.warning(f"Subscriptions query failed: {e}")
+    except (SQLAlchemyError, ValueError) as e:
+        logger.warning("subscriptions_query_failed", error=str(e))
         return APIResponse(
             success=True,
             data={"subscriptions": [], "total": 0, "message": "Table not yet migrated"},
@@ -1045,8 +1046,8 @@ async def perform_subscription_action(
         )
 
         return APIResponse(success=True, message=f"Subscription {action_req.action} successful")
-    except Exception as e:
-        logger.error(f"Subscription action failed: {e}")
+    except (SQLAlchemyError, ValueError) as e:
+        logger.error("subscription_action_failed", error=str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -1091,7 +1092,8 @@ async def get_tenant_usage(
             SELECT COUNT(*) FROM platform_connectors WHERE tenant_id = :tenant_id AND status = 'connected'
         """), {"tenant_id": tenant_id})
         connectors_count = connector_result.scalar() or 0
-    except Exception:
+    except (ConnectionError, TimeoutError, OSError) as exc:
+        logger.warning(f"Failed to count connectors for tenant {tenant_id}: {exc}")
         connectors_count = 0
 
     # Get limits from tenant or default
@@ -1408,7 +1410,7 @@ async def seed_platforms(
                     "errors": sr.errors,
                     "duration_seconds": round(sr.duration_seconds, 2),
                 })
-            except Exception as e:
+            except (ConnectionError, TimeoutError, OSError, ValueError) as e:
                 logger.error("seed_sync_failed", platform=pname, error=str(e))
                 sync_results.append({
                     "platform": pname,
@@ -1565,7 +1567,7 @@ WHERE campaigns.id = sub.campaign_id AND campaigns.tenant_id = :tid"""),
         for step in sql_steps:
             await db.execute(step, params)
         await db.commit()
-    except Exception as e:
+    except (SQLAlchemyError, ValueError) as e:
         await db.rollback()
         logger.error("seed_demo_data_failed", error=str(e))
         raise HTTPException(status_code=500, detail=f"Seed failed: {str(e)}")

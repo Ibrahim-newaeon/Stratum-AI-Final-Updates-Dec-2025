@@ -269,7 +269,7 @@ class ComputedTraitsService:
             try:
                 value = await self.compute_trait_for_profile(profile, trait)
                 computed[trait.name] = value
-            except Exception as e:
+            except (ValueError, TypeError, KeyError) as e:
                 logger.warning(
                     "cdp_trait_computation_error",
                     trait_name=trait.name,
@@ -316,7 +316,7 @@ class ComputedTraitsService:
                 try:
                     await self.compute_all_traits_for_profile(profile)
                     processed += 1
-                except Exception as e:
+                except (ValueError, TypeError, KeyError) as e:
                     errors += 1
                     logger.error(
                         "cdp_batch_trait_error",
@@ -577,7 +577,7 @@ class RFMAnalysisService:
                     segment_counts[segment] = segment_counts.get(segment, 0) + 1
                     processed += 1
 
-                except Exception as e:
+                except (ValueError, TypeError, KeyError) as e:
                     logger.error(
                         "cdp_rfm_calculation_error",
                         profile_id=str(profile.id),

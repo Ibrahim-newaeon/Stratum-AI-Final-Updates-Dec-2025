@@ -418,7 +418,10 @@ class StratumMCPServer:
 
         try:
             return await handler(arguments)
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError) as e:
+            logger.error(f"Tool execution network error: {e}")
+            return {"error": str(e)}
+        except (ValueError, KeyError, TypeError, RuntimeError) as e:
             logger.error(f"Tool execution error: {e}")
             return {"error": str(e)}
 

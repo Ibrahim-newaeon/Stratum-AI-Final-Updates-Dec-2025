@@ -493,8 +493,8 @@ async def measure_emq(
             match_rate=result.match_rate,
             recommendations=result.recommendations,
         )
-    except Exception as e:
-        logger.error(f"EMQ measurement failed: {e}")
+    except (ConnectionError, TimeoutError, OSError, ValueError) as e:
+        logger.error("emq_measurement_failed", error=str(e), platform=request.platform)
         return EMQMeasurementResponse(
             success=False,
             platform=request.platform,
@@ -576,8 +576,8 @@ async def upload_offline_conversions(
             failed=result.failed_records,
             errors=[e.get("message", str(e)) for e in result.errors] if result.errors else None,
         )
-    except Exception as e:
-        logger.error(f"Offline conversion upload failed: {e}")
+    except (ConnectionError, TimeoutError, OSError, ValueError) as e:
+        logger.error("offline_conversion_upload_failed", error=str(e))
         return OfflineConversionUploadResponse(
             success=False,
             total_records=len(request.conversions),
@@ -1368,58 +1368,70 @@ async def audit_services_health():
     services_status = {}
 
     # Check each service
+    # Service health checks — catch init/import/config errors
+    _health_errors = (ImportError, OSError, ValueError, TypeError, RuntimeError)
+
     try:
         EMQMeasurementService()
         services_status["emq"] = "healthy"
-    except Exception:
+    except _health_errors as e:
+        logger.warning("health_check_emq_failed", error=str(e))
         services_status["emq"] = "unhealthy"
 
     try:
         OfflineConversionService()
         services_status["offline_conversions"] = "healthy"
-    except Exception:
+    except _health_errors as e:
+        logger.warning("health_check_offline_conversions_failed", error=str(e))
         services_status["offline_conversions"] = "unhealthy"
 
     try:
         ModelABTestingService()
         services_status["ab_testing"] = "healthy"
-    except Exception:
+    except _health_errors as e:
+        logger.warning("health_check_ab_testing_failed", error=str(e))
         services_status["ab_testing"] = "unhealthy"
 
     try:
         ConversionLatencyTracker()
         services_status["latency_tracking"] = "healthy"
-    except Exception:
+    except _health_errors as e:
+        logger.warning("health_check_latency_tracking_failed", error=str(e))
         services_status["latency_tracking"] = "unhealthy"
 
     try:
         CreativePerformanceService()
         services_status["creative_performance"] = "healthy"
-    except Exception:
+    except _health_errors as e:
+        logger.warning("health_check_creative_performance_failed", error=str(e))
         services_status["creative_performance"] = "unhealthy"
 
     try:
         CompetitorBenchmarkingService()
         services_status["benchmarking"] = "healthy"
-    except Exception:
+    except _health_errors as e:
+        logger.warning("health_check_benchmarking_failed", error=str(e))
         services_status["benchmarking"] = "unhealthy"
 
     try:
         BudgetReallocationService()
         services_status["budget_reallocation"] = "healthy"
-    except Exception:
+    except _health_errors as e:
+        logger.warning("health_check_budget_reallocation_failed", error=str(e))
         services_status["budget_reallocation"] = "unhealthy"
 
     try:
         AudienceInsightsService()
         services_status["audience_insights"] = "healthy"
-    except Exception:
+    except _health_errors as e:
+        logger.warning("health_check_audience_insights_failed", error=str(e))
         services_status["audience_insights"] = "unhealthy"
 
     try:
         LTVPredictor(models_path="./models_health_check")
         services_status["ltv_predictor"] = "healthy"
-    except Exception:
+    except _health_errors as e:
+        logger.warning("health_check_ltv_predictor_failed", error=str(e))
         services_status["ltv_predictor"] = "unhealthy"
 
     all_healthy = all(s == "healthy" for s in services_status.values())

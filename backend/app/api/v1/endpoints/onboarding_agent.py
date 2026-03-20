@@ -199,7 +199,7 @@ async def start_conversation(
             progress_percent=response.progress_percent,
         )
 
-    except Exception as e:
+    except (ConnectionError, TimeoutError, OSError, ValueError) as e:
         logger.error(
             "onboarding_start_failed",
             error=str(e),
@@ -264,7 +264,7 @@ async def send_message(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except (ConnectionError, TimeoutError, OSError, ValueError) as e:
         logger.error(
             "onboarding_message_failed",
             session_id=request.session_id,

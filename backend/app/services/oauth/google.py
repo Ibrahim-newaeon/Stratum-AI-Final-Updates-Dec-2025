@@ -296,7 +296,7 @@ class GoogleOAuthService(OAuthService):
                                 )
                             )
 
-                except Exception as e:
+                except (ConnectionError, TimeoutError, OSError, ValueError, KeyError) as e:
                     self.logger.warning(f"Failed to fetch customer {customer_id}", error=str(e))
                     # Add basic info from resource name
                     accounts.append(

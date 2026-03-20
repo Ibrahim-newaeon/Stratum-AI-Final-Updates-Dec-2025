@@ -487,7 +487,7 @@ async def test_webhook(
         error_message = "Request timed out"
     except httpx.RequestError as e:
         error_message = str(e)
-    except Exception as e:
+    except (ValueError, KeyError, TypeError, OSError) as e:
         error_message = f"Unexpected error: {e!s}"
 
     duration_ms = int((datetime.now(UTC) - start_time).total_seconds() * 1000)

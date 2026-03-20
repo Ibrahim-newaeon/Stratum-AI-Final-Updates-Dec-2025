@@ -346,7 +346,7 @@ def compute_cdp_traits(self, tenant_id: int, trait_id: Optional[str] = None):
                         profile.computed_traits = profile.computed_traits or {}
                         profile.computed_traits[trait.name] = value
                         computed_count += 1
-                    except Exception as e:
+                    except (ValueError, TypeError, KeyError, AttributeError) as e:
                         logger.error(f"Trait {trait.name} failed for profile {profile.id}: {e}")
 
             offset += CHUNK_SIZE

@@ -17,6 +17,7 @@ from enum import Enum
 from dataclasses import dataclass, field
 import json
 import logging
+import smtplib
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, insert, func, update
@@ -638,11 +639,17 @@ class AutopilotEnforcer:
                 )
                 return False
 
-        except Exception as exc:
-            # Do not let executor failures break the enforcement flow
+        except (ConnectionError, TimeoutError, OSError) as exc:
+            # Network / platform errors — do not let executor failures break enforcement
             logger.error(
                 f"Error auto-pausing campaign {campaign_id} via platform executor: {exc}",
                 exc_info=True,
+            )
+            return False
+        except Exception as exc:
+            # Unexpected error — log with full traceback for investigation
+            logger.exception(
+                f"Unexpected error auto-pausing campaign {campaign_id}: {exc}"
             )
             return False
 
@@ -1021,7 +1028,7 @@ class AutopilotEnforcer:
                     notification_channels=["email"],
                     db=self.db,
                 )
-            except Exception as exc:
+            except (ConnectionError, TimeoutError, OSError, ValueError) as exc:
                 logger.error(
                     f"Failed to send enforcement notification: {exc}",
                     exc_info=True,
@@ -1159,12 +1166,12 @@ async def send_enforcement_notification(
                         sent = email_service._send_email(email_addr, message)
                         if sent:
                             any_sent = True
-                    except Exception as email_exc:
+                    except (ConnectionError, TimeoutError, OSError, smtplib.SMTPException) as email_exc:
                         logger.error(
                             f"Failed to send enforcement email to {email_addr[:20]}...: {email_exc}"
                         )
 
-        except Exception as exc:
+        except (ConnectionError, TimeoutError, OSError) as exc:
             logger.error(f"Error sending enforcement email notifications: {exc}", exc_info=True)
 
     # ---- Slack Channel ----
@@ -1181,7 +1188,7 @@ async def send_enforcement_notification(
             if sent:
                 any_sent = True
             await slack_svc.close()
-        except Exception as slack_exc:
+        except (ConnectionError, TimeoutError, OSError) as slack_exc:
             logger.error(f"Failed to send Slack enforcement notification: {slack_exc}")
 
     logger.info(

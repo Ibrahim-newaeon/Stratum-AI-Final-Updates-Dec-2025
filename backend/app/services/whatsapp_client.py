@@ -446,7 +446,7 @@ class WhatsAppClient:
                             "errors": status.get("errors"),
                         })
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError) as e:
             logger.error(f"Error parsing webhook payload: {e}")
 
         return events

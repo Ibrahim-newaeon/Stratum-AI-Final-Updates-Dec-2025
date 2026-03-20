@@ -156,12 +156,12 @@ class PlatformSyncOrchestrator:
                             continue
                         result.campaigns_synced += synced
                         result.metrics_upserted += metrics
-                    except Exception as e:
+                    except (ConnectionError, TimeoutError, OSError, ValueError) as e:
                         result.errors.append(f"Account {acct_id}: {e}")
                 else:
                     result.errors.append(f"Token expired for {acct_id} and no DB connection to refresh")
                     break
-            except Exception as e:
+            except (ConnectionError, TimeoutError, OSError, ValueError) as e:
                 logger.error("sync_account_error", account=acct_id, error=str(e))
                 result.errors.append(f"Account {acct_id}: {e}")
 
@@ -291,7 +291,7 @@ class PlatformSyncOrchestrator:
                         revenue_cents=row.revenue_cents,
                     )
                     metrics_upserted += 1
-            except Exception as e:
+            except (ConnectionError, TimeoutError, OSError, ValueError, KeyError) as e:
                 logger.warning("meta_insights_error", campaign=mc.external_id, error=str(e))
 
             # Recalculate aggregates on the campaign
@@ -354,7 +354,7 @@ class PlatformSyncOrchestrator:
                         revenue_cents=row.revenue_cents,
                     )
                     metrics_upserted += 1
-            except Exception as e:
+            except (ConnectionError, TimeoutError, OSError, ValueError, KeyError) as e:
                 logger.warning("tiktok_reports_error", advertiser=advertiser_id, error=str(e))
 
         # Recalculate aggregates
@@ -420,7 +420,7 @@ class PlatformSyncOrchestrator:
                         revenue_cents=row.revenue_cents,
                     )
                     metrics_upserted += 1
-            except Exception as e:
+            except (ConnectionError, TimeoutError, OSError, ValueError, KeyError) as e:
                 logger.warning("snapchat_stats_error", account=ad_account_id, error=str(e))
 
         # Recalculate aggregates
@@ -605,7 +605,7 @@ class PlatformSyncOrchestrator:
         try:
             oauth = get_oauth_service(platform.value)
             access_token = oauth.decrypt_token(conn.access_token_encrypted)
-        except Exception as e:
+        except (ValueError, TypeError, KeyError) as e:
             logger.error("token_decrypt_failed", error=str(e))
             return None
 
@@ -642,7 +642,7 @@ class PlatformSyncOrchestrator:
             await self.db.commit()
 
             return new_tokens.access_token
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError, ValueError) as e:
             logger.error("token_refresh_failed", platform=platform.value, error=str(e))
             conn.status = ConnectionStatus.EXPIRED
             conn.last_error = str(e)

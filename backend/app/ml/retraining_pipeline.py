@@ -133,7 +133,7 @@ class RetrainingPipeline:
                         )
                         for v in versions
                     ]
-            except Exception as e:
+            except (OSError, ValueError, TypeError, KeyError, json.JSONDecodeError) as e:
                 logger.error("model_history_load_error", error=str(e))
 
     def _save_model_history(self):
@@ -280,7 +280,7 @@ class RetrainingPipeline:
                 logger.info("model_staged", model_name=model_name, version_id=version_id)
                 results["reason"] = comparison.get("reason", "Did not meet promotion criteria")
 
-        except Exception as e:
+        except (OSError, ValueError, TypeError, KeyError, RuntimeError) as e:
             logger.error("retraining_failed", error=str(e))
             results["status"] = "failed"
             results["error"] = str(e)

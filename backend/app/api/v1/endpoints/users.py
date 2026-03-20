@@ -35,7 +35,7 @@ def _safe_decrypt(value: Optional[str]) -> Optional[str]:
         return None
     try:
         return decrypt_pii(value)
-    except Exception:
+    except (ValueError, TypeError, KeyError, OSError):
         # Value may be stored in plaintext or encrypted with a different key
         return value
 
@@ -313,8 +313,8 @@ async def invite_user(
             tenant = tenant_result.scalar_one_or_none()
             if tenant:
                 tenant_name = tenant.name
-    except Exception as e:
-        logger.warning(f"Could not fetch inviter/tenant details: {e}")
+    except (ValueError, TypeError, KeyError, OSError) as e:
+        logger.warning("fetch_inviter_tenant_details_failed", error=str(e))
 
     # Send invite email in background
     def send_invite_email():
@@ -328,8 +328,8 @@ async def invite_user(
                 role=invite_data.role,
             )
             logger.info(f"Invite email sent to {invite_data.email}")
-        except Exception as e:
-            logger.error(f"Failed to send invite email to {invite_data.email}: {e}")
+        except (ConnectionError, TimeoutError, OSError, ValueError) as e:
+            logger.error("send_invite_email_failed", email=invite_data.email, error=str(e))
 
     background_tasks.add_task(send_invite_email)
 

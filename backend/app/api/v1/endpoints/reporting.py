@@ -495,7 +495,8 @@ async def run_schedule_now(
         return execution
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    except Exception as e:
+    except (ConnectionError, TimeoutError, OSError) as e:
+        logger.error("run_schedule_now_failed", error=str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -575,8 +576,8 @@ async def generate_report(
 
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        logger.error(f"Report generation failed: {str(e)}")
+    except (ConnectionError, TimeoutError, OSError) as e:
+        logger.error("report_generation_failed", error=str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
 

@@ -113,7 +113,7 @@ class EmailDelivery(DeliveryChannelHandler):
                 "response": str(result),
             }
 
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError, aiosmtplib.SMTPException) as e:
             logger.error(f"Email delivery failed: {str(e)}")
             return {
                 "success": False,
@@ -234,7 +234,7 @@ class SlackDelivery(DeliveryChannelHandler):
                             "error": f"Slack API error: {response.status} - {response_text}",
                         }
 
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError, aiohttp.ClientError) as e:
             logger.error(f"Slack delivery failed: {str(e)}")
             return {
                 "success": False,
@@ -352,7 +352,7 @@ class TeamsDelivery(DeliveryChannelHandler):
                             "error": f"Teams API error: {response.status} - {response_text}",
                         }
 
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError, aiohttp.ClientError) as e:
             logger.error(f"Teams delivery failed: {str(e)}")
             return {
                 "success": False,
@@ -458,7 +458,7 @@ class WebhookDelivery(DeliveryChannelHandler):
                             "error": f"Webhook error: {response.status} - {response_text}",
                         }
 
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError, aiohttp.ClientError) as e:
             logger.error(f"Webhook delivery failed: {str(e)}")
             return {
                 "success": False,
@@ -543,7 +543,7 @@ class S3Delivery(DeliveryChannelHandler):
                 "success": False,
                 "error": "aioboto3 package not installed for S3 delivery",
             }
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError, ValueError, KeyError) as e:
             logger.error(f"S3 delivery failed: {str(e)}")
             return {
                 "success": False,

@@ -130,7 +130,7 @@ class WebSocketManager:
             await asyncio.wait_for(self._redis.ping(), timeout=5.0)
             self._pubsub_task = asyncio.create_task(self._redis_listener())
             logger.info("websocket_redis_connected")
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError) as e:
             logger.warning(
                 "websocket_redis_unavailable",
                 error=str(e),
@@ -233,8 +233,8 @@ class WebSocketManager:
         try:
             if client.websocket.client_state == WebSocketState.CONNECTED:
                 await client.websocket.close()
-        except Exception:
-            pass
+        except (ConnectionError, OSError, RuntimeError):
+            pass  # Client already disconnected or connection reset
 
         logger.info(
             "websocket_client_disconnected",
@@ -279,7 +279,7 @@ class WebSocketManager:
 
         try:
             await client.websocket.send_text(message.to_json())
-        except Exception as e:
+        except (ConnectionError, OSError, RuntimeError) as e:
             logger.warning(
                 "websocket_send_failed",
                 client_id=client_id,
@@ -338,7 +338,7 @@ class WebSocketManager:
                 "message": message.to_json(),
             })
             await self._redis.publish(f"ws:{channel}", envelope)
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError) as e:
             logger.warning("redis_publish_failed", error=str(e))
 
     async def _redis_listener(self):
@@ -391,7 +391,7 @@ class WebSocketManager:
             for client_id in client_ids:
                 await self.send_to_client(client_id, ws_message)
 
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError, ValueError, KeyError) as e:
             logger.warning("redis_message_handling_failed", error=str(e))
 
     async def _heartbeat_loop(self):

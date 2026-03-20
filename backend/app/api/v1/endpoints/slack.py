@@ -272,8 +272,8 @@ async def test_slack_connection(
                     message="Connection test failed. Please check your webhook URL.",
                 ),
             )
-    except Exception as e:
-        logger.error(f"Slack test failed: {e}")
+    except (ConnectionError, TimeoutError, OSError) as e:
+        logger.error("slack_test_failed", error=str(e))
         integration.last_test_at = datetime.now(UTC)
         integration.last_test_success = False
         await db.commit()
@@ -370,8 +370,8 @@ async def send_slack_notification(
                     message="Failed to send notification",
                 ),
             )
-    except Exception as e:
-        logger.error(f"Slack notify failed: {e}")
+    except (ConnectionError, TimeoutError, OSError) as e:
+        logger.error("slack_notify_failed", error=str(e))
         return APIResponse(
             success=True,
             data=SlackTestResponse(

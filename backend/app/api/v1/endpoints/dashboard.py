@@ -27,6 +27,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import and_, desc, func, select, text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.deps import CurrentUserDep, VerifiedUserDep
@@ -397,7 +398,7 @@ async def get_dashboard_overview(
         return await _build_dashboard_overview(
             tenant_id, period, custom_start, custom_end, db
         )
-    except Exception as e:
+    except (SQLAlchemyError, ValueError, TypeError, KeyError, ZeroDivisionError, OSError) as e:
         logger.error("dashboard_overview_error", error=str(e), tenant_id=tenant_id)
         # Return safe empty dashboard so the frontend can still render
         start_date, end_date = get_date_range(period, custom_start, custom_end)
@@ -535,8 +536,9 @@ async def _build_dashboard_overview(
             prev_conversions = current_conversions
             prev_impressions = current_impressions
             prev_clicks = current_clicks
-    except Exception:
+    except (SQLAlchemyError, ValueError, TypeError, KeyError) as _prev_err:
         # Table may not have data yet — show zero change
+        logger.debug("dashboard_previous_period_unavailable", error=str(_prev_err))
         prev_spend = current_spend
         prev_revenue = current_revenue
         prev_conversions = current_conversions
@@ -1114,7 +1116,7 @@ async def get_signal_health(
 
     try:
         return await _build_signal_health(tenant_id, db)
-    except Exception as e:
+    except (SQLAlchemyError, ValueError, TypeError, KeyError, ZeroDivisionError, OSError) as e:
         logger.error("signal_health_error", error=str(e), tenant_id=tenant_id)
         return APIResponse(
             success=True,
@@ -1234,7 +1236,8 @@ async def _build_signal_health(tenant_id: int, db: AsyncSession):
         overall_score = int(
             freshness_score * 0.4 + emq_component * 0.35 + connectivity_score * 0.25
         )
-    except Exception:
+    except (SQLAlchemyError, ValueError, TypeError, KeyError) as _score_err:
+        logger.debug("signal_health_analytics_unavailable", error=str(_score_err))
         # If analytics tables aren't populated yet, derive from connectivity
         if connected_count > 0 or has_env_credentials:
             overall_score = 75

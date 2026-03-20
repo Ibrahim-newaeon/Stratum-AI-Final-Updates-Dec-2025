@@ -100,7 +100,7 @@ async def stripe_webhook(request: Request):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid signature",
         )
-    except Exception as e:
+    except (ValueError, KeyError) as e:
         logger.error("stripe_webhook_parse_error", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -145,7 +145,7 @@ async def stripe_webhook(request: Request):
 
             await db.commit()
 
-        except Exception as e:
+        except (ValueError, KeyError, TypeError, OSError) as e:
             logger.error(
                 "stripe_webhook_handler_error",
                 event_type=event_type,
@@ -404,7 +404,7 @@ async def handle_invoice_payment_failed(db: AsyncSession, invoice: dict):
                     user_id=user.id,
                     attempt_count=attempt_count,
                 )
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError, ValueError) as e:
             logger.error(
                 "payment_failed_email_error",
                 tenant_id=tenant.id,

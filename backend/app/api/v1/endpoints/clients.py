@@ -10,7 +10,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.deps import VerifiedUserDep
@@ -137,8 +137,8 @@ async def list_clients(
         )
     except HTTPException:
         raise
-    except Exception as e:
-        logger.error(f"Error listing clients: {e}")
+    except (SQLAlchemyError, ValueError) as e:
+        logger.error("list_clients_failed", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to list clients",
@@ -201,9 +201,9 @@ async def create_client(
         )
     except HTTPException:
         raise
-    except Exception as e:
+    except (SQLAlchemyError, ValueError) as e:
         await db.rollback()
-        logger.error(f"Error creating client: {e}")
+        logger.error("create_client_failed", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create client",
@@ -277,8 +277,8 @@ async def get_client(
         return APIResponse(data=response)
     except HTTPException:
         raise
-    except Exception as e:
-        logger.error(f"Error getting client {client_id}: {e}")
+    except (SQLAlchemyError, ValueError) as e:
+        logger.error("get_client_failed", client_id=client_id, error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to get client",
@@ -362,9 +362,9 @@ async def update_client(
         )
     except HTTPException:
         raise
-    except Exception as e:
+    except (SQLAlchemyError, ValueError) as e:
         await db.rollback()
-        logger.error(f"Error updating client {client_id}: {e}")
+        logger.error("update_client_failed", client_id=client_id, error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to update client",
@@ -406,9 +406,9 @@ async def delete_client(
         return APIResponse(message="Client deleted successfully")
     except HTTPException:
         raise
-    except Exception as e:
+    except (SQLAlchemyError, ValueError) as e:
         await db.rollback()
-        logger.error(f"Error deleting client {client_id}: {e}")
+        logger.error("delete_client_failed", client_id=client_id, error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to delete client",
@@ -514,8 +514,8 @@ async def get_client_summary(
         return APIResponse(data=summary)
     except HTTPException:
         raise
-    except Exception as e:
-        logger.error(f"Error getting client summary {client_id}: {e}")
+    except (SQLAlchemyError, ValueError) as e:
+        logger.error("get_client_summary_failed", client_id=client_id, error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to get client summary",
@@ -604,8 +604,8 @@ async def list_assignments(
         return APIResponse(data=items)
     except HTTPException:
         raise
-    except Exception as e:
-        logger.error(f"Error listing assignments for client {client_id}: {e}")
+    except (SQLAlchemyError, ValueError) as e:
+        logger.error("list_assignments_failed", client_id=client_id, error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to list assignments",
@@ -703,9 +703,9 @@ async def create_assignment(
         )
     except HTTPException:
         raise
-    except Exception as e:
+    except (SQLAlchemyError, ValueError) as e:
         await db.rollback()
-        logger.error(f"Error creating assignment: {e}")
+        logger.error("create_assignment_failed", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create assignment",
@@ -763,9 +763,9 @@ async def delete_assignment(
         return APIResponse(message="User unassigned from client successfully")
     except HTTPException:
         raise
-    except Exception as e:
+    except (SQLAlchemyError, ValueError) as e:
         await db.rollback()
-        logger.error(f"Error deleting assignment: {e}")
+        logger.error("delete_assignment_failed", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to delete assignment",
@@ -860,9 +860,9 @@ async def invite_portal_user(
         )
     except HTTPException:
         raise
-    except Exception as e:
+    except (SQLAlchemyError, ValueError) as e:
         await db.rollback()
-        logger.error(f"Error inviting portal user: {e}")
+        logger.error("invite_portal_user_failed", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to invite portal user",

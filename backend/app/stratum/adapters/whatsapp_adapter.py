@@ -319,8 +319,10 @@ class WhatsAppAdapter(BaseAdapter):
 
             self._initialized = True
 
-        except Exception as e:
+        except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
             raise AuthenticationError(f"Failed to initialize WhatsApp: {e}")
+        except (ValueError, KeyError, TypeError) as e:
+            raise AuthenticationError(f"Failed to parse WhatsApp init response: {e}")
 
     async def cleanup(self) -> None:
         """Clean up adapter resources."""
@@ -736,7 +738,7 @@ class WhatsAppAdapter(BaseAdapter):
                         for handler in self._message_handlers:
                             try:
                                 await handler(message)
-                            except Exception as e:
+                            except (ValueError, KeyError, TypeError, RuntimeError) as e:
                                 logger.error(f"Message handler error: {e}")
 
                 # Handle status updates
@@ -823,7 +825,7 @@ class WhatsAppAdapter(BaseAdapter):
                     for handler in self._status_handlers:
                         try:
                             await handler(message_id, new_status)
-                        except Exception as e:
+                        except (ValueError, KeyError, TypeError, RuntimeError) as e:
                             logger.error(f"Status handler error: {e}")
                     return
 

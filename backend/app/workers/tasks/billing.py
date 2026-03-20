@@ -71,7 +71,7 @@ def calculate_cost_allocation():
                     }
                 )
 
-            except Exception as e:
+            except (ValueError, TypeError, KeyError) as e:
                 logger.error(f"Cost allocation failed for tenant {tenant.id}: {e}")
 
     logger.info(f"Calculated allocations for {len(allocations)} tenants")
@@ -126,7 +126,7 @@ def calculate_usage_rollup():
                 tenant.settings = tenant.settings or {}
                 tenant.settings["last_usage_rollup"] = rollup
 
-            except Exception as e:
+            except (ValueError, TypeError, KeyError) as e:
                 logger.error(f"Usage rollup failed for tenant {tenant.id}: {e}")
 
         db.commit()

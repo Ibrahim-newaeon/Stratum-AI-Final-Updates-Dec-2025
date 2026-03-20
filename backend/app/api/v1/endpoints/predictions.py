@@ -15,6 +15,8 @@ from pydantic import BaseModel
 from sqlalchemy import select, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from sqlalchemy.exc import SQLAlchemyError
+
 from app.core.logging import get_logger
 from app.db.session import get_async_session
 from app.ml.roas_optimizer import ROASOptimizer, LivePredictionEngine
@@ -230,7 +232,7 @@ async def get_live_predictions(
         )
         db.add(prediction_record)
         await db.commit()
-    except Exception as e:
+    except (SQLAlchemyError, ValueError) as e:
         logger.warning("prediction_cache_failed", error=str(e))
         await db.rollback()
 

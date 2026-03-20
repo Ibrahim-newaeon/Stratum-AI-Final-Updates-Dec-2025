@@ -883,8 +883,11 @@ class UnifiedEventsAPI:
                 sender = self.senders[platform]
                 result = await sender.send(events)
                 results[platform] = result
-            except Exception as e:
-                logger.error(f"Error sending to {platform}: {e}")
+            except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
+                logger.error(f"Network error sending to {platform}: {e}")
+                results[platform] = {"error": str(e)}
+            except (ValueError, KeyError, TypeError) as e:
+                logger.error(f"Data error sending to {platform}: {e}")
                 results[platform] = {"error": str(e)}
 
         return results

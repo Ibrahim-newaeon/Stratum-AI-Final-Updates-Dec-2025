@@ -724,7 +724,7 @@ class AutopilotEngine:
                     }
                 )
 
-            except Exception as e:
+            except (KeyError, ValueError, TypeError, ZeroDivisionError) as e:
                 logger.error(f"Error evaluating rule {rule.name}: {e}")
                 results.append(
                     {

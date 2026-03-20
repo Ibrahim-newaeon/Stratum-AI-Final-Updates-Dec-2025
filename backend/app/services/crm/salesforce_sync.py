@@ -124,7 +124,7 @@ class SalesforceSyncService:
                 results=results,
             )
 
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError, ValueError) as e:
             results["errors"].append(str(e))
             await self._log_sync(results, start_time, "failed", str(e))
             logger.error(
@@ -170,7 +170,7 @@ class SalesforceSyncService:
                             results["contacts_created"] += 1
                         else:
                             results["contacts_updated"] += 1
-                    except Exception as e:
+                    except (ValueError, TypeError, KeyError) as e:
                         logger.warning(
                             "salesforce_contact_sync_error",
                             contact_id=contact.get("Id"),
@@ -290,7 +290,7 @@ class SalesforceSyncService:
                             results["leads_created"] += 1
                         else:
                             results["leads_updated"] += 1
-                    except Exception as e:
+                    except (ValueError, TypeError, KeyError) as e:
                         logger.warning(
                             "salesforce_lead_sync_error",
                             lead_id=lead.get("Id"),
@@ -412,7 +412,7 @@ class SalesforceSyncService:
                         await self._process_opportunity(opp)
                         results["opportunities_synced"] += 1
                         results["opportunities_created"] += 1
-                    except Exception as e:
+                    except (ValueError, TypeError, KeyError) as e:
                         logger.warning(
                             "salesforce_opportunity_sync_error",
                             opp_id=opp.get("Id"),

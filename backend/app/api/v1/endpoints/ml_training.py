@@ -131,7 +131,7 @@ async def upload_training_data(
 
         return DataUploadResponse(**result)
 
-    except Exception as e:
+    except (OSError, ValueError, KeyError, TypeError) as e:
         logger.error("upload_training_data_failed", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -210,7 +210,7 @@ async def train_models(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except (OSError, ValueError, KeyError, TypeError) as e:
         logger.error("train_models_failed", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -240,7 +240,7 @@ async def list_models():
                         metrics=metadata.get("metrics", {}),
                         features=metadata.get("features", []),
                     ))
-            except Exception as e:
+            except (OSError, ValueError, KeyError, TypeError) as e:
                 logger.warning("failed_to_read_model_metadata", file=str(metadata_file), error=str(e))
 
     return ModelsListResponse(

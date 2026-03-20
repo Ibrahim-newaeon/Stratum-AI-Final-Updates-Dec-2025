@@ -381,7 +381,7 @@ class EmbedTokenService:
                 hostname = hostname.split("/")[0]
 
             hostname = hostname.lower()
-        except Exception:
+        except (ValueError, IndexError):
             return False
 
         # Check against allowed domains

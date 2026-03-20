@@ -538,7 +538,7 @@ class ReportGenerator:
                 "duration_seconds": execution.duration_seconds,
             }
 
-        except Exception as e:
+        except (OSError, ValueError, TypeError, KeyError, RuntimeError) as e:
             logger.error("report_generation_failed", error=str(e), execution_id=str(execution.id))
             execution.status = ExecutionStatus.FAILED
             execution.completed_at = datetime.now(timezone.utc)

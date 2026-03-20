@@ -53,7 +53,7 @@ def generate_forecast(tenant_id: int, campaign_ids: Optional[list[int]] = None):
                         "forecast": forecast,
                     }
                 )
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, RuntimeError) as e:
                 logger.error(f"Forecast failed for campaign {campaign.id}: {e}")
 
     logger.info(f"Generated {len(forecasts)} forecasts")

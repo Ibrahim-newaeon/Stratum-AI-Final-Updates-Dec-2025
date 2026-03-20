@@ -562,7 +562,7 @@ class BudgetReallocationService:
                 )
                 applied.append(change)
 
-            except Exception as e:
+            except (ConnectionError, TimeoutError, OSError, ValueError, RuntimeError) as e:
                 failed.append((change, str(e)))
 
         plan.status = ReallocationStatus.COMPLETED if not failed else ReallocationStatus.FAILED
@@ -622,7 +622,7 @@ class BudgetReallocationService:
                     reason="Rollback",
                     expected_impact={},
                 ))
-            except Exception as e:
+            except (ConnectionError, TimeoutError, OSError, ValueError, RuntimeError) as e:
                 failed.append((None, str(e)))
 
         plan.status = ReallocationStatus.ROLLED_BACK

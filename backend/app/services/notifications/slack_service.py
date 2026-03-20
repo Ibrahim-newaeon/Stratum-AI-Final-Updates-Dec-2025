@@ -112,7 +112,7 @@ class SlackNotificationService:
             else:
                 logger.error(f"Slack API error: {response.status_code} - {response.text}")
                 return False
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError, httpx.HTTPError) as e:
             logger.error(f"Failed to send Slack notification: {e}")
             return False
 

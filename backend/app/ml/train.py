@@ -816,7 +816,7 @@ class ModelTrainer:
                 results[platform] = metrics
                 logger.info("platform_model_trained", platform=platform, r2=round(metrics["r2"], 4))
 
-            except Exception as e:
+            except (ValueError, TypeError, RuntimeError, KeyError, OSError) as e:
                 logger.error("platform_model_training_error", platform=platform, error=str(e))
                 results[platform] = {"error": str(e)}
 

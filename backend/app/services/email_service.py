@@ -90,7 +90,7 @@ class EmailService:
         except smtplib.SMTPException as e:
             logger.error("SMTP error sending email", error=str(e))
             return False
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError) as e:
             logger.error("Unexpected error sending email", error=str(e))
             return False
 

@@ -125,7 +125,7 @@ class MetaAudienceConnector(BaseAudienceConnector):
                 error_details=error_body,
                 duration_ms=int((time.time() - start_time) * 1000),
             )
-        except Exception as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             self.logger.error("meta_audience_create_error", error=str(e))
             return AudienceSyncResult(
                 success=False,
@@ -220,7 +220,7 @@ class MetaAudienceConnector(BaseAudienceConnector):
                 error_details=error_body,
                 duration_ms=int((time.time() - start_time) * 1000),
             )
-        except Exception as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             self.logger.error("meta_audience_add_error", error=str(e))
             return AudienceSyncResult(
                 success=False,
@@ -277,7 +277,7 @@ class MetaAudienceConnector(BaseAudienceConnector):
                 duration_ms=duration_ms,
             )
 
-        except Exception as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             self.logger.error("meta_audience_remove_error", error=str(e))
             return AudienceSyncResult(
                 success=False,
@@ -350,7 +350,7 @@ class MetaAudienceConnector(BaseAudienceConnector):
                 duration_ms=duration_ms,
             )
 
-        except Exception as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             self.logger.error("meta_audience_replace_error", error=str(e))
             return AudienceSyncResult(
                 success=False,
@@ -385,7 +385,7 @@ class MetaAudienceConnector(BaseAudienceConnector):
                 platform_response=result,
             )
 
-        except Exception as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             self.logger.error("meta_audience_delete_error", error=str(e))
             return AudienceSyncResult(
                 success=False,
@@ -416,7 +416,7 @@ class MetaAudienceConnector(BaseAudienceConnector):
                 response.raise_for_status()
                 return response.json()
 
-        except Exception as e:
+        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             self.logger.error("meta_audience_info_error", error=str(e))
             return {"error": str(e)}
 

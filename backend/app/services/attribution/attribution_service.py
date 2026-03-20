@@ -616,7 +616,8 @@ class AttributionService:
                         "deal_id": str(deal.id),
                         "error": attr_result.get("error"),
                     })
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, ZeroDivisionError) as e:
+                logger.warning("attribution_deal_failed", deal_id=str(deal.id), error=str(e))
                 results["failed"] += 1
                 results["errors"].append({
                     "deal_id": str(deal.id),

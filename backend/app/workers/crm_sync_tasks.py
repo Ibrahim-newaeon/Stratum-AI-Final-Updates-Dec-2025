@@ -302,7 +302,7 @@ async def sync_all_crm_connections() -> dict[str, Any]:
                     )
                     results["zoho"]["synced"] += 1
 
-            except Exception as e:
+            except (ConnectionError, TimeoutError, OSError) as e:
                 logger.error(
                     f"Failed to dispatch sync for {connection.provider.value} "
                     f"tenant {connection.tenant_id}: {e}"
@@ -380,7 +380,7 @@ async def run_scheduled_writebacks() -> dict[str, Any]:
                 config.next_sync_at = now + timedelta(hours=config.sync_interval_hours)
                 results["writebacks_triggered"] += 1
 
-            except Exception as e:
+            except (ConnectionError, TimeoutError, OSError) as e:
                 logger.error(f"Failed to trigger writeback for config {config.id}: {e}")
 
         await db.commit()

@@ -74,15 +74,12 @@ jobs:
 
       - name: Check formatting with Black
         run: black --check --diff .
-        continue-on-error: true  # Pre-existing formatting; will be cleaned up incrementally
 
       - name: Check import sorting with isort
         run: isort --check-only --diff .
-        continue-on-error: true  # Pre-existing import order; will be cleaned up incrementally
 
       - name: Type check with mypy
         run: mypy app --ignore-missing-imports --no-error-summary
-        continue-on-error: true  # Pre-existing type issues; will be cleaned up incrementally
 
       - name: Run unit tests
         env:
@@ -109,7 +106,6 @@ jobs:
           PYTHONPATH: .
         run: |
           pytest tests/integration -v --tb=short -m "integration"
-        continue-on-error: true  # Integration tests may fail without full DB setup
 
       - name: Generate coverage report
         env:
@@ -123,7 +119,6 @@ jobs:
           PYTHONPATH: .
         run: |
           pytest tests/unit --cov=app --cov-config=.coveragerc --cov-report=xml --cov-report=term-missing -m "unit or not integration"
-        continue-on-error: true  # Coverage collection depends on test pass rate
 
       - name: Security scan with Bandit
         run: |
@@ -176,15 +171,12 @@ jobs:
 
       - name: Dependency audit (npm)
         run: npm audit --audit-level=high --omit=dev
-        continue-on-error: true  # Warn-only until deps are fully audited
 
       - name: Lint
         run: npm run lint
-        continue-on-error: true  # Pre-existing ESLint warnings; cleaned up incrementally
 
       - name: Type check
         run: npx tsc --noEmit
-        continue-on-error: true  # Pre-existing TS warnings (unused vars etc.)
 
       - name: Run unit tests with coverage
         run: npm run test:coverage -- --reporter=verbose
@@ -297,7 +289,7 @@ jobs:
         if: always()
         with:
           sarif_file: "trivy-fs-results.sarif"
-        continue-on-error: true  # May fail if repo doesn't have code scanning enabled
+        continue-on-error: true  # Requires GitHub Advanced Security; not all repos have code scanning
 
   # ===========================================================================
   # Secret Scanning

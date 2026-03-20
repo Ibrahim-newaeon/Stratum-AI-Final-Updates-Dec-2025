@@ -185,8 +185,8 @@ async def send_whatsapp_otp(
         otp_key = f"{OTP_PREFIX}{phone_number}"
         await redis_client.setex(otp_key, OTP_EXPIRY_SECONDS, otp_code)
         await redis_client.close()
-    except Exception as e:
-        logger.error(f"Redis error storing OTP: {e}")
+    except (ConnectionError, TimeoutError, OSError) as e:
+        logger.error("redis_store_otp_failed", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to generate verification code",
@@ -232,8 +232,8 @@ async def send_whatsapp_otp(
                 f"WhatsApp API error sending OTP to {phone_number[:6]}***: "
                 f"{e.message} (code={e.error_code}, subcode={e.error_subcode})"
             )
-        except Exception as e:
-            logger.error(f"Unexpected error sending WhatsApp OTP: {e}", exc_info=True)
+        except (ConnectionError, TimeoutError, OSError) as e:
+            logger.error("whatsapp_otp_send_failed", error=str(e))
 
     background_tasks.add_task(send_whatsapp_message)
 
@@ -304,8 +304,8 @@ async def verify_whatsapp_otp(request: VerifyOTPRequest):
 
     except HTTPException:
         raise
-    except Exception as e:
-        logger.error(f"Error verifying OTP: {e}")
+    except (ConnectionError, TimeoutError, OSError) as e:
+        logger.error("redis_verify_otp_failed", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to verify code",
@@ -342,7 +342,8 @@ async def login(
             )
     except HTTPException:
         raise
-    except Exception:
+    except (ConnectionError, TimeoutError, OSError) as exc:
+        logger.warning("redis_unavailable_rate_limit_check", error=str(exc))
         pass  # Redis unavailable — allow login to proceed
 
     # Find user(s) by email hash
@@ -367,8 +368,8 @@ async def login(
         # Record failed attempt
         try:
             await record_failed_login(email_hash)
-        except Exception:
-            pass  # Redis unavailable
+        except (ConnectionError, TimeoutError, OSError) as exc:
+            logger.warning("redis_unavailable_record_failed_login", error=str(exc))
         logger.warning("login_failed", email_hash=email_hash[:16])
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -378,8 +379,8 @@ async def login(
     # Clear failed attempts on successful login
     try:
         await clear_login_attempts(email_hash)
-    except Exception:
-        pass  # Redis unavailable
+    except (ConnectionError, TimeoutError, OSError) as exc:
+        logger.warning("redis_unavailable_clear_login_attempts", error=str(exc))
 
     # Update last login
     user.last_login_at = datetime.now(timezone.utc)
@@ -622,8 +623,9 @@ async def logout(
         if payload:
             try:
                 await blacklist_token(token, payload)
-            except Exception:
-                pass  # Redis unavailable — token will expire naturally
+            except (ConnectionError, TimeoutError, OSError) as exc:
+                logger.warning("redis_unavailable_token_blacklist", error=str(exc))
+                # Token will expire naturally via JWT exp claim
 
     if user_id:
         # Log logout event
@@ -860,8 +862,8 @@ async def forgot_password(
             str(user.id),
         )
         await redis_client.close()
-    except Exception as e:
-        logger.error(f"Redis error storing reset token: {e}")
+    except (ConnectionError, TimeoutError, OSError) as e:
+        logger.error("redis_store_reset_token_failed", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to generate reset link. Please try again.",
@@ -872,7 +874,7 @@ async def forgot_password(
     if user.full_name:
         try:
             user_name = decrypt_pii(user.full_name)
-        except Exception:
+        except (ValueError, TypeError, UnicodeDecodeError):
             user_name = "there"
 
     # Send reset link (in background to not block response)
@@ -892,8 +894,8 @@ async def forgot_password(
                     message=f"Your Stratum AI password reset link:\n{reset_url}\n\nThis link expires in 1 hour.",
                 )
                 logger.info("password_reset_whatsapp_sent", user_id=user.id)
-            except Exception as e:
-                logger.error(f"Failed to send WhatsApp reset: {e}")
+            except (ConnectionError, TimeoutError, OSError) as e:
+                logger.error("whatsapp_reset_send_failed", error=str(e))
 
         background_tasks.add_task(send_whatsapp_reset)
     else:
@@ -907,8 +909,8 @@ async def forgot_password(
                     user_name=user_name,
                 )
                 logger.info("password_reset_email_sent", user_id=user.id)
-            except Exception as e:
-                logger.error(f"Failed to send reset email: {e}")
+            except (ConnectionError, TimeoutError, OSError) as e:
+                logger.error("reset_email_send_failed", error=str(e))
 
         background_tasks.add_task(send_reset_email)
 
@@ -961,8 +963,8 @@ async def reset_password(
 
     except HTTPException:
         raise
-    except Exception as e:
-        logger.error(f"Redis error validating reset token: {e}")
+    except (ConnectionError, TimeoutError, OSError) as e:
+        logger.error("redis_validate_reset_token_failed", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to validate reset token. Please try again.",
@@ -1037,8 +1039,8 @@ async def verify_email(
 
     except HTTPException:
         raise
-    except Exception as e:
-        logger.error(f"Redis error validating verification token: {e}")
+    except (ConnectionError, TimeoutError, OSError) as e:
+        logger.error("redis_validate_verification_token_failed", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to verify email. Please try again.",
@@ -1079,7 +1081,7 @@ async def verify_email(
     if user.full_name:
         try:
             user_name = decrypt_pii(user.full_name)
-        except Exception:
+        except (ValueError, TypeError, UnicodeDecodeError):
             user_name = "there"
 
     try:
@@ -1091,8 +1093,8 @@ async def verify_email(
                 to_email=original_email,
                 user_name=user_name,
             )
-    except Exception as e:
-        logger.warning(f"Failed to send welcome email: {e}")
+    except (ConnectionError, TimeoutError, OSError) as e:
+        logger.warning("welcome_email_send_failed", error=str(e))
 
     logger.info("email_verified", user_id=user.id)
 
@@ -1170,8 +1172,8 @@ async def resend_verification(
             str(user.id),
         )
         await redis_client.close()
-    except Exception as e:
-        logger.error(f"Redis error storing verification token: {e}")
+    except (ConnectionError, TimeoutError, OSError) as e:
+        logger.error("redis_store_verification_token_failed", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to generate verification email. Please try again.",
@@ -1182,7 +1184,7 @@ async def resend_verification(
     if user.full_name:
         try:
             user_name = decrypt_pii(user.full_name)
-        except Exception:
+        except (ValueError, TypeError, UnicodeDecodeError):
             user_name = "there"
 
     # Send email in background
@@ -1195,8 +1197,8 @@ async def resend_verification(
                 user_name=user_name,
             )
             logger.info("verification_email_resent", user_id=user.id)
-        except Exception as e:
-            logger.error(f"Failed to send verification email: {e}")
+        except (ConnectionError, TimeoutError, OSError) as e:
+            logger.error("verification_email_send_failed", error=str(e))
 
     background_tasks.add_task(send_verification)
 

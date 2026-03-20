@@ -716,7 +716,7 @@ class GoogleAdsAdapter(BaseAdapter):
             action.error_message = self._parse_google_error(e)
             logger.error(f"Action failed: {action.error_message}")
             return action
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError, ValueError, KeyError, TypeError) as e:
             action.status = "failed"
             action.error_message = str(e)
             logger.error(f"Action failed with unexpected error: {e}")

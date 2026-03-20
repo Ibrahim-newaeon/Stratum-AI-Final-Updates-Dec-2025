@@ -167,7 +167,7 @@ class ZohoSyncService:
                 deals=results["deals_synced"],
             )
 
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError, ValueError) as e:
             logger.error("zoho_sync_failed", tenant_id=self.tenant_id, error=str(e))
             connection.last_sync_status = "failed"
             await self.db.commit()
@@ -230,7 +230,7 @@ class ZohoSyncService:
                             results["created"] += 1
                         elif updated:
                             results["updated"] += 1
-                    except Exception as e:
+                    except (ValueError, TypeError, KeyError) as e:
                         results["errors"].append(f"Contact {contact_data.get('id')}: {e!s}")
 
                 # Check for more pages
@@ -295,7 +295,7 @@ class ZohoSyncService:
                             results["created"] += 1
                         elif updated:
                             results["updated"] += 1
-                    except Exception as e:
+                    except (ValueError, TypeError, KeyError) as e:
                         results["errors"].append(f"Lead {lead_data.get('id')}: {e!s}")
 
                 # Check for more pages
@@ -488,7 +488,7 @@ class ZohoSyncService:
                             results["created"] += 1
                         elif updated:
                             results["updated"] += 1
-                    except Exception as e:
+                    except (ValueError, TypeError, KeyError) as e:
                         results["errors"].append(f"Deal {deal_data.get('id')}: {e!s}")
 
                 # Check for more pages
@@ -692,7 +692,7 @@ class ZohoSyncService:
                                     contact.utm_source,
                                 )
 
-                except Exception as e:
+                except (ValueError, TypeError, KeyError) as e:
                     logger.warning(
                         "zoho_deal_association_failed",
                         deal_id=deal.crm_deal_id,

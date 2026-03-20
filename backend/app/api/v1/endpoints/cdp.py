@@ -752,7 +752,7 @@ async def ingest_events(
                     )
                 )
 
-            except Exception as e:
+            except (ValueError, KeyError, TypeError) as e:
                 logger.error(
                     "cdp_event_processing_error",
                     tenant_id=tenant_id,
@@ -2472,7 +2472,7 @@ async def test_webhook(
             error=f"Request timed out after {webhook.timeout_seconds} seconds",
         )
 
-    except Exception as e:
+    except (ConnectionError, OSError) as e:
         elapsed_ms = (time.time() - start_time) * 1000
         logger.error(
             "cdp_webhook_test_error",

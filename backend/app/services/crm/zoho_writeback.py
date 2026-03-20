@@ -304,7 +304,7 @@ class ZohoWritebackService:
                         results["contact_fields"]["errors"].append(
                             f"Failed to create {field['field_label']}: API returned no data"
                         )
-                except Exception as e:
+                except (ConnectionError, TimeoutError, OSError, ValueError) as e:
                     results["contact_fields"]["failed"] += 1
                     results["contact_fields"]["errors"].append(
                         f"Failed to create {field['field_label']}: {e!s}"
@@ -327,7 +327,7 @@ class ZohoWritebackService:
                         results["deal_fields"]["errors"].append(
                             f"Failed to create {field['field_label']}: API returned no data"
                         )
-                except Exception as e:
+                except (ConnectionError, TimeoutError, OSError, ValueError) as e:
                     results["deal_fields"]["failed"] += 1
                     results["deal_fields"]["errors"].append(
                         f"Failed to create {field['field_label']}: {e!s}"

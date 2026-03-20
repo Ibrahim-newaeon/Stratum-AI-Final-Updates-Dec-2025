@@ -226,7 +226,7 @@ class COGSService:
                 )
                 updated += 1
 
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, OSError) as e:
                 logger.error(f"Failed to update COGS for {update_data}: {e}")
                 failed += 1
 
@@ -409,7 +409,7 @@ class COGSIngestionService:
                     update_data = self._parse_csv_row(row)
                     if update_data:
                         updates.append(update_data)
-                except Exception as e:
+                except (ValueError, TypeError, KeyError) as e:
                     errors.append({"row": row_num, "error": str(e)})
 
             upload.rows_processed = len(updates) + len(errors)
@@ -432,7 +432,7 @@ class COGSIngestionService:
             upload.status = "completed"
             upload.processed_at = datetime.now(timezone.utc)
 
-        except Exception as e:
+        except (OSError, ValueError, TypeError, KeyError, UnicodeDecodeError) as e:
             logger.error(f"Failed to process COGS CSV: {e}")
             upload.status = "failed"
             upload.error_details = [{"error": str(e)}]

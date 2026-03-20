@@ -19,12 +19,17 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
+import structlog
+
 from app.auth.deps import get_current_user
 from app.db.session import get_async_session
 from app.models import User
 from app.models.audience_sync import SyncOperation, SyncPlatform
 from app.services.cdp.audience_sync import AudienceSyncService
 from app.tenancy.deps import get_tenant_id
+from sqlalchemy.exc import SQLAlchemyError
+
+logger = structlog.get_logger(__name__)
 
 router = APIRouter(prefix="/cdp/audience-sync", tags=["CDP Audience Sync"])
 
@@ -210,8 +215,9 @@ async def create_platform_audience(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         )
-    except Exception as e:
+    except (SQLAlchemyError, ConnectionError, TimeoutError, OSError) as e:
         await db.rollback()
+        logger.error("create_platform_audience_failed", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create platform audience: {e!s}",
@@ -298,8 +304,9 @@ async def trigger_sync(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         )
-    except Exception as e:
+    except (SQLAlchemyError, ConnectionError, TimeoutError, OSError) as e:
         await db.rollback()
+        logger.error("trigger_sync_failed", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Sync failed: {e!s}",
@@ -435,7 +442,8 @@ async def sync_segment_to_all_platforms(
                 triggered_by_user_id=current_user.id,
             )
             jobs.append(job)
-        except Exception as e:
+        except (SQLAlchemyError, ConnectionError, TimeoutError, OSError, ValueError) as e:
+            logger.error("sync_segment_platform_failed", platform=audience.platform, error=str(e))
             errors.append(
                 {
                     "platform": audience.platform,

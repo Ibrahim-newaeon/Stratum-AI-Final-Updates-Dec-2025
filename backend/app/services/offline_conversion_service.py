@@ -223,7 +223,7 @@ class MetaOfflineUploader(BaseOfflineUploader):
                     platform_response=all_results[0] if all_results else None,
                 )
 
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError, ValueError, httpx.HTTPError) as e:
             logger.error(f"Meta offline upload error: {e}")
             return UploadResult(
                 batch_id="",
@@ -363,7 +363,7 @@ class GoogleOfflineUploader(BaseOfflineUploader):
                         errors=[result.get("error", {"message": "Upload failed"})],
                     )
 
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError, ValueError, httpx.HTTPError) as e:
             logger.error(f"Google offline upload error: {e}")
             return UploadResult(
                 batch_id="",
@@ -476,7 +476,7 @@ class TikTokOfflineUploader(BaseOfflineUploader):
                         errors=[{"message": result.get("message", "Upload failed"), "code": result.get("code")}],
                     )
 
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError, ValueError, httpx.HTTPError) as e:
             logger.error(f"TikTok offline upload error: {e}")
             return UploadResult(
                 batch_id="",
@@ -571,7 +571,7 @@ class LinkedInOfflineUploader(BaseOfflineUploader):
                         errors=[{"message": f"HTTP {response.status_code}", "body": response.text}],
                     )
 
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError, ValueError, httpx.HTTPError) as e:
             logger.error(f"LinkedIn offline upload error: {e}")
             return UploadResult(
                 batch_id="",
@@ -679,7 +679,7 @@ class OfflineConversionService:
                 conv = self._parse_row(row, platform, default_mapping, i)
                 if conv:
                     conversions.append(conv)
-            except Exception as e:
+            except (ValueError, TypeError, KeyError) as e:
                 logger.warning(f"Error parsing row {i}: {e}")
 
         return conversions

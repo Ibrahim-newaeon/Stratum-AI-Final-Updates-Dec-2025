@@ -79,7 +79,7 @@ def calculate_daily_scores():
 
                     total_scored += 1
 
-                except Exception as e:
+                except (ValueError, TypeError, KeyError, RuntimeError) as e:
                     logger.error(f"Scoring failed for campaign {campaign.id}: {e}")
 
             # Commit per tenant to avoid long transactions

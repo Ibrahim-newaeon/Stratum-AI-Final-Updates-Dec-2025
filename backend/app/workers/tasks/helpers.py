@@ -73,5 +73,5 @@ def publish_event(tenant_id: int, event_type: str, payload: dict[str, Any]) -> N
         finally:
             redis_client.close()
 
-    except Exception as e:
+    except (ConnectionError, TimeoutError, OSError) as e:
         logger.warning(f"Failed to publish event: {e}")

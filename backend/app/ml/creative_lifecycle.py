@@ -343,7 +343,7 @@ class CreativeLifecyclePredictor:
                 decay_rate = float(popt[1])
                 floor = float(popt[2])
 
-            except Exception as e:
+            except (ValueError, TypeError, RuntimeError) as e:
                 logger.warning(f"Decay fitting failed: {e}")
                 return self._heuristic_decay(history)
         else:

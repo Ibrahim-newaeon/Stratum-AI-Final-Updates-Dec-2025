@@ -394,7 +394,7 @@ class SalesforceWritebackService:
                             }
                         )
 
-                except Exception as e:
+                except (ConnectionError, TimeoutError, OSError, ValueError, TypeError) as e:
                     failed += 1
                     errors.append(
                         {
@@ -515,7 +515,7 @@ class SalesforceWritebackService:
                             }
                         )
 
-                except Exception as e:
+                except (ConnectionError, TimeoutError, OSError, ValueError, TypeError) as e:
                     failed += 1
                     errors.append(
                         {

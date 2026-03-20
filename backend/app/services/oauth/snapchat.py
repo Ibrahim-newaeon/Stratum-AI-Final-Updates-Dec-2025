@@ -280,7 +280,7 @@ class SnapchatOAuthService(OAuthService):
                             )
                         )
 
-                except Exception as e:
+                except (ConnectionError, TimeoutError, OSError, ValueError, KeyError) as e:
                     self.logger.warning(f"Failed to get ad accounts for org {org_id}", error=str(e))
 
         return accounts

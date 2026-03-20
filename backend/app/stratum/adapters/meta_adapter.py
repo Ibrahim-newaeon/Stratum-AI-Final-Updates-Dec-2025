@@ -629,8 +629,11 @@ class MetaAdapter(BaseAdapter):
 
             return emq_scores
 
-        except Exception as e:
+        except (FacebookRequestError, ConnectionError, TimeoutError, OSError) as e:
             logger.error(f"Failed to fetch EMQ scores: {e}")
+            return []
+        except (ValueError, KeyError, TypeError) as e:
+            logger.error(f"Failed to parse EMQ score data: {e}")
             return []
 
     # ========================================================================
@@ -685,7 +688,7 @@ class MetaAdapter(BaseAdapter):
             action.error_message = e.api_error_message()
             logger.error(f"Action failed: {action.error_message}")
             return action
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError, ValueError, KeyError, TypeError) as e:
             action.status = "failed"
             action.error_message = str(e)
             logger.error(f"Action failed with unexpected error: {e}")

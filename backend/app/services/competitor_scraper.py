@@ -211,7 +211,7 @@ async def fetch_fb_page_display_name(fb_url: str) -> Optional[str]:
     except httpx.TimeoutException:
         logger.warning("fb_page_fetch_timeout", url=fb_url)
         return None
-    except Exception as e:
+    except (ConnectionError, OSError, ValueError, httpx.HTTPError) as e:
         logger.warning("fb_page_fetch_error", url=fb_url, error=str(e)[:200])
         return None
 
@@ -324,7 +324,7 @@ async def scrape_website(domain: str) -> CompetitorScanResult:
     except httpx.TimeoutException:
         result.scrape_error = "Timeout"
         logger.warning("scrape_timeout", domain=domain)
-    except Exception as e:
+    except (ConnectionError, OSError, ValueError, httpx.HTTPError) as e:
         result.scrape_error = str(e)[:200]
         logger.error("scrape_failed", domain=domain, error=str(e))
 
@@ -447,7 +447,7 @@ async def search_meta_ad_library(
     except httpx.TimeoutException:
         result.error = "API timeout"
         logger.warning("ad_library_timeout", query=query)
-    except Exception as e:
+    except (ConnectionError, OSError, ValueError, httpx.HTTPError) as e:
         result.error = str(e)[:200]
         logger.error("ad_library_failed", query=query, error=str(e))
 

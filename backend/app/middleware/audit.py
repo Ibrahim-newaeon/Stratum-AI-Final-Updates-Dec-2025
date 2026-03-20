@@ -79,7 +79,7 @@ class AuditMiddleware(BaseHTTPMiddleware):
         if response.status_code in range(200, 300):
             try:
                 await self._log_audit_event(request, request_body, response)
-            except Exception as e:
+            except (OSError, ValueError, TypeError, RuntimeError, KeyError) as e:
                 # Audit logging must never break the request
                 logger.error("audit_dispatch_failed", error=str(e))
 
@@ -127,7 +127,7 @@ class AuditMiddleware(BaseHTTPMiddleware):
             # Queue for async database write
             await self._queue_audit_write(audit_entry)
 
-        except Exception as e:
+        except (OSError, ValueError, TypeError, RuntimeError, KeyError) as e:
             logger.error("audit_logging_failed", error=str(e))
 
     def _parse_resource_from_path(self, path: str) -> tuple[str, Optional[str]]:
@@ -226,6 +226,6 @@ class AuditMiddleware(BaseHTTPMiddleware):
                 await client.lpush("audit_log_queue", json.dumps(audit_entry))
             finally:
                 await client.close()
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError) as e:
             # Audit logging should never break the request
             logger.warning("audit_queue_failed", error=str(e))

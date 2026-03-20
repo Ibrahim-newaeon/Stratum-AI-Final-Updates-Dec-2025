@@ -142,7 +142,7 @@ class HubSpotSyncService:
                 deals=results["deals_synced"],
             )
 
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError, ValueError) as e:
             logger.error("hubspot_sync_failed", tenant_id=self.tenant_id, error=str(e))
             connection.last_sync_status = "failed"
             await self.db.commit()
@@ -192,7 +192,7 @@ class HubSpotSyncService:
                             results["created"] += 1
                         elif updated:
                             results["updated"] += 1
-                    except Exception as e:
+                    except (ValueError, TypeError, KeyError) as e:
                         results["errors"].append(f"Contact {contact_data.get('id')}: {str(e)}")
 
                 # Check for more pages
@@ -333,7 +333,7 @@ class HubSpotSyncService:
                             results["created"] += 1
                         elif updated:
                             results["updated"] += 1
-                    except Exception as e:
+                    except (ValueError, TypeError, KeyError) as e:
                         results["errors"].append(f"Deal {deal_data.get('id')}: {str(e)}")
 
                 # Check for more pages
@@ -525,7 +525,7 @@ class HubSpotSyncService:
                                     contact.utm_source,
                                 )
 
-                except Exception as e:
+                except (ValueError, TypeError, KeyError) as e:
                     logger.warning(
                         "deal_association_failed",
                         deal_id=deal.crm_deal_id,
@@ -574,7 +574,7 @@ class HubSpotSyncService:
                         await self.db.commit()
                         result["deal_id"] = object_id
 
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError, ValueError, KeyError) as e:
             logger.error("hubspot_webhook_processing_failed", error=str(e))
             result["status"] = "error"
             result["error"] = str(e)

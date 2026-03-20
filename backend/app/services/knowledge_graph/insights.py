@@ -164,7 +164,7 @@ class KnowledgeGraphInsightsEngine:
                 detected = await detector(tenant_id, days)
                 if detected:
                     problems.extend(detected if isinstance(detected, list) else [detected])
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, ZeroDivisionError, OSError) as e:
                 logger.error(f"Problem detector {detector.__name__} failed: {e}")
 
         # Sort by severity
@@ -230,7 +230,7 @@ class KnowledgeGraphInsightsEngine:
                     },
                     solutions=self._generate_revenue_solutions(root_cause),
                 )
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, ZeroDivisionError, OSError) as e:
             logger.error(f"Revenue decline detection failed: {e}")
 
         return None
@@ -469,7 +469,7 @@ class KnowledgeGraphInsightsEngine:
                         ),
                     ],
                 )
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, ZeroDivisionError, OSError) as e:
             logger.error(f"Blocked automation detection failed: {e}")
 
         return None
@@ -524,7 +524,7 @@ class KnowledgeGraphInsightsEngine:
                         ),
                     ],
                 ))
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, ZeroDivisionError, OSError) as e:
             logger.error(f"Signal degradation detection failed: {e}")
 
         return problems
@@ -637,7 +637,7 @@ class KnowledgeGraphInsightsEngine:
                                 ),
                             ],
                         ))
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, ZeroDivisionError, OSError) as e:
             logger.error(f"Segment issue detection failed: {e}")
 
         return problems
@@ -694,7 +694,7 @@ class KnowledgeGraphInsightsEngine:
                         ),
                     ],
                 )
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, ZeroDivisionError, OSError) as e:
             logger.error(f"Trust gate bottleneck detection failed: {e}")
 
         return None
@@ -757,7 +757,7 @@ class KnowledgeGraphInsightsEngine:
                                 ),
                             ],
                         )
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, ZeroDivisionError, OSError) as e:
             logger.error(f"Channel inefficiency detection failed: {e}")
 
         return None

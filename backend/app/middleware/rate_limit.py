@@ -111,7 +111,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 await self._redis.ping()
                 self._redis_available = True
                 logger.info("rate_limiter_redis_connected")
-            except Exception as exc:
+            except (ConnectionError, TimeoutError, OSError) as exc:
                 logger.warning(
                     "rate_limiter_redis_unavailable",
                     error=str(exc),
@@ -179,7 +179,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         # Try Redis first, fall back to in-memory
         try:
             allowed, remaining = await self._check_redis(client_id)
-        except Exception:
+        except (ConnectionError, TimeoutError, OSError):
             # Redis unavailable — use local token bucket
             bucket = self._get_bucket(client_id)
             allowed = bucket.consume()

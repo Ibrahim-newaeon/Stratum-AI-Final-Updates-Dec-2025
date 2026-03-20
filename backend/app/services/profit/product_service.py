@@ -309,7 +309,7 @@ class ProductCatalogService:
                     )
                     created += 1
 
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, OSError) as e:
                 logger.error(f"Failed to import product: {e}")
                 failed += 1
 

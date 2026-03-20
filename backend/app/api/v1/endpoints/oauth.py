@@ -24,6 +24,8 @@ from pydantic import BaseModel, Field
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from sqlalchemy.exc import SQLAlchemyError
+
 from app.auth.deps import CurrentUserDep, VerifiedUserDep
 from app.auth.permissions import require_super_admin
 from app.core.config import settings
@@ -169,7 +171,7 @@ async def start_oauth(
             user_id=current_user.id,
             redirect_uri=request_data.frontend_callback_url or settings.frontend_url,
         )
-    except Exception as e:
+    except (ConnectionError, TimeoutError, OSError, ValueError) as e:
         logger.error("Failed to create OAuth state", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -265,7 +267,7 @@ async def oauth_callback(
     try:
         redirect_uri = oauth_service.get_redirect_uri()
         tokens = await oauth_service.exchange_code_for_tokens(code, redirect_uri)
-    except Exception as e:
+    except (ConnectionError, TimeoutError, OSError, ValueError) as e:
         logger.error(
             "oauth_token_exchange_failed",
             platform=platform.value,
@@ -343,11 +345,11 @@ async def oauth_callback(
                 platform=platform.value,
                 tenant_id=oauth_state.tenant_id,
             )
-        except Exception as sync_err:
+        except (ConnectionError, TimeoutError, OSError, RuntimeError) as sync_err:
             # Non-blocking — don't fail the OAuth flow if sync scheduling fails
             logger.warning("auto_sync_trigger_failed", error=str(sync_err))
 
-    except Exception as e:
+    except (SQLAlchemyError, ValueError) as e:
         logger.error(
             "oauth_storage_failed",
             platform=platform.value,
@@ -519,7 +521,7 @@ async def list_ad_accounts(
     try:
         oauth_service = get_oauth_service(platform.value)
         access_token = oauth_service.decrypt_token(connection.access_token_encrypted)
-    except Exception as e:
+    except (ValueError, OSError, KeyError) as e:
         logger.error("Failed to decrypt token", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -546,7 +548,7 @@ async def list_ad_accounts(
                 await db.commit()
 
                 access_token = new_tokens.access_token
-            except Exception as e:
+            except (ConnectionError, TimeoutError, OSError, ValueError) as e:
                 logger.error("Token refresh failed", error=str(e))
                 connection.status = ConnectionStatus.EXPIRED
                 connection.last_error = str(e)
@@ -565,7 +567,7 @@ async def list_ad_accounts(
     # Fetch accounts from platform
     try:
         platform_accounts = await oauth_service.fetch_ad_accounts(access_token)
-    except Exception as e:
+    except (ConnectionError, TimeoutError, OSError, ValueError) as e:
         logger.error("Failed to fetch ad accounts", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
@@ -637,7 +639,7 @@ async def connect_ad_accounts(
         oauth_service = get_oauth_service(platform.value)
         access_token = oauth_service.decrypt_token(connection.access_token_encrypted)
         platform_accounts = await oauth_service.fetch_ad_accounts(access_token)
-    except Exception as e:
+    except (ConnectionError, TimeoutError, OSError, ValueError) as e:
         logger.error("Failed to fetch ad accounts for validation", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY, detail="Failed to validate accounts"
@@ -802,7 +804,7 @@ async def refresh_token(
             ),
         )
 
-    except Exception as e:
+    except (ConnectionError, TimeoutError, OSError, ValueError) as e:
         logger.error("Token refresh failed", error=str(e))
         connection.status = ConnectionStatus.ERROR
         connection.last_error = str(e)
@@ -851,7 +853,7 @@ async def disconnect_platform(
             oauth_service = get_oauth_service(platform.value)
             access_token = oauth_service.decrypt_token(connection.access_token_encrypted)
             await oauth_service.revoke_access(access_token)
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError, ValueError) as e:
             logger.warning("Failed to revoke access with platform", error=str(e))
             # Continue with local disconnect anyway
 
@@ -907,7 +909,7 @@ async def _auto_sync_after_oauth(tenant_id: int, platform: AdPlatform) -> None:
                 metrics=result.metrics_upserted,
                 errors=len(result.errors),
             )
-    except Exception as e:
+    except (ConnectionError, TimeoutError, OSError, ValueError, RuntimeError) as e:
         logger.error(
             "auto_sync_failed",
             platform=platform.value,
