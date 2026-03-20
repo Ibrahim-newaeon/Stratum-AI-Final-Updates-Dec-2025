@@ -212,10 +212,12 @@ describe('AutopilotPanel', () => {
   it('renders status filter buttons', () => {
     setupMocks();
     render(<AutopilotPanel tenantId={1} />);
-    expect(screen.getByText('Filter:')).toBeInTheDocument();
+    // "Filter:" label appears once; status labels like "Queued"/"Applied" appear
+    // both in the filter bar AND in action status badges, so use getAllByText.
+    expect(screen.getAllByText('Filter:').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('All')).toBeInTheDocument();
-    expect(screen.getByText('Queued')).toBeInTheDocument();
-    expect(screen.getByText('Applied')).toBeInTheDocument();
+    expect(screen.getAllByText('Queued').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Applied').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('Failed')).toBeInTheDocument();
   });
 

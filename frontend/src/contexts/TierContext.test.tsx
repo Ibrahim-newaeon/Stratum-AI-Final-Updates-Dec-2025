@@ -231,8 +231,20 @@ describe('TierContext', () => {
 
     it('handles API errors gracefully', async () => {
       mockGet.mockRejectedValue(new Error('Network error'));
-      const queryClient = createQueryClient();
+      // TierProvider uses retry: 2 in useQuery, so we need a longer timeout
+      // to wait for all retry attempts to complete before the error state is set.
+      const queryClient = new QueryClient({
+        defaultOptions: {
+          queries: {
+            retry: false,
+            gcTime: 0,
+          },
+        },
+      });
 
+      // Override the retry behavior at the query client level.
+      // TierProvider sets retry: 2, but the query function rejects instantly,
+      // so we need enough time for react-query to exhaust retries.
       const wrapper = ({ children }: { children: ReactNode }) => (
         <QueryClientProvider client={queryClient}>
           <TierProvider>{children}</TierProvider>
@@ -241,9 +253,12 @@ describe('TierContext', () => {
 
       const { result } = renderHook(() => useTier(), { wrapper });
 
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 10000 }
+      );
 
       expect(result.current.error).toBeTruthy();
       // Should fall back to defaults

@@ -114,7 +114,12 @@ describe('AlertsWidget', () => {
   it('applies staggered animation delays', () => {
     mockUseDashboardSimulation.mockReturnValue({ alerts: sampleAlerts });
     const { container } = render(<AlertsWidget />);
-    const alertItems = container.querySelectorAll('[style*="animationDelay"]');
+    // jsdom may serialize the style as "animation-delay" (kebab-case) rather
+    // than "animationDelay" (camelCase). Query for both forms.
+    let alertItems = container.querySelectorAll('[style*="animation-delay"]');
+    if (alertItems.length === 0) {
+      alertItems = container.querySelectorAll('[style*="animationDelay"]');
+    }
     expect(alertItems.length).toBe(4);
   });
 });

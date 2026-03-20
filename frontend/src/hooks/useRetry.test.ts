@@ -3,6 +3,11 @@
  *
  * Tests for retry functionality with exponential backoff.
  * Covers execute, retry, reset, callbacks, and the standalone fetchWithRetry.
+ *
+ * NOTE: The useRetry hook uses `await sleep()` (Promise-wrapped setTimeout)
+ * inside a while loop. Fake timers cannot advance when the event loop is
+ * blocked by an awaited promise, so the hook tests use real timers with
+ * tiny delays to avoid the deadlock.
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -10,14 +15,6 @@ import { renderHook, act } from '@testing-library/react';
 import { useRetry, fetchWithRetry } from './useRetry';
 
 describe('useRetry', () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
   // -------------------------------------------------------------------------
   // Initial state
   // -------------------------------------------------------------------------
@@ -74,13 +71,13 @@ describe('useRetry', () => {
   });
 
   // -------------------------------------------------------------------------
-  // Retry behavior
+  // Retry behavior (real timers with small delays)
   // -------------------------------------------------------------------------
 
   describe('Retry Behavior', () => {
     it('should retry on failure up to maxRetries', async () => {
       const { result } = renderHook(() =>
-        useRetry<string>({ maxRetries: 2, baseDelay: 100, exponentialBackoff: false })
+        useRetry<string>({ maxRetries: 2, baseDelay: 1, exponentialBackoff: false })
       );
 
       const fn = vi.fn().mockRejectedValue(new Error('fail'));
@@ -91,8 +88,6 @@ describe('useRetry', () => {
         } catch {
           // expected
         }
-        // Flush all pending timers for sleep delays
-        await vi.runAllTimersAsync();
       });
 
       // Initial attempt + 2 retries = 3 calls
@@ -101,7 +96,7 @@ describe('useRetry', () => {
 
     it('should succeed after transient failures', async () => {
       const { result } = renderHook(() =>
-        useRetry<string>({ maxRetries: 3, baseDelay: 10, exponentialBackoff: false })
+        useRetry<string>({ maxRetries: 3, baseDelay: 1, exponentialBackoff: false })
       );
 
       const fn = vi
@@ -113,7 +108,6 @@ describe('useRetry', () => {
       let value: string | undefined;
       await act(async () => {
         value = await result.current.execute(fn);
-        await vi.runAllTimersAsync();
       });
 
       expect(value).toBe('success');
@@ -122,14 +116,13 @@ describe('useRetry', () => {
 
     it('should throw the last error after exhausting retries', async () => {
       const { result } = renderHook(() =>
-        useRetry<string>({ maxRetries: 1, baseDelay: 10, exponentialBackoff: false })
+        useRetry<string>({ maxRetries: 1, baseDelay: 1, exponentialBackoff: false })
       );
 
       const fn = vi.fn().mockRejectedValue(new Error('persistent failure'));
 
       await act(async () => {
         await expect(result.current.execute(fn)).rejects.toThrow('persistent failure');
-        await vi.runAllTimersAsync();
       });
     });
   });
@@ -140,11 +133,13 @@ describe('useRetry', () => {
 
   describe('Exponential Backoff', () => {
     it('should use exponential delays when enabled', async () => {
+      // Use small delays so the test completes quickly with real timers.
+      // We spy on setTimeout to verify the calculated delays are exponential.
       const { result } = renderHook(() =>
         useRetry<string>({
           maxRetries: 3,
-          baseDelay: 1000,
-          maxDelay: 10000,
+          baseDelay: 10,
+          maxDelay: 1000,
           exponentialBackoff: true,
         })
       );
@@ -158,13 +153,12 @@ describe('useRetry', () => {
         } catch {
           // expected
         }
-        await vi.runAllTimersAsync();
       });
 
       // Verify delays increase exponentially
-      // The sleep calls: baseDelay * 2^0 = 1000, baseDelay * 2^1 = 2000, baseDelay * 2^2 = 4000
+      // The sleep calls: baseDelay * 2^0 = 10, baseDelay * 2^1 = 20, baseDelay * 2^2 = 40
       const sleepCalls = setTimeoutSpy.mock.calls.filter(
-        (call) => typeof call[1] === 'number' && call[1] >= 1000
+        (call) => typeof call[1] === 'number' && call[1] >= 10
       );
       expect(sleepCalls.length).toBeGreaterThanOrEqual(1);
 
@@ -172,11 +166,12 @@ describe('useRetry', () => {
     });
 
     it('should cap delay at maxDelay', async () => {
+      // Use small delays with a low maxDelay cap to verify capping
       const { result } = renderHook(() =>
         useRetry<string>({
-          maxRetries: 5,
-          baseDelay: 5000,
-          maxDelay: 8000,
+          maxRetries: 3,
+          baseDelay: 50,
+          maxDelay: 80,
           exponentialBackoff: true,
         })
       );
@@ -190,16 +185,15 @@ describe('useRetry', () => {
         } catch {
           // expected
         }
-        await vi.runAllTimersAsync();
       });
 
-      // All setTimeout delays should be <= 8000
+      // All setTimeout delays should be <= 80
       const delayCalls = setTimeoutSpy.mock.calls
-        .filter((call) => typeof call[1] === 'number' && call[1] >= 5000)
+        .filter((call) => typeof call[1] === 'number' && call[1] >= 50)
         .map((call) => call[1] as number);
 
       delayCalls.forEach((delay) => {
-        expect(delay).toBeLessThanOrEqual(8000);
+        expect(delay).toBeLessThanOrEqual(80);
       });
 
       setTimeoutSpy.mockRestore();
@@ -209,7 +203,7 @@ describe('useRetry', () => {
       const { result } = renderHook(() =>
         useRetry<string>({
           maxRetries: 2,
-          baseDelay: 500,
+          baseDelay: 5,
           exponentialBackoff: false,
         })
       );
@@ -223,15 +217,14 @@ describe('useRetry', () => {
         } catch {
           // expected
         }
-        await vi.runAllTimersAsync();
       });
 
       const delayCalls = setTimeoutSpy.mock.calls
-        .filter((call) => call[1] === 500)
+        .filter((call) => call[1] === 5)
         .map((call) => call[1]);
 
       expect(delayCalls.length).toBeGreaterThanOrEqual(1);
-      delayCalls.forEach((d) => expect(d).toBe(500));
+      delayCalls.forEach((d) => expect(d).toBe(5));
 
       setTimeoutSpy.mockRestore();
     });
@@ -245,7 +238,7 @@ describe('useRetry', () => {
     it('should call onRetry on each retry attempt', async () => {
       const onRetry = vi.fn();
       const { result } = renderHook(() =>
-        useRetry<string>({ maxRetries: 2, baseDelay: 10, exponentialBackoff: false, onRetry })
+        useRetry<string>({ maxRetries: 2, baseDelay: 1, exponentialBackoff: false, onRetry })
       );
 
       const fn = vi.fn().mockRejectedValue(new Error('fail'));
@@ -256,7 +249,6 @@ describe('useRetry', () => {
         } catch {
           // expected
         }
-        await vi.runAllTimersAsync();
       });
 
       expect(onRetry).toHaveBeenCalledTimes(2);
@@ -267,7 +259,7 @@ describe('useRetry', () => {
     it('should call onMaxRetriesReached when retries exhausted', async () => {
       const onMaxRetriesReached = vi.fn();
       const { result } = renderHook(() =>
-        useRetry<string>({ maxRetries: 1, baseDelay: 10, exponentialBackoff: false, onMaxRetriesReached })
+        useRetry<string>({ maxRetries: 1, baseDelay: 1, exponentialBackoff: false, onMaxRetriesReached })
       );
 
       const fn = vi.fn().mockRejectedValue(new Error('final'));
@@ -278,7 +270,6 @@ describe('useRetry', () => {
         } catch {
           // expected
         }
-        await vi.runAllTimersAsync();
       });
 
       expect(onMaxRetriesReached).toHaveBeenCalledTimes(1);
@@ -293,7 +284,7 @@ describe('useRetry', () => {
   describe('Reset', () => {
     it('should clear all state on reset', async () => {
       const { result } = renderHook(() =>
-        useRetry<string>({ maxRetries: 1, baseDelay: 10, exponentialBackoff: false })
+        useRetry<string>({ maxRetries: 1, baseDelay: 1, exponentialBackoff: false })
       );
 
       const fn = vi.fn().mockRejectedValue(new Error('fail'));
@@ -304,7 +295,6 @@ describe('useRetry', () => {
         } catch {
           // expected
         }
-        await vi.runAllTimersAsync();
       });
 
       expect(result.current.lastError).not.toBeNull();
@@ -326,7 +316,7 @@ describe('useRetry', () => {
   describe('Retry (manual)', () => {
     it('should re-execute the last function when retry is called', async () => {
       const { result } = renderHook(() =>
-        useRetry<string>({ maxRetries: 0, baseDelay: 10 })
+        useRetry<string>({ maxRetries: 0, baseDelay: 1 })
       );
 
       const fn = vi
@@ -340,13 +330,11 @@ describe('useRetry', () => {
         } catch {
           // expected on first attempt
         }
-        await vi.runAllTimersAsync();
       });
 
       let retryResult: string | undefined;
       await act(async () => {
         retryResult = await result.current.retry();
-        await vi.runAllTimersAsync();
       });
 
       expect(retryResult).toBe('ok');
@@ -371,7 +359,7 @@ describe('useRetry', () => {
   describe('Error Handling', () => {
     it('should wrap non-Error throws into Error objects', async () => {
       const { result } = renderHook(() =>
-        useRetry<string>({ maxRetries: 0, baseDelay: 10 })
+        useRetry<string>({ maxRetries: 0, baseDelay: 1 })
       );
 
       const fn = vi.fn().mockRejectedValue('string error');
@@ -382,7 +370,6 @@ describe('useRetry', () => {
         } catch {
           // expected
         }
-        await vi.runAllTimersAsync();
       });
 
       expect(result.current.lastError).toBeInstanceOf(Error);

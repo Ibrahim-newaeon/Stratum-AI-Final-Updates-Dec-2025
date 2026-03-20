@@ -11,45 +11,83 @@ import { renderHook, act } from '@testing-library/react';
 
 // ---------------------------------------------------------------------------
 // Mock jsPDF and html2canvas
+//
+// vi.mock() factories are hoisted above variable declarations, so we use
+// vi.hoisted() to ensure the mock references are available when the
+// factory runs.
 // ---------------------------------------------------------------------------
 
-const mockSave = vi.fn();
-const mockText = vi.fn();
-const mockRect = vi.fn();
-const mockAddImage = vi.fn();
-const mockAddPage = vi.fn();
-const mockSetFillColor = vi.fn();
-const mockSetTextColor = vi.fn();
-const mockSetFontSize = vi.fn();
-const mockSetFont = vi.fn();
+const {
+  mockSave,
+  mockText,
+  mockRect,
+  mockAddImage,
+  mockAddPage,
+  mockSetFillColor,
+  mockSetTextColor,
+  mockSetFontSize,
+  mockSetFont,
+  mockPdf,
+  mockJsPDF,
+  mockCanvas,
+  mockHtml2canvas,
+} = vi.hoisted(() => {
+  const mockSave = vi.fn();
+  const mockText = vi.fn();
+  const mockRect = vi.fn();
+  const mockAddImage = vi.fn();
+  const mockAddPage = vi.fn();
+  const mockSetFillColor = vi.fn();
+  const mockSetTextColor = vi.fn();
+  const mockSetFontSize = vi.fn();
+  const mockSetFont = vi.fn();
 
-const mockPdf = {
-  internal: {
-    pageSize: {
-      getWidth: () => 297, // A4 landscape width in mm
-      getHeight: () => 210,
+  const mockPdf = {
+    internal: {
+      pageSize: {
+        getWidth: () => 297, // A4 landscape width in mm
+        getHeight: () => 210,
+      },
     },
-  },
-  save: mockSave,
-  text: mockText,
-  rect: mockRect,
-  addImage: mockAddImage,
-  addPage: mockAddPage,
-  setFillColor: mockSetFillColor,
-  setTextColor: mockSetTextColor,
-  setFontSize: mockSetFontSize,
-  setFont: mockSetFont,
-};
+    save: mockSave,
+    text: mockText,
+    rect: mockRect,
+    addImage: mockAddImage,
+    addPage: mockAddPage,
+    setFillColor: mockSetFillColor,
+    setTextColor: mockSetTextColor,
+    setFontSize: mockSetFontSize,
+    setFont: mockSetFont,
+  };
 
-const mockJsPDF = vi.fn(() => mockPdf);
+  // Use a regular function (not arrow) so the mock can be called with `new`.
+  // Returning a non-primitive from a constructor makes `new` use that object.
+  const mockJsPDF = vi.fn(function() { return mockPdf; });
 
-const mockCanvas = {
-  width: 800,
-  height: 600,
-  toDataURL: vi.fn().mockReturnValue('data:image/png;base64,mockdata'),
-};
+  const mockCanvas = {
+    width: 800,
+    height: 600,
+    toDataURL: vi.fn().mockReturnValue('data:image/png;base64,mockdata'),
+  };
 
-const mockHtml2canvas = vi.fn().mockResolvedValue(mockCanvas);
+  const mockHtml2canvas = vi.fn().mockResolvedValue(mockCanvas);
+
+  return {
+    mockSave,
+    mockText,
+    mockRect,
+    mockAddImage,
+    mockAddPage,
+    mockSetFillColor,
+    mockSetTextColor,
+    mockSetFontSize,
+    mockSetFont,
+    mockPdf,
+    mockJsPDF,
+    mockCanvas,
+    mockHtml2canvas,
+  };
+});
 
 // Mock dynamic imports
 vi.mock('jspdf', () => ({ default: mockJsPDF }));

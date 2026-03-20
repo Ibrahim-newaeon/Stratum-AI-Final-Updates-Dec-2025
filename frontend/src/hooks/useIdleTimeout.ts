@@ -57,6 +57,10 @@ export function useIdleTimeout({
   const onTimeoutRef = useRef(onTimeout);
   onTimeoutRef.current = onTimeout;
 
+  // Track warning state in a ref so activity handlers always read the
+  // latest value without requiring the effect to depend on isWarning.
+  const isWarningRef = useRef(false);
+
   const clearAllTimers = useCallback(() => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
@@ -70,6 +74,7 @@ export function useIdleTimeout({
 
   const startWarningCountdown = useCallback(() => {
     setIsWarning(true);
+    isWarningRef.current = true;
     const warningSec = Math.ceil(warningDuration / 1000);
     setSecondsLeft(warningSec);
 
@@ -80,6 +85,7 @@ export function useIdleTimeout({
       if (remaining <= 0) {
         clearAllTimers();
         setIsWarning(false);
+        isWarningRef.current = false;
         onTimeoutRef.current();
       }
     }, 1000);
@@ -88,6 +94,7 @@ export function useIdleTimeout({
   const resetTimer = useCallback(() => {
     clearAllTimers();
     setIsWarning(false);
+    isWarningRef.current = false;
     setSecondsLeft(0);
 
     if (!enabled) return;
@@ -104,6 +111,7 @@ export function useIdleTimeout({
     if (!enabled) {
       clearAllTimers();
       setIsWarning(false);
+      isWarningRef.current = false;
       return;
     }
 
@@ -111,9 +119,10 @@ export function useIdleTimeout({
     resetTimer();
 
     const handleActivity = () => {
-      // Only reset if NOT already in warning state
-      // (user must explicitly click "Stay logged in" during warning)
-      if (!isWarning) {
+      // Only reset if NOT already in warning state.
+      // Read from ref to avoid stale closure and prevent the effect from
+      // depending on isWarning (which would re-run and reset the timer).
+      if (!isWarningRef.current) {
         resetTimer();
       }
     };
@@ -128,7 +137,7 @@ export function useIdleTimeout({
       });
       clearAllTimers();
     };
-  }, [enabled, resetTimer, clearAllTimers, isWarning]);
+  }, [enabled, resetTimer, clearAllTimers]);
 
   return { isWarning, secondsLeft, resetTimer };
 }

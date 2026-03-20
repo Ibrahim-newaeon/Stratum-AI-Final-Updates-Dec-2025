@@ -131,11 +131,15 @@ describe('SignalHealthPanel', () => {
 
     render(<SignalHealthPanel tenantId={1} />);
     expect(screen.getByText('Signal Health')).toBeInTheDocument();
-    expect(screen.getByText('Healthy')).toBeInTheDocument();
+    // "Healthy" appears in the header badge AND in each platform row status,
+    // so use getAllByText instead of getByText
+    expect(screen.getAllByText('Healthy').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('Overall EMQ')).toBeInTheDocument();
-    expect(screen.getByText('Event Loss')).toBeInTheDocument();
-    expect(screen.getByText('Freshness')).toBeInTheDocument();
-    expect(screen.getByText('API Health')).toBeInTheDocument();
+    // "Event Loss", "Freshness", "API Health" appear as both card titles and
+    // table column headers, so use getAllByText
+    expect(screen.getAllByText('Event Loss').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Freshness').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('API Health').length).toBeGreaterThanOrEqual(1);
   });
 
   it('renders platform rows in the table', () => {

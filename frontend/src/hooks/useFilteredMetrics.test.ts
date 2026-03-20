@@ -13,10 +13,59 @@ import { renderHook } from '@testing-library/react';
 
 // ---------------------------------------------------------------------------
 // Mock dependencies before importing the hook
+//
+// vi.mock() factories are hoisted above variable declarations. Use
+// vi.hoisted() so mock data and spy functions are available when the
+// factory runs, preventing TDZ / undefined references that cause OOM.
 // ---------------------------------------------------------------------------
 
-const mockShowPriceMetrics = vi.fn(() => true);
-const mockVisibilityData = vi.fn(() => ({ data: { hidden_metrics: [] as string[] }, isLoading: false }));
+const { mockShowPriceMetrics, mockVisibilityData, MOCK_METRICS } = vi.hoisted(() => {
+  const mockShowPriceMetrics = vi.fn(() => true);
+  const mockVisibilityData = vi.fn(() => ({
+    data: { hidden_metrics: [] as string[] },
+    isLoading: false,
+  }));
+
+  const MOCK_METRICS = {
+    impressions: {
+      id: 'impressions',
+      label: 'Impressions',
+      category: 'performance',
+      platforms: ['meta', 'google'],
+      isPriceMetric: false,
+    },
+    spend: {
+      id: 'spend',
+      label: 'Spend',
+      category: 'cost',
+      platforms: ['meta', 'google', 'tiktok'],
+      isPriceMetric: true,
+    },
+    roas: {
+      id: 'roas',
+      label: 'ROAS',
+      category: 'cost',
+      platforms: ['meta', 'google'],
+      isPriceMetric: true,
+    },
+    clicks: {
+      id: 'clicks',
+      label: 'Clicks',
+      category: 'performance',
+      platforms: ['meta', 'google', 'snapchat'],
+      isPriceMetric: false,
+    },
+    conversions: {
+      id: 'conversions',
+      label: 'Conversions',
+      category: 'conversion',
+      platforms: ['tiktok'],
+      isPriceMetric: false,
+    },
+  };
+
+  return { mockShowPriceMetrics, mockVisibilityData, MOCK_METRICS };
+});
 
 vi.mock('@/hooks/usePriceMetrics', () => ({
   usePriceMetrics: () => ({ showPriceMetrics: mockShowPriceMetrics() }),
@@ -28,45 +77,6 @@ vi.mock('@/api/dashboard', () => ({
     return { data: result.data, isLoading: result.isLoading };
   },
 }));
-
-// Define mock metric registry
-const MOCK_METRICS = {
-  impressions: {
-    id: 'impressions',
-    label: 'Impressions',
-    category: 'performance',
-    platforms: ['meta', 'google'],
-    isPriceMetric: false,
-  },
-  spend: {
-    id: 'spend',
-    label: 'Spend',
-    category: 'cost',
-    platforms: ['meta', 'google', 'tiktok'],
-    isPriceMetric: true,
-  },
-  roas: {
-    id: 'roas',
-    label: 'ROAS',
-    category: 'cost',
-    platforms: ['meta', 'google'],
-    isPriceMetric: true,
-  },
-  clicks: {
-    id: 'clicks',
-    label: 'Clicks',
-    category: 'performance',
-    platforms: ['meta', 'google', 'snapchat'],
-    isPriceMetric: false,
-  },
-  conversions: {
-    id: 'conversions',
-    label: 'Conversions',
-    category: 'conversion',
-    platforms: ['tiktok'],
-    isPriceMetric: false,
-  },
-};
 
 vi.mock('@/constants/metrics', () => ({
   METRIC_REGISTRY: MOCK_METRICS,

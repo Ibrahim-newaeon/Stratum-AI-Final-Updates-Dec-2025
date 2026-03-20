@@ -138,8 +138,8 @@ describe('Login', () => {
   it('shows validation errors on empty form submission', async () => {
     render(<Login />);
 
-    const submitButton = screen.getByRole('button', { name: /initialize session/i });
-    fireEvent.click(submitButton);
+    const form = screen.getByRole('button', { name: /initialize session/i }).closest('form')!;
+    fireEvent.submit(form);
 
     await waitFor(() => {
       expect(screen.getByText('Please fill in all fields')).toBeInTheDocument();
@@ -205,8 +205,10 @@ describe('Login', () => {
     fireEvent.click(screen.getByRole('button', { name: /initialize session/i }));
 
     await waitFor(() => {
-      expect(screen.getByText('Too many failed login attempts.')).toBeInTheDocument();
+      // The lockout alert renders "Account temporarily locked" and
+      // "Too many failed attempts. Try again in <countdown>"
       expect(screen.getByText('Account temporarily locked')).toBeInTheDocument();
+      expect(screen.getByText(/Too many failed attempts/)).toBeInTheDocument();
     });
   });
 

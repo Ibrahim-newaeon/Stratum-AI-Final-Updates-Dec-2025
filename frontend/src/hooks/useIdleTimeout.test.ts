@@ -327,9 +327,10 @@ describe('useIdleTimeout', () => {
         useIdleTimeout({ onTimeout, timeout: 2_000, warningDuration: 5_000 })
       );
 
-      // mainTimeout = Math.max(2000 - 5000, 0) = 0, so warning starts immediately
+      // mainTimeout = Math.max(2000 - 5000, 0) = 0, so warning starts almost immediately.
+      // Advance by 1ms to ensure the zero-delay setTimeout fires.
       act(() => {
-        vi.advanceTimersByTime(0);
+        vi.advanceTimersByTime(1);
       });
 
       expect(result.current.isWarning).toBe(true);
