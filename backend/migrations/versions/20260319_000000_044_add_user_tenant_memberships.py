@@ -12,6 +12,7 @@ Create Date: 2026-03-19 00:00:00.000000
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.dialects.postgresql import ENUM
 
 # revision identifiers
 revision = '044_add_user_tenant_memberships'
@@ -28,7 +29,7 @@ def upgrade():
         sa.Column('tenant_id', sa.Integer, sa.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False),
         sa.Column(
             'role',
-            sa.Enum('superadmin', 'admin', 'manager', 'analyst', 'viewer', name='userrole', create_type=False),
+            ENUM('superadmin', 'admin', 'manager', 'analyst', 'viewer', name='userrole', create_type=False),
             nullable=False,
             server_default='analyst',
         ),
