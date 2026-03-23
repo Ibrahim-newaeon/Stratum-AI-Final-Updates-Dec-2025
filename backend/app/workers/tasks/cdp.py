@@ -13,7 +13,7 @@ from typing import Any, Optional
 
 from celery import shared_task
 from celery.utils.log import get_task_logger
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from app.db.session import SyncSessionLocal
 from app.workers.locks import with_distributed_lock
@@ -425,9 +425,21 @@ def compute_cdp_funnel(self, tenant_id: int, funnel_id: str):
 
         previous_count = 0
         for i, step in enumerate(steps):
-            # Count profiles that completed this step
-            # Implementation would query events
-            count = 0  # Placeholder
+            # Count distinct profiles that completed this step's event
+            event_name = step.get("event_name") or step.get("name")
+            if event_name:
+                from app.models.cdp import CDPEvent
+                count_result = db.execute(
+                    select(func.count(func.distinct(CDPEvent.profile_id))).where(
+                        CDPEvent.tenant_id == tenant_id,
+                        CDPEvent.event_name == event_name,
+                        CDPEvent.profile_id.isnot(None),
+                    )
+                ).scalar() or 0
+                count = count_result
+            else:
+                count = 0
+
             conversion = (count / previous_count * 100) if previous_count > 0 else 100
 
             results["steps"].append(
@@ -438,7 +450,7 @@ def compute_cdp_funnel(self, tenant_id: int, funnel_id: str):
                     "conversion": round(conversion, 2),
                 }
             )
-            previous_count = count
+            previous_count = count if count > 0 else previous_count
 
         # Update funnel with results
         funnel.last_computed_at = datetime.now(UTC)

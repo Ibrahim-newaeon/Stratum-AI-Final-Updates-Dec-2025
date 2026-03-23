@@ -685,14 +685,69 @@ class SalesforceClient:
         Note: This is a simplified implementation. Full custom field creation
         requires the Metadata API which has different authentication.
         """
-        # Custom field creation typically requires Metadata API
-        # This is a placeholder - in production, use Salesforce Metadata API
-        logger.warning(
-            "salesforce_custom_field_creation_not_implemented",
-            object_name=object_name,
-            field_name=field_name,
+        # Use Salesforce Tooling API for custom field creation
+        # (Alternative to Metadata API that works with REST and same auth)
+        sf_field_type_map = {
+            "text": "Text",
+            "number": "Number",
+            "currency": "Currency",
+            "date": "Date",
+            "datetime": "DateTime",
+            "email": "Email",
+            "phone": "Phone",
+            "url": "Url",
+            "checkbox": "Checkbox",
+            "picklist": "Picklist",
+            "textarea": "LongTextArea",
+        }
+
+        sf_type = sf_field_type_map.get(field_type, "Text")
+
+        # Ensure field API name has __c suffix
+        api_name = field_name if field_name.endswith("__c") else f"{field_name}__c"
+
+        metadata = {
+            "FullName": f"{object_name}.{api_name}",
+            "Metadata": {
+                "label": label,
+                "description": description,
+                "type": sf_type,
+                "inlineHelpText": description,
+            },
+        }
+
+        # Add type-specific defaults
+        if sf_type == "Text":
+            metadata["Metadata"]["length"] = 255
+        elif sf_type == "Number":
+            metadata["Metadata"]["precision"] = 18
+            metadata["Metadata"]["scale"] = 2
+        elif sf_type == "LongTextArea":
+            metadata["Metadata"]["length"] = 32768
+            metadata["Metadata"]["visibleLines"] = 5
+
+        result = await self._make_request(
+            "POST",
+            "/tooling/sobjects/CustomField",
+            data=metadata,
         )
-        return {"success": False, "error": "Custom field creation requires Metadata API"}
+
+        if result and result.get("id"):
+            logger.info(
+                "salesforce_custom_field_created",
+                object_name=object_name,
+                field_name=api_name,
+                field_id=result["id"],
+            )
+            return {"success": True, "field_id": result["id"], "api_name": api_name}
+
+        logger.warning(
+            "salesforce_custom_field_creation_failed",
+            object_name=object_name,
+            field_name=api_name,
+            result=result,
+        )
+        return {"success": False, "error": result}
 
     # =========================================================================
     # Bulk Operations

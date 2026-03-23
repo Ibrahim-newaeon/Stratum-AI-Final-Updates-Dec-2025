@@ -180,7 +180,7 @@ class ClientAssignment(TimestampMixin, Base):
 
 
 # =============================================================================
-# Client Request (Portal workflow — v2 placeholder)
+# Client Request (Portal workflow)
 # =============================================================================
 class ClientRequest(TimestampMixin, TenantMixin, Base):
     """

@@ -1159,11 +1159,9 @@ async def get_superadmin_dashboard(
     tenants = result.scalars().all()
 
     total_tenants = len(tenants)
-    # NOTE: Tenant.status and Tenant.mrr_cents are not yet on the model;
-    # getattr defaults keep this safe but return placeholder values.
-    active_tenants = len([t for t in tenants if getattr(t, 'status', 'active') == 'active'])
+    active_tenants = len([t for t in tenants if t.status == 'active'])
     trial_tenants = len([t for t in tenants if t.plan == 'trial'])
-    total_mrr = sum((getattr(t, 'mrr_cents', 0) or 0) for t in tenants) / 100
+    total_mrr = sum((t.mrr_cents or 0) for t in tenants) / 100
 
     # Get user count
     user_result = await db.execute(
