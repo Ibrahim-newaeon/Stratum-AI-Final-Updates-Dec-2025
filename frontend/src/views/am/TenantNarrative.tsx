@@ -264,11 +264,41 @@ export default function TenantNarrative() {
   ]
 
   const handleExportPDF = () => {
-    // TODO: implement PDF export
+    // Generate a printable PDF view of the narrative
+    const printContent = document.querySelector('[data-tour="tenant-narrative"]')
+    if (printContent) {
+      const printWindow = window.open('', '_blank')
+      if (printWindow) {
+        printWindow.document.write(`
+          <html>
+            <head>
+              <title>Client Narrative - ${tenantId}</title>
+              <style>
+                body { font-family: system-ui, sans-serif; padding: 2rem; color: #1a1a1a; }
+                h1, h2, h3 { color: #111; }
+                .metric { display: inline-block; margin: 0.5rem 1rem 0.5rem 0; padding: 0.5rem 1rem; background: #f5f5f5; border-radius: 8px; }
+              </style>
+            </head>
+            <body>
+              <h1>Client Narrative Report</h1>
+              <p>Generated: ${new Date().toLocaleDateString()}</p>
+              <hr />
+              ${printContent.innerHTML}
+            </body>
+          </html>
+        `)
+        printWindow.document.close()
+        printWindow.print()
+      }
+    }
   }
 
   const handleScheduleCall = () => {
-    // TODO: implement calendar integration
+    // Open calendar link for scheduling a follow-up call
+    const subject = encodeURIComponent(`Stratum AI - Follow-up Call`)
+    const body = encodeURIComponent(`Hi,\n\nI'd like to schedule a follow-up call to discuss your campaign performance.\n\nBest regards`)
+    // Use mailto as a fallback for calendar integration
+    window.open(`mailto:?subject=${subject}&body=${body}`, '_blank')
   }
 
   return (

@@ -136,7 +136,7 @@ services:
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5173}
     volumes:
       - ./backend:/app
-      - ./ml_service/models:/app/ml_service/models:ro
+      - ./backend/app/ml:/app/ml_service/models:ro
     ports:
       - "8000:8000"
     depends_on:
@@ -219,7 +219,7 @@ services:
       - ENABLE_WHATSAPP=${ENABLE_WHATSAPP:-false}
     volumes:
       - ./backend:/app
-      - ./ml_service/models:/app/ml_service/models:ro
+      - ./backend/app/ml:/app/ml_service/models:ro
     depends_on:
       db:
         condition: service_healthy

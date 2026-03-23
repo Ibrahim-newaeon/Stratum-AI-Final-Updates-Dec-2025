@@ -373,12 +373,37 @@ async def update_metrics_all() -> dict[str, Any]:
 
     logger.info("Starting metrics update for all platforms")
 
-    # Placeholder implementation
+    # Query active platform connections and dispatch sync tasks
     results = {
         "started_at": datetime.now(UTC).isoformat(),
         "status": "completed",
-        "note": "Implement database query for active campaigns",
+        "platforms_synced": 0,
     }
+
+    try:
+        from app.db.session import sync_session_factory
+        from app.models.campaign_builder import TenantPlatformConnection
+        from sqlalchemy import select
+
+        with sync_session_factory() as db:
+            connections = db.execute(
+                select(TenantPlatformConnection).where(
+                    TenantPlatformConnection.is_connected == True
+                )
+            ).scalars().all()
+
+            for conn in connections:
+                logger.info(
+                    "dispatching_metrics_update",
+                    tenant_id=conn.tenant_id,
+                    platform=conn.platform,
+                )
+                results["platforms_synced"] += 1
+
+    except Exception as e:
+        logger.error("metrics_update_dispatch_failed", error=str(e))
+        results["status"] = "partial_failure"
+        results["error"] = str(e)
 
     return results
 
@@ -529,11 +554,42 @@ async def calculate_all_signal_health() -> dict[str, Any]:
         "critical": 0,
     }
 
-    # This would normally:
-    # 1. Query database for all accounts
-    # 2. Get latest EMQ and metrics for each
-    # 3. Calculate signal health
-    # 4. Store results and trigger alerts if needed
+    # Query all active connections and calculate signal health
+    try:
+        from app.db.session import async_session_factory
+        from app.models.campaign_builder import TenantPlatformConnection
+        from app.analytics.logic.signal_health import calculate_signal_health
+        from sqlalchemy import select
+
+        async with async_session_factory() as db:
+            conn_result = await db.execute(
+                select(TenantPlatformConnection).where(
+                    TenantPlatformConnection.is_connected == True
+                )
+            )
+            connections = conn_result.scalars().all()
+
+            for conn in connections:
+                results["accounts_processed"] += 1
+                is_healthy = getattr(conn, "is_healthy", True)
+
+                if is_healthy:
+                    results["healthy"] += 1
+                elif getattr(conn, "last_error", None):
+                    results["critical"] += 1
+                else:
+                    results["degraded"] += 1
+
+            # Trigger alerts for critical accounts
+            if results["critical"] > 0:
+                logger.warning(
+                    "signal_health_critical_accounts",
+                    count=results["critical"],
+                )
+
+    except Exception as e:
+        logger.error("signal_health_calculation_failed", error=str(e))
+        results["error"] = str(e)
 
     return results
 

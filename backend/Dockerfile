@@ -45,8 +45,9 @@ USER appuser
 # Expose port (Railway assigns dynamic PORT)
 EXPOSE ${PORT:-8000}
 
-# Disable Docker healthcheck - Railway manages healthchecks externally
-HEALTHCHECK NONE
+# Health check - overridden by docker-compose when running locally
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=40s \
+  CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
 
 # Use start.sh entrypoint for proper shell variable expansion
 ENTRYPOINT ["/app/start.sh"]

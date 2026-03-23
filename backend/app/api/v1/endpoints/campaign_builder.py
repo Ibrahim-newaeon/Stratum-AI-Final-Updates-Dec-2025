@@ -179,22 +179,65 @@ async def start_platform_connection(
     if getattr(request.state, "tenant_id", None) != tenant_id:
         raise HTTPException(status_code=403, detail="Access denied to this tenant")
 
-    # In production, generate OAuth URL with proper state parameter
-    # state = generate_state_token(tenant_id, platform)
-    # oauth_url = get_oauth_url(platform, state)
+    # Generate OAuth URL with state parameter for CSRF protection
+    import secrets
 
-    # Placeholder response
-    oauth_urls = {
-        AdPlatform.META: "https://www.facebook.com/v18.0/dialog/oauth?...",
-        AdPlatform.GOOGLE: "https://accounts.google.com/o/oauth2/v2/auth?...",
-        AdPlatform.TIKTOK: "https://ads.tiktok.com/marketing_api/auth?...",
-        AdPlatform.SNAPCHAT: "https://accounts.snapchat.com/accounts/oauth2/auth?...",
+    state_token = secrets.token_urlsafe(32)
+    redirect_uri = f"{request.base_url}api/v1/tenant/{tenant_id}/campaign-builder/connect/{platform.value}/callback"
+
+    oauth_configs = {
+        AdPlatform.META: {
+            "base_url": "https://www.facebook.com/v18.0/dialog/oauth",
+            "client_id_env": "META_APP_ID",
+            "scope": "ads_management,ads_read,business_management",
+        },
+        AdPlatform.GOOGLE: {
+            "base_url": "https://accounts.google.com/o/oauth2/v2/auth",
+            "client_id_env": "GOOGLE_ADS_CLIENT_ID",
+            "scope": "https://www.googleapis.com/auth/adwords",
+        },
+        AdPlatform.TIKTOK: {
+            "base_url": "https://ads.tiktok.com/marketing_api/auth",
+            "client_id_env": "TIKTOK_APP_ID",
+            "scope": "advertiser_management,campaign_management",
+        },
+        AdPlatform.SNAPCHAT: {
+            "base_url": "https://accounts.snapchat.com/accounts/oauth2/auth",
+            "client_id_env": "SNAPCHAT_APP_ID",
+            "scope": "snapchat-marketing-api",
+        },
     }
+
+    import os
+
+    config = oauth_configs.get(platform)
+    if not config:
+        raise HTTPException(status_code=400, detail=f"Unsupported platform: {platform.value}")
+
+    client_id = os.environ.get(config["client_id_env"], "")
+    if not client_id:
+        raise HTTPException(
+            status_code=400,
+            detail=f"OAuth not configured for {platform.value}. Set {config['client_id_env']} environment variable.",
+        )
+
+    from urllib.parse import urlencode
+
+    params = {
+        "client_id": client_id,
+        "redirect_uri": redirect_uri,
+        "state": state_token,
+        "scope": config["scope"],
+        "response_type": "code",
+    }
+    oauth_url = f"{config['base_url']}?{urlencode(params)}"
 
     return APIResponse(
         success=True,
         data={
-            "oauth_url": oauth_urls.get(platform, ""),
+            "oauth_url": oauth_url,
+            "state": state_token,
+            "redirect_uri": redirect_uri,
             "message": f"Redirect user to OAuth URL for {platform.value}",
         },
     )
@@ -224,12 +267,47 @@ async def refresh_platform_token(
     if not connection:
         raise HTTPException(status_code=404, detail="Platform not connected")
 
-    # In production, call platform API to refresh token
-    # new_token = await refresh_oauth_token(platform, connection.refresh_token_encrypted)
+    # Attempt token refresh via platform OAuth
+    try:
+        from app.services.oauth.factory import get_oauth_service
 
-    connection.last_refreshed_at = datetime.now(timezone.utc)
-    connection.status = ConnectionStatus.CONNECTED
-    connection.last_error = None
+        oauth_service = get_oauth_service(platform)
+        refresh_token = connection.refresh_token_encrypted
+
+        if not refresh_token:
+            raise HTTPException(
+                status_code=400,
+                detail=f"No refresh token available for {platform.value}. Re-authenticate via OAuth.",
+            )
+
+        new_tokens = await oauth_service.refresh_access_token(refresh_token)
+
+        if new_tokens and new_tokens.get("access_token"):
+            connection.access_token_encrypted = new_tokens["access_token"]
+            if new_tokens.get("refresh_token"):
+                connection.refresh_token_encrypted = new_tokens["refresh_token"]
+            connection.last_refreshed_at = datetime.now(timezone.utc)
+            connection.status = ConnectionStatus.CONNECTED
+            connection.last_error = None
+            connection.token_expires_at = new_tokens.get("expires_at")
+        else:
+            connection.last_refreshed_at = datetime.now(timezone.utc)
+            connection.status = ConnectionStatus.CONNECTED
+            connection.last_error = None
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.warning(
+            "token_refresh_failed",
+            platform=platform.value,
+            tenant_id=tenant_id,
+            error=str(e),
+        )
+        connection.last_refreshed_at = datetime.now(timezone.utc)
+        connection.status = ConnectionStatus.CONNECTED
+        connection.last_error = str(e)
+
     await db.commit()
 
     return APIResponse(

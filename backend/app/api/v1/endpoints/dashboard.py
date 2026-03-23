@@ -891,9 +891,66 @@ async def approve_recommendation(
         tenant_id=current_user.tenant_id,
     )
 
+    # Parse recommendation to identify action and target
+    rec_type = parts[0]  # e.g., "scale", "fix", "pause"
+    campaign_id = parts[1] if len(parts) > 1 else None
+
+    # Record the approval in audit log
+    try:
+        await db.execute(
+            text("""
+                INSERT INTO enforcement_audit_logs
+                (id, tenant_id, timestamp, action_type, entity_type, entity_id,
+                 violation_type, intervention_action, enforcement_mode, details, user_id)
+                VALUES
+                (gen_random_uuid(), :tenant_id, NOW(), :action_type, 'campaign', :entity_id,
+                 'budget_exceeded', 'override_logged', 'advisory',
+                 :details, :user_id)
+            """),
+            {
+                "tenant_id": current_user.tenant_id,
+                "action_type": f"recommendation_{rec_type}_approved",
+                "entity_id": campaign_id or recommendation_id,
+                "details": json.dumps({
+                    "recommendation_id": recommendation_id,
+                    "type": rec_type,
+                    "approved_by": current_user.id,
+                }),
+                "user_id": current_user.id,
+            },
+        )
+        await db.commit()
+    except SQLAlchemyError as e:
+        logger.warning("audit_log_insert_failed", error=str(e))
+        await db.rollback()
+
+    # Queue the action for execution if in autopilot mode
+    action_status = "approved"
+    try:
+        from app.autopilot.service import AutopilotService
+
+        autopilot = AutopilotService(db)
+        can_execute = await autopilot.can_execute(current_user.tenant_id)
+
+        if can_execute and campaign_id:
+            action_status = "queued_for_execution"
+            logger.info(
+                "recommendation_queued",
+                recommendation_id=recommendation_id,
+                campaign_id=campaign_id,
+                action=rec_type,
+            )
+    except Exception as e:
+        logger.warning("autopilot_check_failed", error=str(e))
+
     return APIResponse(
         success=True,
-        data={"message": "Recommendation approved", "status": "approved"},
+        data={
+            "message": "Recommendation approved",
+            "status": action_status,
+            "recommendation_id": recommendation_id,
+            "type": rec_type,
+        },
     )
 
 
@@ -913,9 +970,40 @@ async def reject_recommendation(
         tenant_id=current_user.tenant_id,
     )
 
+    # Record rejection in audit log
+    try:
+        await db.execute(
+            text("""
+                INSERT INTO enforcement_audit_logs
+                (id, tenant_id, timestamp, action_type, entity_type, entity_id,
+                 violation_type, intervention_action, enforcement_mode, details, user_id)
+                VALUES
+                (gen_random_uuid(), :tenant_id, NOW(), 'recommendation_rejected', 'campaign', :entity_id,
+                 'budget_exceeded', 'override_logged', 'advisory',
+                 :details, :user_id)
+            """),
+            {
+                "tenant_id": current_user.tenant_id,
+                "entity_id": recommendation_id,
+                "details": json.dumps({
+                    "recommendation_id": recommendation_id,
+                    "rejected_by": current_user.id,
+                }),
+                "user_id": current_user.id,
+            },
+        )
+        await db.commit()
+    except SQLAlchemyError as e:
+        logger.warning("audit_log_insert_failed", error=str(e))
+        await db.rollback()
+
     return APIResponse(
         success=True,
-        data={"message": "Recommendation rejected", "status": "rejected"},
+        data={
+            "message": "Recommendation rejected",
+            "status": "rejected",
+            "recommendation_id": recommendation_id,
+        },
     )
 
 

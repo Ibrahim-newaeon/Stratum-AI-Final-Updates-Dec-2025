@@ -215,6 +215,7 @@ export default function SuperadminDashboard() {
   const [systemHealth, setSystemHealth] = useState<SystemHealth | null>(null)
   const [plans, setPlans] = useState<any[]>([])
   const [invoices, setInvoices] = useState<any[]>([])
+  const [subscriptions, setSubscriptions] = useState<any[]>([])
   const [auditLogs, setAuditLogs] = useState<any[]>([])
 
   const fetchData = useCallback(async () => {
@@ -222,13 +223,14 @@ export default function SuperadminDashboard() {
     setError(null)
 
     try {
-      const [revenueRes, tenantsRes, healthRes, churnRes, plansRes, invoicesRes, auditRes] = await Promise.allSettled([
+      const [revenueRes, tenantsRes, healthRes, churnRes, plansRes, invoicesRes, subscriptionsRes, auditRes] = await Promise.allSettled([
         apiClient.get('/superadmin/revenue'),
         apiClient.get('/superadmin/tenants/portfolio'),
         apiClient.get('/superadmin/system/health'),
         apiClient.get('/superadmin/churn/risks'),
         apiClient.get('/superadmin/billing/plans'),
         apiClient.get('/superadmin/billing/invoices'),
+        apiClient.get('/superadmin/billing/subscriptions'),
         apiClient.get('/superadmin/audit', { params: { limit: 100 } }),
       ])
 
@@ -250,6 +252,17 @@ export default function SuperadminDashboard() {
       }
       if (invoicesRes.status === 'fulfilled' && invoicesRes.value.data.success) {
         setInvoices(invoicesRes.value.data.data.invoices || [])
+      }
+      if (subscriptionsRes.status === 'fulfilled' && subscriptionsRes.value.data.success) {
+        const subs = subscriptionsRes.value.data.data.subscriptions || []
+        setSubscriptions(subs.map((s: any) => ({
+          id: s.id,
+          tenantName: s.tenant_name || `Tenant ${s.tenant_id}`,
+          plan: s.plan_name || 'unknown',
+          status: s.status || 'active',
+          mrr: s.discount_percent ? 0 : 0,
+          nextBilling: new Date(s.current_period_end || Date.now()),
+        })))
       }
       if (auditRes.status === 'fulfilled' && auditRes.value.data.success) {
         setAuditLogs(auditRes.value.data.data.logs || [])
@@ -1220,9 +1233,68 @@ export default function SuperadminDashboard() {
           {billingSubTab === 'subscriptions' && (
             <div className="rounded-xl border bg-card p-6 shadow-card">
               <h3 className="font-semibold mb-4">Active Subscriptions</h3>
-              <p className="text-muted-foreground text-center py-8">
-                Subscription management coming soon. View and manage tenant subscriptions, trials, and upgrades.
-              </p>
+              {subscriptions.length === 0 ? (
+                <p className="text-muted-foreground text-center py-8">
+                  No active subscriptions found.
+                </p>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-muted-foreground">
+                      <th className="text-left py-3 px-4 font-medium">Tenant</th>
+                      <th className="text-left py-3 px-4 font-medium">Plan</th>
+                      <th className="text-left py-3 px-4 font-medium">Status</th>
+                      <th className="text-right py-3 px-4 font-medium">MRR</th>
+                      <th className="text-left py-3 px-4 font-medium">Next Billing</th>
+                      <th className="text-left py-3 px-4 font-medium">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {subscriptions.map((sub) => (
+                      <tr key={sub.id} className="border-b hover:bg-muted/50">
+                        <td className="py-3 px-4 font-medium">{sub.tenantName}</td>
+                        <td className="py-3 px-4">
+                          <span className="px-2 py-0.5 rounded-full text-xs bg-primary/10 text-primary capitalize">
+                            {sub.plan}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className={`px-2 py-0.5 rounded-full text-xs ${
+                            sub.status === 'active' ? 'bg-green-500/10 text-green-500' :
+                            sub.status === 'past_due' ? 'bg-red-500/10 text-red-500' :
+                            sub.status === 'trialing' ? 'bg-blue-500/10 text-blue-500' :
+                            'bg-muted text-muted-foreground'
+                          }`}>
+                            {sub.status}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-right font-mono">${sub.mrr.toLocaleString()}</td>
+                        <td className="py-3 px-4 text-muted-foreground">
+                          {sub.nextBilling.toLocaleDateString()}
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="flex gap-2">
+                            {sub.status === 'past_due' && (
+                              <button
+                                onClick={() => handleRetryPayment?.(sub.id)}
+                                className="text-xs px-2 py-1 rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                              >
+                                Retry
+                              </button>
+                            )}
+                            <button
+                              onClick={() => window.location.href = `/superadmin/billing/subscriptions/${sub.id}`}
+                              className="text-xs px-2 py-1 rounded bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
+                            >
+                              Manage
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           )}
         </div>

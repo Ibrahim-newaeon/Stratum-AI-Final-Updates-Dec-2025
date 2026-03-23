@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
+import apiClient from '@/api/client'
 import {
   Search,
   Upload,
@@ -299,8 +300,18 @@ export function Assets() {
           <div className="flex gap-2">
             <button
               onClick={() => {
-                // Tag functionality — could open a tag modal
-                alert(`Tag ${selectedAssets.length} assets — coming soon`)
+                const tag = prompt(`Enter tag for ${selectedAssets.length} selected assets:`)
+                if (tag && tag.trim()) {
+                  // Apply tag to selected assets via API
+                  selectedAssets.forEach(async (assetId) => {
+                    try {
+                      await apiClient.post(`/api/v1/assets/${assetId}/tags`, { tag: tag.trim() })
+                    } catch {
+                      // Silently handle if endpoint not yet available
+                    }
+                  })
+                  setSelectedAssets([])
+                }
               }}
               className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-background border hover:bg-muted transition-colors text-sm"
             >

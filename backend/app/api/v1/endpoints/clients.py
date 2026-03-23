@@ -24,7 +24,7 @@ from app.base_schemas import APIResponse, PaginatedResponse
 from app.core.logging import get_logger
 from app.db.session import get_async_session
 from app.models import Campaign, CampaignStatus, User, UserRole
-from app.models.client import Client, ClientAssignment
+from app.models.client import Client, ClientAssignment, ClientRequest, ClientRequestStatus, ClientRequestType
 from app.schemas.client import (
     ClientAssignmentCreate,
     ClientAssignmentResponse,
@@ -867,3 +867,243 @@ async def invite_portal_user(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to invite portal user",
         )
+
+
+# =============================================================================
+# Portal Requests (Client Request Workflow)
+# =============================================================================
+
+from datetime import datetime, timezone as tz
+from pydantic import BaseModel, Field
+
+
+class PortalRequestCreate(BaseModel):
+    """Create a portal request."""
+    type: str = Field(..., description="Request type")
+    campaign_name: Optional[str] = Field(None, description="Campaign name if applicable")
+    description: str = Field("", description="Request description")
+    target_entity_type: Optional[str] = None
+    target_entity_id: Optional[int] = None
+    requested_changes: dict = Field(default_factory=dict)
+
+
+class PortalRequestReview(BaseModel):
+    """Review a portal request."""
+    action: str = Field(..., description="approve or reject")
+    notes: Optional[str] = None
+
+
+@router.post(
+    "/portal/requests",
+    response_model=APIResponse,
+    tags=["Portal"],
+)
+async def create_portal_request(
+    payload: PortalRequestCreate,
+    current_user: VerifiedUserDep,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Submit a portal request from a client portal user.
+
+    Portal users can request campaign changes, budget adjustments, etc.
+    Requests are reviewed by agency users.
+    """
+    # Map request type string to enum
+    type_map = {
+        "pause_campaign": ClientRequestType.PAUSE_CAMPAIGN,
+        "resume_campaign": ClientRequestType.RESUME_CAMPAIGN,
+        "adjust_budget": ClientRequestType.ADJUST_BUDGET,
+        "change_targeting": ClientRequestType.CHANGE_TARGETING,
+        "new_campaign": ClientRequestType.NEW_CAMPAIGN,
+        "general": ClientRequestType.OTHER,
+        "other": ClientRequestType.OTHER,
+    }
+
+    request_type = type_map.get(payload.type, ClientRequestType.OTHER)
+
+    # Find the client this portal user belongs to
+    assignment = await db.execute(
+        select(ClientAssignment).where(
+            ClientAssignment.user_id == current_user.id,
+        )
+    )
+    client_assignment = assignment.scalar_one_or_none()
+
+    if not client_assignment:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No client assignment found for this user",
+        )
+
+    title = payload.campaign_name or f"{request_type.value} request"
+
+    client_request = ClientRequest(
+        tenant_id=current_user.tenant_id,
+        client_id=client_assignment.client_id,
+        requested_by=current_user.id,
+        request_type=request_type,
+        title=title,
+        description=payload.description,
+        target_entity_type=payload.target_entity_type,
+        target_entity_id=payload.target_entity_id,
+        requested_changes=payload.requested_changes,
+        status=ClientRequestStatus.PENDING,
+    )
+
+    db.add(client_request)
+    await db.commit()
+    await db.refresh(client_request)
+
+    logger.info(
+        "portal_request_created",
+        request_id=client_request.id,
+        client_id=client_assignment.client_id,
+        type=request_type.value,
+        user_id=current_user.id,
+    )
+
+    return APIResponse(
+        message="Request submitted successfully",
+        data={
+            "request_id": client_request.id,
+            "status": client_request.status.value,
+            "title": client_request.title,
+        },
+    )
+
+
+@router.get(
+    "/{client_id}/requests",
+    response_model=APIResponse,
+    dependencies=[Depends(require_permission("clients.view", PermLevel.VIEW))],
+    tags=["Portal"],
+)
+async def list_client_requests(
+    client_id: int,
+    current_user: VerifiedUserDep,
+    db: AsyncSession = Depends(get_async_session),
+    status_filter: Optional[str] = Query(None, description="Filter by status"),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
+):
+    """List requests for a specific client."""
+    await enforce_client_access(db, current_user, client_id)
+
+    query = select(ClientRequest).where(
+        ClientRequest.client_id == client_id,
+        ClientRequest.tenant_id == current_user.tenant_id,
+    )
+
+    if status_filter:
+        query = query.where(ClientRequest.status == status_filter)
+
+    query = query.order_by(ClientRequest.created_at.desc())
+    query = query.offset(skip).limit(limit)
+
+    result = await db.execute(query)
+    requests = result.scalars().all()
+
+    # Count total
+    count_query = select(func.count(ClientRequest.id)).where(
+        ClientRequest.client_id == client_id,
+        ClientRequest.tenant_id == current_user.tenant_id,
+    )
+    if status_filter:
+        count_query = count_query.where(ClientRequest.status == status_filter)
+    total = (await db.execute(count_query)).scalar() or 0
+
+    return APIResponse(
+        data={
+            "requests": [
+                {
+                    "id": r.id,
+                    "type": r.request_type.value,
+                    "title": r.title,
+                    "description": r.description,
+                    "status": r.status.value,
+                    "requested_changes": r.requested_changes,
+                    "created_at": r.created_at.isoformat() if r.created_at else None,
+                    "reviewed_at": r.reviewed_at.isoformat() if r.reviewed_at else None,
+                    "review_notes": r.review_notes,
+                }
+                for r in requests
+            ],
+            "total": total,
+            "skip": skip,
+            "limit": limit,
+        },
+    )
+
+
+@router.post(
+    "/{client_id}/requests/{request_id}/review",
+    response_model=APIResponse,
+    dependencies=[Depends(require_permission("clients.edit", PermLevel.EDIT))],
+    tags=["Portal"],
+)
+async def review_client_request(
+    client_id: int,
+    request_id: int,
+    payload: PortalRequestReview,
+    current_user: VerifiedUserDep,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Approve or reject a client portal request.
+
+    Agency users review requests submitted by portal users.
+    """
+    await enforce_client_access(db, current_user, client_id)
+
+    result = await db.execute(
+        select(ClientRequest).where(
+            ClientRequest.id == request_id,
+            ClientRequest.client_id == client_id,
+            ClientRequest.tenant_id == current_user.tenant_id,
+        )
+    )
+    client_request = result.scalar_one_or_none()
+
+    if not client_request:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Request not found",
+        )
+
+    if client_request.status != ClientRequestStatus.PENDING:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Request already {client_request.status.value}",
+        )
+
+    if payload.action == "approve":
+        client_request.status = ClientRequestStatus.APPROVED
+    elif payload.action == "reject":
+        client_request.status = ClientRequestStatus.REJECTED
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Action must be 'approve' or 'reject'",
+        )
+
+    client_request.reviewed_by = current_user.id
+    client_request.reviewed_at = datetime.now(tz.utc)
+    client_request.review_notes = payload.notes
+
+    await db.commit()
+
+    logger.info(
+        "portal_request_reviewed",
+        request_id=request_id,
+        action=payload.action,
+        reviewer_id=current_user.id,
+    )
+
+    return APIResponse(
+        message=f"Request {payload.action}d successfully",
+        data={
+            "request_id": request_id,
+            "status": client_request.status.value,
+        },
+    )
