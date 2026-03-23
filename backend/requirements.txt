@@ -3,7 +3,7 @@
 # =============================================================================
 
 # FastAPI Framework
-fastapi==0.135.1
+fastapi==0.135.2
 uvicorn[standard]==0.42.0
 python-multipart==0.0.22
 starlette==0.52.1
@@ -24,7 +24,7 @@ alembic==1.18.4
 greenlet==3.3.2
 
 # Redis & Caching
-redis[asyncio]==7.2.1
+redis[asyncio]==7.3.0
 
 # Celery
 celery==5.6.2
@@ -49,7 +49,7 @@ joblib==1.5.3
 xgboost==2.0.3
 
 # Google Cloud (for Vertex AI)
-google-cloud-aiplatform==1.141.0
+google-cloud-aiplatform==1.142.0
 google-auth==2.49.1
 
 # Web Scraping (Module D)
@@ -70,14 +70,14 @@ prometheus-client==0.24.1
 # Testing
 pytest==8.0.1
 pytest-asyncio==0.23.8
-pytest-cov==7.0.0
-faker==40.11.0
+pytest-cov==7.1.0
+faker==40.11.1
 
 # Development
 black==26.3.1
 isort==8.0.1
 mypy==1.19.1
-ruff==0.15.6
+ruff==0.15.7
 
 # Ad Platform SDKs
 stripe>=7.0.0
