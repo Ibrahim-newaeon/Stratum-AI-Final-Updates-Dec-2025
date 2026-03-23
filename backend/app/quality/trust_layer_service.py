@@ -60,7 +60,7 @@ class SignalHealthService:
                     FactSignalHealthDaily.tenant_id == tenant_id,
                     FactSignalHealthDaily.date == target_date,
                 )
-            )
+            ).limit(1000)
         )
         records = result.scalars().all()
 
@@ -266,7 +266,7 @@ class AttributionVarianceService:
                     FactAttributionVarianceDaily.tenant_id == tenant_id,
                     FactAttributionVarianceDaily.date == target_date,
                 )
-            )
+            ).limit(1000)
         )
         records = result.scalars().all()
 

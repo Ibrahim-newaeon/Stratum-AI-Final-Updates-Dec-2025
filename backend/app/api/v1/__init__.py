@@ -21,7 +21,6 @@ from app.api.v1.endpoints import (
     whatsapp,
     tenants,
     tenant_dashboard,
-    linkedin,
     ml_training,
     predictions,
     capi,
@@ -145,13 +144,6 @@ api_router.include_router(
     whatsapp.router,
     prefix="/whatsapp",
     tags=["WhatsApp"],
-)
-
-# LinkedIn Ads Integration
-api_router.include_router(
-    linkedin.router,
-    prefix="/linkedin",
-    tags=["LinkedIn Ads"],
 )
 
 # ML Training & Data Upload

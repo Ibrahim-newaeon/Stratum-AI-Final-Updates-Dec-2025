@@ -109,12 +109,6 @@ class DataQualityAnalyzer:
             PIIField.EXTERNAL_ID: 20,
             PIIField.CLIENT_IP: 15,
         },
-        "linkedin": {
-            PIIField.EMAIL: 45,
-            PIIField.FIRST_NAME: 20,
-            PIIField.LAST_NAME: 20,
-            PIIField.EXTERNAL_ID: 15,
-        },
     }
 
     # ROAS impact per match quality level

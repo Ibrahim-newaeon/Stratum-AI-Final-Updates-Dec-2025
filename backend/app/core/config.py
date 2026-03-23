@@ -126,16 +126,6 @@ class Settings(BaseSettings):
     snapchat_access_token: Optional[str] = Field(default=None)
     snapchat_ad_account_id: Optional[str] = Field(default=None)
 
-    # LinkedIn
-    linkedin_client_id: Optional[str] = Field(
-        default=None, description="LinkedIn App Client ID"
-    )
-    linkedin_client_secret: Optional[str] = Field(
-        default=None, description="LinkedIn App Client Secret"
-    )
-    linkedin_access_token: Optional[str] = Field(
-        default=None, description="LinkedIn Marketing API access token"
-    )
 
     # -------------------------------------------------------------------------
     # WhatsApp Business API Configuration
@@ -150,8 +140,8 @@ class Settings(BaseSettings):
         default=None, description="WhatsApp Business Account ID"
     )
     whatsapp_verify_token: str = Field(
-        default="stratum-whatsapp-verify-token",
-        description="Token for webhook verification"
+        default="",
+        description="Token for webhook verification — must be set via WHATSAPP_VERIFY_TOKEN env var"
     )
     whatsapp_app_secret: Optional[str] = Field(
         default=None, description="WhatsApp/Meta App Secret for webhook signature verification"

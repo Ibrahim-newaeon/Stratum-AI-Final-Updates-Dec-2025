@@ -86,6 +86,34 @@ class AutopilotService:
         Returns:
             Created action record
         """
+        # Trust Gate Check: validate signal health before queuing
+        from app.quality.trust_layer_service import SignalHealthService
+
+        signal_service = SignalHealthService(self.db)
+        health_data = await signal_service.get_signal_health(tenant_id, date.today())
+        signal_status = health_data.get("status", "unknown")
+
+        # Determine action status based on trust gate
+        if signal_status == "critical":
+            # Block — require manual approval
+            action_status = ActionStatus.FAILED.value
+            from app.core.logging import get_logger
+            get_logger(__name__).warning(
+                "trust_gate_blocked_action",
+                tenant_id=tenant_id,
+                action_type=action_type,
+                signal_status=signal_status,
+            )
+            raise ValueError(
+                f"Signal health is {signal_status}. Action blocked — manual intervention required."
+            )
+        elif signal_status == "degraded":
+            # Hold — queue but require approval
+            action_status = ActionStatus.PENDING_APPROVAL.value if hasattr(ActionStatus, "PENDING_APPROVAL") else ActionStatus.QUEUED.value
+        else:
+            # Healthy or unknown — proceed normally
+            action_status = ActionStatus.QUEUED.value
+
         action = FactActionsQueue(
             tenant_id=tenant_id,
             date=date.today(),
@@ -96,7 +124,7 @@ class AutopilotService:
             platform=platform,
             action_json=json.dumps(action_json),
             before_value=json.dumps(before_value) if before_value else None,
-            status=ActionStatus.QUEUED.value,
+            status=action_status,
             created_by_user_id=created_by_user_id,
         )
         self.db.add(action)

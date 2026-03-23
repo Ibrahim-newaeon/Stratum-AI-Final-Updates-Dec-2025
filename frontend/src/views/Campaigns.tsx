@@ -260,7 +260,6 @@ export function Campaigns() {
             <option value="google">Google Ads</option>
             <option value="meta">Meta Ads</option>
             <option value="tiktok">TikTok Ads</option>
-            <option value="linkedin">LinkedIn Ads</option>
           </select>
 
           <button className="flex items-center gap-2 px-4 py-2 rounded-lg border hover:bg-muted transition-colors">

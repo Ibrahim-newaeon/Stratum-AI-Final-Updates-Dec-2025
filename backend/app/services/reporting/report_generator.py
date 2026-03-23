@@ -59,7 +59,7 @@ class ReportDataCollector:
         if platforms:
             query = query.where(Campaign.platform.in_(platforms))
 
-        result = await self.db.execute(query)
+        result = await self.db.execute(query.limit(1000))
         campaigns = result.scalars().all()
 
         # Build report data
@@ -138,9 +138,9 @@ class ReportDataCollector:
                     CRMDeal.won_at >= datetime.combine(start_date, datetime.min.time(), tzinfo=timezone.utc),
                     CRMDeal.won_at <= datetime.combine(end_date, datetime.max.time(), tzinfo=timezone.utc),
                 )
-            )
+            ).limit(1000)
         )
-        deals = deal_result.scalars().all()
+        deals = list(deal_result.scalars().all())
 
         # Build attribution data
         data = {
@@ -194,7 +194,7 @@ class ReportDataCollector:
                 )
             )
         )
-        targets = target_result.scalars().all()
+        targets = list(target_result.scalars().all())
 
         # Get recent alerts
         alert_result = await self.db.execute(
@@ -205,7 +205,7 @@ class ReportDataCollector:
                 )
             ).order_by(PacingAlert.created_at.desc()).limit(10)
         )
-        alerts = alert_result.scalars().all()
+        alerts = list(alert_result.scalars().all())
 
         data = {
             "summary": {
@@ -265,7 +265,7 @@ class ReportDataCollector:
                 )
             ).order_by(DailyProfitMetrics.date)
         )
-        metrics = result.scalars().all()
+        metrics = list(result.scalars().all())
 
         data = {
             "summary": {
@@ -345,7 +345,7 @@ class ReportDataCollector:
                 )
             ).order_by(DailyPipelineMetrics.date)
         )
-        metrics = result.scalars().all()
+        metrics = list(result.scalars().all())
 
         data = {
             "summary": {

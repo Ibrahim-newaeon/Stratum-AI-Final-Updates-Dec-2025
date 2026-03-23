@@ -49,8 +49,8 @@ def verify_webhook_signature(payload: bytes, signature: str) -> bool:
     Meta sends X-Hub-Signature-256 header with HMAC SHA256 signature.
     """
     if not settings.whatsapp_app_secret:
-        logger.warning("WhatsApp app secret not configured, skipping signature verification")
-        return True  # Skip verification in development
+        logger.error("WhatsApp app secret not configured — rejecting webhook for security")
+        return False  # Reject webhooks when secret is not configured
 
     expected_signature = hmac.new(
         settings.whatsapp_app_secret.encode("utf-8"),

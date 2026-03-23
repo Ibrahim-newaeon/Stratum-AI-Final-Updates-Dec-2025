@@ -345,7 +345,7 @@ class FunnelService:
                 .limit(batch_size)
                 .offset(offset)
             )
-            profiles = list(result.scalars().all())
+            profiles = list(result.scalars().all())  # already bounded by .limit(batch_size)
 
             if not profiles:
                 break
@@ -526,7 +526,7 @@ class FunnelService:
         if end_date:
             query = query.where(CDPFunnelEntry.entered_at <= end_date)
 
-        result = await self.db.execute(query)
+        result = await self.db.execute(query.limit(1000))
         entries = list(result.scalars().all())
 
         # Calculate metrics
@@ -602,7 +602,7 @@ class FunnelService:
         if funnel_id:
             query = query.where(CDPFunnelEntry.funnel_id == funnel_id)
 
-        result = await self.db.execute(query.options(selectinload(CDPFunnelEntry.funnel)))
+        result = await self.db.execute(query.options(selectinload(CDPFunnelEntry.funnel)).limit(1000))
         entries = list(result.scalars().all())
 
         journeys = []

@@ -313,6 +313,7 @@ class IdentityResolutionService:
                 CDPProfileIdentifier.identifier_hash == identifier_hash,
             )
             .options(selectinload(CDPProfile.identifiers))
+            .limit(1000)
         )
         return list(result.scalars().unique().all())
 
@@ -536,7 +537,7 @@ class IdentityResolutionService:
             select(CDPProfileIdentifier).where(
                 CDPProfileIdentifier.tenant_id == self.tenant_id,
                 CDPProfileIdentifier.profile_id == profile_id,
-            )
+            ).limit(1000)
         )
         identifiers = result.scalars().all()
 
@@ -617,7 +618,7 @@ class IdentityResolutionService:
                             CDPIdentityLink.source_identifier_id == current_id,
                             CDPIdentityLink.target_identifier_id == current_id,
                         ),
-                    )
+                    ).limit(1000)
                 )
                 links = result.scalars().all()
 
@@ -640,7 +641,7 @@ class IdentityResolutionService:
             return []
 
         result = await self.db.execute(
-            select(CDPProfileIdentifier).where(CDPProfileIdentifier.id.in_(list(visited)))
+            select(CDPProfileIdentifier).where(CDPProfileIdentifier.id.in_(list(visited))).limit(1000)
         )
         return list(result.scalars().all())
 
@@ -658,7 +659,7 @@ class IdentityResolutionService:
             select(CDPProfileIdentifier).where(
                 CDPProfileIdentifier.tenant_id == self.tenant_id,
                 CDPProfileIdentifier.profile_id == profile_id,
-            )
+            ).limit(1000)
         )
         identifiers = result.scalars().all()
 
@@ -675,7 +676,7 @@ class IdentityResolutionService:
                     CDPIdentityLink.source_identifier_id.in_(identifier_ids),
                     CDPIdentityLink.target_identifier_id.in_(identifier_ids),
                 ),
-            )
+            ).limit(1000)
         )
         links = result.scalars().all()
 

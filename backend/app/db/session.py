@@ -161,6 +161,14 @@ class TenantAwareSession:
     async def delete(self, instance):
         """Delete an instance (verify tenant ownership first)."""
         if hasattr(instance, "tenant_id") and instance.tenant_id != self._tenant_id:
+            import structlog
+            structlog.get_logger().warning(
+                "cross_tenant_delete_blocked",
+                requesting_tenant=self._tenant_id,
+                target_tenant=instance.tenant_id,
+                entity_type=type(instance).__name__,
+                entity_id=getattr(instance, "id", "unknown"),
+            )
             raise PermissionError("Cannot delete object from different tenant")
         await self._session.delete(instance)
 

@@ -129,9 +129,18 @@ def decode_token(token: str) -> Optional[dict[str, Any]]:
 # PII Encryption (GDPR Compliance)
 # =============================================================================
 
-def _get_pii_salt() -> bytes:
-    """Return the salt used for PII key derivation."""
-    return b"stratum_ai_pii_salt_v1"
+def _get_pii_salt(tenant_id: int | None = None) -> bytes:
+    """Return the salt used for PII key derivation.
+
+    Uses a per-tenant salt when tenant_id is provided, derived from
+    the master encryption key and tenant identifier to prevent
+    cross-tenant rainbow table attacks.
+    """
+    base_salt = b"stratum_ai_pii_salt_v2"
+    if tenant_id is not None:
+        import hashlib
+        return hashlib.sha256(base_salt + str(tenant_id).encode()).digest()
+    return base_salt
 
 
 def _get_fernet_key() -> bytes:

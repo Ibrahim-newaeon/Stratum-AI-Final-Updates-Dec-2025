@@ -227,7 +227,7 @@ class IdentityMatcher:
                     Touchpoint.tenant_id == self.tenant_id,
                     column == click_id_value,
                 )
-            ).order_by(Touchpoint.event_ts)
+            ).order_by(Touchpoint.event_ts).limit(1000)
         )
         return list(result.scalars().all())
 
@@ -254,7 +254,7 @@ class IdentityMatcher:
                     Touchpoint.event_ts >= lookback_start,
                     Touchpoint.event_ts <= (conversion_time or datetime.now(timezone.utc)),
                 )
-            ).order_by(Touchpoint.event_ts)
+            ).order_by(Touchpoint.event_ts).limit(1000)
         )
         return list(result.scalars().all())
 
@@ -294,7 +294,7 @@ class IdentityMatcher:
             conditions.append(Touchpoint.utm_medium == utm_medium)
 
         result = await self.db.execute(
-            select(Touchpoint).where(and_(*conditions)).order_by(Touchpoint.event_ts)
+            select(Touchpoint).where(and_(*conditions)).order_by(Touchpoint.event_ts).limit(1000)
         )
         return list(result.scalars().all())
 
@@ -323,7 +323,7 @@ class IdentityMatcher:
                     Touchpoint.contact_id == deal.contact_id,
                     Touchpoint.event_ts <= (deal.won_at or datetime.now(timezone.utc)),
                 )
-            ).order_by(Touchpoint.event_ts)
+            ).order_by(Touchpoint.event_ts).limit(1000)
         )
         touchpoints = list(result.scalars().all())
 
@@ -455,9 +455,9 @@ class IdentityMatcher:
                     CRMDeal.won_at <= end_date,
                     CRMDeal.attributed_campaign_id.isnot(None),
                 )
-            )
+            ).limit(1000)
         )
-        deals = result.scalars().all()
+        deals = list(result.scalars().all())
 
         # Group metrics
         groups: Dict[str, Dict[str, Any]] = {}

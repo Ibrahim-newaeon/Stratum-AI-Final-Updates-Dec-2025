@@ -851,10 +851,12 @@ async def forgot_password(
     # Generate secure reset token
     reset_token = secrets.token_urlsafe(48)
 
-    # Store token in Redis with user ID mapping
+    # Store hashed token in Redis to prevent token theft if Redis is exposed
     try:
+        import hashlib
+        token_hash = hashlib.sha256(reset_token.encode()).hexdigest()
         redis_client = await get_redis_client()
-        token_key = f"{PASSWORD_RESET_PREFIX}{reset_token}"
+        token_key = f"{PASSWORD_RESET_PREFIX}{token_hash}"
         await redis_client.setex(
             token_key,
             PASSWORD_RESET_EXPIRY_SECONDS,
@@ -943,10 +945,12 @@ async def reset_password(
     """
     token = request_data.token.strip()
 
-    # Look up token in Redis
+    # Look up hashed token in Redis
     try:
+        import hashlib
+        token_hash = hashlib.sha256(token.encode()).hexdigest()
         redis_client = await get_redis_client()
-        token_key = f"{PASSWORD_RESET_PREFIX}{token}"
+        token_key = f"{PASSWORD_RESET_PREFIX}{token_hash}"
         user_id_str = await redis_client.get(token_key)
 
         if not user_id_str:

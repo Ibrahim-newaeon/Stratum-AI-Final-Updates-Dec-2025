@@ -58,13 +58,6 @@ const PLATFORMS = [
     color: 'bg-yellow-400',
     objectives: ['AWARENESS', 'CONSIDERATION', 'CONVERSIONS', 'CATALOG_SALES'],
   },
-  {
-    id: 'linkedin',
-    name: 'LinkedIn',
-    description: 'B2B Advertising',
-    color: 'bg-blue-700',
-    objectives: ['BRAND_AWARENESS', 'WEBSITE_VISITS', 'ENGAGEMENT', 'VIDEO_VIEWS', 'LEAD_GENERATION', 'CONVERSIONS'],
-  },
 ]
 
 // Audience type definition for API responses

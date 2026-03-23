@@ -515,7 +515,7 @@ class SegmentService:
                     .offset(offset)
                     .limit(batch_size)
                 )
-                profiles = result.scalars().all()
+                profiles = list(result.scalars().all())
 
                 if not profiles:
                     break
@@ -630,7 +630,7 @@ class SegmentService:
                 .offset(offset)
                 .limit(batch_size)
             )
-            profiles = result.scalars().all()
+            profiles = list(result.scalars().all())
 
             if not profiles:
                 break
@@ -692,7 +692,7 @@ class SegmentService:
             .offset(offset)
             .limit(limit)
         )
-        profiles = list(result.scalars().all())
+        profiles = list(result.scalars().all())  # already bounded by .limit(limit)
 
         return profiles, total
 
@@ -777,6 +777,7 @@ class SegmentService:
                 CDPSegmentMembership.is_active == True,
                 CDPSegment.tenant_id == self.tenant_id,
             )
+            .limit(1000)
         )
         return list(result.scalars().all())
 

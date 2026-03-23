@@ -155,8 +155,10 @@ class RateLimiter:
             # Delete empty key to prevent unbounded growth
             if not self.requests[key]:
                 del self.requests[key]
-                # Key was empty, so definitely under limit — record and allow
-                self.requests[key].append(now)
+
+            # Key was empty or just cleaned, so definitely under limit — record and allow
+            if key not in self.requests:
+                self.requests[key] = [now]
                 return True
 
             if len(self.requests[key]) >= self.requests_per_minute:

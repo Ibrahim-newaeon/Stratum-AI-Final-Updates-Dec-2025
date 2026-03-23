@@ -12,6 +12,7 @@ through multiple stacked BaseHTTPMiddleware instances.
 
 from collections.abc import Awaitable, Callable
 
+from fastapi import HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
@@ -28,6 +29,8 @@ class ErrorHandlerMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
         try:
             return await call_next(request)
+        except HTTPException:
+            raise  # Let FastAPI handle HTTP exceptions (4xx/5xx) with proper status codes
         except Exception as exc:
             request_id = getattr(request.state, "request_id", "unknown")
             origin = request.headers.get("origin", "")

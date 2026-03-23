@@ -16,7 +16,7 @@ omit =
 
 [report]
 # Minimum coverage percentage required
-fail_under = 80
+fail_under = 90
 
 # Show missing line numbers
 show_missing = True
