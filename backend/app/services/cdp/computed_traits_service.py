@@ -172,7 +172,7 @@ class ComputedTraitsService:
             cutoff = datetime.now(UTC) - timedelta(days=time_window_days)
             query = query.where(CDPEvent.event_time >= cutoff)
 
-        result = await self.db.execute(query.order_by(CDPEvent.event_time.desc()))
+        result = await self.db.execute(query.order_by(CDPEvent.event_time.desc()).limit(1000))
         events = result.scalars().all()
 
         # Compute based on trait type
@@ -391,6 +391,7 @@ class RFMAnalysisService:
                 CDPEvent.event_time >= cutoff,
             )
             .order_by(CDPEvent.event_time.desc())
+            .limit(1000)
         )
         purchases = result.scalars().all()
 
@@ -548,7 +549,7 @@ class RFMAnalysisService:
                 .offset(offset)
                 .limit(batch_size)
             )
-            profiles = result.scalars().all()
+            profiles = list(result.scalars().all())
 
             if not profiles:
                 break
@@ -606,7 +607,7 @@ class RFMAnalysisService:
         Get RFM distribution summary for the tenant.
         """
         result = await self.db.execute(
-            select(CDPProfile).where(CDPProfile.tenant_id == self.tenant_id)
+            select(CDPProfile).where(CDPProfile.tenant_id == self.tenant_id).limit(1000)
         )
         profiles = result.scalars().all()
 
