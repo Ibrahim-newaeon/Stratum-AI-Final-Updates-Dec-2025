@@ -1031,18 +1031,19 @@ async def whatsapp_webhook(
     # Get raw body for signature verification
     raw_body = await request.body()
 
-    # Verify webhook signature from Meta
-    if x_hub_signature_256:
-        if not verify_webhook_signature(raw_body, x_hub_signature_256):
-            logger.warning("Invalid webhook signature received")
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid webhook signature"
-            )
-    else:
-        logger.warning("No webhook signature header received")
-        # In production, you might want to reject unsigned requests
-        # For now, we allow it with a warning for development purposes
+    # Verify webhook signature from Meta (MANDATORY)
+    if not x_hub_signature_256:
+        logger.warning("webhook_missing_signature", path=request.url.path)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing webhook signature header"
+        )
+    if not verify_webhook_signature(raw_body, x_hub_signature_256):
+        logger.warning("webhook_invalid_signature", path=request.url.path)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid webhook signature"
+        )
 
     body = await request.json()
 

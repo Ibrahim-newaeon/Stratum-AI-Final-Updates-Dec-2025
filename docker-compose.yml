@@ -40,13 +40,13 @@ services:
     image: redis:7-alpine
     container_name: stratum_redis
     restart: unless-stopped
-    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru --requirepass ${REDIS_PASSWORD:-stratum-dev-redis-pass}
     volumes:
       - redis_data:/data
     ports:
       - "6379:6379"
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-stratum-dev-redis-pass}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -81,8 +81,8 @@ services:
       - SECRET_KEY=${SECRET_KEY:?SECRET_KEY must be set}
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-stratum}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-stratum_ai}
       - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER:-stratum}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-stratum_ai}
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/1
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-stratum-dev-redis-pass}@redis:6379/0
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-stratum-dev-redis-pass}@redis:6379/1
       - ML_PROVIDER=${ML_PROVIDER:-local}
       - ML_MODELS_PATH=/app/ml_service/models
       - USE_MOCK_AD_DATA=${USE_MOCK_AD_DATA:-true}
@@ -120,7 +120,7 @@ services:
       - WHATSAPP_PHONE_NUMBER_ID=${WHATSAPP_PHONE_NUMBER_ID:-}
       - WHATSAPP_ACCESS_TOKEN=${WHATSAPP_ACCESS_TOKEN:-}
       - WHATSAPP_BUSINESS_ACCOUNT_ID=${WHATSAPP_BUSINESS_ACCOUNT_ID:-}
-      - WHATSAPP_VERIFY_TOKEN=${WHATSAPP_VERIFY_TOKEN:-stratum-whatsapp-verify-token}
+      - WHATSAPP_VERIFY_TOKEN=${WHATSAPP_VERIFY_TOKEN:?WHATSAPP_VERIFY_TOKEN must be set}
       - WHATSAPP_APP_SECRET=${WHATSAPP_APP_SECRET:-}
       - WHATSAPP_API_VERSION=${WHATSAPP_API_VERSION:-v24.0}
       - ENABLE_WHATSAPP=${ENABLE_WHATSAPP:-false}
@@ -181,9 +181,9 @@ services:
       - APP_ENV=${APP_ENV:-development}
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-stratum}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-stratum_ai}
       - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER:-stratum}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-stratum_ai}
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/1
-      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-stratum-dev-redis-pass}@redis:6379/0
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-stratum-dev-redis-pass}@redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-stratum-dev-redis-pass}@redis:6379/2
       - ML_PROVIDER=${ML_PROVIDER:-local}
       - ML_MODELS_PATH=/app/ml_service/models
       - USE_MOCK_AD_DATA=${USE_MOCK_AD_DATA:-true}
@@ -262,9 +262,9 @@ services:
     environment:
       - APP_ENV=${APP_ENV:-development}
       - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER:-stratum}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-stratum_ai}
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/1
-      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-stratum-dev-redis-pass}@redis:6379/0
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-stratum-dev-redis-pass}@redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-stratum-dev-redis-pass}@redis:6379/2
     volumes:
       - ./backend:/app
     depends_on:
@@ -345,7 +345,7 @@ services:
     security_opt:
       - no-new-privileges:true
     environment:
-      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-stratum-dev-redis-pass}@redis:6379/1
       - FLOWER_PORT=5555
       - FLOWER_BASIC_AUTH=${FLOWER_USER:-admin}:${FLOWER_PASSWORD:?FLOWER_PASSWORD must be set}
     ports:

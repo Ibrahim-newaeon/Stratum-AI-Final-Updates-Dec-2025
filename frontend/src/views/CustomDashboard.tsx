@@ -13,6 +13,7 @@ import {
   AlertTriangle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { usePriceMetrics } from '@/hooks/usePriceMetrics'
 import { DashboardSimulationProvider } from '@/contexts/DashboardSimulationContext'
 import { KPIWidget } from '@/components/widgets/KPIWidget'
@@ -361,9 +362,11 @@ function CustomDashboardContent() {
 
 export function CustomDashboard() {
   return (
+    <ErrorBoundary>
     <DashboardSimulationProvider>
       <CustomDashboardContent />
     </DashboardSimulationProvider>
+    </ErrorBoundary>
   )
 }
 

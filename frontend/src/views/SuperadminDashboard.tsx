@@ -45,6 +45,7 @@ import {
   Calendar,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { usePriceMetrics } from '@/hooks/usePriceMetrics'
 import { useAuth } from '@/contexts/AuthContext'
 import apiClient from '@/api/client'
@@ -314,6 +315,7 @@ export default function SuperadminDashboard() {
   }
 
   return (
+    <ErrorBoundary>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 motion-enter">
@@ -1401,6 +1403,7 @@ export default function SuperadminDashboard() {
         </div>
       )}
     </div>
+    </ErrorBoundary>
   )
 }
 

@@ -31,6 +31,7 @@ import { useApproveAction, useDismissAction, useQueueAction } from '@/api/autopi
 import { useToast } from '@/components/ui/use-toast'
 import { exportDashboardPDF } from '@/utils/pdfExport'
 import { DocumentArrowDownIcon, CalendarIcon } from '@heroicons/react/24/outline'
+import { Loader2 } from 'lucide-react'
 
 export default function TenantOverview() {
   const { tenantId } = useParams<{ tenantId: string }>()
@@ -52,12 +53,15 @@ export default function TenantOverview() {
   const updatePlaybookItem = useUpdatePlaybookItem(tid)
 
   // Fetch data
-  const { data: emqData, isLoading: _emqLoading } = useEmqScore(tid)
-  const { data: autopilotData } = useAutopilotState(tid)
+  const { data: emqData, isLoading: emqLoading } = useEmqScore(tid)
+  const { data: autopilotData, isLoading: autopilotLoading } = useAutopilotState(tid)
   const { data: playbookData } = useEmqPlaybook(tid)
   const { data: incidentsData } = useEmqIncidents(tid, dateRange.start, dateRange.end)
-  const { data: overviewData } = useTenantOverview(tid)
+  const { data: overviewData, isLoading: overviewLoading } = useTenantOverview(tid)
   const { data: recommendationsData } = useTenantRecommendations(tid)
+
+  // Show loading state when critical data is still being fetched for the first time
+  const isInitialLoading = (emqLoading || autopilotLoading || overviewLoading) && !emqData && !overviewData
 
   // Transform data for components
   const emqScore = emqData?.score ?? 85
@@ -351,6 +355,17 @@ export default function TenantOverview() {
         variant: 'destructive',
       })
     }
+  }
+
+  if (isInitialLoading) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading overview...</p>
+        </div>
+      </div>
+    );
   }
 
   return (

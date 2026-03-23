@@ -22,6 +22,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { apiClient } from '@/api/client'
 
 // Types
@@ -250,6 +251,7 @@ export function Tenants() {
   }
 
   return (
+    <ErrorBoundary>
     <div className="space-y-6">
       {/* Page Header */}
       <div className="flex items-center justify-between">
@@ -426,6 +428,7 @@ export function Tenants() {
         />
       )}
     </div>
+    </ErrorBoundary>
   )
 }
 

@@ -8,6 +8,7 @@ Handles login, registration, token refresh, password reset, and WhatsApp verific
 
 import hmac
 import secrets
+import re
 import string
 from datetime import datetime, timezone, timedelta
 from typing import Annotated, Optional
@@ -171,6 +172,13 @@ async def send_whatsapp_otp(
 
     phone_number = request.phone_number.strip()
 
+    # Validate E.164 phone number format
+    if not re.match(r'^\+?[1-9]\d{1,14}$', phone_number.replace('+', '')):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid phone number format. Use E.164 format (e.g., +1234567890).",
+        )
+
     # Normalize phone number (ensure it starts with +)
     if not phone_number.startswith('+'):
         phone_number = '+' + phone_number
@@ -261,6 +269,12 @@ async def verify_whatsapp_otp(request: VerifyOTPRequest):
     if not phone_number.startswith('+'):
         phone_number = '+' + phone_number
 
+    if not re.match(r'^\+?[1-9]\d{1,14}$', phone_number.lstrip('+')):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid phone number format.",
+        )
+
     try:
         redis_client = await get_redis_client()
         otp_key = f"{OTP_PREFIX}{phone_number}"
@@ -342,8 +356,11 @@ async def login(
     except HTTPException:
         raise
     except (ConnectionError, TimeoutError, OSError) as exc:
-        logger.warning("redis_unavailable_rate_limit_check", error=str(exc))
-        pass  # Redis unavailable — allow login to proceed
+        logger.error("redis_unavailable_rate_limit_check", error=str(exc))
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Service temporarily unavailable. Please try again shortly.",
+        )
 
     # Find user(s) by email hash
     # Note: email_hash is unique per tenant, so the same email may exist

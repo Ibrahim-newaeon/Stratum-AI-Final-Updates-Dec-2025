@@ -78,6 +78,10 @@ async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
     """
     FastAPI dependency for async database sessions.
 
+    Auto-commits on successful handler completion, rolls back on exception.
+    For multi-step operations requiring explicit transaction control, use
+    ``await session.begin()`` or ``await session.begin_nested()``.
+
     Usage:
         @router.get("/items")
         async def get_items(db: AsyncSession = Depends(get_async_session)):

@@ -10,6 +10,7 @@ from typing import List, Dict, Any, Optional
 import httpx
 import logging
 from datetime import datetime, timezone
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
 from app.core.config import settings
 
@@ -74,6 +75,12 @@ class WhatsAppClient:
             "Content-Type": "application/json",
         }
 
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=1, max=15),
+        retry=retry_if_exception_type((httpx.ConnectError, httpx.TimeoutException, OSError)),
+        reraise=True,
+    )
     async def _make_request(
         self,
         method: str,
