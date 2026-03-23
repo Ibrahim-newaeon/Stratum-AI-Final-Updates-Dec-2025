@@ -46,7 +46,7 @@ scikit-learn==1.8.0
 pandas==3.0.1
 numpy>=1.26.4,<3.0
 joblib==1.5.3
-xgboost==2.0.3
+xgboost==3.2.0
 
 # Google Cloud (for Vertex AI)
 google-cloud-aiplatform==1.141.0
