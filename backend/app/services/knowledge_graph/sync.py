@@ -99,7 +99,7 @@ class KnowledgeGraphSyncService:
         if since:
             query = query.where(CDPProfile.updated_at > since)
 
-        result = await self.session.execute(query)
+        result = await self.session.execute(query.limit(1000))
         profiles = result.scalars().all()
 
         synced = 0
@@ -159,7 +159,7 @@ class KnowledgeGraphSyncService:
             query = query.where(CDPEvent.created_at > since)
         query = query.order_by(CDPEvent.event_time.asc())
 
-        result = await self.session.execute(query)
+        result = await self.session.execute(query.limit(1000))
         events = result.scalars().all()
 
         synced = 0
@@ -251,7 +251,7 @@ class KnowledgeGraphSyncService:
         if since:
             query = query.where(CDPSegment.updated_at > since)
 
-        result = await self.session.execute(query)
+        result = await self.session.execute(query.limit(1000))
         segments = result.scalars().all()
 
         synced = 0
@@ -271,7 +271,7 @@ class KnowledgeGraphSyncService:
             membership_query = select(CDPSegmentMembership).where(
                 CDPSegmentMembership.segment_id == segment.id,
                 CDPSegmentMembership.is_active == True
-            )
+            ).limit(1000)
             membership_result = await self.session.execute(membership_query)
             memberships = membership_result.scalars().all()
 
@@ -323,7 +323,7 @@ class KnowledgeGraphSyncService:
         if since:
             query = query.where(FactSignalHealthDaily.date >= since.date())
 
-        result = await self.session.execute(query)
+        result = await self.session.execute(query.limit(1000))
         signals = result.scalars().all()
 
         synced = 0
@@ -376,7 +376,7 @@ class KnowledgeGraphSyncService:
         if since:
             query = query.where(TrustGateAuditLog.created_at > since)
 
-        result = await self.session.execute(query)
+        result = await self.session.execute(query.limit(1000))
         decisions = result.scalars().all()
 
         synced = 0
@@ -429,7 +429,7 @@ class KnowledgeGraphSyncService:
         if since:
             query = query.where(FactActionsQueue.created_at > since)
 
-        result = await self.session.execute(query)
+        result = await self.session.execute(query.limit(1000))
         actions = result.scalars().all()
 
         synced = 0
@@ -489,7 +489,7 @@ class KnowledgeGraphSyncService:
         if since:
             query = query.where(Campaign.updated_at > since)
 
-        result = await self.session.execute(query)
+        result = await self.session.execute(query.limit(1000))
         campaigns = result.scalars().all()
 
         synced = 0

@@ -269,6 +269,8 @@ services:
       - ./backend:/app
     depends_on:
       - worker
+      api:
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "celery -A app.workers.celery_app inspect ping --timeout 10"]
       interval: 60s
@@ -310,6 +312,12 @@ services:
       - "5173:5173"
     depends_on:
       - api
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:5173 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     deploy:
       resources:
         limits:

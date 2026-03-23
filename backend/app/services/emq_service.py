@@ -40,7 +40,7 @@ from app.analytics.logic.emq_calculation import (
 class EmqService:
     """Service for EMQ operations."""
 
-    SUPPORTED_PLATFORMS = ["meta", "google", "tiktok", "snapchat", "linkedin"]
+    SUPPORTED_PLATFORMS = ["meta", "google", "tiktok", "snapchat"]
 
     def __init__(self, session: AsyncSession):
         self.session = session
@@ -71,7 +71,7 @@ class EmqService:
                 FactSignalHealthDaily.tenant_id == tenant_id,
                 FactSignalHealthDaily.date == target_date,
             )
-        )
+        ).limit(1000)
         current_result = await self.session.execute(current_query)
         current_records = current_result.scalars().all()
 
@@ -81,7 +81,7 @@ class EmqService:
                 FactSignalHealthDaily.tenant_id == tenant_id,
                 FactSignalHealthDaily.date == previous_date,
             )
-        )
+        ).limit(1000)
         previous_result = await self.session.execute(previous_query)
         previous_records = previous_result.scalars().all()
 
@@ -218,7 +218,7 @@ class EmqService:
                 FactAttributionVarianceDaily.tenant_id == tenant_id,
                 FactAttributionVarianceDaily.date == target_date,
             )
-        )
+        ).limit(1000)
         result = await self.session.execute(query)
         variance_records = result.scalars().all()
 
@@ -353,7 +353,7 @@ class EmqService:
             )
         ).order_by(FactSignalHealthDaily.date.desc())
 
-        result = await self.session.execute(query)
+        result = await self.session.execute(query.limit(1000))
         records = result.scalars().all()
 
         incidents = []
@@ -574,7 +574,7 @@ class EmqService:
                 FactAttributionVarianceDaily.date <= end_date,
             )
         )
-        result = await self.session.execute(query)
+        result = await self.session.execute(query.limit(1000))
         records = result.scalars().all()
 
         if not records:

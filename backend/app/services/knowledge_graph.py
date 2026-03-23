@@ -198,7 +198,7 @@ class KnowledgeGraphService:
                 )
                 .order_by(CDPEvent.event_time.desc())
             )
-            result = await self.db.execute(stmt)
+            result = await self.db.execute(stmt.limit(1000))
             events = result.scalars().all()
 
             # Group by channel extracted from event context/properties
@@ -393,7 +393,7 @@ class KnowledgeGraphService:
                 )
                 .order_by(CDPEvent.event_time.asc())
             )
-            events_result = await self.db.execute(events_stmt)
+            events_result = await self.db.execute(events_stmt.limit(1000))
             events = events_result.scalars().all()
 
             # Build touchpoints and detect stage transitions
@@ -515,7 +515,7 @@ class KnowledgeGraphService:
                 )
                 .order_by(FactActionsQueue.created_at.desc())
             )
-            result = await self.db.execute(stmt)
+            result = await self.db.execute(stmt.limit(1000))
             actions = result.scalars().all()
 
             blocked: list[dict[str, Any]] = []
@@ -627,7 +627,7 @@ class KnowledgeGraphService:
                     )
                     .order_by(FactSignalHealthDaily.platform)
                 )
-                sh_result = await self.db.execute(sh_stmt)
+                sh_result = await self.db.execute(sh_stmt.limit(1000))
                 sh_records = sh_result.scalars().all()
                 for sh in sh_records:
                     signal_health_context.append(
@@ -962,7 +962,7 @@ class KnowledgeGraphInsightsEngine:
                     FactSignalHealthDaily.date.asc(),
                 )
             )
-            sh_result = await self.db.execute(sh_stmt)
+            sh_result = await self.db.execute(sh_stmt.limit(1000))
             sh_records = sh_result.scalars().all()
 
             # Group records by platform for trend analysis
@@ -1244,7 +1244,7 @@ class KnowledgeGraphInsightsEngine:
                 )
                 .order_by(FactAttributionVarianceDaily.date.desc())
             )
-            av_result = await self.db.execute(av_stmt)
+            av_result = await self.db.execute(av_stmt.limit(1000))
             av_records = av_result.scalars().all()
 
             for av in av_records:

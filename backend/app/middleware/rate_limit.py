@@ -216,16 +216,35 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         return f"ip:{self._get_client_ip(request)}"
 
     def _get_client_ip(self, request: Request) -> str:
-        """Extract client IP, handling proxies."""
-        forwarded = request.headers.get("X-Forwarded-For")
-        if forwarded:
-            return forwarded.split(",")[0].strip()
-        real_ip = request.headers.get("X-Real-IP")
-        if real_ip:
-            return real_ip
-        if request.client:
-            return request.client.host
-        return "unknown"
+        """Extract client IP, only trusting proxy headers from known sources.
+
+        X-Forwarded-For is only used when the direct client is a known
+        proxy (private network or loopback). Otherwise, the direct
+        connection IP is used to prevent header spoofing.
+        """
+        client_ip = request.client.host if request.client else "unknown"
+
+        # Only trust proxy headers if the direct connection is from a trusted proxy
+        trusted_prefixes = ("10.", "172.16.", "172.17.", "172.18.", "172.19.",
+                            "172.20.", "172.21.", "172.22.", "172.23.", "172.24.",
+                            "172.25.", "172.26.", "172.27.", "172.28.", "172.29.",
+                            "172.30.", "172.31.", "192.168.", "127.", "::1")
+        is_trusted_proxy = any(client_ip.startswith(p) for p in trusted_prefixes)
+
+        if is_trusted_proxy:
+            forwarded = request.headers.get("X-Forwarded-For")
+            if forwarded:
+                # Take the rightmost untrusted IP (closest to the proxy)
+                ips = [ip.strip() for ip in forwarded.split(",")]
+                for ip in reversed(ips):
+                    if not any(ip.startswith(p) for p in trusted_prefixes):
+                        return ip
+                return ips[0]
+            real_ip = request.headers.get("X-Real-IP")
+            if real_ip:
+                return real_ip
+
+        return client_ip
 
     def _rate_limit_response(self, remaining: int) -> JSONResponse:
         """Create rate limit exceeded response."""

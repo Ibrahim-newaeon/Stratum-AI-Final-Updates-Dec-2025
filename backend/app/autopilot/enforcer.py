@@ -37,7 +37,8 @@ from app.services.email_service import get_email_service
 from app.services.notifications.slack_service import SlackNotificationService
 
 
-logger = logging.getLogger(__name__)
+from app.core.logging import get_logger
+logger = get_logger(__name__)
 
 
 # =============================================================================
@@ -1153,6 +1154,9 @@ async def send_enforcement_notification(
                     f"Timestamp: {timestamp_str}\n"
                 )
 
+                import asyncio
+                import functools
+
                 for row in admin_rows:
                     email_addr: str = row[0]  # User.email
                     try:
@@ -1162,7 +1166,12 @@ async def send_enforcement_notification(
                             html_content=html_content,
                             text_content=text_content,
                         )
-                        sent = email_service._send_email(email_addr, message)
+                        # Run blocking SMTP in thread pool to avoid blocking the event loop
+                        loop = asyncio.get_running_loop()
+                        sent = await loop.run_in_executor(
+                            None,
+                            functools.partial(email_service._send_email, email_addr, message),
+                        )
                         if sent:
                             any_sent = True
                     except (ConnectionError, TimeoutError, OSError, smtplib.SMTPException) as email_exc:

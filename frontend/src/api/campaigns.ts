@@ -8,7 +8,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient, ApiResponse, PaginatedResponse } from './client'
 
 // Types
-export type Platform = 'meta' | 'google' | 'tiktok' | 'snapchat' | 'linkedin'
+export type Platform = 'meta' | 'google' | 'tiktok' | 'snapchat'
 export type CampaignStatus = 'active' | 'paused' | 'completed' | 'draft' | 'error'
 export type CampaignObjective = 'awareness' | 'consideration' | 'conversion'
 

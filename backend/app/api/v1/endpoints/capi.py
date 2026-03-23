@@ -37,7 +37,7 @@ def get_capi_service(tenant_id: int) -> CAPIService:
 # =============================================================================
 class PlatformCredentials(BaseModel):
     """Credentials for connecting to a platform."""
-    platform: str = Field(..., description="Platform name: meta, google, tiktok, snapchat, linkedin")
+    platform: str = Field(..., description="Platform name: meta, google, tiktok, snapchat")
     credentials: Dict[str, str] = Field(..., description="Platform-specific credentials")
 
 
@@ -79,7 +79,6 @@ async def connect_platform(
     - Google Ads - Requires customer_id, conversion_action_id, api_key
     - TikTok - Requires pixel_code, access_token
     - Snapchat - Requires pixel_id, access_token
-    - LinkedIn - Requires conversion_id, access_token
     """
     tenant_id = getattr(request.state, "tenant_id", 1)
     service = get_capi_service(tenant_id)

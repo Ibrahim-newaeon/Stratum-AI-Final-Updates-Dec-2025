@@ -87,8 +87,11 @@ async def get_current_user(
         raise
     except (ConnectionError, OSError, TimeoutError) as exc:
         import structlog
-        structlog.get_logger().warning("redis_unavailable_blacklist_check_skipped", error=str(exc))
-        pass  # Redis unavailable — allow request to proceed
+        structlog.get_logger().error("redis_unavailable_blacklist_check_failed", error=str(exc))
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Authentication service temporarily unavailable",
+        )
 
     if payload.get("type") != "access":
         raise HTTPException(
