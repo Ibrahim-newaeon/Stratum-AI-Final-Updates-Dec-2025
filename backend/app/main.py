@@ -30,6 +30,7 @@ from app.middleware.audit import AuditMiddleware
 from app.middleware.security import SecurityHeadersMiddleware
 from app.middleware.tenant import TenantMiddleware
 from app.middleware.rate_limit import RateLimitMiddleware
+from app.middleware.csrf import CSRFMiddleware
 from app.api.v1 import api_router
 
 # Prometheus Metrics
@@ -50,6 +51,23 @@ ACTIVE_CONNECTIONS = Gauge(
 ACTIVE_WEBSOCKETS = Gauge(
     "active_websocket_connections",
     "Number of active WebSocket connections",
+)
+
+# Integration-specific metrics
+CAPI_REQUESTS = Counter(
+    "capi_requests_total",
+    "Total CAPI requests to external platforms",
+    ["platform", "status"],
+)
+CAPI_LATENCY = Histogram(
+    "capi_request_duration_seconds",
+    "CAPI request latency in seconds",
+    ["platform"],
+)
+CELERY_TASK_DURATION = Histogram(
+    "celery_task_duration_seconds",
+    "Celery task execution time in seconds",
+    ["task_name", "status"],
 )
 
 # Setup logging
@@ -180,9 +198,9 @@ def create_application() -> FastAPI:
         title=settings.app_name,
         description="Enterprise Marketing Intelligence Platform - Unified analytics across Meta, Google, TikTok & Snapchat",
         version="1.0.0",
-        docs_url="/docs" if settings.is_development else None,
-        redoc_url="/redoc" if settings.is_development else None,
-        openapi_url="/openapi.json" if settings.is_development else None,
+        docs_url=None if settings.is_production else "/docs",
+        redoc_url=None if settings.is_production else "/redoc",
+        openapi_url=None if settings.is_production else "/openapi.json",
         default_response_class=ORJSONResponse,
         lifespan=lifespan,
     )
@@ -234,6 +252,9 @@ def create_application() -> FastAPI:
         requests_per_minute=settings.rate_limit_per_minute,
         burst_size=settings.rate_limit_burst,
     )
+
+    # CSRF protection for state-changing requests
+    app.add_middleware(CSRFMiddleware)
 
     # Tenant extraction and validation
     app.add_middleware(TenantMiddleware)
@@ -488,7 +509,7 @@ def create_application() -> FastAPI:
         user_id = None
         if token:
             try:
-                from jose import jwt as jose_jwt
+                from jose import jwt as jose_jwt, JWTError
                 payload = jose_jwt.decode(
                     token,
                     settings.jwt_secret_key,
@@ -497,9 +518,8 @@ def create_application() -> FastAPI:
                 user_id = payload.get("sub")
                 if not tenant_id:
                     tenant_id = payload.get("tenant_id")
-            except (Exception,) as _jwt_err:
+            except (JWTError, ValueError, TypeError, KeyError) as _jwt_err:
                 # Invalid/expired token — reject the connection
-                # Intentionally broad: jose.JWTError + any decode edge case
                 await websocket.close(code=4001, reason="Invalid or expired token")
                 return
         else:

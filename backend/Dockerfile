@@ -29,6 +29,10 @@ RUN chown appuser:appgroup /app
 COPY requirements-prod.txt .
 RUN pip install --no-cache-dir -r requirements-prod.txt
 
+# Remove build dependencies to reduce image size (~200MB savings)
+RUN apt-get purge -y --auto-remove build-essential libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 # Copy application code (.dockerignore excludes tests, cache, etc.)
 COPY --chown=appuser:appgroup . .
 

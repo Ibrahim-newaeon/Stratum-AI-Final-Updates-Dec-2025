@@ -11,6 +11,8 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Type
 from dataclasses import dataclass
 
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+
 from app.core.logging import get_logger
 from .platform_connectors import (
     BaseCAPIConnector,
@@ -232,16 +234,31 @@ class CAPIService:
                     errors=[{"message": "Platform not connected"}],
                     platform=platform,
                 )
+
+            @retry(
+                stop=stop_after_attempt(4),
+                wait=wait_exponential(multiplier=1, min=1, max=30),
+                retry=retry_if_exception_type((ConnectionError, TimeoutError, OSError)),
+                reraise=True,
+            )
+            async def _send_with_retry():
+                return await connector.send_events(events)
+
             try:
-                result = await connector.send_events(events)
+                result = await _send_with_retry()
                 return platform, result
             except (ConnectionError, TimeoutError, OSError) as e:
-                logger.error(f"Error sending to {platform}: {e}")
+                logger.error(
+                    "capi_send_failed_after_retries",
+                    platform=platform,
+                    error=str(e),
+                    events_count=len(events),
+                )
                 return platform, CAPIResponse(
                     success=False,
                     events_received=len(events),
                     events_processed=0,
-                    errors=[{"message": str(e)}],
+                    errors=[{"message": f"Failed after retries: {e}"}],
                     platform=platform,
                 )
 

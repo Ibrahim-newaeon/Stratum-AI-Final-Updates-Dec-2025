@@ -150,9 +150,13 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     # --------------------------------------------------------------------- #
     def _get_bucket(self, client_id: str) -> TokenBucket:
         if client_id not in self._buckets:
+            # Use aggressive limits in fallback mode (1/4 of normal) since
+            # each worker process has its own bucket — N workers = N * limit
+            fallback_rate = self.rate_per_second / 4
+            fallback_capacity = max(1, self.burst_size // 4)
             self._buckets[client_id] = TokenBucket(
-                rate=self.rate_per_second,
-                capacity=self.burst_size,
+                rate=fallback_rate,
+                capacity=fallback_capacity,
             )
         return self._buckets[client_id]
 
@@ -180,7 +184,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         try:
             allowed, remaining = await self._check_redis(client_id)
         except (ConnectionError, TimeoutError, OSError):
-            # Redis unavailable — use local token bucket
+            # Redis unavailable — use local token bucket with aggressive limits
+            logger.warning("rate_limiter_redis_fallback", client_id=client_id)
             bucket = self._get_bucket(client_id)
             allowed = bucket.consume()
             remaining = bucket.remaining

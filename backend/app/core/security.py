@@ -20,6 +20,22 @@ from passlib.context import CryptContext
 
 from app.core.config import settings
 
+import redis.asyncio as aioredis
+
+# Shared Redis connection pool — avoids creating a new connection per call
+_redis_pool: aioredis.Redis | None = None
+
+async def get_redis_pool() -> aioredis.Redis:
+    """Return a shared Redis connection pool for security operations."""
+    global _redis_pool
+    if _redis_pool is None:
+        _redis_pool = aioredis.from_url(
+            settings.redis_url,
+            decode_responses=True,
+            max_connections=20,
+        )
+    return _redis_pool
+
 # Password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -143,14 +159,14 @@ def _get_pii_salt(tenant_id: int | None = None) -> bytes:
     return base_salt
 
 
-def _get_fernet_key() -> bytes:
+def _get_fernet_key(tenant_id: int | None = None) -> bytes:
     """
     Derive a Fernet-compatible key from the encryption key setting.
     Uses PBKDF2 for key derivation.
     """
     # Use a fixed salt for deterministic key derivation
     # In production, consider using a per-tenant salt stored securely
-    salt = _get_pii_salt()
+    salt = _get_pii_salt(tenant_id)
 
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
@@ -165,12 +181,13 @@ def _get_fernet_key() -> bytes:
     return key
 
 
-def encrypt_pii(plaintext: str) -> str:
+def encrypt_pii(plaintext: str, tenant_id: int | None = None) -> str:
     """
     Encrypt PII data using Fernet symmetric encryption.
 
     Args:
         plaintext: The sensitive data to encrypt
+        tenant_id: Optional tenant ID for per-tenant key derivation
 
     Returns:
         Base64-encoded encrypted string
@@ -178,12 +195,12 @@ def encrypt_pii(plaintext: str) -> str:
     if not plaintext:
         return ""
 
-    fernet = Fernet(_get_fernet_key())
+    fernet = Fernet(_get_fernet_key(tenant_id))
     encrypted = fernet.encrypt(plaintext.encode("utf-8"))
     return base64.urlsafe_b64encode(encrypted).decode("utf-8")
 
 
-def decrypt_pii(ciphertext: str) -> str:
+def decrypt_pii(ciphertext: str, tenant_id: int | None = None) -> str:
     """
     Decrypt PII data.
 
@@ -192,6 +209,7 @@ def decrypt_pii(ciphertext: str) -> str:
 
     Args:
         ciphertext: The encrypted data to decrypt
+        tenant_id: Optional tenant ID for per-tenant key derivation
 
     Returns:
         Decrypted plaintext string
@@ -200,7 +218,7 @@ def decrypt_pii(ciphertext: str) -> str:
         return ""
 
     try:
-        fernet = Fernet(_get_fernet_key())
+        fernet = Fernet(_get_fernet_key(tenant_id))
         decrypted = fernet.decrypt(base64.urlsafe_b64decode(ciphertext.encode("utf-8")))
         return decrypted.decode("utf-8")
     except (InvalidToken, Exception) as exc:
@@ -278,8 +296,6 @@ async def blacklist_token(token: str, payload: dict[str, Any]) -> None:
         token: The raw JWT string
         payload: Decoded token payload (must contain 'exp')
     """
-    import redis.asyncio as aioredis
-
     exp = payload.get("exp")
     if not exp:
         return
@@ -291,11 +307,8 @@ async def blacklist_token(token: str, payload: dict[str, Any]) -> None:
     jti = payload.get("jti", token[-32:])  # Use jti if present, else token suffix
     key = f"{TOKEN_BLACKLIST_PREFIX}{jti}"
 
-    client = aioredis.from_url(settings.redis_url, decode_responses=True)
-    try:
-        await client.setex(key, ttl, "1")
-    finally:
-        await client.close()
+    client = await get_redis_pool()
+    await client.setex(key, ttl, "1")
 
 
 async def is_token_blacklisted(payload: dict[str, Any], token: str) -> bool:
@@ -309,16 +322,11 @@ async def is_token_blacklisted(payload: dict[str, Any], token: str) -> bool:
     Returns:
         True if the token is blacklisted
     """
-    import redis.asyncio as aioredis
-
     jti = payload.get("jti", token[-32:])
     key = f"{TOKEN_BLACKLIST_PREFIX}{jti}"
 
-    client = aioredis.from_url(settings.redis_url, decode_responses=True)
-    try:
-        return await client.exists(key) == 1
-    finally:
-        await client.close()
+    client = await get_redis_pool()
+    return await client.exists(key) == 1
 
 
 # =============================================================================
@@ -339,17 +347,12 @@ async def check_login_rate_limit(email_hash: str) -> tuple[bool, int]:
     Returns:
         Tuple of (is_allowed, remaining_lockout_seconds)
     """
-    import redis.asyncio as aioredis
-
-    client = aioredis.from_url(settings.redis_url, decode_responses=True)
-    try:
-        lockout_key = f"{LOGIN_LOCKOUT_PREFIX}{email_hash}"
-        lockout_ttl = await client.ttl(lockout_key)
-        if lockout_ttl > 0:
-            return False, lockout_ttl
-        return True, 0
-    finally:
-        await client.close()
+    client = await get_redis_pool()
+    lockout_key = f"{LOGIN_LOCKOUT_PREFIX}{email_hash}"
+    lockout_ttl = await client.ttl(lockout_key)
+    if lockout_ttl > 0:
+        return False, lockout_ttl
+    return True, 0
 
 
 async def record_failed_login(email_hash: str) -> int:
@@ -357,41 +360,31 @@ async def record_failed_login(email_hash: str) -> int:
     Record a failed login attempt. Returns the current attempt count.
     If MAX_LOGIN_ATTEMPTS is reached, sets a lockout.
     """
-    import redis.asyncio as aioredis
+    client = await get_redis_pool()
+    key = f"{LOGIN_ATTEMPT_PREFIX}{email_hash}"
+    attempts = await client.incr(key)
+    if attempts == 1:
+        await client.expire(key, LOGIN_ATTEMPT_WINDOW_SECONDS)
 
-    client = aioredis.from_url(settings.redis_url, decode_responses=True)
-    try:
-        key = f"{LOGIN_ATTEMPT_PREFIX}{email_hash}"
-        attempts = await client.incr(key)
-        if attempts == 1:
-            await client.expire(key, LOGIN_ATTEMPT_WINDOW_SECONDS)
+    if attempts >= MAX_LOGIN_ATTEMPTS:
+        lockout_key = f"{LOGIN_LOCKOUT_PREFIX}{email_hash}"
+        await client.setex(lockout_key, LOGIN_LOCKOUT_SECONDS, "1")
+        await client.delete(key)
 
-        if attempts >= MAX_LOGIN_ATTEMPTS:
-            lockout_key = f"{LOGIN_LOCKOUT_PREFIX}{email_hash}"
-            await client.setex(lockout_key, LOGIN_LOCKOUT_SECONDS, "1")
-            await client.delete(key)
-
-        return attempts
-    finally:
-        await client.close()
+    return attempts
 
 
 async def clear_login_attempts(email_hash: str) -> None:
     """Clear failed login attempts after successful login."""
-    import redis.asyncio as aioredis
-
-    client = aioredis.from_url(settings.redis_url, decode_responses=True)
-    try:
-        await client.delete(f"{LOGIN_ATTEMPT_PREFIX}{email_hash}")
-    finally:
-        await client.close()
+    client = await get_redis_pool()
+    await client.delete(f"{LOGIN_ATTEMPT_PREFIX}{email_hash}")
 
 
 # =============================================================================
 # Permission Decorator
 # =============================================================================
 
-def require_permission(permission: str):
+def require_permission(permission: str) -> Any:
     """
     Dependency factory that checks if the current user has the required permission.
 
@@ -403,7 +396,7 @@ def require_permission(permission: str):
     """
     from fastapi import Depends, HTTPException, Request
 
-    async def permission_checker(request: Request):
+    async def permission_checker(request: Request) -> bool:
         # Get user permissions from request state (set by auth middleware)
         user_permissions = getattr(request.state, "permissions", [])
         user_role = getattr(request.state, "role", None)

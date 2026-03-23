@@ -128,6 +128,10 @@ jobs:
       - name: Dependency audit (pip-audit)
         run: |
           pip install pip-audit
+          # CVE-2024-23342: ecdsa timing side-channel in python-ecdsa.
+          # Accepted risk: We use python-jose with cryptography backend (not python-ecdsa)
+          # for JWT signing. The vulnerable ecdsa library is a transitive dependency only
+          # and not used in our signing operations (we use HS256/RS256 via cryptography).
           pip-audit --strict --desc on --ignore-vuln CVE-2024-23342
 
       - name: Upload coverage to Codecov

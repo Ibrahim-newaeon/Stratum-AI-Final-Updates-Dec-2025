@@ -20,6 +20,7 @@ from urllib.parse import urlencode
 
 import aiohttp
 from sqlalchemy import and_, select
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -363,6 +364,12 @@ class SalesforceClient:
 
         return connection
 
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=15),
+        retry=retry_if_exception_type((ConnectionError, TimeoutError, OSError)),
+        reraise=True,
+    )
     async def _refresh_token(self) -> bool:
         """Refresh expired access token."""
         connection = await self._get_connection()

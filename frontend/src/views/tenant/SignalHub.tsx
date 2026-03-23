@@ -7,6 +7,7 @@
 
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { cn } from '@/lib/utils'
 import {
   EmqScoreCard,
@@ -257,6 +258,7 @@ export default function SignalHub() {
   )
 
   return (
+    <ErrorBoundary>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -558,5 +560,6 @@ export default function SignalHub() {
         </div>
       )}
     </div>
+    </ErrorBoundary>
   )
 }
