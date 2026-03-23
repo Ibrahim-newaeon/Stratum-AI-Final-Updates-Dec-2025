@@ -229,7 +229,7 @@ class IdentityMatcher:
                 )
             ).order_by(Touchpoint.event_ts)
         )
-        return list(result.scalars().all())
+        return list(result.scalars().all())  # already bounded by click_id equality
 
     async def _find_touchpoints_by_identity(
         self,
@@ -254,7 +254,7 @@ class IdentityMatcher:
                     Touchpoint.event_ts >= lookback_start,
                     Touchpoint.event_ts <= (conversion_time or datetime.now(timezone.utc)),
                 )
-            ).order_by(Touchpoint.event_ts)
+            ).order_by(Touchpoint.event_ts).limit(1000)
         )
         return list(result.scalars().all())
 
@@ -294,7 +294,7 @@ class IdentityMatcher:
             conditions.append(Touchpoint.utm_medium == utm_medium)
 
         result = await self.db.execute(
-            select(Touchpoint).where(and_(*conditions)).order_by(Touchpoint.event_ts)
+            select(Touchpoint).where(and_(*conditions)).order_by(Touchpoint.event_ts).limit(1000)
         )
         return list(result.scalars().all())
 
@@ -325,7 +325,7 @@ class IdentityMatcher:
                 )
             ).order_by(Touchpoint.event_ts)
         )
-        touchpoints = list(result.scalars().all())
+        touchpoints = list(result.scalars().all())  # already bounded by contact_id + time
 
         if not touchpoints:
             return {"attributed": False, "reason": "no_touchpoints"}
@@ -457,7 +457,7 @@ class IdentityMatcher:
                 )
             )
         )
-        deals = result.scalars().all()
+        deals = list(result.scalars().all())
 
         # Group metrics
         groups: Dict[str, Dict[str, Any]] = {}

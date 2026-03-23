@@ -502,9 +502,9 @@ class JourneyService:
                     CRMDeal.won_at <= end_date,
                     CRMDeal.contact_id.isnot(None),
                 )
-            )
+            ).limit(1000)
         )
-        deals = deal_result.scalars().all()
+        deals = list(deal_result.scalars().all())
 
         # Track assists and last-touches
         stats: Dict[str, Dict[str, Any]] = {}
@@ -516,9 +516,9 @@ class JourneyService:
                         Touchpoint.contact_id == deal.contact_id,
                         Touchpoint.event_ts <= deal.won_at,
                     )
-                ).order_by(Touchpoint.event_ts)
+                ).order_by(Touchpoint.event_ts).limit(1000)
             )
-            touchpoints = touchpoint_result.scalars().all()
+            touchpoints = list(touchpoint_result.scalars().all())
 
             if not touchpoints:
                 continue
@@ -589,9 +589,9 @@ class JourneyService:
                     CRMDeal.won_at <= end_date,
                     CRMDeal.contact_id.isnot(None),
                 )
-            )
+            ).limit(1000)
         )
-        deals = deal_result.scalars().all()
+        deals = list(deal_result.scalars().all())
 
         # Time lag buckets (in days)
         buckets = {
