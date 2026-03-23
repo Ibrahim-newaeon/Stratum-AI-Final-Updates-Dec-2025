@@ -227,9 +227,9 @@ class IdentityMatcher:
                     Touchpoint.tenant_id == self.tenant_id,
                     column == click_id_value,
                 )
-            ).order_by(Touchpoint.event_ts)
+            ).order_by(Touchpoint.event_ts).limit(1000)
         )
-        return list(result.scalars().all())  # already bounded by click_id equality
+        return list(result.scalars().all())
 
     async def _find_touchpoints_by_identity(
         self,
@@ -323,9 +323,9 @@ class IdentityMatcher:
                     Touchpoint.contact_id == deal.contact_id,
                     Touchpoint.event_ts <= (deal.won_at or datetime.now(timezone.utc)),
                 )
-            ).order_by(Touchpoint.event_ts)
+            ).order_by(Touchpoint.event_ts).limit(1000)
         )
-        touchpoints = list(result.scalars().all())  # already bounded by contact_id + time
+        touchpoints = list(result.scalars().all())
 
         if not touchpoints:
             return {"attributed": False, "reason": "no_touchpoints"}
@@ -455,7 +455,7 @@ class IdentityMatcher:
                     CRMDeal.won_at <= end_date,
                     CRMDeal.attributed_campaign_id.isnot(None),
                 )
-            )
+            ).limit(1000)
         )
         deals = list(result.scalars().all())
 
