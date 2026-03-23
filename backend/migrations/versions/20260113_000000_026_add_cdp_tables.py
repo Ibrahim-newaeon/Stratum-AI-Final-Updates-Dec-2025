@@ -18,7 +18,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers
 revision = '026_cdp_tables'
-down_revision = '026_add_autopilot_enforcement'
+down_revision = '012_add_autopilot_enforcement'
 branch_labels = None
 depends_on = None
 

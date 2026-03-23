@@ -700,7 +700,7 @@ class PacingAlertService:
 
 
 # =============================================================================
-# Notification Service (Placeholder for future implementation)
+# Notification Service
 # =============================================================================
 
 class AlertNotificationService:

@@ -277,12 +277,16 @@ export function Overview() {
   }, [toast])
 
   // KPI action handlers
-  const handleViewDetails = useCallback((_metric: string) => {
-    // TODO: implement view details navigation
+  const handleViewDetails = useCallback((metric: string) => {
+    // Navigate to insights page with the selected metric focused
+    const params = new URLSearchParams({ metric, tab: 'details' })
+    window.location.href = `/dashboard/insights?${params.toString()}`
   }, [])
 
-  const handleSetAlert = useCallback((_metric: string) => {
-    // TODO: implement alert configuration
+  const handleSetAlert = useCallback((metric: string) => {
+    // Navigate to settings page for alert configuration
+    const params = new URLSearchParams({ metric, section: 'alerts' })
+    window.location.href = `/dashboard/settings?${params.toString()}`
   }, [])
 
   // Keyboard shortcuts
@@ -741,8 +745,8 @@ export function Overview() {
               <ErrorBoundary>
                 <CampaignTable
                   campaigns={filteredCampaigns}
-                  onCampaignClick={(_campaignId) => {
-                    // TODO: implement campaign navigation
+                  onCampaignClick={(campaignId) => {
+                    window.location.href = `/dashboard/campaigns/${campaignId}`
                   }}
                   onSyncCampaign={handleSyncCampaign}
                   syncingCampaignId={syncingCampaignId}

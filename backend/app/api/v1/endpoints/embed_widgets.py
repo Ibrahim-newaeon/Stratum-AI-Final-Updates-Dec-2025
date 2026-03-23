@@ -346,7 +346,7 @@ async def get_embed_code(
 
     codes = service.generate_embed_code(
         widget=widget,
-        token="{YOUR_TOKEN}",  # Placeholder - user provides actual token
+        token=token.token_prefix if hasattr(token, 'token_prefix') else str(token.id),
         base_url=base_url,
     )
 
