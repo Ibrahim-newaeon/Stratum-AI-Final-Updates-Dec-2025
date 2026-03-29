@@ -135,7 +135,7 @@ jobs:
           pip-audit --strict --desc on --ignore-vuln CVE-2024-23342
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         with:
           file: backend/coverage.xml
           flags: backend
@@ -186,7 +186,7 @@ jobs:
         run: npm run test:coverage -- --reporter=verbose
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         with:
           file: frontend/coverage/lcov.info
           flags: frontend
