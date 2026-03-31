@@ -379,8 +379,15 @@ async def check_mfa_required_for_user(
     if a second factor is needed.
 
     **Note:** This endpoint does not require authentication as it's part
-    of the login flow.
+    of the login flow. Input is validated to prevent user enumeration.
     """
+    # Validate user_id range to prevent enumeration probing
+    if user_id < 1 or user_id > 2_147_483_647:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid user ID",
+        )
+
     mfa_required = await check_mfa_required(db, user_id)
 
     if mfa_required:

@@ -232,7 +232,7 @@ export default function OnboardingChat({
         'Check Integrations': '/dashboard/integrations',
       };
       const route = routes[reply];
-      if (route) {
+      if (route && route.startsWith('/')) {
         onClose();
         window.location.href = route;
         return;

@@ -303,11 +303,15 @@ async def update_tenant(
             detail="Tenant not found",
         )
 
-    # Update fields
+    # Update fields — whitelist allowed fields to prevent mass assignment
+    ALLOWED_FIELDS = {
+        "name", "slug", "domain", "plan", "plan_expires_at",
+        "max_users", "max_campaigns", "settings", "logo_url",
+    }
     update_dict = update_data.model_dump(exclude_unset=True)
 
     for field, value in update_dict.items():
-        if hasattr(tenant, field):
+        if field in ALLOWED_FIELDS and hasattr(tenant, field):
             setattr(tenant, field, value)
 
     await db.commit()

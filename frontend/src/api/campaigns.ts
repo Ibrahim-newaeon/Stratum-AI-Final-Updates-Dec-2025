@@ -90,9 +90,10 @@ export const campaignsApi = {
    * Get all campaigns with optional filters
    */
   getCampaigns: async (filters: CampaignFilters = {}): Promise<PaginatedResponse<CampaignWithMetrics>> => {
+    const safeFilters = { limit: 50, skip: 0, ...filters }
     const response = await apiClient.get<ApiResponse<PaginatedResponse<CampaignWithMetrics>>>(
       '/campaigns',
-      { params: filters }
+      { params: safeFilters }
     )
     return response.data.data
   },

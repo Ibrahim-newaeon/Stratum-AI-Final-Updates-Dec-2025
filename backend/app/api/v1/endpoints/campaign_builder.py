@@ -218,7 +218,7 @@ async def start_platform_connection(
     if not client_id:
         raise HTTPException(
             status_code=400,
-            detail=f"OAuth not configured for {platform.value}. Set {config['client_id_env']} environment variable.",
+            detail=f"OAuth not configured for {platform.value}. Contact your administrator.",
         )
 
     from urllib.parse import urlencode
@@ -277,7 +277,7 @@ async def refresh_platform_token(
         if not refresh_token:
             raise HTTPException(
                 status_code=400,
-                detail=f"No refresh token available for {platform.value}. Re-authenticate via OAuth.",
+                detail=f"Platform authentication expired for {platform.value}. Please re-authenticate.",
             )
 
         new_tokens = await oauth_service.refresh_access_token(refresh_token)

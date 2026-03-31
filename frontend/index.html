@@ -16,8 +16,13 @@
     <script>
       // Runtime config — always served fresh (no-cache HTML).
       // Overrides any stale build-time VITE_API_URL baked into JS bundles.
+      // In production, this block should be templated by the deployment
+      // pipeline (e.g. envsubst or server-side injection).  The fallback
+      // "/api/v1" ensures local dev works without explicit configuration.
       window.__RUNTIME_CONFIG__ = {
-        VITE_API_URL: "https://app.stratumai.app/api/v1"
+        VITE_API_URL: "__VITE_API_URL_PLACEHOLDER__" !== "__VITE_API_URL_PLACEHOLDER__"
+          ? "__VITE_API_URL_PLACEHOLDER__"
+          : "/api/v1"
       };
     </script>
     <div id="root"></div>

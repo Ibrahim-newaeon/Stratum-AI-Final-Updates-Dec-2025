@@ -1015,7 +1015,7 @@ async def cdp_health():
 )
 async def export_profiles(
     format: str = Query("json", description="Export format: json or csv"),
-    limit: int = Query(1000, ge=1, le=10000, description="Max profiles to export"),
+    limit: int = Query(500, ge=1, le=2000, description="Max profiles to export"),
     offset: int = Query(0, ge=0, description="Offset for pagination"),
     db: AsyncSession = Depends(get_async_session),
     current_user=Depends(get_current_user),
@@ -1141,7 +1141,7 @@ async def export_profiles(
 )
 async def export_events(
     format: str = Query("json", description="Export format: json or csv"),
-    limit: int = Query(1000, ge=1, le=10000, description="Max events to export"),
+    limit: int = Query(500, ge=1, le=2000, description="Max events to export"),
     offset: int = Query(0, ge=0, description="Offset for pagination"),
     start_date: Optional[datetime] = Query(None, description="Filter events from this date"),
     end_date: Optional[datetime] = Query(None, description="Filter events until this date"),

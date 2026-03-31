@@ -7,6 +7,7 @@ Pydantic schemas for Client CRUD, assignments, and portal invitations.
 
 from datetime import datetime
 from typing import Optional
+from urllib.parse import urlparse
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
@@ -41,6 +42,28 @@ class ClientCreate(BaseModel):
     def validate_slug(cls, v: str) -> str:
         """Ensure slug is lowercase and URL-safe."""
         return v.lower().strip()
+
+    @field_validator("website", "logo_url", mode="before")
+    @classmethod
+    def validate_url_format(cls, v: Optional[str]) -> Optional[str]:
+        """Validate that URL fields contain properly formatted URLs."""
+        if v is None or v == "":
+            return v
+        parsed = urlparse(v)
+        if parsed.scheme not in ("http", "https") or not parsed.netloc:
+            raise ValueError("Must be a valid HTTP or HTTPS URL")
+        return v
+
+    @field_validator("timezone", mode="before")
+    @classmethod
+    def validate_timezone(cls, v: str) -> str:
+        """Validate timezone is a known IANA timezone or UTC offset."""
+        import zoneinfo
+        try:
+            zoneinfo.ZoneInfo(v)
+        except (KeyError, zoneinfo.ZoneInfoNotFoundError):
+            raise ValueError(f"Unknown timezone: {v}")
+        return v
 
 
 class ClientUpdate(BaseModel):

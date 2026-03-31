@@ -163,6 +163,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (stored) {
       try {
         const parsedUser = JSON.parse(stored) as User;
+
+        // Validate required fields before trusting the stored session
+        if (!parsedUser.id || !parsedUser.email || !parsedUser.role) {
+          throw new Error('Invalid stored user: missing required fields');
+        }
+
         setUser(parsedUser);
 
         // Sync tenant context to Zustand store on session restore
