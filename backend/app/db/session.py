@@ -7,7 +7,7 @@ Implements proper context management for multi-tenant queries.
 """
 
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator, Generator
+from typing import Any, AsyncGenerator, Generator
 
 from sqlalchemy import create_engine, event, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -156,17 +156,16 @@ class TenantAwareSession:
         """Execute a statement (tenant filtering should be applied by caller)."""
         return await self._session.execute(statement, *args, **kwargs)
 
-    async def add(self, instance):
+    async def add(self, instance: Any) -> None:
         """Add an instance, ensuring tenant_id is set."""
         if hasattr(instance, "tenant_id"):
             instance.tenant_id = self._tenant_id
         self._session.add(instance)
 
-    async def delete(self, instance):
+    async def delete(self, instance: Any) -> None:
         """Delete an instance (verify tenant ownership first)."""
         if hasattr(instance, "tenant_id") and instance.tenant_id != self._tenant_id:
-            import structlog
-            structlog.get_logger().warning(
+            logger.warning(
                 "cross_tenant_delete_blocked",
                 requesting_tenant=self._tenant_id,
                 target_tenant=instance.tenant_id,
@@ -174,15 +173,16 @@ class TenantAwareSession:
                 entity_id=getattr(instance, "id", "unknown"),
             )
             raise PermissionError("Cannot delete object from different tenant")
-        await self._session.delete(instance)
+        # NOTE: AsyncSession.delete() is synchronous — do NOT await it.
+        self._session.delete(instance)
 
-    async def commit(self):
+    async def commit(self) -> None:
         await self._session.commit()
 
-    async def rollback(self):
+    async def rollback(self) -> None:
         await self._session.rollback()
 
-    async def refresh(self, instance):
+    async def refresh(self, instance: Any) -> None:
         await self._session.refresh(instance)
 
 

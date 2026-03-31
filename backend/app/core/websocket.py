@@ -14,6 +14,7 @@ Handles:
 
 import asyncio
 import json
+import uuid
 from datetime import datetime, timezone
 from typing import Dict, Set, Optional, Any, List
 from dataclasses import dataclass, field
@@ -30,7 +31,7 @@ logger = get_logger(__name__)
 
 # Unique identifier for this process instance, used to prevent double-delivery
 # when the same instance both sends locally and receives via Redis pub/sub.
-_instance_id = __import__("uuid").uuid4().hex[:8]
+_instance_id = uuid.uuid4().hex[:8]
 
 
 class MessageType(str, Enum):
@@ -152,14 +153,14 @@ class WebSocketManager:
             try:
                 await self._pubsub_task
             except asyncio.CancelledError:
-                pass
+                logger.debug("websocket_pubsub_task_cancelled")
 
         if self._heartbeat_task:
             self._heartbeat_task.cancel()
             try:
                 await self._heartbeat_task
             except asyncio.CancelledError:
-                pass
+                logger.debug("websocket_heartbeat_task_cancelled")
 
         # Close all connections
         for client_id in list(self._connections.keys()):
@@ -172,7 +173,6 @@ class WebSocketManager:
 
     def _generate_client_id(self) -> str:
         """Generate a unique client ID."""
-        import uuid
         return str(uuid.uuid4())
 
     async def connect(
@@ -229,11 +229,11 @@ class WebSocketManager:
             if channel in self._channel_subscriptions:
                 self._channel_subscriptions[channel].discard(client_id)
 
-        # Close the connection
+        # Close the connection — use try/except instead of state check to
+        # avoid TOCTOU race where state changes between check and close().
         try:
-            if client.websocket.client_state == WebSocketState.CONNECTED:
-                await client.websocket.close()
-        except (ConnectionError, OSError, RuntimeError):
+            await client.websocket.close()
+        except (ConnectionError, OSError, RuntimeError, WebSocketDisconnect):
             pass  # Client already disconnected or connection reset
 
         logger.info(
@@ -359,7 +359,7 @@ class WebSocketManager:
                 if message and message["type"] == "pmessage":
                     await self._handle_redis_message(message)
         except asyncio.CancelledError:
-            pass
+            logger.debug("websocket_redis_listener_cancelled")
         finally:
             await pubsub.punsubscribe("ws:*")
             await pubsub.close()
@@ -408,7 +408,7 @@ class WebSocketManager:
                 for client_id in list(self._connections.keys()):
                     await self.send_to_client(client_id, message)
         except asyncio.CancelledError:
-            pass
+            logger.debug("websocket_heartbeat_loop_cancelled")
 
     async def handle_client_message(self, client_id: str, data: str):
         """Handle an incoming message from a client."""

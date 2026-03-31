@@ -7,12 +7,21 @@ All environment variables are validated and typed.
 """
 
 import re
+import secrets
 import warnings
 from functools import lru_cache
 from typing import List, Literal, Optional
 
 from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Generate cryptographically secure defaults so the application never
+# silently runs with a well-known, guessable key.  These are regenerated
+# every process start, which forces operators to set stable values via
+# environment variables for any non-ephemeral deployment.
+_DEV_SECRET_KEY = f"dev-autogen-{secrets.token_urlsafe(32)}"
+_DEV_JWT_SECRET = f"jwt-autogen-{secrets.token_urlsafe(32)}"
+_DEV_PII_KEY = secrets.token_urlsafe(32)  # 43-char URL-safe string
 
 
 class Settings(BaseSettings):
@@ -34,7 +43,7 @@ class Settings(BaseSettings):
     )
     debug: bool = Field(default=False)
     secret_key: str = Field(
-        default="dev-secret-key-change-in-production",
+        default_factory=lambda: _DEV_SECRET_KEY,
         description="Secret key for signing",
     )
     api_v1_prefix: str = Field(default="/api/v1")
@@ -177,13 +186,13 @@ class Settings(BaseSettings):
     # Security Configuration
     # -------------------------------------------------------------------------
     jwt_secret_key: str = Field(
-        default="jwt-secret-dev", description="JWT signing key"
+        default_factory=lambda: _DEV_JWT_SECRET, description="JWT signing key"
     )
     jwt_algorithm: str = Field(default="HS256")
     access_token_expire_minutes: int = Field(default=30)
     refresh_token_expire_days: int = Field(default=7)
     pii_encryption_key: str = Field(
-        default="dev-encryption-key-32bytes", description="AES encryption key for PII"
+        default_factory=lambda: _DEV_PII_KEY, description="AES encryption key for PII"
     )
 
     # -------------------------------------------------------------------------
@@ -343,17 +352,18 @@ class Settings(BaseSettings):
     def enforce_production_safety(self) -> "Settings":
         """Reject insecure default values in production and staging environments."""
         if self.app_env in ("production", "staging"):
-            if self.secret_key == "dev-secret-key-change-in-production":
+            if self.secret_key.startswith("dev-autogen-"):
                 raise ValueError(
-                    f"secret_key must be changed from its default value in {self.app_env}"
+                    f"SECRET_KEY must be explicitly set in {self.app_env} (do not rely on auto-generated dev defaults)"
                 )
-            if self.jwt_secret_key == "jwt-secret-dev":
+            if self.jwt_secret_key.startswith("jwt-autogen-"):
                 raise ValueError(
-                    f"jwt_secret_key must be changed from its default value in {self.app_env}"
+                    f"JWT_SECRET_KEY must be explicitly set in {self.app_env} (do not rely on auto-generated dev defaults)"
                 )
-            if self.pii_encryption_key == "dev-encryption-key-32bytes":
+            # PII key: reject both the old hardcoded default and auto-generated ones
+            if self.pii_encryption_key == _DEV_PII_KEY:
                 raise ValueError(
-                    f"pii_encryption_key must be changed from its default value in {self.app_env}"
+                    f"PII_ENCRYPTION_KEY must be explicitly set in {self.app_env} (do not rely on auto-generated dev defaults)"
                 )
             if (
                 self.whatsapp_verify_token == "stratum-whatsapp-verify-token"

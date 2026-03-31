@@ -22,6 +22,7 @@ from app.features.flags import AutopilotLevel, get_autopilot_caps
 class ActionStatus(str, Enum):
     """Action lifecycle statuses."""
     QUEUED = "queued"
+    PENDING_APPROVAL = "pending_approval"
     APPROVED = "approved"
     APPLIED = "applied"
     FAILED = "failed"
@@ -109,7 +110,7 @@ class AutopilotService:
             )
         elif signal_status == "degraded":
             # Hold — queue but require approval
-            action_status = ActionStatus.PENDING_APPROVAL.value if hasattr(ActionStatus, "PENDING_APPROVAL") else ActionStatus.QUEUED.value
+            action_status = ActionStatus.PENDING_APPROVAL.value
         else:
             # Healthy or unknown — proceed normally
             action_status = ActionStatus.QUEUED.value

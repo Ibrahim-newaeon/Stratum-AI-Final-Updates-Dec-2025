@@ -133,16 +133,15 @@ async def get_current_user(
     try:
         email = payload.get("email") or decrypt_pii(user.email)
     except (ValueError, TypeError, UnicodeDecodeError) as exc:
-        import structlog
-        structlog.get_logger().warning("pii_decryption_fallback", field="email", user_id=user.id, error=str(exc))
-        # Fallback: use raw stored value or email from JWT
-        email = payload.get("email") or user.email or f"user-{user.id}@unknown"
+        logger.warning("pii_decryption_fallback", field="email", user_id=user.id, error=str(exc))
+        # Fallback: prefer the JWT claim; never expose raw ciphertext
+        jwt_email = payload.get("email")
+        email = jwt_email if jwt_email else f"user-{user.id}@unknown"
 
     try:
         full_name = decrypt_pii(user.full_name) if user.full_name else None
     except (ValueError, TypeError, UnicodeDecodeError) as exc:
-        import structlog
-        structlog.get_logger().warning("pii_decryption_fallback", field="full_name", user_id=user.id, error=str(exc))
+        logger.warning("pii_decryption_fallback", field="full_name", user_id=user.id, error=str(exc))
         full_name = None
 
     # Store user info in request state for middleware/logging
