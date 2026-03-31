@@ -123,6 +123,7 @@ class CDPSource(Base, TimestampMixin):
         Index("ix_cdp_sources_tenant", "tenant_id"),
         Index("ix_cdp_sources_key", "source_key"),
         Index("ix_cdp_sources_type", "tenant_id", "source_type"),
+        UniqueConstraint("tenant_id", "source_key", name="uq_cdp_source_key_per_tenant"),
     )
 
     def __repr__(self) -> str:

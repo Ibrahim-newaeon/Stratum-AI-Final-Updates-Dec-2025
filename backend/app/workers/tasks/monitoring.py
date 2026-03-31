@@ -14,11 +14,13 @@ from sqlalchemy import func, select
 from app.core.config import settings
 from app.db.session import SyncSessionLocal
 from app.models import Campaign, Tenant
+from app.workers.locks import with_distributed_lock
 
 logger = get_task_logger(__name__)
 
 
 @shared_task
+@with_distributed_lock(timeout=600)
 def check_pipeline_health():
     """
     Check health of data pipelines and sync jobs.

@@ -13,6 +13,7 @@ from sqlalchemy import select
 
 from app.db.session import SyncSessionLocal
 from app.models import Campaign, Tenant
+from app.workers.locks import with_distributed_lock
 
 logger = get_task_logger(__name__)
 
@@ -61,6 +62,7 @@ def generate_forecast(tenant_id: int, campaign_ids: Optional[list[int]] = None):
 
 
 @shared_task
+@with_distributed_lock(timeout=1800)
 def generate_daily_forecasts():
     """
     Generate daily forecasts for all active campaigns.

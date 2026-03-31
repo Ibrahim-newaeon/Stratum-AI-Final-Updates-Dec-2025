@@ -236,9 +236,10 @@ class CRMDeal(Base):
     stage = Column(String(100), nullable=True)  # Raw stage from CRM
     stage_normalized = Column(StrEnumType(DealStage), nullable=True)  # Normalized stage
 
-    # Financials
-    amount = Column(Float, nullable=True)  # Deal value
-    amount_cents = Column(BigInteger, nullable=True)  # Deal value in cents
+    # Financials — prefer amount_cents for precision; amount is kept for
+    # backward compatibility but should not be used for calculations.
+    amount = Column(Float, nullable=True)  # DEPRECATED: use amount_cents
+    amount_cents = Column(BigInteger, nullable=True)  # Deal value in cents (canonical)
     currency = Column(String(10), default="USD", nullable=False)
 
     # Dates
@@ -377,6 +378,7 @@ class Touchpoint(Base):
         Index("ix_touchpoints_tenant_campaign", "tenant_id", "campaign_id"),
         Index("ix_touchpoints_email_hash", "tenant_id", "email_hash"),
         Index("ix_touchpoints_click_ids", "tenant_id", "gclid", "fbclid", "ttclid"),
+        Index("ix_touchpoints_tenant_converting", "tenant_id", "is_converting_touch"),
         Index("ix_touchpoints_visitor", "tenant_id", "visitor_id"),
     )
 

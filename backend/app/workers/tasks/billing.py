@@ -13,11 +13,13 @@ from sqlalchemy import func, select
 
 from app.db.session import SyncSessionLocal
 from app.models import Campaign, CampaignMetric, Tenant
+from app.workers.locks import with_distributed_lock
 
 logger = get_task_logger(__name__)
 
 
 @shared_task
+@with_distributed_lock(timeout=1800)
 def calculate_cost_allocation():
     """
     Calculate cost allocation across campaigns and channels.
@@ -79,6 +81,7 @@ def calculate_cost_allocation():
 
 
 @shared_task
+@with_distributed_lock(timeout=1800)
 def calculate_usage_rollup():
     """
     Calculate usage metrics for billing purposes.

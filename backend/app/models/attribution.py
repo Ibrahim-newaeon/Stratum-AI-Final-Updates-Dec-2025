@@ -142,6 +142,8 @@ class ConversionPath(Base):
         Index("ix_conversion_paths_tenant_period", "tenant_id", "period_start", "period_end"),
         Index("ix_conversion_paths_hash", "tenant_id", "path_hash"),
         Index("ix_conversion_paths_conversions", "tenant_id", "conversions"),
+        Index("ix_conversion_paths_first_channel", "tenant_id", "first_channel"),
+        Index("ix_conversion_paths_last_channel", "tenant_id", "last_channel"),
         UniqueConstraint(
             "tenant_id", "path_hash", "path_type", "period_start", "period_end",
             name="uq_conversion_path"

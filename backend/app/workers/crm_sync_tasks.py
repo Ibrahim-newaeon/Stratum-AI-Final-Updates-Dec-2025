@@ -46,7 +46,9 @@ def async_task(func):
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         try:
-            return loop.run_until_complete(func(*args, **kwargs))
+            return loop.run_until_complete(
+                asyncio.wait_for(func(*args, **kwargs), timeout=300)
+            )
         finally:
             loop.close()
 
