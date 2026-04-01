@@ -13,7 +13,7 @@ starlette==0.52.1
 anyio==4.12.1
 httpx==0.28.1
 aiofiles==25.1.0
-aiohttp==3.13.3
+aiohttp==3.13.4
 aiosmtplib==5.1.0
 sse-starlette==2.0.0
 
