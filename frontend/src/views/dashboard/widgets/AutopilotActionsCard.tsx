@@ -161,34 +161,36 @@ export function AutopilotActionsCard() {
 
   if (isLoading) {
     return (
-      <div className="bg-card border rounded-xl p-6 flex items-center justify-center min-h-[200px]">
+      <div className="widget-card flex items-center justify-center min-h-[200px]">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
-    <div className="bg-card border rounded-xl p-6">
-      <div className="flex items-center justify-between mb-4">
+    <div className="widget-card h-full flex flex-col">
+      <div className="widget-header">
         <div className="flex items-center gap-2">
-          <Zap className="w-4 h-4 text-primary" />
-          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+          <div className="p-1.5 rounded-lg bg-primary/10">
+            <Zap className="w-3.5 h-3.5 text-primary" />
+          </div>
+          <h3 className="widget-title">
             Autopilot Actions
           </h3>
         </div>
-        <span className="text-xs text-muted-foreground">{allActions.length} total</span>
+        <span className="text-xs text-muted-foreground tabular-nums">{allActions.length} total</span>
       </div>
 
       {/* Filter tabs */}
-      <div className="flex gap-1 mb-4 bg-muted rounded-lg p-0.5">
+      <div className="flex gap-1 mb-4 bg-white/[0.04] border border-white/[0.06] rounded-lg p-0.5">
         {TABS.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
             className={cn(
-              'flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
+              'flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200',
               activeTab === tab.key
-                ? 'bg-card text-foreground shadow-sm'
+                ? 'bg-primary/20 text-primary shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
             )}
           >
@@ -198,7 +200,7 @@ export function AutopilotActionsCard() {
       </div>
 
       {/* Action list */}
-      <div className="max-h-[400px] overflow-y-auto space-y-2">
+      <div className="flex-1 max-h-[400px] overflow-y-auto space-y-1.5 scrollbar-hide">
         {filtered.length === 0 ? (
           <div className="text-center py-8 text-sm text-muted-foreground">
             No actions in this category
@@ -207,7 +209,7 @@ export function AutopilotActionsCard() {
           filtered.map((action) => (
             <div
               key={action.id}
-              className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors"
+              className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] border border-transparent hover:border-white/[0.05] transition-all duration-200"
             >
               <div className="flex items-center gap-3 min-w-0">
                 <span
