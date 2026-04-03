@@ -128,6 +128,10 @@ export default {
         'glow-insight': '0 0 18px rgba(249, 115, 22, 0.22)',
         'card': '0 4px 12px rgba(0, 0, 0, 0.20)',
         'card-hover': '0 10px 30px rgba(0, 0, 0, 0.28)',
+        // Glassmorphism shadows
+        'glass': '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.04)',
+        'glass-hover': '0 12px 48px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(168, 85, 247, 0.08)',
+        'bento': '0 2px 8px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.04)',
       },
       spacing: {
         // Analytics Design System spacing (8px grid)

@@ -68,7 +68,17 @@ def compute_cdp_segment(self, tenant_id: int, segment_id: str):
 
         matched_profiles = []
         offset = 0
+        max_iterations = 10_000  # Safety limit: 10k * CHUNK_SIZE = 5M profiles max
+        iterations = 0
         while True:
+            iterations += 1
+            if iterations > max_iterations:
+                logger.warning(
+                    f"Segment {segment_id} hit max iteration limit ({max_iterations}), "
+                    f"processed {offset} profiles"
+                )
+                break
+
             chunk = db.execute(
                 base_query.offset(offset).limit(CHUNK_SIZE)
             ).scalars().all()
@@ -245,8 +255,9 @@ def compute_cdp_rfm(self, tenant_id: int, config: Optional[dict] = None):
         total_scored = 0
         all_results: dict[str, Any] = {}
         offset = 0
+        max_iterations = 10_000
 
-        while True:
+        for _iter in range(max_iterations):
             chunk = db.execute(
                 base_query.offset(offset).limit(CHUNK_SIZE)
             ).scalars().all()
@@ -331,7 +342,9 @@ def compute_cdp_traits(self, tenant_id: int, trait_id: Optional[str] = None):
 
         computed_count = 0
         offset = 0
-        while True:
+        max_iterations = 10_000
+
+        for _iter in range(max_iterations):
             chunk = db.execute(
                 base_query.offset(offset).limit(CHUNK_SIZE)
             ).scalars().all()

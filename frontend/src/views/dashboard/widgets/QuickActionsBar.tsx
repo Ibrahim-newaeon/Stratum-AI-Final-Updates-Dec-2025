@@ -68,15 +68,16 @@ export function QuickActionsBar({ actions }: QuickActionsBarProps) {
             key={action.id}
             onClick={() => handleAction(action)}
             className={cn(
-              'inline-flex items-center gap-2 px-4 py-2 rounded-lg',
-              'bg-card border hover:bg-muted transition-colors',
-              'text-sm font-medium'
+              'inline-flex items-center gap-2 px-4 py-2.5 rounded-xl',
+              'bg-white/[0.04] border border-white/[0.07] backdrop-blur-sm',
+              'hover:bg-white/[0.08] hover:border-primary/20',
+              'transition-all duration-200 text-sm font-medium group'
             )}
           >
-            <Icon className="w-4 h-4 text-primary" />
+            <Icon className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
             <span>{action.label}</span>
             {action.count !== null && action.count > 0 && (
-              <span className="ml-1 px-1.5 py-0.5 text-xs bg-primary/10 text-primary rounded-full font-medium">
+              <span className="ml-0.5 px-2 py-0.5 text-[11px] bg-primary/15 text-primary rounded-full font-semibold tabular-nums">
                 {action.count}
               </span>
             )}

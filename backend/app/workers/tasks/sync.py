@@ -24,12 +24,12 @@ from app.workers.tasks.helpers import publish_event
 logger = get_task_logger(__name__)
 
 
-def _run_async(coro):
-    """Run an async coroutine from a synchronous Celery task."""
+def _run_async(coro, timeout_seconds: int = 300):
+    """Run an async coroutine from a synchronous Celery task with a timeout."""
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
-        return loop.run_until_complete(coro)
+        return loop.run_until_complete(asyncio.wait_for(coro, timeout=timeout_seconds))
     finally:
         loop.close()
 

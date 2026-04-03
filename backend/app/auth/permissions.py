@@ -827,9 +827,19 @@ async def get_accessible_client_ids(
     # Manager / Analyst: scoped to assigned clients
     from app.models.client import ClientAssignment
 
-    result = await db.execute(
-        select(ClientAssignment.client_id).where(
-            ClientAssignment.user_id == user_id,
+    try:
+        result = await db.execute(
+            select(ClientAssignment.client_id).where(
+                ClientAssignment.user_id == user_id,
+            )
         )
-    )
-    return list(result.scalars().all())
+        return list(result.scalars().all())
+    except (ConnectionError, TimeoutError, OSError) as exc:
+        import structlog
+        structlog.get_logger().error(
+            "get_accessible_client_ids_db_error",
+            user_id=user_id,
+            error=str(exc),
+            error_type=type(exc).__name__,
+        )
+        return []  # Fail closed: no access on DB error

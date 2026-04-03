@@ -105,11 +105,11 @@ export const KPICard: React.FC<KPICardProps> = ({
   return (
     <div
       className={cn(
-        'relative overflow-hidden rounded-lg border motion-card motion-enter group',
+        'relative overflow-hidden rounded-2xl motion-card motion-enter group',
         highlight
-          ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-glow'
-          : 'bg-card shadow-card hover:shadow-card-hover hover:border-[rgba(168,85,247,0.30)]',
-        size === 'small' ? 'p-4' : 'p-6',
+          ? 'bg-gradient-to-br from-primary/90 to-cyan-500/80 text-primary-foreground shadow-glow border border-primary/30'
+          : 'bg-white/[0.04] border border-white/[0.07] backdrop-blur-sm hover:bg-white/[0.07] hover:border-primary/20 hover:shadow-lg',
+        size === 'small' ? 'p-4' : 'p-5',
         className
       )}
       onMouseEnter={() => hasActions && setShowActions(true)}
@@ -117,12 +117,11 @@ export const KPICard: React.FC<KPICardProps> = ({
       role="article"
       aria-label={`${title}: ${value}${delta !== undefined ? `, ${delta > 0 ? 'up' : 'down'} ${Math.abs(delta).toFixed(1)}% ${deltaText}` : ''}`}
     >
-      {/* Accent border (left side) */}
+      {/* Accent border (top edge gradient) */}
       <div
         className={cn(
-          'absolute left-0 top-0 h-full w-1 transition-all duration-200',
-          highlight ? 'bg-primary-foreground/30' : 'bg-primary',
-          'group-hover:w-1.5'
+          'absolute left-0 top-0 w-full h-[2px] transition-opacity duration-200',
+          highlight ? 'bg-primary-foreground/30 opacity-100' : 'bg-gradient-to-r from-primary/60 to-cyan-500/60 opacity-0 group-hover:opacity-100'
         )}
       />
 

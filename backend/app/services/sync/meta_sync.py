@@ -26,6 +26,7 @@ import aiohttp
 from app.base_models import CampaignStatus
 from app.core.config import settings
 from app.core.logging import get_logger
+from app.services.circuit_breaker import get_circuit_breaker
 
 logger = get_logger(__name__)
 
@@ -94,6 +95,11 @@ class MetaCampaignSyncService:
         ad_account_id: str,
     ) -> list[MetaCampaignData]:
         """Fetch all campaigns for an ad account."""
+        breaker = get_circuit_breaker("meta_api", failure_threshold=5, cooldown_seconds=120)
+        if not breaker.allow_request():
+            logger.warning("meta_api_circuit_open", account=ad_account_id)
+            return []
+
         campaigns: list[MetaCampaignData] = []
         url: Optional[str] = self._graph_url(f"{ad_account_id}/campaigns")
         params: dict[str, Any] = {
@@ -102,7 +108,8 @@ class MetaCampaignSyncService:
             "limit": 200,
         }
 
-        async with aiohttp.ClientSession() as session:
+        timeout = aiohttp.ClientTimeout(total=60, connect=10)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
             while url:
                 async with session.get(url, params=params) as resp:
                     await self._handle_rate_limit(resp)
@@ -121,6 +128,7 @@ class MetaCampaignSyncService:
                 url = paging.get("next")
                 params = {}  # next URL includes all params
 
+        breaker.record_success()
         logger.info("meta_campaigns_fetched", account=ad_account_id, count=len(campaigns))
         return campaigns
 
@@ -146,7 +154,8 @@ class MetaCampaignSyncService:
             "limit": 500,
         }
 
-        async with aiohttp.ClientSession() as session:
+        timeout = aiohttp.ClientTimeout(total=60, connect=10)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
             while url:
                 async with session.get(url, params=params) as resp:
                     await self._handle_rate_limit(resp)

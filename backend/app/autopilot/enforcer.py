@@ -328,7 +328,7 @@ class AutopilotEnforcer:
 
                 # Add new rules from the Pydantic models
                 for rule in updates["rules"]:
-                    rule_dict = rule.dict() if hasattr(rule, 'dict') else rule
+                    rule_dict = rule.model_dump() if hasattr(rule, 'model_dump') else (rule.dict() if hasattr(rule, 'dict') else rule)
                     db_rule = TenantEnforcementRuleDB(
                         settings_id=db_settings.id,
                         tenant_id=tenant_id,
@@ -646,8 +646,8 @@ class AutopilotEnforcer:
                 exc_info=True,
             )
             return False
-        except Exception as exc:
-            # Unexpected error — log with full traceback for investigation
+        except (RuntimeError, TypeError, KeyError, AttributeError) as exc:
+            # Unexpected but non-fatal error — log with full traceback for investigation
             logger.exception(
                 f"Unexpected error auto-pausing campaign {campaign_id}: {exc}"
             )

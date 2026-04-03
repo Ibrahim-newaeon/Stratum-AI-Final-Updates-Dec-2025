@@ -80,7 +80,9 @@ async def connect_platform(
     - TikTok - Requires pixel_code, access_token
     - Snapchat - Requires pixel_id, access_token
     """
-    tenant_id = getattr(request.state, "tenant_id", 1)
+    tenant_id = getattr(request.state, "tenant_id", None)
+    if tenant_id is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
     service = get_capi_service(tenant_id)
 
     result = await service.connect_platform(data.platform, data.credentials)
@@ -102,7 +104,9 @@ async def disconnect_platform(
     request: Request,
 ):
     """Disconnect from a platform."""
-    tenant_id = getattr(request.state, "tenant_id", 1)
+    tenant_id = getattr(request.state, "tenant_id", None)
+    if tenant_id is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
     service = get_capi_service(tenant_id)
 
     success = await service.disconnect_platform(platform)
@@ -116,7 +120,9 @@ async def disconnect_platform(
 @router.get("/platforms/status", response_model=APIResponse)
 async def get_platforms_status(request: Request):
     """Get connection status for all platforms."""
-    tenant_id = getattr(request.state, "tenant_id", 1)
+    tenant_id = getattr(request.state, "tenant_id", None)
+    if tenant_id is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
     service = get_capi_service(tenant_id)
 
     connected = service.get_connected_platforms()
@@ -134,7 +140,9 @@ async def get_platforms_status(request: Request):
 @router.post("/platforms/test", response_model=APIResponse)
 async def test_connections(request: Request):
     """Test all platform connections."""
-    tenant_id = getattr(request.state, "tenant_id", 1)
+    tenant_id = getattr(request.state, "tenant_id", None)
+    if tenant_id is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
     service = get_capi_service(tenant_id)
 
     results = await service.test_all_connections()
@@ -154,7 +162,9 @@ async def test_connections(request: Request):
 @router.get("/platforms/{platform}/requirements", response_model=APIResponse)
 async def get_platform_requirements(platform: str, request: Request):
     """Get setup requirements for a platform."""
-    tenant_id = getattr(request.state, "tenant_id", 1)
+    tenant_id = getattr(request.state, "tenant_id", None)
+    if tenant_id is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
     service = get_capi_service(tenant_id)
 
     requirements = await service.get_platform_requirements(platform)
@@ -182,7 +192,9 @@ async def stream_event(
     2. Event mapped to platform-specific format
     3. Sent to all connected platforms (or specified ones)
     """
-    tenant_id = getattr(request.state, "tenant_id", 1)
+    tenant_id = getattr(request.state, "tenant_id", None)
+    if tenant_id is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
     service = get_capi_service(tenant_id)
 
     platform_list = platforms.split(",") if platforms else None
@@ -225,7 +237,9 @@ async def stream_batch_events(
     - Aggregated data quality analysis
     - Detailed per-platform results
     """
-    tenant_id = getattr(request.state, "tenant_id", 1)
+    tenant_id = getattr(request.state, "tenant_id", None)
+    if tenant_id is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
     service = get_capi_service(tenant_id)
 
     events = [
@@ -277,7 +291,9 @@ async def analyze_data_quality(
     - Missing fields that impact match quality
     - Recommendations to improve ROAS
     """
-    tenant_id = getattr(request.state, "tenant_id", 1)
+    tenant_id = getattr(request.state, "tenant_id", None)
+    if tenant_id is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
     service = get_capi_service(tenant_id)
 
     analysis = service.analyze_data_quality(data.user_data, data.platform)
@@ -302,7 +318,9 @@ async def get_quality_report(
     - Top recommendations to fix
     - Estimated ROAS improvement potential
     """
-    tenant_id = getattr(request.state, "tenant_id", 1)
+    tenant_id = getattr(request.state, "tenant_id", None)
+    if tenant_id is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
     service = get_capi_service(tenant_id)
 
     platform_list = platforms.split(",") if platforms else None
@@ -364,7 +382,9 @@ async def get_live_insights(
     - Top gaps to fix immediately
     - ROAS lift potential
     """
-    tenant_id = getattr(request.state, "tenant_id", 1)
+    tenant_id = getattr(request.state, "tenant_id", None)
+    if tenant_id is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
     service = get_capi_service(tenant_id)
 
     insights = service.get_live_insights(platform)
@@ -389,7 +409,9 @@ async def map_event(
 
     Shows how your event will be translated for each platform.
     """
-    tenant_id = getattr(request.state, "tenant_id", 1)
+    tenant_id = getattr(request.state, "tenant_id", None)
+    if tenant_id is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
     service = get_capi_service(tenant_id)
 
     mapping = service.map_event(event_name, parameters or {})
@@ -410,7 +432,9 @@ async def detect_pii(
 
     Identifies what data will be hashed and how.
     """
-    tenant_id = getattr(request.state, "tenant_id", 1)
+    tenant_id = getattr(request.state, "tenant_id", None)
+    if tenant_id is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
     service = get_capi_service(tenant_id)
 
     detections = service.detect_pii_fields(data)
@@ -435,7 +459,9 @@ async def hash_user_data(
 
     Automatically detects and hashes PII fields using SHA256.
     """
-    tenant_id = getattr(request.state, "tenant_id", 1)
+    tenant_id = getattr(request.state, "tenant_id", None)
+    if tenant_id is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
     service = get_capi_service(tenant_id)
 
     hashed = service.hash_user_data(user_data)

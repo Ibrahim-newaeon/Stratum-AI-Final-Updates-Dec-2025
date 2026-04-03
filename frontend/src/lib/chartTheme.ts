@@ -60,13 +60,15 @@ export const chartTheme = {
     '#f97316', // Orange
   ],
 
-  // Tooltip styling - Analytics Design System
+  // Tooltip styling — frosted glass
   tooltip: {
     contentStyle: {
-      backgroundColor: '#0A0A0A',
-      border: '1px solid rgba(255,255,255,0.10)',
-      borderRadius: '12px',
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.20)',
+      backgroundColor: 'rgba(10, 10, 10, 0.85)',
+      backdropFilter: 'blur(16px) saturate(1.4)',
+      WebkitBackdropFilter: 'blur(16px) saturate(1.4)',
+      border: '1px solid rgba(255,255,255,0.08)',
+      borderRadius: '14px',
+      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(168, 85, 247, 0.06)',
       padding: '12px 16px',
     },
     labelStyle: {

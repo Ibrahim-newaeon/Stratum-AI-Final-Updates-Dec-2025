@@ -104,18 +104,20 @@ export function AnomalyFeedCard() {
 
   if (isLoading) {
     return (
-      <div className="bg-card border rounded-xl p-6 flex items-center justify-center min-h-[200px]">
+      <div className="widget-card flex items-center justify-center min-h-[200px]">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
-    <div className="bg-card border rounded-xl p-6">
-      <div className="flex items-center justify-between mb-4">
+    <div className="widget-card h-full flex flex-col">
+      <div className="widget-header">
         <div className="flex items-center gap-2">
-          <AlertTriangle className="w-4 h-4 text-amber-500" />
-          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+          <div className="p-1.5 rounded-lg bg-amber-500/10">
+            <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+          </div>
+          <h3 className="widget-title">
             Anomaly Feed
           </h3>
         </div>
@@ -136,7 +138,7 @@ export function AnomalyFeedCard() {
           <p className="text-xs text-muted-foreground mt-1">All signals are operating within normal parameters</p>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="flex-1 space-y-2 overflow-y-auto max-h-[400px] scrollbar-hide">
           {visible.map((item) => {
             const cfg = SEVERITY_CONFIG[item.severity];
             const Icon = cfg.icon;
@@ -144,7 +146,7 @@ export function AnomalyFeedCard() {
               <div
                 key={item.id}
                 className={cn(
-                  'flex items-start gap-3 p-3 rounded-lg border-l-2 bg-muted/30 hover:bg-muted/50 transition-colors',
+                  'flex items-start gap-3 p-3 rounded-xl border-l-2 bg-white/[0.02] hover:bg-white/[0.05] transition-all duration-200',
                   cfg.border
                 )}
               >

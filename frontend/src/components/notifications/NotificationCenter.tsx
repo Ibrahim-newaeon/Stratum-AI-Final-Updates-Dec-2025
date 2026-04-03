@@ -311,7 +311,7 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
                         )}
                         onClick={() => {
                           markAsRead(notification.id);
-                          if (notification.actionUrl) {
+                          if (notification.actionUrl && notification.actionUrl.startsWith('/')) {
                             window.location.href = notification.actionUrl;
                           }
                         }}

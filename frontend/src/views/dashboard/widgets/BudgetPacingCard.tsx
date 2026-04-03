@@ -114,26 +114,26 @@ export function BudgetPacingCard() {
 
   if (isLoading) {
     return (
-      <div className="bg-card border rounded-xl p-6 flex items-center justify-center min-h-[280px]">
+      <div className="widget-card flex items-center justify-center min-h-[280px]">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
-    <div className="bg-card border rounded-xl p-6">
-      <div className="flex items-center justify-between mb-5">
-        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+    <div className="widget-card h-full">
+      <div className="widget-header">
+        <h3 className="widget-title">
           Budget Pacing
         </h3>
-        <div className="flex bg-muted rounded-lg p-0.5">
+        <div className="flex bg-white/[0.04] border border-white/[0.06] rounded-lg p-0.5">
           {(['7d', '14d', '30d'] as PeriodFilter[]).map((p) => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
               className={cn(
-                'px-3 py-1 text-xs font-medium rounded-md transition-colors',
-                period === p ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                'px-3 py-1 text-xs font-medium rounded-md transition-all duration-200',
+                period === p ? 'bg-primary/20 text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'
               )}
             >
               {p}
@@ -161,11 +161,11 @@ export function BudgetPacingCard() {
                 </span>
               </div>
 
-              {/* Progress bar */}
-              <div className="relative h-2.5 bg-muted rounded-full overflow-hidden">
+              {/* Progress bar — rounded with glow */}
+              <div className="relative h-2 bg-white/[0.06] rounded-full overflow-hidden">
                 <div
-                  className={cn('h-full rounded-full transition-all duration-500', barColor)}
-                  style={{ width: `${pct}%` }}
+                  className={cn('h-full rounded-full transition-all duration-700 ease-out', barColor)}
+                  style={{ width: `${pct}%`, boxShadow: `0 0 8px ${barColor === 'bg-blue-500' ? 'rgba(8,102,255,0.4)' : barColor === 'bg-red-500' ? 'rgba(239,68,68,0.4)' : barColor === 'bg-cyan-500' ? 'rgba(0,242,234,0.4)' : 'rgba(250,204,21,0.4)'}` }}
                 />
                 {/* Projected marker */}
                 {projPct > 0 && projPct <= 100 && (

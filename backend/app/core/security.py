@@ -6,6 +6,7 @@ Security utilities including JWT handling, password hashing, and PII encryption.
 Implements GDPR-compliant encryption for sensitive data.
 """
 
+import asyncio
 import base64
 import hashlib
 import secrets
@@ -24,16 +25,31 @@ import redis.asyncio as aioredis
 
 # Shared Redis connection pool — avoids creating a new connection per call
 _redis_pool: aioredis.Redis | None = None
+_redis_pool_lock: asyncio.Lock | None = None
+
+
+def _get_redis_lock() -> asyncio.Lock:
+    """Lazily create the asyncio lock (must be created inside a running loop)."""
+    global _redis_pool_lock
+    if _redis_pool_lock is None:
+        _redis_pool_lock = asyncio.Lock()
+    return _redis_pool_lock
+
 
 async def get_redis_pool() -> aioredis.Redis:
     """Return a shared Redis connection pool for security operations."""
     global _redis_pool
-    if _redis_pool is None:
-        _redis_pool = aioredis.from_url(
-            settings.redis_url,
-            decode_responses=True,
-            max_connections=20,
-        )
+    if _redis_pool is not None:
+        return _redis_pool
+
+    async with _get_redis_lock():
+        # Double-check after acquiring the lock
+        if _redis_pool is None:
+            _redis_pool = aioredis.from_url(
+                settings.redis_url,
+                decode_responses=True,
+                max_connections=20,
+            )
     return _redis_pool
 
 # Password hashing context
@@ -154,7 +170,6 @@ def _get_pii_salt(tenant_id: int | None = None) -> bytes:
     """
     base_salt = b"stratum_ai_pii_salt_v2"
     if tenant_id is not None:
-        import hashlib
         return hashlib.sha256(base_salt + str(tenant_id).encode()).digest()
     return base_salt
 
@@ -321,12 +336,21 @@ async def is_token_blacklisted(payload: dict[str, Any], token: str) -> bool:
 
     Returns:
         True if the token is blacklisted
+
+    Raises:
+        ConnectionError: If Redis is unreachable (callers should handle gracefully)
+        TimeoutError: If Redis operation times out
     """
     jti = payload.get("jti", token[-32:])
     key = f"{TOKEN_BLACKLIST_PREFIX}{jti}"
 
-    client = await get_redis_pool()
-    return await client.exists(key) == 1
+    try:
+        client = await get_redis_pool()
+        return await client.exists(key) == 1
+    except (ConnectionError, TimeoutError, OSError) as exc:
+        raise ConnectionError(
+            f"Redis unavailable during token blacklist check: {type(exc).__name__}"
+        ) from exc
 
 
 # =============================================================================

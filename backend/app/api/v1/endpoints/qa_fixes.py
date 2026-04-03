@@ -395,7 +395,8 @@ async def get_fix_history(
             }
             for row in rows
         ]
-    except Exception:
+    except (ConnectionError, TimeoutError, OSError) as exc:
+        logger.warning("qa_fix_history_query_failed", error=str(exc), tenant_id=tenant_id)
         history = []
 
     return APIResponse(

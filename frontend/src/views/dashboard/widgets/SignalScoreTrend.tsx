@@ -62,16 +62,16 @@ export function SignalScoreTrend({ signalHealth, loading }: SignalScoreTrendProp
 
   if (loading) {
     return (
-      <div className="bg-card border rounded-xl p-6 flex items-center justify-center min-h-[280px]">
+      <div className="widget-card flex items-center justify-center min-h-[280px]">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
-    <div className="bg-card border rounded-xl p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+    <div className="widget-card h-full">
+      <div className="widget-header">
+        <h3 className="widget-title">
           Signal Score Trend
         </h3>
         <div className="flex items-center gap-2">
@@ -133,37 +133,43 @@ export function SignalScoreTrend({ signalHealth, loading }: SignalScoreTrendProp
         </svg>
       </div>
 
-      {/* Sub-metrics grid */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="p-3 rounded-lg bg-muted/50">
-          <p className="text-xs text-muted-foreground mb-1">EMQ Score</p>
-          <p className="text-sm font-semibold">
+      {/* Sub-metrics grid — frosted sub-cards */}
+      <div className="grid grid-cols-2 gap-2.5">
+        <div className="p-3 rounded-xl bg-white/[0.04] border border-white/[0.05]">
+          <p className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide">EMQ Score</p>
+          <p className="text-sm font-bold tabular-nums">
             {signalHealth?.emq_score != null ? signalHealth.emq_score : '--'}
           </p>
         </div>
-        <div className="p-3 rounded-lg bg-muted/50">
-          <p className="text-xs text-muted-foreground mb-1">Data Freshness</p>
-          <p className="text-sm font-semibold">
+        <div className="p-3 rounded-xl bg-white/[0.04] border border-white/[0.05]">
+          <p className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide">Data Freshness</p>
+          <p className="text-sm font-bold tabular-nums">
             {signalHealth?.data_freshness_minutes != null
               ? `${signalHealth.data_freshness_minutes}m ago`
               : '--'}
           </p>
         </div>
-        <div className="p-3 rounded-lg bg-muted/50">
-          <p className="text-xs text-muted-foreground mb-1">API Health</p>
-          <p className={cn('text-sm font-semibold', signalHealth?.api_health ? 'text-emerald-500' : 'text-red-500')}>
-            {signalHealth?.api_health != null ? (signalHealth.api_health ? 'Healthy' : 'Degraded') : '--'}
-          </p>
+        <div className="p-3 rounded-xl bg-white/[0.04] border border-white/[0.05]">
+          <p className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide">API Health</p>
+          <div className="flex items-center gap-1.5">
+            <div className={cn('w-1.5 h-1.5 rounded-full', signalHealth?.api_health ? 'bg-emerald-500' : 'bg-red-500')} />
+            <p className={cn('text-sm font-bold', signalHealth?.api_health ? 'text-emerald-400' : 'text-red-400')}>
+              {signalHealth?.api_health != null ? (signalHealth.api_health ? 'Healthy' : 'Degraded') : '--'}
+            </p>
+          </div>
         </div>
-        <div className="p-3 rounded-lg bg-muted/50">
-          <p className="text-xs text-muted-foreground mb-1">Autopilot</p>
-          <p className={cn('text-sm font-semibold', signalHealth?.autopilot_enabled ? 'text-emerald-500' : 'text-muted-foreground')}>
-            {signalHealth?.autopilot_enabled != null
-              ? signalHealth.autopilot_enabled
-                ? 'Enabled'
-                : 'Disabled'
-              : '--'}
-          </p>
+        <div className="p-3 rounded-xl bg-white/[0.04] border border-white/[0.05]">
+          <p className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide">Autopilot</p>
+          <div className="flex items-center gap-1.5">
+            <div className={cn('w-1.5 h-1.5 rounded-full', signalHealth?.autopilot_enabled ? 'bg-emerald-500' : 'bg-muted-foreground')} />
+            <p className={cn('text-sm font-bold', signalHealth?.autopilot_enabled ? 'text-emerald-400' : 'text-muted-foreground')}>
+              {signalHealth?.autopilot_enabled != null
+                ? signalHealth.autopilot_enabled
+                  ? 'Enabled'
+                  : 'Disabled'
+                : '--'}
+            </p>
+          </div>
         </div>
       </div>
     </div>

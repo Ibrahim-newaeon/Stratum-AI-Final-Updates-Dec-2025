@@ -302,9 +302,69 @@
   }
 
   .card-glass {
-    background: rgba(6, 6, 6, 0.80);
-    backdrop-filter: blur(12px);
-    @apply border rounded-lg;
+    background: rgba(6, 6, 6, 0.60);
+    backdrop-filter: blur(16px) saturate(1.6);
+    -webkit-backdrop-filter: blur(16px) saturate(1.6);
+    @apply border border-white/[0.08] rounded-xl;
+  }
+
+  .card-glass:hover {
+    background: rgba(6, 6, 6, 0.70);
+    border-color: rgba(168, 85, 247, 0.15);
+  }
+
+  /* Bento Grid Layout */
+  .bento-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(4, 1fr);
+    grid-auto-rows: minmax(0, 1fr);
+  }
+
+  @media (max-width: 1023px) {
+    .bento-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 639px) {
+    .bento-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .bento-span-2 { grid-column: span 2; }
+  .bento-span-3 { grid-column: span 3; }
+  .bento-span-4 { grid-column: span 4; }
+  .bento-row-2  { grid-row: span 2; }
+
+  @media (max-width: 639px) {
+    .bento-span-2,
+    .bento-span-3,
+    .bento-span-4 { grid-column: span 1; }
+    .bento-row-2 { grid-row: span 1; }
+  }
+
+  /* Widget Card — unified glassmorphism style for dashboard */
+  .widget-card {
+    background: rgba(10, 10, 10, 0.65);
+    backdrop-filter: blur(12px) saturate(1.4);
+    -webkit-backdrop-filter: blur(12px) saturate(1.4);
+    @apply border border-white/[0.07] rounded-2xl p-5 transition-all duration-200;
+  }
+
+  .widget-card:hover {
+    background: rgba(10, 10, 10, 0.75);
+    border-color: rgba(168, 85, 247, 0.18);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(168, 85, 247, 0.06);
+  }
+
+  .widget-header {
+    @apply flex items-center justify-between mb-4;
+  }
+
+  .widget-title {
+    @apply text-xs font-semibold text-muted-foreground uppercase tracking-wider;
   }
 
   /* Gradient backgrounds - Brand signature */

@@ -13,6 +13,7 @@ from sqlalchemy import select
 
 from app.db.session import SyncSessionLocal
 from app.models import Campaign, MLPrediction, Tenant
+from app.workers.locks import with_distributed_lock
 from app.workers.tasks.helpers import calculate_task_confidence, publish_event
 
 logger = get_task_logger(__name__)
@@ -104,6 +105,7 @@ def run_live_predictions(self, tenant_id: int):
 
 
 @shared_task
+@with_distributed_lock(timeout=1800)
 def run_all_tenant_predictions():
     """
     Run predictions for all active tenants.

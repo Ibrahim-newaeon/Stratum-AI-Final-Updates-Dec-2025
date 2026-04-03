@@ -27,6 +27,15 @@ if (sentryDsn) {
       Sentry.browserTracingIntegration(),
     ],
     tracesSampleRate: import.meta.env.MODE === 'production' ? 0.1 : 1.0,
+    // Strip PII from error reports before sending to Sentry
+    beforeSend(event) {
+      if (event.user) {
+        delete event.user.email;
+        delete event.user.ip_address;
+        delete event.user.username;
+      }
+      return event;
+    },
   });
 }
 
