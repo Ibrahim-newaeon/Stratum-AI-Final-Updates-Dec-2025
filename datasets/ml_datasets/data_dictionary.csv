@@ -1,0 +1,26 @@
+dataset,field,type,description
+churn_prediction,customer_id,string,Unique customer identifier
+churn_prediction,account_age_days,int,Days since account creation
+churn_prediction,subscription_tier,categorical,"Subscription plan: starter, professional, enterprise"
+churn_prediction,mrr,float,Monthly recurring revenue
+churn_prediction,login_frequency_30d,int,Number of logins in last 30 days
+churn_prediction,login_trend_30d,float,Login frequency change rate
+churn_prediction,nps_score,int,Net Promoter Score (0-10)
+churn_prediction,churned,binary,"Target: 1 if churned, 0 otherwise"
+ltv_prediction,customer_id,string,Unique customer identifier
+ltv_prediction,rfm_score,int,Combined RFM score (3-15)
+ltv_prediction,total_revenue,float,Total historical revenue
+ltv_prediction,ltv_12_months,float,Target: Predicted 12-month LTV
+campaign_performance,campaign_id,string,Unique campaign identifier
+campaign_performance,platform,categorical,"Ad platform: meta, google, tiktok, snapchat"
+campaign_performance,objective,categorical,Campaign objective
+campaign_performance,roas,float,Target: Return on Ad Spend
+campaign_performance,cpa,float,Target: Cost per Acquisition
+signal_health,source,categorical,Data source name
+signal_health,emq_score,float,Event Match Quality score (0-10)
+signal_health,health_score,float,Overall health score (0-100)
+signal_health,health_status,categorical,"Target: healthy, risk, degraded, critical"
+anomaly_detection,date,date,Date of observation
+anomaly_detection,spend_zscore,float,Z-score of spend metric
+anomaly_detection,is_anomaly,binary,Target: 1 if anomaly detected
+anomaly_detection,anomaly_type,categorical,"Type: spike, drop, trend_break"

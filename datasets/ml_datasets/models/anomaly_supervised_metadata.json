@@ -1,0 +1,36 @@
+{
+  "model_type": "random_forest",
+  "approach": "supervised",
+  "features": {
+    "numeric": [
+      "day_of_week",
+      "spend",
+      "impressions",
+      "clicks",
+      "conversions",
+      "revenue",
+      "ctr",
+      "cvr",
+      "cpa",
+      "roas",
+      "cpm",
+      "spend_zscore",
+      "impressions_zscore",
+      "clicks_zscore",
+      "conversions_zscore",
+      "revenue_zscore",
+      "anomaly_severity"
+    ],
+    "categorical": [
+      "anomaly_metric"
+    ]
+  },
+  "metrics": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "roc_auc": 1.0
+  },
+  "saved_at": "2026-01-18T17:43:44.492786",
+  "model_path": "C:\\Users\\Vip\\OneDrive\\Desktop\\Stratum-AI-Final-Updates-Dec-2025-main\\datasets\\ml_datasets\\models\\anomaly_supervised.joblib"
+}

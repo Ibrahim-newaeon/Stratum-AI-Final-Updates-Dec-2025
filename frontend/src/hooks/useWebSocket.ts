@@ -1,0 +1,283 @@
+/**
+ * WebSocket Hook for Real-Time Updates
+ *
+ * Provides real-time data synchronization for EMQ scores,
+ * incidents, and action recommendations
+ */
+
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+
+type ConnectionState = 'connecting' | 'connected' | 'disconnected' | 'error'
+
+interface WebSocketMessage {
+  type: string
+  payload: Record<string, unknown>
+  timestamp: string
+}
+
+type MessageHandler = (data: WebSocketMessage) => void
+
+interface UseWebSocketOptions {
+  url?: string
+  autoConnect?: boolean
+  reconnectAttempts?: number
+  reconnectInterval?: number
+  onMessage?: MessageHandler
+  onConnect?: () => void
+  onDisconnect?: () => void
+  onError?: (error: Event) => void
+}
+
+const DEFAULT_WS_URL = import.meta.env.VITE_WS_URL ||
+  `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws`
+
+export function useWebSocket(options: UseWebSocketOptions = {}) {
+  const {
+    url = DEFAULT_WS_URL,
+    autoConnect = true,
+    reconnectAttempts = 5,
+    reconnectInterval = 3000,
+    onMessage,
+    onConnect,
+    onDisconnect,
+    onError,
+  } = options
+
+  const wsRef = useRef<WebSocket | null>(null)
+  const reconnectCountRef = useRef(0)
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout>()
+  const queryClient = useQueryClient()
+
+  const [connectionState, setConnectionState] = useState<ConnectionState>('disconnected')
+  const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null)
+
+  const connect = useCallback(() => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      return
+    }
+
+    setConnectionState('connecting')
+
+    try {
+      const ws = new WebSocket(url)
+      wsRef.current = ws
+
+      ws.onopen = () => {
+        setConnectionState('connected')
+        reconnectCountRef.current = 0
+        onConnect?.()
+        console.warn('[WebSocket] Connected')
+      }
+
+      ws.onmessage = (event) => {
+        try {
+          const message: WebSocketMessage = JSON.parse(event.data)
+          setLastMessage(message)
+          handleMessage(message)
+          onMessage?.(message)
+        } catch (error) {
+          console.error('[WebSocket] Failed to parse message:', error)
+        }
+      }
+
+      ws.onclose = () => {
+        setConnectionState('disconnected')
+        onDisconnect?.()
+        console.warn('[WebSocket] Disconnected')
+
+        // Attempt reconnection
+        if (reconnectCountRef.current < reconnectAttempts) {
+          reconnectCountRef.current++
+          console.warn(`[WebSocket] Reconnecting... (${reconnectCountRef.current}/${reconnectAttempts})`)
+          reconnectTimeoutRef.current = setTimeout(connect, reconnectInterval)
+        }
+      }
+
+      ws.onerror = (error) => {
+        setConnectionState('error')
+        onError?.(error)
+        console.error('[WebSocket] Error:', error)
+      }
+    } catch (error) {
+      setConnectionState('error')
+      console.error('[WebSocket] Connection failed:', error)
+    }
+  }, [url, reconnectAttempts, reconnectInterval, onConnect, onDisconnect, onError, onMessage])
+
+  const disconnect = useCallback(() => {
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current)
+    }
+    reconnectCountRef.current = reconnectAttempts // Prevent auto-reconnect
+    wsRef.current?.close()
+    wsRef.current = null
+    setConnectionState('disconnected')
+  }, [reconnectAttempts])
+
+  const send = useCallback((type: string, payload: Record<string, unknown>) => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      const message: WebSocketMessage = {
+        type,
+        payload,
+        timestamp: new Date().toISOString(),
+      }
+      wsRef.current.send(JSON.stringify(message))
+    } else {
+      console.warn('[WebSocket] Cannot send - not connected')
+    }
+  }, [])
+
+  // Handle incoming messages and update React Query cache
+  const handleMessage = useCallback((message: WebSocketMessage) => {
+    switch (message.type) {
+      case 'emq_update':
+        // Update EMQ score in cache
+        queryClient.setQueryData(
+          ['emq', 'score', message.payload.tenantId],
+          (old: Record<string, unknown> | undefined) => ({
+            ...old,
+            score: message.payload.score,
+            previousScore: old?.score,
+            updatedAt: message.timestamp,
+          })
+        )
+        break
+
+      case 'incident_opened':
+      case 'incident_closed':
+        // Invalidate incidents query to refetch
+        queryClient.invalidateQueries({
+          queryKey: ['emq', 'incidents', message.payload.tenantId],
+        })
+        break
+
+      case 'autopilot_mode_change':
+        // Update autopilot state
+        queryClient.setQueryData(
+          ['autopilot', message.payload.tenantId],
+          (old: Record<string, unknown> | undefined) => ({
+            ...old,
+            mode: message.payload.mode,
+            changedAt: message.timestamp,
+          })
+        )
+        break
+
+      case 'action_recommendation':
+        // Invalidate recommendations to refetch
+        queryClient.invalidateQueries({
+          queryKey: ['tenant', message.payload.tenantId, 'recommendations'],
+        })
+        break
+
+      case 'platform_status':
+        // Update platform status in cache
+        queryClient.setQueryData(
+          ['platforms', 'status'],
+          (old: Record<string, unknown> | undefined) => ({
+            ...old,
+            [message.payload.platform as string]: message.payload.status,
+          })
+        )
+        break
+
+      default:
+        console.warn('[WebSocket] Unhandled message type:', message.type)
+    }
+  }, [queryClient])
+
+  // Auto-connect on mount
+  useEffect(() => {
+    if (autoConnect) {
+      connect()
+    }
+
+    return () => {
+      disconnect()
+    }
+  }, [autoConnect, connect, disconnect])
+
+  return {
+    connectionState,
+    lastMessage,
+    connect,
+    disconnect,
+    send,
+    isConnected: connectionState === 'connected',
+  }
+}
+
+/**
+ * Hook for subscribing to specific WebSocket channels
+ */
+export function useWebSocketChannel(
+  channel: string,
+  onMessage: (payload: Record<string, unknown>) => void,
+  deps: unknown[] = []
+) {
+  const { send, connectionState, isConnected } = useWebSocket({
+    onMessage: (message: WebSocketMessage) => {
+      if (message.type === channel || message.type.startsWith(`${channel}:`)) {
+        onMessage(message.payload)
+      }
+    },
+  })
+
+  // Subscribe to channel on connect
+  useEffect(() => {
+    if (isConnected) {
+      send('subscribe', { channel })
+    }
+  }, [isConnected, channel, ...deps])
+
+  return { connectionState, isConnected }
+}
+
+/**
+ * Hook for real-time EMQ score updates
+ */
+export function useRealtimeEmq(tenantId: number) {
+  const queryClient = useQueryClient()
+  const [score, setScore] = useState<number | null>(null)
+
+  useWebSocketChannel(
+    'emq_update',
+    (payload) => {
+      if (payload.tenantId === tenantId) {
+        const newScore = typeof payload.score === 'number' ? payload.score : null
+        setScore(newScore)
+        // Also update the query cache
+        queryClient.setQueryData(['emq', 'score', tenantId], (old: Record<string, unknown> | undefined) => ({
+          ...old,
+          score: newScore,
+          previousScore: old?.score,
+        }))
+      }
+    },
+    [tenantId]
+  )
+
+  return score
+}
+
+/**
+ * Hook for real-time incident notifications
+ */
+export function useRealtimeIncidents(tenantId: number) {
+  const [latestIncident, setLatestIncident] = useState<Record<string, unknown> | null>(null)
+
+  useWebSocketChannel(
+    'incident',
+    (payload) => {
+      if (payload.tenantId === tenantId) {
+        setLatestIncident(payload)
+      }
+    },
+    [tenantId]
+  )
+
+  return latestIncident
+}
+
+export default useWebSocket

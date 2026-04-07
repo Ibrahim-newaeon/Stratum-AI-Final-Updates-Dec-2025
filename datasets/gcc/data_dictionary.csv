@@ -1,0 +1,9 @@
+field,type,description
+geo,category,Country market: KSA / Kuwait / Qatar.
+currency,category,Local currency mapped to geo.
+fx_to_usd,numeric,"Conversion factor used to create spend_usd / revenue_usd (approx, for testing)."
+"spend_usd, revenue_usd",numeric,USD-normalized spend/revenue for cross-geo modeling.
+emq_score,numeric (0-100),Synthetic EMQ proxy tied to pixel health + landing quality + noise.
+creative_fatigue_score,numeric (0-100),Fatigue proxy that increases over time and depresses CTR/CVR.
+label_next_7d_roas,numeric,Supervised target for next-7-day ROAS.
+label_next_7d_conversions,numeric,Supervised target for next-7-day conversions.

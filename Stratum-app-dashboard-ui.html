@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stratum AI — App Dashboard UI (Mock)</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+    :root {
+      --bg: #05060a;
+      --bg2: #090b12;
+      --bg-glass: rgba(255,255,255,0.06);
+      --bg-card: rgba(255,255,255,0.07);
+      --border: rgba(255,255,255,0.10);
+      --border-strong: rgba(255,255,255,0.16);
+
+      --text: rgba(255,255,255,0.92);
+      --text2: rgba(255,255,255,0.70);
+      --muted: rgba(255,255,255,0.55);
+
+      --green: #10b981;
+      --orange: #f59e0b;
+      --pink: #ec4899;
+      --blue: #3b82f6;
+      --purple: #8b5cf6;
+      --cyan: #06b6d4;
+
+      --shadow: 0 18px 45px rgba(0,0,0,0.45);
+      --radius: 18px;
+      --radius2: 22px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(1200px 700px at 12% 12%, rgba(139,92,246,0.22), transparent 55%),
+        radial-gradient(900px 600px at 88% 18%, rgba(6,182,212,0.18), transparent 55%),
+        radial-gradient(900px 700px at 70% 85%, rgba(236,72,153,0.14), transparent 55%),
+        linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%);
+      min-height: 100vh;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 285px 1fr;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      padding: 18px 14px;
+      border-right: 1px solid var(--border);
+      background: rgba(0,0,0,0.25);
+      backdrop-filter: blur(14px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius2);
+      background: rgba(255,255,255,0.04);
+      box-shadow: var(--shadow);
+    }
+    .logo {
+      width: 38px; height: 38px;
+      border-radius: 14px;
+      display: grid; place-items: center;
+      background: linear-gradient(135deg, rgba(16,185,129,0.9), rgba(6,182,212,0.9));
+      color: #031014;
+      font-weight: 900;
+    }
+    .brand h1 {
+      font-size: 14px;
+      margin: 0;
+      font-weight: 900;
+      letter-spacing: 0.2px;
+    }
+    .brand p {
+      margin: 2px 0 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .nav {
+      margin-top: 14px;
+      padding: 10px;
+      border-radius: var(--radius2);
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+    }
+    .nav a {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 10px;
+      border-radius: 14px;
+      color: var(--text2);
+      text-decoration: none;
+      font-weight: 700;
+      transition: 140ms ease;
+      user-select: none;
+    }
+    .nav a:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+    .nav a.active { background: rgba(16,185,129,0.12); color: var(--text); border: 1px solid rgba(16,185,129,0.22); }
+    .nav .ico {
+      width: 26px;
+      display: grid; place-items: center;
+      font-size: 16px;
+    }
+
+    .side-foot {
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      bottom: 14px;
+      padding: 12px;
+      border-radius: var(--radius2);
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      color: var(--text2);
+      font-size: 12px;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      margin-top: 8px;
+      font-weight: 700;
+      color: var(--text2);
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); display: inline-block; }
+
+    /* Main */
+    .main {
+      padding: 22px 22px 34px;
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 14px 16px;
+      border-radius: var(--radius2);
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 12px;
+      z-index: 10;
+      backdrop-filter: blur(16px);
+    }
+    .crumbs {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .crumbs .title {
+      font-size: 16px;
+      font-weight: 900;
+      letter-spacing: 0.2px;
+    }
+    .crumbs .sub {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .select, .btn {
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 10px 12px;
+      font-weight: 800;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .btn:hover { border-color: var(--border-strong); }
+    .btn.primary { background: rgba(16,185,129,0.14); border-color: rgba(16,185,129,0.22); }
+
+    /* Section Shell */
+    .section {
+      margin-top: 18px;
+      display: none;
+      animation: fadeIn 160ms ease-out;
+    }
+    .section.active { display: block; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 14px;
+      flex-wrap: wrap;
+      padding: 10px 6px 2px;
+    }
+    .section-head h2 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 950;
+      letter-spacing: 0.2px;
+    }
+    .section-head p {
+      margin: 6px 0 0;
+      color: var(--text2);
+      max-width: 820px;
+      line-height: 1.45;
+    }
+
+    .badges { display: flex; gap: 8px; flex-wrap: wrap; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      color: var(--text2);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .badge.good { border-color: rgba(16,185,129,0.24); background: rgba(16,185,129,0.10); color: rgba(255,255,255,0.92); }
+    .badge.warn { border-color: rgba(245,158,11,0.24); background: rgba(245,158,11,0.12); color: rgba(255,255,255,0.92); }
+    .badge.bad { border-color: rgba(236,72,153,0.24); background: rgba(236,72,153,0.12); color: rgba(255,255,255,0.92); }
+
+    /* Cards + grids */
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 14px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 12px; }
+    .grid-1 { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 12px; }
+
+    @media (max-width: 1100px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar { position: relative; height: auto; }
+      .side-foot { position: relative; left: auto; right: auto; bottom: auto; margin-top: 12px; }
+      .grid-3 { grid-template-columns: 1fr; }
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      padding: 14px 14px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .card .k {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+      margin-bottom: 8px;
+    }
+    .card .v {
+      font-size: 26px;
+      font-weight: 950;
+      letter-spacing: 0.2px;
+      margin: 0;
+    }
+    .card .d {
+      margin-top: 6px;
+      color: var(--text2);
+      font-size: 12px;
+    }
+
+    .row {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+      overflow: hidden;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+    }
+    .table th, .table td {
+      padding: 10px 10px;
+      font-size: 12px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      color: var(--text2);
+    }
+    .table th { color: rgba(255,255,255,0.82); font-weight: 900; background: rgba(255,255,255,0.04); }
+    .table tr:hover td { background: rgba(255,255,255,0.03); }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-weight: 900;
+      font-size: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+    }
+    .status.good { border-color: rgba(16,185,129,0.26); background: rgba(16,185,129,0.12); }
+    .status.warn { border-color: rgba(245,158,11,0.26); background: rgba(245,158,11,0.12); }
+    .status.bad { border-color: rgba(236,72,153,0.26); background: rgba(236,72,153,0.12); }
+    .status.muted { border-color: rgba(255,255,255,0.14); color: rgba(255,255,255,0.78); }
+
+    .bar {
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.10);
+      margin-top: 10px;
+    }
+    .bar > div { height: 100%; width: 0%; transition: width 500ms ease; }
+
+    .callout {
+      padding: 12px 12px;
+      border-radius: var(--radius);
+      border: 1px solid rgba(245,158,11,0.24);
+      background: rgba(245,158,11,0.12);
+      color: rgba(255,255,255,0.90);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    .callout strong { font-weight: 950; }
+
+    /* Modal */
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      z-index: 999;
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(10px);
+    }
+    .modal.open { display: flex; }
+    .modal .sheet {
+      width: min(820px, 100%);
+      border-radius: 22px;
+      border: 1px solid var(--border-strong);
+      background: rgba(10,12,18,0.92);
+      box-shadow: 0 28px 80px rgba(0,0,0,0.55);
+      padding: 16px;
+    }
+    .sheet .head {
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.10);
+    }
+    .sheet h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 950;
+    }
+    .sheet .close {
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 9px 12px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    .sheet .body {
+      padding-top: 12px;
+      color: var(--text2);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    .checklist {
+      display: grid;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .item {
+      display:flex;
+      gap: 10px;
+      padding: 10px 10px;
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 16px;
+      background: rgba(255,255,255,0.03);
+    }
+    .item .b {
+      width: 26px; height: 26px;
+      border-radius: 10px;
+      display:grid; place-items:center;
+      background: rgba(59,130,246,0.14);
+      border: 1px solid rgba(59,130,246,0.22);
+      color: rgba(255,255,255,0.92);
+      font-weight: 900;
+    }
+    .item .t { font-weight: 900; color: rgba(255,255,255,0.92); }
+    .item .s { margin-top: 2px; color: var(--muted); }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo">S</div>
+        <div>
+          <h1>Stratum AI</h1>
+          <p>Revenue Intelligence + Trust Layer</p>
+        </div>
+      </div>
+
+      <nav class="nav" aria-label="Primary">
+        <a href="#overview" class="active" data-route="overview"><span class="ico">🧭</span>Overview</a>
+        <a href="#insights" data-route="insights"><span class="ico">🔎</span>Insights</a>
+        <a href="#attribution" data-route="attribution"><span class="ico">🧬</span>Attribution</a>
+        <a href="#signal" data-route="signal"><span class="ico">📡</span>Signal Quality</a>
+        <a href="#activation" data-route="activation"><span class="ico">⚡</span>Activation</a>
+        <a href="#admin" data-route="admin"><span class="ico">🛠️</span>Admin</a>
+      </nav>
+
+      <div class="side-foot">
+        <div><strong>Today:</strong> Jan 6, 2026</div>
+        <div class="pill"><span class="dot"></span> Data freshness: <span id="freshnessPill">Good</span></div>
+        <div style="margin-top: 8px; color: var(--muted);">
+          Principle: If data is missing, show <strong>Data Unavailable</strong> + a remediation checklist (no placeholders).
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+      <div class="topbar">
+        <div class="crumbs">
+          <div class="title" id="pageTitle">Overview</div>
+          <div class="sub" id="pageSub">Executive KPIs, alerts, pacing, and quick context.</div>
+        </div>
+
+        <div class="controls">
+          <select class="select" id="tenantSelect" aria-label="Tenant">
+            <option>Midas — KSA</option>
+            <option>Midas — Kuwait</option>
+            <option>Midas — Qatar</option>
+          </select>
+          <select class="select" id="dateRange" aria-label="Date Range">
+            <option>Last 7 days</option>
+            <option>Last 14 days</option>
+            <option>Last 30 days</option>
+          </select>
+          <button class="btn" id="refreshBtn">Refresh</button>
+          <button class="btn primary" id="exportBtn">Export</button>
+        </div>
+      </div>
+
+      <!-- Overview -->
+      <section class="section active" id="overview">
+        <div class="section-head">
+          <div>
+            <h2>Overview</h2>
+            <p>Daily snapshot across platforms with a trust-first lens: pacing, profitability, and what needs attention right now.</p>
+          </div>
+          <div class="badges">
+            <span class="badge good">✅ Fresh: 23m</span>
+            <span class="badge warn">⚠️ Meta EMQ dip</span>
+            <span class="badge">🔔 6 alerts</span>
+          </div>
+        </div>
+
+        <div class="grid-3">
+          <div class="card">
+            <div class="k">Profit ROAS</div>
+            <p class="v">3.9x</p>
+            <div class="d">↑ 12% vs previous period</div>
+            <div class="bar"><div style="background: linear-gradient(90deg, var(--green), var(--cyan)); width: 78%;"></div></div>
+          </div>
+          <div class="card">
+            <div class="k">Pacing Status</div>
+            <p class="v">On Track</p>
+            <div class="d">Projected: 98% of monthly cap</div>
+            <div class="bar"><div style="background: linear-gradient(90deg, var(--blue), var(--purple)); width: 66%;"></div></div>
+          </div>
+          <div class="card">
+            <div class="k">Signal Health</div>
+            <p class="v">88</p>
+            <div class="d">Coverage: 92% • Latency: Warn</div>
+            <div class="bar"><div style="background: linear-gradient(90deg, var(--orange), var(--pink)); width: 55%;"></div></div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="row">
+              <div>
+                <div class="k">Alert Inbox</div>
+                <div style="font-weight: 950;">What changed & why</div>
+              </div>
+              <button class="btn" onclick="openModal('meta-emq')">Resolve signal issue</button>
+            </div>
+
+            <div style="margin-top: 10px; display:grid; gap: 10px;">
+              <div class="callout">
+                <strong>Meta EMQ degraded</strong> — Missing hashed phone/email on Purchase events. This can reduce match quality and attribution stability.
+              </div>
+              <div class="card" style="background: rgba(255,255,255,0.03); box-shadow:none;">
+                <div class="row">
+                  <div>
+                    <div style="font-weight: 950;">ROAS anomaly detected</div>
+                    <div style="color: var(--muted); font-size: 12px;">Snap conversions down 28% vs baseline</div>
+                  </div>
+                  <span class="status warn">⚠️ Investigate</span>
+                </div>
+              </div>
+              <div class="card" style="background: rgba(255,255,255,0.03); box-shadow:none;">
+                <div class="row">
+                  <div>
+                    <div style="font-weight: 950;">Budget risk</div>
+                    <div style="color: var(--muted); font-size: 12px;">Google spend accelerating; projected +6% over cap</div>
+                  </div>
+                  <span class="status warn">⚠️ Watch</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="row">
+              <div>
+                <div class="k">Quick Actions</div>
+                <div style="font-weight: 950;">Safe next steps (guardrails on)</div>
+              </div>
+              <span class="status muted">Audit Log</span>
+            </div>
+
+            <div style="margin-top: 10px; display:grid; gap: 10px;">
+              <div class="card" style="background: rgba(59,130,246,0.09); border-color: rgba(59,130,246,0.20); box-shadow:none;">
+                <div style="font-weight: 950;">Increase Meta Prospecting +12%</div>
+                <div style="color: var(--text2); font-size: 12px; margin-top: 4px;">Confidence: Medium • Guardrail: max +15% daily</div>
+                <div style="margin-top: 10px;" class="row">
+                  <span class="status good">✅ Ready</span>
+                  <button class="btn primary" onclick="toast('Action queued (approval not required).')">Apply</button>
+                </div>
+              </div>
+
+              <div class="card" style="background: rgba(245,158,11,0.10); border-color: rgba(245,158,11,0.22); box-shadow:none;">
+                <div style="font-weight: 950;">Pause Snapchat Ad Set (fatigue)</div>
+                <div style="color: var(--text2); font-size: 12px; margin-top: 4px;">Requires approval • Rollback available</div>
+                <div style="margin-top: 10px;" class="row">
+                  <span class="status warn">⚠️ Approval</span>
+                  <button class="btn" onclick="toast('Approval request sent to Tenant Admin.')">Request</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Insights -->
+      <section class="section" id="insights">
+        <div class="section-head">
+          <div>
+            <h2>Insights</h2>
+            <p>Account → campaign → ad set → ad → creative drilldowns. Explanations highlight drivers (CPM/CTR/CVR mix) and signal context.</p>
+          </div>
+          <div class="badges">
+            <span class="badge good">✅ Fresh: 41m</span>
+            <span class="badge">📤 Export-ready</span>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="row">
+              <div>
+                <div class="k">Top Movers (7d)</div>
+                <div style="font-weight: 950;">Explainable drivers</div>
+              </div>
+              <span class="status good">✅ Signal OK</span>
+            </div>
+
+            <table class="table" aria-label="Top Movers">
+              <thead>
+                <tr>
+                  <th>Entity</th><th>Platform</th><th>Δ ROAS</th><th>Driver</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Campaign A</td><td>Meta</td><td style="color: rgba(16,185,129,0.95); font-weight: 900;">+18%</td><td>CPM ↓ • CVR ↑</td>
+                </tr>
+                <tr>
+                  <td>PMax B</td><td>Google</td><td style="color: rgba(245,158,11,0.95); font-weight: 900;">-11%</td><td>CTR ↓ • Feed issues</td>
+                </tr>
+                <tr>
+                  <td>Ad Set C</td><td>TikTok</td><td style="color: rgba(245,158,11,0.95); font-weight: 900;">-7%</td><td>Freshness degraded</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="card">
+            <div class="row">
+              <div>
+                <div class="k">Creative Fatigue</div>
+                <div style="font-weight: 950;">Frequency + CTR trend</div>
+              </div>
+              <button class="btn" onclick="toast('Opening creative view… (mock)')">View</button>
+            </div>
+
+            <div style="margin-top: 12px; display:grid; gap: 10px;">
+              <div class="card" style="background: rgba(245,158,11,0.10); border-color: rgba(245,158,11,0.22); box-shadow:none;">
+                <div class="row">
+                  <div><strong>Video_07</strong><div style="color: var(--muted); font-size: 12px;">Freq 3.1 • CTR -22%</div></div>
+                  <span class="status warn">High</span>
+                </div>
+                <div class="bar"><div style="background: linear-gradient(90deg, var(--orange), var(--pink)); width: 78%;"></div></div>
+              </div>
+              <div class="card" style="background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.18); box-shadow:none;">
+                <div class="row">
+                  <div><strong>Static_12</strong><div style="color: var(--muted); font-size: 12px;">Freq 1.4 • CTR +6%</div></div>
+                  <span class="status good">Low</span>
+                </div>
+                <div class="bar"><div style="background: linear-gradient(90deg, var(--green), var(--cyan)); width: 32%;"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-1">
+          <div class="card">
+            <div class="row">
+              <div>
+                <div class="k">Campaign Table</div>
+                <div style="font-weight: 950;">Standardized drilldown + signal context</div>
+              </div>
+              <div class="badges">
+                <span class="badge">Filter: Platform</span>
+                <span class="badge">Sort: ROAS</span>
+              </div>
+            </div>
+
+            <table class="table" aria-label="Campaign Table">
+              <thead>
+                <tr>
+                  <th>Campaign</th><th>Spend</th><th>ROAS</th><th>CVR</th><th>Signal</th><th>Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Meta • Prospecting</td><td>$42,100</td><td>3.4x</td><td>1.9%</td><td><span class="status good">✅ Good</span></td><td>Healthy</td>
+                </tr>
+                <tr>
+                  <td>Google • PMax B</td><td>$31,550</td><td>2.7x</td><td>1.6%</td><td><span class="status good">✅ Good</span></td><td>Feed fixes recommended</td>
+                </tr>
+                <tr>
+                  <td>Snap • Retargeting</td><td>$9,800</td><td>2.1x</td><td>1.1%</td><td><span class="status warn">⚠️ Warn</span></td><td>Auth expired (Data partial)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Attribution -->
+      <section class="section" id="attribution">
+        <div class="section-head">
+          <div>
+            <h2>Attribution</h2>
+            <p>Compare platform attribution vs GA4 and quantify variance to avoid false conclusions. Multi-touch views are optional and clearly labeled.</p>
+          </div>
+          <div class="badges">
+            <span class="badge good">✅ GA4 connected</span>
+            <span class="badge warn">⚠️ TikTok variance high</span>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="row">
+              <div>
+                <div class="k">Variance (Platform vs GA4)</div>
+                <div style="font-weight: 950;">Higher variance = lower confidence</div>
+              </div>
+              <button class="btn" onclick="toast('Exporting variance report… (mock)')">Export</button>
+            </div>
+
+            <table class="table" aria-label="Variance Table">
+              <thead>
+                <tr><th>Platform</th><th>Variance</th><th>Status</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Meta</td><td>+9%</td><td><span class="status good">✅ Stable</span></td></tr>
+                <tr><td>Google</td><td>+6%</td><td><span class="status good">✅ Stable</span></td></tr>
+                <tr><td>TikTok</td><td>+18%</td><td><span class="status warn">⚠️ Review</span></td></tr>
+                <tr><td>Snapchat</td><td>Data Unavailable</td><td><span class="status bad">❌ Broken</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="card">
+            <div class="k">Attribution Methods</div>
+            <div style="font-weight: 950;">Choose how credit is assigned</div>
+            <div style="margin-top: 10px; display:grid; gap: 10px;">
+              <div class="card" style="background: rgba(139,92,246,0.10); border-color: rgba(139,92,246,0.22); box-shadow:none;">
+                <div class="row">
+                  <div>
+                    <div style="font-weight: 950;">Markov Chain</div>
+                    <div style="color: var(--muted); font-size: 12px;">Data-driven path weighting</div>
+                  </div>
+                  <span class="status muted">Optional</span>
+                </div>
+              </div>
+              <div class="card" style="background: rgba(59,130,246,0.08); border-color: rgba(59,130,246,0.22); box-shadow:none;">
+                <div class="row">
+                  <div>
+                    <div style="font-weight: 950;">Shapley</div>
+                    <div style="color: var(--muted); font-size: 12px;">Fair value distribution</div>
+                  </div>
+                  <span class="status muted">Optional</span>
+                </div>
+              </div>
+              <div class="callout">
+                <strong>Trust rule:</strong> If a platform is disconnected, attribution results are labeled <strong>Partial</strong> and excluded from automation.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Signal Quality -->
+      <section class="section" id="signal">
+        <div class="section-head">
+          <div>
+            <h2>Signal Quality</h2>
+            <p><strong>Meta EMQ</strong> is shown as-is. For other platforms, Stratum AI reports measurable diagnostics (coverage, freshness, latency, delivery errors).</p>
+          </div>
+          <div class="badges">
+            <span class="badge warn">⚠️ TikTok freshness</span>
+            <span class="badge bad">❌ Snapchat auth</span>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="row">
+              <div>
+                <div class="k">Connector Status</div>
+                <div style="font-weight: 950;">Connected / Partial / Broken</div>
+              </div>
+              <button class="btn" onclick="openModal('connectors')">Remediation checklist</button>
+            </div>
+
+            <table class="table" aria-label="Connector Status">
+              <thead>
+                <tr><th>Platform</th><th>Last Sync</th><th>Status</th><th>Notes</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Meta</td><td>23m</td><td><span class="status good">✅ Connected</span></td><td>Meta EMQ available</td></tr>
+                <tr><td>Google</td><td>41m</td><td><span class="status good">✅ Connected</span></td><td>Conversions + cost OK</td></tr>
+                <tr><td>TikTok</td><td>6h</td><td><span class="status warn">⚠️ Partial</span></td><td>Limited scopes / delayed sync</td></tr>
+                <tr><td>Snapchat</td><td>—</td><td><span class="status bad">❌ Broken</span></td><td>Auth expired</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="card">
+            <div class="k">Signal Health Drivers</div>
+            <div style="font-weight: 950;">Measured inputs (not estimates)</div>
+
+            <div style="margin-top: 12px;">
+              <div class="row"><div>Coverage</div><div style="font-weight: 950;">92%</div></div>
+              <div class="bar"><div style="background: linear-gradient(90deg, var(--green), var(--cyan)); width: 92%;"></div></div>
+
+              <div class="row" style="margin-top: 12px;"><div>Freshness</div><div style="font-weight: 950;">Good</div></div>
+              <div class="bar"><div style="background: linear-gradient(90deg, var(--blue), var(--purple)); width: 78%;"></div></div>
+
+              <div class="row" style="margin-top: 12px;"><div>Latency</div><div style="font-weight: 950; color: rgba(245,158,11,0.95);">Warn</div></div>
+              <div class="bar"><div style="background: linear-gradient(90deg, var(--orange), var(--pink)); width: 55%;"></div></div>
+            </div>
+
+            <div class="callout" style="margin-top: 12px;">
+              <strong>Data rule:</strong> If delivery errors are detected, dashboards show <strong>Data Unavailable</strong> for affected slices until resolved.
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-1">
+          <div class="card">
+            <div class="row">
+              <div>
+                <div class="k">Signal Timeline</div>
+                <div style="font-weight: 950;">Last 24 hours</div>
+              </div>
+              <span class="status warn">⚠️ Needs attention</span>
+            </div>
+
+            <table class="table" aria-label="Signal Timeline">
+              <thead>
+                <tr><th>Time</th><th>Event</th><th>Impact</th><th>Suggested action</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>12:40</td><td>Meta event delivery recovered</td><td><span class="status good">✅ Good</span></td><td>Monitor EMQ for 24h</td></tr>
+                <tr><td>09:10</td><td>TikTok freshness degraded</td><td><span class="status warn">⚠️ Warn</span></td><td>Check scopes + sync schedule</td></tr>
+                <tr><td>03:20</td><td>Snapchat auth expired</td><td><span class="status bad">❌ Broken</span></td><td>Reconnect + re-run sync</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Activation -->
+      <section class="section" id="activation">
+        <div class="section-head">
+          <div>
+            <h2>Activation</h2>
+            <p>Turn insights into actions safely. Every action has limits, approvals, and an audit trail. “Autopilot” can be enabled per tenant with restrictions.</p>
+          </div>
+          <div class="badges">
+            <span class="badge good">🛡️ Guardrails On</span>
+            <span class="badge">🧾 Audit log enabled</span>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="row">
+              <div>
+                <div class="k">Playbook Actions</div>
+                <div style="font-weight: 950;">Recommended next steps</div>
+              </div>
+              <button class="btn primary" onclick="toast('Playbook applied (mock).')">Apply selected</button>
+            </div>
+
+            <table class="table" aria-label="Playbook Actions">
+              <thead>
+                <tr><th>Action</th><th>Reason</th><th>Guardrail</th><th>Approval</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Increase Meta Prospecting +12%</td><td>ROAS ↑ with stable signal</td><td>Max +15% daily</td><td><span class="status good">✅ No</span></td></tr>
+                <tr><td>Reduce Google budget -8%</td><td>Pacing risk</td><td>Max -10% daily</td><td><span class="status warn">⚠️ Optional</span></td></tr>
+                <tr><td>Pause Snapchat Ad Set</td><td>Fatigue + broken signal</td><td>Rollback 24h</td><td><span class="status warn">⚠️ Yes</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="card">
+            <div class="k">Safety Rules</div>
+            <div style="font-weight: 950;">Non‑negotiables</div>
+            <div style="margin-top: 10px; display:grid; gap: 10px;">
+              <div class="card" style="background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.18); box-shadow:none;">
+                <div class="row"><div><strong>No automation on broken data</strong></div><span class="status good">✅ Enforced</span></div>
+                <div style="color: var(--muted); font-size: 12px; margin-top: 4px;">If a connector is ❌, actions are disabled for that platform.</div>
+              </div>
+              <div class="card" style="background: rgba(245,158,11,0.10); border-color: rgba(245,158,11,0.22); box-shadow:none;">
+                <div class="row"><div><strong>Approval thresholds</strong></div><span class="status warn">⚠️ Enabled</span></div>
+                <div style="color: var(--muted); font-size: 12px; margin-top: 4px;">Large budget shifts require Tenant Admin approval.</div>
+              </div>
+              <div class="card" style="background: rgba(255,255,255,0.03); box-shadow:none;">
+                <div class="row"><div><strong>Rollback window</strong></div><span class="status muted">24 hours</span></div>
+                <div style="color: var(--muted); font-size: 12px; margin-top: 4px;">Every action can be reversed within the rollback window.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-1">
+          <div class="card">
+            <div class="row">
+              <div>
+                <div class="k">Audit Log</div>
+                <div style="font-weight: 950;">Who did what, when</div>
+              </div>
+              <button class="btn" onclick="toast('Exporting audit log… (mock)')">Export</button>
+            </div>
+
+            <table class="table" aria-label="Audit Log">
+              <thead>
+                <tr><th>Time</th><th>Actor</th><th>Action</th><th>Entity</th><th>Result</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>2h ago</td><td>Account Manager</td><td>Budget +12%</td><td>Meta Prospecting</td><td><span class="status good">✅ Applied</span></td></tr>
+                <tr><td>5h ago</td><td>System</td><td>Token refresh</td><td>Google Ads</td><td><span class="status good">✅ Success</span></td></tr>
+                <tr><td>1d ago</td><td>Tenant Admin</td><td>Approval granted</td><td>Snap pause</td><td><span class="status warn">⚠️ Pending</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Admin -->
+      <section class="section" id="admin">
+        <div class="section-head">
+          <div>
+            <h2>Admin</h2>
+            <p>Connectors, permissions, roles, and feature flags. Admin is where the platform becomes production-ready.</p>
+          </div>
+          <div class="badges">
+            <span class="badge warn">⚠️ 1 connector broken</span>
+            <span class="badge">👥 RBAC</span>
+            <span class="badge">🚩 Feature flags</span>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="row">
+              <div>
+                <div class="k">Connector Health Center</div>
+                <div style="font-weight: 950;">Permissions + last sync + errors</div>
+              </div>
+              <button class="btn" onclick="openModal('connectors')">Fix checklist</button>
+            </div>
+
+            <table class="table" aria-label="Connector Health Center">
+              <thead>
+                <tr><th>Platform</th><th>Insights API</th><th>Campaign mgmt</th><th>Signal</th><th>Notes</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Meta</td><td><span class="status good">✅</span></td><td><span class="status good">✅</span></td><td><span class="status warn">⚠️ EMQ dip</span></td><td>Meta EMQ available</td></tr>
+                <tr><td>Google</td><td><span class="status good">✅</span></td><td><span class="status good">✅</span></td><td><span class="status good">✅</span></td><td>Stable</td></tr>
+                <tr><td>TikTok</td><td><span class="status warn">⚠️</span></td><td><span class="status warn">⚠️</span></td><td><span class="status warn">⚠️</span></td><td>Limited scopes</td></tr>
+                <tr><td>Snapchat</td><td><span class="status bad">❌</span></td><td><span class="status bad">❌</span></td><td><span class="status bad">❌</span></td><td>Reconnect required</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="card">
+            <div class="k">Roles & Permissions</div>
+            <div style="font-weight: 950;">Multi-tenant RBAC</div>
+
+            <div style="margin-top: 12px; display:grid; gap: 10px;">
+              <div class="card" style="background: rgba(255,255,255,0.03); box-shadow:none;">
+                <div class="row"><div><strong>Super Admin</strong></div><span class="status muted">All tenants</span></div>
+                <div style="color: var(--muted); font-size: 12px; margin-top: 4px;">Platform management, billing, feature flags, audit.</div>
+              </div>
+              <div class="card" style="background: rgba(255,255,255,0.03); box-shadow:none;">
+                <div class="row"><div><strong>Tenant Admin</strong></div><span class="status muted">Tenant scope</span></div>
+                <div style="color: var(--muted); font-size: 12px; margin-top: 4px;">Users, connectors, approvals, guardrails.</div>
+              </div>
+              <div class="card" style="background: rgba(255,255,255,0.03); box-shadow:none;">
+                <div class="row"><div><strong>Account Manager</strong></div><span class="status muted">Operate</span></div>
+                <div style="color: var(--muted); font-size: 12px; margin-top: 4px;">Insights + actions (within rules).</div>
+              </div>
+              <div class="card" style="background: rgba(255,255,255,0.03); box-shadow:none;">
+                <div class="row"><div><strong>Viewer</strong></div><span class="status muted">Read-only</span></div>
+                <div style="color: var(--muted); font-size: 12px; margin-top: 4px;">Dashboards + exports only.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-1">
+          <div class="card">
+            <div class="row">
+              <div>
+                <div class="k">Feature Flags (per tenant)</div>
+                <div style="font-weight: 950;">Enable safely</div>
+              </div>
+              <button class="btn" onclick="toast('Saved flags (mock).')">Save</button>
+            </div>
+
+            <table class="table" aria-label="Feature Flags">
+              <thead>
+                <tr><th>Feature</th><th>Status</th><th>Rule</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Attribution</td><td><span class="status good">✅ Enabled</span></td><td>Requires GA4 connected</td></tr>
+                <tr><td>Autopilot</td><td><span class="status warn">⚠️ Approval required</span></td><td>No actions on broken data</td></tr>
+                <tr><td>Offline uploads</td><td><span class="status muted">Coming soon</span></td><td>Requires mapping + QA</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Remediation Modal -->
+  <div class="modal" id="modal">
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="head">
+        <h3 id="modalTitle">Remediation Checklist</h3>
+        <button class="close" onclick="closeModal()">Close</button>
+      </div>
+      <div class="body" id="modalBody">
+        <!-- injected -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const routes = {
+      overview: {
+        title: "Overview",
+        sub: "Executive KPIs, alerts, pacing, and quick context."
+      },
+      insights: {
+        title: "Insights",
+        sub: "Drilldowns across platforms with explainable drivers and exports."
+      },
+      attribution: {
+        title: "Attribution",
+        sub: "Platform vs GA4 variance and optional multi-touch views."
+      },
+      signal: {
+        title: "Signal Quality",
+        sub: "Meta EMQ + measurable diagnostics: coverage, freshness, latency, delivery errors."
+      },
+      activation: {
+        title: "Activation",
+        sub: "Playbooks, guardrails, approvals, audit logs, and rollback."
+      },
+      admin: {
+        title: "Admin",
+        sub: "Connectors, permissions, RBAC, and feature flags."
+      }
+    };
+
+    function setRoute(key) {
+      document.querySelectorAll('.nav a').forEach(a => a.classList.toggle('active', a.dataset.route === key));
+      document.querySelectorAll('.section').forEach(s => s.classList.toggle('active', s.id === key));
+
+      document.getElementById('pageTitle').textContent = routes[key].title;
+      document.getElementById('pageSub').textContent = routes[key].sub;
+
+      // update sidebar pill (simple heuristic)
+      const pill = document.getElementById('freshnessPill');
+      if (key === 'signal' || key === 'admin') pill.textContent = "Mixed";
+      else pill.textContent = "Good";
+
+      window.location.hash = key;
+    }
+
+    document.querySelectorAll('.nav a').forEach(a => {
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        setRoute(a.dataset.route);
+      });
+    });
+
+    // Init from hash
+    const initKey = (window.location.hash || '#overview').replace('#','');
+    if (routes[initKey]) setRoute(initKey);
+
+    // Buttons (mock)
+    document.getElementById('refreshBtn').addEventListener('click', () => toast("Refreshing data… (mock)"));
+    document.getElementById('exportBtn').addEventListener('click', () => toast("Export started… (mock)"));
+
+    // Modal content templates
+    const modalTemplates = {
+      "meta-emq": {
+        title: "Meta EMQ degraded — remediation checklist",
+        body: `
+          <div style="color: rgba(255,255,255,0.82); font-weight: 900;">Goal</div>
+          <div>Restore match quality by ensuring required identifiers are sent consistently.</div>
+          <div class="checklist">
+            <div class="item">
+              <div class="b">1</div>
+              <div>
+                <div class="t">Confirm event payload</div>
+                <div class="s">Purchase events include hashed email/phone when available; no empty fields.</div>
+              </div>
+            </div>
+            <div class="item">
+              <div class="b">2</div>
+              <div>
+                <div class="t">Verify dedupe</div>
+                <div class="s">event_id is stable across pixel + CAPI to avoid duplicates.</div>
+              </div>
+            </div>
+            <div class="item">
+              <div class="b">3</div>
+              <div>
+                <div class="t">Check delivery errors</div>
+                <div class="s">Resolve 4xx/5xx responses; retry with backoff.</div>
+              </div>
+            </div>
+            <div class="item">
+              <div class="b">4</div>
+              <div>
+                <div class="t">Re-measure</div>
+                <div class="s">Track EMQ trend for 24h; do not auto-optimize during degradation.</div>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top: 12px; color: var(--muted);">
+            Note: “EMQ” is Meta-specific. Other platforms use signal diagnostics (coverage/freshness/latency).
+          </div>
+        `
+      },
+      "connectors": {
+        title: "Connectors — remediation checklist",
+        body: `
+          <div style="color: rgba(255,255,255,0.82); font-weight: 900;">Rule</div>
+          <div>If a connector is broken (❌), Stratum AI shows <strong>Data Unavailable</strong> and disables automation for that platform.</div>
+          <div class="checklist">
+            <div class="item">
+              <div class="b">1</div>
+              <div>
+                <div class="t">Reconnect OAuth</div>
+                <div class="s">Refresh tokens and confirm required scopes/permissions.</div>
+              </div>
+            </div>
+            <div class="item">
+              <div class="b">2</div>
+              <div>
+                <div class="t">Validate account access</div>
+                <div class="s">Ensure the user has access to the ad account(s) inside the platform.</div>
+              </div>
+            </div>
+            <div class="item">
+              <div class="b">3</div>
+              <div>
+                <div class="t">Run a forced sync</div>
+                <div class="s">Backfill the last 7 days; confirm spend/conversions align.</div>
+              </div>
+            </div>
+            <div class="item">
+              <div class="b">4</div>
+              <div>
+                <div class="t">Monitor rate limits & errors</div>
+                <div class="s">Retry with exponential backoff; surface errors in Health Center.</div>
+              </div>
+            </div>
+          </div>
+        `
+      }
+    };
+
+    function openModal(key) {
+      const m = modalTemplates[key] || modalTemplates["connectors"];
+      document.getElementById('modalTitle').textContent = m.title;
+      document.getElementById('modalBody').innerHTML = m.body;
+      document.getElementById('modal').classList.add('open');
+    }
+    function closeModal() {
+      document.getElementById('modal').classList.remove('open');
+    }
+    document.getElementById('modal').addEventListener('click', (e) => {
+      if (e.target.id === 'modal') closeModal();
+    });
+
+    // Toast (lightweight)
+    let toastTimer = null;
+    function toast(msg) {
+      clearTimeout(toastTimer);
+      let el = document.getElementById('toast');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'toast';
+        el.style.position = 'fixed';
+        el.style.left = '50%';
+        el.style.bottom = '18px';
+        el.style.transform = 'translateX(-50%)';
+        el.style.padding = '10px 12px';
+        el.style.borderRadius = '14px';
+        el.style.border = '1px solid rgba(255,255,255,0.14)';
+        el.style.background = 'rgba(10,12,18,0.88)';
+        el.style.backdropFilter = 'blur(12px)';
+        el.style.color = 'rgba(255,255,255,0.88)';
+        el.style.fontWeight = '900';
+        el.style.fontSize = '12px';
+        el.style.boxShadow = '0 18px 55px rgba(0,0,0,0.45)';
+        el.style.zIndex = '1000';
+        document.body.appendChild(el);
+      }
+      el.textContent = msg;
+      el.style.opacity = '1';
+      toastTimer = setTimeout(() => {
+        el.style.opacity = '0';
+      }, 1800);
+    }
+  </script>
+</body>
+</html>

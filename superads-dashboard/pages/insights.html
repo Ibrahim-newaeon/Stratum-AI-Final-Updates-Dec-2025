@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Insights - Stratum AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../shared/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- SVG Icons -->
+    <svg style="position: absolute; width: 0; height: 0;">
+        <symbol id="icon-chart" viewBox="0 0 24 24"><path d="M3 3v18h18M9 17V9m4 8v-5m4 5V6"/></symbol>
+        <symbol id="icon-trending-up" viewBox="0 0 24 24"><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></symbol>
+        <symbol id="icon-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+        <symbol id="icon-signal" viewBox="0 0 24 24"><path d="M2 20h.01M7 20v-4m5 4v-8m5 8V8m5 12V4"/></symbol>
+        <symbol id="icon-megaphone" viewBox="0 0 24 24"><path d="M3 11l18-5v12L3 13v-2z"/><path d="M11.6 16.8a3 3 0 11-5.8-1.6"/></symbol>
+        <symbol id="icon-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9zM9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/></symbol>
+        <symbol id="icon-dollar" viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></symbol>
+        <symbol id="icon-message" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></symbol>
+        <symbol id="icon-plug" viewBox="0 0 24 24"><path d="M12 22v-5M9 8V2m6 6V2M7 8h10a2 2 0 012 2v4a7 7 0 01-14 0v-4a2 2 0 012-2z"/></symbol>
+        <symbol id="icon-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></symbol>
+        <symbol id="icon-clipboard" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></symbol>
+        <symbol id="icon-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></symbol>
+        <symbol id="icon-menu" viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"/></symbol>
+        <symbol id="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></symbol>
+        <symbol id="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></symbol>
+        <symbol id="icon-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+        <symbol id="icon-pie-chart" viewBox="0 0 24 24"><path d="M21.21 15.89A10 10 0 118 2.83M22 12A10 10 0 0012 2v10z"/></symbol>
+        <symbol id="icon-bar-chart" viewBox="0 0 24 24"><path d="M12 20V10M18 20V4M6 20v-4"/></symbol>
+        <symbol id="icon-award" viewBox="0 0 24 24"><circle cx="12" cy="8" r="7"/><path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12"/></symbol>
+        <symbol id="icon-rocket" viewBox="0 0 24 24"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 00-2.91-.09zM12 15l-3-3a22 22 0 012-3.95A12.88 12.88 0 0122 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 01-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></symbol>
+        <symbol id="icon-arrow-up" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></symbol>
+        <symbol id="icon-arrow-down" viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"/></symbol>
+    </svg>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="logo">
+                    <div class="logo-icon">S</div>
+                    STRATUM AI
+                </a>
+                <span class="badge superads">SuperAds</span>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Core</div>
+                    <a href="../index.html" class="nav-item"><span class="nav-icon"><svg><use href="#icon-chart"/></svg></span>Overview</a>
+                    <a href="insights.html" class="nav-item active"><span class="nav-icon"><svg><use href="#icon-trending-up"/></svg></span>Insights</a>
+                    <a href="attribution.html" class="nav-item"><span class="nav-icon"><svg><use href="#icon-target"/></svg></span>Attribution</a>
+                    <a href="signal-quality.html" class="nav-item"><span class="nav-icon"><svg><use href="#icon-signal"/></svg></span>Signal Quality</a>
+                    <a href="campaigns.html" class="nav-item"><span class="nav-icon"><svg><use href="#icon-megaphone"/></svg></span>Campaigns</a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Intelligence</div>
+                    <a href="predictions.html" class="nav-item"><span class="nav-icon"><svg><use href="#icon-cpu"/></svg></span>ML Predictions</a>
+                    <a href="profit.html" class="nav-item"><span class="nav-icon"><svg><use href="#icon-dollar"/></svg></span>Profit Center</a>
+                    <a href="whatsapp.html" class="nav-item"><span class="nav-icon"><svg><use href="#icon-message"/></svg></span>WhatsApp</a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Admin</div>
+                    <a href="connectors.html" class="nav-item"><span class="nav-icon"><svg><use href="#icon-plug"/></svg></span>Connectors</a>
+                    <a href="users.html" class="nav-item"><span class="nav-icon"><svg><use href="#icon-users"/></svg></span>Users & RBAC</a>
+                    <a href="audit-log.html" class="nav-item"><span class="nav-icon"><svg><use href="#icon-clipboard"/></svg></span>Audit Log</a>
+                    <a href="settings.html" class="nav-item"><span class="nav-icon"><svg><use href="#icon-settings"/></svg></span>Settings</a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="connection-status"><span class="status-indicator connected"></span><span>API Connected</span></div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <button class="mobile-menu-btn" id="mobileMenuBtn">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#icon-menu"/></svg>
+                    </button>
+                    <h1 class="page-title">Performance Insights</h1>
+                    <div class="date-range-picker">
+                        <button class="date-btn" data-period="7d">7D</button>
+                        <button class="date-btn active" data-period="30d">30D</button>
+                        <button class="date-btn" data-period="90d">90D</button>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button class="btn btn-secondary" id="exportBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#icon-download"/></svg>
+                        Export
+                    </button>
+                    <div class="theme-toggle" id="themeToggle"><div class="theme-toggle-slider" id="themeIcon"></div></div>
+                </div>
+            </header>
+
+            <div class="dashboard">
+                <!-- KPI Cards -->
+                <div class="metrics-grid" id="kpiGrid">
+                    <div class="metric-card" data-metric="revenue">
+                        <div class="metric-header">
+                            <div class="metric-icon green"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#icon-dollar"/></svg></div>
+                            <div class="metric-trend up"><span class="trend-arrow"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><use href="#icon-arrow-up"/></svg></span><span id="revenueTrend">23%</span></div>
+                        </div>
+                        <div class="metric-value">$<span id="totalRevenue">2.4M</span></div>
+                        <div class="metric-label">Total Revenue</div>
+                    </div>
+                    <div class="metric-card" data-metric="spend">
+                        <div class="metric-header">
+                            <div class="metric-icon orange"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#icon-dollar"/></svg></div>
+                            <div class="metric-trend up"><span class="trend-arrow"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><use href="#icon-arrow-up"/></svg></span><span id="spendTrend">15%</span></div>
+                        </div>
+                        <div class="metric-value">$<span id="totalSpend">571K</span></div>
+                        <div class="metric-label">Ad Spend</div>
+                    </div>
+                    <div class="metric-card" data-metric="roas">
+                        <div class="metric-header">
+                            <div class="metric-icon purple"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#icon-trending-up"/></svg></div>
+                            <div class="metric-trend up"><span class="trend-arrow"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><use href="#icon-arrow-up"/></svg></span><span id="roasTrend">8%</span></div>
+                        </div>
+                        <div class="metric-value"><span id="roas">4.2</span>x</div>
+                        <div class="metric-label">ROAS</div>
+                    </div>
+                    <div class="metric-card" data-metric="conversions">
+                        <div class="metric-header">
+                            <div class="metric-icon cyan"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#icon-target"/></svg></div>
+                            <div class="metric-trend up"><span class="trend-arrow"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><use href="#icon-arrow-up"/></svg></span><span id="convTrend">12%</span></div>
+                        </div>
+                        <div class="metric-value"><span id="conversions">8,547</span></div>
+                        <div class="metric-label">Conversions</div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="grid-2">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-title"><span class="panel-title-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#icon-bar-chart"/></svg></span>Revenue vs Spend</div>
+                            <div class="tabs" style="margin: 0; padding: 0; background: transparent;">
+                                <button class="tab active" data-chart="revenue">Revenue</button>
+                                <button class="tab" data-chart="spend">Spend</button>
+                                <button class="tab" data-chart="roas">ROAS</button>
+                            </div>
+                        </div>
+                        <div class="panel-content">
+                            <canvas id="mainChart" height="250"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-title"><span class="panel-title-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#icon-pie-chart"/></svg></span>Spend by Platform</div>
+                        </div>
+                        <div class="panel-content" style="display: flex; align-items: center; justify-content: center;">
+                            <canvas id="platformChart" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance by Platform -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><span class="panel-title-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#icon-award"/></svg></span>Performance by Platform</div>
+                    </div>
+                    <div class="panel-content">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Platform</th>
+                                    <th>Spend</th>
+                                    <th>Revenue</th>
+                                    <th>ROAS</th>
+                                    <th>Conversions</th>
+                                    <th>CPA</th>
+                                    <th>CTR</th>
+                                </tr>
+                            </thead>
+                            <tbody id="platformTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Top Campaigns -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><span class="panel-title-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#icon-rocket"/></svg></span>Top Performing Campaigns</div>
+                        <a href="campaigns.html" class="btn btn-secondary">View All</a>
+                    </div>
+                    <div class="panel-content">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Campaign</th>
+                                    <th>Platform</th>
+                                    <th>Status</th>
+                                    <th>Spend</th>
+                                    <th>Revenue</th>
+                                    <th>ROAS</th>
+                                    <th>Conversions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="campaignTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../shared/api.js"></script>
+    <script src="../shared/utils.js"></script>
+    <script>
+        let mainChart, platformChart;
+        let currentPeriod = '30d';
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            initTheme();
+            initEventListeners();
+            await loadData();
+        });
+
+        function initTheme() {
+            const savedTheme = localStorage.getItem('stratum-theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const iconEl = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                iconEl.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><use href="#icon-moon"/></svg>';
+            } else {
+                iconEl.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><use href="#icon-sun"/></svg>';
+            }
+        }
+
+        function initEventListeners() {
+            document.getElementById('themeToggle').addEventListener('click', () => {
+                const html = document.documentElement;
+                const newTheme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                html.setAttribute('data-theme', newTheme);
+                localStorage.setItem('stratum-theme', newTheme);
+                updateThemeIcon(newTheme);
+                updateChartTheme();
+            });
+
+            document.querySelectorAll('.date-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    document.querySelectorAll('.date-btn').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    currentPeriod = e.target.dataset.period;
+                    await loadData();
+                });
+            });
+
+            document.querySelectorAll('.panel-header .tab').forEach(tab => {
+                tab.addEventListener('click', (e) => {
+                    document.querySelectorAll('.panel-header .tab').forEach(t => t.classList.remove('active'));
+                    e.target.classList.add('active');
+                    updateMainChart(e.target.dataset.chart);
+                });
+            });
+        }
+
+        async function loadData() {
+            const dateRange = getDateRange(currentPeriod);
+
+            const [kpis, campaigns] = await Promise.all([
+                API.getKPIs(currentPeriod),
+                API.getCampaigns(1, 10)
+            ]);
+
+            renderKPIs(kpis.data);
+            renderPlatformTable();
+            renderCampaignTable(campaigns.data?.items || []);
+            initCharts();
+        }
+
+        function renderKPIs(data) {
+            const periodData = {
+                '7d': [
+                    { metric: 'revenue', value: 584000, change_percent: 18 },
+                    { metric: 'spend', value: 153684, change_percent: 12 },
+                    { metric: 'roas', value: 3.8, change_percent: 5 },
+                    { metric: 'conversions', value: 2124, change_percent: 9 }
+                ],
+                '30d': [
+                    { metric: 'revenue', value: 2400000, change_percent: 23 },
+                    { metric: 'spend', value: 571428, change_percent: 15 },
+                    { metric: 'roas', value: 4.2, change_percent: 8 },
+                    { metric: 'conversions', value: 8547, change_percent: 12 }
+                ],
+                '90d': [
+                    { metric: 'revenue', value: 7850000, change_percent: 31 },
+                    { metric: 'spend', value: 1744444, change_percent: 22 },
+                    { metric: 'roas', value: 4.5, change_percent: 11 },
+                    { metric: 'conversions', value: 27420, change_percent: 19 }
+                ]
+            };
+
+            const kpis = data || periodData[currentPeriod] || periodData['30d'];
+
+            document.getElementById('totalRevenue').textContent = formatNumber(kpis.find(k => k.metric === 'revenue')?.value || 2400000);
+            document.getElementById('totalSpend').textContent = formatNumber(kpis.find(k => k.metric === 'spend')?.value || 571428);
+            document.getElementById('roas').textContent = (kpis.find(k => k.metric === 'roas')?.value || 4.2).toFixed(1);
+            document.getElementById('conversions').textContent = formatNumber(kpis.find(k => k.metric === 'conversions')?.value || 8547, 0);
+
+            document.getElementById('revenueTrend').textContent = (kpis.find(k => k.metric === 'revenue')?.change_percent || 23) + '%';
+            document.getElementById('spendTrend').textContent = (kpis.find(k => k.metric === 'spend')?.change_percent || 15) + '%';
+            document.getElementById('roasTrend').textContent = (kpis.find(k => k.metric === 'roas')?.change_percent || 8) + '%';
+            document.getElementById('convTrend').textContent = (kpis.find(k => k.metric === 'conversions')?.change_percent || 12) + '%';
+        }
+
+        function renderPlatformTable() {
+            const platforms = [
+                { name: 'Meta Ads', color: '#0081FB', spend: 285000, revenue: 1425000, roas: 5.0, conversions: 4280, cpa: 66.59, ctr: 2.8 },
+                { name: 'Google Ads', color: '#EA4335', spend: 180000, revenue: 792000, roas: 4.4, conversions: 2640, cpa: 68.18, ctr: 3.2 },
+                { name: 'TikTok', color: '#000000', spend: 75000, revenue: 225000, roas: 3.0, conversions: 1120, cpa: 66.96, ctr: 1.8 },
+                { name: 'Snapchat', color: '#FFFC00', spend: 31428, revenue: 78570, roas: 2.5, conversions: 507, cpa: 62.00, ctr: 1.2 }
+            ];
+
+            document.getElementById('platformTable').innerHTML = platforms.map(p => `
+                <tr>
+                    <td><span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: ${p.color}; margin-right: 8px;"></span>${p.name}</td>
+                    <td>$${formatNumber(p.spend)}</td>
+                    <td>$${formatNumber(p.revenue)}</td>
+                    <td><span style="color: ${p.roas >= 3 ? 'var(--accent-green)' : 'var(--accent-orange)'}">${p.roas.toFixed(1)}x</span></td>
+                    <td>${formatNumber(p.conversions)}</td>
+                    <td>$${p.cpa.toFixed(2)}</td>
+                    <td>${p.ctr.toFixed(1)}%</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderCampaignTable(campaigns) {
+            const defaultCampaigns = [
+                { id: 1, name: 'Summer Sale 2024', platform: 'meta', status: 'active', total_spend_cents: 8500000, revenue_cents: 42500000, roas: 5.0, conversions: 1420 },
+                { id: 2, name: 'Brand Search - High Intent', platform: 'google', status: 'active', total_spend_cents: 4200000, revenue_cents: 25200000, roas: 6.0, conversions: 840 },
+                { id: 3, name: 'Retargeting - Cart Abandon', platform: 'meta', status: 'active', total_spend_cents: 2800000, revenue_cents: 22400000, roas: 8.0, conversions: 620 },
+                { id: 4, name: 'Gen Z Awareness', platform: 'tiktok', status: 'active', total_spend_cents: 3500000, revenue_cents: 10500000, roas: 3.0, conversions: 520 },
+                { id: 5, name: 'Product Launch Q1', platform: 'meta', status: 'paused', total_spend_cents: 1800000, revenue_cents: 7200000, roas: 4.0, conversions: 280 }
+            ];
+
+            const data = campaigns.length > 0 ? campaigns : defaultCampaigns;
+
+            document.getElementById('campaignTable').innerHTML = data.map(c => `
+                <tr onclick="window.location.href='campaigns.html?id=${c.id}'" style="cursor: pointer;">
+                    <td>${c.name}</td>
+                    <td><span class="platform-icon ${c.platform}" style="width: 24px; height: 24px; font-size: 0.6rem; display: inline-flex; border-radius: 4px;">${c.platform?.substring(0,2).toUpperCase()}</span></td>
+                    <td><span class="feature-status ${c.status}">${capitalize(c.status)}</span></td>
+                    <td>$${formatNumber(c.total_spend_cents / 100)}</td>
+                    <td>$${formatNumber((c.revenue_cents || c.total_spend_cents * (c.roas || 1)) / 100)}</td>
+                    <td><span style="color: ${(c.roas || 0) >= 3 ? 'var(--accent-green)' : 'var(--accent-orange)'}">${(c.roas || 0).toFixed(1)}x</span></td>
+                    <td>${formatNumber(c.conversions || 0)}</td>
+                </tr>
+            `).join('');
+        }
+
+        function initCharts() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const textColor = isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)';
+            const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+
+            // Main Chart
+            const mainCtx = document.getElementById('mainChart').getContext('2d');
+            if (mainChart) mainChart.destroy();
+
+            const labels = Array.from({ length: 30 }, (_, i) => {
+                const d = new Date();
+                d.setDate(d.getDate() - (29 - i));
+                return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            });
+
+            const revenueData = Array.from({ length: 30 }, () => 70000 + Math.random() * 30000);
+            const spendData = Array.from({ length: 30 }, () => 15000 + Math.random() * 8000);
+
+            mainChart = new Chart(mainCtx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Revenue',
+                        data: revenueData,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }, {
+                        label: 'Spend',
+                        data: spendData,
+                        borderColor: '#f97316',
+                        backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { intersect: false, mode: 'index' },
+                    plugins: { legend: { labels: { color: textColor } } },
+                    scales: {
+                        x: { grid: { color: gridColor }, ticks: { color: textColor } },
+                        y: { grid: { color: gridColor }, ticks: { color: textColor, callback: v => '$' + formatNumber(v) } }
+                    }
+                }
+            });
+
+            // Platform Chart
+            const platformCtx = document.getElementById('platformChart').getContext('2d');
+            if (platformChart) platformChart.destroy();
+
+            platformChart = new Chart(platformCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Meta', 'Google', 'TikTok', 'Snapchat'],
+                    datasets: [{
+                        data: [285000, 180000, 75000, 31428],
+                        backgroundColor: ['#0081FB', '#EA4335', '#000000', '#FFFC00'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: {
+                        legend: { position: 'right', labels: { color: textColor, padding: 20 } }
+                    }
+                }
+            });
+        }
+
+        function updateMainChart(metric) {
+            const labels = mainChart.data.labels;
+            let data, label, color;
+
+            switch(metric) {
+                case 'spend':
+                    data = Array.from({ length: 30 }, () => 15000 + Math.random() * 8000);
+                    label = 'Ad Spend';
+                    color = '#f97316';
+                    break;
+                case 'roas':
+                    data = Array.from({ length: 30 }, () => 3.5 + Math.random() * 2);
+                    label = 'ROAS';
+                    color = '#8b5cf6';
+                    break;
+                default:
+                    data = Array.from({ length: 30 }, () => 70000 + Math.random() * 30000);
+                    label = 'Revenue';
+                    color = '#10b981';
+            }
+
+            mainChart.data.datasets = [{
+                label,
+                data,
+                borderColor: color,
+                backgroundColor: color + '20',
+                fill: true,
+                tension: 0.4
+            }];
+            mainChart.update();
+        }
+
+        function updateChartTheme() {
+            initCharts();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(find:*)",
+      "Bash(cat:*)",
+      "Bash(make:*)",
+      "Bash(pytest:*)",
+      "Bash(docker:*)",
+      "Bash(git:*)"
+    ]
+  }
+}

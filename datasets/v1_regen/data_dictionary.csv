@@ -1,0 +1,15 @@
+field,type,description
+date,date,Daily grain (YYYY-MM-DD).
+platform,category,Ad platform: Meta / Google Ads / TikTok / Snapchat.
+campaign_id/adset_id/ad_id,string IDs,Hierarchy keys for joins to dimension tables.
+"spend, impressions, clicks",numeric,Core delivery metrics.
+"ctr, cpm, cpc",numeric,Derived delivery KPIs.
+"leads, purchases, revenue, roas",numeric,Outcome + value metrics used for ML targets.
+emq_score,numeric (0-100),"Synthetic Event Match Quality signal influenced by pixel health, landing quality, and noise."
+creative_fatigue_score,numeric (0-100),Fatigue grows over time and reduces CTR/CVR.
+signal_strength_score,numeric (0-100),Composite of pixel health and EMQ.
+roas_alert,binary,ROAS/quality alert flag (simulated).
+anomaly_flag,binary,Anomaly detection ground truth flag (simulated).
+label_next_7d_roas,numeric,Supervised label for next 7 days ROAS (synthetic but realistic).
+label_next_7d_conversions,numeric,Supervised label for next 7 days conversions.
+predicted_*,numeric,Noisy model outputs to test evaluation and monitoring pipelines.

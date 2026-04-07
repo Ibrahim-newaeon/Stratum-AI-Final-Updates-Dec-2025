@@ -1,0 +1,203 @@
+# Stratum AI: Multi-Platform Integration Configuration
+# =====================================================
+#
+# Copy this file to config.yaml and fill in your credentials.
+# NEVER commit config.yaml to version control - it contains secrets!
+#
+# Each platform section can be enabled/disabled independently.
+# You only need to configure the platforms you're using.
+
+# =============================================================================
+# META (Facebook/Instagram) Configuration
+# =============================================================================
+#
+# Setup Instructions:
+# 1. Go to developers.facebook.com and create a Meta App
+# 2. Add the Marketing API product to your app
+# 3. In Business Settings, create a System User with Admin access
+# 4. Generate a token with ads_management and ads_read permissions
+# 5. Copy the App ID, App Secret, and System User Token below
+#
+meta:
+  enabled: true
+  app_id: "YOUR_META_APP_ID"
+  app_secret: "YOUR_META_APP_SECRET"
+  access_token: "YOUR_SYSTEM_USER_ACCESS_TOKEN"
+  # Optional: Business Manager ID for multi-account access
+  business_id: ""
+  # Optional: Pixel ID for EMQ and Conversions API
+  pixel_id: ""
+
+# =============================================================================
+# GOOGLE ADS Configuration
+# =============================================================================
+#
+# Setup Instructions:
+# 1. Create a Google Cloud Project at console.cloud.google.com
+# 2. Enable the Google Ads API
+# 3. Create OAuth credentials (or use Service Account)
+# 4. Apply for a developer token at ads.google.com/aw/apicenter
+# 5. Run the OAuth flow to get a refresh token
+#
+# For Service Account authentication:
+# 1. Create a Service Account in Google Cloud Console
+# 2. Download the JSON key file
+# 3. Add the service account email to your Google Ads account
+# 4. Set json_key_file_path below
+#
+google:
+  enabled: true
+  developer_token: "YOUR_DEVELOPER_TOKEN"
+  # OAuth credentials (Option 1)
+  client_id: "YOUR_CLIENT_ID.apps.googleusercontent.com"
+  client_secret: "YOUR_CLIENT_SECRET"
+  refresh_token: "YOUR_REFRESH_TOKEN"
+  # Service Account (Option 2 - comment out OAuth if using this)
+  # json_key_file_path: "/path/to/service-account-key.json"
+  # impersonated_email: "user@example.com"
+  # Manager Account ID (required if using MCC)
+  login_customer_id: "1234567890"
+
+# =============================================================================
+# TIKTOK Configuration
+# =============================================================================
+#
+# Setup Instructions:
+# 1. Apply for TikTok Marketing API access at business-api.tiktok.com
+# 2. Create an app and get approved
+# 3. Complete the OAuth flow to get an access token
+# 4. Note: TikTok access tokens expire - use refresh tokens for automation
+#
+tiktok:
+  enabled: false
+  app_id: "YOUR_TIKTOK_APP_ID"
+  secret: "YOUR_TIKTOK_APP_SECRET"
+  access_token: "YOUR_TIKTOK_ACCESS_TOKEN"
+  # Default advertiser ID to use
+  advertiser_id: ""
+
+# =============================================================================
+# SNAPCHAT Configuration
+# =============================================================================
+#
+# Setup Instructions:
+# 1. Go to Business Manager and create an OAuth app
+# 2. Complete the OAuth authorization flow
+# 3. Exchange the auth code for access and refresh tokens
+# 4. Store the refresh token below (access tokens expire in 30 minutes)
+#
+snapchat:
+  enabled: false
+  client_id: "YOUR_SNAPCHAT_CLIENT_ID"
+  client_secret: "YOUR_SNAPCHAT_CLIENT_SECRET"
+  refresh_token: "YOUR_SNAPCHAT_REFRESH_TOKEN"
+  # Optional: Default organization and ad account
+  organization_id: ""
+  ad_account_id: ""
+
+# =============================================================================
+# WHATSAPP Configuration
+# =============================================================================
+#
+# Setup Instructions:
+# 1. Set up WhatsApp Business API via Meta Business Suite
+# 2. Create a WhatsApp Business Account
+# 3. Get your Phone Number ID and Access Token
+# 4. Configure webhook for receiving messages
+#
+whatsapp:
+  enabled: false
+  phone_number_id: "YOUR_PHONE_NUMBER_ID"
+  access_token: "YOUR_WHATSAPP_ACCESS_TOKEN"
+  business_account_id: "YOUR_WABA_ID"
+  verify_token: "YOUR_WEBHOOK_VERIFY_TOKEN"
+  # Optional: For conversion tracking
+  pixel_id: ""
+
+# =============================================================================
+# Signal Health & Trust Gate Configuration
+# =============================================================================
+#
+# These settings control how Stratum evaluates data quality and makes
+# automation decisions.
+#
+signal_health:
+  # Component weights (must sum to 1.0)
+  weights:
+    emq: 0.25
+    freshness: 0.25
+    variance: 0.25
+    anomaly: 0.25
+
+  # EMQ thresholds by event type (0-10 scale)
+  emq_thresholds:
+    Purchase: 8.5
+    AddToCart: 6.0
+    ViewContent: 4.0
+    Lead: 7.0
+
+trust_gate:
+  # Score thresholds
+  healthy_threshold: 70
+  degraded_threshold: 40
+
+  # Action-specific thresholds
+  action_thresholds:
+    update_budget: 70
+    update_bid: 75
+    update_status: 65
+    create_campaign: 60
+
+  # Set to true to require manual approval for all actions
+  require_manual_approval: false
+
+  # Emergency pause - blocks all automation
+  emergency_pause: false
+
+# =============================================================================
+# Logging Configuration
+# =============================================================================
+logging:
+  level: INFO  # DEBUG, INFO, WARNING, ERROR
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "stratum.log"
+
+# =============================================================================
+# Sync & Automation Settings
+# =============================================================================
+sync:
+  # How often to pull data from platforms (minutes)
+  poll_interval: 15
+
+  # How many days of historical data to fetch for metrics
+  metrics_lookback_days: 7
+
+  # Maximum concurrent API requests
+  max_concurrent_requests: 10
+
+automation:
+  # Whether to automatically execute approved actions
+  auto_execute: false
+
+  # Maximum budget change per action (as percentage)
+  max_budget_change_percent: 50
+
+  # Minimum time between budget changes (minutes)
+  budget_change_cooldown: 60
+
+# =============================================================================
+# Celery Worker Configuration
+# =============================================================================
+celery:
+  broker_url: "redis://localhost:6379/0"
+  result_backend: "redis://localhost:6379/0"
+
+  # Task schedules
+  beat_schedule:
+    sync_data:
+      task: "app.stratum.workers.data_sync.sync_all_platforms"
+      schedule: 900  # Every 15 minutes
+
+    run_automations:
+      task: "app.stratum.workers.automation_runner.run_pending_automations"
+      schedule: 300  # Every 5 minutes

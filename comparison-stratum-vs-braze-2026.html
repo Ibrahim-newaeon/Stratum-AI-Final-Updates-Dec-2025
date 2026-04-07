@@ -1,0 +1,1868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stratum AI vs Braze - Full Platform Comparison 2026</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #050508;
+            --bg-secondary: #0a0a10;
+            --bg-tertiary: #111118;
+            --bg-card: #0d0d14;
+            --bg-hover: #16161f;
+            --accent-primary: #8b5cf6;
+            --accent-secondary: #a78bfa;
+            --accent-gradient: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 50%, #c4b5fd 100%);
+            --stratum-color: #10b981;
+            --stratum-light: #34d399;
+            --stratum-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            --braze-color: #ff6b35;
+            --braze-light: #ff8c5a;
+            --braze-gradient: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: #1e1e2d;
+            --border-hover: #2d2d42;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --glow-stratum: rgba(16, 185, 129, 0.15);
+            --glow-braze: rgba(255, 107, 53, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+
+        /* Animated Background */
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background-image:
+                linear-gradient(rgba(139, 92, 246, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(139, 92, 246, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        .bg-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(16, 185, 129, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(255, 107, 53, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(139, 92, 246, 0.05) 0%, transparent 70%);
+        }
+
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 5rem 2rem;
+            margin-bottom: 4rem;
+            position: relative;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            filter: blur(60px);
+            z-index: -1;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
+            border: 1px solid var(--border-color);
+            padding: 0.625rem 1.25rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .hero-badge span {
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 600;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            max-width: 750px;
+            margin: 0 auto 3rem;
+            line-height: 1.8;
+        }
+
+        .hero-logos {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 4rem;
+            margin-top: 3rem;
+        }
+
+        .hero-logo {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-icon {
+            width: 100px;
+            height: 100px;
+            border-radius: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: 800;
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+
+        .logo-icon:hover {
+            transform: scale(1.05);
+        }
+
+        .stratum-logo {
+            background: var(--stratum-gradient);
+            box-shadow: 0 12px 40px rgba(16, 185, 129, 0.4);
+        }
+
+        .braze-logo {
+            background: var(--braze-gradient);
+            box-shadow: 0 12px 40px rgba(255, 107, 53, 0.4);
+        }
+
+        .logo-name {
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        .logo-tagline {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        .vs-divider {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .vs-badge {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            background: var(--bg-tertiary);
+            padding: 1.25rem;
+            border-radius: 50%;
+            border: 2px solid var(--border-color);
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Section Styles */
+        .section {
+            margin-bottom: 5rem;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .section-label {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--accent-primary);
+            margin-bottom: 0.75rem;
+        }
+
+        .section-header h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            letter-spacing: -0.01em;
+        }
+
+        .section-header p {
+            color: var(--text-secondary);
+            font-size: 1.125rem;
+        }
+
+        /* Cards */
+        .card {
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 1.25rem;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, transparent 0%, rgba(139, 92, 246, 0.02) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-4px);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        /* Overview Grid */
+        .overview-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .overview-card {
+            position: relative;
+        }
+
+        .overview-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            border-radius: 1.25rem 1.25rem 0 0;
+        }
+
+        .stratum-card::after {
+            background: var(--stratum-gradient);
+        }
+
+        .braze-card::after {
+            background: var(--braze-gradient);
+        }
+
+        .overview-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-top: 0.5rem;
+        }
+
+        .overview-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.5rem;
+        }
+
+        .stratum-icon {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--stratum-color);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .braze-icon {
+            background: rgba(255, 107, 53, 0.15);
+            color: var(--braze-color);
+            border: 1px solid rgba(255, 107, 53, 0.3);
+        }
+
+        .overview-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .overview-tagline {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .overview-description {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            line-height: 1.8;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .stat-item {
+            background: var(--bg-tertiary);
+            padding: 1.25rem;
+            border-radius: 1rem;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 800;
+            margin-bottom: 0.25rem;
+        }
+
+        .stratum-value { color: var(--stratum-color); }
+        .braze-value { color: var(--braze-color); }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Comparison Table */
+        .table-wrapper {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 1.25rem;
+            overflow: hidden;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 1.25rem 1.5rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .comparison-table th {
+            background: var(--bg-tertiary);
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+        }
+
+        .comparison-table th:nth-child(2) {
+            color: var(--stratum-color);
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
+        }
+
+        .comparison-table th:nth-child(3) {
+            color: var(--braze-color);
+            background: linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(255, 107, 53, 0.05) 100%);
+        }
+
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .comparison-table tbody tr {
+            transition: background 0.2s ease;
+        }
+
+        .comparison-table tbody tr:hover {
+            background: var(--bg-hover);
+        }
+
+        .comparison-table td:first-child {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .comparison-table td:not(:first-child) {
+            color: var(--text-secondary);
+        }
+
+        .check { color: var(--success); font-weight: 600; }
+        .cross { color: var(--danger); opacity: 0.7; }
+        .partial { color: var(--warning); }
+
+        .highlight-stratum {
+            background: linear-gradient(90deg, var(--glow-stratum) 0%, transparent 100%);
+            border-left: 3px solid var(--stratum-color);
+        }
+
+        .highlight-braze {
+            background: linear-gradient(90deg, var(--glow-braze) 0%, transparent 100%);
+            border-left: 3px solid var(--braze-color);
+        }
+
+        /* Feature Category Headers */
+        .category-row td {
+            background: var(--bg-tertiary) !important;
+            font-weight: 700 !important;
+            color: var(--accent-primary) !important;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 1rem 1.5rem !important;
+        }
+
+        /* Two Column Layout */
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .column-card h3 {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .column-card ul {
+            list-style: none;
+        }
+
+        .column-card li {
+            padding: 1rem 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-color);
+            line-height: 1.6;
+        }
+
+        .column-card li:last-child {
+            border-bottom: none;
+        }
+
+        .list-icon {
+            flex-shrink: 0;
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            margin-top: 2px;
+        }
+
+        .stratum-list-icon {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--stratum-color);
+        }
+
+        .braze-list-icon {
+            background: rgba(255, 107, 53, 0.15);
+            color: var(--braze-color);
+        }
+
+        /* Channel Grid */
+        .channel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 1rem;
+        }
+
+        .channel-item {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 1rem;
+            padding: 1.25rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .channel-item:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-2px);
+        }
+
+        .channel-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .channel-name {
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .channel-status {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .status-full {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+        }
+
+        .status-partial {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--warning);
+        }
+
+        .status-none {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--danger);
+        }
+
+        /* Pricing Section */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .pricing-card {
+            position: relative;
+        }
+
+        .pricing-header {
+            padding-bottom: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .pricing-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .pricing-model {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .pricing-amount {
+            font-size: 3rem;
+            font-weight: 800;
+            margin: 1.5rem 0;
+            display: flex;
+            align-items: baseline;
+            gap: 0.5rem;
+        }
+
+        .pricing-period {
+            font-size: 1rem;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .pricing-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: var(--bg-tertiary);
+            border-radius: 0.75rem;
+        }
+
+        .pricing-features {
+            list-style: none;
+        }
+
+        .pricing-features li {
+            padding: 0.625rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Use Cases */
+        .use-case-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        .use-case-card {
+            padding: 1.75rem;
+        }
+
+        .use-case-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .use-case-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .use-case-description {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 1.25rem;
+            line-height: 1.6;
+        }
+
+        .use-case-winner {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .winner-stratum {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--stratum-color);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .winner-braze {
+            background: rgba(255, 107, 53, 0.15);
+            color: var(--braze-color);
+            border: 1px solid rgba(255, 107, 53, 0.3);
+        }
+
+        .winner-tie {
+            background: rgba(139, 92, 246, 0.15);
+            color: var(--accent-primary);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+
+        /* Verdict Section */
+        .verdict-section {
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 1.5rem;
+            padding: 3.5rem;
+            margin-top: 4rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .verdict-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--accent-gradient);
+        }
+
+        .verdict-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2.5rem;
+            margin-top: 2.5rem;
+        }
+
+        .verdict-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 1.25rem;
+            padding: 2rem;
+        }
+
+        .verdict-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .verdict-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+        }
+
+        .verdict-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .verdict-list {
+            list-style: none;
+        }
+
+        .verdict-list li {
+            padding: 0.625rem 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .verdict-list li::before {
+            content: '✓';
+            color: var(--success);
+            font-weight: 700;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .bottom-line {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 1.25rem;
+            padding: 2.5rem;
+            margin-top: 2.5rem;
+            text-align: center;
+        }
+
+        .bottom-line h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1.25rem;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .bottom-line p {
+            color: var(--text-secondary);
+            max-width: 900px;
+            margin: 0 auto;
+            line-height: 1.8;
+        }
+
+        /* Overlap Section */
+        .overlap-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 1.25rem;
+            padding: 2.5rem;
+            margin-top: 3rem;
+        }
+
+        .overlap-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .overlap-header h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .overlap-grid {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        .overlap-column h4 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .overlap-column ul {
+            list-style: none;
+        }
+
+        .overlap-column li {
+            padding: 0.5rem 0;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .overlap-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+        }
+
+        .overlap-venn {
+            width: 120px;
+            height: 120px;
+            background: var(--accent-gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 4rem 2rem 3rem;
+            margin-top: 4rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .footer-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            max-width: 700px;
+            margin: 0 auto 1.5rem;
+            line-height: 1.7;
+        }
+
+        .footer-sources {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .footer-sources a {
+            color: var(--accent-primary);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .footer-sources a:hover {
+            color: var(--accent-secondary);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .overview-grid,
+            .two-column,
+            .verdict-grid,
+            .pricing-grid,
+            .use-case-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .overlap-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .overlap-center {
+                order: -1;
+            }
+
+            .hero h1 {
+                font-size: 2.75rem;
+            }
+
+            .hero-logos {
+                flex-direction: column;
+                gap: 2rem;
+            }
+
+            .container {
+                padding: 1.5rem;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .section-header h2 {
+                font-size: 1.75rem;
+            }
+
+            .table-wrapper {
+                overflow-x: auto;
+            }
+
+            .comparison-table {
+                min-width: 700px;
+            }
+
+            .stat-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .channel-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="bg-gradient"></div>
+
+    <div class="container">
+        <!-- Hero Section -->
+        <header class="hero">
+            <div class="hero-badge">
+                <span>2026 Deep Analysis</span> | Marketing Platform Comparison
+            </div>
+            <h1>Stratum AI vs Braze</h1>
+            <p class="hero-subtitle">
+                A comprehensive comparison of two powerful marketing platforms: Trust-Gated Revenue OS vs Customer Engagement Platform.
+                Both serve marketing teams but with fundamentally different approaches and strengths.
+            </p>
+            <div class="hero-logos">
+                <div class="hero-logo">
+                    <div class="logo-icon stratum-logo">S</div>
+                    <span class="logo-name">Stratum AI</span>
+                    <span class="logo-tagline">Trust-Gated Revenue OS</span>
+                </div>
+                <div class="vs-divider">
+                    <div class="vs-badge">VS</div>
+                </div>
+                <div class="hero-logo">
+                    <div class="logo-icon braze-logo">B</div>
+                    <span class="logo-name">Braze</span>
+                    <span class="logo-tagline">Customer Engagement Platform</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Executive Summary -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-label">Overview</span>
+                <h2>Executive Summary</h2>
+                <p>Understanding the core focus and value proposition of each platform</p>
+            </div>
+
+            <div class="overview-grid">
+                <div class="card overview-card stratum-card">
+                    <div class="overview-header">
+                        <div class="overview-icon stratum-icon">S</div>
+                        <div>
+                            <div class="overview-title">Stratum AI</div>
+                            <div class="overview-tagline">Revenue Operating System with Trust-Gated Autopilot</div>
+                        </div>
+                    </div>
+                    <p class="overview-description">
+                        Stratum AI is a <strong>Revenue Operating System</strong> focused on paid advertising optimization,
+                        customer data unification (CDP), and predictive analytics. Its unique <strong>Trust-Gated Autopilot</strong>
+                        architecture ensures automation only executes when signal health passes safety thresholds, preventing
+                        costly mistakes. Specializes in multi-platform ad campaign management with advanced attribution modeling.
+                    </p>
+                    <div class="stat-grid">
+                        <div class="stat-item">
+                            <div class="stat-value stratum-value">4</div>
+                            <div class="stat-label">Ad Platforms</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value stratum-value">CDP</div>
+                            <div class="stat-label">Built-in CDP</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value stratum-value">MTA</div>
+                            <div class="stat-label">Multi-Touch Attribution</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value stratum-value">Trust</div>
+                            <div class="stat-label">Gated Automation</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card overview-card braze-card">
+                    <div class="overview-header">
+                        <div class="overview-icon braze-icon">B</div>
+                        <div>
+                            <div class="overview-title">Braze</div>
+                            <div class="overview-tagline">Customer Engagement Platform for Cross-Channel Messaging</div>
+                        </div>
+                    </div>
+                    <p class="overview-description">
+                        Braze is the leading <strong>Customer Engagement Platform</strong> that empowers brands to deliver
+                        personalized messaging across email, push notifications, SMS, in-app messages, and more. Recognized
+                        as a <strong>Gartner Magic Quadrant Leader</strong> for Multichannel Marketing Hubs. Excels at
+                        real-time customer journey orchestration with its powerful Canvas Flow builder.
+                    </p>
+                    <div class="stat-grid">
+                        <div class="stat-item">
+                            <div class="stat-value braze-value">8+</div>
+                            <div class="stat-label">Messaging Channels</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value braze-value">Canvas</div>
+                            <div class="stat-label">Journey Builder</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value braze-value">Real-time</div>
+                            <div class="stat-label">Data Streaming</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value braze-value">Gartner</div>
+                            <div class="stat-label">MQ Leader</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Core Focus Comparison -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-label">Positioning</span>
+                <h2>Core Focus & Target Market</h2>
+                <p>Different platforms optimized for different marketing challenges</p>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 28%;">Dimension</th>
+                            <th style="width: 36%;">Stratum AI</th>
+                            <th style="width: 36%;">Braze</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Primary Purpose</strong></td>
+                            <td>Paid advertising optimization & revenue operations</td>
+                            <td>Cross-channel customer messaging & engagement</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Core Problem Solved</strong></td>
+                            <td>Optimizing ad spend, unifying customer data, safe automation</td>
+                            <td>Delivering personalized messages at the right time on any channel</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Primary Users</strong></td>
+                            <td>Performance marketers, Growth teams, RevOps</td>
+                            <td>CRM marketers, Lifecycle marketers, Product marketers</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Marketing Focus</strong></td>
+                            <td>Acquisition (Paid Media)</td>
+                            <td>Retention & Engagement (Owned Channels)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Company Size</strong></td>
+                            <td>SMB to Enterprise with significant ad spend</td>
+                            <td>Mid-market to Enterprise ($60K-$200K+/year)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Industry Recognition</strong></td>
+                            <td>Emerging platform with unique Trust-Gated approach</td>
+                            <td>Gartner MQ Leader 3 years running, Forrester Strong Performer</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Feature Comparison -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-label">Features</span>
+                <h2>Detailed Feature Comparison</h2>
+                <p>Side-by-side analysis of platform capabilities</p>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Feature</th>
+                            <th>Stratum AI</th>
+                            <th>Braze</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Messaging Channels -->
+                        <tr class="category-row">
+                            <td colspan="3">Messaging & Communication Channels</td>
+                        </tr>
+                        <tr class="highlight-braze">
+                            <td><strong>Email Marketing</strong></td>
+                            <td class="cross">✗ Not available</td>
+                            <td class="check">✓ Full email platform with templates, A/B testing</td>
+                        </tr>
+                        <tr class="highlight-braze">
+                            <td><strong>Push Notifications</strong></td>
+                            <td class="cross">✗ Not available</td>
+                            <td class="check">✓ iOS, Android, Web push with rich media</td>
+                        </tr>
+                        <tr class="highlight-braze">
+                            <td><strong>SMS/MMS</strong></td>
+                            <td class="cross">✗ Not available</td>
+                            <td class="check">✓ Global SMS with MMS and RCS support</td>
+                        </tr>
+                        <tr class="highlight-braze">
+                            <td><strong>In-App Messages</strong></td>
+                            <td class="cross">✗ Not available</td>
+                            <td class="check">✓ Modal, slideup, fullscreen, custom HTML</td>
+                        </tr>
+                        <tr class="highlight-braze">
+                            <td><strong>Content Cards</strong></td>
+                            <td class="cross">✗ Not available</td>
+                            <td class="check">✓ Persistent in-app content feeds</td>
+                        </tr>
+                        <tr>
+                            <td><strong>WhatsApp</strong></td>
+                            <td class="check">✓ Integration available</td>
+                            <td class="check">✓ WhatsApp Commerce, Flows, Carousels</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Slack Integration</strong></td>
+                            <td class="check">✓ Notifications & alerts</td>
+                            <td class="check">✓ Available via integrations</td>
+                        </tr>
+
+                        <!-- Paid Advertising -->
+                        <tr class="category-row">
+                            <td colspan="3">Paid Advertising & Acquisition</td>
+                        </tr>
+                        <tr class="highlight-stratum">
+                            <td><strong>Ad Campaign Management</strong></td>
+                            <td class="check">✓ Full builder for Meta, Google, TikTok, Snapchat</td>
+                            <td class="cross">✗ Not available (integration only)</td>
+                        </tr>
+                        <tr class="highlight-stratum">
+                            <td><strong>Multi-Touch Attribution</strong></td>
+                            <td class="check">✓ Markov Chain, Shapley Value, First/Last touch</td>
+                            <td class="partial">◐ Basic attribution, relies on partners</td>
+                        </tr>
+                        <tr class="highlight-stratum">
+                            <td><strong>ROAS Optimization</strong></td>
+                            <td class="check">✓ Predictive ROAS, Profit ROAS with COGS</td>
+                            <td class="cross">✗ Not available</td>
+                        </tr>
+                        <tr class="highlight-stratum">
+                            <td><strong>Budget Pacing</strong></td>
+                            <td class="check">✓ EWMA forecasting, spend targets, alerts</td>
+                            <td class="cross">✗ Not available</td>
+                        </tr>
+                        <tr class="highlight-stratum">
+                            <td><strong>Audience Sync to Ad Platforms</strong></td>
+                            <td class="check">✓ One-click sync to Meta, Google, TikTok, Snapchat</td>
+                            <td class="partial">◐ Via Audience Sync (Facebook, Google)</td>
+                        </tr>
+                        <tr class="highlight-stratum">
+                            <td><strong>Creative Performance Tracking</strong></td>
+                            <td class="check">✓ Creative lifecycle, fatigue detection</td>
+                            <td class="cross">✗ Not available</td>
+                        </tr>
+
+                        <!-- Customer Data Platform -->
+                        <tr class="category-row">
+                            <td colspan="3">Customer Data Platform (CDP)</td>
+                        </tr>
+                        <tr class="highlight-stratum">
+                            <td><strong>Built-in CDP</strong></td>
+                            <td class="check">✓ Full CDP with profiles, segments, identity resolution</td>
+                            <td class="partial">◐ User profiles, not a full CDP</td>
+                        </tr>
+                        <tr class="highlight-stratum">
+                            <td><strong>Identity Graph</strong></td>
+                            <td class="check">✓ Visual identity resolution, cross-device tracking</td>
+                            <td class="cross">✗ Not available (relies on CDPs)</td>
+                        </tr>
+                        <tr class="highlight-stratum">
+                            <td><strong>RFM Segmentation</strong></td>
+                            <td class="check">✓ Built-in Recency, Frequency, Monetary analysis</td>
+                            <td class="partial">◐ Manual setup required</td>
+                        </tr>
+                        <tr class="highlight-stratum">
+                            <td><strong>Computed Traits</strong></td>
+                            <td class="check">✓ Dynamic computed attributes</td>
+                            <td class="partial">◐ Via Liquid templating</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Real-time Segmentation</strong></td>
+                            <td class="check">✓ Dynamic segments with behavioral rules</td>
+                            <td class="check">✓ Real-time segment updates</td>
+                        </tr>
+
+                        <!-- Journey Orchestration -->
+                        <tr class="category-row">
+                            <td colspan="3">Journey Orchestration & Automation</td>
+                        </tr>
+                        <tr class="highlight-braze">
+                            <td><strong>Visual Journey Builder</strong></td>
+                            <td class="partial">◐ Rules-based automation</td>
+                            <td class="check">✓ Canvas Flow - industry-leading journey builder</td>
+                        </tr>
+                        <tr class="highlight-braze">
+                            <td><strong>Cross-Channel Orchestration</strong></td>
+                            <td class="partial">◐ Ad platform focused</td>
+                            <td class="check">✓ Email, push, SMS, in-app, web in one journey</td>
+                        </tr>
+                        <tr class="highlight-stratum">
+                            <td><strong>Trust-Gated Automation</strong></td>
+                            <td class="check">✓ Signal health checks before execution</td>
+                            <td class="cross">✗ Not available</td>
+                        </tr>
+                        <tr>
+                            <td><strong>IFTTT-Style Rules</strong></td>
+                            <td class="check">✓ Condition-based automation rules</td>
+                            <td class="check">✓ Action-based campaigns</td>
+                        </tr>
+
+                        <!-- AI & ML -->
+                        <tr class="category-row">
+                            <td colspan="3">AI & Machine Learning</td>
+                        </tr>
+                        <tr class="highlight-braze">
+                            <td><strong>AI Assistant/Agents</strong></td>
+                            <td class="partial">◐ AI-powered recommendations</td>
+                            <td class="check">✓ BrazeAI with agents, operators, decisioning</td>
+                        </tr>
+                        <tr class="highlight-braze">
+                            <td><strong>Send Time Optimization</strong></td>
+                            <td class="cross">✗ Not available</td>
+                            <td class="check">✓ Intelligent Timing</td>
+                        </tr>
+                        <tr class="highlight-braze">
+                            <td><strong>Channel Optimization</strong></td>
+                            <td class="cross">✗ Not available</td>
+                            <td class="check">✓ Intelligent Channel selection</td>
+                        </tr>
+                        <tr class="highlight-stratum">
+                            <td><strong>Predictive ROAS</strong></td>
+                            <td class="check">✓ Campaign performance predictions</td>
+                            <td class="cross">✗ Not available</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Predictive Churn</strong></td>
+                            <td class="check">✓ ML-powered churn prediction</td>
+                            <td class="check">✓ Predictive Churn model</td>
+                        </tr>
+                        <tr class="highlight-stratum">
+                            <td><strong>LTV Prediction</strong></td>
+                            <td class="check">✓ Customer lifetime value prediction</td>
+                            <td class="partial">◐ Via integrations</td>
+                        </tr>
+
+                        <!-- Data & Analytics -->
+                        <tr class="category-row">
+                            <td colspan="3">Data & Analytics</td>
+                        </tr>
+                        <tr class="highlight-stratum">
+                            <td><strong>EMQ Scoring</strong></td>
+                            <td class="check">✓ Event Match Quality with fix playbooks</td>
+                            <td class="cross">✗ Not available</td>
+                        </tr>
+                        <tr class="highlight-stratum">
+                            <td><strong>Signal Health Monitoring</strong></td>
+                            <td class="check">✓ Core feature - trust engine</td>
+                            <td class="cross">✗ Not available</td>
+                        </tr>
+                        <tr class="highlight-braze">
+                            <td><strong>Real-time Data Streaming</strong></td>
+                            <td class="partial">◐ Event processing</td>
+                            <td class="check">✓ Currents - real-time data export</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Custom Reporting</strong></td>
+                            <td class="check">✓ Scheduled reports, PDF/CSV/Excel</td>
+                            <td class="check">✓ Report Builder, Query Builder</td>
+                        </tr>
+                        <tr>
+                            <td><strong>A/B Testing</strong></td>
+                            <td class="check">✓ Statistical significance, power analysis</td>
+                            <td class="check">✓ Multivariate testing in Canvas</td>
+                        </tr>
+
+                        <!-- Integrations -->
+                        <tr class="category-row">
+                            <td colspan="3">Integrations</td>
+                        </tr>
+                        <tr class="highlight-stratum">
+                            <td><strong>CRM Bi-directional Sync</strong></td>
+                            <td class="check">✓ HubSpot, Salesforce, Zoho, Pipedrive write-back</td>
+                            <td class="partial">◐ One-way data ingestion primarily</td>
+                        </tr>
+                        <tr class="highlight-braze">
+                            <td><strong>CDP Integrations</strong></td>
+                            <td class="check">✓ Has built-in CDP</td>
+                            <td class="check">✓ Segment, mParticle, Tealium</td>
+                        </tr>
+                        <tr class="highlight-braze">
+                            <td><strong>Data Warehouse</strong></td>
+                            <td class="partial">◐ PostgreSQL based</td>
+                            <td class="check">✓ Snowflake, Redshift, BigQuery, Databricks</td>
+                        </tr>
+                        <tr class="highlight-stratum">
+                            <td><strong>Conversion API (Server-side)</strong></td>
+                            <td class="check">✓ Meta CAPI, multi-platform event streaming</td>
+                            <td class="partial">◐ Via webhooks</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Channel Coverage -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-label">Channels</span>
+                <h2>Channel Coverage Comparison</h2>
+                <p>Where each platform can reach your customers</p>
+            </div>
+
+            <div class="two-column">
+                <div class="card">
+                    <h3 style="color: var(--stratum-color); margin-bottom: 1.5rem; font-size: 1.25rem;">Stratum AI Channels</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.9rem;">
+                        Focused on paid advertising platforms and audience management
+                    </p>
+                    <div class="channel-grid">
+                        <div class="channel-item">
+                            <div class="channel-icon">📘</div>
+                            <div class="channel-name">Meta Ads</div>
+                            <div class="channel-status status-full">Full</div>
+                        </div>
+                        <div class="channel-item">
+                            <div class="channel-icon">🔍</div>
+                            <div class="channel-name">Google Ads</div>
+                            <div class="channel-status status-full">Full</div>
+                        </div>
+                        <div class="channel-item">
+                            <div class="channel-icon">🎵</div>
+                            <div class="channel-name">TikTok Ads</div>
+                            <div class="channel-status status-full">Full</div>
+                        </div>
+                        <div class="channel-item">
+                            <div class="channel-icon">👻</div>
+                            <div class="channel-name">Snapchat Ads</div>
+                            <div class="channel-status status-full">Full</div>
+                        </div>
+                        <div class="channel-item">
+                            <div class="channel-icon">💼</div>
+                            <div class="channel-name">LinkedIn</div>
+                            <div class="channel-status status-partial">Partial</div>
+                        </div>
+                        <div class="channel-item">
+                            <div class="channel-icon">💬</div>
+                            <div class="channel-name">WhatsApp</div>
+                            <div class="channel-status status-partial">Integration</div>
+                        </div>
+                        <div class="channel-item">
+                            <div class="channel-icon">🔔</div>
+                            <div class="channel-name">Slack</div>
+                            <div class="channel-status status-partial">Alerts</div>
+                        </div>
+                        <div class="channel-item">
+                            <div class="channel-icon">🔗</div>
+                            <div class="channel-name">Webhooks</div>
+                            <div class="channel-status status-full">Full</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 style="color: var(--braze-color); margin-bottom: 1.5rem; font-size: 1.25rem;">Braze Channels</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.9rem;">
+                        Comprehensive owned channel coverage for customer engagement
+                    </p>
+                    <div class="channel-grid">
+                        <div class="channel-item">
+                            <div class="channel-icon">📧</div>
+                            <div class="channel-name">Email</div>
+                            <div class="channel-status status-full">Full</div>
+                        </div>
+                        <div class="channel-item">
+                            <div class="channel-icon">📱</div>
+                            <div class="channel-name">Mobile Push</div>
+                            <div class="channel-status status-full">Full</div>
+                        </div>
+                        <div class="channel-item">
+                            <div class="channel-icon">🌐</div>
+                            <div class="channel-name">Web Push</div>
+                            <div class="channel-status status-full">Full</div>
+                        </div>
+                        <div class="channel-item">
+                            <div class="channel-icon">💬</div>
+                            <div class="channel-name">SMS/MMS</div>
+                            <div class="channel-status status-full">Full</div>
+                        </div>
+                        <div class="channel-item">
+                            <div class="channel-icon">📲</div>
+                            <div class="channel-name">In-App</div>
+                            <div class="channel-status status-full">Full</div>
+                        </div>
+                        <div class="channel-item">
+                            <div class="channel-icon">🃏</div>
+                            <div class="channel-name">Content Cards</div>
+                            <div class="channel-status status-full">Full</div>
+                        </div>
+                        <div class="channel-item">
+                            <div class="channel-icon">💚</div>
+                            <div class="channel-name">WhatsApp</div>
+                            <div class="channel-status status-full">Full</div>
+                        </div>
+                        <div class="channel-item">
+                            <div class="channel-icon">💬</div>
+                            <div class="channel-name">RCS</div>
+                            <div class="channel-status status-full">Full</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Unique Capabilities -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-label">Differentiators</span>
+                <h2>Unique Capabilities</h2>
+                <p>Features that set each platform apart</p>
+            </div>
+
+            <div class="two-column">
+                <div class="card column-card">
+                    <h3>
+                        <div class="overview-icon stratum-icon">S</div>
+                        Stratum AI Exclusives
+                    </h3>
+                    <ul>
+                        <li>
+                            <span class="list-icon stratum-list-icon">1</span>
+                            <div><strong>Trust-Gated Autopilot</strong> - Automation only executes when signal health passes thresholds (70+ = healthy). Prevents costly mistakes from bad data.</div>
+                        </li>
+                        <li>
+                            <span class="list-icon stratum-list-icon">2</span>
+                            <div><strong>Full Built-in CDP</strong> - 360° customer profiles, identity resolution, computed traits, lifecycle stages - no need for separate CDP.</div>
+                        </li>
+                        <li>
+                            <span class="list-icon stratum-list-icon">3</span>
+                            <div><strong>Data-Driven Attribution</strong> - Markov Chain and Shapley Value models for true multi-touch attribution, not just last-click.</div>
+                        </li>
+                        <li>
+                            <span class="list-icon stratum-list-icon">4</span>
+                            <div><strong>Profit ROAS</strong> - Track actual profit with COGS management, margin rules, and product-level profitability.</div>
+                        </li>
+                        <li>
+                            <span class="list-icon stratum-list-icon">5</span>
+                            <div><strong>EMQ Scoring</strong> - Event Match Quality diagnostics with fix playbooks and ROAS impact estimation.</div>
+                        </li>
+                        <li>
+                            <span class="list-icon stratum-list-icon">6</span>
+                            <div><strong>What-If Simulator</strong> - Predict outcomes of budget changes before executing them.</div>
+                        </li>
+                        <li>
+                            <span class="list-icon stratum-list-icon">7</span>
+                            <div><strong>CRM Write-Back</strong> - Bi-directional sync with HubSpot, Salesforce, Zoho, Pipedrive.</div>
+                        </li>
+                        <li>
+                            <span class="list-icon stratum-list-icon">8</span>
+                            <div><strong>Multi-Platform Audience Sync</strong> - One-click sync segments to Meta, Google, TikTok, Snapchat.</div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="card column-card">
+                    <h3>
+                        <div class="overview-icon braze-icon">B</div>
+                        Braze Exclusives
+                    </h3>
+                    <ul>
+                        <li>
+                            <span class="list-icon braze-list-icon">1</span>
+                            <div><strong>Canvas Flow</strong> - Industry-leading visual journey builder with branching logic, delays, and real-time orchestration.</div>
+                        </li>
+                        <li>
+                            <span class="list-icon braze-list-icon">2</span>
+                            <div><strong>8+ Native Channels</strong> - Email, Push, SMS, In-App, Content Cards, WhatsApp, RCS, Webhooks - all in one platform.</div>
+                        </li>
+                        <li>
+                            <span class="list-icon braze-list-icon">3</span>
+                            <div><strong>BrazeAI Suite</strong> - AI agents, operators, decisioning studio, content optimizer for intelligent automation.</div>
+                        </li>
+                        <li>
+                            <span class="list-icon braze-list-icon">4</span>
+                            <div><strong>Intelligent Timing</strong> - AI-optimized send times based on individual user engagement patterns.</div>
+                        </li>
+                        <li>
+                            <span class="list-icon braze-list-icon">5</span>
+                            <div><strong>Content Cards</strong> - Persistent in-app content feeds for non-intrusive messaging.</div>
+                        </li>
+                        <li>
+                            <span class="list-icon braze-list-icon">6</span>
+                            <div><strong>Currents</strong> - Real-time data streaming to data warehouses and analytics platforms.</div>
+                        </li>
+                        <li>
+                            <span class="list-icon braze-list-icon">7</span>
+                            <div><strong>Liquid Personalization</strong> - Advanced templating for dynamic content based on user data.</div>
+                        </li>
+                        <li>
+                            <span class="list-icon braze-list-icon">8</span>
+                            <div><strong>Gartner MQ Leader</strong> - 3 consecutive years as a Leader in Multichannel Marketing Hubs.</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pricing Comparison -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-label">Investment</span>
+                <h2>Pricing Comparison</h2>
+                <p>Understanding the cost structure of each platform</p>
+            </div>
+
+            <div class="pricing-grid">
+                <div class="card pricing-card">
+                    <div class="pricing-header">
+                        <div class="pricing-name" style="color: var(--stratum-color);">Stratum AI</div>
+                        <div class="pricing-model">Tiered Subscription Model</div>
+                    </div>
+                    <div class="pricing-amount" style="color: var(--stratum-color);">
+                        Custom<span class="pricing-period"> / based on features & scale</span>
+                    </div>
+                    <div class="pricing-note">
+                        Feature-based pricing with Starter, Professional, and Enterprise tiers. Pricing scales with ad spend volume and feature requirements.
+                    </div>
+                    <ul class="pricing-features">
+                        <li><span class="check">✓</span> Self-service signup available</li>
+                        <li><span class="check">✓</span> Free trial likely available</li>
+                        <li><span class="check">✓</span> Transparent tier-based pricing</li>
+                        <li><span class="check">✓</span> No per-message fees</li>
+                        <li><span class="check">✓</span> All CDP features included</li>
+                        <li><span class="check">✓</span> Stripe-based billing</li>
+                        <li><span class="check">✓</span> Accessible for SMBs</li>
+                    </ul>
+                </div>
+
+                <div class="card pricing-card">
+                    <div class="pricing-header">
+                        <div class="pricing-name" style="color: var(--braze-color);">Braze</div>
+                        <div class="pricing-model">Enterprise Custom Quotes</div>
+                    </div>
+                    <div class="pricing-amount" style="color: var(--braze-color);">
+                        $60K-200K+<span class="pricing-period"> / year typical</span>
+                    </div>
+                    <div class="pricing-note">
+                        Pricing based on Monthly Active Users (MAUs), data points, features needed, and support requirements. Custom quotes only.
+                    </div>
+                    <ul class="pricing-features">
+                        <li><span class="cross">✗</span> No self-service signup</li>
+                        <li><span class="cross">✗</span> No free trial</li>
+                        <li><span class="cross">✗</span> No public pricing</li>
+                        <li><span class="partial">◐</span> Message volume may affect cost</li>
+                        <li><span class="check">✓</span> All channels included</li>
+                        <li><span class="check">✓</span> Enterprise support</li>
+                        <li><span class="partial">◐</span> Long implementation (months)</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Use Case Winners -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-label">Scenarios</span>
+                <h2>Use Case Analysis</h2>
+                <p>Which platform wins for specific marketing challenges</p>
+            </div>
+
+            <div class="use-case-grid">
+                <div class="card use-case-card">
+                    <div class="use-case-icon">📈</div>
+                    <div class="use-case-title">Scaling Paid Advertising</div>
+                    <div class="use-case-description">Managing and optimizing campaigns across Meta, Google, TikTok, Snapchat with attribution and ROAS tracking</div>
+                    <div class="use-case-winner winner-stratum">Stratum AI</div>
+                </div>
+
+                <div class="card use-case-card">
+                    <div class="use-case-icon">📧</div>
+                    <div class="use-case-title">Email Marketing Campaigns</div>
+                    <div class="use-case-description">Sending personalized email campaigns with A/B testing, templates, and deliverability optimization</div>
+                    <div class="use-case-winner winner-braze">Braze</div>
+                </div>
+
+                <div class="card use-case-card">
+                    <div class="use-case-icon">👤</div>
+                    <div class="use-case-title">Customer Data Unification</div>
+                    <div class="use-case-description">Building unified customer profiles, identity resolution, and pushing audiences to ad platforms</div>
+                    <div class="use-case-winner winner-stratum">Stratum AI</div>
+                </div>
+
+                <div class="card use-case-card">
+                    <div class="use-case-icon">📱</div>
+                    <div class="use-case-title">Mobile App Engagement</div>
+                    <div class="use-case-description">Push notifications, in-app messages, and content cards for mobile user engagement</div>
+                    <div class="use-case-winner winner-braze">Braze</div>
+                </div>
+
+                <div class="card use-case-card">
+                    <div class="use-case-icon">🎯</div>
+                    <div class="use-case-title">Multi-Touch Attribution</div>
+                    <div class="use-case-description">Understanding which channels and touchpoints drive conversions with data-driven models</div>
+                    <div class="use-case-winner winner-stratum">Stratum AI</div>
+                </div>
+
+                <div class="card use-case-card">
+                    <div class="use-case-icon">🔄</div>
+                    <div class="use-case-title">Cross-Channel Journeys</div>
+                    <div class="use-case-description">Orchestrating complex customer journeys across email, push, SMS, and in-app</div>
+                    <div class="use-case-winner winner-braze">Braze</div>
+                </div>
+
+                <div class="card use-case-card">
+                    <div class="use-case-icon">💰</div>
+                    <div class="use-case-title">Profit & ROAS Optimization</div>
+                    <div class="use-case-description">Tracking actual profit (not just revenue) with COGS and margin analysis</div>
+                    <div class="use-case-winner winner-stratum">Stratum AI</div>
+                </div>
+
+                <div class="card use-case-card">
+                    <div class="use-case-icon">⏰</div>
+                    <div class="use-case-title">Real-Time Personalization</div>
+                    <div class="use-case-description">Delivering personalized messages at the optimal time for each user</div>
+                    <div class="use-case-winner winner-braze">Braze</div>
+                </div>
+
+                <div class="card use-case-card">
+                    <div class="use-case-icon">🛡️</div>
+                    <div class="use-case-title">Safe Automation</div>
+                    <div class="use-case-description">Preventing costly automation mistakes with data quality checks</div>
+                    <div class="use-case-winner winner-stratum">Stratum AI</div>
+                </div>
+
+                <div class="card use-case-card">
+                    <div class="use-case-icon">🔔</div>
+                    <div class="use-case-title">Lifecycle Marketing</div>
+                    <div class="use-case-description">Onboarding, activation, retention, and win-back campaigns</div>
+                    <div class="use-case-winner winner-braze">Braze</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Overlap Analysis -->
+        <section class="section">
+            <div class="overlap-section">
+                <div class="overlap-header">
+                    <h3>Where They Overlap vs. Differentiate</h3>
+                    <p style="color: var(--text-secondary);">Understanding the relationship between these platforms</p>
+                </div>
+
+                <div class="overlap-grid">
+                    <div class="overlap-column">
+                        <h4 style="color: var(--stratum-color);">Stratum AI Only</h4>
+                        <ul>
+                            <li>Ad campaign management & optimization</li>
+                            <li>Multi-touch attribution (Markov, Shapley)</li>
+                            <li>Trust-gated automation</li>
+                            <li>Profit ROAS with COGS</li>
+                            <li>EMQ scoring & signal health</li>
+                            <li>Full CDP with identity graph</li>
+                            <li>What-if budget simulator</li>
+                            <li>CRM bi-directional sync</li>
+                        </ul>
+                    </div>
+
+                    <div class="overlap-center">
+                        <div class="overlap-venn">Both Do</div>
+                    </div>
+
+                    <div class="overlap-column">
+                        <h4 style="color: var(--braze-color);">Braze Only</h4>
+                        <ul>
+                            <li>Email marketing platform</li>
+                            <li>Push notifications (mobile & web)</li>
+                            <li>SMS/MMS/RCS messaging</li>
+                            <li>In-app messages & content cards</li>
+                            <li>Canvas Flow journey builder</li>
+                            <li>BrazeAI agents & operators</li>
+                            <li>Intelligent timing & channel</li>
+                            <li>Currents real-time streaming</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 2rem; padding: 1.5rem; background: var(--bg-tertiary); border-radius: 1rem;">
+                    <p style="color: var(--text-secondary); margin-bottom: 0.5rem;"><strong>Shared Capabilities:</strong></p>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">
+                        Customer segmentation • A/B testing • Predictive churn • WhatsApp • Webhooks • API integrations • Real-time data processing • Multi-tenant architecture
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Verdict Section -->
+        <section class="verdict-section">
+            <div class="section-header">
+                <span class="section-label">Conclusion</span>
+                <h2>Final Verdict</h2>
+                <p>Choosing the right platform for your marketing stack</p>
+            </div>
+
+            <div class="verdict-grid">
+                <div class="verdict-card">
+                    <div class="verdict-header">
+                        <div class="overview-icon stratum-icon">S</div>
+                        <div>
+                            <div class="verdict-title">Choose Stratum AI if you...</div>
+                            <div class="verdict-subtitle">Acquisition & Revenue Operations Focus</div>
+                        </div>
+                    </div>
+                    <ul class="verdict-list">
+                        <li>Run significant paid advertising across multiple platforms</li>
+                        <li>Need advanced multi-touch attribution models</li>
+                        <li>Want a built-in CDP without buying a separate tool</li>
+                        <li>Need trust-gated automation to prevent costly mistakes</li>
+                        <li>Want to track profit (not just revenue) with COGS</li>
+                        <li>Need to sync audiences to ad platforms automatically</li>
+                        <li>Are a performance marketing or growth team</li>
+                        <li>Want transparent, accessible pricing</li>
+                        <li>Need CRM write-back capabilities</li>
+                    </ul>
+                </div>
+
+                <div class="verdict-card">
+                    <div class="verdict-header">
+                        <div class="overview-icon braze-icon">B</div>
+                        <div>
+                            <div class="verdict-title">Choose Braze if you...</div>
+                            <div class="verdict-subtitle">Retention & Engagement Focus</div>
+                        </div>
+                    </div>
+                    <ul class="verdict-list">
+                        <li>Need comprehensive cross-channel messaging (email, push, SMS)</li>
+                        <li>Have a mobile app requiring push and in-app messages</li>
+                        <li>Want industry-leading journey orchestration (Canvas Flow)</li>
+                        <li>Need AI-powered send time and channel optimization</li>
+                        <li>Focus on lifecycle marketing and retention</li>
+                        <li>Require Content Cards for persistent in-app content</li>
+                        <li>Are a CRM or lifecycle marketing team</li>
+                        <li>Have enterprise budget ($60K+/year)</li>
+                        <li>Need real-time data streaming to data warehouses</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="bottom-line">
+                <h3>The Bottom Line</h3>
+                <p>
+                    <strong style="color: var(--stratum-color);">Stratum AI</strong> and <strong style="color: var(--braze-color);">Braze</strong>
+                    are <strong>complementary, not competing</strong> platforms. They serve different parts of the marketing funnel:
+                </p>
+                <br>
+                <p>
+                    <strong style="color: var(--stratum-color);">Stratum AI</strong> excels at <strong>customer acquisition</strong> -
+                    optimizing paid advertising, unifying customer data, providing advanced attribution, and ensuring safe automation with its unique trust-gated approach.
+                </p>
+                <br>
+                <p>
+                    <strong style="color: var(--braze-color);">Braze</strong> excels at <strong>customer retention & engagement</strong> -
+                    delivering personalized messages across email, push, SMS, and in-app channels with sophisticated journey orchestration.
+                </p>
+                <br>
+                <p style="padding-top: 1rem; border-top: 1px solid var(--border-color); margin-top: 1rem;">
+                    <strong>For a complete marketing stack</strong>, many organizations could benefit from using both:
+                    Stratum AI for acquisition and revenue operations, feeding high-quality customer data to Braze for lifecycle engagement.
+                </p>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p class="footer-note">
+                This comparison was generated on January 22, 2026. Information about Braze was gathered from public sources including braze.com,
+                Gartner, G2, press releases, and industry reports. Stratum AI information is based on direct codebase analysis.
+                Features and pricing may have changed since this report was generated.
+            </p>
+            <p class="footer-sources">
+                Sources:
+                <a href="https://www.braze.com/">braze.com</a> |
+                <a href="https://www.braze.com/product/overview">Braze Products</a> |
+                <a href="https://www.braze.com/product/journey-orchestration">Canvas Flow</a> |
+                <a href="https://www.g2.com/products/braze/reviews">G2 Reviews</a> |
+                <a href="https://www.spendflo.com/blog/braze-pricing-guide">Pricing Guide</a>
+            </p>
+        </footer>
+    </div>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "buildCommand": "cd frontend && npm install && npm run build",
+  "outputDirectory": "frontend/dist",
+  "framework": "vite",
+  "build": {
+    "env": {
+      "VITE_API_URL": "https://app.stratumai.app/api/v1",
+      "VITE_WS_URL": "wss://app.stratumai.app"
+    }
+  }
+}

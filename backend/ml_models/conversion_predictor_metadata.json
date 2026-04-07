@@ -1,0 +1,36 @@
+{
+  "name": "conversion_predictor",
+  "version": "1.0.0",
+  "created_at": "2026-01-05T02:55:39.742953+00:00",
+  "features": [
+    "log_spend",
+    "log_impressions",
+    "log_clicks",
+    "ctr",
+    "cpc",
+    "platform_google",
+    "platform_linkedin",
+    "platform_meta",
+    "platform_snapchat",
+    "platform_tiktok"
+  ],
+  "metrics": {
+    "r2": 0.8528969616403084,
+    "mae": 7.423253374808455,
+    "rmse": 15.736992737819824,
+    "mape": 46767280593.39529,
+    "feature_importances": {
+      "log_spend": 0.019791472928954307,
+      "log_impressions": 0.020050231120347053,
+      "log_clicks": 0.8864004708388609,
+      "ctr": 0.042819616824422105,
+      "cpc": 0.0265111085954252,
+      "platform_google": 0.0005190324157058623,
+      "platform_linkedin": 2.247180449508093e-06,
+      "platform_meta": 0.003109614831530405,
+      "platform_snapchat": 0.00020011884699119614,
+      "platform_tiktok": 0.0005960864173135273
+    }
+  },
+  "model_type": "RandomForestRegressor"
+}

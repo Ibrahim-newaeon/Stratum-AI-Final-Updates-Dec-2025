@@ -1,0 +1,7 @@
+# Historical expired dev JWT tokens in .claude/settings.local.json
+# These were local development tokens (expired) that were accidentally committed.
+# The file has been removed from git tracking and added to .gitignore.
+7cc6b8d:.claude/settings.local.json:jwt:177
+7cc6b8d:.claude/settings.local.json:jwt:178
+7cc6b8d:.claude/settings.local.json:jwt:179
+7cc6b8d:.claude/settings.local.json:jwt:182

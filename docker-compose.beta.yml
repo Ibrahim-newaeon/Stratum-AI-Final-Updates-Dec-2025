@@ -1,0 +1,171 @@
+# =============================================================================
+# Stratum AI - Beta Deployment (DigitalOcean)
+# =============================================================================
+# Target: 4GB RAM / 2 vCPU Droplet with Managed PostgreSQL
+# Usage: docker compose -f docker-compose.beta.yml up -d
+# =============================================================================
+
+services:
+  # ===========================================================================
+  # Redis (Local on Droplet)
+  # ===========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: stratum_redis
+    restart: always
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - stratum_network
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  # ===========================================================================
+  # FastAPI Backend
+  # ===========================================================================
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: stratum_api
+    restart: always
+    env_file:
+      - .env.production
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - stratum_network
+    command: >
+      sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  # ===========================================================================
+  # Celery Worker (Background Tasks)
+  # ===========================================================================
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: stratum_worker
+    restart: always
+    env_file:
+      - .env.production
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+    depends_on:
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    networks:
+      - stratum_network
+    command: celery -A app.workers.celery_app worker --loglevel=info --concurrency=4
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  # ===========================================================================
+  # Celery Beat (Scheduler)
+  # ===========================================================================
+  beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: stratum_beat
+    restart: always
+    env_file:
+      - .env.production
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+    depends_on:
+      - worker
+    networks:
+      - stratum_network
+    command: celery -A app.workers.celery_app beat --loglevel=info
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  # ===========================================================================
+  # React Frontend (Production Build)
+  # ===========================================================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+      args:
+        - VITE_API_BASE_URL=${VITE_API_BASE_URL:-https://beta.stratum-ai.com}
+    container_name: stratum_frontend
+    restart: always
+    networks:
+      - stratum_network
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  # ===========================================================================
+  # Nginx Reverse Proxy with SSL
+  # ===========================================================================
+  nginx:
+    image: nginx:alpine
+    container_name: stratum_nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/beta.conf:/etc/nginx/conf.d/default.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /var/www/certbot:/var/www/certbot:ro
+    depends_on:
+      - api
+      - frontend
+    networks:
+      - stratum_network
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  stratum_network:
+    driver: bridge
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  redis_data:

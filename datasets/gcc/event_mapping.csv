@@ -1,0 +1,10 @@
+platform,event,dataset_field
+Meta,Purchase,purchases
+Meta,Lead,leads
+Google Ads,Purchase,purchases
+Google Ads,Lead,leads
+TikTok,CompletePayment,purchases
+Snapchat,PURCHASE,purchases
+All,EMQ_Degraded,emq_degraded_flag
+All,ROAS_Alert,roas_alert
+All,Auto_Resolve_Applied,auto_resolve_applied

@@ -1,0 +1,38 @@
+# =============================================================================
+# Stratum AI - Frontend Dockerfile (Railway deployment, repo root context)
+# =============================================================================
+
+# Build stage
+FROM node:20-alpine AS build
+
+WORKDIR /app
+
+COPY frontend/package*.json frontend/.npmrc ./
+RUN npm ci --legacy-peer-deps
+
+COPY frontend/ .
+
+ARG VITE_API_URL
+ARG VITE_WS_URL
+ARG VITE_DEFAULT_LOCALE
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_WS_URL=$VITE_WS_URL
+ENV VITE_DEFAULT_LOCALE=$VITE_DEFAULT_LOCALE
+
+RUN echo "Building with VITE_API_URL=$VITE_API_URL" && npm run build
+
+# Verify dist was created
+RUN echo "=== Build output ===" && ls -la dist/ && echo "=== index.html ===" && head -5 dist/index.html
+
+# Production stage
+FROM node:20-alpine
+
+WORKDIR /app
+
+RUN npm install -g serve@14
+
+COPY --from=build /app/dist ./dist
+
+RUN echo "=== Production dist ===" && ls -la dist/ && du -sh dist/
+
+CMD ["sh", "-c", "echo Starting serve on port ${PORT:-3000} && exec serve -s dist -l ${PORT:-3000}"]

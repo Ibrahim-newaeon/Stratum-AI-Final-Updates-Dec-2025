@@ -1,0 +1,383 @@
+services:
+  # ===========================================================================
+  # PostgreSQL 16 Database
+  # ===========================================================================
+  db:
+    image: postgres:16-alpine
+    container_name: stratum_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-stratum}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-stratum_ai}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-stratum} -d ${POSTGRES_DB:-stratum_ai}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - stratum_network
+
+  # ===========================================================================
+  # Redis (Caching & Celery Broker)
+  # ===========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: stratum_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru --requirepass ${REDIS_PASSWORD:-stratum-dev-redis-pass}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-stratum-dev-redis-pass}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - stratum_network
+
+  # ===========================================================================
+  # FastAPI Backend
+  # ===========================================================================
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: stratum_api
+    restart: unless-stopped
+    user: "1000:1000"
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - APP_ENV=${APP_ENV:-development}
+      - DEBUG=${DEBUG:-false}
+      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY must be set}
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-stratum}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-stratum_ai}
+      - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER:-stratum}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-stratum_ai}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-stratum-dev-redis-pass}@redis:6379/0
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-stratum-dev-redis-pass}@redis:6379/1
+      - ML_PROVIDER=${ML_PROVIDER:-local}
+      - ML_MODELS_PATH=/app/ml_service/models
+      - USE_MOCK_AD_DATA=${USE_MOCK_AD_DATA:-true}
+      - MARKET_INTEL_PROVIDER=${MARKET_INTEL_PROVIDER:-mock}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:?JWT_SECRET_KEY must be set}
+      - PII_ENCRYPTION_KEY=${PII_ENCRYPTION_KEY:?PII_ENCRYPTION_KEY must be set}
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:5173
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - LOG_FORMAT=${LOG_FORMAT:-json}
+      # Ad Platform Credentials
+      - META_APP_ID=${META_APP_ID:-}
+      - META_APP_SECRET=${META_APP_SECRET:-}
+      - META_ACCESS_TOKEN=${META_ACCESS_TOKEN:-}
+      - META_AD_ACCOUNT_IDS=${META_AD_ACCOUNT_IDS:-}
+      - GOOGLE_ADS_DEVELOPER_TOKEN=${GOOGLE_ADS_DEVELOPER_TOKEN:-}
+      - GOOGLE_ADS_CLIENT_ID=${GOOGLE_ADS_CLIENT_ID:-}
+      - GOOGLE_ADS_CLIENT_SECRET=${GOOGLE_ADS_CLIENT_SECRET:-}
+      - GOOGLE_ADS_REFRESH_TOKEN=${GOOGLE_ADS_REFRESH_TOKEN:-}
+      - GOOGLE_ADS_CUSTOMER_ID=${GOOGLE_ADS_CUSTOMER_ID:-}
+      - TIKTOK_APP_ID=${TIKTOK_APP_ID:-}
+      - TIKTOK_SECRET=${TIKTOK_SECRET:-}
+      - TIKTOK_ACCESS_TOKEN=${TIKTOK_ACCESS_TOKEN:-}
+      - TIKTOK_AD_ACCOUNT_ID=${TIKTOK_AD_ACCOUNT_ID:-}
+      - TIKTOK_ADVERTISER_ID=${TIKTOK_ADVERTISER_ID:-}
+      - TIKTOK_PIXEL_ID=${TIKTOK_PIXEL_ID:-}
+      - TIKTOK_CAPI_TOKEN=${TIKTOK_CAPI_TOKEN:-}
+      - SNAPCHAT_APP_ID=${SNAPCHAT_APP_ID:-}
+      - SNAPCHAT_SECRET=${SNAPCHAT_SECRET:-}
+      - SNAPCHAT_CAPI_TOKEN=${SNAPCHAT_CAPI_TOKEN:-}
+      - SNAPCHAT_AD_ACCOUNT_ID=${SNAPCHAT_AD_ACCOUNT_ID:-}
+      - SNAPCHAT_PIXEL_ID=${SNAPCHAT_PIXEL_ID:-}
+      # Market Intelligence
+      - SERPAPI_KEY=${SERPAPI_KEY:-}
+      # WhatsApp
+      - WHATSAPP_PHONE_NUMBER_ID=${WHATSAPP_PHONE_NUMBER_ID:-}
+      - WHATSAPP_ACCESS_TOKEN=${WHATSAPP_ACCESS_TOKEN:-}
+      - WHATSAPP_BUSINESS_ACCOUNT_ID=${WHATSAPP_BUSINESS_ACCOUNT_ID:-}
+      - WHATSAPP_VERIFY_TOKEN=${WHATSAPP_VERIFY_TOKEN:?WHATSAPP_VERIFY_TOKEN must be set}
+      - WHATSAPP_APP_SECRET=${WHATSAPP_APP_SECRET:-}
+      - WHATSAPP_API_VERSION=${WHATSAPP_API_VERSION:-v24.0}
+      - ENABLE_WHATSAPP=${ENABLE_WHATSAPP:-false}
+      # SMTP / Email
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
+      - SMTP_TLS=${SMTP_TLS:-true}
+      - SMTP_SSL=${SMTP_SSL:-false}
+      - EMAIL_FROM_NAME=${EMAIL_FROM_NAME:-Stratum AI}
+      - EMAIL_FROM_ADDRESS=${EMAIL_FROM_ADDRESS:-noreply@stratumhq.com}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5173}
+    volumes:
+      - ./backend:/app
+      - ./backend/app/ml:/app/ml_service/models:ro
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - stratum_network
+    command: >
+      sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers ${UVICORN_WORKERS:-2}"
+
+  # ===========================================================================
+  # Celery Worker (Background Tasks)
+  # ===========================================================================
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: stratum_worker
+    restart: unless-stopped
+    user: "1000:1000"
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - APP_ENV=${APP_ENV:-development}
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-stratum}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-stratum_ai}
+      - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER:-stratum}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-stratum_ai}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-stratum-dev-redis-pass}@redis:6379/0
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-stratum-dev-redis-pass}@redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-stratum-dev-redis-pass}@redis:6379/2
+      - ML_PROVIDER=${ML_PROVIDER:-local}
+      - ML_MODELS_PATH=/app/ml_service/models
+      - USE_MOCK_AD_DATA=${USE_MOCK_AD_DATA:-true}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      # Ad Platform Credentials (needed for sync tasks)
+      - META_APP_ID=${META_APP_ID:-}
+      - META_APP_SECRET=${META_APP_SECRET:-}
+      - META_ACCESS_TOKEN=${META_ACCESS_TOKEN:-}
+      - META_AD_ACCOUNT_IDS=${META_AD_ACCOUNT_IDS:-}
+      - GOOGLE_ADS_DEVELOPER_TOKEN=${GOOGLE_ADS_DEVELOPER_TOKEN:-}
+      - GOOGLE_ADS_CLIENT_ID=${GOOGLE_ADS_CLIENT_ID:-}
+      - GOOGLE_ADS_CLIENT_SECRET=${GOOGLE_ADS_CLIENT_SECRET:-}
+      - GOOGLE_ADS_REFRESH_TOKEN=${GOOGLE_ADS_REFRESH_TOKEN:-}
+      - GOOGLE_ADS_CUSTOMER_ID=${GOOGLE_ADS_CUSTOMER_ID:-}
+      - TIKTOK_APP_ID=${TIKTOK_APP_ID:-}
+      - TIKTOK_SECRET=${TIKTOK_SECRET:-}
+      - TIKTOK_ACCESS_TOKEN=${TIKTOK_ACCESS_TOKEN:-}
+      - TIKTOK_AD_ACCOUNT_ID=${TIKTOK_AD_ACCOUNT_ID:-}
+      - TIKTOK_ADVERTISER_ID=${TIKTOK_ADVERTISER_ID:-}
+      - TIKTOK_PIXEL_ID=${TIKTOK_PIXEL_ID:-}
+      - TIKTOK_CAPI_TOKEN=${TIKTOK_CAPI_TOKEN:-}
+      - SNAPCHAT_APP_ID=${SNAPCHAT_APP_ID:-}
+      - SNAPCHAT_SECRET=${SNAPCHAT_SECRET:-}
+      - SNAPCHAT_CAPI_TOKEN=${SNAPCHAT_CAPI_TOKEN:-}
+      - SNAPCHAT_AD_ACCOUNT_ID=${SNAPCHAT_AD_ACCOUNT_ID:-}
+      - SNAPCHAT_PIXEL_ID=${SNAPCHAT_PIXEL_ID:-}
+      - SERPAPI_KEY=${SERPAPI_KEY:-}
+      - WHATSAPP_PHONE_NUMBER_ID=${WHATSAPP_PHONE_NUMBER_ID:-}
+      - WHATSAPP_ACCESS_TOKEN=${WHATSAPP_ACCESS_TOKEN:-}
+      - WHATSAPP_BUSINESS_ACCOUNT_ID=${WHATSAPP_BUSINESS_ACCOUNT_ID:-}
+      - WHATSAPP_APP_SECRET=${WHATSAPP_APP_SECRET:-}
+      - WHATSAPP_API_VERSION=${WHATSAPP_API_VERSION:-v24.0}
+      - ENABLE_WHATSAPP=${ENABLE_WHATSAPP:-false}
+    volumes:
+      - ./backend:/app
+      - ./backend/app/ml:/app/ml_service/models:ro
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A app.workers.celery_app inspect ping --timeout 10"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - stratum_network
+    command: celery -A app.workers.celery_app worker --loglevel=info --concurrency=4
+
+  # ===========================================================================
+  # Celery Beat (Scheduler)
+  # ===========================================================================
+  scheduler:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: stratum_scheduler
+    restart: unless-stopped
+    user: "1000:1000"
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - APP_ENV=${APP_ENV:-development}
+      - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER:-stratum}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-stratum_ai}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-stratum-dev-redis-pass}@redis:6379/0
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-stratum-dev-redis-pass}@redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-stratum-dev-redis-pass}@redis:6379/2
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - worker
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A app.workers.celery_app inspect ping --timeout 10"]
+      interval: 60s
+      timeout: 15s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - stratum_network
+    command: celery -A app.workers.celery_app beat --loglevel=info
+
+  # ===========================================================================
+  # React Frontend (Vite)
+  # ===========================================================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development
+    container_name: stratum_frontend
+    restart: unless-stopped
+    environment:
+      - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:8000}
+      - VITE_WS_URL=${VITE_WS_URL:-ws://localhost:8000}
+      - VITE_DEFAULT_LOCALE=${VITE_DEFAULT_LOCALE:-en}
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:5173 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - stratum_network
+    command: npm run dev -- --host 0.0.0.0
+
+  # ===========================================================================
+  # Flower (Celery Monitoring) - Optional
+  # ===========================================================================
+  flower:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: stratum_flower
+    restart: unless-stopped
+    user: "1000:1000"
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-stratum-dev-redis-pass}@redis:6379/1
+      - FLOWER_PORT=5555
+      - FLOWER_BASIC_AUTH=${FLOWER_USER:-admin}:${FLOWER_PASSWORD:?FLOWER_PASSWORD must be set}
+    ports:
+      - "5555:5555"
+    depends_on:
+      - worker
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - stratum_network
+    command: celery -A app.workers.celery_app flower --port=5555
+    profiles:
+      - monitoring
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  stratum_network:
+    driver: bridge
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  postgres_data:
+  redis_data:

@@ -1,0 +1,16 @@
+{
+  "name": "budget_impact",
+  "version": "1.0.0",
+  "created_at": "2026-01-05T02:55:39.777283+00:00",
+  "features": [
+    "log_spend"
+  ],
+  "metrics": {
+    "r2": 0.14725992869071847,
+    "mae": 0.8638191970540003,
+    "rmse": 1.0795112977096013,
+    "mape": 8.681473434998956,
+    "spend_elasticity": 1.0496170189438259
+  },
+  "model_type": "Ridge"
+}

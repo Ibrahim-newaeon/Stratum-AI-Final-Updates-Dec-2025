@@ -1,0 +1,228 @@
+{
+  "roas_models": {
+    "gradient_boosting": {
+      "mse": 894.7489245256766,
+      "rmse": 29.912354045204744,
+      "mae": 7.908515789048771,
+      "r2": 0.33977890380851905,
+      "mape": 190.27634842744874
+    },
+    "random_forest": {
+      "mse": 812.291750068496,
+      "rmse": 28.500732447930105,
+      "mae": 7.553146268668175,
+      "r2": 0.4006227501845643,
+      "mape": 118.47689732045312
+    }
+  },
+  "cpa_models": {
+    "gradient_boosting": {
+      "mse": 833.313597438151,
+      "rmse": 28.867171621725447,
+      "mae": 3.8692224215283466,
+      "r2": 0.9757768960242681,
+      "mape": 5.361003596528118
+    },
+    "random_forest": {
+      "mse": 2889.8704938716833,
+      "rmse": 53.75751569661384,
+      "mae": 4.7867932422435535,
+      "r2": 0.9159960503888825,
+      "mape": 2.8639168982861576
+    }
+  },
+  "best_roas_model": {
+    "name": "random_forest",
+    "metrics": {
+      "mse": 812.291750068496,
+      "rmse": 28.500732447930105,
+      "mae": 7.553146268668175,
+      "r2": 0.4006227501845643,
+      "mape": 118.47689732045312
+    }
+  },
+  "best_cpa_model": {
+    "name": "gradient_boosting",
+    "metrics": {
+      "mse": 833.313597438151,
+      "rmse": 28.867171621725447,
+      "mae": 3.8692224215283466,
+      "r2": 0.9757768960242681,
+      "mape": 5.361003596528118
+    }
+  },
+  "platform_analysis": [
+    {
+      "platform": "meta",
+      "count": "6150",
+      "avg_roas": 5.94001006504065,
+      "r2": 0.6180863501585071,
+      "rmse": 7.409561059610246
+    },
+    {
+      "platform": "tiktok",
+      "count": "3000",
+      "avg_roas": 7.377068100000001,
+      "r2": 0.6594042284049273,
+      "rmse": 9.772683683690683
+    },
+    {
+      "platform": "google",
+      "count": "4590",
+      "avg_roas": 24.496038888888886,
+      "r2": 0.6398324241022317,
+      "rmse": 30.147721145347496
+    },
+    {
+      "platform": "snapchat",
+      "count": "1260",
+      "avg_roas": 2.197968174603175,
+      "r2": 0.6188140962647319,
+      "rmse": 2.2978358581277125
+    }
+  ],
+  "roas_feature_importance": [
+    {
+      "feature": "cvr",
+      "importance": 0.3816849999857878
+    },
+    {
+      "feature": "cpc",
+      "importance": 0.3441681913204541
+    },
+    {
+      "feature": "landing_page_score",
+      "importance": 0.056244841585275936
+    },
+    {
+      "feature": "relevance_score",
+      "importance": 0.029379277847442976
+    },
+    {
+      "feature": "impressions",
+      "importance": 0.026536869316871867
+    },
+    {
+      "feature": "ctr",
+      "importance": 0.025834016906367836
+    },
+    {
+      "feature": "cpm",
+      "importance": 0.02498990157543057
+    },
+    {
+      "feature": "spend",
+      "importance": 0.01873143764210422
+    },
+    {
+      "feature": "audience_size",
+      "importance": 0.01604261449434324
+    },
+    {
+      "feature": "creative_age_days",
+      "importance": 0.016019130820398485
+    },
+    {
+      "feature": "clicks",
+      "importance": 0.013402342483960432
+    },
+    {
+      "feature": "day_of_week",
+      "importance": 0.01100204308594392
+    },
+    {
+      "feature": "creative_count",
+      "importance": 0.008968276781012948
+    },
+    {
+      "feature": "interests_count",
+      "importance": 0.007533138458712679
+    },
+    {
+      "feature": "geo_regions",
+      "importance": 0.0059423530928580095
+    }
+  ],
+  "cpa_feature_importance": [
+    {
+      "feature": "cvr",
+      "importance": 0.5659989180281403
+    },
+    {
+      "feature": "cpc",
+      "importance": 0.35229969366118075
+    },
+    {
+      "feature": "spend",
+      "importance": 0.03858311627260687
+    },
+    {
+      "feature": "ctr",
+      "importance": 0.022785262589728652
+    },
+    {
+      "feature": "impressions",
+      "importance": 0.006936707292604296
+    },
+    {
+      "feature": "audience_size",
+      "importance": 0.004207580478552092
+    },
+    {
+      "feature": "clicks",
+      "importance": 0.0037878901601133552
+    },
+    {
+      "feature": "daily_budget",
+      "importance": 0.0031650886585473568
+    },
+    {
+      "feature": "landing_page_score",
+      "importance": 0.0015116309359394166
+    },
+    {
+      "feature": "relevance_score",
+      "importance": 0.00025481380961389757
+    },
+    {
+      "feature": "cpm",
+      "importance": 0.0001536971389334935
+    },
+    {
+      "feature": "day_of_week",
+      "importance": 9.662885979501291e-05
+    },
+    {
+      "feature": "creative_age_days",
+      "importance": 6.994779235657369e-05
+    },
+    {
+      "feature": "geo_regions",
+      "importance": 3.213753147932118e-05
+    },
+    {
+      "feature": "lookalike_used",
+      "importance": 2.629659521507874e-05
+    }
+  ],
+  "dataset_info": {
+    "total_samples": 15000,
+    "features": 23,
+    "platforms": [
+      "meta",
+      "tiktok",
+      "google",
+      "snapchat"
+    ],
+    "objectives": [
+      "conversions",
+      "app_installs",
+      "awareness",
+      "traffic",
+      "lead_gen"
+    ],
+    "roas_mean": 11.591234973333334,
+    "cpa_mean": 74.90329266666667
+  },
+  "generated_at": "2026-01-18T17:42:40.918279"
+}

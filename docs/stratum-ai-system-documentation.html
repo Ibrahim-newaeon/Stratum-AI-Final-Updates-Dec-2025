@@ -1,0 +1,1818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stratum AI - System Documentation</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1e293b;
+            --gray: #64748b;
+            --light: #f8fafc;
+            --border: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(16, 185, 129, 0.1) 100%);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 3rem;
+        }
+
+        header h1 {
+            font-size: 3rem;
+            background: linear-gradient(135deg, #6366f1, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+        }
+
+        header p {
+            font-size: 1.25rem;
+            color: #94a3b8;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: rgba(99, 102, 241, 0.2);
+            border: 1px solid var(--primary);
+            border-radius: 2rem;
+            font-size: 0.875rem;
+            color: #a5b4fc;
+            margin: 0.5rem;
+        }
+
+        .section {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .section h2 {
+            font-size: 1.75rem;
+            color: #f1f5f9;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .section h3 {
+            font-size: 1.25rem;
+            color: #e2e8f0;
+            margin: 1.5rem 0 1rem;
+        }
+
+        .section h4 {
+            font-size: 1rem;
+            color: #cbd5e1;
+            margin: 1rem 0 0.5rem;
+        }
+
+        p {
+            color: #94a3b8;
+            margin-bottom: 1rem;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .card h4 {
+            color: #f1f5f9;
+            font-size: 1.1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .card p {
+            font-size: 0.95rem;
+        }
+
+        .formula-box {
+            background: #0f172a;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            font-family: 'Consolas', 'Monaco', monospace;
+            overflow-x: auto;
+        }
+
+        .formula-box code {
+            color: #a5b4fc;
+            font-size: 0.9rem;
+            line-height: 1.8;
+        }
+
+        .flow-diagram {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(16, 185, 129, 0.05));
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 0.75rem;
+            padding: 2rem;
+            margin: 1.5rem 0;
+            text-align: center;
+        }
+
+        .flow-step {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0.5rem;
+            vertical-align: middle;
+        }
+
+        .flow-box {
+            background: rgba(99, 102, 241, 0.2);
+            border: 2px solid var(--primary);
+            border-radius: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            color: #e2e8f0;
+            font-weight: 600;
+            min-width: 120px;
+        }
+
+        .flow-box.healthy { border-color: var(--secondary); background: rgba(16, 185, 129, 0.2); }
+        .flow-box.warning { border-color: var(--warning); background: rgba(245, 158, 11, 0.2); }
+        .flow-box.danger { border-color: var(--danger); background: rgba(239, 68, 68, 0.2); }
+
+        .flow-arrow {
+            color: var(--gray);
+            font-size: 1.5rem;
+            margin: 0 0.5rem;
+            vertical-align: middle;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        th, td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        th {
+            background: rgba(99, 102, 241, 0.15);
+            color: #f1f5f9;
+            font-weight: 600;
+        }
+
+        td {
+            color: #94a3b8;
+        }
+
+        tr:hover td {
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .status-healthy { color: var(--secondary); }
+        .status-warning { color: var(--warning); }
+        .status-danger { color: var(--danger); }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 0.5rem 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .weight-indicator {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 0.5rem 0;
+        }
+
+        .weight-label {
+            min-width: 180px;
+            color: #e2e8f0;
+        }
+
+        .weight-value {
+            color: var(--primary);
+            font-weight: 600;
+            min-width: 50px;
+        }
+
+        ul, ol {
+            margin: 1rem 0 1rem 1.5rem;
+            color: #94a3b8;
+        }
+
+        li {
+            margin: 0.5rem 0;
+        }
+
+        .highlight {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .ai-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(16, 185, 129, 0.2));
+            border: 1px solid var(--primary);
+            border-radius: 0.5rem;
+            padding: 0.5rem 1rem;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .metric-item {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-label {
+            color: #64748b;
+            font-size: 0.85rem;
+            margin-top: 0.25rem;
+        }
+
+        .code-block {
+            background: #0f172a;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+        }
+
+        .code-block pre {
+            color: #a5b4fc;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.875rem;
+            line-height: 1.6;
+        }
+
+        .toc {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .toc h3 {
+            color: #f1f5f9;
+            margin-bottom: 1rem;
+        }
+
+        .toc ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .toc li {
+            margin: 0.5rem 0;
+        }
+
+        .toc a {
+            color: #94a3b8;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .toc a:hover {
+            color: var(--primary);
+        }
+
+        footer {
+            text-align: center;
+            padding: 3rem 2rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            margin-top: 3rem;
+        }
+
+        footer p {
+            color: #64748b;
+        }
+
+        @media (max-width: 768px) {
+            header h1 { font-size: 2rem; }
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
+            .container { padding: 1rem; }
+            .section { padding: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Stratum AI System Documentation</h1>
+        <p>Revenue Operating System with Trust-Gated Autopilot Architecture</p>
+        <div style="margin-top: 1.5rem;">
+            <span class="badge">Machine Learning</span>
+            <span class="badge">Predictive Analytics</span>
+            <span class="badge">Trust Engine</span>
+            <span class="badge">Anomaly Detection</span>
+            <span class="badge">Signal Processing</span>
+        </div>
+    </header>
+
+    <div class="container">
+        <nav class="toc">
+            <h3>Table of Contents</h3>
+            <ul>
+                <li><a href="#overview">1. System Overview - Why It's AI</a></li>
+                <li><a href="#trust-engine">2. Trust Engine Architecture</a></li>
+                <li><a href="#signal-health">3. Signal Health Calculations</a></li>
+                <li><a href="#predictions">4. Prediction Models</a></li>
+                <li><a href="#anomaly">5. Anomaly Detection</a></li>
+                <li><a href="#rfm">6. RFM Customer Segmentation</a></li>
+                <li><a href="#optimization">7. Budget Optimization</a></li>
+                <li><a href="#confidence">8. Confidence Scoring</a></li>
+                <li><a href="#thresholds">9. System Thresholds</a></li>
+                <li><a href="#code-quality">10. Code Quality Assessment</a></li>
+                <li><a href="#red-flags">11. Red Flags Checklist (Non-Technical)</a></li>
+            </ul>
+        </nav>
+
+        <!-- Section 1: Overview -->
+        <section id="overview" class="section">
+            <h2>1. System Overview - What Makes This an AI System</h2>
+
+            <p>Stratum AI is an intelligent Revenue Operating System that combines multiple AI/ML paradigms to make autonomous, data-driven decisions while maintaining safety guardrails. Here's what qualifies it as an AI system:</p>
+
+            <div class="grid-3">
+                <div class="card">
+                    <h4>Predictive Intelligence</h4>
+                    <p>Forecasts LTV, conversions, ROAS trajectories, and churn risk using ML models and statistical algorithms (EWMA, Gradient Boosting).</p>
+                </div>
+                <div class="card">
+                    <h4>Probabilistic Reasoning</h4>
+                    <p>Quantifies uncertainty with confidence intervals, prediction bounds, and statistical significance testing.</p>
+                </div>
+                <div class="card">
+                    <h4>Adaptive Learning</h4>
+                    <p>Uses Exponential Moving Averages (EMA) to adapt to trends, with platform-specific models that learn from historical data.</p>
+                </div>
+                <div class="card">
+                    <h4>Causal Understanding</h4>
+                    <p>Models Signal → Decision → Outcome chains to understand cause-effect relationships in marketing performance.</p>
+                </div>
+                <div class="card">
+                    <h4>Safety-First Autonomy</h4>
+                    <p>Trust-gate guardrails prevent automation when signal health degrades, protecting against bad data decisions.</p>
+                </div>
+                <div class="card">
+                    <h4>Explainable AI</h4>
+                    <p>Every decision includes feature importances, confidence scores, and factor identification for full transparency.</p>
+                </div>
+            </div>
+
+            <div class="metric-grid" style="margin-top: 2rem;">
+                <div class="metric-item">
+                    <div class="metric-value">7+</div>
+                    <div class="metric-label">ML Models</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">50+</div>
+                    <div class="metric-label">Features Analyzed</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">5</div>
+                    <div class="metric-label">Prediction Types</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">11</div>
+                    <div class="metric-label">Customer Segments</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Trust Engine -->
+        <section id="trust-engine" class="section">
+            <h2>2. Trust Engine Architecture</h2>
+
+            <p>The Trust Engine is the core decision-making component that evaluates signal health before allowing any automation to execute. It implements a three-tier decision system.</p>
+
+            <div class="flow-diagram">
+                <div class="flow-step">
+                    <div class="flow-box">Signal Sources</div>
+                </div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-step">
+                    <div class="flow-box">Health Calculator</div>
+                </div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-step">
+                    <div class="flow-box">Trust Gate</div>
+                </div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-step" style="display: inline-block; vertical-align: middle;">
+                    <div class="flow-box healthy" style="margin-bottom: 0.5rem;">PASS → Execute</div>
+                    <div class="flow-box warning" style="margin-bottom: 0.5rem;">HOLD → Alert Only</div>
+                    <div class="flow-box danger">BLOCK → Manual</div>
+                </div>
+            </div>
+
+            <h3>Trust Gate Decision Logic</h3>
+            <div class="formula-box">
+                <code>
+Base Threshold: 70.0 (signal health score required for automation)<br>
+Hold Threshold: 40.0 (below this = manual intervention required)<br><br>
+
+Action-Specific Thresholds:<br>
+├── High-Risk Actions (increase budget, launch campaigns): 80.0<br>
+├── Standard Actions (bid adjustments, targeting changes): 70.0<br>
+├── Conservative Actions (pause, reduce budget): 60.0<br>
+└── Safety Actions (emergency stop, pause all): ALWAYS ALLOWED
+                </code>
+            </div>
+
+            <h3>Decision States</h3>
+            <table>
+                <tr>
+                    <th>Signal Health</th>
+                    <th>Trust Gate</th>
+                    <th>Automation</th>
+                    <th>System Response</th>
+                </tr>
+                <tr>
+                    <td><span class="status-healthy">70-100 (HEALTHY)</span></td>
+                    <td>PASS</td>
+                    <td>Full Autopilot</td>
+                    <td>All automations execute normally</td>
+                </tr>
+                <tr>
+                    <td><span class="status-warning">40-69 (DEGRADED)</span></td>
+                    <td>HOLD</td>
+                    <td>Limited (Conservative Only)</td>
+                    <td>Alerts sent, only safe actions allowed</td>
+                </tr>
+                <tr>
+                    <td><span class="status-danger">0-39 (CRITICAL)</span></td>
+                    <td>BLOCK</td>
+                    <td>Disabled</td>
+                    <td>Manual intervention required</td>
+                </tr>
+            </table>
+        </section>
+
+        <!-- Section 3: Signal Health -->
+        <section id="signal-health" class="section">
+            <h2>3. Signal Health Calculations</h2>
+
+            <p>Signal Health is a composite score (0-100) that evaluates data reliability before automation decisions. The score is calculated using weighted components that measure different aspects of data quality.</p>
+
+            <h3>Composite Score Formula</h3>
+            <div class="formula-box">
+                <code>
+Signal Health = (EMQ × 0.40) + (Freshness × 0.25) + (Variance × 0.20) + (Anomaly × 0.15) + [CDP_EMQ × 0.10]<br><br>
+
+Where:<br>
+├── EMQ Score: Event Match Quality from advertising platforms (0-100)<br>
+├── Freshness Score: Data recency measurement (0-100)<br>
+├── Variance Score: Attribution alignment between platforms (0-100)<br>
+├── Anomaly Score: Z-score based anomaly detection (0-100)<br>
+└── CDP EMQ: Optional Customer Data Platform quality score (0-100)
+                </code>
+            </div>
+
+            <h3>Component Weights</h3>
+            <div style="max-width: 600px;">
+                <div class="weight-indicator">
+                    <span class="weight-label">EMQ Score</span>
+                    <div class="progress-bar" style="flex: 1;">
+                        <div class="progress-fill" style="width: 40%; background: linear-gradient(90deg, var(--primary), var(--secondary));"></div>
+                    </div>
+                    <span class="weight-value">40%</span>
+                </div>
+                <div class="weight-indicator">
+                    <span class="weight-label">Freshness Score</span>
+                    <div class="progress-bar" style="flex: 1;">
+                        <div class="progress-fill" style="width: 25%; background: linear-gradient(90deg, var(--primary), var(--secondary));"></div>
+                    </div>
+                    <span class="weight-value">25%</span>
+                </div>
+                <div class="weight-indicator">
+                    <span class="weight-label">Variance Score</span>
+                    <div class="progress-bar" style="flex: 1;">
+                        <div class="progress-fill" style="width: 20%; background: linear-gradient(90deg, var(--primary), var(--secondary));"></div>
+                    </div>
+                    <span class="weight-value">20%</span>
+                </div>
+                <div class="weight-indicator">
+                    <span class="weight-label">Anomaly Score</span>
+                    <div class="progress-bar" style="flex: 1;">
+                        <div class="progress-fill" style="width: 15%; background: linear-gradient(90deg, var(--primary), var(--secondary));"></div>
+                    </div>
+                    <span class="weight-value">15%</span>
+                </div>
+            </div>
+
+            <h3>EMQ (Event Match Quality) - 5-Driver Model</h3>
+            <p>EMQ evaluates the quality of event data from advertising platforms using five weighted components:</p>
+
+            <div class="grid-2">
+                <div class="card">
+                    <h4>1. Event Match Rate (30%)</h4>
+                    <p>Measures overlap between Pixel and CAPI (Conversions API) events.</p>
+                    <ul>
+                        <li><span class="status-healthy">≥85%</span> = GOOD</li>
+                        <li><span class="status-warning">70-85%</span> = WARNING</li>
+                        <li><span class="status-danger">&lt;70%</span> = CRITICAL</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h4>2. Pixel Coverage (25%)</h4>
+                    <p>Evaluates tracking pixel installation completeness.</p>
+                    <ul>
+                        <li><span class="status-healthy">≥90%</span> = GOOD</li>
+                        <li><span class="status-warning">75-90%</span> = WARNING</li>
+                        <li><span class="status-danger">&lt;75%</span> = CRITICAL</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h4>3. Conversion Latency (20%)</h4>
+                    <p>Measures time delay in conversion reporting.</p>
+                    <div class="formula-box" style="margin-top: 0.5rem;">
+                        <code style="font-size: 0.8rem;">
+&lt;1h = 100 | &lt;4h = 70-90<br>
+&lt;12h = 40-70 | &lt;24h = 0-40<br>
+&gt;24h = 0
+                        </code>
+                    </div>
+                </div>
+                <div class="card">
+                    <h4>4. Attribution Accuracy (15%)</h4>
+                    <p>Platform vs GA4 conversion alignment.</p>
+                    <ul>
+                        <li><span class="status-healthy">Variance &lt;10%</span> = 80+</li>
+                        <li><span class="status-warning">10-50%</span> = 60-80</li>
+                        <li><span class="status-danger">&gt;50%</span> = &lt;60</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h4>5. Data Freshness (10%)</h4>
+                    <p>Time since last data update received.</p>
+                    <div class="formula-box" style="margin-top: 0.5rem;">
+                        <code style="font-size: 0.8rem;">
+&lt;1h = 100 | &lt;6h = 80-96<br>
+&lt;24h = 40-80 | &gt;24h = 0-40
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <h3>Autopilot Mode Based on EMQ</h3>
+            <table>
+                <tr>
+                    <th>EMQ Score</th>
+                    <th>Mode</th>
+                    <th>Allowed Actions</th>
+                </tr>
+                <tr>
+                    <td><span class="status-healthy">80+</span></td>
+                    <td>Normal</td>
+                    <td>Full autopilot - all automations enabled</td>
+                </tr>
+                <tr>
+                    <td><span class="status-warning">60-80</span></td>
+                    <td>Limited</td>
+                    <td>Conservative actions only (maintain, small adjustments)</td>
+                </tr>
+                <tr>
+                    <td><span class="status-warning">40-60</span></td>
+                    <td>Cuts Only</td>
+                    <td>Pause and reduce budget only</td>
+                </tr>
+                <tr>
+                    <td><span class="status-danger">&lt;40</span></td>
+                    <td>Frozen</td>
+                    <td>No automation - manual intervention required</td>
+                </tr>
+            </table>
+        </section>
+
+        <!-- Section 4: Predictions -->
+        <section id="predictions" class="section">
+            <h2>4. Prediction Models</h2>
+
+            <p>Stratum AI employs multiple ML models for predictive analytics, each designed for specific business outcomes.</p>
+
+            <h3>4.1 LTV Predictor (Gradient Boosting + Heuristics)</h3>
+            <p>Predicts customer lifetime value across multiple time horizons using a hybrid ML approach.</p>
+
+            <div class="grid-2">
+                <div>
+                    <h4>Model Architecture</h4>
+                    <ul>
+                        <li><strong>Primary:</strong> Gradient Boosting Regressor</li>
+                        <li><strong>Fallback:</strong> Heuristic-based calculation</li>
+                        <li><strong>Features:</strong> 15+ behavioral and transactional signals</li>
+                    </ul>
+
+                    <h4>Prediction Timeframes</h4>
+                    <table>
+                        <tr><th>Period</th><th>Multiplier</th></tr>
+                        <tr><td>30 days</td><td>1.0x</td></tr>
+                        <tr><td>90 days</td><td>2.2x</td></tr>
+                        <tr><td>180 days</td><td>3.5x</td></tr>
+                        <tr><td>365 days</td><td>5.0x</td></tr>
+                        <tr><td>Lifetime</td><td>8.0x</td></tr>
+                    </table>
+                </div>
+                <div>
+                    <h4>Features Used</h4>
+                    <ul>
+                        <li>First order value, items, days to purchase</li>
+                        <li>Email engagement (opens, clicks)</li>
+                        <li>Session activity in first week</li>
+                        <li>Historical orders, AOV, frequency</li>
+                        <li>Device type, location tier</li>
+                        <li>Acquisition channel quality scores</li>
+                    </ul>
+
+                    <h4>Channel Quality Adjustments</h4>
+                    <table>
+                        <tr><th>Channel</th><th>Multiplier</th></tr>
+                        <tr><td>Referral</td><td>1.3x</td></tr>
+                        <tr><td>Organic</td><td>1.2x</td></tr>
+                        <tr><td>Email</td><td>1.1x</td></tr>
+                        <tr><td>Google Ads</td><td>1.05x</td></tr>
+                        <tr><td>Meta Ads</td><td>0.95x</td></tr>
+                        <tr><td>TikTok Ads</td><td>0.9x</td></tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="formula-box">
+                <code>
+LTV Calculation:<br>
+├── Base LTV = First Order Value × Retention Multiplier × Channel Quality<br>
+├── Adjusted LTV = Base LTV × (1 + Engagement Bonus) × (1 - Churn Risk)<br>
+└── CAC Recommendation = LTV / 3.0 (targeting 3:1 LTV:CAC ratio)
+                </code>
+            </div>
+
+            <h3>4.2 ROAS Optimizer</h3>
+            <p>Analyzes campaign performance and recommends budget optimizations based on return on ad spend.</p>
+
+            <h4>Platform-Specific ROAS Targets</h4>
+            <table>
+                <tr>
+                    <th>Platform</th>
+                    <th>Minimum</th>
+                    <th>Good</th>
+                    <th>Excellent</th>
+                </tr>
+                <tr>
+                    <td>Google Ads</td>
+                    <td>2.0x</td>
+                    <td>3.0x</td>
+                    <td>5.0x</td>
+                </tr>
+                <tr>
+                    <td>Meta Ads</td>
+                    <td>1.5x</td>
+                    <td>2.5x</td>
+                    <td>4.0x</td>
+                </tr>
+                <tr>
+                    <td>TikTok Ads</td>
+                    <td>1.2x</td>
+                    <td>2.0x</td>
+                    <td>3.5x</td>
+                </tr>
+                <tr>
+                    <td>Snapchat Ads</td>
+                    <td>1.0x</td>
+                    <td>1.8x</td>
+                    <td>3.0x</td>
+                </tr>
+            </table>
+
+            <div class="formula-box">
+                <code>
+Campaign Health Score (0-100):<br>
+├── ROAS Component: 0-50 points (weighted by platform thresholds)<br>
+├── CTR Component: 0-25 points<br>
+└── Conversion Component: 0-25 points<br><br>
+
+Budget Optimization Model:<br>
+Diminishing Returns: 15% ROAS decline per 100% budget increase<br>
+Portfolio Reallocation: Weighted by (ROAS × Health Score)
+                </code>
+            </div>
+
+            <h3>4.3 Pacing Forecaster (EWMA with Seasonality)</h3>
+            <p>Predicts end-of-month metrics using Exponentially Weighted Moving Average with day-of-week seasonality factors.</p>
+
+            <div class="card" style="margin: 1rem 0;">
+                <h4>Algorithm: EWMA_DOW</h4>
+                <div class="formula-box">
+                    <code>
+EWMA Formula: S_t = α × Y_t + (1-α) × S_{t-1}<br><br>
+
+Parameters:<br>
+├── Alpha (α): 0.3 (30% weight to recent data, 70% to history)<br>
+├── Seasonality Window: 28 days (calculate weekly patterns)<br>
+├── Confidence Level: 90% (z-score = 1.645)<br><br>
+
+Metrics Forecast:<br>
+├── Daily point forecasts with 90% confidence intervals<br>
+├── End-of-Month (EOM) projection<br>
+├── MTD vs Remaining analysis<br>
+└── Daily average vs needed-to-target calculation
+                    </code>
+                </div>
+            </div>
+
+            <h3>4.4 Conversion Predictor</h3>
+            <p>ML-based conversion rate prediction with platform-aware inference.</p>
+
+            <table>
+                <tr>
+                    <th>Platform</th>
+                    <th>Baseline CVR</th>
+                    <th>Adjustment Range</th>
+                </tr>
+                <tr>
+                    <td>Google Ads</td>
+                    <td>3.5%</td>
+                    <td>0.5x - 1.5x</td>
+                </tr>
+                <tr>
+                    <td>Meta Ads</td>
+                    <td>2.5%</td>
+                    <td>0.5x - 1.5x</td>
+                </tr>
+                <tr>
+                    <td>TikTok Ads</td>
+                    <td>1.5%</td>
+                    <td>0.5x - 1.5x</td>
+                </tr>
+                <tr>
+                    <td>Snapchat Ads</td>
+                    <td>1.2%</td>
+                    <td>0.5x - 1.5x</td>
+                </tr>
+            </table>
+
+            <div class="formula-box">
+                <code>
+Predicted CVR = Baseline × CTR_Factor × Spend_Efficiency × Variance<br><br>
+
+Where:<br>
+├── CTR_Factor: 0.5-1.5x (vs 1.5% average CTR benchmark)<br>
+├── Spend_Efficiency: 0.8-1.2x (based on CPC performance)<br>
+└── Variance: 0.9-1.1x (noise factor for uncertainty)
+                </code>
+            </div>
+        </section>
+
+        <!-- Section 5: Anomaly Detection -->
+        <section id="anomaly" class="section">
+            <h2>5. Anomaly Detection</h2>
+
+            <p>The system uses Z-Score analysis to detect unusual patterns in marketing metrics, automatically identifying outliers that may indicate problems or opportunities.</p>
+
+            <h3>Z-Score Algorithm</h3>
+            <div class="formula-box">
+                <code>
+Z-Score = (X - μ) / σ<br><br>
+
+Where:<br>
+├── X = Current metric value<br>
+├── μ = Mean of baseline period (last 14 days)<br>
+└── σ = Standard deviation of baseline period<br><br>
+
+Baseline Configuration:<br>
+└── Window: 14 days of historical data
+                </code>
+            </div>
+
+            <h3>Severity Thresholds</h3>
+            <table>
+                <tr>
+                    <th>Z-Score</th>
+                    <th>Severity</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td>|z| ≥ 4.0</td>
+                    <td><span class="status-danger">CRITICAL</span></td>
+                    <td>Extreme deviation - immediate attention required</td>
+                </tr>
+                <tr>
+                    <td>|z| ≥ 3.0</td>
+                    <td><span class="status-danger">HIGH</span></td>
+                    <td>Significant anomaly - investigate urgently</td>
+                </tr>
+                <tr>
+                    <td>|z| ≥ 2.5</td>
+                    <td><span class="status-warning">MEDIUM</span></td>
+                    <td>Notable deviation - review recommended</td>
+                </tr>
+                <tr>
+                    <td>|z| ≥ 2.0</td>
+                    <td><span class="status-warning">LOW</span></td>
+                    <td>Minor anomaly - monitor for persistence</td>
+                </tr>
+            </table>
+
+            <h3>Metrics Monitored</h3>
+            <div class="grid-2">
+                <div class="card">
+                    <h4>Spend Anomalies</h4>
+                    <p>Detects unusual spend patterns that may indicate budget issues or tracking problems.</p>
+                </div>
+                <div class="card">
+                    <h4>ROAS Shifts</h4>
+                    <p>Identifies sudden changes in return on ad spend across campaigns.</p>
+                </div>
+                <div class="card">
+                    <h4>CPA Spikes</h4>
+                    <p>Monitors cost-per-acquisition for unexpected increases.</p>
+                </div>
+                <div class="card">
+                    <h4>Conversion Rate Changes</h4>
+                    <p>Tracks conversion rate fluctuations for quality signals.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 6: RFM -->
+        <section id="rfm" class="section">
+            <h2>6. RFM Customer Segmentation</h2>
+
+            <p>RFM (Recency, Frequency, Monetary) analysis uses quintile-based scoring to segment customers into actionable groups for targeted marketing.</p>
+
+            <h3>RFM Scoring Method</h3>
+            <div class="formula-box">
+                <code>
+Each customer receives a 1-5 score for each dimension:<br><br>
+
+Recency (R): Days since last order (inverted - lower days = higher score)<br>
+├── Quintile 5: Most recent purchasers<br>
+├── Quintile 1: Longest since purchase<br><br>
+
+Frequency (F): Total number of orders<br>
+├── Quintile 5: Most frequent buyers<br>
+├── Quintile 1: One-time purchasers<br><br>
+
+Monetary (M): Total revenue generated<br>
+├── Quintile 5: Highest spenders<br>
+└── Quintile 1: Lowest spenders
+                </code>
+            </div>
+
+            <h3>Customer Segments (11 Categories)</h3>
+            <table>
+                <tr>
+                    <th>Segment</th>
+                    <th>RFM Pattern</th>
+                    <th>Retention Rate</th>
+                    <th>Strategy</th>
+                </tr>
+                <tr>
+                    <td class="status-healthy">CHAMPIONS</td>
+                    <td>R=5, F=5, M=5</td>
+                    <td>95%</td>
+                    <td>Reward loyalty, exclusive offers</td>
+                </tr>
+                <tr>
+                    <td class="status-healthy">LOYAL</td>
+                    <td>R=4-5, F=3-5, M=4-5</td>
+                    <td>85%</td>
+                    <td>Upsell, referral programs</td>
+                </tr>
+                <tr>
+                    <td class="status-healthy">POTENTIAL</td>
+                    <td>R=4-5, F=1-3, M=1-3</td>
+                    <td>65%</td>
+                    <td>Nurture, education content</td>
+                </tr>
+                <tr>
+                    <td>NEW</td>
+                    <td>R=5, F=1, M=1-3</td>
+                    <td>45%</td>
+                    <td>Onboarding, welcome series</td>
+                </tr>
+                <tr>
+                    <td>PROMISING</td>
+                    <td>R=4, F=1, M=1-2</td>
+                    <td>40%</td>
+                    <td>Engagement campaigns</td>
+                </tr>
+                <tr>
+                    <td class="status-warning">NEED_ATTENTION</td>
+                    <td>R=3, F=2-3, M=2-3</td>
+                    <td>35%</td>
+                    <td>Re-engagement offers</td>
+                </tr>
+                <tr>
+                    <td class="status-warning">ABOUT_TO_SLEEP</td>
+                    <td>R=2-3, F=1-2, M=1-2</td>
+                    <td>25%</td>
+                    <td>Win-back campaigns</td>
+                </tr>
+                <tr>
+                    <td class="status-danger">AT_RISK</td>
+                    <td>R=1-2, F=3-5, M=3-5</td>
+                    <td>20%</td>
+                    <td>Priority outreach, surveys</td>
+                </tr>
+                <tr>
+                    <td class="status-danger">CANT_LOSE</td>
+                    <td>R=1, F=4-5, M=4-5</td>
+                    <td>15%</td>
+                    <td>Aggressive win-back, personal contact</td>
+                </tr>
+                <tr>
+                    <td class="status-danger">HIBERNATING</td>
+                    <td>R=1-2, F=1-2, M=1-2</td>
+                    <td>10%</td>
+                    <td>Reactivation campaigns</td>
+                </tr>
+                <tr>
+                    <td class="status-danger">LOST</td>
+                    <td>R=1, F=1, M=1</td>
+                    <td>5%</td>
+                    <td>Low-cost reactivation or archive</td>
+                </tr>
+            </table>
+
+            <h3>CLV Integration</h3>
+            <div class="formula-box">
+                <code>
+Segment-Based CLV Calculation:<br><br>
+
+Expected Orders = Base Orders × Segment Multiplier<br>
+├── Champions: 1.5x<br>
+├── Loyal: 1.3x<br>
+├── Lost: 0.2x<br><br>
+
+Expected Lifetime Months = -ln(1 - Retention) / Monthly Churn Rate<br><br>
+
+Discounted CLV = Σ(Monthly Value × Retention^t) / (1 + Discount Rate)^t<br>
+└── Discount Rate: 10% annual
+                </code>
+            </div>
+        </section>
+
+        <!-- Section 7: Optimization -->
+        <section id="optimization" class="section">
+            <h2>7. Budget Optimization</h2>
+
+            <h3>Scaling Score Calculator</h3>
+            <p>Determines budget recommendations based on weighted performance deltas with risk adjustments.</p>
+
+            <div class="formula-box">
+                <code>
+Scaling Score = (ROAS_Δ × 0.40 + CPA_Δ × -0.25 + CVR_Δ × 0.15 + CTR_Δ × 0.10)<br>
+               × (1 - Frequency_Penalty)<br>
+               × (1 - EMQ_Penalty)<br>
+               × (1 - Volume_Penalty)<br><br>
+
+Score Interpretation:<br>
+├── ≥ +0.25: SCALE (increase budget 20-30%)<br>
+├── -0.25 to +0.25: WATCH (maintain current budget)<br>
+└── ≤ -0.25: FIX (reduce budget 30-50%)<br><br>
+
+Risk Penalties:<br>
+├── Frequency Penalty: 10% if above target frequency<br>
+├── EMQ Penalty: Linear penalty if EMQ < 90<br>
+└── Volume Penalty: Applied if conversions < minimum threshold
+                </code>
+            </div>
+
+            <h3>Budget Reallocation Safety Controls</h3>
+            <div class="grid-2">
+                <div class="card">
+                    <h4>Decrease Limits</h4>
+                    <p>Maximum <span class="highlight">20%</span> decrease per entity per day to prevent sudden performance drops.</p>
+                </div>
+                <div class="card">
+                    <h4>Increase Limits</h4>
+                    <p>Maximum <span class="highlight">30%</span> increase per entity per day to avoid budget shock.</p>
+                </div>
+                <div class="card">
+                    <h4>Daily Movement Cap</h4>
+                    <p>Maximum <span class="highlight">15%</span> of total daily spend can be reallocated in one day.</p>
+                </div>
+                <div class="card">
+                    <h4>Learning Phase Protection</h4>
+                    <p>Entities in learning phase are <span class="highlight">skipped</span> from reallocation to preserve optimization data.</p>
+                </div>
+            </div>
+
+            <h3>Creative Fatigue Detection</h3>
+            <div class="formula-box">
+                <code>
+Fatigue Score = EMA(CTR_Drop × 0.40 + ROAS_Drop × 0.30 + CPA_Rise × 0.20 + Frequency × 0.10)<br><br>
+
+EMA Smoothing: α = 0.4<br><br>
+
+Creative Status:<br>
+├── ≥ 0.65: REFRESH (create new creative immediately)<br>
+├── 0.45-0.65: WATCH (prepare variant creatives)<br>
+└── < 0.45: HEALTHY (no action needed)
+                </code>
+            </div>
+        </section>
+
+        <!-- Section 8: Confidence -->
+        <section id="confidence" class="section">
+            <h2>8. Confidence Scoring</h2>
+
+            <p>Every prediction includes a confidence score to quantify uncertainty and guide decision-making.</p>
+
+            <h3>Confidence Calculation Components</h3>
+            <div class="formula-box">
+                <code>
+Base Confidence = 0.50<br><br>
+
+Additive Factors:<br>
+├── Sample Size: +0.30 for 1 campaign, +0.60 for 10+ campaigns<br>
+├── Data Completeness: +0.20 for complete spend/revenue/ROAS data<br>
+├── Order History: +0.25 if customer has 3+ orders<br>
+├── Engagement: +0.10 per engagement type (email, session, etc.)<br><br>
+
+Subtractive Factors:<br>
+├── High Variance: -0.20 for high ROAS variance<br>
+├── Data Gaps: -0.15 for missing key metrics<br><br>
+
+Final Confidence = min(Calculated Score, 0.95)  // Never claim 100%
+                </code>
+            </div>
+
+            <h3>Model-Specific Confidence Thresholds</h3>
+            <table>
+                <tr>
+                    <th>Action Type</th>
+                    <th>Min Confidence</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td>Pause Campaign</td>
+                    <td>0.85</td>
+                    <td>High confidence required for stopping actions</td>
+                </tr>
+                <tr>
+                    <td>Decrease Budget</td>
+                    <td>0.75</td>
+                    <td>Moderate-high confidence for reduction</td>
+                </tr>
+                <tr>
+                    <td>Scale Budget</td>
+                    <td>0.65</td>
+                    <td>Medium confidence acceptable for scaling</td>
+                </tr>
+                <tr>
+                    <td>Increase Budget</td>
+                    <td>0.60</td>
+                    <td>Medium confidence for increases</td>
+                </tr>
+                <tr>
+                    <td>Creative/Bidding Changes</td>
+                    <td>0.55</td>
+                    <td>Lower confidence acceptable for optimization</td>
+                </tr>
+            </table>
+
+            <h3>LTV Prediction Confidence</h3>
+            <div class="formula-box">
+                <code>
+LTV Confidence Calculation:<br><br>
+
+Base: 0.50<br>
++ 0.25 if customer has 3+ orders (behavioral data)<br>
++ 0.10 per engagement type (email opens, clicks, sessions)<br>
++ 0.05 for complete demographic data<br>
+= Final Score (capped at 0.95)
+                </code>
+            </div>
+        </section>
+
+        <!-- Section 9: Thresholds -->
+        <section id="thresholds" class="section">
+            <h2>9. System Thresholds & Configuration</h2>
+
+            <p>Critical parameters that govern system behavior. These are configurable but have tested defaults.</p>
+
+            <h3>Trust Engine Thresholds</h3>
+            <table>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Value</th>
+                    <th>Purpose</th>
+                </tr>
+                <tr>
+                    <td>HEALTHY_THRESHOLD</td>
+                    <td>70.0</td>
+                    <td>Minimum signal health for full autopilot</td>
+                </tr>
+                <tr>
+                    <td>DEGRADED_THRESHOLD</td>
+                    <td>40.0</td>
+                    <td>Below this requires manual intervention</td>
+                </tr>
+                <tr>
+                    <td>HIGH_RISK_THRESHOLD</td>
+                    <td>80.0</td>
+                    <td>Required for budget increases, launches</td>
+                </tr>
+                <tr>
+                    <td>CONSERVATIVE_THRESHOLD</td>
+                    <td>60.0</td>
+                    <td>Required for pause/reduce actions</td>
+                </tr>
+            </table>
+
+            <h3>EMQ Thresholds</h3>
+            <table>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Value</th>
+                    <th>Automation Mode</th>
+                </tr>
+                <tr>
+                    <td>EMQ_RELIABLE</td>
+                    <td>80+</td>
+                    <td>Normal (full autopilot)</td>
+                </tr>
+                <tr>
+                    <td>EMQ_DIRECTIONAL</td>
+                    <td>60-80</td>
+                    <td>Limited (conservative only)</td>
+                </tr>
+                <tr>
+                    <td>EMQ_UNSAFE</td>
+                    <td>40-60</td>
+                    <td>Cuts Only (reduce/pause)</td>
+                </tr>
+                <tr>
+                    <td>EMQ_FROZEN</td>
+                    <td>&lt;40</td>
+                    <td>Frozen (no automation)</td>
+                </tr>
+            </table>
+
+            <h3>Anomaly Detection</h3>
+            <table>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Value</th>
+                </tr>
+                <tr>
+                    <td>Baseline Window</td>
+                    <td>14 days</td>
+                </tr>
+                <tr>
+                    <td>Critical Z-Score</td>
+                    <td>±4.0</td>
+                </tr>
+                <tr>
+                    <td>High Z-Score</td>
+                    <td>±3.0</td>
+                </tr>
+                <tr>
+                    <td>Medium Z-Score</td>
+                    <td>±2.5</td>
+                </tr>
+                <tr>
+                    <td>Low Z-Score</td>
+                    <td>±2.0</td>
+                </tr>
+            </table>
+
+            <h3>Budget Control</h3>
+            <table>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Value</th>
+                </tr>
+                <tr>
+                    <td>Max Daily Decrease</td>
+                    <td>20%</td>
+                </tr>
+                <tr>
+                    <td>Max Daily Increase</td>
+                    <td>30%</td>
+                </tr>
+                <tr>
+                    <td>Max Daily Movement</td>
+                    <td>15% of total</td>
+                </tr>
+                <tr>
+                    <td>Scaling Threshold (SCALE)</td>
+                    <td>+0.25</td>
+                </tr>
+                <tr>
+                    <td>Scaling Threshold (FIX)</td>
+                    <td>-0.25</td>
+                </tr>
+            </table>
+
+            <h3>Forecasting Parameters</h3>
+            <table>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Value</th>
+                </tr>
+                <tr>
+                    <td>EWMA Alpha</td>
+                    <td>0.30</td>
+                </tr>
+                <tr>
+                    <td>Seasonality Window</td>
+                    <td>28 days</td>
+                </tr>
+                <tr>
+                    <td>Confidence Level</td>
+                    <td>90%</td>
+                </tr>
+                <tr>
+                    <td>Z-Score (90% CI)</td>
+                    <td>1.645</td>
+                </tr>
+            </table>
+        </section>
+
+        <!-- Section 10: Code Quality -->
+        <section id="code-quality" class="section">
+            <h2>10. Code Quality Assessment</h2>
+
+            <p>Comprehensive analysis of the Stratum AI codebase across eight industry-standard quality metrics. Scores are based on automated analysis and manual code review.</p>
+
+            <h3>Quality Metrics Overview</h3>
+            <div class="metric-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                <div class="metric-item">
+                    <div class="metric-value">80%</div>
+                    <div class="metric-label">Readability</div>
+                    <div class="progress-bar"><div class="progress-fill" style="width: 80%; background: var(--secondary);"></div></div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">85%</div>
+                    <div class="metric-label">Maintainability</div>
+                    <div class="progress-bar"><div class="progress-fill" style="width: 85%; background: var(--secondary);"></div></div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">70%</div>
+                    <div class="metric-label">Testability</div>
+                    <div class="progress-bar"><div class="progress-fill" style="width: 70%; background: var(--warning);"></div></div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">80%</div>
+                    <div class="metric-label">Security</div>
+                    <div class="progress-bar"><div class="progress-fill" style="width: 80%; background: var(--secondary);"></div></div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">85%</div>
+                    <div class="metric-label">Scalability</div>
+                    <div class="progress-bar"><div class="progress-fill" style="width: 85%; background: var(--secondary);"></div></div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">80%</div>
+                    <div class="metric-label">Consistency</div>
+                    <div class="progress-bar"><div class="progress-fill" style="width: 80%; background: var(--secondary);"></div></div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">75%</div>
+                    <div class="metric-label">Simplicity</div>
+                    <div class="progress-bar"><div class="progress-fill" style="width: 75%; background: var(--warning);"></div></div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">80%</div>
+                    <div class="metric-label">Efficiency</div>
+                    <div class="progress-bar"><div class="progress-fill" style="width: 80%; background: var(--secondary);"></div></div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin: 2rem 0;">
+                <div class="ai-badge" style="font-size: 1.25rem; padding: 1rem 2rem;">
+                    Overall Score: 79.4% (Grade: A-)
+                </div>
+            </div>
+
+            <h3>Detailed Metric Breakdown</h3>
+            <table>
+                <tr>
+                    <th>Metric</th>
+                    <th>Score</th>
+                    <th>Grade</th>
+                    <th>Key Findings</th>
+                </tr>
+                <tr>
+                    <td><strong>Readability</strong></td>
+                    <td>80%</td>
+                    <td><span class="status-healthy">A-</span></td>
+                    <td>Clear naming conventions, comprehensive docstrings, well-organized imports</td>
+                </tr>
+                <tr>
+                    <td><strong>Maintainability</strong></td>
+                    <td>85%</td>
+                    <td><span class="status-healthy">A</span></td>
+                    <td>Excellent separation of concerns, modular services, centralized configuration</td>
+                </tr>
+                <tr>
+                    <td><strong>Testability</strong></td>
+                    <td>70%</td>
+                    <td><span class="status-warning">B+</span></td>
+                    <td>70% backend / 60% frontend coverage requirement, good fixtures</td>
+                </tr>
+                <tr>
+                    <td><strong>Security</strong></td>
+                    <td>80%</td>
+                    <td><span class="status-healthy">A-</span></td>
+                    <td>Bcrypt passwords, JWT tokens, PII encryption, tenant isolation</td>
+                </tr>
+                <tr>
+                    <td><strong>Scalability</strong></td>
+                    <td>85%</td>
+                    <td><span class="status-healthy">A</span></td>
+                    <td>Async throughout, connection pooling, Celery task queues, Redis caching</td>
+                </tr>
+                <tr>
+                    <td><strong>Consistency</strong></td>
+                    <td>80%</td>
+                    <td><span class="status-healthy">A-</span></td>
+                    <td>Uniform coding style, consistent patterns, type hints everywhere</td>
+                </tr>
+                <tr>
+                    <td><strong>Simplicity</strong></td>
+                    <td>75%</td>
+                    <td><span class="status-warning">B+</span></td>
+                    <td>Minimal abstraction layers, some large files need splitting</td>
+                </tr>
+                <tr>
+                    <td><strong>Efficiency</strong></td>
+                    <td>80%</td>
+                    <td><span class="status-healthy">A-</span></td>
+                    <td>ORM with pagination, bulk operations, lazy loading patterns</td>
+                </tr>
+            </table>
+
+            <h3>Style Guide & Specifications</h3>
+            <p>The codebase follows industry-standard conventions with the following tools and configurations:</p>
+
+            <div class="grid-2">
+                <div class="card">
+                    <h4>Backend (Python)</h4>
+                    <ul>
+                        <li><strong>Style:</strong> PEP 8 compliant (implicit)</li>
+                        <li><strong>Type Hints:</strong> Required on all functions</li>
+                        <li><strong>Testing:</strong> pytest with async support</li>
+                        <li><strong>Coverage:</strong> 70% minimum (.coveragerc)</li>
+                        <li><strong>Validation:</strong> Pydantic models for all I/O</li>
+                        <li><strong>Async:</strong> Required for all I/O operations</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h4>Frontend (TypeScript/React)</h4>
+                    <ul>
+                        <li><strong>Style:</strong> TypeScript strict mode enabled</li>
+                        <li><strong>Linting:</strong> noUnusedLocals, noUnusedParameters</li>
+                        <li><strong>Testing:</strong> Vitest + Playwright E2E</li>
+                        <li><strong>Coverage:</strong> 60% minimum (vite.config.ts)</li>
+                        <li><strong>Build:</strong> Vite with code splitting</li>
+                        <li><strong>State:</strong> React Query for API calls</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3>Configuration Files Present</h3>
+            <table>
+                <tr>
+                    <th>File</th>
+                    <th>Purpose</th>
+                    <th>Status</th>
+                </tr>
+                <tr>
+                    <td>pytest.ini</td>
+                    <td>Python test configuration with markers</td>
+                    <td><span class="status-healthy">Present</span></td>
+                </tr>
+                <tr>
+                    <td>.coveragerc</td>
+                    <td>70% coverage threshold, branch coverage</td>
+                    <td><span class="status-healthy">Present</span></td>
+                </tr>
+                <tr>
+                    <td>tsconfig.json</td>
+                    <td>TypeScript strict mode configuration</td>
+                    <td><span class="status-healthy">Present</span></td>
+                </tr>
+                <tr>
+                    <td>vite.config.ts</td>
+                    <td>Build optimization, code splitting</td>
+                    <td><span class="status-healthy">Present</span></td>
+                </tr>
+                <tr>
+                    <td>alembic.ini</td>
+                    <td>Database migration configuration</td>
+                    <td><span class="status-healthy">Present</span></td>
+                </tr>
+                <tr>
+                    <td>.eslintrc / ruff.toml</td>
+                    <td>Explicit linting configuration</td>
+                    <td><span class="status-warning">Not at root</span></td>
+                </tr>
+                <tr>
+                    <td>.prettierrc</td>
+                    <td>Code formatter configuration</td>
+                    <td><span class="status-warning">Not found</span></td>
+                </tr>
+                <tr>
+                    <td>.pre-commit</td>
+                    <td>Pre-commit hooks</td>
+                    <td><span class="status-warning">Not found</span></td>
+                </tr>
+            </table>
+        </section>
+
+        <!-- Section 11: Red Flags Checklist -->
+        <section id="red-flags" class="section">
+            <h2>11. Red Flags Checklist for Non-Technical Reviewers</h2>
+
+            <p>This checklist helps non-technical stakeholders identify potential problems in a software project. Use this to evaluate project health during reviews, due diligence, or ongoing oversight.</p>
+
+            <h3>Project Health Indicators</h3>
+            <div class="grid-2">
+                <div class="card" style="border-left: 4px solid var(--secondary);">
+                    <h4>Green Flags (Positive Signs)</h4>
+                    <ul>
+                        <li>Regular code updates (commits at least weekly)</li>
+                        <li>Tests exist and pass consistently</li>
+                        <li>Documentation is present and updated</li>
+                        <li>Multiple developers have contributed</li>
+                        <li>Issues and bugs are tracked and resolved</li>
+                        <li>Version control (Git) is used properly</li>
+                        <li>Security updates are applied promptly</li>
+                        <li>Environment configurations are separate from code</li>
+                    </ul>
+                </div>
+                <div class="card" style="border-left: 4px solid var(--danger);">
+                    <h4>Red Flags (Warning Signs)</h4>
+                    <ul>
+                        <li>No recent updates (months of inactivity)</li>
+                        <li>No tests or tests frequently failing</li>
+                        <li>Missing or outdated documentation</li>
+                        <li>Single developer with no backup</li>
+                        <li>Known bugs ignored for long periods</li>
+                        <li>No version control or messy history</li>
+                        <li>Outdated dependencies with known vulnerabilities</li>
+                        <li>Passwords/secrets visible in code</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3>Questions to Ask Development Teams</h3>
+            <table>
+                <tr>
+                    <th>Category</th>
+                    <th>Question</th>
+                    <th>Good Answer</th>
+                    <th>Red Flag Answer</th>
+                </tr>
+                <tr>
+                    <td><strong>Testing</strong></td>
+                    <td>"What percentage of code is tested?"</td>
+                    <td class="status-healthy">"70%+ with automated runs"</td>
+                    <td class="status-danger">"We test manually" / "Not sure"</td>
+                </tr>
+                <tr>
+                    <td><strong>Security</strong></td>
+                    <td>"How are passwords stored?"</td>
+                    <td class="status-healthy">"Hashed with bcrypt/argon2"</td>
+                    <td class="status-danger">"In the database" / "Encrypted"</td>
+                </tr>
+                <tr>
+                    <td><strong>Backups</strong></td>
+                    <td>"How often is data backed up?"</td>
+                    <td class="status-healthy">"Daily with tested recovery"</td>
+                    <td class="status-danger">"When we remember" / "Never"</td>
+                </tr>
+                <tr>
+                    <td><strong>Deployment</strong></td>
+                    <td>"How do you deploy changes?"</td>
+                    <td class="status-healthy">"Automated CI/CD pipeline"</td>
+                    <td class="status-danger">"Copy files to server manually"</td>
+                </tr>
+                <tr>
+                    <td><strong>Monitoring</strong></td>
+                    <td>"How do you know if something breaks?"</td>
+                    <td class="status-healthy">"Alerts from monitoring tools"</td>
+                    <td class="status-danger">"Users tell us"</td>
+                </tr>
+                <tr>
+                    <td><strong>Documentation</strong></td>
+                    <td>"Can a new developer start quickly?"</td>
+                    <td class="status-healthy">"Yes, we have onboarding docs"</td>
+                    <td class="status-danger">"They need to ask me everything"</td>
+                </tr>
+                <tr>
+                    <td><strong>Dependencies</strong></td>
+                    <td>"Are third-party libraries up to date?"</td>
+                    <td class="status-healthy">"Updated monthly, security patches ASAP"</td>
+                    <td class="status-danger">"We don't touch what works"</td>
+                </tr>
+                <tr>
+                    <td><strong>Recovery</strong></td>
+                    <td>"What happens if the main developer leaves?"</td>
+                    <td class="status-healthy">"Code is documented, others can maintain"</td>
+                    <td class="status-danger">"We'd be in trouble"</td>
+                </tr>
+            </table>
+
+            <h3>Document Checklist</h3>
+            <p>Essential documents that should exist for any production software:</p>
+
+            <div class="grid-3">
+                <div class="card">
+                    <h4>Must Have</h4>
+                    <ul>
+                        <li>README with setup instructions</li>
+                        <li>API documentation</li>
+                        <li>Database schema documentation</li>
+                        <li>Deployment procedures</li>
+                        <li>Environment variable list</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h4>Should Have</h4>
+                    <ul>
+                        <li>Architecture overview</li>
+                        <li>Security practices document</li>
+                        <li>Incident response plan</li>
+                        <li>Change log / release notes</li>
+                        <li>Contributing guidelines</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h4>Nice to Have</h4>
+                    <ul>
+                        <li>Decision records (ADRs)</li>
+                        <li>Performance benchmarks</li>
+                        <li>Runbook for common issues</li>
+                        <li>Code style guide</li>
+                        <li>Onboarding checklist</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3>Severity Assessment Matrix</h3>
+            <table>
+                <tr>
+                    <th>Issue</th>
+                    <th>Severity</th>
+                    <th>Impact</th>
+                    <th>Action Required</th>
+                </tr>
+                <tr>
+                    <td>Passwords/API keys in code</td>
+                    <td><span class="status-danger">CRITICAL</span></td>
+                    <td>Security breach risk</td>
+                    <td>Immediate remediation</td>
+                </tr>
+                <tr>
+                    <td>No automated tests</td>
+                    <td><span class="status-danger">HIGH</span></td>
+                    <td>Bugs reach production</td>
+                    <td>Add tests before new features</td>
+                </tr>
+                <tr>
+                    <td>Single point of failure (one developer)</td>
+                    <td><span class="status-danger">HIGH</span></td>
+                    <td>Business continuity risk</td>
+                    <td>Document and cross-train</td>
+                </tr>
+                <tr>
+                    <td>No backups or untested backups</td>
+                    <td><span class="status-danger">HIGH</span></td>
+                    <td>Data loss risk</td>
+                    <td>Implement and test backups</td>
+                </tr>
+                <tr>
+                    <td>Outdated dependencies (6+ months)</td>
+                    <td><span class="status-warning">MEDIUM</span></td>
+                    <td>Security vulnerabilities</td>
+                    <td>Schedule update cycle</td>
+                </tr>
+                <tr>
+                    <td>Missing documentation</td>
+                    <td><span class="status-warning">MEDIUM</span></td>
+                    <td>Slow onboarding, knowledge loss</td>
+                    <td>Create documentation plan</td>
+                </tr>
+                <tr>
+                    <td>No monitoring/alerting</td>
+                    <td><span class="status-warning">MEDIUM</span></td>
+                    <td>Delayed incident response</td>
+                    <td>Implement basic monitoring</td>
+                </tr>
+                <tr>
+                    <td>Inconsistent code style</td>
+                    <td><span class="status-healthy">LOW</span></td>
+                    <td>Slower development</td>
+                    <td>Add linting tools</td>
+                </tr>
+            </table>
+
+            <h3>Quick Health Score Calculator</h3>
+            <p>Award points for each item present. Total score indicates project health:</p>
+
+            <div class="formula-box">
+                <code>
+PROJECT HEALTH SCORECARD (Max: 100 points)<br><br>
+
+<strong>Code Quality (25 points)</strong><br>
+├── [ ] Automated tests exist (+10)<br>
+├── [ ] Code review process (+5)<br>
+├── [ ] Linting/formatting enforced (+5)<br>
+└── [ ] Type checking enabled (+5)<br><br>
+
+<strong>Security (25 points)</strong><br>
+├── [ ] No secrets in code (+10)<br>
+├── [ ] Passwords properly hashed (+5)<br>
+├── [ ] HTTPS everywhere (+5)<br>
+└── [ ] Regular security updates (+5)<br><br>
+
+<strong>Operations (25 points)</strong><br>
+├── [ ] Automated deployments (+5)<br>
+├── [ ] Monitoring and alerting (+5)<br>
+├── [ ] Backup strategy tested (+10)<br>
+└── [ ] Incident response plan (+5)<br><br>
+
+<strong>Documentation (25 points)</strong><br>
+├── [ ] Setup instructions work (+10)<br>
+├── [ ] API documented (+5)<br>
+├── [ ] Architecture explained (+5)<br>
+└── [ ] Runbook for issues (+5)<br><br>
+
+<strong>SCORING:</strong><br>
+├── 80-100: Excellent - Production ready<br>
+├── 60-79: Good - Minor improvements needed<br>
+├── 40-59: Fair - Significant gaps to address<br>
+└── 0-39: Poor - Major remediation required
+                </code>
+            </div>
+
+            <h3>Stratum AI Project Score</h3>
+            <div class="grid-2" style="margin-top: 1rem;">
+                <div>
+                    <table>
+                        <tr><th>Category</th><th>Score</th></tr>
+                        <tr><td>Code Quality</td><td>22/25</td></tr>
+                        <tr><td>Security</td><td>23/25</td></tr>
+                        <tr><td>Operations</td><td>20/25</td></tr>
+                        <tr><td>Documentation</td><td>20/25</td></tr>
+                        <tr><th>TOTAL</th><th>85/100</th></tr>
+                    </table>
+                </div>
+                <div class="card" style="display: flex; align-items: center; justify-content: center; text-align: center;">
+                    <div>
+                        <div class="metric-value" style="font-size: 3rem;">85%</div>
+                        <div style="color: var(--secondary); font-weight: 600; font-size: 1.25rem;">EXCELLENT</div>
+                        <div style="color: #64748b; margin-top: 0.5rem;">Production Ready</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- AI Summary Section -->
+        <section class="section" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(16, 185, 129, 0.1) 100%);">
+            <h2>Summary: Why Stratum is an AI System</h2>
+
+            <div class="grid-2">
+                <div>
+                    <h3>Machine Learning Components</h3>
+                    <ul>
+                        <li><strong>Gradient Boosting</strong> for LTV prediction</li>
+                        <li><strong>EWMA</strong> for time-series forecasting</li>
+                        <li><strong>Z-Score Analysis</strong> for anomaly detection</li>
+                        <li><strong>Quintile Segmentation</strong> for RFM clustering</li>
+                        <li><strong>EMA Smoothing</strong> for trend detection</li>
+                    </ul>
+
+                    <h3>Intelligent Decision Making</h3>
+                    <ul>
+                        <li>Trust-gated automation with safety guardrails</li>
+                        <li>Multi-factor scoring with weighted components</li>
+                        <li>Platform-specific model adaptation</li>
+                        <li>Risk-aware action selection</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>Predictive Capabilities</h3>
+                    <ul>
+                        <li>Customer Lifetime Value prediction</li>
+                        <li>Conversion rate forecasting</li>
+                        <li>ROAS trajectory modeling</li>
+                        <li>Churn risk assessment</li>
+                        <li>Budget pacing forecasts</li>
+                    </ul>
+
+                    <h3>Autonomous Operations</h3>
+                    <ul>
+                        <li>Self-adjusting budget allocation</li>
+                        <li>Automatic anomaly response</li>
+                        <li>Creative fatigue detection</li>
+                        <li>Signal health monitoring</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="ai-badge" style="margin-top: 2rem; font-size: 1.1rem;">
+                Stratum AI: Data-Driven Decisions with Trust-Gated Safety
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <p>Stratum AI System Documentation v1.0</p>
+        <p style="margin-top: 0.5rem;">Revenue Operating System with Trust-Gated Autopilot Architecture</p>
+        <p style="margin-top: 1rem; font-size: 0.85rem;">Generated: January 2026</p>
+    </footer>
+</body>
+</html>

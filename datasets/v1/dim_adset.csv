@@ -1,0 +1,95 @@
+platform,campaign_id,adset_id,adset_name,audience_id,device,placement,optimization_event,bid_strategy,daily_budget
+Meta,C_CT2CXIFS,AS_8X76RKQ4,Interest | KSA | Desktop | Stories,AU_PKT9A90F,Mobile,Marketplace,Purchase,Cost Cap,29.3
+Meta,C_CT2CXIFS,AS_4B9UOE3T,Interest | Egypt | Tablet | Marketplace,AU_D5SOWOMQ,Mobile,Reels,Purchase,Lowest Cost,30.3
+Meta,C_GX8WDZRM,AS_BDVPINE9,Retargeting | Egypt | Mobile | Audience Network,AU_R9A7MFP0,Mobile,Reels,AddToCart,Cost Cap,39.39
+Meta,C_GX8WDZRM,AS_7T3BD4Z1,CRM | KSA | Tablet | Feed,AU_GNNQFKPL,Desktop,Marketplace,Purchase,Lowest Cost,51.81
+Meta,C_GX8WDZRM,AS_GU1UQXJ4,Retargeting | Kuwait | Mobile | Feed,AU_8KE2WT1Q,Mobile,Feed,LandingPageView,Lowest Cost,52.73
+Meta,C_GX8WDZRM,AS_RBLRTVWA,Retargeting | Egypt | Mobile | Reels,AU_R9A7MFP0,Tablet,Marketplace,Purchase,Cost Cap,20.0
+Meta,C_57TCOZDA,AS_SUHA51LI,CRM | Kuwait | Desktop | Audience Network,AU_RUPFR2P3,Tablet,Reels,AppInstall,Bid Cap,39.54
+Meta,C_57TCOZDA,AS_3XF1GP1Z,Interest | Egypt | Tablet | Feed,AU_R7SGMSOX,Desktop,Stories,AddToCart,Cost Cap,47.13
+Meta,C_57TCOZDA,AS_J2E42TRD,Broad | Jordan | Desktop | Audience Network,AU_5EDJJTFP,Mobile,Stories,LandingPageView,Maximize Conversions,21.45
+Meta,C_D2GVF6LC,AS_XSY0VDVE,CRM | Egypt | Desktop | Feed,AU_JP70LKLF,Tablet,Marketplace,AddToCart,Bid Cap,20.0
+Meta,C_D2GVF6LC,AS_G687CVIY,Broad | Qatar | Mobile | Reels,AU_N3QXKHKT,Mobile,Audience Network,Lead,Maximize Conversions,20.0
+Meta,C_D2GVF6LC,AS_Y670KMIQ,Retargeting | Jordan | Mobile | Marketplace,AU_8IRCD9SI,Desktop,Audience Network,Purchase,Lowest Cost,24.04
+Meta,C_GVJICS4I,AS_BQNJ971H,Retargeting | Jordan | Desktop | Reels,AU_8IRCD9SI,Desktop,Feed,Purchase,Cost Cap,21.45
+Meta,C_GVJICS4I,AS_9BY4CYXQ,Broad | Qatar | Tablet | Feed,AU_N3QXKHKT,Desktop,Feed,AddToCart,Cost Cap,95.96
+Meta,C_VRHX1Z2Y,AS_7RF1F1L8,Retargeting | Jordan | Desktop | Stories,AU_8IRCD9SI,Mobile,Feed,AddToCart,Bid Cap,20.0
+Meta,C_VRHX1Z2Y,AS_XYCJ2XX2,Retargeting | Jordan | Mobile | Audience Network,AU_4GPYWSSB,Mobile,Audience Network,AddToCart,Maximize Conversions,20.0
+Meta,C_VRHX1Z2Y,AS_UWE98STK,Retargeting | Egypt | Tablet | Reels,AU_R9A7MFP0,Desktop,Audience Network,Lead,Lowest Cost,29.94
+Meta,C_00EIUE23,AS_16DH7JTK,Broad | Jordan | Mobile | Stories,AU_DNR9IS25,Tablet,Reels,AddToCart,Bid Cap,22.63
+Meta,C_00EIUE23,AS_CQN0B58S,Interest | KSA | Tablet | Stories,AU_YU58CEPS,Desktop,Reels,LandingPageView,Bid Cap,72.21
+Meta,C_2PJGDSY0,AS_K5635T5B,Interest | KSA | Mobile | Marketplace,AU_PKT9A90F,Tablet,Marketplace,Lead,Cost Cap,93.82
+Meta,C_2PJGDSY0,AS_GZXV9XJM,Interest | Egypt | Tablet | Audience Network,AU_D5SOWOMQ,Desktop,Audience Network,Purchase,Lowest Cost,27.45
+Meta,C_85T4BXVH,AS_4QOD4K7Y,Retargeting | Jordan | Mobile | Reels,AU_8IRCD9SI,Mobile,Audience Network,Purchase,Cost Cap,33.98
+Meta,C_85T4BXVH,AS_7YUL38V8,CRM | Qatar | Desktop | Stories,AU_YM6IER0V,Tablet,Marketplace,Lead,Cost Cap,46.22
+Meta,C_85T4BXVH,AS_2Q4NM8R9,Interest | Egypt | Tablet | Stories,AU_D5SOWOMQ,Mobile,Feed,AppInstall,Cost Cap,20.0
+Meta,C_85T4BXVH,AS_4MSUSDFO,Lookalike | Qatar | Tablet | Feed,AU_X497W19V,Mobile,Marketplace,Lead,Lowest Cost,41.15
+Meta,C_AVSMLZ16,AS_I4UPAQYP,CRM | Jordan | Desktop | Stories,AU_O7Y22T1T,Desktop,Stories,AppInstall,Lowest Cost,27.51
+Meta,C_AVSMLZ16,AS_NPF727XE,CRM | Qatar | Tablet | Feed,AU_YM6IER0V,Mobile,Audience Network,AppInstall,Cost Cap,48.4
+Google Ads,C_8DE4CS0L,AS_YYF8IWHL,Interest | Kuwait | Tablet | Discover,AU_QOHMUH8L,Tablet,YouTube,Lead,Lowest Cost,27.2
+Google Ads,C_8DE4CS0L,AS_BPNEGC2D,Interest | Jordan | Mobile | Search,AU_452BFSOZ,Desktop,Discover,Lead,Cost Cap,35.78
+Google Ads,C_8DE4CS0L,AS_L195DWY7,Interest | KSA | Desktop | Discover,AU_ECBPMBJP,Desktop,YouTube,AddToCart,Maximize Conversions,69.93
+Google Ads,C_QNVF2XF8,AS_CEM9N4NV,Retargeting | UAE | Desktop | Search,AU_024SCOSS,Mobile,YouTube,Purchase,Maximize Conversions,20.32
+Google Ads,C_QNVF2XF8,AS_G4UNXU0C,Interest | UAE | Tablet | YouTube,AU_J5S6R044,Tablet,YouTube,Purchase,Bid Cap,28.85
+Google Ads,C_QNVF2XF8,AS_EJAN63XD,Lookalike | Kuwait | Tablet | Gmail,AU_G2KTBCUD,Desktop,Discover,Purchase,Lowest Cost,53.49
+Google Ads,C_FZYY94DA,AS_VG7CON4R,Broad | KSA | Mobile | Search,AU_J5CI6VG2,Tablet,Display,AppInstall,Lowest Cost,30.8
+Google Ads,C_FZYY94DA,AS_WDG1OEVZ,Lookalike | Kuwait | Desktop | Search,AU_G2KTBCUD,Tablet,Display,LandingPageView,Maximize Conversions,20.0
+Google Ads,C_FZYY94DA,AS_UXGFAT2X,CRM | Qatar | Desktop | Search,AU_YM6IER0V,Mobile,Search,Lead,Maximize Conversions,26.8
+Google Ads,C_RTR5JEK1,AS_XQP5M3GI,Interest | UAE | Desktop | Search,AU_J5S6R044,Desktop,Display,AppInstall,Maximize Conversions,84.29
+Google Ads,C_RTR5JEK1,AS_9B3N2SE0,CRM | Kuwait | Tablet | Discover,AU_TS2H3TZR,Mobile,Display,Lead,Bid Cap,20.0
+Google Ads,C_2XZ36JWB,AS_HJWTV3N7,Retargeting | Egypt | Desktop | Display,AU_R9A7MFP0,Desktop,Search,LandingPageView,Maximize Conversions,31.48
+Google Ads,C_2XZ36JWB,AS_M21YANNR,CRM | Egypt | Tablet | Search,AU_FC1UQBFO,Tablet,Search,AppInstall,Cost Cap,38.79
+Google Ads,C_XJ6Y0IY1,AS_K5SILU2D,Interest | KSA | Desktop | Search,AU_YU58CEPS,Desktop,YouTube,Lead,Maximize Conversions,20.0
+Google Ads,C_XJ6Y0IY1,AS_1GPTC2QW,CRM | Egypt | Mobile | Discover,AU_FC1UQBFO,Mobile,YouTube,Lead,Bid Cap,54.31
+Google Ads,C_XJ6Y0IY1,AS_Y2EFZ6RX,Interest | KSA | Desktop | Discover,AU_ECBPMBJP,Desktop,Gmail,Purchase,Lowest Cost,20.0
+Google Ads,C_XJ6Y0IY1,AS_RFXQFXKD,Broad | Egypt | Desktop | Display,AU_1XE6VA05,Tablet,YouTube,LandingPageView,Lowest Cost,54.37
+Google Ads,C_K2WNJ02N,AS_YW1UIPRF,Retargeting | Jordan | Mobile | Gmail,AU_8IRCD9SI,Tablet,Gmail,AppInstall,Bid Cap,67.72
+Google Ads,C_K2WNJ02N,AS_NCDZ6S60,CRM | Kuwait | Desktop | Discover,AU_RUPFR2P3,Mobile,Gmail,AppInstall,Cost Cap,20.32
+Google Ads,C_K2WNJ02N,AS_IAK5W77Q,CRM | Kuwait | Mobile | Display,AU_RCL472RL,Mobile,Display,Purchase,Lowest Cost,21.36
+Google Ads,C_K2WNJ02N,AS_C4XYJLC9,Interest | Jordan | Tablet | Discover,AU_452BFSOZ,Mobile,Display,Lead,Maximize Conversions,44.25
+Google Ads,C_JA0BO8WA,AS_TGN7P05D,Interest | UAE | Mobile | Display,AU_J5S6R044,Mobile,Search,Lead,Maximize Conversions,31.71
+Google Ads,C_JA0BO8WA,AS_H8WN2T3Q,Interest | Egypt | Mobile | Search,AU_R7SGMSOX,Mobile,Display,AppInstall,Lowest Cost,20.0
+Google Ads,C_JA0BO8WA,AS_PG3GIHAD,CRM | Kuwait | Mobile | YouTube,AU_T5J284WV,Mobile,Discover,AddToCart,Lowest Cost,20.0
+Google Ads,C_JA0BO8WA,AS_094DFRYI,Retargeting | Egypt | Desktop | YouTube,AU_UMPYO0CU,Tablet,Gmail,Lead,Lowest Cost,34.03
+TikTok,C_R8DOYWLL,AS_BWJM58TL,Broad | Egypt | Desktop | For You,AU_P5JO3Q3Q,Mobile,For You,Lead,Cost Cap,22.84
+TikTok,C_R8DOYWLL,AS_EXZGVTUI,Interest | Egypt | Mobile | TopView,AU_R7SGMSOX,Tablet,TopView,AddToCart,Cost Cap,22.17
+TikTok,C_R8DOYWLL,AS_WQGADY20,Broad | Egypt | Mobile | TopView,AU_P5JO3Q3Q,Desktop,TopView,AddToCart,Maximize Conversions,20.0
+TikTok,C_R8DOYWLL,AS_E9FV4B1K,Lookalike | Jordan | Tablet | TopView,AU_SZ9C3FUQ,Mobile,For You,Purchase,Bid Cap,24.04
+TikTok,C_A1FS4MGB,AS_4HTZ45QF,Lookalike | Jordan | Tablet | TopView,AU_VB5UL5NW,Mobile,Stories,LandingPageView,Bid Cap,20.0
+TikTok,C_A1FS4MGB,AS_9DY7084P,Interest | UAE | Desktop | Stories,AU_QM1H8OJR,Mobile,TopView,Purchase,Cost Cap,28.9
+TikTok,C_Y9Z9UR73,AS_JGGGS8W0,Interest | KSA | Desktop | TopView,AU_ECBPMBJP,Tablet,TopView,AppInstall,Maximize Conversions,23.23
+TikTok,C_Y9Z9UR73,AS_TR5GOIT2,Retargeting | Kuwait | Desktop | Stories,AU_S442VLDQ,Tablet,TopView,AppInstall,Lowest Cost,20.0
+TikTok,C_LMMDPC3D,AS_6ZHBPX52,Broad | Jordan | Mobile | TopView,AU_5EDJJTFP,Tablet,Stories,AddToCart,Cost Cap,39.99
+TikTok,C_LMMDPC3D,AS_YW3QN3T7,CRM | Jordan | Tablet | TopView,AU_YZMEPGTH,Tablet,For You,Purchase,Bid Cap,27.93
+TikTok,C_LMMDPC3D,AS_W6TK9LSG,Retargeting | UAE | Desktop | Pangle,AU_024SCOSS,Tablet,Stories,AppInstall,Cost Cap,36.68
+TikTok,C_ULF5VLUD,AS_K5FI11Z1,Interest | Egypt | Desktop | TopView,AU_R7SGMSOX,Mobile,For You,AppInstall,Cost Cap,20.0
+TikTok,C_ULF5VLUD,AS_ZBOOINB6,Interest | Kuwait | Mobile | For You,AU_QOHMUH8L,Desktop,For You,LandingPageView,Bid Cap,20.87
+TikTok,C_Q7MW0SKC,AS_PAAFH5JF,Interest | Kuwait | Tablet | For You,AU_QOHMUH8L,Tablet,For You,AddToCart,Cost Cap,23.24
+TikTok,C_Q7MW0SKC,AS_LHZZ3RY4,CRM | Egypt | Desktop | Pangle,AU_FC1UQBFO,Mobile,Pangle,Purchase,Cost Cap,21.65
+TikTok,C_Q7MW0SKC,AS_UA7OV77G,CRM | Jordan | Desktop | Pangle,AU_YZMEPGTH,Desktop,Stories,LandingPageView,Cost Cap,21.64
+TikTok,C_Z0C99AFT,AS_XDO3V94X,Broad | Egypt | Tablet | TopView,AU_1XE6VA05,Mobile,For You,Lead,Lowest Cost,26.02
+TikTok,C_Z0C99AFT,AS_H236I5A7,CRM | KSA | Tablet | For You,AU_GNNQFKPL,Tablet,TopView,AppInstall,Maximize Conversions,20.0
+TikTok,C_Z0C99AFT,AS_UHW9408S,Interest | Egypt | Desktop | For You,AU_R7SGMSOX,Tablet,For You,Purchase,Maximize Conversions,20.0
+TikTok,C_9O9YP6SD,AS_DAQM2OX8,Interest | Jordan | Tablet | Pangle,AU_452BFSOZ,Tablet,Pangle,AddToCart,Maximize Conversions,20.0
+TikTok,C_9O9YP6SD,AS_3JCJUDT5,Interest | KSA | Tablet | Stories,AU_YU58CEPS,Mobile,Stories,AppInstall,Cost Cap,22.23
+TikTok,C_9O9YP6SD,AS_N749AHW2,Broad | Jordan | Mobile | Pangle,AU_5EDJJTFP,Mobile,Stories,LandingPageView,Lowest Cost,20.0
+TikTok,C_9O9YP6SD,AS_1GN81EJB,Broad | Jordan | Desktop | Stories,AU_DNR9IS25,Mobile,For You,Purchase,Lowest Cost,49.41
+Snapchat,C_ECEW6GST,AS_ZB4K8OIZ,Interest | Kuwait | Tablet | Discover,AU_QOHMUH8L,Tablet,Spotlight,AddToCart,Bid Cap,30.08
+Snapchat,C_ECEW6GST,AS_JKLOQMHL,Retargeting | Egypt | Tablet | Stories,AU_UMPYO0CU,Tablet,Publisher,AppInstall,Lowest Cost,20.0
+Snapchat,C_ECEW6GST,AS_UPO1RXIV,CRM | Qatar | Desktop | Publisher,AU_YM6IER0V,Desktop,Discover,AddToCart,Maximize Conversions,50.04
+Snapchat,C_X6APK6I2,AS_4WCO5OEQ,Lookalike | Jordan | Desktop | Spotlight,AU_SZ9C3FUQ,Mobile,Spotlight,AppInstall,Bid Cap,55.61
+Snapchat,C_X6APK6I2,AS_4A6I2KOE,Interest | KSA | Tablet | Discover,AU_ECBPMBJP,Mobile,Spotlight,Lead,Cost Cap,20.0
+Snapchat,C_X6APK6I2,AS_7ZBSFN24,Broad | Jordan | Desktop | Spotlight,AU_J0JE4QVZ,Mobile,Publisher,AppInstall,Cost Cap,20.0
+Snapchat,C_X6APK6I2,AS_0XC71O4Y,Broad | Jordan | Desktop | Stories,AU_J0JE4QVZ,Desktop,Spotlight,AddToCart,Maximize Conversions,23.76
+Snapchat,C_XGJ1QQ81,AS_ZN0994LX,CRM | Kuwait | Tablet | Publisher,AU_TS2H3TZR,Desktop,Discover,AppInstall,Bid Cap,28.41
+Snapchat,C_XGJ1QQ81,AS_L52AM7SM,Broad | Jordan | Mobile | Spotlight,AU_5EDJJTFP,Tablet,Spotlight,Purchase,Bid Cap,20.16
+Snapchat,C_XGJ1QQ81,AS_WWROM3ZA,Lookalike | Kuwait | Desktop | Spotlight,AU_F4W0VUGK,Desktop,Stories,AppInstall,Lowest Cost,20.0
+Snapchat,C_XGJ1QQ81,AS_ZVE9L4UW,CRM | Kuwait | Mobile | Discover,AU_A830DM7X,Mobile,Spotlight,LandingPageView,Cost Cap,21.2
+Snapchat,C_XU5R5L6R,AS_7148C6WZ,Interest | Egypt | Tablet | Spotlight,AU_R7SGMSOX,Desktop,Stories,AppInstall,Maximize Conversions,21.14
+Snapchat,C_XU5R5L6R,AS_R2LIOGRP,Lookalike | Qatar | Tablet | Publisher,AU_X497W19V,Desktop,Spotlight,Lead,Cost Cap,24.82
+Snapchat,C_XX99QWB0,AS_8LSWU652,Broad | Jordan | Mobile | Publisher,AU_J0JE4QVZ,Tablet,Discover,LandingPageView,Cost Cap,22.74
+Snapchat,C_XX99QWB0,AS_720KLBIP,Broad | Egypt | Tablet | Discover,AU_P5JO3Q3Q,Tablet,Stories,Lead,Cost Cap,63.79
+Snapchat,C_XX99QWB0,AS_BCWU438R,Lookalike | Kuwait | Tablet | Publisher,AU_G2KTBCUD,Mobile,Spotlight,AppInstall,Maximize Conversions,20.0
+Snapchat,C_XX99QWB0,AS_A9XM091Z,CRM | Egypt | Mobile | Spotlight,AU_FC1UQBFO,Tablet,Publisher,LandingPageView,Cost Cap,20.0
+Snapchat,C_8BLGSRI2,AS_A5NV0T5X,Retargeting | Egypt | Desktop | Stories,AU_R9A7MFP0,Desktop,Stories,Lead,Lowest Cost,21.08
+Snapchat,C_8BLGSRI2,AS_KC97HQ4T,CRM | Jordan | Mobile | Discover,AU_YZMEPGTH,Mobile,Spotlight,Purchase,Cost Cap,33.44
