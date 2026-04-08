@@ -341,7 +341,6 @@ class FunnelService:
             result = await self.db.execute(
                 select(CDPProfile)
                 .where(CDPProfile.tenant_id == self.tenant_id)
-                .options(selectinload(CDPProfile.events))
                 .limit(batch_size)
                 .offset(offset)
             )
@@ -350,8 +349,24 @@ class FunnelService:
             if not profiles:
                 break
 
+            # Fetch events for all profiles in batch
+            profile_ids = [p.id for p in profiles]
+            events_result = await self.db.execute(
+                select(CDPEvent)
+                .where(
+                    CDPEvent.tenant_id == self.tenant_id,
+                    CDPEvent.profile_id.in_(profile_ids),
+                )
+                .order_by(CDPEvent.event_time.asc())
+            )
+            all_events = events_result.scalars().all()
+            events_by_profile: dict = {}
+            for evt in all_events:
+                events_by_profile.setdefault(evt.profile_id, []).append(evt)
+
             for profile in profiles:
-                entry = await self._process_profile_funnel(profile, funnel, steps)
+                profile_events = events_by_profile.get(profile.id, [])
+                entry = await self._process_profile_funnel(profile, funnel, steps, profile_events)
 
                 if entry:
                     total_entered += 1
@@ -428,6 +443,7 @@ class FunnelService:
         profile: CDPProfile,
         funnel: CDPFunnel,
         steps: list[dict],
+        profile_events: Optional[list] = None,
     ) -> Optional[CDPFunnelEntry]:
         """
         Process a single profile through the funnel.
@@ -435,7 +451,18 @@ class FunnelService:
         Returns a funnel entry if the profile completed at least step 1.
         """
         # Get all events for this profile (ordered by time)
-        events = sorted(profile.events, key=lambda e: e.event_time)
+        if profile_events is not None:
+            events = sorted(profile_events, key=lambda e: e.event_time)
+        else:
+            result = await self.db.execute(
+                select(CDPEvent)
+                .where(
+                    CDPEvent.tenant_id == self.tenant_id,
+                    CDPEvent.profile_id == profile.id,
+                )
+                .order_by(CDPEvent.event_time.asc())
+            )
+            events = list(result.scalars().all())
 
         if not events:
             return None

@@ -87,8 +87,8 @@ class SegmentEvaluator:
             return False, None
 
         logic = rules.get("logic", "and").lower()
-        conditions = rules.get("conditions", [])
-        groups = rules.get("groups", [])
+        conditions = rules.get("conditions") or []
+        groups = rules.get("groups") or []
 
         results = []
         scores = []

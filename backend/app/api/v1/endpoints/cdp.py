@@ -43,7 +43,7 @@ def _batched(iterable: list, n: int) -> Iterator[list]:
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request, status
-from sqlalchemy import String, delete, func, or_, select
+from sqlalchemy import Date, String, cast, delete, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -1311,15 +1311,15 @@ async def get_event_statistics(
 
     daily_volume_result = await db.execute(
         select(
-            func.date(CDPEvent.event_time).label("date"),
+            cast(CDPEvent.event_time, Date).label("date"),
             func.count(CDPEvent.id).label("count"),
         )
         .where(
             CDPEvent.tenant_id == tenant_id,
             CDPEvent.event_time >= daily_cutoff,
         )
-        .group_by(func.date(CDPEvent.event_time))
-        .order_by(func.date(CDPEvent.event_time).asc())
+        .group_by(cast(CDPEvent.event_time, Date))
+        .order_by(cast(CDPEvent.event_time, Date).asc())
     )
     daily_volume = [
         {"date": str(row.date), "count": row.count} for row in daily_volume_result.all()
