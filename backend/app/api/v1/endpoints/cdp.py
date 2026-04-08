@@ -1309,26 +1309,28 @@ async def get_event_statistics(
     daily_period = min(period_days, 30)
     daily_cutoff = datetime.now(UTC) - timedelta(days=daily_period)
 
+    date_expr = cast(CDPEvent.event_time, Date)
     daily_volume_result = await db.execute(
         select(
-            cast(CDPEvent.event_time, Date).label("date"),
+            date_expr.label("date"),
             func.count(CDPEvent.id).label("count"),
         )
         .where(
             CDPEvent.tenant_id == tenant_id,
             CDPEvent.event_time >= daily_cutoff,
         )
-        .group_by(cast(CDPEvent.event_time, Date))
-        .order_by(cast(CDPEvent.event_time, Date).asc())
+        .group_by(date_expr)
+        .order_by(date_expr.asc())
     )
     daily_volume = [
         {"date": str(row.date), "count": row.count} for row in daily_volume_result.all()
     ]
 
     # EMQ score distribution
+    bucket_expr = func.round(CDPEvent.emq_score * 10)
     emq_distribution_result = await db.execute(
         select(
-            func.round(CDPEvent.emq_score * 10).label("bucket"),
+            bucket_expr.label("bucket"),
             func.count(CDPEvent.id).label("count"),
         )
         .where(
@@ -1336,8 +1338,8 @@ async def get_event_statistics(
             CDPEvent.event_time >= cutoff_date,
             CDPEvent.emq_score.isnot(None),
         )
-        .group_by(func.round(CDPEvent.emq_score * 10))
-        .order_by(func.round(CDPEvent.emq_score * 10))
+        .group_by(bucket_expr)
+        .order_by(bucket_expr)
     )
     emq_distribution = [
         {
