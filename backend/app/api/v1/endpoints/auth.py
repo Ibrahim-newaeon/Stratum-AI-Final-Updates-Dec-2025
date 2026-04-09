@@ -356,11 +356,9 @@ async def login(
     except HTTPException:
         raise
     except (ConnectionError, TimeoutError, OSError) as exc:
-        logger.error("redis_unavailable_rate_limit_check", error=str(exc))
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Service temporarily unavailable. Please try again shortly.",
-        )
+        # Graceful degradation: allow login when Redis is unavailable.
+        # Rate limiting is best-effort; password verification is the real gate.
+        logger.warning("redis_unavailable_rate_limit_check", error=str(exc))
 
     # Find user(s) by email hash
     # Note: email_hash is unique per tenant, so the same email may exist
