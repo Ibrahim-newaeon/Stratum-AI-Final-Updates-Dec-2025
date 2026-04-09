@@ -5,7 +5,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
   LockClosedIcon,
-  ArrowLeftIcon,
   CheckCircleIcon,
   EyeIcon,
   EyeSlashIcon,
@@ -13,6 +12,7 @@ import {
   ExclamationCircleIcon,
 } from '@heroicons/react/24/outline';
 import { useResetPassword } from '@/api/auth';
+import { authStyles } from '@/components/auth/authStyles';
 
 const resetPasswordSchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters'),
@@ -23,6 +23,20 @@ const resetPasswordSchema = z.object({
 });
 
 type ResetPasswordForm = z.infer<typeof resetPasswordSchema>;
+
+/** Shared background with floating orbs and cyber grid */
+function AuthBackground() {
+  return (
+    <>
+      <div className="fixed inset-0 auth-cyber-grid pointer-events-none" />
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="auth-float-1 absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(255, 31, 109, 0.08), transparent 60%)' }} />
+        <div className="auth-float-2 absolute bottom-[-15%] right-[-5%] w-[500px] h-[500px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(255, 140, 0, 0.06), transparent 60%)' }} />
+        <div className="auth-float-3 absolute top-[30%] right-[20%] w-[400px] h-[400px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(255, 215, 0, 0.05), transparent 60%)' }} />
+      </div>
+    </>
+  );
+}
 
 export default function ResetPassword() {
   const navigate = useNavigate();
@@ -46,29 +60,34 @@ export default function ResetPassword() {
     resolver: zodResolver(resetPasswordSchema),
   });
 
-  // If no token, show error
+  // No token — invalid link
   if (!token) {
     return (
-      <div className="min-h-screen bg-surface-primary flex items-center justify-center p-6">
-        <div className="max-w-md w-full text-center">
-          <div className="motion-enter">
-            <div className="w-20 h-20 rounded-full bg-danger/10 flex items-center justify-center mx-auto mb-6">
-              <ExclamationTriangleIcon className="w-10 h-10 text-danger" />
+      <>
+        <style>{authStyles}</style>
+        <div className="bg-[#050B18] text-white min-h-screen flex font-sans selection:bg-[#FF1F6D]/30 overflow-hidden">
+          <AuthBackground />
+          <main className="relative z-10 w-full flex items-center justify-center min-h-screen p-6">
+            <div className="w-full max-w-md auth-glass-card rounded-xl p-10 border-white/10 relative z-10 shadow-2xl auth-fade-up text-center">
+              <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-6">
+                <ExclamationTriangleIcon className="w-8 h-8 text-red-400" />
+              </div>
+              <h2 className="text-2xl font-display font-extrabold text-white mb-2 tracking-tight">
+                Invalid Reset Link
+              </h2>
+              <p className="text-slate-400 text-sm mb-8">
+                This security key reset link is invalid or has expired. Request a new transmission.
+              </p>
+              <Link
+                to="/forgot-password"
+                className="block w-full auth-gradient-btn auth-shimmer-btn text-white font-black h-14 rounded-xl tracking-[0.2em] text-sm flex items-center justify-center transition-all active:scale-[0.98]"
+              >
+                REQUEST NEW LINK
+              </Link>
             </div>
-            <h1 className="text-h1 text-white mb-4">Invalid reset link</h1>
-            <p className="text-body text-text-secondary mb-8">
-              This password reset link is invalid or has expired. Please request a new one.
-            </p>
-            <Link
-              to="/forgot-password"
-              className="inline-block w-full py-3 rounded-xl bg-gradient-stratum text-white font-medium text-body text-center
-                         hover:shadow-glow transition-all duration-base"
-            >
-              Request new link
-            </Link>
-          </div>
+          </main>
         </div>
-      </div>
+      </>
     );
   }
 
@@ -76,143 +95,159 @@ export default function ResetPassword() {
     resetPasswordMutation.mutate({ token, password: data.password });
   };
 
+  // Success state
   if (isSuccess) {
     return (
-      <div className="min-h-screen bg-surface-primary flex items-center justify-center p-6">
-        <div className="max-w-md w-full text-center">
-          <div className="motion-enter">
-            <div className="w-20 h-20 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-6">
-              <CheckCircleIcon className="w-10 h-10 text-success" />
+      <>
+        <style>{authStyles}</style>
+        <div className="bg-[#050B18] text-white min-h-screen flex font-sans selection:bg-[#FF1F6D]/30 overflow-hidden">
+          <AuthBackground />
+          <main className="relative z-10 w-full flex items-center justify-center min-h-screen p-6">
+            <div className="w-full max-w-md auth-glass-card rounded-xl p-10 border-white/10 relative z-10 shadow-2xl auth-fade-up text-center">
+              <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-6">
+                <CheckCircleIcon className="w-8 h-8 text-emerald-400" />
+              </div>
+              <h2 className="text-2xl font-display font-extrabold text-white mb-2 tracking-tight">
+                Key Reset Complete
+              </h2>
+              <p className="text-slate-400 text-sm mb-8">
+                Your security key has been updated. Initialize your session with the new credentials.
+              </p>
+              <button
+                onClick={() => navigate('/login')}
+                className="w-full auth-gradient-btn auth-shimmer-btn text-white font-black h-14 rounded-xl tracking-[0.2em] text-sm flex items-center justify-center transition-all active:scale-[0.98]"
+              >
+                INITIALIZE SESSION
+              </button>
             </div>
-            <h1 className="text-h1 text-white mb-4">Password reset successful</h1>
-            <p className="text-body text-text-secondary mb-8">
-              Your password has been reset. You can now sign in with your new password.
-            </p>
-            <button
-              onClick={() => navigate('/login')}
-              className="w-full py-3 rounded-xl bg-gradient-stratum text-white font-medium text-body
-                         hover:shadow-glow transition-all duration-base"
-            >
-              Sign in
-            </button>
-          </div>
+          </main>
         </div>
-      </div>
+      </>
     );
   }
 
+  // Form state
   return (
-    <div className="min-h-screen bg-surface-primary flex items-center justify-center p-6">
-      <div className="max-w-md w-full">
-        <div className="motion-enter">
-          {/* Back link */}
-          <Link
-            to="/login"
-            className="inline-flex items-center gap-2 text-meta text-text-muted hover:text-white transition-colors mb-8"
-          >
-            <ArrowLeftIcon className="w-4 h-4" />
-            Back to login
-          </Link>
+    <>
+      <style>{authStyles}</style>
+      <div className="bg-[#050B18] text-white min-h-screen flex font-sans selection:bg-[#FF1F6D]/30 overflow-hidden">
+        <AuthBackground />
 
-          {/* Logo */}
-          <div className="flex items-center gap-2 mb-8">
-            <div className="w-10 h-10 rounded-lg bg-gradient-stratum flex items-center justify-center">
-              <span className="text-white font-bold text-h3">S</span>
-            </div>
-            <span className="text-h2 text-white font-semibold">Stratum AI</span>
-          </div>
-
-          <h1 className="text-h1 text-white mb-2">Reset your password</h1>
-          <p className="text-body text-text-muted mb-8">
-            Enter your new password below.
-          </p>
-
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            {/* API Error */}
-            {apiError && (
-              <div className="flex items-center gap-2 p-3 rounded-xl bg-danger/10 text-danger">
-                <ExclamationCircleIcon className="w-5 h-5 flex-shrink-0" />
-                <span className="text-meta">{apiError}</span>
-              </div>
-            )}
-
-            {/* Password */}
-            <div>
-              <label className="block text-meta text-text-secondary mb-2">New password</label>
-              <div className="relative">
-                <LockClosedIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted" />
-                <input
-                  {...register('password')}
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Min. 8 characters"
-                  className="w-full pl-12 pr-12 py-3 rounded-xl bg-surface-secondary border border-white/10
-                             text-white placeholder-text-muted text-body
-                             focus:border-stratum-500/50 focus:ring-2 focus:ring-stratum-500/20
-                             transition-all duration-base outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-white transition-colors"
-                >
-                  {showPassword ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
-                </button>
-              </div>
-              {errors.password && (
-                <p className="mt-2 text-meta text-danger">{errors.password.message}</p>
-              )}
-            </div>
-
-            {/* Confirm Password */}
-            <div>
-              <label className="block text-meta text-text-secondary mb-2">Confirm new password</label>
-              <div className="relative">
-                <LockClosedIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted" />
-                <input
-                  {...register('confirmPassword')}
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  placeholder="Confirm your password"
-                  className="w-full pl-12 pr-12 py-3 rounded-xl bg-surface-secondary border border-white/10
-                             text-white placeholder-text-muted text-body
-                             focus:border-stratum-500/50 focus:ring-2 focus:ring-stratum-500/20
-                             transition-all duration-base outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-white transition-colors"
-                >
-                  {showConfirmPassword ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
-                </button>
-              </div>
-              {errors.confirmPassword && (
-                <p className="mt-2 text-meta text-danger">{errors.confirmPassword.message}</p>
-              )}
-            </div>
-
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-3 rounded-xl bg-gradient-stratum text-white font-medium text-body
-                         hover:shadow-glow transition-all duration-base
-                         disabled:opacity-50 disabled:cursor-not-allowed"
+        <main className="relative z-10 w-full flex items-center justify-center min-h-screen p-6">
+          <div className="w-full max-w-md auth-glass-card rounded-xl p-10 border-white/10 relative z-10 shadow-2xl auth-fade-up">
+            {/* Back link */}
+            <Link
+              to="/login"
+              className="inline-flex items-center gap-2 text-[10px] text-slate-500 hover:text-white transition-colors uppercase tracking-widest font-mono mb-8"
             >
-              {isLoading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                  Resetting password...
-                </span>
-              ) : (
-                'Reset password'
+              &larr; Back to session
+            </Link>
+
+            {/* Header */}
+            <div className="mb-8">
+              <h2 className="text-2xl font-display font-extrabold text-white mb-2 tracking-tight">
+                Reset Security Key
+              </h2>
+              <p className="text-slate-400 text-sm">
+                Enter your new security key below.
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              {/* API Error */}
+              {apiError && (
+                <div className="auth-slide-in flex items-center gap-2 p-3 rounded-xl text-[13px] bg-red-500/10 border border-red-500/20 text-red-400">
+                  <ExclamationCircleIcon className="w-4 h-4 flex-shrink-0" />
+                  <span>{apiError}</span>
+                </div>
               )}
-            </button>
-          </form>
-        </div>
+
+              {/* New Password */}
+              <div className="space-y-2 auth-fade-up-d1">
+                <label
+                  htmlFor="reset-password"
+                  className="text-[10px] uppercase font-bold tracking-[0.15em] text-slate-500 ml-1"
+                >
+                  New Security Key
+                </label>
+                <div className="relative">
+                  <LockClosedIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-slate-500 pointer-events-none" />
+                  <input
+                    {...register('password')}
+                    id="reset-password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Min. 8 characters"
+                    className="w-full h-[44px] bg-[#050B18]/80 border border-white/10 rounded-[12px] pl-12 pr-11 text-white text-sm outline-none transition-all placeholder:text-slate-600 focus:border-[#FF8C00] focus:shadow-[0_0_15px_rgba(255,140,0,0.3)]"
+                  />
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/60 transition-colors"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeSlashIcon className="w-[18px] h-[18px]" /> : <EyeIcon className="w-[18px] h-[18px]" />}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="text-xs text-red-400 mt-1 ml-1">{errors.password.message}</p>
+                )}
+              </div>
+
+              {/* Confirm Password */}
+              <div className="space-y-2 auth-fade-up-d2">
+                <label
+                  htmlFor="reset-confirm-password"
+                  className="text-[10px] uppercase font-bold tracking-[0.15em] text-slate-500 ml-1"
+                >
+                  Confirm Security Key
+                </label>
+                <div className="relative">
+                  <LockClosedIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-slate-500 pointer-events-none" />
+                  <input
+                    {...register('confirmPassword')}
+                    id="reset-confirm-password"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    placeholder="Re-enter security key"
+                    className="w-full h-[44px] bg-[#050B18]/80 border border-white/10 rounded-[12px] pl-12 pr-11 text-white text-sm outline-none transition-all placeholder:text-slate-600 focus:border-[#FF8C00] focus:shadow-[0_0_15px_rgba(255,140,0,0.3)]"
+                  />
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/60 transition-colors"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showConfirmPassword ? <EyeSlashIcon className="w-[18px] h-[18px]" /> : <EyeIcon className="w-[18px] h-[18px]" />}
+                  </button>
+                </div>
+                {errors.confirmPassword && (
+                  <p className="text-xs text-red-400 mt-1 ml-1">{errors.confirmPassword.message}</p>
+                )}
+              </div>
+
+              {/* Submit */}
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="auth-fade-up-d3 w-full auth-gradient-btn auth-shimmer-btn text-white font-black h-14 rounded-xl tracking-[0.2em] text-sm flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
+              >
+                {isLoading ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="animate-spin w-[18px] h-[18px]" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    RESETTING...
+                  </span>
+                ) : (
+                  <>RESET SECURITY KEY</>
+                )}
+              </button>
+            </form>
+          </div>
+        </main>
       </div>
-    </div>
+    </>
   );
 }
