@@ -89,17 +89,17 @@ export default {
         danger: '#EF4444',
         info: '#3B82F6',
         insight: '#F97316',
-        // Surface colors for dark mode
+        // Surface colors — white light theme
         surface: {
-          primary: '#060606',
-          secondary: '#0A0A0A',
-          tertiary: '#121212',
-          elevated: 'rgba(255,255,255,0.04)',
+          primary: '#F5F5F7',
+          secondary: '#FFFFFF',
+          tertiary: '#F0F0F5',
+          elevated: 'rgba(0,0,0,0.02)',
         },
         // Text colors
-        'text-primary': '#FFFFFF',
-        'text-secondary': '#A7AABB',
-        'text-muted': '#6E7482',
+        'text-primary': '#1A1A2E',
+        'text-secondary': '#9090A0',
+        'text-muted': '#B0B0BA',
       },
       borderRadius: {
         sm: '10px',
@@ -121,17 +121,16 @@ export default {
         'h1': ['28px', { lineHeight: '1.25', fontWeight: '700' }],
       },
       boxShadow: {
-        // Analytics Design System shadows
-        'glow-sm': '0 0 10px rgba(168, 85, 247, 0.15)',
-        'glow': '0 0 22px rgba(168, 85, 247, 0.18)',
-        'glow-lg': '0 0 30px rgba(168, 85, 247, 0.25)',
-        'glow-insight': '0 0 18px rgba(249, 115, 22, 0.22)',
-        'card': '0 4px 12px rgba(0, 0, 0, 0.20)',
-        'card-hover': '0 10px 30px rgba(0, 0, 0, 0.28)',
-        // Glassmorphism shadows
-        'glass': '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.04)',
-        'glass-hover': '0 12px 48px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(168, 85, 247, 0.08)',
-        'bento': '0 2px 8px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.04)',
+        // Light theme shadows — subtle and clean
+        'glow-sm': '0 0 8px rgba(255, 31, 109, 0.10)',
+        'glow': '0 0 15px rgba(255, 31, 109, 0.12)',
+        'glow-lg': '0 0 22px rgba(255, 31, 109, 0.18)',
+        'glow-insight': '0 0 12px rgba(249, 115, 22, 0.15)',
+        'card': '0 1px 3px rgba(0, 0, 0, 0.06)',
+        'card-hover': '0 4px 16px rgba(0, 0, 0, 0.08)',
+        'glass': '0 2px 8px rgba(0, 0, 0, 0.04)',
+        'glass-hover': '0 4px 16px rgba(0, 0, 0, 0.06)',
+        'bento': '0 1px 4px rgba(0, 0, 0, 0.04)',
       },
       spacing: {
         // Analytics Design System spacing (8px grid)
@@ -146,8 +145,8 @@ export default {
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-stratum': 'linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)',
-        'gradient-stratum-soft': 'linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%)',
+        'gradient-stratum': 'linear-gradient(135deg, #FF1F6D 0%, #FF8C00 100%)',
+        'gradient-stratum-soft': 'linear-gradient(135deg, rgba(255, 31, 109, 0.06) 0%, rgba(255, 140, 0, 0.06) 100%)',
       },
       keyframes: {
         'accordion-down': {

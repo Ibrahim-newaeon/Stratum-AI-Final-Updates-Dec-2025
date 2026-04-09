@@ -4,36 +4,37 @@
 
 @layer base {
   :root {
-    --background: 0 0% 98%;
-    --foreground: 224 71% 4%;
+    /* White light theme — matches dashboard_white_theme.html */
+    --background: 240 11% 97%;            /* #F5F5F7 page */
+    --foreground: 240 28% 14%;            /* #1A1A2E text */
 
-    --card: 0 0% 100%;
-    --card-foreground: 224 71% 4%;
+    --card: 0 0% 100%;                    /* #FFFFFF cards */
+    --card-foreground: 240 28% 14%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 224 71% 4%;
+    --popover-foreground: 240 28% 14%;
 
-    /* Stratum AI Brand - Purple to Cyan gradient feel */
-    --primary: 262 83% 58%;
+    /* Primary accent — Spectral Pink #FF1F6D */
+    --primary: 340 100% 56%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 224 71% 4%;
+    --secondary: 239 84% 67%;             /* #6366F1 Indigo */
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 46%;
+    --muted: 240 10% 96%;                 /* #F0F0F5 */
+    --muted-foreground: 240 8% 60%;       /* #9090A0 */
 
-    --accent: 262 83% 95%;
-    --accent-foreground: 262 83% 35%;
+    --accent: 340 100% 97%;               /* light pink tint */
+    --accent-foreground: 340 100% 40%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 262 83% 58%;
+    --border: 240 10% 93%;                /* #EBEBEF */
+    --input: 240 10% 93%;
+    --ring: 340 100% 56%;                 /* #FF1F6D */
 
-    --radius: 0.75rem;
+    --radius: 0.625rem;                   /* 10px — matches HTML ref */
 
     /* Platform colors */
     --meta: 214 89% 52%;
@@ -49,47 +50,45 @@
   }
 
   .dark {
-    /* Analytics Design System - Dark-first surfaces */
-    --background: 0 0% 2.4%;           /* #060606 - primary bg */
-    --foreground: 0 0% 100%;           /* #FFFFFF - text primary */
+    /* Dark fallback — mirrors light values for consistency */
+    --background: 240 11% 97%;
+    --foreground: 240 28% 14%;
 
-    --card: 0 0% 3.9%;                 /* #0A0A0A - secondary surface */
-    --card-foreground: 0 0% 100%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 28% 14%;
 
-    --popover: 0 0% 7.1%;              /* #121212 - tertiary/elevated */
-    --popover-foreground: 0 0% 100%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 28% 14%;
 
-    /* Stratum AI Brand - Purple/Cyan gradient system */
-    --primary: 271 91% 65%;            /* #a855f7 */
+    --primary: 340 100% 56%;            /* #FF1F6D */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 3.9%;            /* #0A0A0A */
-    --secondary-foreground: 228 14% 70%; /* #A7AABB - text secondary */
+    --secondary: 239 84% 67%;           /* #6366F1 */
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 0 0% 7.1%;                /* #121212 */
-    --muted-foreground: 223 10% 47%;   /* #6E7482 - text muted */
+    --muted: 240 10% 96%;
+    --muted-foreground: 240 8% 60%;
 
-    --accent: 271 91% 65% / 0.10;      /* Purple at 10% */
-    --accent-foreground: 271 91% 75%;
+    --accent: 340 100% 97%;
+    --accent-foreground: 340 100% 40%;
 
-    --destructive: 0 84% 60%;          /* #EF4444 */
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Borders - subtle transparency */
-    --border: 0 0% 100% / 0.10;        /* rgba(255,255,255,0.10) */
-    --input: 0 0% 100% / 0.08;         /* rgba(255,255,255,0.08) */
-    --ring: 271 91% 65%;               /* #a855f7 */
+    --border: 240 10% 93%;              /* #EBEBEF */
+    --input: 240 10% 93%;
+    --ring: 340 100% 56%;
 
-    /* Data/Status colors from design system */
-    --success: 142 71% 45%;            /* #22C55E */
-    --warning: 48 97% 54%;             /* #FACC15 */
-    --danger: 0 84% 60%;               /* #EF4444 */
-    --info: 217 91% 60%;               /* #3B82F6 */
-    --insight: 25 95% 53%;             /* #F97316 - Quantum Ember */
+    /* Data/Status colors */
+    --success: 142 71% 45%;
+    --warning: 48 97% 54%;
+    --danger: 0 84% 60%;
+    --info: 217 91% 60%;
+    --insight: 25 95% 53%;
 
-    /* Brand glow */
-    --glow-brand: 271 91% 65% / 0.18;
-    --glow-insight: 25 95% 53% / 0.22;
+    /* Brand glow — pink */
+    --glow-brand: 340 100% 56% / 0.12;
+    --glow-insight: 25 95% 53% / 0.15;
   }
 }
 
@@ -195,8 +194,8 @@
   --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
   --ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-exit: cubic-bezier(0.7, 0, 0.84, 0);
-  --glow-brand: rgba(168, 85, 247, 0.18);
-  --glow-insight: rgba(249, 115, 22, 0.22);
+  --glow-brand: rgba(255, 31, 109, 0.12);
+  --glow-insight: rgba(249, 115, 22, 0.15);
 }
 
 /* A) Page & Section Entrance */
@@ -298,19 +297,19 @@
   .card-elevated:hover {
     @apply shadow-card-hover;
     transform: translateY(-1px);
-    border-color: rgba(168, 85, 247, 0.30);
+    border-color: rgba(255, 31, 109, 0.20);
   }
 
   .card-glass {
-    background: rgba(6, 6, 6, 0.60);
-    backdrop-filter: blur(16px) saturate(1.6);
-    -webkit-backdrop-filter: blur(16px) saturate(1.6);
-    @apply border border-white/[0.08] rounded-xl;
+    background: #FFFFFF;
+    @apply border rounded-xl;
+    border-color: #EBEBEF;
   }
 
   .card-glass:hover {
-    background: rgba(6, 6, 6, 0.70);
-    border-color: rgba(168, 85, 247, 0.15);
+    background: #FFFFFF;
+    border-color: rgba(255, 31, 109, 0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
   }
 
   /* Bento Grid Layout */
@@ -345,18 +344,16 @@
     .bento-row-2 { grid-row: span 1; }
   }
 
-  /* Widget Card — unified glassmorphism style for dashboard */
+  /* Widget Card — clean white card for dashboard */
   .widget-card {
-    background: rgba(10, 10, 10, 0.65);
-    backdrop-filter: blur(12px) saturate(1.4);
-    -webkit-backdrop-filter: blur(12px) saturate(1.4);
-    @apply border border-white/[0.07] rounded-2xl p-5 transition-all duration-200;
+    background: #FFFFFF;
+    @apply border rounded-2xl p-5 transition-all duration-200;
+    border-color: #EBEBEF;
   }
 
   .widget-card:hover {
-    background: rgba(10, 10, 10, 0.75);
-    border-color: rgba(168, 85, 247, 0.18);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(168, 85, 247, 0.06);
+    border-color: rgba(255, 31, 109, 0.15);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
   }
 
   .widget-header {
@@ -369,15 +366,15 @@
 
   /* Gradient backgrounds - Brand signature */
   .gradient-primary {
-    background: linear-gradient(135deg, #a855f7 0%, #06b6d4 100%);
+    background: linear-gradient(135deg, #FF1F6D 0%, #FF8C00 100%);
   }
 
   .gradient-primary-soft {
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%);
+    background: linear-gradient(135deg, rgba(255, 31, 109, 0.06) 0%, rgba(255, 140, 0, 0.06) 100%);
   }
 
   .dark .gradient-primary-soft {
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(6, 182, 212, 0.15) 100%);
+    background: linear-gradient(135deg, rgba(255, 31, 109, 0.08) 0%, rgba(255, 140, 0, 0.08) 100%);
   }
 
   /* Stat card animations */
@@ -440,11 +437,11 @@
 
   /* Glow effects */
   .glow-primary {
-    box-shadow: 0 0 20px hsl(262 83% 58% / 0.3);
+    box-shadow: 0 0 15px rgba(255, 31, 109, 0.15);
   }
 
   .dark .glow-primary {
-    box-shadow: 0 0 30px hsl(262 83% 65% / 0.25);
+    box-shadow: 0 0 15px rgba(255, 31, 109, 0.15);
   }
 
   /* Button enhancements */
@@ -453,11 +450,11 @@
   }
 
   .btn-primary:hover {
-    box-shadow: 0 4px 12px hsl(262 83% 58% / 0.3);
+    box-shadow: 0 4px 12px rgba(255, 31, 109, 0.25);
   }
 
   .dark .btn-primary:hover {
-    box-shadow: 0 4px 16px hsl(262 83% 65% / 0.35);
+    box-shadow: 0 4px 12px rgba(255, 31, 109, 0.25);
   }
 
   /* Sidebar active state */
@@ -471,10 +468,10 @@
     left: 0;
     top: 50%;
     transform: translateY(-50%);
-    width: 3px;
+    width: 2px;
     height: 60%;
     border-radius: 0 4px 4px 0;
-    background: linear-gradient(180deg, hsl(262 83% 58%) 0%, hsl(199 89% 48%) 100%);
+    background: #FF1F6D;
   }
 
   /* ===== Standardized Button Components ===== */
@@ -594,10 +591,10 @@
 
 /* Skeleton loading - Analytics Design System */
 .skeleton {
-  background: linear-gradient(90deg, rgba(255,255,255,0.04), rgba(255,255,255,0.08), rgba(255,255,255,0.04));
+  background: linear-gradient(90deg, #F0F0F5, #E8E8F0, #F0F0F5);
   background-size: 200% 100%;
   animation: shimmer 900ms linear infinite;
-  border-radius: 12px;
+  border-radius: 10px;
 }
 
 @keyframes shimmer {
@@ -614,8 +611,8 @@
 
 /* Nav Active State - Analytics Design System */
 .nav-item-active {
-  background: rgba(168, 85, 247, 0.10);
-  border-left: 3px solid rgba(168, 85, 247, 0.30);
+  background: rgba(255, 31, 109, 0.06);
+  border-left: 2px solid #FF1F6D;
 }
 
 /* Joyride custom styles */
@@ -816,7 +813,7 @@
 
   /* Mobile bottom navigation */
   .mobile-nav-bottom {
-    @apply fixed bottom-0 left-0 right-0 bg-surface-secondary border-t border-white/10 safe-area-bottom;
+    @apply fixed bottom-0 left-0 right-0 bg-surface-secondary border-t safe-area-bottom;
     @apply flex items-center justify-around py-2;
     @apply lg:hidden;
   }
@@ -879,7 +876,7 @@
 
   /* Mobile bottom sheet */
   .bottom-sheet {
-    @apply fixed inset-x-0 bottom-0 rounded-t-2xl bg-surface-secondary border-t border-white/10;
+    @apply fixed inset-x-0 bottom-0 rounded-t-2xl bg-surface-secondary border-t;
     @apply transform transition-transform duration-300 ease-out;
     @apply safe-area-bottom;
   }
@@ -892,7 +889,7 @@
 
   /* Swipe indicator for bottom sheets */
   .swipe-indicator {
-    @apply w-12 h-1 bg-white/20 rounded-full mx-auto my-3;
+    @apply w-12 h-1 bg-black/10 rounded-full mx-auto my-3;
   }
 }
 

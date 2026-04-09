@@ -1,6 +1,6 @@
 /**
- * Dashboard Layout - DARK THEME EDITION
- * Matches landing page with purple/cyan gradients
+ * Dashboard Layout - WHITE LIGHT THEME
+ * Clean minimal design: #F5F5F7 page, #FFFFFF cards, #FF1F6D accent
  */
 
 import { useEffect, useState } from 'react';
@@ -66,7 +66,6 @@ import { KeyboardShortcutsModal } from '@/components/ui/keyboard-shortcuts';
 import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist';
 import { useAuth } from '@/contexts/AuthContext';
 import type { AppRole } from '@/components/auth/ProtectedRoute';
-import { NeuralNetworkBg } from '@/components/ui/NeuralNetworkBg';
 import { TrustGateIndicator } from '@/components/ui/TrustGateIndicator';
 import { OnboardingChat, OnboardingChatButton } from '@/components/onboarding';
 import { FeedbackWidget } from '@/components/feedback/FeedbackWidget';
@@ -121,27 +120,26 @@ function canSeeSection(role: string | undefined, section: string): boolean {
   return visible.includes(section);
 }
 
-// Stratum AI Dashboard Theme - Midnight Teal Glass
+// Stratum AI Dashboard Theme — White Light
 const theme = {
-  primary: '#00c7be',                     // Midnight Teal
-  primaryLight: 'rgba(0, 199, 190, 0.15)',
-  gold: '#e2b347',                        // CTA accent
-  green: '#34c759',                       // Jade
+  primary: '#FF1F6D',                     // Spectral Pink — CTA, active nav
+  primaryLight: 'rgba(255, 31, 109, 0.06)',
+  secondary: '#6366F1',                   // Indigo — users / mid metric
+  tertiary: '#0EA5E9',                    // Sky — conversions
+  green: '#22C55E',                       // Success
   orange: '#f59e0b',
-  purple: '#a78bfa',
-  cyan: '#00c7be',
-  bgBase: '#0b1215',                      // Midnight Ocean
-  bgCard: 'rgba(255, 255, 255, 0.05)',    // Glass surface
-  bgSurface: 'rgba(255, 255, 255, 0.08)',
-  bgOverlay: 'rgba(11, 18, 21, 0.75)',
-  textPrimary: 'rgba(245, 245, 247, 0.92)',
-  textSecondary: 'rgba(245, 245, 247, 0.6)',
-  textMuted: 'rgba(245, 245, 247, 0.35)',
-  border: 'rgba(255, 255, 255, 0.08)',
-  borderHover: 'rgba(255, 255, 255, 0.15)',
-  borderGold: 'rgba(226, 179, 71, 0.2)',
-  success: '#34c759',
-  danger: '#ff6b6b',
+  bgBase: '#F5F5F7',                      // Page background
+  bgCard: '#FFFFFF',                      // Cards
+  bgSurface: 'rgba(0, 0, 0, 0.03)',      // Hover surface
+  bgOverlay: 'rgba(0, 0, 0, 0.3)',       // Modal overlay
+  textPrimary: '#1A1A2E',                 // Headings
+  textSecondary: '#9090A0',               // Body text
+  textMuted: '#B0B0BA',                   // Labels / icons
+  border: '#EBEBEF',                      // Clean borders
+  borderHover: '#D0D0DA',                 // Hover borders
+  borderAccent: 'rgba(255, 31, 109, 0.2)',
+  success: '#22C55E',
+  danger: '#EF4444',
 };
 
 const navigation = [
@@ -250,11 +248,11 @@ export default function DashboardLayout() {
   const [onboardingChatOpen, setOnboardingChatOpen] = useState(false);
   const { hasNewUpdates } = useWhatsNew();
 
-  // Set dark theme
+  // Set light theme
   useEffect(() => {
-    document.documentElement.classList.remove('light');
-    document.documentElement.classList.add('dark');
-    localStorage.setItem('stratum-theme', 'dark');
+    document.documentElement.classList.remove('dark');
+    document.documentElement.classList.add('light');
+    localStorage.setItem('stratum-theme', 'light');
   }, []);
 
   const toggleLanguage = () => {
@@ -280,9 +278,6 @@ export default function DashboardLayout() {
 
   return (
     <div className="flex flex-col h-screen overflow-hidden" style={{ background: theme.bgBase }}>
-      {/* Neural Network Background */}
-      <NeuralNetworkBg />
-
       <DemoBanner variant="top" />
 
       <div className="flex flex-1 overflow-hidden relative z-10">
@@ -311,10 +306,8 @@ export default function DashboardLayout() {
             sidebarCollapsed ? 'lg:w-0 lg:overflow-hidden' : 'lg:w-64'
           )}
           style={{
-            background: theme.bgBase,
-            backdropFilter: 'blur(40px) saturate(1.8)',
-            WebkitBackdropFilter: 'blur(40px) saturate(1.8)',
-            borderRight: `1px solid ${theme.border}`,
+            background: '#FFFFFF',
+            borderRight: `0.5px solid ${theme.border}`,
           }}
         >
           <div
@@ -329,7 +322,7 @@ export default function DashboardLayout() {
               style={{ borderBottom: `1px solid ${theme.border}` }}
             >
               <div className="flex items-center gap-3">
-                <img src="/images/stratum-logo.svg" alt="Stratum AI" className="h-7" style={{ filter: 'invert(1) brightness(2)' }} />
+                <img src="/images/stratum-logo.svg" alt="Stratum AI" className="h-7" />
               </div>
               <button
                 onClick={() => setSidebarCollapsed(true)}
@@ -747,11 +740,10 @@ export default function DashboardLayout() {
             onClick={() => setSidebarCollapsed(false)}
             className="hidden lg:flex fixed top-4 left-4 z-50 h-8 w-8 items-center justify-center rounded-xl transition-all duration-200"
             style={{
-              background: theme.bgCard,
-              backdropFilter: 'blur(40px)',
-              border: `1px solid ${theme.border}`,
+              background: '#FFFFFF',
+              border: `0.5px solid ${theme.border}`,
               color: theme.primary,
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
             }}
           >
             <ChevronRightIcon className="h-4 w-4" />
@@ -769,10 +761,8 @@ export default function DashboardLayout() {
           <header
             className="flex h-14 items-center justify-between px-4 lg:px-6"
             style={{
-              background: theme.bgCard,
-              backdropFilter: 'blur(40px)',
-              WebkitBackdropFilter: 'blur(40px)',
-              borderBottom: `1px solid ${theme.border}`,
+              background: '#FFFFFF',
+              borderBottom: `0.5px solid ${theme.border}`,
             }}
           >
             <button
@@ -872,10 +862,9 @@ export default function DashboardLayout() {
                         exit="exit"
                         className="absolute right-0 mt-2 w-48 py-1 rounded-2xl z-50"
                         style={{
-                          background: theme.bgCard,
-                          backdropFilter: 'blur(40px)',
-                          border: `1px solid ${theme.border}`,
-                          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
+                          background: '#FFFFFF',
+                          border: `0.5px solid ${theme.border}`,
+                          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
                         }}
                       >
                         <div
