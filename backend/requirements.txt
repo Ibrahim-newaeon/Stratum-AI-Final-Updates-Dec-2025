@@ -35,7 +35,7 @@ celery-redbeat==2.3.3
 python-jose[cryptography]==3.5.0
 passlib[bcrypt]==1.7.4
 bcrypt==4.2.1  # Pin to 4.x for passlib compatibility
-cryptography==46.0.5
+cryptography==46.0.7
 pydantic[email]==2.12.5
 pydantic-settings==2.13.1
 pyotp==2.9.0
