@@ -11,7 +11,7 @@ from typing import Dict, Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_
+from sqlalchemy import case, select, func, and_
 
 from app.db.session import get_async_session
 from app.models.trust_layer import FactSignalHealthDaily, FactActionsQueue
@@ -58,13 +58,13 @@ async def get_platform_overview(
     actions_query = select(
         func.count(FactActionsQueue.id).label("total"),
         func.sum(
-            func.case(
+            case(
                 (FactActionsQueue.status == "applied", 1),
                 else_=0
             )
         ).label("applied"),
         func.sum(
-            func.case(
+            case(
                 (FactActionsQueue.status == "failed", 1),
                 else_=0
             )
@@ -150,7 +150,7 @@ async def get_tenant_profitability(
         FactActionsQueue.tenant_id,
         func.count(FactActionsQueue.id).label("total_actions"),
         func.sum(
-            func.case(
+            case(
                 (FactActionsQueue.status == "applied", 1),
                 else_=0
             )

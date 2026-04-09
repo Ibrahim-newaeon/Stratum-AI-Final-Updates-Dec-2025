@@ -339,14 +339,14 @@ class TestRateLimitMiddleware:
     async def test_requests_above_limit_return_429(self):
         """Requests above the rate limit should return 429 Too Many Requests."""
         app = MagicMock()
-        # Very low burst to trigger rate limit quickly
-        middleware = RateLimitMiddleware(app, requests_per_minute=5, burst_size=3)
+        # Use burst_size=8 so fallback capacity (8//4=2) allows at least 1 OK
+        middleware = RateLimitMiddleware(app, requests_per_minute=5, burst_size=8)
         middleware._redis_available = False
 
         request = _make_request("/api/v1/data", client_host="10.0.0.2")
 
-        # Exhaust the burst capacity
-        for _ in range(3):
+        # Fallback capacity = max(1, 8//4) = 2; exhaust it
+        for _ in range(2):
             resp = await middleware.dispatch(request, _ok_call_next)
             assert resp.status_code == 200
 
@@ -442,15 +442,21 @@ class TestRateLimitMiddleware:
         assert client_id == "user:42"
 
     def test_client_ip_from_x_forwarded_for(self):
-        """Client IP should be extracted from X-Forwarded-For header."""
+        """Client IP should be extracted from X-Forwarded-For header.
+
+        The middleware picks the rightmost untrusted IP (closest to the
+        proxy) to prevent spoofing via prepended headers.
+        """
         app = MagicMock()
         middleware = RateLimitMiddleware(app)
 
-        request = _make_request("/api/v1/data")
+        # client.host must be a trusted proxy for headers to be used
+        request = _make_request("/api/v1/data", client_host="127.0.0.1")
         request.headers = {"X-Forwarded-For": "203.0.113.50, 70.41.3.18"}
 
         ip = middleware._get_client_ip(request)
-        assert ip == "203.0.113.50"
+        # Rightmost untrusted IP is returned
+        assert ip == "70.41.3.18"
 
     def test_client_ip_from_x_real_ip(self):
         """Client IP should fall back to X-Real-IP header."""

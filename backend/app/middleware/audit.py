@@ -79,7 +79,7 @@ class AuditMiddleware(BaseHTTPMiddleware):
         if response.status_code in range(200, 300):
             try:
                 await self._log_audit_event(request, request_body, response)
-            except (OSError, ValueError, TypeError, RuntimeError, KeyError) as e:
+            except Exception as e:
                 # Audit logging must never break the request
                 logger.error("audit_dispatch_failed", error=str(e))
 
