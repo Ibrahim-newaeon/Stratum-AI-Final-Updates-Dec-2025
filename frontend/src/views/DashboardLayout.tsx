@@ -151,7 +151,7 @@ const navigation = [
     dataTour: 'overview',
     section: 'dashboard',
   },
-  { name: 'nav.dashboard', href: '/dashboard', icon: Squares2X2Icon, tourId: 'nav-dashboard', section: 'dashboard' },
+  { name: 'nav.dashboard', href: '/dashboard/custom-dashboard', icon: Squares2X2Icon, tourId: 'nav-dashboard', section: 'dashboard' },
   {
     name: 'nav.campaigns',
     href: '/dashboard/campaigns',
