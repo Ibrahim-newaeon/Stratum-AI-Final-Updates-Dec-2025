@@ -174,6 +174,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     except (OSError, ValueError, ImportError, RuntimeError) as e:
         logger.warning("ml_auto_train_failed", error=str(e), detail="ML predictions will be unavailable")
 
+    # Auto-seed superadmin if not exists or update password
+    try:
+        from scripts.seed_superadmin import create_superadmin
+        await create_superadmin()
+        logger.info("superadmin_seed_completed")
+    except Exception as e:
+        logger.warning("superadmin_seed_failed", error=str(e))
+
     yield
 
     # Shutdown
