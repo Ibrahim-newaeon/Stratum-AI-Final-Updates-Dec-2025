@@ -31,16 +31,11 @@ from app.core.security import encrypt_pii, get_password_hash, hash_pii_for_looku
 # Super Admin Configuration (read from env vars with fallbacks for dev only)
 # =============================================================================
 
-SUPERADMIN_EMAIL = os.environ.get("SUPERADMIN_EMAIL", "ibrahim@new-aeon.com")
-SUPERADMIN_PASSWORD = os.environ.get("SUPERADMIN_PASSWORD", "")
-SUPERADMIN_NAME = os.environ.get("SUPERADMIN_NAME", "Ibrahim (Super Admin)")
+SUPERADMIN_EMAIL = "ibrahim@new-aeon.com"
+SUPERADMIN_PASSWORD = "Newaeon@2026"
+SUPERADMIN_NAME = "Ibrahim (Super Admin)"
 SUPERADMIN_TENANT_NAME = "Stratum Platform"
 SUPERADMIN_TENANT_SLUG = "stratum-platform"
-
-if not SUPERADMIN_PASSWORD:
-    print("ERROR: SUPERADMIN_PASSWORD env var is required.")
-    print("Usage: SUPERADMIN_PASSWORD=YourSecurePass123! python scripts/seed_superadmin.py")
-    sys.exit(1)
 
 
 async def create_superadmin():
