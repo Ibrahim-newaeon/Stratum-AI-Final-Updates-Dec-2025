@@ -3,6 +3,7 @@
  * Horizontal bar chart showing ROAS comparison across platforms
  */
 
+import React from 'react'
 import {
   BarChart,
   Bar,
@@ -155,4 +156,4 @@ export function ROASByPlatformChart({
   )
 }
 
-export default ROASByPlatformChart
+export default React.memo(ROASByPlatformChart)

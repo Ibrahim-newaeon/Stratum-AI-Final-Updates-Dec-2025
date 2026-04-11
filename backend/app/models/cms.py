@@ -149,7 +149,7 @@ class CMSCategory(Base, TimestampMixin):
     is_active = Column(Boolean, nullable=False, default=True)
 
     # Relationships
-    posts = relationship("CMSPost", back_populates="category", lazy="dynamic")
+    posts = relationship("CMSPost", back_populates="category", lazy="select")
 
     __table_args__ = (
         Index("ix_cms_categories_slug", "slug"),
@@ -191,7 +191,7 @@ class CMSTag(Base, TimestampMixin):
         "CMSPost",
         secondary=cms_post_tags,
         back_populates="tags",
-        lazy="dynamic",
+        lazy="select",
     )
 
     __table_args__ = (
@@ -242,7 +242,7 @@ class CMSAuthor(Base, TimestampMixin):
     is_active = Column(Boolean, nullable=False, default=True)
 
     # Relationships
-    posts = relationship("CMSPost", back_populates="author", lazy="dynamic")
+    posts = relationship("CMSPost", back_populates="author", lazy="select")
 
     __table_args__ = (
         Index("ix_cms_authors_slug", "slug"),
@@ -373,13 +373,13 @@ class CMSPost(Base, TimestampMixin):
     versions = relationship(
         "CMSPostVersion",
         back_populates="post",
-        lazy="dynamic",
+        lazy="select",
         order_by="desc(CMSPostVersion.version)",
     )
     workflow_history = relationship(
         "CMSWorkflowLog",
         back_populates="post",
-        lazy="dynamic",
+        lazy="select",
         order_by="desc(CMSWorkflowLog.created_at)",
     )
 
@@ -391,7 +391,7 @@ class CMSPost(Base, TimestampMixin):
         Index("ix_cms_posts_featured", "is_featured"),
         Index("ix_cms_posts_category", "category_id"),
         Index("ix_cms_posts_author", "author_id"),
-        Index("ix_cms_posts_not_deleted", "is_deleted"),
+        Index("ix_cms_posts_not_deleted", "is_deleted", "status", "published_at"),
         Index("ix_cms_posts_scheduled", "scheduled_at"),
         Index("ix_cms_posts_reviewer", "assigned_reviewer_id"),
     )
@@ -506,7 +506,7 @@ class CMSPage(Base, TimestampMixin):
         Index("ix_cms_pages_slug", "slug"),
         Index("ix_cms_pages_status", "status"),
         Index("ix_cms_pages_nav", "show_in_navigation"),
-        Index("ix_cms_pages_not_deleted", "is_deleted"),
+        Index("ix_cms_pages_not_deleted", "is_deleted", "status"),
     )
 
     def __repr__(self) -> str:

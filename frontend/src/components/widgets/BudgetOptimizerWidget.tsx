@@ -4,7 +4,7 @@
  * Falls back to live simulation data when API is unavailable
  */
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Wallet,
   RefreshCw,
@@ -389,4 +389,4 @@ export function BudgetOptimizerWidget({ className }: BudgetOptimizerWidgetProps)
   )
 }
 
-export default BudgetOptimizerWidget
+export default React.memo(BudgetOptimizerWidget)

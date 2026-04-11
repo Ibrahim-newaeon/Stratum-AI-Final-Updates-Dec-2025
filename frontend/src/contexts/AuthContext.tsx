@@ -23,85 +23,22 @@ function isDemoModeEnabled(): boolean {
 }
 
 /**
- * Demo credentials for client-side fallback when backend is unavailable.
- * SECURITY: Never include real credentials here. These are demo-only placeholders.
- * Gated behind VITE_ENABLE_DEMO_MODE environment variable.
+ * Demo credentials loaded lazily — only pulled into memory when demo mode is active.
+ * Tree-shaken in production builds when VITE_ENABLE_DEMO_MODE is not 'true'.
  */
-const DEMO_CREDENTIALS: Record<string, { email: string; password: string; user: User }> = {
-  superadmin: {
-    email: 'demo-superadmin@stratum.ai',
-    password: 'demo-only-not-real',
-    user: {
-      id: 'demo-sa-001',
-      email: 'demo-superadmin@stratum.ai',
-      name: 'Demo Super Admin',
-      role: 'superadmin',
-      organization: 'Demo Organization',
-      permissions: ['all'],
-      tenant_id: 1,
-      user_type: 'agency',
-      cms_role: 'super_admin',
-    },
-  },
-  admin: {
-    email: 'demo-admin@stratum.ai',
-    password: 'demo-only-not-real',
-    user: {
-      id: 'demo-admin-001',
-      email: 'demo-admin@stratum.ai',
-      name: 'Demo Admin',
-      role: 'admin',
-      organization: 'Demo Commerce',
-      permissions: ['all'],
-      tenant_id: 1,
-      user_type: 'agency',
-      cms_role: 'admin',
-    },
-  },
-  manager: {
-    email: 'demo-manager@stratum.ai',
-    password: 'demo-only-not-real',
-    user: {
-      id: 'demo-mgr-001',
-      email: 'demo-manager@stratum.ai',
-      name: 'Demo Manager',
-      role: 'manager',
-      organization: 'Demo Commerce',
-      permissions: ['read'],
-      tenant_id: 1,
-      user_type: 'agency',
-    },
-  },
-  analyst: {
-    email: 'demo-analyst@stratum.ai',
-    password: 'demo-only-not-real',
-    user: {
-      id: 'demo-analyst-001',
-      email: 'demo-analyst@stratum.ai',
-      name: 'Demo Analyst',
-      role: 'analyst',
-      organization: 'Demo Commerce',
-      permissions: ['read'],
-      tenant_id: 1,
-      user_type: 'agency',
-    },
-  },
-  viewer: {
-    email: 'demo-viewer@stratum.ai',
-    password: 'demo-only-not-real',
-    user: {
-      id: 'demo-viewer-001',
-      email: 'demo-viewer@stratum.ai',
-      name: 'Demo Client Viewer',
-      role: 'viewer',
-      organization: 'Demo Commerce',
-      permissions: ['read'],
-      tenant_id: 1,
-      user_type: 'portal',
-      client_id: 1,
-    },
-  },
-};
+let _demoCreds: Record<string, { email: string; password: string; user: User }> | null = null;
+function getDemoCredentials(): Record<string, { email: string; password: string; user: User }> {
+  if (!_demoCreds) {
+    _demoCreds = {
+      superadmin: { email: 'demo-superadmin@stratum.ai', password: 'demo-only-not-real', user: { id: 'demo-sa-001', email: 'demo-superadmin@stratum.ai', name: 'Demo Super Admin', role: 'superadmin', organization: 'Demo Organization', permissions: ['all'], tenant_id: 1, user_type: 'agency', cms_role: 'super_admin' } },
+      admin: { email: 'demo-admin@stratum.ai', password: 'demo-only-not-real', user: { id: 'demo-admin-001', email: 'demo-admin@stratum.ai', name: 'Demo Admin', role: 'admin', organization: 'Demo Commerce', permissions: ['all'], tenant_id: 1, user_type: 'agency', cms_role: 'admin' } },
+      manager: { email: 'demo-manager@stratum.ai', password: 'demo-only-not-real', user: { id: 'demo-mgr-001', email: 'demo-manager@stratum.ai', name: 'Demo Manager', role: 'manager', organization: 'Demo Commerce', permissions: ['read'], tenant_id: 1, user_type: 'agency' } },
+      analyst: { email: 'demo-analyst@stratum.ai', password: 'demo-only-not-real', user: { id: 'demo-analyst-001', email: 'demo-analyst@stratum.ai', name: 'Demo Analyst', role: 'analyst', organization: 'Demo Commerce', permissions: ['read'], tenant_id: 1, user_type: 'agency' } },
+      viewer: { email: 'demo-viewer@stratum.ai', password: 'demo-only-not-real', user: { id: 'demo-viewer-001', email: 'demo-viewer@stratum.ai', name: 'Demo Client Viewer', role: 'viewer', organization: 'Demo Commerce', permissions: ['read'], tenant_id: 1, user_type: 'portal', client_id: 1 } },
+    };
+  }
+  return _demoCreds;
+}
 
 /** Decode JWT payload without a library */
 function decodeJwtPayload(token: string): Record<string, unknown> {
@@ -242,12 +179,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return { success: false, error: errorMessage };
         }
 
-        // Store tokens
+        // Store tokens in sessionStorage (reduced XSS persistence vs localStorage)
         if (data.data?.access_token) {
-          localStorage.setItem(ACCESS_TOKEN_KEY, data.data.access_token);
+          sessionStorage.setItem(ACCESS_TOKEN_KEY, data.data.access_token);
         }
         if (data.data?.refresh_token) {
-          localStorage.setItem(REFRESH_TOKEN_KEY, data.data.refresh_token);
+          sessionStorage.setItem(REFRESH_TOKEN_KEY, data.data.refresh_token);
         }
 
         // Store available tenants for the switcher
@@ -351,7 +288,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (role: 'superadmin' | 'admin' | 'manager' | 'analyst' | 'viewer'): Promise<{ success: boolean; error?: string }> => {
       if (!isDemoModeEnabled()) return { success: false, error: 'Demo mode is disabled' };
 
-      const demo = DEMO_CREDENTIALS[role];
+      const demo = getDemoCredentials()[role];
       if (!demo) return { success: false, error: 'Unknown demo role' };
 
       // First try the real backend
@@ -371,8 +308,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('stratum_demo_mode', 'true');
 
       // Set a placeholder token so the API interceptor doesn't redirect
-      localStorage.setItem(ACCESS_TOKEN_KEY, 'demo-token');
-      localStorage.setItem(REFRESH_TOKEN_KEY, 'demo-refresh-token');
+      sessionStorage.setItem(ACCESS_TOKEN_KEY, 'demo-token');
+      sessionStorage.setItem(REFRESH_TOKEN_KEY, 'demo-refresh-token');
 
       // Sync tenant store
       const tenantStore = useTenantStore.getState();
@@ -402,8 +339,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setIsDemoSession(false);
     localStorage.removeItem(AUTH_STORAGE_KEY);
-    localStorage.removeItem(ACCESS_TOKEN_KEY);
-    localStorage.removeItem(REFRESH_TOKEN_KEY);
+    sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+    sessionStorage.removeItem(REFRESH_TOKEN_KEY);
     localStorage.removeItem('stratum_demo_mode');
     // BUG-023: Clean up all onboarding-related localStorage keys on logout
     localStorage.removeItem('stratum_onboarding_progress');
@@ -423,9 +360,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // BUG-014: Session idle timeout — auto-logout after 30 min of inactivity
+  // Role-based idle timeout — stricter for privileged roles
+  const ROLE_TIMEOUT_MS: Record<string, number> = {
+    superadmin: 15 * 60 * 1000, // 15 min
+    admin: 15 * 60 * 1000,      // 15 min
+    manager: 30 * 60 * 1000,    // 30 min
+    analyst: 30 * 60 * 1000,    // 30 min
+    viewer: 60 * 60 * 1000,     // 60 min
+  };
+  const idleTimeout = user ? (ROLE_TIMEOUT_MS[user.role] ?? 30 * 60 * 1000) : 30 * 60 * 1000;
+
   const { isWarning, secondsLeft, resetTimer } = useIdleTimeout({
-    timeout: 30 * 60 * 1000, // 30 minutes
+    timeout: idleTimeout,
     warningDuration: 60 * 1000, // 60-second warning
     onTimeout: () => {
       logout();

@@ -883,9 +883,11 @@ function App() {
                       <Route
                         path="settings"
                         element={
-                          <Suspense fallback={<LoadingSpinner />}>
-                            <Settings />
-                          </Suspense>
+                          <ProtectedRoute requiredRole="admin">
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <Settings />
+                            </Suspense>
+                          </ProtectedRoute>
                         }
                       />
                       <Route
@@ -1095,21 +1097,25 @@ function App() {
                         }
                       />
 
-                      {/* Enterprise feature routes */}
+                      {/* Enterprise feature routes (admin+ only) */}
                       <Route
                         path="custom-autopilot-rules"
                         element={
-                          <Suspense fallback={<LoadingSpinner />}>
-                            <CustomAutopilotRules />
-                          </Suspense>
+                          <ProtectedRoute requiredRole="admin">
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <CustomAutopilotRules />
+                            </Suspense>
+                          </ProtectedRoute>
                         }
                       />
                       <Route
                         path="custom-reports"
                         element={
-                          <Suspense fallback={<LoadingSpinner />}>
-                            <CustomReportBuilder />
-                          </Suspense>
+                          <ProtectedRoute requiredRole="manager">
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <CustomReportBuilder />
+                            </Suspense>
+                          </ProtectedRoute>
                         }
                       />
 
@@ -1341,23 +1347,27 @@ function App() {
                         }
                       />
 
-                      {/* Tenant Settings */}
+                      {/* Tenant Settings (admin+ only) */}
                       <Route
                         path="settings"
                         element={
-                          <Suspense fallback={<LoadingSpinner />}>
-                            <TenantSettings />
-                          </Suspense>
+                          <ProtectedRoute requiredRole="admin">
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <TenantSettings />
+                            </Suspense>
+                          </ProtectedRoute>
                         }
                       />
 
-                      {/* Team Management */}
+                      {/* Team Management (admin+ only) */}
                       <Route
                         path="team"
                         element={
-                          <Suspense fallback={<LoadingSpinner />}>
-                            <TeamManagement />
-                          </Suspense>
+                          <ProtectedRoute requiredRole="admin">
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <TeamManagement />
+                            </Suspense>
+                          </ProtectedRoute>
                         }
                       />
 
@@ -1373,23 +1383,27 @@ function App() {
                         }
                       />
 
-                      {/* Tenant Insights */}
+                      {/* Tenant Insights (manager+ only) */}
                       <Route
                         path="insights"
                         element={
-                          <Suspense fallback={<LoadingSpinner />}>
-                            <TenantInsights />
-                          </Suspense>
+                          <ProtectedRoute requiredRole="manager">
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <TenantInsights />
+                            </Suspense>
+                          </ProtectedRoute>
                         }
                       />
 
-                      {/* Tenant Audit Log */}
+                      {/* Tenant Audit Log (admin+ only) */}
                       <Route
                         path="audit-log"
                         element={
-                          <Suspense fallback={<LoadingSpinner />}>
-                            <TenantAuditLog />
-                          </Suspense>
+                          <ProtectedRoute requiredRole="admin">
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <TenantAuditLog />
+                            </Suspense>
+                          </ProtectedRoute>
                         }
                       />
 
@@ -1484,13 +1498,15 @@ function App() {
                         }
                       />
 
-                      {/* Reporting */}
+                      {/* Reporting (manager+ only) */}
                       <Route
                         path="reporting"
                         element={
-                          <Suspense fallback={<LoadingSpinner />}>
-                            <Reporting />
-                          </Suspense>
+                          <ProtectedRoute requiredRole="manager">
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <Reporting />
+                            </Suspense>
+                          </ProtectedRoute>
                         }
                       />
 

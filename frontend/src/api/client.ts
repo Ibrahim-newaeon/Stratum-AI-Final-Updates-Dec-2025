@@ -22,21 +22,22 @@ export const apiClient: AxiosInstance = axios.create({
   },
 })
 
-// Token management
+// Token management — use in-memory + sessionStorage to reduce XSS persistence
+// (sessionStorage is cleared when the tab closes, unlike localStorage)
 let accessToken: string | null = null
 
 export const setAccessToken = (token: string | null) => {
   accessToken = token
   if (token) {
-    localStorage.setItem('access_token', token)
+    sessionStorage.setItem('access_token', token)
   } else {
-    localStorage.removeItem('access_token')
+    sessionStorage.removeItem('access_token')
   }
 }
 
 export const getAccessToken = (): string | null => {
   if (!accessToken) {
-    accessToken = localStorage.getItem('access_token')
+    accessToken = sessionStorage.getItem('access_token')
   }
   return accessToken
 }
@@ -61,18 +62,8 @@ export const getTenantId = (): number => {
   return currentTenantId
 }
 
-// Super admin bypass header management
-let superAdminBypass = false
-
-export const setSuperAdminBypass = (bypass: boolean) => {
-  superAdminBypass = bypass
-}
-
-export const getSuperAdminBypass = (): boolean => {
-  return superAdminBypass
-}
-
-// Request interceptor - add auth token, tenant ID, and super admin bypass
+// Request interceptor - add auth token and tenant ID
+// NOTE: X-Superadmin-Bypass removed — bypass must be validated server-side only
 apiClient.interceptors.request.use(
   (config) => {
     const token = getAccessToken()
@@ -84,11 +75,6 @@ apiClient.interceptors.request.use(
     const tenantId = getTenantId()
     if (tenantId && config.headers) {
       config.headers['X-Tenant-ID'] = String(tenantId)
-    }
-
-    // Add super admin bypass header if enabled
-    if (superAdminBypass && config.headers) {
-      config.headers['X-Superadmin-Bypass'] = 'true'
     }
 
     return config
@@ -136,7 +122,7 @@ apiClient.interceptors.response.use(
       isRefreshing = true
 
       try {
-        const refreshToken = localStorage.getItem('refresh_token')
+        const refreshToken = sessionStorage.getItem('refresh_token')
         if (refreshToken) {
           const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
             refresh_token: refreshToken,
@@ -155,7 +141,7 @@ apiClient.interceptors.response.use(
 
           // Persist the rotated refresh token so future refreshes work
           if (newRefreshToken) {
-            localStorage.setItem('refresh_token', newRefreshToken)
+            sessionStorage.setItem('refresh_token', newRefreshToken)
           }
 
           isRefreshing = false
@@ -171,7 +157,7 @@ apiClient.interceptors.response.use(
         refreshSubscribers = []
         // Refresh failed - logout user
         setAccessToken(null)
-        localStorage.removeItem('refresh_token')
+        sessionStorage.removeItem('refresh_token')
         window.location.href = '/login?reason=session_expired'
       }
     }

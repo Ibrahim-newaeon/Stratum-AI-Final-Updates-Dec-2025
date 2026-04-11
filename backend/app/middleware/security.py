@@ -79,15 +79,32 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
                 "max-age=31536000; includeSubDomains; preload"
             )
 
-            # Content Security Policy for production
-            # Adjust these values based on your actual CDN/API domains
+            # Content Security Policy for production — HTTPS only, no http:// allowed
             csp_directives = [
                 "default-src 'self'",
                 "script-src 'self' https://cdn.jsdelivr.net https://www.googletagmanager.com",
                 "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
                 "font-src 'self' https://fonts.gstatic.com data:",
                 "img-src 'self' data: https: blob:",
-                "connect-src 'self' https://api.stripe.com https://*.sentry.io wss: ws:",
+                "connect-src 'self' https://api.stripe.com https://*.sentry.io wss:",
+                "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
+                "object-src 'none'",
+                "base-uri 'self'",
+                "form-action 'self'",
+                "frame-ancestors 'self'",
+                "upgrade-insecure-requests",
+            ]
+            response.headers["Content-Security-Policy"] = "; ".join(csp_directives)
+
+        elif getattr(settings, "is_staging", False):
+            # Staging CSP — same as production but with report-only
+            csp_directives = [
+                "default-src 'self'",
+                "script-src 'self' https://cdn.jsdelivr.net https://www.googletagmanager.com",
+                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+                "font-src 'self' https://fonts.gstatic.com data:",
+                "img-src 'self' data: https: blob:",
+                "connect-src 'self' https://api.stripe.com https://*.sentry.io wss:",
                 "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
                 "object-src 'none'",
                 "base-uri 'self'",
@@ -98,7 +115,8 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             response.headers["Content-Security-Policy"] = "; ".join(csp_directives)
 
         else:
-            # Development CSP - more permissive for hot reload, etc.
+            # Development CSP only — http:// allowed for local dev only
+            # IMPORTANT: Never deploy with this config; is_production must be True in prod/staging
             csp_directives = [
                 "default-src 'self'",
                 "script-src 'self' 'unsafe-inline' 'unsafe-eval'",

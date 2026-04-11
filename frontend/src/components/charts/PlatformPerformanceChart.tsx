@@ -3,6 +3,7 @@
  * Bar chart comparing spend and revenue across platforms
  */
 
+import React from 'react'
 import {
   BarChart,
   Bar,
@@ -130,4 +131,4 @@ export function PlatformPerformanceChart({
   )
 }
 
-export default PlatformPerformanceChart
+export default React.memo(PlatformPerformanceChart)

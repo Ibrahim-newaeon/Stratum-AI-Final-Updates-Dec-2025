@@ -117,7 +117,7 @@ def check_pipeline_health():
         "database": db_status,
     }
 
-    # Alert if issues found
+    # Alert if issues found — escalate to external alerting
     if issues:
         logger.warning(f"Pipeline health issues detected: {issues}")
         # Publish to monitoring channel
@@ -130,6 +130,39 @@ def check_pipeline_health():
             redis_client.publish("monitoring:pipeline_health", json.dumps(health_status))
         except (ConnectionError, TimeoutError, OSError) as e:
             logger.warning("Failed to publish pipeline health to Redis: %s", e)
+
+        # Escalate to Sentry/external alerting for critical issues
+        critical_types = {"redis_connection", "database_connection"}
+        critical_issues = [i for i in issues if i["type"] in critical_types]
+        if critical_issues:
+            logger.error(
+                "CRITICAL pipeline health failure — escalating: %s",
+                critical_issues,
+            )
+            try:
+                import sentry_sdk
+                sentry_sdk.capture_message(
+                    f"Pipeline health CRITICAL: {[i['type'] for i in critical_issues]}",
+                    level="error",
+                )
+            except (ImportError, Exception) as e:
+                logger.warning("Sentry escalation unavailable: %s", e)
+
+        # Escalate webhook if configured
+        alert_webhook = getattr(settings, "alert_webhook_url", None)
+        if alert_webhook:
+            try:
+                import json
+                import urllib.request
+                req = urllib.request.Request(
+                    alert_webhook,
+                    data=json.dumps(health_status).encode(),
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                )
+                urllib.request.urlopen(req, timeout=5)
+            except Exception as e:
+                logger.warning("Webhook escalation failed: %s", e)
 
     logger.info(f"Pipeline health check complete: {health_status['status']}")
     return health_status

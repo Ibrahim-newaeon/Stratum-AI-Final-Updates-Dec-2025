@@ -10,8 +10,35 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import axios from 'axios';
 
 // ---------------------------------------------------------------------------
-// Mock localStorage
+// Mock sessionStorage (tokens now use sessionStorage to reduce XSS surface)
 // ---------------------------------------------------------------------------
+const mockSessionStorage = (() => {
+  let store: Record<string, string> = {};
+  return {
+    getItem: vi.fn((key: string) => store[key] ?? null),
+    setItem: vi.fn((key: string, value: string) => {
+      store[key] = value;
+    }),
+    removeItem: vi.fn((key: string) => {
+      delete store[key];
+    }),
+    clear: vi.fn(() => {
+      store = {};
+    }),
+    get length() {
+      return Object.keys(store).length;
+    },
+    key: vi.fn((index: number) => Object.keys(store)[index] ?? null),
+    _reset: () => {
+      store = {};
+    },
+    _getStore: () => store,
+  };
+})();
+
+Object.defineProperty(window, 'sessionStorage', { value: mockSessionStorage });
+
+// Mock localStorage for tenant_id (still uses localStorage)
 const mockLocalStorage = (() => {
   let store: Record<string, string> = {};
   return {
@@ -47,21 +74,22 @@ import {
   getAccessToken,
   setTenantId,
   getTenantId,
-  setSuperAdminBypass,
-  getSuperAdminBypass,
 } from './client';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Reset module-level state by clearing tokens + localStorage */
+/** Reset module-level state by clearing tokens + storage */
 function resetClientState() {
   setAccessToken(null);
   setTenantId(null);
-  setSuperAdminBypass(false);
+  mockSessionStorage._reset();
   mockLocalStorage._reset();
   // Restore the original implementation (mockClear only clears calls, not mockImplementation)
+  mockSessionStorage.getItem.mockImplementation((key: string) => mockSessionStorage._getStore()[key] ?? null);
+  mockSessionStorage.setItem.mockClear();
+  mockSessionStorage.removeItem.mockClear();
   mockLocalStorage.getItem.mockImplementation((key: string) => mockLocalStorage._getStore()[key] ?? null);
   mockLocalStorage.setItem.mockClear();
   mockLocalStorage.removeItem.mockClear();
@@ -74,29 +102,29 @@ function resetClientState() {
 describe('API Client - Token Management', () => {
   beforeEach(resetClientState);
 
-  it('setAccessToken stores the token and persists to localStorage', () => {
+  it('setAccessToken stores the token and persists to sessionStorage', () => {
     setAccessToken('tok_abc');
 
     expect(getAccessToken()).toBe('tok_abc');
-    expect(mockLocalStorage.setItem).toHaveBeenCalledWith('access_token', 'tok_abc');
+    expect(mockSessionStorage.setItem).toHaveBeenCalledWith('access_token', 'tok_abc');
   });
 
-  it('setAccessToken(null) clears token and removes from localStorage', () => {
+  it('setAccessToken(null) clears token and removes from sessionStorage', () => {
     setAccessToken('tok_abc');
-    mockLocalStorage.removeItem.mockClear();
+    mockSessionStorage.removeItem.mockClear();
 
     setAccessToken(null);
 
     expect(getAccessToken()).toBeNull();
-    expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('access_token');
+    expect(mockSessionStorage.removeItem).toHaveBeenCalledWith('access_token');
   });
 
-  it('getAccessToken falls back to localStorage when in-memory value is null', () => {
+  it('getAccessToken falls back to sessionStorage when in-memory value is null', () => {
     // Clear in-memory token
     setAccessToken(null);
 
     // Directly write to the mock store (bypassing setAccessToken)
-    mockLocalStorage._getStore()['access_token'] = 'tok_from_storage';
+    mockSessionStorage._getStore()['access_token'] = 'tok_from_storage';
 
     const token = getAccessToken();
     expect(token).toBe('tok_from_storage');
@@ -141,22 +169,6 @@ describe('API Client - Tenant ID Management', () => {
   });
 });
 
-describe('API Client - Super Admin Bypass', () => {
-  beforeEach(resetClientState);
-
-  it('defaults to false', () => {
-    expect(getSuperAdminBypass()).toBe(false);
-  });
-
-  it('can be toggled on and off', () => {
-    setSuperAdminBypass(true);
-    expect(getSuperAdminBypass()).toBe(true);
-
-    setSuperAdminBypass(false);
-    expect(getSuperAdminBypass()).toBe(false);
-  });
-});
-
 describe('API Client - Request Interceptor', () => {
   beforeEach(resetClientState);
 
@@ -181,19 +193,7 @@ describe('API Client - Request Interceptor', () => {
     expect(config.headers['X-Tenant-ID']).toBe('7');
   });
 
-  it('adds X-Superadmin-Bypass header when bypass is enabled', async () => {
-    setSuperAdminBypass(true);
-
-    const config = await (apiClient.interceptors.request as any).handlers[0].fulfilled({
-      headers: {},
-    });
-
-    expect(config.headers['X-Superadmin-Bypass']).toBe('true');
-  });
-
-  it('does NOT add X-Superadmin-Bypass header when bypass is disabled', async () => {
-    setSuperAdminBypass(false);
-
+  it('does NOT add X-Superadmin-Bypass header (removed for security)', async () => {
     const config = await (apiClient.interceptors.request as any).handlers[0].fulfilled({
       headers: {},
     });

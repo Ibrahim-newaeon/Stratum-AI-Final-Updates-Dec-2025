@@ -3,6 +3,7 @@
  * Area chart showing revenue and spend trends over time
  */
 
+import React from 'react'
 import {
   AreaChart,
   Area,
@@ -162,4 +163,4 @@ export function DailyTrendChart({
   )
 }
 
-export default DailyTrendChart
+export default React.memo(DailyTrendChart)
