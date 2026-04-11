@@ -89,9 +89,14 @@ async def create_superadmin():
             if existing:
                 print(f"Super admin already exists: {SUPERADMIN_EMAIL}")
                 print(f"  User ID: {existing[0]}")
-                print(f"  Role: {existing[1]}")
-                print(f"  Active: {existing[2]}")
-                print(f"  Verified: {existing[3]}")
+                print(f"  Updating password and ensuring active/verified...")
+                await conn.execute(
+                    text(
+                        "UPDATE users SET password_hash = :password_hash, is_active = true, is_verified = true WHERE email_hash = :email_hash"
+                    ),
+                    {"password_hash": password_hash, "email_hash": email_hash},
+                )
+                print("  Password updated successfully!")
                 return
 
             # Check/create tenant
