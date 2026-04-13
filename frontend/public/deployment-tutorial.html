@@ -111,13 +111,13 @@
     /* Glass morphism - NN/g compliant */
     .glass {
       background: var(--glass-bg);
-      backdrop-filter: blur(100px);
-      -webkit-backdrop-filter: blur(100px);
+      
+      -webkit-
       border: 1px solid var(--glass-border);
     }
     .glass-strong {
       background: rgba(20, 20, 30, 0.85);
-      backdrop-filter: blur(120px);
+      
       border: 1px solid rgba(255,255,255,0.12);
     }
     .glass:hover {
@@ -153,11 +153,11 @@
     }
 
     /* Text gradients */
-    .text-gradient { background: linear-gradient(135deg, #a855f7, #06b6d4, #f97316); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .text-gradient-purple { background: linear-gradient(135deg, #a855f7, #c084fc); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .text-gradient-cyan { background: linear-gradient(135deg, #06b6d4, #22d3ee); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .text-gradient-green { background: linear-gradient(135deg, #22c55e, #4ade80); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .text-gradient-orange { background: linear-gradient(135deg, #f97316, #fb923c); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .text-gradient { background: linear-gradient(135deg, #a855f7, #06b6d4, #f97316);   color: transparent; }
+    .text-gradient-purple { background: linear-gradient(135deg, #a855f7, #c084fc);   color: transparent; }
+    .text-gradient-cyan { background: linear-gradient(135deg, #06b6d4, #22d3ee);   color: transparent; }
+    .text-gradient-green { background: linear-gradient(135deg, #22c55e, #4ade80);   color: transparent; }
+    .text-gradient-orange { background: linear-gradient(135deg, #f97316, #fb923c);   color: transparent; }
 
     /* Buttons 2026 */
     .btn-primary {
@@ -1461,10 +1461,10 @@ trust_engine:
           <span class="font-semibold">Stratum AI</span>
         </div>
         <div class="flex items-center gap-6 text-sm text-gray-500">
-          <a href="#" class="hover:text-white transition">Documentation</a>
-          <a href="#" class="hover:text-white transition">API Reference</a>
-          <a href="#" class="hover:text-white transition">Support</a>
-          <a href="#" class="hover:text-white transition">Status</a>
+          <a href="/docs" class="hover:text-white transition">Documentation</a>
+          <a href="/docs/api" class="hover:text-white transition">API Reference</a>
+          <a href="/support" class="hover:text-white transition">Support</a>
+          <a href="/status" class="hover:text-white transition">Status</a>
         </div>
         <div class="text-sm text-gray-500">
           &copy; 2024 Stratum AI. All rights reserved.
