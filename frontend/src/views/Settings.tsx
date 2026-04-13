@@ -34,6 +34,13 @@ import { useToast } from '@/components/ui/use-toast';
 import { useFeatureFlagsStore, defaultFeatures } from '@/stores/featureFlagsStore';
 import { useFeatureFlags, useUpdateFeatureFlags } from '@/api/featureFlags';
 import {
+  useBillingOverview,
+  useInvoices,
+  useCreatePortal,
+  useCancelSubscription,
+  useReactivateSubscription,
+} from '@/api/payments';
+import {
   METRIC_REGISTRY,
   METRIC_CATEGORIES,
   METRIC_LABELS,
@@ -1946,50 +1953,263 @@ function MetricVisibilitySettings() {
 
 function BillingSettings() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const tenant = useTenantStore((state) => state.tenant);
 
-  const plan = tenant?.plan || 'free';
-  const planExpires = tenant?.plan_expires_at
-    ? new Date(tenant.plan_expires_at).toLocaleDateString()
-    : null;
+  const { data: overview, isLoading: overviewLoading } = useBillingOverview();
+  const { data: invoices, isLoading: invoicesLoading } = useInvoices();
+  const createPortal = useCreatePortal();
+  const cancelSub = useCancelSubscription();
+  const reactivateSub = useReactivateSubscription();
+
+  const sub = overview?.subscription;
+  const planName = sub?.tier || tenant?.plan || 'free';
+  const hasActiveSub = sub?.has_subscription && sub.status === 'active';
+  const isCanceling = sub?.cancel_at_period_end;
+
+  const handleManageBilling = async () => {
+    try {
+      const { portal_url } = await createPortal.mutateAsync();
+      window.location.href = portal_url;
+    } catch {
+      toast({ title: 'Error', description: 'Could not open billing portal.', variant: 'destructive' });
+    }
+  };
+
+  const handleCancel = async () => {
+    if (!confirm('Are you sure you want to cancel your subscription? You will retain access until the end of the current period.')) return;
+    try {
+      await cancelSub.mutateAsync();
+      toast({ title: 'Subscription canceled', description: 'Your plan will remain active until the end of the billing period.' });
+    } catch {
+      toast({ title: 'Error', description: 'Failed to cancel subscription.', variant: 'destructive' });
+    }
+  };
+
+  const handleReactivate = async () => {
+    try {
+      await reactivateSub.mutateAsync();
+      toast({ title: 'Subscription reactivated', description: 'Your plan will continue as normal.' });
+    } catch {
+      toast({ title: 'Error', description: 'Failed to reactivate subscription.', variant: 'destructive' });
+    }
+  };
+
+  const statusColor = (status: string | null | undefined) => {
+    switch (status) {
+      case 'active': return 'bg-green-500/15 text-green-600 border-green-500/30';
+      case 'trialing': return 'bg-blue-500/15 text-blue-600 border-blue-500/30';
+      case 'past_due': return 'bg-amber-500/15 text-amber-600 border-amber-500/30';
+      case 'canceled': return 'bg-red-500/15 text-red-600 border-red-500/30';
+      default: return 'bg-muted text-muted-foreground border-border';
+    }
+  };
+
+  const formatDate = (d: string | null | undefined) => d ? new Date(d).toLocaleDateString() : '--';
+  const formatCurrency = (amount: number, currency = 'usd') =>
+    new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount / 100);
+
+  if (overviewLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <h2 className="text-lg font-semibold">{t('settings.billingSettings')}</h2>
 
+      {/* Current Plan */}
       <div className="p-4 rounded-lg border bg-primary/5 border-primary/20">
         <div className="flex items-center justify-between">
-          <div>
-            <p className="font-medium capitalize">{plan} Plan</p>
-            <p className="text-sm text-muted-foreground">
-              {planExpires ? `Renews ${planExpires}` : 'No expiration set'}
-            </p>
+          <div className="flex items-center gap-3">
+            <div>
+              <p className="font-medium capitalize">{planName} Plan</p>
+              <div className="flex items-center gap-2 mt-1">
+                <span className={cn('text-xs px-2 py-0.5 rounded-full border font-medium capitalize', statusColor(sub?.status))}>
+                  {sub?.status || 'inactive'}
+                </span>
+                {isCanceling && (
+                  <span className="text-xs text-amber-600">Cancels {formatDate(sub?.current_period_end)}</span>
+                )}
+              </div>
+              {hasActiveSub && !isCanceling && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  {formatDate(sub?.current_period_start)} - {formatDate(sub?.current_period_end)}
+                </p>
+              )}
+              {sub?.trial_end && (
+                <p className="text-sm text-blue-600 mt-1">Trial ends {formatDate(sub.trial_end)}</p>
+              )}
+            </div>
           </div>
-          <button className="px-4 py-2 rounded-lg border hover:bg-muted transition-colors text-sm">
-            {t('settings.changePlan')}
+          <div className="flex items-center gap-2">
+            {isCanceling ? (
+              <button
+                onClick={handleReactivate}
+                disabled={reactivateSub.isPending}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm disabled:opacity-50"
+              >
+                {reactivateSub.isPending && <Loader2 className="w-3 h-3 animate-spin" />}
+                Reactivate
+              </button>
+            ) : (
+              <button
+                onClick={() => navigate('/checkout')}
+                className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm"
+              >
+                Upgrade Plan
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Upcoming Invoice */}
+      {overview?.upcoming_invoice && (
+        <div className="p-4 rounded-lg border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Next payment</p>
+              <p className="font-medium">{formatCurrency(overview.upcoming_invoice.amount_due, overview.upcoming_invoice.currency)}</p>
+            </div>
+            <p className="text-sm text-muted-foreground">{formatDate(overview.upcoming_invoice.next_payment_date)}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Methods */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-medium">{t('settings.paymentMethod')}</h3>
+          <button
+            onClick={handleManageBilling}
+            disabled={createPortal.isPending}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg border hover:bg-muted transition-colors text-sm disabled:opacity-50"
+          >
+            {createPortal.isPending && <Loader2 className="w-3 h-3 animate-spin" />}
+            Manage Subscription
           </button>
         </div>
-      </div>
-
-      <div>
-        <h3 className="font-medium mb-3">{t('settings.paymentMethod')}</h3>
         <div className="p-4 rounded-lg border">
-          <p className="text-muted-foreground text-center py-2">
-            No payment method on file. Contact support to manage billing.
-          </p>
+          {overview?.payment_methods && overview.payment_methods.length > 0 ? (
+            <div className="space-y-3">
+              {overview.payment_methods.map((pm) => (
+                <div key={pm.id} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <CreditCard className="w-5 h-5 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm font-medium capitalize">
+                        {pm.card?.brand || pm.type} {pm.card ? `**** ${pm.card.last4}` : ''}
+                      </p>
+                      {pm.card && (
+                        <p className="text-xs text-muted-foreground">
+                          Expires {pm.card.exp_month}/{pm.card.exp_year}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  {pm.is_default && (
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">Default</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-center py-2">
+              No payment method on file.
+            </p>
+          )}
         </div>
       </div>
 
+      {/* Invoice History */}
       <div>
         <h3 className="font-medium mb-3">{t('settings.billingHistory')}</h3>
         <div className="rounded-lg border overflow-hidden">
-          <div className="p-6 text-center text-muted-foreground">
-            <CreditCard className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p>No billing history available</p>
-            <p className="text-sm mt-1">Invoices will appear here once billing is configured</p>
-          </div>
+          {invoicesLoading ? (
+            <div className="flex items-center justify-center py-6">
+              <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : invoices && invoices.length > 0 ? (
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-muted/50">
+                  <th className="text-left px-4 py-2 font-medium text-muted-foreground">Date</th>
+                  <th className="text-left px-4 py-2 font-medium text-muted-foreground">Amount</th>
+                  <th className="text-left px-4 py-2 font-medium text-muted-foreground">Status</th>
+                  <th className="text-right px-4 py-2 font-medium text-muted-foreground">Invoice</th>
+                </tr>
+              </thead>
+              <tbody>
+                {invoices.map((inv) => (
+                  <tr key={inv.id} className="border-b last:border-0">
+                    <td className="px-4 py-3">{formatDate(inv.created)}</td>
+                    <td className="px-4 py-3">{formatCurrency(inv.amount_paid || inv.amount_due, inv.currency)}</td>
+                    <td className="px-4 py-3">
+                      <span className={cn(
+                        'text-xs px-2 py-0.5 rounded-full border font-medium capitalize',
+                        inv.status === 'paid' ? 'bg-green-500/15 text-green-600 border-green-500/30' :
+                        inv.status === 'open' ? 'bg-amber-500/15 text-amber-600 border-amber-500/30' :
+                        'bg-muted text-muted-foreground border-border'
+                      )}>
+                        {inv.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {inv.invoice_pdf ? (
+                        <a
+                          href={inv.invoice_pdf}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-primary hover:underline"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          PDF
+                        </a>
+                      ) : inv.hosted_invoice_url ? (
+                        <a
+                          href={inv.hosted_invoice_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline"
+                        >
+                          View
+                        </a>
+                      ) : (
+                        <span className="text-muted-foreground">--</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <div className="p-6 text-center text-muted-foreground">
+              <CreditCard className="w-8 h-8 mx-auto mb-2 opacity-50" />
+              <p>No billing history available</p>
+              <p className="text-sm mt-1">Invoices will appear here once billing is configured</p>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Cancel Subscription */}
+      {hasActiveSub && !isCanceling && (
+        <div className="pt-4 border-t">
+          <button
+            onClick={handleCancel}
+            disabled={cancelSub.isPending}
+            className="flex items-center gap-2 text-sm text-red-600 hover:text-red-700 transition-colors disabled:opacity-50"
+          >
+            {cancelSub.isPending && <Loader2 className="w-3 h-3 animate-spin" />}
+            Cancel Subscription
+          </button>
+        </div>
+      )}
     </div>
   );
 }

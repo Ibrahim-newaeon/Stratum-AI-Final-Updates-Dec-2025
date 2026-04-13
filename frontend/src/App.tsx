@@ -217,6 +217,11 @@ const ComparisonPage = lazyWithRetry(() => import('./views/pages/resources/Compa
 const GlossaryPage = lazyWithRetry(() => import('./views/pages/resources/Glossary'));
 const NotFound = lazyWithRetry(() => import('./views/NotFound'));
 
+// Checkout flow
+const CheckoutPage = lazyWithRetry(() => import('./views/checkout/CheckoutPage'));
+const CheckoutSuccess = lazyWithRetry(() => import('./views/checkout/CheckoutSuccess'));
+const CheckoutCancel = lazyWithRetry(() => import('./views/checkout/CheckoutCancel'));
+
 // Announcement pages
 const AudienceSyncLaunch = lazyWithRetry(() => import('./views/pages/announcements/AudienceSyncLaunch'));
 
@@ -773,6 +778,38 @@ function App() {
                         <ProtectedRoute>
                           <Suspense fallback={<LoadingSpinner />}>
                             <Onboarding />
+                          </Suspense>
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    {/* Checkout flow (protected) */}
+                    <Route
+                      path="/checkout"
+                      element={
+                        <ProtectedRoute>
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <CheckoutPage />
+                          </Suspense>
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/checkout/success"
+                      element={
+                        <ProtectedRoute>
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <CheckoutSuccess />
+                          </Suspense>
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/checkout/cancel"
+                      element={
+                        <ProtectedRoute>
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <CheckoutCancel />
                           </Suspense>
                         </ProtectedRoute>
                       }
