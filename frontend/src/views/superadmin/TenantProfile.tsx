@@ -78,7 +78,7 @@ function ConfirmDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/50" onClick={onCancel} />
+      <div className="absolute inset-0 bg-black/50" role="presentation" onClick={onCancel} />
       <div className="relative bg-surface-primary border border-white/10 rounded-2xl p-6 max-w-md w-full mx-4 shadow-xl">
         <button
           onClick={onCancel}

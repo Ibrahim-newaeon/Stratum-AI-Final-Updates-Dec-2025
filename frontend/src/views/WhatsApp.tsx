@@ -2033,7 +2033,7 @@ export function WhatsApp() {
 
       {/* Edit Contact Modal */}
       {showEditModal && editingContact && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowEditModal(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" role="presentation" onClick={() => setShowEditModal(false)}>
           <div className="bg-card rounded-xl border shadow-lg w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold">Edit Contact</h2>
@@ -2200,7 +2200,7 @@ export function WhatsApp() {
 
       {/* Create Template Modal */}
       {showTemplateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowTemplateModal(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" role="presentation" onClick={() => setShowTemplateModal(false)}>
           <div className="bg-card rounded-xl border shadow-lg w-full max-w-lg p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold">Create Template</h2>
@@ -2310,7 +2310,7 @@ export function WhatsApp() {
 
       {/* View Template Modal */}
       {viewingTemplate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setViewingTemplate(null)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" role="presentation" onClick={() => setViewingTemplate(null)}>
           <div className="bg-card rounded-xl border shadow-lg w-full max-w-lg p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold">Template Details</h2>
@@ -2389,7 +2389,7 @@ export function WhatsApp() {
 
       {/* View Message Modal */}
       {viewingMessage && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setViewingMessage(null)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" role="presentation" onClick={() => setViewingMessage(null)}>
           <div className="bg-card rounded-xl border shadow-lg w-full max-w-lg p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold">Message Details</h2>

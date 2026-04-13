@@ -248,9 +248,9 @@ export function LearningHub({ isOpen, onClose }: LearningHubProps) {
       <div className="p-4 border-t bg-muted/30">
         <p className="text-xs text-muted-foreground text-center">
           {t('learningHub.needHelp')}{' '}
-          <a href="#" className="text-primary hover:underline">
+          <button type="button" className="text-primary hover:underline">
             {t('learningHub.contactSupport')}
-          </a>
+          </button>
         </p>
       </div>
     </div>

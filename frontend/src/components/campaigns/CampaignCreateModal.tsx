@@ -349,7 +349,7 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={handleClose} />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" role="presentation" onClick={handleClose} />
 
       {/* Modal */}
       <div className="relative w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-2xl bg-card border shadow-xl mx-4">

@@ -133,11 +133,11 @@ export function Pricing() {
         <div className="mt-16 text-center">
           <p className="text-body text-text-muted">
             Have questions?{' '}
-            <a href="#" className="text-stratum-400 hover:text-stratum-300 transition-colors">
+            <button type="button" className="text-stratum-400 hover:text-stratum-300 transition-colors">
               Check our FAQ
-            </a>{' '}
+            </button>{' '}
             or{' '}
-            <a href="#" className="text-stratum-400 hover:text-stratum-300 transition-colors">
+            <a href="mailto:sales@stratum.ai" className="text-stratum-400 hover:text-stratum-300 transition-colors">
               contact sales
             </a>
           </p>

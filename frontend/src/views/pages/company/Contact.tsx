@@ -176,7 +176,7 @@ export default function Contact() {
                 <h3 className="text-lg font-semibold text-white mb-2">Support</h3>
                 <p style={{ color: '#8B8D9E' }}>
                   For existing customers, visit our{' '}
-                  <a href="#" className="text-[#FF4D4D] hover:underline">
+                  <a href="/help" className="text-[#FF4D4D] hover:underline">
                     Help Center
                   </a>{' '}
                   or email{' '}

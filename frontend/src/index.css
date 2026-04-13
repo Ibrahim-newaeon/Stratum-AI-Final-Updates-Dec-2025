@@ -50,33 +50,33 @@
   }
 
   .dark {
-    /* Dark fallback — mirrors light values for consistency */
-    --background: 240 11% 97%;
-    --foreground: 240 28% 14%;
+    /* Dark theme — proper dark values */
+    --background: 240 10% 10%;            /* #18181B dark page */
+    --foreground: 240 6% 90%;             /* #E4E4E7 light text */
 
-    --card: 0 0% 100%;
-    --card-foreground: 240 28% 14%;
+    --card: 240 10% 14%;                  /* #222228 dark cards */
+    --card-foreground: 240 6% 90%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 28% 14%;
+    --popover: 240 10% 14%;
+    --popover-foreground: 240 6% 90%;
 
-    --primary: 340 100% 56%;            /* #FF1F6D */
+    --primary: 340 100% 56%;              /* #FF1F6D unchanged */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 239 84% 67%;           /* #6366F1 */
+    --secondary: 239 84% 67%;             /* #6366F1 unchanged */
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 240 10% 96%;
-    --muted-foreground: 240 8% 60%;
+    --muted: 240 8% 18%;                  /* #2C2C32 dark muted */
+    --muted-foreground: 240 6% 55%;       /* #86868F subdued text */
 
-    --accent: 340 100% 97%;
-    --accent-foreground: 340 100% 40%;
+    --accent: 340 60% 16%;                /* dark pink tint */
+    --accent-foreground: 340 100% 70%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 240 10% 93%;              /* #EBEBEF */
-    --input: 240 10% 93%;
+    --border: 240 8% 20%;                 /* #303036 dark border */
+    --input: 240 8% 20%;
     --ring: 340 100% 56%;
 
     /* Data/Status colors */
@@ -612,7 +612,6 @@
 /* Nav Active State - Analytics Design System */
 .nav-item-active {
   background: rgba(255, 31, 109, 0.06);
-  border-left: 2px solid #FF1F6D;
 }
 
 /* Joyride custom styles */
@@ -644,11 +643,11 @@
 
 .react-grid-item {
   transition: all 200ms ease;
-  transition-property: left, top, width, height;
+  transition-property: transform;
 }
 
 .react-grid-item.cssTransforms {
-  transition-property: transform, width, height;
+  transition-property: transform;
 }
 
 .react-grid-item.resizing {

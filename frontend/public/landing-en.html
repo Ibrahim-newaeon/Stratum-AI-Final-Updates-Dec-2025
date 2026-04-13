@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stratum AI - Revenue Intelligence + Trust Layer</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         /* ============================================
            STRATUM AI THEME SYSTEM v3.0
@@ -164,37 +164,33 @@
         .orb {
             position: absolute;
             border-radius: 50%;
-            filter: blur(80px);
-            opacity: 0.5;
-            animation: orbFloat 15s ease-in-out infinite;
+            filter: blur(120px);
+            opacity: 0.15;
         }
 
         .orb-1 {
             width: 600px;
             height: 600px;
-            background: rgba(59, 130, 246, 0.3);
+            background: rgba(59, 130, 246, 0.2);
             top: -200px;
             left: -200px;
-            animation-delay: 0s;
         }
 
         .orb-2 {
             width: 500px;
             height: 500px;
-            background: rgba(139, 92, 246, 0.3);
+            background: rgba(139, 92, 246, 0.15);
             bottom: -150px;
             right: -150px;
-            animation-delay: -5s;
         }
 
         .orb-3 {
             width: 400px;
             height: 400px;
-            background: rgba(236, 72, 153, 0.2);
+            background: rgba(236, 72, 153, 0.1);
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            animation-delay: -10s;
         }
 
         @keyframes orbFloat {
@@ -240,16 +236,7 @@
             font-family: 'Inter', -apple-system, sans-serif;
             font-size: 1.5rem;
             font-weight: 700;
-            background: var(--gradient-primary);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: logoShine 3s ease-in-out infinite;
-        }
-
-        @keyframes logoShine {
-            0%, 100% { filter: brightness(1); }
-            50% { filter: brightness(1.2); }
+            color: var(--gold);
         }
 
         .nav-links {

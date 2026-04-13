@@ -218,7 +218,7 @@ export function KeyboardShortcutsHelp({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" role="presentation" onClick={onClose} />
 
       {/* Modal */}
       <div className="relative bg-surface-secondary border border-white/10 rounded-2xl p-6 max-w-lg w-full mx-4 max-h-[80vh] overflow-y-auto">

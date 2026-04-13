@@ -248,7 +248,7 @@ export default function CMSLayout() {
           sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         )}
       >
-        <div className="absolute inset-0 bg-black/50" onClick={() => setSidebarOpen(false)} />
+        <div className="absolute inset-0 bg-black/50" role="presentation" onClick={() => setSidebarOpen(false)} />
         <div
           className={cn(
             'absolute left-0 top-0 bottom-0 w-72 bg-surface-secondary border-r border-white/10 flex flex-col transition-transform',
