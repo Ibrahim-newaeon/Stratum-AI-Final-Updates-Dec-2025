@@ -57,7 +57,7 @@ const fallbackFeatures = [
     title: 'Smart Segmentation',
     description:
       'Build segments with behavioral rules, RFM scores, and lifecycle stages. Preview before you publish.',
-    color: '#34c759',
+    color: 'var(--landing-accent-green)',
   },
   {
     icon: ArrowPathIcon,
@@ -81,7 +81,7 @@ const fallbackFeatures = [
     title: 'Privacy-First',
     description:
       'Consent management, GDPR/CCPA compliance, and hashed PII for secure platform sync.',
-    color: '#3b82f6',
+    color: 'var(--landing-accent-blue)',
   },
 ];
 
@@ -132,7 +132,7 @@ export default function CDPSolution() {
                 style={{
                   background: 'rgba(255, 179, 71, 0.1)',
                   border: '1px solid rgba(255, 179, 71, 0.3)',
-                  color: '#FFB347',
+                  color: 'var(--landing-accent-warm)',
                 }}
               >
                 <UserGroupIcon className="w-4 h-4" />
@@ -140,13 +140,13 @@ export default function CDPSolution() {
               </div>
               <h1
                 className="text-4xl md:text-5xl font-bold mb-6"
-                style={{ fontFamily: "'Inter', sans-serif" }}
+                style={{ fontFamily: "'Clash Display', sans-serif" }}
               >
                 <span className="text-white">{hero.title}</span>
                 <br />
-                <span style={{ color: '#FF4D4D' }}>{hero.titleHighlight}</span>
+                <span style={{ color: 'var(--landing-accent-coral)' }}>{hero.titleHighlight}</span>
               </h1>
-              <p className="text-lg mb-8" style={{ color: '#8B8D9E' }}>
+              <p className="text-lg mb-8" style={{ color: 'var(--landing-text)' }}>
                 {hero.description}
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
@@ -154,7 +154,7 @@ export default function CDPSolution() {
                   to={hero.ctaLink}
                   className="px-8 py-4 rounded-full text-lg font-semibold text-white transition-all hover:opacity-90 text-center"
                   style={{
-                    background: '#FF4D4D',
+                    background: 'var(--landing-accent-coral)',
                     boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
                   }}
                 >
@@ -164,7 +164,7 @@ export default function CDPSolution() {
                   to="/cdp-calculator"
                   className="px-8 py-4 rounded-xl text-lg font-semibold text-white transition-all hover:bg-white/10 text-center"
                   style={{
-                    background: 'rgba(255, 255, 255, 0.06)',
+                    background: 'var(--landing-surface-glass)',
                     border: '1px solid rgba(255, 255, 255, 0.12)',
                   }}
                 >
@@ -175,18 +175,18 @@ export default function CDPSolution() {
             <div
               className="rounded-3xl p-8"
               style={{
-                background: '#12131F',
-                border: '1px solid #1E1F30',
+                background: 'var(--landing-card)',
+                border: '1px solid var(--landing-border)',
               }}
             >
               {/* Stats */}
               <div className="grid grid-cols-2 gap-6">
                 {stats.map((stat) => (
                   <div key={stat.label} className="text-center">
-                    <div className="text-3xl font-bold" style={{ color: '#FF4D4D' }}>
+                    <div className="text-3xl font-bold" style={{ color: 'var(--landing-accent-coral)' }}>
                       {stat.value}
                     </div>
-                    <div className="text-sm" style={{ color: 'rgba(139, 141, 158, 0.7)' }}>
+                    <div className="text-sm" style={{ color: 'var(--landing-text-dim)' }}>
                       {stat.label}
                     </div>
                   </div>
@@ -204,7 +204,7 @@ export default function CDPSolution() {
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               Everything You Need in a CDP
             </h2>
-            <p className="text-lg" style={{ color: '#8B8D9E' }}>
+            <p className="text-lg" style={{ color: 'var(--landing-text)' }}>
               From identity resolution to audience activation, all in one platform.
             </p>
           </div>
@@ -214,14 +214,14 @@ export default function CDPSolution() {
                 key={feature.title}
                 className="p-6 rounded-2xl transition-all hover:scale-[1.02]"
                 style={{
-                  background: '#12131F',
-                  border: '1px solid #1E1F30',
+                  background: 'var(--landing-card)',
+                  border: '1px solid var(--landing-border)',
                   borderLeft: `3px solid ${feature.color}`,
                 }}
               >
                 <feature.icon className="w-10 h-10 mb-4" style={{ color: feature.color }} />
                 <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
-                <p className="text-sm" style={{ color: '#8B8D9E' }}>
+                <p className="text-sm" style={{ color: 'var(--landing-text)' }}>
                   {feature.description}
                 </p>
               </div>
@@ -237,21 +237,21 @@ export default function CDPSolution() {
           <div
             className="rounded-2xl overflow-hidden"
             style={{
-              background: '#12131F',
-              border: '1px solid #1E1F30',
+              background: 'var(--landing-card)',
+              border: '1px solid var(--landing-border)',
             }}
           >
             <table className="w-full">
               <thead>
-                <tr style={{ borderBottom: '1px solid #1E1F30' }}>
+                <tr style={{ borderBottom: '1px solid var(--landing-border)' }}>
                   <th className="text-left p-4 text-white">Feature</th>
-                  <th className="p-4 text-center" style={{ color: '#FF4D4D' }}>
+                  <th className="p-4 text-center" style={{ color: 'var(--landing-accent-coral)' }}>
                     Stratum CDP
                   </th>
-                  <th className="p-4 text-center" style={{ color: 'rgba(139, 141, 158, 0.7)' }}>
+                  <th className="p-4 text-center" style={{ color: 'var(--landing-text-dim)' }}>
                     Segment
                   </th>
-                  <th className="p-4 text-center" style={{ color: 'rgba(139, 141, 158, 0.7)' }}>
+                  <th className="p-4 text-center" style={{ color: 'var(--landing-text-dim)' }}>
                     mParticle
                   </th>
                 </tr>
@@ -267,26 +267,26 @@ export default function CDPSolution() {
                 ].map(([feature, stratum, segment, mparticle]) => (
                   <tr
                     key={feature as string}
-                    style={{ borderBottom: '1px solid #1E1F30' }}
+                    style={{ borderBottom: '1px solid var(--landing-border)' }}
                   >
                     <td className="p-4 text-white">{feature}</td>
                     <td className="p-4 text-center">
                       {stratum ? (
-                        <span style={{ color: '#00D4AA' }}>✓</span>
+                        <span style={{ color: 'var(--landing-accent-teal)' }}>✓</span>
                       ) : (
                         <span style={{ color: 'rgba(255, 255, 255, 0.3)' }}>—</span>
                       )}
                     </td>
                     <td className="p-4 text-center">
                       {segment ? (
-                        <span style={{ color: '#00D4AA' }}>✓</span>
+                        <span style={{ color: 'var(--landing-accent-teal)' }}>✓</span>
                       ) : (
                         <span style={{ color: 'rgba(255, 255, 255, 0.3)' }}>—</span>
                       )}
                     </td>
                     <td className="p-4 text-center">
                       {mparticle ? (
-                        <span style={{ color: '#00D4AA' }}>✓</span>
+                        <span style={{ color: 'var(--landing-accent-teal)' }}>✓</span>
                       ) : (
                         <span style={{ color: 'rgba(255, 255, 255, 0.3)' }}>—</span>
                       )}
@@ -305,21 +305,21 @@ export default function CDPSolution() {
           <div
             className="p-12 rounded-3xl"
             style={{
-              background: '#12131F',
-              border: '1px solid #1E1F30',
+              background: 'var(--landing-card)',
+              border: '1px solid var(--landing-border)',
             }}
           >
             <h2 className="text-3xl font-bold text-white mb-4">
               Ready to Unify Your Customer Data?
             </h2>
-            <p className="text-lg mb-8" style={{ color: '#8B8D9E' }}>
+            <p className="text-lg mb-8" style={{ color: 'var(--landing-text)' }}>
               Start your free trial and see results in days, not months.
             </p>
             <Link
               to="/signup"
               className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-all hover:opacity-90"
               style={{
-                background: '#FF4D4D',
+                background: 'var(--landing-accent-coral)',
                 boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
               }}
             >

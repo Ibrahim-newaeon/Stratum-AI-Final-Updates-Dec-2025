@@ -4,67 +4,68 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Stratum AI - Decision Operating System</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="description" content="Stratum AI Decision Operating System dashboard. Monitor signal health, trust gates, campaign performance, and autopilot enforcement in real time.">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.17/dist/tailwind.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: { sans: ['Inter', 'sans-serif'] },
-          colors: {
-            // Core Surfaces
-            dark: {
-              950: '#0a0a1a',  // App Background
-              900: '#14162b',  // Surface 1 (Cards)
-              800: '#1a1f3c',  // Surface 2 (Elevated)
-              700: '#21264a',  // Surface 3 (Hover)
-              600: '#2d3356',
-            },
-            // Primary Brand
-            primary: {
-              DEFAULT: '#4DA3FF',
-              hover: '#6CB6FF',
-              active: '#3A8AE6',
-              50: '#EBF5FF',
-              100: '#E1EFFF',
-              500: '#4DA3FF',
-              600: '#3A8AE6',
-              700: '#2B7ACC',
-            },
-            // Accent Colors
-            accent: {
-              glow: '#00F2EA',
-              purple: '#7C7CFF',
-              emerald: '#2CFFC8',
-            },
-            // Status Colors
-            success: '#2EE59D',
-            warning: '#FFC857',
-            danger: '#FF4D6D',
-            info: '#4DA3FF',
-            // Typography
-            text: {
-              primary: '#EAEAF0',
-              secondary: '#B3B3C6',
-              muted: '#8A8AA3',
-              disabled: '#5F5F7A',
-              inverse: '#0A0A1A',
-            }
-          },
-          boxShadow: {
-            'soft': '0 4px 12px rgba(0,0,0,0.25)',
-            'medium': '0 8px 24px rgba(0,0,0,0.35)',
-            'deep': '0 16px 48px rgba(0,0,0,0.45)',
-            'glow': '0 0 30px rgba(77, 163, 255, 0.3), 0 0 60px rgba(0, 242, 234, 0.15)',
-            'glow-accent': '0 0 20px rgba(0, 242, 234, 0.4)',
-          }
-        }
-      }
-    }
-  </script>
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@200,300,400,500,600,700&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,600,700&display=swap" rel="stylesheet">
+  <style>
+    /* ── Custom theme color utilities (replaces CDN JIT) ── */
+    /* Core Surfaces */
+    .bg-dark-950 { background-color: #0a0a1a; }
+    .bg-dark-900 { background-color: #14162b; }
+    .bg-dark-800 { background-color: #1a1f3c; }
+    .bg-dark-800\/50 { background-color: rgba(26, 31, 60, 0.5); }
+    .bg-dark-700 { background-color: #21264a; }
+    .bg-dark-600 { background-color: #2d3356; }
+    .hover\:bg-dark-600:hover { background-color: #2d3356; }
+    .hover\:bg-dark-700:hover { background-color: #21264a; }
+    .hover\:bg-dark-800:hover { background-color: #1a1f3c; }
+    .hover\:bg-dark-800\/30:hover { background-color: rgba(26, 31, 60, 0.3); }
+    .border-dark-600 { border-color: #2d3356; }
+    .border-dark-700 { border-color: #21264a; }
+    .text-dark-200 { color: #c5c5d2; }
+    /* Primary Brand */
+    .bg-primary { background-color: #4DA3FF; }
+    .bg-primary\/10 { background-color: rgba(77, 163, 255, 0.1); }
+    .bg-primary\/20 { background-color: rgba(77, 163, 255, 0.2); }
+    .bg-primary\/40 { background-color: rgba(77, 163, 255, 0.4); }
+    .bg-primary\/60 { background-color: rgba(77, 163, 255, 0.6); }
+    .bg-primary\/70 { background-color: rgba(77, 163, 255, 0.7); }
+    .hover\:bg-primary\/20:hover { background-color: rgba(77, 163, 255, 0.2); }
+    .hover\:bg-primary\/30:hover { background-color: rgba(77, 163, 255, 0.3); }
+    .hover\:bg-primary-hover:hover { background-color: #6CB6FF; }
+    .text-primary { color: #4DA3FF; }
+    .border-primary\/30 { border-color: rgba(77, 163, 255, 0.3); }
+    .hover\:border-primary\/50:hover { border-color: rgba(77, 163, 255, 0.5); }
+    .ring-primary\/30 { --tw-ring-color: rgba(77, 163, 255, 0.3); }
+    /* Accent Colors */
+    .bg-accent-glow { background-color: #00F2EA; }
+    .bg-accent-glow\/20 { background-color: rgba(0, 242, 234, 0.2); }
+    .text-accent-glow { color: #00F2EA; }
+    /* Status Colors */
+    .bg-success\/10 { background-color: rgba(46, 229, 157, 0.1); }
+    .bg-success\/20 { background-color: rgba(46, 229, 157, 0.2); }
+    .bg-success\/60 { background-color: rgba(46, 229, 157, 0.6); }
+    .hover\:bg-success\/30:hover { background-color: rgba(46, 229, 157, 0.3); }
+    .border-success\/30 { border-color: rgba(46, 229, 157, 0.3); }
+    .bg-warning\/20 { background-color: rgba(255, 200, 87, 0.2); }
+    .hover\:bg-warning\/30:hover { background-color: rgba(255, 200, 87, 0.3); }
+    .border-warning\/30 { border-color: rgba(255, 200, 87, 0.3); }
+    .bg-danger\/20 { background-color: rgba(255, 77, 109, 0.2); }
+    .hover\:bg-danger\/30:hover { background-color: rgba(255, 77, 109, 0.3); }
+    .border-danger\/30 { border-color: rgba(255, 77, 109, 0.3); }
+    /* Custom shadows */
+    .shadow-soft { box-shadow: 0 4px 12px rgba(0,0,0,0.25); }
+    .shadow-medium { box-shadow: 0 8px 24px rgba(0,0,0,0.35); }
+    .shadow-deep { box-shadow: 0 16px 48px rgba(0,0,0,0.45); }
+    .shadow-glow { box-shadow: 0 0 30px rgba(77, 163, 255, 0.3), 0 0 60px rgba(0, 242, 234, 0.15); }
+    .shadow-glow-accent { box-shadow: 0 0 20px rgba(0, 242, 234, 0.4); }
+    /* Custom font families */
+    .font-sans { font-family: "Satoshi", sans-serif; }
+    .font-display { font-family: "Clash Display", sans-serif; }
+  </style>
   <style>
     [x-cloak] { display: none !important; }
 
@@ -261,6 +262,7 @@
   </style>
 </head>
 <body class="bg-dark-950 text-white font-sans antialiased" x-data="stratumApp()" x-cloak :class="'theme-' + activeTheme">
+  <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-white focus:text-black focus:rounded">Skip to content</a>
 
   <!-- Login Screen -->
   <div x-show="!isLoggedIn" class="min-h-screen flex">
@@ -408,7 +410,7 @@
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 overflow-y-auto bg-dark-950">
+    <main id="main-content" class="flex-1 overflow-y-auto bg-dark-950">
 
       <!-- ==================== SUPER ADMIN SCREENS ==================== -->
       <template x-if="currentRole === 'superadmin'">
@@ -421,13 +423,14 @@
                 <p class="text-dark-200">Platform-wide performance at a glance</p>
               </div>
               <div class="flex items-center gap-3">
-                <select class="px-3 py-2 rounded-lg bg-dark-800 border border-dark-700 text-sm">
+                <label for="dashboard-timerange" class="sr-only">Time range</label>
+                <select id="dashboard-timerange" class="px-3 py-2 rounded-lg bg-dark-800 border border-dark-700 text-sm">
                   <option>Last 24 hours</option>
                   <option>Last 7 days</option>
                   <option>Last 30 days</option>
                 </select>
-                <button @click="fetchAllData()" class="px-4 py-2 rounded-lg bg-dark-800 border border-dark-700 text-sm hover:bg-dark-700 transition-colors">
-                  <svg class="w-4 h-4 inline mr-2" :class="loading.executive || loading.tenants ? 'animate-spin' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                <button type="button" @click="fetchAllData()" class="px-4 py-2 rounded-lg bg-dark-800 border border-dark-700 text-sm hover:bg-dark-700 transition-colors">
+                  <svg class="w-4 h-4 inline mr-2" :class="loading.executive || loading.tenants ? 'animate-spin' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                   Refresh
                 </button>
               </div>
@@ -577,8 +580,10 @@
                 <p class="text-dark-200">Portfolio management and health monitoring</p>
               </div>
               <div class="flex items-center gap-3">
-                <input type="text" placeholder="Search tenants..." class="px-4 py-2 rounded-lg bg-dark-800 border border-dark-700 text-sm w-64">
-                <select class="px-3 py-2 rounded-lg bg-dark-800 border border-dark-700 text-sm">
+                <label for="search-tenants" class="sr-only">Search tenants</label>
+                <input type="text" id="search-tenants" placeholder="Search tenants..." class="px-4 py-2 rounded-lg bg-dark-800 border border-dark-700 text-sm w-64">
+                <label for="tenant-status-filter" class="sr-only">Filter by status</label>
+                <select id="tenant-status-filter" class="px-3 py-2 rounded-lg bg-dark-800 border border-dark-700 text-sm">
                   <option>All Status</option>
                   <option>Scaling</option>
                   <option>Stable</option>
@@ -840,8 +845,10 @@
                 <p class="text-dark-200">Execution view</p>
               </div>
               <div class="flex items-center gap-3">
-                <input type="text" placeholder="Search campaigns..." class="px-4 py-2 rounded-lg bg-dark-800 border border-dark-700 text-sm w-64">
-                <select class="px-3 py-2 rounded-lg bg-dark-800 border border-dark-700 text-sm">
+                <label for="search-campaigns" class="sr-only">Search campaigns</label>
+                <input type="text" id="search-campaigns" placeholder="Search campaigns..." class="px-4 py-2 rounded-lg bg-dark-800 border border-dark-700 text-sm w-64">
+                <label for="platform-filter" class="sr-only">Filter by platform</label>
+                <select id="platform-filter" class="px-3 py-2 rounded-lg bg-dark-800 border border-dark-700 text-sm">
                   <option>All Platforms</option>
                   <option>Meta</option>
                   <option>Google</option>

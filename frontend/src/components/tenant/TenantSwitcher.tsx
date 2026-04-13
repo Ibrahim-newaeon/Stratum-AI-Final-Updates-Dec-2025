@@ -179,7 +179,7 @@ export default function TenantSwitcher() {
           {/* Header */}
           <div
             className="px-4 py-3"
-            style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}
+            style={{ borderBottom: '1px solid var(--landing-border-white-dim)' }}
           >
             <p className="text-xs font-medium text-white/50 uppercase tracking-wider">
               Switch Workspace
@@ -263,7 +263,7 @@ export default function TenantSwitcher() {
           {/* Footer */}
           <div
             className="px-4 py-2.5"
-            style={{ borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}
+            style={{ borderTop: '1px solid var(--landing-border-white-dim)' }}
           >
             <p className="text-[11px] text-white/30">
               {tenants.length} workspace{tenants.length !== 1 ? 's' : ''} available

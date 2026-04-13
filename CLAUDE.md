@@ -183,6 +183,28 @@ Coverage target: 90%+ for `core/`, `autopilot/`, `analytics/`
 | frontend | 5173 | React Vite dev server |
 | flower | 5555 | Celery monitoring (optional) |
 
+## Design Context
+
+### Users
+Marketing agencies managing multiple client accounts across ad platforms. Extended sessions, professional setting, data-heavy workflows.
+
+### Brand Personality
+**Bold, intelligent, premium.** Sophisticated power through restraint. Bloomberg terminal meets luxury brand.
+
+### Aesthetic Direction
+- **Reference**: Apple / Porsche Design — premium materials, restrained palette, obsessive detail
+- **Anti-reference**: Enterprise gray (Salesforce/SAP)
+- **Theme**: Dark mode primary (dashboard). Light mode for marketing pages.
+- **Palette**: Deep darks, warm coral accent (#FF4D4D), tinted neutrals. 60/30/10 rule.
+- **Typography**: Clash Display (headings) + Satoshi (body). No Inter, no banned fonts.
+
+### Design Principles
+1. **Quiet authority** — Power through precision, not noise
+2. **Information density without clutter** — Strong hierarchy, not hidden data
+3. **Premium materiality** — Tinted neutrals, subtle depth, no flat gray
+4. **Decisive contrast** — Bold type hierarchy, 1.5x+ ratio between steps
+5. **Earn every pixel** — Every element serves the user's task
+
 ## Imports
 @docs/architecture/trust-engine.md
 @docs/integrations/README.md

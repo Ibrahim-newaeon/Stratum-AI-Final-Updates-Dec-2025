@@ -64,14 +64,14 @@ const fallbackFeatures = [
     title: 'Multi-Platform Audience Sync',
     description:
       'Push segments to Meta, Google, TikTok & Snapchat with one click. Auto-sync keeps audiences fresh.',
-    color: '#34c759',
+    color: 'var(--landing-accent-green)',
   },
   {
     icon: ChartBarIcon,
     title: 'Advanced Attribution',
     description:
       'Multi-touch attribution models with conversion path analysis and incrementality testing.',
-    color: '#3b82f6',
+    color: 'var(--landing-accent-blue)',
   },
   {
     icon: CpuChipIcon,
@@ -91,7 +91,7 @@ const fallbackFeatures = [
     icon: ChartPieIcon,
     title: 'RFM Analysis',
     description: 'Built-in Recency, Frequency, Monetary analysis for customer value segmentation.',
-    color: '#00c7be',
+    color: 'var(--landing-accent-cyan)',
   },
   {
     icon: CloudArrowUpIcon,
@@ -146,7 +146,7 @@ export default function Features() {
             style={{
               background: 'rgba(255, 179, 71, 0.1)',
               border: '1px solid rgba(255, 179, 71, 0.3)',
-              color: '#FFB347',
+              color: 'var(--landing-accent-warm)',
             }}
           >
             <SparklesIcon className="w-4 h-4" />
@@ -154,19 +154,19 @@ export default function Features() {
           </div>
           <h1
             className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6"
-            style={{ fontFamily: "'Inter', sans-serif" }}
+            style={{ fontFamily: "'Clash Display', sans-serif" }}
           >
             <span className="text-white">Everything You Need to</span>
             <br />
             <span
-              style={{ color: '#FF4D4D' }}
+              style={{ color: 'var(--landing-accent-coral)' }}
             >
               Scale Revenue Operations
             </span>
           </h1>
           <p
             className="text-lg md:text-xl max-w-3xl mx-auto mb-10"
-            style={{ color: '#8B8D9E' }}
+            style={{ color: 'var(--landing-text)' }}
           >
             From signal health monitoring to ML-powered predictions, Stratum AI provides the
             complete toolkit for modern growth teams.
@@ -176,7 +176,7 @@ export default function Features() {
               to="/signup"
               className="px-8 py-4 rounded-full text-lg font-semibold text-white transition-all hover:opacity-90"
               style={{
-                background: '#FF4D4D',
+                background: 'var(--landing-accent-coral)',
                 boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
               }}
             >
@@ -186,7 +186,7 @@ export default function Features() {
               to="/pricing"
               className="px-8 py-4 rounded-xl text-lg font-semibold text-white transition-all hover:bg-white/10"
               style={{
-                background: 'rgba(255, 255, 255, 0.06)',
+                background: 'var(--landing-surface-glass)',
                 border: '1px solid rgba(255, 255, 255, 0.2)',
               }}
             >
@@ -205,8 +205,8 @@ export default function Features() {
                 key={feature.title}
                 className="p-6 rounded-2xl transition-all hover:scale-[1.02] group"
                 style={{
-                  background: '#12131F',
-                  border: '1px solid #1E1F30',
+                  background: 'var(--landing-card)',
+                  border: '1px solid var(--landing-border)',
                   borderLeft: `3px solid ${feature.color}`,
                 }}
               >
@@ -220,7 +220,7 @@ export default function Features() {
                   <feature.icon className="w-6 h-6" style={{ color: feature.color }} />
                 </div>
                 <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
-                <p className="text-sm" style={{ color: '#8B8D9E' }}>
+                <p className="text-sm" style={{ color: 'var(--landing-text)' }}>
                   {feature.description}
                 </p>
               </div>
@@ -235,21 +235,21 @@ export default function Features() {
           <div
             className="p-12 rounded-3xl"
             style={{
-              background: '#12131F',
-              border: '1px solid #1E1F30',
+              background: 'var(--landing-card)',
+              border: '1px solid var(--landing-border)',
             }}
           >
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               Ready to Transform Your Revenue Operations?
             </h2>
-            <p className="text-lg mb-8" style={{ color: '#8B8D9E' }}>
+            <p className="text-lg mb-8" style={{ color: 'var(--landing-text)' }}>
               Join 150+ growth teams using Stratum AI to drive sustainable growth.
             </p>
             <Link
               to="/signup"
               className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-all hover:opacity-90"
               style={{
-                background: '#FF4D4D',
+                background: 'var(--landing-accent-coral)',
                 boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
               }}
             >

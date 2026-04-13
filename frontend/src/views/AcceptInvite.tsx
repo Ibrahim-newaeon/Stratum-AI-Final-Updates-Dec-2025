@@ -31,15 +31,15 @@ const theme = {
   bgPage: '#050B18',
   bgCard: 'rgba(10, 22, 40, 0.8)',
   bgInput: 'rgba(255, 255, 255, 0.05)',
-  primary: '#00c7be',
+  primary: 'var(--landing-accent-cyan)',
   primaryHover: '#00b3aa',
   primaryLight: 'rgba(0, 199, 190, 0.15)',
   textPrimary: 'rgba(245, 245, 247, 0.92)',
   textSecondary: 'rgba(245, 245, 247, 0.6)',
   textMuted: 'rgba(245, 245, 247, 0.4)',
-  border: 'rgba(255, 255, 255, 0.08)',
+  border: 'var(--landing-border-white-dim)',
   danger: '#ef4444',
-  success: '#34c759',
+  success: 'var(--landing-accent-green)',
 };
 
 // ── Component ──────────────────────────────────────────────────────────────

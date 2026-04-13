@@ -126,7 +126,7 @@ export function FeedbackWidget() {
             onClick={() => setIsOpen(true)}
             className="fixed bottom-20 right-4 w-12 h-12 rounded-full text-[#0b1215] shadow-lg hover:shadow-xl transition-shadow z-40 flex items-center justify-center"
             style={{
-              background: '#00c7be',
+              background: 'var(--landing-accent-cyan)',
               boxShadow: '0 0 25px rgba(0, 199, 190, 0.35)',
             }}
             title="Send Feedback"
@@ -207,7 +207,7 @@ export function FeedbackWidget() {
                         style={{
                           color:
                             rating === r.value
-                              ? '#00c7be'
+                              ? 'var(--landing-accent-cyan)'
                               : 'rgba(245,245,247,0.35)',
                         }}
                       >

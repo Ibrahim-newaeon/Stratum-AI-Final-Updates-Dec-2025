@@ -59,14 +59,14 @@ export default function Contact() {
               <CheckCircleIcon className="w-10 h-10 text-green-500" />
             </div>
             <h1 className="text-3xl font-bold text-white mb-4">Message Sent!</h1>
-            <p className="text-lg mb-8" style={{ color: '#8B8D9E' }}>
+            <p className="text-lg mb-8" style={{ color: 'var(--landing-text)' }}>
               Thank you for reaching out. We'll get back to you as soon as possible.
             </p>
             <button
               onClick={() => setSubmitted(false)}
               className="px-6 py-3 rounded-full font-semibold text-white transition-all hover:opacity-90"
               style={{
-                background: '#FF4D4D',
+                background: 'var(--landing-accent-coral)',
                 boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
               }}
             >
@@ -97,19 +97,19 @@ export default function Contact() {
           </div>
           <h1
             className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6"
-            style={{ fontFamily: "'Inter', sans-serif" }}
+            style={{ fontFamily: "'Clash Display', sans-serif" }}
           >
             <span className="text-white">Get in</span>
             <br />
             <span
-              style={{ color: '#FF4D4D' }}
+              style={{ color: 'var(--landing-accent-coral)' }}
             >
               Touch
             </span>
           </h1>
           <p
             className="text-lg md:text-xl max-w-2xl mx-auto"
-            style={{ color: '#8B8D9E' }}
+            style={{ color: 'var(--landing-text)' }}
           >
             Have questions? We&apos;d love to hear from you. Send us a message and we&apos;ll
             respond as soon as possible.
@@ -126,21 +126,21 @@ export default function Contact() {
               <div
                 className="p-6 rounded-2xl"
                 style={{
-                  background: '#12131F',
-                  border: '1px solid #1E1F30',
+                  background: 'var(--landing-card)',
+                  border: '1px solid var(--landing-border)',
                 }}
               >
-                <EnvelopeIcon className="w-8 h-8 mb-4" style={{ color: '#FF4D4D' }} />
+                <EnvelopeIcon className="w-8 h-8 mb-4" style={{ color: 'var(--landing-accent-coral)' }} />
                 <h3 className="text-lg font-semibold text-white mb-2">Email Us</h3>
-                <p style={{ color: '#8B8D9E' }}>
+                <p style={{ color: 'var(--landing-text)' }}>
                   <a href="mailto:hello@stratum.ai" className="hover:text-white transition-colors">
                     hello@stratum.ai
                   </a>
                 </p>
-                <p className="text-sm mt-2" style={{ color: 'rgba(139, 141, 158, 0.7)' }}>
+                <p className="text-sm mt-2" style={{ color: 'var(--landing-text-dim)' }}>
                   For sales inquiries
                 </p>
-                <p style={{ color: '#8B8D9E' }}>
+                <p style={{ color: 'var(--landing-text)' }}>
                   <a href="mailto:sales@stratum.ai" className="hover:text-white transition-colors">
                     sales@stratum.ai
                   </a>
@@ -150,13 +150,13 @@ export default function Contact() {
               <div
                 className="p-6 rounded-2xl"
                 style={{
-                  background: '#12131F',
-                  border: '1px solid #1E1F30',
+                  background: 'var(--landing-card)',
+                  border: '1px solid var(--landing-border)',
                 }}
               >
-                <MapPinIcon className="w-8 h-8 mb-4" style={{ color: '#FFB347' }} />
+                <MapPinIcon className="w-8 h-8 mb-4" style={{ color: 'var(--landing-accent-warm)' }} />
                 <h3 className="text-lg font-semibold text-white mb-2">Headquarters</h3>
-                <p style={{ color: '#8B8D9E' }}>
+                <p style={{ color: 'var(--landing-text)' }}>
                   548 Market Street
                   <br />
                   Suite 35000
@@ -168,19 +168,19 @@ export default function Contact() {
               <div
                 className="p-6 rounded-2xl"
                 style={{
-                  background: '#12131F',
-                  border: '1px solid #1E1F30',
+                  background: 'var(--landing-card)',
+                  border: '1px solid var(--landing-border)',
                 }}
               >
-                <ChatBubbleLeftRightIcon className="w-8 h-8 mb-4" style={{ color: '#FFB347' }} />
+                <ChatBubbleLeftRightIcon className="w-8 h-8 mb-4" style={{ color: 'var(--landing-accent-warm)' }} />
                 <h3 className="text-lg font-semibold text-white mb-2">Support</h3>
-                <p style={{ color: '#8B8D9E' }}>
+                <p style={{ color: 'var(--landing-text)' }}>
                   For existing customers, visit our{' '}
-                  <a href="/help" className="text-[#FF4D4D] hover:underline">
+                  <a href="/help" className="text-[var(--landing-accent-coral)] hover:underline">
                     Help Center
                   </a>{' '}
                   or email{' '}
-                  <a href="mailto:support@stratum.ai" className="text-[#FF4D4D] hover:underline">
+                  <a href="mailto:support@stratum.ai" className="text-[var(--landing-accent-coral)] hover:underline">
                     support@stratum.ai
                   </a>
                 </p>
@@ -193,8 +193,8 @@ export default function Contact() {
                 onSubmit={handleSubmit}
                 className="p-8 rounded-3xl"
                 style={{
-                  background: '#12131F',
-                  border: '1px solid #1E1F30',
+                  background: 'var(--landing-card)',
+                  border: '1px solid var(--landing-border)',
                 }}
               >
                 <h2 className="text-2xl font-bold text-white mb-6">Send us a Message</h2>
@@ -221,8 +221,8 @@ export default function Contact() {
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       className="w-full px-4 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-all focus:ring-2"
                       style={{
-                        background: 'rgba(255, 255, 255, 0.06)',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        background: 'var(--landing-surface-glass)',
+                        border: '1px solid var(--landing-border-glass)',
                       }}
                       placeholder="Your name"
                       required
@@ -236,8 +236,8 @@ export default function Contact() {
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       className="w-full px-4 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-all focus:ring-2"
                       style={{
-                        background: 'rgba(255, 255, 255, 0.06)',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        background: 'var(--landing-surface-glass)',
+                        border: '1px solid var(--landing-border-glass)',
                       }}
                       placeholder="your@email.com"
                       required
@@ -253,8 +253,8 @@ export default function Contact() {
                       onChange={(e) => setFormData({ ...formData, company: e.target.value })}
                       className="w-full px-4 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-all focus:ring-2"
                       style={{
-                        background: 'rgba(255, 255, 255, 0.06)',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        background: 'var(--landing-surface-glass)',
+                        border: '1px solid var(--landing-border-glass)',
                       }}
                       placeholder="Your company"
                     />
@@ -266,8 +266,8 @@ export default function Contact() {
                       onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                       className="w-full px-4 py-3 rounded-xl text-white outline-none transition-all focus:ring-2"
                       style={{
-                        background: 'rgba(255, 255, 255, 0.06)',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        background: 'var(--landing-surface-glass)',
+                        border: '1px solid var(--landing-border-glass)',
                       }}
                       required
                     >
@@ -287,8 +287,8 @@ export default function Contact() {
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                     className="w-full px-4 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-all focus:ring-2 min-h-[150px]"
                     style={{
-                      background: 'rgba(255, 255, 255, 0.06)',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      background: 'var(--landing-surface-glass)',
+                      border: '1px solid var(--landing-border-glass)',
                     }}
                     placeholder="How can we help you?"
                     required
@@ -299,7 +299,7 @@ export default function Contact() {
                   disabled={submitContact.isPending}
                   className="w-full py-4 rounded-full font-semibold text-white transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{
-                    background: '#FF4D4D',
+                    background: 'var(--landing-accent-coral)',
                     boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
                   }}
                 >

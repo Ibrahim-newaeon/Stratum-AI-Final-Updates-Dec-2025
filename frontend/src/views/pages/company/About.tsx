@@ -64,7 +64,7 @@ export default function About() {
             style={{
               background: 'rgba(255, 179, 71, 0.1)',
               border: '1px solid rgba(255, 179, 71, 0.3)',
-              color: '#FFB347',
+              color: 'var(--landing-accent-warm)',
             }}
           >
             <SparklesIcon className="w-4 h-4" />
@@ -72,19 +72,19 @@ export default function About() {
           </div>
           <h1
             className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6"
-            style={{ fontFamily: "'Inter', sans-serif" }}
+            style={{ fontFamily: "'Clash Display', sans-serif" }}
           >
             <span className="text-white">Building the Future of</span>
             <br />
             <span
-              style={{ color: '#FF4D4D' }}
+              style={{ color: 'var(--landing-accent-coral)' }}
             >
               Revenue Operations
             </span>
           </h1>
           <p
             className="text-lg md:text-xl max-w-3xl mx-auto"
-            style={{ color: '#8B8D9E' }}
+            style={{ color: 'var(--landing-text)' }}
           >
             We&apos;re on a mission to help growth teams make smarter decisions with AI-powered
             intelligence and trust-gated automation.
@@ -98,12 +98,12 @@ export default function About() {
           <div
             className="p-8 md:p-12 rounded-3xl"
             style={{
-              background: '#12131F',
-              border: '1px solid #1E1F30',
+              background: 'var(--landing-card)',
+              border: '1px solid var(--landing-border)',
             }}
           >
             <h2 className="text-3xl font-bold text-white mb-6">Our Story</h2>
-            <div className="space-y-4" style={{ color: '#8B8D9E' }}>
+            <div className="space-y-4" style={{ color: 'var(--landing-text)' }}>
               <p>
                 Stratum AI was founded in 2024 by a team of marketing technologists who experienced
                 firsthand the chaos of managing campaigns across multiple platforms with unreliable
@@ -131,10 +131,10 @@ export default function About() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {stats.map((stat) => (
               <div key={stat.label} className="text-center">
-                <div className="text-4xl font-bold" style={{ color: '#FF4D4D' }}>
+                <div className="text-4xl font-bold" style={{ color: 'var(--landing-accent-coral)' }}>
                   {stat.value}
                 </div>
-                <div className="text-sm mt-2" style={{ color: 'rgba(139, 141, 158, 0.7)' }}>
+                <div className="text-sm mt-2" style={{ color: 'var(--landing-text-dim)' }}>
                   {stat.label}
                 </div>
               </div>
@@ -153,12 +153,12 @@ export default function About() {
                 key={value.title}
                 className="p-6 rounded-2xl"
                 style={{
-                  background: '#12131F',
-                  border: '1px solid #1E1F30',
+                  background: 'var(--landing-card)',
+                  border: '1px solid var(--landing-border)',
                 }}
               >
                 <h3 className="text-xl font-semibold text-white mb-2">{value.title}</h3>
-                <p style={{ color: '#8B8D9E' }}>{value.description}</p>
+                <p style={{ color: 'var(--landing-text)' }}>{value.description}</p>
               </div>
             ))}
           </div>
@@ -182,7 +182,7 @@ export default function About() {
                   {member.image}
                 </div>
                 <h3 className="font-semibold text-white">{member.name}</h3>
-                <p className="text-sm" style={{ color: 'rgba(139, 141, 158, 0.7)' }}>
+                <p className="text-sm" style={{ color: 'var(--landing-text-dim)' }}>
                   {member.role}
                 </p>
               </div>
@@ -197,19 +197,19 @@ export default function About() {
           <div
             className="p-12 rounded-3xl"
             style={{
-              background: '#12131F',
-              border: '1px solid #1E1F30',
+              background: 'var(--landing-card)',
+              border: '1px solid var(--landing-border)',
             }}
           >
             <h2 className="text-3xl font-bold text-white mb-4">Join Our Mission</h2>
-            <p className="text-lg mb-8" style={{ color: '#8B8D9E' }}>
+            <p className="text-lg mb-8" style={{ color: 'var(--landing-text)' }}>
               We&apos;re always looking for talented people to join our team.
             </p>
             <Link
               to="/careers"
               className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-all hover:opacity-90"
               style={{
-                background: '#FF4D4D',
+                background: 'var(--landing-accent-coral)',
                 boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
               }}
             >

@@ -26,7 +26,7 @@ const docCategories = [
     title: 'Getting Started',
     description: 'Quick start guides to get you up and running',
     icon: PlayIcon,
-    color: '#00D4AA',
+    color: 'var(--landing-accent-teal)',
     links: [
       { name: 'Quick Start Guide', href: '/docs/quickstart' },
       { name: 'Installation', href: '/docs/installation' },
@@ -38,7 +38,7 @@ const docCategories = [
     title: 'API Reference',
     description: 'Complete API documentation with examples',
     icon: CodeBracketIcon,
-    color: '#FFB347',
+    color: 'var(--landing-accent-warm)',
     links: [
       { name: 'REST API', href: '/api-docs' },
       { name: 'Webhooks', href: '/docs/webhooks' },
@@ -50,7 +50,7 @@ const docCategories = [
     title: 'Trust Engine',
     description: 'Learn about our trust-gated automation',
     icon: ShieldCheckIcon,
-    color: '#00D4FF',
+    color: 'var(--landing-accent-sky)',
     links: [
       { name: 'Signal Health', href: '/docs/signal-health' },
       { name: 'Trust Gates', href: '/docs/trust-gates' },
@@ -62,7 +62,7 @@ const docCategories = [
     title: 'CDP',
     description: 'Customer Data Platform documentation',
     icon: CpuChipIcon,
-    color: '#FF6B6B',
+    color: 'var(--landing-accent-red)',
     links: [
       { name: 'Profiles', href: '/docs/cdp/profiles' },
       { name: 'Segments', href: '/docs/cdp/segments' },
@@ -74,7 +74,7 @@ const docCategories = [
     title: 'Integrations',
     description: 'Connect with ad platforms and tools',
     icon: CloudIcon,
-    color: '#FFB800',
+    color: 'var(--landing-accent-amber)',
     links: [
       { name: 'Meta Ads', href: '/docs/integrations/meta' },
       { name: 'Google Ads', href: '/docs/integrations/google' },
@@ -86,7 +86,7 @@ const docCategories = [
     title: 'Tutorials',
     description: 'Step-by-step guides and best practices',
     icon: AcademicCapIcon,
-    color: '#A78BFA',
+    color: 'var(--landing-accent-violet)',
     links: [
       { name: 'Video Tutorials', href: '/docs/tutorials/videos' },
       { name: 'Use Cases', href: '/docs/tutorials/use-cases' },
@@ -127,27 +127,27 @@ export default function DocsPage() {
                   border: '1px solid rgba(255,179,71,0.3)',
                 }}
               >
-                <BookOpenIcon className="w-4 h-4 text-[#FFB347]" />
-                <span className="text-sm font-medium text-[#FFB347]">Documentation</span>
+                <BookOpenIcon className="w-4 h-4 text-[var(--landing-accent-warm)]" />
+                <span className="text-sm font-medium text-[var(--landing-accent-warm)]">Documentation</span>
               </div>
 
               <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
                 Learn how to build with{' '}
                 <span
-                  style={{ color: '#FF4D4D' }}
+                  style={{ color: 'var(--landing-accent-coral)' }}
                 >
                   Stratum AI
                 </span>
               </h1>
 
-              <p className="text-lg mb-8" style={{ color: '#8B8D9E' }}>
+              <p className="text-lg mb-8" style={{ color: 'var(--landing-text)' }}>
                 Comprehensive guides, API references, and tutorials to help you integrate and
                 maximize the power of trust-gated automation.
               </p>
 
               {/* Search Bar */}
               <div className="relative max-w-xl mx-auto">
-                <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: 'rgba(139,141,158,0.7)' }} />
+                <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: 'var(--landing-text-dim)' }} />
                 <input
                   type="text"
                   placeholder="Search documentation..."
@@ -155,8 +155,8 @@ export default function DocsPage() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-12 pr-4 py-4 rounded-xl text-white placeholder-gray-500 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#FF4D4D]/50"
                   style={{
-                    background: '#12131F',
-                    border: '1px solid #1E1F30',
+                    background: 'var(--landing-card)',
+                    border: '1px solid var(--landing-border)',
                   }}
                 />
               </div>
@@ -180,8 +180,8 @@ export default function DocsPage() {
                       key={category.title}
                       className="group p-6 rounded-2xl transition-all duration-300 hover:-translate-y-1"
                       style={{
-                        background: '#12131F',
-                        border: '1px solid #1E1F30',
+                        background: 'var(--landing-card)',
+                        border: '1px solid var(--landing-border)',
                       }}
                     >
                       <div
@@ -195,7 +195,7 @@ export default function DocsPage() {
                       </div>
 
                       <h3 className="text-xl font-semibold text-white mb-2">{category.title}</h3>
-                      <p className="text-sm mb-4" style={{ color: '#8B8D9E' }}>{category.description}</p>
+                      <p className="text-sm mb-4" style={{ color: 'var(--landing-text)' }}>{category.description}</p>
 
                       <ul className="space-y-2">
                         {category.links.map((link) => (
@@ -203,7 +203,7 @@ export default function DocsPage() {
                             <Link
                               to={link.href}
                               className="flex items-center gap-2 text-sm hover:text-white transition-colors group/link"
-                              style={{ color: '#8B8D9E' }}
+                              style={{ color: 'var(--landing-text)' }}
                             >
                               <ArrowRightIcon className="w-3 h-3 opacity-0 -translate-x-2 group-hover/link:opacity-100 group-hover/link:translate-x-0 transition-all" />
                               <span>{link.name}</span>
@@ -229,18 +229,18 @@ export default function DocsPage() {
                       to="#"
                       className="flex items-center gap-4 p-4 rounded-xl transition-all duration-200 hover:bg-white/5 group"
                       style={{
-                        background: '#12131F',
-                        border: '1px solid #1E1F30',
+                        background: 'var(--landing-card)',
+                        border: '1px solid var(--landing-border)',
                       }}
                     >
                       <span className="text-2xl font-bold" style={{ color: 'rgba(139,141,158,0.5)' }}>
                         {String(index + 1).padStart(2, '0')}
                       </span>
                       <div className="flex-1">
-                        <h4 className="text-white font-medium group-hover:text-[#FF4D4D] transition-colors">
+                        <h4 className="text-white font-medium group-hover:text-[var(--landing-accent-coral)] transition-colors">
                           {article.title}
                         </h4>
-                        <div className="flex items-center gap-3 mt-1 text-xs" style={{ color: 'rgba(139,141,158,0.7)' }}>
+                        <div className="flex items-center gap-3 mt-1 text-xs" style={{ color: 'var(--landing-text-dim)' }}>
                           <span>{article.views} views</span>
                           <span>{article.time} read</span>
                         </div>
@@ -257,14 +257,14 @@ export default function DocsPage() {
                 <div
                   className="rounded-2xl p-8 md:p-12 text-center"
                   style={{
-                    background: '#12131F',
-                    border: '1px solid #1E1F30',
+                    background: 'var(--landing-card)',
+                    border: '1px solid var(--landing-border)',
                   }}
                 >
                   <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
                     Can't find what you're looking for?
                   </h2>
-                  <p className="mb-8" style={{ color: '#8B8D9E' }}>
+                  <p className="mb-8" style={{ color: 'var(--landing-text)' }}>
                     Our support team is here to help you with any questions.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -272,8 +272,8 @@ export default function DocsPage() {
                       to="/contact"
                       className="px-6 py-3 rounded-full font-semibold text-white transition-all duration-200"
                       style={{
-                        background: '#FF4D4D',
-                        boxShadow: '0 4px 20px rgba(255,77,77,0.3)',
+                        background: 'var(--landing-accent-coral)',
+                        boxShadow: 'var(--landing-glow-coral)',
                       }}
                     >
                       Contact Support
@@ -282,8 +282,8 @@ export default function DocsPage() {
                       to="/faq"
                       className="px-6 py-3 rounded-xl font-semibold text-white transition-all duration-200"
                       style={{
-                        background: 'rgba(255, 255, 255, 0.06)',
-                        border: '1px solid #1E1F30',
+                        background: 'var(--landing-surface-glass)',
+                        border: '1px solid var(--landing-border)',
                       }}
                     >
                       View FAQ

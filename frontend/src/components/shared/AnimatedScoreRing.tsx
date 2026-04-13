@@ -21,7 +21,7 @@ interface AnimatedScoreRingProps {
 }
 
 const statusColors: Record<RingStatus, { stroke: string; text: string }> = {
-  good: { stroke: '#34c759', text: 'text-green-500' },
+  good: { stroke: 'var(--landing-accent-green)', text: 'text-green-500' },
   warning: { stroke: '#f59e0b', text: 'text-amber-500' },
   critical: { stroke: '#ef4444', text: 'text-red-500' },
 };

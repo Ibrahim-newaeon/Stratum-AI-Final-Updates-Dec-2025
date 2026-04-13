@@ -83,6 +83,9 @@ export default {
         tiktok: '#00F2EA',
         snapchat: '#FFFC00',
         whatsapp: '#25D366',
+        // Widget status tokens
+        'status-healthy': 'hsl(var(--status-healthy))',
+        'status-critical': 'hsl(var(--status-critical))',
         // Data/Status colors
         success: '#22C55E',
         warning: '#FACC15',
@@ -108,7 +111,8 @@ export default {
         xl: '20px',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Arial', 'sans-serif'],
+        sans: ['Satoshi', 'sans-serif'],
+        display: ['Clash Display', 'sans-serif'],
         mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
       },
       fontSize: {

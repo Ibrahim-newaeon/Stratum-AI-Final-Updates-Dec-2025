@@ -68,10 +68,10 @@ function mapAlertsToAnomalies(alerts: PacingAlert[]): AnomalyItem[] {
   }));
 }
 
-const SEVERITY_CONFIG: Record<AlertSeverity, { icon: React.ElementType; cls: string; border: string }> = {
-  critical: { icon: XCircle, cls: 'text-red-500 bg-red-500/10', border: 'border-l-red-500' },
-  warning: { icon: AlertTriangle, cls: 'text-amber-500 bg-amber-500/10', border: 'border-l-amber-500' },
-  info: { icon: Info, cls: 'text-blue-500 bg-blue-500/10', border: 'border-l-blue-500' },
+const SEVERITY_CONFIG: Record<AlertSeverity, { icon: React.ElementType; cls: string }> = {
+  critical: { icon: XCircle, cls: 'text-red-500 bg-red-500/10' },
+  warning: { icon: AlertTriangle, cls: 'text-amber-500 bg-amber-500/10' },
+  info: { icon: Info, cls: 'text-blue-500 bg-blue-500/10' },
 };
 
 function formatRelativeTime(iso: string): string {
@@ -124,6 +124,7 @@ export function AnomalyFeedCard() {
         {visible.length > 0 && (
           <button
             onClick={dismissAll}
+            aria-label="Dismiss all anomalies"
             className="text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             Dismiss All
@@ -145,10 +146,7 @@ export function AnomalyFeedCard() {
             return (
               <div
                 key={item.id}
-                className={cn(
-                  'flex items-start gap-3 p-3 rounded-xl border-l-2 bg-white/[0.02] hover:bg-white/[0.05] transition-all duration-200',
-                  cfg.border
-                )}
+                className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] transition-all duration-200"
               >
                 <div className={cn('shrink-0 p-1.5 rounded-md', cfg.cls)}>
                   <Icon className="w-3.5 h-3.5" />
@@ -158,7 +156,8 @@ export function AnomalyFeedCard() {
                     <p className="text-sm font-medium">{item.title}</p>
                     <button
                       onClick={() => dismiss(item.id)}
-                      className="shrink-0 p-0.5 rounded hover:bg-muted transition-colors"
+                      aria-label="Dismiss anomaly"
+                      className="shrink-0 p-1 rounded hover:bg-muted transition-colors"
                     >
                       <X className="w-3.5 h-3.5 text-muted-foreground" />
                     </button>

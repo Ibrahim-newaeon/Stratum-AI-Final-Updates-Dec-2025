@@ -97,7 +97,7 @@ export default function TrustEngine() {
   const colors = getColorClasses(current.color);
 
   return (
-    <section className="relative py-32 overflow-hidden" style={{ background: '#000000' }}>
+    <section className="relative py-32 overflow-hidden" style={{ background: 'var(--landing-bg-deep)' }}>
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-[0.02]">
         <svg className="w-full h-full">
@@ -134,20 +134,20 @@ export default function TrustEngine() {
                 border: '1px solid rgba(52, 199, 89, 0.3)',
               }}
             >
-              <ShieldCheckIcon className="w-4 h-4" style={{ color: '#34c759' }} />
-              <span className="text-sm font-medium" style={{ color: '#34c759' }}>Unique to Stratum AI</span>
+              <ShieldCheckIcon className="w-4 h-4" style={{ color: 'var(--landing-accent-green)' }} />
+              <span className="text-sm font-medium" style={{ color: 'var(--landing-accent-green)' }}>Unique to Stratum AI</span>
             </div>
           </div>
 
           <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-center">
             <span className="text-white">Trust-Gated</span>
             <br />
-            <span style={{ color: '#00c7be' }}>
+            <span style={{ color: 'var(--landing-accent-cyan)' }}>
               Autopilot
             </span>
           </h2>
 
-          <p className="text-lg max-w-2xl mx-auto text-center" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+          <p className="text-lg max-w-2xl mx-auto text-center" style={{ color: 'var(--landing-text-white-soft)' }}>
             The only platform that{' '}
             <span className="text-white font-medium">refuses to execute bad recommendations</span>.
             Signal health is verified before every automated action.
@@ -329,7 +329,7 @@ export default function TrustEngine() {
                 border: '1px solid rgba(0, 199, 190, 0.2)',
               }}
             >
-              <InformationCircleIcon className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#00c7be' }} />
+              <InformationCircleIcon className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--landing-accent-cyan)' }} />
               <div>
                 <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
                   <span className="font-medium text-white">

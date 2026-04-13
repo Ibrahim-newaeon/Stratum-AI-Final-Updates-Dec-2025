@@ -120,19 +120,19 @@ export default function Pricing() {
         <div className="max-w-7xl mx-auto text-center">
           <h1
             className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6"
-            style={{ fontFamily: "'Inter', sans-serif" }}
+            style={{ fontFamily: "'Clash Display', sans-serif" }}
           >
             <span className="text-white">Simple, Transparent</span>
             <br />
             <span
-              style={{ color: '#FF4D4D' }}
+              style={{ color: 'var(--landing-accent-coral)' }}
             >
               Pricing
             </span>
           </h1>
           <p
             className="text-lg md:text-xl max-w-2xl mx-auto"
-            style={{ color: '#8B8D9E' }}
+            style={{ color: 'var(--landing-text)' }}
           >
             Choose the plan that fits your team. All plans include a 14-day free trial.
           </p>
@@ -150,8 +150,8 @@ export default function Pricing() {
                   tier.highlighted ? 'ring-2' : ''
                 }`}
                 style={{
-                  background: '#12131F',
-                  border: '1px solid #1E1F30',
+                  background: 'var(--landing-card)',
+                  border: '1px solid var(--landing-border)',
                   borderTop: tier.highlighted ? '3px solid #FF4D4D' : undefined,
                 }}
               >
@@ -159,7 +159,7 @@ export default function Pricing() {
                   <div
                     className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-xs font-semibold"
                     style={{
-                      background: '#FF4D4D',
+                      background: 'var(--landing-accent-coral)',
                       color: '#ffffff',
                     }}
                   >
@@ -171,9 +171,9 @@ export default function Pricing() {
                   <h3 className="text-xl font-semibold text-white mb-2">{tier.name}</h3>
                   <div className="flex items-baseline gap-1">
                     <span className="text-4xl font-bold text-white">{tier.price}</span>
-                    <span style={{ color: 'rgba(139, 141, 158, 0.7)' }}>{tier.period}</span>
+                    <span style={{ color: 'var(--landing-text-dim)' }}>{tier.period}</span>
                   </div>
-                  <p className="mt-3 text-sm" style={{ color: '#8B8D9E' }}>
+                  <p className="mt-3 text-sm" style={{ color: 'var(--landing-text)' }}>
                     {tier.description}
                   </p>
                 </div>
@@ -183,9 +183,9 @@ export default function Pricing() {
                     <li key={feature} className="flex items-start gap-3">
                       <CheckIcon
                         className="w-5 h-5 flex-shrink-0 mt-0.5"
-                        style={{ color: '#00D4AA' }}
+                        style={{ color: 'var(--landing-accent-teal)' }}
                       />
-                      <span className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>
+                      <span className="text-sm" style={{ color: 'var(--landing-text-white-mid)' }}>
                         {feature}
                       </span>
                     </li>
@@ -198,7 +198,7 @@ export default function Pricing() {
                     tier.highlighted ? 'rounded-full' : 'rounded-xl'
                   }`}
                   style={{
-                    background: tier.highlighted ? '#FF4D4D' : 'rgba(255, 255, 255, 0.06)',
+                    background: tier.highlighted ? 'var(--landing-accent-coral)' : 'var(--landing-surface-glass)',
                     color: '#ffffff',
                     border: tier.highlighted ? 'none' : '1px solid rgba(255, 255, 255, 0.2)',
                     boxShadow: tier.highlighted ? '0 4px 20px rgba(255, 77, 77, 0.3)' : 'none',
@@ -224,12 +224,12 @@ export default function Pricing() {
                 key={faq.q}
                 className="p-6 rounded-2xl"
                 style={{
-                  background: '#12131F',
-                  border: '1px solid #1E1F30',
+                  background: 'var(--landing-card)',
+                  border: '1px solid var(--landing-border)',
                 }}
               >
                 <h3 className="text-lg font-semibold text-white mb-2">{faq.q}</h3>
-                <p className="text-sm" style={{ color: '#8B8D9E' }}>
+                <p className="text-sm" style={{ color: 'var(--landing-text)' }}>
                   {faq.a}
                 </p>
               </div>

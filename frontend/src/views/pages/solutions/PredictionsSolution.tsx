@@ -41,7 +41,7 @@ const fallbackFeatures = [
     description:
       'Identify at-risk customers before they leave. Get actionable retention recommendations.',
     accuracy: '94%',
-    color: '#ef4444',
+    color: 'var(--landing-accent-red)',
   },
   {
     icon: CurrencyDollarIcon,
@@ -50,7 +50,7 @@ const fallbackFeatures = [
     description:
       'Predict customer lifetime value at acquisition. Optimize acquisition spend accordingly.',
     accuracy: '91%',
-    color: '#34c759',
+    color: 'var(--landing-accent-green)',
   },
   {
     icon: ArrowTrendingUpIcon,
@@ -58,7 +58,7 @@ const fallbackFeatures = [
     title: 'Revenue Forecasting',
     description: 'Accurate revenue predictions based on historical patterns and market signals.',
     accuracy: '89%',
-    color: '#3b82f6',
+    color: 'var(--landing-accent-blue)',
   },
   {
     icon: LightBulbIcon,
@@ -117,7 +117,7 @@ export default function PredictionsSolution() {
                 style={{
                   background: 'rgba(255, 179, 71, 0.1)',
                   border: '1px solid rgba(255, 179, 71, 0.3)',
-                  color: '#FFB347',
+                  color: 'var(--landing-accent-warm)',
                 }}
               >
                 <SparklesIcon className="w-4 h-4" />
@@ -125,20 +125,20 @@ export default function PredictionsSolution() {
               </div>
               <h1
                 className="text-4xl md:text-5xl font-bold mb-6"
-                style={{ fontFamily: "'Inter', sans-serif" }}
+                style={{ fontFamily: "'Clash Display', sans-serif" }}
               >
                 <span className="text-white">{hero.title}</span>
                 <br />
-                <span style={{ color: '#FF4D4D' }}>{hero.titleHighlight}</span>
+                <span style={{ color: 'var(--landing-accent-coral)' }}>{hero.titleHighlight}</span>
               </h1>
-              <p className="text-lg mb-8" style={{ color: '#8B8D9E' }}>
+              <p className="text-lg mb-8" style={{ color: 'var(--landing-text)' }}>
                 {hero.description}
               </p>
               <Link
                 to={hero.ctaLink}
                 className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-all hover:opacity-90"
                 style={{
-                  background: '#FF4D4D',
+                  background: 'var(--landing-accent-coral)',
                   boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
                 }}
               >
@@ -148,8 +148,8 @@ export default function PredictionsSolution() {
             <div
               className="rounded-3xl p-8"
               style={{
-                background: '#12131F',
-                border: '1px solid #1E1F30',
+                background: 'var(--landing-card)',
+                border: '1px solid var(--landing-border)',
               }}
             >
               {/* Prediction Preview */}
@@ -163,14 +163,14 @@ export default function PredictionsSolution() {
                 >
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm text-white">High Churn Risk</span>
-                    <span className="text-sm font-bold" style={{ color: '#ef4444' }}>
+                    <span className="text-sm font-bold" style={{ color: 'var(--landing-accent-red)' }}>
                       847 customers
                     </span>
                   </div>
                   <div className="h-2 rounded-full" style={{ background: 'rgba(255,255,255,0.1)' }}>
                     <div
                       className="h-full rounded-full"
-                      style={{ width: '23%', background: '#ef4444' }}
+                      style={{ width: '23%', background: 'var(--landing-accent-red)' }}
                     />
                   </div>
                 </div>
@@ -183,14 +183,14 @@ export default function PredictionsSolution() {
                 >
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm text-white">High LTV Potential</span>
-                    <span className="text-sm font-bold" style={{ color: '#34c759' }}>
+                    <span className="text-sm font-bold" style={{ color: 'var(--landing-accent-green)' }}>
                       2,341 customers
                     </span>
                   </div>
                   <div className="h-2 rounded-full" style={{ background: 'rgba(255,255,255,0.1)' }}>
                     <div
                       className="h-full rounded-full"
-                      style={{ width: '67%', background: '#34c759' }}
+                      style={{ width: '67%', background: 'var(--landing-accent-green)' }}
                     />
                   </div>
                 </div>
@@ -203,14 +203,14 @@ export default function PredictionsSolution() {
                 >
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm text-white">Next 30-Day Revenue</span>
-                    <span className="text-sm font-bold" style={{ color: '#3b82f6' }}>
+                    <span className="text-sm font-bold" style={{ color: 'var(--landing-accent-blue)' }}>
                       $847,200
                     </span>
                   </div>
                   <div className="h-2 rounded-full" style={{ background: 'rgba(255,255,255,0.1)' }}>
                     <div
                       className="h-full rounded-full"
-                      style={{ width: '85%', background: '#3b82f6' }}
+                      style={{ width: '85%', background: 'var(--landing-accent-blue)' }}
                     />
                   </div>
                 </div>
@@ -225,7 +225,7 @@ export default function PredictionsSolution() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Prediction Models</h2>
-            <p className="text-lg" style={{ color: '#8B8D9E' }}>
+            <p className="text-lg" style={{ color: 'var(--landing-text)' }}>
               Enterprise-grade ML models continuously trained on your data.
             </p>
           </div>
@@ -235,8 +235,8 @@ export default function PredictionsSolution() {
                 key={pred.title}
                 className="p-6 rounded-2xl transition-all hover:scale-[1.02]"
                 style={{
-                  background: '#12131F',
-                  border: '1px solid #1E1F30',
+                  background: 'var(--landing-card)',
+                  border: '1px solid var(--landing-border)',
                   borderLeft: `3px solid ${pred.color}`,
                 }}
               >
@@ -257,13 +257,13 @@ export default function PredictionsSolution() {
                         className="text-sm font-bold px-2 py-1 rounded"
                         style={{
                           background: 'rgba(52, 199, 89, 0.1)',
-                          color: '#34c759',
+                          color: 'var(--landing-accent-green)',
                         }}
                       >
                         {pred.accuracy} accuracy
                       </span>
                     </div>
-                    <p className="text-sm" style={{ color: '#8B8D9E' }}>
+                    <p className="text-sm" style={{ color: 'var(--landing-text)' }}>
                       {pred.description}
                     </p>
                   </div>
@@ -284,14 +284,14 @@ export default function PredictionsSolution() {
                 <div
                   className="w-14 h-14 rounded-xl flex items-center justify-center text-xl font-bold mx-auto mb-4"
                   style={{
-                    background: '#FF4D4D',
+                    background: 'var(--landing-accent-coral)',
                     color: '#ffffff',
                   }}
                 >
                   {item.step}
                 </div>
                 <h3 className="text-lg font-semibold text-white mb-2">{item.title}</h3>
-                <p className="text-sm" style={{ color: '#8B8D9E' }}>
+                <p className="text-sm" style={{ color: 'var(--landing-text)' }}>
                   {item.description}
                 </p>
               </div>
@@ -306,19 +306,19 @@ export default function PredictionsSolution() {
           <div
             className="p-12 rounded-3xl"
             style={{
-              background: '#12131F',
-              border: '1px solid #1E1F30',
+              background: 'var(--landing-card)',
+              border: '1px solid var(--landing-border)',
             }}
           >
             <h2 className="text-3xl font-bold text-white mb-4">Start Predicting Today</h2>
-            <p className="text-lg mb-8" style={{ color: '#8B8D9E' }}>
+            <p className="text-lg mb-8" style={{ color: 'var(--landing-text)' }}>
               See predictions for your customers within 48 hours.
             </p>
             <Link
               to="/signup"
               className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-all hover:opacity-90"
               style={{
-                background: '#FF4D4D',
+                background: 'var(--landing-accent-coral)',
                 boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
               }}
             >

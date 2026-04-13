@@ -66,7 +66,7 @@ export default function Security() {
             style={{
               background: 'rgba(0, 212, 170, 0.1)',
               border: '1px solid rgba(0, 212, 170, 0.3)',
-              color: '#00D4AA',
+              color: 'var(--landing-accent-teal)',
             }}
           >
             <ShieldCheckIcon className="w-4 h-4" />
@@ -74,19 +74,19 @@ export default function Security() {
           </div>
           <h1
             className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6"
-            style={{ fontFamily: "'Inter', sans-serif" }}
+            style={{ fontFamily: "'Clash Display', sans-serif" }}
           >
             <span className="text-white">Enterprise-Grade</span>
             <br />
             <span
-              style={{ color: '#FF4D4D' }}
+              style={{ color: 'var(--landing-accent-coral)' }}
             >
               Security
             </span>
           </h1>
           <p
             className="text-lg md:text-xl max-w-2xl mx-auto"
-            style={{ color: '#8B8D9E' }}
+            style={{ color: 'var(--landing-text)' }}
           >
             Your data security is our top priority. We implement industry-leading security measures
             to protect your information.
@@ -110,13 +110,13 @@ export default function Security() {
                     key={feature.title}
                     className="p-6 rounded-2xl"
                     style={{
-                      background: '#12131F',
-                      border: '1px solid #1E1F30',
+                      background: 'var(--landing-card)',
+                      border: '1px solid var(--landing-border)',
                     }}
                   >
-                    <feature.icon className="w-10 h-10 mb-4" style={{ color: '#00D4AA' }} />
+                    <feature.icon className="w-10 h-10 mb-4" style={{ color: 'var(--landing-accent-teal)' }} />
                     <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
-                    <p className="text-sm" style={{ color: '#8B8D9E' }}>
+                    <p className="text-sm" style={{ color: 'var(--landing-text)' }}>
                       {feature.description}
                     </p>
                   </div>
@@ -131,12 +131,12 @@ export default function Security() {
               <div
                 className="p-8 rounded-3xl"
                 style={{
-                  background: '#12131F',
-                  border: '1px solid #1E1F30',
+                  background: 'var(--landing-card)',
+                  border: '1px solid var(--landing-border)',
                 }}
               >
                 <h2 className="text-2xl font-bold text-white mb-6">Our Security Practices</h2>
-                <div className="space-y-6" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>
+                <div className="space-y-6" style={{ color: 'var(--landing-text-white-mid)' }}>
                   <div>
                     <h3 className="text-lg font-semibold text-white mb-2">Infrastructure Security</h3>
                     <p>
@@ -192,7 +192,7 @@ export default function Security() {
                     style={{
                       background: 'rgba(0, 212, 170, 0.1)',
                       border: '1px solid rgba(0, 212, 170, 0.3)',
-                      color: '#00D4AA',
+                      color: 'var(--landing-accent-teal)',
                     }}
                   >
                     {cert}
@@ -208,16 +208,16 @@ export default function Security() {
               <div
                 className="p-12 rounded-3xl"
                 style={{
-                  background: '#12131F',
-                  border: '1px solid #1E1F30',
+                  background: 'var(--landing-card)',
+                  border: '1px solid var(--landing-border)',
                 }}
               >
                 <h2 className="text-3xl font-bold text-white mb-4">Security Questions?</h2>
-                <p className="text-lg mb-6" style={{ color: '#8B8D9E' }}>
+                <p className="text-lg mb-6" style={{ color: 'var(--landing-text)' }}>
                   Contact our security team for questions, vulnerability reports, or to request our SOC
                   2 report.
                 </p>
-                <p style={{ color: '#8B8D9E' }}>
+                <p style={{ color: 'var(--landing-text)' }}>
                   <strong className="text-white">Email:</strong>{' '}
                   <a href="mailto:security@stratum.ai" className="text-orange-500 hover:underline">
                     security@stratum.ai

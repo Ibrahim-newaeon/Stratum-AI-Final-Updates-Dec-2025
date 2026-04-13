@@ -259,7 +259,7 @@ const StatusIcon = ({ status }: { status: FeatureStatus }) => {
           className="flex items-center justify-center w-6 h-6 rounded-full"
           style={{ background: 'rgba(52, 199, 89, 0.2)' }}
         >
-          <CheckIcon className="w-4 h-4" style={{ color: '#34c759' }} />
+          <CheckIcon className="w-4 h-4" style={{ color: 'var(--landing-accent-green)' }} />
         </div>
       );
     case 'no':
@@ -289,7 +289,7 @@ const StatusIcon = ({ status }: { status: FeatureStatus }) => {
             boxShadow: '0 0 0 2px rgba(0, 199, 190, 0.4)',
           }}
         >
-          <SparklesIcon className="w-4 h-4" style={{ color: '#00c7be' }} />
+          <SparklesIcon className="w-4 h-4" style={{ color: 'var(--landing-accent-cyan)' }} />
         </div>
       );
   }
@@ -342,7 +342,7 @@ export default function BattleCard() {
             </span>
           </h2>
 
-          <p className="text-lg max-w-2xl mx-auto mb-8 text-center" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+          <p className="text-lg max-w-2xl mx-auto mb-8 text-center" style={{ color: 'var(--landing-text-white-soft)' }}>
             The only platform with Trust-Gated execution, built-in AI predictions, and visual
             identity resolution.
           </p>
@@ -366,19 +366,19 @@ export default function BattleCard() {
         >
           <div className="flex items-center gap-2">
             <StatusIcon status="unique" />
-            <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Unique to Stratum AI</span>
+            <span style={{ color: 'var(--landing-text-white-soft)' }}>Unique to Stratum AI</span>
           </div>
           <div className="flex items-center gap-2">
             <StatusIcon status="yes" />
-            <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Full Support</span>
+            <span style={{ color: 'var(--landing-text-white-soft)' }}>Full Support</span>
           </div>
           <div className="flex items-center gap-2">
             <StatusIcon status="partial" />
-            <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Partial/Limited</span>
+            <span style={{ color: 'var(--landing-text-white-soft)' }}>Partial/Limited</span>
           </div>
           <div className="flex items-center gap-2">
             <StatusIcon status="no" />
-            <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Not Available</span>
+            <span style={{ color: 'var(--landing-text-white-soft)' }}>Not Available</span>
           </div>
         </motion.div>
 

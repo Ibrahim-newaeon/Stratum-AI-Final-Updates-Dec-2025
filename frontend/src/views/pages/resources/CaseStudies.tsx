@@ -24,7 +24,7 @@ const fallbackCaseStudies = [
     industry: 'E-Commerce',
     icon: ShoppingBagIcon,
     logo: 'L',
-    color: '#FFB347',
+    color: 'var(--landing-accent-warm)',
     headline: '340% increase in ROAS with Trust-Gated Automation',
     description:
       'How a luxury fashion retailer transformed their ad performance by only executing when signal health was optimal.',
@@ -44,7 +44,7 @@ const fallbackCaseStudies = [
     industry: 'Financial Services',
     icon: BuildingOffice2Icon,
     logo: 'F',
-    color: '#00D4FF',
+    color: 'var(--landing-accent-sky)',
     headline: '67% reduction in wasted ad spend',
     description:
       'A fintech unicorn used signal health monitoring to pause campaigns before they burned budget.',
@@ -64,7 +64,7 @@ const fallbackCaseStudies = [
     industry: 'Healthcare',
     icon: HeartIcon,
     logo: 'H',
-    color: '#00D4AA',
+    color: 'var(--landing-accent-teal)',
     headline: 'Unified 2M+ patient profiles across channels',
     description:
       'How a healthcare network used CDP to create personalized patient journeys while maintaining HIPAA compliance.',
@@ -84,7 +84,7 @@ const fallbackCaseStudies = [
     industry: 'Education',
     icon: AcademicCapIcon,
     logo: 'L',
-    color: '#FFB800',
+    color: 'var(--landing-accent-amber)',
     headline: '5x improvement in student acquisition efficiency',
     description:
       'An online education platform used predictive churn analysis to optimize their enrollment funnels.',
@@ -104,7 +104,7 @@ const fallbackCaseStudies = [
     industry: 'Retail',
     icon: BuildingStorefrontIcon,
     logo: 'M',
-    color: '#FF6B6B',
+    color: 'var(--landing-accent-red)',
     headline: 'Synced 500K customer segments to 4 ad platforms',
     description:
       'A national retail chain used Audience Sync to maintain consistent targeting across all digital channels.',
@@ -124,7 +124,7 @@ const fallbackCaseStudies = [
     industry: 'B2B SaaS',
     icon: GlobeAltIcon,
     logo: 'C',
-    color: '#A78BFA',
+    color: 'var(--landing-accent-violet)',
     headline: 'Reduced sales cycle by 40% with predictive scoring',
     description:
       'An enterprise SaaS company used ML-powered lead scoring to prioritize high-intent accounts.',
@@ -158,7 +158,7 @@ export default function CaseStudiesPage() {
         industry: s.industry,
         icon: ShoppingBagIcon,
         logo: s.logo,
-        color: '#FFB347',
+        color: 'var(--landing-accent-warm)',
         headline: s.challenge,
         description: s.solution,
         metrics: s.results.map((r) => ({ label: r.metric, value: r.value })),
@@ -184,20 +184,20 @@ export default function CaseStudiesPage() {
                   border: '1px solid rgba(0, 212, 255, 0.2)',
                 }}
               >
-                <TrophyIcon className="w-4 h-4 text-[#00D4FF]" />
-                <span className="text-sm font-medium text-[#00D4FF]">Case Studies</span>
+                <TrophyIcon className="w-4 h-4 text-[var(--landing-accent-sky)]" />
+                <span className="text-sm font-medium text-[var(--landing-accent-sky)]">Case Studies</span>
               </div>
 
               <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
                 Success Stories from{' '}
                 <span
-                  style={{ color: '#FF4D4D' }}
+                  style={{ color: 'var(--landing-accent-coral)' }}
                 >
                   Industry Leaders
                 </span>
               </h1>
 
-              <p className="text-lg" style={{ color: '#8B8D9E' }}>
+              <p className="text-lg" style={{ color: 'var(--landing-text)' }}>
                 Discover how companies across industries use Stratum AI to transform their marketing
                 performance with trust-gated automation.
               </p>
@@ -209,11 +209,11 @@ export default function CaseStudiesPage() {
                 <div key={stat.label} className="text-center">
                   <div
                     className="text-3xl md:text-4xl font-bold mb-2"
-                    style={{ color: '#FF4D4D' }}
+                    style={{ color: 'var(--landing-accent-coral)' }}
                   >
                     {stat.value}
                   </div>
-                  <div className="text-sm" style={{ color: '#8B8D9E' }}>{stat.label}</div>
+                  <div className="text-sm" style={{ color: 'var(--landing-text)' }}>{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -229,8 +229,8 @@ export default function CaseStudiesPage() {
                   <div
                     className="h-full p-6 rounded-2xl transition-all duration-300 hover:-translate-y-2"
                     style={{
-                      background: '#12131F',
-                      border: '1px solid #1E1F30',
+                      background: 'var(--landing-card)',
+                      border: '1px solid var(--landing-border)',
                     }}
                   >
                     {/* Header */}
@@ -246,18 +246,18 @@ export default function CaseStudiesPage() {
                         </div>
                         <div>
                           <h3 className="font-semibold text-white">{study.company}</h3>
-                          <span className="text-xs" style={{ color: 'rgba(139,141,158,0.7)' }}>{study.industry}</span>
+                          <span className="text-xs" style={{ color: 'var(--landing-text-dim)' }}>{study.industry}</span>
                         </div>
                       </div>
                       <study.icon className="w-5 h-5" style={{ color: 'rgba(139,141,158,0.5)' }} />
                     </div>
 
                     {/* Headline */}
-                    <h4 className="text-lg font-semibold text-white mb-3 group-hover:text-[#FF4D4D] transition-colors">
+                    <h4 className="text-lg font-semibold text-white mb-3 group-hover:text-[var(--landing-accent-coral)] transition-colors">
                       {study.headline}
                     </h4>
 
-                    <p className="text-sm mb-4" style={{ color: '#8B8D9E' }}>{study.description}</p>
+                    <p className="text-sm mb-4" style={{ color: 'var(--landing-text)' }}>{study.description}</p>
 
                     {/* Metrics */}
                     <div className="grid grid-cols-3 gap-2 mb-4">
@@ -265,12 +265,12 @@ export default function CaseStudiesPage() {
                         <div
                           key={metric.label}
                           className="p-2 rounded-lg text-center"
-                          style={{ background: '#12131F', border: '1px solid #1E1F30' }}
+                          style={{ background: 'var(--landing-card)', border: '1px solid var(--landing-border)' }}
                         >
                           <div className="text-lg font-bold" style={{ color: study.color }}>
                             {metric.value}
                           </div>
-                          <div className="text-[10px]" style={{ color: 'rgba(139,141,158,0.7)' }}>{metric.label}</div>
+                          <div className="text-[10px]" style={{ color: 'var(--landing-text-dim)' }}>{metric.label}</div>
                         </div>
                       ))}
                     </div>
@@ -283,14 +283,14 @@ export default function CaseStudiesPage() {
                         borderLeft: `2px solid ${study.color}`,
                       }}
                     >
-                      <p className="text-sm italic" style={{ color: '#8B8D9E' }}>"{study.quote}"</p>
-                      <p className="text-xs mt-2" style={{ color: 'rgba(139,141,158,0.7)' }}>
+                      <p className="text-sm italic" style={{ color: 'var(--landing-text)' }}>"{study.quote}"</p>
+                      <p className="text-xs mt-2" style={{ color: 'var(--landing-text-dim)' }}>
                         {study.author}, {study.role}
                       </p>
                     </div>
 
                     {/* Read more */}
-                    <div className="flex items-center gap-2 text-sm font-medium text-[#FFB347] group-hover:gap-3 transition-all">
+                    <div className="flex items-center gap-2 text-sm font-medium text-[var(--landing-accent-warm)] group-hover:gap-3 transition-all">
                       <span>Read Full Story</span>
                       <ArrowRightIcon className="w-4 h-4" />
                     </div>
@@ -307,14 +307,14 @@ export default function CaseStudiesPage() {
             <div
               className="rounded-2xl p-8 md:p-12 text-center"
               style={{
-                background: '#12131F',
-                border: '1px solid #1E1F30',
+                background: 'var(--landing-card)',
+                border: '1px solid var(--landing-border)',
               }}
             >
               <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
                 Ready to write your success story?
               </h2>
-              <p className="mb-8" style={{ color: '#8B8D9E' }}>
+              <p className="mb-8" style={{ color: 'var(--landing-text)' }}>
                 Join hundreds of companies using Stratum AI to transform their marketing
                 performance.
               </p>
@@ -323,8 +323,8 @@ export default function CaseStudiesPage() {
                   to="/signup"
                   className="px-8 py-4 rounded-full font-semibold text-white transition-all duration-200"
                   style={{
-                    background: '#FF4D4D',
-                    boxShadow: '0 4px 20px rgba(255,77,77,0.3)',
+                    background: 'var(--landing-accent-coral)',
+                    boxShadow: 'var(--landing-glow-coral)',
                   }}
                 >
                   Start Free Trial
@@ -333,8 +333,8 @@ export default function CaseStudiesPage() {
                   to="/contact"
                   className="px-8 py-4 rounded-xl font-semibold text-white transition-all duration-200"
                   style={{
-                    background: 'rgba(255, 255, 255, 0.06)',
-                    border: '1px solid #1E1F30',
+                    background: 'var(--landing-surface-glass)',
+                    border: '1px solid var(--landing-border)',
                   }}
                 >
                   Talk to Sales

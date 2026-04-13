@@ -25,10 +25,10 @@ import {
 // Theme constants
 // ---------------------------------------------------------------------------
 const theme = {
-  primary: '#00c7be',
+  primary: 'var(--landing-accent-cyan)',
   primaryLight: 'rgba(0, 199, 190, 0.15)',
   bgCard: 'rgba(255, 255, 255, 0.05)',
-  border: 'rgba(255, 255, 255, 0.08)',
+  border: 'var(--landing-border-white-dim)',
   textPrimary: 'rgba(245, 245, 247, 0.92)',
   textSecondary: 'rgba(245, 245, 247, 0.6)',
   textMuted: 'rgba(245, 245, 247, 0.35)',

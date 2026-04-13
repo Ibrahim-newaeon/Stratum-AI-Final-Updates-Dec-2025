@@ -198,10 +198,10 @@ const renderValue = (value: ComparisonValue, isStratum = false) => {
           className="w-6 h-6 rounded-full flex items-center justify-center"
           style={{
             background: isStratum ? 'rgba(0, 255, 136, 0.2)' : 'rgba(0, 255, 136, 0.15)',
-            border: `1px solid ${isStratum ? '#00FF88' : 'rgba(0, 255, 136, 0.3)'}`,
+            border: `1px solid ${isStratum ? 'var(--landing-status-green)' : 'rgba(0, 255, 136, 0.3)'}`,
           }}
         >
-          <CheckIcon className="w-4 h-4 text-[#00FF88]" />
+          <CheckIcon className="w-4 h-4 text-[var(--landing-status-green)]" />
         </div>
       </div>
     );
@@ -216,7 +216,7 @@ const renderValue = (value: ComparisonValue, isStratum = false) => {
             border: '1px solid rgba(255, 71, 87, 0.3)',
           }}
         >
-          <XMarkIcon className="w-4 h-4 text-[#FF4757]" />
+          <XMarkIcon className="w-4 h-4 text-[var(--landing-status-red)]" />
         </div>
       </div>
     );
@@ -231,12 +231,12 @@ const renderValue = (value: ComparisonValue, isStratum = false) => {
             border: '1px solid rgba(255, 183, 0, 0.3)',
           }}
         >
-          <MinusIcon className="w-4 h-4 text-[#FFB800]" />
+          <MinusIcon className="w-4 h-4 text-[var(--landing-accent-amber)]" />
         </div>
       </div>
     );
   }
-  return <span className="text-sm" style={{ color: '#8B8D9E' }}>{value}</span>;
+  return <span className="text-sm" style={{ color: 'var(--landing-text)' }}>{value}</span>;
 };
 
 const fallbackDifferentiators = [
@@ -245,28 +245,28 @@ const fallbackDifferentiators = [
     description:
       'Only execute when signal health passes safety thresholds. No other platform offers this level of automation confidence.',
     icon: ShieldCheckIcon,
-    color: '#FFB347',
+    color: 'var(--landing-accent-warm)',
   },
   {
     title: 'Identity Graph Visualization',
     description:
       'See exactly how customer identities are connected across devices and channels with interactive visualizations.',
     icon: CpuChipIcon,
-    color: '#00D4FF',
+    color: 'var(--landing-accent-sky)',
   },
   {
     title: 'RFM Analysis Built-in',
     description:
       'Native Recency, Frequency, Monetary analysis without additional tools or integrations.',
     icon: ChartBarIcon,
-    color: '#00D4AA',
+    color: 'var(--landing-accent-teal)',
   },
   {
     title: 'Signal Health Monitoring',
     description:
       'Real-time monitoring of data quality and signal reliability across all your integrations.',
     icon: BoltIcon,
-    color: '#FF6B6B',
+    color: 'var(--landing-accent-red)',
   },
 ];
 
@@ -295,7 +295,7 @@ export default function ComparisonPage() {
         title: d.title,
         description: d.description,
         icon: diffIconMap[d.iconName] || ShieldCheckIcon,
-        color: '#FFB347',
+        color: 'var(--landing-accent-warm)',
       }))
     : fallbackDifferentiators;
 
@@ -315,20 +315,20 @@ export default function ComparisonPage() {
                   border: '1px solid rgba(255,179,71,0.3)',
                 }}
               >
-                <ChartBarIcon className="w-4 h-4 text-[#FFB347]" />
-                <span className="text-sm font-medium text-[#FFB347]">Compare</span>
+                <ChartBarIcon className="w-4 h-4 text-[var(--landing-accent-warm)]" />
+                <span className="text-sm font-medium text-[var(--landing-accent-warm)]">Compare</span>
               </div>
 
               <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
                 How Stratum AI{' '}
                 <span
-                  style={{ color: '#FF4D4D' }}
+                  style={{ color: 'var(--landing-accent-coral)' }}
                 >
                   Compares
                 </span>
               </h1>
 
-              <p className="text-lg" style={{ color: '#8B8D9E' }}>
+              <p className="text-lg" style={{ color: 'var(--landing-text)' }}>
                 See how Stratum AI stacks up against other marketing platforms. Trust-gated
                 automation is our unique differentiator.
               </p>
@@ -354,7 +354,7 @@ export default function ComparisonPage() {
                 >
                   <diff.icon className="w-8 h-8 mb-3" style={{ color: diff.color }} />
                   <h3 className="text-white font-semibold mb-2">{diff.title}</h3>
-                  <p className="text-sm" style={{ color: '#8B8D9E' }}>{diff.description}</p>
+                  <p className="text-sm" style={{ color: 'var(--landing-text)' }}>{diff.description}</p>
                 </div>
               ))}
             </div>
@@ -365,7 +365,7 @@ export default function ComparisonPage() {
         <section className="py-8">
           <div className="max-w-5xl mx-auto px-6 lg:px-8">
             <div className="flex items-center justify-center gap-3 mb-8 flex-wrap">
-              <span className="text-sm" style={{ color: '#8B8D9E' }}>Compare with:</span>
+              <span className="text-sm" style={{ color: 'var(--landing-text)' }}>Compare with:</span>
               {competitors.map((comp) => (
                 <button
                   key={comp.id}
@@ -377,9 +377,9 @@ export default function ComparisonPage() {
                     background:
                       selectedCompetitor === comp.id
                         ? `${comp.color}20`
-                        : '#12131F',
-                    border: `1px solid ${selectedCompetitor === comp.id ? `${comp.color}40` : '#1E1F30'}`,
-                    color: selectedCompetitor === comp.id ? undefined : '#8B8D9E',
+                        : 'var(--landing-card)',
+                    border: `1px solid ${selectedCompetitor === comp.id ? `${comp.color}40` : 'var(--landing-border)'}`,
+                    color: selectedCompetitor === comp.id ? undefined : 'var(--landing-text)',
                   }}
                 >
                   {comp.name}
@@ -391,20 +391,20 @@ export default function ComparisonPage() {
             <div
               className="rounded-2xl overflow-hidden"
               style={{
-                background: '#12131F',
-                border: '1px solid #1E1F30',
+                background: 'var(--landing-card)',
+                border: '1px solid var(--landing-border)',
               }}
             >
               {/* Header */}
               <div
                 className="grid grid-cols-3 gap-4 p-4 border-b"
-                style={{ borderColor: '#1E1F30' }}
+                style={{ borderColor: 'var(--landing-border)' }}
               >
-                <div className="text-sm font-medium" style={{ color: '#8B8D9E' }}>Feature</div>
+                <div className="text-sm font-medium" style={{ color: 'var(--landing-text)' }}>Feature</div>
                 <div className="text-center">
                   <span
                     className="text-sm font-bold"
-                    style={{ color: '#FF4D4D' }}
+                    style={{ color: 'var(--landing-accent-coral)' }}
                   >
                     Stratum AI
                   </span>
@@ -425,13 +425,13 @@ export default function ComparisonPage() {
                   {/* Category Header */}
                   <button
                     className="w-full flex items-center justify-between p-4 border-b transition-colors hover:bg-white/5"
-                    style={{ borderColor: '#1E1F30' }}
+                    style={{ borderColor: 'var(--landing-border)' }}
                     onClick={() =>
                       setExpandedCategory(expandedCategory === category ? null : category)
                     }
                   >
                     <span className="text-white font-medium">{category}</span>
-                    <span className="text-xs" style={{ color: 'rgba(139,141,158,0.7)' }}>
+                    <span className="text-xs" style={{ color: 'var(--landing-text-dim)' }}>
                       {features.filter((f) => f.category === category).length} features
                     </span>
                   </button>
@@ -450,11 +450,11 @@ export default function ComparisonPage() {
                           }}
                         >
                           <div className="flex items-center gap-2">
-                            <span className="text-sm" style={{ color: '#8B8D9E' }}>{feature.feature}</span>
+                            <span className="text-sm" style={{ color: 'var(--landing-text)' }}>{feature.feature}</span>
                             {feature.tooltip && (
                               <span
                                 className="text-[10px] font-medium px-1.5 py-0.5 rounded"
-                                style={{ background: 'rgba(255,179,71,0.1)', color: '#FFB347' }}
+                                style={{ background: 'rgba(255,179,71,0.1)', color: 'var(--landing-accent-warm)' }}
                               >
                                 Unique
                               </span>
@@ -476,14 +476,14 @@ export default function ComparisonPage() {
             <div
               className="rounded-2xl p-8 md:p-12 text-center"
               style={{
-                background: '#12131F',
-                border: '1px solid #1E1F30',
+                background: 'var(--landing-card)',
+                border: '1px solid var(--landing-border)',
               }}
             >
               <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
                 Ready to experience the difference?
               </h2>
-              <p className="mb-8" style={{ color: '#8B8D9E' }}>
+              <p className="mb-8" style={{ color: 'var(--landing-text)' }}>
                 Start with a free trial and see why trust-gated automation changes everything.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -491,8 +491,8 @@ export default function ComparisonPage() {
                   to="/signup"
                   className="px-8 py-4 rounded-full font-semibold text-white transition-all duration-200 flex items-center justify-center gap-2"
                   style={{
-                    background: '#FF4D4D',
-                    boxShadow: '0 4px 20px rgba(255,77,77,0.3)',
+                    background: 'var(--landing-accent-coral)',
+                    boxShadow: 'var(--landing-glow-coral)',
                   }}
                 >
                   Start Free Trial
@@ -502,8 +502,8 @@ export default function ComparisonPage() {
                   to="/contact"
                   className="px-8 py-4 rounded-xl font-semibold text-white transition-all duration-200"
                   style={{
-                    background: 'rgba(255, 255, 255, 0.06)',
-                    border: '1px solid #1E1F30',
+                    background: 'var(--landing-surface-glass)',
+                    border: '1px solid var(--landing-border)',
                   }}
                 >
                   Request Demo

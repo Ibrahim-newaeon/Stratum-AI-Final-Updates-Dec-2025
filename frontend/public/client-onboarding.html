@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stratum AI - Client Onboarding Form</title>
+    <meta name="description" content="Stratum AI client onboarding form. Provision platform credentials for Meta, Google, TikTok, Snapchat, WhatsApp Business, and analytics integrations.">
     <style>
         :root {
             --bg-primary: #0a0a0f;
@@ -359,7 +360,8 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-white focus:text-black focus:rounded">Skip to content</a>
+    <div class="container" id="main-content">
         <header>
             <div class="logo">⬡ Stratum AI</div>
             <p class="subtitle">Client Onboarding - Platform Credentials Form</p>
@@ -377,24 +379,24 @@
                 </div>
                 <div class="fields-grid">
                     <div class="field">
-                        <label>Client Name <span class="required">*</span></label>
-                        <input type="text" name="client_name" placeholder="e.g., Acme Corporation" required>
+                        <label for="client_name">Client Name <span class="required">*</span></label>
+                        <input type="text" name="client_name" id="client_name" placeholder="e.g., Acme Corporation" required>
                     </div>
                     <div class="field">
-                        <label>Client ID <span class="optional">(auto-generated if empty)</span></label>
-                        <input type="text" name="client_id" placeholder="e.g., acme-corp-001">
+                        <label for="client_id">Client ID <span class="optional">(auto-generated if empty)</span></label>
+                        <input type="text" name="client_id" id="client_id" placeholder="e.g., acme-corp-001">
                     </div>
                     <div class="field">
-                        <label>Contact Email <span class="required">*</span></label>
-                        <input type="email" name="contact_email" placeholder="e.g., admin@acme.com" required>
+                        <label for="contact_email">Contact Email <span class="required">*</span></label>
+                        <input type="email" name="contact_email" id="contact_email" placeholder="e.g., admin@acme.com" required>
                     </div>
                     <div class="field">
-                        <label>Contact Phone</label>
-                        <input type="tel" name="contact_phone" placeholder="e.g., +1 234 567 8900">
+                        <label for="contact_phone">Contact Phone</label>
+                        <input type="tel" name="contact_phone" id="contact_phone" placeholder="e.g., +1 234 567 8900">
                     </div>
                     <div class="field">
-                        <label>Timezone <span class="required">*</span></label>
-                        <select name="timezone" required>
+                        <label for="timezone">Timezone <span class="required">*</span></label>
+                        <select name="timezone" id="timezone" required>
                             <option value="">Select timezone...</option>
                             <option value="America/New_York">America/New_York (EST/EDT)</option>
                             <option value="America/Chicago">America/Chicago (CST/CDT)</option>
@@ -409,8 +411,8 @@
                         </select>
                     </div>
                     <div class="field">
-                        <label>Currency <span class="required">*</span></label>
-                        <select name="currency" required>
+                        <label for="currency">Currency <span class="required">*</span></label>
+                        <select name="currency" id="currency" required>
                             <option value="">Select currency...</option>
                             <option value="USD">USD - US Dollar</option>
                             <option value="EUR">EUR - Euro</option>
@@ -424,8 +426,8 @@
                         </select>
                     </div>
                     <div class="field field-full">
-                        <label>Notes</label>
-                        <textarea name="notes" placeholder="Any additional notes about this client..."></textarea>
+                        <label for="notes">Notes</label>
+                        <textarea name="notes" id="notes" placeholder="Any additional notes about this client..."></textarea>
                     </div>
                 </div>
             </section>

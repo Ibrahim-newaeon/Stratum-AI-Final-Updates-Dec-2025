@@ -77,7 +77,7 @@ export default function AIFooter() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="relative" style={{ background: '#000000', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+    <footer className="relative" style={{ background: 'var(--landing-bg-deep)', borderTop: '1px solid var(--landing-border-white-dim)' }}>
       {/* Main Footer Content */}
       <div className="max-w-7xl mx-auto px-6 py-16">
         <div className="grid grid-cols-2 md:grid-cols-6 gap-8">

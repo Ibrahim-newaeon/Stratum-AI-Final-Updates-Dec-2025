@@ -120,26 +120,26 @@ function canSeeSection(role: string | undefined, section: string): boolean {
   return visible.includes(section);
 }
 
-// Stratum AI Dashboard Theme — White Light
+// Stratum AI Dashboard Theme — White Light (tokenised via CSS variables)
 const theme = {
-  primary: '#FF1F6D',                     // Spectral Pink — CTA, active nav
-  primaryLight: 'rgba(255, 31, 109, 0.06)',
-  secondary: '#6366F1',                   // Indigo — users / mid metric
-  tertiary: '#0EA5E9',                    // Sky — conversions
-  green: '#22C55E',                       // Success
+  primary: 'hsl(var(--primary))',                   // Spectral Pink — CTA, active nav
+  primaryLight: 'hsl(var(--accent))',               // light pink tint
+  secondary: 'hsl(var(--secondary))',               // Indigo — users / mid metric
+  tertiary: '#0EA5E9',                              // Sky — conversions (Tailwind sky-500)
+  green: 'hsl(var(--success))',                      // Success
   orange: '#f59e0b',
-  bgBase: '#F5F5F7',                      // Page background
-  bgCard: '#FFFFFF',                      // Cards
-  bgSurface: 'rgba(0, 0, 0, 0.03)',      // Hover surface
-  bgOverlay: 'rgba(0, 0, 0, 0.3)',       // Modal overlay
-  textPrimary: '#1A1A2E',                 // Headings
-  textSecondary: '#9090A0',               // Body text
-  textMuted: '#B0B0BA',                   // Labels / icons
-  border: '#EBEBEF',                      // Clean borders
-  borderHover: '#D0D0DA',                 // Hover borders
-  borderAccent: 'rgba(255, 31, 109, 0.2)',
-  success: '#22C55E',
-  danger: '#EF4444',
+  bgBase: 'hsl(var(--background))',                 // Page background
+  bgCard: 'hsl(var(--card))',                       // Cards
+  bgSurface: 'rgba(0, 0, 0, 0.03)',                // Hover surface
+  bgOverlay: 'rgba(0, 0, 0, 0.3)',                 // Modal overlay
+  textPrimary: 'hsl(var(--foreground))',             // Headings
+  textSecondary: 'hsl(var(--muted-foreground))',     // Body text
+  textMuted: 'hsl(var(--muted-foreground))',         // Labels / icons
+  border: 'hsl(var(--border))',                     // Clean borders
+  borderHover: 'hsl(var(--border))',                // Hover borders
+  borderAccent: 'hsl(var(--ring) / 0.2)',
+  success: 'hsl(var(--success))',
+  danger: 'hsl(var(--destructive))',
 };
 
 const navigation = [
@@ -299,6 +299,7 @@ export default function DashboardLayout() {
         {/* Sidebar */}
         <aside
           data-tour="sidebar"
+          aria-label="Main navigation"
           className={cn(
             'fixed inset-y-0 left-0 z-50 w-64 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]',
             sidebarOpen ? 'translate-x-0' : '-translate-x-full',
@@ -306,7 +307,7 @@ export default function DashboardLayout() {
             sidebarCollapsed ? 'lg:w-0 lg:overflow-hidden' : 'lg:w-64'
           )}
           style={{
-            background: '#FFFFFF',
+            background: 'hsl(var(--card))',
             borderRight: `0.5px solid ${theme.border}`,
           }}
         >
@@ -328,6 +329,7 @@ export default function DashboardLayout() {
                 onClick={() => setSidebarCollapsed(true)}
                 className="hidden lg:flex p-1.5 rounded-md transition-colors"
                 style={{ color: theme.textMuted }}
+                aria-label="Collapse sidebar"
               >
                 <ChevronLeftIcon className="h-4 w-4" />
               </button>
@@ -335,6 +337,7 @@ export default function DashboardLayout() {
                 className="lg:hidden p-1.5 rounded-md transition-colors"
                 style={{ color: theme.textMuted }}
                 onClick={() => setSidebarOpen(false)}
+                aria-label="Close navigation"
               >
                 <XMarkIcon className="h-5 w-5" />
               </button>
@@ -350,26 +353,16 @@ export default function DashboardLayout() {
                     to={item.href}
                     id={item.tourId}
                     data-tour={item.dataTour}
-                    className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150"
-                    style={{
-                      background: isActive ? theme.primaryLight : 'transparent',
-                      color: isActive ? theme.primary : theme.textSecondary,
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isActive) {
-                        e.currentTarget.style.background = theme.bgSurface;
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isActive) {
-                        e.currentTarget.style.background = 'transparent';
-                      }
-                    }}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150",
+                      isActive
+                        ? "bg-accent text-primary"
+                        : "text-muted-foreground hover:bg-black/[0.03]"
+                    )}
                     onClick={() => setSidebarOpen(false)}
                   >
                     <item.icon
-                      className="h-5 w-5"
-                      style={{ color: isActive ? theme.primary : theme.textMuted }}
+                      className={cn("h-5 w-5", isActive ? "text-primary" : "text-muted-foreground")}
                     />
                     {t(item.name)}
                   </NavLink>
@@ -381,33 +374,30 @@ export default function DashboardLayout() {
               <div className="pt-2">
                 <button
                   onClick={() => setCdpExpanded(!cdpExpanded)}
-                  className="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150"
-                  style={{
-                    background: location.pathname.startsWith('/dashboard/cdp')
-                      ? theme.primaryLight
-                      : 'transparent',
-                    color: location.pathname.startsWith('/dashboard/cdp')
-                      ? theme.primary
-                      : theme.textSecondary,
-                  }}
+                  aria-expanded={cdpExpanded}
+                  className={cn(
+                    "w-full flex items-center justify-between gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150",
+                    location.pathname.startsWith('/dashboard/cdp')
+                      ? "bg-accent text-primary"
+                      : "text-muted-foreground"
+                  )}
                 >
                   <div className="flex items-center gap-3">
                     <CircleStackIcon
-                      className="h-5 w-5"
-                      style={{
-                        color: location.pathname.startsWith('/dashboard/cdp')
-                          ? theme.primary
-                          : theme.textMuted,
-                      }}
+                      className={cn(
+                        "h-5 w-5",
+                        location.pathname.startsWith('/dashboard/cdp')
+                          ? "text-primary"
+                          : "text-muted-foreground"
+                      )}
                     />
                     <span>CDP</span>
                   </div>
                   <ChevronDownIcon
                     className={cn(
-                      'h-4 w-4 transition-transform duration-200',
+                      'h-4 w-4 transition-transform duration-200 text-muted-foreground',
                       cdpExpanded && 'rotate-180'
                     )}
-                    style={{ color: theme.textMuted }}
                   />
                 </button>
 
@@ -418,8 +408,7 @@ export default function DashboardLayout() {
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
                       transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                      className="mt-1 ml-3 pl-3 space-y-0.5 overflow-hidden"
-                      style={{ borderLeft: `2px solid ${theme.primaryLight}` }}
+                      className="mt-1 ml-2 pl-3 space-y-0.5 overflow-hidden"
                     >
                       {cdpNavigation.map((item, index) => {
                         const isActive = location.pathname === item.href;
@@ -432,16 +421,16 @@ export default function DashboardLayout() {
                           >
                             <NavLink
                               to={item.href}
-                              className="flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm transition-all duration-150"
-                              style={{
-                                background: isActive ? theme.primaryLight : 'transparent',
-                                color: isActive ? theme.primary : theme.textSecondary,
-                              }}
+                              className={cn(
+                                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-150",
+                                isActive
+                                  ? "bg-accent text-primary"
+                                  : "text-muted-foreground hover:bg-black/[0.03]"
+                              )}
                               onClick={() => setSidebarOpen(false)}
                             >
                               <item.icon
-                                className="h-4 w-4"
-                                style={{ color: isActive ? theme.primary : theme.textMuted }}
+                                className={cn("h-4 w-4", isActive ? "text-primary" : "text-muted-foreground")}
                               />
                               {item.name}
                             </NavLink>
@@ -459,33 +448,30 @@ export default function DashboardLayout() {
               <div className="pt-2">
                 <button
                   onClick={() => setKgExpanded(!kgExpanded)}
-                  className="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150"
-                  style={{
-                    background: location.pathname.startsWith('/dashboard/knowledge-graph')
-                      ? theme.primaryLight
-                      : 'transparent',
-                    color: location.pathname.startsWith('/dashboard/knowledge-graph')
-                      ? theme.primary
-                      : theme.textSecondary,
-                  }}
+                  aria-expanded={kgExpanded}
+                  className={cn(
+                    "w-full flex items-center justify-between gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150",
+                    location.pathname.startsWith('/dashboard/knowledge-graph')
+                      ? "bg-accent text-primary"
+                      : "text-muted-foreground"
+                  )}
                 >
                   <div className="flex items-center gap-3">
                     <SparklesIcon
-                      className="h-5 w-5"
-                      style={{
-                        color: location.pathname.startsWith('/dashboard/knowledge-graph')
-                          ? theme.primary
-                          : theme.textMuted,
-                      }}
+                      className={cn(
+                        "h-5 w-5",
+                        location.pathname.startsWith('/dashboard/knowledge-graph')
+                          ? "text-primary"
+                          : "text-muted-foreground"
+                      )}
                     />
                     <span>Knowledge Graph</span>
                   </div>
                   <ChevronDownIcon
                     className={cn(
-                      'h-4 w-4 transition-transform duration-200',
+                      'h-4 w-4 transition-transform duration-200 text-muted-foreground',
                       kgExpanded && 'rotate-180'
                     )}
-                    style={{ color: theme.textMuted }}
                   />
                 </button>
 
@@ -496,8 +482,7 @@ export default function DashboardLayout() {
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
                       transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                      className="mt-1 ml-3 pl-3 space-y-0.5 overflow-hidden"
-                      style={{ borderLeft: `2px solid ${theme.primaryLight}` }}
+                      className="mt-1 ml-2 pl-3 space-y-0.5 overflow-hidden"
                     >
                       {kgNavigation.map((item, index) => {
                         const isActive = location.pathname === item.href;
@@ -510,16 +495,16 @@ export default function DashboardLayout() {
                           >
                             <NavLink
                               to={item.href}
-                              className="flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm transition-all duration-150"
-                              style={{
-                                background: isActive ? theme.primaryLight : 'transparent',
-                                color: isActive ? theme.primary : theme.textSecondary,
-                              }}
+                              className={cn(
+                                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-150",
+                                isActive
+                                  ? "bg-accent text-primary"
+                                  : "text-muted-foreground hover:bg-black/[0.03]"
+                              )}
                               onClick={() => setSidebarOpen(false)}
                             >
                               <item.icon
-                                className="h-4 w-4"
-                                style={{ color: isActive ? theme.primary : theme.textMuted }}
+                                className={cn("h-4 w-4", isActive ? "text-primary" : "text-muted-foreground")}
                               />
                               {item.name}
                             </NavLink>
@@ -537,33 +522,30 @@ export default function DashboardLayout() {
               <div className="pt-2">
                 <button
                   onClick={() => setNewsletterExpanded(!newsletterExpanded)}
-                  className="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150"
-                  style={{
-                    background: location.pathname.startsWith('/dashboard/newsletter')
-                      ? theme.primaryLight
-                      : 'transparent',
-                    color: location.pathname.startsWith('/dashboard/newsletter')
-                      ? theme.primary
-                      : theme.textSecondary,
-                  }}
+                  aria-expanded={newsletterExpanded}
+                  className={cn(
+                    "w-full flex items-center justify-between gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150",
+                    location.pathname.startsWith('/dashboard/newsletter')
+                      ? "bg-accent text-primary"
+                      : "text-muted-foreground"
+                  )}
                 >
                   <div className="flex items-center gap-3">
                     <EnvelopeIcon
-                      className="h-5 w-5"
-                      style={{
-                        color: location.pathname.startsWith('/dashboard/newsletter')
-                          ? theme.primary
-                          : theme.textMuted,
-                      }}
+                      className={cn(
+                        "h-5 w-5",
+                        location.pathname.startsWith('/dashboard/newsletter')
+                          ? "text-primary"
+                          : "text-muted-foreground"
+                      )}
                     />
                     <span>Newsletter</span>
                   </div>
                   <ChevronDownIcon
                     className={cn(
-                      'h-4 w-4 transition-transform duration-200',
+                      'h-4 w-4 transition-transform duration-200 text-muted-foreground',
                       newsletterExpanded && 'rotate-180'
                     )}
-                    style={{ color: theme.textMuted }}
                   />
                 </button>
 
@@ -574,8 +556,7 @@ export default function DashboardLayout() {
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
                       transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                      className="mt-1 ml-3 pl-3 space-y-0.5 overflow-hidden"
-                      style={{ borderLeft: `2px solid ${theme.primaryLight}` }}
+                      className="mt-1 ml-2 pl-3 space-y-0.5 overflow-hidden"
                     >
                       {newsletterNavigation.map((item, index) => {
                         const isActive = location.pathname === item.href;
@@ -588,16 +569,16 @@ export default function DashboardLayout() {
                           >
                             <NavLink
                               to={item.href}
-                              className="flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm transition-all duration-150"
-                              style={{
-                                background: isActive ? theme.primaryLight : 'transparent',
-                                color: isActive ? theme.primary : theme.textSecondary,
-                              }}
+                              className={cn(
+                                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-150",
+                                isActive
+                                  ? "bg-accent text-primary"
+                                  : "text-muted-foreground hover:bg-black/[0.03]"
+                              )}
                               onClick={() => setSidebarOpen(false)}
                             >
                               <item.icon
-                                className="h-4 w-4"
-                                style={{ color: isActive ? theme.primary : theme.textMuted }}
+                                className={cn("h-4 w-4", isActive ? "text-primary" : "text-muted-foreground")}
                               />
                               {item.name}
                             </NavLink>
@@ -618,32 +599,28 @@ export default function DashboardLayout() {
                 <div>
                   <button
                     onClick={() => setSuperadminExpanded(!superadminExpanded)}
-                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150"
-                    style={{
-                      background: location.pathname.startsWith('/dashboard/superadmin')
-                        ? theme.primaryLight
-                        : 'transparent',
-                      color: location.pathname.startsWith('/dashboard/superadmin')
-                        ? theme.primary
-                        : theme.textSecondary,
-                    }}
+                    aria-expanded={superadminExpanded}
+                    className={cn(
+                      "w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150",
+                      location.pathname.startsWith('/dashboard/superadmin')
+                        ? "bg-accent text-primary"
+                        : "text-muted-foreground"
+                    )}
                   >
                     <div className="flex items-center gap-3">
-                      <ShieldCheckIcon className="h-5 w-5" style={{ color: theme.textMuted }} />
+                      <ShieldCheckIcon className="h-5 w-5 text-muted-foreground" />
                       <span>Superadmin</span>
                     </div>
                     <ChevronDownIcon
                       className={cn(
-                        'h-4 w-4 transition-transform',
+                        'h-4 w-4 transition-transform text-muted-foreground',
                         superadminExpanded && 'rotate-180'
                       )}
-                      style={{ color: theme.textMuted }}
                     />
                   </button>
                   {superadminExpanded && (
                     <div
-                      className="mt-1 ml-3 pl-3 space-y-0.5"
-                      style={{ borderLeft: `2px solid ${theme.primaryLight}` }}
+                      className="mt-1 ml-2 pl-3 space-y-0.5"
                     >
                       {[
                         {
@@ -653,23 +630,25 @@ export default function DashboardLayout() {
                           end: true,
                         },
                         { href: '/dashboard/superadmin/users', icon: UserGroupIcon, name: 'Users' },
-                      ].map((item) => (
-                        <NavLink
-                          key={item.href}
-                          to={item.href}
-                          end={item.end}
-                          className="flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm transition-all duration-150"
-                          style={{
-                            background:
-                              location.pathname === item.href ? theme.primaryLight : 'transparent',
-                            color:
-                              location.pathname === item.href ? theme.primary : theme.textSecondary,
-                          }}
-                        >
-                          <item.icon className="h-4 w-4" style={{ color: theme.textMuted }} />
-                          {item.name}
-                        </NavLink>
-                      ))}
+                      ].map((item) => {
+                        const isActive = location.pathname === item.href;
+                        return (
+                          <NavLink
+                            key={item.href}
+                            to={item.href}
+                            end={item.end}
+                            className={cn(
+                              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-150",
+                              isActive
+                                ? "bg-accent text-primary"
+                                : "text-muted-foreground hover:bg-black/[0.03]"
+                            )}
+                          >
+                            <item.icon className={cn("h-4 w-4", isActive ? "text-primary" : "text-muted-foreground")} />
+                            {item.name}
+                          </NavLink>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -694,15 +673,15 @@ export default function DashboardLayout() {
                     key={item.href}
                     to={item.href}
                     data-tour={item.dataTour}
-                    className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150"
-                    style={{
-                      background: isActive ? theme.primaryLight : 'transparent',
-                      color: isActive ? theme.primary : theme.textSecondary,
-                    }}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150",
+                      isActive
+                        ? "bg-accent text-primary"
+                        : "text-muted-foreground hover:bg-black/[0.03]"
+                    )}
                   >
                     <item.icon
-                      className="h-5 w-5"
-                      style={{ color: isActive ? theme.primary : theme.textMuted }}
+                      className={cn("h-5 w-5", isActive ? "text-primary" : "text-muted-foreground")}
                     />
                     {t(item.name)}
                   </NavLink>
@@ -738,6 +717,7 @@ export default function DashboardLayout() {
         {sidebarCollapsed && (
           <button
             onClick={() => setSidebarCollapsed(false)}
+            aria-label="Expand sidebar"
             className="hidden lg:flex fixed top-4 left-4 z-50 h-8 w-8 items-center justify-center rounded-xl transition-all duration-200"
             style={{
               background: '#FFFFFF',
@@ -761,7 +741,7 @@ export default function DashboardLayout() {
           <header
             className="flex h-14 items-center justify-between px-4 lg:px-6"
             style={{
-              background: '#FFFFFF',
+              background: 'hsl(var(--card))',
               borderBottom: `0.5px solid ${theme.border}`,
             }}
           >
@@ -769,6 +749,7 @@ export default function DashboardLayout() {
               className="lg:hidden p-2 rounded-lg transition-colors"
               style={{ color: theme.textMuted }}
               onClick={() => setSidebarOpen(true)}
+              aria-label="Open navigation"
             >
               <Bars3Icon className="h-5 w-5" />
             </button>
@@ -786,42 +767,26 @@ export default function DashboardLayout() {
               <ClientContextSwitcher />
 
               <button
-                className="p-2 rounded-xl transition-colors"
-                style={{ color: theme.textMuted }}
+                className="p-2 rounded-xl transition-colors text-muted-foreground hover:text-primary"
                 onClick={() => setLearningHubOpen(!learningHubOpen)}
                 title="Learning Hub"
-                onMouseEnter={(e) => (e.currentTarget.style.color = theme.primary)}
-                onMouseLeave={(e) => (e.currentTarget.style.color = theme.textMuted)}
+                aria-label="Learning Hub"
               >
                 <BookOpenIcon className="h-5 w-5" />
               </button>
 
               <button
-                className="px-2.5 py-1 rounded-lg text-xs font-medium transition-colors"
-                style={{
-                  color: theme.textMuted,
-                  border: `1px solid ${theme.border}`,
-                }}
+                className="px-2.5 py-1 rounded-lg text-xs font-medium transition-colors text-muted-foreground border border-border hover:text-primary hover:border-border"
                 onClick={toggleLanguage}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = theme.borderHover;
-                  e.currentTarget.style.color = theme.primary;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = theme.border;
-                  e.currentTarget.style.color = theme.textMuted;
-                }}
               >
                 {i18n.language === 'en' ? 'AR' : 'EN'}
               </button>
 
               <button
                 onClick={() => setWhatsNewOpen(true)}
-                className="relative p-2 rounded-xl transition-colors"
-                style={{ color: theme.textMuted }}
+                className="relative p-2 rounded-xl transition-colors text-muted-foreground hover:text-primary"
                 title="What's New"
-                onMouseEnter={(e) => (e.currentTarget.style.color = theme.primary)}
-                onMouseLeave={(e) => (e.currentTarget.style.color = theme.textMuted)}
+                aria-label="What's New"
               >
                 <GiftIcon className="h-5 w-5" />
                 {hasNewUpdates && (
@@ -862,7 +827,7 @@ export default function DashboardLayout() {
                         exit="exit"
                         className="absolute right-0 mt-2 w-48 py-1 rounded-2xl z-50"
                         style={{
-                          background: '#FFFFFF',
+                          background: 'hsl(var(--card))',
                           border: `0.5px solid ${theme.border}`,
                           boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
                         }}
@@ -880,21 +845,15 @@ export default function DashboardLayout() {
                         </div>
                         <NavLink
                           to="/dashboard/settings"
-                          className="flex items-center gap-2 px-3 py-2 text-sm transition-colors rounded-lg mx-1"
-                          style={{ color: theme.textSecondary }}
+                          className="flex items-center gap-2 px-3 py-2 text-sm transition-colors rounded-lg mx-1 text-muted-foreground hover:bg-black/[0.03]"
                           onClick={() => setUserMenuOpen(false)}
-                          onMouseEnter={(e) => (e.currentTarget.style.background = theme.bgSurface)}
-                          onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                         >
                           <CogIcon className="w-4 h-4" />
                           {t('common.settings')}
                         </NavLink>
                         <button
                           onClick={handleLogout}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors rounded-lg mx-1"
-                          style={{ color: theme.danger }}
-                          onMouseEnter={(e) => (e.currentTarget.style.background = theme.bgSurface)}
-                          onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors rounded-lg mx-1 text-destructive hover:bg-black/[0.03]"
                         >
                           <ArrowRightOnRectangleIcon className="w-4 h-4" />
                           {t('common.logout')}

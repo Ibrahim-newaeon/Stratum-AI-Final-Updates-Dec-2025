@@ -25,7 +25,7 @@ export default function AICTA() {
   const isInView = useInView(ref, { once: true, margin: '-100px' });
 
   return (
-    <section className="relative py-32 overflow-hidden" style={{ background: '#000000' }}>
+    <section className="relative py-32 overflow-hidden" style={{ background: 'var(--landing-bg-deep)' }}>
       {/* Background Effects */}
       <div className="absolute inset-0">
         {/* Floating orbs */}
@@ -64,8 +64,8 @@ export default function AICTA() {
               border: '1px solid rgba(0, 199, 190, 0.3)',
             }}
           >
-            <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#34c759' }} />
-            <span className="text-sm font-medium" style={{ color: '#00c7be' }}>Ready to transform your revenue operations?</span>
+            <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: 'var(--landing-accent-green)' }} />
+            <span className="text-sm font-medium" style={{ color: 'var(--landing-accent-cyan)' }}>Ready to transform your revenue operations?</span>
           </div>
         </motion.div>
 
@@ -78,7 +78,7 @@ export default function AICTA() {
         >
           <span className="text-white">Stop Guessing.</span>
           <br />
-          <span style={{ color: '#00c7be' }}>
+          <span style={{ color: 'var(--landing-accent-cyan)' }}>
             Start Predicting.
           </span>
         </motion.h2>
@@ -89,7 +89,7 @@ export default function AICTA() {
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ delay: 0.2, duration: 0.6 }}
           className="text-lg max-w-2xl mx-auto mb-10 text-center"
-          style={{ color: 'rgba(255, 255, 255, 0.5)' }}
+          style={{ color: 'var(--landing-text-white-soft)' }}
         >
           Join 500+ revenue teams using Stratum AI to predict outcomes, automate safely, and scale
           with confidence.
@@ -106,7 +106,7 @@ export default function AICTA() {
             href="/signup"
             className="group inline-flex items-center gap-3 px-8 py-4 rounded-lg text-base font-semibold text-white transition-all hover:scale-[1.02] hover:brightness-110"
             style={{
-              background: '#00c7be',
+              background: 'var(--landing-accent-cyan)',
               boxShadow: '0 0 40px rgba(0, 199, 190, 0.3)',
             }}
           >
@@ -120,7 +120,7 @@ export default function AICTA() {
             style={{
               background: 'rgba(255, 255, 255, 0.03)',
               backdropFilter: 'blur(40px)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
+              border: '1px solid var(--landing-border-white-dim)',
             }}
           >
             Schedule a Demo
@@ -135,8 +135,8 @@ export default function AICTA() {
           className="flex flex-wrap items-center justify-center gap-6"
         >
           {benefits.map((benefit) => (
-            <div key={benefit.text} className="flex items-center gap-2 text-sm" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
-              <benefit.icon className="w-4 h-4" style={{ color: '#00c7be' }} />
+            <div key={benefit.text} className="flex items-center gap-2 text-sm" style={{ color: 'var(--landing-text-white-soft)' }}>
+              <benefit.icon className="w-4 h-4" style={{ color: 'var(--landing-accent-cyan)' }} />
               <span>{benefit.text}</span>
             </div>
           ))}

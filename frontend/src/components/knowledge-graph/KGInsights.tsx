@@ -114,7 +114,7 @@ function HealthScoreRing({ score, status }: { score: number; status: string }) {
   const strokeDashoffset = circumference - (score / 100) * circumference;
 
   const statusColors = {
-    healthy: '#34c759',
+    healthy: 'var(--landing-accent-green)',
     degraded: '#f59e0b',
     critical: '#ef4444',
   };

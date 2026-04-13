@@ -109,28 +109,28 @@ const uptimeHistory = [
 const getStatusColor = (status: ServiceStatus) => {
   switch (status) {
     case 'operational':
-      return '#00FF88';
+      return 'var(--landing-status-green)';
     case 'degraded':
-      return '#FFB800';
+      return 'var(--landing-accent-amber)';
     case 'outage':
-      return '#FF4757';
+      return 'var(--landing-status-red)';
     case 'maintenance':
-      return '#00D4FF';
+      return 'var(--landing-accent-sky)';
     default:
-      return '#94A3B8';
+      return 'var(--landing-text)';
   }
 };
 
 const getStatusIcon = (status: ServiceStatus) => {
   switch (status) {
     case 'operational':
-      return <CheckCircleIcon className="w-5 h-5" style={{ color: '#00FF88' }} />;
+      return <CheckCircleIcon className="w-5 h-5" style={{ color: 'var(--landing-status-green)' }} />;
     case 'degraded':
-      return <ExclamationTriangleIcon className="w-5 h-5" style={{ color: '#FFB800' }} />;
+      return <ExclamationTriangleIcon className="w-5 h-5" style={{ color: 'var(--landing-accent-amber)' }} />;
     case 'outage':
-      return <XCircleIcon className="w-5 h-5" style={{ color: '#FF4757' }} />;
+      return <XCircleIcon className="w-5 h-5" style={{ color: 'var(--landing-status-red)' }} />;
     case 'maintenance':
-      return <ClockIcon className="w-5 h-5" style={{ color: '#00D4FF' }} />;
+      return <ClockIcon className="w-5 h-5" style={{ color: 'var(--landing-accent-sky)' }} />;
     default:
       return null;
   }
@@ -139,13 +139,13 @@ const getStatusIcon = (status: ServiceStatus) => {
 const getSeverityColor = (severity: string) => {
   switch (severity) {
     case 'minor':
-      return '#FFB800';
+      return 'var(--landing-accent-amber)';
     case 'major':
-      return '#FF6B6B';
+      return 'var(--landing-accent-red)';
     case 'critical':
-      return '#FF4757';
+      return 'var(--landing-status-red)';
     default:
-      return '#94A3B8';
+      return 'var(--landing-text)';
   }
 };
 
@@ -202,13 +202,13 @@ export default function StatusPage() {
               }}
             >
               {allOperational ? (
-                <CheckCircleIcon className="w-6 h-6 text-[#00FF88]" />
+                <CheckCircleIcon className="w-6 h-6 text-[var(--landing-status-green)]" />
               ) : (
-                <ExclamationTriangleIcon className="w-6 h-6 text-[#FFB800]" />
+                <ExclamationTriangleIcon className="w-6 h-6 text-[var(--landing-accent-amber)]" />
               )}
               <span
                 className="text-lg font-semibold"
-                style={{ color: allOperational ? '#00FF88' : '#FFB800' }}
+                style={{ color: allOperational ? 'var(--landing-status-green)' : 'var(--landing-accent-amber)' }}
               >
                 {allOperational ? 'All Systems Operational' : 'Some Systems Degraded'}
               </span>
@@ -217,13 +217,13 @@ export default function StatusPage() {
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
               Stratum AI{' '}
               <span
-                style={{ color: '#FF4D4D' }}
+                style={{ color: 'var(--landing-accent-coral)' }}
               >
                 System Status
               </span>
             </h1>
 
-            <p style={{ color: '#8B8D9E' }}>
+            <p style={{ color: 'var(--landing-text)' }}>
               Real-time status and uptime monitoring for all Stratum AI services.
             </p>
           </div>
@@ -235,13 +235,13 @@ export default function StatusPage() {
             <div
               className="p-6 rounded-2xl"
               style={{
-                background: '#12131F',
-                border: '1px solid #1E1F30',
+                background: 'var(--landing-card)',
+                border: '1px solid var(--landing-border)',
               }}
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-white font-semibold">Uptime - Last 14 Days</h3>
-                <span className="text-[#00FF88] font-mono text-sm">99.98% average</span>
+                <span className="text-[var(--landing-status-green)] font-mono text-sm">99.98% average</span>
               </div>
               <div className="flex gap-1">
                 {uptimeHistory.map((day, i) => (
@@ -250,7 +250,7 @@ export default function StatusPage() {
                       className="h-10 rounded transition-all duration-200 group-hover:scale-110"
                       style={{
                         background:
-                          day.uptime === 100 ? '#00FF88' : day.uptime > 99 ? '#FFB800' : '#FF4757',
+                          day.uptime === 100 ? 'var(--landing-status-green)' : day.uptime > 99 ? 'var(--landing-accent-amber)' : 'var(--landing-status-red)',
                         opacity: 0.8,
                       }}
                     />
@@ -265,7 +265,7 @@ export default function StatusPage() {
                   </div>
                 ))}
               </div>
-              <div className="flex justify-between mt-2 text-xs" style={{ color: 'rgba(139,141,158,0.7)' }}>
+              <div className="flex justify-between mt-2 text-xs" style={{ color: 'var(--landing-text-dim)' }}>
                 <span>14 days ago</span>
                 <span>Today</span>
               </div>
@@ -283,21 +283,21 @@ export default function StatusPage() {
                   key={service.name}
                   className="flex items-center justify-between p-4 rounded-xl"
                   style={{
-                    background: '#12131F',
-                    border: '1px solid #1E1F30',
+                    background: 'var(--landing-card)',
+                    border: '1px solid var(--landing-border)',
                   }}
                 >
                   <div className="flex items-center gap-4">
-                    <service.icon className="w-5 h-5" style={{ color: '#8B8D9E' }} />
+                    <service.icon className="w-5 h-5" style={{ color: 'var(--landing-text)' }} />
                     <span className="text-white font-medium">{service.name}</span>
                   </div>
                   <div className="flex items-center gap-6">
                     <div className="text-right">
-                      <span className="text-xs" style={{ color: 'rgba(139,141,158,0.7)' }}>Uptime</span>
+                      <span className="text-xs" style={{ color: 'var(--landing-text-dim)' }}>Uptime</span>
                       <p className="text-sm text-white font-mono">{service.uptime}</p>
                     </div>
                     <div className="text-right">
-                      <span className="text-xs" style={{ color: 'rgba(139,141,158,0.7)' }}>Latency</span>
+                      <span className="text-xs" style={{ color: 'var(--landing-text-dim)' }}>Latency</span>
                       <p className="text-sm text-white font-mono">{service.latency}</p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -325,13 +325,13 @@ export default function StatusPage() {
               <div
                 className="p-8 rounded-xl text-center"
                 style={{
-                  background: '#12131F',
-                  border: '1px solid #1E1F30',
+                  background: 'var(--landing-card)',
+                  border: '1px solid var(--landing-border)',
                 }}
               >
-                <CheckCircleIcon className="w-12 h-12 mx-auto mb-4 text-[#00FF88]" />
+                <CheckCircleIcon className="w-12 h-12 mx-auto mb-4 text-[var(--landing-status-green)]" />
                 <p className="text-white font-medium">No incidents reported</p>
-                <p className="text-sm mt-1" style={{ color: '#8B8D9E' }}>
+                <p className="text-sm mt-1" style={{ color: 'var(--landing-text)' }}>
                   All systems have been operating normally.
                 </p>
               </div>
@@ -342,8 +342,8 @@ export default function StatusPage() {
                     key={incident.id}
                     className="rounded-xl overflow-hidden"
                     style={{
-                      background: '#12131F',
-                      border: '1px solid #1E1F30',
+                      background: 'var(--landing-card)',
+                      border: '1px solid var(--landing-border)',
                     }}
                   >
                     <button
@@ -365,24 +365,24 @@ export default function StatusPage() {
                               incident.status === 'resolved'
                                 ? 'rgba(0, 255, 136, 0.2)'
                                 : 'rgba(255, 183, 0, 0.2)',
-                            color: incident.status === 'resolved' ? '#00FF88' : '#FFB800',
+                            color: incident.status === 'resolved' ? 'var(--landing-status-green)' : 'var(--landing-accent-amber)',
                           }}
                         >
                           {incident.status}
                         </span>
                       </div>
-                      <span className="text-sm" style={{ color: 'rgba(139,141,158,0.7)' }}>{incident.createdAt}</span>
+                      <span className="text-sm" style={{ color: 'var(--landing-text-dim)' }}>{incident.createdAt}</span>
                     </button>
 
                     {expandedIncident === incident.id && (
-                      <div className="px-4 pb-4 border-t" style={{ borderColor: '#1E1F30' }}>
+                      <div className="px-4 pb-4 border-t" style={{ borderColor: 'var(--landing-border)' }}>
                         <div className="mt-4 space-y-3">
                           {incident.updates.map((update, i) => (
                             <div key={i} className="flex gap-3">
-                              <span className="text-xs w-12 flex-shrink-0" style={{ color: 'rgba(139,141,158,0.7)' }}>
+                              <span className="text-xs w-12 flex-shrink-0" style={{ color: 'var(--landing-text-dim)' }}>
                                 {update.time}
                               </span>
-                              <span className="text-sm" style={{ color: '#8B8D9E' }}>{update.message}</span>
+                              <span className="text-sm" style={{ color: 'var(--landing-text)' }}>{update.message}</span>
                             </div>
                           ))}
                         </div>
@@ -401,12 +401,12 @@ export default function StatusPage() {
             <div
               className="p-8 rounded-2xl"
               style={{
-                background: '#12131F',
-                border: '1px solid #1E1F30',
+                background: 'var(--landing-card)',
+                border: '1px solid var(--landing-border)',
               }}
             >
               <h3 className="text-xl font-bold text-white mb-2">Subscribe to Status Updates</h3>
-              <p className="mb-6" style={{ color: '#8B8D9E' }}>
+              <p className="mb-6" style={{ color: 'var(--landing-text)' }}>
                 Get notified about incidents and maintenance windows.
               </p>
               <div className="flex gap-3 max-w-md mx-auto">
@@ -415,15 +415,15 @@ export default function StatusPage() {
                   placeholder="Enter your email"
                   className="flex-1 px-4 py-3 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF4D4D]/50"
                   style={{
-                    background: '#0A0B14',
-                    border: '1px solid #1E1F30',
+                    background: 'var(--landing-bg)',
+                    border: '1px solid var(--landing-border)',
                   }}
                 />
                 <button
                   className="px-6 py-3 rounded-full font-semibold text-white transition-all duration-200"
                   style={{
-                    background: '#FF4D4D',
-                    boxShadow: '0 4px 20px rgba(255,77,77,0.3)',
+                    background: 'var(--landing-accent-coral)',
+                    boxShadow: 'var(--landing-glow-coral)',
                   }}
                 >
                   Subscribe

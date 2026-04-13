@@ -89,7 +89,7 @@ export default function ApiDocs() {
             style={{
               background: 'rgba(255, 179, 71, 0.1)',
               border: '1px solid rgba(255, 179, 71, 0.3)',
-              color: '#FFB347',
+              color: 'var(--landing-accent-warm)',
             }}
           >
             <CodeBracketIcon className="w-4 h-4" />
@@ -97,19 +97,19 @@ export default function ApiDocs() {
           </div>
           <h1
             className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6"
-            style={{ fontFamily: "'Inter', sans-serif" }}
+            style={{ fontFamily: "'Clash Display', sans-serif" }}
           >
             <span className="text-white">Build with the</span>
             <br />
             <span
-              style={{ color: '#FF4D4D' }}
+              style={{ color: 'var(--landing-accent-coral)' }}
             >
               Stratum API
             </span>
           </h1>
           <p
             className="text-lg md:text-xl max-w-2xl mx-auto"
-            style={{ color: '#8B8D9E' }}
+            style={{ color: 'var(--landing-text)' }}
           >
             Everything you need to integrate Stratum AI into your applications.
           </p>
@@ -126,13 +126,13 @@ export default function ApiDocs() {
                 href={link.href}
                 className="p-6 rounded-2xl transition-all hover:scale-[1.02] group"
                 style={{
-                  background: '#12131F',
-                  border: '1px solid #1E1F30',
+                  background: 'var(--landing-card)',
+                  border: '1px solid var(--landing-border)',
                 }}
               >
                 <link.icon className="w-8 h-8 mb-4" style={{ color: '#06b6d4' }} />
                 <h3 className="text-lg font-semibold text-white mb-2">{link.title}</h3>
-                <p className="text-sm" style={{ color: '#8B8D9E' }}>
+                <p className="text-sm" style={{ color: 'var(--landing-text)' }}>
                   {link.description}
                 </p>
               </a>
@@ -148,14 +148,14 @@ export default function ApiDocs() {
           <div
             className="rounded-2xl overflow-hidden"
             style={{
-              background: '#12131F',
-              border: '1px solid #1E1F30',
+              background: 'var(--landing-card)',
+              border: '1px solid var(--landing-border)',
             }}
           >
-            <div className="p-4 border-b" style={{ borderColor: '#1E1F30' }}>
+            <div className="p-4 border-b" style={{ borderColor: 'var(--landing-border)' }}>
               <h3 className="font-semibold text-white">Popular Endpoints</h3>
             </div>
-            <div className="divide-y" style={{ borderColor: '#1E1F30' }}>
+            <div className="divide-y" style={{ borderColor: 'var(--landing-border)' }}>
               {endpoints.map((endpoint) => (
                 <div
                   key={`${endpoint.method}-${endpoint.path}`}
@@ -168,13 +168,13 @@ export default function ApiDocs() {
                         endpoint.method === 'GET'
                           ? 'rgba(0, 212, 170, 0.2)'
                           : 'rgba(59, 130, 246, 0.2)',
-                      color: endpoint.method === 'GET' ? '#00D4AA' : '#3b82f6',
+                      color: endpoint.method === 'GET' ? 'var(--landing-accent-teal)' : 'var(--landing-accent-blue)',
                     }}
                   >
                     {endpoint.method}
                   </span>
                   <code className="text-sm text-white font-mono flex-1">{endpoint.path}</code>
-                  <span className="text-sm" style={{ color: 'rgba(139, 141, 158, 0.7)' }}>
+                  <span className="text-sm" style={{ color: 'var(--landing-text-dim)' }}>
                     {endpoint.description}
                   </span>
                 </div>
@@ -191,30 +191,30 @@ export default function ApiDocs() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div>
               <h3 className="text-xl font-semibold text-white mb-4">1. Get your API key</h3>
-              <p className="mb-6" style={{ color: '#8B8D9E' }}>
+              <p className="mb-6" style={{ color: 'var(--landing-text)' }}>
                 Sign up for Stratum AI and generate an API key from your dashboard settings.
               </p>
               <h3 className="text-xl font-semibold text-white mb-4">2. Install the SDK</h3>
               <div
                 className="p-4 rounded-xl font-mono text-sm mb-6"
                 style={{
-                  background: '#0A0B14',
-                  border: '1px solid #1E1F30',
-                  color: '#00D4AA',
+                  background: 'var(--landing-bg)',
+                  border: '1px solid var(--landing-border)',
+                  color: 'var(--landing-accent-teal)',
                 }}
               >
                 npm install @stratum-ai/sdk
               </div>
               <h3 className="text-xl font-semibold text-white mb-4">3. Make your first request</h3>
-              <p style={{ color: '#8B8D9E' }}>
+              <p style={{ color: 'var(--landing-text)' }}>
                 Use the SDK to connect to the API and start tracking signals.
               </p>
             </div>
             <div
               className="p-6 rounded-2xl font-mono text-sm overflow-x-auto"
               style={{
-                background: '#0A0B14',
-                border: '1px solid #1E1F30',
+                background: 'var(--landing-bg)',
+                border: '1px solid var(--landing-border)',
               }}
             >
               <pre style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
@@ -244,19 +244,19 @@ if (health.score >= 70) {
           <div
             className="p-12 rounded-3xl"
             style={{
-              background: '#12131F',
-              border: '1px solid #1E1F30',
+              background: 'var(--landing-card)',
+              border: '1px solid var(--landing-border)',
             }}
           >
             <h2 className="text-3xl font-bold text-white mb-4">Ready to Start Building?</h2>
-            <p className="text-lg mb-8" style={{ color: '#8B8D9E' }}>
+            <p className="text-lg mb-8" style={{ color: 'var(--landing-text)' }}>
               Get your API key and start integrating in minutes.
             </p>
             <Link
               to="/signup"
               className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-all hover:opacity-90"
               style={{
-                background: '#FF4D4D',
+                background: 'var(--landing-accent-coral)',
                 boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
               }}
             >

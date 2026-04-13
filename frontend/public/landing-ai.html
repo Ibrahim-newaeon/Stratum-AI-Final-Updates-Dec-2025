@@ -5,11 +5,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Stratum AI - The Only AI That Thinks Before It Acts</title>
   <meta name="description" content="Trust-Gated Autopilot executes revenue operations only when AI confirms data quality meets safety thresholds. Predict ROAS, prevent churn, and sync audiences.">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.17/dist/tailwind.min.css">
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@200,300,400,500,600,700&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,600,700&display=swap" rel="stylesheet">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
+    /* ── Arbitrary-value utilities (replaces CDN JIT) ── */
+    .bg-\[\#030303\] { background-color: #030303; }
+    .bg-\[\#030303\]\/80 { background-color: rgba(3, 3, 3, 0.8); }
+    .p-\[1px\] { padding: 1px; }
+    .inset-\[1px\] { inset: 1px; }
+    .-inset-\[1px\] { inset: -1px; }
+    .opacity-\[0\.03\] { opacity: 0.03; }
+    .opacity-\[0\.02\] { opacity: 0.02; }
+    .leading-\[1\.1\] { line-height: 1.1; }
+    .border-l-\[8px\] { border-left-width: 8px; }
+    .border-y-\[5px\] { border-top-width: 5px; border-bottom-width: 5px; }
+    .w-\[1200px\] { width: 1200px; }
+    .h-\[600px\] { height: 600px; }
+    .h-\[2px\] { height: 2px; }
+    .scale-\[1\.02\] { transform: scale(1.02); }
+    .text-\[10px\] { font-size: 10px; }
+    .border-white\/\[0\.05\] { border-color: rgba(255, 255, 255, 0.05); }
+    .from-white\/\[0\.05\] { --tw-gradient-from: rgba(255, 255, 255, 0.05) var(--tw-gradient-from-position); --tw-gradient-to: rgba(255, 255, 255, 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+    .bg-white\/\[0\.02\] { background-color: rgba(255, 255, 255, 0.02); }
+    .bg-white\/\[0\.03\] { background-color: rgba(255, 255, 255, 0.03); }
+    .bg-white\/\[0\.05\] { background-color: rgba(255, 255, 255, 0.05); }
+    .hover\:bg-white\/\[0\.05\]:hover { background-color: rgba(255, 255, 255, 0.05); }
     /* ============================================
        STRATUM AI THEME SYSTEM v3.0
     ============================================ */
@@ -57,7 +81,7 @@
       --glass-border: rgba(0, 0, 0, 0.06);
     }
 
-    * { font-family: 'Inter', -apple-system, sans-serif; }
+    * { font-family: 'Satoshi', -apple-system, sans-serif; }
     body { background: var(--bg-void); color: var(--text-primary); }
 
     /* Animations */
@@ -132,6 +156,7 @@
   </style>
 </head>
 <body class="antialiased">
+  <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-white focus:text-black focus:rounded">Skip to content</a>
   <!-- Navigation -->
   <nav class="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-[#030303]/80 backdrop-blur-xl">
     <div class="max-w-7xl mx-auto px-6 py-4">
@@ -159,10 +184,11 @@
   </nav>
 
   <!-- Hero Section -->
+  <main id="main-content">
   <section class="relative min-h-screen flex items-center justify-center pt-32 pb-20 overflow-hidden">
     <!-- Neural Network Background -->
-    <div class="absolute inset-0 overflow-hidden opacity-[0.03]">
-      <svg class="absolute w-full h-full" viewBox="0 0 1000 1000">
+    <div class="absolute inset-0 overflow-hidden opacity-[0.03]" aria-hidden="true">
+      <svg class="absolute w-full h-full" viewBox="0 0 1000 1000" aria-hidden="true">
         <defs>
           <pattern id="neural-grid" width="50" height="50" patternUnits="userSpaceOnUse">
             <circle cx="25" cy="25" r="1" fill="currentColor" class="text-amber-500"/>
@@ -1235,6 +1261,7 @@
       </div>
     </div>
   </section>
+  </main>
 
   <!-- Footer -->
   <footer class="relative border-t border-white/[0.05] bg-[#030303]">

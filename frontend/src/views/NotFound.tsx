@@ -82,7 +82,7 @@ export default function NotFound() {
 
         {/* Helpful links */}
         <div className="mt-12 pt-8" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
-          <p className="text-sm mb-4" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+          <p className="text-sm mb-4" style={{ color: 'var(--landing-text-white-soft)' }}>
             Looking for something specific?
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">

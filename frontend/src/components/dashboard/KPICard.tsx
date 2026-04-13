@@ -84,7 +84,6 @@ export const KPICard: React.FC<KPICardProps> = ({
           className
         )}
       >
-        <div className="absolute left-0 top-0 h-full w-1 bg-muted" />
         <div className="relative space-y-3">
           <div className="flex items-center justify-between">
             <div className="h-4 w-24 bg-muted rounded" />
@@ -108,7 +107,7 @@ export const KPICard: React.FC<KPICardProps> = ({
         'relative overflow-hidden rounded-2xl motion-card motion-enter group',
         highlight
           ? 'bg-gradient-to-br from-primary/90 to-cyan-500/80 text-primary-foreground shadow-glow border border-primary/30'
-          : 'bg-white/[0.04] border border-white/[0.07] backdrop-blur-sm hover:bg-white/[0.07] hover:border-primary/20 hover:shadow-lg',
+          : 'bg-white/[0.04] border border-white/[0.07] hover:bg-white/[0.07] hover:border-primary/20 hover:shadow-lg',
         size === 'small' ? 'p-4' : 'p-5',
         className
       )}
@@ -201,7 +200,7 @@ export const KPICard: React.FC<KPICardProps> = ({
         {/* Value with animation */}
         <div
           className={cn(
-            'font-bold tabular-nums',
+            'font-bold tabular-nums font-display',
             size === 'small' ? 'text-2xl' : 'text-3xl',
             highlight ? 'text-primary-foreground' : 'text-foreground'
           )}

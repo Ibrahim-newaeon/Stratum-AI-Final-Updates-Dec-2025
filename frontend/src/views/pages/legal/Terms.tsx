@@ -26,14 +26,14 @@ export default function Terms() {
             style={{
               background: 'rgba(255, 179, 71, 0.1)',
               border: '1px solid rgba(255, 179, 71, 0.3)',
-              color: '#FFB347',
+              color: 'var(--landing-accent-warm)',
             }}
           >
             <DocumentTextIcon className="w-4 h-4" />
             Legal
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Terms of Service</h1>
-          <p style={{ color: 'rgba(139, 141, 158, 0.7)' }}>Last updated: January 15, 2026</p>
+          <p style={{ color: 'var(--landing-text-dim)' }}>Last updated: January 15, 2026</p>
         </div>
       </section>
 
@@ -48,11 +48,11 @@ export default function Terms() {
             <div
               className="prose prose-invert max-w-none p-8 rounded-3xl"
               style={{
-                background: '#12131F',
-                border: '1px solid #1E1F30',
+                background: 'var(--landing-card)',
+                border: '1px solid var(--landing-border)',
               }}
             >
-              <div className="space-y-8" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>
+              <div className="space-y-8" style={{ color: 'var(--landing-text-white-mid)' }}>
                 <section>
                   <h2 className="text-2xl font-bold text-white mb-4">1. Acceptance of Terms</h2>
                   <p>

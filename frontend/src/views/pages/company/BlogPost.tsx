@@ -53,14 +53,14 @@ export default function BlogPost() {
         <div className="py-20 px-6">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-4xl font-bold text-white mb-4">Post Not Found</h1>
-            <p className="text-lg mb-8" style={{ color: '#8B8D9E' }}>
+            <p className="text-lg mb-8" style={{ color: 'var(--landing-text)' }}>
               The blog post you're looking for doesn't exist or has been removed.
             </p>
             <Link
               to="/blog"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-white transition-all hover:opacity-90"
               style={{
-                background: '#FF4D4D',
+                background: 'var(--landing-accent-coral)',
                 boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
               }}
             >
@@ -81,7 +81,7 @@ export default function BlogPost() {
           <Link
             to="/blog"
             className="inline-flex items-center gap-2 text-sm transition-colors hover:text-white"
-            style={{ color: '#8B8D9E' }}
+            style={{ color: 'var(--landing-text)' }}
           >
             <ArrowLeftIcon className="w-4 h-4" />
             Back to Blog
@@ -99,7 +99,7 @@ export default function BlogPost() {
                 className="text-sm px-3 py-1 rounded-full"
                 style={{
                   background: 'rgba(255, 179, 71, 0.1)',
-                  color: '#FFB347',
+                  color: 'var(--landing-accent-warm)',
                 }}
               >
                 {post.category.name}
@@ -108,7 +108,7 @@ export default function BlogPost() {
             {post.reading_time_minutes && (
               <span
                 className="text-sm flex items-center gap-1"
-                style={{ color: 'rgba(139, 141, 158, 0.7)' }}
+                style={{ color: 'var(--landing-text-dim)' }}
               >
                 <ClockIcon className="w-4 h-4" />
                 {post.reading_time_minutes} min read
@@ -119,14 +119,14 @@ export default function BlogPost() {
           {/* Title */}
           <h1
             className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6"
-            style={{ fontFamily: "'Inter', sans-serif" }}
+            style={{ fontFamily: "'Clash Display', sans-serif" }}
           >
             {post.title}
           </h1>
 
           {/* Excerpt */}
           {post.excerpt && (
-            <p className="text-lg md:text-xl mb-8" style={{ color: '#8B8D9E' }}>
+            <p className="text-lg md:text-xl mb-8" style={{ color: 'var(--landing-text)' }}>
               {post.excerpt}
             </p>
           )}
@@ -135,7 +135,7 @@ export default function BlogPost() {
           <div
             className="flex flex-wrap items-center gap-6 pb-8 border-b"
             style={{
-              borderColor: '#1E1F30',
+              borderColor: 'var(--landing-border)',
               color: 'rgba(139, 141, 158, 0.7)',
             }}
           >
@@ -158,7 +158,7 @@ export default function BlogPost() {
                 <div>
                   <p className="text-white font-medium">{post.author.name}</p>
                   {post.author.job_title && (
-                    <p className="text-sm" style={{ color: 'rgba(139, 141, 158, 0.7)' }}>
+                    <p className="text-sm" style={{ color: 'var(--landing-text-dim)' }}>
                       {post.author.job_title}
                     </p>
                   )}
@@ -182,7 +182,7 @@ export default function BlogPost() {
           <div
             className="prose prose-invert prose-lg max-w-none"
             style={{
-              color: 'rgba(255, 255, 255, 0.8)',
+              color: 'var(--landing-text-white-mid)',
             }}
             dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content || '') }}
           />
@@ -191,16 +191,16 @@ export default function BlogPost() {
           {post.tags && post.tags.length > 0 && (
             <div
               className="mt-12 pt-8 border-t"
-              style={{ borderColor: '#1E1F30' }}
+              style={{ borderColor: 'var(--landing-border)' }}
             >
               <div className="flex items-center gap-3 flex-wrap">
-                <TagIcon className="w-5 h-5" style={{ color: 'rgba(139, 141, 158, 0.7)' }} />
+                <TagIcon className="w-5 h-5" style={{ color: 'var(--landing-text-dim)' }} />
                 {post.tags.map((tag) => (
                   <span
                     key={tag.id}
                     className="px-3 py-1 rounded-full text-sm"
                     style={{
-                      background: 'rgba(255, 255, 255, 0.06)',
+                      background: 'var(--landing-surface-glass)',
                       border: '1px solid rgba(255, 255, 255, 0.2)',
                       color: '#8B8D9E',
                     }}
@@ -217,8 +217,8 @@ export default function BlogPost() {
             <div
               className="mt-12 p-8 rounded-2xl"
               style={{
-                background: '#12131F',
-                border: '1px solid #1E1F30',
+                background: 'var(--landing-card)',
+                border: '1px solid var(--landing-border)',
               }}
             >
               <div className="flex items-start gap-4">
@@ -241,11 +241,11 @@ export default function BlogPost() {
                     About {post.author.name}
                   </h3>
                   {post.author.job_title && (
-                    <p className="text-sm mb-2" style={{ color: 'rgba(139, 141, 158, 0.7)' }}>
+                    <p className="text-sm mb-2" style={{ color: 'var(--landing-text-dim)' }}>
                       {post.author.job_title}
                     </p>
                   )}
-                  <p style={{ color: '#8B8D9E' }}>{post.author.bio}</p>
+                  <p style={{ color: 'var(--landing-text)' }}>{post.author.bio}</p>
                 </div>
               </div>
             </div>
@@ -259,12 +259,12 @@ export default function BlogPost() {
           <div
             className="p-12 rounded-3xl"
             style={{
-              background: '#12131F',
-              border: '1px solid #1E1F30',
+              background: 'var(--landing-card)',
+              border: '1px solid var(--landing-border)',
             }}
           >
             <h2 className="text-3xl font-bold text-white mb-4">Ready to Get Started?</h2>
-            <p className="text-lg mb-8" style={{ color: '#8B8D9E' }}>
+            <p className="text-lg mb-8" style={{ color: 'var(--landing-text)' }}>
               See how Stratum AI can help you optimize your marketing performance.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -272,7 +272,7 @@ export default function BlogPost() {
                 to="/signup"
                 className="px-6 py-3 rounded-full font-semibold text-white transition-all hover:opacity-90"
                 style={{
-                  background: '#FF4D4D',
+                  background: 'var(--landing-accent-coral)',
                   boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
                 }}
               >
@@ -282,7 +282,7 @@ export default function BlogPost() {
                 to="/contact"
                 className="px-6 py-3 rounded-xl font-semibold transition-all hover:bg-white/10"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.06)',
+                  background: 'var(--landing-surface-glass)',
                   border: '1px solid rgba(255, 255, 255, 0.2)',
                   color: '#ffffff',
                 }}

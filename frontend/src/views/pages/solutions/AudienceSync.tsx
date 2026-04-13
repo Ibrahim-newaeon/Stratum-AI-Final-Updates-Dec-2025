@@ -75,7 +75,7 @@ const fallbackFeatures = [
     iconName: 'ChartBarIcon',
     title: 'Match Rate Tracking',
     description: 'Monitor match rates and optimize identifier coverage.',
-    color: '#34c759',
+    color: 'var(--landing-accent-green)',
   },
   {
     icon: ShieldCheckIcon,
@@ -89,7 +89,7 @@ const fallbackFeatures = [
     iconName: 'CloudArrowUpIcon',
     title: 'Flexible Export',
     description: 'Export as CSV or JSON with custom attributes anytime.',
-    color: '#3b82f6',
+    color: 'var(--landing-accent-blue)',
   },
   {
     icon: ArrowPathIcon,
@@ -145,7 +145,7 @@ export default function AudienceSyncSolution() {
             style={{
               background: 'rgba(255, 179, 71, 0.1)',
               border: '1px solid rgba(255, 179, 71, 0.3)',
-              color: '#FFB347',
+              color: 'var(--landing-accent-warm)',
             }}
           >
             <ArrowPathIcon className="w-4 h-4" />
@@ -153,19 +153,19 @@ export default function AudienceSyncSolution() {
           </div>
           <h1
             className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6"
-            style={{ fontFamily: "'Inter', sans-serif" }}
+            style={{ fontFamily: "'Clash Display', sans-serif" }}
           >
             <span className="text-white">{hero.title}</span>
             <br />
             <span
-              style={{ color: '#FF4D4D' }}
+              style={{ color: 'var(--landing-accent-coral)' }}
             >
               {hero.titleHighlight}
             </span>
           </h1>
           <p
             className="text-lg md:text-xl max-w-3xl mx-auto mb-10"
-            style={{ color: '#8B8D9E' }}
+            style={{ color: 'var(--landing-text)' }}
           >
             {hero.description}
           </p>
@@ -173,7 +173,7 @@ export default function AudienceSyncSolution() {
             to={hero.ctaLink}
             className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-all hover:opacity-90"
             style={{
-              background: '#FF4D4D',
+              background: 'var(--landing-accent-coral)',
               boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
             }}
           >
@@ -192,21 +192,21 @@ export default function AudienceSyncSolution() {
                 key={platform.name}
                 className="p-6 rounded-2xl text-center transition-all hover:scale-[1.02] group"
                 style={{
-                  background: '#12131F',
-                  border: '1px solid #1E1F30',
+                  background: 'var(--landing-card)',
+                  border: '1px solid var(--landing-border)',
                 }}
               >
                 <div
                   className="w-14 h-14 rounded-xl flex items-center justify-center font-bold text-xl mx-auto mb-3 transition-colors"
                   style={{
                     background: 'linear-gradient(135deg, #FF4D4D 0%, #FFB347 100%)',
-                    color: 'rgba(255, 255, 255, 0.8)',
+                    color: 'var(--landing-text-white-mid)',
                   }}
                 >
                   {platform.name[0]}
                 </div>
                 <h3 className="font-semibold text-white">{platform.name}</h3>
-                <p className="text-xs mt-1" style={{ color: 'rgba(139, 141, 158, 0.7)' }}>
+                <p className="text-xs mt-1" style={{ color: 'var(--landing-text-dim)' }}>
                   {platform.description}
                 </p>
               </div>
@@ -225,14 +225,14 @@ export default function AudienceSyncSolution() {
                 <div
                   className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-bold mx-auto mb-4"
                   style={{
-                    background: '#FF4D4D',
-                    color: '#ffffff',
+                    background: 'var(--landing-accent-coral)',
+                    color: '#fff',
                   }}
                 >
                   {item.step}
                 </div>
                 <h3 className="text-xl font-semibold text-white mb-2">{item.title}</h3>
-                <p style={{ color: '#8B8D9E' }}>{item.description}</p>
+                <p style={{ color: 'var(--landing-text)' }}>{item.description}</p>
               </div>
             ))}
           </div>
@@ -248,14 +248,14 @@ export default function AudienceSyncSolution() {
                 key={feature.title}
                 className="p-6 rounded-2xl transition-all hover:scale-[1.02]"
                 style={{
-                  background: '#12131F',
-                  border: '1px solid #1E1F30',
+                  background: 'var(--landing-card)',
+                  border: '1px solid var(--landing-border)',
                   borderLeft: `3px solid ${feature.color}`,
                 }}
               >
                 <feature.icon className="w-10 h-10 mb-4" style={{ color: feature.color }} />
                 <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
-                <p className="text-sm" style={{ color: '#8B8D9E' }}>
+                <p className="text-sm" style={{ color: 'var(--landing-text)' }}>
                   {feature.description}
                 </p>
               </div>
@@ -270,19 +270,19 @@ export default function AudienceSyncSolution() {
           <div
             className="p-12 rounded-3xl"
             style={{
-              background: '#12131F',
-              border: '1px solid #1E1F30',
+              background: 'var(--landing-card)',
+              border: '1px solid var(--landing-border)',
             }}
           >
             <h2 className="text-3xl font-bold text-white mb-4">Start Syncing Audiences Today</h2>
-            <p className="text-lg mb-8" style={{ color: '#8B8D9E' }}>
+            <p className="text-lg mb-8" style={{ color: 'var(--landing-text)' }}>
               Free 14-day trial. No credit card required.
             </p>
             <Link
               to="/signup"
               className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-all hover:opacity-90"
               style={{
-                background: '#FF4D4D',
+                background: 'var(--landing-accent-coral)',
                 boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
               }}
             >

@@ -56,7 +56,7 @@ const fallbackGlossaryData: GlossaryCategory[] = [
     id: 'trust-engine',
     title: 'Trust Engine',
     icon: ShieldCheckIcon,
-    color: '#FFB347',
+    color: 'var(--landing-accent-warm)',
     description:
       'Core decision-making component that evaluates signal health before automation execution.',
     terms: [
@@ -124,7 +124,7 @@ const fallbackGlossaryData: GlossaryCategory[] = [
     id: 'cdp',
     title: 'CDP (Customer Data Platform)',
     icon: UserGroupIcon,
-    color: '#00D4FF',
+    color: 'var(--landing-accent-sky)',
     description:
       'Unified customer data infrastructure for profiles, segments, and identity resolution.',
     terms: [
@@ -212,7 +212,7 @@ const fallbackGlossaryData: GlossaryCategory[] = [
     id: 'audience-sync',
     title: 'Audience Sync',
     icon: ArrowPathIcon,
-    color: '#00D4AA',
+    color: 'var(--landing-accent-teal)',
     description: 'Push CDP segments to ad platforms for targeting and suppression.',
     terms: [
       {
@@ -259,7 +259,7 @@ const fallbackGlossaryData: GlossaryCategory[] = [
     id: 'capi',
     title: 'CAPI (Conversions API)',
     icon: BoltIcon,
-    color: '#FFB800',
+    color: 'var(--landing-accent-amber)',
     description: 'Server-side event delivery to ad platforms for improved attribution.',
     terms: [
       {
@@ -320,7 +320,7 @@ const fallbackGlossaryData: GlossaryCategory[] = [
     id: 'analytics',
     title: 'Analytics & Metrics',
     icon: ChartBarIcon,
-    color: '#FF6B6B',
+    color: 'var(--landing-accent-red)',
     description: 'Performance metrics, KPIs, and calculated values for campaign optimization.',
     terms: [
       {
@@ -380,7 +380,7 @@ const fallbackGlossaryData: GlossaryCategory[] = [
     id: 'pacing',
     title: 'Pacing & Forecasting',
     icon: SignalIcon,
-    color: '#A78BFA',
+    color: 'var(--landing-accent-violet)',
     description: 'Budget tracking, spend pacing, and performance forecasting.',
     terms: [
       {
@@ -426,7 +426,7 @@ const fallbackGlossaryData: GlossaryCategory[] = [
     id: 'crm',
     title: 'CRM Integration',
     icon: CurrencyDollarIcon,
-    color: '#00D4FF',
+    color: 'var(--landing-accent-sky)',
     description: 'Customer relationship management sync and pipeline attribution.',
     terms: [
       {
@@ -472,7 +472,7 @@ const fallbackGlossaryData: GlossaryCategory[] = [
     id: 'experiments',
     title: 'A/B Testing & Experiments',
     icon: BeakerIcon,
-    color: '#FF6B6B',
+    color: 'var(--landing-accent-red)',
     description: 'Controlled experiments for testing campaign variations.',
     terms: [
       {
@@ -547,7 +547,7 @@ const fallbackGlossaryData: GlossaryCategory[] = [
     id: 'platforms',
     title: 'Ad Platforms',
     icon: CpuChipIcon,
-    color: '#00D4AA',
+    color: 'var(--landing-accent-teal)',
     description: 'Supported advertising platforms and their specific terminology.',
     terms: [
       {
@@ -638,20 +638,20 @@ export default function GlossaryPage() {
                 border: '1px solid rgba(255,179,71,0.3)',
               }}
             >
-              <BookOpenIcon className="w-4 h-4 text-[#FFB347]" />
-              <span className="text-sm font-medium text-[#FFB347]">Glossary</span>
+              <BookOpenIcon className="w-4 h-4 text-[var(--landing-accent-warm)]" />
+              <span className="text-sm font-medium text-[var(--landing-accent-warm)]">Glossary</span>
             </div>
 
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
               Platform{' '}
               <span
-                style={{ color: '#FF4D4D' }}
+                style={{ color: 'var(--landing-accent-coral)' }}
               >
                 Terminology
               </span>
             </h1>
 
-            <p className="text-lg mb-8" style={{ color: '#8B8D9E' }}>
+            <p className="text-lg mb-8" style={{ color: 'var(--landing-text)' }}>
               Complete reference of {totalTerms}+ terms, metrics, and values used across Stratum AI.
             </p>
 
@@ -660,12 +660,12 @@ export default function GlossaryPage() {
               <div
                 className="relative"
                 style={{
-                  background: '#12131F',
-                  border: '1px solid #1E1F30',
+                  background: 'var(--landing-card)',
+                  border: '1px solid var(--landing-border)',
                   borderRadius: '12px',
                 }}
               >
-                <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: 'rgba(139,141,158,0.7)' }} />
+                <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: 'var(--landing-text-dim)' }} />
                 <input
                   type="text"
                   placeholder="Search terms..."
@@ -681,7 +681,7 @@ export default function GlossaryPage() {
         {/* Category Navigation */}
         <section
           className="py-4 sticky top-16 z-10"
-          style={{ background: '#0A0B14' }}
+          style={{ background: 'var(--landing-bg)' }}
         >
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
             <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
@@ -737,7 +737,7 @@ export default function GlossaryPage() {
                     </div>
                     <div>
                       <h2 className="text-xl font-bold text-white">{category.title}</h2>
-                      <p className="text-sm" style={{ color: '#8B8D9E' }}>{category.description}</p>
+                      <p className="text-sm" style={{ color: 'var(--landing-text)' }}>{category.description}</p>
                     </div>
                   </div>
 
@@ -748,16 +748,16 @@ export default function GlossaryPage() {
                         key={index}
                         className="p-5 rounded-xl"
                         style={{
-                          background: '#12131F',
-                          border: '1px solid #1E1F30',
+                          background: 'var(--landing-card)',
+                          border: '1px solid var(--landing-border)',
                         }}
                       >
                         <h3 className="text-lg font-semibold text-white mb-2">{term.term}</h3>
-                        <p className="mb-3" style={{ color: '#8B8D9E' }}>{term.definition}</p>
+                        <p className="mb-3" style={{ color: 'var(--landing-text)' }}>{term.definition}</p>
 
                         {term.values && (
                           <div className="space-y-2 mt-4">
-                            <span className="text-xs font-medium uppercase tracking-wide" style={{ color: 'rgba(139,141,158,0.7)' }}>
+                            <span className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--landing-text-dim)' }}>
                               Values
                             </span>
                             <div className="grid gap-2">
@@ -776,7 +776,7 @@ export default function GlossaryPage() {
                                   >
                                     {value.value}
                                   </code>
-                                  <span className="text-sm" style={{ color: '#8B8D9E' }}>{value.description}</span>
+                                  <span className="text-sm" style={{ color: 'var(--landing-text)' }}>{value.description}</span>
                                 </div>
                               ))}
                             </div>
@@ -788,10 +788,10 @@ export default function GlossaryPage() {
                             className="mt-4 p-3 rounded-lg"
                             style={{ background: 'rgba(255,179,71,0.1)' }}
                           >
-                            <span className="text-xs font-medium text-[#FFB347] uppercase tracking-wide">
+                            <span className="text-xs font-medium text-[var(--landing-accent-warm)] uppercase tracking-wide">
                               Example
                             </span>
-                            <p className="text-sm mt-1" style={{ color: '#8B8D9E' }}>{term.example}</p>
+                            <p className="text-sm mt-1" style={{ color: 'var(--landing-text)' }}>{term.example}</p>
                           </div>
                         )}
                       </div>
@@ -802,7 +802,7 @@ export default function GlossaryPage() {
 
               {filteredCategories.length === 0 && (
                 <div className="text-center py-12">
-                  <p style={{ color: '#8B8D9E' }}>No terms found matching "{searchQuery}"</p>
+                  <p style={{ color: 'var(--landing-text)' }}>No terms found matching "{searchQuery}"</p>
                 </div>
               )}
             </div>
@@ -815,14 +815,14 @@ export default function GlossaryPage() {
             <div
               className="p-8 rounded-2xl"
               style={{
-                background: '#12131F',
-                border: '1px solid #1E1F30',
+                background: 'var(--landing-card)',
+                border: '1px solid var(--landing-border)',
               }}
             >
               <h3 className="text-xl font-bold text-white mb-2">
                 Can't find what you're looking for?
               </h3>
-              <p className="mb-6" style={{ color: '#8B8D9E' }}>
+              <p className="mb-6" style={{ color: 'var(--landing-text)' }}>
                 Check our documentation or reach out to our support team.
               </p>
               <div className="flex gap-4 justify-center">
@@ -830,8 +830,8 @@ export default function GlossaryPage() {
                   href="/docs"
                   className="px-6 py-3 rounded-full font-semibold text-white transition-all duration-200"
                   style={{
-                    background: '#FF4D4D',
-                    boxShadow: '0 4px 20px rgba(255,77,77,0.3)',
+                    background: 'var(--landing-accent-coral)',
+                    boxShadow: 'var(--landing-glow-coral)',
                   }}
                 >
                   View Docs
@@ -840,8 +840,8 @@ export default function GlossaryPage() {
                   href="/contact"
                   className="px-6 py-3 rounded-xl font-semibold text-white transition-all duration-200"
                   style={{
-                    background: 'rgba(255, 255, 255, 0.06)',
-                    border: '1px solid #1E1F30',
+                    background: 'var(--landing-surface-glass)',
+                    border: '1px solid var(--landing-border)',
                   }}
                 >
                   Contact Support

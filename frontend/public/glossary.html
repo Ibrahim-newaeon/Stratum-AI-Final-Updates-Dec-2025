@@ -5,10 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SaaS Glossary | Stratum AI - Master the Language of Revenue Operations</title>
   <meta name="description" content="Comprehensive glossary of SaaS, Revenue Operations, and AI terms with industry benchmarks. Essential definitions for business, technical, and marketing teams.">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.17/dist/tailwind.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@200,300,400,500,600,700&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,600,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
+    /* ── Arbitrary-value utilities (replaces CDN JIT) ── */
+    .top-\[72px\] { top: 72px; }
+    .bg-\[\#030303\]\/80 { background-color: rgba(3, 3, 3, 0.8); }
+    .text-\[10px\] { font-size: 10px; }
     /* ============================================
        STRATUM AI THEME SYSTEM v3.0
     ============================================ */
@@ -60,7 +66,7 @@
       --glass-border: rgba(0, 0, 0, 0.06);
     }
 
-    * { font-family: 'Inter', -apple-system, sans-serif; }
+    * { font-family: 'Satoshi', -apple-system, sans-serif; }
     body { background: var(--bg-void); color: var(--text-primary); overflow-x: hidden; }
 
     /* Gold Mesh Gradient Background */
@@ -265,10 +271,11 @@
   </style>
 </head>
 <body class="antialiased">
-  <div class="mesh-gradient"></div>
-  <div class="noise"></div>
+  <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-white focus:text-black focus:rounded">Skip to content</a>
+  <div class="mesh-gradient" aria-hidden="true"></div>
+  <div class="noise" aria-hidden="true"></div>
 
-  <div class="fixed inset-0 pointer-events-none overflow-hidden">
+  <div class="fixed inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
     <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl animate-morph"></div>
     <div class="absolute bottom-1/4 right-1/4 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl animate-morph" style="animation-delay: -4s;"></div>
   </div>
@@ -308,6 +315,7 @@
         Master the language of <span class="text-white">Revenue Operations</span> with industry benchmarks showing what's <span class="text-red-400">bad</span>, <span class="text-yellow-400">good</span>, and <span class="text-green-400">excellent</span>.
       </p>
       <div class="max-w-xl mx-auto mb-12 animate-fade-up delay-300">
+        <label for="searchInput" class="sr-only">Search glossary terms</label>
         <input type="text" id="searchInput" placeholder="Search terms... (ARR, API, Signal Health)" class="w-full px-6 py-4 rounded-2xl search-input text-white placeholder-gray-500">
       </div>
       <div class="grid grid-cols-2 md:grid-cols-5 gap-4 animate-fade-up delay-400">
@@ -360,14 +368,14 @@
   </section>
 
   <!-- Main Content -->
-  <main class="max-w-7xl mx-auto px-6 py-12">
+  <main id="main-content" class="max-w-7xl mx-auto px-6 py-12">
     <div id="glossaryContainer">
 
       <!-- BUSINESS TERMS -->
       <section id="business" class="mb-16 category-section" data-category="business">
         <div class="flex items-center gap-4 mb-8">
           <div class="w-12 h-12 rounded-2xl bg-amber-500/20 flex items-center justify-center">
-            <svg class="w-6 h-6 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <svg class="w-6 h-6 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           </div>
           <div>
             <h2 class="text-2xl font-bold text-white">Business & Revenue</h2>
@@ -544,7 +552,7 @@
       <section id="marketing" class="mb-16 category-section" data-category="marketing">
         <div class="flex items-center gap-4 mb-8">
           <div class="w-12 h-12 rounded-2xl bg-orange-500/20 flex items-center justify-center">
-            <svg class="w-6 h-6 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/></svg>
+            <svg class="w-6 h-6 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/></svg>
           </div>
           <div>
             <h2 class="text-2xl font-bold text-white">Marketing & Growth</h2>
@@ -719,7 +727,7 @@
       <section id="technical" class="mb-16 category-section" data-category="technical">
         <div class="flex items-center gap-4 mb-8">
           <div class="w-12 h-12 rounded-2xl bg-teal-500/20 flex items-center justify-center">
-            <svg class="w-6 h-6 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+            <svg class="w-6 h-6 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
           </div>
           <div>
             <h2 class="text-2xl font-bold text-white">Technical & Platform</h2>
@@ -806,7 +814,7 @@
       <section id="ai" class="mb-16 category-section" data-category="ai">
         <div class="flex items-center gap-4 mb-8">
           <div class="w-12 h-12 rounded-2xl bg-green-500/20 flex items-center justify-center">
-            <svg class="w-6 h-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+            <svg class="w-6 h-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
           </div>
           <div>
             <h2 class="text-2xl font-bold text-white">AI & Machine Learning</h2>
@@ -926,7 +934,7 @@
       <section id="stratum" class="mb-16 category-section" data-category="stratum">
         <div class="flex items-center gap-4 mb-8">
           <div class="w-12 h-12 rounded-2xl bg-yellow-500/20 flex items-center justify-center">
-            <svg class="w-6 h-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            <svg class="w-6 h-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
           </div>
           <div>
             <h2 class="text-2xl font-bold text-white">Stratum AI Platform</h2>

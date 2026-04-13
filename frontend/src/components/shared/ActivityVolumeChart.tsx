@@ -24,7 +24,7 @@ interface ActivityVolumeChartProps {
 export function ActivityVolumeChart({
   data,
   height = 200,
-  color = '#00c7be',
+  color = 'var(--landing-accent-cyan)',
 }: ActivityVolumeChartProps) {
   const formatDate = (date: string) => {
     const d = new Date(date);

@@ -3,84 +3,95 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Stratum AI | Dashboard Access</title>
+<meta name="description" content="Sign in to your Stratum AI dashboard. Access trust-gated autopilot, real-time signal health monitoring, and revenue operations.">
+<link href="https://api.fontshare.com/v2/css?f[]=clash-display@200,300,400,500,600,700&amp;display=swap" rel="stylesheet"/>
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,600,700&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;family=Manrope:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
-<script>
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        primary: "#FF1F6D",
-                        secondary: "#FF8C00",
-                        "cyber-yellow": "#FFD700",
-                        "cyber-red": "#FF3D00",
-                        "midnight": "#050B18",
-                        "cyber-blue": "#0A1628",
-                        "cyber-cyan": "#00F5FF",
-                    },
-                    fontFamily: {
-                        display: ["Manrope", "sans-serif"],
-                        sans: ["Inter", "sans-serif"],
-                        mono: ["JetBrains Mono", "monospace"],
-                    },
-                    borderRadius: {
-                        'xl': '24px',
-                        '2xl': '32px',
-                    }
-                },
-            },
-        };
-    </script>
-<style type="text/tailwindcss">
-        @layer components {
-            .container {
-                box-sizing: border-box;
-                margin-left: auto;
-                margin-right: auto;
-                max-width: 1500px;
-                width: 100%;
-            }
-            .glass-morphism {
-                background: #0d1424;
-                border: 1px solid rgba(255, 255, 255, 0.08);
-            }
-            .glass-card-blue {
-                background: #0a1020;
-                border: 1px solid rgba(255, 255, 255, 0.06);
-            }
-            .mesh-bg {
-                background-image: radial-gradient(circle at 1px 1px, rgba(255, 31, 109, 0.05) 1px, transparent 0);
-                background-size: 40px 40px;
-            }
-            .hero-glow {
-                background: radial-gradient(circle at 50% 50%, rgba(255, 31, 109, 0.1) 0%, transparent 70%);
-            }
-            .btn-cyber-primary {
-                background: linear-gradient(135deg, #FF1F6D 0%, #FF3D00 100%);
-                color: white;
-            }
-            .input-glow-orange:focus {
-                border-color: #FF8C00;
-                box-shadow: 0 0 0 2px rgba(255, 140, 0, 0.15);
-            }
-            .input-glow-cyan:focus {
-                border-color: #FF1F6D;
-                box-shadow: 0 0 0 2px rgba(255, 31, 109, 0.15);
-            }
-            .spectral-ring {
-                filter: none;
-            }
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.17/dist/tailwind.min.css">
+<style>
+        /* ── Arbitrary-value utilities (replaces CDN JIT) ── */
+        .text-\[11px\] { font-size: 11px; }
+        .text-\[10px\] { font-size: 10px; }
+        .tracking-\[0\.15em\] { letter-spacing: 0.15em; }
+        .tracking-\[0\.2em\] { letter-spacing: 0.2em; }
+        .bg-\[\#080E1C\] { background-color: #080E1C; }
+        .h-\[44px\] { height: 44px; }
+        .h-\[1px\] { height: 1px; }
+        .rounded-\[12px\] { border-radius: 12px; }
+        .hover\:shadow-\[0_0_30px_rgba\(255\,31\,109\,0\.5\)\]:hover { box-shadow: 0 0 30px rgba(255,31,109,0.5); }
+        .active\:scale-\[0\.98\]:active { transform: scale(0.98); }
+        /* ── Custom theme color utilities ── */
+        .bg-midnight { background-color: #050B18; }
+        .bg-midnight\/80 { background-color: rgba(5, 11, 24, 0.8); }
+        .bg-cyber-blue { background-color: #0A1628; }
+        .bg-cyber-cyan { background-color: #00F5FF; }
+        .bg-cyber-red { background-color: #FF3D00; }
+        .bg-secondary { background-color: #FF8C00; }
+        .bg-primary { background-color: #FF1F6D; }
+        .from-primary\/5 { --tw-gradient-from: rgba(255, 31, 109, 0.05) var(--tw-gradient-from-position); --tw-gradient-to: rgba(255, 31, 109, 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+        .selection\:bg-primary\/30 *::selection { background-color: rgba(255, 31, 109, 0.3); }
+        .selection\:bg-primary\/30::selection { background-color: rgba(255, 31, 109, 0.3); }
+        .text-primary { color: #FF1F6D; }
+        .hover\:text-primary:hover { color: #FF1F6D; }
+        .text-secondary { color: #FF8C00; }
+        .text-cyber-cyan { color: #00F5FF; }
+        .text-cyber-red { color: #FF3D00; }
+        .text-cyber-yellow { color: #FFD700; }
+        .border-primary { border-color: #FF1F6D; }
+        .focus\:ring-primary:focus { --tw-ring-color: #FF1F6D; }
+        .focus\:ring-offset-midnight:focus { --tw-ring-offset-color: #050B18; }
+        /* Custom font families */
+        .font-display { font-family: "Clash Display", sans-serif; }
+        .font-sans { font-family: "Satoshi", sans-serif; }
+        .font-mono { font-family: "JetBrains Mono", monospace; }
+        /* ── Component classes ── */
+        .container {
+            box-sizing: border-box;
+            margin-left: auto;
+            margin-right: auto;
+            max-width: 1500px;
+            width: 100%;
+        }
+        .glass-morphism {
+            background: #0d1424;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-card-blue {
+            background: #0a1020;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .mesh-bg {
+            background-image: radial-gradient(circle at 1px 1px, rgba(255, 31, 109, 0.05) 1px, transparent 0);
+            background-size: 40px 40px;
+        }
+        .hero-glow {
+            background: radial-gradient(circle at 50% 50%, rgba(255, 31, 109, 0.1) 0%, transparent 70%);
+        }
+        .btn-cyber-primary {
+            background: linear-gradient(135deg, #FF1F6D 0%, #FF3D00 100%);
+            color: white;
+        }
+        .input-glow-orange:focus {
+            border-color: #FF8C00;
+            box-shadow: 0 0 0 2px rgba(255, 140, 0, 0.15);
+        }
+        .input-glow-cyan:focus {
+            border-color: #FF1F6D;
+            box-shadow: 0 0 0 2px rgba(255, 31, 109, 0.15);
+        }
+        .spectral-ring {
+            filter: none;
         }
     </style>
 </head>
 <body class="bg-midnight text-white font-sans selection:bg-primary/30 min-h-screen overflow-hidden">
+<a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-white focus:text-black focus:rounded">Skip to content</a>
 <div class="container flex min-h-screen">
 <div class="hidden lg:flex lg:w-7/12 bg-midnight relative overflow-hidden items-center justify-center border-r border-white/5 mesh-bg">
-<div class="absolute inset-0 hero-glow"></div>
+<div class="absolute inset-0 hero-glow" aria-hidden="true"></div>
 <div class="absolute top-12 left-12 flex items-center gap-2">
 <img src="/images/stratum-logo.svg" alt="Stratum AI" class="h-9" style="filter: invert(1) brightness(2);">
 </div>
@@ -122,8 +133,8 @@
             Stratum AI // Enterprise Platform
         </div>
 </div>
-<div class="w-full lg:w-5/12 bg-[#080E1C] flex flex-col items-center justify-center p-6 relative">
-<div class="absolute top-0 right-0 w-full h-full bg-gradient-to-bl from-primary/5 to-transparent pointer-events-none"></div>
+<main id="main-content" class="w-full lg:w-5/12 bg-[#080E1C] flex flex-col items-center justify-center p-6 relative">
+<div class="absolute top-0 right-0 w-full h-full bg-gradient-to-bl from-primary/5 to-transparent pointer-events-none" aria-hidden="true"></div>
 <div class="w-full max-w-md glass-card-blue rounded-xl p-10 border-white/10 relative z-10 shadow-2xl mb-12">
 <div class="mb-10">
 <h2 class="text-3xl font-display font-extrabold text-white mb-2 tracking-tight">Sign In</h2>
@@ -151,7 +162,7 @@
 <input class="w-4 h-4 rounded border-white/10 bg-midnight text-primary focus:ring-primary focus:ring-offset-midnight" id="remember" type="checkbox"/>
 <label class="text-xs text-slate-400 font-medium" for="remember">Keep session active for 24h</label>
 </div>
-<button class="w-full btn-cyber-primary h-14 rounded-xl font-black text-sm tracking-[0.2em] flex items-center justify-center gap-3 hover:shadow-[0_0_30px_rgba(255,31,109,0.5)] transition-all active:scale-[0.98]">
+<button type="submit" class="w-full btn-cyber-primary h-14 rounded-xl font-black text-sm tracking-[0.2em] flex items-center justify-center gap-3 hover:shadow-[0_0_30px_rgba(255,31,109,0.5)] transition-all active:scale-[0.98]">
                     SIGN IN
                     <span class="material-symbols-outlined text-xl" aria-hidden="true">arrow_forward</span>
 </button>
@@ -170,7 +181,7 @@
 <span class="text-[10px] text-slate-600 font-mono tracking-widest">&copy; 2026 STRATUM ARTIFICIAL INTELLIGENCE</span>
 </div>
 </div>
-</div>
+</main>
 </div>
 
 </body></html>

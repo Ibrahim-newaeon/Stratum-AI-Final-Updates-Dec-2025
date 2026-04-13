@@ -105,7 +105,7 @@ export function SignalScoreTrend({ signalHealth, loading }: SignalScoreTrendProp
             y1={passY}
             x2={svgW}
             y2={passY}
-            stroke="#10b981"
+            stroke="hsl(var(--status-healthy))"
             strokeWidth="0.8"
             strokeDasharray="4 3"
             opacity="0.5"
@@ -115,7 +115,7 @@ export function SignalScoreTrend({ signalHealth, loading }: SignalScoreTrendProp
             y1={blockY}
             x2={svgW}
             y2={blockY}
-            stroke="#ef4444"
+            stroke="hsl(var(--status-critical))"
             strokeWidth="0.8"
             strokeDasharray="4 3"
             opacity="0.5"

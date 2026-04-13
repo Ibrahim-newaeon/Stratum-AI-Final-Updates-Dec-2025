@@ -24,7 +24,7 @@ const resourceCategories = [
     title: 'Documentation',
     description: 'Technical guides and API references',
     icon: BookOpenIcon,
-    color: '#FFB347',
+    color: 'var(--landing-accent-warm)',
     href: '/docs',
     cta: 'Browse Docs',
   },
@@ -32,7 +32,7 @@ const resourceCategories = [
     title: 'Case Studies',
     description: 'Success stories from our customers',
     icon: PresentationChartBarIcon,
-    color: '#00D4FF',
+    color: 'var(--landing-accent-sky)',
     href: '/case-studies',
     cta: 'Read Stories',
   },
@@ -40,7 +40,7 @@ const resourceCategories = [
     title: 'Blog',
     description: 'Latest news and industry insights',
     icon: NewspaperIcon,
-    color: '#00D4AA',
+    color: 'var(--landing-accent-teal)',
     href: '/blog',
     cta: 'Read Blog',
   },
@@ -48,7 +48,7 @@ const resourceCategories = [
     title: 'Changelog',
     description: 'Product updates and release notes',
     icon: DocumentTextIcon,
-    color: '#FFB800',
+    color: 'var(--landing-accent-amber)',
     href: '/changelog',
     cta: 'View Updates',
   },
@@ -60,28 +60,28 @@ const fallbackGuides = [
     description: 'Learn how to set up and optimize trust gates for maximum performance.',
     type: 'Guide',
     readTime: '15 min',
-    color: '#FFB347',
+    color: 'var(--landing-accent-warm)',
   },
   {
     title: 'CDP Implementation Playbook',
     description: 'Step-by-step guide to implementing your Customer Data Platform.',
     type: 'Playbook',
     readTime: '25 min',
-    color: '#00D4FF',
+    color: 'var(--landing-accent-sky)',
   },
   {
     title: 'Signal Health Optimization',
     description: 'Best practices for maintaining healthy signal scores.',
     type: 'Guide',
     readTime: '12 min',
-    color: '#00D4AA',
+    color: 'var(--landing-accent-teal)',
   },
   {
     title: 'Multi-Platform Audience Sync Setup',
     description: 'Configure audience sync across Meta, Google, TikTok, and Snapchat.',
     type: 'Tutorial',
     readTime: '10 min',
-    color: '#FF6B6B',
+    color: 'var(--landing-accent-red)',
   },
 ];
 
@@ -140,7 +140,7 @@ export default function ResourcesPage() {
         description: g.description,
         type: g.tag,
         readTime: '',
-        color: '#FFB347',
+        color: 'var(--landing-accent-warm)',
       }))
     : fallbackGuides;
 
@@ -184,13 +184,13 @@ export default function ResourcesPage() {
               <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
                 Learn, Grow, and{' '}
                 <span
-                  style={{ color: '#FF4D4D' }}
+                  style={{ color: 'var(--landing-accent-coral)' }}
                 >
                   Succeed
                 </span>
               </h1>
 
-              <p className="text-lg" style={{ color: '#8B8D9E' }}>
+              <p className="text-lg" style={{ color: 'var(--landing-text)' }}>
                 Everything you need to master trust-gated automation and transform your marketing
                 performance.
               </p>
@@ -208,8 +208,8 @@ export default function ResourcesPage() {
                   to={cat.href}
                   className="group p-6 rounded-2xl transition-all duration-300 hover:-translate-y-1"
                   style={{
-                    background: '#12131F',
-                    border: '1px solid #1E1F30',
+                    background: 'var(--landing-card)',
+                    border: '1px solid var(--landing-border)',
                   }}
                 >
                   <div
@@ -222,7 +222,7 @@ export default function ResourcesPage() {
                     <cat.icon className="w-6 h-6" style={{ color: cat.color }} />
                   </div>
                   <h3 className="text-lg font-semibold text-white mb-1">{cat.title}</h3>
-                  <p className="text-sm mb-4" style={{ color: '#8B8D9E' }}>{cat.description}</p>
+                  <p className="text-sm mb-4" style={{ color: 'var(--landing-text)' }}>{cat.description}</p>
                   <div
                     className="flex items-center gap-2 text-sm font-medium group-hover:gap-3 transition-all"
                     style={{ color: cat.color }}
@@ -253,8 +253,8 @@ export default function ResourcesPage() {
                   to="#"
                   className="group flex items-start gap-4 p-5 rounded-xl transition-all duration-200 hover:bg-white/5"
                   style={{
-                    background: '#12131F',
-                    border: '1px solid #1E1F30',
+                    background: 'var(--landing-card)',
+                    border: '1px solid var(--landing-border)',
                   }}
                 >
                   <div
@@ -277,12 +277,12 @@ export default function ResourcesPage() {
                       >
                         {guide.type}
                       </span>
-                      <span className="text-xs" style={{ color: 'rgba(139,141,158,0.7)' }}>{guide.readTime} read</span>
+                      <span className="text-xs" style={{ color: 'var(--landing-text-dim)' }}>{guide.readTime} read</span>
                     </div>
                     <h4 className="text-white font-medium group-hover:text-[#FF4D4D] transition-colors">
                       {guide.title}
                     </h4>
-                    <p className="text-sm mt-1" style={{ color: '#8B8D9E' }}>{guide.description}</p>
+                    <p className="text-sm mt-1" style={{ color: 'var(--landing-text)' }}>{guide.description}</p>
                   </div>
                 </Link>
               ))}
@@ -303,31 +303,31 @@ export default function ResourcesPage() {
                   key={webinar.title}
                   className="p-5 rounded-xl"
                   style={{
-                    background: '#12131F',
+                    background: 'var(--landing-card)',
                     border: webinar.isUpcoming
-                      ? '1px solid #1E1F30'
-                      : '1px solid #1E1F30',
+                      ? '1px solid var(--landing-border)'
+                      : '1px solid var(--landing-border)',
                   }}
                 >
                   {webinar.isUpcoming && (
                     <span
                       className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded mb-3"
-                      style={{ background: 'rgba(0, 255, 136, 0.2)', color: '#00FF88' }}
+                      style={{ background: 'rgba(0, 255, 136, 0.2)', color: 'var(--landing-status-green)' }}
                     >
                       <CalendarIcon className="w-3 h-3" />
                       Upcoming
                     </span>
                   )}
                   <h4 className="text-white font-medium mb-2">{webinar.title}</h4>
-                  <p className="text-sm mb-3" style={{ color: 'rgba(139,141,158,0.7)' }}>
+                  <p className="text-sm mb-3" style={{ color: 'var(--landing-text-dim)' }}>
                     {webinar.date} • {webinar.time}
                   </p>
-                  <p className="text-xs mb-4" style={{ color: '#8B8D9E' }}>
+                  <p className="text-xs mb-4" style={{ color: 'var(--landing-text)' }}>
                     Speakers: {webinar.speakers.join(', ')}
                   </p>
                   <button
                     className="flex items-center gap-2 text-sm font-medium transition-colors"
-                    style={{ color: webinar.isUpcoming ? '#FFB347' : '#00D4FF' }}
+                    style={{ color: webinar.isUpcoming ? 'var(--landing-accent-warm)' : 'var(--landing-accent-sky)' }}
                   >
                     {webinar.isUpcoming ? (
                       <>
@@ -360,8 +360,8 @@ export default function ResourcesPage() {
                   key={paper.title}
                   className="p-5 rounded-xl"
                   style={{
-                    background: '#12131F',
-                    border: '1px solid #1E1F30',
+                    background: 'var(--landing-card)',
+                    border: '1px solid var(--landing-border)',
                   }}
                 >
                   <div
@@ -374,9 +374,9 @@ export default function ResourcesPage() {
                     <DocumentTextIcon className="w-5 h-5 text-[#FF6B6B]" />
                   </div>
                   <h4 className="text-white font-medium mb-2">{paper.title}</h4>
-                  <p className="text-sm mb-3" style={{ color: '#8B8D9E' }}>{paper.description}</p>
+                  <p className="text-sm mb-3" style={{ color: 'var(--landing-text)' }}>{paper.description}</p>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs" style={{ color: 'rgba(139,141,158,0.7)' }}>
+                    <span className="text-xs" style={{ color: 'var(--landing-text-dim)' }}>
                       {paper.pages} pages • {paper.downloads} downloads
                     </span>
                     <button className="flex items-center gap-1 text-sm font-medium text-[#FF6B6B]">
@@ -396,13 +396,13 @@ export default function ResourcesPage() {
             <div
               className="p-8 rounded-2xl text-center"
               style={{
-                background: '#12131F',
-                border: '1px solid #1E1F30',
+                background: 'var(--landing-card)',
+                border: '1px solid var(--landing-border)',
               }}
             >
               <MicrophoneIcon className="w-10 h-10 mx-auto mb-4 text-[#FFB347]" />
               <h3 className="text-xl font-bold text-white mb-2">Stay in the Loop</h3>
-              <p className="mb-6" style={{ color: '#8B8D9E' }}>
+              <p className="mb-6" style={{ color: 'var(--landing-text)' }}>
                 Get the latest resources, guides, and product updates delivered to your inbox.
               </p>
               <div className="flex gap-3 max-w-md mx-auto">
@@ -411,15 +411,15 @@ export default function ResourcesPage() {
                   placeholder="Enter your email"
                   className="flex-1 px-4 py-3 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF4D4D]/50"
                   style={{
-                    background: '#0A0B14',
-                    border: '1px solid #1E1F30',
+                    background: 'var(--landing-bg)',
+                    border: '1px solid var(--landing-border)',
                   }}
                 />
                 <button
                   className="px-6 py-3 rounded-full font-semibold text-white transition-all duration-200"
                   style={{
-                    background: '#FF4D4D',
-                    boxShadow: '0 4px 20px rgba(255,77,77,0.3)',
+                    background: 'var(--landing-accent-coral)',
+                    boxShadow: 'var(--landing-glow-coral)',
                   }}
                 >
                   Subscribe

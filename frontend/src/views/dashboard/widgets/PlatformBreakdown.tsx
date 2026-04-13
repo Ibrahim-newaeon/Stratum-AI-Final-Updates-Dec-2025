@@ -90,7 +90,7 @@ export function PlatformBreakdown({ platforms, loading = false }: PlatformBreakd
   const getStatusIcon = (status: PlatformSummary['status']) => {
     switch (status) {
       case 'connected':
-        return <CheckCircle2 className="w-4 h-4 text-[#00c7be]" />;
+        return <CheckCircle2 className="w-4 h-4 text-status-healthy" />;
       case 'error':
         return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
       case 'disconnected':
@@ -125,7 +125,7 @@ export function PlatformBreakdown({ platforms, loading = false }: PlatformBreakd
         <h3 className="font-semibold">Platform Performance</h3>
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
           <span>Total: {formatCurrency(totalSpend)} spend</span>
-          <span className="text-[#00c7be]">{formatCurrency(totalRevenue)} revenue</span>
+          <span className="text-status-healthy">{formatCurrency(totalRevenue)} revenue</span>
         </div>
       </div>
 
@@ -139,7 +139,7 @@ export function PlatformBreakdown({ platforms, loading = false }: PlatformBreakd
               <div
                 key={platform.platform}
                 className={cn(
-                  'rounded-lg p-4 relative overflow-hidden backdrop-blur-md',
+                  'rounded-lg p-4 relative overflow-hidden',
                   'border transition-all duration-200',
                   config.borderColor
                 )}
@@ -182,7 +182,7 @@ export function PlatformBreakdown({ platforms, loading = false }: PlatformBreakd
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Revenue</span>
-                    <span className="font-medium text-[#00c7be]">
+                    <span className="font-medium text-status-healthy">
                       {formatCurrency(platform.revenue)}
                     </span>
                   </div>
@@ -192,7 +192,7 @@ export function PlatformBreakdown({ platforms, loading = false }: PlatformBreakd
                       className={cn(
                         'font-medium',
                         platform.roas !== null && platform.roas >= 3
-                          ? 'text-[#00c7be]'
+                          ? 'text-status-healthy'
                           : platform.roas !== null && platform.roas >= 1
                             ? 'text-yellow-500'
                             : 'text-muted-foreground'
@@ -222,6 +222,7 @@ export function PlatformBreakdown({ platforms, loading = false }: PlatformBreakd
                       disabled={syncPlatform.isPending}
                       className="flex items-center gap-1 px-2 py-1 rounded text-xs font-medium text-primary hover:bg-primary/10 transition-colors disabled:opacity-50"
                       title={`Sync ${platform.platform} campaigns`}
+                      aria-label={`Sync ${platform.platform} campaigns`}
                     >
                       <RefreshCw className={cn('w-3 h-3', syncPlatform.isPending && 'animate-spin')} />
                       Sync

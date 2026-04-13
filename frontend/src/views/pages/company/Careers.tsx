@@ -94,7 +94,7 @@ export default function Careers() {
             style={{
               background: 'rgba(255, 179, 71, 0.1)',
               border: '1px solid rgba(255, 179, 71, 0.3)',
-              color: '#FFB347',
+              color: 'var(--landing-accent-warm)',
             }}
           >
             <BriefcaseIcon className="w-4 h-4" />
@@ -102,19 +102,19 @@ export default function Careers() {
           </div>
           <h1
             className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6"
-            style={{ fontFamily: "'Inter', sans-serif" }}
+            style={{ fontFamily: "'Clash Display', sans-serif" }}
           >
             <span className="text-white">Build the Future</span>
             <br />
             <span
-              style={{ color: '#FF4D4D' }}
+              style={{ color: 'var(--landing-accent-coral)' }}
             >
               With Us
             </span>
           </h1>
           <p
             className="text-lg md:text-xl max-w-2xl mx-auto"
-            style={{ color: '#8B8D9E' }}
+            style={{ color: 'var(--landing-text)' }}
           >
             Join a team of passionate builders creating the next generation of revenue intelligence.
           </p>
@@ -131,8 +131,8 @@ export default function Careers() {
                 key={benefit}
                 className="p-4 rounded-xl text-center"
                 style={{
-                  background: '#12131F',
-                  border: '1px solid #1E1F30',
+                  background: 'var(--landing-card)',
+                  border: '1px solid var(--landing-border)',
                 }}
               >
                 <span className="text-sm text-white">{benefit}</span>
@@ -152,8 +152,8 @@ export default function Careers() {
                 key={job.title}
                 className="p-6 rounded-2xl transition-all hover:scale-[1.01] cursor-pointer"
                 style={{
-                  background: '#12131F',
-                  border: '1px solid #1E1F30',
+                  background: 'var(--landing-card)',
+                  border: '1px solid var(--landing-border)',
                 }}
               >
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -164,21 +164,21 @@ export default function Careers() {
                         className="text-sm px-2 py-1 rounded"
                         style={{
                           background: 'rgba(255, 179, 71, 0.1)',
-                          color: '#FFB347',
+                          color: 'var(--landing-accent-warm)',
                         }}
                       >
                         {job.department}
                       </span>
                       <span
                         className="flex items-center gap-1 text-sm"
-                        style={{ color: 'rgba(139, 141, 158, 0.7)' }}
+                        style={{ color: 'var(--landing-text-dim)' }}
                       >
                         <MapPinIcon className="w-4 h-4" />
                         {job.location}
                       </span>
                       <span
                         className="flex items-center gap-1 text-sm"
-                        style={{ color: 'rgba(139, 141, 158, 0.7)' }}
+                        style={{ color: 'var(--landing-text-dim)' }}
                       >
                         <CurrencyDollarIcon className="w-4 h-4" />
                         {job.salary}
@@ -188,7 +188,7 @@ export default function Careers() {
                   <button
                     className="px-6 py-2 rounded-lg text-sm font-medium transition-all hover:bg-white/10"
                     style={{
-                      background: 'rgba(255, 255, 255, 0.06)',
+                      background: 'var(--landing-surface-glass)',
                       border: '1px solid rgba(255, 255, 255, 0.2)',
                       color: '#ffffff',
                     }}
@@ -208,12 +208,12 @@ export default function Careers() {
           <div
             className="p-12 rounded-3xl"
             style={{
-              background: '#12131F',
-              border: '1px solid #1E1F30',
+              background: 'var(--landing-card)',
+              border: '1px solid var(--landing-border)',
             }}
           >
             <h2 className="text-3xl font-bold text-white mb-4">Don&apos;t See Your Role?</h2>
-            <p className="text-lg mb-8" style={{ color: '#8B8D9E' }}>
+            <p className="text-lg mb-8" style={{ color: 'var(--landing-text)' }}>
               We&apos;re always looking for talented people. Send us your resume and we&apos;ll
               reach out when a matching role opens up.
             </p>
@@ -221,7 +221,7 @@ export default function Careers() {
               to="/contact"
               className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-all hover:opacity-90"
               style={{
-                background: '#FF4D4D',
+                background: 'var(--landing-accent-coral)',
                 boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
               }}
             >

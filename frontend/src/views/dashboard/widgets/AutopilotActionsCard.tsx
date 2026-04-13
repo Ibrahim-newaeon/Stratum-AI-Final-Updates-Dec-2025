@@ -187,6 +187,8 @@ export function AutopilotActionsCard() {
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
+            aria-label={`Filter: ${tab.label}`}
+            aria-current={activeTab === tab.key ? "true" : undefined}
             className={cn(
               'flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200',
               activeTab === tab.key

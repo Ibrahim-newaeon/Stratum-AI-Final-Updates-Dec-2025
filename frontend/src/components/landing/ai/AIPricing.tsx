@@ -247,20 +247,20 @@ export default function AIPricing() {
                 border: '1px solid rgba(52, 199, 89, 0.3)',
               }}
             >
-              <SparklesIcon className="w-4 h-4" style={{ color: '#34c759' }} />
-              <span className="text-sm font-medium" style={{ color: '#34c759' }}>AI-Powered Pricing</span>
+              <SparklesIcon className="w-4 h-4" style={{ color: 'var(--landing-accent-green)' }} />
+              <span className="text-sm font-medium" style={{ color: 'var(--landing-accent-green)' }}>AI-Powered Pricing</span>
             </div>
           </div>
 
           <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-center">
             <span className="text-white">Pay for the AI</span>
             <br />
-            <span style={{ color: '#34c759' }}>
+            <span style={{ color: 'var(--landing-accent-green)' }}>
               Power You Need
             </span>
           </h2>
 
-          <p className="text-lg max-w-2xl mx-auto mb-10 text-center" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+          <p className="text-lg max-w-2xl mx-auto mb-10 text-center" style={{ color: 'var(--landing-text-white-soft)' }}>
             All plans include the core platform. Upgrade for advanced AI models and higher limits.
           </p>
 

@@ -44,8 +44,8 @@ export function SignalHealthCard({ signalHealth, loading = false }: SignalHealth
     switch (status) {
       case 'healthy':
         return {
-          color: 'text-[#00c7be]',
-          bgColor: 'bg-[#00c7be]/10',
+          color: 'text-status-healthy',
+          bgColor: 'bg-status-healthy/10',
           icon: CheckCircle2,
           label: 'Healthy',
         };
@@ -58,8 +58,8 @@ export function SignalHealthCard({ signalHealth, loading = false }: SignalHealth
         };
       case 'critical':
         return {
-          color: 'text-[#ff6b6b]',
-          bgColor: 'bg-[#ff6b6b]/10',
+          color: 'text-status-critical',
+          bgColor: 'bg-status-critical/10',
           icon: XCircle,
           label: 'Critical',
         };
@@ -77,9 +77,9 @@ export function SignalHealthCard({ signalHealth, loading = false }: SignalHealth
   const StatusIcon = statusConfig.icon;
 
   const getScoreColor = (score: number) => {
-    if (score >= 70) return 'text-[#00c7be]';
+    if (score >= 70) return 'text-status-healthy';
     if (score >= 40) return 'text-yellow-500';
-    return 'text-[#ff6b6b]';
+    return 'text-status-critical';
   };
 
   const formatFreshness = (minutes: number | null) => {
@@ -95,7 +95,7 @@ export function SignalHealthCard({ signalHealth, loading = false }: SignalHealth
   return (
     <div className="glass border border-white/10 rounded-xl p-5 h-full card-3d">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold">Signal Health</h3>
+        <h3 className="font-semibold font-display">Signal Health</h3>
         <div
           className={cn(
             'flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ai-chip',
@@ -128,10 +128,10 @@ export function SignalHealthCard({ signalHealth, loading = false }: SignalHealth
             className={cn(
               'h-full rounded-full transition-all duration-500',
               signalHealth.overall_score >= 70
-                ? 'bg-gradient-to-r from-[#00c7be] to-[#34c759]'
+                ? 'bg-gradient-to-r from-status-healthy to-emerald-500'
                 : signalHealth.overall_score >= 40
                   ? 'bg-gradient-to-r from-yellow-500 to-amber-400'
-                  : 'bg-gradient-to-r from-[#ff6b6b] to-[#ff8a8a]'
+                  : 'bg-gradient-to-r from-status-critical to-red-400'
             )}
             style={{ width: `${signalHealth.overall_score}%` }}
           />
@@ -170,7 +170,7 @@ export function SignalHealthCard({ signalHealth, loading = false }: SignalHealth
           <span
             className={cn(
               'font-medium',
-              signalHealth.api_health ? 'text-[#00c7be]' : 'text-[#ff6b6b]'
+              signalHealth.api_health ? 'text-status-healthy' : 'text-status-critical'
             )}
           >
             {signalHealth.api_health ? 'Online' : 'Offline'}
@@ -185,7 +185,7 @@ export function SignalHealthCard({ signalHealth, loading = false }: SignalHealth
           <span
             className={cn(
               'font-medium',
-              signalHealth.autopilot_enabled ? 'text-[#00c7be]' : 'text-muted-foreground'
+              signalHealth.autopilot_enabled ? 'text-status-healthy' : 'text-muted-foreground'
             )}
           >
             {signalHealth.autopilot_enabled ? 'Enabled' : 'Disabled'}

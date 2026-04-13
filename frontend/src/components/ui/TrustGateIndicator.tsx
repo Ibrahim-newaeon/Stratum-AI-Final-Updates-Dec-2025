@@ -37,7 +37,7 @@ function getTrustState(score: number): TrustState {
     return {
       score,
       status: 'PASS',
-      color: style.getPropertyValue('--teal').trim() || '#00c7be',
+      color: style.getPropertyValue('--teal').trim() || 'var(--landing-accent-cyan)',
       bgColor: style.getPropertyValue('--teal-light').trim() || 'rgba(0, 199, 190, 0.15)',
     };
   } else if (score >= DEGRADED_THRESHOLD) {
@@ -114,7 +114,7 @@ export const TrustGateIndicator = memo(function TrustGateIndicator({
                 <div
                   className="w-1.5 h-1.5 rounded-full flex-shrink-0"
                   style={{
-                    backgroundColor: comp.value >= 70 ? '#00c7be' : comp.value >= 40 ? '#f59e0b' : '#ff6b6b',
+                    backgroundColor: comp.value >= 70 ? 'var(--landing-accent-cyan)' : comp.value >= 40 ? '#f59e0b' : '#ff6b6b',
                   }}
                 />
                 <span className="text-xs truncate" style={{ color: 'rgba(255,255,255,0.6)' }}>
@@ -125,7 +125,7 @@ export const TrustGateIndicator = memo(function TrustGateIndicator({
                 <span
                   className="text-xs font-mono font-medium"
                   style={{
-                    color: comp.value >= 70 ? '#00c7be' : comp.value >= 40 ? '#f59e0b' : '#ff6b6b',
+                    color: comp.value >= 70 ? 'var(--landing-accent-cyan)' : comp.value >= 40 ? '#f59e0b' : '#ff6b6b',
                   }}
                 >
                   {comp.value}
@@ -204,7 +204,7 @@ export const TrustGateIndicator = memo(function TrustGateIndicator({
           </div>
           <span
             className="text-xs"
-            style={{ color: 'rgba(255, 255, 255, 0.5)' }}
+            style={{ color: 'var(--landing-text-white-soft)' }}
           >
             Signal Health
           </span>

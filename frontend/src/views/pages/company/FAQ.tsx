@@ -211,19 +211,19 @@ export default function FAQ() {
       {/* Hero Section */}
       <section className="py-20 px-6">
         <div className="max-w-7xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm mb-6" style={{ background: 'rgba(255, 179, 71, 0.1)', border: '1px solid rgba(255, 179, 71, 0.3)', color: '#FFB347' }}>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm mb-6" style={{ background: 'rgba(255, 179, 71, 0.1)', border: '1px solid rgba(255, 179, 71, 0.3)', color: 'var(--landing-accent-warm)' }}>
             <QuestionMarkCircleIcon className="w-4 h-4" />
             Help Center
           </div>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
             <span className="text-white">Frequently Asked</span>
             <br />
-            <span className="text-[#FF4D4D]">Questions</span>
+            <span className="text-[var(--landing-accent-coral)]">Questions</span>
           </h1>
-          <p className="text-lg md:text-xl text-[#8B8D9E] max-w-2xl mx-auto mb-8">
+          <p className="text-lg md:text-xl text-[var(--landing-text)] max-w-2xl mx-auto mb-8">
             Everything you need to know about Stratum AI. Can&apos;t find what you&apos;re looking
             for?{' '}
-            <a href="/contact" className="text-[#FF4D4D] hover:underline">
+            <a href="/contact" className="text-[var(--landing-accent-coral)] hover:underline">
               Contact our team
             </a>
           </p>
@@ -237,7 +237,7 @@ export default function FAQ() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-12 pr-4 py-4 rounded-2xl text-white placeholder-white/40 outline-none transition-all focus:ring-2 focus:ring-[#FF4D4D]/50"
-              style={{ background: '#12131F', border: '1px solid #1E1F30' }}
+              style={{ background: 'var(--landing-card)', border: '1px solid var(--landing-border)' }}
             />
           </div>
         </div>
@@ -251,11 +251,11 @@ export default function FAQ() {
               const Icon = category.icon;
               const isSelected = selectedCategory === category.id;
               const colorMap: Record<string, string> = {
-                'text-green-400': '#34c759',
+                'text-green-400': 'var(--landing-accent-green)',
                 'text-purple-400': '#a855f7',
                 'text-cyan-400': '#06b6d4',
                 'text-orange-400': '#f97316',
-                'text-blue-400': '#3b82f6',
+                'text-blue-400': 'var(--landing-accent-blue)',
                 'text-pink-400': '#ec4899',
                 'text-white': '#ffffff',
               };
@@ -266,11 +266,11 @@ export default function FAQ() {
                   key={category.id}
                   onClick={() => setSelectedCategory(category.id)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                    isSelected ? 'text-white' : 'text-[#8B8D9E] hover:text-white'
+                    isSelected ? 'text-white' : 'text-[var(--landing-text)] hover:text-white'
                   }`}
                   style={{
-                    background: isSelected ? `${accentColor}20` : '#12131F',
-                    border: `1px solid ${isSelected ? `${accentColor}40` : '#1E1F30'}`,
+                    background: isSelected ? `${accentColor}20` : 'var(--landing-card)',
+                    border: `1px solid ${isSelected ? `${accentColor}40` : 'var(--landing-border)'}`,
                   }}
                 >
                   <Icon
@@ -291,7 +291,7 @@ export default function FAQ() {
           {filteredFaqs.length === 0 ? (
             <div className="text-center py-12">
               <QuestionMarkCircleIcon className="w-12 h-12 text-white/20 mx-auto mb-4" />
-              <p className="text-[#8B8D9E]">No questions found matching your search.</p>
+              <p className="text-[var(--landing-text)]">No questions found matching your search.</p>
             </div>
           ) : (
             <div
@@ -301,11 +301,11 @@ export default function FAQ() {
                 const Icon = getCategoryIcon(faq.category);
                 const categoryData = categories.find((c) => c.id === faq.category);
                 const colorMap: Record<string, string> = {
-                  'text-green-400': '#34c759',
+                  'text-green-400': 'var(--landing-accent-green)',
                   'text-purple-400': '#a855f7',
                   'text-cyan-400': '#06b6d4',
                   'text-orange-400': '#f97316',
-                  'text-blue-400': '#3b82f6',
+                  'text-blue-400': 'var(--landing-accent-blue)',
                   'text-pink-400': '#ec4899',
                   'text-white': '#ffffff',
                 };
@@ -350,7 +350,7 @@ export default function FAQ() {
                     </h3>
 
                     {/* Answer */}
-                    <p className="text-sm text-[#8B8D9E] leading-relaxed">{faq.answer}</p>
+                    <p className="text-sm text-[var(--landing-text)] leading-relaxed">{faq.answer}</p>
                   </div>
                 );
               })}
@@ -362,25 +362,25 @@ export default function FAQ() {
       {/* Contact CTA */}
       <section className="py-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="p-8 rounded-3xl" style={{ background: '#12131F', border: '1px solid #1E1F30' }}>
+          <div className="p-8 rounded-3xl" style={{ background: 'var(--landing-card)', border: '1px solid var(--landing-border)' }}>
             <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
               Still have questions?
             </h2>
-            <p className="text-[#8B8D9E] mb-6 max-w-xl mx-auto">
+            <p className="text-[var(--landing-text)] mb-6 max-w-xl mx-auto">
               Our team is here to help. Reach out and we&apos;ll get back to you as soon as
               possible.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
                 href="/contact"
-                className="px-6 py-3 rounded-full font-semibold text-white bg-[#FF4D4D] hover:bg-[#FF6B6B] transition-colors shadow-lg shadow-[rgba(255,77,77,0.3)]"
+                className="px-6 py-3 rounded-full font-semibold text-white bg-[var(--landing-accent-coral)] hover:bg-[var(--landing-accent-red)] transition-colors shadow-lg shadow-[rgba(255,77,77,0.3)]"
               >
                 Contact Support
               </a>
               <a
                 href="mailto:sales@stratum.ai"
                 className="px-6 py-3 rounded-xl font-semibold text-white hover:bg-white/10 transition-colors"
-                style={{ background: '#12131F', border: '1px solid #1E1F30' }}
+                style={{ background: 'var(--landing-card)', border: '1px solid var(--landing-border)' }}
               >
                 Email Us
               </a>

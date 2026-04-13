@@ -26,7 +26,7 @@ export default function DPA() {
             style={{
               background: 'rgba(255, 179, 71, 0.1)',
               border: '1px solid rgba(255, 179, 71, 0.3)',
-              color: '#FFB347',
+              color: 'var(--landing-accent-warm)',
             }}
           >
             <DocumentCheckIcon className="w-4 h-4" />
@@ -35,7 +35,7 @@ export default function DPA() {
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
             Data Processing Agreement
           </h1>
-          <p style={{ color: 'rgba(139, 141, 158, 0.7)' }}>Last updated: January 15, 2026</p>
+          <p style={{ color: 'var(--landing-text-dim)' }}>Last updated: January 15, 2026</p>
         </div>
       </section>
 
@@ -51,11 +51,11 @@ export default function DPA() {
               <div
                 className="prose prose-invert max-w-none p-8 rounded-3xl"
                 style={{
-                  background: '#12131F',
-                  border: '1px solid #1E1F30',
+                  background: 'var(--landing-card)',
+                  border: '1px solid var(--landing-border)',
                 }}
               >
-                <div className="space-y-8" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>
+                <div className="space-y-8" style={{ color: 'var(--landing-text-white-mid)' }}>
                   <section>
                     <h2 className="text-2xl font-bold text-white mb-4">1. Introduction</h2>
                     <p>
@@ -222,19 +222,19 @@ export default function DPA() {
               <div
                 className="p-8 rounded-3xl"
                 style={{
-                  background: '#12131F',
-                  border: '1px solid #1E1F30',
+                  background: 'var(--landing-card)',
+                  border: '1px solid var(--landing-border)',
                 }}
               >
                 <h2 className="text-2xl font-bold text-white mb-4">Need a Signed Copy?</h2>
-                <p className="mb-6" style={{ color: '#8B8D9E' }}>
+                <p className="mb-6" style={{ color: 'var(--landing-text)' }}>
                   Request a pre-signed DPA for your records or contact us for a custom agreement.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <button
                     className="px-6 py-3 rounded-full font-semibold text-white transition-all hover:opacity-90"
                     style={{
-                      background: '#FF4D4D',
+                      background: 'var(--landing-accent-coral)',
                       boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
                     }}
                   >
@@ -243,7 +243,7 @@ export default function DPA() {
                   <button
                     className="px-6 py-3 rounded-xl font-semibold text-white transition-all hover:bg-white/10"
                     style={{
-                      background: 'rgba(255, 255, 255, 0.06)',
+                      background: 'var(--landing-surface-glass)',
                       border: '1px solid rgba(255, 255, 255, 0.2)',
                     }}
                   >

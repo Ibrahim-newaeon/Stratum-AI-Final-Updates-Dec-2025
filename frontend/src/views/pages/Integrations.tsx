@@ -12,8 +12,8 @@ const categoryColors: Record<string, string> = {
   'Ad Platforms': '#f97316',
   'Analytics & Attribution': '#06b6d4',
   'CRM & Sales': '#a855f7',
-  'E-commerce': '#34c759',
-  Communication: '#3b82f6',
+  'E-commerce': 'var(--landing-accent-green)',
+  Communication: 'var(--landing-accent-blue)',
 };
 
 const fallbackIntegrations = {
@@ -75,19 +75,19 @@ export default function Integrations() {
         <div className="max-w-7xl mx-auto text-center">
           <h1
             className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6"
-            style={{ fontFamily: "'Inter', sans-serif" }}
+            style={{ fontFamily: "'Clash Display', sans-serif" }}
           >
             <span className="text-white">Connect Your</span>
             <br />
             <span
-              style={{ color: '#FF4D4D' }}
+              style={{ color: 'var(--landing-accent-coral)' }}
             >
               Entire Stack
             </span>
           </h1>
           <p
             className="text-lg md:text-xl max-w-2xl mx-auto mb-10"
-            style={{ color: '#8B8D9E' }}
+            style={{ color: 'var(--landing-text)' }}
           >
             Stratum AI integrates with 50+ platforms to unify your marketing data and automate
             across channels.
@@ -96,7 +96,7 @@ export default function Integrations() {
             to="/signup"
             className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-all hover:opacity-90"
             style={{
-              background: '#FF4D4D',
+              background: 'var(--landing-accent-coral)',
               boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
             }}
           >
@@ -119,8 +119,8 @@ export default function Integrations() {
                       key={integration.name}
                       className="p-6 rounded-2xl transition-all hover:scale-[1.02] group"
                       style={{
-                        background: '#12131F',
-                        border: '1px solid #1E1F30',
+                        background: 'var(--landing-card)',
+                        border: '1px solid var(--landing-border)',
                         borderLeft: `3px solid ${color}`,
                       }}
                     >
@@ -136,7 +136,7 @@ export default function Integrations() {
                         </div>
                         <div>
                           <h3 className="font-semibold text-white">{integration.name}</h3>
-                          <p className="text-sm" style={{ color: 'rgba(139, 141, 158, 0.7)' }}>
+                          <p className="text-sm" style={{ color: 'var(--landing-text-dim)' }}>
                             {integration.description}
                           </p>
                         </div>
@@ -156,12 +156,12 @@ export default function Integrations() {
           <div
             className="p-12 rounded-3xl"
             style={{
-              background: '#12131F',
-              border: '1px solid #1E1F30',
+              background: 'var(--landing-card)',
+              border: '1px solid var(--landing-border)',
             }}
           >
             <h2 className="text-3xl font-bold text-white mb-4">Need a Custom Integration?</h2>
-            <p className="text-lg mb-8" style={{ color: '#8B8D9E' }}>
+            <p className="text-lg mb-8" style={{ color: 'var(--landing-text)' }}>
               Our API allows you to connect any data source. Contact us to discuss your needs.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -169,7 +169,7 @@ export default function Integrations() {
                 to="/api-docs"
                 className="px-8 py-4 rounded-xl font-semibold text-white transition-all hover:bg-white/10"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.06)',
+                  background: 'var(--landing-surface-glass)',
                   border: '1px solid rgba(255, 255, 255, 0.2)',
                 }}
               >
@@ -179,7 +179,7 @@ export default function Integrations() {
                 to="/contact"
                 className="px-8 py-4 rounded-full font-semibold text-white transition-all hover:opacity-90"
                 style={{
-                  background: '#FF4D4D',
+                  background: 'var(--landing-accent-coral)',
                   boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
                 }}
               >
