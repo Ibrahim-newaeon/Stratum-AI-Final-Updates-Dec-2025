@@ -3168,3 +3168,319 @@ async def get_goal_tracking(
         data=response,
         message="Goal tracking generated",
     )
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Feature #12 — Attribution Confidence Dashboard
+# ═══════════════════════════════════════════════════════════════════════════════
+
+from app.analytics.logic.attribution_confidence import (
+    AttributionConfidenceResponse,
+    build_attribution_confidence,
+)
+
+
+@router.get("/attribution-confidence")
+async def get_attribution_confidence(
+    user: CurrentUserDep,
+    db: AsyncSession = Depends(get_async_session),
+) -> APIResponse:
+    """
+    Returns attribution confidence analysis across channels and models.
+    Evaluates data quality, model agreement, and channel-level confidence.
+    """
+    tenant_id = user.current_tenant_id
+    if not tenant_id:
+        raise HTTPException(status_code=400, detail="No active tenant")
+
+    campaigns: list[dict] = []
+
+    try:
+        result = await db.execute(
+            select(Campaign).where(
+                and_(
+                    Campaign.tenant_id == tenant_id,
+                    Campaign.status != CampaignStatus.DELETED,
+                )
+            )
+        )
+        rows = result.scalars().all()
+
+        for c in rows:
+            spend = float(c.total_spend_cents or 0) / 100
+            revenue = float(c.revenue_cents or 0) / 100 if hasattr(c, "revenue_cents") else 0
+            conversions = int(c.conversions or 0) if hasattr(c, "conversions") else 0
+            platform = str(c.platform.value) if c.platform else "unknown"
+
+            campaigns.append({
+                "platform": platform,
+                "spend": spend,
+                "revenue": revenue,
+                "conversions": conversions,
+            })
+
+    except (SQLAlchemyError, ValueError, TypeError) as e:
+        logger.warning("attribution_confidence_db_error", error=str(e))
+        return APIResponse(
+            success=True,
+            data=AttributionConfidenceResponse(
+                summary="Attribution data temporarily unavailable.",
+                confidence_label="insufficient",
+            ),
+            message="Attribution confidence (limited data)",
+        )
+
+    response = build_attribution_confidence(campaigns=campaigns)
+
+    logger.info(
+        "attribution_confidence_generated",
+        tenant_id=tenant_id,
+        channels=response.channels_tracked,
+        overall_confidence=response.overall_confidence,
+    )
+
+    return APIResponse(
+        success=True,
+        data=response,
+        message="Attribution confidence generated",
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Feature #13 — Customer LTV Forecasting
+# ═══════════════════════════════════════════════════════════════════════════════
+
+from app.analytics.logic.ltv_forecasting import (
+    LTVForecastResponse,
+    build_ltv_forecast,
+)
+
+
+@router.get("/ltv-forecast")
+async def get_ltv_forecast(
+    user: CurrentUserDep,
+    db: AsyncSession = Depends(get_async_session),
+) -> APIResponse:
+    """
+    Returns customer LTV forecasting by cohort and segment.
+    Projects lifetime value, analyzes unit economics, and identifies risk.
+    """
+    tenant_id = user.current_tenant_id
+    if not tenant_id:
+        raise HTTPException(status_code=400, detail="No active tenant")
+
+    campaigns: list[dict] = []
+
+    try:
+        result = await db.execute(
+            select(Campaign).where(
+                and_(
+                    Campaign.tenant_id == tenant_id,
+                    Campaign.status != CampaignStatus.DELETED,
+                )
+            )
+        )
+        rows = result.scalars().all()
+
+        for c in rows:
+            spend = float(c.total_spend_cents or 0) / 100
+            revenue = float(c.revenue_cents or 0) / 100 if hasattr(c, "revenue_cents") else 0
+            conversions = int(c.conversions or 0) if hasattr(c, "conversions") else 0
+            platform = str(c.platform.value) if c.platform else "unknown"
+
+            campaigns.append({
+                "platform": platform,
+                "spend": spend,
+                "revenue": revenue,
+                "conversions": conversions,
+            })
+
+    except (SQLAlchemyError, ValueError, TypeError) as e:
+        logger.warning("ltv_forecast_db_error", error=str(e))
+        return APIResponse(
+            success=True,
+            data=LTVForecastResponse(
+                summary="LTV data temporarily unavailable.",
+                ltv_health="poor",
+            ),
+            message="LTV forecast (limited data)",
+        )
+
+    response = build_ltv_forecast(campaigns=campaigns)
+
+    logger.info(
+        "ltv_forecast_generated",
+        tenant_id=tenant_id,
+        customers=response.total_customers,
+        avg_ltv=response.overall_avg_ltv,
+        ltv_health=response.ltv_health,
+    )
+
+    return APIResponse(
+        success=True,
+        data=response,
+        message="LTV forecast generated",
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Feature #14 — Campaign Creative Scoring
+# ═══════════════════════════════════════════════════════════════════════════════
+
+from app.analytics.logic.creative_scoring import (
+    CreativeScoringResponse,
+    build_creative_scoring,
+)
+
+
+@router.get("/creative-scoring")
+async def get_creative_scoring(
+    user: CurrentUserDep,
+    db: AsyncSession = Depends(get_async_session),
+) -> APIResponse:
+    """
+    Returns creative performance scoring across campaigns.
+    Grades creatives A-F, detects fatigue, identifies winners.
+    """
+    tenant_id = user.current_tenant_id
+    if not tenant_id:
+        raise HTTPException(status_code=400, detail="No active tenant")
+
+    campaigns: list[dict] = []
+
+    try:
+        result = await db.execute(
+            select(Campaign).where(
+                and_(
+                    Campaign.tenant_id == tenant_id,
+                    Campaign.status != CampaignStatus.DELETED,
+                )
+            )
+        )
+        rows = result.scalars().all()
+
+        for c in rows:
+            spend = float(c.total_spend_cents or 0) / 100
+            revenue = float(c.revenue_cents or 0) / 100 if hasattr(c, "revenue_cents") else 0
+            conversions = int(c.conversions or 0) if hasattr(c, "conversions") else 0
+            impressions = int(c.impressions or 0) if hasattr(c, "impressions") else 0
+            clicks = int(c.clicks or 0) if hasattr(c, "clicks") else 0
+            platform = str(c.platform.value) if c.platform else "unknown"
+            name = c.name or f"Campaign {c.id}"
+
+            campaigns.append({
+                "name": name,
+                "platform": platform,
+                "spend": spend,
+                "revenue": revenue,
+                "conversions": conversions,
+                "impressions": impressions,
+                "clicks": clicks,
+                "days_running": 14,
+            })
+
+    except (SQLAlchemyError, ValueError, TypeError) as e:
+        logger.warning("creative_scoring_db_error", error=str(e))
+        return APIResponse(
+            success=True,
+            data=CreativeScoringResponse(
+                summary="Creative scoring data temporarily unavailable.",
+                overall_grade="F",
+            ),
+            message="Creative scoring (limited data)",
+        )
+
+    response = build_creative_scoring(campaigns=campaigns)
+
+    logger.info(
+        "creative_scoring_generated",
+        tenant_id=tenant_id,
+        total_creatives=response.total_creatives,
+        overall_grade=response.overall_grade,
+    )
+
+    return APIResponse(
+        success=True,
+        data=response,
+        message="Creative scoring generated",
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Feature #15 — Competitor Intelligence Automation
+# ═══════════════════════════════════════════════════════════════════════════════
+
+from app.analytics.logic.competitor_intel import (
+    CompetitorIntelResponse,
+    build_competitor_intel,
+)
+
+
+@router.get("/competitor-intel")
+async def get_competitor_intel(
+    user: CurrentUserDep,
+    db: AsyncSession = Depends(get_async_session),
+) -> APIResponse:
+    """
+    Returns competitive intelligence from market signals.
+    Estimates SOV, competitor profiles, platform competition, opportunities.
+    """
+    tenant_id = user.current_tenant_id
+    if not tenant_id:
+        raise HTTPException(status_code=400, detail="No active tenant")
+
+    campaigns: list[dict] = []
+
+    try:
+        result = await db.execute(
+            select(Campaign).where(
+                and_(
+                    Campaign.tenant_id == tenant_id,
+                    Campaign.status != CampaignStatus.DELETED,
+                )
+            )
+        )
+        rows = result.scalars().all()
+
+        for c in rows:
+            spend = float(c.total_spend_cents or 0) / 100
+            revenue = float(c.revenue_cents or 0) / 100 if hasattr(c, "revenue_cents") else 0
+            conversions = int(c.conversions or 0) if hasattr(c, "conversions") else 0
+            impressions = int(c.impressions or 0) if hasattr(c, "impressions") else 0
+            clicks = int(c.clicks or 0) if hasattr(c, "clicks") else 0
+            platform = str(c.platform.value) if c.platform else "unknown"
+
+            campaigns.append({
+                "platform": platform,
+                "spend": spend,
+                "revenue": revenue,
+                "conversions": conversions,
+                "impressions": impressions,
+                "clicks": clicks,
+            })
+
+    except (SQLAlchemyError, ValueError, TypeError) as e:
+        logger.warning("competitor_intel_db_error", error=str(e))
+        return APIResponse(
+            success=True,
+            data=CompetitorIntelResponse(
+                summary="Competitive intelligence data temporarily unavailable.",
+                market_position="unknown",
+            ),
+            message="Competitor intelligence (limited data)",
+        )
+
+    response = build_competitor_intel(campaigns=campaigns)
+
+    logger.info(
+        "competitor_intel_generated",
+        tenant_id=tenant_id,
+        platforms=response.platforms_tracked,
+        market_position=response.market_position,
+    )
+
+    return APIResponse(
+        success=True,
+        data=response,
+        message="Competitor intelligence generated",
+    )

@@ -78,6 +78,10 @@ import { UnifiedNotificationsCard } from '@/components/dashboard/UnifiedNotifica
 import { CrossPlatformOptimizerCard } from '@/components/dashboard/CrossPlatformOptimizerCard'
 import { AudienceLifecycleCard } from '@/components/dashboard/AudienceLifecycleCard'
 import { GoalTrackingCard } from '@/components/dashboard/GoalTrackingCard'
+import { AttributionConfidenceCard } from '@/components/dashboard/AttributionConfidenceCard'
+import { LTVForecastCard } from '@/components/dashboard/LTVForecastCard'
+import { CreativeScoringCard } from '@/components/dashboard/CreativeScoringCard'
+import { CompetitorIntelCard } from '@/components/dashboard/CompetitorIntelCard'
 
 export function Overview() {
   const { t } = useTranslation()
@@ -372,6 +376,18 @@ export function Overview() {
 
       {/* Goal Tracking & Pacing Card */}
       <GoalTrackingCard />
+
+      {/* Attribution Confidence Dashboard Card */}
+      <AttributionConfidenceCard />
+
+      {/* Customer LTV Forecast Card */}
+      <LTVForecastCard />
+
+      {/* Campaign Creative Scoring Card */}
+      <CreativeScoringCard />
+
+      {/* Competitor Intelligence Card */}
+      <CompetitorIntelCard />
 
       {/* Audience Lifecycle Automations Card */}
       <AudienceLifecycleCard />

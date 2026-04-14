@@ -1373,9 +1373,332 @@ export function useGoalTracking(enabled = true) {
   });
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// Feature #12 — Attribution Confidence Dashboard
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export interface ChannelAttribution {
+  channel: string;
+  attributed_revenue: number;
+  attributed_conversions: number;
+  confidence_score: number;
+  confidence_label: 'high' | 'medium' | 'low' | 'insufficient';
+  sample_size: number;
+  data_quality: number;
+  last_touch_pct: number;
+  first_touch_pct: number;
+  linear_pct: number;
+  data_driven_pct: number;
+  model_agreement: number;
+  revenue_share_pct: number;
+}
+
+export interface ModelComparison {
+  model_name: string;
+  display_name: string;
+  total_attributed_revenue: number;
+  total_conversions: number;
+  confidence: number;
+  strengths: string[];
+  weaknesses: string[];
+  best_for: string;
+}
+
+export interface DataQualityMetric {
+  metric_name: string;
+  label: string;
+  score: number;
+  status: 'good' | 'warning' | 'poor';
+  description: string;
+  impact: 'high' | 'medium' | 'low';
+}
+
+export interface AttributionRecommendation {
+  title: string;
+  description: string;
+  priority: 'high' | 'medium' | 'low';
+  impact_area: string;
+  effort: string;
+}
+
+export interface AttributionConfidenceResponse {
+  summary: string;
+  overall_confidence: number;
+  confidence_label: 'high' | 'medium' | 'low' | 'insufficient';
+  model_used: string;
+  recommended_model: string;
+  channels: ChannelAttribution[];
+  model_comparisons: ModelComparison[];
+  data_quality_metrics: DataQualityMetric[];
+  recommendations: AttributionRecommendation[];
+  total_attributed_revenue: number;
+  total_conversions: number;
+  channels_tracked: number;
+  high_confidence_channels: number;
+  low_confidence_channels: number;
+}
+
+export function useAttributionConfidence(enabled = true) {
+  return useQuery({
+    queryKey: ['dashboard', 'attribution-confidence'],
+    queryFn: async (): Promise<AttributionConfidenceResponse> => {
+      const response = await apiClient.get<ApiResponse<AttributionConfidenceResponse>>(
+        '/dashboard/attribution-confidence'
+      );
+      return response.data.data;
+    },
+    enabled,
+    staleTime: 10 * 60 * 1000,
+    refetchInterval: 30 * 60 * 1000,
+    retry: 1,
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Feature #13 — Customer LTV Forecasting
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export interface CohortLTV {
+  cohort_id: string;
+  cohort_label: string;
+  size: number;
+  avg_ltv: number;
+  projected_ltv_3m: number;
+  projected_ltv_6m: number;
+  projected_ltv_12m: number;
+  confidence: number;
+  retention_rate: number;
+  avg_order_value: number;
+  purchase_frequency: number;
+  total_revenue: number;
+  months_active: number;
+}
+
+export interface SegmentForecast {
+  segment: string;
+  segment_label: string;
+  customer_count: number;
+  current_avg_ltv: number;
+  projected_12m_ltv: number;
+  growth_rate: number;
+  risk_level: 'low' | 'medium' | 'high' | 'critical';
+  revenue_contribution_pct: number;
+  total_revenue: number;
+  avg_order_value: number;
+  cac: number;
+  ltv_to_cac_ratio: number;
+}
+
+export interface LTVDistributionBucket {
+  bucket_label: string;
+  bucket_min: number;
+  bucket_max: number;
+  count: number;
+  pct: number;
+  revenue_pct: number;
+  avg_ltv: number;
+}
+
+export interface LTVInsight {
+  title: string;
+  description: string;
+  severity: 'positive' | 'info' | 'warning' | 'critical';
+  metric: string;
+  action_label: string;
+}
+
+export interface LTVForecastResponse {
+  summary: string;
+  overall_avg_ltv: number;
+  projected_avg_ltv_12m: number;
+  total_customer_value: number;
+  projected_total_12m: number;
+  total_customers: number;
+  avg_ltv_to_cac: number;
+  ltv_health: 'excellent' | 'good' | 'needs_attention' | 'poor';
+  cohorts: CohortLTV[];
+  segments: SegmentForecast[];
+  distribution: LTVDistributionBucket[];
+  insights: LTVInsight[];
+  high_value_pct: number;
+  at_risk_revenue_pct: number;
+}
+
+export function useLTVForecast(enabled = true) {
+  return useQuery({
+    queryKey: ['dashboard', 'ltv-forecast'],
+    queryFn: async (): Promise<LTVForecastResponse> => {
+      const response = await apiClient.get<ApiResponse<LTVForecastResponse>>(
+        '/dashboard/ltv-forecast'
+      );
+      return response.data.data;
+    },
+    enabled,
+    staleTime: 10 * 60 * 1000,
+    refetchInterval: 30 * 60 * 1000,
+    retry: 1,
+  });
+}
+
 /**
  * Update metric visibility settings
  */
+// ═══════════════════════════════════════════════════════════════════════════════
+// Feature #14 — Campaign Creative Scoring
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export interface CreativeScore {
+  creative_id: string;
+  campaign_name: string;
+  platform: string;
+  overall_score: number;
+  grade: string;
+  ctr: number;
+  ctr_score: number;
+  conversion_rate: number;
+  cvr_score: number;
+  roas: number;
+  roas_score: number;
+  cpa: number;
+  cpa_score: number;
+  spend: number;
+  impressions: number;
+  clicks: number;
+  conversions: number;
+  revenue: number;
+  fatigue_level: 'none' | 'low' | 'medium' | 'high';
+  fatigue_score: number;
+  status: 'winner' | 'active' | 'underperforming' | 'fatigued' | 'new';
+  days_running: number;
+  recommendation: string;
+}
+
+export interface CreativeInsight {
+  title: string;
+  description: string;
+  severity: 'positive' | 'info' | 'warning' | 'critical';
+  creative_id?: string;
+  action_label: string;
+}
+
+export interface PlatformCreativeSummary {
+  platform: string;
+  total_creatives: number;
+  avg_score: number;
+  winners: number;
+  fatigued: number;
+  underperforming: number;
+  top_creative_score: number;
+  total_spend: number;
+}
+
+export interface CreativeScoringResponse {
+  summary: string;
+  creatives: CreativeScore[];
+  platform_summaries: PlatformCreativeSummary[];
+  insights: CreativeInsight[];
+  total_creatives: number;
+  avg_score: number;
+  overall_grade: string;
+  winners_count: number;
+  fatigued_count: number;
+  underperforming_count: number;
+  refresh_needed_pct: number;
+}
+
+export function useCreativeScoring(enabled = true) {
+  return useQuery({
+    queryKey: ['dashboard', 'creative-scoring'],
+    queryFn: async (): Promise<CreativeScoringResponse> => {
+      const response = await apiClient.get<ApiResponse<CreativeScoringResponse>>(
+        '/dashboard/creative-scoring'
+      );
+      return response.data.data;
+    },
+    enabled,
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: 15 * 60 * 1000,
+    retry: 1,
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Feature #15 — Competitor Intelligence Automation
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export interface CompetitorProfile {
+  competitor_id: string;
+  name: string;
+  estimated_spend: number;
+  estimated_sov: number;
+  relative_strength: 'stronger' | 'similar' | 'weaker';
+  primary_platforms: string[];
+  threat_level: 'low' | 'medium' | 'high' | 'critical';
+  trend: 'growing' | 'stable' | 'declining';
+}
+
+export interface PlatformCompetition {
+  platform: string;
+  your_spend: number;
+  your_roas: number;
+  your_ctr: number;
+  estimated_market_cpm: number;
+  competition_level: 'low' | 'medium' | 'high' | 'saturated';
+  competition_score: number;
+  your_position: string;
+  opportunity_score: number;
+  avg_cpc_trend: 'rising' | 'stable' | 'falling';
+}
+
+export interface MarketOpportunity {
+  title: string;
+  description: string;
+  opportunity_type: string;
+  platform: string;
+  potential_impact: 'low' | 'medium' | 'high';
+  confidence: number;
+  action: string;
+}
+
+export interface CompetitorInsight {
+  title: string;
+  description: string;
+  severity: 'positive' | 'info' | 'warning' | 'critical';
+  action_label: string;
+}
+
+export interface CompetitorIntelResponse {
+  summary: string;
+  your_estimated_sov: number;
+  market_position: string;
+  competitive_pressure: number;
+  pressure_trend: 'increasing' | 'stable' | 'decreasing';
+  competitors: CompetitorProfile[];
+  platform_competition: PlatformCompetition[];
+  opportunities: MarketOpportunity[];
+  insights: CompetitorInsight[];
+  total_your_spend: number;
+  estimated_market_spend: number;
+  platforms_tracked: number;
+  opportunities_count: number;
+}
+
+export function useCompetitorIntel(enabled = true) {
+  return useQuery({
+    queryKey: ['dashboard', 'competitor-intel'],
+    queryFn: async (): Promise<CompetitorIntelResponse> => {
+      const response = await apiClient.get<ApiResponse<CompetitorIntelResponse>>(
+        '/dashboard/competitor-intel'
+      );
+      return response.data.data;
+    },
+    enabled,
+    staleTime: 10 * 60 * 1000,
+    refetchInterval: 30 * 60 * 1000,
+    retry: 1,
+  });
+}
+
 export function useUpdateMetricVisibility() {
   const queryClient = useQueryClient();
 
