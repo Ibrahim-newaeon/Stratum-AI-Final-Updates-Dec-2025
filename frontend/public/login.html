@@ -10,7 +10,29 @@
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.17/dist/tailwind.min.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: {
+        display: ['"Clash Display"', 'sans-serif'],
+        sans: ['"Satoshi"', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'monospace'],
+      },
+      colors: {
+        midnight: { DEFAULT: '#050B18' },
+        'cyber-blue': { DEFAULT: '#0A1628' },
+        'cyber-cyan': { DEFAULT: '#00F5FF' },
+        'cyber-red': { DEFAULT: '#FF3D00' },
+        'cyber-yellow': { DEFAULT: '#FFD700' },
+        primary: { DEFAULT: '#FF1F6D' },
+        secondary: { DEFAULT: '#FF8C00' },
+      },
+    }
+  }
+}
+</script>
 <style>
         /* ── Arbitrary-value utilities (replaces CDN JIT) ── */
         .text-\[11px\] { font-size: 11px; }

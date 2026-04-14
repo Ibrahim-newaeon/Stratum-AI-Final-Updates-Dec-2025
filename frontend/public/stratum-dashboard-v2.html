@@ -5,7 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Stratum AI - Decision Operating System</title>
   <meta name="description" content="Stratum AI Decision Operating System dashboard. Monitor signal health, trust gates, campaign performance, and autopilot enforcement in real time.">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.17/dist/tailwind.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: {
+        display: ['"Clash Display"', 'sans-serif'],
+        sans: ['"Satoshi"', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'monospace'],
+      },
+      colors: {
+        midnight: { DEFAULT: '#050B18' },
+        'cyber-blue': { DEFAULT: '#0A1628' },
+        'cyber-cyan': { DEFAULT: '#00F5FF' },
+        'cyber-red': { DEFAULT: '#FF3D00' },
+        'cyber-yellow': { DEFAULT: '#FFD700' },
+        primary: { DEFAULT: '#FF1F6D' },
+        secondary: { DEFAULT: '#FF8C00' },
+      },
+    }
+  }
+}
+</script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://api.fontshare.com/v2/css?f[]=clash-display@200,300,400,500,600,700&display=swap" rel="stylesheet">
