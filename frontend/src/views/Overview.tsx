@@ -82,6 +82,11 @@ import { AttributionConfidenceCard } from '@/components/dashboard/AttributionCon
 import { LTVForecastCard } from '@/components/dashboard/LTVForecastCard'
 import { CreativeScoringCard } from '@/components/dashboard/CreativeScoringCard'
 import { CompetitorIntelCard } from '@/components/dashboard/CompetitorIntelCard'
+import { ABTestAnalysisCard } from '@/components/dashboard/ABTestAnalysisCard'
+import { CollaborativeAnnotationsCard } from '@/components/dashboard/CollaborativeAnnotationsCard'
+import { KnowledgeGraphCard } from '@/components/dashboard/KnowledgeGraphCard'
+import { JourneyMapCard } from '@/components/dashboard/JourneyMapCard'
+import { NLFilterCard } from '@/components/dashboard/NLFilterCard'
 
 export function Overview() {
   const { t } = useTranslation()
@@ -388,6 +393,21 @@ export function Overview() {
 
       {/* Competitor Intelligence Card */}
       <CompetitorIntelCard />
+
+      {/* A/B Test Analysis Card */}
+      <ABTestAnalysisCard />
+
+      {/* Collaborative Annotations Card */}
+      <CollaborativeAnnotationsCard />
+
+      {/* Knowledge Graph Auto-Insights Card */}
+      <KnowledgeGraphCard />
+
+      {/* Cross-Channel Journey Mapping Card */}
+      <JourneyMapCard />
+
+      {/* Natural Language Filters Card */}
+      <NLFilterCard />
 
       {/* Audience Lifecycle Automations Card */}
       <AudienceLifecycleCard />

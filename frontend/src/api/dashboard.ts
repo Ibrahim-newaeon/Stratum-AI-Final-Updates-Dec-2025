@@ -1699,6 +1699,351 @@ export function useCompetitorIntel(enabled = true) {
   });
 }
 
+// =============================================================================
+// Feature #16: Scheduled A/B Test Analysis
+// =============================================================================
+
+export interface ABTestVariant {
+  variant_id: string;
+  variant_label: string;
+  campaign_name: string;
+  spend: number;
+  impressions: number;
+  clicks: number;
+  conversions: number;
+  revenue: number;
+  ctr: number;
+  cvr: number;
+  cpa: number;
+  roas: number;
+}
+
+export interface ABTestResult {
+  test_id: string;
+  test_name: string;
+  platform: string;
+  status: 'running' | 'winner_found' | 'inconclusive' | 'needs_more_data';
+  variants: ABTestVariant[];
+  winning_variant: string | null;
+  confidence: number;
+  lift_pct: number;
+  primary_metric: string;
+  days_running: number;
+  recommended_action: string;
+  min_sample_reached: boolean;
+}
+
+export interface ABTestInsight {
+  title: string;
+  description: string;
+  severity: 'positive' | 'info' | 'warning' | 'critical';
+  action_label: string;
+}
+
+export interface ABTestAnalysisResponse {
+  summary: string;
+  total_tests: number;
+  active_tests: number;
+  winners_found: number;
+  avg_confidence: number;
+  total_spend_in_tests: number;
+  potential_savings: number;
+  tests: ABTestResult[];
+  insights: ABTestInsight[];
+}
+
+export function useABTestAnalysis(enabled = true) {
+  return useQuery({
+    queryKey: ['dashboard', 'ab-test-analysis'],
+    queryFn: async (): Promise<ABTestAnalysisResponse> => {
+      const response = await apiClient.get<ApiResponse<ABTestAnalysisResponse>>(
+        '/dashboard/ab-test-analysis'
+      );
+      return response.data.data;
+    },
+    enabled,
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: 15 * 60 * 1000,
+    retry: 1,
+  });
+}
+
+// =============================================================================
+// Feature #17: Collaborative Annotations
+// =============================================================================
+
+export interface AnnotationAuthor {
+  user_id: number;
+  name: string;
+  initials: string;
+  role: string;
+}
+
+export interface AnnotationReply {
+  reply_id: string;
+  author: AnnotationAuthor;
+  content: string;
+  created_at: string;
+  reactions: Record<string, number>;
+}
+
+export interface Annotation {
+  annotation_id: string;
+  target_type: 'metric' | 'campaign' | 'period' | 'platform' | 'general';
+  target_id: string;
+  target_label: string;
+  content: string;
+  tag: 'performance' | 'strategy' | 'alert' | 'question' | 'general';
+  author: AnnotationAuthor;
+  created_at: string;
+  updated_at: string;
+  pinned: boolean;
+  resolved: boolean;
+  replies: AnnotationReply[];
+  reply_count: number;
+  mentions: string[];
+}
+
+export interface AnnotationSummary {
+  total: number;
+  unresolved: number;
+  pinned: number;
+  by_tag: Record<string, number>;
+  recent_activity_count: number;
+  contributors: number;
+}
+
+export interface AnnotationInsight {
+  title: string;
+  description: string;
+  severity: string;
+}
+
+export interface CollaborativeAnnotationsResponse {
+  summary: string;
+  annotations: Annotation[];
+  stats: AnnotationSummary;
+  insights: AnnotationInsight[];
+  active_discussions: number;
+  team_members_active: number;
+}
+
+export function useCollaborativeAnnotations(enabled = true) {
+  return useQuery({
+    queryKey: ['dashboard', 'collaborative-annotations'],
+    queryFn: async (): Promise<CollaborativeAnnotationsResponse> => {
+      const response = await apiClient.get<ApiResponse<CollaborativeAnnotationsResponse>>(
+        '/dashboard/collaborative-annotations'
+      );
+      return response.data.data;
+    },
+    enabled,
+    staleTime: 2 * 60 * 1000,
+    refetchInterval: 5 * 60 * 1000,
+    retry: 1,
+  });
+}
+
+// =============================================================================
+// Feature #18: Knowledge Graph Auto-Insights
+// =============================================================================
+
+export interface KnowledgeNode {
+  node_id: string;
+  label: string;
+  node_type: 'metric' | 'platform' | 'campaign' | 'segment' | 'trend';
+  value: string;
+  importance: number;
+}
+
+export interface KnowledgeEdge {
+  edge_id: string;
+  source: string;
+  target: string;
+  relationship: 'correlates_with' | 'drives' | 'inhibits' | 'depends_on';
+  strength: number;
+  description: string;
+}
+
+export interface KnowledgePattern {
+  pattern_id: string;
+  title: string;
+  description: string;
+  pattern_type: string;
+  confidence: number;
+  affected_metrics: string[];
+  recommendation: string;
+  severity: 'positive' | 'info' | 'warning' | 'critical';
+}
+
+export interface KnowledgeCluster {
+  cluster_id: string;
+  label: string;
+  description: string;
+  campaign_count: number;
+  avg_roas: number;
+  avg_cpa: number;
+  platforms: string[];
+  performance_level: 'top' | 'above_average' | 'average' | 'below_average' | 'poor';
+}
+
+export interface KnowledgeGraphResponse {
+  summary: string;
+  nodes: KnowledgeNode[];
+  edges: KnowledgeEdge[];
+  patterns: KnowledgePattern[];
+  clusters: KnowledgeCluster[];
+  total_relationships: number;
+  patterns_discovered: number;
+  strongest_correlation: string;
+  key_insight: string;
+}
+
+export function useKnowledgeGraph(enabled = true) {
+  return useQuery({
+    queryKey: ['dashboard', 'knowledge-graph'],
+    queryFn: async (): Promise<KnowledgeGraphResponse> => {
+      const response = await apiClient.get<ApiResponse<KnowledgeGraphResponse>>(
+        '/dashboard/knowledge-graph'
+      );
+      return response.data.data;
+    },
+    enabled,
+    staleTime: 10 * 60 * 1000,
+    refetchInterval: 30 * 60 * 1000,
+    retry: 1,
+  });
+}
+
+// =============================================================================
+// Feature #19: Cross-Channel Journey Mapping
+// =============================================================================
+
+export interface JourneyTouchpoint {
+  step: number;
+  platform: string;
+  interaction_type: 'impression' | 'click' | 'visit' | 'conversion';
+  avg_time_to_next: string;
+  drop_off_rate: number;
+}
+
+export interface JourneyPath {
+  path_id: string;
+  path_name: string;
+  touchpoints: JourneyTouchpoint[];
+  frequency: number;
+  avg_conversions: number;
+  avg_revenue_per_journey: number;
+  avg_days_to_convert: number;
+  conversion_rate: number;
+}
+
+export interface ChannelContribution {
+  platform: string;
+  first_touch_pct: number;
+  last_touch_pct: number;
+  assist_pct: number;
+  total_touches: number;
+  avg_position: number;
+  assisted_revenue: number;
+  direct_revenue: number;
+}
+
+export interface JourneyInsight {
+  title: string;
+  description: string;
+  severity: 'positive' | 'info' | 'warning' | 'critical';
+  action_label: string;
+}
+
+export interface JourneyMapResponse {
+  summary: string;
+  top_paths: JourneyPath[];
+  channel_contributions: ChannelContribution[];
+  insights: JourneyInsight[];
+  avg_touchpoints: number;
+  avg_days_to_convert: number;
+  single_touch_pct: number;
+  multi_touch_pct: number;
+  total_journeys_analyzed: number;
+  top_entry_channel: string;
+  top_closing_channel: string;
+}
+
+export function useJourneyMap(enabled = true) {
+  return useQuery({
+    queryKey: ['dashboard', 'journey-map'],
+    queryFn: async (): Promise<JourneyMapResponse> => {
+      const response = await apiClient.get<ApiResponse<JourneyMapResponse>>(
+        '/dashboard/journey-map'
+      );
+      return response.data.data;
+    },
+    enabled,
+    staleTime: 10 * 60 * 1000,
+    refetchInterval: 30 * 60 * 1000,
+    retry: 1,
+  });
+}
+
+// =============================================================================
+// Feature #20: Natural Language Filters
+// =============================================================================
+
+export interface ParsedFilter {
+  filter_type: string;
+  field: string;
+  operator: string;
+  value: string;
+  display_label: string;
+}
+
+export interface FilterInterpretation {
+  original_query: string;
+  intent: 'filter' | 'compare' | 'analyze' | 'summarize' | 'question';
+  confidence: number;
+  parsed_filters: ParsedFilter[];
+  explanation: string;
+  applied: boolean;
+}
+
+export interface QuerySuggestion {
+  query: string;
+  description: string;
+  category: 'filter' | 'insight' | 'comparison';
+}
+
+export interface RecentQuery {
+  query: string;
+  timestamp: string;
+  filters_count: number;
+  results_count: number;
+}
+
+export interface NLFilterResponse {
+  interpretation: FilterInterpretation;
+  suggestions: QuerySuggestion[];
+  recent_queries: RecentQuery[];
+  available_fields: string[];
+  example_queries: string[];
+}
+
+export function useNLFilter(query: string, enabled = true) {
+  return useQuery({
+    queryKey: ['dashboard', 'nl-filter', query],
+    queryFn: async (): Promise<NLFilterResponse> => {
+      const response = await apiClient.get<ApiResponse<NLFilterResponse>>(
+        '/dashboard/nl-filter',
+        { params: { query } }
+      );
+      return response.data.data;
+    },
+    enabled: enabled && query.length > 0,
+    staleTime: 60 * 1000,
+    retry: 1,
+  });
+}
+
 export function useUpdateMetricVisibility() {
   const queryClient = useQueryClient();
 

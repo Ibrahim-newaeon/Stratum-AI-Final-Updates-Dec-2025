@@ -3484,3 +3484,373 @@ async def get_competitor_intel(
         data=response,
         message="Competitor intelligence generated",
     )
+
+
+# =============================================================================
+# Feature #16 — Scheduled A/B Test Analysis
+# =============================================================================
+
+from app.analytics.logic.ab_test_analysis import (
+    ABTestAnalysisResponse,
+    build_ab_test_analysis,
+)
+
+
+@router.get("/ab-test-analysis", response_model=APIResponse)
+async def get_ab_test_analysis(
+    current_user: CurrentUserDep,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Automated A/B test detection and statistical analysis."""
+    tenant_id = current_user.tenant_id
+    campaigns: list[dict] = []
+
+    try:
+        result = await db.execute(
+            select(Campaign).where(
+                and_(
+                    Campaign.tenant_id == tenant_id,
+                    Campaign.is_deleted == False,
+                )
+            )
+        )
+        rows = result.scalars().all()
+
+        for c in rows:
+            spend = float(c.total_spend_cents or 0) / 100
+            revenue = float(c.revenue_cents or 0) / 100 if hasattr(c, "revenue_cents") else 0
+            conversions = int(c.conversions or 0) if hasattr(c, "conversions") else 0
+            impressions = int(c.impressions or 0) if hasattr(c, "impressions") else 0
+            clicks = int(c.clicks or 0) if hasattr(c, "clicks") else 0
+            platform = str(c.platform.value) if c.platform else "unknown"
+
+            campaigns.append({
+                "name": c.name or "",
+                "platform": platform,
+                "spend": spend,
+                "revenue": revenue,
+                "conversions": conversions,
+                "impressions": impressions,
+                "clicks": clicks,
+                "days_running": 14,
+            })
+
+    except (SQLAlchemyError, ValueError, TypeError) as e:
+        logger.warning("ab_test_analysis_db_error", error=str(e))
+        return APIResponse(
+            success=True,
+            data=ABTestAnalysisResponse(
+                summary="A/B test data temporarily unavailable.",
+            ),
+            message="A/B test analysis (limited data)",
+        )
+
+    response = build_ab_test_analysis(campaigns=campaigns)
+
+    logger.info(
+        "ab_test_analysis_generated",
+        tenant_id=tenant_id,
+        total_tests=response.total_tests,
+    )
+
+    return APIResponse(
+        success=True,
+        data=response,
+        message="A/B test analysis generated",
+    )
+
+
+# =============================================================================
+# Feature #17 — Collaborative Annotations
+# =============================================================================
+
+from app.analytics.logic.collaborative_annotations import (
+    CollaborativeAnnotationsResponse,
+    build_collaborative_annotations,
+)
+
+
+@router.get("/collaborative-annotations", response_model=APIResponse)
+async def get_collaborative_annotations(
+    current_user: CurrentUserDep,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Team annotations and notes on dashboard metrics."""
+    tenant_id = current_user.tenant_id
+    campaigns: list[dict] = []
+    user_name = ""
+    user_id = current_user.id
+
+    try:
+        user_name = f"{current_user.first_name or ''} {current_user.last_name or ''}".strip()
+        if not user_name:
+            user_name = current_user.email.split("@")[0] if current_user.email else "Team Member"
+
+        result = await db.execute(
+            select(Campaign).where(
+                and_(
+                    Campaign.tenant_id == tenant_id,
+                    Campaign.is_deleted == False,
+                )
+            ).limit(50)
+        )
+        rows = result.scalars().all()
+
+        for c in rows:
+            spend = float(c.total_spend_cents or 0) / 100
+            revenue = float(c.revenue_cents or 0) / 100 if hasattr(c, "revenue_cents") else 0
+            platform = str(c.platform.value) if c.platform else "unknown"
+
+            campaigns.append({
+                "platform": platform,
+                "spend": spend,
+                "revenue": revenue,
+                "conversions": int(c.conversions or 0) if hasattr(c, "conversions") else 0,
+            })
+
+    except (SQLAlchemyError, ValueError, TypeError) as e:
+        logger.warning("annotations_db_error", error=str(e))
+        return APIResponse(
+            success=True,
+            data=CollaborativeAnnotationsResponse(
+                summary="Annotations data temporarily unavailable.",
+            ),
+            message="Annotations (limited data)",
+        )
+
+    response = build_collaborative_annotations(
+        campaigns=campaigns,
+        user_name=user_name,
+        user_id=user_id,
+    )
+
+    logger.info(
+        "annotations_generated",
+        tenant_id=tenant_id,
+        total=response.stats.total,
+    )
+
+    return APIResponse(
+        success=True,
+        data=response,
+        message="Collaborative annotations generated",
+    )
+
+
+# =============================================================================
+# Feature #18 — Knowledge Graph Auto-Insights
+# =============================================================================
+
+from app.analytics.logic.knowledge_graph import (
+    KnowledgeGraphResponse,
+    build_knowledge_graph,
+)
+
+
+@router.get("/knowledge-graph", response_model=APIResponse)
+async def get_knowledge_graph(
+    current_user: CurrentUserDep,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Cross-metric relationship discovery and pattern detection."""
+    tenant_id = current_user.tenant_id
+    campaigns: list[dict] = []
+
+    try:
+        result = await db.execute(
+            select(Campaign).where(
+                and_(
+                    Campaign.tenant_id == tenant_id,
+                    Campaign.is_deleted == False,
+                )
+            )
+        )
+        rows = result.scalars().all()
+
+        for c in rows:
+            spend = float(c.total_spend_cents or 0) / 100
+            revenue = float(c.revenue_cents or 0) / 100 if hasattr(c, "revenue_cents") else 0
+            conversions = int(c.conversions or 0) if hasattr(c, "conversions") else 0
+            impressions = int(c.impressions or 0) if hasattr(c, "impressions") else 0
+            clicks = int(c.clicks or 0) if hasattr(c, "clicks") else 0
+            platform = str(c.platform.value) if c.platform else "unknown"
+
+            campaigns.append({
+                "platform": platform,
+                "spend": spend,
+                "revenue": revenue,
+                "conversions": conversions,
+                "impressions": impressions,
+                "clicks": clicks,
+            })
+
+    except (SQLAlchemyError, ValueError, TypeError) as e:
+        logger.warning("knowledge_graph_db_error", error=str(e))
+        return APIResponse(
+            success=True,
+            data=KnowledgeGraphResponse(
+                summary="Knowledge graph data temporarily unavailable.",
+            ),
+            message="Knowledge graph (limited data)",
+        )
+
+    response = build_knowledge_graph(campaigns=campaigns)
+
+    logger.info(
+        "knowledge_graph_generated",
+        tenant_id=tenant_id,
+        patterns=response.patterns_discovered,
+    )
+
+    return APIResponse(
+        success=True,
+        data=response,
+        message="Knowledge graph insights generated",
+    )
+
+
+# =============================================================================
+# Feature #19 — Cross-Channel Journey Mapping
+# =============================================================================
+
+from app.analytics.logic.journey_mapping import (
+    JourneyMapResponse,
+    build_journey_map,
+)
+
+
+@router.get("/journey-map", response_model=APIResponse)
+async def get_journey_map(
+    current_user: CurrentUserDep,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Map customer journeys across advertising platforms."""
+    tenant_id = current_user.tenant_id
+    campaigns: list[dict] = []
+
+    try:
+        result = await db.execute(
+            select(Campaign).where(
+                and_(
+                    Campaign.tenant_id == tenant_id,
+                    Campaign.is_deleted == False,
+                )
+            )
+        )
+        rows = result.scalars().all()
+
+        for c in rows:
+            spend = float(c.total_spend_cents or 0) / 100
+            revenue = float(c.revenue_cents or 0) / 100 if hasattr(c, "revenue_cents") else 0
+            conversions = int(c.conversions or 0) if hasattr(c, "conversions") else 0
+            impressions = int(c.impressions or 0) if hasattr(c, "impressions") else 0
+            clicks = int(c.clicks or 0) if hasattr(c, "clicks") else 0
+            platform = str(c.platform.value) if c.platform else "unknown"
+
+            campaigns.append({
+                "platform": platform,
+                "spend": spend,
+                "revenue": revenue,
+                "conversions": conversions,
+                "impressions": impressions,
+                "clicks": clicks,
+            })
+
+    except (SQLAlchemyError, ValueError, TypeError) as e:
+        logger.warning("journey_map_db_error", error=str(e))
+        return APIResponse(
+            success=True,
+            data=JourneyMapResponse(
+                summary="Journey mapping data temporarily unavailable.",
+            ),
+            message="Journey mapping (limited data)",
+        )
+
+    response = build_journey_map(campaigns=campaigns)
+
+    logger.info(
+        "journey_map_generated",
+        tenant_id=tenant_id,
+        journeys=response.total_journeys_analyzed,
+    )
+
+    return APIResponse(
+        success=True,
+        data=response,
+        message="Journey map generated",
+    )
+
+
+# =============================================================================
+# Feature #20 — Natural Language Filters
+# =============================================================================
+
+from app.analytics.logic.nl_filters import (
+    NLFilterResponse,
+    build_nl_filter,
+)
+
+
+@router.get("/nl-filter", response_model=APIResponse)
+async def get_nl_filter(
+    current_user: CurrentUserDep,
+    query: str = Query(default="", description="Natural language filter query"),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Parse natural language queries into structured dashboard filters."""
+    tenant_id = current_user.tenant_id
+    campaigns: list[dict] = []
+
+    try:
+        result = await db.execute(
+            select(Campaign).where(
+                and_(
+                    Campaign.tenant_id == tenant_id,
+                    Campaign.is_deleted == False,
+                )
+            ).limit(100)
+        )
+        rows = result.scalars().all()
+
+        for c in rows:
+            spend = float(c.total_spend_cents or 0) / 100
+            revenue = float(c.revenue_cents or 0) / 100 if hasattr(c, "revenue_cents") else 0
+            platform = str(c.platform.value) if c.platform else "unknown"
+            roas = revenue / spend if spend > 0 else 0
+            cpa_val = spend / max(int(c.conversions or 0), 1) if hasattr(c, "conversions") else 0
+
+            campaigns.append({
+                "name": c.name or "",
+                "platform": platform,
+                "spend": spend,
+                "revenue": revenue,
+                "roas": round(roas, 2),
+                "cpa": round(cpa_val, 2),
+                "conversions": int(c.conversions or 0) if hasattr(c, "conversions") else 0,
+                "impressions": int(c.impressions or 0) if hasattr(c, "impressions") else 0,
+                "clicks": int(c.clicks or 0) if hasattr(c, "clicks") else 0,
+            })
+
+    except (SQLAlchemyError, ValueError, TypeError) as e:
+        logger.warning("nl_filter_db_error", error=str(e))
+        return APIResponse(
+            success=True,
+            data=NLFilterResponse(),
+            message="Natural language filters (limited data)",
+        )
+
+    response = build_nl_filter(query=query, campaigns=campaigns)
+
+    logger.info(
+        "nl_filter_processed",
+        tenant_id=tenant_id,
+        query=query[:100],
+        intent=response.interpretation.intent,
+        filters_count=len(response.interpretation.parsed_filters),
+    )
+
+    return APIResponse(
+        success=True,
+        data=response,
+        message="Natural language filter processed",
+    )
