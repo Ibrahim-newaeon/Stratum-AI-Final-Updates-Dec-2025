@@ -65,6 +65,7 @@ from app.api.v1.endpoints import (
     onboarding_agent,
     embed_widgets,
     audience_sync,
+    copilot,
 )
 
 api_router = APIRouter()
@@ -455,4 +456,11 @@ api_router.include_router(
 api_router.include_router(
     audience_sync.router,
     tags=["CDP Audience Sync"],
+)
+
+# AI Copilot Chat (Feature #4)
+# Note: copilot.router already has prefix="/copilot"
+api_router.include_router(
+    copilot.router,
+    tags=["AI Copilot"],
 )

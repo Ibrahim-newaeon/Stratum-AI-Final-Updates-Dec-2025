@@ -115,6 +115,26 @@ export interface VerifyWhatsAppOTPResponse {
   verification_token: string | null;
 }
 
+// Email OTP Types
+export interface SendEmailOTPRequest {
+  email: string;
+}
+
+export interface SendEmailOTPResponse {
+  message: string;
+  expires_in: number;
+}
+
+export interface VerifyEmailOTPRequest {
+  email: string;
+  otp_code: string;
+}
+
+export interface VerifyEmailOTPResponse {
+  verified: boolean;
+  verification_token: string | null;
+}
+
 // API Functions
 export const authApi = {
   /**
@@ -196,6 +216,28 @@ export const authApi = {
   verifyWhatsAppOTP: async (data: VerifyWhatsAppOTPRequest): Promise<VerifyWhatsAppOTPResponse> => {
     const response = await apiClient.post<ApiResponse<VerifyWhatsAppOTPResponse>>(
       '/auth/whatsapp/verify-otp',
+      data
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Send email OTP for signup verification
+   */
+  sendEmailOTP: async (data: SendEmailOTPRequest): Promise<SendEmailOTPResponse> => {
+    const response = await apiClient.post<ApiResponse<SendEmailOTPResponse>>(
+      '/auth/email/send-otp',
+      data
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Verify email OTP code
+   */
+  verifyEmailOTP: async (data: VerifyEmailOTPRequest): Promise<VerifyEmailOTPResponse> => {
+    const response = await apiClient.post<ApiResponse<VerifyEmailOTPResponse>>(
+      '/auth/email/verify-otp',
       data
     );
     return response.data.data;
@@ -361,5 +403,23 @@ export function useSendWhatsAppOTP() {
 export function useVerifyWhatsAppOTP() {
   return useMutation({
     mutationFn: authApi.verifyWhatsAppOTP,
+  });
+}
+
+/**
+ * Hook for sending email OTP
+ */
+export function useSendEmailOTP() {
+  return useMutation({
+    mutationFn: authApi.sendEmailOTP,
+  });
+}
+
+/**
+ * Hook for verifying email OTP
+ */
+export function useVerifyEmailOTP() {
+  return useMutation({
+    mutationFn: authApi.verifyEmailOTP,
   });
 }

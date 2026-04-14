@@ -68,6 +68,13 @@ import { useTenantStore } from '@/stores/tenantStore'
 import { exportDashboardPDF } from '@/utils/pdfExport'
 import { useToast } from '@/components/ui/use-toast'
 import { useLiveSimulation } from '@/lib/liveSimulation'
+import { MorningBriefingCard } from '@/components/dashboard/MorningBriefingCard'
+import { AnomalyNarrativesCard } from '@/components/dashboard/AnomalyNarrativesCard'
+import { SignalRecoveryCard } from '@/components/dashboard/SignalRecoveryCard'
+import { PredictiveBudgetCard } from '@/components/dashboard/PredictiveBudgetCard'
+import { AIReportCard } from '@/components/dashboard/AIReportCard'
+import { ChurnPreventionCard } from '@/components/dashboard/ChurnPreventionCard'
+import { UnifiedNotificationsCard } from '@/components/dashboard/UnifiedNotificationsCard'
 
 export function Overview() {
   const { t } = useTranslation()
@@ -339,6 +346,27 @@ export function Overview() {
 
   return (
     <div className="space-y-6">
+      {/* Morning Briefing Card */}
+      <MorningBriefingCard />
+
+      {/* Signal Recovery Card */}
+      <SignalRecoveryCard />
+
+      {/* Anomaly Narratives Card */}
+      <AnomalyNarrativesCard />
+
+      {/* Predictive Budget Autopilot Card */}
+      <PredictiveBudgetCard />
+
+      {/* AI-Generated Report Card */}
+      <AIReportCard />
+
+      {/* Churn Prevention Card */}
+      <ChurnPreventionCard />
+
+      {/* Unified Notifications Card */}
+      <UnifiedNotificationsCard />
+
       {/* Keyboard Shortcuts Modal */}
       {showKeyboardHints && (
         <div

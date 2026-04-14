@@ -34,6 +34,7 @@ import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { CommandPalette } from '@/components/ui/command-palette';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTenantStore } from '@/stores/tenantStore';
+import { CopilotChat } from '@/components/dashboard/CopilotChat';
 
 // Tenant-scoped navigation items
 const getNavigation = (tenantId: string) => [
@@ -342,6 +343,9 @@ export default function TenantLayout() {
           <Outlet />
         </main>
       </div>
+
+      {/* AI Copilot Chat — floating on all pages */}
+      <CopilotChat />
     </div>
   );
 }

@@ -310,6 +310,68 @@ Need help? Check out our documentation at {self.frontend_url}/docs
         message = self._create_message(to_email, subject, html_content, text_content)
         return self._send_email(to_email, message)
 
+    def send_otp_email(self, to_email: str, otp_code: str) -> bool:
+        """Send a 6-digit OTP verification code via email for signup."""
+        subject = "Your Stratum AI verification code"
+
+        html_content = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: #2563eb; margin: 0;">Stratum AI</h1>
+    </div>
+
+    <div style="background: #f8fafc; border-radius: 8px; padding: 30px; margin-bottom: 20px;">
+        <h2 style="margin-top: 0; text-align: center;">Verification Code</h2>
+
+        <p style="text-align: center;">Use the following code to complete your registration:</p>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <div style="background: #1e293b; color: #f8fafc; font-size: 32px; font-weight: 700; letter-spacing: 8px; padding: 16px 32px; border-radius: 8px; display: inline-block; font-family: monospace;">
+                {otp_code}
+            </div>
+        </div>
+
+        <p style="color: #64748b; font-size: 14px; text-align: center;">
+            This code expires in 5 minutes. Do not share it with anyone.
+        </p>
+
+        <p style="color: #dc2626; font-size: 14px; text-align: center;">
+            If you didn't request this code, you can safely ignore this email.
+        </p>
+    </div>
+
+    <div style="text-align: center; color: #94a3b8; font-size: 12px;">
+        <p style="margin-top: 20px;">
+            &copy; 2026 Stratum AI. All rights reserved.
+        </p>
+    </div>
+</body>
+</html>
+"""
+
+        text_content = f"""
+Your Stratum AI Verification Code
+
+Use the following code to complete your registration:
+
+{otp_code}
+
+This code expires in 5 minutes. Do not share it with anyone.
+
+If you didn't request this code, you can safely ignore this email.
+
+- The Stratum AI Team
+"""
+
+        message = self._create_message(to_email, subject, html_content, text_content)
+        return self._send_email(to_email, message)
+
     def send_payment_failed_email(
         self,
         to_email: str,

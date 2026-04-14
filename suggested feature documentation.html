@@ -1,0 +1,2080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stratum AI - Suggested Features Roadmap Documentation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #050B18;
+            --bg-card: #0C1425;
+            --bg-card-alt: #101B2E;
+            --bg-code: #080F1E;
+            --bg-hover: #131F38;
+            --text-primary: #FFFFFF;
+            --text-secondary: #8B9EC0;
+            --text-muted: #5A6F8E;
+            --border: #1A2744;
+            --border-light: #243352;
+            --coral: #FF6B4A;
+            --coral-dark: #E85535;
+            --coral-glow: rgba(255, 107, 74, 0.15);
+            --orange: #FF9F43;
+            --orange-glow: rgba(255, 159, 67, 0.12);
+            --cyan: #22D3EE;
+            --cyan-dark: #06B6D4;
+            --cyan-glow: rgba(34, 211, 238, 0.12);
+            --green: #10B981;
+            --green-glow: rgba(16, 185, 129, 0.15);
+            --purple: #8B5CF6;
+            --purple-glow: rgba(139, 92, 246, 0.12);
+            --yellow: #FBBF24;
+            --yellow-glow: rgba(251, 191, 36, 0.12);
+            --danger: #EF4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        ::selection {
+            background: var(--coral);
+            color: white;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* ── Header ── */
+        .header {
+            text-align: center;
+            padding: 4rem 2rem 3.5rem;
+            background: linear-gradient(180deg, #0A1628 0%, var(--bg-primary) 100%);
+            border-bottom: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(255, 107, 74, 0.06) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .header-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 1rem;
+            background: var(--coral-glow);
+            border: 1px solid rgba(255, 107, 74, 0.25);
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--coral);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 1.5rem;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            background: linear-gradient(135deg, var(--coral) 0%, var(--orange) 50%, var(--cyan) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.75rem;
+            line-height: 1.15;
+        }
+
+        .header .subtitle {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            max-width: 640px;
+            margin: 0 auto 2rem;
+            font-weight: 400;
+        }
+
+        .header-meta {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .header-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .header-meta-item strong {
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        /* ── Section Titles ── */
+        .section-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin: 3rem 0 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .section-subtitle {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+        }
+
+        .section-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border-light), transparent);
+            margin: 3rem 0;
+        }
+
+        /* ── Completed Feature Card ── */
+        .feature-completed {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .feature-completed-header {
+            padding: 2rem 2.5rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.04) 0%, transparent 60%);
+        }
+
+        .feature-number {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--green);
+            margin-bottom: 0.75rem;
+        }
+
+        .feature-completed-header h2 {
+            font-size: 1.85rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.3rem 0.85rem;
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .status-completed {
+            background: var(--green-glow);
+            color: var(--green);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .status-planned {
+            background: var(--purple-glow);
+            color: var(--purple);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+
+        .feature-completed-body {
+            padding: 2rem 2.5rem;
+        }
+
+        /* ── Subsection headings ── */
+        .subsection-heading {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--cyan);
+            margin: 2rem 0 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .subsection-heading:first-child {
+            margin-top: 0;
+        }
+
+        .subsection-heading .icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+        }
+
+        /* ── Description text ── */
+        .description {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.8;
+            margin-bottom: 1rem;
+        }
+
+        /* ── Implementation blocks ── */
+        .impl-block {
+            background: var(--bg-card-alt);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .impl-block-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--coral);
+            margin-bottom: 0.25rem;
+        }
+
+        .impl-block-file {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+        }
+
+        .impl-block-file code {
+            background: var(--bg-code);
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.78rem;
+            color: var(--cyan);
+            border: 1px solid var(--border);
+        }
+
+        .impl-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .impl-list li {
+            position: relative;
+            padding: 0.3rem 0 0.3rem 1.25rem;
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            line-height: 1.65;
+        }
+
+        .impl-list li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0.7rem;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--coral);
+            opacity: 0.6;
+        }
+
+        .impl-list li code {
+            background: var(--bg-code);
+            padding: 0.1rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.8rem;
+            color: var(--orange);
+            border: 1px solid var(--border);
+        }
+
+        /* ── Data flow block ── */
+        .data-flow {
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem 2rem;
+            margin: 1rem 0;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.82rem;
+            line-height: 1.9;
+            color: var(--text-secondary);
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        .data-flow .flow-highlight {
+            color: var(--cyan);
+        }
+
+        .data-flow .flow-arrow {
+            color: var(--coral);
+        }
+
+        .data-flow .flow-comment {
+            color: var(--text-muted);
+        }
+
+        /* ── Files modified table ── */
+        .files-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-size: 0.88rem;
+        }
+
+        .files-table th {
+            text-align: left;
+            padding: 0.75rem 1rem;
+            background: var(--bg-code);
+            color: var(--coral);
+            font-weight: 600;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .files-table td {
+            padding: 0.65rem 1rem;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        .files-table td:first-child {
+            font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.8rem;
+            color: var(--cyan);
+        }
+
+        .files-table tr:hover {
+            background: var(--bg-hover);
+        }
+
+        .files-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* ── Roadmap Table ── */
+        .roadmap-wrapper {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            margin: 1.5rem 0;
+        }
+
+        .roadmap-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+        }
+
+        .roadmap-table thead th {
+            text-align: left;
+            padding: 1rem 1.25rem;
+            background: var(--bg-code);
+            color: var(--coral);
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            border-bottom: 2px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .roadmap-table tbody td {
+            padding: 0.85rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-secondary);
+            vertical-align: middle;
+        }
+
+        .roadmap-table tbody tr:hover {
+            background: var(--bg-hover);
+        }
+
+        .roadmap-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .roadmap-table .rank {
+            font-weight: 700;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-align: center;
+            width: 50px;
+        }
+
+        .roadmap-table .rank-top {
+            color: var(--coral);
+        }
+
+        .roadmap-table .feature-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .category-badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            white-space: nowrap;
+        }
+
+        .cat-ai {
+            background: var(--coral-glow);
+            color: var(--coral);
+            border: 1px solid rgba(255, 107, 74, 0.2);
+        }
+
+        .cat-automation {
+            background: var(--cyan-glow);
+            color: var(--cyan);
+            border: 1px solid rgba(34, 211, 238, 0.2);
+        }
+
+        .cat-ux {
+            background: var(--purple-glow);
+            color: var(--purple);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+
+        .cat-data {
+            background: var(--yellow-glow);
+            color: var(--yellow);
+            border: 1px solid rgba(251, 191, 36, 0.2);
+        }
+
+        .effort-badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .effort-low {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--green);
+        }
+
+        .effort-medium {
+            background: rgba(251, 191, 36, 0.1);
+            color: var(--yellow);
+        }
+
+        .effort-high {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .impact-badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .impact-very-high {
+            background: var(--coral-glow);
+            color: var(--coral);
+        }
+
+        .impact-high {
+            background: var(--orange-glow);
+            color: var(--orange);
+        }
+
+        .impact-medium {
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--purple);
+        }
+
+        .status-cell {
+            font-weight: 600;
+            font-size: 0.78rem;
+        }
+
+        .status-cell.completed {
+            color: var(--green);
+        }
+
+        .status-cell.planned {
+            color: var(--text-muted);
+        }
+
+        .builds-on {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* ── Summary Stats ── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            text-align: center;
+        }
+
+        .stat-card .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .stat-card .stat-label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .stat-coral .stat-value { color: var(--coral); }
+        .stat-green .stat-value { color: var(--green); }
+        .stat-cyan .stat-value { color: var(--cyan); }
+        .stat-purple .stat-value { color: var(--purple); }
+        .stat-orange .stat-value { color: var(--orange); }
+
+        /* ── Table of Contents ── */
+        .toc {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .toc h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .toc-list {
+            list-style: none;
+            padding: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 0.5rem;
+        }
+
+        .toc-list li a {
+            display: block;
+            padding: 0.6rem 1rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list li a:hover {
+            background: var(--bg-hover);
+            color: var(--coral);
+            transform: translateX(4px);
+        }
+
+        .toc-list li a .toc-num {
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-right: 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        /* ── Footer ── */
+        .footer {
+            text-align: center;
+            padding: 3rem 2rem;
+            margin-top: 3rem;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .footer .footer-brand {
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--coral), var(--cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .footer .footer-session {
+            display: block;
+            margin-top: 0.25rem;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            opacity: 0.7;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .header h1 { font-size: 2rem; }
+            .container { padding: 0 1rem; }
+            .feature-completed-header,
+            .feature-completed-body { padding: 1.5rem; }
+            .impl-block { padding: 1rem; }
+            .roadmap-table { font-size: 0.8rem; }
+            .roadmap-table thead th,
+            .roadmap-table tbody td { padding: 0.6rem 0.75rem; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media print {
+            body { background: #fff; color: #1a1a1a; }
+            .header { background: none; border: 1px solid #ddd; }
+            .feature-completed, .roadmap-wrapper, .toc, .stat-card, .impl-block {
+                border-color: #ddd;
+                background: #fafafa;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════ HEADER -->
+<div class="header">
+    <div class="container">
+        <div class="header-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            Feature Roadmap
+        </div>
+        <h1>Suggested Features<br>Documentation</h1>
+        <p class="subtitle">Stratum AI Platform &mdash; 20 planned features and automations prioritized by impact and effort. Tracking implementation status from concept to production.</p>
+        <div class="header-meta">
+            <div class="header-meta-item"><strong>Total Features:</strong>&nbsp;20</div>
+            <div class="header-meta-item"><strong>Completed:</strong>&nbsp;1</div>
+            <div class="header-meta-item"><strong>Planned:</strong>&nbsp;19</div>
+            <div class="header-meta-item"><strong>Last Updated:</strong>&nbsp;April 14, 2026</div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+
+    <!-- ════════════════════════════════════ SUMMARY STATS -->
+    <div class="stats-grid">
+        <div class="stat-card stat-coral">
+            <div class="stat-value">20</div>
+            <div class="stat-label">Total Features</div>
+        </div>
+        <div class="stat-card stat-green">
+            <div class="stat-value">1</div>
+            <div class="stat-label">Completed</div>
+        </div>
+        <div class="stat-card stat-cyan">
+            <div class="stat-value">6</div>
+            <div class="stat-label">AI-Powered</div>
+        </div>
+        <div class="stat-card stat-purple">
+            <div class="stat-value">4</div>
+            <div class="stat-label">Automation</div>
+        </div>
+        <div class="stat-card stat-orange">
+            <div class="stat-value">5</div>
+            <div class="stat-label">Dashboard UX</div>
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════ TABLE OF CONTENTS -->
+    <div class="toc">
+        <h3>Contents</h3>
+        <ul class="toc-list">
+            <li><a href="#feature-1"><span class="toc-num">01</span> AI Morning Briefing (Completed)</a></li>
+            <li><a href="#roadmap"><span class="toc-num">02</span> Remaining Features Roadmap</a></li>
+            <li><a href="#categories"><span class="toc-num">03</span> Features by Category</a></li>
+        </ul>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- FEATURE #1: AI MORNING BRIEFING                            -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+
+    <div class="section-title" id="feature-1">Feature #1: AI Morning Briefing</div>
+    <div class="section-subtitle">Personalized daily intelligence digest &mdash; the first completed feature from the roadmap</div>
+
+    <div class="feature-completed">
+        <div class="feature-completed-header">
+            <div class="feature-number">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Feature #1 &middot; Dashboard UX
+            </div>
+            <h2>AI Morning Briefing</h2>
+            <span class="status-badge status-completed">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Completed
+            </span>
+        </div>
+
+        <div class="feature-completed-body">
+
+            <!-- Overview -->
+            <div class="subsection-heading">
+                <span class="icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                </span>
+                Overview
+            </div>
+            <p class="description">
+                A personalized daily intelligence digest that appears at the top of the dashboard on load. Shows overnight changes, KPI snapshot, signal health status, and prioritized action items &mdash; replacing 15 minutes of manual clicking with one glanceable card.
+            </p>
+
+            <!-- Technical Implementation -->
+            <div class="subsection-heading">
+                <span class="icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                </span>
+                Technical Implementation
+            </div>
+
+            <!-- Backend -->
+            <div class="impl-block">
+                <div class="impl-block-title">Backend: <code>GET /api/v1/dashboard/morning-briefing</code></div>
+                <div class="impl-block-file">File: <code>backend/app/api/v1/endpoints/dashboard.py</code></div>
+                <ul class="impl-list">
+                    <li>Returns <code>MorningBriefingResponse</code> with:</li>
+                    <li>Personalized greeting using user's first name</li>
+                    <li>Executive summary narrative (2&ndash;3 sentences)</li>
+                    <li>Portfolio health assessment (<code>strong</code> / <code>steady</code> / <code>needs_attention</code> / <code>critical</code>)</li>
+                    <li>KPI snapshot: spend, revenue, ROAS, conversions with % changes</li>
+                    <li>Signal health status and score</li>
+                    <li>Top 5 overnight changes with human-readable narratives</li>
+                    <li>Top 5 prioritized action items with impact estimates</li>
+                    <li>Campaign counts, scale/fix candidates</li>
+                    <li>Auth: Requires authenticated user (<code>CurrentUserDep</code>)</li>
+                    <li>Data: Aggregates from Campaign table, AuditLog, signal health</li>
+                </ul>
+            </div>
+
+            <!-- Frontend Component -->
+            <div class="impl-block">
+                <div class="impl-block-title">Frontend Component: <code>MorningBriefingCard.tsx</code></div>
+                <div class="impl-block-file">File: <code>frontend/src/components/dashboard/MorningBriefingCard.tsx</code></div>
+                <ul class="impl-list">
+                    <li>Placement: First element on the Dashboard Overview page</li>
+                    <li>Sun icon + personalized greeting header</li>
+                    <li>Portfolio health badge (color-coded)</li>
+                    <li>4 KPI mini-cards with trend indicators</li>
+                    <li>Signal health bar with autopilot status</li>
+                    <li>Collapsible "Overnight Changes" section with directional icons</li>
+                    <li>Collapsible "Actions Today" section with priority coloring</li>
+                    <li>Session-dismissible (X button)</li>
+                    <li>Design: Light theme, bg-card, border, no glassmorphism, Clash Display headings</li>
+                </ul>
+            </div>
+
+            <!-- API Integration -->
+            <div class="impl-block">
+                <div class="impl-block-title">API Integration: <code>dashboard.ts</code></div>
+                <div class="impl-block-file">File: <code>frontend/src/api/dashboard.ts</code></div>
+                <ul class="impl-list">
+                    <li>Types: <code>MorningBriefingResponse</code>, <code>BriefingChangeItem</code>, <code>BriefingActionItem</code></li>
+                    <li>Hook: <code>useMorningBriefing()</code> &mdash; 10min stale, 30min refetch</li>
+                    <li>API function: <code>dashboardApi.getMorningBriefing()</code></li>
+                </ul>
+            </div>
+
+            <!-- Data Flow -->
+            <div class="subsection-heading">
+                <span class="icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                </span>
+                Data Flow
+            </div>
+            <div class="data-flow"><span class="flow-highlight">User opens dashboard</span>
+  <span class="flow-arrow">&rarr;</span> Overview.tsx renders <span class="flow-highlight">&lt;MorningBriefingCard /&gt;</span>
+    <span class="flow-arrow">&rarr;</span> <span class="flow-highlight">useMorningBriefing()</span> calls <span class="flow-highlight">GET /dashboard/morning-briefing</span>
+      <span class="flow-arrow">&rarr;</span> Backend queries Campaign table for current metrics
+      <span class="flow-arrow">&rarr;</span> Computes day-over-day changes
+      <span class="flow-arrow">&rarr;</span> Generates narrative from changes + signal health
+      <span class="flow-arrow">&rarr;</span> Returns structured briefing
+    <span class="flow-arrow">&rarr;</span> Card renders greeting, KPIs, changes, actions
+    <span class="flow-arrow">&rarr;</span> <span class="flow-comment">User can dismiss or collapse sections</span></div>
+
+            <!-- Files Modified -->
+            <div class="subsection-heading">
+                <span class="icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                </span>
+                Files Modified
+            </div>
+            <table class="files-table">
+                <thead>
+                    <tr>
+                        <th>File</th>
+                        <th>Change</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>backend/app/api/v1/endpoints/dashboard.py</td>
+                        <td>Added 3 schemas + morning-briefing endpoint</td>
+                    </tr>
+                    <tr>
+                        <td>frontend/src/api/dashboard.ts</td>
+                        <td>Added 3 types + API function + hook</td>
+                    </tr>
+                    <tr>
+                        <td>frontend/src/components/dashboard/MorningBriefingCard.tsx</td>
+                        <td>New component (created)</td>
+                    </tr>
+                    <tr>
+                        <td>frontend/src/views/Overview.tsx</td>
+                        <td>Added import + component placement</td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- FEATURE #2: SMART ANOMALY NARRATIVES                       -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+
+    <div class="section-divider"></div>
+
+    <div class="section-title" id="feature-2">Feature #2: Smart Anomaly Narratives</div>
+    <div class="section-subtitle">Transforms raw z-score anomalies into contextual, human-readable stories with likely causes, recommended actions, and cross-metric correlation analysis</div>
+
+    <div class="feature-detail-card">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Effort</div>
+                <div class="stat-value" style="color: var(--green);">Low</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Impact</div>
+                <div class="stat-value" style="color: var(--orange);">Medium</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Category</div>
+                <div class="stat-value" style="color: var(--coral);">AI-Powered</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Status</div>
+                <div class="stat-value" style="color: var(--green);">Completed</div>
+            </div>
+        </div>
+
+        <div class="impl-detail">
+            <!-- Architecture -->
+            <div class="subsection-heading">
+                <span class="icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+                </span>
+                Architecture
+            </div>
+            <div class="impl-block">
+                <div class="impl-block-title">Backend Analytics Module</div>
+                <ul class="impl-list">
+                    <li><code>anomaly_narratives.py</code> &mdash; new module in <code>analytics/logic/</code></li>
+                    <li>7 metric templates: spend, revenue, ROAS, CPA, conversions, event_loss_pct, EMQ score</li>
+                    <li>Each template has up/down title, causes (3-4 each), and recommended actions</li>
+                    <li>5 cross-metric correlation patterns detected (e.g. spend_up_roas_down, tracking_degradation)</li>
+                    <li>Executive summary generation + portfolio risk assessment (low/moderate/elevated/high)</li>
+                </ul>
+            </div>
+            <div class="impl-block">
+                <div class="impl-block-title">Pydantic Models</div>
+                <ul class="impl-list">
+                    <li><code>AnomalyNarrative</code> &mdash; metric, title, summary, causes, actions, severity, direction, change_percent, category</li>
+                    <li><code>CorrelationInsight</code> &mdash; title, description, severity, related_metrics, pattern</li>
+                    <li><code>AnomalyNarrativesResponse</code> &mdash; executive_summary, narratives[], correlations[], portfolio_risk</li>
+                </ul>
+            </div>
+            <div class="impl-block">
+                <div class="impl-block-title">API Endpoint</div>
+                <ul class="impl-list">
+                    <li><code>GET /dashboard/anomaly-narratives</code></li>
+                    <li>Fetches 15 days of campaign metrics, runs <code>detect_anomalies()</code>, then <code>build_anomaly_narratives()</code></li>
+                    <li>Auth-protected via <code>CurrentUserDep</code>, scoped to tenant</li>
+                </ul>
+            </div>
+            <div class="impl-block">
+                <div class="impl-block-title">Frontend Component</div>
+                <ul class="impl-list">
+                    <li><code>AnomalyNarrativesCard.tsx</code> &mdash; new dashboard component</li>
+                    <li>Header with AlertTriangle icon, executive summary, portfolio risk badge</li>
+                    <li>Stats bar with critical/high counts, anomaly total, correlations count</li>
+                    <li><code>CorrelationCard</code> sub-component (severity-coded, shows related metrics)</li>
+                    <li><code>NarrativeCard</code> sub-component (expandable: shows causes + actions)</li>
+                    <li>Session-dismissible, collapsible sections, light theme matching MorningBriefingCard</li>
+                </ul>
+            </div>
+
+            <!-- Data Flow -->
+            <div class="subsection-heading">
+                <span class="icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                </span>
+                Data Flow
+            </div>
+            <div class="data-flow"><span class="flow-highlight">Dashboard loads</span>
+  <span class="flow-arrow">&rarr;</span> <span class="flow-highlight">useAnomalyNarratives()</span> calls <span class="flow-highlight">GET /dashboard/anomaly-narratives</span>
+    <span class="flow-arrow">&rarr;</span> Backend queries 14 days of campaign metrics
+    <span class="flow-arrow">&rarr;</span> <span class="flow-highlight">detect_anomalies()</span> computes z-scores per metric
+    <span class="flow-arrow">&rarr;</span> <span class="flow-highlight">build_anomaly_narratives()</span> generates narratives + correlations
+    <span class="flow-arrow">&rarr;</span> Returns executive summary, narratives, correlations, risk level
+  <span class="flow-arrow">&rarr;</span> Card renders severity-coded narratives with expand/collapse</div>
+
+            <!-- Correlation Patterns -->
+            <div class="subsection-heading">
+                <span class="icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                </span>
+                Cross-Metric Correlation Patterns
+            </div>
+            <table class="files-table">
+                <thead>
+                    <tr>
+                        <th>Pattern</th>
+                        <th>Trigger</th>
+                        <th>Insight</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>spend_up_roas_down</code></td>
+                        <td>Spend &uarr; + ROAS &darr;</td>
+                        <td>Scaling inefficiency &mdash; diminishing returns</td>
+                    </tr>
+                    <tr>
+                        <td><code>tracking_degradation</code></td>
+                        <td>Revenue &darr; + event_loss &uarr;</td>
+                        <td>Conversion events not reaching platforms</td>
+                    </tr>
+                    <tr>
+                        <td><code>funnel_pressure</code></td>
+                        <td>CPA &uarr; + conversions &darr;</td>
+                        <td>Funnel bottleneck (landing page / checkout)</td>
+                    </tr>
+                    <tr>
+                        <td><code>quality_degradation</code></td>
+                        <td>EMQ &darr; + revenue &darr;</td>
+                        <td>Data quality impacting platform optimization</td>
+                    </tr>
+                    <tr>
+                        <td><code>delivery_constrained</code></td>
+                        <td>Spend &darr; + conversions &darr;</td>
+                        <td>Under-delivery from paused ads or narrow targeting</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Files Modified -->
+            <div class="subsection-heading">
+                <span class="icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                </span>
+                Files Modified
+            </div>
+            <table class="files-table">
+                <thead>
+                    <tr>
+                        <th>File</th>
+                        <th>Change</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>backend/app/analytics/logic/anomaly_narratives.py</td>
+                        <td>New module (created) &mdash; narrative generation + correlation detection</td>
+                    </tr>
+                    <tr>
+                        <td>backend/app/api/v1/endpoints/dashboard.py</td>
+                        <td>Added anomaly-narratives endpoint</td>
+                    </tr>
+                    <tr>
+                        <td>frontend/src/api/dashboard.ts</td>
+                        <td>Added 3 types + useAnomalyNarratives() hook</td>
+                    </tr>
+                    <tr>
+                        <td>frontend/src/components/dashboard/AnomalyNarrativesCard.tsx</td>
+                        <td>New component (created)</td>
+                    </tr>
+                    <tr>
+                        <td>frontend/src/views/Overview.tsx</td>
+                        <td>Added import + component placement after MorningBriefingCard</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- FEATURE #3: SIGNAL AUTO-RECOVERY                           -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+
+    <div class="section-divider"></div>
+
+    <div class="section-title" id="feature-3">Feature #3: Signal Auto-Recovery</div>
+    <div class="section-subtitle">Automatically detects signal health degradation, diagnoses root causes, triggers recovery actions, and tracks recovery progress with a real-time dashboard card</div>
+
+    <div class="feature-detail-card">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Effort</div>
+                <div class="stat-value" style="color: var(--green);">Low</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Impact</div>
+                <div class="stat-value" style="color: var(--coral);">High</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Category</div>
+                <div class="stat-value" style="color: var(--cyan);">Automation</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Status</div>
+                <div class="stat-value" style="color: var(--green);">Completed</div>
+            </div>
+        </div>
+
+        <div class="impl-detail">
+            <!-- Architecture -->
+            <div class="subsection-heading">
+                <span class="icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+                </span>
+                Architecture
+            </div>
+            <div class="impl-block">
+                <div class="impl-block-title">Backend Analytics Module</div>
+                <ul class="impl-list">
+                    <li><code>signal_recovery.py</code> &mdash; new module in <code>analytics/logic/</code></li>
+                    <li>5 issue types: emq_drop, event_loss, api_down, data_stale, tracking_gap</li>
+                    <li>6 recovery action types: resync, diagnostics, check_capi, check_pixel, alert_team, expand_params</li>
+                    <li>Auto-triggered actions execute immediately; manual actions queued as recommendations</li>
+                    <li>Recovery timeline tracking with detection &rarr; action &rarr; progress events</li>
+                    <li>Weighted health score from freshness, EMQ, API connectivity, and event loss</li>
+                </ul>
+            </div>
+            <div class="impl-block">
+                <div class="impl-block-title">Pydantic Models</div>
+                <ul class="impl-list">
+                    <li><code>SignalIssue</code> &mdash; type, severity, title, description, metric_value, threshold, affected_platforms</li>
+                    <li><code>RecoveryAction</code> &mdash; type, title, status, priority, auto_triggered, estimated_minutes</li>
+                    <li><code>RecoveryTimeline</code> &mdash; timestamp, event, type, details</li>
+                    <li><code>SignalRecoveryResponse</code> &mdash; status, summary, issues[], recovery_actions[], timeline[], health_score, progress_pct</li>
+                </ul>
+            </div>
+            <div class="impl-block">
+                <div class="impl-block-title">API Endpoint</div>
+                <ul class="impl-list">
+                    <li><code>GET /dashboard/signal-recovery</code></li>
+                    <li>Gathers signal health indicators: EMQ, event loss, API connectivity, data freshness</li>
+                    <li>Queries <code>fact_platform_daily</code> and <code>fact_alerts</code> tables</li>
+                    <li>Runs <code>build_signal_recovery()</code> to generate issues, actions, and timeline</li>
+                    <li>Auth-protected, tenant-scoped, graceful fallback on DB errors</li>
+                </ul>
+            </div>
+            <div class="impl-block">
+                <div class="impl-block-title">Frontend Component</div>
+                <ul class="impl-list">
+                    <li><code>SignalRecoveryCard.tsx</code> &mdash; new dashboard component</li>
+                    <li>Status-aware header with animated pulse for degraded/critical states</li>
+                    <li>SVG health score ring visualization (0-100)</li>
+                    <li>Stats bar: issue count, action count, auto-triggered count, ETA, platforms</li>
+                    <li>Animated recovery progress bar</li>
+                    <li>Expandable <code>IssueCard</code> (severity-coded) and <code>ActionCard</code> (with execute button for re-sync)</li>
+                    <li>Collapsible recovery timeline with typed icons (detection, action, progress, resolution)</li>
+                    <li>Only visible when signals are degraded &mdash; auto-hides when healthy</li>
+                </ul>
+            </div>
+
+            <!-- Data Flow -->
+            <div class="subsection-heading">
+                <span class="icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                </span>
+                Data Flow
+            </div>
+            <div class="data-flow"><span class="flow-highlight">Dashboard loads</span>
+  <span class="flow-arrow">&rarr;</span> <span class="flow-highlight">useSignalRecovery()</span> calls <span class="flow-highlight">GET /dashboard/signal-recovery</span> (30s stale, 2min refetch)
+    <span class="flow-arrow">&rarr;</span> Backend gathers: platform connections, data freshness, EMQ alerts, event loss
+    <span class="flow-arrow">&rarr;</span> <span class="flow-highlight">build_signal_recovery()</span> detects issues &rarr; generates actions &rarr; builds timeline
+    <span class="flow-arrow">&rarr;</span> Returns recovery status, issues, actions, progress percentage
+  <span class="flow-arrow">&rarr;</span> Card renders with health ring + progress bar (hidden when healthy)
+  <span class="flow-arrow">&rarr;</span> <span class="flow-comment">User can trigger re-sync directly from the card</span></div>
+
+            <!-- Issue Templates -->
+            <div class="subsection-heading">
+                <span class="icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                </span>
+                Issue Detection Templates
+            </div>
+            <table class="files-table">
+                <thead>
+                    <tr>
+                        <th>Issue Type</th>
+                        <th>Trigger Condition</th>
+                        <th>Auto-Recovery Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>emq_drop</code></td>
+                        <td>EMQ score &lt; 80%</td>
+                        <td>Check CAPI params, enrich payloads, run diagnostics</td>
+                    </tr>
+                    <tr>
+                        <td><code>event_loss</code></td>
+                        <td>Event loss &gt; 5%</td>
+                        <td>Check CAPI logs, verify pixel, <strong>auto re-sync</strong></td>
+                    </tr>
+                    <tr>
+                        <td><code>api_down</code></td>
+                        <td>API connectivity lost</td>
+                        <td>Check credentials, <strong>auto reconnect</strong>, <strong>auto notify team</strong></td>
+                    </tr>
+                    <tr>
+                        <td><code>data_stale</code></td>
+                        <td>Data &gt; 24h old</td>
+                        <td><strong>Auto full sync</strong>, check scheduler</td>
+                    </tr>
+                    <tr>
+                        <td><code>tracking_gap</code></td>
+                        <td>Platform vs. server discrepancy</td>
+                        <td>Audit tracking setup, check deduplication</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Files Modified -->
+            <div class="subsection-heading">
+                <span class="icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                </span>
+                Files Modified
+            </div>
+            <table class="files-table">
+                <thead>
+                    <tr>
+                        <th>File</th>
+                        <th>Change</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>backend/app/analytics/logic/signal_recovery.py</td>
+                        <td>New module (created) &mdash; issue detection + recovery action generation</td>
+                    </tr>
+                    <tr>
+                        <td>backend/app/api/v1/endpoints/dashboard.py</td>
+                        <td>Added signal-recovery endpoint with full signal health gathering</td>
+                    </tr>
+                    <tr>
+                        <td>frontend/src/api/dashboard.ts</td>
+                        <td>Added 4 types + useSignalRecovery() hook</td>
+                    </tr>
+                    <tr>
+                        <td>frontend/src/components/dashboard/SignalRecoveryCard.tsx</td>
+                        <td>New component (created) &mdash; health ring, progress bar, issue/action cards</td>
+                    </tr>
+                    <tr>
+                        <td>frontend/src/views/Overview.tsx</td>
+                        <td>Added import + component placement before AnomalyNarrativesCard</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- FEATURE #4: AI COPILOT CHAT                                -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+
+    <div class="section-divider"></div>
+
+    <div class="section-title" id="feature-4">Feature #4: AI Copilot Chat</div>
+    <div class="section-subtitle">Conversational AI assistant that queries real dashboard data to answer questions about campaigns, signal health, anomalies, and recommendations in natural language</div>
+
+    <div class="feature-detail-card">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Effort</div>
+                <div class="stat-value" style="color: var(--coral);">High</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Impact</div>
+                <div class="stat-value" style="color: var(--coral);">Very High</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Category</div>
+                <div class="stat-value" style="color: var(--coral);">AI-Powered</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Status</div>
+                <div class="stat-value" style="color: var(--green);">Completed</div>
+            </div>
+        </div>
+
+        <div class="impl-detail">
+            <!-- Architecture -->
+            <div class="subsection-heading">
+                <span class="icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+                </span>
+                Architecture
+            </div>
+            <div class="impl-block">
+                <div class="impl-block-title">Copilot Agent (Backend)</div>
+                <ul class="impl-list">
+                    <li><code>copilot_agent.py</code> &mdash; new agent in <code>services/agents/</code></li>
+                    <li>9 recognized intents: greeting, performance_overview, signal_health, anomalies, spend_analysis, roas_analysis, recommendations, campaigns, help</li>
+                    <li>Keyword-based intent classification (upgradeable to LLM)</li>
+                    <li>Template response generation with real data injection</li>
+                    <li>Data-aware: queries campaign metrics, signal health, anomaly data</li>
+                    <li>ROAS quality assessment (exceptional/strong/healthy/break-even/below target)</li>
+                    <li>Cross-data recommendations combining signal + anomaly + performance signals</li>
+                </ul>
+            </div>
+            <div class="impl-block">
+                <div class="impl-block-title">API Endpoint</div>
+                <ul class="impl-list">
+                    <li><code>POST /copilot/chat</code> &mdash; accepts message + optional session_id</li>
+                    <li>Gathers context: campaign metrics (aggregated), EMQ alerts, anomaly summary</li>
+                    <li>Runs <code>process_message()</code> with full data context</li>
+                    <li>Returns: message, suggestions[], data_cards[], intent, session_id</li>
+                    <li>Registered in API router via <code>api/v1/__init__.py</code></li>
+                </ul>
+            </div>
+            <div class="impl-block">
+                <div class="impl-block-title">Frontend Component</div>
+                <ul class="impl-list">
+                    <li><code>CopilotChat.tsx</code> &mdash; floating chat panel on all dashboard pages</li>
+                    <li>Gradient floating button (bottom-right) with sparkle icon + green status dot</li>
+                    <li>400px &times; 600px slide-up panel with gradient header</li>
+                    <li>User/assistant message bubbles with avatar icons</li>
+                    <li>Bold markdown rendering (<code>**text**</code>)</li>
+                    <li>Inline data cards (metric value + change indicator)</li>
+                    <li>Suggestion chips below messages for guided conversation</li>
+                    <li>Loading state with spinner + "Analyzing your data..." text</li>
+                    <li>Session persistence across page navigations (via TenantLayout)</li>
+                </ul>
+            </div>
+
+            <!-- Intents -->
+            <div class="subsection-heading">
+                <span class="icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </span>
+                Recognized Intents
+            </div>
+            <table class="files-table">
+                <thead>
+                    <tr>
+                        <th>Intent</th>
+                        <th>Example Queries</th>
+                        <th>Response Includes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>performance_overview</code></td>
+                        <td>"How are my campaigns doing?", "Give me a summary"</td>
+                        <td>Spend, revenue, ROAS, conversions, campaign count + data cards</td>
+                    </tr>
+                    <tr>
+                        <td><code>signal_health</code></td>
+                        <td>"Is my signal healthy?", "Check EMQ"</td>
+                        <td>Health score, EMQ, autopilot status, issues</td>
+                    </tr>
+                    <tr>
+                        <td><code>anomalies</code></td>
+                        <td>"Any anomalies?", "Is anything unusual?"</td>
+                        <td>Anomaly count, severity breakdown, top correlation, risk level</td>
+                    </tr>
+                    <tr>
+                        <td><code>spend_analysis</code></td>
+                        <td>"How much am I spending?", "Budget analysis"</td>
+                        <td>Total spend, CPA, conversions, efficiency ratio</td>
+                    </tr>
+                    <tr>
+                        <td><code>roas_analysis</code></td>
+                        <td>"What's my ROAS?", "Am I profitable?"</td>
+                        <td>ROAS with quality assessment, spend vs. revenue</td>
+                    </tr>
+                    <tr>
+                        <td><code>recommendations</code></td>
+                        <td>"What should I do?", "Give me advice"</td>
+                        <td>Numbered action items from signal + anomaly + performance data</td>
+                    </tr>
+                    <tr>
+                        <td><code>campaigns</code></td>
+                        <td>"Show me campaigns", "How many are active?"</td>
+                        <td>Active/total count, spend summary</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Data Flow -->
+            <div class="subsection-heading">
+                <span class="icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                </span>
+                Data Flow
+            </div>
+            <div class="data-flow"><span class="flow-highlight">User clicks sparkle button</span>
+  <span class="flow-arrow">&rarr;</span> Chat panel opens with welcome message + suggestions
+  <span class="flow-arrow">&rarr;</span> User types or taps suggestion
+  <span class="flow-arrow">&rarr;</span> <span class="flow-highlight">useCopilotChat()</span> calls <span class="flow-highlight">POST /copilot/chat</span>
+    <span class="flow-arrow">&rarr;</span> Backend gathers: campaign metrics, EMQ alerts, health data
+    <span class="flow-arrow">&rarr;</span> <span class="flow-highlight">classify_intent()</span> determines user's question type
+    <span class="flow-arrow">&rarr;</span> Response generator builds narrative with real data
+    <span class="flow-arrow">&rarr;</span> Returns message + data_cards[] + suggestions[]
+  <span class="flow-arrow">&rarr;</span> Assistant bubble renders with inline data cards
+  <span class="flow-arrow">&rarr;</span> <span class="flow-comment">Suggestions update for next turn</span></div>
+
+            <!-- Files Modified -->
+            <div class="subsection-heading">
+                <span class="icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                </span>
+                Files Modified
+            </div>
+            <table class="files-table">
+                <thead>
+                    <tr>
+                        <th>File</th>
+                        <th>Change</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>backend/app/services/agents/copilot_agent.py</td>
+                        <td>New module &mdash; intent classification + data-aware response generation</td>
+                    </tr>
+                    <tr>
+                        <td>backend/app/api/v1/endpoints/copilot.py</td>
+                        <td>New endpoint &mdash; POST /copilot/chat with context gathering</td>
+                    </tr>
+                    <tr>
+                        <td>backend/app/api/v1/__init__.py</td>
+                        <td>Registered copilot router</td>
+                    </tr>
+                    <tr>
+                        <td>frontend/src/api/copilot.ts</td>
+                        <td>New API module &mdash; types + useCopilotChat() mutation hook</td>
+                    </tr>
+                    <tr>
+                        <td>frontend/src/components/dashboard/CopilotChat.tsx</td>
+                        <td>New component &mdash; floating chat panel with data cards</td>
+                    </tr>
+                    <tr>
+                        <td>frontend/src/views/TenantLayout.tsx</td>
+                        <td>Added CopilotChat integration (persistent across all pages)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- FEATURE #5: PREDICTIVE BUDGET AUTOPILOT                    -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+
+    <div class="section-divider"></div>
+
+    <div class="section-title" id="feature-5">Feature #5: Predictive Budget Autopilot</div>
+    <div class="section-subtitle">Confidence-scored budget reallocation with trust gate validation and forecast projections</div>
+
+    <div class="architecture-card">
+        <div class="arch-title">Architecture Overview</div>
+        <div class="arch-description">
+            The Predictive Budget Autopilot analyzes all campaigns to generate confidence-scored budget
+            reallocation recommendations. It uses composite scoring (ROAS delta 60%, CPA delta 40%),
+            validates through the trust gate, and projects forecast outcomes if recommendations are applied.
+        </div>
+
+        <div class="arch-title" style="margin-top: 1.5rem;">Data Flow</div>
+        <pre class="code-block">
+Campaign Metrics (spend, revenue, conversions)
+        &darr;
+Portfolio Averages (avg spend, revenue, conversions)
+        &darr;
+Campaign Scoring (_calculate_campaign_score)
+  &bull; ROAS delta (60% weight)
+  &bull; CPA delta (40% weight)
+  &bull; Confidence from volume + spend + score magnitude
+        &darr;
+Action Classification (_determine_action)
+  &bull; scale: score &ge; 0.25, confidence &ge; 0.5
+  &bull; reduce: score &le; -0.25, confidence &ge; 0.4
+  &bull; pause: score &le; -0.25 AND ROAS &lt; 0.5
+  &bull; maintain: default
+        &darr;
+Budget Calculation (_calculate_recommended_spend)
+  &bull; Scale: +15-30% (modulated by confidence)
+  &bull; Reduce: -10-20% (modulated by confidence)
+  &bull; Pause: $0
+        &darr;
+Risk Analysis (_identify_risk_factors)
+  &bull; Low conversion volume (&lt;10)
+  &bull; Below confidence threshold (&lt;0.6)
+  &bull; ROAS below breakeven (&lt;1.0)
+  &bull; Low spend learning phase (&lt;$50)
+        &darr;
+Trust Gate Validation
+  &bull; PASS: signal health &ge; 70 &rarr; autopilot eligible
+  &bull; HOLD: signal health &ge; 40 &rarr; advisory only
+  &bull; BLOCK: signal health &lt; 40 &rarr; changes suspended
+        &darr;
+Forecast Projection
+  &bull; Projected spend, revenue, ROAS, conversions
+  &bull; Change percentages vs current
+  &bull; Confidence level (high/medium/low)
+        </pre>
+
+        <div class="arch-title" style="margin-top: 1.5rem;">Backend Models</div>
+        <table class="deps-table">
+            <thead>
+                <tr><th>Model</th><th>Purpose</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>CampaignBudgetInsight</code></td><td>Per-campaign recommendation with action, confidence, metrics, risk factors</td></tr>
+                <tr><td><code>BudgetForecast</code></td><td>Projected spend/revenue/ROAS/conversions if recommendations applied</td></tr>
+                <tr><td><code>PredictiveBudgetResponse</code></td><td>Full response: trust gate, recommendations, forecast, summary</td></tr>
+            </tbody>
+        </table>
+
+        <div class="arch-title" style="margin-top: 1.5rem;">Frontend Components</div>
+        <table class="deps-table">
+            <thead>
+                <tr><th>Component</th><th>Purpose</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>PredictiveBudgetCard</code></td><td>Main card: trust gate badge, stats bar, forecast, recommendations</td></tr>
+                <tr><td><code>ForecastCard</code></td><td>Projected impact: spend, revenue, ROAS, conversions with change indicators</td></tr>
+                <tr><td><code>RecommendationRow</code></td><td>Expandable per-campaign row: action, confidence, metrics, risk factors</td></tr>
+                <tr><td><code>ConfidenceBar</code></td><td>Color-coded confidence indicator (emerald &ge;85%, blue &ge;60%, amber &ge;40%, red)</td></tr>
+            </tbody>
+        </table>
+
+        <div class="arch-title" style="margin-top: 1.5rem;">Files Modified / Created</div>
+        <table class="deps-table">
+            <thead>
+                <tr><th>File</th><th>Change</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>backend/app/analytics/logic/predictive_budget.py</td>
+                    <td>New module &mdash; scoring, actions, forecasting, trust gate</td>
+                </tr>
+                <tr>
+                    <td>backend/app/api/v1/endpoints/dashboard.py</td>
+                    <td>New endpoint: GET /dashboard/predictive-budget</td>
+                </tr>
+                <tr>
+                    <td>frontend/src/api/dashboard.ts</td>
+                    <td>Added types + usePredictiveBudget() hook (5min stale, 15min refetch)</td>
+                </tr>
+                <tr>
+                    <td>frontend/src/components/dashboard/PredictiveBudgetCard.tsx</td>
+                    <td>New component &mdash; budget autopilot card with forecast and recommendations</td>
+                </tr>
+                <tr>
+                    <td>frontend/src/views/Overview.tsx</td>
+                    <td>Integrated PredictiveBudgetCard after AnomalyNarrativesCard</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- FEATURE #6: AI-GENERATED REPORTS                           -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+
+    <div class="section-divider"></div>
+
+    <div class="section-title" id="feature-6">Feature #6: AI-Generated Reports</div>
+    <div class="section-subtitle">Executive-quality performance reports with narrative insights, trend analysis, and actionable recommendations</div>
+
+    <div class="architecture-card">
+        <div class="arch-title">Architecture Overview</div>
+        <div class="arch-description">
+            AI-Generated Reports automatically produce executive-quality performance reports by aggregating
+            campaign metrics, analyzing platform breakdowns, identifying top/bottom performers, generating
+            narrative insights, and producing actionable recommendations. Each report includes a health grade
+            (A&ndash;F), KPI grid with period-over-period changes, and collapsible sections.
+        </div>
+
+        <div class="arch-title" style="margin-top: 1.5rem;">Data Flow</div>
+        <pre class="code-block">
+Campaign Metrics (all campaigns, all platforms)
+        &darr;
+Aggregation (total spend, revenue, conversions, ROAS, CPA)
+        &darr;
+Health Grading (_calculate_grade)
+  &bull; A: ROAS &ge; 4.0 + 100+ conversions
+  &bull; B: ROAS &ge; 3.0 + 50+ conversions
+  &bull; C: ROAS &ge; 2.0 + 20+ conversions
+  &bull; D: ROAS &ge; 1.0
+  &bull; F: Below breakeven
+        &darr;
+Platform Analysis (_analyze_platforms)
+  &bull; Per-platform spend, revenue, ROAS, conversion counts
+  &bull; Spend share percentage
+  &bull; Narrative commentary per platform
+        &darr;
+Campaign Highlights (_find_highlights)
+  &bull; Top 3 by ROAS with scaling insight
+  &bull; Bottom 3 by ROAS with risk narrative
+        &darr;
+Insight Generation (_generate_insights)
+  &bull; Concentration risk (>70% single platform)
+  &bull; High-ROAS opportunities (4x+)
+  &bull; Low conversion warnings
+  &bull; Portfolio ROAS milestones
+  &bull; Cross-platform performance
+        &darr;
+Recommendations (_generate_recommendations)
+  &bull; Scale top performers
+  &bull; Cut/pause underperformers
+  &bull; Platform diversification
+  &bull; Conversion funnel audit
+        &darr;
+Structured Report (7 sections + executive summary)
+        </pre>
+
+        <div class="arch-title" style="margin-top: 1.5rem;">Report Sections</div>
+        <table class="deps-table">
+            <thead>
+                <tr><th>Section</th><th>Content</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Executive Summary</td><td>Narrative overview of portfolio performance with grade</td></tr>
+                <tr><td>KPI Grid</td><td>6 KPIs with values, trends, and period-over-period changes</td></tr>
+                <tr><td>Platform Breakdown</td><td>Per-platform metrics with spend share and commentary</td></tr>
+                <tr><td>Top Performers</td><td>Best 3 campaigns by ROAS with scaling recommendations</td></tr>
+                <tr><td>Needs Attention</td><td>Worst 3 campaigns with optimization suggestions</td></tr>
+                <tr><td>AI Insights</td><td>Categorized insights: trends, opportunities, risks, milestones</td></tr>
+                <tr><td>Recommendations</td><td>Up to 5 prioritized actionable recommendations</td></tr>
+            </tbody>
+        </table>
+
+        <div class="arch-title" style="margin-top: 1.5rem;">Files Modified / Created</div>
+        <table class="deps-table">
+            <thead>
+                <tr><th>File</th><th>Change</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>backend/app/analytics/logic/ai_reports.py</td>
+                    <td>New module &mdash; report generation with insights, grading, recommendations</td>
+                </tr>
+                <tr>
+                    <td>backend/app/api/v1/endpoints/dashboard.py</td>
+                    <td>New endpoint: GET /dashboard/ai-report</td>
+                </tr>
+                <tr>
+                    <td>frontend/src/api/dashboard.ts</td>
+                    <td>Added types + useAIReport() hook (10min stale, 30min refetch)</td>
+                </tr>
+                <tr>
+                    <td>frontend/src/components/dashboard/AIReportCard.tsx</td>
+                    <td>New component &mdash; collapsible report card with grade badge, KPI grid, insights</td>
+                </tr>
+                <tr>
+                    <td>frontend/src/views/Overview.tsx</td>
+                    <td>Integrated AIReportCard after PredictiveBudgetCard</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- FEATURE #7: CHURN PREVENTION AUTOMATIONS                   -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+
+    <div class="section-divider"></div>
+
+    <div class="section-title" id="feature-7">Feature #7: Churn Prevention Automations</div>
+    <div class="section-subtitle">Multi-dimensional churn risk scoring with automated intervention recommendations</div>
+
+    <div class="architecture-card">
+        <div class="arch-title">Architecture Overview</div>
+        <div class="arch-description">
+            Churn Prevention analyzes every campaign across three risk dimensions &mdash; performance
+            (ROAS, conversions), spend trend (vs portfolio average), and engagement (status, data freshness).
+            Scores are aggregated into per-campaign risk levels and portfolio-wide retention metrics.
+            Automated intervention playbooks are generated per risk profile.
+        </div>
+
+        <div class="arch-title" style="margin-top: 1.5rem;">Risk Scoring Dimensions</div>
+        <table class="deps-table">
+            <thead>
+                <tr><th>Dimension</th><th>Max Weight</th><th>Signals</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Performance</td><td>50 pts</td><td>Critical ROAS (&lt;0.5x), low ROAS (&lt;1x), zero conversions, low conversions</td></tr>
+                <tr><td>Spend Trend</td><td>30 pts</td><td>Spend collapse (&lt;30% of avg), declining spend, near-zero spend</td></tr>
+                <tr><td>Engagement</td><td>25 pts</td><td>Campaign paused/archived, stale data (no sync in 7 days)</td></tr>
+            </tbody>
+        </table>
+
+        <div class="arch-title" style="margin-top: 1.5rem;">Risk Levels</div>
+        <table class="deps-table">
+            <thead>
+                <tr><th>Level</th><th>Score Range</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+                <tr><td style="color: var(--danger);">Critical</td><td>&ge;70</td><td>Urgent client review + full playbook</td></tr>
+                <tr><td style="color: var(--orange);">High</td><td>45&ndash;69</td><td>Proactive intervention</td></tr>
+                <tr><td style="color: var(--yellow);">Medium</td><td>25&ndash;44</td><td>Monitor + targeted actions</td></tr>
+                <tr><td style="color: var(--green);">Low</td><td>&lt;25</td><td>Healthy &mdash; no action needed</td></tr>
+            </tbody>
+        </table>
+
+        <div class="arch-title" style="margin-top: 1.5rem;">Intervention Categories</div>
+        <table class="deps-table">
+            <thead>
+                <tr><th>Category</th><th>Examples</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Outreach</td><td>Urgent client review, proactive performance update</td></tr>
+                <tr><td>Creative</td><td>Refresh creative assets, test new variations</td></tr>
+                <tr><td>Optimize</td><td>Audit targeting &amp; audiences, reactivation plan</td></tr>
+                <tr><td>Budget</td><td>Revised budget strategy proposal</td></tr>
+                <tr><td>Technical</td><td>Conversion tracking audit, platform re-sync (auto-eligible)</td></tr>
+            </tbody>
+        </table>
+
+        <div class="arch-title" style="margin-top: 1.5rem;">Files Modified / Created</div>
+        <table class="deps-table">
+            <thead>
+                <tr><th>File</th><th>Change</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>backend/app/analytics/logic/churn_prevention.py</td>
+                    <td>New module &mdash; risk scoring, intervention generation, retention metrics</td>
+                </tr>
+                <tr>
+                    <td>backend/app/api/v1/endpoints/dashboard.py</td>
+                    <td>New endpoint: GET /dashboard/churn-prevention</td>
+                </tr>
+                <tr>
+                    <td>frontend/src/api/dashboard.ts</td>
+                    <td>Added types + useChurnPrevention() hook (5min stale, 10min refetch)</td>
+                </tr>
+                <tr>
+                    <td>frontend/src/components/dashboard/ChurnPreventionCard.tsx</td>
+                    <td>New component &mdash; risk distribution bar, retention metrics, intervention cards, at-risk campaigns</td>
+                </tr>
+                <tr>
+                    <td>frontend/src/views/Overview.tsx</td>
+                    <td>Integrated ChurnPreventionCard after AIReportCard</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- FEATURE #8: UNIFIED NOTIFICATIONS WITH AI PRIORITY         -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+
+    <div class="section-divider"></div>
+
+    <div class="section-title" id="feature-8">Feature #8: Unified Notifications with AI Priority</div>
+    <div class="section-subtitle">AI-scored notification feed aggregating campaigns, signals, pacing, and system alerts</div>
+
+    <div class="architecture-card">
+        <div class="arch-title">Architecture Overview</div>
+        <div class="arch-description">
+            Unified Notifications aggregates alerts from multiple sources (campaign performance,
+            signal health, system events, existing DB notifications), scores each by urgency,
+            impact, and actionability using a weighted formula, then returns a priority-ranked
+            feed with suggested actions and category grouping.
+        </div>
+
+        <div class="arch-title" style="margin-top: 1.5rem;">Priority Scoring Formula</div>
+        <pre class="code-block">
+Priority = (Urgency &times; 0.5) + (Impact &times; 0.3) + (Actionability &times; 0.2)
+
+Urgency (0-100):
+  &bull; Severity base: critical=90, error=75, warning=50, info=20
+  &bull; Recency boost: &lt;1hr +10, &lt;6hr +5, &gt;24hr -10
+  &bull; Time-sensitivity bonus: +15
+
+Impact (0-100):
+  &bull; Spend at risk: &ge;$10K=40, &ge;$5K=30, &ge;$1K=20
+  &bull; Deviation %: &ge;50%=30, &ge;25%=20, &ge;10%=10
+  &bull; Campaigns affected: &ge;5=20, &ge;2=10
+
+Actionability (0-100):
+  &bull; Auto-resolvable=90, suggested action=70, manual=30
+
+Priority Labels:
+  &bull; Critical: &ge;75  |  High: &ge;50  |  Medium: &ge;30  |  Low: &lt;30
+        </pre>
+
+        <div class="arch-title" style="margin-top: 1.5rem;">Notification Sources</div>
+        <table class="deps-table">
+            <thead>
+                <tr><th>Source</th><th>Triggers</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Campaign</td><td>Critical ROAS (&lt;0.5x), zero conversions, top performer (5x+ ROAS)</td></tr>
+                <tr><td>Signal Health</td><td>Health critical (&lt;40), health degraded (&lt;70)</td></tr>
+                <tr><td>System</td><td>No active campaigns, portfolio below breakeven</td></tr>
+                <tr><td>Database</td><td>Existing notifications table (re-scored with AI priority)</td></tr>
+            </tbody>
+        </table>
+
+        <div class="arch-title" style="margin-top: 1.5rem;">Files Modified / Created</div>
+        <table class="deps-table">
+            <thead>
+                <tr><th>File</th><th>Change</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>backend/app/analytics/logic/unified_notifications.py</td>
+                    <td>New module &mdash; priority scoring, multi-source aggregation, grouping</td>
+                </tr>
+                <tr>
+                    <td>backend/app/api/v1/endpoints/dashboard.py</td>
+                    <td>New endpoint: GET /dashboard/notifications-prioritized</td>
+                </tr>
+                <tr>
+                    <td>frontend/src/api/dashboard.ts</td>
+                    <td>Added types + useUnifiedNotifications() hook (2min stale, 5min refetch)</td>
+                </tr>
+                <tr>
+                    <td>frontend/src/components/dashboard/UnifiedNotificationsCard.tsx</td>
+                    <td>New component &mdash; priority/grouped views, expandable notifications, suggested actions</td>
+                </tr>
+                <tr>
+                    <td>frontend/src/views/Overview.tsx</td>
+                    <td>Integrated UnifiedNotificationsCard after ChurnPreventionCard</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- REMAINING FEATURES ROADMAP                                 -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+
+    <div class="section-divider"></div>
+
+    <div class="section-title" id="roadmap">Remaining Features (Planned)</div>
+    <div class="section-subtitle">12 features prioritized by impact-to-effort ratio &mdash; the recommended implementation sequence</div>
+
+    <div class="roadmap-wrapper">
+        <table class="roadmap-table">
+            <thead>
+                <tr>
+                    <th style="text-align:center;">Rank</th>
+                    <th>Feature</th>
+                    <th>Category</th>
+                    <th>Effort</th>
+                    <th>Impact</th>
+                    <th>Status</th>
+                    <th>Builds On</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="rank rank-top">1</td>
+                    <td class="feature-name" style="color: var(--green);">AI Morning Briefing</td>
+                    <td><span class="category-badge cat-ux">Dashboard UX</span></td>
+                    <td><span class="effort-badge effort-medium">Medium</span></td>
+                    <td><span class="impact-badge impact-very-high">Very High</span></td>
+                    <td class="status-cell completed">Completed</td>
+                    <td class="builds-on">Dashboard, Signal Health</td>
+                </tr>
+                <tr>
+                    <td class="rank rank-top">2</td>
+                    <td class="feature-name" style="color: var(--green);">Smart Anomaly Narratives</td>
+                    <td><span class="category-badge cat-ai">AI-Powered</span></td>
+                    <td><span class="effort-badge effort-low">Low</span></td>
+                    <td><span class="impact-badge impact-medium">Medium</span></td>
+                    <td class="status-cell completed">Completed</td>
+                    <td class="builds-on">Anomaly Detection</td>
+                </tr>
+                <tr>
+                    <td class="rank rank-top">3</td>
+                    <td class="feature-name" style="color: var(--green);">Signal Auto-Recovery</td>
+                    <td><span class="category-badge cat-automation">Automation</span></td>
+                    <td><span class="effort-badge effort-low">Low</span></td>
+                    <td><span class="impact-badge impact-high">High</span></td>
+                    <td class="status-cell completed">Completed</td>
+                    <td class="builds-on">Signal Health, EMQ</td>
+                </tr>
+                <tr>
+                    <td class="rank rank-top">4</td>
+                    <td class="feature-name" style="color: var(--green);">AI Copilot Chat</td>
+                    <td><span class="category-badge cat-ai">AI-Powered</span></td>
+                    <td><span class="effort-badge effort-high">High</span></td>
+                    <td><span class="impact-badge impact-very-high">Very High</span></td>
+                    <td class="status-cell completed">Completed</td>
+                    <td class="builds-on">All Analytics</td>
+                </tr>
+                <tr>
+                    <td class="rank rank-top">5</td>
+                    <td class="feature-name">Predictive Budget Autopilot</td>
+                    <td><span class="category-badge cat-ai">AI-Powered</span></td>
+                    <td><span class="effort-badge effort-medium">Medium</span></td>
+                    <td><span class="impact-badge impact-very-high">Very High</span></td>
+                    <td class="status-cell completed">Completed</td>
+                    <td class="builds-on">Trust Gate, Autopilot</td>
+                </tr>
+                <tr>
+                    <td class="rank">6</td>
+                    <td class="feature-name" style="color: var(--green);">AI-Generated Reports</td>
+                    <td><span class="category-badge cat-ai">AI-Powered</span></td>
+                    <td><span class="effort-badge effort-medium">Medium</span></td>
+                    <td><span class="impact-badge impact-high">High</span></td>
+                    <td class="status-cell completed">Completed</td>
+                    <td class="builds-on">Reporting Engine</td>
+                </tr>
+                <tr>
+                    <td class="rank">7</td>
+                    <td class="feature-name" style="color: var(--green);">Churn Prevention Automations</td>
+                    <td><span class="category-badge cat-ai">AI-Powered</span></td>
+                    <td><span class="effort-badge effort-medium">Medium</span></td>
+                    <td><span class="impact-badge impact-high">High</span></td>
+                    <td class="status-cell completed">Completed</td>
+                    <td class="builds-on">CDP, WhatsApp</td>
+                </tr>
+                <tr>
+                    <td class="rank">8</td>
+                    <td class="feature-name" style="color: var(--green);">Unified Notifications with AI Priority</td>
+                    <td><span class="category-badge cat-ux">Dashboard UX</span></td>
+                    <td><span class="effort-badge effort-medium">Medium</span></td>
+                    <td><span class="impact-badge impact-high">High</span></td>
+                    <td class="status-cell completed">Completed</td>
+                    <td class="builds-on">Notifications, Alerts</td>
+                </tr>
+                <tr>
+                    <td class="rank">9</td>
+                    <td class="feature-name">Cross-Platform Budget Optimizer</td>
+                    <td><span class="category-badge cat-automation">Automation</span></td>
+                    <td><span class="effort-badge effort-medium">Medium</span></td>
+                    <td><span class="impact-badge impact-high">High</span></td>
+                    <td class="status-cell planned">Planned</td>
+                    <td class="builds-on">Integrations, Pacing</td>
+                </tr>
+                <tr>
+                    <td class="rank">10</td>
+                    <td class="feature-name">Audience Lifecycle Automations</td>
+                    <td><span class="category-badge cat-automation">Automation</span></td>
+                    <td><span class="effort-badge effort-medium">Medium</span></td>
+                    <td><span class="impact-badge impact-high">High</span></td>
+                    <td class="status-cell planned">Planned</td>
+                    <td class="builds-on">CDP, Audience Sync</td>
+                </tr>
+                <tr>
+                    <td class="rank">11</td>
+                    <td class="feature-name">Goal Tracking &amp; Pacing</td>
+                    <td><span class="category-badge cat-ux">Dashboard UX</span></td>
+                    <td><span class="effort-badge effort-medium">Medium</span></td>
+                    <td><span class="impact-badge impact-high">High</span></td>
+                    <td class="status-cell planned">Planned</td>
+                    <td class="builds-on">Pacing Service</td>
+                </tr>
+                <tr>
+                    <td class="rank">12</td>
+                    <td class="feature-name">Attribution Confidence Dashboard</td>
+                    <td><span class="category-badge cat-data">Data &amp; Intel</span></td>
+                    <td><span class="effort-badge effort-medium">Medium</span></td>
+                    <td><span class="impact-badge impact-high">High</span></td>
+                    <td class="status-cell planned">Planned</td>
+                    <td class="builds-on">Attribution, DDA</td>
+                </tr>
+                <tr>
+                    <td class="rank">13</td>
+                    <td class="feature-name">Customer LTV Forecasting</td>
+                    <td><span class="category-badge cat-data">Data &amp; Intel</span></td>
+                    <td><span class="effort-badge effort-medium">Medium</span></td>
+                    <td><span class="impact-badge impact-high">High</span></td>
+                    <td class="status-cell planned">Planned</td>
+                    <td class="builds-on">CDP, RFM Analysis</td>
+                </tr>
+                <tr>
+                    <td class="rank">14</td>
+                    <td class="feature-name">Campaign Creative Scoring</td>
+                    <td><span class="category-badge cat-ai">AI-Powered</span></td>
+                    <td><span class="effort-badge effort-medium">Medium</span></td>
+                    <td><span class="impact-badge impact-medium">Medium</span></td>
+                    <td class="status-cell planned">Planned</td>
+                    <td class="builds-on">Campaigns, Analytics</td>
+                </tr>
+                <tr>
+                    <td class="rank">15</td>
+                    <td class="feature-name">Competitor Intelligence Automation</td>
+                    <td><span class="category-badge cat-data">Data &amp; Intel</span></td>
+                    <td><span class="effort-badge effort-high">High</span></td>
+                    <td><span class="impact-badge impact-high">High</span></td>
+                    <td class="status-cell planned">Planned</td>
+                    <td class="builds-on">External APIs</td>
+                </tr>
+                <tr>
+                    <td class="rank">16</td>
+                    <td class="feature-name">Scheduled A/B Test Analysis</td>
+                    <td><span class="category-badge cat-automation">Automation</span></td>
+                    <td><span class="effort-badge effort-medium">Medium</span></td>
+                    <td><span class="impact-badge impact-medium">Medium</span></td>
+                    <td class="status-cell planned">Planned</td>
+                    <td class="builds-on">Campaigns, Celery</td>
+                </tr>
+                <tr>
+                    <td class="rank">17</td>
+                    <td class="feature-name">Collaborative Annotations</td>
+                    <td><span class="category-badge cat-ux">Dashboard UX</span></td>
+                    <td><span class="effort-badge effort-medium">Medium</span></td>
+                    <td><span class="impact-badge impact-medium">Medium</span></td>
+                    <td class="status-cell planned">Planned</td>
+                    <td class="builds-on">Dashboard, WebSocket</td>
+                </tr>
+                <tr>
+                    <td class="rank">18</td>
+                    <td class="feature-name">Knowledge Graph Auto-Insights</td>
+                    <td><span class="category-badge cat-data">Data &amp; Intel</span></td>
+                    <td><span class="effort-badge effort-high">High</span></td>
+                    <td><span class="impact-badge impact-high">High</span></td>
+                    <td class="status-cell planned">Planned</td>
+                    <td class="builds-on">Knowledge Graph</td>
+                </tr>
+                <tr>
+                    <td class="rank">19</td>
+                    <td class="feature-name">Cross-Channel Journey Mapping</td>
+                    <td><span class="category-badge cat-data">Data &amp; Intel</span></td>
+                    <td><span class="effort-badge effort-high">High</span></td>
+                    <td><span class="impact-badge impact-high">High</span></td>
+                    <td class="status-cell planned">Planned</td>
+                    <td class="builds-on">CDP, Attribution</td>
+                </tr>
+                <tr>
+                    <td class="rank">20</td>
+                    <td class="feature-name">Natural Language Filters</td>
+                    <td><span class="category-badge cat-ux">Dashboard UX</span></td>
+                    <td><span class="effort-badge effort-high">High</span></td>
+                    <td><span class="impact-badge impact-medium">Medium</span></td>
+                    <td class="status-cell planned">Planned</td>
+                    <td class="builds-on">All Data Models</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- FEATURES BY CATEGORY                                       -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+
+    <div class="section-divider"></div>
+
+    <div class="section-title" id="categories">Features by Category</div>
+    <div class="section-subtitle">Breakdown of all 20 features across four implementation categories</div>
+
+    <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+        <div class="impl-block" style="border-left: 3px solid var(--coral);">
+            <div class="impl-block-title" style="margin-bottom: 0.5rem;">AI-Powered (6 features)</div>
+            <ul class="impl-list">
+                <li style="color: var(--green);">AI Copilot Chat &nbsp;<span style="font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em;">Completed</span></li>
+                <li style="color: var(--green);">Smart Anomaly Narratives &nbsp;<span style="font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em;">Completed</span></li>
+                <li style="color: var(--green);">Predictive Budget Autopilot &nbsp;<span style="font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em;">Completed</span></li>
+                <li>Campaign Creative Scoring</li>
+                <li style="color: var(--green);">Churn Prevention Automations &nbsp;<span style="font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em;">Completed</span></li>
+                <li style="color: var(--green);">AI-Generated Reports &nbsp;<span style="font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em;">Completed</span></li>
+            </ul>
+        </div>
+        <div class="impl-block" style="border-left: 3px solid var(--cyan);">
+            <div class="impl-block-title" style="color: var(--cyan); margin-bottom: 0.5rem;">Automation (4 features)</div>
+            <ul class="impl-list">
+                <li>Cross-Platform Budget Optimizer</li>
+                <li>Audience Lifecycle Automations</li>
+                <li style="color: var(--green);">Signal Auto-Recovery &nbsp;<span style="font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em;">Completed</span></li>
+                <li>Scheduled A/B Test Analysis</li>
+            </ul>
+        </div>
+        <div class="impl-block" style="border-left: 3px solid var(--purple);">
+            <div class="impl-block-title" style="color: var(--purple); margin-bottom: 0.5rem;">Dashboard UX (5 features)</div>
+            <ul class="impl-list">
+                <li style="color: var(--green);">AI Morning Briefing &nbsp;<span style="font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em;">Completed</span></li>
+                <li>Natural Language Filters</li>
+                <li>Goal Tracking &amp; Pacing</li>
+                <li style="color: var(--green);">Unified Notifications with AI Priority &nbsp;<span style="font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em;">Completed</span></li>
+                <li>Collaborative Annotations</li>
+            </ul>
+        </div>
+        <div class="impl-block" style="border-left: 3px solid var(--yellow);">
+            <div class="impl-block-title" style="color: var(--yellow); margin-bottom: 0.5rem;">Data &amp; Intelligence (5 features)</div>
+            <ul class="impl-list">
+                <li>Competitor Intelligence Automation</li>
+                <li>Attribution Confidence Dashboard</li>
+                <li>Customer LTV Forecasting</li>
+                <li>Cross-Channel Journey Mapping</li>
+                <li>Knowledge Graph Auto-Insights</li>
+            </ul>
+        </div>
+    </div>
+
+</div>
+
+<!-- ════════════════════════════════════════════════════════════ FOOTER -->
+<div class="footer">
+    <span class="footer-brand">&copy; 2026 Stratum Artificial Intelligence</span>
+    <span class="footer-session">The Intelligence Layer Session &middot; April 14, 2026</span>
+</div>
+
+</body>
+</html>

@@ -14,7 +14,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status, BackgroundTasks
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 import redis.asyncio as redis
@@ -62,6 +62,9 @@ PASSWORD_RESET_PREFIX = "password_reset:"
 PASSWORD_RESET_EXPIRY_SECONDS = 3600  # 1 hour
 EMAIL_VERIFICATION_PREFIX = "email_verify:"
 EMAIL_VERIFICATION_EXPIRY_SECONDS = 86400  # 24 hours
+EMAIL_OTP_PREFIX = "email_otp:"
+SIGNUP_VERIFY_PREFIX = "signup_verify:"
+SIGNUP_VERIFY_EXPIRY_SECONDS = 1800  # 30 minutes
 
 
 # Pydantic schemas for forgot-password / reset-password
@@ -142,6 +145,53 @@ class VerifyOTPResponse(BaseModel):
     verification_token: Optional[str] = None  # Token to use during registration
 
 
+# Email OTP schemas
+class SendEmailOTPRequest(BaseModel):
+    """Request to send email OTP."""
+    email: str = Field(..., description="Email address to send OTP to")
+
+
+class SendEmailOTPResponse(BaseModel):
+    """Response after sending email OTP."""
+    message: str
+    expires_in: int = OTP_EXPIRY_SECONDS
+
+
+class VerifyEmailOTPRequest(BaseModel):
+    """Request to verify email OTP."""
+    email: str = Field(..., description="Email that received OTP")
+    otp_code: str = Field(..., min_length=6, max_length=6, description="6-digit OTP code")
+
+
+class VerifyEmailOTPResponse(BaseModel):
+    """Response after verifying email OTP."""
+    verified: bool
+    verification_token: Optional[str] = None
+
+
+# Public registration schema (auto-creates tenant with free tier)
+class RegisterRequest(BaseModel):
+    """Public registration request."""
+    email: EmailStr
+    password: str = Field(..., min_length=8, max_length=128)
+    full_name: Optional[str] = Field(None, max_length=255)
+    phone: Optional[str] = None
+    company_website: Optional[str] = None
+    verification_token: str = Field(..., min_length=1, description="Token from email or WhatsApp verification")
+
+    @field_validator("password")
+    @classmethod
+    def validate_password_strength(cls, v: str) -> str:
+        """Ensure password meets complexity requirements."""
+        if not any(c.isupper() for c in v):
+            raise ValueError("Password must contain at least one uppercase letter")
+        if not any(c.islower() for c in v):
+            raise ValueError("Password must contain at least one lowercase letter")
+        if not any(c.isdigit() for c in v):
+            raise ValueError("Password must contain at least one digit")
+        return v
+
+
 def generate_otp(length: int = 6) -> str:
     """Generate a cryptographically secure random numeric OTP code."""
     return ''.join(secrets.choice(string.digits) for _ in range(length))
@@ -170,18 +220,19 @@ async def send_whatsapp_otp(
             detail="WhatsApp messaging is not configured. Please contact your administrator.",
         )
 
-    phone_number = request.phone_number.strip()
+    # Normalize phone number: strip spaces, dashes, parentheses, dots
+    phone_number = re.sub(r'[\s\-\(\)\.]+', '', request.phone_number.strip())
+
+    # Ensure it starts with +
+    if not phone_number.startswith('+'):
+        phone_number = '+' + phone_number
 
     # Validate E.164 phone number format
-    if not re.match(r'^\+?[1-9]\d{1,14}$', phone_number.replace('+', '')):
+    if not re.match(r'^\+[1-9]\d{1,14}$', phone_number):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid phone number format. Use E.164 format (e.g., +1234567890).",
         )
-
-    # Normalize phone number (ensure it starts with +)
-    if not phone_number.startswith('+'):
-        phone_number = '+' + phone_number
 
     # Generate OTP
     otp_code = generate_otp()
@@ -263,13 +314,14 @@ async def verify_whatsapp_otp(request: VerifyOTPRequest):
 
     Returns a verification token that must be included during registration.
     """
-    phone_number = request.phone_number.strip()
+    # Normalize phone number: strip spaces, dashes, parentheses, dots
+    phone_number = re.sub(r'[\s\-\(\)\.]+', '', request.phone_number.strip())
 
-    # Normalize phone number
+    # Ensure it starts with +
     if not phone_number.startswith('+'):
         phone_number = '+' + phone_number
 
-    if not re.match(r'^\+?[1-9]\d{1,14}$', phone_number.lstrip('+')):
+    if not re.match(r'^\+[1-9]\d{1,14}$', phone_number):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid phone number format.",
@@ -301,6 +353,12 @@ async def verify_whatsapp_otp(request: VerifyOTPRequest):
         verification_token = secrets.token_urlsafe(32)
         verification_key = f"phone_verified:{phone_number}"
         await redis_client.setex(verification_key, 1800, verification_token)  # 30 min expiry
+        # Store for register endpoint validation
+        await redis_client.setex(
+            f"{SIGNUP_VERIFY_PREFIX}{verification_token}",
+            SIGNUP_VERIFY_EXPIRY_SECONDS,
+            f"phone:{phone_number}",
+        )
 
         await redis_client.close()
 
@@ -319,6 +377,127 @@ async def verify_whatsapp_otp(request: VerifyOTPRequest):
         raise
     except (ConnectionError, TimeoutError, OSError) as e:
         logger.error("redis_verify_otp_failed", error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to verify code",
+        )
+
+
+@router.post("/email/send-otp", response_model=APIResponse[SendEmailOTPResponse])
+async def send_email_otp(
+    request: SendEmailOTPRequest,
+    background_tasks: BackgroundTasks,
+):
+    """
+    Send an email OTP verification code for signup.
+
+    The OTP is valid for 5 minutes and must be verified before registration.
+    """
+    email = request.email.lower().strip()
+
+    # Basic email format validation
+    if not re.match(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$', email):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid email format.",
+        )
+
+    # Generate OTP
+    otp_code = generate_otp()
+
+    # Store OTP in Redis with expiry
+    try:
+        redis_client = await get_redis_client()
+        otp_key = f"{EMAIL_OTP_PREFIX}{email}"
+        await redis_client.setex(otp_key, OTP_EXPIRY_SECONDS, otp_code)
+        await redis_client.close()
+    except (ConnectionError, TimeoutError, OSError) as e:
+        logger.error("redis_store_email_otp_failed", error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to generate verification code",
+        )
+
+    # Send OTP via email in background
+    async def send_otp_email_bg() -> None:
+        try:
+            email_service = get_email_service()
+            email_service.send_otp_email(to_email=email, otp_code=otp_code)
+            logger.info(f"Email OTP sent to {email[:6]}***")
+        except (ConnectionError, TimeoutError, OSError) as e:
+            logger.error("email_otp_send_failed", error=str(e))
+
+    background_tasks.add_task(send_otp_email_bg)
+
+    logger.info(f"Email OTP generated for {email[:6]}***")
+
+    return APIResponse(
+        success=True,
+        data=SendEmailOTPResponse(
+            message="Verification code sent to your email",
+            expires_in=OTP_EXPIRY_SECONDS,
+        ),
+        message="OTP sent successfully",
+    )
+
+
+@router.post("/email/verify-otp", response_model=APIResponse[VerifyEmailOTPResponse])
+async def verify_email_otp(request: VerifyEmailOTPRequest):
+    """
+    Verify the email OTP code.
+
+    Returns a verification token that must be included during registration.
+    """
+    email = request.email.lower().strip()
+
+    try:
+        redis_client = await get_redis_client()
+        otp_key = f"{EMAIL_OTP_PREFIX}{email}"
+        stored_otp = await redis_client.get(otp_key)
+
+        if not stored_otp:
+            await redis_client.close()
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="OTP expired or not found. Please request a new code.",
+            )
+
+        if not hmac.compare_digest(str(stored_otp), str(request.otp_code)):
+            await redis_client.close()
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid OTP code. Please try again.",
+            )
+
+        # OTP is valid - delete it and create verification token
+        await redis_client.delete(otp_key)
+
+        # Create a verification token (valid for 30 minutes)
+        verification_token = secrets.token_urlsafe(32)
+        # Store for register endpoint validation
+        await redis_client.setex(
+            f"{SIGNUP_VERIFY_PREFIX}{verification_token}",
+            SIGNUP_VERIFY_EXPIRY_SECONDS,
+            f"email:{email}",
+        )
+
+        await redis_client.close()
+
+        logger.info(f"Email OTP verified for {email[:6]}***")
+
+        return APIResponse(
+            success=True,
+            data=VerifyEmailOTPResponse(
+                verified=True,
+                verification_token=verification_token,
+            ),
+            message="Email verified successfully",
+        )
+
+    except HTTPException:
+        raise
+    except (ConnectionError, TimeoutError, OSError) as e:
+        logger.error("redis_verify_email_otp_failed", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to verify code",
@@ -469,44 +648,52 @@ async def login(
 
 @router.post("/register", response_model=APIResponse[UserResponse])
 async def register(
-    user_data: UserCreate,
+    request_data: RegisterRequest,
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_async_session),
 ):
     """
-    Register a new user.
+    Register a new user with verified identity.
 
-    Args:
-        user_data: User registration details
-
-    Returns:
-        Created user information
+    Requires a verification_token from email or WhatsApp OTP verification.
+    Auto-creates a tenant with free tier for new signups.
     """
     from app.core.security import encrypt_pii
-    from app.models import Tenant
+    from app.models import Tenant, UserTenantMembership
+    from app.base_models import UserRole
 
-    # Validate tenant_id server-side — never trust client-provided value blindly
-    tenant_result = await db.execute(
-        select(Tenant).where(
-            Tenant.id == user_data.tenant_id,
-            Tenant.is_deleted == False,
-        )
-    )
-    tenant = tenant_result.scalar_one_or_none()
-    if not tenant:
+    # 1. Validate verification token from Redis
+    try:
+        redis_client = await get_redis_client()
+        verify_key = f"{SIGNUP_VERIFY_PREFIX}{request_data.verification_token}"
+        verified_data = await redis_client.get(verify_key)
+
+        if not verified_data:
+            await redis_client.close()
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or expired verification. Please verify your email or phone first.",
+            )
+
+        # Consume the token (one-time use)
+        await redis_client.delete(verify_key)
+        await redis_client.close()
+    except HTTPException:
+        raise
+    except (ConnectionError, TimeoutError, OSError) as e:
+        logger.error("redis_validate_signup_token_failed", error=str(e))
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid tenant",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to validate verification. Please try again.",
         )
 
-    # Check if email already exists
-    email_hash = hash_pii_for_lookup(user_data.email.lower())
+    # 2. Check if email already exists (globally)
+    email_lower = request_data.email.lower()
+    email_hash = hash_pii_for_lookup(email_lower)
     result = await db.execute(
-        select(User).where(
-            User.tenant_id == user_data.tenant_id,
-            User.email_hash == email_hash,
-        )
+        select(User).where(User.email_hash == email_hash)
     )
-    existing = result.scalar_one_or_none()
+    existing = result.scalars().first()
 
     if existing:
         raise HTTPException(
@@ -514,31 +701,73 @@ async def register(
             detail="Email already registered",
         )
 
-    # Create user with encrypted PII
-    user = User(
-        tenant_id=user_data.tenant_id,
-        email=encrypt_pii(user_data.email.lower()),
-        email_hash=email_hash,
-        password_hash=get_password_hash(user_data.password),
-        full_name=encrypt_pii(user_data.full_name) if user_data.full_name else None,
-        role=user_data.role,
-        locale=user_data.locale,
-        timezone=user_data.timezone,
-    )
+    # 3. Auto-create tenant with free tier
+    slug_base = re.sub(r'[^a-z0-9]+', '-', email_lower.split('@')[0]).strip('-')
+    slug = f"{slug_base}-{secrets.token_hex(4)}"
+    tenant_name = f"{request_data.full_name}'s Workspace" if request_data.full_name else f"{slug_base}'s Workspace"
 
+    tenant = Tenant(
+        name=tenant_name,
+        slug=slug,
+        plan="free",
+        status="active",
+        billing_email=email_lower,
+    )
+    db.add(tenant)
+    await db.flush()  # Get tenant.id without committing
+
+    # 4. Create user with encrypted PII (verified = True since they passed OTP)
+    user = User(
+        tenant_id=tenant.id,
+        email=encrypt_pii(email_lower),
+        email_hash=email_hash,
+        password_hash=get_password_hash(request_data.password),
+        full_name=encrypt_pii(request_data.full_name) if request_data.full_name else None,
+        role=UserRole.ADMIN,
+        is_verified=True,
+    )
     db.add(user)
+    await db.flush()  # Get user.id
+
+    # 5. Create tenant membership (admin, default tenant)
+    membership = UserTenantMembership(
+        user_id=user.id,
+        tenant_id=tenant.id,
+        role=UserRole.ADMIN,
+        is_default=True,
+        is_active=True,
+    )
+    db.add(membership)
+
     await db.commit()
     await db.refresh(user)
+    await db.refresh(tenant)
 
-    logger.info("user_registered", user_id=user.id, tenant_id=user.tenant_id)
+    # 6. Send welcome email in background
+    user_name = request_data.full_name or ""
+    async def send_welcome() -> None:
+        try:
+            email_service = get_email_service()
+            email_service.send_welcome_email(to_email=email_lower, user_name=user_name)
+        except (ConnectionError, TimeoutError, OSError) as e:
+            logger.warning("welcome_email_send_failed", error=str(e))
+
+    background_tasks.add_task(send_welcome)
+
+    logger.info(
+        "user_registered",
+        user_id=user.id,
+        tenant_id=tenant.id,
+        plan="free",
+    )
 
     return APIResponse(
         success=True,
         data=UserResponse(
             id=user.id,
-            tenant_id=user.tenant_id,
-            email=user_data.email,  # Return original email
-            full_name=user_data.full_name,
+            tenant_id=tenant.id,
+            email=request_data.email,  # Return original email
+            full_name=request_data.full_name,
             role=user.role,
             locale=user.locale,
             timezone=user.timezone,
@@ -549,7 +778,7 @@ async def register(
             created_at=user.created_at,
             updated_at=user.updated_at,
         ),
-        message="Registration successful",
+        message="Registration successful. Free tier activated.",
     )
 
 
