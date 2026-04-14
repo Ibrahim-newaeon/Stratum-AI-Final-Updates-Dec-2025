@@ -75,6 +75,9 @@ import { PredictiveBudgetCard } from '@/components/dashboard/PredictiveBudgetCar
 import { AIReportCard } from '@/components/dashboard/AIReportCard'
 import { ChurnPreventionCard } from '@/components/dashboard/ChurnPreventionCard'
 import { UnifiedNotificationsCard } from '@/components/dashboard/UnifiedNotificationsCard'
+import { CrossPlatformOptimizerCard } from '@/components/dashboard/CrossPlatformOptimizerCard'
+import { AudienceLifecycleCard } from '@/components/dashboard/AudienceLifecycleCard'
+import { GoalTrackingCard } from '@/components/dashboard/GoalTrackingCard'
 
 export function Overview() {
   const { t } = useTranslation()
@@ -363,6 +366,15 @@ export function Overview() {
 
       {/* Churn Prevention Card */}
       <ChurnPreventionCard />
+
+      {/* Cross-Platform Budget Optimizer Card */}
+      <CrossPlatformOptimizerCard />
+
+      {/* Goal Tracking & Pacing Card */}
+      <GoalTrackingCard />
+
+      {/* Audience Lifecycle Automations Card */}
+      <AudienceLifecycleCard />
 
       {/* Unified Notifications Card */}
       <UnifiedNotificationsCard />

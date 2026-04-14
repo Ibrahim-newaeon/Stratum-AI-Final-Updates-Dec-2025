@@ -1118,6 +1118,261 @@ export function useUnifiedNotifications(enabled = true) {
   });
 }
 
+// =============================================================================
+// Feature #9: Cross-Platform Budget Optimizer
+// =============================================================================
+
+export interface PlatformEfficiency {
+  platform: string;
+  campaigns: number;
+  current_spend: number;
+  current_revenue: number;
+  roas: number;
+  cpa: number;
+  conversions: number;
+  spend_share_pct: number;
+  efficiency_score: number;
+  efficiency_rank: number;
+}
+
+export interface AllocationShift {
+  from_platform: string;
+  to_platform: string;
+  shift_amount: number;
+  shift_pct: number;
+  reasoning: string;
+}
+
+export interface PlatformRecommendation {
+  platform: string;
+  current_spend: number;
+  recommended_spend: number;
+  change_amount: number;
+  change_pct: number;
+  action: 'scale' | 'reduce' | 'maintain';
+  reasoning: string;
+  projected_roas: number;
+  projected_revenue: number;
+  confidence: number;
+}
+
+export interface OptimizationScenario {
+  name: string;
+  description: string;
+  allocations: Record<string, number>;
+  projected_revenue: number;
+  projected_roas: number;
+  projected_conversions: number;
+  improvement_pct: number;
+}
+
+export type OptimizationStrategy = 'roas_max' | 'balanced' | 'volume_max';
+
+export interface CrossPlatformOptimizerResponse {
+  summary: string;
+  strategy: OptimizationStrategy;
+  total_budget: number;
+  current_roas: number;
+  optimized_roas: number;
+  roas_improvement_pct: number;
+  platforms: PlatformEfficiency[];
+  recommendations: PlatformRecommendation[];
+  shifts: AllocationShift[];
+  scenarios: OptimizationScenario[];
+  total_campaigns: number;
+  platforms_count: number;
+  reallocation_amount: number;
+  reallocation_pct: number;
+}
+
+/**
+ * Hook for fetching cross-platform budget optimization
+ */
+export function useCrossPlatformOptimizer(strategy: OptimizationStrategy = 'balanced', enabled = true) {
+  return useQuery({
+    queryKey: ['dashboard', 'cross-platform-optimizer', strategy],
+    queryFn: async (): Promise<CrossPlatformOptimizerResponse> => {
+      const response = await apiClient.get<ApiResponse<CrossPlatformOptimizerResponse>>(
+        '/dashboard/cross-platform-optimizer',
+        { params: { strategy } }
+      );
+      return response.data.data;
+    },
+    enabled,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 15 * 60 * 1000, // 15 minutes
+    retry: 1,
+  });
+}
+
+// =============================================================================
+// Feature #10: Audience Lifecycle Automations
+// =============================================================================
+
+export interface LifecycleStageMetric {
+  stage: string;
+  count: number;
+  pct_of_total: number;
+  change_7d: number;
+  change_pct: number;
+  avg_revenue: number;
+  avg_events: number;
+}
+
+export interface LifecycleTransition {
+  from_stage: string;
+  to_stage: string;
+  count_7d: number;
+  count_30d: number;
+  trend: 'increasing' | 'stable' | 'decreasing';
+  is_positive: boolean;
+}
+
+export interface AudienceRule {
+  rule_id: string;
+  name: string;
+  description: string;
+  trigger_stage: string;
+  trigger_condition: string;
+  action: string;
+  target_platform?: string;
+  target_audience?: string;
+  is_active: boolean;
+  profiles_matched: number;
+  last_triggered?: string;
+  priority: 'high' | 'medium' | 'low';
+  category: 'acquisition' | 'activation' | 'retention' | 'reactivation';
+}
+
+export interface LifecycleRecommendation {
+  title: string;
+  description: string;
+  impact: 'high' | 'medium' | 'low';
+  category: string;
+  action_label: string;
+  profiles_affected: number;
+}
+
+export interface SyncReadiness {
+  platform: string;
+  is_connected: boolean;
+  audiences_count: number;
+  auto_sync_enabled: boolean;
+  last_sync?: string;
+  match_rate_pct: number;
+}
+
+export interface AudienceLifecycleResponse {
+  summary: string;
+  total_profiles: number;
+  active_rules: number;
+  total_rules: number;
+  stages: LifecycleStageMetric[];
+  transitions: LifecycleTransition[];
+  rules: AudienceRule[];
+  recommendations: LifecycleRecommendation[];
+  sync_readiness: SyncReadiness[];
+  lifecycle_health: 'excellent' | 'good' | 'needs_attention' | 'poor';
+  automation_coverage_pct: number;
+  profiles_in_automation: number;
+}
+
+/**
+ * Hook for fetching audience lifecycle automations
+ */
+export function useAudienceLifecycle(enabled = true) {
+  return useQuery({
+    queryKey: ['dashboard', 'audience-lifecycle'],
+    queryFn: async (): Promise<AudienceLifecycleResponse> => {
+      const response = await apiClient.get<ApiResponse<AudienceLifecycleResponse>>(
+        '/dashboard/audience-lifecycle'
+      );
+      return response.data.data;
+    },
+    enabled,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 15 * 60 * 1000, // 15 minutes
+    retry: 1,
+  });
+}
+
+// =============================================================================
+// Feature #11: Goal Tracking & Pacing
+// =============================================================================
+
+export interface GoalProgress {
+  goal_id: string;
+  metric: string;
+  label: string;
+  target_value: number;
+  current_value: number;
+  progress_pct: number;
+  pacing_pct: number;
+  pacing_status: 'ahead' | 'on_track' | 'behind' | 'at_risk' | 'critical';
+  projected_value: number;
+  projected_pct: number;
+  gap: number;
+  daily_needed: number;
+  days_remaining: number;
+  days_elapsed: number;
+  trend: 'improving' | 'stable' | 'declining';
+  formatted_current: string;
+  formatted_target: string;
+  formatted_projected: string;
+  is_inverted: boolean;
+}
+
+export interface PacingMilestone {
+  label: string;
+  expected_value: number;
+  actual_value: number;
+  status: 'hit' | 'missed' | 'upcoming';
+  date_label: string;
+}
+
+export interface GoalInsight {
+  title: string;
+  description: string;
+  severity: 'positive' | 'info' | 'warning' | 'critical';
+  metric: string;
+  action_label?: string;
+}
+
+export interface GoalTrackingResponse {
+  summary: string;
+  period_label: string;
+  days_elapsed: number;
+  days_remaining: number;
+  days_total: number;
+  progress_pct: number;
+  goals: GoalProgress[];
+  milestones: PacingMilestone[];
+  insights: GoalInsight[];
+  overall_pacing: 'ahead' | 'on_track' | 'behind' | 'at_risk' | 'critical';
+  goals_on_track: number;
+  goals_at_risk: number;
+  goals_behind: number;
+}
+
+/**
+ * Hook for fetching goal tracking & pacing data
+ */
+export function useGoalTracking(enabled = true) {
+  return useQuery({
+    queryKey: ['dashboard', 'goal-tracking'],
+    queryFn: async (): Promise<GoalTrackingResponse> => {
+      const response = await apiClient.get<ApiResponse<GoalTrackingResponse>>(
+        '/dashboard/goal-tracking'
+      );
+      return response.data.data;
+    },
+    enabled,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 10 * 60 * 1000, // 10 minutes
+    retry: 1,
+  });
+}
+
 /**
  * Update metric visibility settings
  */
