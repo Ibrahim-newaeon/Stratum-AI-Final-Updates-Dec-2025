@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stratum AI — Platform Documentation</title>
+<meta name="description" content="Complete technical documentation for the Stratum AI Revenue Operating System with Trust-Gated Autopilot.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0A0B14">
+<link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link href="https://api.fontshare.com/v2/css?f[]=clash-display@200,300,400,500,600,700&f[]=satoshi@300,400,500,600,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--color-brand-pink:#FF1F6D;--color-brand-orange:#FF8C00;--color-brand-violet:#A78BFA;--color-brand-indigo:#6366F1;--color-brand-teal:#00D4AA;--color-brand-cyan:#00D4FF;--color-brand-sky:#3B82F6;--color-bg:#0A0B14;--color-card:#12131F;--color-border:#1E1F30;--color-glass:rgba(255,255,255,0.06);--color-glass-strong:rgba(18,19,31,0.8);--color-glass-border:rgba(255,255,255,0.1);--color-text:#F0F0F5;--color-text-muted:#8B8D9E;--color-text-dim:rgba(139,141,158,0.7);--color-text-faint:rgba(139,141,158,0.5);--color-success:#25D366;--color-warning:#FFB800;--color-error:#FF4D4D;--color-info:#00D4FF;--gradient-brand:linear-gradient(135deg,#FF1F6D,#FF8C00);--gradient-brand-subtle:linear-gradient(135deg,rgba(255,31,109,0.08),rgba(255,140,0,0.08));--glow-brand:0 4px 20px rgba(255,31,109,0.3);--glow-brand-subtle:0 2px 12px rgba(255,31,109,0.12);--font-display:'Clash Display',system-ui,sans-serif;--font-body:'Satoshi',system-ui,sans-serif;--font-mono:'JetBrains Mono',ui-monospace,Menlo,Monaco,Consolas,monospace;--space-xs:0.25rem;--space-sm:0.5rem;--space-md:1rem;--space-lg:1.5rem;--space-xl:2rem;--space-2xl:3rem;--space-3xl:4rem;--radius-sm:0.375rem;--radius-md:0.5rem;--radius-lg:0.75rem;--radius-xl:1rem;--radius-2xl:1.25rem;--radius-full:9999px;--transition-fast:0.18s cubic-bezier(0.2,0.8,0.2,1);--transition-base:0.28s cubic-bezier(0.2,0.8,0.2,1);--transition-slow:0.4s cubic-bezier(0.2,0.8,0.2,1)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+body{font-family:var(--font-body);background:var(--color-bg);color:var(--color-text);line-height:1.6;min-height:100vh;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+code{font-family:var(--font-mono);font-size:0.85em;background:rgba(255,255,255,0.06);padding:0.15em 0.4em;border-radius:var(--radius-sm);color:var(--color-brand-cyan)}
+pre{background:rgba(0,0,0,0.4);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:1.25rem;overflow-x:auto;margin:1rem 0}
+pre code{background:none;padding:0;font-size:0.8125rem;color:var(--color-text-muted)}
+h1,h2,h3,h4,h5,h6{font-family:var(--font-display);line-height:1.2;color:var(--color-text)}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.2)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideIn{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
+@keyframes scaleIn{from{opacity:0;transform:scale(0.95)}to{opacity:1;transform:scale(1)}}
+@keyframes glowPulse{0%,100%{box-shadow:0 0 20px rgba(255,31,109,0.15)}50%{box-shadow:0 0 30px rgba(255,31,109,0.3)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+.fade-up{animation:fadeUp 0.5s var(--transition-base) both}
+.fade-in{animation:fadeIn 0.4s ease both}
+.slide-in{animation:slideIn 0.5s var(--transition-base) both}
+.scale-in{animation:scaleIn 0.4s var(--transition-base) both}
+.stagger-children>*{opacity:0;animation:fadeUp 0.5s cubic-bezier(0.2,0.8,0.2,1) both}
+.stagger-children>*:nth-child(1){animation-delay:.04s}
+.stagger-children>*:nth-child(2){animation-delay:.08s}
+.stagger-children>*:nth-child(3){animation-delay:.12s}
+.stagger-children>*:nth-child(4){animation-delay:.16s}
+.stagger-children>*:nth-child(5){animation-delay:.20s}
+.stagger-children>*:nth-child(6){animation-delay:.24s}
+.stagger-children>*:nth-child(7){animation-delay:.28s}
+.stagger-children>*:nth-child(8){animation-delay:.32s}
+.stagger-children>*:nth-child(9){animation-delay:.36s}
+.stagger-children>*:nth-child(10){animation-delay:.40s}
+.stagger-children>*:nth-child(11){animation-delay:.44s}
+.stagger-children>*:nth-child(12){animation-delay:.48s}
+.stagger-children>*:nth-child(13){animation-delay:.52s}
+.stagger-children>*:nth-child(14){animation-delay:.56s}
+.stagger-children>*:nth-child(15){animation-delay:.60s}
+.glass{background:var(--color-glass);border:1px solid var(--color-glass-border);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.glass-strong{background:var(--color-glass-strong);border:1px solid var(--color-glass-border);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.surface-card{background:var(--color-card);border:1px solid var(--color-border);border-radius:var(--radius-2xl)}
+.card{background:var(--color-card);border:1px solid var(--color-border);border-radius:var(--radius-2xl);padding:1.5rem}
+.card-hover{transition:all var(--transition-base)}
+.card-hover:hover{background:rgba(255,255,255,0.08);transform:translateY(-1px)}
+.badge{display:inline-flex;align-items:center;gap:0.375rem;padding:0.25rem 0.75rem;border-radius:var(--radius-full);font-size:0.75rem;font-weight:500}
+.badge-brand{background:rgba(255,31,109,0.12);color:var(--color-brand-pink)}
+.badge-info{background:rgba(0,212,255,0.12);color:var(--color-info)}
+.badge-warn{background:rgba(255,184,0,0.12);color:var(--color-warning)}
+.badge-error{background:rgba(255,77,77,0.12);color:var(--color-error)}
+.badge-success{background:rgba(37,211,102,0.12);color:var(--color-success)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;padding:0.625rem 1.25rem;border-radius:var(--radius-lg);font-family:var(--font-body);font-size:0.875rem;font-weight:500;border:none;cursor:pointer;transition:all var(--transition-fast);text-decoration:none}
+.btn-brand{background:var(--gradient-brand);color:#fff;box-shadow:var(--glow-brand-subtle)}
+.btn-brand:hover{box-shadow:var(--glow-brand);transform:translateY(-1px)}
+.btn-ghost{background:transparent;color:var(--color-text-muted);border:1px solid var(--color-border)}
+.btn-ghost:hover{background:var(--color-glass);color:var(--color-text)}
+.callout{padding:1rem 1.25rem;border-radius:var(--radius-lg);margin:1rem 0;border-left:3px solid;font-size:0.875rem;line-height:1.6}
+.callout-info{background:rgba(0,212,255,0.06);border-color:var(--color-info);color:var(--color-text-muted)}
+.callout-warn{background:rgba(255,184,0,0.06);border-color:var(--color-warning);color:var(--color-text-muted)}
+.callout-error{background:rgba(255,77,77,0.06);border-color:var(--color-error);color:var(--color-text-muted)}
+.callout-success{background:rgba(37,211,102,0.06);border-color:var(--color-success);color:var(--color-text-muted)}
+.doc-table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:0.875rem}
+.doc-table th{text-align:left;padding:0.75rem 1rem;background:rgba(255,255,255,0.04);border-bottom:1px solid var(--color-border);font-family:var(--font-display);font-weight:600;font-size:0.8125rem;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:0.04em}
+.doc-table td{padding:0.75rem 1rem;border-bottom:1px solid var(--color-border);color:var(--color-text-muted)}
+.doc-table tr:hover td{background:rgba(255,255,255,0.02)}
+.container{max-width:960px;margin:0 auto;padding:0 1.5rem}
+.view{display:none}
+.view.active{display:block}
+.hero{text-align:center;padding:4rem 0 3rem}
+.hero-badge{display:inline-flex;align-items:center;gap:0.5rem;padding:0.375rem 1rem;border-radius:var(--radius-full);background:rgba(255,31,109,0.1);border:1px solid rgba(255,31,109,0.2);font-size:0.8125rem;font-weight:500;color:var(--color-brand-pink);margin-bottom:1.5rem}
+.hero h1{font-family:var(--font-display);font-size:clamp(2rem,5vw,3rem);font-weight:700;margin-bottom:0.75rem;background:var(--gradient-brand);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{color:var(--color-text-muted);font-size:1.125rem;max-width:600px;margin:0 auto 2rem;line-height:1.6}
+.hero-stats{display:flex;justify-content:center;gap:1rem;flex-wrap:wrap}
+.hero-stat{display:inline-flex;align-items:center;gap:0.375rem;padding:0.5rem 1rem;background:var(--color-card);border:1px solid var(--color-border);border-radius:var(--radius-full);font-size:0.8125rem;color:var(--color-text-muted)}
+.hero-stat strong{color:var(--color-text)}
+.section-list{display:flex;flex-direction:column;gap:0.625rem;padding-bottom:4rem}
+.section-card{display:flex;align-items:center;gap:1.5rem;padding:1.25rem 1.5rem;background:var(--color-card);border:1px solid var(--color-border);border-radius:var(--radius-2xl);cursor:pointer;transition:all 0.28s cubic-bezier(0.2,0.8,0.2,1);text-decoration:none;color:inherit;border-left:3px solid var(--accent-color,var(--color-brand-pink))}
+.section-card:hover{background:rgba(255,255,255,0.08);transform:translateY(-1px)}
+.section-num{font-family:var(--font-display);font-size:2rem;font-weight:700;min-width:3.5rem;text-align:center}
+.section-info{flex:1;min-width:0}
+.section-info h3{font-family:var(--font-display);font-size:1.125rem;font-weight:600;margin-bottom:0.25rem}
+.section-info p{color:var(--color-text-muted);font-size:0.875rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.section-meta{margin-left:auto;flex-shrink:0}
+.topic-count{background:rgba(255,255,255,0.06);padding:0.25rem 0.75rem;border-radius:var(--radius-full);font-size:0.75rem;color:var(--color-text-muted);white-space:nowrap}
+.section-page{max-width:900px;margin:0 auto;padding:2rem 1.5rem 4rem}
+.back-link{color:var(--color-text-muted);text-decoration:none;font-size:0.875rem;display:inline-flex;align-items:center;gap:0.5rem;margin-bottom:1.5rem;transition:color var(--transition-fast)}
+.back-link:hover{color:var(--color-text)}
+.section-badge{display:inline-block;padding:0.25rem 0.75rem;border-radius:var(--radius-full);font-size:0.75rem;font-weight:500;background:rgba(255,255,255,0.06);color:var(--color-text-muted);margin-bottom:1rem}
+.section-page h1{font-family:var(--font-display);font-size:2.25rem;font-weight:700;margin-bottom:0.75rem}
+.section-desc{color:var(--color-text-muted);font-size:1.125rem;margin-bottom:2rem;line-height:1.6}
+.topic-nav{background:var(--color-card);border:1px solid var(--color-border);border-radius:var(--radius-2xl);padding:1.25rem 1.5rem;margin-bottom:2.5rem}
+.topic-nav h4{font-family:var(--font-display);font-size:0.875rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem}
+.topic-nav a{display:block;padding:0.5rem 0;color:var(--color-text);text-decoration:none;font-size:0.9375rem;border-bottom:1px solid var(--color-border);transition:color var(--transition-fast)}
+.topic-nav a:last-child{border-bottom:none}
+.topic-nav a:hover{color:var(--color-brand-pink)}
+.topic-block{margin-bottom:3rem;padding-top:1.5rem;border-top:1px solid var(--color-border)}
+.topic-block:first-of-type{border-top:none;padding-top:0}
+.topic-title{font-family:var(--font-display);font-size:1.5rem;font-weight:600;margin-bottom:0.75rem}
+.topic-description{color:var(--color-text-muted);line-height:1.65;margin-bottom:1.25rem}
+.tech-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}
+@media(max-width:640px){.tech-grid{grid-template-columns:1fr}}
+.tech-card{background:var(--color-glass);border:1px solid var(--color-glass-border);border-radius:var(--radius-xl);padding:1rem 1.25rem}
+.tech-card h4{font-family:var(--font-display);font-size:0.875rem;font-weight:600;margin-bottom:0.5rem}
+.tech-card code{display:block;margin-bottom:0.25rem}
+.tech-card p{font-size:0.8125rem;color:var(--color-text-muted);margin:0.25rem 0}
+.file-pills{display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.75rem}
+.file-pill{display:inline-block;padding:0.25rem 0.75rem;background:rgba(255,255,255,0.04);border:1px solid var(--color-border);border-radius:var(--radius-full);font-family:var(--font-mono);font-size:0.75rem;color:var(--color-text-muted)}
+.section-nav{display:flex;justify-content:space-between;margin-top:3rem;padding-top:2rem;border-top:1px solid var(--color-border)}
+.section-nav a{text-decoration:none;color:var(--color-text-muted);font-size:0.875rem;transition:color var(--transition-fast)}
+.section-nav a:hover{color:var(--color-text)}
+.section-nav .nav-label{font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:0.25rem}
+.section-nav .nav-title{font-family:var(--font-display);font-weight:600;color:var(--color-text)}
+.glossary-group{margin-bottom:2rem}
+.glossary-group h3{font-family:var(--font-display);font-size:1.25rem;font-weight:600;margin-bottom:1rem}
+.glossary-term{padding:0.75rem 0;border-bottom:1px solid var(--color-border)}
+.glossary-term dt{font-family:var(--font-display);font-weight:600;font-size:1rem;margin-bottom:0.25rem}
+.glossary-term dd{color:var(--color-text-muted);font-size:0.875rem;line-height:1.55;margin:0}
+.tutorial-step{margin-bottom:1.5rem;padding-left:2.5rem;position:relative}
+.tutorial-step::before{content:attr(data-step);position:absolute;left:0;top:0;font-family:var(--font-display);font-weight:700;font-size:1.125rem}
+.tutorial-step h4{font-family:var(--font-display);font-weight:600;margin-bottom:0.5rem}
+.tutorial-step p,.tutorial-step ul{color:var(--color-text-muted);font-size:0.875rem;line-height:1.6}
+.tutorial-step ul{margin:0.5rem 0 0 1.25rem;list-style:disc}
+.tutorial-step li{margin-bottom:0.25rem}
+.flow-diagram{background:rgba(0,0,0,0.3);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:1.5rem;margin:1rem 0;font-family:var(--font-mono);font-size:0.8125rem;color:var(--color-text-muted);text-align:center;line-height:2.2;white-space:pre-wrap}
+.endpoint-list{margin:1rem 0}
+.endpoint-item{display:flex;align-items:center;gap:0.75rem;padding:0.625rem 0;border-bottom:1px solid var(--color-border);font-size:0.875rem}
+.endpoint-method{font-family:var(--font-mono);font-size:0.75rem;font-weight:600;padding:0.2rem 0.5rem;border-radius:var(--radius-sm);min-width:3.5rem;text-align:center}
+.method-get{background:rgba(0,212,170,0.12);color:var(--color-brand-teal)}
+.method-post{background:rgba(99,102,241,0.12);color:var(--color-brand-indigo)}
+.method-put{background:rgba(255,184,0,0.12);color:var(--color-warning)}
+.method-delete{background:rgba(255,77,77,0.12);color:var(--color-error)}
+.endpoint-path{font-family:var(--font-mono);font-size:0.8125rem;color:var(--color-text-muted)}
+.tier-card{background:var(--color-card);border:1px solid var(--color-border);border-radius:var(--radius-2xl);padding:1.5rem;margin-bottom:1.5rem}
+.tier-card h4{font-family:var(--font-display);font-size:1.25rem;font-weight:600;margin-bottom:0.5rem}
+.tier-price{font-family:var(--font-display);font-size:1.5rem;font-weight:700;margin-bottom:1rem}
+.tier-features{list-style:none;padding:0;margin:0}
+.tier-features li{padding:0.375rem 0;border-bottom:1px solid var(--color-border);color:var(--color-text-muted);font-size:0.875rem;padding-left:1.5rem;position:relative}
+.tier-features li::before{content:"\2713";position:absolute;left:0;color:var(--color-success)}
+.tier-limits{margin-top:1rem;padding-top:1rem;border-top:1px solid var(--color-border)}
+.tier-limits p{font-size:0.8125rem;color:var(--color-text-muted);margin:0.25rem 0}
+@media print{body{background:#fff;color:#000}.section-card,.card,.tech-card,.topic-nav{border-color:#ddd;background:#f9f9f9}.hero h1{-webkit-text-fill-color:#000}.back-link,.section-nav{display:none}}
+@media(max-width:768px){.hero h1{font-size:1.75rem}.hero p{font-size:1rem}.section-card{flex-wrap:wrap;gap:0.75rem;padding:1rem}.section-num{font-size:1.5rem;min-width:2.5rem}.section-info p{white-space:normal}.section-page h1{font-size:1.75rem}.hero-stats{flex-direction:column;align-items:center}}
+</style>
+</head>
+<body>
+
+<div id="home-view" class="view active">
+<div class="container">
+<div class="hero fade-up">
+<div class="hero-badge">Documentation</div>
+<h1>Stratum AI Platform Documentation</h1>
+<p>The complete technical guide for the Revenue Operating System with Trust-Gated Autopilot</p>
+<div class="hero-stats">
+<span class="hero-stat"><strong>15</strong>&nbsp;sections</span>
+<span class="hero-stat"><strong>48+</strong>&nbsp;features</span>
+<span class="hero-stat"><strong>Complete</strong>&nbsp;API reference</span>
+</div>
+</div>
+<div class="section-list stagger-children">
+
+<a class="section-card" href="#section-architecture" style="--accent-color:#00D4FF"><span class="section-num" style="color:#00D4FF">01</span><div class="section-info"><h3>Platform Architecture</h3><p>System architecture, tech stack, infrastructure components, and service topology</p></div><div class="section-meta"><span class="topic-count">6 topics</span></div></a>
+
+<a class="section-card" href="#section-trust-engine" style="--accent-color:#25D366"><span class="section-num" style="color:#25D366">02</span><div class="section-info"><h3>Trust &amp; Signal Engine</h3><p>The core decision-making engine that evaluates signal health before allowing automation</p></div><div class="section-meta"><span class="topic-count">6 topics</span></div></a>
+
+<a class="section-card" href="#section-ai-intelligence" style="--accent-color:#A78BFA"><span class="section-num" style="color:#A78BFA">03</span><div class="section-info"><h3>AI Intelligence Layer</h3><p>AI-powered insights, anomaly detection, copilot, and intelligent notifications</p></div><div class="section-meta"><span class="topic-count">8 topics</span></div></a>
+
+<a class="section-card" href="#section-analytics" style="--accent-color:#FF8C00"><span class="section-num" style="color:#FF8C00">04</span><div class="section-info"><h3>Predictive &amp; Analytics</h3><p>Predictive budgeting, forecasting, creative scoring, journey mapping, and goal tracking</p></div><div class="section-meta"><span class="topic-count">6 topics</span></div></a>
+
+<a class="section-card" href="#section-automation" style="--accent-color:#00D4AA"><span class="section-num" style="color:#00D4AA">05</span><div class="section-info"><h3>Automation Engine</h3><p>Autopilot enforcement, churn prevention, cross-platform optimization, and A/B testing</p></div><div class="section-meta"><span class="topic-count">6 topics</span></div></a>
+
+<a class="section-card" href="#section-cdp" style="--accent-color:#6366F1"><span class="section-num" style="color:#6366F1">06</span><div class="section-info"><h3>Customer Data Platform</h3><p>Unified customer profiles, identity resolution, segmentation, and RFM analysis</p></div><div class="section-meta"><span class="topic-count">7 topics</span></div></a>
+
+<a class="section-card" href="#section-integrations" style="--accent-color:#FF1F6D"><span class="section-num" style="color:#FF1F6D">07</span><div class="section-info"><h3>Integrations</h3><p>Ad platforms, CRM, WhatsApp Business, Slack, and payment integrations</p></div><div class="section-meta"><span class="topic-count">8 topics</span></div></a>
+
+<a class="section-card" href="#section-platform-core" style="--accent-color:#FF4D4D"><span class="section-num" style="color:#FF4D4D">08</span><div class="section-info"><h3>Platform Core</h3><p>Authentication, multi-tenancy, campaign builder, pacing, profit tracking, CMS, and reporting</p></div><div class="section-meta"><span class="topic-count">8 topics</span></div></a>
+
+<a class="section-card" href="#section-api-reference" style="--accent-color:#3B82F6"><span class="section-num" style="color:#3B82F6">09</span><div class="section-info"><h3>API Reference</h3><p>Complete API endpoint documentation with authentication, request/response formats</p></div><div class="section-meta"><span class="topic-count">7 topics</span></div></a>
+
+<a class="section-card" href="#section-deployment" style="--accent-color:#128C7E"><span class="section-num" style="color:#128C7E">10</span><div class="section-info"><h3>Deployment &amp; Operations</h3><p>Docker setup, production deployment, server requirements, and monitoring</p></div><div class="section-meta"><span class="topic-count">6 topics</span></div></a>
+
+<a class="section-card" href="#section-onboarding" style="--accent-color:#FFB800"><span class="section-num" style="color:#FFB800">11</span><div class="section-info"><h3>Client Onboarding</h3><p>8-step client setup process from account creation to go-live</p></div><div class="section-meta"><span class="topic-count">8 topics</span></div></a>
+
+<a class="section-card" href="#section-security" style="--accent-color:#8B5CF6"><span class="section-num" style="color:#8B5CF6">12</span><div class="section-info"><h3>Security &amp; Compliance</h3><p>Authentication, encryption, GDPR/CCPA compliance, and data protection</p></div><div class="section-meta"><span class="topic-count">6 topics</span></div></a>
+
+<a class="section-card" href="#section-tiers" style="--accent-color:#FF8C00"><span class="section-num" style="color:#FF8C00">13</span><div class="section-info"><h3>Subscription Tiers</h3><p>Starter, Professional, and Enterprise plan features and limits</p></div><div class="section-meta"><span class="topic-count">3 topics</span></div></a>
+
+<a class="section-card" href="#section-glossary" style="--accent-color:#00D4AA"><span class="section-num" style="color:#00D4AA">14</span><div class="section-info"><h3>Glossary</h3><p>Key terms and definitions used throughout the Stratum AI platform</p></div><div class="section-meta"><span class="topic-count">7 topics</span></div></a>
+
+<a class="section-card" href="#section-tutorials" style="--accent-color:#FF1F6D"><span class="section-num" style="color:#FF1F6D">15</span><div class="section-info"><h3>Tutorials</h3><p>Step-by-step guides for Starter, Professional, and Enterprise plan users</p></div><div class="section-meta"><span class="topic-count">3 topics</span></div></a>
+
+</div></div></div>
+
+<div id="section-architecture" class="view">
+<div class="section-page fade-up">
+<a href="#home" class="back-link">&larr; All Sections</a>
+<div class="section-badge">Section 1 of 15</div>
+<h1 style="color:#00D4FF">Platform Architecture</h1>
+<p class="section-desc">System architecture, tech stack, infrastructure components, and service topology</p>
+<div class="topic-nav"><h4>In this section</h4>
+<a href="#system-overview">System Overview</a>
+<a href="#tech-stack">Tech Stack</a>
+<a href="#project-structure">Project Structure</a>
+<a href="#docker-services">Docker Services</a>
+<a href="#infrastructure">Infrastructure</a>
+<a href="#code-standards">Code Standards</a>
+</div>
+
+<div class="topic-block" id="system-overview"><h3 class="topic-title">System Overview</h3><p class="topic-description">Stratum AI is a Revenue Operating System with Trust-Gated Autopilot architecture. Automation executes ONLY when signal health passes safety thresholds. The core flow is: Signal Health Check &rarr; Trust Gate &rarr; Automation Decision.</p><div class="flow-diagram">Signal Sources &rarr; Signal Health Check &rarr; Trust Gate &rarr; Automation Decision
+
+[HEALTHY 70-100] &rarr; [PASS] &rarr; [EXECUTE]
+[DEGRADED 40-69] &rarr; [HOLD] &rarr; [ALERT ONLY]
+[UNHEALTHY 0-39] &rarr; [BLOCK] &rarr; [MANUAL REQUIRED]</div><div class="callout callout-info">The Trust Gate is the central safety mechanism. No automation can bypass the trust evaluation, ensuring data-driven decision-making at every step.</div></div>
+
+<div class="topic-block" id="tech-stack"><h3 class="topic-title">Tech Stack</h3><p class="topic-description">A modern, production-grade stack designed for high performance, type safety, and scalability.</p><div class="tech-grid"><div class="tech-card"><h4>Backend</h4><code>Python 3.11+</code><p>FastAPI 0.109 &middot; Pydantic 2.x &middot; SQLAlchemy 2.x (async)</p><p>PostgreSQL 16 &middot; Redis 7</p><p>Celery 5.3 + Redis + Celery Beat</p><p>Auth: JWT + OAuth2 + MFA (TOTP)</p></div><div class="tech-card"><h4>Frontend</h4><code>React 18 &middot; TypeScript 5.3</code><p>Vite 5.1 &middot; Tailwind CSS 3.4</p><p>shadcn/ui + Radix UI</p><p>Recharts &middot; Tremor &middot; Framer Motion</p><p>State: Zustand + React Query</p></div></div></div>
+
+<div class="topic-block" id="project-structure"><h3 class="topic-title">Project Structure</h3><p class="topic-description">The monorepo is organized into backend (Python/FastAPI) and frontend (React/TypeScript) with Docker orchestration.</p><pre><code>backend/
+  app/
+    api/v1/endpoints/    # FastAPI routes (50+ endpoints)
+    analytics/logic/     # Signal health, EMQ, attribution, anomalies
+    autopilot/           # Trust gate enforcement engine
+    auth/                # JWT, MFA, permissions
+    core/                # Config, security, logging, websocket
+    db/                  # Database session management
+    middleware/          # Tenant, audit, rate limiting
+    models/              # SQLAlchemy models (19 files)
+    schemas/             # Pydantic schemas
+    services/            # External integrations &amp; business logic
+      oauth/             # OAuth provider factory
+      pacing/            # Budget forecasting
+      profit/            # COGS &amp; profit tracking
+      reporting/         # Report generation &amp; scheduling
+      crm/               # CRM integrations
+    stratum/             # Core domain models
+    workers/             # Celery tasks
+  migrations/            # Alembic migrations (41 revisions)
+  tests/                 # pytest suite (21 test files)
+frontend/
+  src/
+    api/                 # API client wrappers
+    components/          # React components (50+ TSX files)
+    contexts/            # React context providers
+    hooks/               # Custom React hooks
+    stores/              # Zustand stores
+    views/               # Page views &amp; routes
+    styles/              # Tailwind CSS + custom styles
+docker-compose.yml       # 8 services
+docs/                    # 60+ documentation files
+</code></pre></div>
+
+<div class="topic-block" id="docker-services"><h3 class="topic-title">Docker Services</h3><p class="topic-description">The platform runs 8 containerized services orchestrated via Docker Compose.</p><table class="doc-table"><thead><tr><th>Service</th><th>Image</th><th>Port</th><th>Description</th></tr></thead><tbody><tr><td>db</td><td>PostgreSQL 16</td><td>5432</td><td>Primary database</td></tr><tr><td>redis</td><td>Redis 7</td><td>6379</td><td>Cache + Celery broker</td></tr><tr><td>api</td><td>FastAPI</td><td>8000</td><td>Backend API server</td></tr><tr><td>worker</td><td>Celery</td><td>&mdash;</td><td>Background task worker (4 concurrency)</td></tr><tr><td>scheduler</td><td>Celery Beat</td><td>&mdash;</td><td>Periodic task scheduler</td></tr><tr><td>frontend</td><td>Vite</td><td>5173</td><td>React development server</td></tr><tr><td>flower</td><td>Flower</td><td>5555</td><td>Celery monitoring (optional)</td></tr></tbody></table></div>
+
+<div class="topic-block" id="infrastructure"><h3 class="topic-title">Infrastructure</h3><p class="topic-description">Production infrastructure leverages Docker containers deployed to AWS with comprehensive monitoring.</p><div class="tech-grid"><div class="tech-card"><h4>Compute &amp; Storage</h4><p>Docker containerization</p><p>AWS ECS for orchestration</p><p>AWS RDS for managed PostgreSQL</p><p>AWS ElastiCache for managed Redis</p></div><div class="tech-card"><h4>Monitoring &amp; Observability</h4><p>Prometheus for metrics collection</p><p>Grafana for visualization</p><p>Sentry for error tracking</p><p>structlog for JSON logging</p></div></div></div>
+
+<div class="topic-block" id="code-standards"><h3 class="topic-title">Code Standards</h3><p class="topic-description">Strict coding standards enforced via linting and CI to ensure quality and security.</p><ul style="color:var(--color-text-muted);font-size:0.875rem;line-height:1.8;list-style:disc;padding-left:1.5rem;margin-bottom:1rem"><li>Type hints required on all functions</li><li>Pydantic models for all API I/O</li><li>Async/await for all I/O operations</li><li>90%+ test coverage for core/</li><li>Use <code>datetime.now(timezone.utc)</code> &mdash; never <code>datetime.utcnow()</code></li><li>Use <code>secrets</code> module for tokens &mdash; never <code>random</code></li><li>Use <code>hmac.compare_digest()</code> for constant-time comparisons</li><li>Fernet encryption for PII before storage</li><li>Structured logging via structlog (JSON format)</li></ul></div>
+
+
+<div class="section-nav"><span></span><a href="#section-trust-engine" style="text-align:right"><span class="nav-label">Next &rarr;</span><span class="nav-title">Trust &amp; Signal Engine</span></a></div>
+</div></div>
+
+<div id="section-trust-engine" class="view">
+<div class="section-page fade-up">
+<a href="#home" class="back-link">&larr; All Sections</a>
+<div class="section-badge">Section 2 of 15</div>
+<h1 style="color:#25D366">Trust &amp; Signal Engine</h1>
+<p class="section-desc">The core decision-making engine that evaluates signal health before allowing automation</p>
+<div class="topic-nav"><h4>In this section</h4>
+<a href="#trust-overview">Trust Engine Overview</a>
+<a href="#signal-health-score">Signal Health Score</a>
+<a href="#trust-gate">Trust Gate</a>
+<a href="#emq">EMQ (Event Match Quality)</a>
+<a href="#signal-recovery">Signal Recovery</a>
+<a href="#attribution-confidence">Attribution Confidence</a>
+</div>
+
+<div class="topic-block" id="trust-overview"><h3 class="topic-title">Trust Engine Overview</h3><p class="topic-description">The Trust Engine is the core decision-making component that evaluates signal health before allowing automation execution. It consists of four key components working in sequence.</p><div class="flow-diagram">[Signal Sources] &rarr; [Collectors] &rarr; [Health Calculator]
+&darr;
+[Trust Gate]
+&darr;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&darr;
+[PASS]&nbsp;&nbsp;&nbsp;&nbsp;[HOLD/BLOCK]
+&darr;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&darr;
+[Execute]&nbsp;[Alert/Manual]</div><div class="tech-grid"><div class="tech-card"><h4>Signal Collectors</h4><p>Gather data from ad platforms, analytics, CRM, and webhooks into a unified signal stream.</p></div><div class="tech-card"><h4>Health Calculator</h4><p>Compute composite reliability scores from weighted signal components.</p></div><div class="tech-card"><h4>Trust Gate</h4><p>Binary decision point: pass, hold, or block automation based on health score.</p></div><div class="tech-card"><h4>Automation Executor</h4><p>Execute approved actions: budget adjustments, bidding changes, campaign toggles.</p></div></div></div>
+
+<div class="topic-block" id="signal-health-score"><h3 class="topic-title">Signal Health Score</h3><p class="topic-description">A composite score from 0 to 100 measuring overall signal reliability. The score is computed from five weighted components.</p><table class="doc-table"><thead><tr><th>Component</th><th>Weight</th><th>Description</th></tr></thead><tbody><tr><td>EMQ (Event Match Quality)</td><td>35%</td><td>How well tracked events match platform data</td></tr><tr><td>API Health</td><td>25%</td><td>API response times, error rates, availability</td></tr><tr><td>Event Loss</td><td>20%</td><td>Percentage of events lost in transit</td></tr><tr><td>Platform Stability</td><td>10%</td><td>Ad platform uptime and consistency</td></tr><tr><td>Data Quality</td><td>10%</td><td>Completeness and accuracy of data</td></tr></tbody></table><div class="callout callout-success"><strong>70&ndash;100 Healthy (Green):</strong> Autopilot enabled, automation proceeds.</div><div class="callout callout-warn"><strong>40&ndash;69 Degraded (Yellow):</strong> Alert and hold, no auto-execution.</div><div class="callout callout-error"><strong>0&ndash;39 Unhealthy (Red):</strong> Manual intervention required.</div></div>
+
+<div class="topic-block" id="trust-gate"><h3 class="topic-title">Trust Gate</h3><p class="topic-description">The decision checkpoint that evaluates signal health before any automation can execute. Three enforcement modes control how strictly the gate is applied.</p><table class="doc-table"><thead><tr><th>Decision</th><th>Score</th><th>Action</th></tr></thead><tbody><tr><td><span class="badge badge-success">PASS</span></td><td>&ge; 70</td><td>Automation proceeds normally</td></tr><tr><td><span class="badge badge-warn">HOLD</span></td><td>40&ndash;69</td><td>Alert only, no execution</td></tr><tr><td><span class="badge badge-error">BLOCK</span></td><td>&lt; 40</td><td>Requires manual approval</td></tr></tbody></table><p class="topic-description"><strong>Enforcement Modes:</strong> Advisory (log only), Soft-Block (hold + alert), Hard-Block (full block).</p><div class="file-pills"><span class="file-pill">stratum/core/trust_gate.py</span><span class="file-pill">trust gate UI indicators</span></div></div>
+
+<div class="topic-block" id="emq"><h3 class="topic-title">EMQ (Event Match Quality)</h3><p class="topic-description">A score from 0 to 100 measuring how well tracked events match with platform data. Higher EMQ indicates better attribution accuracy and more reliable signal health.</p><div class="tech-grid"><div class="tech-card"><h4>Backend</h4><p>Score range: 0&ndash;100</p><p>Higher = better attribution accuracy</p></div><div class="tech-card"><h4>Frontend</h4><p>Feeds into Signal Health at 35% weight</p><p>Real-time calculation</p></div></div><div class="file-pills"><span class="file-pill">analytics/logic/emq_calculation.py</span></div></div>
+
+<div class="topic-block" id="signal-recovery"><h3 class="topic-title">Signal Recovery</h3><p class="topic-description">Real-time signal monitoring with recovery suggestions when signal health degrades. Provides actionable recommendations to restore signal quality.</p><div class="tech-grid"><div class="tech-card"><h4>Backend</h4><code>GET /api/v1/dashboard/signal-recovery</code><p>Logic: <code>signal_recovery.py</code></p></div><div class="tech-card"><h4>Frontend</h4><code>SignalRecoveryCard.tsx</code><p>Hook: <code>useSignalRecovery()</code></p><p>Stale: 30s | Refetch: 2min</p></div></div><div class="file-pills"><span class="file-pill">signal_recovery.py</span><span class="file-pill">dashboard.py</span><span class="file-pill">dashboard.ts</span><span class="file-pill">SignalRecoveryCard.tsx</span></div></div>
+
+<div class="topic-block" id="attribution-confidence"><h3 class="topic-title">Attribution Confidence</h3><p class="topic-description">Measures the reliability of the attribution model, providing confidence intervals for conversion credit assignment across touchpoints.</p><div class="tech-grid"><div class="tech-card"><h4>Backend</h4><code>GET /api/v1/dashboard/attribution-confidence</code><p>Logic: <code>attribution_confidence.py</code></p></div><div class="tech-card"><h4>Frontend</h4><code>AttributionConfidenceCard.tsx</code><p>Hook: <code>useAttributionConfidence()</code></p><p>Stale: 10min | Refetch: 30min</p></div></div><div class="file-pills"><span class="file-pill">attribution_confidence.py</span><span class="file-pill">dashboard.py</span><span class="file-pill">dashboard.ts</span><span class="file-pill">AttributionConfidenceCard.tsx</span></div></div>
+
+
+<div class="section-nav"><a href="#section-architecture"><span class="nav-label">&larr; Previous</span><span class="nav-title">Platform Architecture</span></a><a href="#section-ai-intelligence" style="text-align:right"><span class="nav-label">Next &rarr;</span><span class="nav-title">AI Intelligence Layer</span></a></div>
+</div></div>
+
+<div id="section-ai-intelligence" class="view">
+<div class="section-page fade-up">
+<a href="#home" class="back-link">&larr; All Sections</a>
+<div class="section-badge">Section 3 of 15</div>
+<h1 style="color:#A78BFA">AI Intelligence Layer</h1>
+<p class="section-desc">AI-powered insights, anomaly detection, copilot, and intelligent notifications</p>
+<div class="topic-nav"><h4>In this section</h4>
+<a href="#morning-briefing">AI Morning Briefing</a>
+<a href="#anomaly-narratives">Smart Anomaly Narratives</a>
+<a href="#ai-copilot">AI Copilot</a>
+<a href="#ai-reports">AI Reports</a>
+<a href="#knowledge-graph">Knowledge Graph</a>
+<a href="#nl-filters">Natural Language Filters</a>
+<a href="#annotations">Collaborative Annotations</a>
+<a href="#smart-notifications">Smart Notifications</a>
+</div>
+
+<div class="topic-block" id="morning-briefing"><h3 class="topic-title">AI Morning Briefing</h3><p class="topic-description">AI-generated daily briefing covering overnight performance, detected anomalies, signal health changes, metric movements, personalized highlights, risk alerts, and recommended actions.</p><div class="tech-grid"><div class="tech-card"><h4>Backend</h4><code>GET /api/v1/dashboard/morning-briefing</code><p>Logic: <code>morning_briefing.py</code></p></div><div class="tech-card"><h4>Frontend</h4><code>MorningBriefingCard.tsx</code><p>Hook: <code>useMorningBriefing()</code></p><p>Stale: 10min | Refetch: 30min</p></div></div><div class="file-pills"><span class="file-pill">morning_briefing.py</span><span class="file-pill">dashboard.py</span><span class="file-pill">dashboard.ts</span><span class="file-pill">MorningBriefingCard.tsx</span><span class="file-pill">Overview.tsx</span></div></div>
+
+<div class="topic-block" id="anomaly-narratives"><h3 class="topic-title">Smart Anomaly Narratives</h3><p class="topic-description">Plain-language explanations of detected anomalies with severity levels and recommended actions. Converts complex statistical anomalies into human-readable narratives.</p><div class="tech-grid"><div class="tech-card"><h4>Backend</h4><code>GET /api/v1/dashboard/anomaly-narratives</code><p>Logic: <code>anomaly_narratives.py</code></p></div><div class="tech-card"><h4>Frontend</h4><code>AnomalyNarrativesCard.tsx</code><p>Hook: <code>useAnomalyNarratives()</code></p><p>Stale: 10min | Refetch: 30min</p></div></div></div>
+
+<div class="topic-block" id="ai-copilot"><h3 class="topic-title">AI Copilot</h3><p class="topic-description">Conversational AI assistant for campaign analysis, optimization suggestions, and natural language queries. Enables users to interact with their data through conversation rather than complex UIs.</p><div class="tech-grid"><div class="tech-card"><h4>Backend</h4><code>GET /api/v1/dashboard/ai-copilot</code><p>Interactive chat interface</p></div><div class="tech-card"><h4>Frontend</h4><code>AICopilotCard.tsx</code><p>Real-time conversational AI</p></div></div></div>
+
+<div class="topic-block" id="ai-reports"><h3 class="topic-title">AI Reports</h3><p class="topic-description">AI-generated performance reports with narrative summaries and data visualization. Automatically creates comprehensive reports from campaign data.</p><div class="tech-grid"><div class="tech-card"><h4>Backend</h4><code>GET /api/v1/dashboard/ai-report</code><p>Auto-generated narratives</p></div><div class="tech-card"><h4>Frontend</h4><code>AIReportCard.tsx</code><p>Hook: <code>useAIReport()</code></p><p>Stale: 10min | Refetch: 30min</p></div></div></div>
+
+<div class="topic-block" id="knowledge-graph"><h3 class="topic-title">Knowledge Graph</h3><p class="topic-description">Visual knowledge graph of campaign relationships, audience overlaps, and performance correlations. Maps the interconnections between campaigns, audiences, and outcomes.</p><div class="tech-grid"><div class="tech-card"><h4>Backend</h4><code>GET /api/v1/dashboard/knowledge-graph</code><p>Relationship mapping engine</p></div><div class="tech-card"><h4>Frontend</h4><code>KnowledgeGraphCard.tsx</code><p>Hook: <code>useKnowledgeGraph()</code></p><p>Stale: 10min | Refetch: 30min</p></div></div></div>
+
+<div class="topic-block" id="nl-filters"><h3 class="topic-title">Natural Language Filters</h3><p class="topic-description">Query data using natural language instead of complex filter UIs. Type questions like &quot;Show me campaigns with ROAS above 3 in the last 7 days&quot; and get instant results.</p><div class="tech-grid"><div class="tech-card"><h4>Backend</h4><code>GET /api/v1/dashboard/nl-filter</code><p>NLP query parser</p></div><div class="tech-card"><h4>Frontend</h4><code>NLFilterCard.tsx</code><p>Hook: <code>useNLFilter()</code></p><p>Stale: 60s</p></div></div></div>
+
+<div class="topic-block" id="annotations"><h3 class="topic-title">Collaborative Annotations</h3><p class="topic-description">Team annotations on metrics and events for shared context. Team members can add notes, tag colleagues, and share insights directly on data points.</p><div class="tech-grid"><div class="tech-card"><h4>Backend</h4><code>GET /api/v1/dashboard/collaborative-annotations</code><p>Threaded annotations engine</p></div><div class="tech-card"><h4>Frontend</h4><code>CollaborativeAnnotationsCard.tsx</code><p>Hook: <code>useCollaborativeAnnotations()</code></p><p>Stale: 2min | Refetch: 5min</p></div></div></div>
+
+<div class="topic-block" id="smart-notifications"><h3 class="topic-title">Smart Notifications</h3><p class="topic-description">AI-prioritized notifications ranked by urgency and relevance. Filters noise and surfaces the most important alerts based on user role and context.</p><div class="tech-grid"><div class="tech-card"><h4>Backend</h4><code>GET /api/v1/dashboard/notifications-prioritized</code><p>Priority ranking engine</p></div><div class="tech-card"><h4>Frontend</h4><code>UnifiedNotificationsCard.tsx</code><p>Hook: <code>useUnifiedNotifications()</code></p><p>Stale: 2min | Refetch: 5min</p></div></div></div>
+
+
+<div class="section-nav"><a href="#section-trust-engine"><span class="nav-label">&larr; Previous</span><span class="nav-title">Trust &amp; Signal Engine</span></a><a href="#section-analytics" style="text-align:right"><span class="nav-label">Next &rarr;</span><span class="nav-title">Predictive &amp; Analytics</span></a></div>
+</div></div>
+
+<div id="section-analytics" class="view">
+<div class="section-page fade-up">
+<a href="#home" class="back-link">&larr; All Sections</a>
+<div class="section-badge">Section 4 of 15</div>
+<h1 style="color:#FF8C00">Predictive &amp; Analytics</h1>
+<p class="section-desc">Predictive budgeting, forecasting, creative scoring, journey mapping, and goal tracking</p>
+<div class="topic-nav"><h4>In this section</h4>
+<a href="#predictive-budget">Predictive Budget Optimizer</a>
+<a href="#ltv-forecast">LTV Forecast</a>
+<a href="#creative-scoring">Creative Scoring</a>
+<a href="#journey-map">Journey Map</a>
+<a href="#goal-tracking">Goal Tracking</a>
+<a href="#analytics-engine">Analytics Engine</a>
+</div>
+
+<div class="topic-block" id="predictive-budget"><h3 class="topic-title">Predictive Budget Optimizer</h3><p class="topic-description">AI-driven budget allocation recommendations based on performance trends. Analyzes historical spend and outcome data to suggest optimal budget distribution across campaigns and channels.</p><div class="tech-grid"><div class="tech-card"><h4>Backend</h4><code>GET /api/v1/dashboard/predictive-budget</code><p>ML-based budget modeling</p></div><div class="tech-card"><h4>Frontend</h4><code>PredictiveBudgetCard.tsx</code><p>Hook: <code>usePredictiveBudget()</code></p><p>Stale: 5min | Refetch: 15min</p></div></div></div>
+
+<div class="topic-block" id="ltv-forecast"><h3 class="topic-title">LTV Forecast</h3><p class="topic-description">Customer lifetime value predictions using ML models. Forecasts future revenue per customer segment to inform acquisition and retention strategy.</p><div class="tech-grid"><div class="tech-card"><h4>Backend</h4><code>GET /api/v1/dashboard/ltv-forecast</code><p>ML lifetime value model</p></div><div class="tech-card"><h4>Frontend</h4><code>LTVForecastCard.tsx</code><p>Hook: <code>useLTVForecast()</code></p><p>Stale: 10min | Refetch: 30min</p></div></div></div>
+
+<div class="topic-block" id="creative-scoring"><h3 class="topic-title">Creative Scoring</h3><p class="topic-description">AI-powered creative asset performance scoring and recommendations. Evaluates ad creatives across engagement, conversion, and fatigue metrics to suggest improvements.</p><div class="tech-grid"><div class="tech-card"><h4>Backend</h4><code>GET /api/v1/dashboard/creative-scoring</code><p>Creative analysis engine</p></div><div class="tech-card"><h4>Frontend</h4><code>CreativeScoringCard.tsx</code><p>Hook: <code>useCreativeScoring()</code></p><p>Stale: 5min | Refetch: 15min</p></div></div></div>
+
+<div class="topic-block" id="journey-map"><h3 class="topic-title">Journey Map</h3><p class="topic-description">Visual customer journey mapping across touchpoints and channels. Traces the path from first impression to conversion, revealing drop-off points and optimization opportunities.</p><div class="tech-grid"><div class="tech-card"><h4>Backend</h4><code>GET /api/v1/dashboard/journey-map</code><p>Multi-touch journey engine</p></div><div class="tech-card"><h4>Frontend</h4><code>JourneyMapCard.tsx</code><p>Hook: <code>useJourneyMap()</code></p><p>Stale: 10min | Refetch: 30min</p></div></div></div>
+
+<div class="topic-block" id="goal-tracking"><h3 class="topic-title">Goal Tracking</h3><p class="topic-description">Campaign goal tracking with progress indicators and projected completion dates. Set KPI targets and monitor real-time progress with pacing forecasts.</p><div class="tech-grid"><div class="tech-card"><h4>Backend</h4><code>GET /api/v1/dashboard/goal-tracking</code><p>Goal pacing engine</p></div><div class="tech-card"><h4>Frontend</h4><code>GoalTrackingCard.tsx</code><p>Hook: <code>useGoalTracking()</code></p><p>Stale: 5min | Refetch: 10min</p></div></div></div>
+
+<div class="topic-block" id="analytics-engine"><h3 class="topic-title">Analytics Engine</h3><p class="topic-description">Core analytics modules powering the platform intelligence layer. Eight specialized modules handle different aspects of data analysis.</p><table class="doc-table"><thead><tr><th>Module</th><th>File</th><th>Purpose</th></tr></thead><tbody><tr><td>Signal Health</td><td><code>signal_health.py</code></td><td>Composite signal reliability scoring</td></tr><tr><td>EMQ Calculation</td><td><code>emq_calculation.py</code></td><td>Event match quality measurement</td></tr><tr><td>Anomaly Detection</td><td><code>anomaly_detection.py</code></td><td>Statistical anomaly identification</td></tr><tr><td>Attribution</td><td><code>attribution.py</code></td><td>Multi-touch attribution models</td></tr><tr><td>Competitor Analysis</td><td><code>competitor_analysis.py</code></td><td>Market intelligence</td></tr><tr><td>Funnel Analysis</td><td><code>funnel_analysis.py</code></td><td>Conversion funnel optimization</td></tr><tr><td>Pacing Analysis</td><td><code>pacing_analysis.py</code></td><td>Budget spend velocity</td></tr><tr><td>Profit Analysis</td><td><code>profit_analysis.py</code></td><td>Revenue and margin calculation</td></tr></tbody></table><div class="file-pills"><span class="file-pill">analytics/logic/</span></div></div>
+
+
+<div class="section-nav"><a href="#section-ai-intelligence"><span class="nav-label">&larr; Previous</span><span class="nav-title">AI Intelligence Layer</span></a><a href="#section-automation" style="text-align:right"><span class="nav-label">Next &rarr;</span><span class="nav-title">Automation Engine</span></a></div>
+</div></div>
+
+<div id="section-automation" class="view">
+<div class="section-page fade-up">
+<a href="#home" class="back-link">&larr; All Sections</a>
+<div class="section-badge">Section 5 of 15</div>
+<h1 style="color:#00D4AA">Automation Engine</h1>
+<p class="section-desc">Autopilot enforcement, churn prevention, cross-platform optimization, and A/B testing</p>
+<div class="topic-nav"><h4>In this section</h4>
+<a href="#autopilot-enforcement">Autopilot Enforcement</a>
+<a href="#churn-prevention">Churn Prevention</a>
+<a href="#cross-platform">Cross-Platform Optimizer</a>
+<a href="#audience-lifecycle">Audience Lifecycle</a>
+<a href="#ab-test">A/B Test Analysis</a>
+<a href="#competitor-intel">Competitor Intelligence</a>
+</div>
+
+<div class="topic-block" id="autopilot-enforcement"><h3 class="topic-title">Autopilot Enforcement</h3><p class="topic-description">Trust-gated automation execution engine. Actions include adjusting budgets, modifying bidding strategies, pausing/enabling campaigns, and scaling spend. All actions must pass through the Trust Gate before execution.</p><table class="doc-table"><thead><tr><th>Enforcement Mode</th><th>Behavior</th></tr></thead><tbody><tr><td>Advisory</td><td>Log recommendations only, no action taken</td></tr><tr><td>Soft-Block</td><td>Hold action + send alert for manual review</td></tr><tr><td>Hard-Block</td><td>Full block, requires explicit manual approval</td></tr></tbody></table><div class="file-pills"><span class="file-pill">autopilot/enforcer.py</span><span class="file-pill">autopilot/service.py</span></div></div>
+
+<div class="topic-block" id="churn-prevention"><h3 class="topic-title">Churn Prevention</h3><p class="topic-description">AI-powered churn prediction and automated retention campaigns. Uses machine learning to identify customers likely to churn and triggers automated retention workflows.</p><div class="tech-grid"><div class="tech-card"><h4>Backend</h4><code>GET /api/v1/dashboard/churn-prevention</code><p>ML churn prediction model</p></div><div class="tech-card"><h4>Frontend</h4><code>ChurnPreventionCard.tsx</code><p>Hook: <code>useChurnPrevention()</code></p><p>Stale: 5min | Refetch: 10min</p></div></div></div>
+
+<div class="topic-block" id="cross-platform"><h3 class="topic-title">Cross-Platform Optimizer</h3><p class="topic-description">Unified optimization across Meta, Google, TikTok, and Snapchat simultaneously. Reallocates budget and adjusts bids across platforms to maximize overall performance.</p><div class="tech-grid"><div class="tech-card"><h4>Backend</h4><code>GET /api/v1/dashboard/cross-platform-optimizer</code><p>Multi-platform optimization engine</p></div><div class="tech-card"><h4>Frontend</h4><code>CrossPlatformOptimizerCard.tsx</code><p>Hook: <code>useCrossPlatformOptimizer()</code></p><p>Stale: 5min | Refetch: 15min</p></div></div></div>
+
+<div class="topic-block" id="audience-lifecycle"><h3 class="topic-title">Audience Lifecycle</h3><p class="topic-description">Automated audience segment management through lifecycle stages. Automatically moves users between segments based on behavior and engagement patterns.</p><div class="tech-grid"><div class="tech-card"><h4>Backend</h4><code>GET /api/v1/dashboard/audience-lifecycle</code><p>Lifecycle state machine</p></div><div class="tech-card"><h4>Frontend</h4><code>AudienceLifecycleCard.tsx</code><p>Hook: <code>useAudienceLifecycle()</code></p><p>Stale: 5min | Refetch: 15min</p></div></div></div>
+
+<div class="topic-block" id="ab-test"><h3 class="topic-title">A/B Test Analysis</h3><p class="topic-description">Statistical analysis of A/B tests with confidence intervals and recommendations. Provides significance testing, sample size calculations, and clear winner/loser determination.</p><div class="tech-grid"><div class="tech-card"><h4>Backend</h4><code>GET /api/v1/dashboard/ab-test-analysis</code><p>Statistical significance engine</p></div><div class="tech-card"><h4>Frontend</h4><code>ABTestAnalysisCard.tsx</code><p>Hook: <code>useABTestAnalysis()</code></p><p>Stale: 5min | Refetch: 15min</p></div></div></div>
+
+<div class="topic-block" id="competitor-intel"><h3 class="topic-title">Competitor Intelligence</h3><p class="topic-description">Market intelligence and competitor campaign monitoring. Tracks competitor ad spend, creative strategies, and market share to inform strategic decisions.</p><div class="tech-grid"><div class="tech-card"><h4>Backend</h4><code>GET /api/v1/dashboard/competitor-intel</code><p>Market intelligence engine</p></div><div class="tech-card"><h4>Frontend</h4><code>CompetitorIntelCard.tsx</code><p>Hook: <code>useCompetitorIntel()</code></p><p>Stale: 10min | Refetch: 30min</p></div></div></div>
+
+
+<div class="section-nav"><a href="#section-analytics"><span class="nav-label">&larr; Previous</span><span class="nav-title">Predictive &amp; Analytics</span></a><a href="#section-cdp" style="text-align:right"><span class="nav-label">Next &rarr;</span><span class="nav-title">Customer Data Platform</span></a></div>
+</div></div>
+
+<div id="section-cdp" class="view">
+<div class="section-page fade-up">
+<a href="#home" class="back-link">&larr; All Sections</a>
+<div class="section-badge">Section 6 of 15</div>
+<h1 style="color:#6366F1">Customer Data Platform</h1>
+<p class="section-desc">Unified customer profiles, identity resolution, segmentation, and RFM analysis</p>
+<div class="topic-nav"><h4>In this section</h4>
+<a href="#cdp-overview">CDP Overview</a>
+<a href="#identity-resolution">Identity Resolution</a>
+<a href="#segments">Segments</a>
+<a href="#computed-traits">Computed Traits</a>
+<a href="#rfm-analysis">RFM Analysis</a>
+<a href="#lifecycle-stages">Lifecycle Stages</a>
+<a href="#audience-sync">Audience Sync</a>
+</div>
+
+<div class="topic-block" id="cdp-overview"><h3 class="topic-title">CDP Overview</h3><p class="topic-description">Unified customer records combining data from multiple sources. Each profile contains identity information, behavioral events, computed traits, and segment memberships.</p><div class="callout callout-info">The CDP is the single source of truth for customer data across all connected platforms and touchpoints.</div><div class="file-pills"><span class="file-pill">models/cdp.py</span></div></div>
+
+<div class="topic-block" id="identity-resolution"><h3 class="topic-title">Identity Resolution</h3><p class="topic-description">The process of connecting disparate identifiers to a single customer profile. Maps anonymous visitors through to known customers via progressive identification.</p><div class="flow-diagram">Anonymous (device/session)
+&darr;
+Known (via email/login)
+&darr;
+Customer (via purchase)</div><p class="topic-description">The Identity Graph provides a visual representation showing how different identifiers (email, phone, device IDs) connect to form a unified profile.</p></div>
+
+<div class="topic-block" id="segments"><h3 class="topic-title">Segments</h3><p class="topic-description">Dynamic groups of profiles matching specific criteria. Segments update automatically as customer data changes.</p><table class="doc-table"><thead><tr><th>Type</th><th>Description</th><th>Example</th></tr></thead><tbody><tr><td>Behavioral</td><td>Based on event patterns</td><td>Users who viewed product 3+ times</td></tr><tr><td>Demographic</td><td>Based on profile attributes</td><td>Users in tier &quot;Enterprise&quot;</td></tr><tr><td>Predictive</td><td>Based on ML models</td><td>High churn risk (score &gt; 0.7)</td></tr></tbody></table></div>
+
+<div class="topic-block" id="computed-traits"><h3 class="topic-title">Computed Traits</h3><p class="topic-description">Derived attributes calculated from event history. These are automatically computed and updated as new events arrive.</p><ul style="color:var(--color-text-muted);font-size:0.875rem;line-height:1.8;list-style:disc;padding-left:1.5rem"><li>Total purchases</li><li>Days since last activity</li><li>Average order value</li><li>Lifetime value (LTV)</li></ul></div>
+
+<div class="topic-block" id="rfm-analysis"><h3 class="topic-title">RFM Analysis</h3><p class="topic-description">Customer segmentation based on Recency (how recently they purchased), Frequency (how often they purchase), and Monetary value (how much they spend). Produces 12 distinct segments.</p><table class="doc-table"><thead><tr><th>Segment</th><th>Description</th></tr></thead><tbody><tr><td>Champions</td><td>Best customers: recent, frequent, high spend</td></tr><tr><td>Loyal Customers</td><td>Consistent buyers with strong frequency</td></tr><tr><td>Potential Loyalists</td><td>Recent buyers with growing frequency</td></tr><tr><td>New Customers</td><td>First-time recent buyers</td></tr><tr><td>Promising</td><td>Recent shoppers with average spend</td></tr><tr><td>Need Attention</td><td>Above-average but declining activity</td></tr><tr><td>About to Sleep</td><td>Below-average recency and frequency</td></tr><tr><td>At Risk</td><td>Previously valuable, now declining</td></tr><tr><td>Can't Lose</td><td>High-value customers showing churn signals</td></tr><tr><td>Hibernating</td><td>Low activity across all dimensions</td></tr><tr><td>Lost</td><td>No recent activity, low value</td></tr><tr><td>Others</td><td>Remaining profiles not matching above</td></tr></tbody></table></div>
+
+<div class="topic-block" id="lifecycle-stages"><h3 class="topic-title">Lifecycle Stages</h3><p class="topic-description">Customer journey positions tracked from first touch through to churn, enabling stage-appropriate engagement strategies.</p><div class="flow-diagram">Anonymous &rarr; Known &rarr; Lead &rarr; Customer &rarr; Active &rarr; At Risk &rarr; Churned</div></div>
+
+<div class="topic-block" id="audience-sync"><h3 class="topic-title">Audience Sync</h3><p class="topic-description">Push CDP segments to advertising platforms for targeting. Enables synchronized audience lists across all connected ad platforms.</p><table class="doc-table"><thead><tr><th>Platform</th><th>Audience Type</th></tr></thead><tbody><tr><td>Meta/Facebook</td><td>Custom Audiences</td></tr><tr><td>Google</td><td>Customer Match</td></tr><tr><td>TikTok</td><td>Custom Audiences</td></tr><tr><td>Snapchat</td><td>Audience Match</td></tr></tbody></table><div class="file-pills"><span class="file-pill">services/cdp/audience_sync/</span></div></div>
+
+
+<div class="section-nav"><a href="#section-automation"><span class="nav-label">&larr; Previous</span><span class="nav-title">Automation Engine</span></a><a href="#section-integrations" style="text-align:right"><span class="nav-label">Next &rarr;</span><span class="nav-title">Integrations</span></a></div>
+</div></div>
+
+<div id="section-integrations" class="view">
+<div class="section-page fade-up">
+<a href="#home" class="back-link">&larr; All Sections</a>
+<div class="section-badge">Section 7 of 15</div>
+<h1 style="color:#FF1F6D">Integrations</h1>
+<p class="section-desc">Ad platforms, CRM, WhatsApp Business, Slack, and payment integrations</p>
+<div class="topic-nav"><h4>In this section</h4>
+<a href="#meta-ads">Meta/Facebook Ads</a>
+<a href="#google-ads">Google Ads</a>
+<a href="#tiktok-ads">TikTok Ads</a>
+<a href="#snapchat-ads">Snapchat Ads</a>
+<a href="#whatsapp">WhatsApp Business</a>
+<a href="#crm">CRM Integrations</a>
+<a href="#slack">Slack</a>
+<a href="#stripe">Stripe Payments</a>
+</div>
+
+<div class="topic-block" id="meta-ads"><h3 class="topic-title">Meta/Facebook Ads</h3><p class="topic-description">OAuth integration with Meta Marketing API. Supports campaign management, Conversions API (CAPI) for server-side tracking, and audience synchronization.</p><p class="topic-description"><strong>Permissions:</strong> ads_read, ads_management, business_management</p><div class="callout callout-info">CAPI (Conversions API) sends conversion data directly to Meta servers, bypassing browser limitations for more accurate tracking.</div><div class="file-pills"><span class="file-pill">services/oauth/</span></div></div>
+
+<div class="topic-block" id="google-ads"><h3 class="topic-title">Google Ads</h3><p class="topic-description">OAuth integration for Google Ads campaign management, automated bidding, and performance reporting. Supports Search, Display, Shopping, and Video campaign types.</p></div>
+
+<div class="topic-block" id="tiktok-ads"><h3 class="topic-title">TikTok Ads</h3><p class="topic-description">OAuth integration for TikTok Ads platform. Enables campaign creation, audience targeting, and performance analytics for TikTok advertising.</p></div>
+
+<div class="topic-block" id="snapchat-ads"><h3 class="topic-title">Snapchat Ads</h3><p class="topic-description">OAuth integration for Snapchat Marketing API. Supports campaign management, audience creation, and performance tracking for Snapchat advertising.</p></div>
+
+<div class="topic-block" id="whatsapp"><h3 class="topic-title">WhatsApp Business</h3><p class="topic-description">Customer communication via WhatsApp Business API. Supports OTP verification, template messages, and interactive messages for customer engagement.</p><div class="file-pills"><span class="file-pill">services/whatsapp_service.py</span></div></div>
+
+<div class="topic-block" id="crm"><h3 class="topic-title">CRM Integrations</h3><p class="topic-description">Bi-directional sync with major CRM platforms for contacts, companies, and deals. Changes sync both ways to maintain data consistency.</p><table class="doc-table"><thead><tr><th>CRM</th><th>Sync</th></tr></thead><tbody><tr><td>HubSpot</td><td>Bi-directional contacts, companies, deals</td></tr><tr><td>Zoho</td><td>Bi-directional contacts, companies, deals</td></tr><tr><td>Pipedrive</td><td>Bi-directional contacts, companies, deals</td></tr><tr><td>Salesforce</td><td>Bi-directional contacts, companies, deals (Enterprise)</td></tr></tbody></table><div class="file-pills"><span class="file-pill">services/crm/</span></div></div>
+
+<div class="topic-block" id="slack"><h3 class="topic-title">Slack</h3><p class="topic-description">Notification integration for alerts, reports, anomaly detection, and daily summaries. Delivers actionable insights directly to team Slack channels.</p></div>
+
+<div class="topic-block" id="stripe"><h3 class="topic-title">Stripe Payments</h3><p class="topic-description">Subscription management with Stripe. Handles checkout flow, webhooks for payment events, billing portal access, and plan upgrades/downgrades.</p></div>
+
+
+<div class="section-nav"><a href="#section-cdp"><span class="nav-label">&larr; Previous</span><span class="nav-title">Customer Data Platform</span></a><a href="#section-platform-core" style="text-align:right"><span class="nav-label">Next &rarr;</span><span class="nav-title">Platform Core</span></a></div>
+</div></div>
+
+<div id="section-platform-core" class="view">
+<div class="section-page fade-up">
+<a href="#home" class="back-link">&larr; All Sections</a>
+<div class="section-badge">Section 8 of 15</div>
+<h1 style="color:#FF4D4D">Platform Core</h1>
+<p class="section-desc">Authentication, multi-tenancy, campaign builder, pacing, profit tracking, CMS, and reporting</p>
+<div class="topic-nav"><h4>In this section</h4>
+<a href="#authentication">Authentication</a>
+<a href="#multi-tenancy">Multi-Tenancy</a>
+<a href="#campaign-builder">Campaign Builder</a>
+<a href="#budget-pacing">Budget Pacing</a>
+<a href="#profit-cogs">Profit &amp; COGS</a>
+<a href="#cms">CMS</a>
+<a href="#reporting">Reporting Engine</a>
+<a href="#superadmin">SuperAdmin</a>
+</div>
+
+<div class="topic-block" id="authentication"><h3 class="topic-title">Authentication</h3><p class="topic-description">Multi-layered authentication combining JWT tokens, OAuth2, and MFA via TOTP. The JWT token contains User ID, Tenant ID, Permissions, and Expiration.</p><div class="file-pills"><span class="file-pill">auth/</span><span class="file-pill">core/security.py</span><span class="file-pill">services/mfa_service.py</span></div></div>
+
+<div class="topic-block" id="multi-tenancy"><h3 class="topic-title">Multi-Tenancy</h3><p class="topic-description">Isolated customer workspaces with complete data separation. Each tenant gets a separate database schema, own user management, independent configurations, and isolated analytics.</p><div class="callout callout-info">Row-level security ensures that queries are always scoped to the current tenant, preventing data leakage between customers.</div><div class="file-pills"><span class="file-pill">middleware/tenant.py</span></div></div>
+
+<div class="topic-block" id="campaign-builder"><h3 class="topic-title">Campaign Builder</h3><p class="topic-description">Campaign creation and management across all connected ad platforms. Provides a unified interface for building campaigns with platform-specific targeting and creative options.</p><div class="file-pills"><span class="file-pill">models/campaign_builder.py</span></div></div>
+
+<div class="topic-block" id="budget-pacing"><h3 class="topic-title">Budget Pacing</h3><p class="topic-description">Budget spend velocity tracking and forecasting. Monitors how fast budget is being consumed and projects whether campaigns will under-spend or over-spend.</p><div class="file-pills"><span class="file-pill">services/pacing/</span></div></div>
+
+<div class="topic-block" id="profit-cogs"><h3 class="topic-title">Profit &amp; COGS</h3><p class="topic-description">Revenue tracking, cost of goods sold (COGS), and profit margin calculation. Provides true profitability analysis beyond just ROAS.</p><div class="file-pills"><span class="file-pill">services/profit/</span></div></div>
+
+<div class="topic-block" id="cms"><h3 class="topic-title">CMS</h3><p class="topic-description">Content management system for marketing pages. Includes a frontend CMS editor for creating and managing landing pages and marketing content.</p><div class="file-pills"><span class="file-pill">models/cms.py</span></div></div>
+
+<div class="topic-block" id="reporting"><h3 class="topic-title">Reporting Engine</h3><p class="topic-description">Report generation and scheduling with multiple delivery formats. Reports can be automatically generated on schedule and delivered via multiple channels.</p><table class="doc-table"><thead><tr><th>Format</th><th>Delivery</th></tr></thead><tbody><tr><td>PDF</td><td>Email attachment, download</td></tr><tr><td>Slack</td><td>Channel message with summary</td></tr><tr><td>Email</td><td>Formatted HTML email</td></tr></tbody></table><div class="file-pills"><span class="file-pill">services/reporting/</span></div></div>
+
+<div class="topic-block" id="superadmin"><h3 class="topic-title">SuperAdmin</h3><p class="topic-description">Platform administration panel for managing tenants, users, feature flags, and system configuration. Restricted to platform operators.</p><div class="file-pills"><span class="file-pill">endpoints/superadmin.py</span></div></div>
+
+
+<div class="section-nav"><a href="#section-integrations"><span class="nav-label">&larr; Previous</span><span class="nav-title">Integrations</span></a><a href="#section-api-reference" style="text-align:right"><span class="nav-label">Next &rarr;</span><span class="nav-title">API Reference</span></a></div>
+</div></div>
+
+<div id="section-api-reference" class="view">
+<div class="section-page fade-up">
+<a href="#home" class="back-link">&larr; All Sections</a>
+<div class="section-badge">Section 9 of 15</div>
+<h1 style="color:#3B82F6">API Reference</h1>
+<p class="section-desc">Complete API endpoint documentation with authentication, request/response formats</p>
+<div class="topic-nav"><h4>In this section</h4>
+<a href="#auth-api">Authentication API</a>
+<a href="#dashboard-api">Dashboard API</a>
+<a href="#campaigns-api">Campaigns API</a>
+<a href="#analytics-api">Analytics API</a>
+<a href="#cdp-api">CDP API</a>
+<a href="#autopilot-api">Autopilot API</a>
+<a href="#response-format">Response Format</a>
+</div>
+
+<div class="topic-block" id="auth-api"><h3 class="topic-title">Authentication API</h3><p class="topic-description">Authentication endpoints for user login, registration, token refresh, and MFA setup. All protected endpoints require a Bearer JWT token in the Authorization header.</p><div class="endpoint-list"><div class="endpoint-item"><span class="endpoint-method method-post">POST</span><span class="endpoint-path">/api/v1/auth/login</span></div><div class="endpoint-item"><span class="endpoint-method method-post">POST</span><span class="endpoint-path">/api/v1/auth/register</span></div><div class="endpoint-item"><span class="endpoint-method method-post">POST</span><span class="endpoint-path">/api/v1/auth/refresh</span></div><div class="endpoint-item"><span class="endpoint-method method-post">POST</span><span class="endpoint-path">/api/v1/auth/mfa/setup</span></div><div class="endpoint-item"><span class="endpoint-method method-post">POST</span><span class="endpoint-path">/api/v1/auth/mfa/verify</span></div></div><div class="callout callout-info"><strong>Auth Header:</strong> <code>Authorization: Bearer &lt;jwt_token&gt;</code></div></div>
+
+<div class="topic-block" id="dashboard-api"><h3 class="topic-title">Dashboard API</h3><p class="topic-description">Dashboard data endpoints providing all intelligence layer features, analytics, and real-time insights.</p><div class="endpoint-list"><div class="endpoint-item"><span class="endpoint-method method-get">GET</span><span class="endpoint-path">/api/v1/dashboard/overview</span></div><div class="endpoint-item"><span class="endpoint-method method-get">GET</span><span class="endpoint-path">/api/v1/dashboard/morning-briefing</span></div><div class="endpoint-item"><span class="endpoint-method method-get">GET</span><span class="endpoint-path">/api/v1/dashboard/anomaly-narratives</span></div><div class="endpoint-item"><span class="endpoint-method method-get">GET</span><span class="endpoint-path">/api/v1/dashboard/signal-recovery</span></div><div class="endpoint-item"><span class="endpoint-method method-get">GET</span><span class="endpoint-path">/api/v1/dashboard/predictive-budget</span></div><div class="endpoint-item"><span class="endpoint-method method-get">GET</span><span class="endpoint-path">/api/v1/dashboard/ai-report</span></div><div class="endpoint-item"><span class="endpoint-method method-get">GET</span><span class="endpoint-path">/api/v1/dashboard/churn-prevention</span></div><div class="endpoint-item"><span class="endpoint-method method-get">GET</span><span class="endpoint-path">/api/v1/dashboard/notifications-prioritized</span></div><div class="endpoint-item"><span class="endpoint-method method-get">GET</span><span class="endpoint-path">/api/v1/dashboard/cross-platform-optimizer</span></div><div class="endpoint-item"><span class="endpoint-method method-get">GET</span><span class="endpoint-path">/api/v1/dashboard/audience-lifecycle</span></div><div class="endpoint-item"><span class="endpoint-method method-get">GET</span><span class="endpoint-path">/api/v1/dashboard/goal-tracking</span></div><div class="endpoint-item"><span class="endpoint-method method-get">GET</span><span class="endpoint-path">/api/v1/dashboard/attribution-confidence</span></div><div class="endpoint-item"><span class="endpoint-method method-get">GET</span><span class="endpoint-path">/api/v1/dashboard/ltv-forecast</span></div><div class="endpoint-item"><span class="endpoint-method method-get">GET</span><span class="endpoint-path">/api/v1/dashboard/creative-scoring</span></div><div class="endpoint-item"><span class="endpoint-method method-get">GET</span><span class="endpoint-path">/api/v1/dashboard/competitor-intel</span></div><div class="endpoint-item"><span class="endpoint-method method-get">GET</span><span class="endpoint-path">/api/v1/dashboard/ab-test-analysis</span></div><div class="endpoint-item"><span class="endpoint-method method-get">GET</span><span class="endpoint-path">/api/v1/dashboard/collaborative-annotations</span></div><div class="endpoint-item"><span class="endpoint-method method-get">GET</span><span class="endpoint-path">/api/v1/dashboard/knowledge-graph</span></div><div class="endpoint-item"><span class="endpoint-method method-get">GET</span><span class="endpoint-path">/api/v1/dashboard/journey-map</span></div><div class="endpoint-item"><span class="endpoint-method method-get">GET</span><span class="endpoint-path">/api/v1/dashboard/nl-filter</span></div></div></div>
+
+<div class="topic-block" id="campaigns-api"><h3 class="topic-title">Campaigns API</h3><p class="topic-description">Campaign CRUD operations and platform synchronization.</p><div class="endpoint-list"><div class="endpoint-item"><span class="endpoint-method method-get">GET</span><span class="endpoint-path">/api/v1/campaigns</span></div><div class="endpoint-item"><span class="endpoint-method method-post">POST</span><span class="endpoint-path">/api/v1/campaigns</span></div><div class="endpoint-item"><span class="endpoint-method method-get">GET</span><span class="endpoint-path">/api/v1/campaigns/{id}</span></div><div class="endpoint-item"><span class="endpoint-method method-put">PUT</span><span class="endpoint-path">/api/v1/campaigns/{id}</span></div><div class="endpoint-item"><span class="endpoint-method method-delete">DELETE</span><span class="endpoint-path">/api/v1/campaigns/{id}</span></div><div class="endpoint-item"><span class="endpoint-method method-post">POST</span><span class="endpoint-path">/api/v1/campaigns/{id}/sync</span></div></div></div>
+
+<div class="topic-block" id="analytics-api"><h3 class="topic-title">Analytics API</h3><p class="topic-description">Core analytics endpoints for signal health, EMQ, anomalies, and attribution data.</p><div class="endpoint-list"><div class="endpoint-item"><span class="endpoint-method method-get">GET</span><span class="endpoint-path">/api/v1/analytics/signal-health</span></div><div class="endpoint-item"><span class="endpoint-method method-get">GET</span><span class="endpoint-path">/api/v1/analytics/emq</span></div><div class="endpoint-item"><span class="endpoint-method method-get">GET</span><span class="endpoint-path">/api/v1/analytics/anomalies</span></div><div class="endpoint-item"><span class="endpoint-method method-get">GET</span><span class="endpoint-path">/api/v1/analytics/attribution</span></div></div></div>
+
+<div class="topic-block" id="cdp-api"><h3 class="topic-title">CDP API</h3><p class="topic-description">Customer Data Platform endpoints for profiles, segments, audience sync, computed traits, and funnels.</p><div class="endpoint-list"><div class="endpoint-item"><span class="endpoint-method method-get">GET</span><span class="endpoint-path">/api/v1/cdp/profiles</span></div><div class="endpoint-item"><span class="endpoint-method method-get">GET</span><span class="endpoint-path">/api/v1/cdp/segments</span></div><div class="endpoint-item"><span class="endpoint-method method-post">POST</span><span class="endpoint-path">/api/v1/cdp/audience-sync</span></div><div class="endpoint-item"><span class="endpoint-method method-get">GET</span><span class="endpoint-path">/api/v1/cdp/computed-traits</span></div><div class="endpoint-item"><span class="endpoint-method method-get">GET</span><span class="endpoint-path">/api/v1/cdp/funnels</span></div></div></div>
+
+<div class="topic-block" id="autopilot-api"><h3 class="topic-title">Autopilot API</h3><p class="topic-description">Autopilot rule management, action execution, dry-run testing, and trust layer audit logs.</p><div class="endpoint-list"><div class="endpoint-item"><span class="endpoint-method method-get">GET</span><span class="endpoint-path">/api/v1/autopilot/rules</span></div><div class="endpoint-item"><span class="endpoint-method method-post">POST</span><span class="endpoint-path">/api/v1/autopilot/actions/{id}/execute</span></div><div class="endpoint-item"><span class="endpoint-method method-post">POST</span><span class="endpoint-path">/api/v1/autopilot/actions/{id}/dry-run</span></div><div class="endpoint-item"><span class="endpoint-method method-get">GET</span><span class="endpoint-path">/api/v1/trust-layer/audit-logs</span></div></div></div>
+
+<div class="topic-block" id="response-format"><h3 class="topic-title">Response Format</h3><p class="topic-description">All API responses follow a consistent format for both success and error cases.</p><pre><code>// Success Response
+{
+  "status": "success",
+  "data": { ... },
+  "meta": {
+    "page": 1,
+    "total": 100,
+    "timestamp": "2024-01-01T00:00:00Z"
+  }
+}</code></pre><pre><code>// Error Response
+{
+  "status": "error",
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Invalid input",
+    "details": [ ... ]
+  }
+}</code></pre></div>
+
+
+<div class="section-nav"><a href="#section-platform-core"><span class="nav-label">&larr; Previous</span><span class="nav-title">Platform Core</span></a><a href="#section-deployment" style="text-align:right"><span class="nav-label">Next &rarr;</span><span class="nav-title">Deployment &amp; Operations</span></a></div>
+</div></div>
+
+<div id="section-deployment" class="view">
+<div class="section-page fade-up">
+<a href="#home" class="back-link">&larr; All Sections</a>
+<div class="section-badge">Section 10 of 15</div>
+<h1 style="color:#128C7E">Deployment &amp; Operations</h1>
+<p class="section-desc">Docker setup, production deployment, server requirements, and monitoring</p>
+<div class="topic-nav"><h4>In this section</h4>
+<a href="#docker-compose">Docker Compose</a>
+<a href="#server-requirements">Server Requirements</a>
+<a href="#env-vars">Environment Variables</a>
+<a href="#production-checklist">Production Checklist</a>
+<a href="#monitoring">Monitoring</a>
+<a href="#commands">Commands</a>
+</div>
+
+<div class="topic-block" id="docker-compose"><h3 class="topic-title">Docker Compose</h3><p class="topic-description">Production setup with 8 containerized services orchestrated via docker-compose.yml. All services are configured for production use with proper health checks and restart policies.</p><pre><code>docker compose up -d              # Start all services
+docker compose logs -f api        # Follow API logs
+docker compose ps                 # Service status</code></pre></div>
+
+<div class="topic-block" id="server-requirements"><h3 class="topic-title">Server Requirements</h3><p class="topic-description">Hardware requirements for running the full Stratum AI platform stack.</p><table class="doc-table"><thead><tr><th>Spec</th><th>Minimum</th><th>Recommended</th></tr></thead><tbody><tr><td>CPU</td><td>4 vCPU</td><td>8 vCPU</td></tr><tr><td>RAM</td><td>16 GB</td><td>32 GB</td></tr><tr><td>Storage</td><td>100 GB SSD</td><td>500 GB SSD</td></tr><tr><td>OS</td><td colspan="2">Ubuntu 22.04 LTS</td></tr></tbody></table></div>
+
+<div class="topic-block" id="env-vars"><h3 class="topic-title">Environment Variables</h3><p class="topic-description">Required environment variables for production deployment. All secrets must be set via environment variables, never committed to the repository.</p><table class="doc-table"><thead><tr><th>Variable</th><th>Purpose</th></tr></thead><tbody><tr><td><code>DATABASE_URL</code></td><td>PostgreSQL connection string</td></tr><tr><td><code>REDIS_URL</code></td><td>Redis connection string</td></tr><tr><td><code>SECRET_KEY</code></td><td>Application secret key</td></tr><tr><td><code>JWT_SECRET</code></td><td>JWT signing secret</td></tr><tr><td><code>META_APP_ID</code></td><td>Meta/Facebook App ID</td></tr><tr><td><code>META_APP_SECRET</code></td><td>Meta/Facebook App Secret</td></tr><tr><td><code>GOOGLE_CLIENT_ID</code></td><td>Google OAuth Client ID</td></tr><tr><td><code>GOOGLE_CLIENT_SECRET</code></td><td>Google OAuth Client Secret</td></tr><tr><td><code>TIKTOK_APP_ID</code></td><td>TikTok App ID</td></tr><tr><td><code>SNAPCHAT_CLIENT_ID</code></td><td>Snapchat Client ID</td></tr><tr><td><code>STRIPE_SECRET_KEY</code></td><td>Stripe payment secret</td></tr><tr><td><code>SENTRY_DSN</code></td><td>Sentry error tracking DSN</td></tr></tbody></table><div class="callout callout-error"><strong>Security:</strong> Never commit .env files or API credentials to the repository.</div></div>
+
+<div class="topic-block" id="production-checklist"><h3 class="topic-title">Production Checklist</h3><p class="topic-description">Step-by-step checklist for deploying to production.</p><h4 style="font-family:var(--font-display);margin:1rem 0 0.5rem;color:var(--color-text)">Pre-deployment</h4><ul style="color:var(--color-text-muted);font-size:0.875rem;line-height:1.8;list-style:disc;padding-left:1.5rem"><li>Verify all environment variables are set</li><li>Run database migrations</li><li>Build frontend production bundle</li><li>Test database and Redis connections</li></ul><h4 style="font-family:var(--font-display);margin:1rem 0 0.5rem;color:var(--color-text)">Deployment</h4><ul style="color:var(--color-text-muted);font-size:0.875rem;line-height:1.8;list-style:disc;padding-left:1.5rem"><li><code>docker compose up -d</code></li><li>Verify health endpoints respond</li></ul><h4 style="font-family:var(--font-display);margin:1rem 0 0.5rem;color:var(--color-text)">Post-deployment</h4><ul style="color:var(--color-text-muted);font-size:0.875rem;line-height:1.8;list-style:disc;padding-left:1.5rem"><li>Check application logs for errors</li><li>Verify Prometheus metrics are flowing</li><li>Test critical user flows end-to-end</li></ul></div>
+
+<div class="topic-block" id="monitoring"><h3 class="topic-title">Monitoring</h3><p class="topic-description">Comprehensive monitoring stack for observability across the platform.</p><div class="tech-grid"><div class="tech-card"><h4>Prometheus</h4><p>Request latency, error rates, queue depths, system health metrics collection.</p></div><div class="tech-card"><h4>Grafana</h4><p>Visualization dashboards for all Prometheus metrics.</p></div><div class="tech-card"><h4>Sentry</h4><p>Error tracking and performance monitoring with stack traces.</p></div><div class="tech-card"><h4>Structured Logging</h4><p>JSON-formatted logs via structlog: Request ID, Tenant ID, User ID, Timestamp, Event type.</p></div></div></div>
+
+<div class="topic-block" id="commands"><h3 class="topic-title">Commands</h3><p class="topic-description">Common development and operations commands.</p><pre><code># Development
+make dev              # FastAPI hot reload (port 8000)
+make test             # Run pytest
+make test-cov         # Tests with coverage report
+make lint             # Ruff + mypy
+make format           # Auto-format code
+make migrate          # Run Alembic migrations
+
+# Docker
+docker compose up -d  # Full stack (8 services)
+
+# Frontend
+cd frontend &amp;&amp; npm run dev    # Vite dev server (port 5173)
+cd frontend &amp;&amp; npm run build  # Production build</code></pre></div>
+
+
+<div class="section-nav"><a href="#section-api-reference"><span class="nav-label">&larr; Previous</span><span class="nav-title">API Reference</span></a><a href="#section-onboarding" style="text-align:right"><span class="nav-label">Next &rarr;</span><span class="nav-title">Client Onboarding</span></a></div>
+</div></div>
+
+<div id="section-onboarding" class="view">
+<div class="section-page fade-up">
+<a href="#home" class="back-link">&larr; All Sections</a>
+<div class="section-badge">Section 11 of 15</div>
+<h1 style="color:#FFB800">Client Onboarding</h1>
+<p class="section-desc">8-step client setup process from account creation to go-live</p>
+<div class="topic-nav"><h4>In this section</h4>
+<a href="#step-1">Step 1: Account Creation</a>
+<a href="#step-2">Step 2: Platform Connections</a>
+<a href="#step-3">Step 3: Data Configuration</a>
+<a href="#step-4">Step 4: CDP Setup</a>
+<a href="#step-5">Step 5: Trust Engine Config</a>
+<a href="#step-6">Step 6: Automation Rules</a>
+<a href="#step-7">Step 7: Team Setup</a>
+<a href="#step-8">Step 8: Go Live</a>
+</div>
+
+<div class="topic-block" id="step-1"><h3 class="topic-title">Step 1: Account Creation</h3><p class="topic-description">Create the tenant workspace, set up the admin user account, and configure timezone and regional preferences.</p><div class="callout callout-info">Each tenant is a fully isolated workspace with its own data, users, and configuration.</div></div>
+
+<div class="topic-block" id="step-2"><h3 class="topic-title">Step 2: Platform Connections</h3><p class="topic-description">Connect advertising platforms via OAuth: Meta, Google, TikTok, and Snapchat. Select which ad accounts to track and configure sync frequency.</p><ul style="color:var(--color-text-muted);font-size:0.875rem;line-height:1.8;list-style:disc;padding-left:1.5rem"><li>Authenticate via OAuth for each platform</li><li>Select ad accounts to monitor</li><li>Configure data sync intervals</li><li>Verify initial data pull</li></ul></div>
+
+<div class="topic-block" id="step-3"><h3 class="topic-title">Step 3: Data Configuration</h3><p class="topic-description">Configure data sources, set up Conversions API (CAPI) tracking for server-side events, and configure event mapping between platforms and internal tracking.</p></div>
+
+<div class="topic-block" id="step-4"><h3 class="topic-title">Step 4: CDP Setup</h3><p class="topic-description">Import existing customer data, configure identity resolution rules, and set up initial customer segments for targeting and analysis.</p></div>
+
+<div class="topic-block" id="step-5"><h3 class="topic-title">Step 5: Trust Engine Config</h3><p class="topic-description">Set signal health thresholds for your business needs, configure trust gate rules, and define the enforcement mode (Advisory, Soft-Block, or Hard-Block).</p></div>
+
+<div class="topic-block" id="step-6"><h3 class="topic-title">Step 6: Automation Rules</h3><p class="topic-description">Configure autopilot rules for automated campaign management. Set budget caps, define action constraints, and establish safety guardrails.</p></div>
+
+<div class="topic-block" id="step-7"><h3 class="topic-title">Step 7: Team Setup</h3><p class="topic-description">Invite team members to the workspace, assign roles and permissions, and configure notification preferences for each team member.</p></div>
+
+<div class="topic-block" id="step-8"><h3 class="topic-title">Step 8: Go Live</h3><p class="topic-description">Final review of all configurations, enable automation, and begin monitoring initial performance. The system will start in Advisory mode and can be upgraded to Soft-Block or Hard-Block as confidence grows.</p><div class="callout callout-success">Start with Advisory mode to observe recommendations before enabling automated execution.</div></div>
+
+
+<div class="section-nav"><a href="#section-deployment"><span class="nav-label">&larr; Previous</span><span class="nav-title">Deployment &amp; Operations</span></a><a href="#section-security" style="text-align:right"><span class="nav-label">Next &rarr;</span><span class="nav-title">Security &amp; Compliance</span></a></div>
+</div></div>
+
+<div id="section-security" class="view">
+<div class="section-page fade-up">
+<a href="#home" class="back-link">&larr; All Sections</a>
+<div class="section-badge">Section 12 of 15</div>
+<h1 style="color:#8B5CF6">Security &amp; Compliance</h1>
+<p class="section-desc">Authentication, encryption, GDPR/CCPA compliance, and data protection</p>
+<div class="topic-nav"><h4>In this section</h4>
+<a href="#sec-auth">Authentication</a>
+<a href="#data-encryption">Data Encryption</a>
+<a href="#gdpr">GDPR Compliance</a>
+<a href="#ccpa">CCPA Compliance</a>
+<a href="#pii-protection">PII Protection</a>
+<a href="#access-control">Access Control</a>
+</div>
+
+<div class="topic-block" id="sec-auth"><h3 class="topic-title">Authentication</h3><p class="topic-description">Multi-layered authentication combining JWT tokens with OAuth2 and optional MFA via TOTP. Session management includes automatic token refresh and secure logout.</p><ul style="color:var(--color-text-muted);font-size:0.875rem;line-height:1.8;list-style:disc;padding-left:1.5rem"><li>JWT tokens with short expiration + refresh flow</li><li>OAuth2 for third-party platform authentication</li><li>MFA via TOTP (Time-based One-Time Password)</li><li>Secure session management with automatic cleanup</li></ul></div>
+
+<div class="topic-block" id="data-encryption"><h3 class="topic-title">Data Encryption</h3><p class="topic-description">Multiple encryption layers protect data at rest and in transit.</p><table class="doc-table"><thead><tr><th>Layer</th><th>Method</th><th>Purpose</th></tr></thead><tbody><tr><td>PII at rest</td><td>Fernet encryption</td><td>Protect personal data in database</td></tr><tr><td>Platform sync</td><td>SHA-256 hashing</td><td>Hash emails/phones for audience matching</td></tr><tr><td>Data in transit</td><td>TLS 1.2+</td><td>Encrypt all network communication</td></tr><tr><td>Tokens</td><td><code>secrets</code> module</td><td>Cryptographically secure token generation</td></tr><tr><td>Comparisons</td><td><code>hmac.compare_digest()</code></td><td>Constant-time comparison to prevent timing attacks</td></tr></tbody></table></div>
+
+<div class="topic-block" id="gdpr"><h3 class="topic-title">GDPR Compliance</h3><p class="topic-description">Full GDPR compliance with data export, right to erasure, and consent management features.</p><ul style="color:var(--color-text-muted);font-size:0.875rem;line-height:1.8;list-style:disc;padding-left:1.5rem"><li>Data export in machine-readable format</li><li>Right to erasure (RTBF) with complete data deletion</li><li>Consent management with granular categories</li><li>Data processing records</li></ul></div>
+
+<div class="topic-block" id="ccpa"><h3 class="topic-title">CCPA Compliance</h3><p class="topic-description">California Consumer Privacy Act compliance ensuring right to know, right to delete, and right to opt-out of data sale for California residents.</p></div>
+
+<div class="topic-block" id="pii-protection"><h3 class="topic-title">PII Protection</h3><p class="topic-description">Personally identifiable information (email, phone, names) is encrypted with Fernet before storage. PII is never included in JWT claims and is hashed with SHA-256 for audience matching.</p><div class="callout callout-error"><strong>Rule:</strong> PII must never appear in logs, JWT tokens, or client-side storage. Always use encrypted database fields.</div></div>
+
+<div class="topic-block" id="access-control"><h3 class="topic-title">Access Control</h3><p class="topic-description">Role-based permissions with tenant isolation, row-level security, and comprehensive audit logging of all access events.</p><ul style="color:var(--color-text-muted);font-size:0.875rem;line-height:1.8;list-style:disc;padding-left:1.5rem"><li>Role-based access control (RBAC)</li><li>Tenant isolation at query level</li><li>Row-level security in PostgreSQL</li><li>Audit logging for all state-changing operations</li></ul></div>
+
+
+<div class="section-nav"><a href="#section-onboarding"><span class="nav-label">&larr; Previous</span><span class="nav-title">Client Onboarding</span></a><a href="#section-tiers" style="text-align:right"><span class="nav-label">Next &rarr;</span><span class="nav-title">Subscription Tiers</span></a></div>
+</div></div>
+
+<div id="section-tiers" class="view">
+<div class="section-page fade-up">
+<a href="#home" class="back-link">&larr; All Sections</a>
+<div class="section-badge">Section 13 of 15</div>
+<h1 style="color:#FF8C00">Subscription Tiers</h1>
+<p class="section-desc">Starter, Professional, and Enterprise plan features and limits</p>
+<div class="topic-nav"><h4>In this section</h4>
+<a href="#starter">Starter Plan ($499/mo)</a>
+<a href="#professional">Professional Plan ($999/mo)</a>
+<a href="#enterprise">Enterprise Plan (Custom)</a>
+</div>
+
+<div class="topic-block" id="starter"><h3 class="topic-title">Starter Plan ($499/mo)</h3><div class="tier-card"><h4 style="color:var(--color-brand-teal)">Starter</h4><div class="tier-price" style="color:var(--color-brand-teal)">$499<span style="font-size:0.875rem;color:var(--color-text-muted)">/month</span></div><ul class="tier-features"><li>Connect ad platforms (Meta, Google, TikTok, Snapchat)</li><li>Overview dashboard with KPIs</li><li>Signal health monitoring</li><li>CDP overview</li><li>RFM analysis (12 segments)</li><li>Dashboard export (CSV/JSON)</li><li>Slack notifications</li></ul><div class="tier-limits"><p><strong>Limits:</strong></p><p>5 ad accounts &middot; 3 team members &middot; 90 days retention &middot; 10K API requests/mo</p></div></div></div>
+
+<div class="topic-block" id="professional"><h3 class="topic-title">Professional Plan ($999/mo)</h3><div class="tier-card"><h4 style="color:var(--color-brand-indigo)">Professional</h4><div class="tier-price" style="color:var(--color-brand-indigo)">$999<span style="font-size:0.875rem;color:var(--color-text-muted)">/month</span></div><p class="topic-description">Everything in Starter, plus:</p><ul class="tier-features"><li>Funnel builder with drop-off analysis</li><li>Computed traits (aggregation, most frequent, first/last, unique count)</li><li>Trust gate audit logs (PASS/HOLD/BLOCK with context)</li><li>Action dry-run mode (test automations safely)</li><li>Pipedrive CRM integration</li><li>Advanced CDP segmentation</li></ul><div class="tier-limits"><p><strong>Limits:</strong></p><p>15 ad accounts &middot; 10 team members &middot; 180 days retention &middot; 50K API requests/mo</p></div></div></div>
+
+<div class="topic-block" id="enterprise"><h3 class="topic-title">Enterprise Plan (Custom)</h3><div class="tier-card"><h4 style="color:var(--color-brand-pink)">Enterprise</h4><div class="tier-price" style="color:var(--color-brand-pink)">Custom<span style="font-size:0.875rem;color:var(--color-text-muted)">&nbsp;pricing</span></div><p class="topic-description">Everything in Professional, plus:</p><ul class="tier-features"><li>Consent management (GDPR/CCPA)</li><li>Real-time streaming (&lt;1s event processing)</li><li>Predictive churn model (ML-powered, &gt;85% accuracy)</li><li>Custom autopilot rules (condition groups with AND/OR logic)</li><li>Salesforce CRM integration (full bi-directional)</li><li>LinkedIn Lead Gen integration</li><li>Dashboard customization (drag-and-drop widgets)</li><li>Custom report builder</li></ul><div class="tier-limits"><p><strong>Limits:</strong></p><p>Unlimited ad accounts &middot; Unlimited team members &middot; 365 days retention &middot; Unlimited API &middot; Dedicated support</p></div></div></div>
+
+
+<div class="section-nav"><a href="#section-security"><span class="nav-label">&larr; Previous</span><span class="nav-title">Security &amp; Compliance</span></a><a href="#section-glossary" style="text-align:right"><span class="nav-label">Next &rarr;</span><span class="nav-title">Glossary</span></a></div>
+</div></div>
+
+<div id="section-glossary" class="view">
+<div class="section-page fade-up">
+<a href="#home" class="back-link">&larr; All Sections</a>
+<div class="section-badge">Section 14 of 15</div>
+<h1 style="color:#00D4AA">Glossary</h1>
+<p class="section-desc">Key terms and definitions used throughout the Stratum AI platform</p>
+<div class="topic-nav"><h4>In this section</h4>
+<a href="#gloss-core">Core Concepts</a>
+<a href="#gloss-cdp">CDP Terms</a>
+<a href="#gloss-advertising">Advertising</a>
+<a href="#gloss-platform">Platform</a>
+<a href="#gloss-technical">Technical</a>
+<a href="#gloss-monitoring">Monitoring</a>
+<a href="#gloss-compliance">Compliance</a>
+</div>
+
+<div class="topic-block" id="gloss-core"><h3 class="topic-title">Core Concepts</h3><div class="glossary-group"><dl class="glossary-term"><dt>Signal</dt><dd>An input data point collected from various sources including metrics, events, and webhooks. Signals are the foundation of the Trust Engine.</dd></dl><dl class="glossary-term"><dt>Signal Health</dt><dd>A composite score (0-100) measuring the reliability and quality of signals. Used by the Trust Gate to determine if automation should proceed.</dd></dl><dl class="glossary-term"><dt>Trust Gate</dt><dd>A decision checkpoint that evaluates signal health before allowing automation to execute. Can PASS, HOLD, or BLOCK.</dd></dl><dl class="glossary-term"><dt>Trust Engine</dt><dd>The core decision-making component consisting of Signal Collectors, Health Calculator, Trust Gate Evaluator, and Automation Executor.</dd></dl><dl class="glossary-term"><dt>Autopilot</dt><dd>Automated actions that execute when trust gate conditions are met: adjust budgets, modify bidding, pause/enable campaigns, scale spend.</dd></dl><dl class="glossary-term"><dt>EMQ (Event Match Quality)</dt><dd>A score (0-100) measuring how well tracked events match with platform data. Higher EMQ = better attribution accuracy.</dd></dl></div></div>
+
+<div class="topic-block" id="gloss-cdp"><h3 class="topic-title">CDP Terms</h3><div class="glossary-group"><dl class="glossary-term"><dt>Profile</dt><dd>A unified customer record combining data from multiple sources: identity, behavioral events, computed traits, segment memberships.</dd></dl><dl class="glossary-term"><dt>Identity Graph</dt><dd>A visual representation showing how different identifiers (email, phone, device IDs) connect to form a unified profile.</dd></dl><dl class="glossary-term"><dt>Identity Resolution</dt><dd>The process of connecting disparate identifiers to a single customer profile: Anonymous to Known to Customer.</dd></dl><dl class="glossary-term"><dt>Segment</dt><dd>A dynamic group of profiles matching specific criteria: Behavioral (event patterns), Demographic (attributes), Predictive (ML models).</dd></dl><dl class="glossary-term"><dt>Computed Traits</dt><dd>Derived attributes calculated from event history: total purchases, days since last activity, average order value, LTV.</dd></dl><dl class="glossary-term"><dt>RFM Analysis</dt><dd>Customer segmentation based on Recency, Frequency, and Monetary value.</dd></dl><dl class="glossary-term"><dt>Lifecycle Stage</dt><dd>Customer journey position: Anonymous, Known, Lead, Customer, Active, At Risk, Churned.</dd></dl><dl class="glossary-term"><dt>Audience Sync</dt><dd>Push CDP segments to ad platforms: Meta Custom Audiences, Google Customer Match, TikTok/Snapchat Audiences.</dd></dl></div></div>
+
+<div class="topic-block" id="gloss-advertising"><h3 class="topic-title">Advertising</h3><div class="glossary-group"><dl class="glossary-term"><dt>CAPI (Conversions API)</dt><dd>Server-side event tracking that sends conversion data directly to ad platforms, bypassing browser limitations.</dd></dl><dl class="glossary-term"><dt>Attribution Model</dt><dd>Method for assigning credit to marketing touchpoints: last-click, first-click, linear, time-decay, data-driven.</dd></dl><dl class="glossary-term"><dt>DDA (Data-Driven Attribution)</dt><dd>Machine learning approach to attribution using historical data to determine credit distribution.</dd></dl><dl class="glossary-term"><dt>ROAS</dt><dd>Return on Ad Spend = Revenue / Ad Spend.</dd></dl><dl class="glossary-term"><dt>MER</dt><dd>Marketing Efficiency Ratio = Total Revenue / Total Marketing Spend.</dd></dl><dl class="glossary-term"><dt>CAC</dt><dd>Customer Acquisition Cost = Total Marketing Spend / New Customers Acquired.</dd></dl><dl class="glossary-term"><dt>LTV</dt><dd>Lifetime Value = Average Order Value x Purchase Frequency x Customer Lifespan.</dd></dl></div></div>
+
+<div class="topic-block" id="gloss-platform"><h3 class="topic-title">Platform</h3><div class="glossary-group"><dl class="glossary-term"><dt>Tenant</dt><dd>An isolated customer account with separate database schema, user management, configurations, and analytics.</dd></dl><dl class="glossary-term"><dt>Multi-tenancy</dt><dd>Architecture pattern where a single instance serves multiple customers with complete data isolation.</dd></dl><dl class="glossary-term"><dt>Feature Flag</dt><dd>Configuration toggles that enable/disable functionality per tenant or globally.</dd></dl><dl class="glossary-term"><dt>Subscription Tier</dt><dd>Account level determining available features: Starter, Professional, Enterprise.</dd></dl></div></div>
+
+<div class="topic-block" id="gloss-technical"><h3 class="topic-title">Technical</h3><div class="glossary-group"><dl class="glossary-term"><dt>Celery</dt><dd>Distributed task queue for background job processing: data sync, report generation, scheduled tasks.</dd></dl><dl class="glossary-term"><dt>Redis</dt><dd>In-memory data store used for caching, Celery message broker, real-time pub/sub, and rate limiting.</dd></dl><dl class="glossary-term"><dt>WebSocket</dt><dd>Bidirectional communication protocol for real-time updates: EMQ changes, incidents, autopilot status.</dd></dl><dl class="glossary-term"><dt>SSE (Server-Sent Events)</dt><dd>Unidirectional server-to-client streaming for dashboard updates.</dd></dl><dl class="glossary-term"><dt>OAuth</dt><dd>Authentication protocol for connecting to ad platforms (Meta, Google, TikTok, Snapchat).</dd></dl><dl class="glossary-term"><dt>JWT (JSON Web Token)</dt><dd>Token-based authentication containing User ID, Tenant ID, Permissions, Expiration.</dd></dl><dl class="glossary-term"><dt>MFA</dt><dd>Multi-Factor Authentication via TOTP (Time-based One-Time Password).</dd></dl></div></div>
+
+<div class="topic-block" id="gloss-monitoring"><h3 class="topic-title">Monitoring</h3><div class="glossary-group"><dl class="glossary-term"><dt>Prometheus</dt><dd>Metrics collection system for request latency, error rates, queue depths, system health.</dd></dl><dl class="glossary-term"><dt>Grafana</dt><dd>Visualization platform for Prometheus metrics dashboards.</dd></dl><dl class="glossary-term"><dt>Sentry</dt><dd>Error tracking and performance monitoring service with stack traces.</dd></dl><dl class="glossary-term"><dt>Structured Logging</dt><dd>JSON-formatted logs with consistent fields: Request ID, Tenant ID, User ID, Timestamp, Event type.</dd></dl></div></div>
+
+<div class="topic-block" id="gloss-compliance"><h3 class="topic-title">Compliance</h3><div class="glossary-group"><dl class="glossary-term"><dt>GDPR</dt><dd>General Data Protection Regulation (EU privacy law). Supports data export, right to erasure, consent management.</dd></dl><dl class="glossary-term"><dt>CCPA</dt><dd>California Consumer Privacy Act. Right to know, right to delete, right to opt-out.</dd></dl><dl class="glossary-term"><dt>PII</dt><dd>Personally Identifiable Information: email addresses, phone numbers, names, physical addresses.</dd></dl><dl class="glossary-term"><dt>Data Hashing</dt><dd>One-way encryption of PII using SHA-256 for platform sync and audience matching without exposing raw data.</dd></dl></div></div>
+
+
+<div class="section-nav"><a href="#section-tiers"><span class="nav-label">&larr; Previous</span><span class="nav-title">Subscription Tiers</span></a><a href="#section-tutorials" style="text-align:right"><span class="nav-label">Next &rarr;</span><span class="nav-title">Tutorials</span></a></div>
+</div></div>
+
+<div id="section-tutorials" class="view">
+<div class="section-page fade-up">
+<a href="#home" class="back-link">&larr; All Sections</a>
+<div class="section-badge">Section 15 of 15</div>
+<h1 style="color:#FF1F6D">Tutorials</h1>
+<p class="section-desc">Step-by-step guides for Starter, Professional, and Enterprise plan users</p>
+<div class="topic-nav"><h4>In this section</h4>
+<a href="#tut-starter">Starter Plan Tutorial (30 min)</a>
+<a href="#tut-professional">Professional Plan Tutorial (45 min)</a>
+<a href="#tut-enterprise">Enterprise Plan Tutorial (60 min)</a>
+</div>
+
+<div class="topic-block" id="tut-starter"><h3 class="topic-title">Starter Plan Tutorial (30 min)</h3><p class="topic-description">Getting started with the Stratum AI Starter plan. This tutorial covers connecting your ad platforms, understanding the dashboard, and setting up basic monitoring.</p><div class="tutorial-step" data-step="1"><h4>Connect Ad Platforms</h4><p>Authenticate via OAuth for each platform you want to track. Supported platforms: Meta, Google, TikTok, and Snapchat.</p><ul><li>Navigate to Settings &rarr; Integrations</li><li>Click &quot;Connect&quot; for each platform</li><li>Complete the OAuth flow</li><li>Select ad accounts to monitor</li></ul></div><div class="tutorial-step" data-step="2"><h4>Understanding the Dashboard</h4><p>The overview dashboard displays your key performance indicators at a glance.</p><ul><li><strong>Spend:</strong> Total ad spend across platforms</li><li><strong>Revenue:</strong> Attributed revenue</li><li><strong>ROAS:</strong> Return on Ad Spend</li><li><strong>Conversions:</strong> Total conversion events</li><li><strong>CPA:</strong> Cost per acquisition</li><li><strong>CTR:</strong> Click-through rate</li></ul></div><div class="tutorial-step" data-step="3"><h4>Signal Health Monitoring</h4><p>Monitor your signal health to ensure data reliability. Key metrics to watch:</p><ul><li><strong>EMQ:</strong> Target &ge; 8.0</li><li><strong>Event Loss:</strong> Target &lt; 5%</li><li><strong>Data Freshness:</strong> Target &lt; 60 minutes</li><li><strong>API Error Rate:</strong> Target &lt; 1%</li></ul></div><div class="tutorial-step" data-step="4"><h4>CDP Overview &amp; RFM Analysis</h4><p>Explore your customer data in the CDP section. The RFM analysis automatically segments your customers into 12 groups based on Recency, Frequency, and Monetary value.</p></div><div class="tutorial-step" data-step="5"><h4>Dashboard Export</h4><p>Export your dashboard data in CSV or JSON format for external analysis or reporting.</p></div><div class="tutorial-step" data-step="6"><h4>Slack Notifications</h4><p>Connect Slack to receive real-time alerts about performance changes, anomalies, and daily summaries in your team channels.</p></div></div>
+
+<div class="topic-block" id="tut-professional"><h3 class="topic-title">Professional Plan Tutorial (45 min)</h3><p class="topic-description">Advanced features available on the Professional plan. This tutorial builds on the Starter foundations with funnel analysis, computed traits, and trust gate monitoring.</p><div class="tutorial-step" data-step="1"><h4>Funnel Builder</h4><p>Create custom conversion funnels to analyze user flow and identify drop-off points.</p><ul><li>Define funnel steps (e.g., Page View &rarr; Add to Cart &rarr; Purchase)</li><li>Configure time windows for step completion</li><li>Analyze drop-off rates between steps</li><li>Compare funnels across segments</li></ul></div><div class="tutorial-step" data-step="2"><h4>Computed Traits</h4><p>Set up derived customer attributes that update automatically as new events arrive.</p><ul><li><strong>Aggregation:</strong> Sum, count, average over events</li><li><strong>Most Frequent:</strong> Most common value for an attribute</li><li><strong>First/Last:</strong> First or last value seen</li><li><strong>Unique Count:</strong> Count of distinct values</li></ul></div><div class="tutorial-step" data-step="3"><h4>Trust Gate Audit Logs</h4><p>Review all trust gate decisions with full context. Each log entry shows the decision (PASS/HOLD/BLOCK), the signal health score, and the action that was evaluated.</p></div><div class="tutorial-step" data-step="4"><h4>Action Dry-Run Mode</h4><p>Test automation rules safely before enabling them. Dry-run mode simulates the action without making real changes to campaigns.</p></div><div class="tutorial-step" data-step="5"><h4>Pipedrive CRM Integration</h4><p>Connect Pipedrive for bi-directional sync of contacts, companies, and deals. Changes in either system automatically sync to the other.</p></div><div class="tutorial-step" data-step="6"><h4>Advanced CDP Segmentation</h4><p>Build complex segments using behavioral, demographic, and predictive criteria with nested conditions and time-based rules.</p></div></div>
+
+<div class="topic-block" id="tut-enterprise"><h3 class="topic-title">Enterprise Plan Tutorial (60 min)</h3><p class="topic-description">Enterprise-grade features for large-scale operations. This tutorial covers consent management, real-time streaming, predictive models, and advanced customization.</p><div class="tutorial-step" data-step="1"><h4>Consent Management</h4><p>Configure GDPR and CCPA compliant consent management.</p><ul><li><strong>Categories:</strong> Marketing, Analytics, Personalization, Advertising</li><li><strong>Right to Be Forgotten (RTBF):</strong> Complete data deletion workflows</li><li>Consent versioning and audit trail</li></ul></div><div class="tutorial-step" data-step="2"><h4>Real-Time Streaming</h4><p>Process events in under 1 second for time-sensitive automation and alerting. Configure streaming pipelines for real-time data ingestion.</p></div><div class="tutorial-step" data-step="3"><h4>Predictive Churn Model</h4><p>ML-powered churn prediction with high accuracy.</p><ul><li>Accuracy target: &gt; 85%</li><li>AUC-ROC target: &gt; 0.90</li><li>Automated retention campaign triggers</li><li>Custom feature engineering</li></ul></div><div class="tutorial-step" data-step="4"><h4>Custom Autopilot Rules</h4><p>Build sophisticated automation rules with condition groups supporting AND/OR logic, nested conditions, and custom thresholds per campaign.</p></div><div class="tutorial-step" data-step="5"><h4>Salesforce CRM Integration</h4><p>Full bi-directional Salesforce integration with contact, lead, opportunity, and campaign sync.</p></div><div class="tutorial-step" data-step="6"><h4>LinkedIn Lead Gen</h4><p>Connect LinkedIn Lead Gen Forms to capture and sync leads directly into the CDP.</p></div><div class="tutorial-step" data-step="7"><h4>Dashboard Customization</h4><p>Drag-and-drop widget placement for custom dashboard layouts. Add, remove, and resize widgets to create the perfect view for your workflow.</p></div><div class="tutorial-step" data-step="8"><h4>Custom Report Builder</h4><p>Build custom reports with selected metrics, dimensions, filters, and visualizations. Schedule automatic delivery via email, Slack, or PDF.</p></div></div>
+
+
+<div class="section-nav"><a href="#section-glossary"><span class="nav-label">&larr; Previous</span><span class="nav-title">Glossary</span></a><span></span></div>
+</div></div>
+
+<footer style="text-align:center;padding:2rem;color:var(--color-text-dim);font-size:0.8125rem;border-top:1px solid var(--color-border)">
+<p>Stratum AI Platform Documentation &middot; Revenue Operating System with Trust-Gated Autopilot</p>
+</footer>
+
+<script>
+function navigate(hash) {
+  if (!hash || hash === '#home') {
+    document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
+    document.getElementById('home-view').classList.add('active');
+    window.scrollTo(0, 0);
+  } else if (hash.startsWith('#section-')) {
+    document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
+    var slug = hash.replace('#section-', '');
+    var el = document.getElementById('section-' + slug);
+    if (el) {
+      el.classList.add('active');
+    } else {
+      document.getElementById('home-view').classList.add('active');
+    }
+    window.scrollTo(0, 0);
+  } else {
+    // Topic anchor — scroll within the current active section
+    var id = hash.replace('#', '');
+    var target = document.getElementById(id);
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+}
+window.addEventListener('hashchange', function() { navigate(location.hash); });
+document.addEventListener('DOMContentLoaded', function() { navigate(location.hash); });
+</script>
+</body>
+</html>

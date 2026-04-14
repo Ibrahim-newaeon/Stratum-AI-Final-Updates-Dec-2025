@@ -22,7 +22,7 @@ import { useAudienceLifecycle } from '@/api/dashboard';
 import type { LifecycleStageMetric, LifecycleTransition, AudienceRule, LifecycleRecommendation } from '@/api/dashboard';
 
 const stageConfig: Record<string, { color: string; bg: string; border: string; icon: typeof Users }> = {
-  anonymous: { color: 'text-slate-600', bg: 'bg-slate-50', border: 'border-slate-200', icon: Users },
+  anonymous: { color: 'text-muted-foreground', bg: 'bg-muted/30', border: 'border-border', icon: Users },
   known: { color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200', icon: Target },
   customer: { color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200', icon: CheckCircle },
   churned: { color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', icon: XCircle },

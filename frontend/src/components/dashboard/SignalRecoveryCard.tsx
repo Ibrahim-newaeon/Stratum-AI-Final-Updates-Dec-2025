@@ -59,13 +59,13 @@ const severityColors = {
   critical: { text: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', dot: 'bg-red-500' },
   high: { text: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', dot: 'bg-amber-500' },
   medium: { text: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200', dot: 'bg-blue-500' },
-  low: { text: 'text-slate-500', bg: 'bg-slate-50', border: 'border-slate-200', dot: 'bg-slate-400' },
+  low: { text: 'text-muted-foreground', bg: 'bg-muted/30', border: 'border-border', dot: 'bg-slate-400' },
 };
 
 const priorityConfig = {
   urgent: { label: 'URGENT', color: 'text-red-600 bg-red-50' },
   high: { label: 'HIGH', color: 'text-amber-600 bg-amber-50' },
-  normal: { label: 'NORMAL', color: 'text-slate-500 bg-slate-50' },
+  normal: { label: 'NORMAL', color: 'text-muted-foreground bg-muted/30' },
 };
 
 const actionTypeIcons = {
@@ -122,7 +122,7 @@ function ActionCard({ action, onTrigger }: { action: RecoveryAction; onTrigger?:
   const priority = priorityConfig[action.priority] || priorityConfig.normal;
 
   const statusBadge = {
-    pending: { label: 'Pending', color: 'text-slate-500 bg-slate-50 border-slate-200' },
+    pending: { label: 'Pending', color: 'text-muted-foreground bg-muted/30 border-border' },
     in_progress: { label: 'In Progress', color: 'text-blue-600 bg-blue-50 border-blue-200' },
     completed: { label: 'Done', color: 'text-emerald-600 bg-emerald-50 border-emerald-200' },
     failed: { label: 'Failed', color: 'text-red-600 bg-red-50 border-red-200' },
@@ -133,7 +133,7 @@ function ActionCard({ action, onTrigger }: { action: RecoveryAction; onTrigger?:
       <div className="flex items-start gap-2.5">
         <div className={cn(
           'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0',
-          action.auto_triggered ? 'bg-blue-50' : 'bg-slate-50'
+          action.auto_triggered ? 'bg-blue-50' : 'bg-muted/30'
         )}>
           {action.status === 'in_progress' ? (
             <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />

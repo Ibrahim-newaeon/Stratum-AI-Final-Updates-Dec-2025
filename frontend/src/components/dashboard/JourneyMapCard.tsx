@@ -43,32 +43,32 @@ function PathRow({ path }: { path: JourneyPath }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className={`border rounded-xl transition-all ${open ? 'border-slate-200' : 'border-slate-100'}`}>
-      <button onClick={() => setOpen(!open)} className="w-full flex items-center gap-3 p-3 text-left hover:bg-slate-50/50 rounded-xl transition-colors">
+    <div className={`border rounded-xl transition-all ${open ? 'border-foreground/15' : ''}`}>
+      <button onClick={() => setOpen(!open)} className="w-full flex items-center gap-3 p-3 text-left hover:bg-muted/30 rounded-xl transition-colors">
         <div className="w-9 h-9 rounded-lg bg-teal-50 flex items-center justify-center shrink-0">
           <Route className="w-4.5 h-4.5 text-teal-600" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-sm text-slate-900 truncate">{path.path_name}</span>
+            <span className="font-semibold text-sm text-foreground truncate">{path.path_name}</span>
             <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-teal-50 text-teal-600">
               {path.frequency.toFixed(0)}% of journeys
             </span>
           </div>
-          <div className="flex gap-3 mt-0.5 text-xs text-slate-500">
+          <div className="flex gap-3 mt-0.5 text-xs text-muted-foreground">
             <span>{path.touchpoints.length} touchpoints</span>
             <span>{path.avg_days_to_convert.toFixed(1)}d avg</span>
             <span>{path.conversion_rate.toFixed(1)}% CVR</span>
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <span className="text-sm font-bold text-slate-700">{path.avg_conversions.toLocaleString()}</span>
-          <span className="text-[10px] text-slate-400">conv</span>
-          {open ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
+          <span className="text-sm font-bold text-foreground">{path.avg_conversions.toLocaleString()}</span>
+          <span className="text-[10px] text-muted-foreground/50">conv</span>
+          {open ? <ChevronDown className="w-4 h-4 text-muted-foreground/50" /> : <ChevronRight className="w-4 h-4 text-muted-foreground/50" />}
         </div>
       </button>
       {open && (
-        <div className="px-4 pb-4 pt-1 border-t border-slate-50">
+        <div className="px-4 pb-4 pt-1 border-t border">
           <div className="flex items-center gap-1 py-3 overflow-x-auto">
             {path.touchpoints.map((tp, i) => {
               const TpIcon = interactionIcon[tp.interaction_type] || Eye;
@@ -76,20 +76,20 @@ function PathRow({ path }: { path: JourneyPath }) {
               return (
                 <div key={i} className="flex items-center gap-1 shrink-0">
                   <div className="flex flex-col items-center gap-1">
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${tp.interaction_type === 'conversion' ? 'bg-emerald-50' : 'bg-slate-50'}`}>
-                      <TpIcon className={`w-4.5 h-4.5 ${tp.interaction_type === 'conversion' ? 'text-emerald-600' : 'text-slate-400'}`} />
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${tp.interaction_type === 'conversion' ? 'bg-emerald-50' : 'bg-muted/30'}`}>
+                      <TpIcon className={`w-4.5 h-4.5 ${tp.interaction_type === 'conversion' ? 'text-emerald-600' : 'text-muted-foreground/50'}`} />
                     </div>
-                    <span className="text-[10px] font-bold text-slate-500">{tp.platform.slice(0, 6)}</span>
-                    <span className="text-[9px] text-slate-400 capitalize">{tp.interaction_type}</span>
+                    <span className="text-[10px] font-bold text-muted-foreground">{tp.platform.slice(0, 6)}</span>
+                    <span className="text-[9px] text-muted-foreground/50 capitalize">{tp.interaction_type}</span>
                     {tp.drop_off_rate > 0 && (
                       <span className="text-[9px] text-red-400">-{tp.drop_off_rate.toFixed(0)}%</span>
                     )}
                   </div>
                   {!isLast && (
                     <div className="flex flex-col items-center mx-1">
-                      <ArrowRight className="w-3.5 h-3.5 text-slate-300" />
+                      <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/30" />
                       {tp.avg_time_to_next && (
-                        <span className="text-[9px] text-slate-400 mt-0.5">{tp.avg_time_to_next}</span>
+                        <span className="text-[9px] text-muted-foreground/50 mt-0.5">{tp.avg_time_to_next}</span>
                       )}
                     </div>
                   )}
@@ -97,7 +97,7 @@ function PathRow({ path }: { path: JourneyPath }) {
               );
             })}
           </div>
-          <div className="flex gap-4 text-xs text-slate-500 mt-2 pt-2 border-t border-slate-50">
+          <div className="flex gap-4 text-xs text-muted-foreground mt-2 pt-2 border-t border">
             <span>${path.avg_revenue_per_journey.toFixed(0)} avg rev</span>
             <span>{path.avg_days_to_convert.toFixed(1)} days avg</span>
             <span>{path.conversion_rate.toFixed(1)}% CVR</span>
@@ -110,36 +110,36 @@ function PathRow({ path }: { path: JourneyPath }) {
 
 function ContributionRow({ cc }: { cc: ChannelContribution }) {
   return (
-    <div className="flex items-center gap-3 p-3 rounded-xl border border-slate-100">
-      <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center shrink-0">
-        <MapPin className="w-4 h-4 text-slate-400" />
+    <div className="flex items-center gap-3 p-3 rounded-xl border">
+      <div className="w-8 h-8 rounded-lg bg-muted/30 flex items-center justify-center shrink-0">
+        <MapPin className="w-4 h-4 text-muted-foreground/50" />
       </div>
       <div className="flex-1 min-w-0">
-        <div className="font-semibold text-sm text-slate-900">{cc.platform}</div>
+        <div className="font-semibold text-sm text-foreground">{cc.platform}</div>
         <div className="flex gap-2 mt-1">
           <div className="flex-1">
-            <div className="text-[10px] text-slate-400 mb-0.5">First Touch</div>
-            <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+            <div className="text-[10px] text-muted-foreground/50 mb-0.5">First Touch</div>
+            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
               <div className="h-full rounded-full bg-blue-500" style={{ width: `${cc.first_touch_pct}%` }} />
             </div>
           </div>
           <div className="flex-1">
-            <div className="text-[10px] text-slate-400 mb-0.5">Assist</div>
-            <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+            <div className="text-[10px] text-muted-foreground/50 mb-0.5">Assist</div>
+            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
               <div className="h-full rounded-full bg-amber-500" style={{ width: `${cc.assist_pct}%` }} />
             </div>
           </div>
           <div className="flex-1">
-            <div className="text-[10px] text-slate-400 mb-0.5">Last Touch</div>
-            <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+            <div className="text-[10px] text-muted-foreground/50 mb-0.5">Last Touch</div>
+            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
               <div className="h-full rounded-full bg-emerald-500" style={{ width: `${cc.last_touch_pct}%` }} />
             </div>
           </div>
         </div>
       </div>
       <div className="text-right shrink-0">
-        <div className="text-xs text-slate-400">Avg Position</div>
-        <div className="text-sm font-bold text-slate-700">{cc.avg_position.toFixed(1)}</div>
+        <div className="text-xs text-muted-foreground/50">Avg Position</div>
+        <div className="text-sm font-bold text-foreground">{cc.avg_position.toFixed(1)}</div>
       </div>
     </div>
   );
@@ -149,13 +149,13 @@ function InsightRow({ insight }: { insight: JourneyInsight }) {
   const cfg = severityConfig[insight.severity] || severityConfig.info;
   const Icon = cfg.icon;
   return (
-    <div className="flex items-start gap-3 p-3 rounded-xl border border-slate-100">
+    <div className="flex items-start gap-3 p-3 rounded-xl border">
       <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${cfg.bg}`}>
         <Icon className={`w-4 h-4 ${cfg.color}`} />
       </div>
       <div className="flex-1">
-        <div className="text-sm font-semibold text-slate-900">{insight.title}</div>
-        <div className="text-xs text-slate-500 mt-0.5">{insight.description}</div>
+        <div className="text-sm font-semibold text-foreground">{insight.title}</div>
+        <div className="text-xs text-muted-foreground mt-0.5">{insight.description}</div>
       </div>
       {insight.action_label && (
         <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded-lg shrink-0 ${cfg.bg} ${cfg.color}`}>
@@ -174,9 +174,9 @@ export function JourneyMapCard() {
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 animate-pulse">
-        <div className="h-6 bg-slate-100 rounded w-48 mb-4" />
-        <div className="h-20 bg-slate-50 rounded-xl" />
+      <div className="rounded-xl border bg-card p-6 animate-pulse">
+        <div className="h-6 bg-muted rounded w-48 mb-4" />
+        <div className="h-20 bg-muted/30 rounded-xl" />
       </div>
     );
   }
@@ -190,51 +190,51 @@ export function JourneyMapCard() {
   ];
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-      <div className="px-6 pt-5 pb-4 border-b border-slate-100">
+    <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+      <div className="px-6 pt-5 pb-4 border-b border">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center">
               <Route className="w-5 h-5 text-teal-600" />
             </div>
             <div>
-              <h3 className="font-semibold text-slate-900">Journey Mapping</h3>
-              <p className="text-xs text-slate-500 mt-0.5">{data.summary}</p>
+              <h3 className="font-semibold text-foreground">Journey Mapping</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">{data.summary}</p>
             </div>
           </div>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
-          <div className="bg-slate-50 rounded-xl p-3">
-            <div className="text-[10px] font-bold uppercase text-slate-400">Avg Touchpoints</div>
-            <div className="text-lg font-bold text-slate-900">{data.avg_touchpoints.toFixed(1)}</div>
+          <div className="bg-muted/30 rounded-xl p-3">
+            <div className="text-[10px] font-bold uppercase text-muted-foreground/50">Avg Touchpoints</div>
+            <div className="text-lg font-bold text-foreground">{data.avg_touchpoints.toFixed(1)}</div>
           </div>
-          <div className="bg-slate-50 rounded-xl p-3">
-            <div className="text-[10px] font-bold uppercase text-slate-400">Days to Convert</div>
-            <div className="text-lg font-bold text-slate-900">{data.avg_days_to_convert.toFixed(1)}</div>
+          <div className="bg-muted/30 rounded-xl p-3">
+            <div className="text-[10px] font-bold uppercase text-muted-foreground/50">Days to Convert</div>
+            <div className="text-lg font-bold text-foreground">{data.avg_days_to_convert.toFixed(1)}</div>
           </div>
-          <div className="bg-slate-50 rounded-xl p-3">
-            <div className="text-[10px] font-bold uppercase text-slate-400">Entry Channel</div>
+          <div className="bg-muted/30 rounded-xl p-3">
+            <div className="text-[10px] font-bold uppercase text-muted-foreground/50">Entry Channel</div>
             <div className="text-sm font-bold text-blue-600 truncate">{data.top_entry_channel}</div>
           </div>
-          <div className="bg-slate-50 rounded-xl p-3">
-            <div className="text-[10px] font-bold uppercase text-slate-400">Closing Channel</div>
+          <div className="bg-muted/30 rounded-xl p-3">
+            <div className="text-[10px] font-bold uppercase text-muted-foreground/50">Closing Channel</div>
             <div className="text-sm font-bold text-emerald-600 truncate">{data.top_closing_channel}</div>
           </div>
         </div>
       </div>
 
-      <div className="flex border-b border-slate-100 px-6">
+      <div className="flex border-b border px-6">
         {tabs.map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
             className={`px-3 py-2.5 text-xs font-semibold border-b-2 transition-colors ${
-              tab === t.key ? 'border-teal-600 text-teal-600' : 'border-transparent text-slate-400 hover:text-slate-600'
+              tab === t.key ? 'border-teal-600 text-teal-600' : 'border-transparent text-muted-foreground/50 hover:text-muted-foreground'
             }`}
           >
             {t.label}
-            {t.count !== undefined && <span className="ml-1 text-[10px] text-slate-400">({t.count})</span>}
+            {t.count !== undefined && <span className="ml-1 text-[10px] text-muted-foreground/50">({t.count})</span>}
           </button>
         ))}
       </div>

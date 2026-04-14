@@ -37,7 +37,7 @@ const statusConfig: Record<string, { color: string; bg: string; label: string; i
   active: { color: 'text-blue-600', bg: 'bg-blue-50', label: 'Active', icon: Zap },
   underperforming: { color: 'text-red-600', bg: 'bg-red-50', label: 'Underperforming', icon: Pause },
   fatigued: { color: 'text-amber-600', bg: 'bg-amber-50', label: 'Fatigued', icon: RefreshCw },
-  new: { color: 'text-slate-600', bg: 'bg-slate-50', label: 'New', icon: Zap },
+  new: { color: 'text-muted-foreground', bg: 'bg-muted/30', label: 'New', icon: Zap },
 };
 
 const severityConfig: Record<string, { color: string; bg: string; icon: typeof CheckCircle2 }> = {
@@ -61,10 +61,10 @@ function ScoreBar({ label, score, color }: { label: string; score: number; color
   return (
     <div>
       <div className="flex justify-between text-[10px] mb-1">
-        <span className="text-slate-400 uppercase font-bold">{label}</span>
-        <span className="font-bold text-slate-600">{score.toFixed(0)}</span>
+        <span className="text-muted-foreground/50 uppercase font-bold">{label}</span>
+        <span className="font-bold text-muted-foreground">{score.toFixed(0)}</span>
       </div>
-      <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+      <div className="h-1.5 bg-muted rounded-full overflow-hidden">
         <div className={`h-full rounded-full ${color}`} style={{ width: `${Math.min(score, 100)}%` }} />
       </div>
     </div>
@@ -78,17 +78,17 @@ function CreativeRow({ creative }: { creative: CreativeScore }) {
   const StatusIcon = scfg.icon;
 
   return (
-    <div className={`border rounded-xl transition-all ${open ? 'border-slate-200' : 'border-slate-100'}`}>
-      <button onClick={() => setOpen(!open)} className="w-full flex items-center gap-3 p-3 text-left hover:bg-slate-50/50 rounded-xl transition-colors">
+    <div className={`border rounded-xl transition-all ${open ? 'border-foreground/15' : ''}`}>
+      <button onClick={() => setOpen(!open)} className="w-full flex items-center gap-3 p-3 text-left hover:bg-muted/30 rounded-xl transition-colors">
         <GradeBadge grade={creative.grade} size="sm" />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-sm text-slate-900 truncate">{creative.campaign_name}</span>
+            <span className="font-semibold text-sm text-foreground truncate">{creative.campaign_name}</span>
             <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded flex items-center gap-1 ${scfg.bg} ${scfg.color}`}>
               <StatusIcon className="w-3 h-3" />{scfg.label}
             </span>
           </div>
-          <div className="flex gap-3 mt-0.5 text-xs text-slate-500">
+          <div className="flex gap-3 mt-0.5 text-xs text-muted-foreground">
             <span>{creative.platform}</span>
             <span>{creative.roas.toFixed(1)}x ROAS</span>
             <span>{creative.ctr.toFixed(2)}% CTR</span>
@@ -96,11 +96,11 @@ function CreativeRow({ creative }: { creative: CreativeScore }) {
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <span className={`text-sm font-bold ${gcfg.color}`}>{creative.overall_score.toFixed(0)}</span>
-          {open ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
+          {open ? <ChevronDown className="w-4 h-4 text-muted-foreground/50" /> : <ChevronRight className="w-4 h-4 text-muted-foreground/50" />}
         </div>
       </button>
       {open && (
-        <div className="px-4 pb-4 pt-1 border-t border-slate-50 space-y-3">
+        <div className="px-4 pb-4 pt-1 border-t border space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <ScoreBar label="CTR" score={creative.ctr_score} color="bg-blue-500" />
             <ScoreBar label="CVR" score={creative.cvr_score} color="bg-indigo-500" />
@@ -113,12 +113,12 @@ function CreativeRow({ creative }: { creative: CreativeScore }) {
               <span className="text-amber-600 font-semibold">Fatigue: {creative.fatigue_level} ({creative.fatigue_score.toFixed(0)}%)</span>
             </div>
           )}
-          <div className="flex gap-4 text-xs text-slate-500">
+          <div className="flex gap-4 text-xs text-muted-foreground">
             <span>${creative.spend.toLocaleString(undefined, { maximumFractionDigits: 0 })} spend</span>
             <span>{creative.conversions.toLocaleString()} conv</span>
             <span>{creative.days_running}d running</span>
           </div>
-          <div className="text-xs text-slate-600 bg-slate-50 rounded-lg px-3 py-2 italic">
+          <div className="text-xs text-muted-foreground bg-muted/30 rounded-lg px-3 py-2 italic">
             {creative.recommendation}
           </div>
         </div>
@@ -131,11 +131,11 @@ function PlatformSummaryRow({ ps }: { ps: PlatformCreativeSummary }) {
   const grade = ps.avg_score >= 80 ? 'A' : ps.avg_score >= 65 ? 'B' : ps.avg_score >= 50 ? 'C' : ps.avg_score >= 35 ? 'D' : 'F';
   const cfg = gradeConfig[grade];
   return (
-    <div className="flex items-center gap-3 p-3 rounded-xl border border-slate-100">
+    <div className="flex items-center gap-3 p-3 rounded-xl border">
       <GradeBadge grade={grade} size="sm" />
       <div className="flex-1 min-w-0">
-        <div className="font-semibold text-sm text-slate-900">{ps.platform}</div>
-        <div className="flex gap-3 text-xs text-slate-500 mt-0.5">
+        <div className="font-semibold text-sm text-foreground">{ps.platform}</div>
+        <div className="flex gap-3 text-xs text-muted-foreground mt-0.5">
           <span>{ps.total_creatives} creatives</span>
           <span className="text-emerald-600">{ps.winners} winner{ps.winners !== 1 ? 's' : ''}</span>
           {ps.fatigued > 0 && <span className="text-amber-600">{ps.fatigued} fatigued</span>}
@@ -143,7 +143,7 @@ function PlatformSummaryRow({ ps }: { ps: PlatformCreativeSummary }) {
       </div>
       <div className="text-right">
         <div className={`text-sm font-bold ${cfg.color}`}>{ps.avg_score.toFixed(0)}</div>
-        <div className="text-[10px] text-slate-400">avg score</div>
+        <div className="text-[10px] text-muted-foreground/50">avg score</div>
       </div>
     </div>
   );
@@ -153,13 +153,13 @@ function InsightRow({ insight }: { insight: CreativeInsight }) {
   const cfg = severityConfig[insight.severity] || severityConfig.info;
   const Icon = cfg.icon;
   return (
-    <div className="flex items-start gap-3 p-3 rounded-xl border border-slate-100">
+    <div className="flex items-start gap-3 p-3 rounded-xl border">
       <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${cfg.bg}`}>
         <Icon className={`w-4 h-4 ${cfg.color}`} />
       </div>
       <div className="flex-1">
-        <div className="text-sm font-semibold text-slate-900">{insight.title}</div>
-        <div className="text-xs text-slate-500 mt-0.5">{insight.description}</div>
+        <div className="text-sm font-semibold text-foreground">{insight.title}</div>
+        <div className="text-xs text-muted-foreground mt-0.5">{insight.description}</div>
       </div>
       {insight.action_label && (
         <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded-lg shrink-0 ${cfg.bg} ${cfg.color}`}>
@@ -178,9 +178,9 @@ export function CreativeScoringCard() {
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 animate-pulse">
-        <div className="h-6 bg-slate-100 rounded w-48 mb-4" />
-        <div className="h-20 bg-slate-50 rounded-xl" />
+      <div className="rounded-xl border bg-card p-6 animate-pulse">
+        <div className="h-6 bg-muted rounded w-48 mb-4" />
+        <div className="h-20 bg-muted/30 rounded-xl" />
       </div>
     );
   }
@@ -196,21 +196,21 @@ export function CreativeScoringCard() {
   ];
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-      <div className="px-6 pt-5 pb-4 border-b border-slate-100">
+    <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+      <div className="px-6 pt-5 pb-4 border-b border">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
               <Palette className="w-5 h-5 text-purple-600" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-slate-900">Creative Scoring</h3>
+                <h3 className="font-semibold text-foreground">Creative Scoring</h3>
                 <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ${gcfg.bg} ${gcfg.color}`}>
                   Grade {data.overall_grade}
                 </span>
               </div>
-              <p className="text-xs text-slate-500 mt-0.5">{data.summary}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{data.summary}</p>
             </div>
           </div>
           <GradeBadge grade={data.overall_grade} />
@@ -234,24 +234,24 @@ export function CreativeScoringCard() {
             </div>
           )}
           {data.refresh_needed_pct > 0 && (
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-50 rounded-lg text-slate-500">
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-muted/30 rounded-lg text-muted-foreground">
               <span>{data.refresh_needed_pct.toFixed(0)}% need refresh</span>
             </div>
           )}
         </div>
       </div>
 
-      <div className="flex border-b border-slate-100 px-6">
+      <div className="flex border-b border px-6">
         {tabs.map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
             className={`px-3 py-2.5 text-xs font-semibold border-b-2 transition-colors ${
-              tab === t.key ? 'border-purple-600 text-purple-600' : 'border-transparent text-slate-400 hover:text-slate-600'
+              tab === t.key ? 'border-purple-600 text-purple-600' : 'border-transparent text-muted-foreground/50 hover:text-muted-foreground'
             }`}
           >
             {t.label}
-            {t.count !== undefined && <span className="ml-1 text-[10px] text-slate-400">({t.count})</span>}
+            {t.count !== undefined && <span className="ml-1 text-[10px] text-muted-foreground/50">({t.count})</span>}
           </button>
         ))}
       </div>

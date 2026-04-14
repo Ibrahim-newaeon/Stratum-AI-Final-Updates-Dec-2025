@@ -73,20 +73,20 @@ function SegmentRow({ segment }: { segment: SegmentForecast }) {
   const risk = riskConfig[segment.risk_level] || riskConfig.medium;
 
   return (
-    <div className={`border rounded-xl transition-all ${open ? 'border-slate-200' : 'border-slate-100'}`}>
-      <button onClick={() => setOpen(!open)} className="w-full flex items-center gap-3 p-3 text-left hover:bg-slate-50/50 rounded-xl transition-colors">
-        <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center shrink-0">
-          <DollarSign className="w-5 h-5 text-slate-400" />
+    <div className={`border rounded-xl transition-all ${open ? 'border-foreground/15' : ''}`}>
+      <button onClick={() => setOpen(!open)} className="w-full flex items-center gap-3 p-3 text-left hover:bg-muted/30 rounded-xl transition-colors">
+        <div className="w-10 h-10 rounded-lg bg-muted/30 flex items-center justify-center shrink-0">
+          <DollarSign className="w-5 h-5 text-muted-foreground/50" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-sm text-slate-900 truncate">{segment.segment_label}</span>
+            <span className="font-semibold text-sm text-foreground truncate">{segment.segment_label}</span>
             <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ${risk.bg} ${risk.color}`}>{risk.label}</span>
           </div>
-          <div className="flex gap-3 mt-0.5 text-xs text-slate-500">
-            <span>LTV: <strong className="text-slate-700">{fmt(segment.current_avg_ltv)}</strong></span>
-            <span>CAC: <strong className="text-slate-700">{fmt(segment.cac)}</strong></span>
-            <span>LTV:CAC: <strong className="text-slate-700">{segment.ltv_to_cac_ratio.toFixed(1)}x</strong></span>
+          <div className="flex gap-3 mt-0.5 text-xs text-muted-foreground">
+            <span>LTV: <strong className="text-foreground">{fmt(segment.current_avg_ltv)}</strong></span>
+            <span>CAC: <strong className="text-foreground">{fmt(segment.cac)}</strong></span>
+            <span>LTV:CAC: <strong className="text-foreground">{segment.ltv_to_cac_ratio.toFixed(1)}x</strong></span>
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -99,31 +99,31 @@ function SegmentRow({ segment }: { segment: SegmentForecast }) {
               <ArrowDownRight className="w-3 h-3" />{Math.abs(segment.growth_rate).toFixed(0)}%
             </span>
           ) : (
-            <span className="text-xs font-bold text-slate-400 flex items-center gap-0.5">
+            <span className="text-xs font-bold text-muted-foreground/50 flex items-center gap-0.5">
               <Minus className="w-3 h-3" />0%
             </span>
           )}
-          {open ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
+          {open ? <ChevronDown className="w-4 h-4 text-muted-foreground/50" /> : <ChevronRight className="w-4 h-4 text-muted-foreground/50" />}
         </div>
       </button>
       {open && (
-        <div className="px-4 pb-4 pt-1 border-t border-slate-50">
+        <div className="px-4 pb-4 pt-1 border-t border">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="text-center p-2 bg-slate-50 rounded-lg">
-              <div className="text-[10px] font-bold uppercase text-slate-400">Customers</div>
-              <div className="text-sm font-bold text-slate-700">{segment.customer_count.toLocaleString()}</div>
+            <div className="text-center p-2 bg-muted/30 rounded-lg">
+              <div className="text-[10px] font-bold uppercase text-muted-foreground/50">Customers</div>
+              <div className="text-sm font-bold text-foreground">{segment.customer_count.toLocaleString()}</div>
             </div>
-            <div className="text-center p-2 bg-slate-50 rounded-lg">
-              <div className="text-[10px] font-bold uppercase text-slate-400">12m Projected</div>
-              <div className="text-sm font-bold text-slate-700">{fmt(segment.projected_12m_ltv)}</div>
+            <div className="text-center p-2 bg-muted/30 rounded-lg">
+              <div className="text-[10px] font-bold uppercase text-muted-foreground/50">12m Projected</div>
+              <div className="text-sm font-bold text-foreground">{fmt(segment.projected_12m_ltv)}</div>
             </div>
-            <div className="text-center p-2 bg-slate-50 rounded-lg">
-              <div className="text-[10px] font-bold uppercase text-slate-400">Revenue</div>
-              <div className="text-sm font-bold text-slate-700">{fmt(segment.total_revenue)}</div>
+            <div className="text-center p-2 bg-muted/30 rounded-lg">
+              <div className="text-[10px] font-bold uppercase text-muted-foreground/50">Revenue</div>
+              <div className="text-sm font-bold text-foreground">{fmt(segment.total_revenue)}</div>
             </div>
-            <div className="text-center p-2 bg-slate-50 rounded-lg">
-              <div className="text-[10px] font-bold uppercase text-slate-400">Rev Share</div>
-              <div className="text-sm font-bold text-slate-700">{segment.revenue_contribution_pct.toFixed(1)}%</div>
+            <div className="text-center p-2 bg-muted/30 rounded-lg">
+              <div className="text-[10px] font-bold uppercase text-muted-foreground/50">Rev Share</div>
+              <div className="text-sm font-bold text-foreground">{segment.revenue_contribution_pct.toFixed(1)}%</div>
             </div>
           </div>
         </div>
@@ -134,23 +134,23 @@ function SegmentRow({ segment }: { segment: SegmentForecast }) {
 
 function CohortRow({ cohort }: { cohort: CohortLTV }) {
   return (
-    <div className="flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:bg-slate-50/50 transition-colors">
+    <div className="flex items-center gap-3 p-3 rounded-xl border hover:bg-muted/30 transition-colors">
       <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0">
         <Users className="w-4 h-4 text-indigo-500" />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-slate-900">{cohort.cohort_label}</span>
-          <span className="text-[10px] text-slate-400">{cohort.size.toLocaleString()} customers</span>
+          <span className="text-sm font-semibold text-foreground">{cohort.cohort_label}</span>
+          <span className="text-[10px] text-muted-foreground/50">{cohort.size.toLocaleString()} customers</span>
         </div>
-        <div className="flex gap-3 text-xs text-slate-500 mt-0.5">
-          <span>LTV: <strong className="text-slate-700">{fmt(cohort.avg_ltv)}</strong></span>
-          <span>Ret: <strong className="text-slate-700">{cohort.retention_rate.toFixed(0)}%</strong></span>
-          <span>AOV: <strong className="text-slate-700">{fmt(cohort.avg_order_value)}</strong></span>
+        <div className="flex gap-3 text-xs text-muted-foreground mt-0.5">
+          <span>LTV: <strong className="text-foreground">{fmt(cohort.avg_ltv)}</strong></span>
+          <span>Ret: <strong className="text-foreground">{cohort.retention_rate.toFixed(0)}%</strong></span>
+          <span>AOV: <strong className="text-foreground">{fmt(cohort.avg_order_value)}</strong></span>
         </div>
       </div>
       <div className="text-right shrink-0">
-        <div className="text-xs text-slate-400">12m Projected</div>
+        <div className="text-xs text-muted-foreground/50">12m Projected</div>
         <div className="text-sm font-bold text-indigo-600">{fmt(cohort.projected_ltv_12m)}</div>
       </div>
     </div>
@@ -181,7 +181,7 @@ function DistributionBar({ buckets }: { buckets: LTVDistributionBucket[] }) {
       </div>
       <div className="flex flex-wrap gap-2">
         {buckets.map((b, i) => (
-          <div key={i} className="flex items-center gap-1.5 text-[10px] text-slate-500">
+          <div key={i} className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
             <div className={`w-2 h-2 rounded-sm ${colors[i % colors.length]}`} />
             <span>{b.bucket_label}: {b.count} ({b.pct.toFixed(0)}%)</span>
           </div>
@@ -196,13 +196,13 @@ function InsightRow({ insight }: { insight: LTVInsight }) {
   const Icon = cfg.icon;
 
   return (
-    <div className={`flex items-start gap-3 p-3 rounded-xl border border-slate-100`}>
+    <div className={`flex items-start gap-3 p-3 rounded-xl border border`}>
       <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${cfg.bg}`}>
         <Icon className={`w-4 h-4 ${cfg.color}`} />
       </div>
       <div className="flex-1">
-        <div className="text-sm font-semibold text-slate-900">{insight.title}</div>
-        <div className="text-xs text-slate-500 mt-0.5">{insight.description}</div>
+        <div className="text-sm font-semibold text-foreground">{insight.title}</div>
+        <div className="text-xs text-muted-foreground mt-0.5">{insight.description}</div>
       </div>
       {insight.action_label && (
         <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded-lg shrink-0 ${cfg.bg} ${cfg.color}`}>
@@ -223,9 +223,9 @@ export function LTVForecastCard() {
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 animate-pulse">
-        <div className="h-6 bg-slate-100 rounded w-48 mb-4" />
-        <div className="h-20 bg-slate-50 rounded-xl" />
+      <div className="rounded-xl border bg-card p-6 animate-pulse">
+        <div className="h-6 bg-muted rounded w-48 mb-4" />
+        <div className="h-20 bg-muted/30 rounded-xl" />
       </div>
     );
   }
@@ -242,41 +242,41 @@ export function LTVForecastCard() {
   ];
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+    <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="px-6 pt-5 pb-4 border-b border-slate-100">
+      <div className="px-6 pt-5 pb-4 border-b border">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center">
               <TrendingUp className="w-5 h-5 text-indigo-600" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-slate-900">Customer LTV Forecast</h3>
+                <h3 className="font-semibold text-foreground">Customer LTV Forecast</h3>
                 <HealthBadge health={data.ltv_health} />
               </div>
-              <p className="text-xs text-slate-500 mt-0.5">{data.summary}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{data.summary}</p>
             </div>
           </div>
         </div>
 
         {/* KPI strip */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
-          <div className="bg-slate-50 rounded-xl p-3">
-            <div className="text-[10px] font-bold uppercase text-slate-400">Avg LTV</div>
-            <div className="text-lg font-bold text-slate-900">{fmt(data.overall_avg_ltv)}</div>
+          <div className="bg-muted/30 rounded-xl p-3">
+            <div className="text-[10px] font-bold uppercase text-muted-foreground/50">Avg LTV</div>
+            <div className="text-lg font-bold text-foreground">{fmt(data.overall_avg_ltv)}</div>
           </div>
-          <div className="bg-slate-50 rounded-xl p-3">
-            <div className="text-[10px] font-bold uppercase text-slate-400">12m Projected</div>
+          <div className="bg-muted/30 rounded-xl p-3">
+            <div className="text-[10px] font-bold uppercase text-muted-foreground/50">12m Projected</div>
             <div className="text-lg font-bold text-indigo-600">{fmt(data.projected_avg_ltv_12m)}</div>
           </div>
-          <div className="bg-slate-50 rounded-xl p-3">
-            <div className="text-[10px] font-bold uppercase text-slate-400">LTV:CAC</div>
+          <div className="bg-muted/30 rounded-xl p-3">
+            <div className="text-[10px] font-bold uppercase text-muted-foreground/50">LTV:CAC</div>
             <div className={`text-lg font-bold ${hcfg.color}`}>{data.avg_ltv_to_cac.toFixed(1)}x</div>
           </div>
-          <div className="bg-slate-50 rounded-xl p-3">
-            <div className="text-[10px] font-bold uppercase text-slate-400">Customers</div>
-            <div className="text-lg font-bold text-slate-900">{data.total_customers.toLocaleString()}</div>
+          <div className="bg-muted/30 rounded-xl p-3">
+            <div className="text-[10px] font-bold uppercase text-muted-foreground/50">Customers</div>
+            <div className="text-lg font-bold text-foreground">{data.total_customers.toLocaleString()}</div>
           </div>
         </div>
 
@@ -296,7 +296,7 @@ export function LTVForecastCard() {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-slate-100 px-6">
+      <div className="flex border-b border px-6">
         {tabs.map((t) => (
           <button
             key={t.key}
@@ -304,12 +304,12 @@ export function LTVForecastCard() {
             className={`px-3 py-2.5 text-xs font-semibold border-b-2 transition-colors ${
               tab === t.key
                 ? 'border-indigo-600 text-indigo-600'
-                : 'border-transparent text-slate-400 hover:text-slate-600'
+                : 'border-transparent text-muted-foreground/50 hover:text-muted-foreground'
             }`}
           >
             {t.label}
             {t.count !== undefined && (
-              <span className="ml-1 text-[10px] text-slate-400">({t.count})</span>
+              <span className="ml-1 text-[10px] text-muted-foreground/50">({t.count})</span>
             )}
           </button>
         ))}
@@ -322,8 +322,8 @@ export function LTVForecastCard() {
         {tab === 'distribution' && <DistributionBar buckets={data.distribution} />}
         {tab === 'insights' && data.insights.map((ins, i) => <InsightRow key={i} insight={ins} />)}
         {tab === 'segments' && data.segments.length === 0 && (
-          <div className="text-center py-8 text-sm text-slate-400">
-            <Target className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+          <div className="text-center py-8 text-sm text-muted-foreground/50">
+            <Target className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" />
             No segment data available yet.
           </div>
         )}

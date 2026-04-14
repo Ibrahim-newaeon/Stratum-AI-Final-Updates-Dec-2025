@@ -47,16 +47,16 @@ function SuggestionChip({ suggestion, onClick }: { suggestion: QuerySuggestion; 
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-2 p-2.5 rounded-lg border border-slate-100 hover:bg-slate-50 hover:border-slate-200 transition-all text-left group"
+      className="flex items-center gap-2 p-2.5 rounded-lg border hover:bg-muted/30 hover:border-foreground/15 transition-all text-left group"
     >
-      <div className="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center shrink-0 group-hover:bg-blue-50 transition-colors">
-        <Sparkles className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-500 transition-colors" />
+      <div className="w-7 h-7 rounded-lg bg-muted/30 flex items-center justify-center shrink-0 group-hover:bg-blue-50 transition-colors">
+        <Sparkles className="w-3.5 h-3.5 text-muted-foreground/50 group-hover:text-blue-500 transition-colors" />
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-xs font-semibold text-slate-700 truncate">{suggestion.query}</div>
-        <div className="text-[10px] text-slate-400 truncate">{suggestion.description}</div>
+        <div className="text-xs font-semibold text-foreground truncate">{suggestion.query}</div>
+        <div className="text-[10px] text-muted-foreground/50 truncate">{suggestion.description}</div>
       </div>
-      <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-blue-400 transition-colors shrink-0" />
+      <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/30 group-hover:text-blue-400 transition-colors shrink-0" />
     </button>
   );
 }
@@ -65,11 +65,11 @@ function RecentQueryRow({ rq, onClick }: { rq: RecentQuery; onClick: () => void 
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-50 transition-colors text-left w-full"
+      className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/30 transition-colors text-left w-full"
     >
-      <Clock className="w-3.5 h-3.5 text-slate-300 shrink-0" />
-      <span className="text-xs text-slate-600 truncate flex-1">{rq.query}</span>
-      <span className="text-[10px] text-slate-400 shrink-0">{rq.filters_count} filters</span>
+      <Clock className="w-3.5 h-3.5 text-muted-foreground/30 shrink-0" />
+      <span className="text-xs text-muted-foreground truncate flex-1">{rq.query}</span>
+      <span className="text-[10px] text-muted-foreground/50 shrink-0">{rq.filters_count} filters</span>
     </button>
   );
 }
@@ -100,35 +100,35 @@ export function NLFilterCard() {
   const icfg = data?.interpretation?.intent ? intentConfig[data.interpretation.intent] || intentConfig.filter : null;
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-      <div className="px-6 pt-5 pb-4 border-b border-slate-100">
+    <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+      <div className="px-6 pt-5 pb-4 border-b border">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-50 to-violet-50 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-50 to-violet-50 flex items-center justify-center">
             <Search className="w-5 h-5 text-blue-600" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-slate-900">Smart Filters</h3>
+              <h3 className="font-semibold text-foreground">Smart Filters</h3>
               <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-gradient-to-r from-blue-50 to-violet-50 text-violet-600">
                 Natural Language
               </span>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">Ask in plain English to filter your dashboard</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Ask in plain English to filter your dashboard</p>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="relative">
-          <div className="flex items-center gap-2 px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus-within:border-blue-300 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
-            <Sparkles className="w-4 h-4 text-slate-400 shrink-0" />
+          <div className="flex items-center gap-2 px-4 py-3 bg-muted/30 rounded-xl border focus-within:border-blue-300 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+            <Sparkles className="w-4 h-4 text-muted-foreground/50 shrink-0" />
             <input
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder="e.g., Show Meta campaigns with ROAS above 3x"
-              className="flex-1 bg-transparent text-sm text-slate-800 placeholder:text-slate-400 outline-none"
+              className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 outline-none"
             />
             {inputValue && (
-              <button type="button" onClick={handleClear} className="text-slate-400 hover:text-slate-600 transition-colors">
+              <button type="button" onClick={handleClear} className="text-muted-foreground/50 hover:text-muted-foreground transition-colors">
                 <X className="w-4 h-4" />
               </button>
             )}
@@ -151,8 +151,8 @@ export function NLFilterCard() {
                   {icfg.label}
                 </span>
               )}
-              <span className="text-xs text-slate-500">{data.interpretation.explanation}</span>
-              <span className="text-[10px] text-slate-400">{data.interpretation.confidence.toFixed(0)}% confidence</span>
+              <span className="text-xs text-muted-foreground">{data.interpretation.explanation}</span>
+              <span className="text-[10px] text-muted-foreground/50">{data.interpretation.confidence.toFixed(0)}% confidence</span>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {data.interpretation.parsed_filters.map((f, i) => (
@@ -168,8 +168,8 @@ export function NLFilterCard() {
         {data?.suggestions && data.suggestions.length > 0 && (
           <div>
             <div className="flex items-center gap-1.5 mb-2">
-              <Sparkles className="w-3.5 h-3.5 text-slate-400" />
-              <span className="text-[10px] font-bold uppercase text-slate-400">Suggested Queries</span>
+              <Sparkles className="w-3.5 h-3.5 text-muted-foreground/50" />
+              <span className="text-[10px] font-bold uppercase text-muted-foreground/50">Suggested Queries</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {data.suggestions.map((s, i) => (
@@ -183,8 +183,8 @@ export function NLFilterCard() {
         {data?.recent_queries && data.recent_queries.length > 0 && (
           <div>
             <div className="flex items-center gap-1.5 mb-2">
-              <Clock className="w-3.5 h-3.5 text-slate-400" />
-              <span className="text-[10px] font-bold uppercase text-slate-400">Recent Searches</span>
+              <Clock className="w-3.5 h-3.5 text-muted-foreground/50" />
+              <span className="text-[10px] font-bold uppercase text-muted-foreground/50">Recent Searches</span>
             </div>
             <div className="space-y-0.5">
               {data.recent_queries.map((rq, i) => (
@@ -198,15 +198,15 @@ export function NLFilterCard() {
         {!activeQuery && data?.example_queries && (
           <div>
             <div className="flex items-center gap-1.5 mb-2">
-              <Tag className="w-3.5 h-3.5 text-slate-400" />
-              <span className="text-[10px] font-bold uppercase text-slate-400">Try These</span>
+              <Tag className="w-3.5 h-3.5 text-muted-foreground/50" />
+              <span className="text-[10px] font-bold uppercase text-muted-foreground/50">Try These</span>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {data.example_queries.map((eq, i) => (
                 <button
                   key={i}
                   onClick={() => handleSuggestionClick(eq)}
-                  className="text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 text-slate-600 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                  className="text-xs px-2.5 py-1.5 rounded-lg bg-muted/30 text-muted-foreground hover:bg-blue-50 hover:text-blue-600 transition-colors"
                 >
                   {eq}
                 </button>

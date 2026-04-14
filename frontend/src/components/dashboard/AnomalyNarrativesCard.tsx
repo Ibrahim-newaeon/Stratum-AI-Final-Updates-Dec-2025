@@ -23,7 +23,7 @@ const severityConfig = {
   critical: { color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', dot: 'bg-red-500', label: 'Critical' },
   high: { color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', dot: 'bg-amber-500', label: 'High' },
   medium: { color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200', dot: 'bg-blue-500', label: 'Medium' },
-  low: { color: 'text-slate-500', bg: 'bg-slate-50', border: 'border-slate-200', dot: 'bg-slate-400', label: 'Low' },
+  low: { color: 'text-muted-foreground', bg: 'bg-muted/30', border: 'border-border', dot: 'bg-slate-400', label: 'Low' },
 };
 
 const riskConfig = {
