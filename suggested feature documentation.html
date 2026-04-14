@@ -1810,13 +1810,156 @@ Priority Labels:
     </div>
 
     <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- FEATURE #9: Cross-Platform Budget Optimizer                -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+
+    <div class="section-divider"></div>
+
+    <div class="section-title" id="feature-9">Feature #9: Cross-Platform Budget Optimizer</div>
+    <div class="section-subtitle">Analyzes ad spend efficiency across all connected platforms and recommends optimal budget distribution using 3 strategies: ROAS Max, Balanced, Volume Max</div>
+
+    <div class="card">
+        <div class="card-header">Architecture</div>
+        <ol style="padding-left: 1.2rem; color: var(--text-secondary);">
+            <li>Aggregates campaigns by platform</li>
+            <li>Scores each platform on efficiency (ROAS 50%, CPA 30%, volume 20%)</li>
+            <li>Computes optimal allocation with guardrails (max 30% increase, 20% decrease)</li>
+            <li>Generates platform-to-platform shift recommendations</li>
+            <li>Simulates what-if scenarios (ROAS Maximized, Volume Maximized, Equal Distribution)</li>
+        </ol>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Pydantic Models</div>
+        <table class="model-table">
+            <thead><tr><th>Model</th><th>Purpose</th></tr></thead>
+            <tbody>
+                <tr><td>PlatformEfficiency</td><td>Per-platform metrics: ROAS, CPA, conversions, efficiency score (0-100), rank</td></tr>
+                <tr><td>AllocationShift</td><td>Platform-to-platform budget shift with amount, %, and reasoning</td></tr>
+                <tr><td>PlatformRecommendation</td><td>Per-platform recommendation: scale/reduce/maintain with projected outcomes</td></tr>
+                <tr><td>OptimizationScenario</td><td>What-if scenario with projected revenue, ROAS, conversions, improvement %</td></tr>
+                <tr><td>CrossPlatformOptimizerResponse</td><td>Full response: platforms, recommendations, shifts, scenarios, summary</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Files Modified / Created</div>
+        <table class="model-table">
+            <thead><tr><th>File</th><th>Change</th></tr></thead>
+            <tbody>
+                <tr><td>backend/app/analytics/logic/cross_platform_optimizer.py</td><td>New module &mdash; efficiency scoring, optimal allocation, shift generation, scenarios</td></tr>
+                <tr><td>backend/app/api/v1/endpoints/dashboard.py</td><td>GET /dashboard/cross-platform-optimizer?strategy=balanced</td></tr>
+                <tr><td>frontend/src/api/dashboard.ts</td><td>Types + useCrossPlatformOptimizer() hook (5min stale, 15min refetch)</td></tr>
+                <tr><td>frontend/src/components/dashboard/CrossPlatformOptimizerCard.tsx</td><td>New component &mdash; strategy selector, tabbed sections, budget shift visualization</td></tr>
+                <tr><td>frontend/src/views/Overview.tsx</td><td>Integrated CrossPlatformOptimizerCard</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- FEATURE #10: Audience Lifecycle Automations                 -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+
+    <div class="section-divider"></div>
+
+    <div class="section-title" id="feature-10">Feature #10: Audience Lifecycle Automations</div>
+    <div class="section-subtitle">Monitors CDP profile lifecycle stage distribution and auto-generates audience sync rules based on stage transitions (anonymous → known → customer → churned)</div>
+
+    <div class="card">
+        <div class="card-header">Architecture</div>
+        <ol style="padding-left: 1.2rem; color: var(--text-secondary);">
+            <li>Aggregates profiles by lifecycle stage with distribution metrics</li>
+            <li>Detects stage transition volumes and trends</li>
+            <li>Maps transitions to automation rules (acquisition, activation, retention, reactivation)</li>
+            <li>Assesses lifecycle health and automation coverage</li>
+            <li>Generates platform sync readiness and recommendations</li>
+        </ol>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Automation Rule Categories</div>
+        <table class="model-table">
+            <thead><tr><th>Category</th><th>Example Rules</th></tr></thead>
+            <tbody>
+                <tr><td>Acquisition</td><td>New Known → Platform Lookalike Seed</td></tr>
+                <tr><td>Activation</td><td>New Customer → Platform Exclusion, Stale Known → Nurture Sequence</td></tr>
+                <tr><td>Retention</td><td>Reactivated → Welcome Back Flow</td></tr>
+                <tr><td>Reactivation</td><td>Churned → Reactivation Campaign, Churned → Platform Remarketing</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Files Modified / Created</div>
+        <table class="model-table">
+            <thead><tr><th>File</th><th>Change</th></tr></thead>
+            <tbody>
+                <tr><td>backend/app/analytics/logic/audience_lifecycle.py</td><td>New module &mdash; stage analysis, transition detection, rule generation, health scoring</td></tr>
+                <tr><td>backend/app/api/v1/endpoints/dashboard.py</td><td>GET /dashboard/audience-lifecycle with CDP profiles + platform audiences</td></tr>
+                <tr><td>frontend/src/api/dashboard.ts</td><td>Types + useAudienceLifecycle() hook (5min stale, 15min refetch)</td></tr>
+                <tr><td>frontend/src/components/dashboard/AudienceLifecycleCard.tsx</td><td>New component &mdash; stage distribution bar, tabbed rules/transitions/recommendations</td></tr>
+                <tr><td>frontend/src/views/Overview.tsx</td><td>Integrated AudienceLifecycleCard</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- FEATURE #11: Goal Tracking & Pacing                        -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+
+    <div class="section-divider"></div>
+
+    <div class="section-title" id="feature-11">Feature #11: Goal Tracking &amp; Pacing</div>
+    <div class="section-subtitle">Real-time progress toward revenue, spend, ROAS, and conversion targets with pacing status, EOM projections, milestone tracking, and AI insights</div>
+
+    <div class="card">
+        <div class="card-header">Architecture</div>
+        <ol style="padding-left: 1.2rem; color: var(--text-secondary);">
+            <li>Calculates MTD actuals from campaign data</li>
+            <li>Computes pacing percentage vs expected linear pace</li>
+            <li>Projects end-of-month outcomes using daily run-rate</li>
+            <li>Tracks milestones (25%, 50%, 75%, 100% marks)</li>
+            <li>Generates gap analysis with daily-needed amounts and AI insights</li>
+        </ol>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Pacing Status Thresholds</div>
+        <table class="model-table">
+            <thead><tr><th>Status</th><th>Pacing Range</th></tr></thead>
+            <tbody>
+                <tr><td>Ahead</td><td>&gt;110% of expected pace</td></tr>
+                <tr><td>On Track</td><td>90–110%</td></tr>
+                <tr><td>Behind</td><td>75–90%</td></tr>
+                <tr><td>At Risk</td><td>50–75%</td></tr>
+                <tr><td>Critical</td><td>&lt;50%</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Files Modified / Created</div>
+        <table class="model-table">
+            <thead><tr><th>File</th><th>Change</th></tr></thead>
+            <tbody>
+                <tr><td>backend/app/analytics/logic/goal_tracking.py</td><td>New module &mdash; pacing calculation, milestone tracking, EOM projection, insights</td></tr>
+                <tr><td>backend/app/api/v1/endpoints/dashboard.py</td><td>GET /dashboard/goal-tracking with campaign data + tenant targets</td></tr>
+                <tr><td>frontend/src/api/dashboard.ts</td><td>Types + useGoalTracking() hook (5min stale, 10min refetch)</td></tr>
+                <tr><td>frontend/src/components/dashboard/GoalTrackingCard.tsx</td><td>New component &mdash; SVG progress rings, milestone track, expandable goals, insights tab</td></tr>
+                <tr><td>frontend/src/views/Overview.tsx</td><td>Integrated GoalTrackingCard</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════ -->
     <!-- REMAINING FEATURES ROADMAP                                 -->
     <!-- ════════════════════════════════════════════════════════════ -->
 
     <div class="section-divider"></div>
 
     <div class="section-title" id="roadmap">Remaining Features (Planned)</div>
-    <div class="section-subtitle">12 features prioritized by impact-to-effort ratio &mdash; the recommended implementation sequence</div>
+    <div class="section-subtitle">9 features prioritized by impact-to-effort ratio &mdash; the recommended implementation sequence</div>
 
     <div class="roadmap-wrapper">
         <table class="roadmap-table">
@@ -1906,29 +2049,29 @@ Priority Labels:
                 </tr>
                 <tr>
                     <td class="rank">9</td>
-                    <td class="feature-name">Cross-Platform Budget Optimizer</td>
+                    <td class="feature-name" style="color: var(--green);">Cross-Platform Budget Optimizer</td>
                     <td><span class="category-badge cat-automation">Automation</span></td>
                     <td><span class="effort-badge effort-medium">Medium</span></td>
                     <td><span class="impact-badge impact-high">High</span></td>
-                    <td class="status-cell planned">Planned</td>
+                    <td class="status-cell completed">Completed</td>
                     <td class="builds-on">Integrations, Pacing</td>
                 </tr>
                 <tr>
                     <td class="rank">10</td>
-                    <td class="feature-name">Audience Lifecycle Automations</td>
+                    <td class="feature-name" style="color: var(--green);">Audience Lifecycle Automations</td>
                     <td><span class="category-badge cat-automation">Automation</span></td>
                     <td><span class="effort-badge effort-medium">Medium</span></td>
                     <td><span class="impact-badge impact-high">High</span></td>
-                    <td class="status-cell planned">Planned</td>
+                    <td class="status-cell completed">Completed</td>
                     <td class="builds-on">CDP, Audience Sync</td>
                 </tr>
                 <tr>
                     <td class="rank">11</td>
-                    <td class="feature-name">Goal Tracking &amp; Pacing</td>
+                    <td class="feature-name" style="color: var(--green);">Goal Tracking &amp; Pacing</td>
                     <td><span class="category-badge cat-ux">Dashboard UX</span></td>
                     <td><span class="effort-badge effort-medium">Medium</span></td>
                     <td><span class="impact-badge impact-high">High</span></td>
-                    <td class="status-cell planned">Planned</td>
+                    <td class="status-cell completed">Completed</td>
                     <td class="builds-on">Pacing Service</td>
                 </tr>
                 <tr>
@@ -2040,8 +2183,8 @@ Priority Labels:
         <div class="impl-block" style="border-left: 3px solid var(--cyan);">
             <div class="impl-block-title" style="color: var(--cyan); margin-bottom: 0.5rem;">Automation (4 features)</div>
             <ul class="impl-list">
-                <li>Cross-Platform Budget Optimizer</li>
-                <li>Audience Lifecycle Automations</li>
+                <li style="color: var(--green);">Cross-Platform Budget Optimizer &nbsp;<span style="font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em;">Completed</span></li>
+                <li style="color: var(--green);">Audience Lifecycle Automations &nbsp;<span style="font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em;">Completed</span></li>
                 <li style="color: var(--green);">Signal Auto-Recovery &nbsp;<span style="font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em;">Completed</span></li>
                 <li>Scheduled A/B Test Analysis</li>
             </ul>
@@ -2051,7 +2194,7 @@ Priority Labels:
             <ul class="impl-list">
                 <li style="color: var(--green);">AI Morning Briefing &nbsp;<span style="font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em;">Completed</span></li>
                 <li>Natural Language Filters</li>
-                <li>Goal Tracking &amp; Pacing</li>
+                <li style="color: var(--green);">Goal Tracking &amp; Pacing &nbsp;<span style="font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em;">Completed</span></li>
                 <li style="color: var(--green);">Unified Notifications with AI Priority &nbsp;<span style="font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em;">Completed</span></li>
                 <li>Collaborative Annotations</li>
             </ul>
