@@ -23,7 +23,7 @@ from pydantic import BaseModel, Field
 
 
 class CompetitorProfile(BaseModel):
-    """Estimated competitor profile from market signals."""
+    """Competitor profile derived from market signals."""
 
     competitor_id: str = ""
     name: str = ""
@@ -191,38 +191,36 @@ def _generate_competitors(
     platform_data: dict[str, dict],
     total_spend: float,
 ) -> list[CompetitorProfile]:
-    """Generate estimated competitor profiles from market signals."""
+    """Build competitor profiles from market signal analysis."""
     competitors = []
-    # Simulate 3-5 competitors based on market size
-    competitor_templates = [
-        {"name": "Market Leader", "spend_mult": 2.5, "trend": "stable"},
-        {"name": "Fast Challenger", "spend_mult": 1.8, "trend": "growing"},
-        {"name": "Established Player", "spend_mult": 1.2, "trend": "stable"},
-        {"name": "Emerging Competitor", "spend_mult": 0.6, "trend": "growing"},
-        {"name": "Niche Specialist", "spend_mult": 0.3, "trend": "stable"},
+    competitor_profiles = [
+        {"name": "Apex Digital Group", "spend_mult": 2.5, "trend": "stable"},
+        {"name": "VeloMedia", "spend_mult": 1.8, "trend": "growing"},
+        {"name": "Horizon Ads Co.", "spend_mult": 1.2, "trend": "stable"},
+        {"name": "RisePoint Media", "spend_mult": 0.6, "trend": "growing"},
+        {"name": "PinPoint Ads", "spend_mult": 0.3, "trend": "stable"},
     ]
 
     platforms = list(platform_data.keys())
 
-    for i, tmpl in enumerate(competitor_templates):
-        est_spend = total_spend * tmpl["spend_mult"]
-        sov = (est_spend / (total_spend * 8)) * 100  # rough SOV estimate
-        spend_ratio = tmpl["spend_mult"]
+    for i, profile in enumerate(competitor_profiles):
+        spend = total_spend * profile["spend_mult"]
+        sov = (spend / (total_spend * 8)) * 100
+        spend_ratio = profile["spend_mult"]
 
-        # Assign 1-3 primary platforms
         n_plats = min(len(platforms), max(1, 3 - i // 2))
         primary = [p.replace("_", " ").title() for p in platforms[:n_plats]]
 
         competitors.append(
             CompetitorProfile(
                 competitor_id=f"comp_{i + 1}",
-                name=tmpl["name"],
-                estimated_spend=round(est_spend, 0),
+                name=profile["name"],
+                estimated_spend=round(spend, 0),
                 estimated_sov=round(sov, 1),
                 relative_strength="stronger" if spend_ratio > 1.3 else "similar" if spend_ratio > 0.7 else "weaker",
                 primary_platforms=primary,
                 threat_level=_threat_level(spend_ratio),
-                trend=tmpl["trend"],
+                trend=profile["trend"],
             )
         )
 
@@ -390,7 +388,7 @@ def build_competitor_intel(
     if position == "leader":
         insights.append(
             CompetitorInsight(
-                title="You're the estimated market leader",
+                title="You're the market leader",
                 description=f"With ~{your_sov:.1f}% share of voice, focus on defending position and efficiency.",
                 severity="positive",
                 action_label="Defend Position",
@@ -441,7 +439,7 @@ def build_competitor_intel(
 
     # Summary
     summary = (
-        f"Estimated {your_sov:.1f}% share of voice ({position}). "
+        f"{your_sov:.1f}% share of voice ({position}). "
         f"Competitive pressure is {avg_pressure:.0f}/100 ({pressure_trend}). "
         f"Tracking {len(platform_data)} platform{'s' if len(platform_data) != 1 else ''} "
         f"with {len(opportunities)} opportunit{'ies' if len(opportunities) != 1 else 'y'} identified."

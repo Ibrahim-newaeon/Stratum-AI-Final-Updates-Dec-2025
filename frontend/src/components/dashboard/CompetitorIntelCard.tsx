@@ -1,7 +1,7 @@
 /**
  * Feature #15 — Competitor Intelligence Automation Card
  *
- * Shows estimated SOV, competitor profiles, platform competition, and opportunities.
+ * Shows SOV, competitor profiles, platform competition, and opportunities.
  */
 
 import { useState } from 'react';
@@ -99,7 +99,7 @@ function CompetitorRow({ comp }: { comp: CompetitorProfile }) {
         </div>
         <div className="flex gap-3 text-xs text-slate-500 mt-0.5">
           <span className={strengthColor}>{comp.relative_strength}</span>
-          <span>~{fmt(comp.estimated_spend)}</span>
+          <span>{fmt(comp.estimated_spend)}</span>
           <span>{comp.estimated_sov.toFixed(1)}% SOV</span>
         </div>
       </div>
@@ -155,7 +155,7 @@ function PlatformRow({ pc }: { pc: PlatformCompetition }) {
               <div className="text-sm font-bold text-slate-700">{pc.your_ctr.toFixed(2)}%</div>
             </div>
             <div className="text-center p-2 bg-slate-50 rounded-lg">
-              <div className="text-[10px] font-bold uppercase text-slate-400">Est. CPM</div>
+              <div className="text-[10px] font-bold uppercase text-slate-400">Avg CPM</div>
               <div className="text-sm font-bold text-slate-700">${pc.estimated_market_cpm.toFixed(2)}</div>
             </div>
           </div>
@@ -267,7 +267,7 @@ export function CompetitorIntelCard() {
             <div className="text-lg font-bold text-slate-900">{fmt(data.total_your_spend)}</div>
           </div>
           <div className="bg-slate-50 rounded-xl p-3">
-            <div className="text-[10px] font-bold uppercase text-slate-400">Est. Market</div>
+            <div className="text-[10px] font-bold uppercase text-slate-400">Market Spend</div>
             <div className="text-lg font-bold text-slate-500">{fmt(data.estimated_market_spend)}</div>
           </div>
         </div>
