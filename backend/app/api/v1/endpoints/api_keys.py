@@ -9,7 +9,6 @@ CRUD operations for API keys:
 - Delete API keys
 """
 
-import hashlib
 import secrets
 from datetime import UTC, datetime
 from typing import Optional
@@ -99,8 +98,11 @@ def generate_api_key(key_type: str = "live") -> tuple[str, str, str]:
     prefix = f"strat_{key_type}_"
     full_key = f"{prefix}{random_part}"
 
-    # Hash for storage
-    key_hash = hashlib.sha256(full_key.encode()).hexdigest()
+    # Hash for storage using bcrypt (adaptive, brute-force resistant)
+    from passlib.context import CryptContext
+
+    _api_key_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
+    key_hash = _api_key_ctx.hash(full_key)
 
     return full_key, key_hash, prefix
 

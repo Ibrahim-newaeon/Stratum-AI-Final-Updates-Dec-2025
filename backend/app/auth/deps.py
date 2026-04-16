@@ -127,16 +127,18 @@ async def get_current_user(
             detail="User account is deactivated",
         )
 
-    # Decrypt PII for response (gracefully handle key mismatch)
+    # Decrypt PII for response — never fall back to unverified JWT claims
     from app.core.security import decrypt_pii
 
     try:
-        email = payload.get("email") or decrypt_pii(user.email)
+        email = decrypt_pii(user.email)
     except (ValueError, TypeError, UnicodeDecodeError) as exc:
-        logger.warning("pii_decryption_fallback", field="email", user_id=user.id, error=str(exc))
-        # Fallback: prefer the JWT claim; never expose raw ciphertext
-        jwt_email = payload.get("email")
-        email = jwt_email if jwt_email else f"user-{user.id}@unknown"
+        logger.error("pii_decryption_failed", field="email", user_id=user.id, error=str(exc))
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Session invalid - please login again",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     try:
         full_name = decrypt_pii(user.full_name) if user.full_name else None

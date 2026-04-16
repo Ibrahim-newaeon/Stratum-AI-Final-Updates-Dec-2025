@@ -209,12 +209,12 @@ export const useTenantStore = create<TenantState>()(
         name: 'stratum-tenant-store',
         storage: createJSONStorage(() => localStorage),
         // Only persist non-sensitive UI preferences — never persist privilege
-        // escalation flags like superAdminBypass (must be re-asserted each session).
+        // escalation flags (superAdminBypass, isSuperAdminMode) which must be
+        // re-asserted each session based on the authenticated user's role.
         partialize: (state) => ({
           tenantId: state.tenantId,
           dateRange: state.dateRange,
           selectedPlatforms: state.selectedPlatforms,
-          isSuperAdminMode: state.isSuperAdminMode,
         }),
       }
     ),
