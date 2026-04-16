@@ -319,7 +319,7 @@ jobs:
   gate:
     name: Release Gate
     runs-on: ubuntu-latest
-    needs: [backend, frontend, security, secrets]
+    needs: [backend, frontend, security, secrets, e2e]
     if: always()
 
     steps:
@@ -329,10 +329,12 @@ jobs:
           echo "Frontend: ${{ needs.frontend.result }}"
           echo "Security: ${{ needs.security.result }}"
           echo "Secrets: ${{ needs.secrets.result }}"
+          echo "E2E: ${{ needs.e2e.result }}"
           if [[ "${{ needs.backend.result }}" != "success" ]] || \
              [[ "${{ needs.frontend.result }}" != "success" ]] || \
              [[ "${{ needs.security.result }}" != "success" ]] || \
-             [[ "${{ needs.secrets.result }}" != "success" ]]; then
+             [[ "${{ needs.secrets.result }}" != "success" ]] || \
+             [[ "${{ needs.e2e.result }}" != "success" ]]; then
             echo "::error::One or more required jobs failed — merge blocked"
             exit 1
           fi

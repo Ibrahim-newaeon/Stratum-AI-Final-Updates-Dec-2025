@@ -22,8 +22,11 @@ export const apiClient: AxiosInstance = axios.create({
   },
 })
 
-// Token management — use in-memory + sessionStorage to reduce XSS persistence
-// (sessionStorage is cleared when the tab closes, unlike localStorage)
+// Token management — use in-memory + sessionStorage to reduce XSS persistence.
+// sessionStorage is cleared when the tab closes, unlike localStorage.
+// NOTE: Refresh tokens are also in sessionStorage (JS-accessible). If the
+// backend adds httpOnly cookie support, migrate refresh tokens there for
+// stronger XSS protection (see C3 in audit/outputs/master-audit.md).
 let accessToken: string | null = null
 
 export const setAccessToken = (token: string | null) => {

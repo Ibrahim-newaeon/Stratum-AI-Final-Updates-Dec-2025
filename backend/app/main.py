@@ -396,7 +396,8 @@ def create_application() -> FastAPI:
             redis_status = "healthy"
             await redis_client.close()
         except (ConnectionError, TimeoutError, OSError) as e:
-            redis_status = f"unhealthy: {str(e)}"
+            logger.error("redis_health_check_failed", error=str(e))
+            redis_status = "unhealthy"
 
         overall_status = "healthy" if db_health["status"] == "healthy" and redis_status == "healthy" else "unhealthy"
 
