@@ -146,7 +146,7 @@ describe('useKeyboardShortcuts', () => {
         pressKey('e');
       });
 
-      expect(mockNavigate).toHaveBeenCalledWith('/dashboard/emq-dashboard');
+      expect(mockNavigate).toHaveBeenCalledWith('/dashboard/signal-hub');
     });
 
     it('should navigate to Assets on "a" key', () => {

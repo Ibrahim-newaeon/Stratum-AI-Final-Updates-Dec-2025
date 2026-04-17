@@ -15,6 +15,7 @@ import {
   Trash2,
   ExternalLink,
   Loader2,
+  RefreshCw,
   Target,
 } from 'lucide-react'
 import { cn, formatCurrency, formatPercent, formatCompactNumber, getPlatformColor } from '@/lib/utils'
@@ -57,7 +58,7 @@ export function Campaigns() {
   const pageSize = 20
 
   // Fetch campaigns from API
-  const { data: campaignsData, isLoading } = useCampaigns()
+  const { data: campaignsData, isLoading, refetch: refetchCampaigns } = useCampaigns()
   const pauseCampaign = usePauseCampaign()
   const activateCampaign = useActivateCampaign()
   const deleteCampaign = useDeleteCampaign()
@@ -216,13 +217,23 @@ export function Campaigns() {
           <p className="text-muted-foreground">{t('campaigns.subtitle')}</p>
         </div>
 
-        <button
-          onClick={() => setCreateModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          <span>{t('campaigns.createNew')}</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => refetchCampaigns()}
+            disabled={isLoading}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-background hover:bg-accent transition-colors"
+            title="Refresh campaigns"
+          >
+            <RefreshCw className={cn('w-4 h-4', isLoading && 'animate-spin')} />
+          </button>
+          <button
+            onClick={() => setCreateModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            <span>{t('campaigns.createNew')}</span>
+          </button>
+        </div>
       </div>
 
       {/* Filters */}

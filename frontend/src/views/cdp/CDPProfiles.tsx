@@ -6,6 +6,7 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowDownTrayIcon,
+  ArrowPathIcon,
   CalendarIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -342,7 +343,7 @@ export default function CDPProfiles() {
 
   const pageSize = 20;
 
-  const { data, isLoading } = useSearchProfiles({
+  const { data, isLoading, refetch: refetchProfiles } = useSearchProfiles({
     query: search || undefined,
     limit: pageSize,
     offset: (page - 1) * pageSize,
@@ -386,6 +387,14 @@ export default function CDPProfiles() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => refetchProfiles()}
+            disabled={isLoading}
+            className="flex items-center gap-2 px-3 py-2 border rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
+            title="Refresh profiles"
+          >
+            <ArrowPathIcon className={cn('h-4 w-4', isLoading && 'animate-spin')} />
+          </button>
           <button
             onClick={handleExport}
             disabled={exportMutation.isPending}

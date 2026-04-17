@@ -38,7 +38,6 @@ import {
   FunnelIcon,
   GiftIcon,
   HomeIcon,
-  MapIcon,
   PhotoIcon,
   PresentationChartBarIcon,
   ShareIcon,
@@ -217,7 +216,6 @@ const kgNavigation = [
   { name: 'Insights', href: '/dashboard/knowledge-graph/insights', icon: SparklesIcon },
   { name: 'Problem Detection', href: '/dashboard/knowledge-graph/problems', icon: ExclamationTriangleIcon },
   { name: 'Revenue Attribution', href: '/dashboard/knowledge-graph/revenue', icon: CurrencyDollarIcon },
-  { name: 'Journey Explorer', href: '/dashboard/knowledge-graph/journeys', icon: MapIcon },
 ];
 
 const newsletterNavigation = [

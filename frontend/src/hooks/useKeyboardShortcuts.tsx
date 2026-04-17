@@ -51,8 +51,8 @@ export function useKeyboardShortcuts(options: UseKeyboardShortcutsOptions = {}) 
     },
     {
       key: 'e',
-      description: 'Go to EMQ Dashboard',
-      action: () => navigate('/dashboard/emq-dashboard'),
+      description: 'Go to Signal Hub',
+      action: () => navigate('/dashboard/signal-hub'),
       category: 'navigation',
     },
     {

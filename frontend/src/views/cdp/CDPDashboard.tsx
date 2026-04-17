@@ -2,11 +2,12 @@
  * CDP Dashboard - Main overview page for Customer Data Platform
  */
 
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowTrendingDownIcon,
   ArrowTrendingUpIcon,
+  ArrowPathIcon,
   ArrowUpOnSquareIcon,
   CheckCircleIcon,
   ClockIcon,
@@ -179,11 +180,20 @@ function EventVolumeChart({ data }: { data: Array<{ date: string; count: number 
 }
 
 export default function CDPDashboard() {
-  const { data: health, isLoading: _healthLoading } = useCDPHealth();
-  const { data: profileStats, isLoading: profileLoading } = useProfileStatistics();
-  const { data: eventStats, isLoading: eventLoading } = useEventStatistics(30);
-  const { data: segments, isLoading: segmentsLoading } = useSegments();
-  const { data: anomalySummary } = useAnomalySummary();
+  const { data: health, isLoading: _healthLoading, refetch: refetchHealth } = useCDPHealth();
+  const { data: profileStats, isLoading: profileLoading, refetch: refetchProfiles } = useProfileStatistics();
+  const { data: eventStats, isLoading: eventLoading, refetch: refetchEvents } = useEventStatistics(30);
+  const { data: segments, isLoading: segmentsLoading, refetch: refetchSegments } = useSegments();
+  const { data: anomalySummary, refetch: refetchAnomalies } = useAnomalySummary();
+
+  const isRefreshing = profileLoading || eventLoading || segmentsLoading;
+  const handleRefresh = useCallback(() => {
+    refetchHealth();
+    refetchProfiles();
+    refetchEvents();
+    refetchSegments();
+    refetchAnomalies();
+  }, [refetchHealth, refetchProfiles, refetchEvents, refetchSegments, refetchAnomalies]);
 
   const activeSegments = useMemo(() => {
     return segments?.segments.filter((s) => s.status === 'active').length || 0;
@@ -201,6 +211,14 @@ export default function CDPDashboard() {
         </div>
         <div className="flex items-center gap-3">
           {health && <HealthBadge status={health.status} />}
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-background hover:bg-accent transition-colors"
+            title="Refresh CDP data"
+          >
+            <ArrowPathIcon className={cn('h-4 w-4', isRefreshing && 'animate-spin')} />
+          </button>
         </div>
       </div>
 

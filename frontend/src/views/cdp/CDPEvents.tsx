@@ -2,9 +2,10 @@
  * CDP Events - Event timeline and analytics
  */
 
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   ArrowDownTrayIcon,
+  ArrowPathIcon,
   ChartBarIcon,
   CheckCircleIcon,
   ClockIcon,
@@ -173,14 +174,22 @@ export default function CDPEvents() {
   const [eventFilter, setEventFilter] = useState('');
   const [showAnomalies, setShowAnomalies] = useState(false);
 
-  const { data: stats, isLoading: statsLoading } = useEventStatistics(periodDays);
-  const { data: trends, isLoading: trendsLoading } = useEventTrends(periodDays);
-  const { data: summary } = useAnomalySummary();
-  const { data: anomalies, isLoading: anomaliesLoading } = useEventAnomalies({
+  const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useEventStatistics(periodDays);
+  const { data: trends, isLoading: trendsLoading, refetch: refetchTrends } = useEventTrends(periodDays);
+  const { data: summary, refetch: refetchSummary } = useAnomalySummary();
+  const { data: anomalies, isLoading: anomaliesLoading, refetch: refetchAnomalies } = useEventAnomalies({
     window_days: 7,
     zscore_threshold: 2.0,
   });
   const exportMutation = useExportAudience();
+
+  const isRefreshing = statsLoading || trendsLoading || anomaliesLoading;
+  const handleRefresh = useCallback(() => {
+    refetchStats();
+    refetchTrends();
+    refetchSummary();
+    refetchAnomalies();
+  }, [refetchStats, refetchTrends, refetchSummary, refetchAnomalies]);
 
   const filteredEvents = useMemo(() => {
     if (!stats?.events_by_name) return [];
@@ -223,6 +232,14 @@ export default function CDPEvents() {
             <option value={30}>Last 30 days</option>
             <option value={90}>Last 90 days</option>
           </select>
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="flex items-center gap-2 px-3 py-2 border rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
+            title="Refresh event data"
+          >
+            <ArrowPathIcon className={cn('h-4 w-4', isRefreshing && 'animate-spin')} />
+          </button>
           <button
             onClick={handleExport}
             disabled={exportMutation.isPending}
