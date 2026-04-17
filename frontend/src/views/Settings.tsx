@@ -47,6 +47,11 @@ import {
   type MetricCategory,
   type MetricDefinition,
 } from '@/constants/metrics';
+import {
+  PlatformSetupModal,
+  getPlatformById,
+  type PlatformCredentialConfig,
+} from '@/components/integrations/PlatformSetupModal';
 
 type SettingsTab =
   | 'profile'
@@ -1081,6 +1086,7 @@ function SecuritySettings({
 function IntegrationSettings() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [selectedPlatform, setSelectedPlatform] = useState<PlatformCredentialConfig | null>(null);
   const [webhooks, setWebhooks] = useState([
     {
       id: '1',
@@ -1311,6 +1317,28 @@ function IntegrationSettings() {
     }
   };
 
+  // Map Settings platform IDs to PlatformSetupModal IDs
+  const platformIdMap: Record<string, string> = {
+    'google-ads': 'google',
+    meta: 'meta',
+    tiktok: 'tiktok',
+    snapchat: 'snapchat',
+    slack: 'slack',
+    'google-analytics': 'google-analytics',
+    'google-tag-manager': 'google-tag-manager',
+    shopify: 'shopify',
+    stripe: 'stripe',
+    wordpress: 'wordpress',
+  };
+
+  const handleViewCredentials = (integrationId: string) => {
+    const mappedId = platformIdMap[integrationId] || integrationId;
+    const platform = getPlatformById(mappedId);
+    if (platform) {
+      setSelectedPlatform(platform);
+    }
+  };
+
   const IntegrationCard = ({
     integration,
     showDescription = false,
@@ -1320,7 +1348,10 @@ function IntegrationSettings() {
     showDescription?: boolean;
     onConnect?: () => void;
   }) => (
-    <div className="flex items-center justify-between p-4 rounded-xl border border-white/10 glass card-3d">
+    <div
+      className="flex items-center justify-between p-4 rounded-xl border border-white/10 glass card-3d cursor-pointer hover:border-white/20 transition-all"
+      onClick={() => handleViewCredentials(integration.id)}
+    >
       <div className="flex items-center gap-4">
         <div className={cn('p-2 rounded-xl bg-black/30', integration.color)}>
           <IntegrationIcon type={integration.id} />
@@ -1344,7 +1375,13 @@ function IntegrationSettings() {
           </span>
         )}
         <button
-          onClick={onConnect}
+          onClick={(e) => { e.stopPropagation(); handleViewCredentials(integration.id); }}
+          className="px-3 py-1.5 rounded-xl text-xs font-medium border border-white/10 hover:bg-white/5 text-white/50 hover:text-white/80 transition-colors"
+        >
+          View Setup
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); onConnect?.(); }}
           className={cn(
             'px-4 py-2 rounded-xl text-sm font-medium transition-colors',
             integration.connected
@@ -1501,7 +1538,7 @@ function IntegrationSettings() {
         <h3 className="font-medium mb-3">Analytics & Tracking</h3>
         <div className="space-y-3">
           {analyticsIntegrations.map((integration) => (
-            <IntegrationCard key={integration.id} integration={integration} showDescription />
+            <IntegrationCard key={integration.id} integration={integration} showDescription onConnect={() => handleViewCredentials(integration.id)} />
           ))}
         </div>
       </div>
@@ -1513,7 +1550,8 @@ function IntegrationSettings() {
           {commerceIntegrations.map((integration) => (
             <div
               key={integration.id}
-              className="p-4 rounded-xl border border-white/10 glass card-3d text-center"
+              className="p-4 rounded-xl border border-white/10 glass card-3d text-center cursor-pointer hover:border-white/20 transition-all"
+              onClick={() => handleViewCredentials(integration.id)}
             >
               <div className={cn('p-3 rounded-xl bg-black/30 inline-flex mb-3', integration.color)}>
                 <IntegrationIcon type={integration.id} />
@@ -1533,6 +1571,12 @@ function IntegrationSettings() {
           ))}
         </div>
       </div>
+
+      {/* Platform Setup Modal */}
+      <PlatformSetupModal
+        platform={selectedPlatform}
+        onClose={() => setSelectedPlatform(null)}
+      />
     </div>
   );
 }

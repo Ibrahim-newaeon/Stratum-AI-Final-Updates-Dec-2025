@@ -7,6 +7,7 @@ Configures routers, middleware, and application lifecycle events.
 """
 
 import asyncio
+import os
 import time
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Optional
@@ -377,6 +378,15 @@ def create_application() -> FastAPI:
     app.include_router(api_router, prefix=settings.api_v1_prefix)
 
     # -------------------------------------------------------------------------
+    # Static Files - Serve uploaded assets
+    # -------------------------------------------------------------------------
+    from pathlib import Path as _Path
+    uploads_dir = _Path(os.environ.get("ASSET_UPLOAD_DIR", "uploads/assets"))
+    uploads_dir.mkdir(parents=True, exist_ok=True)
+    from starlette.staticfiles import StaticFiles
+    app.mount("/uploads/assets", StaticFiles(directory=str(uploads_dir)), name="uploaded-assets")
+
+    # -------------------------------------------------------------------------
     # Health Check Endpoints
     # -------------------------------------------------------------------------
     @app.get("/health", tags=["Health"])
@@ -396,8 +406,7 @@ def create_application() -> FastAPI:
             redis_status = "healthy"
             await redis_client.close()
         except (ConnectionError, TimeoutError, OSError) as e:
-            logger.error("redis_health_check_failed", error=str(e))
-            redis_status = "unhealthy"
+            redis_status = f"unhealthy: {str(e)}"
 
         overall_status = "healthy" if db_health["status"] == "healthy" and redis_status == "healthy" else "unhealthy"
 

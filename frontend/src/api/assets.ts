@@ -125,9 +125,8 @@ export const assetsApi = {
     formData.append('file', file)
     if (folderId) formData.append('folder_id', folderId)
 
-    const response = await apiClient.post<ApiResponse<Asset>>('/assets/upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
+    // Content-Type is automatically handled by the request interceptor for FormData
+    const response = await apiClient.post<ApiResponse<Asset>>('/assets/upload', formData)
     return response.data.data
   },
 
