@@ -66,6 +66,7 @@ class DeliveryChannel(str, enum.Enum):
     EMAIL = "email"
     SLACK = "slack"
     TEAMS = "teams"
+    WHATSAPP = "whatsapp"
     WEBHOOK = "webhook"
     S3 = "s3"
 

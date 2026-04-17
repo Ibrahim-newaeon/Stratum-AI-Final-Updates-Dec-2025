@@ -22,17 +22,17 @@ ENV VITE_DEFAULT_LOCALE=$VITE_DEFAULT_LOCALE
 RUN echo "Building with VITE_API_URL=$VITE_API_URL" && npm run build
 
 # Verify dist was created
-RUN ls -la dist/
+RUN echo "=== Build output ===" && ls -la dist/ && echo "=== index.html ===" && head -5 dist/index.html
 
-# Production stage — use nginx for better performance and security headers
-FROM nginx:alpine AS production
+# Production stage
+FROM node:20-alpine
 
-COPY --from=build /app/dist /usr/share/nginx/html
-COPY frontend/nginx.conf /etc/nginx/templates/default.conf.template
+WORKDIR /app
 
-# Railway assigns dynamic PORT; nginx:alpine uses envsubst on templates
-ENV PORT=80
+RUN npm install -g serve@14
 
-EXPOSE ${PORT}
+COPY --from=build /app/dist ./dist
 
-CMD ["nginx", "-g", "daemon off;"]
+RUN echo "=== Production dist ===" && ls -la dist/ && du -sh dist/
+
+CMD ["sh", "-c", "echo Starting serve on port ${PORT:-3000} && exec serve -s dist -l ${PORT:-3000}"]

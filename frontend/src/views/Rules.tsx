@@ -18,6 +18,7 @@ import {
   Settings,
   MessageCircle,
   Loader2,
+  RefreshCw,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { usePriceMetrics } from '@/hooks/usePriceMetrics'
@@ -151,7 +152,7 @@ export function Rules() {
   const [editingRule, setEditingRule] = useState<Rule | null>(null)
 
   // Fetch rules from API
-  const { data: rulesData, isLoading } = useRules()
+  const { data: rulesData, isLoading, refetch } = useRules()
   const toggleRule = useToggleRule()
   const duplicateRule = useDuplicateRule()
   const updateRule = useUpdateRule()
@@ -278,13 +279,23 @@ export function Rules() {
           <p className="text-muted-foreground">{t('rules.subtitle')}</p>
         </div>
 
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          <span>{t('rules.createRule')}</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-background hover:bg-accent transition-colors"
+            title="Refresh rules"
+          >
+            <RefreshCw className={cn('w-4 h-4', isLoading && 'animate-spin')} />
+          </button>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            <span>{t('rules.createRule')}</span>
+          </button>
+        </div>
       </div>
 
       {/* Stats */}

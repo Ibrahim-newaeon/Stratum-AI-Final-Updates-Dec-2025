@@ -11,7 +11,7 @@ import secrets
 import re
 import string
 from datetime import datetime, timezone, timedelta
-from typing import Annotated, Literal, Optional
+from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status, BackgroundTasks
 from pydantic import BaseModel, EmailStr, Field, field_validator
@@ -70,10 +70,10 @@ SIGNUP_VERIFY_EXPIRY_SECONDS = 1800  # 30 minutes
 # Pydantic schemas for forgot-password / reset-password
 class ForgotPasswordRequest(BaseModel):
     """Request to initiate password reset."""
-    email: EmailStr = Field(..., description="Email address associated with the account")
-    delivery_method: Literal["email", "whatsapp"] = Field(
+    email: str = Field(..., description="Email address associated with the account")
+    delivery_method: Optional[str] = Field(
         default="email",
-        description="Delivery method for reset code",
+        description="Delivery method: 'email' or 'whatsapp'",
     )
     phone_number: Optional[str] = Field(
         default=None,

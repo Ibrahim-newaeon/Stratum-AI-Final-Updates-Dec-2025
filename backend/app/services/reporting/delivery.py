@@ -563,6 +563,110 @@ class S3Delivery(DeliveryChannelHandler):
 
 
 # =============================================================================
+# WhatsApp Delivery
+# =============================================================================
+
+class WhatsAppDelivery(DeliveryChannelHandler):
+    """WhatsApp Business API delivery for report summaries."""
+
+    async def deliver(
+        self,
+        execution: ReportExecution,
+        config: Dict[str, Any],
+        recipient: str,  # Phone number
+    ) -> Dict[str, Any]:
+        """Send report summary via WhatsApp Business API."""
+        try:
+            api_url = config.get("api_url", "https://graph.facebook.com/v18.0")
+            phone_number_id = config["phone_number_id"]
+            access_token = config["access_token"]
+
+            # Build message using a template or text
+            template_name = config.get("template_name", "report_notification")
+            language = config.get("language", "en")
+
+            payload: Dict[str, Any] = {
+                "messaging_product": "whatsapp",
+                "to": recipient.lstrip("+"),
+                "type": "template",
+                "template": {
+                    "name": template_name,
+                    "language": {"code": language},
+                    "components": [
+                        {
+                            "type": "body",
+                            "parameters": [
+                                {"type": "text", "text": execution.report_type.value if hasattr(execution.report_type, 'value') else str(execution.report_type)},
+                                {"type": "text", "text": execution.completed_at.strftime("%Y-%m-%d %H:%M") if execution.completed_at else "N/A"},
+                            ],
+                        }
+                    ],
+                },
+            }
+
+            # If no template, fall back to plain text
+            if config.get("use_text_message"):
+                summary = self._build_summary(execution)
+                payload = {
+                    "messaging_product": "whatsapp",
+                    "to": recipient.lstrip("+"),
+                    "type": "text",
+                    "text": {"body": summary},
+                }
+
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    f"{api_url}/{phone_number_id}/messages",
+                    json=payload,
+                    headers={
+                        "Authorization": f"Bearer {access_token}",
+                        "Content-Type": "application/json",
+                    },
+                    timeout=aiohttp.ClientTimeout(total=30),
+                ) as resp:
+                    data = await resp.json()
+                    if resp.status == 200 and data.get("messages"):
+                        return {
+                            "success": True,
+                            "message_id": data["messages"][0].get("id"),
+                            "response": data,
+                        }
+                    return {
+                        "success": False,
+                        "error": data.get("error", {}).get("message", f"HTTP {resp.status}"),
+                        "response": data,
+                    }
+
+        except (ConnectionError, TimeoutError, OSError, ValueError, KeyError) as e:
+            logger.error(f"WhatsApp delivery failed: {str(e)}")
+            return {
+                "success": False,
+                "error": str(e),
+            }
+
+    def _build_summary(self, execution: ReportExecution) -> str:
+        """Build a text summary of the report for WhatsApp."""
+        report_type = execution.report_type.value if hasattr(execution.report_type, 'value') else str(execution.report_type)
+        completed = execution.completed_at.strftime("%Y-%m-%d %H:%M UTC") if execution.completed_at else "N/A"
+        period = f"{execution.date_range_start} to {execution.date_range_end}" if hasattr(execution, 'date_range_start') else "N/A"
+
+        lines = [
+            f"📊 *Stratum AI Report Ready*",
+            f"",
+            f"*Type:* {report_type.replace('_', ' ').title()}",
+            f"*Period:* {period}",
+            f"*Generated:* {completed}",
+            f"*Format:* {execution.format.value.upper() if hasattr(execution.format, 'value') else str(execution.format).upper()}",
+        ]
+
+        if execution.file_url:
+            lines.append(f"")
+            lines.append(f"Download: {execution.file_url}")
+
+        return "\n".join(lines)
+
+
+# =============================================================================
 # Delivery Service (Orchestrator)
 # =============================================================================
 
@@ -575,6 +679,7 @@ class DeliveryService:
         DeliveryChannel.EMAIL: EmailDelivery,
         DeliveryChannel.SLACK: SlackDelivery,
         DeliveryChannel.TEAMS: TeamsDelivery,
+        DeliveryChannel.WHATSAPP: WhatsAppDelivery,
         DeliveryChannel.WEBHOOK: WebhookDelivery,
         DeliveryChannel.S3: S3Delivery,
     }

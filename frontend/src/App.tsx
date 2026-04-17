@@ -952,6 +952,16 @@ function App() {
                         }
                       />
 
+                      {/* Signal Hub (EMQ / Signal Health) */}
+                      <Route
+                        path="signal-hub"
+                        element={
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <SignalHub />
+                          </Suspense>
+                        }
+                      />
+
                       {/* CDP (Customer Data Platform) routes */}
                       <Route
                         path="cdp"

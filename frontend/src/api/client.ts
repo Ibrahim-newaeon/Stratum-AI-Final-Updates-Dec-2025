@@ -22,11 +22,8 @@ export const apiClient: AxiosInstance = axios.create({
   },
 })
 
-// Token management — use in-memory + sessionStorage to reduce XSS persistence.
-// sessionStorage is cleared when the tab closes, unlike localStorage.
-// NOTE: Refresh tokens are also in sessionStorage (JS-accessible). If the
-// backend adds httpOnly cookie support, migrate refresh tokens there for
-// stronger XSS protection (see C3 in audit/outputs/master-audit.md).
+// Token management — use in-memory + sessionStorage to reduce XSS persistence
+// (sessionStorage is cleared when the tab closes, unlike localStorage)
 let accessToken: string | null = null
 
 export const setAccessToken = (token: string | null) => {
@@ -78,6 +75,11 @@ apiClient.interceptors.request.use(
     const tenantId = getTenantId()
     if (tenantId && config.headers) {
       config.headers['X-Tenant-ID'] = String(tenantId)
+    }
+
+    // Let axios set the correct Content-Type with boundary for FormData
+    if (config.data instanceof FormData && config.headers) {
+      delete config.headers['Content-Type']
     }
 
     return config

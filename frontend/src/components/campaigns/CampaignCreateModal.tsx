@@ -20,7 +20,7 @@ import {
   Bookmark,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import apiClient from '@/api/client'
+import apiClient, { getTenantId } from '@/api/client'
 
 interface CampaignCreateModalProps {
   open: boolean
@@ -138,13 +138,15 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
   // Fetch ad accounts and audiences when platform changes
   useEffect(() => {
     if (formData.platform) {
-      // Fetch ad accounts
+      const tenantId = getTenantId()
+
+      // Fetch ad accounts from campaign-builder endpoint
       setIsLoadingAccounts(true)
-      apiClient.get(`/integrations/${formData.platform}/ad-accounts`)
+      apiClient.get(`/campaign-builder/tenant/${tenantId}/ad-accounts/${formData.platform}`)
         .then((res) => {
           const accounts = res.data?.data || res.data || []
           const mapped = (Array.isArray(accounts) ? accounts : []).map((a: Record<string, unknown>) => ({
-            id: (a.id || a.account_id || '') as string,
+            id: (a.id || a.platform_account_id || a.account_id || '') as string,
             name: (a.name || '') as string,
             currency: (a.currency || 'USD') as string,
           }))
@@ -162,9 +164,9 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
         })
         .finally(() => setIsLoadingAccounts(false))
 
-      // Fetch audiences
+      // Fetch audiences from campaign-builder endpoint
       setIsLoadingAudiences(true)
-      apiClient.get(`/integrations/${formData.platform}/audiences`)
+      apiClient.get(`/campaign-builder/tenant/${tenantId}/audiences/${formData.platform}`)
         .then((res) => {
           const data = res.data?.data || res.data || {}
           setPlatformAudiences({
@@ -307,16 +309,11 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
         saved_audiences: formData.saved_audiences.length > 0 ? formData.saved_audiences : null,
       }
 
-      const response = await fetch('/api/v1/campaigns', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
+      const response = await apiClient.post('/campaigns', payload)
+      const data = response.data
 
-      const data = await response.json()
-
-      if (data.success) {
-        onSuccess?.(data.data)
+      if (data.success !== false) {
+        onSuccess?.(data.data || data)
         handleClose()
       } else {
         setSubmitError(data.message || t('campaigns.create.errors.submitFailed'))

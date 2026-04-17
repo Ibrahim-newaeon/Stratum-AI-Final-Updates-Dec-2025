@@ -155,7 +155,7 @@ export const rulesApi = {
    * Execute a rule manually
    */
   executeRule: async (id: string): Promise<RuleExecution> => {
-    const response = await apiClient.post<ApiResponse<RuleExecution>>(`/rules/${id}/execute`)
+    const response = await apiClient.post<ApiResponse<RuleExecution>>(`/rules/${id}/test`)
     return response.data.data
   },
 

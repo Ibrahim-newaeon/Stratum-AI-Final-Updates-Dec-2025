@@ -32,6 +32,11 @@ from app.services.email_service import get_email_service
 logger = get_logger(__name__)
 router = APIRouter(tags=["stripe-webhook"])
 
+# Simple in-memory idempotency cache for processed webhook events.
+# In production with multiple workers, use Redis instead.
+_processed_events: set[str] = set()
+_MAX_PROCESSED_EVENTS = 10000
+
 
 async def get_tenant_by_customer_id(db: AsyncSession, customer_id: str) -> Tenant | None:
     """Get tenant by Stripe customer ID."""
@@ -110,6 +115,11 @@ async def stripe_webhook(request: Request):
     event_type = event.type
     event_data = event.data.object
 
+    # Idempotency check — skip already-processed events
+    if event.id in _processed_events:
+        logger.info("stripe_webhook_duplicate_skipped", event_id=event.id)
+        return {"status": "already_processed", "event_type": event_type}
+
     logger.info(
         "stripe_webhook_received",
         event_type=event_type,
@@ -144,6 +154,12 @@ async def stripe_webhook(request: Request):
                 logger.debug("stripe_webhook_unhandled", event_type=event_type)
 
             await db.commit()
+
+            # Mark event as processed for idempotency
+            _processed_events.add(event.id)
+            if len(_processed_events) > _MAX_PROCESSED_EVENTS:
+                # Evict oldest entries to prevent unbounded growth
+                _processed_events.clear()
 
         except (ValueError, KeyError, TypeError, OSError) as e:
             logger.error(

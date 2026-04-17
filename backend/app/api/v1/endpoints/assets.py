@@ -6,9 +6,12 @@ Creative asset management for DAM functionality.
 Implements Module B: Digital Asset Management.
 """
 
+import os
+import uuid
+from pathlib import Path
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, UploadFile, File, Form, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -25,6 +28,107 @@ from app.schemas import (
 
 logger = get_logger(__name__)
 router = APIRouter()
+
+# Upload directory — configurable via env, defaults to ./uploads/assets
+UPLOAD_DIR = Path(os.environ.get("ASSET_UPLOAD_DIR", "uploads/assets"))
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+# Allowed MIME types and max size (20MB)
+ALLOWED_MIME_TYPES = {
+    "image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml",
+    "video/mp4", "video/webm", "video/quicktime",
+    "text/html",
+}
+MAX_FILE_SIZE = 20 * 1024 * 1024  # 20MB
+
+# Map MIME type to AssetType
+MIME_TO_ASSET_TYPE = {
+    "image/jpeg": "image",
+    "image/png": "image",
+    "image/gif": "image",
+    "image/webp": "image",
+    "image/svg+xml": "image",
+    "video/mp4": "video",
+    "video/webm": "video",
+    "video/quicktime": "video",
+    "text/html": "html5",
+}
+
+
+@router.post("/upload", response_model=APIResponse[CreativeAssetResponse], status_code=status.HTTP_201_CREATED)
+async def upload_asset(
+    request: Request,
+    file: UploadFile = File(...),
+    folder_id: Optional[str] = Form(None),
+    name: Optional[str] = Form(None),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Upload a creative asset file.
+
+    Accepts multipart/form-data with:
+    - file: The asset file (image, video, or HTML5)
+    - folder_id: Optional folder to place the asset in
+    - name: Optional display name (defaults to filename)
+    """
+    tenant_id = getattr(request.state, "tenant_id", None)
+
+    # Validate MIME type
+    content_type = file.content_type or "application/octet-stream"
+    if content_type not in ALLOWED_MIME_TYPES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unsupported file type: {content_type}. Allowed: {', '.join(sorted(ALLOWED_MIME_TYPES))}",
+        )
+
+    # Read file and check size
+    contents = await file.read()
+    if len(contents) > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=f"File too large. Maximum size is {MAX_FILE_SIZE // (1024 * 1024)}MB.",
+        )
+
+    # Generate unique filename
+    ext = Path(file.filename or "file").suffix or ".bin"
+    unique_name = f"{uuid.uuid4().hex}{ext}"
+    tenant_dir = UPLOAD_DIR / str(tenant_id or "default")
+    tenant_dir.mkdir(parents=True, exist_ok=True)
+    file_path = tenant_dir / unique_name
+
+    # Write file
+    with open(file_path, "wb") as f:
+        f.write(contents)
+
+    # Build the URL (relative — served by nginx or a static route)
+    file_url = f"/uploads/assets/{tenant_id or 'default'}/{unique_name}"
+
+    # Determine asset type from MIME
+    asset_type_str = MIME_TO_ASSET_TYPE.get(content_type, "image")
+
+    # Create DB record
+    display_name = name or file.filename or unique_name
+    asset = CreativeAsset(
+        tenant_id=tenant_id,
+        name=display_name,
+        asset_type=asset_type_str,
+        file_url=file_url,
+        file_size_bytes=len(contents),
+        file_format=content_type,
+        folder=folder_id,
+    )
+
+    db.add(asset)
+    await db.commit()
+    await db.refresh(asset)
+
+    logger.info("asset_uploaded", asset_id=asset.id, tenant_id=tenant_id, size=len(contents))
+
+    return APIResponse(
+        success=True,
+        data=CreativeAssetResponse.model_validate(asset),
+        message="Asset uploaded successfully",
+    )
 
 
 @router.get("", response_model=APIResponse[PaginatedResponse[CreativeAssetResponse]])

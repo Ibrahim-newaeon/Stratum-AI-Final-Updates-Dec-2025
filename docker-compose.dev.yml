@@ -1,23 +1,9 @@
 # =============================================================================
-# Stratum AI - Development Docker Compose
-# Full stack: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
-# Frontend only: docker compose -f docker-compose.dev.yml up --build
+# Stratum AI - Development Docker Compose (Frontend Only)
+# Run with: docker compose -f docker-compose.dev.yml up --build
 # =============================================================================
-# NOTE: This file exposes DB/Redis ports to the host for local dev tools.
-# NEVER use this overlay in production or staging.
 
 services:
-  # ===========================================================================
-  # Dev port overrides (only when stacked with docker-compose.yml)
-  # ===========================================================================
-  db:
-    ports:
-      - "5432:5432"
-
-  redis:
-    ports:
-      - "6379:6379"
-
   # ===========================================================================
   # React Frontend (Vite) - Port 5175
   # ===========================================================================

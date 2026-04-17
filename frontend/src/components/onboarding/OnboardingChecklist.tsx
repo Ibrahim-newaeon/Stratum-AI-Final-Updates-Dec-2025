@@ -75,7 +75,7 @@ const DEFAULT_CHECKLIST: ChecklistItem[] = [
     description: 'Check your data quality and signal scores',
     icon: BarChart3,
     actionLabel: 'View Signals',
-    actionUrl: '/dashboard/emq-dashboard',
+    actionUrl: '/dashboard/signal-hub',
     completed: false,
     required: false,
   },
