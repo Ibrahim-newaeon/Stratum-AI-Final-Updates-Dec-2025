@@ -2147,11 +2147,11 @@ function BillingSettings() {
                     <CreditCard className="w-5 h-5 text-muted-foreground" />
                     <div>
                       <p className="text-sm font-medium capitalize">
-                        {pm.card?.brand || pm.type} {pm.card ? `**** ${pm.card.last4}` : ''}
+                        {pm.brand || pm.type} {pm.last4 ? `**** ${pm.last4}` : ''}
                       </p>
-                      {pm.card && (
+                      {pm.exp_month && (
                         <p className="text-xs text-muted-foreground">
-                          Expires {pm.card.exp_month}/{pm.card.exp_year}
+                          Expires {pm.exp_month}/{pm.exp_year}
                         </p>
                       )}
                     </div>

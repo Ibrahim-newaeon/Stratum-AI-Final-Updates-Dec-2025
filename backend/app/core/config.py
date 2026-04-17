@@ -349,17 +349,6 @@ class Settings(BaseSettings):
         return self
 
     @model_validator(mode="after")
-    def warn_small_pool_in_production(self) -> "Settings":
-        """Warn if database pool size is too small for production workloads."""
-        if self.app_env in ("production", "staging") and self.db_pool_size < 20:
-            warnings.warn(
-                f"DB_POOL_SIZE={self.db_pool_size} may be too small for {self.app_env}. "
-                f"Recommend at least 20 per Uvicorn worker to avoid connection exhaustion.",
-                stacklevel=2,
-            )
-        return self
-
-    @model_validator(mode="after")
     def enforce_production_safety(self) -> "Settings":
         """Reject insecure default values in production and staging environments."""
         if self.app_env in ("production", "staging"):

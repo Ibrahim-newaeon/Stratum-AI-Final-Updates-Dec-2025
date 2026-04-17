@@ -6,9 +6,7 @@ global:
   evaluation_interval: 15s
 
 alerting:
-  alertmanagers:
-    - static_configs:
-        - targets: ['alertmanager:9093']
+  alertmanagers: []
 
 rule_files:
   - /etc/prometheus/alerts.yml
