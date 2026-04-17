@@ -4,7 +4,7 @@
  * Automated report generation, scheduling, and delivery management.
  */
 
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import {
   useReportTemplates,
@@ -23,6 +23,7 @@ import {
   EnvelopeIcon,
   ChatBubbleLeftIcon,
   ArrowDownTrayIcon,
+  ArrowPathIcon,
   ClockIcon,
   CheckCircleIcon,
   XCircleIcon,
@@ -35,13 +36,21 @@ export default function Reporting() {
   const { tenantId: _tenantId } = useParams<{ tenantId: string }>()
   const [activeTab, setActiveTab] = useState<TabType>('templates')
 
-  const { data: templates } = useReportTemplates()
-  const { data: schedules } = useReportSchedules()
-  const { data: executions } = useReportExecutions({ limit: 20 })
-  const { data: deliveryConfigs } = useDeliveryChannelConfigs()
+  const { data: templates, isLoading: templatesLoading, refetch: refetchTemplates } = useReportTemplates()
+  const { data: schedules, refetch: refetchSchedules } = useReportSchedules()
+  const { data: executions, refetch: refetchExecutions } = useReportExecutions({ limit: 20 })
+  const { data: deliveryConfigs, refetch: refetchDelivery } = useDeliveryChannelConfigs()
   const generateReport = useGenerateReport()
   const pauseSchedule = usePauseReportSchedule()
   const resumeSchedule = useResumeReportSchedule()
+
+  const isRefreshing = templatesLoading
+  const handleRefresh = useCallback(() => {
+    refetchTemplates()
+    refetchSchedules()
+    refetchExecutions()
+    refetchDelivery()
+  }, [refetchTemplates, refetchSchedules, refetchExecutions, refetchDelivery])
 
   const tabs = [
     { id: 'templates' as TabType, label: 'Templates' },
@@ -60,10 +69,20 @@ export default function Reporting() {
             Create, schedule, and deliver automated performance reports
           </p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90">
-          <PlusIcon className="h-4 w-4" />
-          New Template
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border hover:bg-accent transition-colors"
+            title="Refresh reporting data"
+          >
+            <ArrowPathIcon className={cn('h-4 w-4', isRefreshing && 'animate-spin')} />
+          </button>
+          <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90">
+            <PlusIcon className="h-4 w-4" />
+            New Template
+          </button>
+        </div>
       </div>
 
       {/* Tabs */}

@@ -14,7 +14,7 @@ import { apiClient, ApiResponse } from './client'
 export type ReportType = 'campaign_performance' | 'attribution_summary' | 'pacing_status' | 'profit_roas' | 'pipeline_metrics' | 'executive_summary' | 'custom'
 export type ReportFormat = 'pdf' | 'csv' | 'excel' | 'json' | 'html'
 export type ScheduleFrequency = 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'custom'
-export type DeliveryChannel = 'email' | 'slack' | 'teams' | 'webhook' | 's3'
+export type DeliveryChannel = 'email' | 'slack' | 'teams' | 'whatsapp' | 'webhook' | 's3'
 export type ExecutionStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'
 export type DeliveryStatus = 'pending' | 'sent' | 'delivered' | 'failed' | 'bounced'
 
@@ -88,6 +88,11 @@ export interface DeliveryConfig {
   }
   teams?: {
     webhookUrl: string
+  }
+  whatsapp?: {
+    phoneNumber: string
+    templateName?: string
+    useTextMessage?: boolean
   }
   webhook?: {
     webhookUrl: string

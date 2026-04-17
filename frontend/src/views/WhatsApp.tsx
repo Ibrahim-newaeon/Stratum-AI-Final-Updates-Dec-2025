@@ -16,6 +16,7 @@ import {
   Eye,
   Radio,
   Trash2,
+  RefreshCw,
   Upload,
   Inbox,
   ArrowLeft,
@@ -973,6 +974,14 @@ export function WhatsApp() {
         </div>
 
         <div className="flex gap-2">
+          <button
+            onClick={() => fetchData()}
+            disabled={isLoading}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border hover:bg-muted transition-colors"
+            title="Refresh data"
+          >
+            <RefreshCw className={cn('w-4 h-4', isLoading && 'animate-spin')} />
+          </button>
           {selectedContactIds.length > 0 && (
             <button
               onClick={() => setShowBroadcastModal(true)}

@@ -126,7 +126,7 @@ export const emqV2Api = {
   getEmqScore: async (tenantId: number, date?: string): Promise<EmqScore> => {
     const params = date ? { date } : {}
     const response = await apiClient.get<ApiResponse<EmqScore>>(
-      `/emq/v2/tenants/${tenantId}/score`,
+      `/tenants/${tenantId}/emq/score`,
       { params }
     )
     return response.data.data
@@ -138,7 +138,7 @@ export const emqV2Api = {
   getConfidence: async (tenantId: number, date?: string): Promise<ConfidenceData> => {
     const params = date ? { date } : {}
     const response = await apiClient.get<ApiResponse<ConfidenceData>>(
-      `/emq/v2/tenants/${tenantId}/confidence`,
+      `/tenants/${tenantId}/emq/confidence`,
       { params }
     )
     return response.data.data
@@ -149,7 +149,7 @@ export const emqV2Api = {
    */
   getPlaybook: async (tenantId: number): Promise<PlaybookItem[]> => {
     const response = await apiClient.get<ApiResponse<PlaybookItem[]>>(
-      `/emq/v2/tenants/${tenantId}/playbook`
+      `/tenants/${tenantId}/emq/playbook`
     )
     return response.data.data
   },
@@ -163,7 +163,7 @@ export const emqV2Api = {
     updates: Partial<Pick<PlaybookItem, 'status' | 'owner'>>
   ): Promise<PlaybookItem> => {
     const response = await apiClient.patch<ApiResponse<PlaybookItem>>(
-      `/emq/v2/tenants/${tenantId}/playbook/${itemId}`,
+      `/tenants/${tenantId}/emq/playbook/${itemId}`,
       updates
     )
     return response.data.data
@@ -178,7 +178,7 @@ export const emqV2Api = {
     endDate: string
   ): Promise<EmqIncident[]> => {
     const response = await apiClient.get<ApiResponse<EmqIncident[]>>(
-      `/emq/v2/tenants/${tenantId}/incidents`,
+      `/tenants/${tenantId}/emq/incidents`,
       { params: { start_date: startDate, end_date: endDate } }
     )
     return response.data.data
@@ -189,7 +189,7 @@ export const emqV2Api = {
    */
   getImpact: async (tenantId: number, startDate: string, endDate: string): Promise<EmqImpact> => {
     const response = await apiClient.get<ApiResponse<EmqImpact>>(
-      `/emq/v2/tenants/${tenantId}/impact`,
+      `/tenants/${tenantId}/emq/impact`,
       { params: { start_date: startDate, end_date: endDate } }
     )
     return response.data.data
@@ -201,7 +201,7 @@ export const emqV2Api = {
   getVolatility: async (tenantId: number, week?: string): Promise<EmqVolatility> => {
     const params = week ? { week } : {}
     const response = await apiClient.get<ApiResponse<EmqVolatility>>(
-      `/emq/v2/tenants/${tenantId}/volatility`,
+      `/tenants/${tenantId}/emq/volatility`,
       { params }
     )
     return response.data.data
@@ -212,7 +212,7 @@ export const emqV2Api = {
    */
   getAutopilotState: async (tenantId: number): Promise<AutopilotState> => {
     const response = await apiClient.get<ApiResponse<AutopilotState>>(
-      `/emq/v2/tenants/${tenantId}/autopilot`
+      `/tenants/${tenantId}/emq/autopilot-state`
     )
     return response.data.data
   },
@@ -226,7 +226,7 @@ export const emqV2Api = {
     reason?: string
   ): Promise<AutopilotState> => {
     const response = await apiClient.put<ApiResponse<AutopilotState>>(
-      `/emq/v2/tenants/${tenantId}/autopilot`,
+      `/tenants/${tenantId}/emq/autopilot-mode`,
       { mode, reason }
     )
     return response.data.data
@@ -241,7 +241,7 @@ export const emqV2Api = {
     if (date) params.date = date
     if (platform) params.platform = platform
     const response = await apiClient.get<ApiResponse<EmqBenchmark[]>>(
-      '/emq/v2/benchmarks',
+      '/emq/benchmarks',
       { params }
     )
     return response.data.data
@@ -253,7 +253,7 @@ export const emqV2Api = {
   getPortfolio: async (date?: string): Promise<EmqPortfolio> => {
     const params = date ? { date } : {}
     const response = await apiClient.get<ApiResponse<EmqPortfolio>>(
-      '/emq/v2/portfolio',
+      '/emq/portfolio',
       { params }
     )
     return response.data.data
