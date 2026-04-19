@@ -7,7 +7,7 @@
 fastapi==0.135.1
 uvicorn[standard]==0.42.0
 python-multipart==0.0.26
-starlette==0.52.1
+starlette==1.0.0
 
 # Async Support
 anyio==4.12.1
