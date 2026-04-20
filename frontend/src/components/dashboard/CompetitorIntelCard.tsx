@@ -16,7 +16,6 @@ import {
   ChevronRight,
   Target,
   Eye,
-  Zap,
   Shield,
   BarChart3,
 } from 'lucide-react';

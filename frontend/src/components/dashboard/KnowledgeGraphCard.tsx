@@ -7,14 +7,11 @@
 import { useState } from 'react';
 import {
   Brain,
-  GitBranch,
   Lightbulb,
   Layers,
   ArrowRight,
   CheckCircle2,
   AlertTriangle,
-  Zap,
-  BarChart3,
 } from 'lucide-react';
 import {
   useKnowledgeGraph,
