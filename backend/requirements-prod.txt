@@ -95,4 +95,4 @@ shap>=0.43.0
 
 # Utilities
 python-dotenv==1.2.2
-tenacity==8.2.3
+tenacity==9.1.4
