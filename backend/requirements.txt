@@ -36,8 +36,8 @@ python-jose[cryptography]==3.5.0
 passlib[bcrypt]==1.7.4
 bcrypt==5.0.0  # Pin to 4.x for passlib compatibility
 cryptography==46.0.7
-pydantic[email]==2.13.2
-pydantic-settings==2.13.1
+pydantic[email]==2.13.3
+pydantic-settings==2.14.0
 pyotp==2.9.0
 qrcode[pil]==8.2
 
@@ -57,7 +57,7 @@ beautifulsoup4==4.14.3
 lxml==6.1.0
 
 # Validation & Serialization
-pydantic==2.13.2
+pydantic==2.13.3
 orjson==3.11.8
 email-validator==2.3.0
 
