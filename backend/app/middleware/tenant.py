@@ -34,6 +34,8 @@ PUBLIC_ENDPOINTS = {
     "/api/v1/auth/reset-password",
     "/api/v1/auth/verify-email",
     "/api/v1/auth/resend-verification",
+    "/api/v1/auth/email/send-otp",
+    "/api/v1/auth/email/verify-otp",
     "/api/v1/auth/whatsapp/send-otp",
     "/api/v1/auth/whatsapp/verify-otp",
 }
