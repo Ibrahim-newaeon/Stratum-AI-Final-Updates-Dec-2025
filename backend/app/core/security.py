@@ -56,14 +56,19 @@ async def get_redis_pool() -> aioredis.Redis:
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
+def _truncate_for_bcrypt(password: str) -> str:
+    """Truncate password to 72 bytes (bcrypt max) without splitting multi-byte chars."""
+    return password.encode("utf-8")[:72].decode("utf-8", errors="ignore")
+
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a password against its hash."""
-    return pwd_context.verify(plain_password, hashed_password)
+    return pwd_context.verify(_truncate_for_bcrypt(plain_password), hashed_password)
 
 
 def get_password_hash(password: str) -> str:
     """Generate password hash using bcrypt."""
-    return pwd_context.hash(password)
+    return pwd_context.hash(_truncate_for_bcrypt(password))
 
 
 def create_access_token(
