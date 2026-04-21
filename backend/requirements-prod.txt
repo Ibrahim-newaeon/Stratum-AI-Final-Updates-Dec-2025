@@ -64,7 +64,7 @@ email-validator==2.3.0
 
 # Logging & Monitoring
 structlog==25.5.0
-python-json-logger==2.0.7
+python-json-logger==4.1.0
 sentry-sdk[fastapi]==2.58.0
 prometheus-client==0.25.0
 
