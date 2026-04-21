@@ -66,6 +66,7 @@ from app.api.v1.endpoints import (
     embed_widgets,
     audience_sync,
     copilot,
+    launch_readiness,
 )
 
 api_router = APIRouter()
@@ -198,6 +199,13 @@ api_router.include_router(
     superadmin.router,
     prefix="/superadmin",
     tags=["Super Admin"],
+)
+
+# Launch Readiness (Go-Live wizard)
+api_router.include_router(
+    launch_readiness.router,
+    prefix="/superadmin/launch-readiness",
+    tags=["Launch Readiness"],
 )
 
 # Dashboard (Overview metrics, signal health, campaigns, settings)
