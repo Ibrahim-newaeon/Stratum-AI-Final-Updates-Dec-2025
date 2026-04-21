@@ -31,11 +31,23 @@ from app.core.security import encrypt_pii, get_password_hash, hash_pii_for_looku
 # Super Admin Configuration (read from env vars with fallbacks for dev only)
 # =============================================================================
 
-SUPERADMIN_EMAIL = "ibrahim@new-aeon.com"
-SUPERADMIN_PASSWORD = "Newaeon@2026"
-SUPERADMIN_NAME = "Ibrahim (Super Admin)"
-SUPERADMIN_TENANT_NAME = "Stratum Platform"
-SUPERADMIN_TENANT_SLUG = "stratum-platform"
+# =============================================================================
+# Super Admin Configuration
+# Reads from env vars with safe fallbacks. Set these in your Railway
+# Backend service Variables (or .env) to override the defaults.
+#
+#   SUPERADMIN_EMAIL          e.g. admin@yourcompany.com
+#   SUPERADMIN_PASSWORD       strong password, 12+ chars
+#   SUPERADMIN_NAME           display name
+#   SUPERADMIN_TENANT_NAME    top-level platform tenant name
+#   SUPERADMIN_TENANT_SLUG    url-safe slug for the tenant
+# =============================================================================
+
+SUPERADMIN_EMAIL = os.getenv("SUPERADMIN_EMAIL", "ibrahim@new-aeon.com")
+SUPERADMIN_PASSWORD = os.getenv("SUPERADMIN_PASSWORD", "Newaeon@2026")
+SUPERADMIN_NAME = os.getenv("SUPERADMIN_NAME", "Ibrahim (Super Admin)")
+SUPERADMIN_TENANT_NAME = os.getenv("SUPERADMIN_TENANT_NAME", "Stratum Platform")
+SUPERADMIN_TENANT_SLUG = os.getenv("SUPERADMIN_TENANT_SLUG", "stratum-platform")
 
 
 async def create_superadmin():
