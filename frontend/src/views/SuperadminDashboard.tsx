@@ -106,7 +106,7 @@ interface SystemHealth {
   pipeline: { success_rate_24h: number; jobs_total_24h: number; jobs_failed_24h: number }
   api: { requests_24h: number; error_rate: number; latency_p50_ms: number; latency_p99_ms?: number }
   platforms: Record<string, { status: string; success_rate: number }>
-  resources: { cpu_percent: number; memory_percent: number; disk_percent: number }
+  resources?: { cpu_percent: number; memory_percent: number; disk_percent: number }
 }
 
 interface SystemAlert {
@@ -191,7 +191,7 @@ function deriveAlerts(health: SystemHealth | null, tenantCount: number, churnCou
         timestamp: 'Current',
       })
     }
-    if (health.resources.cpu_percent >= 80) {
+    if (health.resources && health.resources.cpu_percent >= 80) {
       alerts.push({
         id: 'res-1',
         type: health.resources.cpu_percent >= 90 ? 'error' : 'warning',
@@ -200,7 +200,7 @@ function deriveAlerts(health: SystemHealth | null, tenantCount: number, churnCou
         timestamp: 'Current',
       })
     }
-    if (health.resources.memory_percent >= 80) {
+    if (health.resources && health.resources.memory_percent >= 80) {
       alerts.push({
         id: 'res-2',
         type: health.resources.memory_percent >= 90 ? 'error' : 'warning',
@@ -565,8 +565,8 @@ export default function SuperadminDashboard() {
                   />
                   <HealthRow
                     label="CPU Usage"
-                    value={`${systemHealth.resources.cpu_percent}%`}
-                    status={systemHealth.resources.cpu_percent < 70 ? 'green' : 'amber'}
+                    value={`${systemHealth.resources?.cpu_percent ?? 0}%`}
+                    status={(systemHealth.resources?.cpu_percent ?? 0) < 70 ? 'green' : 'amber'}
                   />
                 </div>
               ) : (
@@ -928,9 +928,9 @@ export default function SuperadminDashboard() {
                 </div>
                 <div className="space-y-3">
                   <ResourceBar label="Latency p50" value={systemHealth.api.latency_p50_ms} max={500} unit="ms" />
-                  <ResourceBar label="CPU" value={systemHealth.resources.cpu_percent} max={100} unit="%" />
-                  <ResourceBar label="Memory" value={systemHealth.resources.memory_percent} max={100} unit="%" />
-                  <ResourceBar label="Disk" value={systemHealth.resources.disk_percent} max={100} unit="%" />
+                  <ResourceBar label="CPU" value={systemHealth.resources?.cpu_percent ?? 0} max={100} unit="%" />
+                  <ResourceBar label="Memory" value={systemHealth.resources?.memory_percent ?? 0} max={100} unit="%" />
+                  <ResourceBar label="Disk" value={systemHealth.resources?.disk_percent ?? 0} max={100} unit="%" />
                 </div>
               </div>
             )}
