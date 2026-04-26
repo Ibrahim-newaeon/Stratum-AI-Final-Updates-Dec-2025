@@ -120,7 +120,7 @@ function canSeeSection(role: string | undefined, section: string): boolean {
   return visible.includes(section);
 }
 
-// Stratum AI Dashboard Theme — White Light (tokenised via CSS variables)
+// Stratum AI Dashboard Theme — Dark Luxury (tokenised via CSS variables)
 const theme = {
   primary: 'hsl(var(--primary))',                   // Spectral Pink — CTA, active nav
   primaryLight: 'hsl(var(--accent))',               // light pink tint
@@ -247,11 +247,11 @@ export default function DashboardLayout() {
   const [onboardingChatOpen, setOnboardingChatOpen] = useState(false);
   const { hasNewUpdates } = useWhatsNew();
 
-  // Set light theme
+  // Ensure dark theme is active for dashboard
   useEffect(() => {
-    document.documentElement.classList.remove('dark');
-    document.documentElement.classList.add('light');
-    localStorage.setItem('stratum-theme', 'light');
+    document.documentElement.classList.remove('light');
+    document.documentElement.classList.add('dark');
+    localStorage.setItem('stratum-theme', 'dark');
   }, []);
 
   const toggleLanguage = () => {

@@ -49,33 +49,19 @@ export default {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
-        // Stratum AI brand colors - Purple to Cyan gradient
+        // Stratum AI brand colors — Warm Coral accent
         stratum: {
-          50: '#faf5ff',
-          100: '#f3e8ff',
-          200: '#e9d5ff',
-          300: '#d8b4fe',
-          400: '#c084fc',
-          500: '#a855f7',
-          600: '#9333ea',
-          700: '#7e22ce',
-          800: '#6b21a8',
-          900: '#581c87',
-          950: '#3b0764',
-        },
-        // Cyan accent for gradients
-        cyan: {
-          50: '#ecfeff',
-          100: '#cffafe',
-          200: '#a5f3fc',
-          300: '#67e8f9',
-          400: '#22d3ee',
-          500: '#06b6d4',
-          600: '#0891b2',
-          700: '#0e7490',
-          800: '#155e75',
-          900: '#164e63',
-          950: '#083344',
+          50: '#fff5f5',
+          100: '#ffe3e3',
+          200: '#ffc9c9',
+          300: '#ffa8a8',
+          400: '#ff8585',
+          500: '#ff4d4d',
+          600: '#e63a3a',
+          700: '#c42b2b',
+          800: '#9b2323',
+          900: '#7a1f1f',
+          950: '#420c0c',
         },
         // Platform colors - Analytics Design System
         meta: '#0866FF',
@@ -149,8 +135,8 @@ export default {
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-stratum': 'linear-gradient(135deg, #FF1F6D 0%, #FF8C00 100%)',
-        'gradient-stratum-soft': 'linear-gradient(135deg, rgba(255, 31, 109, 0.06) 0%, rgba(255, 140, 0, 0.06) 100%)',
+        'gradient-stratum': 'linear-gradient(135deg, #FF4D4D 0%, #FF8C00 100%)',
+        'gradient-stratum-soft': 'linear-gradient(135deg, rgba(255, 77, 77, 0.06) 0%, rgba(255, 140, 0, 0.06) 100%)',
       },
       keyframes: {
         'accordion-down': {

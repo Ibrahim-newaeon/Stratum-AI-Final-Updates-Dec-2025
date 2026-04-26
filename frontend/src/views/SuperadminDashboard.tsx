@@ -867,9 +867,9 @@ export default function SuperadminDashboard() {
               </h3>
               <div className="space-y-4">
                 {(() => {
-                  const cpu = systemHealth?.resources.cpu_percent ?? 45
-                  const mem = systemHealth?.resources.memory_percent ?? 62
-                  const disk = systemHealth?.resources.disk_percent ?? 30
+                  const cpu = systemHealth?.resources?.cpu_percent ?? 45
+                  const mem = systemHealth?.resources?.memory_percent ?? 62
+                  const disk = systemHealth?.resources?.disk_percent ?? 30
                   const apiOk = systemHealth ? systemHealth.api.error_rate < 5 : true
                   const pipeOk = systemHealth ? systemHealth.pipeline.success_rate_24h >= 95 : true
                   return [

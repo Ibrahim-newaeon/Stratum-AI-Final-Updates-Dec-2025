@@ -15,37 +15,37 @@
   }
 
   :root {
-    /* White light theme — matches dashboard_white_theme.html */
-    --background: 240 11% 97%;            /* #F5F5F7 page */
-    --foreground: 240 28% 14%;            /* #1A1A2E text */
+    /* Dark Luxury — default dashboard theme (Bloomberg terminal meets luxury brand) */
+    --background: 240 10% 7%;             /* #111114 deep dark page */
+    --foreground: 240 6% 92%;             /* #E8E8EB light text */
 
-    --card: 0 0% 100%;                    /* #FFFFFF cards */
-    --card-foreground: 240 28% 14%;
+    --card: 240 10% 12%;                  /* #1B1B20 dark cards */
+    --card-foreground: 240 6% 92%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 28% 14%;
+    --popover: 240 10% 12%;
+    --popover-foreground: 240 6% 92%;
 
-    /* Primary accent — Spectral Pink #FF1F6D */
-    --primary: 340 100% 56%;
+    /* Primary accent — Warm Coral #FF4D4D */
+    --primary: 0 100% 65%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 239 84% 67%;             /* #6366F1 Indigo */
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 240 10% 96%;                 /* #F0F0F5 */
-    --muted-foreground: 240 8% 45%;       /* #6E6E7A — WCAG AA 4.5:1 on #F5F5F7 */
+    --muted: 240 8% 16%;                  /* #26262B dark muted */
+    --muted-foreground: 240 6% 60%;       /* #909099 — WCAG AA on #111114 */
 
-    --accent: 340 100% 97%;               /* light pink tint */
-    --accent-foreground: 340 100% 40%;
+    --accent: 0 60% 14%;                  /* dark coral tint */
+    --accent-foreground: 0 100% 70%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 240 10% 93%;                /* #EBEBEF */
-    --input: 240 10% 93%;
-    --ring: 340 100% 56%;                 /* #FF1F6D */
+    --border: 240 8% 18%;                 /* #2A2A30 dark border */
+    --input: 240 8% 18%;
+    --ring: 0 100% 65%;                   /* #FF4D4D coral */
 
-    --radius: 0.625rem;                   /* 10px — matches HTML ref */
+    --radius: 0.625rem;                   /* 10px */
 
     /* Platform colors */
     --meta: 214 89% 52%;
@@ -55,54 +55,6 @@
     --whatsapp: 142 70% 45%;
 
     /* Status colors */
-    --success: 142 76% 36%;
-    --warning: 38 92% 50%;
-    --danger: 0 84% 60%;
-    --info: 199 89% 48%;
-    --insight: 25 95% 53%;
-
-    /* Widget status colors */
-    --status-healthy: 171 100% 39%;
-    --status-critical: 0 100% 70%;
-
-    /* Surface colors */
-    --surface-primary: 240 11% 97%;
-    --surface-secondary: 0 0% 100%;
-    --surface-tertiary: 240 10% 96%;
-    --surface-elevated: 240 10% 0% / 0.02;
-  }
-
-  .dark {
-    /* Dark theme — proper dark values */
-    --background: 240 10% 10%;            /* #18181B dark page */
-    --foreground: 240 6% 90%;             /* #E4E4E7 light text */
-
-    --card: 240 10% 14%;                  /* #222228 dark cards */
-    --card-foreground: 240 6% 90%;
-
-    --popover: 240 10% 14%;
-    --popover-foreground: 240 6% 90%;
-
-    --primary: 340 100% 56%;              /* #FF1F6D unchanged */
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 239 84% 67%;             /* #6366F1 unchanged */
-    --secondary-foreground: 0 0% 100%;
-
-    --muted: 240 8% 18%;                  /* #2C2C32 dark muted */
-    --muted-foreground: 240 6% 70%;       /* #A0A0AA — WCAG AA 4.5:1 on #18181B */
-
-    --accent: 340 60% 16%;                /* dark pink tint */
-    --accent-foreground: 340 100% 70%;
-
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 240 8% 20%;                 /* #303036 dark border */
-    --input: 240 8% 20%;
-    --ring: 340 100% 56%;
-
-    /* Data/Status colors */
     --success: 142 71% 45%;
     --warning: 48 97% 54%;
     --danger: 0 84% 60%;
@@ -114,13 +66,13 @@
     --status-critical: 0 100% 70%;
 
     /* Surface colors */
-    --surface-primary: 240 10% 10%;
-    --surface-secondary: 240 10% 14%;
-    --surface-tertiary: 240 8% 18%;
+    --surface-primary: 240 10% 7%;
+    --surface-secondary: 240 10% 12%;
+    --surface-tertiary: 240 8% 16%;
     --surface-elevated: 240 6% 90% / 0.02;
 
-    /* Brand glow — pink */
-    --glow-brand: 340 100% 56% / 0.12;
+    /* Brand glow — coral */
+    --glow-brand: 0 100% 65% / 0.12;
     --glow-insight: 25 95% 53% / 0.15;
 
     /* Landing / marketing page dark tokens */
@@ -150,6 +102,54 @@
     --landing-status-green: #00FF88;
     --landing-status-red: #FF4757;
     --landing-status-yellow: #eab308;
+  }
+
+  .light {
+    /* Light theme — alternative for landing/marketing pages */
+    --background: 240 11% 97%;            /* #F5F5F7 page */
+    --foreground: 240 28% 14%;            /* #1A1A2E text */
+
+    --card: 0 0% 100%;                    /* #FFFFFF cards */
+    --card-foreground: 240 28% 14%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 28% 14%;
+
+    --primary: 0 100% 65%;                /* #FF4D4D coral */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 239 84% 67%;             /* #6366F1 Indigo */
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 240 10% 96%;                 /* #F0F0F5 */
+    --muted-foreground: 240 8% 45%;       /* #6E6E7A */
+
+    --accent: 0 100% 97%;                 /* light coral tint */
+    --accent-foreground: 0 100% 40%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 10% 93%;                /* #EBEBEF */
+    --input: 240 10% 93%;
+    --ring: 0 100% 65%;                   /* #FF4D4D */
+
+    /* Status colors */
+    --success: 142 76% 36%;
+    --warning: 38 92% 50%;
+    --danger: 0 84% 60%;
+    --info: 199 89% 48%;
+    --insight: 25 95% 53%;
+
+    /* Surface colors */
+    --surface-primary: 240 11% 97%;
+    --surface-secondary: 0 0% 100%;
+    --surface-tertiary: 240 10% 96%;
+    --surface-elevated: 240 10% 0% / 0.02;
+
+    /* Brand glow — coral */
+    --glow-brand: 0 100% 65% / 0.12;
+    --glow-insight: 25 95% 53% / 0.15;
   }
 }
 
@@ -361,19 +361,19 @@
   .card-elevated:hover {
     @apply shadow-card-hover;
     transform: translateY(-1px);
-    border-color: rgba(255, 31, 109, 0.20);
+    border-color: hsl(var(--primary) / 0.20);
   }
 
   .card-glass {
-    background: #FFFFFF;
+    background: hsl(var(--card));
     @apply border rounded-xl;
-    border-color: #EBEBEF;
+    border-color: hsl(var(--border));
   }
 
   .card-glass:hover {
-    background: #FFFFFF;
-    border-color: rgba(255, 31, 109, 0.15);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    background: hsl(var(--card));
+    border-color: hsl(var(--primary) / 0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
   }
 
   /* Bento Grid Layout */
@@ -408,16 +408,16 @@
     .bento-row-2 { grid-row: span 1; }
   }
 
-  /* Widget Card — clean white card for dashboard */
+  /* Widget Card — dark surface for dashboard */
   .widget-card {
-    background: #FFFFFF;
+    background: hsl(var(--card));
     @apply border rounded-2xl p-5 transition-colors duration-200;
-    border-color: #EBEBEF;
+    border-color: hsl(var(--border));
   }
 
   .widget-card:hover {
-    border-color: rgba(255, 31, 109, 0.15);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    border-color: hsl(var(--primary) / 0.15);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
   }
 
   .widget-header {
@@ -430,15 +430,15 @@
 
   /* Gradient backgrounds - Brand signature */
   .gradient-primary {
-    background: linear-gradient(135deg, #FF1F6D 0%, #FF8C00 100%);
+    background: linear-gradient(135deg, #FF4D4D 0%, #FF8C00 100%);
   }
 
   .gradient-primary-soft {
-    background: linear-gradient(135deg, rgba(255, 31, 109, 0.06) 0%, rgba(255, 140, 0, 0.06) 100%);
+    background: linear-gradient(135deg, rgba(255, 77, 77, 0.06) 0%, rgba(255, 140, 0, 0.06) 100%);
   }
 
-  .dark .gradient-primary-soft {
-    background: linear-gradient(135deg, rgba(255, 31, 109, 0.08) 0%, rgba(255, 140, 0, 0.08) 100%);
+  .light .gradient-primary-soft {
+    background: linear-gradient(135deg, rgba(255, 77, 77, 0.08) 0%, rgba(255, 140, 0, 0.08) 100%);
   }
 
   /* Stat card animations */
@@ -501,11 +501,11 @@
 
   /* Glow effects */
   .glow-primary {
-    box-shadow: 0 0 15px rgba(255, 31, 109, 0.15);
+    box-shadow: 0 0 15px rgba(255, 77, 77, 0.15);
   }
 
-  .dark .glow-primary {
-    box-shadow: 0 0 15px rgba(255, 31, 109, 0.15);
+  .light .glow-primary {
+    box-shadow: 0 0 15px rgba(255, 77, 77, 0.15);
   }
 
   /* Button enhancements */
@@ -514,11 +514,11 @@
   }
 
   .btn-primary:hover {
-    box-shadow: 0 4px 12px rgba(255, 31, 109, 0.25);
+    box-shadow: 0 4px 12px rgba(255, 77, 77, 0.25);
   }
 
-  .dark .btn-primary:hover {
-    box-shadow: 0 4px 12px rgba(255, 31, 109, 0.25);
+  .light .btn-primary:hover {
+    box-shadow: 0 4px 12px rgba(255, 77, 77, 0.25);
   }
 
   /* Sidebar active state */
