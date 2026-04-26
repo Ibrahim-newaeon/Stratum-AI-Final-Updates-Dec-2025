@@ -369,9 +369,11 @@ class Settings(BaseSettings):
                 self.whatsapp_phone_number_id
                 and not self.whatsapp_verify_token
             ):
-                raise ValueError(
-                    f"WHATSAPP_VERIFY_TOKEN must be explicitly set in {self.app_env} "
-                    "when WHATSAPP_PHONE_NUMBER_ID is configured — empty verify tokens are insecure"
+                import warnings
+                warnings.warn(
+                    f"WHATSAPP_VERIFY_TOKEN is empty in {self.app_env} "
+                    "when WHATSAPP_PHONE_NUMBER_ID is configured — WhatsApp webhooks will not be verified",
+                    stacklevel=2,
                 )
             if (
                 self.whatsapp_verify_token == "stratum-whatsapp-verify-token"
