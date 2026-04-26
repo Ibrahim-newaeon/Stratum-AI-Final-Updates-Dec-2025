@@ -187,9 +187,9 @@ async def start_platform_connection(
 
     oauth_configs = {
         AdPlatform.META: {
-            "base_url": "https://www.facebook.com/v18.0/dialog/oauth",
+            "base_url": "https://www.facebook.com/v25.0/dialog/oauth",
             "client_id_env": "META_APP_ID",
-            "scope": "ads_management,ads_read,business_management",
+            "scope": "ads_management,ads_read,business_management,pages_read_engagement",
         },
         AdPlatform.GOOGLE: {
             "base_url": "https://accounts.google.com/o/oauth2/v2/auth",
@@ -199,7 +199,7 @@ async def start_platform_connection(
         AdPlatform.TIKTOK: {
             "base_url": "https://ads.tiktok.com/marketing_api/auth",
             "client_id_env": "TIKTOK_APP_ID",
-            "scope": "advertiser_management,campaign_management",
+            "scope": "advertiser.read,advertiser.write,campaign.read,campaign.write,report.read",
         },
         AdPlatform.SNAPCHAT: {
             "base_url": "https://accounts.snapchat.com/accounts/oauth2/auth",

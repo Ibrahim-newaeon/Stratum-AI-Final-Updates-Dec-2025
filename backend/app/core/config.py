@@ -113,7 +113,7 @@ class Settings(BaseSettings):
     meta_app_id: Optional[str] = Field(default=None)
     meta_app_secret: Optional[str] = Field(default=None)
     meta_access_token: Optional[str] = Field(default=None)
-    meta_api_version: str = Field(default="v21.0")
+    meta_api_version: str = Field(default="v25.0")
     meta_ad_account_ids: Optional[str] = Field(default=None)
 
     # Google Ads

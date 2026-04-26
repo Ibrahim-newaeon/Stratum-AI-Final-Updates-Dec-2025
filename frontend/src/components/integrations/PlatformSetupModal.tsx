@@ -62,7 +62,7 @@ export const platformCredentials: PlatformCredentialConfig[] = [
     description: 'Connect Meta Ads for campaign management, Conversions API (CAPI), and Custom Audience sync.',
     docsUrl: 'https://developers.facebook.com/docs/marketing-apis',
     authMethod: 'oauth+api-key',
-    apiVersion: 'v21.0',
+    apiVersion: 'v25.0',
     credentials: [
       {
         key: 'meta_app_id',
@@ -130,7 +130,7 @@ export const platformCredentials: PlatformCredentialConfig[] = [
     description: 'Connect Google Ads for campaign management, Enhanced Conversions, and Customer Match audiences.',
     docsUrl: 'https://developers.google.com/google-ads/api/docs/start',
     authMethod: 'oauth+api-key',
-    apiVersion: 'v17',
+    apiVersion: 'v15',
     credentials: [
       {
         key: 'google_ads_developer_token',
