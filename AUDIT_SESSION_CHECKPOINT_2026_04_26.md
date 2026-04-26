@@ -66,21 +66,23 @@ Created comprehensive implementation guide:
 
 ## 🔴 Pending / Next Session
 
-### Priority 1: Theme Redesign
-User wants a completely new direction. Planned approach:
+### Priority 1: Overall Frontend & Dashboard Redesign
+User wants a complete UI/UX redesign — not just colors, but layout, typography, spacing, component style, and interaction patterns. All pages: landing, login, signup, onboarding, dashboard inner pages.
 
-**Obsidian & Gold**
+Planned approach: **Obsidian & Gold**
 - Background: `#0F0F12` (warm charcoal, not pure black)
 - Cards: `#16161A` with subtle `#2A2A32` borders
 - Text: `#F0EDE5` (warm off-white)
 - Accent: `#D4A853` (warm gold/amber) — not blue, not pink
-- Landing pages, login, signup, dashboard all unified
+- Unified aesthetic across landing pages, auth, dashboard, CMS
 
 Files to modify:
 - `frontend/src/index.css` — update `:root` dark variables
 - `frontend/tailwind.config.js` — update stratum brand + gradients
-- `frontend/src/views/DashboardLayout.tsx` — theme comment update
+- `frontend/src/views/DashboardLayout.tsx` — layout, sidebar, nav styling
 - Landing page components — check for hardcoded colors
+- Auth pages (Login, Signup, ForgotPassword) — unified card styling
+- CMS pages — check for hardcoded colors and layout
 
 ### Priority 2: Test Onboarding Flow
 
@@ -170,7 +172,17 @@ Files to modify:
 - [ ] Click Snapchat card
 - [ ] Verify connection works
 
-## Theme Check
+## CMS Status Check
+- [ ] Log in as superadmin
+- [ ] Navigate to `/dashboard/superadmin/cms`
+- [ ] Verify CMS dashboard loads without errors
+- [ ] Check CMS posts page
+- [ ] Check CMS pages editor
+- [ ] Verify CMS roles are assigned correctly
+- [ ] Check if CMS admin can create/edit content
+- [ ] Verify dark theme renders correctly in CMS
+
+## Theme / UI Check
 - [ ] Dashboard renders in correct theme
 - [ ] Cards have proper contrast
 - [ ] Text is readable on all backgrounds
