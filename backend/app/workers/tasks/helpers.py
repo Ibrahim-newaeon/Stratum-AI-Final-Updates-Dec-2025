@@ -8,6 +8,7 @@ Shared helper functions for Celery tasks.
 import json
 from typing import Any
 
+import redis
 from celery.utils.log import get_task_logger
 
 from app.core.config import settings
