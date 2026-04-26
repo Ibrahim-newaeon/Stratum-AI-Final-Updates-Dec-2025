@@ -200,18 +200,36 @@ class EmbedSecurityService:
         return "desktop"
 
     def _get_client_ip(self, request: Request) -> Optional[str]:
-        """Get client IP address, handling proxies."""
-        # Check X-Forwarded-For header
-        forwarded = request.headers.get("x-forwarded-for")
-        if forwarded:
-            # Get first IP (client IP)
-            return forwarded.split(",")[0].strip()
+        """Get client IP address, handling proxies.
 
-        # Fall back to direct connection
-        if request.client:
-            return request.client.host
+        Only trusts X-Forwarded-For when the direct connection is from a
+        known proxy (private network or loopback) to prevent header spoofing.
+        """
+        client_ip = request.client.host if request.client else None
+        if not client_ip:
+            return None
 
-        return None
+        trusted_prefixes = (
+            "10.", "172.16.", "172.17.", "172.18.", "172.19.",
+            "172.20.", "172.21.", "172.22.", "172.23.", "172.24.",
+            "172.25.", "172.26.", "172.27.", "172.28.", "172.29.",
+            "172.30.", "172.31.", "192.168.", "127.", "::1"
+        )
+        is_trusted_proxy = any(client_ip.startswith(p) for p in trusted_prefixes)
+
+        if is_trusted_proxy:
+            forwarded = request.headers.get("x-forwarded-for")
+            if forwarded:
+                ips = [ip.strip() for ip in forwarded.split(",")]
+                for ip in reversed(ips):
+                    if not any(ip.startswith(p) for p in trusted_prefixes):
+                        return ip
+                return ips[0]
+            real_ip = request.headers.get("x-real-ip")
+            if real_ip:
+                return real_ip
+
+        return client_ip
 
     # =========================================================================
     # Data Signing and Verification

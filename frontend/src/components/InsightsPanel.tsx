@@ -5,7 +5,7 @@
  * Features motion animations and priority-based presentation.
  */
 
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Lightbulb,
@@ -99,6 +99,15 @@ const InsightCard: React.FC<{
   onDismiss?: (id: string) => void
   onApply?: (id: string, action: string) => void
 }> = ({ recommendation, index, onDismiss, onApply }) => {
+  const timeoutsRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set())
+
+  useEffect(() => {
+    return () => {
+      timeoutsRef.current.forEach(clearTimeout)
+      timeoutsRef.current.clear()
+    }
+  }, [])
+
   const [isExpanded, setIsExpanded] = useState(false)
   const [isApplying, setIsApplying] = useState(false)
 
@@ -110,23 +119,24 @@ const InsightCard: React.FC<{
     setIsApplying(true)
     onApply?.(recommendation.id, actionType)
     // Simulate API call
-    setTimeout(() => setIsApplying(false), 1000)
+    const id = setTimeout(() => setIsApplying(false), 1000)
+    timeoutsRef.current.add(id)
   }
 
   return (
     <div
       className={`
-        motion-enter relative overflow-hidden rounded-xl border-l-4 ${config.borderColor}
-        bg-card shadow-card hover:shadow-lg transition-all duration-300
+        motion-enter relative overflow-hidden rounded-xl border ${config.borderColor}
+        bg-card shadow-card hover:shadow-lg transition-colors duration-300
         ${isExpanded ? 'ring-2 ring-primary/20' : ''}
       `}
       style={{
         animationDelay: `${index * 100}ms`,
       }}
     >
-      {/* Quantum Ember accent gradient */}
+      {/* Subtle corner accent */}
       <div
-        className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${quantumEmberAccent.primary} opacity-5 rounded-bl-full`}
+        className="absolute top-0 right-0 w-24 h-24 bg-primary opacity-5 rounded-bl-full"
       />
 
       <div className="p-4">

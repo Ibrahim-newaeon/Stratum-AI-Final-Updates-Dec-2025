@@ -5,7 +5,7 @@
  * Reads the invitation token from URL query params, submits to
  * POST /api/v1/auth/accept-invite, then redirects to /login on success.
  *
- * Cyberpunk Dark theme matching Login & Signup pages (bg-[#050B18]).
+ * Cyberpunk Dark theme matching Login & Signup pages (bg-background).
  */
 
 import { useState } from 'react';
@@ -122,7 +122,7 @@ export default function AcceptInvite() {
             </p>
             <Link
               to="/login"
-              className="block w-full py-3 rounded-xl text-black font-semibold text-center transition-all duration-200"
+              className="block w-full py-3 rounded-xl text-black font-semibold text-center transition-colors duration-200"
               style={{ background: theme.primary }}
             >
               Go to Login
@@ -170,7 +170,7 @@ export default function AcceptInvite() {
             </p>
             <button
               onClick={() => navigate('/login', { state: { inviteAccepted: true } })}
-              className="w-full py-3 rounded-xl text-black font-semibold transition-all duration-200"
+              className="w-full py-3 rounded-xl text-black font-semibold transition-colors duration-200"
               style={{ background: theme.primary }}
               onMouseEnter={(e) => (e.currentTarget.style.background = theme.primaryHover)}
               onMouseLeave={(e) => (e.currentTarget.style.background = theme.primary)}
@@ -280,7 +280,7 @@ export default function AcceptInvite() {
             className="h-10 w-10 rounded-xl flex items-center justify-center"
             style={{ background: theme.primary }}
           >
-            <span className="text-white font-semibold text-lg">S</span>
+            <span className="text-foreground font-semibold text-lg">S</span>
           </div>
           <span className="text-xl font-semibold" style={{ color: theme.textPrimary }}>
             Stratum AI
@@ -332,7 +332,7 @@ export default function AcceptInvite() {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   onBlur={() => setTouched((prev) => ({ ...prev, fullName: true }))}
-                  className="w-full pl-12 pr-4 py-3 rounded-xl text-sm outline-none transition-all duration-200"
+                  className="w-full pl-12 pr-4 py-3 rounded-xl text-sm outline-none transition-colors duration-200"
                   style={{
                     background: theme.bgInput,
                     border: `1px solid ${theme.border}`,
@@ -374,7 +374,7 @@ export default function AcceptInvite() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   onBlur={() => setTouched((prev) => ({ ...prev, password: true }))}
-                  className="w-full pl-12 pr-12 py-3 rounded-xl text-sm outline-none transition-all duration-200"
+                  className="w-full pl-12 pr-12 py-3 rounded-xl text-sm outline-none transition-colors duration-200"
                   style={{
                     background: theme.bgInput,
                     border: `1px solid ${theme.border}`,
@@ -428,7 +428,7 @@ export default function AcceptInvite() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   onBlur={() => setTouched((prev) => ({ ...prev, confirmPassword: true }))}
-                  className="w-full pl-12 pr-12 py-3 rounded-xl text-sm outline-none transition-all duration-200"
+                  className="w-full pl-12 pr-12 py-3 rounded-xl text-sm outline-none transition-colors duration-200"
                   style={{
                     background: theme.bgInput,
                     border: `1px solid ${theme.border}`,
@@ -467,7 +467,7 @@ export default function AcceptInvite() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 rounded-xl font-semibold text-black transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 rounded-xl font-semibold text-black transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ background: theme.primary }}
               onMouseEnter={(e) => {
                 if (!isLoading) e.currentTarget.style.background = theme.primaryHover;
@@ -518,3 +518,5 @@ export default function AcceptInvite() {
     </div>
   );
 }
+
+

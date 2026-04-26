@@ -350,7 +350,7 @@ export default function BattleCard() {
           {/* Download Button */}
           <button
             onClick={handleDownload}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-white/[0.05] border border-white/10 hover:bg-white/10 transition-all text-sm font-medium text-white"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-white/[0.05] border border-white/10 hover:bg-white/10 transition-colors text-sm font-medium text-white"
           >
             <ArrowDownTrayIcon className="w-4 h-4" />
             Download Sales Battle Card (PDF)
@@ -387,7 +387,7 @@ export default function BattleCard() {
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ delay: 0.3, duration: 0.6 }}
-          className="rounded-3xl border border-white/[0.05] bg-white/[0.02] backdrop-blur-xl overflow-hidden"
+          className="rounded-3xl border border-white/[0.05] bg-white/[0.02] backdrop-blur-sm overflow-hidden"
         >
           {/* Table Header */}
           <div className="grid grid-cols-6 gap-4 p-6 border-b border-white/[0.05] bg-white/[0.02]">
@@ -518,7 +518,7 @@ export default function BattleCard() {
                 className={`inline-flex px-3 py-1 rounded-full bg-gradient-to-r ${item.color} bg-opacity-10 mb-4`}
               >
                 <span
-                  className={`text-xs font-medium bg-gradient-to-r ${item.color} bg-clip-text text-transparent`}
+                  className={`text-xs font-medium bg-gradient-to-r ${item.color} text-foreground`}
                 >
                   {item.title}
                 </span>

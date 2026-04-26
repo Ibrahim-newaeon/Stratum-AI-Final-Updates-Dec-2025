@@ -238,27 +238,27 @@ async def get_tenant_portfolio(
     result = await db.execute(query.offset(skip).limit(limit))
     tenants = result.scalars().all()
 
-    # Get user counts
-    user_counts = {}
-    for t in tenants:
-        count_result = await db.execute(
-            select(func.count(User.id)).where(
-                User.tenant_id == t.id,
-                User.is_deleted == False
-            )
-        )
-        user_counts[t.id] = count_result.scalar() or 0
+    # Batch user counts for all tenants in a single query
+    tenant_ids = [t.id for t in tenants]
+    user_counts = {t.id: 0 for t in tenants}
+    campaign_counts = {t.id: 0 for t in tenants}
 
-    # Get campaign counts
-    campaign_counts = {}
-    for t in tenants:
-        count_result = await db.execute(
-            select(func.count(Campaign.id)).where(
-                Campaign.tenant_id == t.id,
-                Campaign.is_deleted == False
-            )
+    if tenant_ids:
+        user_count_result = await db.execute(
+            select(User.tenant_id, func.count(User.id))
+            .where(User.tenant_id.in_(tenant_ids), User.is_deleted == False)
+            .group_by(User.tenant_id)
         )
-        campaign_counts[t.id] = count_result.scalar() or 0
+        for tid, count in user_count_result.all():
+            user_counts[tid] = count
+
+        campaign_count_result = await db.execute(
+            select(Campaign.tenant_id, func.count(Campaign.id))
+            .where(Campaign.tenant_id.in_(tenant_ids), Campaign.is_deleted == False)
+            .group_by(Campaign.tenant_id)
+        )
+        for tid, count in campaign_count_result.all():
+            campaign_counts[tid] = count
 
     # Build portfolio
     portfolio = []
@@ -905,15 +905,10 @@ async def get_invoices(
             },
         )
     except (SQLAlchemyError, ValueError) as e:
-        logger.warning("invoices_query_failed", error=str(e))
-        return APIResponse(
-            success=True,
-            data={
-                "invoices": [],
-                "total": 0,
-                "summary": {"paid": 0, "pending": 0, "overdue": 0},
-                "message": "Invoices table not yet migrated",
-            },
+        logger.error("invoices_query_failed", error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Billing invoice service temporarily unavailable.",
         )
 
 
@@ -976,10 +971,10 @@ async def get_subscriptions(
             data={"subscriptions": subscriptions, "total": len(subscriptions)},
         )
     except (SQLAlchemyError, ValueError) as e:
-        logger.warning("subscriptions_query_failed", error=str(e))
-        return APIResponse(
-            success=True,
-            data={"subscriptions": [], "total": 0, "message": "Table not yet migrated"},
+        logger.error("subscriptions_query_failed", error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Billing subscription service temporarily unavailable.",
         )
 
 

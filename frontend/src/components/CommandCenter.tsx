@@ -67,7 +67,7 @@ const ScoreBar: React.FC<{ score: number }> = ({ score }) => {
     <div className="flex items-center gap-2">
       <div className="w-20 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
         <div
-          className={`h-full rounded-full transition-all ${
+          className={`h-full rounded-full transition-[width] ${
             isPositive ? 'bg-emerald-500' : 'bg-red-500'
           }`}
           style={{ width: `${percentage}%` }}
@@ -134,7 +134,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ tenantId, classNam
   }
 
   const SortHeader: React.FC<{ field: SortField; label: string }> = ({ field, label }) => (
-    <th
+    <th scope="col"
       className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50"
       onClick={() => handleSort(field)}
     >
@@ -237,17 +237,17 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ tenantId, classNam
         <table className="w-full">
           <thead className="bg-gray-50 dark:bg-gray-800/50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Campaign
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Action
               </th>
               <SortHeader field="scaling_score" label="Score" />
               <SortHeader field="roas" label="ROAS" />
               <SortHeader field="spend" label="Spend" />
               <SortHeader field="conversions" label="Conv." />
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Signals
               </th>
             </tr>

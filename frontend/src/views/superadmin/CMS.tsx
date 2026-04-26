@@ -72,6 +72,8 @@ import {
   CMSPost,
   CMSPage,
   PostStatus,
+  PostCreate,
+  PostUpdate,
 } from '@/api/cms';
 import { PostEditor } from '@/components/cms/PostEditor';
 
@@ -223,12 +225,12 @@ export default function CMS() {
     setShowPostEditor(true);
   };
 
-  const handleSavePost = async (data: any) => {
+  const handleSavePost = async (data: PostCreate | PostUpdate) => {
     try {
       if (editingPost) {
-        await updatePost.mutateAsync({ id: editingPost.id, data });
+        await updatePost.mutateAsync({ id: editingPost.id, data: data as PostUpdate });
       } else {
-        await createPost.mutateAsync(data);
+        await createPost.mutateAsync(data as PostCreate);
       }
       setShowPostEditor(false);
       setEditingPost(undefined);
@@ -640,6 +642,7 @@ export default function CMS() {
               <div className="text-center py-8 text-neutral-400">Loading posts...</div>
             ) : (
               <div className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden">
+                <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-neutral-800/50">
                     <tr>
@@ -725,10 +728,11 @@ export default function CMS() {
                                 <button
                                   className="p-1.5 text-neutral-400 hover:text-white transition-colors"
                                   title="More actions"
+                                  aria-label="More actions"
                                 >
                                   <MoreVertical className="w-4 h-4" />
                                 </button>
-                                <div className="absolute right-0 top-full mt-1 w-48 bg-neutral-800 border border-neutral-700 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                                <div className="absolute right-0 top-full mt-1 w-48 bg-neutral-800 border border-neutral-700 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity z-50">
                                   {workflowActions.map((action, idx) => (
                                     <button
                                       key={idx}
@@ -765,6 +769,7 @@ export default function CMS() {
                     })}
                   </tbody>
                 </table>
+                </div>
                 {postsData?.total === 0 && (
                   <div className="text-center py-8 text-neutral-400">No posts found</div>
                 )}
@@ -921,11 +926,10 @@ export default function CMS() {
                   >
                     <div className="flex items-center gap-4">
                       {author.avatar_url ? (
-                        <img
-                          src={author.avatar_url}
+                        <img                           src={author.avatar_url}
                           alt={author.name}
                           className="w-12 h-12 rounded-full object-cover"
-                        />
+                         loading="lazy" />
                       ) : (
                         <div className="w-12 h-12 rounded-full bg-neutral-800 flex items-center justify-center">
                           <Users className="w-6 h-6 text-neutral-500" />
@@ -972,6 +976,7 @@ export default function CMS() {
               <div className="text-center py-8 text-neutral-400">Loading pages...</div>
             ) : (
               <div className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden">
+                <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-neutral-800/50">
                     <tr>
@@ -1044,6 +1049,7 @@ export default function CMS() {
                     ))}
                   </tbody>
                 </table>
+                </div>
                 {pagesData?.total === 0 && (
                   <div className="text-center py-8 text-neutral-400">No pages found</div>
                 )}

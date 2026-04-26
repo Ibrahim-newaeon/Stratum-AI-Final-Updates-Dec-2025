@@ -274,10 +274,10 @@ export function WhatsNewModal({ isOpen, onClose }: WhatsNewModalProps) {
           >
             {/* Header */}
             <div className="relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-600/20 via-cyan-600/10 to-transparent" />
+              <div className="absolute inset-0 bg-muted/30" />
               <div className="relative px-6 py-5 flex items-start justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center shadow-lg">
+                  <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center shadow-lg">
                     <Gift className="h-6 w-6 text-white" />
                   </div>
                   <div>
@@ -287,6 +287,7 @@ export function WhatsNewModal({ isOpen, onClose }: WhatsNewModalProps) {
                 </div>
                 <button
                   onClick={onClose}
+                  aria-label="Close"
                   className="p-2 rounded-lg hover:bg-accent transition-colors"
                 >
                   <X className="h-5 w-5" />
@@ -358,7 +359,7 @@ export function WhatsNewModal({ isOpen, onClose }: WhatsNewModalProps) {
 
                     {/* Highlights */}
                     {currentRelease.highlights && currentRelease.highlights.length > 0 && (
-                      <div className="mb-6 p-4 rounded-xl bg-gradient-to-br from-purple-500/10 to-cyan-500/10 border border-purple-500/20">
+                      <div className="mb-6 p-4 rounded-xl bg-accent border border-border">
                         <div className="flex items-center gap-2 mb-3">
                           <Rocket className="h-4 w-4 text-purple-500" />
                           <span className="text-sm font-semibold">Highlights</span>

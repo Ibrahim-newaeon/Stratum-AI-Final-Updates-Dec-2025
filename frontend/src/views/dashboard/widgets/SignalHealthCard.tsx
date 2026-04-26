@@ -23,7 +23,7 @@ interface SignalHealthCardProps {
 export function SignalHealthCard({ signalHealth, loading = false }: SignalHealthCardProps) {
   if (loading) {
     return (
-      <div className="glass border border-white/10 rounded-xl p-5 h-full flex items-center justify-center min-h-[200px]">
+      <div className="glass border border-white/10 rounded-xl p-5 h-full flex items-center justify-center min-h-52">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     );
@@ -126,12 +126,12 @@ export function SignalHealthCard({ signalHealth, loading = false }: SignalHealth
         <div className="h-1.5 rounded-full bg-white/10 overflow-hidden mt-2">
           <div
             className={cn(
-              'h-full rounded-full transition-all duration-500',
+              'h-full rounded-full transition-[width] duration-500',
               signalHealth.overall_score >= 70
-                ? 'bg-gradient-to-r from-status-healthy to-emerald-500'
+                ? 'bg-emerald-500'
                 : signalHealth.overall_score >= 40
-                  ? 'bg-gradient-to-r from-yellow-500 to-amber-400'
-                  : 'bg-gradient-to-r from-status-critical to-red-400'
+                  ? 'bg-yellow-500'
+                  : 'bg-red-500'
             )}
             style={{ width: `${signalHealth.overall_score}%` }}
           />

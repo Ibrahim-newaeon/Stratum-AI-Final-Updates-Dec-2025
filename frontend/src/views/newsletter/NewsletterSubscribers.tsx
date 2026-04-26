@@ -100,7 +100,7 @@ function StatCard({
   const iconColor = accentColor || theme.primary;
 
   return (
-    <div className="bg-white/5 border border-white/[0.08] rounded-2xl p-4 backdrop-blur-xl">
+    <div className="bg-card border rounded-2xl p-4">
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <p
@@ -233,9 +233,9 @@ function SubscriberRow({
           <span className="text-sm font-semibold" style={{ color: scoreColor }}>
             {subscriber.lead_score}
           </span>
-          <div className="w-12 h-1.5 rounded-full bg-white/10 overflow-hidden">
+          <div className="w-12 h-1.5 rounded-full bg-muted overflow-hidden">
             <div
-              className="h-full rounded-full transition-all"
+              className="h-full rounded-full transition-[width]"
               style={{
                 width: `${Math.min(subscriber.lead_score, 100)}%`,
                 background: scoreColor,
@@ -302,7 +302,7 @@ function SubscriberRow({
             </button>
             <button
               onClick={() => setConfirming(null)}
-              className="px-3 py-1 text-xs font-medium rounded-lg bg-white/5 transition-colors hover:bg-white/10"
+              className="px-3 py-1 text-xs font-medium rounded-lg bg-muted transition-colors hover:bg-muted"
               style={{ color: theme.textSecondary }}
             >
               No
@@ -473,7 +473,7 @@ export default function NewsletterSubscribers() {
 
       {/* Filter Bar */}
       <div
-        className="rounded-2xl p-4 backdrop-blur-xl"
+        className="rounded-2xl p-4 bg-card border"
         style={{
           background: theme.bgCard,
           border: `1px solid ${theme.border}`,
@@ -486,7 +486,7 @@ export default function NewsletterSubscribers() {
               <button
                 key={opt.value}
                 onClick={() => handleStatusChange(opt.value as typeof statusFilter)}
-                className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
+                className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                 style={{
                   background:
                     statusFilter === opt.value ? theme.primary : 'transparent',
@@ -510,11 +510,11 @@ export default function NewsletterSubscribers() {
             <select
               value={platformFilter}
               onChange={(e) => handlePlatformChange(e.target.value)}
-              className="px-3 py-2 rounded-xl text-sm bg-white/[0.05] border border-white/[0.08] focus:border-[#00c7be]/50 focus:outline-none transition-colors appearance-none cursor-pointer"
+              className="px-3 py-2 rounded-xl text-sm bg-white/[0.05] border border-white/[0.08] focus:border-primary/50 focus:outline-none transition-colors appearance-none cursor-pointer"
               style={{ color: theme.textPrimary }}
             >
               {PLATFORMS.map((p) => (
-                <option key={p} value={p} className="bg-[#12131a]">
+                <option key={p} value={p} className="bg-background">
                   {p}
                 </option>
               ))}
@@ -536,7 +536,7 @@ export default function NewsletterSubscribers() {
               placeholder="0"
               value={minScore}
               onChange={(e) => handleMinScoreChange(e.target.value)}
-              className="w-20 px-3 py-2 rounded-xl text-sm bg-white/[0.05] border border-white/[0.08] focus:border-[#00c7be]/50 focus:outline-none transition-colors"
+              className="w-20 px-3 py-2 rounded-xl text-sm bg-white/[0.05] border border-white/[0.08] focus:border-primary/50 focus:outline-none transition-colors"
               style={{ color: theme.textPrimary }}
             />
           </div>
@@ -545,7 +545,7 @@ export default function NewsletterSubscribers() {
 
       {/* Subscribers Table */}
       <div
-        className="rounded-2xl overflow-hidden backdrop-blur-xl"
+        className="rounded-2xl overflow-hidden bg-card border"
         style={{
           background: theme.bgCard,
           border: `1px solid ${theme.border}`,
@@ -566,7 +566,7 @@ export default function NewsletterSubscribers() {
                   'Last Sent',
                   'Actions',
                 ].map((header) => (
-                  <th
+                  <th scope="col"
                     key={header}
                     className={`p-4 text-sm font-medium ${
                       header === 'Actions' ? 'text-right' : 'text-left'
@@ -653,3 +653,5 @@ export default function NewsletterSubscribers() {
     </div>
   );
 }
+
+

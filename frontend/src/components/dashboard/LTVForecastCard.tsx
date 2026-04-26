@@ -73,7 +73,7 @@ function SegmentRow({ segment }: { segment: SegmentForecast }) {
   const risk = riskConfig[segment.risk_level] || riskConfig.medium;
 
   return (
-    <div className={`border rounded-xl transition-all ${open ? 'border-foreground/15' : ''}`}>
+    <div className={`border rounded-xl transition-colors ${open ? 'border-foreground/15' : ''}`}>
       <button onClick={() => setOpen(!open)} className="w-full flex items-center gap-3 p-3 text-left hover:bg-muted/30 rounded-xl transition-colors">
         <div className="w-10 h-10 rounded-lg bg-muted/30 flex items-center justify-center shrink-0">
           <DollarSign className="w-5 h-5 text-muted-foreground/50" />
@@ -316,11 +316,11 @@ export function LTVForecastCard() {
       </div>
 
       {/* Content */}
-      <div className="p-4 space-y-2 max-h-[480px] overflow-y-auto">
-        {tab === 'segments' && data.segments.map((s, i) => <SegmentRow key={i} segment={s} />)}
-        {tab === 'cohorts' && data.cohorts.map((c, i) => <CohortRow key={i} cohort={c} />)}
+      <div className="p-4 space-y-2 max-h-[30rem] overflow-y-auto">
+        {tab === 'segments' && data.segments.map((s, i) => <SegmentRow key={s.segment || i} segment={s} />)}
+        {tab === 'cohorts' && data.cohorts.map((c, i) => <CohortRow key={c.cohort_id || i} cohort={c} />)}
         {tab === 'distribution' && <DistributionBar buckets={data.distribution} />}
-        {tab === 'insights' && data.insights.map((ins, i) => <InsightRow key={i} insight={ins} />)}
+        {tab === 'insights' && data.insights.map((ins, i) => <InsightRow key={`${ins.title}-${i}`} insight={ins} />)}
         {tab === 'segments' && data.segments.length === 0 && (
           <div className="text-center py-8 text-sm text-muted-foreground/50">
             <Target className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" />

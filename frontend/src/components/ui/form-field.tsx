@@ -176,7 +176,7 @@ export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
             }
             className={cn(
               'w-full py-3 rounded-xl text-foreground placeholder-muted-foreground',
-              'outline-none transition-all duration-200',
+              'outline-none transition-colors duration-200',
               'bg-background border',
               icon ? 'ps-12' : 'ps-4',
               endIcon ? 'pe-12' : 'pe-4',

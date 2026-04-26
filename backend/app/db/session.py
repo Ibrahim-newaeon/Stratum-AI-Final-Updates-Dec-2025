@@ -90,7 +90,6 @@ async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
     async with AsyncSessionLocal() as session:
         try:
             yield session
-            await session.commit()
         except Exception:
             await session.rollback()
             raise
@@ -109,7 +108,6 @@ def get_sync_session() -> Generator[Session, None, None]:
     session = SyncSessionLocal()
     try:
         yield session
-        session.commit()
     except Exception:
         session.rollback()
         raise
@@ -129,7 +127,6 @@ async def async_session_context() -> AsyncGenerator[AsyncSession, None]:
     async with AsyncSessionLocal() as session:
         try:
             yield session
-            await session.commit()
         except Exception:
             await session.rollback()
             raise

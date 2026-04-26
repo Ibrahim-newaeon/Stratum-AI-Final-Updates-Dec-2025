@@ -155,7 +155,7 @@ export function useInsights(tenantId: number, date?: string) {
     queryFn: async () => {
       const params = date ? `?date=${date}` : ''
       const response = await apiClient.get<{ data: InsightsData }>(
-        `/insights/tenant/${tenantId}/insights${params}`
+        `/insights${params}`
       )
       return response.data.data
     },
@@ -187,7 +187,7 @@ export function useRecommendations(
       if (options?.limit) params.append('limit', options.limit.toString())
 
       const response = await apiClient.get<{ data: RecommendationsData }>(
-        `/insights/tenant/${tenantId}/recommendations?${params}`
+        `/insights/recommendations?${params}`
       )
       return response.data.data
     },
@@ -216,7 +216,7 @@ export function useAnomalies(
       if (options?.severity) params.append('severity', options.severity)
 
       const response = await apiClient.get<{ data: AnomaliesData }>(
-        `/insights/tenant/${tenantId}/anomalies?${params}`
+        `/insights/anomalies?${params}`
       )
       return response.data.data
     },
@@ -243,7 +243,7 @@ export function useKPIs(
       if (options?.comparison) params.append('comparison', options.comparison)
 
       const response = await apiClient.get<{ data: KPIsData }>(
-        `/insights/tenant/${tenantId}/kpis?${params}`
+        `/insights/kpis?${params}`
       )
       return response.data.data
     },

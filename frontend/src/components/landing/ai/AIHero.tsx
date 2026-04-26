@@ -76,7 +76,7 @@ export default function AIHero() {
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-6">
-        <div className="text-center">
+        <div className="text-start">
           {/* AI Badge - Centered */}
           <motion.div
             custom={0}
@@ -106,7 +106,7 @@ export default function AIHero() {
             initial="hidden"
             animate="visible"
             variants={fadeUpVariants}
-            className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold tracking-tight leading-[1.1] mb-6 text-center"
+            className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold tracking-tight leading-[1.1] mb-6"
           >
             <span className="text-white">The Only AI That</span>
             <br />
@@ -146,11 +146,11 @@ export default function AIHero() {
             initial="hidden"
             animate="visible"
             variants={fadeUpVariants}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
+            className="flex flex-col sm:flex-row items-center justify-start gap-4 mb-16"
           >
             <a
               href="/signup"
-              className="group inline-flex items-center gap-2 px-8 py-4 rounded-lg text-base font-semibold text-white transition-all hover:scale-[1.02] hover:brightness-110"
+              className="group inline-flex items-center gap-2 px-8 py-4 rounded-lg text-base font-semibold text-white transition-transform hover:scale-[1.02] hover:brightness-110"
               style={{
                 background: 'var(--landing-accent-cyan)',
                 boxShadow: '0 0 40px rgba(0, 199, 190, 0.3)',
@@ -162,7 +162,7 @@ export default function AIHero() {
 
             <a
               href="#demo"
-              className="group inline-flex items-center gap-2 px-8 py-4 rounded-lg text-base font-semibold text-white transition-all hover:bg-white/10"
+              className="group inline-flex items-center gap-2 px-8 py-4 rounded-lg text-base font-semibold text-white transition-colors hover:bg-white/10"
               style={{
                 background: 'rgba(255, 255, 255, 0.03)',
                 backdropFilter: 'blur(40px)',
@@ -190,9 +190,9 @@ export default function AIHero() {
             {stats.map((stat) => (
               <div
                 key={stat.label}
-                className="group relative p-6 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:border-white/10 backdrop-blur-sm transition-all hover:bg-white/[0.04]"
+                className="group relative p-6 rounded-2xl bg-card border hover:border-white/10 transition-colors"
               >
-                <div className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-1">
+                <div className="text-3xl sm:text-4xl font-bold text-foreground mb-1">
                   {stat.value}
                 </div>
                 <div className="text-sm text-gray-400">{stat.label}</div>
@@ -207,7 +207,7 @@ export default function AIHero() {
             initial="hidden"
             animate="visible"
             variants={fadeUpVariants}
-            className="flex flex-wrap items-center justify-center gap-4"
+            className="flex flex-wrap items-center justify-start gap-4"
           >
             {trustBadges.map((badge) => (
               <div
@@ -215,7 +215,7 @@ export default function AIHero() {
                 className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.02] border border-white/[0.05]"
               >
                 <badge.icon
-                  className={`w-4 h-4 bg-gradient-to-r ${badge.color} bg-clip-text text-transparent`}
+                  className={`w-4 h-4 bg-gradient-to-r ${badge.color} text-foreground`}
                   style={{ stroke: 'url(#badge-gradient)' }}
                 />
                 <span className="text-sm text-gray-400">{badge.text}</span>
@@ -232,10 +232,10 @@ export default function AIHero() {
           className="relative mt-20 perspective-1000"
         >
           {/* Glow effect behind card */}
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-cyan-500/20 to-orange-500/20 blur-3xl -z-10 scale-95" />
+          <div className="absolute inset-0 bg-primary/5 blur-3xl -z-10 scale-95" />
 
           {/* Dashboard Card */}
-          <div className="relative rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.05] to-transparent backdrop-blur-xl overflow-hidden">
+          <div className="relative rounded-3xl border bg-card overflow-hidden">
             {/* Window Controls */}
             <div className="flex items-center gap-2 px-6 py-4 border-b border-white/[0.05]">
               <div className="w-3 h-3 rounded-full bg-red-500/80" />
@@ -246,8 +246,8 @@ export default function AIHero() {
 
             {/* Dashboard Content Mock */}
             <div className="p-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Signal Health Card */}
-              <div className="col-span-1 p-6 rounded-2xl bg-white/[0.03] border border-white/[0.05]">
+              {/* Signal Health Section */}
+              <div className="col-span-1 p-6 rounded-2xl">
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-sm text-gray-400">Signal Health</span>
                   <div className="flex items-center gap-1">
@@ -266,8 +266,8 @@ export default function AIHero() {
                 </div>
               </div>
 
-              {/* ROAS Prediction Card */}
-              <div className="col-span-1 p-6 rounded-2xl bg-white/[0.03] border border-white/[0.05]">
+              {/* ROAS Prediction Section */}
+              <div className="col-span-1 p-6 rounded-2xl border-l border-white/10">
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-sm text-gray-400">Predicted ROAS</span>
                   <ChartBarIcon className="w-4 h-4 text-purple-400" />
@@ -279,8 +279,8 @@ export default function AIHero() {
                 </div>
               </div>
 
-              {/* Trust Gate Card */}
-              <div className="col-span-1 p-6 rounded-2xl bg-gradient-to-br from-purple-500/10 to-cyan-500/10 border border-purple-500/20">
+              {/* Trust Gate Section */}
+              <div className="col-span-1 p-6 rounded-2xl border-l border-white/10">
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-sm text-gray-400">Trust Gate</span>
                   <ShieldCheckIcon className="w-4 h-4 text-cyan-400" />

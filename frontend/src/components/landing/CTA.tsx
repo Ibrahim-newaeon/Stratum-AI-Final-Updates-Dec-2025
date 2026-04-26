@@ -19,7 +19,7 @@ export function CTA() {
 
         <h2 className="text-h1 md:text-[40px] text-white mb-6">
           Ready to transform your{' '}
-          <span className="bg-gradient-stratum bg-clip-text text-transparent">
+          <span className=" text-foreground">
             ad operations?
           </span>
         </h2>
@@ -32,8 +32,8 @@ export function CTA() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <button
             onClick={() => navigate('/signup')}
-            className="group flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-stratum text-white font-semibold text-body
-                       shadow-glow hover:shadow-glow-lg transition-all duration-base
+            className="group flex items-center gap-2 px-8 py-4 rounded-xl  text-white font-semibold text-body
+                       shadow-glow hover:shadow-glow-lg transition-transform transition-colors duration-base
                        hover:scale-[1.02] active:scale-[0.98]"
           >
             Get Started Free

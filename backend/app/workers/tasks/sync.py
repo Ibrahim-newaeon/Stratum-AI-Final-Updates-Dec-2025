@@ -26,12 +26,13 @@ logger = get_task_logger(__name__)
 
 def _run_async(coro, timeout_seconds: int = 300):
     """Run an async coroutine from a synchronous Celery task with a timeout."""
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
     try:
-        return loop.run_until_complete(asyncio.wait_for(coro, timeout=timeout_seconds))
-    finally:
-        loop.close()
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        # No event loop running in this thread — use asyncio.run for clean lifecycle
+        return asyncio.run(asyncio.wait_for(coro, timeout=timeout_seconds))
+    # Reuse existing loop (e.g., nested async calls)
+    return loop.run_until_complete(asyncio.wait_for(coro, timeout=timeout_seconds))
 
 
 @shared_task(

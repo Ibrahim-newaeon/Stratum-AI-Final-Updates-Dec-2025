@@ -7,6 +7,10 @@
 
 import * as Sentry from '@sentry/react';
 
+const sentryInit = Sentry.init;
+const browserTracingIntegration = Sentry.browserTracingIntegration;
+const replayIntegration = Sentry.replayIntegration;
+
 const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN;
 const ENVIRONMENT = import.meta.env.MODE || 'development';
 const IS_PRODUCTION = ENVIRONMENT === 'production';
@@ -17,7 +21,7 @@ export function initSentry() {
     return;
   }
 
-  Sentry.init({
+  sentryInit({
     dsn: SENTRY_DSN,
     environment: ENVIRONMENT,
     release: `stratum-frontend@1.0.0`,
@@ -32,9 +36,9 @@ export function initSentry() {
     // Integration configuration
     integrations: [
       // React Router integration for better route tracking
-      Sentry.browserTracingIntegration(),
+      browserTracingIntegration(),
       // Replay integration for session recordings
-      Sentry.replayIntegration({
+      replayIntegration({
         maskAllText: true,
         blockAllMedia: true,
       }),

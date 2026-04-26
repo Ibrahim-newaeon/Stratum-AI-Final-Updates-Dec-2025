@@ -157,15 +157,14 @@ async def copilot_chat(
         }
     except (SQLAlchemyError, TypeError, KeyError) as e:
         logger.debug("copilot_health_fetch_error", error=str(e))
-        # Provide fallback based on platform connectivity
-        if metrics and metrics.get("active_campaigns", 0) > 0:
-            health_data = {
-                "overall_score": 80,
-                "status": "healthy",
-                "emq_score": 0.90,
-                "autopilot_enabled": True,
-                "issues": [],
-            }
+        # Return unknown status rather than fabricated healthy scores
+        health_data = {
+            "overall_score": None,
+            "status": "unknown",
+            "emq_score": None,
+            "autopilot_enabled": False,
+            "issues": ["Unable to fetch signal health data"],
+        }
 
     # 3. Anomaly data (lightweight — just counts)
     anomaly_data = None

@@ -43,7 +43,7 @@ function PathRow({ path }: { path: JourneyPath }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className={`border rounded-xl transition-all ${open ? 'border-foreground/15' : ''}`}>
+    <div className={`border rounded-xl transition-colors ${open ? 'border-foreground/15' : ''}`}>
       <button onClick={() => setOpen(!open)} className="w-full flex items-center gap-3 p-3 text-left hover:bg-muted/30 rounded-xl transition-colors">
         <div className="w-9 h-9 rounded-lg bg-teal-50 flex items-center justify-center shrink-0">
           <Route className="w-4.5 h-4.5 text-teal-600" />
@@ -239,10 +239,10 @@ export function JourneyMapCard() {
         ))}
       </div>
 
-      <div className="p-4 space-y-2 max-h-[480px] overflow-y-auto">
-        {tab === 'paths' && data.top_paths.map((p, i) => <PathRow key={i} path={p} />)}
-        {tab === 'channels' && data.channel_contributions.map((c, i) => <ContributionRow key={i} cc={c} />)}
-        {tab === 'insights' && data.insights.map((ins, i) => <InsightRow key={i} insight={ins} />)}
+      <div className="p-4 space-y-2 max-h-[30rem] overflow-y-auto">
+        {tab === 'paths' && data.top_paths.map((p, i) => <PathRow key={p.path_id || i} path={p} />)}
+        {tab === 'channels' && data.channel_contributions.map((c, i) => <ContributionRow key={c.platform || i} cc={c} />)}
+        {tab === 'insights' && data.insights.map((ins, i) => <InsightRow key={`${ins.title}-${i}`} insight={ins} />)}
       </div>
     </div>
   );

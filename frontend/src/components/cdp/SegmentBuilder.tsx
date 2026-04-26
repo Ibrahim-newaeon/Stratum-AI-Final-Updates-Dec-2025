@@ -139,7 +139,7 @@ function ConditionBuilder({ condition, onChange, onRemove }: ConditionBuilderPro
       <select
         value={condition.field}
         onChange={(e) => onChange({ ...condition, field: e.target.value })}
-        className="px-3 py-1.5 rounded-md border bg-background text-sm min-w-[160px]"
+        className="px-3 py-1.5 rounded-md border bg-background text-sm min-w-40"
       >
         <option value="">Select field...</option>
         {AVAILABLE_FIELDS.map((f) => (
@@ -153,7 +153,7 @@ function ConditionBuilder({ condition, onChange, onRemove }: ConditionBuilderPro
       <select
         value={condition.operator}
         onChange={(e) => onChange({ ...condition, operator: e.target.value })}
-        className="px-3 py-1.5 rounded-md border bg-background text-sm min-w-[140px]"
+        className="px-3 py-1.5 rounded-md border bg-background text-sm min-w-36"
       >
         {operators.map((op) => (
           <option key={op.value} value={op.value}>
@@ -169,7 +169,7 @@ function ConditionBuilder({ condition, onChange, onRemove }: ConditionBuilderPro
             <select
               value={condition.value as string}
               onChange={(e) => onChange({ ...condition, value: e.target.value })}
-              className="px-3 py-1.5 rounded-md border bg-background text-sm min-w-[140px]"
+              className="px-3 py-1.5 rounded-md border bg-background text-sm min-w-36"
             >
               <option value="">Select value...</option>
               {field.options.map((opt) => (
@@ -198,7 +198,7 @@ function ConditionBuilder({ condition, onChange, onRemove }: ConditionBuilderPro
                 })
               }
               placeholder="Enter value..."
-              className="px-3 py-1.5 rounded-md border bg-background text-sm min-w-[140px]"
+              className="px-3 py-1.5 rounded-md border bg-background text-sm min-w-36"
             />
           )}
         </>
@@ -207,6 +207,7 @@ function ConditionBuilder({ condition, onChange, onRemove }: ConditionBuilderPro
       {/* Remove button */}
       <button
         onClick={onRemove}
+        aria-label="Remove condition"
         className="p-1.5 rounded-md hover:bg-red-500/10 text-muted-foreground hover:text-red-500 transition-colors"
       >
         <Trash2 className="w-4 h-4" />
@@ -270,7 +271,12 @@ function RuleGroupBuilder({ group, onChange, onRemove, depth = 0 }: RuleGroupBui
       {/* Group header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <button onClick={() => setIsExpanded(!isExpanded)} className="p-1 hover:bg-muted rounded">
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="p-1 hover:bg-muted rounded"
+            aria-label={isExpanded ? 'Collapse group' : 'Expand group'}
+            aria-expanded={isExpanded}
+          >
             {isExpanded ? (
               <ChevronDown className="w-4 h-4" />
             ) : (
@@ -293,6 +299,7 @@ function RuleGroupBuilder({ group, onChange, onRemove, depth = 0 }: RuleGroupBui
         {onRemove && (
           <button
             onClick={onRemove}
+            aria-label="Remove group"
             className="p-1.5 rounded-md hover:bg-red-500/10 text-muted-foreground hover:text-red-500 transition-colors"
           >
             <Trash2 className="w-4 h-4" />
@@ -679,7 +686,7 @@ export function SegmentBuilder() {
           {filteredSegments.map((segment) => (
             <div
               key={segment.id}
-              className="p-4 rounded-xl border bg-card hover:shadow-md transition-all"
+              className="p-4 rounded-xl border bg-card hover:shadow-md transition-colors"
             >
               <div className="flex items-start justify-between mb-3">
                 <div>

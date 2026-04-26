@@ -54,7 +54,7 @@ interface BuilderRulePayload {
   actions: {
     id: string;
     type: string;
-    config: Record<string, unknown>;
+    config: Record<string, string | number | undefined>;
     priority: number;
   }[];
   targeting: {
@@ -111,7 +111,7 @@ interface AutopilotRule {
   actions: {
     id: string;
     type: string;
-    config: Record<string, unknown>;
+    config: Record<string, string | number | undefined>;
     priority: number;
   }[];
   targeting: {
@@ -161,7 +161,7 @@ function mapApiRuleToAutopilot(r: Rule): AutopilotRule {
     actions: (r.actions ?? []).map((a, i) => ({
       id: `a${i}`,
       type: a.type,
-      config: a.params ?? {},
+      config: (a.params ?? {}) as Record<string, string | number | undefined>,
       priority: i,
     })),
     targeting: {
@@ -267,7 +267,7 @@ export default function CustomAutopilotRules() {
     } catch (err: unknown) {
       const message = getErrorMessage(err, 'Failed to save rule');
       setError(message);
-      console.error('Rule save failed:', err);
+
     }
   };
 
@@ -279,7 +279,7 @@ export default function CustomAutopilotRules() {
     } catch (err: unknown) {
       const message = getErrorMessage(err, 'Failed to toggle rule');
       setError(message);
-      console.error('Rule toggle failed:', err);
+
     }
   };
 
@@ -292,7 +292,7 @@ export default function CustomAutopilotRules() {
       } catch (err: unknown) {
         const message = getErrorMessage(err, 'Failed to delete rule');
         setError(message);
-        console.error('Rule delete failed:', err);
+
       }
     }
   };
@@ -322,7 +322,7 @@ export default function CustomAutopilotRules() {
     } catch (err: unknown) {
       const message = getErrorMessage(err, 'Failed to duplicate rule');
       setError(message);
-      console.error('Rule duplicate failed:', err);
+
     }
   };
 

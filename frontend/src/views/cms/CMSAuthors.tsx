@@ -150,7 +150,7 @@ export default function CMSAuthors() {
           {authors.map((author) => (
             <div
               key={author.id}
-              className="rounded-2xl bg-white/5 border border-white/10 p-6 hover:border-white/20 transition-all group"
+              className="rounded-2xl bg-white/5 border border-white/10 p-6 hover:border-white/20 transition-colors group"
             >
               <div className="flex items-start gap-4">
                 {author.avatar_url ? (
@@ -158,9 +158,11 @@ export default function CMSAuthors() {
                     src={author.avatar_url}
                     alt={author.name}
                     className="w-14 h-14 rounded-full object-cover flex-shrink-0"
+                    loading="lazy"
+                    decoding="async"
                   />
                 ) : (
-                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center text-white text-xl font-bold flex-shrink-0">
+                  <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-white text-xl font-bold flex-shrink-0">
                     {author.name.charAt(0)}
                   </div>
                 )}

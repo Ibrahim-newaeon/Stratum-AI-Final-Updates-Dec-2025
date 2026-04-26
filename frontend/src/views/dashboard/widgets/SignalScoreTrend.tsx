@@ -2,6 +2,7 @@
  * SignalScoreTrend - SVG sparkline of signal health score with sub-metrics
  */
 
+import { useMemo } from 'react';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { SignalHealthSummary } from '@/api/dashboard';
@@ -47,7 +48,7 @@ function buildSparklinePath(data: number[], width: number, height: number): stri
 export function SignalScoreTrend({ signalHealth, loading }: SignalScoreTrendProps) {
   const score = signalHealth?.overall_score ?? 72;
   const status = getStatusLabel(score);
-  const trendData = generateTrendData(score);
+  const trendData = useMemo(() => generateTrendData(score), [score]);
 
   const svgW = 260;
   const svgH = 100;
@@ -62,7 +63,7 @@ export function SignalScoreTrend({ signalHealth, loading }: SignalScoreTrendProp
 
   if (loading) {
     return (
-      <div className="widget-card flex items-center justify-center min-h-[280px]">
+      <div className="widget-card flex items-center justify-center min-h-72">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     );

@@ -94,7 +94,7 @@ function LoadingSkeleton() {
         {Array.from({ length: 6 }).map((_, i) => (
           <div
             key={i}
-            className="bg-white/5 border border-white/[0.08] rounded-2xl p-5 space-y-3"
+            className="bg-muted border border-white/[0.08] rounded-2xl p-5 space-y-3"
           >
             <div className="h-10 w-10 bg-white/[0.06] rounded-full" />
             <div className="h-7 w-16 bg-white/[0.06] rounded" />
@@ -104,7 +104,7 @@ function LoadingSkeleton() {
       </div>
 
       {/* Funnel skeleton */}
-      <div className="bg-white/5 border border-white/[0.08] rounded-2xl p-6 space-y-4">
+      <div className="bg-muted border border-white/[0.08] rounded-2xl p-6 space-y-4">
         <div className="h-6 w-40 bg-white/[0.06] rounded" />
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="h-10 bg-white/[0.06] rounded" />
@@ -128,10 +128,10 @@ function StatCard({
   rateColor?: string;
 }) {
   return (
-    <div className="bg-white/5 border border-white/[0.08] rounded-2xl p-5">
+    <div className="bg-muted border border-white/[0.08] rounded-2xl p-5">
       <div className="flex items-center justify-between mb-3">
-        <div className="h-10 w-10 rounded-full bg-[#00c7be]/15 flex items-center justify-center">
-          <Icon className="h-5 w-5 text-[#00c7be]" />
+        <div className="h-10 w-10 rounded-full bg-primary/15 flex items-center justify-center">
+          <Icon className="h-5 w-5 text-primary" />
         </div>
       </div>
       <div className="text-2xl font-bold text-[rgba(245,245,247,0.92)]">
@@ -286,7 +286,7 @@ export default function NewsletterAnalytics() {
       {/* ----------------------------------------------------------------- */}
       {/* Delivery Funnel                                                   */}
       {/* ----------------------------------------------------------------- */}
-      <div className="bg-white/5 border border-white/[0.08] rounded-2xl p-6">
+      <div className="bg-muted border border-white/[0.08] rounded-2xl p-6">
         <h2 className="text-lg font-semibold text-[rgba(245,245,247,0.92)] mb-5">
           Delivery Funnel
         </h2>
@@ -320,7 +320,7 @@ export default function NewsletterAnalytics() {
                   {/* Bar */}
                   <div className="flex-1 h-9 bg-white/[0.04] rounded-lg overflow-hidden">
                     <div
-                      className="h-full rounded-lg flex items-center px-3 transition-all duration-500"
+                      className="h-full rounded-lg flex items-center px-3 transition-[width] duration-500"
                       style={{
                         width: `${widthPct}%`,
                         backgroundColor: stage.color,
@@ -349,7 +349,7 @@ export default function NewsletterAnalytics() {
       {/* ----------------------------------------------------------------- */}
       {/* Event Timeline                                                    */}
       {/* ----------------------------------------------------------------- */}
-      <div className="bg-white/5 border border-white/[0.08] rounded-2xl p-6">
+      <div className="bg-muted border border-white/[0.08] rounded-2xl p-6">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-lg font-semibold text-[rgba(245,245,247,0.92)]">
             Recent Events
@@ -370,10 +370,10 @@ export default function NewsletterAnalytics() {
             <table className="w-full">
               <thead>
                 <tr className="text-left text-xs font-medium text-[rgba(245,245,247,0.35)] uppercase tracking-wider">
-                  <th className="px-4 py-3">Event</th>
-                  <th className="px-4 py-3">Subscriber ID</th>
-                  <th className="px-4 py-3">Details</th>
-                  <th className="px-4 py-3 text-right">Timestamp</th>
+                  <th scope="col" className="px-4 py-3">Event</th>
+                  <th scope="col" className="px-4 py-3">Subscriber ID</th>
+                  <th scope="col" className="px-4 py-3">Details</th>
+                  <th scope="col" className="px-4 py-3 text-right">Timestamp</th>
                 </tr>
               </thead>
               <tbody>
@@ -398,7 +398,7 @@ export default function NewsletterAnalytics() {
                       </td>
                       <td className="px-4 py-3 text-sm text-[rgba(245,245,247,0.6)] max-w-xs truncate">
                         {clickUrl ? (
-                          <span className="inline-flex items-center gap-1 text-[#00c7be]">
+                          <span className="inline-flex items-center gap-1 text-primary">
                             <LinkIcon className="h-3.5 w-3.5 shrink-0" />
                             <span className="truncate">{clickUrl}</span>
                           </span>
@@ -421,7 +421,7 @@ export default function NewsletterAnalytics() {
       {/* ----------------------------------------------------------------- */}
       {/* Link Performance / Click Map                                      */}
       {/* ----------------------------------------------------------------- */}
-      <div className="bg-white/5 border border-white/[0.08] rounded-2xl p-6">
+      <div className="bg-muted border border-white/[0.08] rounded-2xl p-6">
         <h2 className="text-lg font-semibold text-[rgba(245,245,247,0.92)] mb-5">
           Link Performance
         </h2>
@@ -453,7 +453,7 @@ export default function NewsletterAnalytics() {
                   </div>
                   <div className="h-2.5 bg-white/[0.04] rounded-full overflow-hidden">
                     <div
-                      className="h-full rounded-full transition-all duration-500"
+                      className="h-full rounded-full transition-[width] duration-500"
                       style={{
                         width: `${barPct}%`,
                         backgroundColor: '#a855f7',
@@ -470,3 +470,4 @@ export default function NewsletterAnalytics() {
     </div>
   );
 }
+

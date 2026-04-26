@@ -194,7 +194,6 @@ async def configure_slack(
         db.add(integration)
 
     await db.commit()
-    await db.refresh(integration)
 
     logger.info(f"Slack integration configured for tenant {tenant_id}")
 
@@ -444,7 +443,6 @@ async def toggle_slack(
 
     integration.is_active = is_active
     await db.commit()
-    await db.refresh(integration)
 
     return APIResponse(
         success=True,

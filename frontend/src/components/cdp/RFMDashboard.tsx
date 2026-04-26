@@ -191,7 +191,7 @@ function SegmentCard({ segment, count, totalProfiles, isSelected, onClick }: Seg
   return (
     <div
       className={cn(
-        'p-4 rounded-xl border cursor-pointer transition-all hover:shadow-md',
+        'p-4 rounded-xl border cursor-pointer transition-colors hover:shadow-md',
         isSelected ? 'border-primary ring-2 ring-primary/20' : 'hover:border-primary/50'
       )}
       onClick={onClick}
@@ -204,7 +204,7 @@ function SegmentCard({ segment, count, totalProfiles, isSelected, onClick }: Seg
       <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{config.description}</p>
       <div className="h-1.5 bg-muted rounded-full overflow-hidden">
         <div
-          className={cn('h-full transition-all', config.bgColor.replace('/10', ''))}
+          className={cn('h-full transition-[width]', config.bgColor.replace('/10', ''))}
           style={{ width: `${percentage}%` }}
         />
       </div>
@@ -253,7 +253,7 @@ function ProfileRFMView({ profileId, onBack }: ProfileRFMViewProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <button onClick={onBack} className="p-2 rounded-lg hover:bg-muted transition-colors">
+        <button onClick={onBack} aria-label="Go back" className="p-2 rounded-lg hover:bg-muted transition-colors">
           <ChevronRight className="w-5 h-5 rotate-180" />
         </button>
         <div>
@@ -315,7 +315,7 @@ function ProfileRFMView({ profileId, onBack }: ProfileRFMViewProps) {
         </div>
         <div className="h-3 bg-muted rounded-full overflow-hidden">
           <div
-            className="h-full bg-primary transition-all"
+            className="h-full bg-primary transition-[width]"
             style={{ width: `${(rfm.rfm_score / 15) * 100}%` }}
           />
         </div>

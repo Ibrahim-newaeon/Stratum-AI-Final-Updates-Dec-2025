@@ -115,7 +115,7 @@ export default function TenantSwitcher() {
           // Update auth context user with new role/tenant
           updateUser({
             tenant_id: data.tenant_id,
-            role: data.role as any,
+            role: data.role as 'superadmin' | 'admin' | 'manager' | 'analyst' | 'viewer',
           });
 
           setIsOpen(false);
@@ -124,7 +124,7 @@ export default function TenantSwitcher() {
           window.location.reload();
         }
       } catch (err) {
-        console.error('[TenantSwitcher] Switch failed:', err);
+
       } finally {
         setIsSwitching(false);
       }
@@ -152,7 +152,7 @@ export default function TenantSwitcher() {
         onClick={() => setIsOpen(!isOpen)}
         disabled={isSwitching}
         className={cn(
-          'flex items-center gap-2 px-3 py-2 rounded-lg border transition-all text-sm',
+          'flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors text-sm',
           isOpen
             ? 'bg-white/10 border-[#00c7be]/30 text-white'
             : 'bg-white/5 border-white/10 text-white/80 hover:bg-white/10 hover:border-white/20'

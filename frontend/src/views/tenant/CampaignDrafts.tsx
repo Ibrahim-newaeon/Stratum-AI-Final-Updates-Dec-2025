@@ -39,58 +39,6 @@ interface CampaignDraft {
   approvedBy?: string
 }
 
-const mockDrafts: CampaignDraft[] = [
-  {
-    id: '1',
-    name: 'KSA Prospecting - Q1',
-    platform: 'meta',
-    status: 'draft',
-    budget: 500,
-    currency: 'SAR',
-    objective: 'sales',
-    createdAt: '2024-01-18T10:00:00Z',
-    updatedAt: '2024-01-20T14:30:00Z',
-    createdBy: 'Ahmed Al-Saud',
-  },
-  {
-    id: '2',
-    name: 'UAE Retargeting',
-    platform: 'google',
-    status: 'submitted',
-    budget: 1200,
-    currency: 'AED',
-    objective: 'conversions',
-    createdAt: '2024-01-15T09:00:00Z',
-    updatedAt: '2024-01-19T11:00:00Z',
-    createdBy: 'Sara Mohammed',
-  },
-  {
-    id: '3',
-    name: 'Brand Awareness - Ramadan',
-    platform: 'meta',
-    status: 'approved',
-    budget: 2500,
-    currency: 'SAR',
-    objective: 'awareness',
-    createdAt: '2024-01-10T08:00:00Z',
-    updatedAt: '2024-01-18T16:00:00Z',
-    createdBy: 'Omar Hassan',
-    approvedBy: 'Admin User',
-  },
-  {
-    id: '4',
-    name: 'Product Launch - Winter',
-    platform: 'tiktok',
-    status: 'rejected',
-    budget: 800,
-    currency: 'SAR',
-    objective: 'traffic',
-    createdAt: '2024-01-12T12:00:00Z',
-    updatedAt: '2024-01-17T10:00:00Z',
-    createdBy: 'Fatima Al-Ali',
-  },
-]
-
 const statusConfig: Record<DraftStatus, { icon: React.ComponentType<{ className?: string }>; label: string; color: string }> = {
   draft: { icon: DocumentTextIcon, label: 'Draft', color: 'text-gray-600 bg-gray-100 dark:bg-gray-800' },
   submitted: { icon: ClockIcon, label: 'Pending Approval', color: 'text-amber-600 bg-amber-100 dark:bg-amber-900/30' },
@@ -103,12 +51,12 @@ const statusConfig: Record<DraftStatus, { icon: React.ComponentType<{ className?
 
 export default function CampaignDrafts() {
   const { tenantId } = useParams<{ tenantId: string }>()
-  const [drafts, setDrafts] = useState(mockDrafts)
+  const [drafts, setDrafts] = useState<CampaignDraft[]>([])
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const { toast } = useToast()
 
   // API hooks
-  const tenantIdNum = tenantId ? parseInt(tenantId, 10) : 0
+  const tenantIdNum = tenantId ? parseInt(tenantId, 10) : NaN
   const submitDraft = useSubmitDraft(tenantIdNum)
   const publishDraft = usePublishDraft(tenantIdNum)
   const deleteDraft = useDeleteCampaignDraft(tenantIdNum)

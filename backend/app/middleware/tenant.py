@@ -10,7 +10,8 @@ from typing import Callable, Optional
 
 from fastapi import Request, Response, status
 from fastapi.responses import JSONResponse
-from jose import JWTError, jwt
+import jwt
+from jwt.exceptions import PyJWTError as JWTError
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
 
@@ -159,15 +160,21 @@ class TenantMiddleware(BaseHTTPMiddleware):
         if tenant_id:
             return tenant_id
 
-        # Try X-Tenant-ID header ONLY when an Authorization header is present
-        # (e.g., API key auth where tenant_id isn't in the token claims).
-        # SECURITY: Never trust X-Tenant-ID alone without authentication,
+        # Try X-Tenant-ID header ONLY when a VALID JWT token is present.
+        # SECURITY: Never trust X-Tenant-ID without a successfully decoded JWT,
         # as an unauthenticated client could spoof any tenant.
-        auth_header = request.headers.get("Authorization")
         tenant_header = request.headers.get("X-Tenant-ID")
-        if tenant_header and auth_header:
+        jwt_payload = getattr(request.state, "_jwt_payload", None)
+        if tenant_header and jwt_payload is not None:
             try:
-                return int(tenant_header)
+                header_tenant_id = int(tenant_header)
+                jwt_tenant_id = jwt_payload.get("tenant_id")
+                # Allow if the header tenant matches the JWT tenant claim,
+                # or if the user is a superadmin (cross-tenant access).
+                if jwt_tenant_id and header_tenant_id == jwt_tenant_id:
+                    return header_tenant_id
+                if jwt_payload.get("role") == "superadmin":
+                    return header_tenant_id
             except ValueError:
                 pass
 

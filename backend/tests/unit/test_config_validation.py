@@ -207,6 +207,8 @@ class TestEnvironmentProperties:
             jwt_secret_key="y" * 32,
             pii_encryption_key="z" * 32,
             use_mock_ad_data="false",
+            cors_origins="https://app.stratum.ai",
+            frontend_url="https://app.stratum.ai",
         )
         assert s.is_production is True
         assert s.is_development is False
@@ -278,3 +280,52 @@ class TestCORSConfiguration:
             pii_encryption_key="z" * 32,
         )
         assert s.cors_origins_list == ["https://a.com", "https://b.com", "http://localhost:5173"]
+
+
+# ---------------------------------------------------------------------------
+# 7. Production CORS Safety
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+class TestProductionCORSSafety:
+    """Tests that localhost and wildcard origins are rejected in production/staging."""
+
+    def _prod_settings(self, **overrides):
+        """Helper with production-safe defaults."""
+        defaults = dict(
+            app_env="production",
+            secret_key="x" * 32,
+            jwt_secret_key="y" * 32,
+            pii_encryption_key="z" * 32,
+            use_mock_ad_data="false",
+            cors_origins="https://app.stratum.ai",
+            frontend_url="https://app.stratum.ai",
+        )
+        defaults.update(overrides)
+        return _make_settings(**defaults)
+
+    def test_localhost_in_cors_origins_rejected(self) -> None:
+        with pytest.raises(ValueError, match="CORS_ORIGINS contains insecure origin"):
+            self._prod_settings(cors_origins="http://localhost:3000")
+
+    def test_127_0_0_1_in_cors_origins_rejected(self) -> None:
+        with pytest.raises(ValueError, match="CORS_ORIGINS contains insecure origin"):
+            self._prod_settings(cors_origins="http://127.0.0.1:3000")
+
+    def test_wildcard_in_cors_origins_rejected(self) -> None:
+        with pytest.raises(ValueError, match="CORS_ORIGINS contains insecure origin"):
+            self._prod_settings(cors_origins="*")
+
+    def test_localhost_in_frontend_url_rejected(self) -> None:
+        with pytest.raises(ValueError, match="FRONTEND_URL"):
+            self._prod_settings(frontend_url="http://localhost:5173")
+
+    def test_safe_cors_origins_accepted(self) -> None:
+        s, _ = self._prod_settings(cors_origins="https://a.com,https://b.com")
+        assert "https://a.com" in s.cors_origins_list
+        assert "https://b.com" in s.cors_origins_list
+
+    def test_staging_also_rejects_localhost(self) -> None:
+        with pytest.raises(ValueError, match="CORS_ORIGINS contains insecure origin"):
+            self._prod_settings(app_env="staging", cors_origins="http://localhost:3000")

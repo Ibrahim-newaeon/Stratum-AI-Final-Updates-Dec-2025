@@ -121,7 +121,6 @@ async def seed_cms_admin(email: str, password: str, name: str):
             )
             db.add(user)
             await db.commit()
-            await db.refresh(user)
 
             print(f"      Created user: {email}")
             print(f"      User ID: {user.id}")

@@ -113,7 +113,7 @@ export default function WhatsAppManager() {
           const data = contactsRes.value.data;
           newStats.totalContacts = data.total || data.items?.length || 0;
           if (data.items) {
-            const items = data.items as WhatsAppContact[];
+            const items = data.items as unknown as WhatsAppContact[];
             newStats.optedIn = items.filter((c) => c.opt_in_status === 'opted_in').length;
             newStats.optedOut = items.filter((c) => c.opt_in_status === 'opted_out').length;
           }
@@ -123,7 +123,7 @@ export default function WhatsAppManager() {
           const data = templatesRes.value.data;
           newStats.templates = data.total || data.items?.length || 0;
           if (data.items) {
-            const items = data.items as WhatsAppTemplate[];
+            const items = data.items as unknown as WhatsAppTemplate[];
             newStats.approvedTemplates = items.filter((t) => t.status === 'approved').length;
             newStats.pendingTemplates = items.filter((t) => t.status === 'pending').length;
           }
@@ -133,7 +133,7 @@ export default function WhatsAppManager() {
           const data = messagesRes.value.data;
           newStats.messagesSent = data.total || data.items?.length || 0;
           if (data.items) {
-            const items = data.items as WhatsAppMessage[];
+            const items = data.items as unknown as WhatsAppMessage[];
             newStats.messagesDelivered = items.filter((m) => ['delivered', 'read'].includes(m.status)).length;
             newStats.messagesRead = items.filter((m) => m.status === 'read').length;
           }
@@ -163,12 +163,12 @@ export default function WhatsAppManager() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0b1215] text-white p-6">
+    <div className="min-h-screen bg-background text-foreground p-6">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
           <div className="p-2 rounded-xl bg-gradient-to-br from-[#25D366] to-[#128C7E]">
-            <ChatBubbleLeftRightIcon className="w-6 h-6 text-white" />
+            <ChatBubbleLeftRightIcon className="w-6 h-6 text-foreground" />
           </div>
           <h1 className="text-2xl font-bold">WhatsApp Business Manager</h1>
         </div>
@@ -185,10 +185,10 @@ export default function WhatsAppManager() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                'flex items-center gap-2 px-4 py-3 rounded-xl transition-all whitespace-nowrap',
+                'flex items-center gap-2 px-4 py-3 rounded-xl transition-colors whitespace-nowrap',
                 isActive
-                  ? 'bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white shadow-lg shadow-[#25D366]/20'
-                  : 'bg-[rgba(255,_255,_255,_0.05)] text-gray-400 hover:text-white hover:bg-[#1a1a24] border border-white/5'
+                  ? 'bg-gradient-to-r from-[#25D366] to-[#128C7E] text-foreground shadow-lg shadow-[#25D366]/20'
+                  : 'bg-muted/50 text-gray-400 hover:text-foreground hover:bg-card border border-white/5'
               )}
             >
               <Icon className="w-5 h-5" />
@@ -287,7 +287,7 @@ function OverviewDashboard({
       </div>
 
       {/* Message Stats */}
-      <div className="bg-[rgba(255,_255,_255,_0.05)] rounded-2xl border border-white/5 p-6">
+      <div className="bg-muted/50 rounded-2xl border border-white/5 p-6">
         <h3 className="text-lg font-semibold mb-4">Message Delivery Performance</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-2">
@@ -295,7 +295,7 @@ function OverviewDashboard({
               <span className="text-gray-400">Delivery Rate</span>
               <span className="text-[#25D366] font-medium">{deliveryRate}%</span>
             </div>
-            <div className="h-2 bg-[#1a1a24] rounded-full overflow-hidden">
+            <div className="h-2 bg-card rounded-full overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-[#25D366] to-[#128C7E] rounded-full"
                 style={{ width: `${deliveryRate}%` }}
@@ -307,9 +307,9 @@ function OverviewDashboard({
               <span className="text-gray-400">Read Rate</span>
               <span className="text-cyan-400 font-medium">{readRate}%</span>
             </div>
-            <div className="h-2 bg-[#1a1a24] rounded-full overflow-hidden">
+            <div className="h-2 bg-card rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-cyan-500 to-cyan-400 rounded-full"
+                className="h-full bg-cyan-500 rounded-full"
                 style={{ width: `${readRate}%` }}
               />
             </div>
@@ -319,9 +319,9 @@ function OverviewDashboard({
               <span className="text-gray-400">Opt-in Rate</span>
               <span className="text-purple-400 font-medium">{optInRate}%</span>
             </div>
-            <div className="h-2 bg-[#1a1a24] rounded-full overflow-hidden">
+            <div className="h-2 bg-card rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-purple-500 to-purple-400 rounded-full"
+                className="h-full bg-purple-500 rounded-full"
                 style={{ width: `${optInRate}%` }}
               />
             </div>
@@ -330,7 +330,7 @@ function OverviewDashboard({
       </div>
 
       {/* Template Status */}
-      <div className="bg-[rgba(255,_255,_255,_0.05)] rounded-2xl border border-white/5 p-6">
+      <div className="bg-muted/50 rounded-2xl border border-white/5 p-6">
         <h3 className="text-lg font-semibold mb-4">Template Status</h3>
         <div className="space-y-3">
           <StatusRow
@@ -391,7 +391,7 @@ function StatCard({
     <button
       onClick={onClick}
       className={cn(
-        'bg-gradient-to-br rounded-2xl border p-6 text-left transition-all hover:scale-[1.02] hover:shadow-lg',
+        'bg-gradient-to-br rounded-2xl border p-6 text-left transition-transform transition-colors hover:scale-[1.02] hover:shadow-lg',
         colorClasses[color]
       )}
     >
@@ -429,7 +429,7 @@ function QuickActionCard({
     <button
       onClick={onClick}
       className={cn(
-        'group bg-[rgba(255,_255,_255,_0.05)] rounded-2xl border border-white/5 p-6 text-left transition-all hover:bg-[#1a1a24]',
+        'group bg-muted/50 rounded-2xl border border-white/5 p-6 text-left transition-colors hover:bg-card',
         colorClasses[color]
       )}
     >

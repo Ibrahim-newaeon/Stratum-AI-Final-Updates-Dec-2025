@@ -26,7 +26,7 @@ export function Platforms() {
               className="motion-card group flex flex-col items-center gap-3 p-4"
             >
               <div
-                className="w-16 h-16 rounded-xl flex items-center justify-center transition-all duration-base"
+                className="w-16 h-16 rounded-xl flex items-center justify-center transition-colors duration-base"
                 style={{ backgroundColor: `${platform.color}15` }}
               >
                 <platform.icon className="w-8 h-8" style={{ color: platform.color }} />

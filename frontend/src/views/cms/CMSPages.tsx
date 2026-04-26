@@ -84,23 +84,6 @@ const PAGE_PRESETS = [
   { slug: 'glossary', title: 'Glossary', template: 'glossary' },
 ];
 
-/** JSON schema placeholders per template — shown when content_json is empty */
-const JSON_PLACEHOLDERS: Record<string, string> = {
-  features: JSON.stringify({ features: [{ iconName: 'ShieldCheckIcon', title: 'Feature Name', description: 'Feature description', color: '#8B5CF6' }] }, null, 2),
-  pricing: JSON.stringify({ tiers: [{ name: 'Starter', price: '$499', period: '/mo', description: 'For growing teams', features: ['Feature 1', 'Feature 2'], cta: 'Start Free Trial', highlighted: false }] }, null, 2),
-  about: JSON.stringify({ team: [{ name: 'Jane Doe', role: 'CEO', image: 'JD' }], values: [{ title: 'Trust First', description: 'Building reliable systems' }] }, null, 2),
-  careers: JSON.stringify({ positions: [{ title: 'Sr. Engineer', department: 'Engineering', location: 'Remote', type: 'Full-time', salary: '$150k-$200k', description: 'Job description' }] }, null, 2),
-  comparison: JSON.stringify({ competitors: [{ id: 'comp1', name: 'Competitor', tagline: 'Their tagline', color: '#666' }], features: [{ feature: 'Trust Gates', category: 'Core', stratum: 'Yes', competitors: { comp1: 'No' } }] }, null, 2),
-  changelog: JSON.stringify({ releases: [{ version: 'v3.3.0', date: '2026-02-01', type: 'minor', highlights: ['New feature'], changes: [{ type: 'feature', text: 'Added X' }] }] }, null, 2),
-  'case-studies': JSON.stringify({ studies: [{ company: 'Acme Corp', industry: 'E-commerce', logo: 'AC', challenge: 'The problem', solution: 'How we solved it', results: [{ metric: 'ROAS', value: '340%' }] }] }, null, 2),
-  resources: JSON.stringify({ guides: [{ title: 'Getting Started', description: 'Quick start guide', iconName: 'BookOpenIcon', href: '/docs', tag: 'Guide' }], webinars: [], whitepapers: [] }, null, 2),
-  status: JSON.stringify({ services: [{ name: 'API', status: 'operational', uptime: '99.99%', latency: '45ms' }], incidents: [] }, null, 2),
-  glossary: JSON.stringify({ categories: [{ id: 'trust', name: 'Trust Engine', iconName: 'ShieldCheckIcon', color: '#8B5CF6', terms: [{ term: 'Signal Health', definition: 'Composite score of signal reliability' }] }] }, null, 2),
-  'api-docs': JSON.stringify({ sections: [{ title: 'Getting Started', description: 'Quick start guide', iconName: 'RocketLaunchIcon', href: '#start' }], endpoints: [{ method: 'GET', path: '/api/v1/campaigns', description: 'List campaigns', category: 'Campaigns' }] }, null, 2),
-  solution: JSON.stringify({ hero: { badge: 'Solution', title: 'Page Title', titleHighlight: 'Highlighted', description: 'Solution description', ctaText: 'Get Started', ctaLink: '/signup' }, features: [{ iconName: 'BoltIcon', title: 'Feature', description: 'Description' }] }, null, 2),
-  integrations: JSON.stringify({ categories: [{ name: 'Ad Platforms', description: 'Connect your ad accounts', platforms: [{ name: 'Meta', description: 'Facebook & Instagram', iconName: 'meta', color: '#1877F2' }] }] }, null, 2),
-};
-
 /** Templates that use content_json instead of plain HTML content */
 const STRUCTURED_TEMPLATES = ['features', 'pricing', 'integrations', 'about', 'careers', 'comparison', 'changelog', 'case-studies', 'resources', 'status', 'glossary', 'api-docs', 'solution'];
 
@@ -346,7 +329,7 @@ export default function CMSPages() {
                   className="flex items-center justify-between px-6 py-4 hover:bg-white/5 transition-colors"
                 >
                   <div className="flex items-center gap-4 min-w-0">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                       <RectangleStackIcon className="w-5 h-5 text-cyan-400" />
                     </div>
                     <div className="min-w-0">
@@ -539,7 +522,7 @@ export default function CMSPages() {
                         ? 'border-red-500/50 focus:border-red-500'
                         : 'border-white/10 focus:border-purple-500/50'
                     }`}
-                    placeholder={JSON_PLACEHOLDERS[formData.template || ''] || '{\n  \n}'}
+                    placeholder="Enter JSON content..."
                     spellCheck={false}
                   />
                   {jsonError && (

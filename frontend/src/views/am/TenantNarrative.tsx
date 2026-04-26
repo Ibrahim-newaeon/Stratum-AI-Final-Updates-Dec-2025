@@ -62,7 +62,7 @@ const COST_KPI_IDS = ['spend', 'revenue', 'roas', 'cpa']
 export default function TenantNarrative() {
   const { tenantId } = useParams<{ tenantId: string }>()
   const { showPriceMetrics } = usePriceMetrics()
-  const tid = parseInt(tenantId || '1', 10)
+  const tid = parseInt(tenantId || '', 10)
 
   const [activeTab, setActiveTab] = useState<'summary' | 'timeline' | 'blocked' | 'playbook'>('summary')
 
@@ -333,7 +333,7 @@ export default function TenantNarrative() {
           <button
             data-tour="export-pdf"
             onClick={handleExportPDF}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-stratum text-white font-medium hover:shadow-glow transition-all"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-stratum text-white font-medium hover:shadow-glow transition-colors"
           >
             <DocumentArrowDownIcon className="w-4 h-4" />
             Export PDF

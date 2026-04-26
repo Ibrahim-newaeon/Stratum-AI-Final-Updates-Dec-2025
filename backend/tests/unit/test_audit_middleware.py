@@ -275,6 +275,15 @@ class TestClientIpExtraction:
     def test_x_forwarded_for_chain(self) -> None:
         req = _make_request(headers={"X-Forwarded-For": "203.0.113.50, 70.41.3.18, 150.172.238.178"})
         ip = self.mw._get_client_ip(req)
+        # Secure parsing: walk from right (closest proxy) and return first untrusted IP
+        assert ip == "150.172.238.178"
+
+    def test_x_forwarded_for_ignored_from_untrusted_proxy(self) -> None:
+        req = _make_request(
+            client_host="203.0.113.50",
+            headers={"X-Forwarded-For": "1.1.1.1"},
+        )
+        ip = self.mw._get_client_ip(req)
         assert ip == "203.0.113.50"
 
     def test_x_real_ip(self) -> None:

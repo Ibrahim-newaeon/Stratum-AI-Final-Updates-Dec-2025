@@ -165,7 +165,7 @@ export default function ConnectPlatforms() {
         window.location.href = result.oauth_url
       }
     } catch (error) {
-      console.error('Failed to start connection:', error)
+
     } finally {
       setConnecting(null)
     }
@@ -176,7 +176,7 @@ export default function ConnectPlatforms() {
       try {
         await disconnectPlatform.mutateAsync(platformId as Platform)
       } catch (error) {
-        console.error('Failed to disconnect:', error)
+
       }
     }
   }
@@ -185,7 +185,7 @@ export default function ConnectPlatforms() {
     try {
       await refreshToken.mutateAsync(platformId as Platform)
     } catch (error) {
-      console.error('Failed to refresh token:', error)
+
     }
   }
 
@@ -223,14 +223,14 @@ export default function ConnectPlatforms() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search integrations..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-white/10 bg-white/[0.02] text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-all"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-white/10 bg-white/[0.02] text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-colors"
           />
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={() => setSelectedCategory('all')}
             className={cn(
-              'px-3 py-2 rounded-lg text-xs font-medium transition-all',
+              'px-3 py-2 rounded-lg text-xs font-medium transition-colors',
               selectedCategory === 'all'
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-white/5 text-white/50 hover:text-white/80 hover:bg-white/10 border border-white/10'
@@ -243,7 +243,7 @@ export default function ConnectPlatforms() {
               key={cat}
               onClick={() => setSelectedCategory(cat)}
               className={cn(
-                'px-3 py-2 rounded-lg text-xs font-medium transition-all',
+                'px-3 py-2 rounded-lg text-xs font-medium transition-colors',
                 selectedCategory === cat
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-white/5 text-white/50 hover:text-white/80 hover:bg-white/10 border border-white/10'
@@ -277,7 +277,7 @@ export default function ConnectPlatforms() {
                   <div
                     key={platform.id}
                     className={cn(
-                      'group relative rounded-xl border transition-all cursor-pointer hover:border-white/20',
+                      'group relative rounded-xl border transition-colors cursor-pointer hover:border-white/20',
                       status === 'connected'
                         ? 'border-emerald-500/20 bg-emerald-500/[0.03]'
                         : 'border-white/8 bg-white/[0.02] hover:bg-white/[0.04]'
@@ -351,7 +351,7 @@ export default function ConnectPlatforms() {
                             <button
                               onClick={() => handleConnect(platform.id)}
                               disabled={connecting === platform.id}
-                              className="flex items-center gap-1.5 px-4 py-1.5 text-xs rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-all"
+                              className="flex items-center gap-1.5 px-4 py-1.5 text-xs rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
                             >
                               {connecting === platform.id ? (
                                 <ArrowPathIcon className="h-3.5 w-3.5 animate-spin" />

@@ -232,7 +232,7 @@ export default function DPA() {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <button
-                    className="px-6 py-3 rounded-full font-semibold text-white transition-all hover:opacity-90"
+                    className="px-6 py-3 rounded-full font-semibold text-white transition-opacity hover:opacity-90"
                     style={{
                       background: 'var(--landing-accent-coral)',
                       boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
@@ -241,7 +241,7 @@ export default function DPA() {
                     Download DPA (PDF)
                   </button>
                   <button
-                    className="px-6 py-3 rounded-xl font-semibold text-white transition-all hover:bg-white/10"
+                    className="px-6 py-3 rounded-xl font-semibold text-white transition-colors hover:bg-white/10"
                     style={{
                       background: 'var(--landing-surface-glass)',
                       border: '1px solid rgba(255, 255, 255, 0.2)',

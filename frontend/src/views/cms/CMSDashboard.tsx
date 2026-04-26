@@ -103,7 +103,7 @@ export default function CMSDashboard() {
           <Link
             key={stat.name}
             to={stat.href}
-            className="group relative overflow-hidden rounded-2xl bg-white/5 border border-white/10 p-6 hover:border-white/20 transition-all"
+            className="group relative overflow-hidden rounded-2xl bg-white/5 border border-white/10 p-6 hover:border-white/20 transition-colors"
           >
             {/* Gradient accent */}
             <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${stat.color}`} />
@@ -119,7 +119,7 @@ export default function CMSDashboard() {
             </div>
 
             {/* Hover indicator */}
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary/50 opacity-0 group-hover:opacity-100 transition-opacity" />
           </Link>
         ))}
       </div>
@@ -163,7 +163,7 @@ export default function CMSDashboard() {
             </div>
             <div className="h-2 bg-white/10 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-green-500 to-green-600 transition-all"
+                className="h-full bg-green-500 transition-[width]"
                 style={{
                   width: postsList.length ? `${(publishedPosts / postsList.length) * 100}%` : '0%',
                 }}
@@ -181,7 +181,7 @@ export default function CMSDashboard() {
                 key={action.name}
                 to={action.href}
                 target={action.external ? '_blank' : undefined}
-                className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all"
+                className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-colors"
               >
                 <action.icon className="w-5 h-5 text-purple-400" />
                 <span className="text-white font-medium">{action.name}</span>
@@ -211,7 +211,7 @@ export default function CMSDashboard() {
                 className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10"
               >
                 <div className="flex items-center gap-4 min-w-0">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500/20 to-cyan-500/20 flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                     <DocumentTextIcon className="w-5 h-5 text-purple-400" />
                   </div>
                   <div className="min-w-0">

@@ -246,7 +246,7 @@ async def get_signal_health_trends(
         func.count(FactSignalHealthDaily.id).label("record_count"),
     ).where(
         FactSignalHealthDaily.date >= start_date
-    ).group_by(FactSignalHealthDaily.date).order_by(FactSignalHealthDaily.date)
+    ).group_by(FactSignalHealthDaily.date).order_by(FactSignalHealthDaily.date).limit(1000).limit(1000)
 
     daily_result = await db.execute(daily_query)
 
@@ -340,7 +340,7 @@ async def get_actions_analytics(
         func.count(FactActionsQueue.id).label("count"),
     ).where(
         FactActionsQueue.date >= start_date
-    ).group_by(FactActionsQueue.date).order_by(FactActionsQueue.date)
+    ).group_by(FactActionsQueue.date).order_by(FactActionsQueue.date).limit(1000).limit(1000)
     daily_result = await db.execute(daily_query)
     daily_counts = [{"date": row.date.isoformat(), "count": row.count} for row in daily_result]
 

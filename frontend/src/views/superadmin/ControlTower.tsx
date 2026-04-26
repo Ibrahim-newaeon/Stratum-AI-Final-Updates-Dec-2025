@@ -68,27 +68,13 @@ export default function ControlTower() {
     budgetAtRisk: t.budgetAtRisk ?? 0,
     activeIncidents: t.activeIncidents ?? 0,
     autopilotMode: 'normal',
-  })) ?? [
-    { id: 1, name: 'Acme Corp', emqScore: 94, status: 'ok', budgetAtRisk: 0, activeIncidents: 0, autopilotMode: 'normal' },
-    { id: 2, name: 'TechStart Inc', emqScore: 72, status: 'risk', budgetAtRisk: 8500, activeIncidents: 1, autopilotMode: 'limited' },
-    { id: 3, name: 'GlobalBrand', emqScore: 88, status: 'ok', budgetAtRisk: 2000, activeIncidents: 0, autopilotMode: 'normal' },
-    { id: 4, name: 'FastGrowth Co', emqScore: 45, status: 'critical', budgetAtRisk: 25000, activeIncidents: 3, autopilotMode: 'frozen' },
-    { id: 5, name: 'RetailMax', emqScore: 91, status: 'ok', budgetAtRisk: 0, activeIncidents: 0, autopilotMode: 'normal' },
-  ]
+  })) ?? []
 
   // EMQ benchmarks
-  const benchmarks = benchmarksData ?? [
-    { platform: 'Meta', p25: 65, p50: 78, p75: 89, tenantScore: 82, percentile: 68 },
-    { platform: 'Google', p25: 72, p50: 85, p75: 94, tenantScore: 88, percentile: 72 },
-    { platform: 'TikTok', p25: 55, p50: 70, p75: 82, tenantScore: 75, percentile: 65 },
-  ]
+  const benchmarks = benchmarksData ?? []
 
   // Top issues
-  const topIssues = portfolioData?.topIssues ?? [
-    { driver: 'Freshness', affectedTenants: 3 },
-    { driver: 'Data Loss', affectedTenants: 2 },
-    { driver: 'Variance', affectedTenants: 4 },
-  ]
+  const topIssues = portfolioData?.topIssues ?? []
 
   // Count by status
   const statusCounts = tenantHealth.reduce((acc, t) => {

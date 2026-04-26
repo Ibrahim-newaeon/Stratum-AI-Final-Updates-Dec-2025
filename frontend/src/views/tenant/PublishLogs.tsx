@@ -32,52 +32,6 @@ interface PublishLog {
   retryCount: number
 }
 
-const mockLogs: PublishLog[] = [
-  {
-    id: '1',
-    draftId: 'd1',
-    draftName: 'Summer Sale 2024',
-    platform: 'meta',
-    status: 'success',
-    platformCampaignId: 'camp_123456789',
-    publishedAt: '2024-01-20T10:30:00Z',
-    publishedBy: 'Ahmed Al-Saud',
-    retryCount: 0,
-  },
-  {
-    id: '2',
-    draftId: 'd2',
-    draftName: 'Retargeting - Cart Abandoners',
-    platform: 'google',
-    status: 'success',
-    platformCampaignId: '987654321',
-    publishedAt: '2024-01-19T14:00:00Z',
-    publishedBy: 'Sara Mohammed',
-    retryCount: 0,
-  },
-  {
-    id: '3',
-    draftId: 'd3',
-    draftName: 'Brand Awareness Q1',
-    platform: 'meta',
-    status: 'failed',
-    errorMessage: 'Invalid targeting: Location "XYZ" not found',
-    publishedAt: '2024-01-18T09:15:00Z',
-    publishedBy: 'Omar Hassan',
-    retryCount: 2,
-  },
-  {
-    id: '4',
-    draftId: 'd4',
-    draftName: 'Product Launch - Winter',
-    platform: 'tiktok',
-    status: 'pending',
-    publishedAt: '2024-01-20T11:00:00Z',
-    publishedBy: 'Fatima Al-Ali',
-    retryCount: 0,
-  },
-]
-
 const statusConfig: Record<PublishStatus, { icon: React.ComponentType<{ className?: string }>; label: string; color: string }> = {
   success: { icon: CheckCircleIcon, label: 'Published', color: 'text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30' },
   failed: { icon: XCircleIcon, label: 'Failed', color: 'text-red-600 bg-red-100 dark:bg-red-900/30' },
@@ -87,7 +41,7 @@ const statusConfig: Record<PublishStatus, { icon: React.ComponentType<{ classNam
 
 export default function PublishLogs() {
   const { tenantId } = useParams<{ tenantId: string }>()
-  const [logs] = useState(mockLogs)
+  const [logs] = useState<PublishLog[]>([])
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [selectedLog, setSelectedLog] = useState<PublishLog | null>(null)
 

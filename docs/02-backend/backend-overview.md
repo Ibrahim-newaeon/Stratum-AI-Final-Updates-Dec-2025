@@ -435,7 +435,7 @@ redis>=5.0.0
 celery>=5.3.0
 
 # Authentication
-python-jose[cryptography]>=3.3.0
+PyJWT==2.10.1
 passlib[bcrypt]>=1.7.4
 pyotp>=2.9.0
 

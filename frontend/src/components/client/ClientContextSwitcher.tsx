@@ -147,14 +147,14 @@ export default function ClientContextSwitcher({ className }: ClientContextSwitch
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          'flex items-center gap-2 px-3 py-2 rounded-lg border transition-all text-sm',
+          'flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors text-sm',
           isOpen
             ? 'bg-accent border-primary/30 text-foreground'
             : 'bg-card border-border text-foreground hover:bg-accent hover:border-border'
         )}
       >
         <BuildingOfficeIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-        <span className="truncate max-w-[150px] font-medium">
+        <span className="truncate max-w-36 font-medium">
           {activeClientName || 'Select Client'}
         </span>
         <ChevronUpDownIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" />

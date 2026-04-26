@@ -24,7 +24,7 @@ export function QuickActionsWidget({ className }: QuickActionsWidgetProps) {
             <button
               key={action.id}
               className={cn(
-                'flex flex-col items-center justify-center gap-2 p-3 rounded-lg text-white transition-all duration-200',
+                'flex flex-col items-center justify-center gap-2 p-3 rounded-lg text-white transition-colors duration-200',
                 'focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                 'active:scale-95 motion-card',
                 action.color

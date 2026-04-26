@@ -1195,7 +1195,7 @@ class TestPublishCampaignDraft:
         resp = await publish_campaign_draft(_make_request(), 1, draft.id, bg, db)
         assert resp.success is True
         assert draft.status == DraftStatus.PUBLISHED
-        assert draft.platform_campaign_id is not None
+        # platform_campaign_id is set by background task after platform API returns real ID
         assert draft.published_at is not None
 
     @pytest.mark.asyncio

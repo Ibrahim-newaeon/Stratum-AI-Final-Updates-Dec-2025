@@ -31,11 +31,23 @@ from app.core.security import encrypt_pii, get_password_hash, hash_pii_for_looku
 # Super Admin Configuration (read from env vars with fallbacks for dev only)
 # =============================================================================
 
-SUPERADMIN_EMAIL = "ibrahim@new-aeon.com"
-SUPERADMIN_PASSWORD = "Newaeon@2026"
-SUPERADMIN_NAME = "Ibrahim (Super Admin)"
-SUPERADMIN_TENANT_NAME = "Stratum Platform"
-SUPERADMIN_TENANT_SLUG = "stratum-platform"
+# SECURITY: These MUST be provided via environment variables.
+# The script will fail fast if they are not set.
+SUPERADMIN_EMAIL = os.environ.get("SUPERADMIN_EMAIL")
+SUPERADMIN_PASSWORD = os.environ.get("SUPERADMIN_PASSWORD")
+SUPERADMIN_NAME = os.environ.get("SUPERADMIN_NAME", "Platform Super Admin")
+SUPERADMIN_TENANT_NAME = os.environ.get("SUPERADMIN_TENANT_NAME", "Stratum Platform")
+SUPERADMIN_TENANT_SLUG = os.environ.get("SUPERADMIN_TENANT_SLUG", "stratum-platform")
+
+if not SUPERADMIN_EMAIL or not SUPERADMIN_PASSWORD:
+    print("ERROR: SUPERADMIN_EMAIL and SUPERADMIN_PASSWORD environment variables are required.")
+    print("Example: SUPERADMIN_EMAIL=admin@example.com SUPERADMIN_PASSWORD=$(openssl rand -base64 32) python scripts/seed_superadmin.py")
+    sys.exit(1)
+
+# Enforce strong password policy
+if len(SUPERADMIN_PASSWORD) < 16:
+    print("ERROR: SUPERADMIN_PASSWORD must be at least 16 characters.")
+    sys.exit(1)
 
 
 async def create_superadmin():
@@ -157,7 +169,7 @@ async def create_superadmin():
             print("SUPER ADMIN CREATED SUCCESSFULLY")
             print("=" * 50)
             print(f"  Email:    {SUPERADMIN_EMAIL}")
-            print(f"  Password: {SUPERADMIN_PASSWORD}")
+            print("  Password:  [set via SUPERADMIN_PASSWORD env var]")
             print("  Role:     superadmin")
             print(f"  Tenant:   {SUPERADMIN_TENANT_NAME}")
             print(f"  User ID:  {user_id}")

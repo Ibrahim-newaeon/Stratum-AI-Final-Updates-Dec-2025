@@ -117,7 +117,7 @@ function CampaignRiskRow({ campaign }: { campaign: AtRiskCampaign }) {
   const riskColor = campaignRiskColors[campaign.risk_level];
 
   return (
-    <div className={cn('rounded-lg border transition-all', expanded ? 'bg-muted/20' : 'bg-background')}>
+    <div className={cn('rounded-lg border transition-colors', expanded ? 'bg-muted/20' : 'bg-background')}>
       <button
         onClick={() => setExpanded(!expanded)}
         className="w-full p-3 flex items-center gap-3 text-left"

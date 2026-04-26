@@ -190,7 +190,7 @@ export default function UnifiedDashboard() {
                 setShowPeriodDropdown(!showPeriodDropdown);
                 setShowCustomPicker(false);
               }}
-              className="inline-flex items-center px-4 py-2.5 border border-white/[0.08] rounded-xl text-sm font-medium bg-white/[0.04] hover:bg-white/[0.08] transition-all duration-200"
+              className="inline-flex items-center px-4 py-2.5 border border-white/[0.08] rounded-xl text-sm font-medium bg-white/[0.04] hover:bg-white/[0.08] transition-colors duration-200"
             >
               <Calendar className="w-4 h-4 mr-2 text-primary/70" />
               {period === 'custom' && appliedStartDate && appliedEndDate
@@ -269,7 +269,7 @@ export default function UnifiedDashboard() {
           <button
             onClick={handleRefresh}
             disabled={isLoading}
-            className="inline-flex items-center p-2.5 border border-white/[0.08] rounded-xl text-sm font-medium bg-white/[0.04] hover:bg-white/[0.08] transition-all duration-200 disabled:opacity-50"
+            className="inline-flex items-center p-2.5 border border-white/[0.08] rounded-xl text-sm font-medium bg-white/[0.04] hover:bg-white/[0.08] transition-colors duration-200 disabled:opacity-50"
             title="Refresh"
             aria-label="Refresh dashboard"
           >

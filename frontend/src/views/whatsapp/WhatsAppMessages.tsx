@@ -3,7 +3,7 @@
  * View all sent messages with delivery status tracking
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   ChatBubbleLeftRightIcon,
@@ -83,20 +83,20 @@ export default function WhatsAppMessages() {
       const res = await whatsappApi.listMessages({ page_size: 200 });
       if (res?.data?.items) {
         setMessages(
-          res.data.items.map((m: any) => ({
+          res.data.items.map((m) => ({
             id: m.id,
             contact_name: m.contact_name || m.recipient_phone || 'Unknown',
             contact_phone: m.recipient_phone || m.contact_phone || '',
-            direction: m.direction || 'outbound',
-            message_type: m.message_type || 'template',
+            direction: (m.direction || 'outbound') as Message['direction'],
+            message_type: (m.message_type || 'template') as Message['message_type'],
             template_name: m.template_name || null,
             content: m.body_text || m.content || '',
-            status: m.status || 'pending',
+            status: (m.status || 'pending') as Message['status'],
             sent_at: m.sent_at || m.created_at || null,
-            delivered_at: m.delivered_at || null,
-            read_at: m.read_at || null,
-            error_message: m.error_message || null,
-          }))
+            delivered_at: ((m as unknown) as Record<string, unknown>).delivered_at as string | null || null,
+            read_at: ((m as unknown) as Record<string, unknown>).read_at as string | null || null,
+            error_message: ((m as unknown) as Record<string, unknown>).error_message as string | null || null,
+          })) as Message[]
         );
       }
     } catch {
@@ -128,10 +128,10 @@ export default function WhatsAppMessages() {
 
   // Stats
   const totalMessages = messages.length;
-  const sentMessages = messages.filter((m) => m.direction === 'outbound').length;
-  const deliveredMessages = messages.filter((m) => ['delivered', 'read'].includes(m.status)).length;
-  const readMessages = messages.filter((m) => m.status === 'read').length;
-  const failedMessages = messages.filter((m) => m.status === 'failed').length;
+  const sentMessages = useMemo(() => messages.filter((m) => m.direction === 'outbound').length, [messages]);
+  const deliveredMessages = useMemo(() => messages.filter((m) => ['delivered', 'read'].includes(m.status)).length, [messages]);
+  const readMessages = useMemo(() => messages.filter((m) => m.status === 'read').length, [messages]);
+  const failedMessages = useMemo(() => messages.filter((m) => m.status === 'failed').length, [messages]);
 
   return (
     <div className="space-y-6">
@@ -153,7 +153,7 @@ export default function WhatsAppMessages() {
             placeholder="Search by name, phone, or content..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-[rgba(255,_255,_255,_0.05)] border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
+            className="w-full pl-10 pr-4 py-3 bg-muted/50 border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
           />
         </div>
         <button
@@ -162,7 +162,7 @@ export default function WhatsAppMessages() {
             'flex items-center gap-2 px-4 py-3 rounded-xl border transition-colors',
             showFilters
               ? 'bg-[#25D366]/10 border-[#25D366]/30 text-[#25D366]'
-              : 'bg-[rgba(255,_255,_255,_0.05)] border-white/10 text-gray-400 hover:text-white'
+              : 'bg-muted/50 border-white/10 text-gray-400 hover:text-foreground'
           )}
         >
           <FunnelIcon className="w-5 h-5" />
@@ -171,7 +171,7 @@ export default function WhatsAppMessages() {
         <button
           onClick={fetchMessages}
           disabled={loading}
-          className="flex items-center gap-2 px-4 py-3 bg-[rgba(255,_255,_255,_0.05)] border border-white/10 rounded-xl text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-3 bg-muted/50 border border-white/10 rounded-xl text-gray-400 hover:text-foreground transition-colors disabled:opacity-50"
         >
           <ArrowPathIcon className={cn('w-5 h-5', loading && 'animate-spin')} />
           Refresh
@@ -184,7 +184,7 @@ export default function WhatsAppMessages() {
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           exit={{ opacity: 0, height: 0 }}
-          className="flex flex-wrap gap-4 p-4 bg-[rgba(255,_255,_255,_0.05)] rounded-xl border border-white/5"
+          className="flex flex-wrap gap-4 p-4 bg-muted/50 rounded-xl border border-white/5"
         >
           <div>
             <label className="block text-sm text-gray-400 mb-2">Status</label>
@@ -196,8 +196,8 @@ export default function WhatsAppMessages() {
                   className={cn(
                     'px-3 py-1.5 rounded-lg text-sm transition-colors',
                     statusFilter === status
-                      ? 'bg-[#25D366] text-white'
-                      : 'bg-[#1a1a24] text-gray-400 hover:text-white'
+                      ? 'bg-[#25D366] text-foreground'
+                      : 'bg-card text-gray-400 hover:text-foreground'
                   )}
                 >
                   {status === 'all'
@@ -217,8 +217,8 @@ export default function WhatsAppMessages() {
                   className={cn(
                     'px-3 py-1.5 rounded-lg text-sm transition-colors',
                     directionFilter === dir
-                      ? 'bg-[#25D366] text-white'
-                      : 'bg-[#1a1a24] text-gray-400 hover:text-white'
+                      ? 'bg-[#25D366] text-foreground'
+                      : 'bg-card text-gray-400 hover:text-foreground'
                   )}
                 >
                   {dir === 'all' ? 'All' : dir === 'outbound' ? 'Sent' : 'Received'}
@@ -230,7 +230,7 @@ export default function WhatsAppMessages() {
       )}
 
       {/* Messages List */}
-      <div className="bg-[rgba(255,_255,_255,_0.05)] rounded-2xl border border-white/5 overflow-hidden">
+      <div className="bg-muted/50 rounded-2xl border border-white/5 overflow-hidden">
         <div className="divide-y divide-white/5">
           {paginatedMessages.map((message) => {
             const status = statusConfig[message.status];
@@ -246,7 +246,7 @@ export default function WhatsAppMessages() {
                       'w-10 h-10 rounded-full flex items-center justify-center font-medium',
                       message.direction === 'outbound'
                         ? 'bg-gradient-to-br from-[#25D366] to-[#128C7E]'
-                        : 'bg-gradient-to-br from-cyan-500 to-blue-500'
+                        : 'bg-primary'
                     )}
                   >
                     {message.contact_name[0]}
@@ -326,14 +326,14 @@ export default function WhatsAppMessages() {
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="p-2 bg-[#1a1a24] rounded-lg disabled:opacity-50 hover:bg-[#22222e] transition-colors"
+              className="p-2 bg-card rounded-lg disabled:opacity-50 hover:bg-muted transition-colors"
             >
               <ChevronLeftIcon className="w-4 h-4" />
             </button>
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="p-2 bg-[#1a1a24] rounded-lg disabled:opacity-50 hover:bg-[#22222e] transition-colors"
+              className="p-2 bg-card rounded-lg disabled:opacity-50 hover:bg-muted transition-colors"
             >
               <ChevronRightIcon className="w-4 h-4" />
             </button>
@@ -347,14 +347,14 @@ export default function WhatsAppMessages() {
 function MiniStat({
   label,
   value,
-  color = 'text-white',
+  color = 'text-foreground',
 }: {
   label: string;
   value: number;
   color?: string;
 }) {
   return (
-    <div className="bg-[rgba(255,_255,_255,_0.05)] rounded-xl border border-white/5 p-3 text-center">
+    <div className="bg-muted/50 rounded-xl border border-white/5 p-3 text-center">
       <div className={cn('text-xl font-bold', color)}>{value}</div>
       <div className="text-xs text-gray-500">{label}</div>
     </div>

@@ -299,7 +299,7 @@ export default function DashboardLayout() {
           data-tour="sidebar"
           aria-label="Main navigation"
           className={cn(
-            'fixed inset-y-0 left-0 z-50 w-64 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]',
+            'fixed inset-y-0 left-0 z-50 w-64 transition-colors duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]',
             sidebarOpen ? 'translate-x-0' : '-translate-x-full',
             'lg:translate-x-0',
             sidebarCollapsed ? 'lg:w-0 lg:overflow-hidden' : 'lg:w-64'
@@ -321,7 +321,7 @@ export default function DashboardLayout() {
               style={{ borderBottom: `1px solid ${theme.border}` }}
             >
               <div className="flex items-center gap-3">
-                <img src="/images/stratum-logo.svg" alt="Stratum AI" className="h-7" />
+                <img src="/images/stratum-logo.svg" alt="Stratum AI" className="h-7" loading="lazy" decoding="async" />
               </div>
               <button
                 onClick={() => setSidebarCollapsed(true)}
@@ -352,7 +352,7 @@ export default function DashboardLayout() {
                     id={item.tourId}
                     data-tour={item.dataTour}
                     className={cn(
-                      "flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150",
+                      "flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-colors duration-150",
                       isActive
                         ? "bg-accent text-primary"
                         : "text-muted-foreground hover:bg-black/[0.03]"
@@ -420,7 +420,7 @@ export default function DashboardLayout() {
                             <NavLink
                               to={item.href}
                               className={cn(
-                                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-150",
+                                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors duration-150",
                                 isActive
                                   ? "bg-accent text-primary"
                                   : "text-muted-foreground hover:bg-black/[0.03]"
@@ -494,7 +494,7 @@ export default function DashboardLayout() {
                             <NavLink
                               to={item.href}
                               className={cn(
-                                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-150",
+                                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors duration-150",
                                 isActive
                                   ? "bg-accent text-primary"
                                   : "text-muted-foreground hover:bg-black/[0.03]"
@@ -568,7 +568,7 @@ export default function DashboardLayout() {
                             <NavLink
                               to={item.href}
                               className={cn(
-                                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-150",
+                                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors duration-150",
                                 isActive
                                   ? "bg-accent text-primary"
                                   : "text-muted-foreground hover:bg-black/[0.03]"
@@ -636,7 +636,7 @@ export default function DashboardLayout() {
                             to={item.href}
                             end={item.end}
                             className={cn(
-                              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-150",
+                              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors duration-150",
                               isActive
                                 ? "bg-accent text-primary"
                                 : "text-muted-foreground hover:bg-black/[0.03]"
@@ -672,7 +672,7 @@ export default function DashboardLayout() {
                     to={item.href}
                     data-tour={item.dataTour}
                     className={cn(
-                      "flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150",
+                      "flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-colors duration-150",
                       isActive
                         ? "bg-accent text-primary"
                         : "text-muted-foreground hover:bg-black/[0.03]"
@@ -716,7 +716,7 @@ export default function DashboardLayout() {
           <button
             onClick={() => setSidebarCollapsed(false)}
             aria-label="Expand sidebar"
-            className="hidden lg:flex fixed top-4 left-4 z-50 h-8 w-8 items-center justify-center rounded-xl transition-all duration-200"
+            className="hidden lg:flex fixed top-4 left-4 z-50 h-8 w-8 items-center justify-center rounded-xl transition-colors duration-200"
             style={{
               background: '#FFFFFF',
               border: `0.5px solid ${theme.border}`,
@@ -729,9 +729,9 @@ export default function DashboardLayout() {
         )}
 
         {/* Main content */}
-        <div
+        <main
           className={cn(
-            'flex flex-1 flex-col overflow-hidden transition-all duration-300',
+            'flex flex-1 flex-col overflow-hidden transition-colors duration-300',
             sidebarCollapsed ? 'lg:ml-0' : 'lg:ml-64'
           )}
         >
@@ -881,7 +881,7 @@ export default function DashboardLayout() {
               </motion.div>
             </AnimatePresence>
           </main>
-        </div>
+        </main>
 
         <LearningHub isOpen={learningHubOpen} onClose={() => setLearningHubOpen(false)} />
         <NotificationCenter

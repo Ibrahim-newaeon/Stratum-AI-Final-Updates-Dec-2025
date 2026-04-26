@@ -289,7 +289,7 @@ async def list_categories(
 ):
     """List all content categories."""
     result = await db.execute(
-        select(CMSCategory).order_by(CMSCategory.display_order.asc(), CMSCategory.name.asc())
+        select(CMSCategory).order_by(CMSCategory.display_order.asc(), CMSCategory.name.asc()).limit(1000)
     )
     categories = result.scalars().all()
 
@@ -317,7 +317,7 @@ async def list_tags(
 ):
     """List all content tags."""
     result = await db.execute(
-        select(CMSTag).order_by(CMSTag.usage_count.desc(), CMSTag.name.asc())
+        select(CMSTag).order_by(CMSTag.usage_count.desc(), CMSTag.name.asc()).limit(1000)
     )
     tags = result.scalars().all()
 

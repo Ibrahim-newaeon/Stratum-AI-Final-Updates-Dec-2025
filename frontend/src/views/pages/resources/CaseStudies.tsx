@@ -227,7 +227,7 @@ export default function CaseStudiesPage() {
               {caseStudies.map((study) => (
                 <Link key={study.id} to={`/case-studies/${study.id}`} className="group block">
                   <div
-                    className="h-full p-6 rounded-2xl transition-all duration-300 hover:-translate-y-2"
+                    className="h-full p-6 rounded-2xl transition-transform duration-300 hover:-translate-y-2"
                     style={{
                       background: 'var(--landing-card)',
                       border: '1px solid var(--landing-border)',
@@ -290,7 +290,7 @@ export default function CaseStudiesPage() {
                     </div>
 
                     {/* Read more */}
-                    <div className="flex items-center gap-2 text-sm font-medium text-[var(--landing-accent-warm)] group-hover:gap-3 transition-all">
+                    <div className="flex items-center gap-2 text-sm font-medium text-[var(--landing-accent-warm)] group-hover:gap-3 transition-colors">
                       <span>Read Full Story</span>
                       <ArrowRightIcon className="w-4 h-4" />
                     </div>
@@ -321,7 +321,7 @@ export default function CaseStudiesPage() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
                   to="/signup"
-                  className="px-8 py-4 rounded-full font-semibold text-white transition-all duration-200"
+                  className="px-8 py-4 rounded-full font-semibold text-white transition-colors duration-200"
                   style={{
                     background: 'var(--landing-accent-coral)',
                     boxShadow: 'var(--landing-glow-coral)',
@@ -331,7 +331,7 @@ export default function CaseStudiesPage() {
                 </Link>
                 <Link
                   to="/contact"
-                  className="px-8 py-4 rounded-xl font-semibold text-white transition-all duration-200"
+                  className="px-8 py-4 rounded-xl font-semibold text-white transition-colors duration-200"
                   style={{
                     background: 'var(--landing-surface-glass)',
                     border: '1px solid var(--landing-border)',

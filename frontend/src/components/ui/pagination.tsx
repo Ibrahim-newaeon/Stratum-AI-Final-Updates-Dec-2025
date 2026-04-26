@@ -160,7 +160,7 @@ const Pagination = React.forwardRef<HTMLDivElement, PaginationProps>(
           <button
             onClick={() => onPageChange(1)}
             disabled={!canGoBack}
-            className={cn(paginationButtonVariants({ variant }), 'h-8 w-8')}
+            className={cn(paginationButtonVariants({ variant }), 'h-10 w-10')}
             aria-label="Go to first page"
           >
             <ChevronsLeft className="h-4 w-4" />
@@ -172,7 +172,7 @@ const Pagination = React.forwardRef<HTMLDivElement, PaginationProps>(
           <button
             onClick={() => onPageChange(currentPage - 1)}
             disabled={!canGoBack}
-            className={cn(paginationButtonVariants({ variant }), 'h-8 w-8')}
+            className={cn(paginationButtonVariants({ variant }), 'h-10 w-10')}
             aria-label="Go to previous page"
           >
             <ChevronLeft className="h-4 w-4" />
@@ -184,7 +184,7 @@ const Pagination = React.forwardRef<HTMLDivElement, PaginationProps>(
           page === 'ellipsis' ? (
             <span
               key={`ellipsis-${index}`}
-              className="flex h-8 w-8 items-center justify-center"
+              className="flex h-10 w-10 items-center justify-center"
               aria-hidden
             >
               <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
@@ -198,7 +198,7 @@ const Pagination = React.forwardRef<HTMLDivElement, PaginationProps>(
                   variant,
                   isActive: currentPage === page,
                 }),
-                'h-8 w-8'
+                'h-10 w-10'
               )}
               aria-label={`Go to page ${page}`}
               aria-current={currentPage === page ? 'page' : undefined}
@@ -213,7 +213,7 @@ const Pagination = React.forwardRef<HTMLDivElement, PaginationProps>(
           <button
             onClick={() => onPageChange(currentPage + 1)}
             disabled={!canGoForward}
-            className={cn(paginationButtonVariants({ variant }), 'h-8 w-8')}
+            className={cn(paginationButtonVariants({ variant }), 'h-10 w-10')}
             aria-label="Go to next page"
           >
             <ChevronRight className="h-4 w-4" />
@@ -225,7 +225,7 @@ const Pagination = React.forwardRef<HTMLDivElement, PaginationProps>(
           <button
             onClick={() => onPageChange(totalPages)}
             disabled={!canGoForward}
-            className={cn(paginationButtonVariants({ variant }), 'h-8 w-8')}
+            className={cn(paginationButtonVariants({ variant }), 'h-10 w-10')}
             aria-label="Go to last page"
           >
             <ChevronsRight className="h-4 w-4" />
@@ -265,7 +265,7 @@ const PaginationLink = React.forwardRef<
         variant: 'default',
         isActive,
       }),
-      'h-8 w-8',
+      'h-10 w-10',
       className
     )}
     {...props}

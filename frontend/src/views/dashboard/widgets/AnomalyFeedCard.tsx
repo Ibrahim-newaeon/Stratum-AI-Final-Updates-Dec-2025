@@ -104,7 +104,7 @@ export function AnomalyFeedCard() {
 
   if (isLoading) {
     return (
-      <div className="widget-card flex items-center justify-center min-h-[200px]">
+      <div className="widget-card flex items-center justify-center min-h-[12.5rem]">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     );
@@ -139,14 +139,14 @@ export function AnomalyFeedCard() {
           <p className="text-xs text-muted-foreground mt-1">All signals are operating within normal parameters</p>
         </div>
       ) : (
-        <div className="flex-1 space-y-2 overflow-y-auto max-h-[400px] scrollbar-hide">
+        <div className="flex-1 space-y-2 overflow-y-auto max-h-[25rem] scrollbar-hide">
           {visible.map((item) => {
             const cfg = SEVERITY_CONFIG[item.severity];
             const Icon = cfg.icon;
             return (
               <div
                 key={item.id}
-                className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] transition-all duration-200"
+                className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] transition-colors duration-200"
               >
                 <div className={cn('shrink-0 p-1.5 rounded-md', cfg.cls)}>
                   <Icon className="w-3.5 h-3.5" />

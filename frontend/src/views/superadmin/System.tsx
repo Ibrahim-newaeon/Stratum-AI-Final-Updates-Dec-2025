@@ -113,7 +113,7 @@ export default function System() {
   const handleConfirmAction = async () => {
     if (!confirmDialog) return
 
-    const { type, queueId, queueName } = confirmDialog
+    const { type, queueId, queueName: _queueName } = confirmDialog
     const loadingKey = `${type}-${queueId}`
 
     setActionLoading(prev => ({ ...prev, [loadingKey]: true }))
@@ -132,7 +132,7 @@ export default function System() {
         await refetch()
       }
     } catch (error) {
-      console.error(`Failed to ${type} queue "${queueName}":`, error)
+
     } finally {
       setActionLoading(prev => ({ ...prev, [loadingKey]: false }))
     }

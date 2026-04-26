@@ -6,8 +6,10 @@ API endpoints for server-side Conversion API integration.
 Provides no-code platform connection, event streaming, and data quality analysis.
 """
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, ConfigDict
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field, field_validator
@@ -22,15 +24,39 @@ from app.schemas import APIResponse
 logger = get_logger(__name__)
 router = APIRouter(tags=["capi"])
 
-# Global CAPI service instance (per-tenant in production)
-_capi_services: Dict[int, CAPIService] = {}
+# Global CAPI service instance cache (per-tenant) with TTL eviction
+# to prevent unbounded memory growth and cross-tenant state leakage.
+_CAPI_SERVICE_TTL_MINUTES = 30
+_CAPI_MAX_SERVICES = 100
+_capi_services: Dict[int, tuple[CAPIService, datetime]] = {}
 
 
 def get_capi_service(tenant_id: int) -> CAPIService:
-    """Get or create CAPI service for tenant."""
+    """Get or create CAPI service for tenant with TTL eviction."""
+    now = datetime.now(timezone.utc)
+    # Evict expired entries on every access
+    expired = [
+        tid for tid, (_, ts) in _capi_services.items()
+        if now - ts > timedelta(minutes=_CAPI_SERVICE_TTL_MINUTES)
+    ]
+    for tid in expired:
+        del _capi_services[tid]
+        logger.info("capi_service_evicted", tenant_id=tid)
+
+    # Enforce max size: remove oldest if at capacity and tenant not in cache
+    if tenant_id not in _capi_services and len(_capi_services) >= _CAPI_MAX_SERVICES:
+        oldest_tid = min(_capi_services, key=lambda k: _capi_services[k][1])
+        del _capi_services[oldest_tid]
+        logger.warning("capi_service_max_size_evicted", tenant_id=oldest_tid)
+
     if tenant_id not in _capi_services:
-        _capi_services[tenant_id] = CAPIService()
-    return _capi_services[tenant_id]
+        _capi_services[tenant_id] = (CAPIService(), now)
+    else:
+        # Refresh timestamp on access
+        svc, _ = _capi_services[tenant_id]
+        _capi_services[tenant_id] = (svc, now)
+
+    return _capi_services[tenant_id][0]
 
 
 # =============================================================================
@@ -416,10 +442,18 @@ async def map_event(
     )
 
 
+class PIIDetectRequest(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+
+class PIIHashRequest(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+
 @router.post("/pii/detect", response_model=APIResponse)
 async def detect_pii(
     current_user: CurrentUserDep,
-    data: Dict[str, Any],
+    data: PIIDetectRequest,
 ):
     """
     Detect PII fields in data.
@@ -428,7 +462,7 @@ async def detect_pii(
     """
     service = get_capi_service(current_user.tenant_id)
 
-    detections = service.detect_pii_fields(data)
+    detections = service.detect_pii_fields(data.model_dump())
 
     return APIResponse(
         success=True,
@@ -443,7 +477,7 @@ async def detect_pii(
 @router.post("/pii/hash", response_model=APIResponse)
 async def hash_user_data(
     current_user: CurrentUserDep,
-    user_data: Dict[str, Any],
+    user_data: PIIHashRequest,
 ):
     """
     Hash user data for CAPI transmission.
@@ -452,7 +486,7 @@ async def hash_user_data(
     """
     service = get_capi_service(current_user.tenant_id)
 
-    hashed = service.hash_user_data(user_data)
+    hashed = service.hash_user_data(user_data.model_dump())
 
     return APIResponse(
         success=True,

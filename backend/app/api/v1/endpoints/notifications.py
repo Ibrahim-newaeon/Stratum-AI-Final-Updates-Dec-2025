@@ -338,7 +338,6 @@ async def create_notification(
 
     db.add(notification)
     await db.commit()
-    await db.refresh(notification)
 
     logger.info(f"Notification created: {notification.id}")
 

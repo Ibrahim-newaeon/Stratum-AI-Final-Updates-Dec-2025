@@ -181,11 +181,12 @@ export default function VoiceGreeting({
         >
           <div className="relative max-w-sm bg-[#0b1215] border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
             {/* Gradient top border */}
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-cyan-500" />
+            <div className="absolute top-0 left-0 right-0 h-1 bg-primary" />
 
             {/* Close button */}
             <button
               onClick={handleDismiss}
+              aria-label="Dismiss"
               className="absolute top-3 right-3 p-1.5 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors z-10"
             >
               <XMarkIcon className="w-4 h-4" />
@@ -199,7 +200,7 @@ export default function VoiceGreeting({
                   <motion.div
                     animate={isPlaying ? { scale: [1, 1.1, 1] } : {}}
                     transition={{ repeat: Infinity, duration: 1 }}
-                    className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center"
+                    className="w-12 h-12 rounded-full bg-primary flex items-center justify-center"
                   >
                     <SparklesIcon className="w-6 h-6 text-white" />
                   </motion.div>
@@ -255,7 +256,7 @@ export default function VoiceGreeting({
               <div className="flex gap-3">
                 <button
                   onClick={handleStartChat}
-                  className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-medium rounded-xl hover:opacity-90 transition-opacity"
+                  className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-primary text-white font-medium rounded-xl hover:opacity-90 transition-opacity"
                 >
                   <ChatBubbleLeftRightIcon className="w-5 h-5" />
                   {texts.ctaText}

@@ -100,7 +100,7 @@ class ReportTemplate(Base):
     __tablename__ = "report_templates"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Template identification
     name = Column(String(255), nullable=False)
@@ -135,8 +135,8 @@ class ReportTemplate(Base):
     chart_config = Column(JSONB, nullable=True)  # Chart configurations
 
     # Metadata
-    created_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
-    last_modified_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    last_modified_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
@@ -166,8 +166,8 @@ class ScheduledReport(Base):
     __tablename__ = "scheduled_reports"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
-    template_id = Column(UUID(as_uuid=True), ForeignKey("report_templates.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    template_id = Column(UUID(as_uuid=True), ForeignKey("report_templates.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Schedule identification
     name = Column(String(255), nullable=False)
@@ -230,7 +230,7 @@ class ScheduledReport(Base):
     failure_count = Column(Integer, default=0, nullable=False)
 
     # Metadata
-    created_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
@@ -260,9 +260,9 @@ class ReportExecution(Base):
     __tablename__ = "report_executions"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
-    template_id = Column(UUID(as_uuid=True), ForeignKey("report_templates.id", ondelete="SET NULL"), nullable=True)
-    schedule_id = Column(UUID(as_uuid=True), ForeignKey("scheduled_reports.id", ondelete="SET NULL"), nullable=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    template_id = Column(UUID(as_uuid=True), ForeignKey("report_templates.id", ondelete="SET NULL"), nullable=True, index=True)
+    schedule_id = Column(UUID(as_uuid=True), ForeignKey("scheduled_reports.id", ondelete="SET NULL"), nullable=True, index=True)
 
     # Execution details
     execution_type = Column(String(50), nullable=False)  # scheduled, manual, api
@@ -296,7 +296,7 @@ class ReportExecution(Base):
     retry_count = Column(Integer, default=0, nullable=False)
 
     # Triggered by
-    triggered_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    triggered_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -323,8 +323,8 @@ class ReportDelivery(Base):
     __tablename__ = "report_deliveries"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
-    execution_id = Column(UUID(as_uuid=True), ForeignKey("report_executions.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    execution_id = Column(UUID(as_uuid=True), ForeignKey("report_executions.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Delivery details
     channel = Column(StrEnumType(DeliveryChannel), nullable=False)
@@ -370,7 +370,7 @@ class DeliveryChannelConfig(Base):
     __tablename__ = "delivery_channel_configs"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Channel
     channel = Column(StrEnumType(DeliveryChannel), nullable=False)

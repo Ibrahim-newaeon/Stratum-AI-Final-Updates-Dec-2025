@@ -2,7 +2,7 @@
 // Stratum AI - Custom Report Builder (Enterprise Feature)
 // =============================================================================
 
-import { useState } from 'react';
+import { useState, useCallback, useMemo, memo } from 'react';
 import {
   ArrowsPointingOutIcon,
   ChartBarIcon,
@@ -61,7 +61,7 @@ interface Visualization {
   title: string;
   metrics: string[];
   dimensions: string[];
-  config: Record<string, any>;
+  config: Record<string, unknown>;
 }
 
 interface ReportSchedule {
@@ -459,7 +459,7 @@ function ReportBuilderModal({ report, isOpen, onClose, onSave }: ReportBuilderMo
               Build a custom report with your chosen metrics and visualizations
             </p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-muted rounded-lg">
+          <button onClick={onClose} aria-label="Close" className="p-2 hover:bg-muted rounded-lg">
             <XMarkIcon className="w-5 h-5" />
           </button>
         </div>
@@ -494,8 +494,9 @@ function ReportBuilderModal({ report, isOpen, onClose, onSave }: ReportBuilderMo
               {/* Report Name & Description */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Report Name</label>
+                  <label htmlFor="report-name" className="block text-sm font-medium mb-2">Report Name</label>
                   <input
+                    id="report-name"
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -504,8 +505,9 @@ function ReportBuilderModal({ report, isOpen, onClose, onSave }: ReportBuilderMo
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Date Range</label>
+                  <label htmlFor="date-range" className="block text-sm font-medium mb-2">Date Range</label>
                   <select
+                    id="date-range"
                     value={formData.dateRange.type}
                     onChange={(e) =>
                       setFormData({
@@ -524,8 +526,9 @@ function ReportBuilderModal({ report, isOpen, onClose, onSave }: ReportBuilderMo
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Description</label>
+                <label htmlFor="report-description" className="block text-sm font-medium mb-2">Description</label>
                 <textarea
+                  id="report-description"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   className="w-full px-3 py-2 rounded-lg border bg-background focus:ring-2 focus:ring-primary"
@@ -550,7 +553,7 @@ function ReportBuilderModal({ report, isOpen, onClose, onSave }: ReportBuilderMo
                         })
                       }
                       className={cn(
-                        'p-4 rounded-lg border text-left transition-all',
+                        'p-4 rounded-lg border text-left transition-colors',
                         formData.dataSource === source.id
                           ? 'border-primary bg-primary/5'
                           : 'hover:border-muted-foreground/50'
@@ -914,6 +917,94 @@ function ReportBuilderModal({ report, isOpen, onClose, onSave }: ReportBuilderMo
 }
 
 // =============================================================================
+// Report Card (memoized)
+// =============================================================================
+
+interface ReportCardProps {
+  report: CustomReport;
+  onEdit: (report: CustomReport) => void;
+  onDuplicate: (report: CustomReport) => void;
+  onDelete: (reportId: string) => void;
+}
+
+const ReportCard = memo(function ReportCard({ report, onEdit, onDuplicate, onDelete }: ReportCardProps) {
+  const dataSource = DATA_SOURCES.find((ds) => ds.id === report.dataSource);
+  return (
+    <div className="bg-card rounded-xl border p-5 hover:border-primary/50 transition-colors">
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex-1">
+          <h2 className="font-semibold">{report.name}</h2>
+          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+            {report.description}
+          </p>
+        </div>
+        <span
+          className={cn(
+            'px-2 py-1 rounded-full text-xs font-medium',
+            report.status === 'published'
+              ? 'bg-green-500/10 text-green-500'
+              : 'bg-yellow-500/10 text-yellow-500'
+          )}
+        >
+          {report.status}
+        </span>
+      </div>
+
+      <div className="space-y-2 text-sm mb-4">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <TableCellsIcon className="w-4 h-4" />
+          <span>{dataSource?.name || 'Unknown source'}</span>
+        </div>
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <ChartBarIcon className="w-4 h-4" />
+          <span>
+            {report.metrics.length} metrics, {report.visualizations.length} charts
+          </span>
+        </div>
+        {report.schedule.enabled && (
+          <div className="flex items-center gap-2 text-blue-500">
+            <ClockIcon className="w-4 h-4" />
+            <span className="capitalize">
+              {report.schedule.frequency} at {report.schedule.time}
+            </span>
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-center gap-2 pt-3 border-t">
+        <button
+          onClick={() => onEdit(report)}
+          className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-muted hover:bg-muted/80 text-sm"
+        >
+          <PencilIcon className="w-4 h-4" />
+          Edit
+        </button>
+        <button className="flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-sm">
+          <EyeIcon className="w-4 h-4" />
+          View
+        </button>
+        <button
+          onClick={() => onDuplicate(report)}
+          className="p-1.5 rounded-lg hover:bg-muted"
+          title="Duplicate"
+          aria-label="Duplicate report"
+        >
+          <DocumentDuplicateIcon className="w-4 h-4" />
+        </button>
+        <button
+          onClick={() => onDelete(report.id)}
+          className="p-1.5 rounded-lg hover:bg-destructive/10 hover:text-destructive"
+          title="Delete"
+          aria-label="Delete report"
+        >
+          <TrashIcon className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  );
+});
+
+// =============================================================================
 // Main Component
 // =============================================================================
 
@@ -924,23 +1015,23 @@ export default function CustomReportBuilder() {
   const [filterStatus, setFilterStatus] = useState<'all' | 'draft' | 'published'>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredReports = reports.filter((report) => {
+  const filteredReports = useMemo(() => reports.filter((report) => {
     const matchesStatus = filterStatus === 'all' || report.status === filterStatus;
     const matchesSearch =
       report.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       report.description.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesStatus && matchesSearch;
-  });
+  }), [reports, filterStatus, searchQuery]);
 
-  const handleCreateReport = () => {
+  const handleCreateReport = useCallback(() => {
     setEditingReport(null);
     setIsBuilderOpen(true);
-  };
+  }, []);
 
-  const handleEditReport = (report: CustomReport) => {
+  const handleEditReport = useCallback((report: CustomReport) => {
     setEditingReport(report);
     setIsBuilderOpen(true);
-  };
+  }, []);
 
   const handleSaveReport = (report: CustomReport) => {
     if (editingReport) {
@@ -950,11 +1041,11 @@ export default function CustomReportBuilder() {
     }
   };
 
-  const handleDeleteReport = (reportId: string) => {
-    setReports(reports.filter((r) => r.id !== reportId));
-  };
+  const handleDeleteReport = useCallback((reportId: string) => {
+    setReports((prev) => prev.filter((r) => r.id !== reportId));
+  }, []);
 
-  const handleDuplicateReport = (report: CustomReport) => {
+  const handleDuplicateReport = useCallback((report: CustomReport) => {
     const newReport: CustomReport = {
       ...report,
       id: Date.now().toString(),
@@ -963,14 +1054,14 @@ export default function CustomReportBuilder() {
       updatedAt: new Date().toISOString(),
       status: 'draft',
     };
-    setReports([...reports, newReport]);
-  };
+    setReports((prev) => [...prev, newReport]);
+  }, []);
 
-  const stats = {
+  const stats = useMemo(() => ({
     total: reports.length,
     published: reports.filter((r) => r.status === 'published').length,
     scheduled: reports.filter((r) => r.schedule.enabled).length,
-  };
+  }), [reports]);
 
   return (
     <div className="space-y-6">
@@ -1044,7 +1135,7 @@ export default function CustomReportBuilder() {
       {filteredReports.length === 0 ? (
         <div className="text-center py-12 bg-card rounded-xl border">
           <DocumentChartBarIcon className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium mb-2">No reports found</h3>
+          <h2 className="text-lg font-medium mb-2">No reports found</h2>
           <p className="text-muted-foreground mb-4">
             {searchQuery
               ? 'Try a different search term'
@@ -1062,83 +1153,15 @@ export default function CustomReportBuilder() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredReports.map((report) => {
-            const dataSource = DATA_SOURCES.find((ds) => ds.id === report.dataSource);
-            return (
-              <div
-                key={report.id}
-                className="bg-card rounded-xl border p-5 hover:border-primary/50 transition-colors"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <h3 className="font-semibold">{report.name}</h3>
-                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                      {report.description}
-                    </p>
-                  </div>
-                  <span
-                    className={cn(
-                      'px-2 py-1 rounded-full text-xs font-medium',
-                      report.status === 'published'
-                        ? 'bg-green-500/10 text-green-500'
-                        : 'bg-yellow-500/10 text-yellow-500'
-                    )}
-                  >
-                    {report.status}
-                  </span>
-                </div>
-
-                <div className="space-y-2 text-sm mb-4">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <TableCellsIcon className="w-4 h-4" />
-                    <span>{dataSource?.name || 'Unknown source'}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <ChartBarIcon className="w-4 h-4" />
-                    <span>
-                      {report.metrics.length} metrics, {report.visualizations.length} charts
-                    </span>
-                  </div>
-                  {report.schedule.enabled && (
-                    <div className="flex items-center gap-2 text-blue-500">
-                      <ClockIcon className="w-4 h-4" />
-                      <span className="capitalize">
-                        {report.schedule.frequency} at {report.schedule.time}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-2 pt-3 border-t">
-                  <button
-                    onClick={() => handleEditReport(report)}
-                    className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-muted hover:bg-muted/80 text-sm"
-                  >
-                    <PencilIcon className="w-4 h-4" />
-                    Edit
-                  </button>
-                  <button className="flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-sm">
-                    <EyeIcon className="w-4 h-4" />
-                    View
-                  </button>
-                  <button
-                    onClick={() => handleDuplicateReport(report)}
-                    className="p-1.5 rounded-lg hover:bg-muted"
-                    title="Duplicate"
-                  >
-                    <DocumentDuplicateIcon className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteReport(report.id)}
-                    className="p-1.5 rounded-lg hover:bg-destructive/10 hover:text-destructive"
-                    title="Delete"
-                  >
-                    <TrashIcon className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            );
-          })}
+          {filteredReports.map((report) => (
+            <ReportCard
+              key={report.id}
+              report={report}
+              onEdit={handleEditReport}
+              onDuplicate={handleDuplicateReport}
+              onDelete={handleDeleteReport}
+            />
+          ))}
         </div>
       )}
 

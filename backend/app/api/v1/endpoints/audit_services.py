@@ -1668,9 +1668,10 @@ async def get_audit_log(
     Get audit log entries (admin only).
     Note: In production, this would query from a database or log aggregation service.
     """
+    log_location = settings.AUDIT_LOG_PATH if hasattr(settings, "AUDIT_LOG_PATH") else None
     return {
         "message": "Audit logs are written to the application log stream",
-        "log_location": "/var/log/stratum/audit.log",
+        "log_location": log_location,
         "filters": {
             "operation": operation,
             "resource_type": resource_type,

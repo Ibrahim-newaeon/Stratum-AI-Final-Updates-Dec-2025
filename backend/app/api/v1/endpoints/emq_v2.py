@@ -23,6 +23,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.deps import get_current_user, require_superadmin
 from app.db.session import get_async_session
 from app.schemas.response import APIResponse
 from app.schemas.emq_v2 import (
@@ -48,7 +49,10 @@ from app.schemas.emq_v2 import (
 from app.services.emq_service import EmqService, EmqAdminService
 
 
-router = APIRouter(tags=["EMQ v2"])
+router = APIRouter(
+    tags=["EMQ v2"],
+    dependencies=[Depends(get_current_user)],
+)
 
 
 # =============================================================================
@@ -293,22 +297,11 @@ async def update_playbook_item(
     """
     validate_tenant_access(request, tenant_id)
 
-    # In production, this would update a playbook_items table
-    # For now, return the updated item
-    response_data = PlaybookItemResponse(
-        id=item_id,
-        title="Enable Enhanced Conversions",
-        description="Implement Google Enhanced Conversions to improve match rates",
-        priority="critical",
-        owner=updates.owner,
-        estimatedImpact=8.5,
-        estimatedTime="2-4 hours",
-        platform="Google Ads",
-        status=updates.status or "pending",
-        actionUrl="https://ads.google.com/settings/conversions",
+    # Playbook item persistence not yet implemented — requires playbook_items table
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail="Playbook item update persistence is not yet implemented.",
     )
-
-    return APIResponse(success=True, data=response_data)
 
 
 @router.get(
@@ -534,11 +527,23 @@ async def update_autopilot_mode(
     if config is None:
         raise HTTPException(status_code=400, detail=f"Invalid mode: {update.mode}")
 
-    # In production, this would persist the override to database
+    # Query actual tenant spend for budget-at-risk calculation
+    from sqlalchemy import func
+    from app.models import Campaign
+
+    spend_result = await db.execute(
+        select(func.coalesce(func.sum(Campaign.total_spend_cents), 0)).where(
+            Campaign.tenant_id == tenant_id,
+            Campaign.status == "active",
+        )
+    )
+    total_spend_cents = spend_result.scalar() or 0
+    budget_at_risk = round(total_spend_cents / 100, 2)
+
     response_data = AutopilotStateResponse(
         mode=update.mode,
         reason=update.reason or f"Manual override to {update.mode} mode",
-        budgetAtRisk=45000.00,
+        budgetAtRisk=budget_at_risk,
         allowedActions=config["allowed"],
         restrictedActions=config["restricted"],
     )
@@ -560,6 +565,7 @@ async def get_benchmarks(
     date: Optional[str] = Query(default=None, description="Target date"),
     platform: Optional[str] = Query(default=None, description="Filter by platform"),
     db: AsyncSession = Depends(get_async_session),
+    _superadmin = Depends(require_superadmin()),
 ):
     """
     Get EMQ benchmarks across all tenants.
@@ -586,6 +592,7 @@ async def get_portfolio(
     request: Request,
     date: Optional[str] = Query(default=None, description="Target date"),
     db: AsyncSession = Depends(get_async_session),
+    _superadmin = Depends(require_superadmin()),
 ):
     """
     Get portfolio overview for super admin.

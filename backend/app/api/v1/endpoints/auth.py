@@ -617,7 +617,7 @@ async def login(
             UserTenantMembership.is_active == True,
             TenantModel.is_deleted == False,
         )
-        .order_by(UserTenantMembership.is_default.desc(), TenantModel.name)
+        .order_by(UserTenantMembership.is_default.desc(), TenantModel.name).limit(1000)
     )
     membership_rows = membership_result.all()
     available_tenants = [
@@ -740,8 +740,6 @@ async def register(
     db.add(membership)
 
     await db.commit()
-    await db.refresh(user)
-    await db.refresh(tenant)
 
     # 6. Send welcome email in background
     user_name = request_data.full_name or ""
@@ -804,6 +802,17 @@ async def refresh_token(
             detail="Invalid refresh token",
         )
 
+    # SECURITY: Check if refresh token has already been revoked (rotation)
+    from app.core.security import is_token_blacklisted
+    try:
+        if await is_token_blacklisted(payload, token_data.refresh_token):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Refresh token has been revoked",
+            )
+    except ConnectionError:
+        logger.warning("redis_unavailable_during_refresh")
+
     user_id = int(payload["sub"])
 
     # Verify user still exists and is active
@@ -821,6 +830,9 @@ async def refresh_token(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found or inactive",
         )
+
+    # SECURITY: Revoke the old refresh token before issuing new ones (token rotation)
+    await blacklist_token(token_data.refresh_token, payload)
 
     # Create new tokens
     access_token = create_access_token(
@@ -845,15 +857,21 @@ async def refresh_token(
     )
 
 
+class LogoutRequest(BaseModel):
+    refresh_token: Optional[str] = Field(None, description="Optional refresh token to revoke")
+
+
 @router.post("/logout")
 async def logout(
     request: Request,
+    logout_data: LogoutRequest = None,
     db: AsyncSession = Depends(get_async_session),
 ):
     """
     Log out the current user.
 
-    Blacklists the current access token in Redis so it cannot be reused.
+    Blacklists the current access token and optional refresh token in Redis
+    so they cannot be reused.
     """
     user_id = getattr(request.state, "user_id", None)
     tenant_id = getattr(request.state, "tenant_id", None)
@@ -869,6 +887,15 @@ async def logout(
             except (ConnectionError, TimeoutError, OSError) as exc:
                 logger.warning("redis_unavailable_token_blacklist", error=str(exc))
                 # Token will expire naturally via JWT exp claim
+
+    # SECURITY: Also blacklist the refresh token if provided
+    if logout_data and logout_data.refresh_token:
+        refresh_payload = decode_token(logout_data.refresh_token)
+        if refresh_payload:
+            try:
+                await blacklist_token(logout_data.refresh_token, refresh_payload)
+            except (ConnectionError, TimeoutError, OSError) as exc:
+                logger.warning("redis_unavailable_refresh_blacklist", error=str(exc))
 
     if user_id:
         # Log logout event
@@ -919,7 +946,7 @@ async def list_my_tenants(
             UserTenantMembership.is_active == True,
             Tenant.is_deleted == False,
         )
-        .order_by(UserTenantMembership.is_default.desc(), Tenant.name)
+        .order_by(UserTenantMembership.is_default.desc(), Tenant.name).limit(1000)
     )
     rows = result.all()
 
@@ -942,10 +969,15 @@ async def list_my_tenants(
     )
 
 
+class SwitchTenantRequest(BaseModel):
+    """Request to switch active tenant context."""
+    tenant_id: int = Field(..., description="Target tenant ID to switch to")
+
+
 @router.post("/switch-tenant", response_model=APIResponse)
 async def switch_tenant(
     request: Request,
-    switch_data: dict,
+    switch_data: SwitchTenantRequest,
     db: AsyncSession = Depends(get_async_session),
 ):
     """
@@ -961,7 +993,7 @@ async def switch_tenant(
             detail="Authentication required",
         )
 
-    target_tenant_id = switch_data.get("tenant_id")
+    target_tenant_id = switch_data.tenant_id
     if not target_tenant_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

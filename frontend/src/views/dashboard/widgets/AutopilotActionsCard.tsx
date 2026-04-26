@@ -161,7 +161,7 @@ export function AutopilotActionsCard() {
 
   if (isLoading) {
     return (
-      <div className="widget-card flex items-center justify-center min-h-[200px]">
+      <div className="widget-card flex items-center justify-center min-h-[12.5rem]">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     );
@@ -190,7 +190,7 @@ export function AutopilotActionsCard() {
             aria-label={`Filter: ${tab.label}`}
             aria-current={activeTab === tab.key ? "true" : undefined}
             className={cn(
-              'flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200',
+              'flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors duration-200',
               activeTab === tab.key
                 ? 'bg-primary/20 text-primary shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
@@ -202,7 +202,7 @@ export function AutopilotActionsCard() {
       </div>
 
       {/* Action list */}
-      <div className="flex-1 max-h-[400px] overflow-y-auto space-y-1.5 scrollbar-hide">
+      <div className="flex-1 max-h-[25rem] overflow-y-auto space-y-1.5 scrollbar-hide">
         {filtered.length === 0 ? (
           <div className="text-center py-8 text-sm text-muted-foreground">
             No actions in this category
@@ -211,7 +211,7 @@ export function AutopilotActionsCard() {
           filtered.map((action) => (
             <div
               key={action.id}
-              className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] border border-transparent hover:border-white/[0.05] transition-all duration-200"
+              className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] border border-transparent hover:border-white/[0.05] transition-colors duration-200"
             >
               <div className="flex items-center gap-3 min-w-0">
                 <span

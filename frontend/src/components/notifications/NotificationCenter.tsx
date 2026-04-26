@@ -43,7 +43,7 @@ export interface Notification {
   timestamp: Date;
   read: boolean;
   actionUrl?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 // Demo notifications
@@ -231,6 +231,7 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
               </div>
               <button
                 onClick={onClose}
+                aria-label="Close"
                 className="p-2 rounded-lg hover:bg-accent transition-colors"
               >
                 <X className="h-5 w-5" />
@@ -263,6 +264,7 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
                 {unreadCount > 0 && (
                   <button
                     onClick={markAllAsRead}
+                    aria-label="Mark all as read"
                     className="p-1.5 rounded-lg hover:bg-accent transition-colors"
                     title="Mark all as read"
                   >
@@ -272,6 +274,7 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
                 {notifications.length > 0 && (
                   <button
                     onClick={clearAll}
+                    aria-label="Clear all"
                     className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground hover:text-destructive transition-colors"
                     title="Clear all"
                   >
@@ -406,10 +409,10 @@ interface NotificationBellProps {
 
 export function NotificationBell({ onClick, unreadCount = 0 }: NotificationBellProps) {
   return (
-    <button onClick={onClick} className="relative p-2 rounded-lg hover:bg-accent transition-colors">
+    <button onClick={onClick} aria-label="Notifications" className="relative p-2 rounded-lg hover:bg-accent transition-colors">
       <Bell className="h-5 w-5" />
       {unreadCount > 0 && (
-        <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-bold text-white bg-destructive rounded-full animate-pulse">
+        <span className="absolute -top-0.5 -right-0.5 min-w-5 h-5 flex items-center justify-center px-1 text-[10px] font-bold text-white bg-destructive rounded-full animate-pulse">
           {unreadCount > 9 ? '9+' : unreadCount}
         </span>
       )}

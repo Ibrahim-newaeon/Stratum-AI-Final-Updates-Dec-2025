@@ -183,47 +183,47 @@ export const CampaignTable: React.FC<CampaignTableProps> = ({
                 onClick={() => onCampaignClick?.(campaign.campaign_id)}
                 className="hover:bg-muted/50 cursor-pointer transition-colors"
               >
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-6 py-4 md:whitespace-nowrap">
                   <div className="text-sm font-medium text-foreground">{campaign.campaign_name}</div>
                   <div className="text-xs text-muted-foreground">
                     {campaign.campaign_type} &bull; {campaign.region}
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-6 py-4 md:whitespace-nowrap">
                   <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-primary/10 text-primary">
                     {campaign.platform}
                   </span>
                 </td>
                 {showPriceMetrics && (
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground text-right">
+                  <td className="px-6 py-4 md:whitespace-nowrap text-sm text-foreground text-right">
                     {formatCurrency(campaign.spend)}
                   </td>
                 )}
                 {showPriceMetrics && (
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground text-right">
+                  <td className="px-6 py-4 md:whitespace-nowrap text-sm text-foreground text-right">
                     {formatCurrency(campaign.revenue)}
                   </td>
                 )}
                 {showPriceMetrics && (
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                  <td className="px-6 py-4 md:whitespace-nowrap text-center">
                     <span className={cn('text-sm font-semibold', getROASColor(campaign.roas))}>
                       {campaign.roas.toFixed(2)}x
                     </span>
                   </td>
                 )}
                 {showPriceMetrics && (
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground text-right">
+                  <td className="px-6 py-4 md:whitespace-nowrap text-sm text-foreground text-right">
                     {formatCurrency(campaign.cpa)}
                   </td>
                 )}
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground text-center">
+                <td className="px-6 py-4 md:whitespace-nowrap text-sm text-foreground text-center">
                   {campaign.conversions.toLocaleString()}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground text-center">
+                <td className="px-6 py-4 md:whitespace-nowrap text-sm text-foreground text-center">
                   {campaign.ctr.toFixed(2)}%
                 </td>
                 {onSyncCampaign && (
-                  <td className="px-4 py-4 whitespace-nowrap text-center">
+                  <td className="px-4 py-4 md:whitespace-nowrap text-center">
                     <button
                       onClick={(e) => {
                         e.stopPropagation()

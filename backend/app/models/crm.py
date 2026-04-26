@@ -82,7 +82,7 @@ class CRMConnection(Base):
     __tablename__ = "crm_connections"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Provider details
     provider = Column(StrEnumType(CRMProvider), nullable=False)
@@ -142,8 +142,8 @@ class CRMContact(Base):
     __tablename__ = "crm_contacts"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
-    connection_id = Column(UUID(as_uuid=True), ForeignKey("crm_connections.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    connection_id = Column(UUID(as_uuid=True), ForeignKey("crm_connections.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # CRM identifiers
     crm_contact_id = Column(String(255), nullable=False)  # HubSpot contact ID
@@ -222,9 +222,9 @@ class CRMDeal(Base):
     __tablename__ = "crm_deals"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
-    connection_id = Column(UUID(as_uuid=True), ForeignKey("crm_connections.id", ondelete="CASCADE"), nullable=False)
-    contact_id = Column(UUID(as_uuid=True), ForeignKey("crm_contacts.id", ondelete="SET NULL"), nullable=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    connection_id = Column(UUID(as_uuid=True), ForeignKey("crm_connections.id", ondelete="CASCADE"), nullable=False, index=True)
+    contact_id = Column(UUID(as_uuid=True), ForeignKey("crm_contacts.id", ondelete="SET NULL"), nullable=True, index=True)
 
     # CRM identifiers
     crm_deal_id = Column(String(255), nullable=False)
@@ -260,7 +260,7 @@ class CRMDeal(Base):
     attribution_confidence = Column(Float, nullable=True)  # 0-1
 
     # Attribution touchpoint link
-    attributed_touchpoint_id = Column(UUID(as_uuid=True), ForeignKey("touchpoints.id", ondelete="SET NULL"), nullable=True)
+    attributed_touchpoint_id = Column(UUID(as_uuid=True), ForeignKey("touchpoints.id", ondelete="SET NULL"), nullable=True, index=True)
 
     # Raw CRM data
     raw_properties = Column(JSONB, nullable=True)
@@ -298,10 +298,10 @@ class Touchpoint(Base):
     __tablename__ = "touchpoints"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Contact link (if matched)
-    contact_id = Column(UUID(as_uuid=True), ForeignKey("crm_contacts.id", ondelete="SET NULL"), nullable=True)
+    contact_id = Column(UUID(as_uuid=True), ForeignKey("crm_contacts.id", ondelete="SET NULL"), nullable=True, index=True)
 
     # Touchpoint timing
     event_ts = Column(DateTime(timezone=True), nullable=False)
@@ -395,7 +395,7 @@ class DailyPipelineMetrics(Base):
     __tablename__ = "daily_pipeline_metrics"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
     date = Column(Date, nullable=False)
 
     # Dimension (optional granularity)
@@ -482,8 +482,8 @@ class CRMWritebackConfig(Base):
     __tablename__ = "crm_writeback_configs"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
-    connection_id = Column(UUID(as_uuid=True), ForeignKey("crm_connections.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    connection_id = Column(UUID(as_uuid=True), ForeignKey("crm_connections.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Writeback toggles
     enabled = Column(Boolean, default=False, nullable=False)
@@ -538,8 +538,8 @@ class CRMWritebackSync(Base):
     __tablename__ = "crm_writeback_syncs"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
-    connection_id = Column(UUID(as_uuid=True), ForeignKey("crm_connections.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    connection_id = Column(UUID(as_uuid=True), ForeignKey("crm_connections.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Sync details
     sync_type = Column(String(50), nullable=False)  # full, incremental, manual, scheduled
@@ -568,7 +568,7 @@ class CRMWritebackSync(Base):
     error_details = Column(JSONB, nullable=True)
 
     # Triggered by
-    triggered_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    triggered_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -594,7 +594,7 @@ class CRMSyncLog(Base):
     __tablename__ = "crm_sync_logs"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
     provider = Column(StrEnumType(CRMProvider), nullable=False)
 
     # Sync details

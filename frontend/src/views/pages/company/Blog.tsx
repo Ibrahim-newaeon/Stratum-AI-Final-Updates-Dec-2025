@@ -77,7 +77,7 @@ export default function Blog() {
           <div className="flex flex-wrap gap-3 justify-center">
             <button
               onClick={() => setSelectedCategory(undefined)}
-              className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
+              className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
               style={{
                 background: !selectedCategory ? 'var(--landing-accent-coral)' : 'var(--landing-surface-glass)',
                 border: '1px solid rgba(255, 255, 255, 0.2)',
@@ -90,7 +90,7 @@ export default function Blog() {
               <button
                 key={category.id}
                 onClick={() => setSelectedCategory(category.slug)}
-                className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
+                className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                 style={{
                   background:
                     selectedCategory === category.slug ? 'var(--landing-accent-coral)' : 'var(--landing-surface-glass)',
@@ -135,7 +135,7 @@ export default function Blog() {
               {posts.map((post) => (
                 <Link key={post.id} to={`/blog/${post.slug}`} className="block">
                   <article
-                    className="p-6 rounded-2xl transition-all hover:scale-[1.02] cursor-pointer group h-full"
+                    className="p-6 rounded-2xl transition-transform hover:scale-[1.02] cursor-pointer group h-full"
                     style={{
                       background: 'var(--landing-card)',
                       border: '1px solid var(--landing-border)',
@@ -147,6 +147,8 @@ export default function Blog() {
                           src={post.featured_image_url}
                           alt={post.title}
                           className="w-full h-40 object-cover"
+                          loading="lazy"
+                          decoding="async"
                         />
                       </div>
                     )}
@@ -221,14 +223,15 @@ export default function Blog() {
               <input
                 type="email"
                 placeholder="Enter your email"
-                className="flex-1 px-4 py-3 rounded-xl text-white placeholder-white/40 outline-none"
+                aria-label="Email address"
+                className="flex-1 px-4 py-3 rounded-xl text-white placeholder-white/40 outline-none focus:ring-2 focus:ring-primary"
                 style={{
                   background: 'var(--landing-surface-glass)',
                   border: '1px solid rgba(255, 255, 255, 0.2)',
                 }}
               />
               <button
-                className="px-6 py-3 rounded-full font-semibold text-white transition-all hover:opacity-90"
+                className="px-6 py-3 rounded-full font-semibold text-white transition-opacity hover:opacity-90"
                 style={{
                   background: 'var(--landing-accent-coral)',
                   boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',

@@ -253,7 +253,7 @@ class EnforcementAuditLog(Base):
 
     # Additional context
     details = Column(JSONB, nullable=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
     override_reason = Column(Text, nullable=True)
 
     __table_args__ = (

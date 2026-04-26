@@ -141,7 +141,7 @@ export default function CMSCategories() {
           {categories.map((cat) => (
             <div
               key={cat.id}
-              className="relative overflow-hidden rounded-2xl bg-white/5 border border-white/10 p-6 hover:border-white/20 transition-all group"
+              className="relative overflow-hidden rounded-2xl bg-white/5 border border-white/10 p-6 hover:border-white/20 transition-colors group"
             >
               {/* Color accent */}
               <div
@@ -257,7 +257,7 @@ export default function CMSCategories() {
                       key={color}
                       type="button"
                       onClick={() => setFormData((f) => ({ ...f, color }))}
-                      className={`w-8 h-8 rounded-full transition-all ${formData.color === color ? 'ring-2 ring-white ring-offset-2 ring-offset-neutral-900 scale-110' : 'hover:scale-105'}`}
+                      className={`w-8 h-8 rounded-full transition-transform ${formData.color === color ? 'ring-2 ring-white ring-offset-2 ring-offset-neutral-900 scale-110' : 'hover:scale-105'}`}
                       style={{ backgroundColor: color }}
                     />
                   ))}

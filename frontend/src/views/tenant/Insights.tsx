@@ -166,7 +166,7 @@ export default function TenantInsights() {
             ? Array.from({ length: 4 }).map((_, i) => (
                 <div
                   key={i}
-                  className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm p-4"
+                  className="rounded-xl border bg-card p-4"
                 >
                   <Skeleton className="h-5 w-5 mb-2" />
                   <Skeleton className="h-8 w-24 mb-1" />
@@ -176,7 +176,7 @@ export default function TenantInsights() {
             : kpis.map((kpi) => (
                 <div
                   key={kpi.label}
-                  className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm p-4"
+                  className="rounded-xl border bg-card p-4"
                 >
                   <div className="flex items-center justify-between mb-2">
                     <kpi.icon className={cn('h-5 w-5', kpi.color)} />
@@ -200,7 +200,7 @@ export default function TenantInsights() {
 
         {/* Platform Performance Table */}
         <motion.div
-          className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm p-6"
+          className="rounded-xl border bg-card p-6"
           {...fadeIn}
           transition={{ delay: 0.15 }}
         >
@@ -282,7 +282,7 @@ export default function TenantInsights() {
 
         {/* Top Campaigns Table */}
         <motion.div
-          className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm p-6"
+          className="rounded-xl border bg-card p-6"
           {...fadeIn}
           transition={{ delay: 0.2 }}
         >
@@ -367,3 +367,4 @@ export default function TenantInsights() {
     </>
   );
 }
+

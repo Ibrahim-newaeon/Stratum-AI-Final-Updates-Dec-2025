@@ -2,7 +2,7 @@
  * RecommendationsCard - AI recommendations with approve/reject actions
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   AlertTriangle,
   ArrowRight,
@@ -95,13 +95,13 @@ export function RecommendationsCard({
 
   if (loading) {
     return (
-      <div className="bg-card border rounded-lg p-5 flex items-center justify-center min-h-[200px]">
+      <div className="bg-card border rounded-lg p-5 flex items-center justify-center min-h-52">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
-  const pendingRecommendations = recommendations.filter((r) => r.status === 'pending');
+  const pendingRecommendations = useMemo(() => recommendations.filter((r) => r.status === 'pending'), [recommendations]);
 
   return (
     <div className="bg-card border rounded-lg">
@@ -178,7 +178,7 @@ export function RecommendationsCard({
                       <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden">
                         <div
                           className={cn(
-                            'h-full rounded-full transition-all',
+                            'h-full rounded-full transition-[width]',
                             rec.confidence >= 80
                               ? 'bg-green-500'
                               : rec.confidence >= 60

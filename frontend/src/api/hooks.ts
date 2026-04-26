@@ -332,7 +332,7 @@ export function useTenantRecommendations(tenantId: number, options?: { limit?: n
           expected_impact: number
         }>
         total: number
-      }>>(`/insights/tenant/${tenantId}/recommendations${params}`)
+      }>>(`/insights/recommendations${params}`)
       return response.data.data
     },
     staleTime: 60 * 1000,
@@ -757,3 +757,118 @@ export function useRetryPayment() {
     },
   })
 }
+
+// WhatsApp hooks
+export {
+  useWhatsAppContacts,
+  useCreateWhatsAppContact,
+  useWhatsAppContact,
+  useUpdateWhatsAppContact,
+  useDeleteWhatsAppContact,
+  useWhatsAppTemplates,
+  useCreateWhatsAppTemplate,
+  useWhatsAppMessages,
+  useSendWhatsAppMessage,
+  useWhatsAppConversations,
+} from './whatsapp'
+
+// MFA hooks
+export {
+  useMFAStatus,
+  useMFASetup,
+  useMFAVerify,
+  useMFADisable,
+  useMFABackupCodes,
+  useMFAValidate,
+} from './mfa'
+
+// Subscription hooks
+export {
+  useSubscriptionStatus,
+  useSubscriptionConfig,
+  useSubscriptionCheck,
+  useSubscriptionWarnings,
+  useSubscriptionUsageSummary,
+} from './subscription'
+
+// Webhooks hooks
+export {
+  useWebhooks,
+  useWebhook,
+  useCreateWebhook,
+  useUpdateWebhook,
+  useDeleteWebhook,
+  useTestWebhook,
+  useWebhookDeliveries,
+} from './webhooks'
+
+// Notifications hooks
+export {
+  useNotifications,
+  useNotificationCount,
+  useMarkNotificationsRead,
+  useDeleteNotification,
+} from './notifications'
+
+// Slack hooks
+export {
+  useSlackStatus,
+  useSlackConnect,
+  useSlackDisconnect,
+  useSlackNotify,
+  useSlackTestConnection,
+} from './slack'
+
+// Simulator hooks
+export {
+  useSimulateScenario,
+  useForecastRoas,
+  usePredictConversions,
+  useModelStatus,
+} from './simulator'
+
+// API Keys hooks
+export {
+  useApiKeys,
+  useCreateApiKey,
+  useDeleteApiKey,
+} from './apiKeys'
+
+// CAPI hooks
+export {
+  useStreamEvent,
+  useStreamBatchEvents,
+  useCapiDataQualityReport,
+  useConnectPlatform,
+  useDisconnectPlatform,
+  usePlatformsStatus,
+} from './capi'
+
+// Meta CAPI hooks
+export {
+  useMetaCapiSendEvents,
+  useMetaCapiValidateEvents,
+  useMetaCapiQualityReport,
+  useMetaCapiHealth,
+} from './metaCapi'
+
+// Clients hooks
+export {
+  useClients,
+  useCreateClient,
+  useClient,
+  useUpdateClient,
+  useDeleteClient,
+  useClientUsers,
+  useInvitePortalUser,
+} from './clients'
+
+// Landing CMS hooks
+export {
+  useLandingPages,
+  useLandingPage,
+  useLandingPosts,
+  useLandingPost,
+  useLandingCategories,
+  useLandingTags,
+} from './landingCms'

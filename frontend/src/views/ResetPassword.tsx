@@ -65,22 +65,22 @@ export default function ResetPassword() {
     return (
       <>
         <style>{authStyles}</style>
-        <div className="bg-[#050B18] text-white min-h-screen flex font-sans selection:bg-[#FF1F6D]/30 overflow-hidden">
+        <div className="dark bg-background text-foreground min-h-screen flex font-sans selection:bg-primary/30 overflow-hidden">
           <AuthBackground />
           <main className="relative z-10 w-full flex items-center justify-center min-h-screen p-6">
-            <div className="w-full max-w-md auth-glass-card rounded-xl p-10 border-white/10 relative z-10 shadow-2xl auth-fade-up text-center">
+            <div className="w-full max-w-md auth-glass-card rounded-xl p-10 dark:border-white/10 border-border/50 relative z-10 shadow-2xl auth-fade-up text-center">
               <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-6">
                 <ExclamationTriangleIcon className="w-8 h-8 text-red-400" />
               </div>
-              <h2 className="text-2xl font-display font-extrabold text-white mb-2 tracking-tight">
+              <h2 className="text-2xl font-display font-extrabold text-foreground mb-2 tracking-tight">
                 Invalid Reset Link
               </h2>
-              <p className="text-slate-400 text-sm mb-8">
+              <p className="text-muted-foreground text-sm mb-8">
                 This security key reset link is invalid or has expired. Request a new transmission.
               </p>
               <Link
                 to="/forgot-password"
-                className="block w-full auth-gradient-btn auth-shimmer-btn text-white font-black h-14 rounded-xl tracking-[0.2em] text-sm flex items-center justify-center transition-all active:scale-[0.98]"
+                className="block w-full auth-gradient-btn auth-shimmer-btn text-foreground font-black h-14 rounded-xl tracking-[0.2em] text-sm flex items-center justify-center transition-colors active:scale-[0.98]"
               >
                 REQUEST NEW LINK
               </Link>
@@ -100,22 +100,22 @@ export default function ResetPassword() {
     return (
       <>
         <style>{authStyles}</style>
-        <div className="bg-[#050B18] text-white min-h-screen flex font-sans selection:bg-[#FF1F6D]/30 overflow-hidden">
+        <div className="dark bg-background text-foreground min-h-screen flex font-sans selection:bg-primary/30 overflow-hidden">
           <AuthBackground />
           <main className="relative z-10 w-full flex items-center justify-center min-h-screen p-6">
-            <div className="w-full max-w-md auth-glass-card rounded-xl p-10 border-white/10 relative z-10 shadow-2xl auth-fade-up text-center">
+            <div className="w-full max-w-md auth-glass-card rounded-xl p-10 dark:border-white/10 border-border/50 relative z-10 shadow-2xl auth-fade-up text-center">
               <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-6">
                 <CheckCircleIcon className="w-8 h-8 text-emerald-400" />
               </div>
-              <h2 className="text-2xl font-display font-extrabold text-white mb-2 tracking-tight">
+              <h2 className="text-2xl font-display font-extrabold text-foreground mb-2 tracking-tight">
                 Key Reset Complete
               </h2>
-              <p className="text-slate-400 text-sm mb-8">
+              <p className="text-muted-foreground text-sm mb-8">
                 Your security key has been updated. Initialize your session with the new credentials.
               </p>
               <button
                 onClick={() => navigate('/login')}
-                className="w-full auth-gradient-btn auth-shimmer-btn text-white font-black h-14 rounded-xl tracking-[0.2em] text-sm flex items-center justify-center transition-all active:scale-[0.98]"
+                className="w-full auth-gradient-btn auth-shimmer-btn text-foreground font-black h-14 rounded-xl tracking-[0.2em] text-sm flex items-center justify-center transition-colors active:scale-[0.98]"
               >
                 INITIALIZE SESSION
               </button>
@@ -130,25 +130,25 @@ export default function ResetPassword() {
   return (
     <>
       <style>{authStyles}</style>
-      <div className="bg-[#050B18] text-white min-h-screen flex font-sans selection:bg-[#FF1F6D]/30 overflow-hidden">
+      <div className="dark bg-background text-foreground min-h-screen flex font-sans selection:bg-primary/30 overflow-hidden">
         <AuthBackground />
 
         <main className="relative z-10 w-full flex items-center justify-center min-h-screen p-6">
-          <div className="w-full max-w-md auth-glass-card rounded-xl p-10 border-white/10 relative z-10 shadow-2xl auth-fade-up">
+          <div className="w-full max-w-md auth-glass-card rounded-xl p-10 dark:border-white/10 border-border/50 relative z-10 shadow-2xl auth-fade-up">
             {/* Back link */}
             <Link
               to="/login"
-              className="inline-flex items-center gap-2 text-[10px] text-slate-500 hover:text-white transition-colors uppercase tracking-widest font-mono mb-8"
+              className="inline-flex items-center gap-2 text-[10px] text-muted-foreground hover:text-foreground transition-colors uppercase tracking-widest mb-8"
             >
               &larr; Back to session
             </Link>
 
             {/* Header */}
             <div className="mb-8">
-              <h2 className="text-2xl font-display font-extrabold text-white mb-2 tracking-tight">
+              <h2 className="text-2xl font-display font-extrabold text-foreground mb-2 tracking-tight">
                 Reset Security Key
               </h2>
-              <p className="text-slate-400 text-sm">
+              <p className="text-muted-foreground text-sm">
                 Enter your new security key below.
               </p>
             </div>
@@ -166,27 +166,26 @@ export default function ResetPassword() {
               <div className="space-y-2 auth-fade-up-d1">
                 <label
                   htmlFor="reset-password"
-                  className="text-[10px] uppercase font-bold tracking-[0.15em] text-slate-500 ml-1"
+                  className="text-[10px] uppercase font-bold tracking-[0.15em] text-muted-foreground ml-1"
                 >
                   New Security Key
                 </label>
                 <div className="relative">
-                  <LockClosedIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-slate-500 pointer-events-none" />
+                  <LockClosedIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
                   <input
                     {...register('password')}
                     id="reset-password"
                     type={showPassword ? 'text' : 'password'}
                     placeholder="Min. 8 characters"
-                    className="w-full h-[44px] bg-[#050B18]/80 border border-white/10 rounded-[12px] pl-12 pr-11 text-white text-sm outline-none transition-all placeholder:text-slate-600 focus:border-[#FF8C00] focus:shadow-[0_0_15px_rgba(255,140,0,0.3)]"
+                    className="w-full h-11 bg-background/80 border dark:border-white/10 border-border/50 rounded-[12px] pl-12 pr-11 text-foreground text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary "
                   />
                   <button
                     type="button"
-                    tabIndex={-1}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/60 transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-foreground/25 hover:text-muted-foreground transition-colors"
                     onClick={() => setShowPassword(!showPassword)}
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
-                    {showPassword ? <EyeSlashIcon className="w-[18px] h-[18px]" /> : <EyeIcon className="w-[18px] h-[18px]" />}
+                    {showPassword ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
                   </button>
                 </div>
                 {errors.password && (
@@ -198,27 +197,26 @@ export default function ResetPassword() {
               <div className="space-y-2 auth-fade-up-d2">
                 <label
                   htmlFor="reset-confirm-password"
-                  className="text-[10px] uppercase font-bold tracking-[0.15em] text-slate-500 ml-1"
+                  className="text-[10px] uppercase font-bold tracking-[0.15em] text-muted-foreground ml-1"
                 >
                   Confirm Security Key
                 </label>
                 <div className="relative">
-                  <LockClosedIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-slate-500 pointer-events-none" />
+                  <LockClosedIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
                   <input
                     {...register('confirmPassword')}
                     id="reset-confirm-password"
                     type={showConfirmPassword ? 'text' : 'password'}
                     placeholder="Re-enter security key"
-                    className="w-full h-[44px] bg-[#050B18]/80 border border-white/10 rounded-[12px] pl-12 pr-11 text-white text-sm outline-none transition-all placeholder:text-slate-600 focus:border-[#FF8C00] focus:shadow-[0_0_15px_rgba(255,140,0,0.3)]"
+                    className="w-full h-11 bg-background/80 border dark:border-white/10 border-border/50 rounded-[12px] pl-12 pr-11 text-foreground text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary "
                   />
                   <button
                     type="button"
-                    tabIndex={-1}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/60 transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-foreground/25 hover:text-muted-foreground transition-colors"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
                   >
-                    {showConfirmPassword ? <EyeSlashIcon className="w-[18px] h-[18px]" /> : <EyeIcon className="w-[18px] h-[18px]" />}
+                    {showConfirmPassword ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
                   </button>
                 </div>
                 {errors.confirmPassword && (
@@ -230,11 +228,11 @@ export default function ResetPassword() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="auth-fade-up-d3 w-full auth-gradient-btn auth-shimmer-btn text-white font-black h-14 rounded-xl tracking-[0.2em] text-sm flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
+                className="auth-fade-up-d3 w-full auth-gradient-btn auth-shimmer-btn text-foreground font-black h-14 rounded-xl tracking-[0.2em] text-sm flex items-center justify-center gap-3 transition-colors active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
               >
                 {isLoading ? (
                   <span className="flex items-center gap-2">
-                    <svg className="animate-spin w-[18px] h-[18px]" viewBox="0 0 24 24">
+                    <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
@@ -251,3 +249,5 @@ export default function ResetPassword() {
     </>
   );
 }
+
+

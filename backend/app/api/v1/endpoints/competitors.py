@@ -47,7 +47,7 @@ async def list_competitors(
     if is_primary is not None:
         query = query.where(CompetitorBenchmark.is_primary == is_primary)
 
-    query = query.order_by(CompetitorBenchmark.share_of_voice.desc().nullslast())
+    query = query.order_by(CompetitorBenchmark.share_of_voice.desc().nullslast()).limit(1000)
     query = query.offset(skip).limit(limit)
 
     result = await db.execute(query)
@@ -72,7 +72,7 @@ async def get_share_of_voice(
     result = await db.execute(
         select(CompetitorBenchmark)
         .where(CompetitorBenchmark.tenant_id == tenant_id)
-        .order_by(CompetitorBenchmark.share_of_voice.desc().nullslast())
+        .order_by(CompetitorBenchmark.share_of_voice.desc().nullslast()).limit(1000)
     )
     competitors = result.scalars().all()
 
@@ -163,7 +163,6 @@ async def add_competitor(
 
     db.add(competitor)
     await db.commit()
-    await db.refresh(competitor)
 
     # Queue initial data fetch
     from app.workers.tasks import fetch_competitor_data
@@ -207,7 +206,6 @@ async def update_competitor(
         setattr(competitor, field, value)
 
     await db.commit()
-    await db.refresh(competitor)
 
     return APIResponse(
         success=True,

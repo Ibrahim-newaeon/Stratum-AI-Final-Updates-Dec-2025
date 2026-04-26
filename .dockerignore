@@ -1,0 +1,82 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+.eggs
+*.egg
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.coverage
+htmlcov
+.tox
+venv
+.venv
+env
+
+# Node / Frontend
+node_modules
+npm-debug.log
+yarn-error.log
+.pnpm-debug.log
+.vite
+dist
+build
+.eslintcache
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OS
+Thumbs.db
+desktop.ini
+
+# Logs
+logs
+*.log
+
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# Local data
+postgres_data
+redis_data
+uploads
+
+# Documentation
+docs
+*.md
+!README.md
+
+# CI / CD
+.circleci
+.github
+
+# Tests
+tests
+test
+*_test.py
+
+# Misc
+Dockerfile*
+docker-compose*
+.dockerignore
+Makefile
+scripts/seed-data.sql
+scripts/load_datasets.py

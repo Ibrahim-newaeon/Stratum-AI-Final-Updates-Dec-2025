@@ -72,7 +72,7 @@ function CategoryCard({
   const hasUnavailableFeatures = category.features.some((f) => !f.included);
 
   return (
-    <div className="group relative rounded-2xl bg-gray-900/50 border border-white/5 p-6 hover:border-white/10 transition-all">
+    <div className="group relative rounded-2xl bg-gray-900/50 border border-white/5 p-6 hover:border-white/10 transition-colors">
       {/* Gradient accent */}
       <div
         className={`absolute top-0 left-0 right-0 h-1 rounded-t-2xl bg-gradient-to-r ${gradientClass}`}
@@ -188,7 +188,7 @@ export function TierFeatureGrid({ content }: TierFeatureGridProps) {
           </Badge>
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
             Everything in{' '}
-            <span className={`bg-gradient-to-r ${gradientClass} bg-clip-text text-transparent`}>
+            <span className={`bg-gradient-to-r ${gradientClass} text-foreground`}>
               {name}
             </span>
           </h2>

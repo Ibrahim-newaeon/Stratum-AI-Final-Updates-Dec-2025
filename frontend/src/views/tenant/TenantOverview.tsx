@@ -112,7 +112,7 @@ export default function TenantOverview() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="rounded-xl border bg-card p-6 shadow-card">
           <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <a
               href={`/app/${tenantId}/campaigns/connect`}
               className="flex items-center gap-3 p-4 rounded-lg border hover:bg-accent transition-colors"

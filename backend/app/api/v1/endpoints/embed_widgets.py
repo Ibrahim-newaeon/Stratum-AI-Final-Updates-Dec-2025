@@ -17,13 +17,14 @@ from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.feature_gate import get_current_tier
 from app.core.tiers import Feature, SubscriptionTier, get_tier_limit, has_feature
 from app.db.session import get_db
+from app.models import Campaign
 from app.models.embed_widgets import (
     BrandingLevel,
     EmbedToken,
@@ -220,7 +221,7 @@ async def list_tokens(
             EmbedToken.widget_id == widget_id,
             EmbedToken.tenant_id == tenant_id,
         )
-        .order_by(EmbedToken.created_at.desc())
+        .order_by(EmbedToken.created_at.desc()).limit(1000)
     )
     tokens = result.scalars().all()
 
@@ -437,7 +438,7 @@ async def get_widget_data(
         raise
 
     # Get widget data based on type
-    widget_data = _get_widget_data(widget, db)
+    widget_data = await _get_widget_data(widget, db)
 
     # Create secure response with headers
     return security_service.create_embed_response(
@@ -463,69 +464,136 @@ async def get_widget_data(
     )
 
 
-def _get_widget_data(widget: EmbedWidget, db: AsyncSession) -> dict:
+async def _get_widget_data(widget: EmbedWidget, db: AsyncSession) -> dict:
     """
     Fetch actual widget data based on widget type.
 
-    In production, this would query real data from the database.
+    Queries real campaign and platform data from the database.
+    Returns empty/minimal responses when no data is available.
     """
-    # Mock data for demonstration
     widget_type = widget.widget_type
+    tenant_id = widget.tenant_id
+
+    # Fetch active campaigns for the tenant
+    result = await db.execute(
+        select(Campaign).where(
+            Campaign.tenant_id == tenant_id,
+            Campaign.status == "active",
+        )
+    )
+    campaigns = result.scalars().all()
 
     if widget_type == WidgetType.SIGNAL_HEALTH.value:
+        if not campaigns:
+            return {
+                "overall_score": 0,
+                "status": "unknown",
+                "platforms": {},
+                "last_updated": datetime.now(UTC).isoformat(),
+            }
+        # Compute per-platform scores from campaign CTR/ROAS
+        platform_scores: dict[str, list[float]] = {}
+        for c in campaigns:
+            plat = c.platform.value if hasattr(c.platform, "value") else str(c.platform)
+            score = 0.0
+            if c.roas is not None and c.roas > 0:
+                score += min(50, c.roas * 10)
+            if c.ctr is not None and c.ctr > 0:
+                score += min(50, c.ctr * 5)
+            platform_scores.setdefault(plat, []).append(score)
+        avg_platforms = {
+            plat: round(sum(scores) / len(scores), 1)
+            for plat, scores in platform_scores.items()
+        }
+        overall = round(
+            sum(avg_platforms.values()) / len(avg_platforms), 1
+        ) if avg_platforms else 0
+        status = (
+            "healthy" if overall >= 70 else "at_risk" if overall >= 40 else "critical"
+        )
         return {
-            "overall_score": 87,
-            "status": "healthy",
-            "platforms": {"meta": 92, "google": 85, "tiktok": 78},
+            "overall_score": overall,
+            "status": status,
+            "platforms": avg_platforms,
             "last_updated": datetime.now(UTC).isoformat(),
         }
 
     elif widget_type == WidgetType.ROAS_DISPLAY.value:
+        total_spend = sum(c.total_spend_cents or 0 for c in campaigns)
+        total_revenue = sum(c.revenue_cents or 0 for c in campaigns)
+        blended_roas = round(total_revenue / total_spend, 2) if total_spend > 0 else 0
         return {
-            "blended_roas": 4.23,
-            "trend": "up",
-            "trend_percentage": 12.5,
+            "blended_roas": blended_roas,
+            "trend": "neutral",
+            "trend_percentage": 0,
             "period": "Last 7 days",
             "last_updated": datetime.now(UTC).isoformat(),
         }
 
     elif widget_type == WidgetType.TRUST_GATE_STATUS.value:
+        # Check data freshness from most recent campaign sync
+        latest_sync = max(
+            (c.last_synced_at for c in campaigns if c.last_synced_at),
+            default=None,
+        )
+        pending_actions = sum(
+            1 for c in campaigns
+            if c.roas is not None and c.roas < 1.0
+        )
         return {
-            "status": "pass",
-            "signal_health": 87,
+            "status": "pass" if pending_actions == 0 else "review",
+            "signal_health": None,
             "automation_mode": "normal",
-            "pending_actions": 3,
-            "last_updated": datetime.now(UTC).isoformat(),
+            "pending_actions": pending_actions,
+            "last_updated": latest_sync.isoformat() if latest_sync else datetime.now(UTC).isoformat(),
         }
 
     elif widget_type == WidgetType.SPEND_TRACKER.value:
+        total_spend = sum(c.total_spend_cents or 0 for c in campaigns) / 100
+        total_budget = sum(c.daily_budget_cents or 0 for c in campaigns) / 100
+        utilization = round(total_spend / total_budget * 100, 1) if total_budget > 0 else 0
         return {
-            "total_spend": 45230.50,
-            "budget": 60000,
-            "utilization_percentage": 75.4,
-            "currency": "USD",
+            "total_spend": total_spend,
+            "budget": total_budget,
+            "utilization_percentage": utilization,
+            "currency": campaigns[0].currency if campaigns else "USD",
             "period": "This month",
             "last_updated": datetime.now(UTC).isoformat(),
         }
 
     elif widget_type == WidgetType.ANOMALY_ALERT.value:
+        anomalies = []
+        for c in campaigns:
+            if c.roas is not None and c.roas < 1.0:
+                anomalies.append(f"Low ROAS on {c.name}")
+            if c.ctr is not None and c.ctr < 0.5:
+                anomalies.append(f"Low CTR on {c.name}")
         return {
-            "has_anomalies": True,
-            "anomaly_count": 2,
-            "severity": "medium",
-            "most_recent": "Unusual spend spike on Meta campaign",
+            "has_anomalies": len(anomalies) > 0,
+            "anomaly_count": len(anomalies),
+            "severity": "high" if any(c.roas is not None and c.roas < 0.5 for c in campaigns) else "medium" if anomalies else "none",
+            "most_recent": anomalies[0] if anomalies else None,
             "last_updated": datetime.now(UTC).isoformat(),
         }
 
     elif widget_type == WidgetType.CAMPAIGN_PERFORMANCE.value:
+        top_campaigns = sorted(
+            campaigns,
+            key=lambda c: c.roas or 0,
+            reverse=True,
+        )[:5]
         return {
             "campaigns": [
-                {"name": "Summer Sale", "roas": 5.2, "spend": 12500, "status": "active"},
-                {"name": "Brand Awareness", "roas": 3.8, "spend": 8200, "status": "active"},
-                {"name": "Retargeting", "roas": 7.1, "spend": 5600, "status": "active"},
+                {
+                    "name": c.name,
+                    "roas": c.roas or 0,
+                    "spend": (c.total_spend_cents or 0) / 100,
+                    "status": c.status.value if hasattr(c.status, "value") else str(c.status),
+                }
+                for c in top_campaigns
             ],
-            "total_campaigns": 12,
-            "top_performer": "Retargeting",
+            "total_campaigns": len(campaigns),
+            "top_performer": top_campaigns[0].name if top_campaigns else None,
             "last_updated": datetime.now(UTC).isoformat(),
         }
 

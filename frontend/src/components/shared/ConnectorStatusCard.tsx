@@ -49,7 +49,7 @@ export function ConnectorStatusCard({
   return (
     <div
       className={cn(
-        'rounded-xl border p-5 transition-all',
+        'rounded-xl border p-5 transition-colors',
         isConnected ? 'bg-card shadow-card' : 'bg-muted/30'
       )}
     >

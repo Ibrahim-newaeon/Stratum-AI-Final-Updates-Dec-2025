@@ -17,7 +17,7 @@ function TestimonialCard({
   const gradientClass = `${visuals.gradientFrom} ${visuals.gradientTo}`;
 
   return (
-    <Card className="bg-gray-900/50 border-white/5 hover:border-white/10 transition-all">
+    <Card className="bg-gray-900/50 border-white/5 hover:border-white/10 transition-colors">
       <CardContent className="p-6">
         {/* Stars */}
         <div className="flex gap-1 mb-4">
@@ -57,7 +57,7 @@ function TestimonialCard({
           {testimonial.metric && (
             <div className="text-right">
               <div
-                className={`text-xl font-bold bg-gradient-to-r ${gradientClass} bg-clip-text text-transparent`}
+                className={`text-xl font-bold bg-gradient-to-r ${gradientClass} text-foreground`}
               >
                 {testimonial.metric.value}
               </div>
@@ -89,7 +89,7 @@ export function TierTestimonials({ content }: TierTestimonialsProps) {
           </Badge>
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
             Loved by{' '}
-            <span className={`bg-gradient-to-r ${gradientClass} bg-clip-text text-transparent`}>
+            <span className={`bg-gradient-to-r ${gradientClass} text-foreground`}>
               {name}
             </span>{' '}
             customers
@@ -117,7 +117,7 @@ export function TierTestimonials({ content }: TierTestimonialsProps) {
           ].map((stat, i) => (
             <div key={i} className="text-center">
               <div
-                className={`text-3xl md:text-4xl font-bold bg-gradient-to-r ${gradientClass} bg-clip-text text-transparent`}
+                className={`text-3xl md:text-4xl font-bold bg-gradient-to-r ${gradientClass} text-foreground`}
               >
                 {stat.value}
               </div>

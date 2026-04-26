@@ -42,7 +42,7 @@ class DailyAttributedRevenue(Base):
     __tablename__ = "daily_attributed_revenue"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
     date = Column(Date, nullable=False)
 
     # Attribution model used
@@ -104,7 +104,7 @@ class ConversionPath(Base):
     __tablename__ = "conversion_paths"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Path identifier
     path_hash = Column(String(64), nullable=False)  # SHA256 of path string
@@ -164,7 +164,7 @@ class AttributionSnapshot(Base):
     __tablename__ = "attribution_snapshots"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Snapshot metadata
     snapshot_date = Column(Date, nullable=False)
@@ -223,7 +223,7 @@ class ChannelInteraction(Base):
     __tablename__ = "channel_interactions"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Period
     period_start = Column(Date, nullable=False)
@@ -290,7 +290,7 @@ class TrainedAttributionModel(Base):
     __tablename__ = "trained_attribution_models"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Model identification
     model_name = Column(String(255), nullable=False)
@@ -327,7 +327,7 @@ class TrainedAttributionModel(Base):
     validation_period_end = Column(Date, nullable=True)
 
     # Metadata
-    created_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
     error_message = Column(Text, nullable=True)
 
     # Timestamps
@@ -356,8 +356,8 @@ class ModelTrainingRun(Base):
     __tablename__ = "model_training_runs"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
-    model_id = Column(UUID(as_uuid=True), ForeignKey("trained_attribution_models.id", ondelete="CASCADE"), nullable=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    model_id = Column(UUID(as_uuid=True), ForeignKey("trained_attribution_models.id", ondelete="CASCADE"), nullable=True, index=True)
 
     # Run details
     model_type = Column(StrEnumType(DataDrivenModelType), nullable=False)
@@ -387,7 +387,7 @@ class ModelTrainingRun(Base):
     error_details = Column(JSONB, nullable=True)
 
     # Triggered by
-    triggered_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    triggered_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])

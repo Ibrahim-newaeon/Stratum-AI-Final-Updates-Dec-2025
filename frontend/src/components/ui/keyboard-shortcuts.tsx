@@ -180,6 +180,7 @@ export function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShortcutsMod
                 </div>
                 <button
                   onClick={onClose}
+                  aria-label="Close"
                   className="p-2 rounded-lg hover:bg-accent transition-colors"
                 >
                   <X className="h-5 w-5" />
@@ -220,7 +221,7 @@ export function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShortcutsMod
               </div>
 
               {/* Vim Mode Hint */}
-              <div className="mt-6 p-4 rounded-xl bg-gradient-to-br from-purple-500/10 to-cyan-500/10 border border-purple-500/20">
+              <div className="mt-6 p-4 rounded-xl bg-primary/5 border">
                 <div className="flex items-start gap-3">
                   <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center shrink-0">
                     <span className="text-purple-500 font-mono text-sm font-bold">vim</span>

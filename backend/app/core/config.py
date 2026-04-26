@@ -366,8 +366,16 @@ class Settings(BaseSettings):
                     f"PII_ENCRYPTION_KEY must be explicitly set in {self.app_env} (do not rely on auto-generated dev defaults)"
                 )
             if (
+                self.whatsapp_phone_number_id
+                and not self.whatsapp_verify_token
+            ):
+                raise ValueError(
+                    f"WHATSAPP_VERIFY_TOKEN must be explicitly set in {self.app_env} "
+                    "when WHATSAPP_PHONE_NUMBER_ID is configured — empty verify tokens are insecure"
+                )
+            if (
                 self.whatsapp_verify_token == "stratum-whatsapp-verify-token"
-                and self.whatsapp_phone_number_id  # truthy check: None and "" both skip
+                and self.whatsapp_phone_number_id
             ):
                 import warnings
                 warnings.warn(
@@ -379,6 +387,27 @@ class Settings(BaseSettings):
                 raise ValueError(
                     f"use_mock_ad_data must be False in {self.app_env} — production must use real API data"
                 )
+
+            # CORS: reject localhost, 127.0.0.1, and wildcard origins
+            for origin in self.cors_origins.split(","):
+                origin = origin.strip()
+                if not origin:
+                    continue
+                lower = origin.lower()
+                if "localhost" in lower or "127.0.0.1" in lower or "*" in lower:
+                    raise ValueError(
+                        f"CORS_ORIGINS contains insecure origin '{origin}' in {self.app_env}. "
+                        "Localhost, 127.0.0.1, and wildcard (*) origins are not allowed in production/staging."
+                    )
+
+            frontend = self.frontend_url.strip().rstrip("/")
+            if frontend:
+                lower = frontend.lower()
+                if "localhost" in lower or "127.0.0.1" in lower:
+                    raise ValueError(
+                        f"FRONTEND_URL ('{frontend}') must not reference localhost or 127.0.0.1 in {self.app_env}"
+                    )
+
         return self
 
 

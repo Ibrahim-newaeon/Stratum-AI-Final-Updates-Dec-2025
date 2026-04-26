@@ -34,7 +34,7 @@ function EfficiencyBar({ score }: { score: number }) {
   return (
     <div className="flex items-center gap-2">
       <div className="w-16 h-1.5 rounded-full bg-muted/30 overflow-hidden">
-        <div className={cn('h-full rounded-full transition-all', color)} style={{ width: `${score}%` }} />
+        <div className={cn('h-full rounded-full transition-[width]', color)} style={{ width: `${score}%` }} />
       </div>
       <span className="text-[10px] font-bold text-muted-foreground">{Math.round(score)}</span>
     </div>
@@ -72,7 +72,7 @@ function RecommendationRow({ rec }: { rec: PlatformRecommendation }) {
   const ActionIcon = config.icon;
 
   return (
-    <div className={cn('rounded-lg border transition-all', config.border, expanded ? config.bg + '/30' : 'bg-background')}>
+    <div className={cn('rounded-lg border transition-colors', config.border, expanded ? config.bg + '/30' : 'bg-background')}>
       <button
         onClick={() => setExpanded(!expanded)}
         className="w-full p-3 flex items-start gap-3 text-left"

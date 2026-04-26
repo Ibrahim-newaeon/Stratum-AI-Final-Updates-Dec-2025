@@ -72,7 +72,7 @@ export default function CheckoutPage() {
       // Redirect to Stripe Checkout
       window.location.href = result.checkout_url;
     } catch (error) {
-      console.error('Checkout failed:', error);
+
     }
   };
 
@@ -111,7 +111,7 @@ export default function CheckoutPage() {
                 key={key}
                 onClick={() => setSelectedTier(key)}
                 className={cn(
-                  'relative text-left rounded-2xl p-6 border-2 transition-all duration-200',
+                  'relative text-left rounded-2xl p-6 border-2 transition-colors duration-200',
                   isSelected
                     ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
                     : 'border-border hover:border-primary/30 bg-card',
@@ -173,7 +173,7 @@ export default function CheckoutPage() {
           <button
             onClick={handleCheckout}
             disabled={checkout.isPending || configLoading}
-            className="inline-flex items-center justify-center px-8 py-3.5 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 text-base min-w-[280px]"
+            className="inline-flex items-center justify-center px-8 py-3.5 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 text-base min-w-0 sm:min-w-[280px]"
           >
             {checkout.isPending ? (
               <>

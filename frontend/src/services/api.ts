@@ -365,6 +365,50 @@ export const userApi = {
   },
 }
 
+// WhatsApp types
+export interface WhatsAppContact {
+  id: number
+  phone_number: string
+  country_code: string
+  display_name?: string
+  opt_in_status?: string
+  message_count?: number
+  last_message_at?: string
+  created_at?: string
+}
+
+export interface WhatsAppTemplate {
+  id: number
+  name: string
+  language: string
+  category: string
+  body_text?: string
+  header_type?: string
+  header_content?: string
+  usage_count?: number
+  status?: string
+}
+
+export interface WhatsAppMessage {
+  id: number
+  contact_name?: string
+  recipient_phone?: string
+  contact_phone?: string
+  direction?: string
+  message_type?: string
+  template_name?: string
+  body_text?: string
+  content?: string
+  status?: string
+  sent_at?: string
+  created_at?: string
+  recipients?: number
+  sent?: number
+  delivered?: number
+  read?: number
+  failed?: number
+}
+
 // WhatsApp API
 export const whatsappApi = {
   // Contacts
@@ -373,7 +417,7 @@ export const whatsappApi = {
     page_size?: number
     opt_in_status?: string
     search?: string
-  }) => {
+  }): Promise<ApiResponse<PaginatedResponse<WhatsAppContact>>> => {
     const response = await apiClient.get('/whatsapp/contacts', { params })
     return response.data
   },
@@ -411,7 +455,7 @@ export const whatsappApi = {
     page_size?: number
     status?: string
     category?: string
-  }) => {
+  }): Promise<ApiResponse<PaginatedResponse<WhatsAppTemplate>>> => {
     const response = await apiClient.get('/whatsapp/templates', { params })
     return response.data
   },
@@ -451,7 +495,7 @@ export const whatsappApi = {
     status?: string
     page?: number
     page_size?: number
-  }) => {
+  }): Promise<ApiResponse<PaginatedResponse<WhatsAppMessage>>> => {
     const response = await apiClient.get('/whatsapp/messages', { params })
     return response.data
   },

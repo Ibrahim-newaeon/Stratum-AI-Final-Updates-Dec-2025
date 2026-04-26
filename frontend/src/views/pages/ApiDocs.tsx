@@ -124,7 +124,7 @@ export default function ApiDocs() {
               <a
                 key={link.title}
                 href={link.href}
-                className="p-6 rounded-2xl transition-all hover:scale-[1.02] group"
+                className="p-6 rounded-2xl transition-transform hover:scale-[1.02] group"
                 style={{
                   background: 'var(--landing-card)',
                   border: '1px solid var(--landing-border)',
@@ -226,7 +226,6 @@ const stratum = new StratumClient({
 
 // Get signal health
 const health = await stratum.signals.getHealth('sig_123');
-console.log(health.score); // 85
 
 // Execute automation if healthy
 if (health.score >= 70) {
@@ -254,7 +253,7 @@ if (health.score >= 70) {
             </p>
             <Link
               to="/signup"
-              className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-all hover:opacity-90"
+              className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-opacity hover:opacity-90"
               style={{
                 background: 'var(--landing-accent-coral)',
                 boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',

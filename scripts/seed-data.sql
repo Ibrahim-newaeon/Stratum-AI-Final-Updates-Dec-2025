@@ -28,9 +28,14 @@ BEGIN
     -- Email hash for admin@stratum.ai (SHA256)
     v_email_hash := '7c6a180b36896a65c3a7f3c0c0a3d9fb5c6b0c21a4c3d8e9f0a1b2c3d4e5f6a7';
 
-    -- Pre-generated bcrypt hash for 'Admin123!'
-    -- Note: This is a valid bcrypt hash that will work
-    v_password_hash := '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/X4URbWtA3rP.5TxuS';
+    -- Generate a secure random password hash at runtime.
+    -- NOTE: This seed script now requires the admin password to be set via
+    -- the STRATUM_SEED_ADMIN_PASSWORD environment variable. The application
+    -- startup logic hashes it before executing this script.
+    v_password_hash := COALESCE(current_setting('app.seed_admin_password', true), '');
+    IF v_password_hash = '' THEN
+        RAISE EXCEPTION 'STRATUM_SEED_ADMIN_PASSWORD must be set to seed demo data';
+    END IF;
 
     -- Insert admin user
     INSERT INTO users (tenant_id, email, email_hash, password_hash, full_name, role, is_active, is_verified, locale, timezone, preferences, created_at, updated_at)

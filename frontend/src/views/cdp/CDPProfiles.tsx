@@ -96,7 +96,7 @@ function ProfileDetailModal({ profileId, onClose }: { profileId: string; onClose
               <p className="text-sm text-muted-foreground font-mono">{profile.id.slice(0, 8)}...</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-muted rounded-lg transition-colors">
+          <button onClick={onClose} aria-label="Close" className="p-2 hover:bg-muted rounded-lg transition-colors">
             <XMarkIcon className="h-5 w-5" />
           </button>
         </div>
@@ -244,7 +244,7 @@ function FilterPanel({
     <div className="bg-card rounded-xl border p-4 space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="font-medium">Filters</h3>
-        <button onClick={onClose} className="p-1 hover:bg-muted rounded">
+        <button onClick={onClose} aria-label="Close" className="p-1 hover:bg-muted rounded">
           <XMarkIcon className="h-4 w-4" />
         </button>
       </div>

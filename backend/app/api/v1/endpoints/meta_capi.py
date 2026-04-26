@@ -20,6 +20,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.deps import get_current_user
 from app.core.logging import get_logger
 from app.db.session import get_async_session
 from app.schemas.response import APIResponse
@@ -77,6 +78,7 @@ async def send_capi_events(
     request: Request,
     batch: CAPIEventBatch,
     db: AsyncSession = Depends(get_async_session),
+    current_user = Depends(get_current_user),
 ):
     """
     Send conversion events via CAPI.
@@ -168,6 +170,7 @@ async def send_capi_events(
 @router.post("/events/validate", response_model=APIResponse[Dict[str, Any]])
 async def validate_capi_events(
     payload: CAPIValidationRequest,
+    current_user = Depends(get_current_user),
 ):
     """
     Validate CAPI event payloads without sending them.

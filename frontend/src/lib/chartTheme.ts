@@ -1,27 +1,32 @@
+import type { TooltipProps } from 'recharts'
+
 /**
  * Centralized Chart Theme Configuration
  * Analytics Design System + Stratum AI Brand
+ *
+ * Colors reference CSS custom properties so charts adapt to light/dark mode.
+ * Platform colors are brand identities and remain static.
  */
 
 export const chartTheme = {
-  // Brand colors - Analytics Design System
+  // Brand colors — read from CSS variables where possible
   colors: {
-    primary: '#a855f7',               // Stratum purple
-    primaryLight: '#c084fc',
-    secondary: '#06b6d4',             // Cyan accent
-    secondaryLight: '#22d3ee',
+    primary: 'hsl(var(--primary))',
+    primaryLight: 'hsl(var(--primary) / 0.7)',
+    secondary: 'hsl(var(--secondary))',
+    secondaryLight: 'hsl(var(--secondary) / 0.7)',
 
-    // Metrics
-    spend: '#f97316',                  // Orange
-    revenue: '#0ea5e9',                // Sky blue
-    roas: '#22C55E',                   // Success green (design system)
-    conversions: '#8b5cf6',            // Violet
-    ctr: '#ec4899',                    // Pink
-    cpa: '#FACC15',                    // Warning (design system)
-    impressions: '#6366f1',            // Indigo
-    clicks: '#14b8a6',                 // Teal
+    // Metrics — status + accent tokens
+    spend: 'hsl(var(--insight))',
+    revenue: 'hsl(var(--info))',
+    roas: 'hsl(var(--success))',
+    conversions: 'hsl(var(--secondary))',
+    ctr: 'hsl(var(--primary))',
+    cpa: 'hsl(var(--warning))',
+    impressions: 'hsl(var(--secondary))',
+    clicks: 'hsl(var(--status-healthy))',
 
-    // Platforms - Analytics Design System
+    // Platforms — brand identities (static)
     meta: '#0866FF',
     google: '#4285F4',
     tiktok: '#00F2EA',
@@ -29,76 +34,74 @@ export const chartTheme = {
     linkedin: '#0A66C2',
     whatsapp: '#25D366',
 
-    // Status - Analytics Design System data colors
-    success: '#22C55E',
-    warning: '#FACC15',
-    error: '#EF4444',
-    info: '#3B82F6',
-    insight: '#F97316',               // Quantum Ember
+    // Status — design system tokens
+    success: 'hsl(var(--success))',
+    warning: 'hsl(var(--warning))',
+    error: 'hsl(var(--danger))',
+    info: 'hsl(var(--info))',
+    insight: 'hsl(var(--insight))',
 
-    // Neutral
-    muted: '#6E7482',
-    border: 'rgba(255,255,255,0.10)',
-    grid: 'rgba(255,255,255,0.08)',
+    // Neutral — theme-aware
+    muted: 'hsl(var(--muted-foreground))',
+    border: 'hsl(var(--border))',
+    grid: 'hsl(var(--border) / 0.5)',
   },
 
-  // Platform color palette (ordered) - Analytics Design System
+  // Platform color palette (ordered) — brand identities
   platformColors: ['#0866FF', '#4285F4', '#00F2EA', '#FFFC00', '#0A66C2', '#25D366'],
 
-  // Regional breakdown colors
+  // Regional breakdown colors — kept as static accent palette
   regionColors: ['#6366f1', '#ec4899', '#f97316', '#14b8a6', '#8b5cf6', '#f43f5e'],
 
-  // Chart series colors (for multi-series)
+  // Chart series colors (for multi-series) — static accent palette
   seriesColors: [
-    '#6366f1', // Indigo
-    '#0ea5e9', // Sky
-    '#10b981', // Emerald
-    '#f59e0b', // Amber
-    '#ec4899', // Pink
-    '#8b5cf6', // Violet
-    '#14b8a6', // Teal
-    '#f97316', // Orange
+    '#6366f1',
+    '#0ea5e9',
+    '#10b981',
+    '#f59e0b',
+    '#ec4899',
+    '#8b5cf6',
+    '#14b8a6',
+    '#f97316',
   ],
 
-  // Tooltip styling — frosted glass
+  // Tooltip styling — theme-aware surface
   tooltip: {
     contentStyle: {
-      backgroundColor: 'rgba(10, 10, 10, 0.85)',
-      backdropFilter: 'blur(16px) saturate(1.4)',
-      WebkitBackdropFilter: 'blur(16px) saturate(1.4)',
-      border: '1px solid rgba(255,255,255,0.08)',
+      backgroundColor: 'hsl(var(--card))',
+      border: '1px solid hsl(var(--border))',
       borderRadius: '14px',
-      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(168, 85, 247, 0.06)',
+      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
       padding: '12px 16px',
     },
     labelStyle: {
-      color: '#FFFFFF',
+      color: 'hsl(var(--card-foreground))',
       fontWeight: 600,
       marginBottom: '4px',
     },
     itemStyle: {
-      color: '#A7AABB',
+      color: 'hsl(var(--muted-foreground))',
       fontSize: '14px',
     },
     cursor: {
-      fill: 'rgba(168, 85, 247, 0.10)',
+      fill: 'hsl(var(--primary) / 0.10)',
     },
   },
 
-  // Axis styling - Analytics Design System
+  // Axis styling — theme-aware
   axis: {
     tick: {
       fontSize: 12,
-      fill: '#A7AABB',
+      fill: 'hsl(var(--muted-foreground))',
     },
     tickLine: false,
     axisLine: false,
   },
 
-  // Grid styling - Analytics Design System
+  // Grid styling — theme-aware
   grid: {
     strokeDasharray: '3 3',
-    stroke: 'rgba(255,255,255,0.08)',
+    stroke: 'hsl(var(--border) / 0.5)',
     opacity: 0.5,
   },
 
@@ -117,7 +120,7 @@ export const chartTheme = {
     easing: 'ease-out',
   },
 
-  // Gradient definitions - Analytics Design System
+  // Gradient definitions — theme-aware where possible
   gradients: {
     revenue: {
       id: 'colorRevenue',
@@ -126,8 +129,8 @@ export const chartTheme = {
       x2: '0',
       y2: '1',
       stops: [
-        { offset: '5%', color: '#0ea5e9', opacity: 0.3 },
-        { offset: '95%', color: '#0ea5e9', opacity: 0 },
+        { offset: '5%', color: 'hsl(var(--info))', opacity: 0.3 },
+        { offset: '95%', color: 'hsl(var(--info))', opacity: 0 },
       ],
     },
     spend: {
@@ -137,8 +140,8 @@ export const chartTheme = {
       x2: '0',
       y2: '1',
       stops: [
-        { offset: '5%', color: '#f97316', opacity: 0.3 },
-        { offset: '95%', color: '#f97316', opacity: 0 },
+        { offset: '5%', color: 'hsl(var(--insight))', opacity: 0.3 },
+        { offset: '95%', color: 'hsl(var(--insight))', opacity: 0 },
       ],
     },
     primary: {
@@ -148,8 +151,8 @@ export const chartTheme = {
       x2: '0',
       y2: '1',
       stops: [
-        { offset: '5%', color: '#a855f7', opacity: 0.3 },
-        { offset: '95%', color: '#a855f7', opacity: 0 },
+        { offset: '5%', color: 'hsl(var(--primary))', opacity: 0.3 },
+        { offset: '95%', color: 'hsl(var(--primary))', opacity: 0 },
       ],
     },
     brand: {
@@ -159,27 +162,27 @@ export const chartTheme = {
       x2: '1',
       y2: '1',
       stops: [
-        { offset: '0%', color: '#a855f7', opacity: 1 },
-        { offset: '100%', color: '#06b6d4', opacity: 1 },
+        { offset: '0%', color: 'hsl(var(--primary))', opacity: 1 },
+        { offset: '100%', color: 'hsl(var(--secondary))', opacity: 1 },
       ],
     },
   },
 }
 
-// Helper function to get platform color - Analytics Design System
+// Helper function to get platform color — brand identities (static)
 export function getPlatformChartColor(platform: string): string {
   const platformMap: Record<string, string> = {
     'meta ads': '#0866FF',
-    'meta': '#0866FF',
+    meta: '#0866FF',
     'google ads': '#4285F4',
-    'google': '#4285F4',
+    google: '#4285F4',
     'tiktok ads': '#00F2EA',
-    'tiktok': '#00F2EA',
+    tiktok: '#00F2EA',
     'snapchat ads': '#FFFC00',
-    'snapchat': '#FFFC00',
+    snapchat: '#FFFC00',
     'linkedin ads': '#0A66C2',
-    'linkedin': '#0A66C2',
-    'whatsapp': '#25D366',
+    linkedin: '#0A66C2',
+    whatsapp: '#25D366',
   }
   return platformMap[platform.toLowerCase()] || chartTheme.seriesColors[0]
 }
@@ -199,5 +202,8 @@ export const chartFormatters = {
   percent: (value: number) => `${value.toFixed(1)}%`,
   roas: (value: number) => `${value.toFixed(2)}x`,
 }
+
+/** Recharts tooltip formatter type alias to avoid `as any` */
+export type ChartTooltipFormatter = NonNullable<TooltipProps<number, string>['formatter']>
 
 export default chartTheme

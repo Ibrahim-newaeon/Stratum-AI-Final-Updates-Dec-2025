@@ -127,7 +127,7 @@ export function PhoneInput({
     <div className={cn('relative', className)} ref={dropdownRef}>
       <div
         className={cn(
-          'flex rounded-xl transition-all duration-200',
+          'flex rounded-xl transition-colors duration-200',
           disabled && 'opacity-50 cursor-not-allowed'
         )}
         style={{
@@ -161,8 +161,9 @@ export function PhoneInput({
           onChange={handlePhoneChange}
           placeholder={placeholder}
           disabled={disabled}
+          aria-label="Phone number"
           className={cn(
-            'flex-1 px-3 py-3 bg-transparent outline-none',
+            'flex-1 px-3 py-3 bg-transparent outline-none focus:ring-2 focus:ring-primary',
             'text-white placeholder-text-muted text-body',
             'rounded-r-xl'
           )}
@@ -187,7 +188,7 @@ export function PhoneInput({
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search country..."
               autoFocus
-              className="w-full px-3 py-2 rounded-lg text-white placeholder-white/40 text-sm outline-none transition-all"
+              className="w-full px-3 py-2 rounded-lg text-white placeholder-white/40 text-sm outline-none transition-[width]"
               style={{
                 background: 'rgba(255, 255, 255, 0.06)',
                 border: '1px solid rgba(255, 255, 255, 0.12)',

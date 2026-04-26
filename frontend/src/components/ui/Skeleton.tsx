@@ -179,7 +179,7 @@ export function TableSkeleton({ rows = 5, columns = 7 }: { rows?: number; column
 // Alert Card Skeleton
 export function AlertSkeleton() {
   return (
-    <div className="p-4 rounded-lg bg-muted/30 border-l-4 border-muted">
+    <div className="p-4 rounded-lg bg-muted/30 border border-muted">
       <div className="flex items-start gap-3">
         <Skeleton className="h-5 w-5 rounded mt-0.5" />
         <div className="flex-1 space-y-2">

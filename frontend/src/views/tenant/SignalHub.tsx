@@ -295,7 +295,7 @@ export default function SignalHub() {
               selectedPlatform === signal.platform ? null : signal.platform
             )}
             className={cn(
-              'p-4 rounded-xl border transition-all text-left',
+              'p-4 rounded-xl border transition-colors text-left',
               selectedPlatform === signal.platform
                 ? 'ring-2 ring-stratum-500'
                 : 'hover:border-white/20',
@@ -312,7 +312,7 @@ export default function SignalHub() {
             </div>
 
             {/* Mini metrics */}
-            <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
               <div className="flex items-center gap-1">
                 <ClockIcon className="w-3 h-3" />
                 <span className={signal.freshness >= 90 ? 'text-success' : signal.freshness >= 70 ? 'text-warning' : 'text-danger'}>

@@ -250,7 +250,7 @@ export default function CMSUsers() {
                   >
                     {/* Name */}
                     <div className="col-span-3 flex items-center gap-3 min-w-0">
-                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500/30 to-cyan-500/30 flex items-center justify-center text-white font-medium text-sm flex-shrink-0">
+                      <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-white font-medium text-sm flex-shrink-0">
                         {u.full_name?.charAt(0)?.toUpperCase() || 'U'}
                       </div>
                       <span className="text-white font-medium truncate">

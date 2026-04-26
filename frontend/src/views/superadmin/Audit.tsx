@@ -5,7 +5,7 @@
  * Shows user actions, system events, and API activity
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
 import { useAuditLogs } from '@/api/hooks'
 import {
@@ -57,6 +57,15 @@ export default function Audit() {
   })
   const [currentPage, setCurrentPage] = useState(1)
   const [exportFeedback, setExportFeedback] = useState<string | null>(null)
+  const timeoutsRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set())
+
+  useEffect(() => {
+    return () => {
+      timeoutsRef.current.forEach(clearTimeout)
+      timeoutsRef.current.clear()
+    }
+  }, [])
+
   const itemsPerPage = 10
 
   const { data: auditLogsData, isLoading } = useAuditLogs({
@@ -270,10 +279,12 @@ export default function Audit() {
       URL.revokeObjectURL(url)
 
       setExportFeedback(`Successfully exported ${filteredLogs.length} logs`)
-      setTimeout(() => setExportFeedback(null), 3000)
+      const id1 = setTimeout(() => setExportFeedback(null), 3000)
+      timeoutsRef.current.add(id1)
     } catch (error) {
       setExportFeedback('Failed to export logs. Please try again.')
-      setTimeout(() => setExportFeedback(null), 3000)
+      const id2 = setTimeout(() => setExportFeedback(null), 3000)
+      timeoutsRef.current.add(id2)
     }
   }
 
@@ -355,7 +366,7 @@ export default function Audit() {
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-4">
         {/* Search */}
-        <div className="relative flex-1 min-w-[200px] max-w-md">
+        <div className="relative flex-1 min-w-0 sm:min-w-[200px] max-w-md">
           <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted" />
           <input
             type="text"

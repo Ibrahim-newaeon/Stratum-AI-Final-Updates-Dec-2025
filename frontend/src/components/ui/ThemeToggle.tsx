@@ -18,7 +18,7 @@ export function ThemeToggle() {
           key={option.value}
           onClick={() => setTheme(option.value)}
           className={cn(
-            'p-1.5 rounded-md transition-all duration-200',
+            'p-1.5 rounded-md transition-colors duration-200',
             theme === option.value
               ? 'bg-background text-primary shadow-sm'
               : 'text-muted-foreground hover:text-foreground'

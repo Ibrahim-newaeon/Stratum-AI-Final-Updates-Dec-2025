@@ -175,6 +175,7 @@ function ConditionRow({
       <button
         onClick={onRemove}
         disabled={isLast}
+        aria-label="Remove step"
         className="p-2 hover:bg-muted rounded-lg transition-colors disabled:opacity-50"
       >
         <TrashIcon className="h-4 w-4" />
@@ -256,7 +257,7 @@ function SegmentBuilderModal({
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
           <h3 className="text-lg font-semibold">{segment ? 'Edit Segment' : 'Create Segment'}</h3>
-          <button onClick={onClose} className="p-2 hover:bg-muted rounded-lg">
+          <button onClick={onClose} className="p-2 hover:bg-muted rounded-lg" aria-label="Close">
             <XMarkIcon className="h-5 w-5" />
           </button>
         </div>
@@ -483,6 +484,7 @@ function SegmentCard({
         <div className="flex items-center gap-1">
           <button
             onClick={onCompute}
+            aria-label="Recompute"
             className="p-2 hover:bg-muted rounded-lg transition-colors"
             title="Recompute"
           >
@@ -490,6 +492,7 @@ function SegmentCard({
           </button>
           <button
             onClick={onEdit}
+            aria-label="Edit"
             className="p-2 hover:bg-muted rounded-lg transition-colors"
             title="Edit"
           >
@@ -497,6 +500,7 @@ function SegmentCard({
           </button>
           <button
             onClick={onDelete}
+            aria-label="Delete"
             className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors text-red-500"
             title="Delete"
           >

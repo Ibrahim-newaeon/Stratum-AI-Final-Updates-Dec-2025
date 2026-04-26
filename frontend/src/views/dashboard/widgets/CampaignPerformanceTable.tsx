@@ -86,7 +86,7 @@ export function CampaignPerformanceTable({
 
   if (loading) {
     return (
-      <div className="bg-card border rounded-lg p-5 flex items-center justify-center min-h-[300px]">
+      <div className="bg-card border rounded-lg p-5 flex items-center justify-center min-h-[18.75rem]">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     );
@@ -137,11 +137,11 @@ export function CampaignPerformanceTable({
                     <div className="flex items-center gap-2">
                       {getTrendIcon(campaign.trend)}
                       <div className="min-w-0">
-                        <div className="font-medium truncate max-w-[200px]" title={campaign.name}>
+                        <div className="font-medium truncate max-w-52" title={campaign.name}>
                           {campaign.name}
                         </div>
                         {campaign.recommendation && (
-                          <div className="text-xs text-primary truncate max-w-[200px]">
+                          <div className="text-xs text-primary truncate max-w-52">
                             {campaign.recommendation}
                           </div>
                         )}

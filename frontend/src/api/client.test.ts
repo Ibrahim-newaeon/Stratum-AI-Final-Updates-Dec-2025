@@ -150,12 +150,12 @@ describe('API Client - Tenant ID Management', () => {
     expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('tenant_id');
   });
 
-  it('getTenantId defaults to 1 when nothing is stored', () => {
+  it('getTenantId returns null when nothing is stored', () => {
     setTenantId(null);
     mockLocalStorage._reset();
 
     const id = getTenantId();
-    expect(id).toBe(1);
+    expect(id).toBeNull();
   });
 
   it('getTenantId reads from localStorage when in-memory value is null', () => {

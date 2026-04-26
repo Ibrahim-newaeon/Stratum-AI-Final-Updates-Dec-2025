@@ -71,7 +71,7 @@ export function ActivityFeed({ activities, loading = false, onViewAll }: Activit
 
   if (loading) {
     return (
-      <div className="bg-card border rounded-lg p-5 flex items-center justify-center min-h-[200px]">
+      <div className="bg-card border rounded-lg p-5 flex items-center justify-center min-h-[12.5rem]">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     );
@@ -95,7 +95,7 @@ export function ActivityFeed({ activities, loading = false, onViewAll }: Activit
         )}
       </div>
 
-      <div className="divide-y max-h-[400px] overflow-y-auto">
+      <div className="divide-y max-h-[25rem] overflow-y-auto">
         {activities.length === 0 ? (
           <div className="p-8 text-center text-muted-foreground">
             <Activity className="w-8 h-8 mx-auto mb-2 opacity-50" />

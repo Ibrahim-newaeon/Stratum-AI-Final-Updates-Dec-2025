@@ -78,53 +78,7 @@ export function useKGProblems(filters?: { severity?: ProblemSeverity; status?: s
     },
     staleTime: 5 * 60 * 1000,
     retry: false,
-    initialData: {
-      problems: [
-        {
-          id: '1',
-          severity: 'critical' as const,
-          title: 'Creative Fatigue Detected',
-          description:
-            'Ad creative performance has dropped 34% in the last 7 days across 12 campaigns.',
-          impact: '-$3,400/week',
-          impactAmount: 3400,
-          affectedCampaigns: 12,
-          platform: 'Meta',
-          detectedAt: '2024-12-08',
-          status: 'active' as const,
-        },
-        {
-          id: '2',
-          severity: 'warning' as const,
-          title: 'Budget Pacing Issue',
-          description: 'Google Search campaigns are under-spending by 28% against daily targets.',
-          impact: '-$1,800/week',
-          impactAmount: 1800,
-          affectedCampaigns: 5,
-          platform: 'Google',
-          detectedAt: '2024-12-09',
-          status: 'active' as const,
-        },
-        {
-          id: '3',
-          severity: 'warning' as const,
-          title: 'Audience Overlap',
-          description: '3 Meta ad sets share 45% audience overlap, causing self-competition.',
-          impact: '-$1,000/week',
-          impactAmount: 1000,
-          affectedCampaigns: 3,
-          platform: 'Meta',
-          detectedAt: '2024-12-10',
-          status: 'active' as const,
-        },
-      ],
-      summary: {
-        critical: 1,
-        warnings: 2,
-        resolved30d: 8,
-        revenueAtRisk: 6200,
-      },
-    },
+    // No initialData — avoid flashing fake/demo data before real data loads
   });
 }
 
@@ -152,20 +106,7 @@ export function useKGRevenueAttribution(period: string = '30d') {
       return response.data.data;
     },
     staleTime: 5 * 60 * 1000,
-    placeholderData: {
-      attributedRevenue: 284500,
-      touchpointsTracked: 45200,
-      avgPathLength: 4.2,
-      conversionWindow: '7 days',
-      modelComparison: [
-        { channel: 'Google Search', firstTouch: 42, lastTouch: 38, linear: 35, dataDriven: 37 },
-        { channel: 'Meta Ads', firstTouch: 28, lastTouch: 32, linear: 30, dataDriven: 31 },
-        { channel: 'Display', firstTouch: 12, lastTouch: 8, linear: 14, dataDriven: 13 },
-        { channel: 'TikTok', firstTouch: 10, lastTouch: 12, linear: 11, dataDriven: 11 },
-        { channel: 'Snapchat', firstTouch: 5, lastTouch: 6, linear: 6, dataDriven: 5 },
-        { channel: 'Organic', firstTouch: 3, lastTouch: 4, linear: 4, dataDriven: 3 },
-      ],
-    },
+    // No placeholderData — avoid flashing fake/demo data before real data loads
   });
 }
 
@@ -179,13 +120,6 @@ export function useKGChannelBreakdown(period: string = '30d') {
       return response.data.data;
     },
     staleTime: 5 * 60 * 1000,
-    placeholderData: [
-      { channel: 'Google Search', revenue: 105000, percentage: 37, color: '#4285F4' },
-      { channel: 'Meta Ads', revenue: 88000, percentage: 31, color: '#0866FF' },
-      { channel: 'Display', revenue: 37000, percentage: 13, color: '#34A853' },
-      { channel: 'TikTok', revenue: 31000, percentage: 11, color: '#000000' },
-      { channel: 'Snapchat', revenue: 14000, percentage: 5, color: '#FFFC00' },
-      { channel: 'Organic', revenue: 9500, percentage: 3, color: '#6B7280' },
-    ],
+    // No placeholderData — avoid flashing fake/demo data before real data loads
   });
 }

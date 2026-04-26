@@ -300,7 +300,7 @@ export default function CampaignBuilder() {
       alert('Draft saved!')
       navigate(`/app/${tenantId}/campaigns/drafts`)
     } catch (error) {
-      console.error('Failed to save draft:', error)
+
       // Fallback for demo mode
       alert('Draft saved (demo mode)!')
       navigate(`/app/${tenantId}/campaigns/drafts`)
@@ -339,7 +339,7 @@ export default function CampaignBuilder() {
       }
       navigate(`/app/${tenantId}/campaigns/drafts`)
     } catch (error) {
-      console.error('Failed to submit:', error)
+
       // Fallback for demo mode
       alert('Submitted for approval (demo mode)!')
       navigate(`/app/${tenantId}/campaigns/drafts`)
@@ -359,7 +359,7 @@ export default function CampaignBuilder() {
                     key={p}
                     onClick={() => updateDraft('platform', p)}
                     className={cn(
-                      'p-4 rounded-xl border-2 transition-all text-center',
+                      'p-4 rounded-xl border-2 transition-colors text-center',
                       draft.platform === p
                         ? 'border-primary bg-primary/5'
                         : 'border-border hover:border-primary/50'
@@ -435,7 +435,7 @@ export default function CampaignBuilder() {
                     key={obj.value}
                     onClick={() => updateDraft('objective', obj.value)}
                     className={cn(
-                      'p-4 rounded-lg border-2 text-left transition-all',
+                      'p-4 rounded-lg border-2 text-left transition-colors',
                       draft.objective === obj.value
                         ? 'border-primary bg-primary/5'
                         : 'border-border hover:border-primary/50'
@@ -461,7 +461,7 @@ export default function CampaignBuilder() {
                     key={type}
                     onClick={() => updateDraft('budget', { ...draft.budget, type })}
                     className={cn(
-                      'flex-1 p-4 rounded-lg border-2 transition-all',
+                      'flex-1 p-4 rounded-lg border-2 transition-colors',
                       draft.budget.type === type
                         ? 'border-primary bg-primary/5'
                         : 'border-border hover:border-primary/50'
@@ -537,7 +537,7 @@ export default function CampaignBuilder() {
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-2">Minimum Age</label>
                 <input
@@ -574,7 +574,7 @@ export default function CampaignBuilder() {
                     key={gender.value}
                     onClick={() => updateDraft('targeting', { ...draft.targeting, genders: [gender.value] })}
                     className={cn(
-                      'px-4 py-2 rounded-lg border-2 transition-all',
+                      'px-4 py-2 rounded-lg border-2 transition-colors',
                       draft.targeting.genders.includes(gender.value)
                         ? 'border-primary bg-primary/5'
                         : 'border-border hover:border-primary/50'
@@ -604,7 +604,7 @@ export default function CampaignBuilder() {
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
                 className={cn(
-                  'border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all',
+                  'border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors',
                   isDragging
                     ? 'border-primary bg-primary/5'
                     : 'border-border hover:border-primary/50 hover:bg-muted/50'
@@ -652,6 +652,8 @@ export default function CampaignBuilder() {
                             src={asset.preview}
                             alt={asset.name}
                             className="w-full h-full object-cover"
+                            loading="lazy"
+                            decoding="async"
                           />
                         )}
                         <button
@@ -861,6 +863,8 @@ export default function CampaignBuilder() {
                           src={asset.preview}
                           alt={asset.name}
                           className="w-full h-full object-cover"
+                          loading="lazy"
+                          decoding="async"
                         />
                       )}
                       <div className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors" />

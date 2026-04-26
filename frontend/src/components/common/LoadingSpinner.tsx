@@ -40,7 +40,7 @@ export function LoadingSpinner({
 
 export function PageLoader() {
   return (
-    <div className="flex items-center justify-center min-h-[400px]">
+    <div className="flex items-center justify-center min-h-[25rem]">
       <LoadingSpinner size="lg" label="Loading page..." />
     </div>
   )

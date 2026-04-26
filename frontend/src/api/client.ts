@@ -9,7 +9,7 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosError } from 'axios'
 
 // Runtime config (injected in index.html) takes priority over build-time env
 const API_BASE_URL =
-  (window as any).__RUNTIME_CONFIG__?.VITE_API_URL ||
+  window.__RUNTIME_CONFIG__?.VITE_API_URL ||
   import.meta.env.VITE_API_URL ||
   '/api/v1'
 
@@ -54,10 +54,10 @@ export const setTenantId = (tenantId: number | null) => {
   }
 }
 
-export const getTenantId = (): number => {
+export const getTenantId = (): number | null => {
   if (!currentTenantId) {
     const stored = localStorage.getItem('tenant_id')
-    currentTenantId = stored ? parseInt(stored, 10) : 1
+    currentTenantId = stored ? parseInt(stored, 10) : null
   }
   return currentTenantId
 }

@@ -95,7 +95,7 @@ export function EmptyState({
           <button
             onClick={action.onClick}
             className={cn(
-              'inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200',
+              'inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200',
               'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
               'active:scale-[0.98]',
               action.variant === 'secondary'
@@ -174,7 +174,7 @@ export function NoChartDataState({ onRefresh }: { onRefresh?: () => void }) {
         onClick: onRefresh,
         variant: 'secondary',
       } : undefined}
-      className="min-h-[200px]"
+      className="min-h-[12.5rem]"
     />
   )
 }

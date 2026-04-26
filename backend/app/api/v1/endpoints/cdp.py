@@ -909,7 +909,7 @@ async def list_sources(
     result = await db.execute(
         select(CDPSource)
         .where(CDPSource.tenant_id == tenant_id)
-        .order_by(CDPSource.created_at.desc())
+        .order_by(CDPSource.created_at.desc()).limit(1000)
     )
     sources = result.scalars().all()
 
@@ -961,7 +961,6 @@ async def create_source(
     )
     db.add(db_source)
     await db.commit()
-    await db.refresh(db_source)
 
     logger.info(
         "cdp_source_created",
@@ -1320,7 +1319,7 @@ async def get_event_statistics(
             CDPEvent.event_time >= daily_cutoff,
         )
         .group_by(date_expr)
-        .order_by(date_expr.asc())
+        .order_by(date_expr.asc()).limit(1000)
     )
     daily_volume = [
         {"date": str(row.date), "count": row.count} for row in daily_volume_result.all()
@@ -1339,7 +1338,7 @@ async def get_event_statistics(
             CDPEvent.emq_score.isnot(None),
         )
         .group_by(bucket_expr)
-        .order_by(bucket_expr)
+        .order_by(bucket_expr).limit(1000)
     )
     emq_distribution = [
         {
@@ -1838,9 +1837,9 @@ async def search_profiles(
     }
     sort_column = sort_columns.get(sort_by, CDPProfile.last_seen_at)
     if sort_order == "asc":
-        query_builder = query_builder.order_by(sort_column.asc())
+        query_builder = query_builder.order_by(sort_column.asc()).limit(1000)
     else:
-        query_builder = query_builder.order_by(sort_column.desc())
+        query_builder = query_builder.order_by(sort_column.desc()).limit(1000)
 
     # Add eager loading
     if include_identifiers:
@@ -2190,7 +2189,7 @@ async def list_webhooks(
     result = await db.execute(
         select(CDPWebhook)
         .where(CDPWebhook.tenant_id == tenant_id)
-        .order_by(CDPWebhook.created_at.desc())
+        .order_by(CDPWebhook.created_at.desc()).limit(1000)
     )
     webhooks = result.scalars().all()
 
@@ -2230,7 +2229,6 @@ async def create_webhook(
     )
     db.add(db_webhook)
     await db.commit()
-    await db.refresh(db_webhook)
 
     logger.info(
         "cdp_webhook_created",
@@ -2315,7 +2313,6 @@ async def update_webhook(
         webhook.failure_count = 0
 
     await db.commit()
-    await db.refresh(webhook)
 
     logger.info(
         "cdp_webhook_updated",
@@ -2524,7 +2521,6 @@ async def rotate_webhook_secret(
     # Generate new secret
     webhook.secret_key = secrets.token_urlsafe(32)
     await db.commit()
-    await db.refresh(webhook)
 
     logger.info(
         "cdp_webhook_secret_rotated",
@@ -2615,7 +2611,7 @@ async def detect_event_anomalies(
             CDPEvent.received_at >= cutoff,
         )
         .group_by(CDPEvent.source_id, cast(CDPEvent.received_at, Date))
-        .order_by(cast(CDPEvent.received_at, Date))
+        .order_by(cast(CDPEvent.received_at, Date)).limit(1000)
     )
     daily_counts = result.all()
 
@@ -2630,7 +2626,7 @@ async def detect_event_anomalies(
             CDPEvent.received_at >= cutoff,
         )
         .group_by(cast(CDPEvent.received_at, Date))
-        .order_by(cast(CDPEvent.received_at, Date))
+        .order_by(cast(CDPEvent.received_at, Date)).limit(1000)
     )
     total_daily = total_result.all()
 
@@ -3036,7 +3032,7 @@ async def get_profile_merge_history(
             CDPProfileMerge.tenant_id == tenant_id,
             CDPProfileMerge.surviving_profile_id == profile_id,
         )
-        .order_by(CDPProfileMerge.created_at.desc())
+        .order_by(CDPProfileMerge.created_at.desc()).limit(1000)
     )
     merges = result.scalars().all()
 

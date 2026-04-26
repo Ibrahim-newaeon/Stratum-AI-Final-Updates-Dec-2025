@@ -231,7 +231,7 @@ function CreateAudienceModal({
       <div className="relative bg-card border rounded-xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-auto">
         <div className="flex items-center justify-between p-4 border-b">
           <h2 className="text-lg font-semibold">Create Platform Audience</h2>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-muted transition-colors">
+          <button onClick={onClose} aria-label="Close" className="p-2 rounded-lg hover:bg-muted transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -268,7 +268,7 @@ function CreateAudienceModal({
                     setAdAccountId('');
                   }}
                   className={cn(
-                    'flex items-center gap-2 p-3 rounded-lg border transition-all',
+                    'flex items-center gap-2 p-3 rounded-lg border transition-colors',
                     platform === p.platform
                       ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
                       : 'hover:border-muted-foreground/20'
@@ -427,7 +427,7 @@ function SyncHistoryPanel({ audienceId, audienceName, onClose }: SyncHistoryPane
           </h2>
           <p className="text-sm text-muted-foreground">{audienceName}</p>
         </div>
-        <button onClick={onClose} className="p-2 rounded-lg hover:bg-muted transition-colors">
+        <button onClick={onClose} aria-label="Close" className="p-2 rounded-lg hover:bg-muted transition-colors">
           <X className="w-4 h-4" />
         </button>
       </div>
@@ -570,7 +570,7 @@ function ExportAudienceModal({ isOpen, onClose, segments }: ExportAudienceModalP
             <Download className="w-5 h-5" />
             Export Custom Audience
           </h2>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-muted transition-colors">
+          <button onClick={onClose} aria-label="Close" className="p-2 rounded-lg hover:bg-muted transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -602,7 +602,7 @@ function ExportAudienceModal({ isOpen, onClose, segments }: ExportAudienceModalP
                 type="button"
                 onClick={() => setFormat('csv')}
                 className={cn(
-                  'flex items-center justify-center gap-2 p-3 rounded-lg border transition-all',
+                  'flex items-center justify-center gap-2 p-3 rounded-lg border transition-colors',
                   format === 'csv'
                     ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
                     : 'hover:border-muted-foreground/20'
@@ -615,7 +615,7 @@ function ExportAudienceModal({ isOpen, onClose, segments }: ExportAudienceModalP
                 type="button"
                 onClick={() => setFormat('json')}
                 className={cn(
-                  'flex items-center justify-center gap-2 p-3 rounded-lg border transition-all',
+                  'flex items-center justify-center gap-2 p-3 rounded-lg border transition-colors',
                   format === 'json'
                     ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
                     : 'hover:border-muted-foreground/20'
@@ -709,7 +709,7 @@ function AudienceCard({ audience, onSync, onDelete, onViewHistory, isSyncing }: 
   const matchRate = audience.match_rate ? `${audience.match_rate.toFixed(1)}%` : '-';
 
   return (
-    <div className="p-4 rounded-xl border bg-card hover:shadow-md transition-all">
+    <div className="p-4 rounded-xl border bg-card hover:shadow-md transition-colors">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
           <PlatformIcon platform={audience.platform} />
@@ -762,6 +762,7 @@ function AudienceCard({ audience, onSync, onDelete, onViewHistory, isSyncing }: 
         </button>
         <button
           onClick={onViewHistory}
+          aria-label="View history"
           className="px-3 py-1.5 rounded-md bg-muted hover:bg-muted/80 text-sm font-medium transition-colors"
         >
           <History className="w-4 h-4" />
@@ -774,6 +775,7 @@ function AudienceCard({ audience, onSync, onDelete, onViewHistory, isSyncing }: 
         </button>
         <button
           onClick={onDelete}
+          aria-label="Delete"
           className="px-3 py-1.5 rounded-md hover:bg-red-500/10 text-muted-foreground hover:text-red-500 text-sm font-medium transition-colors"
         >
           <Trash2 className="w-4 h-4" />

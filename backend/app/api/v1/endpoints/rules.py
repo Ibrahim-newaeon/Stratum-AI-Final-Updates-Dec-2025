@@ -115,7 +115,6 @@ async def create_rule(
 
     db.add(rule)
     await db.commit()
-    await db.refresh(rule)
 
     logger.info("rule_created", rule_id=rule.id, name=rule.name)
 
@@ -155,7 +154,6 @@ async def update_rule(
         setattr(rule, field, value)
 
     await db.commit()
-    await db.refresh(rule)
 
     logger.info("rule_updated", rule_id=rule_id)
 
@@ -222,7 +220,6 @@ async def activate_rule(
 
     rule.status = RuleStatus.ACTIVE
     await db.commit()
-    await db.refresh(rule)
 
     logger.info("rule_activated", rule_id=rule_id)
 
@@ -259,7 +256,6 @@ async def pause_rule(
 
     rule.status = RuleStatus.PAUSED
     await db.commit()
-    await db.refresh(rule)
 
     logger.info("rule_paused", rule_id=rule_id)
 
@@ -303,7 +299,6 @@ async def toggle_rule(
         action_msg = "activated"
 
     await db.commit()
-    await db.refresh(rule)
 
     logger.info("rule_toggled", rule_id=rule_id, new_status=rule.status.value)
 
@@ -360,7 +355,6 @@ async def duplicate_rule(
 
     db.add(new_rule)
     await db.commit()
-    await db.refresh(new_rule)
 
     logger.info("rule_duplicated", original_id=rule_id, new_id=new_rule.id)
 

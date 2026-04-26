@@ -291,7 +291,7 @@ function DataTableInner<T>(
             <tr>
               {/* Selection checkbox header */}
               {selectable && (
-                <th className="h-12 w-12 px-4">
+                <th scope="col" className="h-12 w-12 px-4">
                   <input
                     type="checkbox"
                     checked={selected.size === data.length && data.length > 0}
@@ -302,7 +302,7 @@ function DataTableInner<T>(
                 </th>
               )}
               {columns.map((column) => (
-                <th
+                <th scope="col"
                   key={column.id}
                   className={cn(
                     'h-12 px-4 text-left align-middle font-medium text-muted-foreground',

@@ -114,7 +114,7 @@ export function BudgetPacingCard() {
 
   if (isLoading) {
     return (
-      <div className="widget-card flex items-center justify-center min-h-[280px]">
+      <div className="widget-card flex items-center justify-center min-h-[17.5rem]">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     );
@@ -134,7 +134,7 @@ export function BudgetPacingCard() {
               aria-label={`Filter by: ${p}`}
               aria-current={period === p ? "true" : undefined}
               className={cn(
-                'px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200',
+                'px-3 py-1.5 text-xs font-medium rounded-md transition-colors duration-200',
                 period === p ? 'bg-primary/20 text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'
               )}
             >
@@ -166,7 +166,7 @@ export function BudgetPacingCard() {
               {/* Progress bar — rounded with glow */}
               <div className="relative h-2 bg-white/[0.06] rounded-full overflow-hidden">
                 <div
-                  className={cn('h-full rounded-full transition-all duration-700 ease-out', barColor)}
+                  className={cn('h-full rounded-full transition-[width] duration-700 ease-out', barColor)}
                   style={{ width: `${pct}%`, boxShadow: `0 0 8px ${barColor === 'bg-blue-500' ? 'hsl(var(--primary) / 0.4)' : barColor === 'bg-red-500' ? 'hsl(var(--status-critical) / 0.4)' : barColor === 'bg-cyan-500' ? 'hsl(var(--status-healthy) / 0.4)' : 'rgba(250,204,21,0.4)'}` }}
                 />
                 {/* Projected marker */}

@@ -63,16 +63,16 @@ export default function WhatsAppContacts() {
         const res = await whatsappApi.listContacts({ page_size: 200 });
         if (res?.data?.items) {
           setContacts(
-            res.data.items.map((c: any) => ({
+            res.data.items.map((c) => ({
               id: c.id,
               phone_number: c.phone_number || '',
               country_code: c.country_code || 'US',
               display_name: c.display_name || null,
-              opt_in_status: c.opt_in_status || 'pending',
+              opt_in_status: (c.opt_in_status || 'pending') as Contact['opt_in_status'],
               message_count: c.message_count || 0,
               last_message_at: c.last_message_at || null,
               created_at: c.created_at || new Date().toISOString(),
-            }))
+            })) as Contact[]
           );
         }
       } catch {
@@ -146,7 +146,7 @@ export default function WhatsAppContacts() {
         <div className="flex gap-3">
           <button
             onClick={() => setShowImportModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-[#1a1a24] border border-white/10 rounded-xl hover:bg-[#22222e] transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-card border border-white/10 rounded-xl hover:bg-muted transition-colors"
           >
             <ArrowUpTrayIcon className="w-4 h-4" />
             Import CSV
@@ -170,7 +170,7 @@ export default function WhatsAppContacts() {
             placeholder="Search by phone or name..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-[rgba(255,_255,_255,_0.05)] border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none transition-colors"
+            className="w-full pl-10 pr-4 py-3 bg-muted/50 border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none transition-colors"
           />
         </div>
         <div className="flex gap-2">
@@ -181,8 +181,8 @@ export default function WhatsAppContacts() {
               className={cn(
                 'px-4 py-2 rounded-xl transition-colors text-sm font-medium',
                 statusFilter === status
-                  ? 'bg-[#25D366] text-white'
-                  : 'bg-[rgba(255,_255,_255,_0.05)] text-gray-400 hover:text-white border border-white/10'
+                  ? 'bg-[#25D366] text-foreground'
+                  : 'bg-muted/50 text-gray-400 hover:text-foreground border border-white/10'
               )}
             >
               {status === 'all' ? 'All' : statusConfig[status as keyof typeof statusConfig]?.label}
@@ -214,7 +214,7 @@ export default function WhatsAppContacts() {
       )}
 
       {/* Contacts Table */}
-      <div className="bg-[rgba(255,_255,_255,_0.05)] rounded-2xl border border-white/5 overflow-hidden">
+      <div className="bg-muted/50 rounded-2xl border border-white/5 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -295,6 +295,7 @@ export default function WhatsAppContacts() {
                         {contact.opt_in_status !== 'opted_in' && (
                           <button
                             onClick={() => handleOptIn(contact.id)}
+                            aria-label="Opt in"
                             className="p-2 text-green-400 hover:bg-green-500/10 rounded-lg transition-colors"
                             title="Opt In"
                           >
@@ -304,16 +305,17 @@ export default function WhatsAppContacts() {
                         {contact.opt_in_status !== 'opted_out' && (
                           <button
                             onClick={() => handleOptOut(contact.id)}
+                            aria-label="Opt out"
                             className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                             title="Opt Out"
                           >
                             <XCircleIcon className="w-4 h-4" />
                           </button>
                         )}
-                        <button className="p-2 text-gray-400 hover:bg-white/5 rounded-lg transition-colors">
+                        <button aria-label="Edit contact" className="p-2 text-gray-400 hover:bg-white/5 rounded-lg transition-colors">
                           <PencilIcon className="w-4 h-4" />
                         </button>
-                        <button className="p-2 text-gray-400 hover:bg-red-500/10 hover:text-red-400 rounded-lg transition-colors">
+                        <button aria-label="Delete contact" className="p-2 text-gray-400 hover:bg-red-500/10 hover:text-red-400 rounded-lg transition-colors">
                           <TrashIcon className="w-4 h-4" />
                         </button>
                       </div>
@@ -335,14 +337,16 @@ export default function WhatsAppContacts() {
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="p-2 bg-[#1a1a24] rounded-lg disabled:opacity-50 hover:bg-[#22222e] transition-colors"
+              aria-label="Previous page"
+              className="p-2 bg-card rounded-lg disabled:opacity-50 hover:bg-muted transition-colors"
             >
               <ChevronLeftIcon className="w-4 h-4" />
             </button>
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="p-2 bg-[#1a1a24] rounded-lg disabled:opacity-50 hover:bg-[#22222e] transition-colors"
+              aria-label="Next page"
+              className="p-2 bg-card rounded-lg disabled:opacity-50 hover:bg-muted transition-colors"
             >
               <ChevronRightIcon className="w-4 h-4" />
             </button>
@@ -427,12 +431,12 @@ function AddContactModal({
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className="w-full max-w-md bg-[rgba(255,_255,_255,_0.05)] rounded-2xl border border-white/10 p-6"
+        className="w-full max-w-md bg-muted/50 rounded-2xl border border-white/10 p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-semibold">Add Contact</h3>
-          <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-lg">
+          <button onClick={onClose} aria-label="Close" className="p-2 hover:bg-white/5 rounded-lg">
             <XMarkIcon className="w-5 h-5" />
           </button>
         </div>
@@ -446,7 +450,7 @@ function AddContactModal({
               placeholder="+1234567890"
               value={formData.phone_number}
               onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
-              className="w-full px-4 py-3 bg-[#0b1215] border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
+              className="w-full px-4 py-3 bg-background border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
             />
           </div>
           <div>
@@ -454,7 +458,7 @@ function AddContactModal({
             <select
               value={formData.country_code}
               onChange={(e) => setFormData({ ...formData, country_code: e.target.value })}
-              className="w-full px-4 py-3 bg-[#0b1215] border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
+              className="w-full px-4 py-3 bg-background border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
             >
               <option value="US">United States (+1)</option>
               <option value="GB">United Kingdom (+44)</option>
@@ -471,7 +475,7 @@ function AddContactModal({
               placeholder="John Doe"
               value={formData.display_name}
               onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
-              className="w-full px-4 py-3 bg-[#0b1215] border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
+              className="w-full px-4 py-3 bg-background border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
             />
           </div>
 
@@ -479,7 +483,7 @@ function AddContactModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-3 bg-[#1a1a24] border border-white/10 rounded-xl hover:bg-[#22222e] transition-colors"
+              className="flex-1 px-4 py-3 bg-card border border-white/10 rounded-xl hover:bg-muted transition-colors"
             >
               Cancel
             </button>
@@ -528,12 +532,12 @@ function ImportContactsModal({
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className="w-full max-w-lg bg-[rgba(255,_255,_255,_0.05)] rounded-2xl border border-white/10 p-6"
+        className="w-full max-w-lg bg-muted/50 rounded-2xl border border-white/10 p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-semibold">Import Contacts</h3>
-          <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-lg">
+          <button onClick={onClose} aria-label="Close" className="p-2 hover:bg-white/5 rounded-lg">
             <XMarkIcon className="w-5 h-5" />
           </button>
         </div>
@@ -577,7 +581,7 @@ function ImportContactsModal({
           )}
         </div>
 
-        <div className="mt-4 p-4 bg-[#0b1215] rounded-xl">
+        <div className="mt-4 p-4 bg-background rounded-xl">
           <h4 className="font-medium mb-2">CSV Format Required:</h4>
           <code className="text-sm text-gray-400">
             phone_number,country_code,display_name
@@ -591,7 +595,7 @@ function ImportContactsModal({
         <div className="flex gap-3 mt-6">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-3 bg-[#1a1a24] border border-white/10 rounded-xl hover:bg-[#22222e] transition-colors"
+            className="flex-1 px-4 py-3 bg-card border border-white/10 rounded-xl hover:bg-muted transition-colors"
           >
             Cancel
           </button>

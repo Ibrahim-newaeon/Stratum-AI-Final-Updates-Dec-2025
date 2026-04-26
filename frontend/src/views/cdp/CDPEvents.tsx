@@ -103,7 +103,7 @@ function EventsBarChart({ data }: { data: EventByName[] }) {
             <div className="h-2 bg-muted rounded-full overflow-hidden">
               <div
                 className={cn(
-                  'h-full rounded-full transition-all duration-500',
+                  'h-full rounded-full transition-[width] duration-500',
                   i === 0 ? 'bg-primary' : i < 3 ? 'bg-primary/70' : 'bg-primary/50'
                 )}
                 style={{ width: `${widthPercent}%` }}
@@ -157,7 +157,7 @@ function EMQDistributionChart({ data }: { data: Array<{ score_range: string; cou
             <span className="text-xs w-16 text-muted-foreground">{bucket.score_range}</span>
             <div className="flex-1 h-4 bg-muted rounded-full overflow-hidden">
               <div
-                className={cn('h-full rounded-full transition-all', getColor(bucket.score_range))}
+                className={cn('h-full rounded-full transition-[width]', getColor(bucket.score_range))}
                 style={{ width: `${percent}%` }}
               />
             </div>
@@ -235,6 +235,7 @@ export default function CDPEvents() {
           <button
             onClick={handleRefresh}
             disabled={isRefreshing}
+            aria-label="Refresh event data"
             className="flex items-center gap-2 px-3 py-2 border rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
             title="Refresh event data"
           >

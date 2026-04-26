@@ -18,10 +18,9 @@ from sqlalchemy import create_engine, text
 from datetime import datetime
 
 # Database connection
-DATABASE_URL = os.environ.get(
-    "DATABASE_URL_SYNC",
-    "postgresql://stratum:password@localhost:5432/stratum_ai"
-)
+DATABASE_URL = os.environ.get("DATABASE_URL_SYNC")
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL_SYNC environment variable is required")
 
 # Datasets base path
 DATASETS_PATH = Path(__file__).parent.parent / "datasets"
@@ -64,19 +63,35 @@ def infer_sql_type(dtype, col_name):
         return 'TEXT'
 
 
+import re
+
+_VALID_TABLE_NAME = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
+
+def _sanitize_identifier(name: str) -> str:
+    """Validate and quote SQL identifiers to prevent injection."""
+    if not _VALID_TABLE_NAME.match(name):
+        raise ValueError(f"Invalid SQL identifier: {name!r}")
+    return f'"{name}"'
+
+
 def create_table_from_df(engine, df, table_name, schema='warehouse'):
     """Create table based on DataFrame structure."""
+    # Validate table and schema names
+    safe_table = _sanitize_identifier(table_name)
+    safe_schema = _sanitize_identifier(schema)
+
     columns = []
     for col in df.columns:
         sql_type = infer_sql_type(df[col].dtype, col)
-        columns.append(f'"{col}" {sql_type}')
+        safe_col = _sanitize_identifier(col)
+        columns.append(f'{safe_col} {sql_type}')
 
     # Add ID and created_at
     column_defs = ',\n        '.join(columns)
 
     ddl = f"""
-    DROP TABLE IF EXISTS {schema}.{table_name} CASCADE;
-    CREATE TABLE {schema}.{table_name} (
+    DROP TABLE IF EXISTS {safe_schema}.{safe_table} CASCADE;
+    CREATE TABLE {safe_schema}.{safe_table} (
         id BIGSERIAL PRIMARY KEY,
         {column_defs},
         created_at TIMESTAMP DEFAULT NOW()

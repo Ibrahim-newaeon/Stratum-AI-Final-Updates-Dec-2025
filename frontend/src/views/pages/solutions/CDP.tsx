@@ -152,7 +152,7 @@ export default function CDPSolution() {
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link
                   to={hero.ctaLink}
-                  className="px-8 py-4 rounded-full text-lg font-semibold text-white transition-all hover:opacity-90 text-center"
+                  className="px-8 py-4 rounded-full text-lg font-semibold text-white transition-opacity hover:opacity-90 text-center"
                   style={{
                     background: 'var(--landing-accent-coral)',
                     boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
@@ -162,7 +162,7 @@ export default function CDPSolution() {
                 </Link>
                 <Link
                   to="/cdp-calculator"
-                  className="px-8 py-4 rounded-xl text-lg font-semibold text-white transition-all hover:bg-white/10 text-center"
+                  className="px-8 py-4 rounded-xl text-lg font-semibold text-white transition-colors hover:bg-white/10 text-center"
                   style={{
                     background: 'var(--landing-surface-glass)',
                     border: '1px solid rgba(255, 255, 255, 0.12)',
@@ -212,7 +212,7 @@ export default function CDPSolution() {
             {features.map((feature) => (
               <div
                 key={feature.title}
-                className="p-6 rounded-2xl transition-all hover:scale-[1.02]"
+                className="p-6 rounded-2xl transition-transform hover:scale-[1.02]"
                 style={{
                   background: 'var(--landing-card)',
                   border: '1px solid var(--landing-border)',
@@ -317,7 +317,7 @@ export default function CDPSolution() {
             </p>
             <Link
               to="/signup"
-              className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-all hover:opacity-90"
+              className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-opacity hover:opacity-90"
               style={{
                 background: 'var(--landing-accent-coral)',
                 boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',

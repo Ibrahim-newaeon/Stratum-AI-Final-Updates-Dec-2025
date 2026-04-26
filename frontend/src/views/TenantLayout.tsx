@@ -140,7 +140,7 @@ export default function TenantLayout() {
                 <span className="text-white font-bold text-lg">S</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-sm font-bold bg-gradient-stratum bg-clip-text text-transparent">
+                <span className="text-sm font-bold text-foreground">
                   {tenant?.name || 'Tenant'}
                 </span>
                 <span className="text-xs text-muted-foreground">ID: {tenantId}</span>
@@ -175,7 +175,7 @@ export default function TenantLayout() {
                     key={item.name}
                     to={item.href}
                     className={cn(
-                      'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+                      'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200',
                       isActive
                         ? 'bg-gradient-stratum text-white shadow-glow-sm'
                         : 'text-muted-foreground hover:bg-accent hover:text-foreground'
@@ -202,9 +202,9 @@ export default function TenantLayout() {
                       key={item.name}
                       to={item.href}
                       className={cn(
-                        'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200',
+                        'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200',
                         isActive
-                          ? 'bg-primary/10 text-primary border-l-2 border-primary'
+                          ? 'bg-primary/10 text-primary'
                           : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                       )}
                       onClick={() => setSidebarOpen(false)}
@@ -230,9 +230,9 @@ export default function TenantLayout() {
                       key={item.name}
                       to={item.href}
                       className={cn(
-                        'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200',
+                        'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200',
                         isActive
-                          ? 'bg-primary/10 text-primary border-l-2 border-primary'
+                          ? 'bg-primary/10 text-primary'
                           : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                       )}
                       onClick={() => setSidebarOpen(false)}
@@ -251,7 +251,7 @@ export default function TenantLayout() {
             <NavLink
               to={tenantId ? `/app/${tenantId}/settings` : '#'}
               className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200',
                 location.pathname.includes('/settings')
                   ? 'bg-gradient-stratum text-white shadow-glow-sm'
                   : 'text-muted-foreground hover:bg-accent hover:text-foreground'
@@ -294,7 +294,7 @@ export default function TenantLayout() {
             </button>
 
             {/* Notifications */}
-            <button className="p-2 rounded-lg hover:bg-accent transition-colors relative">
+            <button aria-label="Notifications" className="p-2 rounded-lg hover:bg-accent transition-colors relative">
               <BellIcon className="h-5 w-5" />
             </button>
 

@@ -46,22 +46,22 @@ export default function VerifyEmail() {
     return (
       <>
         <style>{authStyles}</style>
-        <div className="bg-[#050B18] text-white min-h-screen flex font-sans selection:bg-[#FF1F6D]/30 overflow-hidden">
+        <div className="dark bg-background text-foreground min-h-screen flex font-sans selection:bg-primary/30 overflow-hidden">
           <AuthBackground />
           <main className="relative z-10 w-full flex items-center justify-center min-h-screen p-6">
-            <div className="w-full max-w-md auth-glass-card rounded-xl p-10 border-white/10 relative z-10 shadow-2xl auth-fade-up text-center">
+            <div className="w-full max-w-md auth-glass-card rounded-xl p-10 dark:border-white/10 border-border/50 relative z-10 shadow-2xl auth-fade-up text-center">
               <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-6">
                 <ExclamationTriangleIcon className="w-8 h-8 text-red-400" />
               </div>
-              <h2 className="text-2xl font-display font-extrabold text-white mb-2 tracking-tight">
+              <h2 className="text-2xl font-display font-extrabold text-foreground mb-2 tracking-tight">
                 Invalid Verification Link
               </h2>
-              <p className="text-slate-400 text-sm mb-8">
+              <p className="text-muted-foreground text-sm mb-8">
                 The verification link is missing or invalid. Check your transmission inbox for the correct link.
               </p>
               <Link
                 to="/login"
-                className="block w-full auth-gradient-btn auth-shimmer-btn text-white font-black h-14 rounded-xl tracking-[0.2em] text-sm flex items-center justify-center transition-all active:scale-[0.98]"
+                className="block w-full auth-gradient-btn auth-shimmer-btn text-foreground font-black h-14 rounded-xl tracking-[0.2em] text-sm flex items-center justify-center transition-colors active:scale-[0.98]"
               >
                 BACK TO SESSION
               </Link>
@@ -77,16 +77,16 @@ export default function VerifyEmail() {
     return (
       <>
         <style>{authStyles}</style>
-        <div className="bg-[#050B18] text-white min-h-screen flex font-sans selection:bg-[#FF1F6D]/30 overflow-hidden">
+        <div className="dark bg-background text-foreground min-h-screen flex font-sans selection:bg-primary/30 overflow-hidden">
           <AuthBackground />
           <main className="relative z-10 w-full flex items-center justify-center min-h-screen p-6">
-            <div className="w-full max-w-md auth-glass-card rounded-xl p-10 border-white/10 relative z-10 shadow-2xl auth-fade-up text-center">
+            <div className="w-full max-w-md auth-glass-card rounded-xl p-10 dark:border-white/10 border-border/50 relative z-10 shadow-2xl auth-fade-up text-center">
               {/* Loading spinner */}
-              <div className="w-16 h-16 rounded-full border-4 border-[#FF1F6D]/20 border-t-[#FF1F6D] animate-spin mx-auto mb-6" />
-              <h2 className="text-2xl font-display font-extrabold text-white mb-2 tracking-tight">
+              <div className="w-16 h-16 rounded-full border-4 border-primary/20 border-t-primary animate-spin mx-auto mb-6" />
+              <h2 className="text-2xl font-display font-extrabold text-foreground mb-2 tracking-tight">
                 Verifying Identity
               </h2>
-              <p className="text-slate-400 text-sm">
+              <p className="text-muted-foreground text-sm">
                 Please wait while we verify your neural identifier...
               </p>
             </div>
@@ -101,22 +101,22 @@ export default function VerifyEmail() {
     return (
       <>
         <style>{authStyles}</style>
-        <div className="bg-[#050B18] text-white min-h-screen flex font-sans selection:bg-[#FF1F6D]/30 overflow-hidden">
+        <div className="dark bg-background text-foreground min-h-screen flex font-sans selection:bg-primary/30 overflow-hidden">
           <AuthBackground />
           <main className="relative z-10 w-full flex items-center justify-center min-h-screen p-6">
-            <div className="w-full max-w-md auth-glass-card rounded-xl p-10 border-white/10 relative z-10 shadow-2xl auth-fade-up text-center">
+            <div className="w-full max-w-md auth-glass-card rounded-xl p-10 dark:border-white/10 border-border/50 relative z-10 shadow-2xl auth-fade-up text-center">
               <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-6">
                 <CheckCircleIcon className="w-8 h-8 text-emerald-400" />
               </div>
-              <h2 className="text-2xl font-display font-extrabold text-white mb-2 tracking-tight">
+              <h2 className="text-2xl font-display font-extrabold text-foreground mb-2 tracking-tight">
                 Identity Verified
               </h2>
-              <p className="text-slate-400 text-sm mb-8">
+              <p className="text-muted-foreground text-sm mb-8">
                 Your neural identifier has been verified. Initialize your session to access Stratum AI.
               </p>
               <Link
                 to="/login"
-                className="block w-full auth-gradient-btn auth-shimmer-btn text-white font-black h-14 rounded-xl tracking-[0.2em] text-sm flex items-center justify-center transition-all active:scale-[0.98]"
+                className="block w-full auth-gradient-btn auth-shimmer-btn text-foreground font-black h-14 rounded-xl tracking-[0.2em] text-sm flex items-center justify-center transition-colors active:scale-[0.98]"
               >
                 INITIALIZE SESSION
               </Link>
@@ -131,30 +131,30 @@ export default function VerifyEmail() {
   return (
     <>
       <style>{authStyles}</style>
-      <div className="bg-[#050B18] text-white min-h-screen flex font-sans selection:bg-[#FF1F6D]/30 overflow-hidden">
+      <div className="dark bg-background text-foreground min-h-screen flex font-sans selection:bg-primary/30 overflow-hidden">
         <AuthBackground />
         <main className="relative z-10 w-full flex items-center justify-center min-h-screen p-6">
-          <div className="w-full max-w-md auth-glass-card rounded-xl p-10 border-white/10 relative z-10 shadow-2xl auth-fade-up text-center">
+          <div className="w-full max-w-md auth-glass-card rounded-xl p-10 dark:border-white/10 border-border/50 relative z-10 shadow-2xl auth-fade-up text-center">
             <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-6">
               <ExclamationTriangleIcon className="w-8 h-8 text-red-400" />
             </div>
-            <h2 className="text-2xl font-display font-extrabold text-white mb-2 tracking-tight">
+            <h2 className="text-2xl font-display font-extrabold text-foreground mb-2 tracking-tight">
               Verification Failed
             </h2>
-            <p className="text-slate-400 text-sm mb-8">
+            <p className="text-muted-foreground text-sm mb-8">
               {error || 'The verification link is invalid or has expired.'}
             </p>
             <div className="space-y-4">
               <Link
                 to="/signup"
-                className="block w-full auth-gradient-btn auth-shimmer-btn text-white font-black h-14 rounded-xl tracking-[0.2em] text-sm flex items-center justify-center transition-all active:scale-[0.98]"
+                className="block w-full auth-gradient-btn auth-shimmer-btn text-foreground font-black h-14 rounded-xl tracking-[0.2em] text-sm flex items-center justify-center transition-colors active:scale-[0.98]"
               >
                 REGISTER NEW ENTITY
               </Link>
               {!showResendForm ? (
                 <button
                   onClick={() => setShowResendForm(true)}
-                  className="text-xs text-[#FF1F6D] hover:text-white transition-colors font-bold uppercase tracking-widest"
+                  className="text-xs text-primary hover:text-foreground transition-colors font-bold uppercase tracking-widest"
                 >
                   Resend verification
                 </button>
@@ -165,7 +165,7 @@ export default function VerifyEmail() {
                     value={resendEmail}
                     onChange={(e) => setResendEmail(e.target.value)}
                     placeholder="Enter your neural identifier"
-                    className="w-full h-[44px] bg-[#050B18]/80 border border-white/10 rounded-[12px] px-4 text-white text-sm outline-none transition-all placeholder:text-slate-600 focus:border-[#00F5FF] focus:shadow-[0_0_15px_rgba(0,245,255,0.3)]"
+                    className="w-full h-11 bg-background/80 border dark:border-white/10 border-border/50 rounded-[12px] px-4 text-foreground text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary "
                   />
                   <button
                     onClick={async () => {
@@ -176,7 +176,7 @@ export default function VerifyEmail() {
                       );
                     }}
                     disabled={resendMutation.isPending || !resendEmail}
-                    className="text-xs text-[#FF1F6D] hover:text-white transition-colors disabled:opacity-50 font-bold uppercase tracking-widest"
+                    className="text-xs text-primary hover:text-foreground transition-colors disabled:opacity-50 font-bold uppercase tracking-widest"
                   >
                     {resendMutation.isPending
                       ? 'Transmitting...'
@@ -203,3 +203,5 @@ export default function VerifyEmail() {
     </>
   );
 }
+
+

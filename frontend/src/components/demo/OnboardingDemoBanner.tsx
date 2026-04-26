@@ -40,6 +40,7 @@ export function OnboardingDemoBanner({
         onClick={onDismiss}
         className="absolute top-3 right-3 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors z-10"
         title="Dismiss"
+        aria-label="Dismiss"
       >
         <X className="w-4 h-4" />
       </button>
@@ -66,11 +67,11 @@ export function OnboardingDemoBanner({
         {/* CTA */}
         <button
           onClick={() => navigate(ctaRoute)}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all group whitespace-nowrap"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors group whitespace-nowrap"
         >
           <Link2 className="w-4 h-4" />
           Connect Platforms
-          <ArrowRight className="w-4 h-4 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" />
+          <ArrowRight className="w-4 h-4 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-opacity" />
         </button>
       </div>
 

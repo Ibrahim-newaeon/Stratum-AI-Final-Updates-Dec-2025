@@ -99,17 +99,17 @@ export function generateId(): string {
 }
 
 export const platformColors: Record<string, string> = {
-  google: '#4285F4',
-  meta: '#1877F2',
-  facebook: '#1877F2',
+  google: 'hsl(var(--google))',
+  meta: 'hsl(var(--meta))',
+  facebook: 'hsl(var(--meta))',
   instagram: '#E4405F',
-  tiktok: '#000000',
+  tiktok: 'hsl(var(--tiktok))',
   linkedin: '#0A66C2',
   twitter: '#1DA1F2',
-  snapchat: '#FFFC00',
+  snapchat: 'hsl(var(--snapchat))',
   pinterest: '#E60023',
 }
 
 export function getPlatformColor(platform: string): string {
-  return platformColors[platform.toLowerCase()] || '#6B7280'
+  return platformColors[platform.toLowerCase()] || 'hsl(var(--muted-foreground))'
 }

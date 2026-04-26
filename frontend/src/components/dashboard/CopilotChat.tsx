@@ -62,7 +62,7 @@ function MessageBubble({ msg }: { msg: CopilotMessage }) {
     <div className={cn('flex gap-2.5 max-w-[95%]', isUser ? 'ml-auto flex-row-reverse' : '')}>
       <div className={cn(
         'w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5',
-        isUser ? 'bg-primary/10' : 'bg-gradient-to-br from-violet-500 to-blue-500'
+        isUser ? 'bg-primary/10' : 'bg-primary'
       )}>
         {isUser
           ? <User className="w-3.5 h-3.5 text-primary" />
@@ -208,7 +208,7 @@ export function CopilotChat() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-br from-violet-600 to-blue-600 text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center group"
+          className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl hover:scale-105 transition-transform transition-colors flex items-center justify-center group"
           aria-label="Open AI Copilot"
         >
           <Sparkles className="w-6 h-6 group-hover:rotate-12 transition-transform" />
@@ -218,9 +218,9 @@ export function CopilotChat() {
 
       {/* Chat Panel */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 z-50 w-[400px] h-[600px] max-h-[80vh] rounded-2xl border bg-card shadow-2xl flex flex-col overflow-hidden">
+        <div className="fixed bottom-6 right-6 z-50 w-[400px] h-[600px] max-h-[80vh] max-w-[calc(100vw-3rem)] rounded-2xl border bg-card shadow-2xl flex flex-col overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b bg-gradient-to-r from-violet-600 to-blue-600 text-white">
+          <div className="flex items-center justify-between px-4 py-3 border-b bg-primary text-primary-foreground">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
                 <Sparkles className="w-4 h-4" />
@@ -257,7 +257,7 @@ export function CopilotChat() {
             {/* Loading indicator */}
             {chatMutation.isPending && (
               <div className="flex gap-2.5">
-                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-500 to-blue-500 flex items-center justify-center flex-shrink-0">
+                <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
                   <Bot className="w-3.5 h-3.5 text-white" />
                 </div>
                 <div className="bg-muted/50 border border-border/50 rounded-2xl rounded-tl-md px-4 py-3">
@@ -283,7 +283,7 @@ export function CopilotChat() {
 
           {/* Input */}
           <form onSubmit={handleSubmit} className="px-4 py-3 border-t bg-card">
-            <div className="flex items-center gap-2 bg-muted/30 rounded-xl border border-border/50 px-3 py-1.5 focus-within:border-violet-400 focus-within:ring-1 focus-within:ring-violet-400/30 transition-all">
+            <div className="flex items-center gap-2 bg-muted/30 rounded-xl border border-border/50 px-3 py-1.5 focus-within:border-violet-400 focus-within:ring-1 focus-within:ring-violet-400/30 transition-colors">
               <MessageSquare className="w-4 h-4 text-muted-foreground flex-shrink-0" />
               <input
                 ref={inputRef}
@@ -291,14 +291,16 @@ export function CopilotChat() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Ask about your campaigns..."
+                aria-label="Ask about your campaigns"
                 className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 outline-none py-1.5"
                 disabled={chatMutation.isPending}
               />
               <button
                 type="submit"
                 disabled={!input.trim() || chatMutation.isPending}
+                aria-label="Send message"
                 className={cn(
-                  'p-1.5 rounded-lg transition-all',
+                  'p-1.5 rounded-lg transition-colors',
                   input.trim()
                     ? 'text-violet-600 hover:bg-violet-100'
                     : 'text-muted-foreground/40'

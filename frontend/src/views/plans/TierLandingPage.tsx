@@ -36,7 +36,7 @@ export default function TierLandingPage() {
             {/* Logo and Back */}
             <div className="flex items-center gap-6">
               <Link to="/" className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-gradient-stratum flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg  flex items-center justify-center">
                   <span className="text-white font-bold">S</span>
                 </div>
                 <span className="text-lg text-white font-semibold hidden sm:inline">
@@ -58,7 +58,7 @@ export default function TierLandingPage() {
                 <Link
                   key={t}
                   to={`/plans/${t}`}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                     t === tier
                       ? `bg-gradient-to-r ${gradientClass} text-white`
                       : 'text-gray-400 hover:text-white hover:bg-white/5'

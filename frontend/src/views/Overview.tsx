@@ -13,7 +13,7 @@
  * - Live simulation with platform connections
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   RefreshCw,
@@ -92,12 +92,21 @@ export function Overview() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { toast } = useToast()
+  const timeoutsRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set())
+
+  useEffect(() => {
+    return () => {
+      timeoutsRef.current.forEach(clearTimeout)
+      timeoutsRef.current.clear()
+    }
+  }, [])
+
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
   const [showKeyboardHints, setShowKeyboardHints] = useState(false)
 
   // Get tenant ID from tenant store
-  const tenantId = useTenantStore((state) => state.tenantId) ?? 1
+  const tenantId = useTenantStore((state) => state.tenantId)
 
   // Price metrics toggle — hides spend, revenue, ROAS, CPA, CPM across dashboard
   const { showPriceMetrics } = usePriceMetrics()
@@ -109,7 +118,7 @@ export function Overview() {
 
   // Fetch data from API with fallback
   const { data: campaignsData, isLoading: campaignsLoading, refetch: refetchCampaigns } = useCampaigns()
-  const { data: overviewData } = useTenantOverview(tenantId)
+  const { data: overviewData } = useTenantOverview(tenantId ?? 0)
 
   // ============================================================================
   // Live Simulation — generates realistic platform data in real-time
@@ -240,10 +249,11 @@ export function Overview() {
   const handleSyncAll = useCallback(async () => {
     syncAllMutation.mutate(undefined, {
       onSuccess: () => {
-        setTimeout(() => {
+        const id = setTimeout(() => {
           refetchCampaigns()
           simulation.refresh()
         }, 2000)
+        timeoutsRef.current.add(id)
       },
     })
   }, [syncAllMutation, refetchCampaigns, simulation])
@@ -253,11 +263,12 @@ export function Overview() {
     setSyncingCampaignId(campaignId)
     syncCampaignMutation.mutate(campaignId, {
       onSettled: () => {
-        setTimeout(() => {
+        const id = setTimeout(() => {
           setSyncingCampaignId(null)
           refetchCampaigns()
           simulation.refresh()
         }, 2000)
+        timeoutsRef.current.add(id)
       },
     })
   }, [syncCampaignMutation, refetchCampaigns, simulation])
@@ -345,9 +356,7 @@ export function Overview() {
   // Set initial loading — immediate when simulation data is ready
   useEffect(() => {
     if (!campaignsLoading || simulation.campaigns.length > 0) {
-      // Short delay for a realistic loading feel
-      const timer = setTimeout(() => setInitialLoading(false), 800)
-      return () => clearTimeout(timer)
+      setInitialLoading(false)
     }
   }, [campaignsLoading, simulation.campaigns.length])
 
@@ -481,7 +490,7 @@ export function Overview() {
             <div
               key={conn.platform}
               className={cn(
-                'flex items-center gap-3 p-3 rounded-lg border transition-all',
+                'flex items-center gap-3 p-3 rounded-lg border transition-colors',
                 conn.status === 'connected' && 'bg-green-500/5 border-green-500/20',
                 conn.status === 'syncing' && 'bg-blue-500/5 border-blue-500/20',
                 conn.status === 'warning' && 'bg-amber-500/5 border-amber-500/20',
@@ -566,7 +575,7 @@ export function Overview() {
           >
             {syncAllMutation.isPending ? (
               <>
-                <DownloadCloud className="w-4 h-4 mr-2 animate-bounce" />
+                <DownloadCloud className="w-4 h-4 mr-2 animate-pulse" />
                 Syncing...
               </>
             ) : syncAllMutation.isSuccess ? (
@@ -835,7 +844,7 @@ export function Overview() {
 
         {/* Account Breakdown */}
         <ErrorBoundary>
-          <AccountBreakdown tenantId={tenantId} />
+          <AccountBreakdown tenantId={tenantId ?? 0} />
         </ErrorBoundary>
 
         {/* Simulator Widget */}
@@ -891,7 +900,7 @@ export function Overview() {
               <div
                 key={alert.id}
                 className={cn(
-                  'p-4 rounded-lg border-l-4 transition-all hover:shadow-md cursor-pointer',
+                  'p-4 rounded-lg border transition-colors hover:shadow-md cursor-pointer',
                   alert.severity === 'warning' && 'bg-amber-500/10 border-amber-500 hover:bg-amber-500/15',
                   alert.severity === 'good' && 'bg-green-500/10 border-green-500 hover:bg-green-500/15',
                   alert.severity === 'critical' && 'bg-red-500/10 border-red-500 hover:bg-red-500/15'
@@ -920,3 +929,4 @@ export function Overview() {
 }
 
 export default Overview
+

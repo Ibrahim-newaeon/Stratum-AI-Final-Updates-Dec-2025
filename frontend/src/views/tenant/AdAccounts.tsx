@@ -83,7 +83,7 @@ export default function AdAccounts() {
         data: { is_enabled: !account.enabled },
       })
     } catch (error) {
-      console.error('Failed to toggle account:', error)
+
       // Fallback: local state update for demo mode
     }
   }
@@ -98,7 +98,7 @@ export default function AdAccounts() {
         syncAccounts.mutateAsync('snapchat'),
       ])
     } catch (error) {
-      console.error('Failed to sync accounts:', error)
+
     }
   }
 
@@ -148,7 +148,7 @@ export default function AdAccounts() {
           <div
             key={account.id}
             className={cn(
-              'rounded-xl border p-6 transition-all',
+              'rounded-xl border p-6 transition-colors',
               account.enabled ? 'bg-card shadow-card' : 'bg-muted/30'
             )}
           >

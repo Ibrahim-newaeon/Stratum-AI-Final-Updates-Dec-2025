@@ -55,7 +55,7 @@ async def get_signal_health(
         raise HTTPException(
             status_code=403,
             detail="Signal health feature is not enabled for this tenant"
-        )
+        ).limit(1000)
 
     service = SignalHealthService(db)
     data = await service.get_signal_health(tenant_id, target_date)
@@ -133,7 +133,7 @@ async def get_signal_health_by_account(
         select(FactSignalHealthDaily).where(*conditions).order_by(
             FactSignalHealthDaily.platform,
             FactSignalHealthDaily.account_id,
-        )
+        ).limit(1000)
     )
     records = result.scalars().all()
 

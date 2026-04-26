@@ -88,7 +88,7 @@ export function PageLayout({ children }: PageLayoutProps) {
       />
       {/* StratumAI Dark Enterprise Header */}
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${
+        className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-200 ${
           isScrolled ? 'py-3' : 'py-4'
         }`}
         style={{
@@ -119,7 +119,7 @@ export function PageLayout({ children }: PageLayoutProps) {
                 >
                   {link.name}
                   <span
-                    className={`nav-link-underline absolute bottom-0 left-0 h-0.5 rounded-full transition-all duration-200 ${
+                    className={`nav-link-underline absolute bottom-0 left-0 h-0.5 rounded-full transition-[width] duration-200 ${
                       isActiveLink(link.href) ? 'w-full' : 'w-0'
                     }`}
                     style={{ background: 'var(--landing-accent-coral)' }}
@@ -134,7 +134,7 @@ export function PageLayout({ children }: PageLayoutProps) {
               <div className="relative lang-toggle">
                 <button
                   onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-white/5"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:bg-white/5"
                   style={{ color: 'var(--landing-text)' }}
                   aria-label="Change language"
                 >
@@ -143,7 +143,7 @@ export function PageLayout({ children }: PageLayoutProps) {
                 </button>
                 {isLangMenuOpen && (
                   <div
-                    className="absolute top-full mt-2 right-0 py-2 rounded-xl min-w-[120px] z-50"
+                    className="absolute top-full mt-2 right-0 py-2 rounded-xl min-w-28 z-50"
                     style={{
                       background: 'var(--landing-card)',
                       border: '1px solid var(--landing-border)',
@@ -184,14 +184,14 @@ export function PageLayout({ children }: PageLayoutProps) {
 
               <Link
                 to="/login"
-                className="text-sm font-medium py-2 px-4 transition-all duration-200 hover:text-white"
+                className="text-sm font-medium py-2 px-4 transition-colors duration-200 hover:text-white"
                 style={{ color: 'var(--landing-text)' }}
               >
                 Sign In
               </Link>
               <Link
                 to="/signup"
-                className="cta-button px-5 py-2.5 rounded-full text-sm font-semibold text-white transition-all duration-200 hover:brightness-110"
+                className="cta-button px-5 py-2.5 rounded-full text-sm font-semibold text-white transition-colors duration-200 hover:brightness-110"
                 style={{
                   background: 'var(--landing-accent-coral)',
                   boxShadow: '0 0 30px rgba(255, 77, 77, 0.2)',
@@ -203,7 +203,7 @@ export function PageLayout({ children }: PageLayoutProps) {
 
             {/* Mobile Menu Button */}
             <button
-              className="lg:hidden p-2 rounded-lg transition-all duration-200"
+              className="lg:hidden p-2 rounded-lg transition-colors duration-200"
               style={{
                 background: 'rgba(255, 255, 255, 0.05)',
                 border: '1px solid var(--landing-border)',
@@ -306,7 +306,7 @@ export function PageLayout({ children }: PageLayoutProps) {
                 </Link>
                 <Link
                   to="/signup"
-                  className="py-3 px-4 rounded-full text-sm font-semibold text-white text-center hover:brightness-110 transition-all"
+                  className="py-3 px-4 rounded-full text-sm font-semibold text-white text-center hover:brightness-110 transition-colors"
                   style={{ background: 'var(--landing-accent-coral)' }}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >

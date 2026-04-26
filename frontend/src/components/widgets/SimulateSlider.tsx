@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Calculator,
@@ -67,13 +67,21 @@ export function SimulateSlider({
   })
   const [result, setResult] = useState<SimulationResult | null>(null)
   const [isSimulating, setIsSimulating] = useState(false)
+  const simulationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (simulationTimeoutRef.current) clearTimeout(simulationTimeoutRef.current)
+    }
+  }, [])
 
   // Simulate effect of changes using a simplified model
   const runSimulation = useCallback(() => {
     setIsSimulating(true)
 
     // Simulated delay for realism
-    setTimeout(() => {
+    if (simulationTimeoutRef.current) clearTimeout(simulationTimeoutRef.current)
+    simulationTimeoutRef.current = setTimeout(() => {
       const { budgetChange, bidChange, targetAudienceChange } = inputs
 
       // Calculate multipliers
@@ -225,6 +233,7 @@ export function SimulateSlider({
           onClick={resetInputs}
           className="p-2 rounded-lg hover:bg-muted transition-colors"
           title="Reset"
+          aria-label="Reset"
         >
           <RefreshCw className="w-4 h-4" />
         </button>

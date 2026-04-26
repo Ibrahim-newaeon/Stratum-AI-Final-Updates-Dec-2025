@@ -31,6 +31,24 @@ interface DailyTrendChartProps {
   onRefresh?: () => void
 }
 
+const metricConfig = {
+  revenue: {
+    color: chartTheme.colors.revenue,
+    gradientId: 'colorRevenue',
+    name: 'Revenue',
+  },
+  spend: {
+    color: chartTheme.colors.spend,
+    gradientId: 'colorSpend',
+    name: 'Spend',
+  },
+  conversions: {
+    color: chartTheme.colors.conversions,
+    gradientId: 'colorConversions',
+    name: 'Conversions',
+  },
+}
+
 function DailyTrendChartInner({
   data,
   height = 300,
@@ -40,24 +58,6 @@ function DailyTrendChartInner({
 }: Omit<DailyTrendChartProps, 'loading' | 'onRefresh'>) {
   if (!data || data.length === 0) {
     return <NoChartDataState />
-  }
-
-  const metricConfig = {
-    revenue: {
-      color: chartTheme.colors.revenue,
-      gradientId: 'colorRevenue',
-      name: 'Revenue',
-    },
-    spend: {
-      color: chartTheme.colors.spend,
-      gradientId: 'colorSpend',
-      name: 'Spend',
-    },
-    conversions: {
-      color: chartTheme.colors.conversions,
-      gradientId: 'colorConversions',
-      name: 'Conversions',
-    },
   }
 
   return (

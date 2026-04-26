@@ -3,6 +3,17 @@
 @tailwind utilities;
 
 @layer base {
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
   :root {
     /* White light theme — matches dashboard_white_theme.html */
     --background: 240 11% 97%;            /* #F5F5F7 page */
@@ -22,7 +33,7 @@
     --secondary-foreground: 0 0% 100%;
 
     --muted: 240 10% 96%;                 /* #F0F0F5 */
-    --muted-foreground: 240 8% 60%;       /* #9090A0 */
+    --muted-foreground: 240 8% 45%;       /* #6E6E7A — WCAG AA 4.5:1 on #F5F5F7 */
 
     --accent: 340 100% 97%;               /* light pink tint */
     --accent-foreground: 340 100% 40%;
@@ -46,11 +57,19 @@
     /* Status colors */
     --success: 142 76% 36%;
     --warning: 38 92% 50%;
+    --danger: 0 84% 60%;
     --info: 199 89% 48%;
+    --insight: 25 95% 53%;
 
     /* Widget status colors */
     --status-healthy: 171 100% 39%;
     --status-critical: 0 100% 70%;
+
+    /* Surface colors */
+    --surface-primary: 240 11% 97%;
+    --surface-secondary: 0 0% 100%;
+    --surface-tertiary: 240 10% 96%;
+    --surface-elevated: 240 10% 0% / 0.02;
   }
 
   .dark {
@@ -71,7 +90,7 @@
     --secondary-foreground: 0 0% 100%;
 
     --muted: 240 8% 18%;                  /* #2C2C32 dark muted */
-    --muted-foreground: 240 6% 55%;       /* #86868F subdued text */
+    --muted-foreground: 240 6% 70%;       /* #A0A0AA — WCAG AA 4.5:1 on #18181B */
 
     --accent: 340 60% 16%;                /* dark pink tint */
     --accent-foreground: 340 100% 70%;
@@ -93,6 +112,12 @@
     /* Widget status colors */
     --status-healthy: 171 100% 39%;
     --status-critical: 0 100% 70%;
+
+    /* Surface colors */
+    --surface-primary: 240 10% 10%;
+    --surface-secondary: 240 10% 14%;
+    --surface-tertiary: 240 8% 18%;
+    --surface-elevated: 240 6% 90% / 0.02;
 
     /* Brand glow — pink */
     --glow-brand: 340 100% 56% / 0.12;
@@ -386,7 +411,7 @@
   /* Widget Card — clean white card for dashboard */
   .widget-card {
     background: #FFFFFF;
-    @apply border rounded-2xl p-5 transition-all duration-200;
+    @apply border rounded-2xl p-5 transition-colors duration-200;
     border-color: #EBEBEF;
   }
 
@@ -485,7 +510,7 @@
 
   /* Button enhancements */
   .btn-primary {
-    @apply bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-200;
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-200;
   }
 
   .btn-primary:hover {
@@ -501,21 +526,13 @@
     @apply relative;
   }
 
-  .nav-active::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 2px;
-    height: 60%;
-    border-radius: 0 4px 4px 0;
-    background: #FF1F6D;
+  .nav-active {
+    @apply bg-primary/10;
   }
 
   /* ===== Standardized Button Components ===== */
   .btn {
-    @apply inline-flex items-center justify-center font-medium transition-all duration-200;
+    @apply inline-flex items-center justify-center font-medium transition-colors duration-200;
     @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
     @apply disabled:opacity-50 disabled:cursor-not-allowed;
     @apply active:scale-[0.98];
@@ -580,7 +597,7 @@
   }
 
   .card-interactive {
-    @apply card transition-all duration-200;
+    @apply card transition-colors duration-200;
     @apply hover:shadow-md hover:border-primary/20;
     @apply focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2;
   }
@@ -678,6 +695,13 @@
 .react-grid-layout {
   position: relative;
   transition: height 200ms ease;
+  contain: layout;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .react-grid-layout {
+    transition: none;
+  }
 }
 
 .react-grid-item {
@@ -731,7 +755,6 @@
   bottom: 3px;
   width: 8px;
   height: 8px;
-  border-right: 2px solid hsl(var(--muted-foreground) / 0.4);
   border-bottom: 2px solid hsl(var(--muted-foreground) / 0.4);
 }
 
@@ -823,7 +846,7 @@
 
   /* Touch-friendly sizing */
   .touch-target {
-    @apply min-h-[44px] min-w-[44px];
+    @apply min-h-11 min-w-11;
   }
 
   /* Mobile text sizes */

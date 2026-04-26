@@ -42,6 +42,21 @@ import { useTenantStore } from '@/stores/tenantStore'
 
 // (Mock data removed — insights come from useInsights() API hook)
 
+interface InsightMetrics {
+  conversionRate?: { current?: number; change?: number }
+  avgOrderValue?: { current?: number; change?: number }
+  cpa?: { current?: number; change?: number }
+  audienceSize?: number
+  potentialReach?: number
+  ctr?: { current?: number; change?: number }
+  frequency?: { current?: number; optimal?: number }
+  impressions?: { current?: number; threshold?: number }
+  estimatedLoss?: number
+  cpcPeak?: { current?: number; offPeak?: number; savings?: number }
+  optimalHours?: string | number
+  monthlySavings?: number
+}
+
 // Type for insight
 interface Insight {
   id: number
@@ -52,7 +67,7 @@ interface Insight {
   impact: string
   campaign: string
   fullDescription?: string
-  metrics?: Record<string, any>
+  metrics?: InsightMetrics
   recommendations?: string[]
   historicalData?: Array<{ date: string; performance: number }>
   confidence?: number
@@ -172,6 +187,7 @@ function InsightDetailModal({
           </div>
           <button
             onClick={onClose}
+            aria-label="Close"
             className="p-2 rounded-lg hover:bg-muted transition-colors"
           >
             <X className="w-5 h-5" />
@@ -216,7 +232,7 @@ function InsightDetailModal({
                 </div>
                 <div className="mt-2 h-2 rounded-full bg-muted overflow-hidden">
                   <div
-                    className="h-full bg-primary rounded-full transition-all"
+                    className="h-full bg-primary rounded-full transition-[width]"
                     style={{ width: `${insight.confidence}%` }}
                   />
                 </div>
@@ -241,18 +257,18 @@ function InsightDetailModal({
                     </div>
                     <div className="p-3 rounded-lg border bg-card">
                       <p className="text-xs text-muted-foreground">Avg Order Value</p>
-                      <p className="text-lg font-semibold">${insight.metrics.avgOrderValue.current}</p>
-                      <p className="text-xs text-green-500">+{insight.metrics.avgOrderValue.change}% vs avg</p>
+                      <p className="text-lg font-semibold">${insight.metrics.avgOrderValue?.current ?? 0}</p>
+                      <p className="text-xs text-green-500">+{insight.metrics.avgOrderValue?.change ?? 0}% vs avg</p>
                     </div>
                     <div className="p-3 rounded-lg border bg-card">
                       <p className="text-xs text-muted-foreground">Cost Per Acquisition</p>
-                      <p className="text-lg font-semibold">${insight.metrics.cpa.current}</p>
-                      <p className="text-xs text-green-500">{insight.metrics.cpa.change}% vs avg</p>
+                      <p className="text-lg font-semibold">${insight.metrics.cpa?.current ?? 0}</p>
+                      <p className="text-xs text-green-500">{insight.metrics.cpa?.change ?? 0}% vs avg</p>
                     </div>
                     <div className="p-3 rounded-lg border bg-card">
                       <p className="text-xs text-muted-foreground">Audience Size</p>
-                      <p className="text-lg font-semibold">{formatCompactNumber(insight.metrics.audienceSize)}</p>
-                      <p className="text-xs text-muted-foreground">{formatCompactNumber(insight.metrics.potentialReach)} potential</p>
+                      <p className="text-lg font-semibold">{formatCompactNumber(insight.metrics.audienceSize ?? 0)}</p>
+                      <p className="text-xs text-muted-foreground">{formatCompactNumber(insight.metrics.potentialReach ?? 0)} potential</p>
                     </div>
                   </>
                 )}
@@ -265,17 +281,17 @@ function InsightDetailModal({
                     </div>
                     <div className="p-3 rounded-lg border bg-card">
                       <p className="text-xs text-muted-foreground">Frequency</p>
-                      <p className="text-lg font-semibold">{insight.metrics.frequency.current}x</p>
-                      <p className="text-xs text-amber-500">Optimal: {insight.metrics.frequency.optimal}x</p>
+                      <p className="text-lg font-semibold">{insight.metrics.frequency?.current ?? 0}x</p>
+                      <p className="text-xs text-amber-500">Optimal: {insight.metrics.frequency?.optimal ?? 0}x</p>
                     </div>
                     <div className="p-3 rounded-lg border bg-card">
                       <p className="text-xs text-muted-foreground">Total Impressions</p>
-                      <p className="text-lg font-semibold">{formatCompactNumber(insight.metrics.impressions.current)}</p>
-                      <p className="text-xs text-muted-foreground">Threshold: {formatCompactNumber(insight.metrics.impressions.threshold)}</p>
+                      <p className="text-lg font-semibold">{formatCompactNumber(insight.metrics.impressions?.current ?? 0)}</p>
+                      <p className="text-xs text-muted-foreground">Threshold: {formatCompactNumber(insight.metrics.impressions?.threshold ?? 0)}</p>
                     </div>
                     <div className="p-3 rounded-lg border bg-card">
                       <p className="text-xs text-muted-foreground">Est. Weekly Loss</p>
-                      <p className="text-lg font-semibold text-red-500">-${formatCompactNumber(insight.metrics.estimatedLoss)}</p>
+                      <p className="text-lg font-semibold text-red-500">-${formatCompactNumber(insight.metrics.estimatedLoss ?? 0)}</p>
                       <p className="text-xs text-muted-foreground">If unchanged</p>
                     </div>
                   </>
@@ -473,6 +489,7 @@ function AnomalyDetailModal({
           </div>
           <button
             onClick={onClose}
+            aria-label="Close"
             className="p-2 rounded-lg hover:bg-muted transition-colors"
           >
             <X className="w-5 h-5" />
@@ -537,7 +554,7 @@ function AnomalyDetailModal({
                 <div className="mt-2 h-2 rounded-full bg-background overflow-hidden">
                   <div
                     className={cn(
-                      'h-full rounded-full transition-all',
+                      'h-full rounded-full transition-[width]',
                       isPositive ? 'bg-green-500' : 'bg-red-500'
                     )}
                     style={{ width: `${anomaly.confidence}%` }}
@@ -894,6 +911,7 @@ function AlertConfigurationModal({
           </div>
           <button
             onClick={onClose}
+            aria-label="Close"
             className="p-2 rounded-lg hover:bg-muted transition-colors"
           >
             <X className="w-5 h-5" />
@@ -923,7 +941,7 @@ function AlertConfigurationModal({
               type="text"
               value={alertRule.name}
               onChange={(e) => handleFieldChange({ name: e.target.value })}
-              className="w-full px-3 py-2 rounded-lg border bg-background focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all"
+              className="w-full px-3 py-2 rounded-lg border bg-background focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-colors"
               placeholder="e.g., CTR Drop Alert"
             />
           </div>
@@ -934,7 +952,7 @@ function AlertConfigurationModal({
             <select
               value={alertRule.metric}
               onChange={(e) => handleFieldChange({ metric: e.target.value })}
-              className="w-full px-3 py-2 rounded-lg border bg-background focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all"
+              className="w-full px-3 py-2 rounded-lg border bg-background focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-colors"
             >
               {metrics.map(metric => (
                 <option key={metric} value={metric}>{metric}</option>
@@ -951,7 +969,7 @@ function AlertConfigurationModal({
                 onChange={(e) => handleFieldChange({
                   condition: e.target.value as AlertRule['condition']
                 })}
-                className="w-full px-3 py-2 rounded-lg border bg-background focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all"
+                className="w-full px-3 py-2 rounded-lg border bg-background focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-colors"
               >
                 {conditions.map(cond => (
                   <option key={cond.value} value={cond.value}>{cond.label}</option>
@@ -968,7 +986,7 @@ function AlertConfigurationModal({
                 onChange={(e) => handleFieldChange({
                   threshold: parseFloat(e.target.value) || 0
                 })}
-                className="w-full px-3 py-2 rounded-lg border bg-background focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all"
+                className="w-full px-3 py-2 rounded-lg border bg-background focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-colors"
                 step={alertRule.condition.includes('change') ? '1' : '0.1'}
               />
             </div>
@@ -999,7 +1017,7 @@ function AlertConfigurationModal({
                     handleFieldChange({ frequency: freq.value as AlertRule['frequency'] })
                   }}
                   className={cn(
-                    'p-3 rounded-lg border text-center transition-all',
+                    'p-3 rounded-lg border text-center transition-colors',
                     alertRule.frequency === freq.value
                       ? 'border-primary bg-primary/10 text-primary'
                       : 'hover:bg-muted'
@@ -1019,7 +1037,7 @@ function AlertConfigurationModal({
               <button
                 onClick={() => updateChannel('email')}
                 className={cn(
-                  'flex items-center gap-3 p-3 rounded-lg border transition-all',
+                  'flex items-center gap-3 p-3 rounded-lg border transition-colors',
                   alertRule.channels.email
                     ? 'border-primary bg-primary/10'
                     : 'hover:bg-muted'
@@ -1043,7 +1061,7 @@ function AlertConfigurationModal({
               <button
                 onClick={() => updateChannel('whatsapp')}
                 className={cn(
-                  'flex items-center gap-3 p-3 rounded-lg border transition-all',
+                  'flex items-center gap-3 p-3 rounded-lg border transition-colors',
                   alertRule.channels.whatsapp
                     ? 'border-primary bg-primary/10'
                     : 'hover:bg-muted'
@@ -1067,7 +1085,7 @@ function AlertConfigurationModal({
               <button
                 onClick={() => updateChannel('inApp')}
                 className={cn(
-                  'flex items-center gap-3 p-3 rounded-lg border transition-all',
+                  'flex items-center gap-3 p-3 rounded-lg border transition-colors',
                   alertRule.channels.inApp
                     ? 'border-primary bg-primary/10'
                     : 'hover:bg-muted'
@@ -1091,7 +1109,7 @@ function AlertConfigurationModal({
               <button
                 onClick={() => updateChannel('slack')}
                 className={cn(
-                  'flex items-center gap-3 p-3 rounded-lg border transition-all',
+                  'flex items-center gap-3 p-3 rounded-lg border transition-colors',
                   alertRule.channels.slack
                     ? 'border-primary bg-primary/10'
                     : 'hover:bg-muted'
@@ -1160,26 +1178,30 @@ export function Stratum() {
   const [createdAlerts, setCreatedAlerts] = useState<AlertRule[]>([])
 
   // Get tenant ID from tenant store
-  const tenantId = useTenantStore((state) => state.tenantId) ?? 1
+  const tenantId = useTenantStore((state) => state.tenantId)
 
   // Fetch data from API
-  const { data: insightsData, isLoading: insightsLoading, refetch: refetchInsights } = useInsights(tenantId)
-  const { data: _recommendationsData } = useRecommendations(tenantId)
-  const { data: anomaliesData, isLoading: anomaliesLoading } = useAnomalies(tenantId)
+  const effectiveTenantId = tenantId ?? 0
+  const { data: insightsData, isLoading: insightsLoading, refetch: refetchInsights } = useInsights(effectiveTenantId)
+  const { data: _recommendationsData } = useRecommendations(effectiveTenantId)
+  const { data: anomaliesData, isLoading: anomaliesLoading } = useAnomalies(effectiveTenantId)
   const { data: predictionsData } = useLivePredictions()
 
   // Transform API insights or fall back to mock
   const insights: Insight[] = useMemo(() => {
     if (insightsData?.actions && insightsData.actions.length > 0) {
-      return insightsData.actions.slice(0, 3).map((i: any, idx: number) => ({
-        id: i.id || idx + 1,
-        type: i.type || i.insight_type || 'suggestion',
-        priority: i.priority || 'medium',
-        title: i.title || '',
-        description: i.description || '',
-        impact: i.impact || i.expected_impact || '+$0 estimated',
-        campaign: i.campaign || i.campaign_name || 'All campaigns',
-      }))
+      return (insightsData.actions as unknown[]).slice(0, 3).map((item, idx) => {
+        const i = item as Record<string, unknown>
+        return {
+          id: (i.id as number) || idx + 1,
+          type: (i.type as string) || (i.insight_type as string) || 'suggestion',
+          priority: (i.priority as string) || 'medium',
+          title: (i.title as string) || '',
+          description: (i.description as string) || '',
+          impact: (i.impact as string) || (i.expected_impact as string) || '+$0 estimated',
+          campaign: (i.campaign as string) || (i.campaign_name as string) || 'All campaigns',
+        }
+      })
     }
     return []
   }, [insightsData])
@@ -1187,15 +1209,19 @@ export function Stratum() {
   // Transform API anomalies or fall back to mock
   const anomalies: Anomaly[] = useMemo(() => {
     if (anomaliesData?.anomalies && anomaliesData.anomalies.length > 0) {
-      return anomaliesData.anomalies.slice(0, 3).map((a: any, idx: number) => ({
-        id: idx + 1,
-        date: new Date(a.detected_at || a.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        metric: a.metric || a.metric_name || 'Unknown',
-        value: a.actual_value || a.value || 0,
-        expected: a.expected_value || a.expected || 0,
-        deviation: a.deviation ? `${a.deviation > 0 ? '+' : ''}${(a.deviation * 100).toFixed(0)}%` : '0%',
-        type: a.is_positive || a.type === 'positive' ? 'positive' : 'negative',
-      }))
+      return (anomaliesData.anomalies as unknown[]).slice(0, 3).map((item, idx) => {
+        const a = item as Record<string, unknown>
+        const deviation = a.deviation as number | undefined
+        return {
+          id: idx + 1,
+          date: new Date((a.detected_at as string) || (a.date as string)).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          metric: (a.metric as string) || (a.metric_name as string) || 'Unknown',
+          value: (a.actual_value as number) || (a.value as number) || 0,
+          expected: (a.expected_value as number) || (a.expected as number) || 0,
+          deviation: deviation ? `${deviation > 0 ? '+' : ''}${(deviation * 100).toFixed(0)}%` : '0%',
+          type: a.is_positive || a.type === 'positive' ? 'positive' : 'negative',
+        }
+      })
     }
     return []
   }, [anomaliesData])
@@ -1336,10 +1362,11 @@ export function Stratum() {
             onClick={handleRefresh}
             disabled={insightsLoading}
             className="p-2 rounded-lg border hover:bg-muted transition-colors disabled:opacity-50"
+            aria-label="Refresh insights"
           >
             {insightsLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
           </button>
-          <button className="p-2 rounded-lg border hover:bg-muted transition-colors">
+          <button className="p-2 rounded-lg border hover:bg-muted transition-colors" aria-label="Settings">
             <Settings className="w-4 h-4" />
           </button>
         </div>
@@ -1371,7 +1398,7 @@ export function Stratum() {
                   key={insight.id}
                   onClick={() => !isApplied && handleInsightClick(insight as Insight)}
                   className={cn(
-                    'p-4 rounded-lg border bg-background transition-all cursor-pointer',
+                    'p-4 rounded-lg border bg-background transition-colors cursor-pointer',
                     isApplied
                       ? 'opacity-60 cursor-default border-green-500/50'
                       : 'hover:shadow-md hover:border-primary/50'
@@ -1626,7 +1653,7 @@ export function Stratum() {
                     key={anomaly.id || i}
                     onClick={() => !isReviewed && handleAnomalyClick(anomaly as Anomaly)}
                     className={cn(
-                      'p-3 rounded-lg border-l-4 transition-all',
+                      'p-3 rounded-lg border transition-colors',
                       anomaly.type === 'positive'
                         ? 'bg-green-500/10 border-green-500'
                         : 'bg-red-500/10 border-red-500',
@@ -1717,7 +1744,7 @@ export function Stratum() {
                 <div
                   key={alert.id}
                   className={cn(
-                    'p-4 rounded-lg border transition-all',
+                    'p-4 rounded-lg border transition-colors',
                     alert.enabled ? 'bg-background' : 'bg-muted/50 opacity-60'
                   )}
                 >

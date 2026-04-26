@@ -139,7 +139,7 @@ export default function Login() {
       <SEO {...pageSEO.login} url="https://stratum-ai.com/login" />
       <style>{authStyles}</style>
 
-      <div className="bg-[#050B18] text-white min-h-screen flex font-sans selection:bg-[#FF1F6D]/30 overflow-hidden">
+      <div className="dark bg-background text-foreground min-h-screen flex font-sans selection:bg-primary/30 overflow-hidden">
         {/* Background mesh */}
         <div className="fixed inset-0 auth-cyber-grid pointer-events-none" />
         <div className="fixed inset-0 pointer-events-none overflow-hidden">
@@ -153,24 +153,24 @@ export default function Login() {
           <AuthLeftPanel className="hidden lg:flex" />
 
           {/* Right Panel — Form */}
-          <section className="lg:w-5/12 w-full flex flex-col items-center justify-center p-6 lg:p-8 bg-[#080E1C] relative">
+          <section className="lg:w-5/12 w-full flex flex-col items-center justify-center p-6 lg:p-8 bg-background relative">
             {/* Subtle gradient overlay */}
-            <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-bl from-[#FF1F6D]/5 to-transparent pointer-events-none" />
+            <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-bl from-primary/5 to-transparent pointer-events-none" />
 
-            <div className="w-full max-w-md auth-glass-card rounded-xl p-10 border-white/10 relative z-10 shadow-2xl auth-fade-up mb-12">
+            <div className="w-full max-w-md auth-glass-card rounded-xl p-10 dark:border-white/10 border-border/50 relative z-10 shadow-2xl auth-fade-up mb-12">
               {/* Header */}
               <div className="mb-10">
-                <h2 className="text-3xl font-display font-extrabold text-white mb-2 tracking-tight">
+                <h2 className="text-3xl font-display font-extrabold text-foreground mb-2 tracking-tight">
                   Dashboard Access
                 </h2>
-                <p className="text-slate-400 text-sm">
+                <p className="text-muted-foreground text-sm">
                   Enter your neural credentials to initialize session.
                 </p>
               </div>
 
               {/* Mobile logo */}
               <div className="lg:hidden flex items-center justify-center gap-3 mb-6">
-                <img src="/images/stratum-logo.svg" alt="Stratum AI" className="h-7" style={{ filter: 'invert(1) brightness(2)' }} />
+                <img src="/images/stratum-logo.svg" alt="Stratum AI" className="h-7" style={{ filter: 'invert(1) brightness(2)' }} loading="lazy" decoding="async" />
               </div>
 
               <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
@@ -180,7 +180,7 @@ export default function Login() {
                     <EnvelopeIcon className="w-4 h-4 flex-shrink-0 mt-0.5" />
                     <div>
                       <span>Please verify your email before signing in. Check your inbox for a verification link.</span>
-                      <Link to="/verify-email" className="block mt-1 text-[#FF1F6D] font-bold hover:underline text-[12px]">
+                      <Link to="/verify-email" className="block mt-1 text-primary font-bold hover:underline text-[12px]">
                         Resend verification email
                       </Link>
                     </div>
@@ -194,7 +194,7 @@ export default function Login() {
                     <div className="flex-1">
                       <p className="font-bold text-amber-300 text-sm mb-0.5">Account temporarily locked</p>
                       <p className="text-amber-400/80">Too many failed attempts. Try again in{' '}
-                        <span className="font-mono font-bold text-amber-300">{formatCountdown(lockoutSeconds)}</span>
+                        <span className="font-bold text-amber-300">{formatCountdown(lockoutSeconds)}</span>
                       </p>
                     </div>
                   </div>
@@ -212,12 +212,12 @@ export default function Login() {
                 <div className="space-y-2 auth-fade-up-d1">
                   <label
                     htmlFor="login-email"
-                    className="text-[10px] uppercase font-bold tracking-[0.15em] text-slate-500 ml-1"
+                    className="text-[10px] uppercase font-bold tracking-[0.15em] text-muted-foreground ml-1"
                   >
                     Neural Identifier
                   </label>
                   <div className="relative">
-                    <FingerPrintIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-slate-500 pointer-events-none" />
+                    <FingerPrintIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
                     <input
                       id="login-email"
                       name="email"
@@ -232,7 +232,7 @@ export default function Login() {
                       disabled={isLoading}
                       aria-invalid={!!emailError}
                       aria-describedby={emailError ? 'login-email-error' : undefined}
-                      className="w-full h-[44px] bg-[#050B18]/80 border border-white/10 rounded-[12px] pl-12 pr-4 text-white text-sm outline-none transition-all placeholder:text-slate-600 focus:border-[#00F5FF] focus:shadow-[0_0_15px_rgba(0,245,255,0.3)]"
+                      className="w-full h-11 bg-background/80 border dark:border-white/10 border-border/50 rounded-[12px] pl-12 pr-4 text-foreground text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary "
                     />
                   </div>
                   {emailError && (
@@ -245,19 +245,19 @@ export default function Login() {
                   <div className="flex justify-between items-center px-1">
                     <label
                       htmlFor="login-password"
-                      className="text-[10px] uppercase font-bold tracking-[0.15em] text-slate-500"
+                      className="text-[10px] uppercase font-bold tracking-[0.15em] text-muted-foreground"
                     >
                       Security Key
                     </label>
                     <Link
                       to="/forgot-password"
-                      className="text-[10px] uppercase font-bold tracking-[0.15em] text-[#FF1F6D] hover:text-white transition-colors"
+                      className="text-[10px] uppercase font-bold tracking-[0.15em] text-primary hover:text-foreground transition-colors"
                     >
                       Reset Key
                     </Link>
                   </div>
                   <div className="relative">
-                    <LockClosedIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-slate-500 pointer-events-none" />
+                    <LockClosedIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
                     <input
                       id="login-password"
                       name="password"
@@ -272,19 +272,18 @@ export default function Login() {
                       disabled={isLoading}
                       aria-invalid={!!passwordError}
                       aria-describedby={passwordError ? 'login-password-error' : undefined}
-                      className="w-full h-[44px] bg-[#050B18]/80 border border-white/10 rounded-[12px] pl-12 pr-11 text-white text-sm outline-none transition-all placeholder:text-slate-600 focus:border-[#FF8C00] focus:shadow-[0_0_15px_rgba(255,140,0,0.3)]"
+                      className="w-full h-11 bg-background/80 border dark:border-white/10 border-border/50 rounded-[12px] pl-12 pr-11 text-foreground text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary "
                     />
                     <button
                       type="button"
-                      tabIndex={-1}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/60 transition-colors"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-foreground/25 hover:text-muted-foreground transition-colors"
                       onClick={() => setShowPassword(!showPassword)}
                       aria-label={showPassword ? 'Hide password' : 'Show password'}
                     >
                       {showPassword ? (
-                        <EyeSlashIcon className="w-[18px] h-[18px]" />
+                        <EyeSlashIcon className="w-5 h-5" />
                       ) : (
-                        <EyeIcon className="w-[18px] h-[18px]" />
+                        <EyeIcon className="w-5 h-5" />
                       )}
                     </button>
                   </div>
@@ -300,11 +299,11 @@ export default function Login() {
                     id="remember"
                     checked={rememberMe}
                     onChange={() => setRememberMe(!rememberMe)}
-                    className="w-4 h-4 rounded border-white/10 bg-[#050B18] text-[#FF1F6D] focus:ring-[#FF1F6D] focus:ring-offset-[#050B18] cursor-pointer"
+                    className="w-4 h-4 rounded dark:border-white/10 border-border/50 bg-background text-primary focus:ring-primary focus:ring-offset-background cursor-pointer"
                   />
                   <label
                     htmlFor="remember"
-                    className="text-xs text-slate-400 font-medium cursor-pointer select-none"
+                    className="text-xs text-muted-foreground font-medium cursor-pointer select-none"
                   >
                     Keep session active for 24h
                   </label>
@@ -314,16 +313,16 @@ export default function Login() {
                 <button
                   type="submit"
                   disabled={isLoading || isLockedOut}
-                  className="auth-fade-up-d3 w-full auth-gradient-btn auth-shimmer-btn text-white font-black h-14 rounded-xl tracking-[0.2em] text-sm flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
+                  className="auth-fade-up-d3 w-full auth-gradient-btn auth-shimmer-btn text-foreground font-black h-14 rounded-xl tracking-[0.2em] text-sm flex items-center justify-center gap-3 transition-colors active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
                 >
                   {isLockedOut ? (
                     <span className="flex items-center gap-2">
-                      <ClockIcon className="w-[18px] h-[18px]" />
+                      <ClockIcon className="w-5 h-5" />
                       LOCKED — {formatCountdown(lockoutSeconds)}
                     </span>
                   ) : isLoading ? (
                     <span className="flex items-center gap-2">
-                      <svg className="animate-spin w-[18px] h-[18px]" viewBox="0 0 24 24">
+                      <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                       </svg>
@@ -344,17 +343,17 @@ export default function Login() {
                   New entity?{' '}
                   <Link
                     to="/signup"
-                    className="text-[#FF1F6D] font-bold hover:text-white transition-colors"
+                    className="text-primary font-bold hover:text-foreground transition-colors"
                   >
                     Request access
                   </Link>
                 </p>
                 <div className="flex gap-6">
-                  <a className="text-[10px] text-slate-500 hover:text-white transition-colors uppercase tracking-widest font-mono" href="/privacy">Privacy Protocol</a>
-                  <a className="text-[10px] text-slate-500 hover:text-white transition-colors uppercase tracking-widest font-mono" href="/terms">Legal Core</a>
-                  <a className="text-[10px] text-slate-500 hover:text-white transition-colors uppercase tracking-widest font-mono" href="/contact">Support</a>
+                  <a className="text-[10px] text-muted-foreground hover:text-foreground transition-colors uppercase tracking-widest" href="/privacy">Privacy Protocol</a>
+                  <a className="text-[10px] text-muted-foreground hover:text-foreground transition-colors uppercase tracking-widest" href="/terms">Legal Core</a>
+                  <a className="text-[10px] text-muted-foreground hover:text-foreground transition-colors uppercase tracking-widest" href="/contact">Support</a>
                 </div>
-                <span className="text-[10px] text-slate-600 font-mono tracking-widest">&copy; 2026 STRATUM ARTIFICIAL INTELLIGENCE</span>
+                <span className="text-[10px] text-muted-foreground tracking-widest">&copy; 2026 STRATUM ARTIFICIAL INTELLIGENCE</span>
               </div>
             </div>
           </section>
@@ -363,3 +362,5 @@ export default function Login() {
     </>
   );
 }
+
+

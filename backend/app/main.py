@@ -527,8 +527,8 @@ def create_application() -> FastAPI:
         user_id = None
         if token:
             try:
-                from jose import jwt as jose_jwt, JWTError
-                payload = jose_jwt.decode(
+                import jwt as pyjwt
+                payload = pyjwt.decode(
                     token,
                     settings.jwt_secret_key,
                     algorithms=[settings.jwt_algorithm],
@@ -536,7 +536,7 @@ def create_application() -> FastAPI:
                 user_id = payload.get("sub")
                 if not tenant_id:
                     tenant_id = payload.get("tenant_id")
-            except (JWTError, ValueError, TypeError, KeyError) as _jwt_err:
+            except (pyjwt.InvalidTokenError, ValueError, TypeError, KeyError) as _jwt_err:
                 # Invalid/expired token — reject the connection
                 await websocket.close(code=4001, reason="Invalid or expired token")
                 return

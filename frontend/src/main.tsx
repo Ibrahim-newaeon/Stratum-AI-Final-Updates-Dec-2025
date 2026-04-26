@@ -2,12 +2,12 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import * as Sentry from '@sentry/react'
+import { init as sentryInit, browserTracingIntegration } from '@sentry/react'
 import App from './App'
 import './index.css'
 import './i18n'
 
-const queryClient = new QueryClient({
+export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
@@ -20,11 +20,11 @@ const queryClient = new QueryClient({
 // Initialize Sentry for production error tracking
 const sentryDsn = import.meta.env.VITE_SENTRY_DSN;
 if (sentryDsn) {
-  Sentry.init({
+  sentryInit({
     dsn: sentryDsn,
     environment: import.meta.env.MODE,
     integrations: [
-      Sentry.browserTracingIntegration(),
+      browserTracingIntegration(),
     ],
     tracesSampleRate: import.meta.env.MODE === 'production' ? 0.1 : 1.0,
     // Strip PII from error reports before sending to Sentry

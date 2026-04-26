@@ -463,7 +463,7 @@ async def get_tenant_alerts(
                     entity_name=c.name,
                     metric="roas",
                     current_value=roas,
-                    expected_value=1.5,
+                    expected_value=None,
                     is_acknowledged=False,
                     is_resolved=False,
                     created_at=datetime.now(timezone.utc) - timedelta(hours=2),
@@ -484,7 +484,7 @@ async def get_tenant_alerts(
                     entity_name=c.name,
                     metric="ctr",
                     current_value=ctr,
-                    expected_value=1.5,
+                    expected_value=None,
                     is_acknowledged=False,
                     is_resolved=False,
                     created_at=datetime.now(timezone.utc) - timedelta(hours=5),
@@ -528,18 +528,11 @@ async def acknowledge_alert(
 
     Marks the alert as seen by the user without resolving the underlying issue.
     """
-    # In production, update fact_alerts table
-    # For now, return success response
+    # Alert persistence not yet implemented — requires fact_alerts table
     logger.info(f"Alert {alert_id} acknowledged by user {ctx.user_id} for tenant {tenant_id}")
-
-    return APIResponse(
-        success=True,
-        message=f"Alert {alert_id} acknowledged",
-        data={
-            "alert_id": alert_id,
-            "acknowledged_by": ctx.user_id,
-            "acknowledged_at": datetime.now(timezone.utc).isoformat(),
-        },
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail="Alert acknowledgement persistence is not yet implemented.",
     )
 
 
@@ -665,7 +658,6 @@ async def update_tenant_settings(
 
     tenant.settings = settings
     await db.commit()
-    await db.refresh(tenant)
 
     logger.info(f"Tenant {tenant_id} settings updated by user {ctx.user_id}")
 

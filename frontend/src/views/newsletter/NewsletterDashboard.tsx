@@ -408,7 +408,7 @@ export default function NewsletterDashboard() {
                   >
                     {['Name', 'Status', 'Recipients', 'Open Rate', 'Click Rate', 'Sent Date'].map(
                       (col) => (
-                        <th
+                        <th scope="col"
                           key={col}
                           style={{
                             textAlign: 'left',

@@ -218,9 +218,6 @@ export function useCreateCampaign() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['campaigns'] })
     },
-    onError: (error: Error) => {
-      console.error('Operation failed:', error)
-    },
   })
 }
 
@@ -234,9 +231,6 @@ export function useUpdateCampaign() {
       queryClient.invalidateQueries({ queryKey: ['campaigns'] })
       queryClient.invalidateQueries({ queryKey: ['campaigns', variables.id] })
     },
-    onError: (error: Error) => {
-      console.error('Operation failed:', error)
-    },
   })
 }
 
@@ -247,9 +241,6 @@ export function useDeleteCampaign() {
     mutationFn: campaignsApi.deleteCampaign,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['campaigns'] })
-    },
-    onError: (error: Error) => {
-      console.error('Operation failed:', error)
     },
   })
 }
@@ -310,9 +301,6 @@ export function usePauseCampaign() {
       queryClient.invalidateQueries({ queryKey: ['campaigns'] })
       queryClient.invalidateQueries({ queryKey: ['campaigns', id] })
     },
-    onError: (error: Error) => {
-      console.error('Operation failed:', error)
-    },
   })
 }
 
@@ -324,9 +312,6 @@ export function useActivateCampaign() {
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ['campaigns'] })
       queryClient.invalidateQueries({ queryKey: ['campaigns', id] })
-    },
-    onError: (error: Error) => {
-      console.error('Operation failed:', error)
     },
   })
 }

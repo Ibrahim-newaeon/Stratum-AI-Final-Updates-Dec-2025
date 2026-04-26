@@ -352,7 +352,7 @@ function ProfileCard({ profile, onView }: ProfileCardProps) {
   const lifecycleConfig = LIFECYCLE_STAGES.find((s) => s.value === profile.lifecycle_stage);
 
   return (
-    <div className="p-4 rounded-xl border bg-card hover:shadow-md transition-all">
+    <div className="p-4 rounded-xl border bg-card hover:shadow-md transition-colors">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -372,7 +372,7 @@ function ProfileCard({ profile, onView }: ProfileCardProps) {
             </div>
           </div>
         </div>
-        <button onClick={onView} className="p-2 rounded-lg hover:bg-muted transition-colors">
+        <button onClick={onView} aria-label="View profile" className="p-2 rounded-lg hover:bg-muted transition-colors">
           <Eye className="w-4 h-4" />
         </button>
       </div>

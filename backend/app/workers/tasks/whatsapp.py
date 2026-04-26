@@ -99,7 +99,7 @@ def send_whatsapp_message(
             from app.services.whatsapp_client import get_whatsapp_client
 
             client = get_whatsapp_client()
-            result = asyncio.get_event_loop().run_until_complete(
+            result = asyncio.run(
                 client.send_template_message(
                     recipient_phone=to_number,
                     template_name=template_name,

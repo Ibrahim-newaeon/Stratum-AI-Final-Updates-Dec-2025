@@ -87,17 +87,17 @@ export default {
         'status-healthy': 'hsl(var(--status-healthy))',
         'status-critical': 'hsl(var(--status-critical))',
         // Data/Status colors
-        success: '#22C55E',
-        warning: '#FACC15',
-        danger: '#EF4444',
-        info: '#3B82F6',
-        insight: '#F97316',
-        // Surface colors — white light theme
+        success: 'hsl(var(--success))',
+        warning: 'hsl(var(--warning))',
+        danger: 'hsl(var(--danger))',
+        info: 'hsl(var(--info))',
+        insight: 'hsl(var(--insight))',
+        // Surface colors — theme-aware
         surface: {
-          primary: '#F5F5F7',
-          secondary: '#FFFFFF',
-          tertiary: '#F0F0F5',
-          elevated: 'rgba(0,0,0,0.02)',
+          primary: 'hsl(var(--surface-primary))',
+          secondary: 'hsl(var(--surface-secondary))',
+          tertiary: 'hsl(var(--surface-tertiary))',
+          elevated: 'hsl(var(--surface-elevated))',
         },
         // Text colors
         'text-primary': '#1A1A2E',

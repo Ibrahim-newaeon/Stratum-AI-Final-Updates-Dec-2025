@@ -80,7 +80,7 @@ function SkeletonRow() {
 function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
-      <div className="rounded-2xl bg-white/5 p-4 mb-4">
+      <div className="rounded-2xl bg-muted p-4 mb-4">
         <EnvelopeIcon className="h-10 w-10 text-[rgba(245,245,247,0.35)]" />
       </div>
       <h3 className="text-lg font-semibold text-[rgba(245,245,247,0.92)] mb-1">
@@ -91,7 +91,7 @@ function EmptyState() {
       </p>
       <Link
         to="/dashboard/newsletter/campaigns/new"
-        className="inline-flex items-center gap-2 bg-[#00c7be] hover:bg-[#00b5ad] text-black font-semibold rounded-xl px-4 py-2 transition-colors"
+        className="inline-flex items-center gap-2 bg-primary hover:bg-[#00b5ad] text-black font-semibold rounded-xl px-4 py-2 transition-colors"
       >
         <PlusIcon className="h-5 w-5" />
         New Campaign
@@ -175,7 +175,7 @@ export default function NewsletterCampaigns() {
         <h1 className="text-2xl font-bold text-[rgba(245,245,247,0.92)]">Campaigns</h1>
         <Link
           to="/dashboard/newsletter/campaigns/new"
-          className="inline-flex items-center gap-2 bg-[#00c7be] hover:bg-[#00b5ad] text-black font-semibold rounded-xl px-4 py-2 transition-colors"
+          className="inline-flex items-center gap-2 bg-primary hover:bg-[#00b5ad] text-black font-semibold rounded-xl px-4 py-2 transition-colors"
         >
           <PlusIcon className="h-5 w-5" />
           New Campaign
@@ -188,14 +188,14 @@ export default function NewsletterCampaigns() {
           value={statusFilter ?? ''}
           onChange={(e) => handleStatusChange(e.target.value)}
           className={cn(
-            'bg-white/5 border border-white/[0.08] rounded-xl',
+            'bg-muted border border-white/[0.08] rounded-xl',
             'px-4 py-2 text-sm text-[rgba(245,245,247,0.92)]',
-            'focus:outline-none focus:ring-1 focus:ring-[#00c7be]/50 focus:border-[#00c7be]/50',
+            'focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50',
             'appearance-none cursor-pointer',
           )}
         >
           {STATUS_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value} className="bg-[#1a1a2e] text-white">
+            <option key={opt.value} value={opt.value} className="bg-[#1a1a2e] text-foreground">
               {opt.label}
             </option>
           ))}
@@ -203,17 +203,17 @@ export default function NewsletterCampaigns() {
       </div>
 
       {/* Campaign Table */}
-      <div className="bg-white/5 border border-white/[0.08] rounded-2xl overflow-hidden">
+      <div className="bg-muted border border-white/[0.08] rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="text-left text-xs font-medium text-[rgba(245,245,247,0.35)] uppercase tracking-wider">
-                <th className="px-6 py-4">Campaign</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4">Recipients</th>
-                <th className="px-6 py-4">Open Rate</th>
-                <th className="px-6 py-4">Click Rate</th>
-                <th className="px-6 py-4 text-right">Actions</th>
+                <th scope="col" className="px-6 py-4">Campaign</th>
+                <th scope="col" className="px-6 py-4">Status</th>
+                <th scope="col" className="px-6 py-4">Recipients</th>
+                <th scope="col" className="px-6 py-4">Open Rate</th>
+                <th scope="col" className="px-6 py-4">Click Rate</th>
+                <th scope="col" className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -307,7 +307,7 @@ export default function NewsletterCampaigns() {
                           <button
                             onClick={() => handleSend(campaign)}
                             disabled={sendCampaign.isPending}
-                            className="p-2 rounded-lg text-[#00c7be] hover:text-[#00b5ad] hover:bg-[#00c7be]/10 transition-colors disabled:opacity-40"
+                            className="p-2 rounded-lg text-primary hover:text-[#00b5ad] hover:bg-primary/10 transition-colors disabled:opacity-40"
                             title="Send"
                           >
                             <PaperAirplaneIcon className="h-4 w-4" />
@@ -372,3 +372,5 @@ export default function NewsletterCampaigns() {
     </div>
   );
 }
+
+

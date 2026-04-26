@@ -3,7 +3,7 @@
  * General CMS configuration and preferences
  */
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   GlobeAltIcon,
   PaintBrushIcon,
@@ -35,11 +35,20 @@ export default function CMSSettings() {
     timezone: 'UTC',
   });
   const [saved, setSaved] = useState(false);
+  const timeoutsRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
+
+  useEffect(() => {
+    return () => {
+      timeoutsRef.current.forEach(clearTimeout);
+      timeoutsRef.current.clear();
+    };
+  }, []);
 
   const handleSave = () => {
     // Settings would be persisted to the backend
     setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+    const id = setTimeout(() => setSaved(false), 3000);
+    timeoutsRef.current.add(id);
   };
 
   return (

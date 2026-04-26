@@ -33,7 +33,7 @@ interface TrustGateStatusProps {
 export function TrustGateStatus({ signalHealth, loading = false }: TrustGateStatusProps) {
   if (loading) {
     return (
-      <div className="glass border border-white/10 rounded-xl p-6 h-full flex items-center justify-center min-h-[200px]">
+      <div className="glass border border-white/10 rounded-xl p-6 h-full flex items-center justify-center min-h-52">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     );
@@ -170,19 +170,19 @@ export function TrustGateStatus({ signalHealth, loading = false }: TrustGateStat
         <div className="h-2 bg-muted rounded-full overflow-hidden">
           <div className="h-full flex">
             <div
-              className="bg-status-critical transition-all duration-500"
+              className="bg-status-critical transition-colors duration-500"
               style={{
                 width: `${Math.min(DEGRADED_THRESHOLD, signalHealth?.overall_score ?? 0)}%`,
               }}
             />
             <div
-              className="bg-yellow-500 transition-all duration-500"
+              className="bg-yellow-500 transition-colors duration-500"
               style={{
                 width: `${Math.max(0, Math.min(HEALTHY_THRESHOLD - DEGRADED_THRESHOLD, (signalHealth?.overall_score ?? 0) - DEGRADED_THRESHOLD))}%`,
               }}
             />
             <div
-              className="bg-status-healthy transition-all duration-500"
+              className="bg-status-healthy transition-colors duration-500"
               style={{
                 width: `${Math.max(0, (signalHealth?.overall_score ?? 0) - HEALTHY_THRESHOLD)}%`,
               }}

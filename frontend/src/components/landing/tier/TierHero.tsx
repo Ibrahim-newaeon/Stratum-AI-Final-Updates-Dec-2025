@@ -78,7 +78,7 @@ export function TierHero({ content }: TierHeroProps) {
         {/* Main headline */}
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
           {hero.headline}{' '}
-          <span className={`bg-gradient-to-r ${gradientClass} bg-clip-text text-transparent`}>
+          <span className={`bg-gradient-to-r ${gradientClass} text-foreground`}>
             {hero.highlightedText}
           </span>
         </h1>
@@ -95,7 +95,7 @@ export function TierHero({ content }: TierHeroProps) {
             <Card key={i} className="bg-gray-900/50 border-white/10">
               <CardContent className="p-4 text-center">
                 <div
-                  className={`text-3xl font-bold bg-gradient-to-r ${gradientClass} bg-clip-text text-transparent`}
+                  className={`text-3xl font-bold bg-gradient-to-r ${gradientClass} text-foreground`}
                 >
                   {metric.value}
                 </div>
@@ -120,7 +120,7 @@ export function TierHero({ content }: TierHeroProps) {
           <Button
             onClick={handlePrimaryCta}
             size="lg"
-            className={`group bg-gradient-to-r ${gradientClass} hover:opacity-90 text-white font-semibold px-8 py-6 text-lg shadow-lg transition-all`}
+            className={`group bg-gradient-to-r ${gradientClass} hover:opacity-90 text-white font-semibold px-8 py-6 text-lg shadow-lg transition-opacity`}
           >
             {hero.primaryCta}
             <ArrowRightIcon className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />

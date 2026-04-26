@@ -73,7 +73,7 @@ function PressureGauge({ pressure }: { pressure: number }) {
   return (
     <div className="flex items-center gap-2">
       <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
-        <div className={`h-full rounded-full ${color} transition-all`} style={{ width: `${Math.min(pressure, 100)}%` }} />
+        <div className={`h-full rounded-full ${color} transition-[width]`} style={{ width: `${Math.min(pressure, 100)}%` }} />
       </div>
       <span className="text-xs font-bold text-muted-foreground">{pressure.toFixed(0)}/100</span>
     </div>
@@ -115,7 +115,7 @@ function PlatformRow({ pc }: { pc: PlatformCompetition }) {
   const clcfg = compLevelConfig[pc.competition_level] || compLevelConfig.medium;
 
   return (
-    <div className={`border rounded-xl transition-all ${open ? 'border-foreground/15' : ''}`}>
+    <div className={`border rounded-xl transition-colors ${open ? 'border-foreground/15' : ''}`}>
       <button onClick={() => setOpen(!open)} className="w-full flex items-center gap-3 p-3 text-left hover:bg-muted/30 rounded-xl transition-colors">
         <div className="w-10 h-10 rounded-lg bg-muted/30 flex items-center justify-center shrink-0">
           <BarChart3 className="w-5 h-5 text-muted-foreground/50" />
@@ -287,11 +287,11 @@ export function CompetitorIntelCard() {
         ))}
       </div>
 
-      <div className="p-4 space-y-2 max-h-[480px] overflow-y-auto">
-        {tab === 'competitors' && data.competitors.map((c, i) => <CompetitorRow key={i} comp={c} />)}
-        {tab === 'platforms' && data.platform_competition.map((p, i) => <PlatformRow key={i} pc={p} />)}
-        {tab === 'opportunities' && data.opportunities.map((o, i) => <OpportunityRow key={i} opp={o} />)}
-        {tab === 'insights' && data.insights.map((ins, i) => <InsightRow key={i} insight={ins} />)}
+      <div className="p-4 space-y-2 max-h-[30rem] overflow-y-auto">
+        {tab === 'competitors' && data.competitors.map((c, i) => <CompetitorRow key={c.competitor_id || i} comp={c} />)}
+        {tab === 'platforms' && data.platform_competition.map((p, i) => <PlatformRow key={p.platform || i} pc={p} />)}
+        {tab === 'opportunities' && data.opportunities.map((o, i) => <OpportunityRow key={`${o.title}-${i}`} opp={o} />)}
+        {tab === 'insights' && data.insights.map((ins, i) => <InsightRow key={`${ins.title}-${i}`} insight={ins} />)}
       </div>
     </div>
   );

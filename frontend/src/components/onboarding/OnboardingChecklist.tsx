@@ -196,7 +196,7 @@ export function OnboardingChecklist({
     return (
       <button
         onClick={() => setIsDismissed(false)}
-        className="fixed bottom-4 left-4 z-40 flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-medium shadow-lg hover:shadow-xl transition-all"
+        className="fixed bottom-4 left-4 z-40 flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-medium shadow-lg hover:shadow-xl transition-colors"
       >
         <Rocket className="h-4 w-4" />
         Setup ({progress}%)
@@ -232,7 +232,7 @@ export function OnboardingChecklist({
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.2, type: 'spring' }}
-                className="relative w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center"
+                className="relative w-20 h-20 mx-auto mb-6 rounded-full bg-primary flex items-center justify-center"
               >
                 <PartyPopper className="h-10 w-10 text-white" />
               </motion.div>
@@ -266,7 +266,7 @@ export function OnboardingChecklist({
         <div className="flex items-center gap-6">
           {/* Progress indicator */}
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <Rocket className="h-4 w-4 text-white" />
             </div>
             <div>
@@ -286,7 +286,7 @@ export function OnboardingChecklist({
                   key={item.id}
                   onClick={() => !item.completed && handleAction(item)}
                   className={cn(
-                    'flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all',
+                    'flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors',
                     item.completed
                       ? 'bg-green-500/10 text-green-600'
                       : 'bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-foreground'
@@ -307,7 +307,7 @@ export function OnboardingChecklist({
           <div className="flex items-center gap-3">
             <div className="w-24 h-1.5 rounded-full bg-muted overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-purple-500 to-cyan-500 transition-all duration-500"
+                className="h-full bg-primary transition-[width] duration-500"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -315,7 +315,7 @@ export function OnboardingChecklist({
           </div>
 
           {/* Dismiss button */}
-          <button onClick={dismiss} className="p-1 rounded hover:bg-accent transition-colors">
+          <button onClick={dismiss} aria-label="Dismiss" className="p-1 rounded hover:bg-accent transition-colors">
             <X className="h-4 w-4 text-muted-foreground" />
           </button>
         </div>
@@ -337,7 +337,7 @@ export function OnboardingChecklist({
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
             <Rocket className="h-5 w-5 text-white" />
           </div>
           <div>
@@ -350,7 +350,7 @@ export function OnboardingChecklist({
         <div className="flex items-center gap-2">
           <div className="w-12 h-1.5 rounded-full bg-muted overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-purple-500 to-cyan-500 transition-all duration-500"
+              className="h-full bg-primary transition-[width] duration-500"
               style={{ width: `${progress}%` }}
             />
           </div>

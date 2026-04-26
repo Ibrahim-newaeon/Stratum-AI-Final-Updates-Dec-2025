@@ -143,7 +143,7 @@ function HealthScoreRing({ score, status }: { score: number; status: string }) {
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={strokeDashoffset}
-          className="transition-all duration-1000 ease-out"
+          className="transition-colors duration-1000 ease-out"
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -165,7 +165,7 @@ function ProblemCard({ problem, isExpanded, onToggle }: {
   const CategoryIcon = categoryIcons[problem.category] || AlertCircle;
 
   return (
-    <div className={`rounded-xl border ${config.border} ${config.bg} overflow-hidden transition-all duration-300`}>
+    <div className={`rounded-xl border ${config.border} ${config.bg} overflow-hidden transition-colors duration-300`}>
       {/* Header */}
       <button
         onClick={onToggle}
@@ -386,6 +386,7 @@ export function KGInsights() {
         </div>
         <button
           onClick={handleRefresh}
+          aria-label="Refresh insights"
           className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
         >
           <RefreshCw className="w-5 h-5" />
@@ -410,7 +411,7 @@ export function KGInsights() {
                   <button
                     key={severity}
                     onClick={() => setSeverityFilter(severityFilter === severity ? null : severity)}
-                    className={`p-3 rounded-lg border transition-all ${
+                    className={`p-3 rounded-lg border transition-colors ${
                       severityFilter === severity
                         ? `${config?.border} ${config?.bg}`
                         : 'border-white/10 bg-white/5 hover:bg-white/10'

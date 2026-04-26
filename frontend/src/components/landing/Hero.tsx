@@ -33,7 +33,7 @@ export function Hero() {
         {/* Main headline */}
         <h1 className="motion-enter text-h1 md:text-[48px] lg:text-[56px] font-bold text-white leading-tight mb-6" style={{ animationDelay: '0.1s' }}>
           A premium{' '}
-          <span className="bg-gradient-stratum bg-clip-text text-transparent">
+          <span className=" text-foreground">
             AI command center
           </span>
         </h1>
@@ -53,8 +53,8 @@ export function Hero() {
         <div className="motion-enter flex flex-col sm:flex-row items-center justify-center gap-4 mb-16" style={{ animationDelay: '0.4s' }}>
           <button
             onClick={() => navigate('/signup')}
-            className="group flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-stratum text-white font-semibold text-body
-                       shadow-glow hover:shadow-glow-lg transition-all duration-base
+            className="group flex items-center gap-2 px-8 py-4 rounded-xl  text-white font-semibold text-body
+                       shadow-glow hover:shadow-glow-lg transition-transform transition-colors duration-base
                        hover:scale-[1.02] active:scale-[0.98]"
           >
             Get Started Free
@@ -63,7 +63,7 @@ export function Hero() {
 
           <button
             className="group flex items-center gap-2 px-8 py-4 rounded-xl border border-white/10 text-white font-medium text-body
-                       hover:bg-white/5 hover:border-white/20 transition-all duration-base"
+                       hover:bg-white/5 hover:border-white/20 transition-colors duration-base"
           >
             <PlayIcon className="w-5 h-5" />
             Watch Demo
@@ -74,7 +74,7 @@ export function Hero() {
         <div className="motion-enter relative max-w-5xl mx-auto" style={{ animationDelay: '0.5s' }}>
           <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
             {/* Glow effect behind the preview */}
-            <div className="absolute -inset-4 bg-gradient-stratum opacity-20 blur-2xl" />
+            <div className="absolute -inset-4  opacity-20 blur-2xl" />
 
             {/* Dashboard mockup placeholder */}
             <div className="relative bg-surface-secondary rounded-2xl p-1">
@@ -134,7 +134,7 @@ export function Hero() {
           <div className="flex flex-col items-center gap-2 text-text-muted">
             <span className="text-micro">Scroll to explore</span>
             <div className="w-6 h-10 rounded-full border border-white/20 flex items-start justify-center p-2">
-              <div className="w-1 h-2 rounded-full bg-white/40 animate-bounce" />
+              <div className="w-1 h-2 rounded-full bg-white/40 animate-pulse" />
             </div>
           </div>
         </div>
@@ -142,3 +142,4 @@ export function Hero() {
     </section>
   );
 }
+

@@ -140,7 +140,7 @@ export function ActionCard({
 
   return (
     <div className={cn(
-      'rounded-xl bg-surface-secondary border border-white/10 overflow-hidden transition-all',
+      'rounded-xl bg-surface-secondary border border-white/10 overflow-hidden transition-colors',
       isActionable && 'hover:border-white/20',
       className
     )}>
@@ -179,7 +179,7 @@ export function ActionCard({
                 </span>
               )}
               {action.campaign && (
-                <span className="text-xs text-text-muted truncate max-w-[150px]">
+                <span className="text-xs text-text-muted truncate max-w-36">
                   {action.campaign}
                 </span>
               )}
@@ -199,7 +199,7 @@ export function ActionCard({
 
       {/* Actions */}
       {showControls && isActionable && (
-        <div className="flex items-center gap-2 px-4 py-3 border-t border-white/10 bg-white/[0.02]">
+        <div className="flex items-center gap-2 px-4 py-3 border-t border-border bg-muted/30">
           <button
             onClick={() => onApply?.(action)}
             className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-success/10 text-success hover:bg-success/20 transition-colors text-sm font-medium"
