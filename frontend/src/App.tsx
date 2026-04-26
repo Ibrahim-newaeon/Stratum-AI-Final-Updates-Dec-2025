@@ -110,6 +110,7 @@ const SuperAdminBilling = lazyWithRetry(() => import('./views/superadmin/Billing
 const SuperAdminSystem = lazyWithRetry(() => import('./views/superadmin/System'));
 // SuperAdminCMS removed — CMS is now a separate portal at /cms
 const SuperAdminUsers = lazyWithRetry(() => import('./views/superadmin/Users'));
+const SuperAdminLaunchReadiness = lazyWithRetry(() => import('./views/superadmin/LaunchReadiness'));
 
 // CMS (Content Management System) - Separate Portal
 const CMSLogin = lazyWithRetry(() => import('./views/CMSLogin'));
@@ -1253,6 +1254,16 @@ function App() {
                           <ProtectedRoute requiredRole="superadmin">
                             <Suspense fallback={<LoadingSpinner />}>
                               <SuperAdminUsers />
+                            </Suspense>
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="superadmin/launch-readiness"
+                        element={
+                          <ProtectedRoute requiredRole="superadmin">
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <SuperAdminLaunchReadiness />
                             </Suspense>
                           </ProtectedRoute>
                         }

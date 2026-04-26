@@ -448,6 +448,7 @@ def setup_test_database(sync_engine):
     import app.models.profit  # noqa: F401
     import app.models.reporting  # noqa: F401
     import app.models.settings  # noqa: F401
+    import app.models.launch_readiness  # noqa: F401
 
     # Drop and recreate all tables for a clean state
     Base.metadata.drop_all(bind=sync_engine)

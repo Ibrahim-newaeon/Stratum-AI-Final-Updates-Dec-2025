@@ -40,6 +40,7 @@ import {
   HomeIcon,
   PhotoIcon,
   PresentationChartBarIcon,
+  RocketLaunchIcon,
   ShareIcon,
   ShieldCheckIcon,
   ShieldExclamationIcon,
@@ -628,6 +629,7 @@ export default function DashboardLayout() {
                           end: true,
                         },
                         { href: '/dashboard/superadmin/users', icon: UserGroupIcon, name: 'Users' },
+                        { href: '/dashboard/superadmin/launch-readiness', icon: RocketLaunchIcon, name: 'Launch Readiness' },
                       ].map((item) => {
                         const isActive = location.pathname === item.href;
                         return (
