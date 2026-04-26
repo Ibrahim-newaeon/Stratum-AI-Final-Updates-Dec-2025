@@ -77,7 +77,7 @@ function FAQItem({
           {faq.question}
         </span>
         <span
-          className={`flex-shrink-0 p-1 rounded-full ${isOpen ? `bg-gradient-to-r ${gradientClass}` : 'bg-white/10'} transition-all`}
+          className={`flex-shrink-0 p-1 rounded-full ${isOpen ? `bg-gradient-to-r ${gradientClass}` : 'bg-white/10'} transition-colors`}
         >
           <ChevronDownIcon
             className={`w-4 h-4 ${isOpen ? 'text-white rotate-180' : 'text-gray-400'} transition-transform duration-200`}
@@ -85,7 +85,7 @@ function FAQItem({
         </span>
       </button>
       <div
-        className={`overflow-hidden transition-all duration-300 ${
+        className={`overflow-hidden transition-colors duration-300 ${
           isOpen ? 'max-h-96 pb-6' : 'max-h-0'
         }`}
       >
@@ -115,7 +115,7 @@ export function TierFAQ({ content }: TierFAQProps) {
           </Badge>
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
             Questions about{' '}
-            <span className={`bg-gradient-to-r ${gradientClass} bg-clip-text text-transparent`}>
+            <span className={`bg-gradient-to-r ${gradientClass} text-foreground`}>
               {name}
             </span>
             ?

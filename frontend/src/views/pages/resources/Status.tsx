@@ -247,7 +247,7 @@ export default function StatusPage() {
                 {uptimeHistory.map((day, i) => (
                   <div key={i} className="flex-1 group relative">
                     <div
-                      className="h-10 rounded transition-all duration-200 group-hover:scale-110"
+                      className="h-10 rounded transition-transform duration-200 group-hover:scale-110"
                       style={{
                         background:
                           day.uptime === 100 ? 'var(--landing-status-green)' : day.uptime > 99 ? 'var(--landing-accent-amber)' : 'var(--landing-status-red)',
@@ -420,7 +420,7 @@ export default function StatusPage() {
                   }}
                 />
                 <button
-                  className="px-6 py-3 rounded-full font-semibold text-white transition-all duration-200"
+                  className="px-6 py-3 rounded-full font-semibold text-white transition-colors duration-200"
                   style={{
                     background: 'var(--landing-accent-coral)',
                     boxShadow: 'var(--landing-glow-coral)',

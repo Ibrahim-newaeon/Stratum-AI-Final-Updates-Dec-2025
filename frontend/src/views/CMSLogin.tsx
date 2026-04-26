@@ -68,7 +68,7 @@ export default function CMSLogin() {
   return (
     <div className="min-h-screen bg-surface-primary flex">
       {/* Left side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-purple-900/50 via-surface-secondary to-cyan-900/30 p-12 flex-col justify-between relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 bg-muted/50 p-12 flex-col justify-between relative overflow-hidden">
         {/* Background pattern */}
         <div className="absolute inset-0 opacity-5">
           <div className="absolute top-20 left-20 w-64 h-64 bg-purple-500 rounded-full blur-3xl" />
@@ -78,11 +78,11 @@ export default function CMSLogin() {
         {/* Logo */}
         <div className="relative z-10">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center">
-              <PencilSquareIcon className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+              <PencilSquareIcon className="w-6 h-6 text-foreground" />
             </div>
             <div>
-              <span className="text-xl font-bold text-white">Stratum</span>
+              <span className="text-xl font-bold text-foreground">Stratum</span>
               <span className="text-xl font-light text-purple-400 ml-1">CMS</span>
             </div>
           </div>
@@ -90,14 +90,14 @@ export default function CMSLogin() {
 
         {/* Feature highlights */}
         <div className="relative z-10 space-y-8">
-          <h1 className="text-4xl font-bold text-white leading-tight">
+          <h1 className="text-4xl font-bold text-foreground leading-tight">
             Content Management
             <br />
-            <span className="bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
+            <span className=" text-foreground">
               Made Simple
             </span>
           </h1>
-          <p className="text-lg text-white/60 max-w-md">
+          <p className="text-lg text-foreground/60 max-w-md">
             Manage your website content, blog posts, FAQs, and pricing pages from one centralized
             dashboard.
           </p>
@@ -109,8 +109,8 @@ export default function CMSLogin() {
                 <DocumentTextIcon className="w-5 h-5 text-purple-400" />
               </div>
               <div>
-                <div className="text-white font-medium">Blog & Content</div>
-                <div className="text-sm text-white/50">Create, edit, and publish blog posts</div>
+                <div className="text-foreground font-medium">Blog & Content</div>
+                <div className="text-sm text-foreground/50">Create, edit, and publish blog posts</div>
               </div>
             </div>
             <div className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10">
@@ -118,8 +118,8 @@ export default function CMSLogin() {
                 <PhotoIcon className="w-5 h-5 text-cyan-400" />
               </div>
               <div>
-                <div className="text-white font-medium">Landing Pages</div>
-                <div className="text-sm text-white/50">Manage features, FAQ, and pricing</div>
+                <div className="text-foreground font-medium">Landing Pages</div>
+                <div className="text-sm text-foreground/50">Manage features, FAQ, and pricing</div>
               </div>
             </div>
             <div className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10">
@@ -127,15 +127,15 @@ export default function CMSLogin() {
                 <TagIcon className="w-5 h-5 text-orange-400" />
               </div>
               <div>
-                <div className="text-white font-medium">Categories & Tags</div>
-                <div className="text-sm text-white/50">Organize content with taxonomy</div>
+                <div className="text-foreground font-medium">Categories & Tags</div>
+                <div className="text-sm text-foreground/50">Organize content with taxonomy</div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="relative z-10 text-sm text-white/40">
+        <div className="relative z-10 text-sm text-foreground/40">
           <p>Stratum AI Content Management System</p>
         </div>
       </div>
@@ -145,19 +145,19 @@ export default function CMSLogin() {
         <div className="w-full max-w-md">
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center justify-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center">
-              <PencilSquareIcon className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+              <PencilSquareIcon className="w-6 h-6 text-foreground" />
             </div>
             <div>
-              <span className="text-xl font-bold text-white">Stratum</span>
+              <span className="text-xl font-bold text-foreground">Stratum</span>
               <span className="text-xl font-light text-purple-400 ml-1">CMS</span>
             </div>
           </div>
 
           {/* Form header */}
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-white mb-2">CMS Admin Login</h2>
-            <p className="text-white/60">Sign in to manage your content</p>
+            <h2 className="text-2xl font-bold text-foreground mb-2">CMS Admin Login</h2>
+            <p className="text-foreground/60">Sign in to manage your content</p>
           </div>
 
           {/* Error alert */}
@@ -171,7 +171,7 @@ export default function CMSLogin() {
           {/* Login form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-white/80">
+              <Label htmlFor="email" className="text-foreground/80">
                 Email Address
               </Label>
               <Input
@@ -182,12 +182,12 @@ export default function CMSLogin() {
                 placeholder="admin@stratum.ai"
                 required
                 autoComplete="email"
-                className="bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-purple-500 focus:ring-purple-500/20"
+                className="bg-white/5 border-white/10 text-foreground placeholder:text-foreground/30 focus:border-purple-500 focus:ring-purple-500/20"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-white/80">
+              <Label htmlFor="password" className="text-foreground/80">
                 Password
               </Label>
               <div className="relative">
@@ -199,12 +199,12 @@ export default function CMSLogin() {
                   placeholder="Enter your password"
                   required
                   autoComplete="current-password"
-                  className="bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-purple-500 focus:ring-purple-500/20 pr-10"
+                  className="bg-white/5 border-white/10 text-foreground placeholder:text-foreground/30 focus:border-purple-500 focus:ring-purple-500/20 pr-10"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/60"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-foreground/60"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? (
@@ -219,7 +219,7 @@ export default function CMSLogin() {
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full py-6 bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white font-semibold"
+              className="w-full py-6 bg-primary hover:from-purple-600 hover:to-cyan-600 text-foreground font-semibold"
             >
               {isLoading ? (
                 <span className="flex items-center gap-2">
@@ -249,14 +249,14 @@ export default function CMSLogin() {
 
           {/* Footer links */}
           <div className="mt-8 text-center space-y-4">
-            <p className="text-sm text-white/40">
+            <p className="text-sm text-foreground/40">
               Need access?{' '}
               <a href="mailto:admin@stratum.ai" className="text-purple-400 hover:underline">
                 Contact your administrator
               </a>
             </p>
             <div className="pt-4 border-t border-white/10">
-              <Link to="/login" className="text-sm text-white/60 hover:text-white">
+              <Link to="/login" className="text-sm text-foreground/60 hover:text-foreground">
                 Back to main login
               </Link>
             </div>

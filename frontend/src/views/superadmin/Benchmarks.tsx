@@ -313,7 +313,7 @@ export default function Benchmarks() {
       {/* Legend */}
       <div className="flex items-center justify-center gap-8 py-4 text-sm text-text-muted">
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded bg-stratum-500/20 border-l-2 border-stratum-400/50" />
+          <div className="w-3 h-3 rounded bg-stratum-500/20 border border-stratum-400/50" />
           <span>P25-P75 Range</span>
         </div>
         <div className="flex items-center gap-2">

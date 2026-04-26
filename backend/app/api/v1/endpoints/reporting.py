@@ -247,7 +247,6 @@ async def create_template(
 
     db.add(template)
     await db.commit()
-    await db.refresh(template)
 
     return template
 
@@ -325,7 +324,6 @@ async def update_template(
     template.last_modified_by_user_id = current_user.id
 
     await db.commit()
-    await db.refresh(template)
 
     return template
 

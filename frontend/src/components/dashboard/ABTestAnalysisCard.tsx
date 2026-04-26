@@ -42,7 +42,7 @@ function ConfidenceBar({ confidence }: { confidence: number }) {
   return (
     <div className="flex items-center gap-2">
       <div className="w-20 h-1.5 bg-muted rounded-full overflow-hidden">
-        <div className={`h-full rounded-full ${color} transition-all`} style={{ width: `${Math.min(confidence, 100)}%` }} />
+        <div className={`h-full rounded-full ${color} transition-[width]`} style={{ width: `${Math.min(confidence, 100)}%` }} />
       </div>
       <span className="text-xs font-bold text-muted-foreground">{confidence.toFixed(0)}%</span>
     </div>
@@ -55,7 +55,7 @@ function TestRow({ test }: { test: ABTestResult }) {
   const StatusIcon = scfg.icon;
 
   return (
-    <div className={`border rounded-xl transition-all ${open ? 'border-foreground/15' : ''}`}>
+    <div className={`border rounded-xl transition-colors ${open ? 'border-foreground/15' : ''}`}>
       <button onClick={() => setOpen(!open)} className="w-full flex items-center gap-3 p-3 text-left hover:bg-muted/30 rounded-xl transition-colors">
         <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${scfg.bg}`}>
           <StatusIcon className={`w-4.5 h-4.5 ${scfg.color}`} />
@@ -219,9 +219,9 @@ export function ABTestAnalysisCard() {
         ))}
       </div>
 
-      <div className="p-4 space-y-2 max-h-[480px] overflow-y-auto">
-        {tab === 'tests' && data.tests.map((t, i) => <TestRow key={i} test={t} />)}
-        {tab === 'insights' && data.insights.map((ins, i) => <InsightRow key={i} insight={ins} />)}
+      <div className="p-4 space-y-2 max-h-[30rem] overflow-y-auto">
+        {tab === 'tests' && data.tests.map((t, i) => <TestRow key={t.test_id || i} test={t} />)}
+        {tab === 'insights' && data.insights.map((ins, i) => <InsightRow key={`${ins.title}-${i}`} insight={ins} />)}
       </div>
     </div>
   );

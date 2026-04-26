@@ -4,7 +4,7 @@
  * Manage team members and their access to the tenant.
  */
 
-import { useState } from 'react'
+import { useState, useCallback, memo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useTenantUsers, useCreateUser, useUpdateUser, useDeleteUser, type UserRole } from '@/api/admin'
 import { useToast } from '@/components/ui/use-toast'
@@ -37,6 +37,109 @@ const ROLES = [
   { value: 'analyst', label: 'Analyst', description: 'View reports and analytics' },
   { value: 'viewer', label: 'Viewer', description: 'Read-only access' },
 ]
+
+const getRoleBadgeColor = (role: string) => {
+  switch (role) {
+    case 'admin':
+      return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+    case 'manager':
+      return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
+    case 'analyst':
+      return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+    default:
+      return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
+  }
+}
+
+const formatDate = (dateString: string | null) => {
+  if (!dateString) return 'Never'
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
+}
+
+interface UserRowProps {
+  user: TeamMember
+  onUpdateRole: (userId: number, role: string) => void
+  onEdit: (user: TeamMember) => void
+  onRemove: (userId: number, userName: string) => void
+}
+
+const UserRow = memo(function UserRow({ user, onUpdateRole, onEdit, onRemove }: UserRowProps) {
+  return (
+    <tr className="hover:bg-muted/50 transition-colors">
+      <td className="px-6 py-4">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+            <span className="text-sm font-medium text-primary">
+              {user.full_name?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
+            </span>
+          </div>
+          <div>
+            <p className="font-medium">{user.full_name || 'No name'}</p>
+            <p className="text-sm text-muted-foreground">{user.email}</p>
+          </div>
+        </div>
+      </td>
+      <td className="px-6 py-4">
+        <select
+          value={user.role}
+          onChange={(e) => onUpdateRole(user.id, e.target.value)}
+          className={cn(
+            'px-3 py-1 rounded-full text-xs font-medium border-0 cursor-pointer',
+            getRoleBadgeColor(user.role)
+          )}
+        >
+          {ROLES.map((role) => (
+            <option key={role.value} value={role.value}>
+              {role.label}
+            </option>
+          ))}
+        </select>
+      </td>
+      <td className="px-6 py-4">
+        <div className="flex items-center gap-2">
+          {user.is_active ? (
+            <>
+              <CheckCircleIcon className="h-5 w-5 text-green-500" />
+              <span className="text-sm text-green-600 dark:text-green-400">Active</span>
+            </>
+          ) : (
+            <>
+              <XCircleIcon className="h-5 w-5 text-red-500" />
+              <span className="text-sm text-red-600 dark:text-red-400">Inactive</span>
+            </>
+          )}
+        </div>
+      </td>
+      <td className="px-6 py-4 text-sm text-muted-foreground">
+        {formatDate(user.last_login_at)}
+      </td>
+      <td className="px-6 py-4">
+        <div className="flex items-center justify-end gap-2">
+          <button
+            onClick={() => onEdit(user)}
+            className="p-2 rounded-lg hover:bg-accent transition-colors"
+            title="Edit member"
+            aria-label="Edit member"
+          >
+            <PencilIcon className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => onRemove(user.id, user.full_name || user.email)}
+            className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 transition-colors"
+            title="Remove member"
+            aria-label="Remove member"
+          >
+            <TrashIcon className="h-4 w-4" />
+          </button>
+        </div>
+      </td>
+    </tr>
+  )
+})
 
 export default function TeamManagement() {
   const { tenantId } = useParams<{ tenantId: string }>()
@@ -102,7 +205,7 @@ export default function TeamManagement() {
     }
   }
 
-  const handleUpdateRole = async (userId: number, newRole: string) => {
+  const handleUpdateRole = useCallback(async (userId: number, newRole: string) => {
     try {
       await updateUserMutation.mutateAsync({
         id: userId,
@@ -120,9 +223,9 @@ export default function TeamManagement() {
         variant: 'destructive',
       })
     }
-  }
+  }, [updateUserMutation, toast, refetch])
 
-  const handleRemoveUser = async (userId: number, userName: string) => {
+  const handleRemoveUser = useCallback(async (userId: number, userName: string) => {
     if (!confirm(`Are you sure you want to remove ${userName} from the team?`)) {
       return
     }
@@ -141,29 +244,12 @@ export default function TeamManagement() {
         variant: 'destructive',
       })
     }
-  }
+  }, [deleteUserMutation, toast, refetch])
 
-  const getRoleBadgeColor = (role: string) => {
-    switch (role) {
-      case 'admin':
-        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-      case 'manager':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
-      case 'analyst':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
-    }
-  }
-
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'Never'
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    })
-  }
+  const handleEditUser = useCallback((user: TeamMember) => {
+    setSelectedUser(user)
+    setShowEditModal(true)
+  }, [])
 
   if (isLoading) {
     return (
@@ -214,6 +300,7 @@ export default function TeamManagement() {
 
       {/* Team Members Table */}
       <div className="rounded-xl border bg-card shadow-card overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="w-full">
           <thead className="bg-muted/50">
             <tr>
@@ -243,80 +330,18 @@ export default function TeamManagement() {
               </tr>
             ) : (
               filteredUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-muted/50 transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <span className="text-sm font-medium text-primary">
-                          {user.full_name?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
-                        </span>
-                      </div>
-                      <div>
-                        <p className="font-medium">{user.full_name || 'No name'}</p>
-                        <p className="text-sm text-muted-foreground">{user.email}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <select
-                      value={user.role}
-                      onChange={(e) => handleUpdateRole(user.id, e.target.value)}
-                      className={cn(
-                        'px-3 py-1 rounded-full text-xs font-medium border-0 cursor-pointer',
-                        getRoleBadgeColor(user.role)
-                      )}
-                    >
-                      {ROLES.map((role) => (
-                        <option key={role.value} value={role.value}>
-                          {role.label}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      {user.is_active ? (
-                        <>
-                          <CheckCircleIcon className="h-5 w-5 text-green-500" />
-                          <span className="text-sm text-green-600 dark:text-green-400">Active</span>
-                        </>
-                      ) : (
-                        <>
-                          <XCircleIcon className="h-5 w-5 text-red-500" />
-                          <span className="text-sm text-red-600 dark:text-red-400">Inactive</span>
-                        </>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-muted-foreground">
-                    {formatDate(user.last_login_at)}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => {
-                          setSelectedUser(user)
-                          setShowEditModal(true)
-                        }}
-                        className="p-2 rounded-lg hover:bg-accent transition-colors"
-                        title="Edit member"
-                      >
-                        <PencilIcon className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleRemoveUser(user.id, user.full_name || user.email)}
-                        className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 transition-colors"
-                        title="Remove member"
-                      >
-                        <TrashIcon className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+                <UserRow
+                  key={user.id}
+                  user={user}
+                  onUpdateRole={handleUpdateRole}
+                  onEdit={handleEditUser}
+                  onRemove={handleRemoveUser}
+                />
               ))
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Role Legend */}

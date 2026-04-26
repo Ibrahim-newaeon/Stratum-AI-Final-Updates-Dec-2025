@@ -292,7 +292,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
       <div
         id="filter-content"
         className={cn(
-          'overflow-hidden transition-all duration-300 ease-in-out',
+          'overflow-hidden transition-colors duration-300 ease-in-out',
           isExpanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
         )}
         aria-hidden={!isExpanded}

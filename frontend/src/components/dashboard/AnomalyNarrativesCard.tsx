@@ -48,7 +48,7 @@ function NarrativeCard({ narrative }: { narrative: AnomalyNarrative }) {
   const isUp = narrative.direction === 'up';
 
   return (
-    <div className={cn('rounded-lg border transition-all', sev.border, expanded ? sev.bg : 'bg-background')}>
+    <div className={cn('rounded-lg border transition-colors', sev.border, expanded ? sev.bg : 'bg-background')}>
       <button
         onClick={() => setExpanded(!expanded)}
         className="w-full p-4 flex items-start gap-3 text-left"

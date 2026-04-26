@@ -144,7 +144,7 @@ function LifecycleChart({ data }: { data: Record<string, number> }) {
             </div>
             <div className="h-2 bg-muted rounded-full overflow-hidden">
               <div
-                className={cn('h-full rounded-full transition-all duration-500', stage.color)}
+                className={cn('h-full rounded-full transition-[width] duration-500', stage.color)}
                 style={{ width: `${percentage}%` }}
               />
             </div>
@@ -214,6 +214,7 @@ export default function CDPDashboard() {
           <button
             onClick={handleRefresh}
             disabled={isRefreshing}
+            aria-label="Refresh CDP data"
             className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-background hover:bg-accent transition-colors"
             title="Refresh CDP data"
           >

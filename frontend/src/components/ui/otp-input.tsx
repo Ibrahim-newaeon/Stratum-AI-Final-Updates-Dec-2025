@@ -131,7 +131,7 @@ export function OTPInput({
             'w-10 h-12 sm:w-12 sm:h-14 text-center text-xl sm:text-2xl font-semibold',
             'rounded-xl border-2',
             'text-white placeholder-text-muted',
-            'transition-all duration-200 outline-none',
+            'transition-colors duration-200 outline-none',
             disabled && 'opacity-50 cursor-not-allowed'
           )}
           style={{

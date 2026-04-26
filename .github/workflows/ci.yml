@@ -128,11 +128,7 @@ jobs:
       - name: Dependency audit (pip-audit)
         run: |
           pip install pip-audit
-          # CVE-2024-23342: ecdsa timing side-channel in python-ecdsa.
-          # Accepted risk: We use python-jose with cryptography backend (not python-ecdsa)
-          # for JWT signing. The vulnerable ecdsa library is a transitive dependency only
-          # and not used in our signing operations (we use HS256/RS256 via cryptography).
-          pip-audit --strict --desc on --ignore-vuln CVE-2024-23342
+          pip-audit --strict --desc on
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
@@ -274,7 +270,7 @@ jobs:
           format: "sarif"
           output: "trivy-fs-results.sarif"
           severity: "CRITICAL,HIGH"
-          exit-code: "0"
+          exit-code: "1"
 
       - name: Build Docker image for scanning
         run: docker build -t stratum-api:scan ./backend
@@ -286,7 +282,7 @@ jobs:
           format: "sarif"
           output: "trivy-image-results.sarif"
           severity: "CRITICAL,HIGH"
-          exit-code: "0"
+          exit-code: "1"
 
       - name: Upload Trivy scan results
         uses: github/codeql-action/upload-sarif@v4

@@ -51,7 +51,7 @@ const categoryColors: Record<TemplateCategory, { text: string; bg: string }> = {
 };
 
 const INPUT_CLS =
-  'bg-white/5 border border-white/[0.08] rounded-xl px-4 py-2.5 text-white placeholder:text-white/30 focus:border-[#00c7be] focus:outline-none w-full';
+  'bg-muted border border-white/[0.08] rounded-xl px-4 py-2.5 text-foreground placeholder:text-foreground/30 focus:border-primary focus:outline-none w-full';
 
 // ---------------------------------------------------------------------------
 // Main Component
@@ -96,7 +96,7 @@ export default function NewsletterTemplates() {
         <h2 className="text-xl font-semibold text-[rgba(245,245,247,0.92)]">Email Templates</h2>
         <button
           onClick={() => setModalState({ mode: 'create' })}
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#00c7be] hover:bg-[#00b3ab] text-white font-medium rounded-xl transition-colors"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-[#00b3ab] text-foreground font-medium rounded-xl transition-colors"
         >
           <PlusIcon className="w-4 h-4" />
           Create Template
@@ -113,8 +113,8 @@ export default function NewsletterTemplates() {
             onClick={() => setActiveCategory(cat.value)}
             className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
               activeCategory === cat.value
-                ? 'bg-[rgba(0,199,190,0.15)] text-[#00c7be]'
-                : 'text-white/60 hover:text-white/80'
+                ? 'bg-[rgba(0,199,190,0.15)] text-primary'
+                : 'text-foreground/60 hover:text-foreground/80'
             }`}
           >
             {cat.label}
@@ -130,7 +130,7 @@ export default function NewsletterTemplates() {
           {Array.from({ length: 6 }).map((_, i) => (
             <div
               key={i}
-              className="bg-white/5 border border-white/[0.08] rounded-2xl overflow-hidden animate-pulse"
+              className="bg-muted border border-white/[0.08] rounded-2xl overflow-hidden animate-pulse"
             >
               <div className="h-40 bg-white/[0.03]" />
               <div className="p-4 space-y-3">
@@ -152,8 +152,8 @@ export default function NewsletterTemplates() {
       {/* ---------------------------------------------------------------- */}
       {!isLoading && filtered.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mb-4">
-            <InboxIcon className="w-8 h-8 text-white/30" />
+          <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
+            <InboxIcon className="w-8 h-8 text-foreground/30" />
           </div>
           <h3 className="text-lg font-medium text-[rgba(245,245,247,0.92)] mb-1">
             No templates yet
@@ -164,7 +164,7 @@ export default function NewsletterTemplates() {
           </p>
           <button
             onClick={() => setModalState({ mode: 'create' })}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#00c7be] hover:bg-[#00b3ab] text-white font-medium rounded-xl transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-[#00b3ab] text-foreground font-medium rounded-xl transition-colors"
           >
             <PlusIcon className="w-4 h-4" />
             Create Template
@@ -187,7 +187,7 @@ export default function NewsletterTemplates() {
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  className="bg-white/5 border border-white/[0.08] rounded-2xl overflow-hidden hover:border-white/[0.15] transition-colors group"
+                  className="bg-muted border border-white/[0.08] rounded-2xl overflow-hidden hover:border-white/[0.15] transition-colors group"
                 >
                   {/* Preview Area */}
                   <div className="relative h-40 bg-white/[0.02] overflow-hidden">
@@ -203,7 +203,7 @@ export default function NewsletterTemplates() {
                       </div>
                     ) : (
                       <div className="flex items-center justify-center h-full">
-                        <EnvelopeIcon className="w-10 h-10 text-white/10" />
+                        <EnvelopeIcon className="w-10 h-10 text-foreground/10" />
                       </div>
                     )}
                     {/* Overlay gradient for readability */}
@@ -245,14 +245,14 @@ export default function NewsletterTemplates() {
                           `/dashboard/newsletter/campaigns/new?template=${template.id}`
                         )
                       }
-                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-[rgba(0,199,190,0.12)] text-[#00c7be] rounded-lg text-sm font-medium hover:bg-[rgba(0,199,190,0.2)] transition-colors"
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-[rgba(0,199,190,0.12)] text-primary rounded-lg text-sm font-medium hover:bg-[rgba(0,199,190,0.2)] transition-colors"
                     >
                       <DocumentDuplicateIcon className="w-4 h-4" />
                       Use Template
                     </button>
                     <button
                       onClick={() => setModalState({ mode: 'edit', template })}
-                      className="p-2 text-[rgba(245,245,247,0.6)] hover:bg-white/5 rounded-lg transition-colors"
+                      className="p-2 text-[rgba(245,245,247,0.6)] hover:bg-muted rounded-lg transition-colors"
                       title="Edit template"
                     >
                       <PencilIcon className="w-4 h-4" />
@@ -366,7 +366,7 @@ function TemplateModal({ mode, template, onClose }: TemplateModalProps) {
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className="w-full max-w-2xl bg-[#0b1215]/95 backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6 my-8"
+        className="w-full max-w-2xl bg-card border rounded-2xl p-6 my-8"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
@@ -376,7 +376,8 @@ function TemplateModal({ mode, template, onClose }: TemplateModalProps) {
           </h3>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+            aria-label="Close"
+            className="p-2 hover:bg-muted rounded-lg transition-colors"
           >
             <XMarkIcon className="w-5 h-5 text-[rgba(245,245,247,0.6)]" />
           </button>
@@ -448,7 +449,7 @@ function TemplateModal({ mode, template, onClose }: TemplateModalProps) {
             <label className="flex items-center gap-3 cursor-pointer">
               <div
                 className={`relative w-10 h-6 rounded-full transition-colors ${
-                  form.is_active ? 'bg-[#00c7be]' : 'bg-white/10'
+                  form.is_active ? 'bg-primary' : 'bg-muted'
                 }`}
                 onClick={() => set('is_active', !form.is_active)}
               >
@@ -481,14 +482,14 @@ function TemplateModal({ mode, template, onClose }: TemplateModalProps) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2.5 bg-white/5 border border-white/[0.08] rounded-xl text-[rgba(245,245,247,0.6)] hover:bg-white/[0.08] transition-colors"
+              className="flex-1 px-4 py-2.5 bg-muted border border-white/[0.08] rounded-xl text-[rgba(245,245,247,0.6)] hover:bg-white/[0.08] transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving || !form.name.trim()}
-              className="flex-1 px-4 py-2.5 bg-[#00c7be] hover:bg-[#00b3ab] text-white font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-2.5 bg-primary hover:bg-[#00b3ab] text-foreground font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving
                 ? 'Saving...'
@@ -502,3 +503,5 @@ function TemplateModal({ mode, template, onClose }: TemplateModalProps) {
     </motion.div>
   );
 }
+
+

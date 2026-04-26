@@ -92,7 +92,7 @@ export default function ABTesting() {
     <div
       key={test.id}
       className={cn(
-        'rounded-xl border bg-card p-6 shadow-card cursor-pointer transition-all hover:shadow-md',
+        'rounded-xl border bg-card p-6 shadow-card cursor-pointer transition-colors hover:shadow-md',
         selectedTestId === test.id && 'ring-2 ring-primary'
       )}
       onClick={() => setSelectedTestId(test.id)}
@@ -111,7 +111,7 @@ export default function ABTesting() {
 
       <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{test.hypothesis}</p>
 
-      <div className="grid grid-cols-2 gap-4 text-sm mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm mb-4">
         <div>
           <p className="text-muted-foreground">Variants</p>
           <p className="font-medium">{test.variants.length}</p>

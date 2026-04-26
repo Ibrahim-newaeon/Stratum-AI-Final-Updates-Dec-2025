@@ -76,7 +76,7 @@ function ScoreGauge({ score, size = 120 }: { score: number; size?: number }) {
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={strokeDashoffset}
-          className="transition-all duration-700 ease-out"
+          className="transition-colors duration-700 ease-out"
         />
       </svg>
       {/* Center text */}
@@ -166,7 +166,7 @@ export function EmqScoreCard({
                     <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
                       <div
                         className={cn(
-                          'h-full rounded-full transition-all duration-500',
+                          'h-full rounded-full transition-[width] duration-500',
                           driver.status === 'good' ? 'bg-success' :
                           driver.status === 'warning' ? 'bg-warning' : 'bg-danger'
                         )}

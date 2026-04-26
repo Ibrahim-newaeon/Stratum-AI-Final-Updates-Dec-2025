@@ -75,7 +75,7 @@ function GoalRow({ goal }: { goal: GoalProgress }) {
   const TrendIcon = trendIcons[goal.trend];
 
   return (
-    <div className={cn('rounded-lg border transition-all', cfg.border, expanded ? cfg.bg + '/30' : 'bg-background')}>
+    <div className={cn('rounded-lg border transition-colors', cfg.border, expanded ? cfg.bg + '/30' : 'bg-background')}>
       <button
         onClick={() => setExpanded(!expanded)}
         className="w-full p-3 flex items-center gap-3 text-left"
@@ -100,7 +100,7 @@ function GoalRow({ goal }: { goal: GoalProgress }) {
           {/* Progress bar */}
           <div className="w-24 h-2 rounded-full bg-muted/20 overflow-hidden hidden sm:block">
             <div
-              className={cn('h-full rounded-full transition-all', cfg.bar)}
+              className={cn('h-full rounded-full transition-[width]', cfg.bar)}
               style={{ width: `${Math.min(100, goal.progress_pct)}%` }}
             />
           </div>
@@ -223,7 +223,7 @@ export function GoalTrackingCard() {
           <Clock className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
           <div className="flex-1 h-1.5 rounded-full bg-muted/20 overflow-hidden">
             <div
-              className="h-full rounded-full bg-teal-500 transition-all"
+              className="h-full rounded-full bg-teal-500 transition-[width]"
               style={{ width: `${Math.min(100, data.progress_pct)}%` }}
             />
           </div>

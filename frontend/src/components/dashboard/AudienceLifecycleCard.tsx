@@ -57,7 +57,7 @@ function StageBar({ stages }: { stages: LifecycleStageMetric[] }) {
           return (
             <div
               key={s.stage}
-              className={cn('h-full transition-all', cfg.bg.replace('bg-', 'bg-').replace('-50', '-400'))}
+              className={cn('h-full transition-[width]', cfg.bg.replace('bg-', 'bg-').replace('-50', '-400'))}
               style={{ width: `${width}%` }}
               title={`${s.stage}: ${s.count} (${s.pct_of_total}%)`}
             />
@@ -116,7 +116,7 @@ function RuleRow({ rule }: { rule: AudienceRule }) {
   const priorityColors = { high: 'text-red-600 bg-red-50', medium: 'text-amber-600 bg-amber-50', low: 'text-blue-600 bg-blue-50' };
 
   return (
-    <div className={cn('rounded-lg border transition-all', expanded ? 'bg-muted/10' : 'bg-background')}>
+    <div className={cn('rounded-lg border transition-colors', expanded ? 'bg-muted/10' : 'bg-background')}>
       <button
         onClick={() => setExpanded(!expanded)}
         className="w-full p-3 flex items-start gap-3 text-left"

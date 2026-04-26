@@ -49,7 +49,7 @@ interface ConditionGroup {
 interface RuleAction {
   id: string;
   type: string;
-  config: Record<string, any>;
+  config: Record<string, string | number | undefined>;
   priority: number;
 }
 
@@ -397,7 +397,7 @@ export function CustomAutopilotRulesBuilder({ rule, onSave, onCancel, isLoading 
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="px-2 py-1 rounded-full bg-gradient-to-r from-purple-500/20 to-primary/20 text-primary text-xs font-medium">
+            <span className="px-2 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
               Enterprise
             </span>
           </div>
@@ -902,7 +902,7 @@ export function CustomAutopilotRulesBuilder({ rule, onSave, onCancel, isLoading 
               >
                 <div
                   className={cn(
-                    'absolute w-5 h-5 rounded-full bg-white top-0.5 transition-all',
+                    'absolute w-5 h-5 rounded-full bg-white top-0.5 transition-colors',
                     formData.schedule.enabled ? 'left-6' : 'left-0.5'
                   )}
                 />
@@ -1031,7 +1031,7 @@ export function CustomAutopilotRulesBuilder({ rule, onSave, onCancel, isLoading 
               >
                 <div
                   className={cn(
-                    'absolute w-5 h-5 rounded-full bg-white top-0.5 transition-all',
+                    'absolute w-5 h-5 rounded-full bg-white top-0.5 transition-colors',
                     formData.trustGate.enabled ? 'left-6' : 'left-0.5'
                   )}
                 />
@@ -1092,7 +1092,7 @@ export function CustomAutopilotRulesBuilder({ rule, onSave, onCancel, isLoading 
                   >
                     <div
                       className={cn(
-                        'absolute w-4 h-4 rounded-full bg-white top-0.5 transition-all',
+                        'absolute w-4 h-4 rounded-full bg-white top-0.5 transition-colors',
                         formData.trustGate.requireApproval ? 'left-5' : 'left-0.5'
                       )}
                     />
@@ -1123,7 +1123,7 @@ export function CustomAutopilotRulesBuilder({ rule, onSave, onCancel, isLoading 
                   >
                     <div
                       className={cn(
-                        'absolute w-4 h-4 rounded-full bg-white top-0.5 transition-all',
+                        'absolute w-4 h-4 rounded-full bg-white top-0.5 transition-colors',
                         formData.trustGate.dryRunFirst ? 'left-5' : 'left-0.5'
                       )}
                     />

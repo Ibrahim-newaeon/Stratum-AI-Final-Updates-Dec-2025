@@ -149,13 +149,13 @@ class ClientAssignment(TimestampMixin, Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
     client_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("clients.id", ondelete="CASCADE"), nullable=False
+        Integer, ForeignKey("clients.id", ondelete="CASCADE"), nullable=False, index=True
     )
     assigned_by: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
     )
     is_primary: Mapped[bool] = mapped_column(
         Boolean, default=False, nullable=False
@@ -196,10 +196,10 @@ class ClientRequest(TimestampMixin, TenantMixin, Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     client_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("clients.id", ondelete="CASCADE"), nullable=False
+        Integer, ForeignKey("clients.id", ondelete="CASCADE"), nullable=False, index=True
     )
     requested_by: Mapped[int] = mapped_column(
-        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
 
     # Request details
@@ -224,7 +224,7 @@ class ClientRequest(TimestampMixin, TenantMixin, Base):
         nullable=False,
     )
     reviewed_by: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
     )
     reviewed_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True

@@ -387,6 +387,7 @@ export default function Attribution() {
               <div className="p-4 border-b">
                 <h3 className="font-medium">Trained Models</h3>
               </div>
+              <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-muted/50">
                   <tr>
@@ -424,6 +425,7 @@ export default function Attribution() {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           )}
         </div>
@@ -457,6 +459,7 @@ export default function Attribution() {
                   Most common channel sequences leading to conversions
                 </p>
               </div>
+              <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-muted/50">
                   <tr>
@@ -496,6 +499,7 @@ export default function Attribution() {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           )}
         </div>

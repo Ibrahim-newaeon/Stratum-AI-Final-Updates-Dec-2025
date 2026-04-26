@@ -33,7 +33,7 @@ const progressVariants = cva('relative w-full overflow-hidden rounded-full', {
 });
 
 // Indicator variants
-const indicatorVariants = cva('h-full w-full flex-1 transition-all', {
+const indicatorVariants = cva('h-full w-full flex-1 transition-[width]', {
   variants: {
     variant: {
       default: 'bg-primary',
@@ -176,7 +176,7 @@ const CircularProgress = React.forwardRef<SVGSVGElement, CircularProgressProps>(
             cy={size / 2}
             r={radius}
             fill="none"
-            className={cn(colorMap[variant], 'transition-all duration-300')}
+            className={cn(colorMap[variant], 'transition-colors duration-300')}
             strokeWidth={strokeWidth}
             strokeLinecap="round"
             strokeDasharray={circumference}
@@ -236,7 +236,7 @@ const ProgressSteps = React.forwardRef<HTMLDivElement, ProgressStepsProps>(
 
           return (
             <div
-              key={index}
+              key={step.label || index}
               className={cn(
                 'flex items-center',
                 orientation === 'horizontal' && !isLast && 'flex-1'

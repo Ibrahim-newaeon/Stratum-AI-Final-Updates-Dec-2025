@@ -7,6 +7,7 @@
 
 import { EditorContent, useEditor } from '@tiptap/react';
 import { BubbleMenu } from '@tiptap/react/menus';
+import type { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import Image from '@tiptap/extension-image';
@@ -100,7 +101,7 @@ export function RichTextEditor({
     ],
     content: contentJson || content,
     editable,
-    onUpdate: ({ editor }: { editor: any }) => {
+    onUpdate: ({ editor }: { editor: Editor }) => {
       if (onChange) {
         const html = editor.getHTML();
         const json = editor.getJSON();
@@ -110,7 +111,7 @@ export function RichTextEditor({
     editorProps: {
       attributes: {
         class:
-          'prose prose-invert prose-sm sm:prose-base max-w-none focus:outline-none min-h-[300px] p-4',
+          'prose prose-invert prose-sm sm:prose-base max-w-none focus:outline-none min-h-[18.75rem] p-4',
       },
     },
   });
@@ -297,7 +298,7 @@ export function RichTextEditor({
       {editable && (
         <BubbleMenu
           editor={editor}
-          className="flex items-center gap-1 p-1 bg-neutral-800 border border-neutral-700 rounded-lg shadow-lg"
+          {...{ className: 'flex items-center gap-1 p-1 bg-neutral-800 border border-neutral-700 rounded-lg shadow-lg' } as unknown as Record<string, unknown>}
         >
           <MenuButton
             onClick={() => editor.chain().focus().toggleBold().run()}

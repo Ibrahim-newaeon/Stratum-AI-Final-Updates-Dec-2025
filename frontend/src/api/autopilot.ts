@@ -91,7 +91,7 @@ export function useAutopilotStatus(tenantId: number) {
     queryKey: ['autopilot-status', tenantId],
     queryFn: async () => {
       const response = await apiClient.get<{ data: AutopilotStatus }>(
-        `/autopilot/tenant/${tenantId}/autopilot/status`
+        `/autopilot/status`
       )
       return response.data.data
     },
@@ -124,7 +124,7 @@ export function useAutopilotActions(
 
       const response = await apiClient.get<{
         data: { actions: AutopilotAction[]; count: number }
-      }>(`/autopilot/tenant/${tenantId}/autopilot/actions?${params}`)
+      }>(`/autopilot/actions?${params}`)
       return response.data.data
     },
     enabled: !!tenantId,
@@ -141,7 +141,7 @@ export function useActionsSummary(tenantId: number, days: number = 7) {
     queryKey: ['autopilot-summary', tenantId, days],
     queryFn: async () => {
       const response = await apiClient.get<{ data: ActionsSummary }>(
-        `/autopilot/tenant/${tenantId}/autopilot/actions/summary?days=${days}`
+        `/autopilot/actions/summary?days=${days}`
       )
       return response.data.data
     },
@@ -158,7 +158,7 @@ export function useAutopilotAction(tenantId: number, actionId: string) {
     queryKey: ['autopilot-action', tenantId, actionId],
     queryFn: async () => {
       const response = await apiClient.get<{ data: { action: AutopilotAction } }>(
-        `/autopilot/tenant/${tenantId}/autopilot/actions/${actionId}`
+        `/autopilot/actions/${actionId}`
       )
       return response.data.data.action
     },
@@ -185,7 +185,7 @@ export function useQueueAction(tenantId: number) {
           requires_approval: boolean
           reason: string | null
         }
-      }>(`/autopilot/tenant/${tenantId}/autopilot/actions`, request)
+      }>(`/autopilot/actions`, request)
       return response.data.data
     },
     onSuccess: () => {
@@ -205,7 +205,7 @@ export function useApproveAction(tenantId: number) {
   return useMutation({
     mutationFn: async (actionId: string) => {
       const response = await apiClient.post<{ data: { action: AutopilotAction } }>(
-        `/autopilot/tenant/${tenantId}/autopilot/actions/${actionId}/approve`
+        `/autopilot/actions/${actionId}/approve`
       )
       return response.data.data.action
     },
@@ -225,7 +225,7 @@ export function useApproveAllActions(tenantId: number) {
   return useMutation({
     mutationFn: async (actionIds?: string[]) => {
       const response = await apiClient.post<{ data: { approved_count: number } }>(
-        `/autopilot/tenant/${tenantId}/autopilot/actions/approve-all`,
+        `/autopilot/actions/approve-all`,
         actionIds ? { action_ids: actionIds } : undefined
       )
       return response.data.data
@@ -247,7 +247,7 @@ export function useDismissAction(tenantId: number) {
   return useMutation({
     mutationFn: async (actionId: string) => {
       const response = await apiClient.post<{ data: { action: AutopilotAction } }>(
-        `/autopilot/tenant/${tenantId}/autopilot/actions/${actionId}/dismiss`
+        `/autopilot/actions/${actionId}/dismiss`
       )
       return response.data.data.action
     },

@@ -20,6 +20,10 @@ interface UseRetryOptions {
   onRetry?: (attempt: number, error: Error) => void;
 }
 
+interface RetryableError extends Error {
+  nonRetryable?: boolean;
+}
+
 interface UseRetryResult<T> {
   /** Execute the async function with retry logic */
   execute: (fn: () => Promise<T>) => Promise<T>;
@@ -158,7 +162,7 @@ export async function fetchWithRetry<T>(
       return response.json();
     } catch (error) {
       // Non-retryable errors (4xx) or exhausted retries → throw immediately
-      if ((error as any)?.nonRetryable || attempt === maxRetries) {
+      if ((error as RetryableError)?.nonRetryable || attempt === maxRetries) {
         throw error;
       }
 

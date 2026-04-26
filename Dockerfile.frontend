@@ -35,4 +35,7 @@ COPY --from=build /app/dist ./dist
 
 RUN echo "=== Production dist ===" && ls -la dist/ && du -sh dist/
 
+# Run as non-root node user (provided by node:alpine image)
+USER node
+
 CMD ["sh", "-c", "echo Starting serve on port ${PORT:-3000} && exec serve -s dist -l ${PORT:-3000}"]

@@ -21,7 +21,7 @@ const AIFooter = lazy(() => import('../components/landing/ai/AIFooter'));
 const SectionSkeleton = () => (
   <div className="min-h-[60vh] flex items-center justify-center">
     <div className="relative w-16 h-16">
-      <div className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-500 via-cyan-500 to-orange-500 animate-spin opacity-20 blur-xl" />
+      <div className="absolute inset-0 rounded-full bg-primary/20 animate-spin opacity-20 blur-xl" />
       <div className="absolute inset-2 rounded-full bg-surface-primary" />
       <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-purple-500 animate-spin" />
     </div>
@@ -33,7 +33,7 @@ export default function AILanding() {
   const backgroundY = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
 
   return (
-    <div className="relative min-h-screen bg-[#030303] text-white overflow-x-hidden" style={{ scrollBehavior: 'smooth' }}>
+    <div className="relative min-h-screen bg-black text-white overflow-x-hidden" style={{ scrollBehavior: 'smooth' }}>
       {/* Ambient Background - 2026 Mesh Gradient */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         {/* Primary mesh gradient */}
@@ -84,12 +84,12 @@ export default function AILanding() {
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50">
         <div className="mx-auto max-w-7xl px-6 py-4">
-          <div className="flex items-center justify-between backdrop-blur-xl bg-white/[0.02] border border-white/[0.05] rounded-2xl px-6 py-3">
+          <div className="flex items-center justify-between bg-card/80 border border-border rounded-2xl px-6 py-3">
             {/* Logo */}
             <a href="/" className="flex items-center gap-3 group">
-              <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 via-cyan-500 to-orange-500 p-[1px]">
-                <div className="absolute inset-[1px] rounded-xl bg-[#030303] flex items-center justify-center">
-                  <span className="text-lg font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
+              <div className="relative w-10 h-10 rounded-xl bg-primary p-[1px]">
+                <div className="absolute inset-[1px] rounded-xl bg-black flex items-center justify-center">
+                  <span className="text-lg font-bold  text-foreground">
                     S
                   </span>
                 </div>
@@ -134,7 +134,7 @@ export default function AILanding() {
                 href="/signup"
                 className="relative group px-5 py-2.5 rounded-xl text-sm font-medium overflow-hidden"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-cyan-500 to-purple-500 bg-[length:200%_100%] group-hover:animate-gradient-x" />
+                <div className="absolute inset-0 bg-primary" />
                 <span className="relative text-white">Start Free Trial</span>
               </a>
             </div>

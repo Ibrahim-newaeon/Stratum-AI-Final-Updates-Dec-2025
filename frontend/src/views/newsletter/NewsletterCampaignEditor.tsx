@@ -36,15 +36,15 @@ import {
 // ---------------------------------------------------------------------------
 
 const INPUT_CLASS =
-  'bg-white/5 border border-white/[0.08] rounded-xl px-4 py-2.5 text-white placeholder:text-white/30 focus:border-[#00c7be] focus:outline-none focus:ring-1 focus:ring-[#00c7be]/50 w-full';
+  'bg-muted border border-white/[0.08] rounded-xl px-4 py-2.5 text-foreground placeholder:text-foreground/30 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/50 w-full';
 
 const BUTTON_PRIMARY =
-  'bg-[#00c7be] hover:bg-[#00b5ad] text-black font-semibold rounded-xl px-4 py-2.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+  'bg-primary hover:bg-[#00b5ad] text-black font-semibold rounded-xl px-4 py-2.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
 
 const BUTTON_SECONDARY =
-  'bg-white/5 border border-white/[0.08] hover:bg-white/10 text-white rounded-xl px-4 py-2.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+  'bg-muted border border-white/[0.08] hover:bg-muted text-foreground rounded-xl px-4 py-2.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
 
-const CARD_CLASS = 'bg-white/5 border border-white/[0.08] rounded-2xl p-6';
+const CARD_CLASS = 'bg-muted border border-white/[0.08] rounded-2xl p-6';
 
 const VARIABLE_TOKENS = [
   { label: 'First Name', token: '{{first_name}}' },
@@ -222,7 +222,7 @@ export default function NewsletterCampaignEditor() {
   // ---- Loading state ----
   if (isEditMode && campaignLoading) {
     return (
-      <div className="flex items-center justify-center h-96 text-white/50">
+      <div className="flex items-center justify-center h-96 text-foreground/50">
         Loading campaign...
       </div>
     );
@@ -236,15 +236,15 @@ export default function NewsletterCampaignEditor() {
         <button
           type="button"
           onClick={() => navigate('/dashboard/newsletter/campaigns')}
-          className="p-2 rounded-xl hover:bg-white/10 text-white/60 hover:text-white transition-colors"
+          className="p-2 rounded-xl hover:bg-muted text-foreground/60 hover:text-foreground transition-colors"
         >
           <ArrowLeftIcon className="w-5 h-5" />
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-white">
+          <h1 className="text-2xl font-bold text-foreground">
             {isEditMode ? 'Edit Campaign' : 'Create Campaign'}
           </h1>
-          <p className="text-sm text-white/50 mt-0.5">
+          <p className="text-sm text-foreground/50 mt-0.5">
             {isEditMode
               ? 'Update your campaign details and content'
               : 'Set up a new email campaign'}
@@ -260,11 +260,11 @@ export default function NewsletterCampaignEditor() {
         <div className="lg:col-span-2 space-y-6">
           {/* Campaign Details Card */}
           <div className={CARD_CLASS}>
-            <h2 className="text-lg font-semibold text-white mb-4">Campaign Details</h2>
+            <h2 className="text-lg font-semibold text-foreground mb-4">Campaign Details</h2>
 
             {/* Campaign Name */}
             <div className="space-y-1.5 mb-4">
-              <label className="text-sm font-medium text-white/70">Campaign Name</label>
+              <label className="text-sm font-medium text-foreground/70">Campaign Name</label>
               <input
                 type="text"
                 value={name}
@@ -276,7 +276,7 @@ export default function NewsletterCampaignEditor() {
 
             {/* Subject Line */}
             <div className="space-y-1.5 mb-4">
-              <label className="text-sm font-medium text-white/70">Subject Line</label>
+              <label className="text-sm font-medium text-foreground/70">Subject Line</label>
               <input
                 type="text"
                 value={subject}
@@ -288,9 +288,9 @@ export default function NewsletterCampaignEditor() {
 
             {/* Preheader Text */}
             <div className="space-y-1.5 mb-4">
-              <label className="text-sm font-medium text-white/70">
+              <label className="text-sm font-medium text-foreground/70">
                 Preheader Text{' '}
-                <span className="text-white/30 font-normal">(optional)</span>
+                <span className="text-foreground/30 font-normal">(optional)</span>
               </label>
               <input
                 type="text"
@@ -299,14 +299,14 @@ export default function NewsletterCampaignEditor() {
                 placeholder="Preview text shown in inbox"
                 className={INPUT_CLASS}
               />
-              <p className="text-xs text-white/30">
+              <p className="text-xs text-foreground/30">
                 Appears after the subject line in most email clients. Keep it under 100 characters.
               </p>
             </div>
 
             {/* Template Selector */}
             <div className="space-y-1.5 mb-6">
-              <label className="text-sm font-medium text-white/70">Load from Template</label>
+              <label className="text-sm font-medium text-foreground/70">Load from Template</label>
               <select
                 value={templateId ?? ''}
                 onChange={(e) =>
@@ -325,7 +325,7 @@ export default function NewsletterCampaignEditor() {
 
             {/* Variable Insertion Buttons */}
             <div className="mb-4">
-              <label className="text-sm font-medium text-white/70 block mb-2">
+              <label className="text-sm font-medium text-foreground/70 block mb-2">
                 Insert Variable
               </label>
               <div className="flex flex-wrap gap-2">
@@ -334,7 +334,7 @@ export default function NewsletterCampaignEditor() {
                     key={token}
                     type="button"
                     onClick={() => insertVariable(token)}
-                    className="text-xs bg-white/5 border border-white/[0.08] hover:bg-white/10 text-white/70 hover:text-white rounded-lg px-3 py-1.5 transition-colors font-mono"
+                    className="text-xs bg-muted border border-white/[0.08] hover:bg-muted text-foreground/70 hover:text-foreground rounded-lg px-3 py-1.5 transition-colors font-mono"
                   >
                     {label}
                   </button>
@@ -344,7 +344,7 @@ export default function NewsletterCampaignEditor() {
 
             {/* Rich Text Editor */}
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-white/70">Email Content</label>
+              <label className="text-sm font-medium text-foreground/70">Email Content</label>
               <RichTextEditor
                 key={editorKey}
                 content={contentHtml}
@@ -362,24 +362,24 @@ export default function NewsletterCampaignEditor() {
           {/* Audience Filters Panel */}
           <div className={CARD_CLASS}>
             <div className="flex items-center gap-2 mb-4">
-              <UserGroupIcon className="w-5 h-5 text-[#00c7be]" />
-              <h3 className="text-base font-semibold text-white">Audience</h3>
+              <UserGroupIcon className="w-5 h-5 text-primary" />
+              <h3 className="text-base font-semibold text-foreground">Audience</h3>
             </div>
 
             {/* Status Filter */}
             <div className="mb-4">
-              <label className="text-sm font-medium text-white/70 block mb-2">Status</label>
+              <label className="text-sm font-medium text-foreground/70 block mb-2">Status</label>
               <div className="space-y-2">
                 {STATUS_OPTIONS.map((status) => (
                   <label
                     key={status}
-                    className="flex items-center gap-2 text-sm text-white/80 cursor-pointer"
+                    className="flex items-center gap-2 text-sm text-foreground/80 cursor-pointer"
                   >
                     <input
                       type="checkbox"
                       checked={audienceFilters.status?.includes(status) ?? false}
                       onChange={() => toggleAudienceStatus(status)}
-                      className="rounded border-white/20 bg-white/5 text-[#00c7be] focus:ring-[#00c7be]/50"
+                      className="rounded border-white/20 bg-muted text-primary focus:ring-primary/50"
                     />
                     <span className="capitalize">{status}</span>
                   </label>
@@ -389,7 +389,7 @@ export default function NewsletterCampaignEditor() {
 
             {/* Min Lead Score */}
             <div className="mb-4">
-              <label className="text-sm font-medium text-white/70 block mb-1.5">
+              <label className="text-sm font-medium text-foreground/70 block mb-1.5">
                 Min Lead Score
               </label>
               <input
@@ -410,18 +410,18 @@ export default function NewsletterCampaignEditor() {
 
             {/* Platform Filter */}
             <div className="mb-4">
-              <label className="text-sm font-medium text-white/70 block mb-2">Platform</label>
+              <label className="text-sm font-medium text-foreground/70 block mb-2">Platform</label>
               <div className="space-y-2">
                 {PLATFORM_OPTIONS.map((platform) => (
                   <label
                     key={platform}
-                    className="flex items-center gap-2 text-sm text-white/80 cursor-pointer"
+                    className="flex items-center gap-2 text-sm text-foreground/80 cursor-pointer"
                   >
                     <input
                       type="checkbox"
                       checked={audienceFilters.platforms?.includes(platform) ?? false}
                       onChange={() => toggleAudiencePlatform(platform)}
-                      className="rounded border-white/20 bg-white/5 text-[#00c7be] focus:ring-[#00c7be]/50"
+                      className="rounded border-white/20 bg-muted text-primary focus:ring-primary/50"
                     />
                     <span className="capitalize">{platform}</span>
                   </label>
@@ -432,8 +432,8 @@ export default function NewsletterCampaignEditor() {
             {/* Live Audience Count */}
             <div className="pt-3 border-t border-white/[0.08]">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-white/50">Estimated audience</span>
-                <span className="text-lg font-bold text-[#00c7be]">
+                <span className="text-sm text-foreground/50">Estimated audience</span>
+                <span className="text-lg font-bold text-primary">
                   {audienceCount !== undefined
                     ? audienceCount.toLocaleString()
                     : '--'}
@@ -445,13 +445,13 @@ export default function NewsletterCampaignEditor() {
           {/* Sender Settings Panel */}
           <div className={CARD_CLASS}>
             <div className="flex items-center gap-2 mb-4">
-              <EnvelopeIcon className="w-5 h-5 text-[#00c7be]" />
-              <h3 className="text-base font-semibold text-white">Sender Settings</h3>
+              <EnvelopeIcon className="w-5 h-5 text-primary" />
+              <h3 className="text-base font-semibold text-foreground">Sender Settings</h3>
             </div>
 
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-white/70">From Name</label>
+                <label className="text-sm font-medium text-foreground/70">From Name</label>
                 <input
                   type="text"
                   value={fromName}
@@ -461,7 +461,7 @@ export default function NewsletterCampaignEditor() {
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-white/70">From Email</label>
+                <label className="text-sm font-medium text-foreground/70">From Email</label>
                 <input
                   type="email"
                   value={fromEmail}
@@ -471,7 +471,7 @@ export default function NewsletterCampaignEditor() {
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-white/70">Reply-To Email</label>
+                <label className="text-sm font-medium text-foreground/70">Reply-To Email</label>
                 <input
                   type="email"
                   value={replyToEmail}
@@ -485,7 +485,7 @@ export default function NewsletterCampaignEditor() {
 
           {/* Actions Panel */}
           <div className={CARD_CLASS}>
-            <h3 className="text-base font-semibold text-white mb-4">Actions</h3>
+            <h3 className="text-base font-semibold text-foreground mb-4">Actions</h3>
 
             <div className="space-y-3">
               {/* Save Draft */}
@@ -546,13 +546,13 @@ export default function NewsletterCampaignEditor() {
       {/* ------------------------------------------------------------------ */}
       {showScheduleModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#1a1a2e] border border-white/[0.08] rounded-2xl p-6 w-full max-w-md shadow-2xl">
+          <div className="bg-card border border-white/[0.08] rounded-2xl p-6 w-full max-w-md shadow-2xl">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white">Schedule Campaign</h3>
+              <h3 className="text-lg font-semibold text-foreground">Schedule Campaign</h3>
               <button
                 type="button"
                 onClick={() => setShowScheduleModal(false)}
-                className="p-1 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-colors"
+                className="p-1 rounded-lg hover:bg-muted text-foreground/60 hover:text-foreground transition-colors"
               >
                 <XMarkIcon className="w-5 h-5" />
               </button>
@@ -560,7 +560,7 @@ export default function NewsletterCampaignEditor() {
 
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-white/70">Send Date &amp; Time</label>
+                <label className="text-sm font-medium text-foreground/70">Send Date &amp; Time</label>
                 <input
                   type="datetime-local"
                   value={scheduledAt}
@@ -596,13 +596,13 @@ export default function NewsletterCampaignEditor() {
       {/* ------------------------------------------------------------------ */}
       {showTestEmailModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#1a1a2e] border border-white/[0.08] rounded-2xl p-6 w-full max-w-md shadow-2xl">
+          <div className="bg-card border border-white/[0.08] rounded-2xl p-6 w-full max-w-md shadow-2xl">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white">Send Test Email</h3>
+              <h3 className="text-lg font-semibold text-foreground">Send Test Email</h3>
               <button
                 type="button"
                 onClick={() => setShowTestEmailModal(false)}
-                className="p-1 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-colors"
+                className="p-1 rounded-lg hover:bg-muted text-foreground/60 hover:text-foreground transition-colors"
               >
                 <XMarkIcon className="w-5 h-5" />
               </button>
@@ -610,7 +610,7 @@ export default function NewsletterCampaignEditor() {
 
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-white/70">
+                <label className="text-sm font-medium text-foreground/70">
                   Recipient Emails
                 </label>
                 <textarea
@@ -620,7 +620,7 @@ export default function NewsletterCampaignEditor() {
                   rows={3}
                   className={INPUT_CLASS}
                 />
-                <p className="text-xs text-white/30">
+                <p className="text-xs text-foreground/30">
                   Separate multiple email addresses with commas.
                 </p>
               </div>
@@ -649,3 +649,5 @@ export default function NewsletterCampaignEditor() {
     </div>
   );
 }
+
+

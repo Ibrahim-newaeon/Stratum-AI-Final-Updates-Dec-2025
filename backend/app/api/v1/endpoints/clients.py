@@ -192,7 +192,6 @@ async def create_client(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=f"Client with slug '{payload.slug}' already exists",
             )
-        await db.refresh(client)
 
         logger.info(f"Client created: {client.id} by user {current_user.id}")
         return APIResponse(
@@ -353,7 +352,6 @@ async def update_client(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=f"Client with slug '{update_data.get('slug', '')}' already exists",
             )
-        await db.refresh(client)
 
         logger.info(f"Client updated: {client_id} by user {current_user.id}")
         return APIResponse(
@@ -664,11 +662,14 @@ async def create_assignment(
                 detail="Only MANAGER and ANALYST users can be assigned to clients via assignments",
             )
 
-        # Check duplicate
+        # Check duplicate (scoped through Client for tenant isolation)
         dup_check = await db.execute(
-            select(ClientAssignment.id).where(
+            select(ClientAssignment.id)
+            .join(Client, ClientAssignment.client_id == Client.id)
+            .where(
                 ClientAssignment.user_id == payload.user_id,
                 ClientAssignment.client_id == client_id,
+                Client.tenant_id == tenant_id,
             )
         )
         if dup_check.scalar_one_or_none() is not None:
@@ -685,7 +686,6 @@ async def create_assignment(
         )
         db.add(assignment)
         await db.commit()
-        await db.refresh(assignment)
 
         logger.info(
             f"User {payload.user_id} assigned to client {client_id} by {current_user.id}"
@@ -742,9 +742,12 @@ async def delete_assignment(
             )
 
         result = await db.execute(
-            select(ClientAssignment).where(
+            select(ClientAssignment)
+            .join(Client, ClientAssignment.client_id == Client.id)
+            .where(
                 ClientAssignment.user_id == user_id,
                 ClientAssignment.client_id == client_id,
+                Client.tenant_id == tenant_id,
             )
         )
         assignment = result.scalar_one_or_none()
@@ -850,7 +853,6 @@ async def invite_portal_user(
         )
         db.add(portal_user)
         await db.commit()
-        await db.refresh(portal_user)
 
         logger.info(
             f"Portal user created: {portal_user.id} for client {client_id} by {current_user.id}"
@@ -953,7 +955,6 @@ async def create_portal_request(
 
     db.add(client_request)
     await db.commit()
-    await db.refresh(client_request)
 
     logger.info(
         "portal_request_created",

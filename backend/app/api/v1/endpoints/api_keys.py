@@ -140,7 +140,7 @@ async def list_api_keys(
                 APIKey.tenant_id == tenant_id,
             )
         )
-        .order_by(APIKey.created_at.desc())
+        .order_by(APIKey.created_at.desc()).limit(1000)
     )
     keys = result.scalars().all()
 
@@ -226,7 +226,6 @@ async def create_api_key(
 
     db.add(api_key)
     await db.commit()
-    await db.refresh(api_key)
 
     logger.info(f"API key created: {api_key.id} for user {user_id}")
 
@@ -290,7 +289,6 @@ async def regenerate_api_key(
     api_key.is_active = True
 
     await db.commit()
-    await db.refresh(api_key)
 
     logger.info(f"API key regenerated: {api_key.id}")
 
@@ -385,7 +383,6 @@ async def deactivate_api_key(
 
     api_key.is_active = False
     await db.commit()
-    await db.refresh(api_key)
 
     return APIResponse(
         success=True,

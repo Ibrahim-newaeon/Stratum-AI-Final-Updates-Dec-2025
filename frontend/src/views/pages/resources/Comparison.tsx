@@ -370,7 +370,7 @@ export default function ComparisonPage() {
                 <button
                   key={comp.id}
                   onClick={() => setSelectedCompetitor(comp.id)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
                     selectedCompetitor === comp.id ? 'text-white' : ''
                   }`}
                   style={{
@@ -489,7 +489,7 @@ export default function ComparisonPage() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
                   to="/signup"
-                  className="px-8 py-4 rounded-full font-semibold text-white transition-all duration-200 flex items-center justify-center gap-2"
+                  className="px-8 py-4 rounded-full font-semibold text-white transition-colors duration-200 flex items-center justify-center gap-2"
                   style={{
                     background: 'var(--landing-accent-coral)',
                     boxShadow: 'var(--landing-glow-coral)',
@@ -500,7 +500,7 @@ export default function ComparisonPage() {
                 </Link>
                 <Link
                   to="/contact"
-                  className="px-8 py-4 rounded-xl font-semibold text-white transition-all duration-200"
+                  className="px-8 py-4 rounded-xl font-semibold text-white transition-colors duration-200"
                   style={{
                     background: 'var(--landing-surface-glass)',
                     border: '1px solid var(--landing-border)',

@@ -11,13 +11,15 @@ CRUD operations for webhooks:
 - Delete webhooks
 """
 
+import ipaddress
 import secrets
+import urllib.parse
 from datetime import UTC, datetime
 from typing import Optional
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import and_, desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -44,6 +46,29 @@ logger = get_logger(__name__)
 # =============================================================================
 
 
+def _is_safe_webhook_url(url: str) -> bool:
+    """Validate URL to prevent SSRF attacks."""
+    parsed = urllib.parse.urlparse(url)
+    # Only allow http/https
+    if parsed.scheme not in ("http", "https"):
+        return False
+    # Reject localhost and private IPs
+    hostname = parsed.hostname
+    if not hostname:
+        return False
+    hostname_lower = hostname.lower()
+    if hostname_lower in ("localhost", "127.0.0.1", "::1", "0.0.0.0"):
+        return False
+    try:
+        ip = ipaddress.ip_address(hostname)
+        if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast:
+            return False
+    except ValueError:
+        # hostname is not an IP address, which is fine
+        pass
+    return True
+
+
 class WebhookCreateRequest(BaseModel):
     """Request to create a new webhook."""
 
@@ -51,6 +76,16 @@ class WebhookCreateRequest(BaseModel):
     url: str = Field(..., description="Webhook endpoint URL")
     events: list[str] = Field(..., min_length=1, description="Events to subscribe to")
     headers: Optional[dict] = Field(default=None, description="Custom headers to include")
+
+    @field_validator("url")
+    @classmethod
+    def validate_url(cls, v: str) -> str:
+        if not _is_safe_webhook_url(v):
+            raise ValueError(
+                "Invalid webhook URL. Must be a public HTTP/HTTPS URL. "
+                "Private IPs, localhost, and non-HTTP schemes are not allowed."
+            )
+        return v
 
 
 class WebhookUpdateRequest(BaseModel):
@@ -61,6 +96,16 @@ class WebhookUpdateRequest(BaseModel):
     events: Optional[list[str]] = None
     headers: Optional[dict] = None
     status: Optional[str] = None
+
+    @field_validator("url")
+    @classmethod
+    def validate_url(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and not _is_safe_webhook_url(v):
+            raise ValueError(
+                "Invalid webhook URL. Must be a public HTTP/HTTPS URL. "
+                "Private IPs, localhost, and non-HTTP schemes are not allowed."
+            )
+        return v
 
 
 class WebhookResponse(BaseModel):
@@ -188,7 +233,7 @@ async def list_webhooks(
         )
 
     result = await db.execute(
-        select(Webhook).where(Webhook.tenant_id == tenant_id).order_by(Webhook.created_at.desc())
+        select(Webhook).where(Webhook.tenant_id == tenant_id).order_by(Webhook.created_at.desc()).limit(1000).limit(1000)
     )
     webhooks = result.scalars().all()
 
@@ -303,7 +348,6 @@ async def create_webhook(
 
     db.add(webhook)
     await db.commit()
-    await db.refresh(webhook)
 
     logger.info(f"Webhook created: {webhook.id} for tenant {tenant_id}")
 
@@ -373,7 +417,6 @@ async def update_webhook(
             webhook.failure_count = 0
 
     await db.commit()
-    await db.refresh(webhook)
 
     return APIResponse(
         success=True,
@@ -455,6 +498,13 @@ async def test_webhook(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Webhook not found",
+        )
+
+    # SECURITY: Re-test URL safety at execution time (DNS rebinding protection)
+    if not _is_safe_webhook_url(webhook.url):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Webhook URL is not valid or points to an internal address",
         )
 
     # Send test payload

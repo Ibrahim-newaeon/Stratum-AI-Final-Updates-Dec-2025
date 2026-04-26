@@ -11,7 +11,7 @@
  * - Set primary client for a user
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, memo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import apiClient from '@/api/client';
 import { meetsRoleRequirement } from '@/components/auth/ProtectedRoute';
@@ -58,6 +58,105 @@ interface AvailableUser {
   role: 'manager' | 'analyst';
 }
 
+const roleBadge = (role: string) => {
+  const config =
+    role === 'manager'
+      ? { bg: 'bg-violet-500/10', text: 'text-violet-400', border: 'border-violet-500/20' }
+      : { bg: 'bg-cyan-500/10', text: 'text-cyan-400', border: 'border-cyan-500/20' };
+  return (
+    <span
+      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${config.bg} ${config.text} border ${config.border} capitalize`}
+    >
+      {role}
+    </span>
+  );
+};
+
+interface AssignmentRowProps {
+  clientId: number;
+  assignment: AssignedUser;
+  isConfirming: boolean;
+  onTogglePrimary: (clientId: number, userId: number) => void;
+  onRequestRemove: (clientId: number, userId: number) => void;
+  onConfirmRemove: (clientId: number, userId: number) => void;
+  onCancelRemove: () => void;
+}
+
+const AssignmentRow = memo(function AssignmentRow({
+  clientId,
+  assignment,
+  isConfirming,
+  onTogglePrimary,
+  onRequestRemove,
+  onConfirmRemove,
+  onCancelRemove,
+}: AssignmentRowProps) {
+  return (
+    <div className="flex items-center justify-between p-4 hover:bg-accent/50 transition-colors">
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+          <UserIcon className="w-4 h-4 text-muted-foreground" />
+        </div>
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-foreground">
+              {assignment.full_name}
+            </span>
+            {roleBadge(assignment.role)}
+            {assignment.is_primary && (
+              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                <StarIconSolid className="w-3 h-3" />
+                Primary
+              </span>
+            )}
+          </div>
+          <span className="text-xs text-muted-foreground">{assignment.email}</span>
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        {!assignment.is_primary && (
+          <button
+            onClick={() => onTogglePrimary(clientId, assignment.id)}
+            className="p-1.5 rounded-lg hover:bg-accent transition-colors"
+            title="Set as primary"
+            aria-label="Set as primary"
+          >
+            <StarIcon className="w-4 h-4 text-muted-foreground" />
+          </button>
+        )}
+        {isConfirming ? (
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => onConfirmRemove(clientId, assignment.id)}
+              className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
+              title="Confirm remove"
+              aria-label="Confirm remove"
+            >
+              <CheckIcon className="w-4 h-4" />
+            </button>
+            <button
+              onClick={onCancelRemove}
+              className="p-1.5 rounded-lg hover:bg-accent transition-colors"
+              title="Cancel"
+              aria-label="Cancel"
+            >
+              <XMarkIcon className="w-4 h-4 text-muted-foreground" />
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => onRequestRemove(clientId, assignment.id)}
+            className="p-1.5 rounded-lg hover:bg-red-500/10 text-muted-foreground hover:text-red-400 transition-colors"
+            title="Remove assignment"
+            aria-label="Remove assignment"
+          >
+            <TrashIcon className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+});
 
 export default function ClientAssignments() {
   const { user } = useAuth();
@@ -87,13 +186,13 @@ export default function ClientAssignments() {
       const userData = usersRes.data?.data || usersRes.data?.items || usersRes.data || [];
 
       setClients(
-        (Array.isArray(clientData) ? clientData : []).map((c: any) => ({
+        (Array.isArray(clientData) ? clientData : []).map((c) => ({
           id: c.id,
           name: c.name || '—',
           domain: c.domain || null,
           status: c.status || 'active',
           campaign_count: c.campaign_count ?? 0,
-          assignments: (c.assignments || []).map((a: any) => ({
+          assignments: (c.assignments || []).map((a: Record<string, unknown>) => ({
             id: a.id || a.user_id,
             email: a.email || '',
             full_name: a.full_name || a.name || '',
@@ -105,7 +204,7 @@ export default function ClientAssignments() {
       );
 
       setAvailableUsers(
-        (Array.isArray(userData) ? userData : []).map((u: any) => ({
+        (Array.isArray(userData) ? userData : []).map((u) => ({
           id: u.id,
           email: u.email || '',
           full_name: u.full_name || u.name || '',
@@ -137,11 +236,11 @@ export default function ClientAssignments() {
       c.domain?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleOpenAssignModal = (client: ClientWithAssignments) => {
+  const handleOpenAssignModal = useCallback((client: ClientWithAssignments) => {
     setSelectedClient(client);
     setAssignSearch('');
     setShowAssignModal(true);
-  };
+  }, []);
 
   const getAvailableUsersForClient = (client: ClientWithAssignments) => {
     const assignedIds = new Set(client.assignments.map((a) => a.id));
@@ -189,7 +288,7 @@ export default function ClientAssignments() {
     }
   };
 
-  const handleRemoveAssignment = async (clientId: number, userId: number) => {
+  const handleRemoveAssignment = useCallback(async (clientId: number, userId: number) => {
     try {
       await apiClient.delete(`/clients/${clientId}/assignments/${userId}`);
     } catch {
@@ -205,9 +304,9 @@ export default function ClientAssignments() {
       })
     );
     setConfirmRemove(null);
-  };
+  }, []);
 
-  const handleTogglePrimary = async (clientId: number, userId: number) => {
+  const handleTogglePrimary = useCallback(async (clientId: number, userId: number) => {
     try {
       await apiClient.patch(`/clients/${clientId}/assignments/${userId}`, { is_primary: true });
     } catch {
@@ -225,21 +324,7 @@ export default function ClientAssignments() {
         };
       })
     );
-  };
-
-  const roleBadge = (role: string) => {
-    const config =
-      role === 'manager'
-        ? { bg: 'bg-violet-500/10', text: 'text-violet-400', border: 'border-violet-500/20' }
-        : { bg: 'bg-cyan-500/10', text: 'text-cyan-400', border: 'border-cyan-500/20' };
-    return (
-      <span
-        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${config.bg} ${config.text} border ${config.border} capitalize`}
-      >
-        {role}
-      </span>
-    );
-  };
+  }, []);
 
   if (!isAdmin) {
     return (
@@ -365,71 +450,21 @@ export default function ClientAssignments() {
             ) : (
               <div className="divide-y divide-border">
                 {client.assignments.map((assignment) => (
-                  <div
+                  <AssignmentRow
                     key={assignment.id}
-                    className="flex items-center justify-between p-4 hover:bg-accent/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                        <UserIcon className="w-4 h-4 text-muted-foreground" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-foreground">
-                            {assignment.full_name}
-                          </span>
-                          {roleBadge(assignment.role)}
-                          {assignment.is_primary && (
-                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                              <StarIconSolid className="w-3 h-3" />
-                              Primary
-                            </span>
-                          )}
-                        </div>
-                        <span className="text-xs text-muted-foreground">{assignment.email}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {!assignment.is_primary && (
-                        <button
-                          onClick={() => handleTogglePrimary(client.id, assignment.id)}
-                          className="p-1.5 rounded-lg hover:bg-accent transition-colors"
-                          title="Set as primary"
-                        >
-                          <StarIcon className="w-4 h-4 text-muted-foreground" />
-                        </button>
-                      )}
-                      {confirmRemove?.clientId === client.id &&
-                      confirmRemove?.userId === assignment.id ? (
-                        <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => handleRemoveAssignment(client.id, assignment.id)}
-                            className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
-                            title="Confirm remove"
-                          >
-                            <CheckIcon className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => setConfirmRemove(null)}
-                            className="p-1.5 rounded-lg hover:bg-accent transition-colors"
-                            title="Cancel"
-                          >
-                            <XMarkIcon className="w-4 h-4 text-muted-foreground" />
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() =>
-                            setConfirmRemove({ clientId: client.id, userId: assignment.id })
-                          }
-                          className="p-1.5 rounded-lg hover:bg-red-500/10 text-muted-foreground hover:text-red-400 transition-colors"
-                          title="Remove assignment"
-                        >
-                          <TrashIcon className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
+                    clientId={client.id}
+                    assignment={assignment}
+                    isConfirming={
+                      confirmRemove?.clientId === client.id &&
+                      confirmRemove?.userId === assignment.id
+                    }
+                    onTogglePrimary={handleTogglePrimary}
+                    onRequestRemove={(clientId, userId) =>
+                      setConfirmRemove({ clientId, userId })
+                    }
+                    onConfirmRemove={handleRemoveAssignment}
+                    onCancelRemove={() => setConfirmRemove(null)}
+                  />
                 ))}
               </div>
             )}

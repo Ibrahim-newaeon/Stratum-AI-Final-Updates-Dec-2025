@@ -44,6 +44,19 @@ def calculate_task_confidence(campaign_data: list, analysis_type: str = "portfol
     return round(min(0.95, sample_conf + completeness_conf + type_bonus), 2)
 
 
+_redis_pool: redis.Redis | None = None
+
+
+def _get_redis_client() -> redis.Redis:
+    """Return a shared Redis client using connection pooling."""
+    global _redis_pool
+    if _redis_pool is None:
+        import redis
+
+        _redis_pool = redis.from_url(settings.redis_url, decode_responses=True)
+    return _redis_pool
+
+
 def publish_event(tenant_id: int, event_type: str, payload: dict[str, Any]) -> None:
     """
     Publish real-time event to Redis pub/sub for WebSocket distribution.
@@ -54,24 +67,19 @@ def publish_event(tenant_id: int, event_type: str, payload: dict[str, Any]) -> N
         payload: Event data to send
     """
     try:
-        import redis
+        redis_client = _get_redis_client()
+        channel = f"events:tenant:{tenant_id}"
 
-        redis_client = redis.from_url(settings.redis_url)
-        try:
-            channel = f"events:tenant:{tenant_id}"
+        message = json.dumps(
+            {
+                "type": event_type,
+                "tenant_id": tenant_id,
+                "payload": payload,
+            }
+        )
 
-            message = json.dumps(
-                {
-                    "type": event_type,
-                    "tenant_id": tenant_id,
-                    "payload": payload,
-                }
-            )
-
-            redis_client.publish(channel, message)
-            logger.debug(f"Published {event_type} event to {channel}")
-        finally:
-            redis_client.close()
+        redis_client.publish(channel, message)
+        logger.debug(f"Published {event_type} event to {channel}")
 
     except (ConnectionError, TimeoutError, OSError) as e:
         logger.warning(f"Failed to publish event: {e}")

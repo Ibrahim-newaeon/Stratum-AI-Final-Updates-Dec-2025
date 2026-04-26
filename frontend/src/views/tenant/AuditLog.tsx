@@ -135,7 +135,7 @@ export default function TenantAuditLog() {
           {metricCards.map((card) => (
             <div
               key={card.label}
-              className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm p-4"
+              className="rounded-xl border bg-card p-4"
             >
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-white/5">
@@ -153,7 +153,7 @@ export default function TenantAuditLog() {
         {/* Activity by Day Chart */}
         {stats?.dailyVolume && stats.dailyVolume.length > 0 && (
           <motion.div
-            className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm p-6"
+            className="rounded-xl border bg-card p-6"
             {...fadeIn}
             transition={{ delay: 0.15 }}
           >
@@ -194,7 +194,7 @@ export default function TenantAuditLog() {
 
         {/* Audit Log Table */}
         <motion.div
-          className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm overflow-hidden"
+          className="rounded-xl border bg-card overflow-hidden"
           {...fadeIn}
           transition={{ delay: 0.25 }}
         >
@@ -209,7 +209,7 @@ export default function TenantAuditLog() {
                   <tr className="border-b border-white/10 bg-white/5">
                     {['Timestamp', 'User', 'Action', 'Resource', 'Details', 'Status', 'IP'].map(
                       (h) => (
-                        <th
+                        <th scope="col"
                           key={h}
                           className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider"
                         >
@@ -320,3 +320,4 @@ export default function TenantAuditLog() {
     </>
   );
 }
+

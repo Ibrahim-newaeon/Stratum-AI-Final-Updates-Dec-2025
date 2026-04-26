@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback, memo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
@@ -42,6 +42,176 @@ interface Campaign {
 type SortField = 'name' | 'spend' | 'revenue' | 'roas' | 'conversions'
 type SortDirection = 'asc' | 'desc'
 
+const SortIcon = memo(function SortIcon({
+  field,
+  sortField,
+  sortDirection,
+}: {
+  field: SortField
+  sortField: SortField | null
+  sortDirection: SortDirection
+}) {
+  if (sortField !== field) return null
+  return sortDirection === 'asc' ? (
+    <ChevronUp className="w-4 h-4" />
+  ) : (
+    <ChevronDown className="w-4 h-4" />
+  )
+})
+
+const StatusBadge = memo(function StatusBadge({ status }: { status: Campaign['status'] }) {
+  const styles = {
+    active: 'bg-green-500/10 text-green-500',
+    paused: 'bg-amber-500/10 text-amber-500',
+    completed: 'bg-blue-500/10 text-blue-500',
+    draft: 'bg-gray-500/10 text-gray-500',
+  }
+  return (
+    <span className={cn('px-2 py-1 rounded-full text-xs font-medium', styles[status])}>
+      {status.charAt(0).toUpperCase() + status.slice(1)}
+    </span>
+  )
+})
+
+interface CampaignRowProps {
+  campaign: Campaign
+  isSelected: boolean
+  showPriceMetrics: boolean
+  onToggleSelect: (id: number) => void
+  onView: (id: number) => void
+  onEdit: (id: number) => void
+  onToggleStatus: (id: number, status: Campaign['status']) => void
+}
+
+const CampaignRow = memo(function CampaignRow({
+  campaign,
+  isSelected,
+  showPriceMetrics,
+  onToggleSelect,
+  onView,
+  onEdit,
+  onToggleStatus,
+}: CampaignRowProps) {
+  const getPlatformBadge = (platform: string) => {
+    const logoMap: Record<string, string> = {
+      meta: '/icons/meta.svg',
+      google: '/icons/google.svg',
+      tiktok: '/icons/tiktok.svg',
+      snapchat: '/icons/snapchat.svg',
+    }
+    const logo = logoMap[platform.toLowerCase()]
+    if (logo) {
+      return (
+        <img
+          src={logo}
+          alt={platform}
+          className="w-6 h-6 rounded-full"
+          title={platform.charAt(0).toUpperCase() + platform.slice(1)}
+        />
+      )
+    }
+    return (
+      <div
+        className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold"
+        style={{ backgroundColor: getPlatformColor(platform) }}
+        title={platform.charAt(0).toUpperCase() + platform.slice(1)}
+      >
+        {platform.charAt(0).toUpperCase()}
+      </div>
+    )
+  }
+
+  return (
+    <tr className="hover:bg-muted/30 transition-colors">
+      <td className="p-4">
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={() => onToggleSelect(campaign.id)}
+          className="rounded border-muted-foreground/50"
+        />
+      </td>
+      <td className="p-4">
+        <div className="flex items-center gap-3">
+          {getPlatformBadge(campaign.platform)}
+          <div>
+            <p className="font-medium">{campaign.name}</p>
+            {showPriceMetrics && (
+              <p className="text-xs text-muted-foreground">
+                {formatCurrency(campaign.spend)} / {formatCurrency(campaign.budget)}
+              </p>
+            )}
+          </div>
+        </div>
+      </td>
+      <td className="p-4"><StatusBadge status={campaign.status} /></td>
+      {showPriceMetrics && (
+        <td className="p-4 text-right font-medium">{formatCurrency(campaign.spend)}</td>
+      )}
+      {showPriceMetrics && (
+        <td className="p-4 text-right font-medium text-green-500">
+          {formatCurrency(campaign.revenue)}
+        </td>
+      )}
+      {showPriceMetrics && (
+        <td className="p-4 text-right">
+          <span
+            className={cn(
+              'font-semibold',
+              campaign.roas >= 4 && 'text-green-500',
+              campaign.roas >= 3 && campaign.roas < 4 && 'text-primary',
+              campaign.roas < 3 && 'text-amber-500'
+            )}
+          >
+            {campaign.roas.toFixed(2)}x
+          </span>
+        </td>
+      )}
+      <td className="p-4 text-right">{formatCompactNumber(campaign.conversions)}</td>
+      <td className="p-4 text-right">{formatPercent(campaign.ctr)}</td>
+      <td className="p-4 text-center">
+        {campaign.trend === 'up' && (
+          <TrendingUp className="w-5 h-5 text-green-500 mx-auto" />
+        )}
+        {campaign.trend === 'down' && (
+          <TrendingDown className="w-5 h-5 text-red-500 mx-auto" />
+        )}
+        {campaign.trend === 'stable' && (
+          <div className="w-5 h-0.5 bg-muted-foreground mx-auto" />
+        )}
+      </td>
+      <td className="p-4 text-right">
+        <div className="flex items-center justify-end gap-1">
+          <button
+            onClick={() => onView(campaign.id)}
+            className="p-2 rounded-lg hover:bg-muted transition-colors"
+            title="View campaign details"
+            aria-label="View campaign details"
+          >
+            <ExternalLink className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => onEdit(campaign.id)}
+            className="p-2 rounded-lg hover:bg-muted transition-colors"
+            title="Edit campaign"
+            aria-label="Edit campaign"
+          >
+            <Edit className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => onToggleStatus(campaign.id, campaign.status)}
+            className="p-2 rounded-lg hover:bg-muted transition-colors"
+            title={campaign.status === 'active' ? 'Pause campaign' : 'Activate campaign'}
+            aria-label={campaign.status === 'active' ? 'Pause campaign' : 'Activate campaign'}
+          >
+            {campaign.status === 'active' ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+          </button>
+        </div>
+      </td>
+    </tr>
+  )
+})
+
 export function Campaigns() {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -84,15 +254,6 @@ export function Campaigns() {
     }
     return []
   }, [campaignsData])
-
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
-    } else {
-      setSortField(field)
-      setSortDirection('desc')
-    }
-  }
 
   const filteredCampaigns = campaigns
     .filter((campaign) => {
@@ -155,58 +316,14 @@ export function Campaigns() {
     )
   }
 
-  const SortIcon = ({ field }: { field: SortField }) => {
-    if (sortField !== field) return null
-    return sortDirection === 'asc' ? (
-      <ChevronUp className="w-4 h-4" />
-    ) : (
-      <ChevronDown className="w-4 h-4" />
-    )
-  }
-
-  const getStatusBadge = (status: Campaign['status']) => {
-    const styles = {
-      active: 'bg-green-500/10 text-green-500',
-      paused: 'bg-amber-500/10 text-amber-500',
-      completed: 'bg-blue-500/10 text-blue-500',
-      draft: 'bg-gray-500/10 text-gray-500',
+  const handleSort = useCallback((field: SortField) => {
+    if (sortField === field) {
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortField(field)
+      setSortDirection('desc')
     }
-
-    return (
-      <span className={cn('px-2 py-1 rounded-full text-xs font-medium', styles[status])}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </span>
-    )
-  }
-
-  const getPlatformBadge = (platform: string) => {
-    const logoMap: Record<string, string> = {
-      meta: '/icons/meta.svg',
-      google: '/icons/google.svg',
-      tiktok: '/icons/tiktok.svg',
-      snapchat: '/icons/snapchat.svg',
-    }
-    const logo = logoMap[platform.toLowerCase()]
-    if (logo) {
-      return (
-        <img
-          src={logo}
-          alt={platform}
-          className="w-6 h-6 rounded-full"
-          title={platform.charAt(0).toUpperCase() + platform.slice(1)}
-        />
-      )
-    }
-    return (
-      <div
-        className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold"
-        style={{ backgroundColor: getPlatformColor(platform) }}
-        title={platform.charAt(0).toUpperCase() + platform.slice(1)}
-      >
-        {platform.charAt(0).toUpperCase()}
-      </div>
-    )
-  }
+  }, [sortField])
 
   return (
     <div className="space-y-6">
@@ -223,6 +340,7 @@ export function Campaigns() {
             disabled={isLoading}
             className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-background hover:bg-accent transition-colors"
             title="Refresh campaigns"
+            aria-label="Refresh campaigns"
           >
             <RefreshCw className={cn('w-4 h-4', isLoading && 'animate-spin')} />
           </button>
@@ -319,7 +437,7 @@ export function Campaigns() {
       {!isLoading && campaigns.length === 0 && (
         <div className="flex flex-col items-center justify-center p-12 rounded-xl border bg-card">
           <Target className="w-12 h-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold mb-2">No campaigns yet</h3>
+          <h2 className="text-lg font-semibold mb-2">No campaigns yet</h2>
           <p className="text-muted-foreground text-center max-w-md">
             Create your first campaign to start tracking performance across platforms.
           </p>
@@ -332,7 +450,7 @@ export function Campaigns() {
           <table className="w-full">
             <thead className="bg-muted/50 border-b">
               <tr>
-                <th className="p-4 text-left">
+                <th scope="col" className="p-4 text-left">
                   <input
                     type="checkbox"
                     checked={selectedCampaigns.length === filteredCampaigns.length && filteredCampaigns.length > 0}
@@ -340,158 +458,84 @@ export function Campaigns() {
                     className="rounded border-muted-foreground/50"
                   />
                 </th>
-                <th className="p-4 text-left">
+                <th scope="col" className="p-4 text-left">
                   <button
                     onClick={() => handleSort('name')}
                     className="flex items-center gap-1 text-sm font-medium hover:text-primary"
                   >
                     {t('campaigns.name')}
-                    <SortIcon field="name" />
+                    <SortIcon field="name" sortField={sortField} sortDirection={sortDirection} />
                   </button>
                 </th>
-                <th className="p-4 text-left text-sm font-medium">{t('campaigns.status')}</th>
+                <th scope="col" className="p-4 text-left text-sm font-medium">{t('campaigns.status')}</th>
                 {showPriceMetrics && (
-                  <th className="p-4 text-right">
+                  <th scope="col" className="p-4 text-right">
                     <button
                       onClick={() => handleSort('spend')}
                       className="flex items-center gap-1 text-sm font-medium hover:text-primary ml-auto"
                     >
                       {t('campaigns.spend')}
-                      <SortIcon field="spend" />
+                      <SortIcon field="spend" sortField={sortField} sortDirection={sortDirection} />
                     </button>
                   </th>
                 )}
                 {showPriceMetrics && (
-                  <th className="p-4 text-right">
+                  <th scope="col" className="p-4 text-right">
                     <button
                       onClick={() => handleSort('revenue')}
                       className="flex items-center gap-1 text-sm font-medium hover:text-primary ml-auto"
                     >
                       {t('campaigns.revenue')}
-                      <SortIcon field="revenue" />
+                      <SortIcon field="revenue" sortField={sortField} sortDirection={sortDirection} />
                     </button>
                   </th>
                 )}
                 {showPriceMetrics && (
-                  <th className="p-4 text-right">
+                  <th scope="col" className="p-4 text-right">
                     <button
                       onClick={() => handleSort('roas')}
                       className="flex items-center gap-1 text-sm font-medium hover:text-primary ml-auto"
                     >
                       ROAS
-                      <SortIcon field="roas" />
+                      <SortIcon field="roas" sortField={sortField} sortDirection={sortDirection} />
                     </button>
                   </th>
                 )}
-                <th className="p-4 text-right">
+                <th scope="col" className="p-4 text-right">
                   <button
                     onClick={() => handleSort('conversions')}
                     className="flex items-center gap-1 text-sm font-medium hover:text-primary ml-auto"
                   >
                     {t('campaigns.conversions')}
-                    <SortIcon field="conversions" />
+                    <SortIcon field="conversions" sortField={sortField} sortDirection={sortDirection} />
                   </button>
                 </th>
-                <th className="p-4 text-right text-sm font-medium">CTR</th>
-                <th className="p-4 text-center text-sm font-medium">{t('campaigns.trend')}</th>
-                <th className="p-4 text-right text-sm font-medium">{t('campaigns.actions')}</th>
+                <th scope="col" className="p-4 text-right text-sm font-medium">CTR</th>
+                <th scope="col" className="p-4 text-center text-sm font-medium">{t('campaigns.trend')}</th>
+                <th scope="col" className="p-4 text-right text-sm font-medium">{t('campaigns.actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {filteredCampaigns.map((campaign) => (
-                <tr key={campaign.id} className="hover:bg-muted/30 transition-colors">
-                  <td className="p-4">
-                    <input
-                      type="checkbox"
-                      checked={selectedCampaigns.includes(campaign.id)}
-                      onChange={() => toggleSelectCampaign(campaign.id)}
-                      className="rounded border-muted-foreground/50"
-                    />
-                  </td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-3">
-                      {getPlatformBadge(campaign.platform)}
-                      <div>
-                        <p className="font-medium">{campaign.name}</p>
-                        {showPriceMetrics && (
-                          <p className="text-xs text-muted-foreground">
-                            {formatCurrency(campaign.spend)} / {formatCurrency(campaign.budget)}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-4">{getStatusBadge(campaign.status)}</td>
-                  {showPriceMetrics && (
-                    <td className="p-4 text-right font-medium">{formatCurrency(campaign.spend)}</td>
-                  )}
-                  {showPriceMetrics && (
-                    <td className="p-4 text-right font-medium text-green-500">
-                      {formatCurrency(campaign.revenue)}
-                    </td>
-                  )}
-                  {showPriceMetrics && (
-                    <td className="p-4 text-right">
-                      <span
-                        className={cn(
-                          'font-semibold',
-                          campaign.roas >= 4 && 'text-green-500',
-                          campaign.roas >= 3 && campaign.roas < 4 && 'text-primary',
-                          campaign.roas < 3 && 'text-amber-500'
-                        )}
-                      >
-                        {campaign.roas.toFixed(2)}x
-                      </span>
-                    </td>
-                  )}
-                  <td className="p-4 text-right">{formatCompactNumber(campaign.conversions)}</td>
-                  <td className="p-4 text-right">{formatPercent(campaign.ctr)}</td>
-                  <td className="p-4 text-center">
-                    {campaign.trend === 'up' && (
-                      <TrendingUp className="w-5 h-5 text-green-500 mx-auto" />
-                    )}
-                    {campaign.trend === 'down' && (
-                      <TrendingDown className="w-5 h-5 text-red-500 mx-auto" />
-                    )}
-                    {campaign.trend === 'stable' && (
-                      <div className="w-5 h-0.5 bg-muted-foreground mx-auto" />
-                    )}
-                  </td>
-                  <td className="p-4 text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      <button
-                        onClick={() => navigate(`/dashboard/campaigns/${campaign.id}`)}
-                        className="p-2 rounded-lg hover:bg-muted transition-colors"
-                        title="View campaign details"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          setEditModalCampaignId(campaign.id)
-                          setCreateModalOpen(true)
-                        }}
-                        className="p-2 rounded-lg hover:bg-muted transition-colors"
-                        title="Edit campaign"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={async () => {
-                          if (campaign.status === 'active') {
-                            await pauseCampaign.mutateAsync(campaign.id.toString())
-                          } else if (campaign.status === 'paused') {
-                            await activateCampaign.mutateAsync(campaign.id.toString())
-                          }
-                        }}
-                        className="p-2 rounded-lg hover:bg-muted transition-colors"
-                        title={campaign.status === 'active' ? 'Pause campaign' : 'Activate campaign'}
-                      >
-                        {campaign.status === 'active' ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+                <CampaignRow
+                  key={campaign.id}
+                  campaign={campaign}
+                  isSelected={selectedCampaigns.includes(campaign.id)}
+                  showPriceMetrics={showPriceMetrics}
+                  onToggleSelect={toggleSelectCampaign}
+                  onView={(id) => navigate(`/dashboard/campaigns/${id}`)}
+                  onEdit={(id) => {
+                    setEditModalCampaignId(id)
+                    setCreateModalOpen(true)
+                  }}
+                  onToggleStatus={async (id, status) => {
+                    if (status === 'active') {
+                      await pauseCampaign.mutateAsync(id.toString())
+                    } else if (status === 'paused') {
+                      await activateCampaign.mutateAsync(id.toString())
+                    }
+                  }}
+                />
               ))}
             </tbody>
           </table>

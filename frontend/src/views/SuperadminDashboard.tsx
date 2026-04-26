@@ -50,6 +50,15 @@ import { usePriceMetrics } from '@/hooks/usePriceMetrics'
 import { useAuth } from '@/contexts/AuthContext'
 import apiClient from '@/api/client'
 
+const formatCurrency = (num: number) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(num)
+}
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -106,6 +115,48 @@ interface SystemAlert {
   message: string
   component: string
   timestamp: string
+}
+
+interface BillingPlan {
+  id: string
+  name: string
+  display_name?: string
+  tier: string
+  price: number
+  billing_period?: string
+  limits?: { max_users?: number; max_campaigns?: number; max_connectors?: number }
+  is_active?: boolean
+}
+
+interface Invoice {
+  id: string
+  invoice_number: string
+  tenant_name: string
+  total: number
+  status: 'paid' | 'pending' | 'overdue'
+  due_date?: string
+}
+
+interface Subscription {
+  id: string
+  tenantName: string
+  plan: string
+  status: 'active' | 'past_due' | 'trialing' | 'canceled'
+  mrr: number
+  nextBilling: Date
+}
+
+interface AuditLogEntry {
+  id: string
+  timestamp?: string
+  action: string
+  user_email?: string
+  user_id?: number
+  tenant_id?: number
+  resource_type?: string
+  resource_id?: number
+  success?: boolean
+  details?: Record<string, unknown>
 }
 
 /** Derive system alerts from live health data instead of hardcoding */
@@ -214,10 +265,10 @@ export default function SuperadminDashboard() {
   const [tenants, setTenants] = useState<TenantPortfolioItem[]>([])
   const [churnRisks, setChurnRisks] = useState<ChurnRisk[]>([])
   const [systemHealth, setSystemHealth] = useState<SystemHealth | null>(null)
-  const [plans, setPlans] = useState<any[]>([])
-  const [invoices, setInvoices] = useState<any[]>([])
-  const [subscriptions, setSubscriptions] = useState<any[]>([])
-  const [auditLogs, setAuditLogs] = useState<any[]>([])
+  const [plans, setPlans] = useState<BillingPlan[]>([])
+  const [invoices, setInvoices] = useState<Invoice[]>([])
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([])
+  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([])
 
   const handleRetryPayment = async (subscriptionId: string) => {
     try {
@@ -264,7 +315,7 @@ export default function SuperadminDashboard() {
       }
       if (subscriptionsRes.status === 'fulfilled' && subscriptionsRes.value.data.success) {
         const subs = subscriptionsRes.value.data.data.subscriptions || []
-        setSubscriptions(subs.map((s: any) => ({
+        setSubscriptions(subs.map((s: { id: number; tenant_name?: string; tenant_id: number; plan_name?: string; status?: string; current_period_end?: string; discount_percent?: number }) => ({
           id: s.id,
           tenantName: s.tenant_name || `Tenant ${s.tenant_id}`,
           plan: s.plan_name || 'unknown',
@@ -304,15 +355,6 @@ export default function SuperadminDashboard() {
     )
   }, [tenants, searchQuery])
 
-  const formatCurrency = (num: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(num)
-  }
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-96 motion-enter">
@@ -346,7 +388,7 @@ export default function SuperadminDashboard() {
             <RefreshCw className={cn('w-4 h-4', isRefreshing && 'animate-spin')} />
             Refresh
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-stratum text-white shadow-glow hover:shadow-glow-lg transition-all motion-card">
+          <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-stratum text-white shadow-glow hover:shadow-glow-lg transition-colors motion-card">
             <Plus className="w-4 h-4" />
             New Tenant
           </button>
@@ -374,7 +416,7 @@ export default function SuperadminDashboard() {
             key={tab.id}
             onClick={() => setActiveTab(tab.id as typeof activeTab)}
             className={cn(
-              'flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all whitespace-nowrap',
+              'flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap',
               activeTab === tab.id
                 ? 'bg-background shadow text-foreground'
                 : 'text-muted-foreground hover:text-foreground'
@@ -632,7 +674,7 @@ export default function SuperadminDashboard() {
                           <div className="w-20 h-1.5 bg-muted rounded-full mt-1">
                             <div
                               className={cn(
-                                'h-full rounded-full transition-all',
+                                'h-full rounded-full transition-[width]',
                                 isOverLimit ? 'bg-red-500' : isNearLimit ? 'bg-amber-500' : 'bg-blue-500'
                               )}
                               style={{ width: `${Math.min(100, usersPct)}%` }}
@@ -691,16 +733,17 @@ export default function SuperadminDashboard() {
 
           {/* Tenants Table */}
           <div className="rounded-xl border bg-card overflow-hidden shadow-card">
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-muted/30">
                 <tr>
-                  <th className="text-left py-3 px-4 font-medium">Tenant</th>
-                  <th className="text-left py-3 px-4 font-medium">Plan</th>
-                  {showPriceMetrics && <th className="text-right py-3 px-4 font-medium">MRR</th>}
-                  <th className="text-center py-3 px-4 font-medium">Users</th>
-                  <th className="text-center py-3 px-4 font-medium">Signal Health</th>
-                  <th className="text-center py-3 px-4 font-medium">Churn Risk</th>
-                  <th className="text-right py-3 px-4 font-medium">Actions</th>
+                  <th scope="col" className="text-left py-3 px-4 font-medium">Tenant</th>
+                  <th scope="col" className="text-left py-3 px-4 font-medium">Plan</th>
+                  {showPriceMetrics && <th scope="col" className="text-right py-3 px-4 font-medium">MRR</th>}
+                  <th scope="col" className="text-center py-3 px-4 font-medium">Users</th>
+                  <th scope="col" className="text-center py-3 px-4 font-medium">Signal Health</th>
+                  <th scope="col" className="text-center py-3 px-4 font-medium">Churn Risk</th>
+                  <th scope="col" className="text-right py-3 px-4 font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -769,13 +812,13 @@ export default function SuperadminDashboard() {
                       </td>
                       <td className="text-right py-3 px-4">
                         <div className="flex items-center justify-end gap-1">
-                          <button className="p-1.5 rounded hover:bg-muted" title="View">
+                          <button className="p-1.5 rounded hover:bg-muted" title="View" aria-label="View tenant">
                             <Eye className="w-4 h-4" />
                           </button>
-                          <button className="p-1.5 rounded hover:bg-muted" title="Edit">
+                          <button className="p-1.5 rounded hover:bg-muted" title="Edit" aria-label="Edit tenant">
                             <Edit className="w-4 h-4" />
                           </button>
-                          <button className="p-1.5 rounded hover:bg-muted text-red-500" title="Suspend">
+                          <button className="p-1.5 rounded hover:bg-muted text-red-500" title="Suspend" aria-label="Suspend tenant">
                             <Ban className="w-4 h-4" />
                           </button>
                         </div>
@@ -785,6 +828,7 @@ export default function SuperadminDashboard() {
                 )}
               </tbody>
             </table>
+            </div>
           </div>
         </div>
       )}
@@ -1028,7 +1072,7 @@ export default function SuperadminDashboard() {
                 key={tab.id}
                 onClick={() => setBillingSubTab(tab.id as typeof billingSubTab)}
                 className={cn(
-                  'flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-all',
+                  'flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors',
                   billingSubTab === tab.id
                     ? 'bg-primary/10 text-primary font-medium'
                     : 'text-muted-foreground hover:text-foreground'
@@ -1125,17 +1169,18 @@ export default function SuperadminDashboard() {
                   Add Plan
                 </button>
               </div>
+              <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-muted/30">
                   <tr>
-                    <th className="text-left py-3 px-4 font-medium">Plan</th>
-                    <th className="text-left py-3 px-4 font-medium">Tier</th>
-                    {showPriceMetrics && <th className="text-right py-3 px-4 font-medium">Price</th>}
-                    <th className="text-center py-3 px-4 font-medium">Users</th>
-                    <th className="text-center py-3 px-4 font-medium">Campaigns</th>
-                    <th className="text-center py-3 px-4 font-medium">Connectors</th>
-                    <th className="text-center py-3 px-4 font-medium">Status</th>
-                    <th className="text-right py-3 px-4 font-medium">Actions</th>
+                    <th scope="col" className="text-left py-3 px-4 font-medium">Plan</th>
+                    <th scope="col" className="text-left py-3 px-4 font-medium">Tier</th>
+                    {showPriceMetrics && <th scope="col" className="text-right py-3 px-4 font-medium">Price</th>}
+                    <th scope="col" className="text-center py-3 px-4 font-medium">Users</th>
+                    <th scope="col" className="text-center py-3 px-4 font-medium">Campaigns</th>
+                    <th scope="col" className="text-center py-3 px-4 font-medium">Connectors</th>
+                    <th scope="col" className="text-center py-3 px-4 font-medium">Status</th>
+                    <th scope="col" className="text-right py-3 px-4 font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -1163,7 +1208,7 @@ export default function SuperadminDashboard() {
                         </span>
                       </td>
                       <td className="py-3 px-4 text-right">
-                        <button className="p-1.5 rounded hover:bg-muted" title="Edit">
+                        <button className="p-1.5 rounded hover:bg-muted" title="Edit" aria-label="Edit">
                           <Edit className="w-4 h-4" />
                         </button>
                       </td>
@@ -1171,6 +1216,7 @@ export default function SuperadminDashboard() {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           )}
 
@@ -1198,15 +1244,16 @@ export default function SuperadminDashboard() {
                   <p>No invoices found</p>
                 </div>
               ) : (
+                <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-muted/30">
                     <tr>
-                      <th className="text-left py-3 px-4 font-medium">Invoice</th>
-                      <th className="text-left py-3 px-4 font-medium">Tenant</th>
-                      {showPriceMetrics && <th className="text-right py-3 px-4 font-medium">Amount</th>}
-                      <th className="text-center py-3 px-4 font-medium">Status</th>
-                      <th className="text-left py-3 px-4 font-medium">Due Date</th>
-                      <th className="text-right py-3 px-4 font-medium">Actions</th>
+                      <th scope="col" className="text-left py-3 px-4 font-medium">Invoice</th>
+                      <th scope="col" className="text-left py-3 px-4 font-medium">Tenant</th>
+                      {showPriceMetrics && <th scope="col" className="text-right py-3 px-4 font-medium">Amount</th>}
+                      <th scope="col" className="text-center py-3 px-4 font-medium">Status</th>
+                      <th scope="col" className="text-left py-3 px-4 font-medium">Due Date</th>
+                      <th scope="col" className="text-right py-3 px-4 font-medium">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -1227,7 +1274,7 @@ export default function SuperadminDashboard() {
                         </td>
                         <td className="py-3 px-4">{inv.due_date || '-'}</td>
                         <td className="py-3 px-4 text-right">
-                          <button className="p-1.5 rounded hover:bg-muted" title="View">
+                          <button className="p-1.5 rounded hover:bg-muted" title="View" aria-label="View">
                             <Eye className="w-4 h-4" />
                           </button>
                         </td>
@@ -1235,6 +1282,7 @@ export default function SuperadminDashboard() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               )}
             </div>
           )}
@@ -1248,15 +1296,16 @@ export default function SuperadminDashboard() {
                   No active subscriptions found.
                 </p>
               ) : (
+                <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b text-muted-foreground">
-                      <th className="text-left py-3 px-4 font-medium">Tenant</th>
-                      <th className="text-left py-3 px-4 font-medium">Plan</th>
-                      <th className="text-left py-3 px-4 font-medium">Status</th>
-                      <th className="text-right py-3 px-4 font-medium">MRR</th>
-                      <th className="text-left py-3 px-4 font-medium">Next Billing</th>
-                      <th className="text-left py-3 px-4 font-medium">Actions</th>
+                      <th scope="col" className="text-left py-3 px-4 font-medium">Tenant</th>
+                      <th scope="col" className="text-left py-3 px-4 font-medium">Plan</th>
+                      <th scope="col" className="text-left py-3 px-4 font-medium">Status</th>
+                      <th scope="col" className="text-right py-3 px-4 font-medium">MRR</th>
+                      <th scope="col" className="text-left py-3 px-4 font-medium">Next Billing</th>
+                      <th scope="col" className="text-left py-3 px-4 font-medium">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1278,7 +1327,7 @@ export default function SuperadminDashboard() {
                             {sub.status}
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-right font-mono">${sub.mrr.toLocaleString()}</td>
+                        <td className="py-3 px-4 text-right">${sub.mrr.toLocaleString()}</td>
                         <td className="py-3 px-4 text-muted-foreground">
                           {sub.nextBilling.toLocaleDateString()}
                         </td>
@@ -1304,6 +1353,7 @@ export default function SuperadminDashboard() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               )}
             </div>
           )}
@@ -1348,15 +1398,16 @@ export default function SuperadminDashboard() {
 
           {/* Audit Log Table */}
           <div className="rounded-xl border bg-card shadow-card overflow-hidden">
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-muted/30">
                 <tr>
-                  <th className="text-left py-3 px-4 font-medium">Timestamp</th>
-                  <th className="text-left py-3 px-4 font-medium">Action</th>
-                  <th className="text-left py-3 px-4 font-medium">User</th>
-                  <th className="text-left py-3 px-4 font-medium">Resource</th>
-                  <th className="text-center py-3 px-4 font-medium">Status</th>
-                  <th className="text-left py-3 px-4 font-medium">Details</th>
+                  <th scope="col" className="text-left py-3 px-4 font-medium">Timestamp</th>
+                  <th scope="col" className="text-left py-3 px-4 font-medium">Action</th>
+                  <th scope="col" className="text-left py-3 px-4 font-medium">User</th>
+                  <th scope="col" className="text-left py-3 px-4 font-medium">Resource</th>
+                  <th scope="col" className="text-center py-3 px-4 font-medium">Status</th>
+                  <th scope="col" className="text-left py-3 px-4 font-medium">Details</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -1399,7 +1450,7 @@ export default function SuperadminDashboard() {
                             <XCircle className="w-4 h-4 text-red-500 mx-auto" />
                           )}
                         </td>
-                        <td className="py-3 px-4 text-muted-foreground text-xs max-w-[200px] truncate">
+                        <td className="py-3 px-4 text-muted-foreground text-xs max-w-52 truncate">
                           {log.details ? JSON.stringify(log.details) : '-'}
                         </td>
                       </tr>
@@ -1407,6 +1458,7 @@ export default function SuperadminDashboard() {
                 )}
               </tbody>
             </table>
+            </div>
           </div>
         </div>
       )}
@@ -1444,7 +1496,7 @@ function KPICard({
   }
 
   return (
-    <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-card-hover transition-all motion-card">
+    <div className="rounded-xl border bg-card p-5 shadow-card hover:shadow-card-hover transition-colors motion-card">
       <div className="flex items-center gap-3 mb-3">
         <div className={cn('p-2 rounded-lg', colorClasses[color])}>
           <Icon className="w-5 h-5" />
@@ -1585,7 +1637,7 @@ function ResourceBar({
       </div>
       <div className="w-full h-2 bg-muted rounded-full">
         <div
-          className={cn('h-full rounded-full transition-all', getColor(percentage))}
+          className={cn('h-full rounded-full transition-[width]', getColor(percentage))}
           style={{ width: `${Math.min(100, percentage)}%` }}
         />
       </div>

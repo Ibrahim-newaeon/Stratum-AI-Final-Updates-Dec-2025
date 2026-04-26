@@ -69,6 +69,14 @@ export function Settings() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
   const [showApiKey, setShowApiKey] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const timeoutsRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
+
+  useEffect(() => {
+    return () => {
+      timeoutsRef.current.forEach(clearTimeout);
+      timeoutsRef.current.clear();
+    };
+  }, []);
 
   const tabs = [
     { id: 'profile', label: t('settings.profile'), icon: User },
@@ -87,10 +95,12 @@ export function Settings() {
     try {
       await apiClient.patch('/users/me', {});
       setSaveStatus('saved');
-      setTimeout(() => setSaveStatus('idle'), 2000);
+      const id = setTimeout(() => setSaveStatus('idle'), 2000);
+      timeoutsRef.current.add(id);
     } catch {
       setSaveStatus('saved');
-      setTimeout(() => setSaveStatus('idle'), 2000);
+      const id = setTimeout(() => setSaveStatus('idle'), 2000);
+      timeoutsRef.current.add(id);
     }
   };
 
@@ -238,6 +248,8 @@ function ProfileSettings() {
               src={user.avatar_url}
               alt={fullName}
               className="w-full h-full rounded-full object-cover"
+              loading="lazy"
+              decoding="async"
             />
           ) : (
             initials.toUpperCase()
@@ -561,6 +573,7 @@ function NotificationSettings() {
   const { toast } = useToast();
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const statusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const savedNotifications = (user?.preferences as Record<string, unknown>)?.notifications as
     | Record<string, boolean>
@@ -576,7 +589,8 @@ function NotificationSettings() {
     if (savedNotifications) {
       setNotifications((prev) => ({ ...prev, ...savedNotifications }));
     }
-  }, [JSON.stringify(savedNotifications)]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [savedNotifications]);
 
   const persistNotifications = useCallback(
     (updated: Record<string, boolean>) => {
@@ -589,7 +603,8 @@ function NotificationSettings() {
           {
             onSuccess: () => {
               setSaveStatus('saved');
-              setTimeout(() => setSaveStatus('idle'), 2000);
+              if (statusTimeoutRef.current) clearTimeout(statusTimeoutRef.current);
+              statusTimeoutRef.current = setTimeout(() => setSaveStatus('idle'), 2000);
             },
             onError: () => {
               setSaveStatus('idle');
@@ -672,6 +687,14 @@ function SecuritySettings({
   const [showTestKey, setShowTestKey] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [regenerating, setRegenerating] = useState<string | null>(null);
+  const timeoutsRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
+
+  useEffect(() => {
+    return () => {
+      timeoutsRef.current.forEach(clearTimeout);
+      timeoutsRef.current.clear();
+    };
+  }, []);
 
   // MFA State
   const [mfaEnabled, setMfaEnabled] = useState(false);
@@ -783,7 +806,8 @@ function SecuritySettings({
   const copyToClipboard = (key: string, keyId: string) => {
     navigator.clipboard.writeText(key);
     setCopiedKey(keyId);
-    setTimeout(() => setCopiedKey(null), 2000);
+    const id = setTimeout(() => setCopiedKey(null), 2000);
+    timeoutsRef.current.add(id);
   };
 
   const handleRegenerate = async (keyId: string) => {
@@ -874,6 +898,8 @@ function SecuritySettings({
                 src={`data:image/png;base64,${mfaSetupData.qr_code_base64}`}
                 alt="MFA QR Code"
                 className="w-48 h-48 rounded-lg bg-white p-2"
+                loading="lazy"
+                decoding="async"
               />
             </div>
             <div className="text-center">
@@ -1058,7 +1084,7 @@ function SecuritySettings({
                 </div>
 
                 <div className="flex items-center gap-2 mb-3">
-                  <code className="flex-1 px-3 py-2.5 rounded-lg bg-black/30 border border-white/5 font-mono text-sm">
+                  <code className="flex-1 px-3 py-2.5 rounded-lg bg-black/30 border border-white/5 text-sm">
                     {isVisible ? apiKey.fullKey : apiKey.key}
                   </code>
                   <button
@@ -1349,7 +1375,7 @@ function IntegrationSettings() {
     onConnect?: () => void;
   }) => (
     <div
-      className="flex items-center justify-between p-4 rounded-xl border border-white/10 glass card-3d cursor-pointer hover:border-white/20 transition-all"
+      className="flex items-center justify-between p-4 rounded-xl border border-white/10 glass card-3d cursor-pointer hover:border-white/20 transition-colors"
       onClick={() => handleViewCredentials(integration.id)}
     >
       <div className="flex items-center gap-4">
@@ -1421,7 +1447,7 @@ function IntegrationSettings() {
             <div key={webhook.id} className="p-4 rounded-xl border border-white/10 glass">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1 min-w-0">
-                  <code className="text-sm font-mono text-cyan-400 break-all">{webhook.url}</code>
+                  <code className="text-sm text-cyan-400 break-all">{webhook.url}</code>
                   <div className="flex flex-wrap gap-2 mt-2">
                     {webhook.events.map((event) => (
                       <span
@@ -1481,7 +1507,7 @@ function IntegrationSettings() {
                         key={event.id}
                         onClick={() => toggleWebhookEvent(event.id)}
                         className={cn(
-                          'p-3 rounded-xl border text-left transition-all',
+                          'p-3 rounded-xl border text-left transition-colors',
                           newWebhookEvents.includes(event.id)
                             ? 'border-primary bg-primary/10'
                             : 'border-white/10 hover:border-white/20'
@@ -1550,7 +1576,7 @@ function IntegrationSettings() {
           {commerceIntegrations.map((integration) => (
             <div
               key={integration.id}
-              className="p-4 rounded-xl border border-white/10 glass card-3d text-center cursor-pointer hover:border-white/20 transition-all"
+              className="p-4 rounded-xl border border-white/10 glass card-3d text-center cursor-pointer hover:border-white/20 transition-colors"
               onClick={() => handleViewCredentials(integration.id)}
             >
               <div className={cn('p-3 rounded-xl bg-black/30 inline-flex mb-3', integration.color)}>
@@ -1654,15 +1680,24 @@ function PreferenceSettings() {
 }
 
 function PriceMetricsToggle() {
-  const tenantId = useTenantStore((state) => state.tenantId) ?? 1;
+  const tenantId = useTenantStore((state) => state.tenantId);
   const features = useFeatureFlagsStore((state) => state.features);
   const setFeatures = useFeatureFlagsStore((state) => state.setFeatures);
 
   // Load feature flags from API (populates Zustand store)
-  useFeatureFlags(tenantId);
+  const effectiveTenantId = tenantId ?? 0
+  useFeatureFlags(effectiveTenantId);
 
-  const updateFlags = useUpdateFeatureFlags(tenantId);
+  const updateFlags = useUpdateFeatureFlags(effectiveTenantId);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const timeoutsRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
+
+  useEffect(() => {
+    return () => {
+      timeoutsRef.current.forEach(clearTimeout);
+      timeoutsRef.current.clear();
+    };
+  }, []);
 
   const showPriceMetrics = features?.show_price_metrics ?? defaultFeatures.show_price_metrics;
 
@@ -1680,13 +1715,15 @@ function PriceMetricsToggle() {
       {
         onSuccess: () => {
           setSaveStatus('saved');
-          setTimeout(() => setSaveStatus('idle'), 2000);
+          const id = setTimeout(() => setSaveStatus('idle'), 2000);
+          timeoutsRef.current.add(id);
         },
         onError: () => {
           // Revert optimistic update
           setFeatures({ ...currentFeatures, show_price_metrics: !newValue });
           setSaveStatus('error');
-          setTimeout(() => setSaveStatus('idle'), 3000);
+          const id = setTimeout(() => setSaveStatus('idle'), 3000);
+          timeoutsRef.current.add(id);
         },
       }
     );
@@ -1762,6 +1799,14 @@ function MetricVisibilitySettings() {
   const updateVisibility = useUpdateMetricVisibility();
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [expandedCategories, setExpandedCategories] = useState<Set<MetricCategory>>(new Set());
+  const timeoutsRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
+
+  useEffect(() => {
+    return () => {
+      timeoutsRef.current.forEach(clearTimeout);
+      timeoutsRef.current.clear();
+    };
+  }, []);
 
   const hiddenMetrics = visibility?.hidden_metrics || [];
   // Backend may return available_metrics as string[] or {key, label}[] — normalise to string[]
@@ -1802,7 +1847,8 @@ function MetricVisibilitySettings() {
     updateVisibility.mutate(updated, {
       onSuccess: () => {
         setSaveStatus('saved');
-        setTimeout(() => setSaveStatus('idle'), 2000);
+        const id = setTimeout(() => setSaveStatus('idle'), 2000);
+        timeoutsRef.current.add(id);
       },
       onError: () => setSaveStatus('idle'),
     });
@@ -1827,7 +1873,8 @@ function MetricVisibilitySettings() {
     updateVisibility.mutate(updated, {
       onSuccess: () => {
         setSaveStatus('saved');
-        setTimeout(() => setSaveStatus('idle'), 2000);
+        const id = setTimeout(() => setSaveStatus('idle'), 2000);
+        timeoutsRef.current.add(id);
       },
       onError: () => setSaveStatus('idle'),
     });
@@ -2179,13 +2226,14 @@ function BillingSettings() {
               <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
             </div>
           ) : invoices && invoices.length > 0 ? (
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-muted/50">
-                  <th className="text-left px-4 py-2 font-medium text-muted-foreground">Date</th>
-                  <th className="text-left px-4 py-2 font-medium text-muted-foreground">Amount</th>
-                  <th className="text-left px-4 py-2 font-medium text-muted-foreground">Status</th>
-                  <th className="text-right px-4 py-2 font-medium text-muted-foreground">Invoice</th>
+                  <th scope="col" className="text-left px-4 py-2 font-medium text-muted-foreground">Date</th>
+                  <th scope="col" className="text-left px-4 py-2 font-medium text-muted-foreground">Amount</th>
+                  <th scope="col" className="text-left px-4 py-2 font-medium text-muted-foreground">Status</th>
+                  <th scope="col" className="text-right px-4 py-2 font-medium text-muted-foreground">Invoice</th>
                 </tr>
               </thead>
               <tbody>
@@ -2231,6 +2279,7 @@ function BillingSettings() {
                 ))}
               </tbody>
             </table>
+            </div>
           ) : (
             <div className="p-6 text-center text-muted-foreground">
               <CreditCard className="w-8 h-8 mx-auto mb-2 opacity-50" />
@@ -2393,7 +2442,7 @@ function TrustEngineSettings() {
           </div>
           <div className="w-full bg-white/10 rounded-full h-2">
             <div
-              className="bg-green-500 rounded-full h-2 transition-all"
+              className="bg-green-500 rounded-full h-2 transition-colors"
               style={{ width: `${healthyThreshold}%` }}
             />
           </div>
@@ -2422,7 +2471,7 @@ function TrustEngineSettings() {
           </div>
           <div className="w-full bg-white/10 rounded-full h-2">
             <div
-              className="bg-amber-500 rounded-full h-2 transition-all"
+              className="bg-amber-500 rounded-full h-2 transition-colors"
               style={{ width: `${degradedThreshold}%` }}
             />
           </div>

@@ -181,6 +181,7 @@ export function LivePredictionsWidget({ className }: LivePredictionsWidgetProps)
     fetchPredictions()
     // Refresh every 30 seconds for live feel
     const interval = setInterval(() => {
+      if (document.hidden) return
       if (usingSimulation) {
         loadSimulationData()
       } else {
@@ -209,7 +210,7 @@ export function LivePredictionsWidget({ className }: LivePredictionsWidgetProps)
   return (
     <div className={cn('rounded-xl border bg-card overflow-hidden', className)}>
       {/* Header */}
-      <div className="px-6 py-4 border-b bg-gradient-to-r from-primary/5 to-transparent">
+      <div className="px-6 py-4 border-b bg-card">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-primary/10 rounded-lg">
@@ -228,6 +229,7 @@ export function LivePredictionsWidget({ className }: LivePredictionsWidgetProps)
           <button
             onClick={handleRefresh}
             disabled={refreshing}
+            aria-label="Refresh predictions"
             className="p-2 hover:bg-muted rounded-lg transition-colors disabled:opacity-50"
             title="Refresh predictions"
           >
@@ -285,7 +287,7 @@ export function LivePredictionsWidget({ className }: LivePredictionsWidgetProps)
 
             {/* Potential Uplift */}
             {portfolio.potential_uplift && (
-              <div className="p-4 rounded-lg bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20">
+              <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20">
                 <div className="flex items-center gap-2 mb-3">
                   <Zap className="w-4 h-4 text-green-500" />
                   <span className="font-medium text-sm">Potential Revenue Uplift</span>

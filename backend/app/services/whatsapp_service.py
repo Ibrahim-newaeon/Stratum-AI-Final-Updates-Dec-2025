@@ -80,7 +80,6 @@ class WhatsAppService:
         contact = WhatsAppContact(**contact_data)
         db.add(contact)
         await db.commit()
-        await db.refresh(contact)
         return contact
 
     @staticmethod
@@ -182,7 +181,6 @@ class WhatsAppService:
         template = WhatsAppTemplate(**template_data)
         db.add(template)
         await db.commit()
-        await db.refresh(template)
         return template
 
     @staticmethod
@@ -219,7 +217,6 @@ class WhatsAppService:
         )
         db.add(message)
         await db.commit()
-        await db.refresh(message)
         # Message will be picked up by Celery worker for async sending
         return message
 
@@ -340,7 +337,6 @@ class WhatsAppService:
             )
             db.add(conversation)
             await db.commit()
-            await db.refresh(conversation)
 
         return conversation
 

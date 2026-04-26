@@ -88,7 +88,7 @@ class EMQMeasurement(Base):
     __tablename__ = "emq_measurements"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Measurement details
     platform = Column(String(50), nullable=False)  # meta, google, tiktok, etc.
@@ -150,7 +150,7 @@ class OfflineConversionBatch(Base):
     __tablename__ = "offline_conversion_batches"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Batch details
     batch_name = Column(String(255), nullable=True)
@@ -182,7 +182,7 @@ class OfflineConversionBatch(Base):
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Created by
-    created_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -201,8 +201,8 @@ class OfflineConversion(Base):
     __tablename__ = "offline_conversions"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
-    batch_id = Column(UUID(as_uuid=True), ForeignKey("offline_conversion_batches.id", ondelete="CASCADE"), nullable=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    batch_id = Column(UUID(as_uuid=True), ForeignKey("offline_conversion_batches.id", ondelete="CASCADE"), nullable=True, index=True)
 
     # Conversion details
     event_name = Column(String(100), nullable=False)
@@ -251,7 +251,7 @@ class ModelExperiment(Base):
     __tablename__ = "model_experiments"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Experiment details
     name = Column(String(255), nullable=False)
@@ -292,7 +292,7 @@ class ModelExperiment(Base):
     updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Created by
-    created_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -312,7 +312,7 @@ class ExperimentPrediction(Base):
     __tablename__ = "experiment_predictions"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    experiment_id = Column(UUID(as_uuid=True), ForeignKey("model_experiments.id", ondelete="CASCADE"), nullable=False)
+    experiment_id = Column(UUID(as_uuid=True), ForeignKey("model_experiments.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Prediction details
     entity_id = Column(String(255), nullable=False)  # campaign_id, customer_id, etc.
@@ -344,7 +344,7 @@ class ConversionLatency(Base):
     __tablename__ = "conversion_latencies"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Event details
     platform = Column(String(50), nullable=False)
@@ -378,7 +378,7 @@ class ConversionLatencyStats(Base):
     __tablename__ = "conversion_latency_stats"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Aggregation period
     period_date = Column(Date, nullable=False)
@@ -421,7 +421,7 @@ class Creative(Base):
     __tablename__ = "creatives"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Creative details
     external_id = Column(String(255), nullable=False)  # Platform's creative ID
@@ -462,8 +462,8 @@ class CreativePerformance(Base):
     __tablename__ = "creative_performance"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    creative_id = Column(UUID(as_uuid=True), ForeignKey("creatives.id", ondelete="CASCADE"), nullable=False)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    creative_id = Column(UUID(as_uuid=True), ForeignKey("creatives.id", ondelete="CASCADE"), nullable=False, index=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Period
     date = Column(Date, nullable=False)
@@ -515,8 +515,8 @@ class CreativeFatigueAlert(Base):
     __tablename__ = "creative_fatigue_alerts"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    creative_id = Column(UUID(as_uuid=True), ForeignKey("creatives.id", ondelete="CASCADE"), nullable=False)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    creative_id = Column(UUID(as_uuid=True), ForeignKey("creatives.id", ondelete="CASCADE"), nullable=False, index=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Alert details
     alert_type = Column(String(50), nullable=False)  # declining_ctr, high_frequency, etc.
@@ -534,7 +534,7 @@ class CreativeFatigueAlert(Base):
 
     # Status
     is_acknowledged = Column(Boolean, default=False, nullable=False)
-    acknowledged_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    acknowledged_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
     acknowledged_at = Column(DateTime(timezone=True), nullable=True)
 
     # Timestamps
@@ -563,7 +563,7 @@ class CompetitorBenchmarkAudit(Base):
     __tablename__ = "competitor_benchmark_audits"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Benchmark context
     date = Column(Date, nullable=False)
@@ -611,7 +611,7 @@ class BudgetReallocationPlan(Base):
     __tablename__ = "budget_reallocation_plans"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Plan details
     name = Column(String(255), nullable=True)
@@ -634,7 +634,7 @@ class BudgetReallocationPlan(Base):
     status = Column(StrEnumType(ReallocationStatus), default=ReallocationStatus.PROPOSED, nullable=False)
 
     # Approval
-    approved_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    approved_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
     approved_at = Column(DateTime(timezone=True), nullable=True)
     rejection_reason = Column(Text, nullable=True)
 
@@ -648,7 +648,7 @@ class BudgetReallocationPlan(Base):
     updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Created by
-    created_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -668,7 +668,7 @@ class BudgetReallocationChange(Base):
     __tablename__ = "budget_reallocation_changes"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    plan_id = Column(UUID(as_uuid=True), ForeignKey("budget_reallocation_plans.id", ondelete="CASCADE"), nullable=False)
+    plan_id = Column(UUID(as_uuid=True), ForeignKey("budget_reallocation_plans.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Campaign details
     campaign_id = Column(String(255), nullable=False)
@@ -708,7 +708,7 @@ class AudienceRecord(Base):
     __tablename__ = "audience_records"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Audience details
     external_id = Column(String(255), nullable=False)
@@ -756,9 +756,9 @@ class AudienceOverlapRecord(Base):
     __tablename__ = "audience_overlaps"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
-    audience_id_1 = Column(UUID(as_uuid=True), ForeignKey("audience_records.id", ondelete="CASCADE"), nullable=False)
-    audience_id_2 = Column(UUID(as_uuid=True), ForeignKey("audience_records.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    audience_id_1 = Column(UUID(as_uuid=True), ForeignKey("audience_records.id", ondelete="CASCADE"), nullable=False, index=True)
+    audience_id_2 = Column(UUID(as_uuid=True), ForeignKey("audience_records.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Overlap metrics
     overlap_percent = Column(Float, nullable=False)
@@ -789,7 +789,7 @@ class CustomerLTVPrediction(Base):
     __tablename__ = "customer_ltv_predictions"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Customer identifier
     customer_id = Column(String(255), nullable=False)
@@ -847,7 +847,7 @@ class LTVCohortAnalysis(Base):
     __tablename__ = "ltv_cohort_analyses"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Cohort identifier
     cohort_month = Column(String(7), nullable=False)  # YYYY-MM

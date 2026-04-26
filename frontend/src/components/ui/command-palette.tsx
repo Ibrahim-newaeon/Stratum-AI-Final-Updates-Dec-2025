@@ -373,13 +373,14 @@ export function CommandPalette({ tenantId }: CommandPaletteProps) {
                 }}
                 onKeyDown={handleKeyDown}
                 placeholder="Type a command or search..."
-                className="flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground"
+                aria-label="Search commands"
+                className="flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary"
               />
               <kbd className="px-2 py-1 text-xs text-muted-foreground bg-muted rounded">ESC</kbd>
             </div>
 
             {/* Command list */}
-            <div ref={listRef} className="max-h-[400px] overflow-y-auto p-2">
+            <div ref={listRef} className="max-h-[25rem] overflow-y-auto p-2">
               {Object.entries(groupedCommands).length === 0 ? (
                 <div className="py-8 text-center text-muted-foreground">No results found.</div>
               ) : (

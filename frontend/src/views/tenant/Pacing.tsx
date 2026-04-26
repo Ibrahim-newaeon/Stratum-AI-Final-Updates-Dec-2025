@@ -162,7 +162,7 @@ export default function Pacing() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                     <div>
                       <p className="text-muted-foreground">Current</p>
                       <p className="font-medium">{status.currentValue.toLocaleString()}</p>

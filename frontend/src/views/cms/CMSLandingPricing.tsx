@@ -161,7 +161,7 @@ export default function CMSLandingPricing() {
           {pricingTiers.map((tier) => (
             <div
               key={tier.id}
-              className={`relative rounded-2xl border p-6 transition-all group ${
+              className={`relative rounded-2xl border p-6 transition-colors group ${
                 tier.highlighted
                   ? 'bg-purple-500/10 border-purple-500/30'
                   : 'bg-white/5 border-white/10 hover:border-white/20'
@@ -226,7 +226,7 @@ export default function CMSLandingPricing() {
               </div>
 
               {tier.highlighted && (
-                <div className="absolute -top-0.5 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-t-2xl" />
+                <div className="absolute -top-0.5 left-0 right-0 h-1 bg-primary rounded-t-2xl" />
               )}
             </div>
           ))}

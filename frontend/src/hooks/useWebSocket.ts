@@ -67,7 +67,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
         setConnectionState('connected')
         reconnectCountRef.current = 0
         onConnect?.()
-        console.warn('[WebSocket] Connected')
+
       }
 
       ws.onmessage = (event) => {
@@ -77,19 +77,19 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
           handleMessage(message)
           onMessage?.(message)
         } catch (error) {
-          console.error('[WebSocket] Failed to parse message:', error)
+
         }
       }
 
       ws.onclose = () => {
         setConnectionState('disconnected')
         onDisconnect?.()
-        console.warn('[WebSocket] Disconnected')
+
 
         // Attempt reconnection
         if (reconnectCountRef.current < reconnectAttempts) {
           reconnectCountRef.current++
-          console.warn(`[WebSocket] Reconnecting... (${reconnectCountRef.current}/${reconnectAttempts})`)
+
           reconnectTimeoutRef.current = setTimeout(connect, reconnectInterval)
         }
       }
@@ -97,11 +97,11 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       ws.onerror = (error) => {
         setConnectionState('error')
         onError?.(error)
-        console.error('[WebSocket] Error:', error)
+
       }
     } catch (error) {
       setConnectionState('error')
-      console.error('[WebSocket] Connection failed:', error)
+
     }
   }, [url, reconnectAttempts, reconnectInterval, onConnect, onDisconnect, onError, onMessage])
 
@@ -124,7 +124,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       }
       wsRef.current.send(JSON.stringify(message))
     } else {
-      console.warn('[WebSocket] Cannot send - not connected')
+
     }
   }, [])
 
@@ -183,7 +183,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
         break
 
       default:
-        console.warn('[WebSocket] Unhandled message type:', message.type)
+
     }
   }, [queryClient])
 

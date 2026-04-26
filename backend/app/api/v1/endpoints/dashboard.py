@@ -631,16 +631,54 @@ async def _build_dashboard_overview(
         ctr=build_metric(current_ctr, prev_ctr, format_percentage),
     )
 
-    # Signal health (mock for now, integrate with trust layer)
-    signal_health = SignalHealthSummary(
-        overall_score=85 if has_campaigns else 0,
-        status="healthy" if has_campaigns else "unknown",
-        emq_score=0.92 if has_campaigns else None,
-        data_freshness_minutes=5 if has_campaigns else None,
-        api_health=True,
-        issues=[],
-        autopilot_enabled=onboarding.automation_mode == "autopilot" if onboarding else False,
-    )
+    # Signal health — computed from actual campaign and platform data
+    if has_campaigns:
+        roas_score = min(50, current_roas * 20)
+        ctr_score = min(30, current_ctr * 10)
+        platform_count = len(connected_platforms)
+        total_platforms = len(list(AdPlatform))
+        connectivity_score = (platform_count / total_platforms * 20) if total_platforms > 0 else 0
+        overall_score = int(roas_score + ctr_score + connectivity_score)
+
+        # EMQ proxy from conversion rate (clicks → conversions)
+        conversion_rate = current_conversions / current_clicks if current_clicks > 0 else 0
+        emq_score = round(min(0.99, max(0.5, 0.5 + conversion_rate * 5)), 2)
+
+        # Determine status
+        if overall_score >= 80:
+            status = "healthy"
+        elif overall_score >= 50:
+            status = "at_risk"
+        else:
+            status = "critical"
+
+        issues = []
+        if current_roas < 1.0:
+            issues.append("ROAS below breakeven")
+        if current_ctr < 0.5:
+            issues.append("CTR below average")
+        if platform_count == 0:
+            issues.append("No platforms connected")
+
+        signal_health = SignalHealthSummary(
+            overall_score=overall_score,
+            status=status,
+            emq_score=emq_score,
+            data_freshness_minutes=5,
+            api_health=platform_count > 0,
+            issues=issues,
+            autopilot_enabled=onboarding.automation_mode == "autopilot" if onboarding else False,
+        )
+    else:
+        signal_health = SignalHealthSummary(
+            overall_score=0,
+            status="unknown",
+            emq_score=None,
+            data_freshness_minutes=None,
+            api_health=False,
+            issues=["No campaign data available"],
+            autopilot_enabled=onboarding.automation_mode == "autopilot" if onboarding else False,
+        )
 
     # Platform breakdown
     platforms_summary = []
@@ -761,9 +799,9 @@ async def get_campaign_performance(
     # Apply sorting
     sort_column = getattr(Campaign, sort_by, Campaign.total_spend_cents)
     if sort_order.lower() == "desc":
-        query = query.order_by(desc(sort_column))
+        query = query.order_by(desc(sort_column)).limit(1000)
     else:
-        query = query.order_by(sort_column)
+        query = query.order_by(sort_column).limit(1000)
 
     # Get total count
     count_result = await db.execute(select(func.count()).select_from(query.subquery()))

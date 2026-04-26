@@ -25,18 +25,49 @@ Endpoints:
 
 from __future__ import annotations
 
+import os
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import HTMLResponse
 
 from app.auth.deps import require_superadmin
+from app.core.config import settings
 
-router = APIRouter(
-    prefix="/debug/memory",
-    tags=["Memory Debug"],
-    dependencies=[Depends(require_superadmin())],
-)
+# Memory debug endpoints are superadmin-only and disabled in production
+# unless explicitly enabled via ENABLE_MEMORY_DEBUG environment variable.
+_enable_in_prod = os.environ.get("ENABLE_MEMORY_DEBUG", "").lower() in ("true", "1", "yes")
+if settings.is_production and not _enable_in_prod:
+    router = APIRouter(
+        prefix="/debug/memory",
+        tags=["Memory Debug"],
+    )
+
+    @router.get("", include_in_schema=False)
+    @router.get("/process", include_in_schema=False)
+    @router.get("/allocations", include_in_schema=False)
+    @router.get("/objects", include_in_schema=False)
+    @router.get("/endpoints", include_in_schema=False)
+    @router.get("/tasks", include_in_schema=False)
+    @router.get("/gc", include_in_schema=False)
+    @router.get("/timeline", include_in_schema=False)
+    @router.post("/snapshot", include_in_schema=False)
+    @router.get("/diff", include_in_schema=False)
+    @router.post("/gc/collect", include_in_schema=False)
+    @router.get("/report", include_in_schema=False)
+    @router.get("/audit", include_in_schema=False)
+    @router.post("/reset", include_in_schema=False)
+    async def _memory_debug_disabled() -> None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Memory debug endpoints are disabled in production.",
+        )
+else:
+    router = APIRouter(
+        prefix="/debug/memory",
+        tags=["Memory Debug"],
+        dependencies=[Depends(require_superadmin())],
+    )
 
 # These will be set during app startup
 _auditor = None

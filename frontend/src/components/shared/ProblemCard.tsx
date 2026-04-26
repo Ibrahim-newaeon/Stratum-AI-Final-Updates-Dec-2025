@@ -71,7 +71,7 @@ export function ProblemCard({
   return (
     <div
       className={cn(
-        'rounded-xl border border-l-4 p-5 transition-all',
+        'rounded-xl border p-5 transition-colors',
         config.borderColor,
         config.bgColor,
         resolved && 'opacity-60'

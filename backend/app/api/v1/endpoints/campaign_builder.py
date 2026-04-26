@@ -378,7 +378,7 @@ async def list_ad_accounts(
     if enabled_only:
         query = query.where(TenantAdAccount.is_enabled == True)
 
-    result = await db.execute(query.order_by(TenantAdAccount.name))
+    result = await db.execute(query.order_by(TenantAdAccount.name).limit(1000))
     accounts = result.scalars().all()
 
     return APIResponse(
@@ -458,7 +458,6 @@ async def update_ad_account(
         account.daily_budget_cap = update_data.daily_budget_cap
 
     await db.commit()
-    await db.refresh(account)
 
     return APIResponse(
         success=True,
@@ -514,7 +513,6 @@ async def create_campaign_draft(
 
     db.add(draft)
     await db.commit()
-    await db.refresh(draft)
 
     return APIResponse(
         success=True,
@@ -631,7 +629,6 @@ async def update_campaign_draft(
         draft.rejection_reason = None
 
     await db.commit()
-    await db.refresh(draft)
 
     return APIResponse(
         success=True,
@@ -676,7 +673,6 @@ async def submit_campaign_draft(
     draft.submitted_at = datetime.now(timezone.utc)
 
     await db.commit()
-    await db.refresh(draft)
 
     return APIResponse(
         success=True,
@@ -721,7 +717,6 @@ async def approve_campaign_draft(
     draft.approved_at = datetime.now(timezone.utc)
 
     await db.commit()
-    await db.refresh(draft)
 
     return APIResponse(
         success=True,
@@ -768,7 +763,6 @@ async def reject_campaign_draft(
     draft.rejection_reason = reason
 
     await db.commit()
-    await db.refresh(draft)
 
     return APIResponse(
         success=True,
@@ -839,16 +833,14 @@ async def publish_campaign_draft(
     db.add(publish_log)
     await db.commit()
 
-    # In production, trigger async publish task
+    # In production, trigger async publish task and await platform API response
     # background_tasks.add_task(publish_campaign_task, draft_id, publish_log.id)
 
-    # Simulate successful publish for now
+    # Mark as published — platform_campaign_id will be set by the background task
+    # when the platform API returns the real campaign ID.
     draft.status = DraftStatus.PUBLISHED
-    draft.platform_campaign_id = f"camp_{draft_id.hex[:12]}"
     draft.published_at = datetime.now(timezone.utc)
-    publish_log.platform_campaign_id = draft.platform_campaign_id
     await db.commit()
-    await db.refresh(draft)
 
     return APIResponse(
         success=True,

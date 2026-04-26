@@ -447,7 +447,7 @@ export const dashboardApi = {
    */
   syncPlatform: async (platform: string, daysBack = 30): Promise<SyncTriggerResponse> => {
     const response = await apiClient.post<ApiResponse<SyncTriggerResponse>>(
-      `/campaigns/sync/${platform}`,
+      `/campaigns/sync-platform/${platform}`,
       null,
       { params: { days_back: daysBack } }
     );

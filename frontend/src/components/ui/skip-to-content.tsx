@@ -49,7 +49,7 @@ const SkipToContent = React.forwardRef<HTMLAnchorElement, SkipToContentProps>(
           'focus:bg-primary focus:text-primary-foreground',
           'focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
           // Animation
-          'transition-all duration-150',
+          'transition-colors duration-150',
           className
         )}
         {...props}

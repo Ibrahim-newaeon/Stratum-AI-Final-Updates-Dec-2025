@@ -172,7 +172,7 @@ export default function TrustEngine() {
                 <button
                   key={state}
                   onClick={() => setActiveState(state)}
-                  className={`relative px-6 py-3 rounded-xl font-medium text-sm transition-all ${
+                  className={`relative px-6 py-3 rounded-xl font-medium text-sm transition-colors ${
                     isActive
                       ? `${stateColors.bgLight} ${stateColors.border} border-2 ${stateColors.text}`
                       : 'bg-white/[0.02] border border-white/[0.05] text-gray-400 hover:bg-white/[0.05]'
@@ -304,7 +304,7 @@ export default function TrustEngine() {
             {healthComponents.map((component) => (
               <div
                 key={component.name}
-                className="group relative p-5 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-white/10 transition-all"
+                className="group relative p-5 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-white/10 transition-colors"
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium text-white">{component.name}</span>

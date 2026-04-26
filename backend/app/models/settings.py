@@ -144,7 +144,7 @@ class WebhookDelivery(Base, TimestampMixin):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     webhook_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("webhooks.id", ondelete="CASCADE"), nullable=False
+        Integer, ForeignKey("webhooks.id", ondelete="CASCADE"), nullable=False, index=True
     )
 
     # Event details
@@ -180,7 +180,7 @@ class Notification(Base, TimestampMixin, TenantMixin):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True
     )  # Null = broadcast to all tenant users
 
     # Content
@@ -227,12 +227,17 @@ class Notification(Base, TimestampMixin, TenantMixin):
 class ChangelogEntry(Base, TimestampMixin):
     """
     Product changelog / What's New entries.
-    Global (not tenant-specific).
+    Scoped to tenant for isolation; NULL tenant_id = global entry (legacy).
     """
 
     __tablename__ = "changelog_entries"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+
+    # Tenant scoping (nullable for backward compatibility with global entries)
+    tenant_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True, index=True
+    )
 
     # Version info
     version: Mapped[str] = mapped_column(String(50), nullable=False)  # e.g., "1.2.0"
@@ -272,10 +277,10 @@ class ChangelogReadStatus(Base, TimestampMixin):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
     changelog_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("changelog_entries.id", ondelete="CASCADE"), nullable=False
+        Integer, ForeignKey("changelog_entries.id", ondelete="CASCADE"), nullable=False, index=True
     )
 
     read_at: Mapped[datetime] = mapped_column(

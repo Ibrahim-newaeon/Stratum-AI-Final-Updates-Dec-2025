@@ -15,6 +15,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTenantStore } from '@/stores/tenantStore';
 import { useQuery } from '@tanstack/react-query';
 
 // Consent types
@@ -75,11 +76,12 @@ export function ConsentManager() {
   const [grantedFilter, setGrantedFilter] = useState<boolean | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // For demo purposes, use tenant ID 1
-  const tenantId = 1;
+  // Use active tenant from global store
+  const tenantId = useTenantStore((state) => state.tenantId);
 
-  const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useConsentStats(tenantId);
-  const { data: profilesData, isLoading: profilesLoading } = useConsentProfiles(tenantId, {
+  const effectiveTenantId = tenantId ?? 0
+  const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useConsentStats(effectiveTenantId);
+  const { data: profilesData, isLoading: profilesLoading } = useConsentProfiles(effectiveTenantId, {
     consent_type: selectedType,
     granted: grantedFilter,
   });
@@ -250,11 +252,11 @@ export function ConsentManager() {
           <table className="w-full">
             <thead className="bg-muted/50">
               <tr>
-                <th className="px-4 py-3 text-left text-sm font-medium">Profile</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">Consent Type</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">Status</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">Date</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">Source</th>
+                <th scope="col" className="px-4 py-3 text-left text-sm font-medium">Profile</th>
+                <th scope="col" className="px-4 py-3 text-left text-sm font-medium">Consent Type</th>
+                <th scope="col" className="px-4 py-3 text-left text-sm font-medium">Status</th>
+                <th scope="col" className="px-4 py-3 text-left text-sm font-medium">Date</th>
+                <th scope="col" className="px-4 py-3 text-left text-sm font-medium">Source</th>
               </tr>
             </thead>
             <tbody className="divide-y">

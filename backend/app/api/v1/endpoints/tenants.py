@@ -9,6 +9,7 @@ Provides CRUD operations for multi-tenant administration.
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -240,7 +241,6 @@ async def create_tenant(
 
     db.add(tenant)
     await db.commit()
-    await db.refresh(tenant)
 
     logger.info(f"Tenant created: {tenant.slug} (ID: {tenant.id})")
 
@@ -315,7 +315,6 @@ async def update_tenant(
             setattr(tenant, field, value)
 
     await db.commit()
-    await db.refresh(tenant)
 
     logger.info(f"Tenant updated: {tenant.slug} (ID: {tenant.id})")
 
@@ -472,7 +471,6 @@ async def update_tenant_plan(
     tenant.max_campaigns = limits["max_campaigns"]
 
     await db.commit()
-    await db.refresh(tenant)
 
     logger.info(f"Tenant plan updated: {tenant.slug} -> {plan}")
 
@@ -496,11 +494,15 @@ async def update_tenant_plan(
     )
 
 
+class FeatureFlagsUpdateRequest(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+
 @router.patch("/{tenant_id}/features", response_model=APIResponse[TenantResponse])
 async def update_tenant_features(
     request: Request,
     tenant_id: int,
-    feature_flags: dict,
+    feature_flags: FeatureFlagsUpdateRequest,
     db: AsyncSession = Depends(get_async_session),
 ):
     """
@@ -520,13 +522,35 @@ async def update_tenant_features(
             detail="Tenant not found",
         )
 
-    # Merge feature flags
+    # Validate and merge feature flags
+    KNOWN_FEATURE_FLAGS = {
+        "competitor_intel",
+        "what_if_simulator",
+        "automation_rules",
+        "gdpr_compliance",
+        "advanced_analytics",
+        "custom_integrations",
+        "white_label",
+        "api_access",
+        "sso",
+        "audit_logs",
+    }
     current_flags = tenant.feature_flags or {}
-    current_flags.update(feature_flags)
+    for key, value in feature_flags.model_dump().items():
+        if key not in KNOWN_FEATURE_FLAGS:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Unknown feature flag: {key}. Allowed: {', '.join(sorted(KNOWN_FEATURE_FLAGS))}",
+            )
+        if not isinstance(value, bool):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Feature flag '{key}' must be a boolean value",
+            )
+        current_flags[key] = value
     tenant.feature_flags = current_flags
 
     await db.commit()
-    await db.refresh(tenant)
 
     logger.info(f"Tenant features updated: {tenant.slug}")
 

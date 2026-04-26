@@ -78,7 +78,7 @@ function CreativeRow({ creative }: { creative: CreativeScore }) {
   const StatusIcon = scfg.icon;
 
   return (
-    <div className={`border rounded-xl transition-all ${open ? 'border-foreground/15' : ''}`}>
+    <div className={`border rounded-xl transition-colors ${open ? 'border-foreground/15' : ''}`}>
       <button onClick={() => setOpen(!open)} className="w-full flex items-center gap-3 p-3 text-left hover:bg-muted/30 rounded-xl transition-colors">
         <GradeBadge grade={creative.grade} size="sm" />
         <div className="flex-1 min-w-0">
@@ -256,10 +256,10 @@ export function CreativeScoringCard() {
         ))}
       </div>
 
-      <div className="p-4 space-y-2 max-h-[480px] overflow-y-auto">
-        {tab === 'creatives' && data.creatives.map((cr, i) => <CreativeRow key={i} creative={cr} />)}
-        {tab === 'platforms' && data.platform_summaries.map((ps, i) => <PlatformSummaryRow key={i} ps={ps} />)}
-        {tab === 'insights' && data.insights.map((ins, i) => <InsightRow key={i} insight={ins} />)}
+      <div className="p-4 space-y-2 max-h-[30rem] overflow-y-auto">
+        {tab === 'creatives' && data.creatives.map((cr, i) => <CreativeRow key={cr.creative_id || i} creative={cr} />)}
+        {tab === 'platforms' && data.platform_summaries.map((ps, i) => <PlatformSummaryRow key={ps.platform || i} ps={ps} />)}
+        {tab === 'insights' && data.insights.map((ins, i) => <InsightRow key={`${ins.title}-${i}`} insight={ins} />)}
       </div>
     </div>
   );

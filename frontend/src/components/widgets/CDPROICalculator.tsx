@@ -130,7 +130,7 @@ export function CDPROICalculator({
               className="flex items-center justify-between text-sm mb-2"
             >
               <span>Monthly Website Sessions</span>
-              <span className="font-mono text-primary">
+              <span className="text-primary">
                 {inputs.monthlySessions.toLocaleString()}
               </span>
             </label>
@@ -165,7 +165,7 @@ export function CDPROICalculator({
               className="flex items-center justify-between text-sm mb-2"
             >
               <span>Conversion Rate</span>
-              <span className="font-mono text-primary">{inputs.conversionRate}%</span>
+              <span className="text-primary">{inputs.conversionRate}%</span>
             </label>
             <input
               type="range"
@@ -187,7 +187,7 @@ export function CDPROICalculator({
           <div>
             <label id="aov-label" className="flex items-center justify-between text-sm mb-2">
               <span>Average Order Value</span>
-              <span className="font-mono text-primary">{format(inputs.averageOrderValue)}</span>
+              <span className="text-primary">{format(inputs.averageOrderValue)}</span>
             </label>
             <input
               type="range"
@@ -212,7 +212,7 @@ export function CDPROICalculator({
               className="flex items-center justify-between text-sm mb-2"
             >
               <span>Gross Margin</span>
-              <span className="font-mono text-primary">{inputs.grossMarginPercent}%</span>
+              <span className="text-primary">{inputs.grossMarginPercent}%</span>
             </label>
             <input
               type="range"
@@ -237,7 +237,7 @@ export function CDPROICalculator({
               className="flex items-center justify-between text-sm mb-2"
             >
               <span>Current Identity Match Rate</span>
-              <span className="font-mono text-amber-500">{inputs.currentMatchRate}%</span>
+              <span className="text-amber-500">{inputs.currentMatchRate}%</span>
             </label>
             <input
               type="range"
@@ -262,7 +262,7 @@ export function CDPROICalculator({
               className="flex items-center justify-between text-sm mb-2"
             >
               <span>Expected Match Rate Improvement</span>
-              <span className="font-mono text-green-500">
+              <span className="text-green-500">
                 +{inputs.expectedMatchRateImprovement}%
               </span>
             </label>
@@ -289,7 +289,7 @@ export function CDPROICalculator({
               className="flex items-center justify-between text-sm mb-2"
             >
               <span>Monthly CDP Cost</span>
-              <span className="font-mono text-muted-foreground">
+              <span className="text-muted-foreground">
                 {format(inputs.monthlyPlatformFee)}
               </span>
             </label>

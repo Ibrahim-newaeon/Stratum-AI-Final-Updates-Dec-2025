@@ -96,7 +96,7 @@ export function useSignalHealth(tenantId: number, date?: string) {
     queryFn: async () => {
       const params = date ? `?date=${date}` : ''
       const response = await apiClient.get<{ data: SignalHealthData }>(
-        `/trust-layer/tenant/${tenantId}/signal-health${params}`
+        `/trust-layer/signal-health${params}`
       )
       return response.data.data
     },
@@ -121,7 +121,7 @@ export function useSignalHealthHistory(
       if (platform) params.append('platform', platform)
 
       const response = await apiClient.get<{ data: { history: SignalHealthData[] } }>(
-        `/trust-layer/tenant/${tenantId}/signal-health/history?${params}`
+        `/trust-layer/signal-health/history?${params}`
       )
       return response.data.data.history
     },
@@ -139,7 +139,7 @@ export function useAttributionVariance(tenantId: number, date?: string) {
     queryFn: async () => {
       const params = date ? `?date=${date}` : ''
       const response = await apiClient.get<{ data: AttributionVarianceData }>(
-        `/trust-layer/tenant/${tenantId}/attribution-variance${params}`
+        `/trust-layer/attribution-variance${params}`
       )
       return response.data.data
     },
@@ -159,7 +159,7 @@ export function useTrustStatus(tenantId: number, date?: string) {
     queryFn: async () => {
       const params = date ? `?date=${date}` : ''
       const response = await apiClient.get<{ data: TrustStatusData }>(
-        `/trust-layer/tenant/${tenantId}/trust-status${params}`
+        `/trust-layer/trust-status${params}`
       )
       return response.data.data
     },

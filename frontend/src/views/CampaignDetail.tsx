@@ -98,7 +98,7 @@ function CampaignDetail() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-96">
         <LoadingSpinner size="lg" label="Loading campaign details..." />
       </div>
     )

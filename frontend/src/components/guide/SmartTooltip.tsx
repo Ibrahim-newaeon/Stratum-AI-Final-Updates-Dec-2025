@@ -41,11 +41,18 @@ export function SmartTooltip({
   const tooltipRef = useRef<HTMLDivElement>(null)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  const rafRef = useRef<number | null>(null)
+
   const calculatePosition = () => {
     if (!triggerRef.current || !tooltipRef.current) return
+    if (rafRef.current) return
 
-    const triggerRect = triggerRef.current.getBoundingClientRect()
-    const tooltipRect = tooltipRef.current.getBoundingClientRect()
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null
+      if (!triggerRef.current || !tooltipRef.current) return
+
+      const triggerRect = triggerRef.current.getBoundingClientRect()
+      const tooltipRect = tooltipRef.current.getBoundingClientRect()
     const padding = 8
 
     let top = 0
@@ -83,7 +90,16 @@ export function SmartTooltip({
       top = viewportHeight - tooltipRect.height - padding
     }
 
-    setCoords({ top, left })
+      setCoords({ top, left })
+    })
+  }
+
+  const throttledCalculatePosition = () => {
+    if (rafRef.current) return
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null
+      calculatePosition()
+    })
   }
 
   const showTooltip = () => {
@@ -107,13 +123,17 @@ export function SmartTooltip({
   useEffect(() => {
     if (isVisible) {
       calculatePosition()
-      window.addEventListener('scroll', calculatePosition, true)
-      window.addEventListener('resize', calculatePosition)
+      window.addEventListener('scroll', throttledCalculatePosition, { passive: true, capture: true })
+      window.addEventListener('resize', throttledCalculatePosition)
     }
 
     return () => {
-      window.removeEventListener('scroll', calculatePosition, true)
-      window.removeEventListener('resize', calculatePosition)
+      window.removeEventListener('scroll', throttledCalculatePosition, { capture: true })
+      window.removeEventListener('resize', throttledCalculatePosition)
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current)
+        rafRef.current = null
+      }
     }
   }, [isVisible])
 

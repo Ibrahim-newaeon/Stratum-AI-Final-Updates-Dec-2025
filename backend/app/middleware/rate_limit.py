@@ -84,6 +84,14 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         self.rate_per_second = requests_per_minute / 60.0
         self.window_seconds = 60  # 1-minute sliding window
 
+        # Stricter limits for authentication endpoints to prevent brute force
+        self._auth_limits = {
+            "/api/v1/auth/login": {"rpm": 10, "burst": 5},
+            "/api/v1/auth/register": {"rpm": 10, "burst": 5},
+            "/api/v1/auth/refresh": {"rpm": 20, "burst": 10},
+            "/api/v1/auth/forgot-password": {"rpm": 5, "burst": 3},
+        }
+
         # Redis client (lazy-init on first request)
         self._redis: Optional[aioredis.Redis] = None
         self._redis_available: Optional[bool] = None  # None = not yet tested
@@ -123,7 +131,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
         return self._redis
 
-    async def _check_redis(self, client_id: str) -> tuple[bool, int]:
+    async def _check_redis(self, client_id: str, auth_limit: dict | None = None) -> tuple[bool, int]:
         """
         Sliding-window counter in Redis.
 
@@ -133,6 +141,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         if redis_client is None:
             raise ConnectionError("Redis not available")
 
+        rpm = auth_limit["rpm"] if auth_limit else self.requests_per_minute
         key = f"rl:{client_id}"
         pipe = redis_client.pipeline()
         pipe.incr(key)
@@ -140,20 +149,22 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         results = await pipe.execute()
 
         current_count: int = results[0]
-        remaining = max(0, self.requests_per_minute - current_count)
-        allowed = current_count <= self.requests_per_minute
+        remaining = max(0, rpm - current_count)
+        allowed = current_count <= rpm
 
         return allowed, remaining
 
     # --------------------------------------------------------------------- #
     # In-memory fallback helpers
     # --------------------------------------------------------------------- #
-    def _get_bucket(self, client_id: str) -> TokenBucket:
+    def _get_bucket(self, client_id: str, auth_limit: dict | None = None) -> TokenBucket:
         if client_id not in self._buckets:
             # Use aggressive limits in fallback mode (1/4 of normal) since
             # each worker process has its own bucket — N workers = N * limit
-            fallback_rate = self.rate_per_second / 4
-            fallback_capacity = max(1, self.burst_size // 4)
+            burst = auth_limit["burst"] if auth_limit else self.burst_size
+            rpm = auth_limit["rpm"] if auth_limit else self.requests_per_minute
+            fallback_rate = (rpm / 60.0) / 4
+            fallback_capacity = max(1, burst // 4)
             self._buckets[client_id] = TokenBucket(
                 rate=fallback_rate,
                 capacity=fallback_capacity,
@@ -178,15 +189,21 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     # --------------------------------------------------------------------- #
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """Apply rate limiting to the request."""
+        path = request.url.path
+        auth_limit = self._get_auth_limit(path)
         client_id = self._get_client_identifier(request)
+
+        # Use stricter auth limits if path matches
+        if auth_limit:
+            client_id = f"auth:{client_id}"
 
         # Try Redis first, fall back to in-memory
         try:
-            allowed, remaining = await self._check_redis(client_id)
+            allowed, remaining = await self._check_redis(client_id, auth_limit)
         except (ConnectionError, TimeoutError, OSError):
             # Redis unavailable — use local token bucket with aggressive limits
             logger.warning("rate_limiter_redis_fallback", client_id=client_id)
-            bucket = self._get_bucket(client_id)
+            bucket = self._get_bucket(client_id, auth_limit)
             allowed = bucket.consume()
             remaining = bucket.remaining
             self._maybe_cleanup()
@@ -195,14 +212,16 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             logger.warning(
                 "rate_limit_exceeded",
                 client_id=client_id,
-                path=request.url.path,
+                path=path,
             )
-            return self._rate_limit_response(remaining)
+            limit_val = auth_limit["rpm"] if auth_limit else self.requests_per_minute
+            return self._rate_limit_response(remaining, limit_val)
 
         response = await call_next(request)
 
         # Add standard rate limit headers
-        response.headers["X-RateLimit-Limit"] = str(self.requests_per_minute)
+        limit_val = auth_limit["rpm"] if auth_limit else self.requests_per_minute
+        response.headers["X-RateLimit-Limit"] = str(limit_val)
         response.headers["X-RateLimit-Remaining"] = str(remaining)
         response.headers["X-RateLimit-Reset"] = str(
             int(time.time()) + self.window_seconds
@@ -251,9 +270,17 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
         return client_ip
 
-    def _rate_limit_response(self, remaining: int) -> JSONResponse:
+    def _get_auth_limit(self, path: str) -> dict | None:
+        """Return stricter limit config for auth endpoints, or None."""
+        for prefix, limit in self._auth_limits.items():
+            if path.startswith(prefix):
+                return limit
+        return None
+
+    def _rate_limit_response(self, remaining: int, limit: int | None = None) -> JSONResponse:
         """Create rate limit exceeded response."""
         retry_after = self.window_seconds
+        limit_val = limit if limit is not None else self.requests_per_minute
 
         return JSONResponse(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -265,7 +292,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             },
             headers={
                 "Retry-After": str(retry_after),
-                "X-RateLimit-Limit": str(self.requests_per_minute),
+                "X-RateLimit-Limit": str(limit_val),
                 "X-RateLimit-Remaining": "0",
             },
         )

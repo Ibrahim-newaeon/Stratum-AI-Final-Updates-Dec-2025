@@ -54,7 +54,7 @@ function RecommendationRow({ rec }: { rec: CampaignBudgetInsight }) {
   const ActionIcon = config.icon;
 
   return (
-    <div className={cn('rounded-lg border transition-all', config.border, expanded ? config.bg : 'bg-background')}>
+    <div className={cn('rounded-lg border transition-colors', config.border, expanded ? config.bg : 'bg-background')}>
       <button
         onClick={() => setExpanded(!expanded)}
         className="w-full p-3 flex items-center gap-3 text-left"

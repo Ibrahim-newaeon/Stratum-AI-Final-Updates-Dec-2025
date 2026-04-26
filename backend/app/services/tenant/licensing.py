@@ -21,7 +21,7 @@ from enum import Enum
 from typing import Optional
 
 import httpx
-from jose import JWTError, jwt
+import jwt
 
 from app.core.config import settings
 from app.core.logging import get_logger
@@ -210,7 +210,7 @@ class LicenseValidationService:
             else:
                 # Fallback: verify signature using HMAC
                 payload = self._verify_hmac_license(encoded_data)
-        except JWTError as e:
+        except jwt.InvalidTokenError as e:
             raise ValueError(f"Invalid license signature: {e}")
 
         # Check expiration

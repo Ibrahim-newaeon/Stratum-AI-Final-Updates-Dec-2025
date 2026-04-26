@@ -391,7 +391,7 @@ async def get_anomalies(
                 "severity": "critical" if roas < 0.5 else "high",
                 "direction": "drop",
                 "current_value": round(roas, 2),
-                "expected_value": 2.0,
+                "expected_value": None,
                 "description": f"ROAS at {roas:.2f}x is below break-even threshold",
                 "possible_causes": ["Audience fatigue", "Increased competition", "Poor creative performance"],
                 "recommended_actions": ["Review targeting", "Refresh creatives", "Consider pausing"],

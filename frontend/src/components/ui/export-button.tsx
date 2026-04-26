@@ -33,7 +33,7 @@ interface ExportButtonProps {
   /** PDF export options */
   pdfOptions?: PdfExportOptions;
   /** CSV data for spreadsheet export */
-  csvData?: Record<string, any>[];
+  csvData?: Record<string, unknown>[];
   /** CSV filename */
   csvFilename?: string;
   /** Show dropdown with format options */

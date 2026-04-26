@@ -59,7 +59,7 @@ export function ConfidenceBandBadge({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full font-medium transition-all',
+        'inline-flex items-center gap-1.5 rounded-full font-medium transition-colors',
         config.bgColor,
         config.color,
         sizeClasses[size],

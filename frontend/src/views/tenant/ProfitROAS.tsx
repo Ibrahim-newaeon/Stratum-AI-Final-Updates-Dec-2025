@@ -280,6 +280,7 @@ export default function ProfitROAS() {
 
           {!loadingProducts && products?.items && products.items.length > 0 && (
             <div className="rounded-xl border bg-card shadow-card overflow-hidden">
+              <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-muted/50">
                   <tr>
@@ -300,7 +301,7 @@ export default function ProfitROAS() {
                           <p className="text-sm text-muted-foreground">{product.brand}</p>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-sm font-mono">{product.sku}</td>
+                      <td className="px-4 py-3 text-sm">{product.sku}</td>
                       <td className="px-4 py-3 text-sm">{product.category || '-'}</td>
                       <td className="px-4 py-3 text-right font-medium">
                         {product.currency} {product.defaultCogs.toFixed(2)}
@@ -324,6 +325,7 @@ export default function ProfitROAS() {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           )}
         </div>
@@ -358,6 +360,7 @@ export default function ProfitROAS() {
 
           {!loadingMargins && marginRules && marginRules.length > 0 && (
             <div className="rounded-xl border bg-card shadow-card overflow-hidden">
+              <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-muted/50">
                   <tr>
@@ -401,6 +404,7 @@ export default function ProfitROAS() {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           )}
         </div>
@@ -450,6 +454,7 @@ export default function ProfitROAS() {
               <div className="p-4 border-b">
                 <h3 className="font-medium">Upload History</h3>
               </div>
+              <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-muted/50">
                   <tr>
@@ -488,6 +493,7 @@ export default function ProfitROAS() {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           )}
         </div>

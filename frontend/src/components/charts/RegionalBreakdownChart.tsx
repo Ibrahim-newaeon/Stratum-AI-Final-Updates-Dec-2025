@@ -3,6 +3,7 @@
  * Pie/Donut chart showing performance distribution by region
  */
 
+import { useMemo } from 'react'
 import {
   PieChart,
   Pie,
@@ -39,8 +40,8 @@ const CustomLegend = ({ payload }: { payload?: Array<{ value: string; color: str
 
   return (
     <ul className="flex flex-wrap justify-center gap-x-4 gap-y-2 mt-4">
-      {payload.map((entry, index) => (
-        <li key={index} className="flex items-center gap-2 text-sm">
+      {payload.map((entry) => (
+        <li key={entry.value} className="flex items-center gap-2 text-sm">
           <span
             className="w-3 h-3 rounded-full flex-shrink-0"
             style={{ backgroundColor: entry.color }}
@@ -69,10 +70,10 @@ function RegionalBreakdownChartInner({
   }
 
   // Assign colors if not provided
-  const chartData = data.map((item, index) => ({
+  const chartData = useMemo(() => data.map((item, index) => ({
     ...item,
     color: item.color || chartTheme.regionColors[index % chartTheme.regionColors.length],
-  }))
+  })), [data])
 
   return (
     <div className="rounded-xl border bg-card p-6">
@@ -91,9 +92,9 @@ function RegionalBreakdownChartInner({
               animationDuration={chartTheme.animation.duration}
               animationBegin={0}
             >
-              {chartData.map((entry, index) => (
+              {chartData.map((entry) => (
                 <Cell
-                  key={`cell-${index}`}
+                  key={`cell-${entry.name}`}
                   fill={entry.color}
                   stroke="hsl(var(--card))"
                   strokeWidth={2}

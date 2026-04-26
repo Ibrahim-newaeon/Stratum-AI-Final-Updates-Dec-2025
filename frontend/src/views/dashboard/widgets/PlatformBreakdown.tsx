@@ -3,6 +3,7 @@
  */
 
 import { AlertTriangle, BarChart3, CheckCircle2, Loader2, RefreshCw, XCircle } from 'lucide-react';
+import { useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import type { PlatformSummary } from '@/api/dashboard';
 import { useSyncPlatform } from '@/api/dashboard';
@@ -59,6 +60,38 @@ const platformConfigs: Record<string, {
   },
 };
 
+const getStatusIcon = (status: PlatformSummary['status']) => {
+  switch (status) {
+    case 'connected':
+      return <CheckCircle2 className="w-4 h-4 text-status-healthy" />;
+    case 'error':
+      return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
+    case 'disconnected':
+      return <XCircle className="w-4 h-4 text-[#ff6b6b]" />;
+    default:
+      return null;
+  }
+};
+
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
+};
+
+const formatRoas = (roas: number | null) => {
+  if (roas === null) return '-';
+  return `${roas.toFixed(2)}x`;
+};
+
+const getPlatformConfig = (platform: string) => {
+  const key = platform.toLowerCase();
+  return platformConfigs[key] || platformConfigs.default;
+};
+
 interface PlatformBreakdownProps {
   platforms: PlatformSummary[];
   loading?: boolean;
@@ -84,40 +117,8 @@ export function PlatformBreakdown({ platforms, loading = false }: PlatformBreakd
     );
   }
 
-  const totalSpend = platforms.reduce((sum, p) => sum + p.spend, 0);
-  const totalRevenue = platforms.reduce((sum, p) => sum + p.revenue, 0);
-
-  const getStatusIcon = (status: PlatformSummary['status']) => {
-    switch (status) {
-      case 'connected':
-        return <CheckCircle2 className="w-4 h-4 text-status-healthy" />;
-      case 'error':
-        return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
-      case 'disconnected':
-        return <XCircle className="w-4 h-4 text-[#ff6b6b]" />;
-      default:
-        return null;
-    }
-  };
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
-
-  const formatRoas = (roas: number | null) => {
-    if (roas === null) return '-';
-    return `${roas.toFixed(2)}x`;
-  };
-
-  const getPlatformConfig = (platform: string) => {
-    const key = platform.toLowerCase();
-    return platformConfigs[key] || platformConfigs.default;
-  };
+  const totalSpend = useMemo(() => platforms.reduce((sum, p) => sum + p.spend, 0), [platforms]);
+  const totalRevenue = useMemo(() => platforms.reduce((sum, p) => sum + p.revenue, 0), [platforms]);
 
   return (
     <div className="bg-card border rounded-lg">
@@ -140,7 +141,7 @@ export function PlatformBreakdown({ platforms, loading = false }: PlatformBreakd
                 key={platform.platform}
                 className={cn(
                   'rounded-lg p-4 relative overflow-hidden',
-                  'border transition-all duration-200',
+                  'border transition-colors duration-200',
                   config.borderColor
                 )}
                 style={{
@@ -155,7 +156,7 @@ export function PlatformBreakdown({ platforms, loading = false }: PlatformBreakd
                 />
                 {/* Spend bar indicator */}
                 <div
-                  className={cn('absolute bottom-0 left-0 h-1 transition-all', config.bgColor)}
+                  className={cn('absolute bottom-0 left-0 h-1 transition-colors', config.bgColor)}
                   style={{ width: `${spendPercentage}%`, backgroundColor: 'currentColor' }}
                 />
 

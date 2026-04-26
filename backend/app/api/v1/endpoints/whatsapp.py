@@ -256,7 +256,6 @@ async def create_contact(
 
     db.add(contact)
     await db.commit()
-    await db.refresh(contact)
 
     logger.info(f"Created WhatsApp contact {contact.id} for tenant {tenant_id}")
 
@@ -394,7 +393,6 @@ async def update_contact(
         contact.country_code = update_data.country_code
 
     await db.commit()
-    await db.refresh(contact)
 
     logger.info(f"Updated WhatsApp contact {contact_id}")
 
@@ -533,7 +531,6 @@ async def opt_in_contact(
     contact.opt_in_method = method
 
     await db.commit()
-    await db.refresh(contact)
 
     logger.info(f"Contact {contact_id} opted in via {method}")
 
@@ -646,7 +643,6 @@ async def create_template(
 
     db.add(template)
     await db.commit()
-    await db.refresh(template)
 
     # Submit to Meta Business Manager API for approval
     try:
@@ -834,7 +830,6 @@ async def send_message(
     contact.last_message_at = datetime.now(timezone.utc)
 
     await db.commit()
-    await db.refresh(message)
 
     # Queue for async sending via Celery worker
     from app.workers.tasks import send_whatsapp_message

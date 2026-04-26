@@ -281,7 +281,7 @@ def signal_health_rollup(self, tenant_id: Optional[int] = None, target_date: Opt
                 await db.rollback()
                 raise self.retry(exc=e)
 
-    return asyncio.get_event_loop().run_until_complete(run_rollup())
+    return asyncio.run(run_rollup())
 
 
 async def fetch_platform_metrics(

@@ -61,7 +61,7 @@ function NotificationRow({ notification }: { notification: PrioritizedNotificati
   const SourceIcon = sourceIcons[notification.source] || Info;
 
   return (
-    <div className={cn('rounded-lg border transition-all', config.border, expanded ? config.bg + '/30' : 'bg-background')}>
+    <div className={cn('rounded-lg border transition-colors', config.border, expanded ? config.bg + '/30' : 'bg-background')}>
       <button
         onClick={() => setExpanded(!expanded)}
         className="w-full p-3 flex items-start gap-3 text-left"

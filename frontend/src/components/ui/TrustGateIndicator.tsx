@@ -87,7 +87,7 @@ export const TrustGateIndicator = memo(function TrustGateIndicator({
       className={cn(
         'fixed bottom-6 left-6 z-50',
         'flex flex-col gap-0 rounded-2xl',
-        'transition-all duration-300',
+        'transition-colors duration-300',
         className
       )}
       style={{
@@ -98,7 +98,7 @@ export const TrustGateIndicator = memo(function TrustGateIndicator({
     >
       {/* Expanded Detail Panel */}
       {expanded && healthDetail && (
-        <div className="px-4 pt-3 pb-2 space-y-2 min-w-[220px]">
+        <div className="px-4 pt-3 pb-2 space-y-2 min-w-56">
           <div className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.4)' }}>
             Signal Components
           </div>

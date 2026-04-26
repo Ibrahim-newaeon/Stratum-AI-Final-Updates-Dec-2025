@@ -433,7 +433,7 @@ export default function ModelExplainability() {
             {/* Sample LIME explanation */}
             <div className="border rounded-lg p-4">
               <h4 className="font-medium mb-4">Sample Prediction Explanation</h4>
-              <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div className="p-3 rounded-lg bg-muted/50">
                   <p className="text-sm text-muted-foreground">Predicted Value</p>
                   <p className="text-2xl font-bold">3.2x ROAS</p>

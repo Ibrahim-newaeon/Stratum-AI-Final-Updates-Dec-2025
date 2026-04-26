@@ -134,7 +134,7 @@ export function CAPISetup() {
         setPlatformStatuses(statuses)
       }
     } catch (err: unknown) {
-      console.error('Failed to fetch statuses:', err)
+
       // Don't show error on initial load - platforms just aren't connected yet
     } finally {
       setIsLoading(false)
@@ -189,7 +189,7 @@ export function CAPISetup() {
         setSuccess(`Disconnected from ${PLATFORMS.find(p => p.id === platform)?.name}`)
       }
     } catch (err: unknown) {
-      console.error('Failed to disconnect:', err)
+
       const axiosErr = err as { response?: { data?: { detail?: string } } };
       setError(axiosErr.response?.data?.detail || 'Failed to disconnect')
     }
@@ -336,7 +336,7 @@ export function CAPISetup() {
         <div className="flex items-center gap-3 p-4 bg-green-500/10 border border-green-500/20 rounded-lg text-green-600">
           <Check className="w-5 h-5" />
           <span>{success}</span>
-          <button onClick={() => setSuccess(null)} className="ml-auto">
+          <button onClick={() => setSuccess(null)} aria-label="Dismiss" className="ml-auto">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -346,7 +346,7 @@ export function CAPISetup() {
         <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-600">
           <AlertCircle className="w-5 h-5" />
           <span>{error}</span>
-          <button onClick={() => setError(null)} className="ml-auto">
+          <button onClick={() => setError(null)} aria-label="Dismiss" className="ml-auto">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -362,7 +362,7 @@ export function CAPISetup() {
             <div
               key={platform.id}
               className={cn(
-                'relative rounded-xl border p-5 transition-all cursor-pointer',
+                'relative rounded-xl border p-5 transition-colors cursor-pointer',
                 status?.connected
                   ? 'border-green-500/50 bg-green-500/5'
                   : isSelected
@@ -465,7 +465,7 @@ export function CAPISetup() {
           <div className="flex-1">
             <div className="h-3 bg-muted rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-primary to-green-500 transition-all duration-500"
+                className="h-full bg-gradient-to-r from-primary to-green-500 transition-[width] duration-500"
                 style={{ width: `${(connectedCount / PLATFORMS.length) * 100}%` }}
               />
             </div>

@@ -40,7 +40,7 @@ class CAPIDeliveryLog(Base):
     __tablename__ = "capi_delivery_logs"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Event identification
     platform = Column(String(50), nullable=False)  # meta, google, tiktok, etc.
@@ -102,7 +102,7 @@ class CAPIDeadLetterEntry(Base):
     __tablename__ = "capi_dead_letter_queue"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Event identification
     platform = Column(String(50), nullable=False)
@@ -164,7 +164,7 @@ class CAPIEventDedupeRecord(Base):
     __tablename__ = "capi_event_dedupe"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Deduplication key
     dedupe_key = Column(String(255), nullable=False)  # {platform}:{event_id} or MD5 hash
@@ -203,7 +203,7 @@ class CAPIDeliveryDailyStats(Base):
     __tablename__ = "capi_delivery_daily_stats"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Aggregation period
     date = Column(DateTime(timezone=True), nullable=False)

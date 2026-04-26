@@ -153,7 +153,7 @@ export default function DocsPage() {
                   placeholder="Search documentation..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 rounded-xl text-white placeholder-gray-500 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#FF4D4D]/50"
+                  className="w-full pl-12 pr-4 py-4 rounded-xl text-white placeholder-gray-500 transition-[width] duration-200 focus:outline-none focus:ring-2 focus:ring-[#FF4D4D]/50"
                   style={{
                     background: 'var(--landing-card)',
                     border: '1px solid var(--landing-border)',
@@ -178,7 +178,7 @@ export default function DocsPage() {
                   {docCategories.map((category) => (
                     <div
                       key={category.title}
-                      className="group p-6 rounded-2xl transition-all duration-300 hover:-translate-y-1"
+                      className="group p-6 rounded-2xl transition-transform duration-300 hover:-translate-y-1"
                       style={{
                         background: 'var(--landing-card)',
                         border: '1px solid var(--landing-border)',
@@ -205,7 +205,7 @@ export default function DocsPage() {
                               className="flex items-center gap-2 text-sm hover:text-white transition-colors group/link"
                               style={{ color: 'var(--landing-text)' }}
                             >
-                              <ArrowRightIcon className="w-3 h-3 opacity-0 -translate-x-2 group-hover/link:opacity-100 group-hover/link:translate-x-0 transition-all" />
+                              <ArrowRightIcon className="w-3 h-3 opacity-0 -translate-x-2 group-hover/link:opacity-100 group-hover/link:translate-x-0 transition-transform" />
                               <span>{link.name}</span>
                             </Link>
                           </li>
@@ -227,7 +227,7 @@ export default function DocsPage() {
                     <Link
                       key={article.title}
                       to="#"
-                      className="flex items-center gap-4 p-4 rounded-xl transition-all duration-200 hover:bg-white/5 group"
+                      className="flex items-center gap-4 p-4 rounded-xl transition-colors duration-200 hover:bg-white/5 group"
                       style={{
                         background: 'var(--landing-card)',
                         border: '1px solid var(--landing-border)',
@@ -270,7 +270,7 @@ export default function DocsPage() {
                   <div className="flex flex-col sm:flex-row gap-4 justify-center">
                     <Link
                       to="/contact"
-                      className="px-6 py-3 rounded-full font-semibold text-white transition-all duration-200"
+                      className="px-6 py-3 rounded-full font-semibold text-white transition-colors duration-200"
                       style={{
                         background: 'var(--landing-accent-coral)',
                         boxShadow: 'var(--landing-glow-coral)',
@@ -280,7 +280,7 @@ export default function DocsPage() {
                     </Link>
                     <Link
                       to="/faq"
-                      className="px-6 py-3 rounded-xl font-semibold text-white transition-all duration-200"
+                      className="px-6 py-3 rounded-xl font-semibold text-white transition-colors duration-200"
                       style={{
                         background: 'var(--landing-surface-glass)',
                         border: '1px solid var(--landing-border)',

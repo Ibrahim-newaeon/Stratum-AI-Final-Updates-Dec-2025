@@ -63,7 +63,7 @@ function AnnotationRow({ annotation }: { annotation: Annotation }) {
             </button>
           )}
           {showReplies && annotation.replies.map((r) => (
-            <div key={r.reply_id} className="mt-2 ml-4 pl-3 border-l-2 border">
+            <div key={r.reply_id} className="mt-2 ml-4 pl-3 border">
               <div className="flex items-center gap-2">
                 <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${r.author.initials === 'AI' ? 'bg-violet-50 text-violet-600' : 'bg-muted/30 text-muted-foreground'}`}>
                   {r.author.initials}
@@ -163,10 +163,10 @@ export function CollaborativeAnnotationsCard() {
         ))}
       </div>
 
-      <div className="p-4 space-y-2 max-h-[480px] overflow-y-auto">
-        {tab === 'all' && data.annotations.map((a, i) => <AnnotationRow key={i} annotation={a} />)}
-        {tab === 'pinned' && pinned.map((a, i) => <AnnotationRow key={i} annotation={a} />)}
-        {tab === 'insights' && data.insights.map((ins, i) => <InsightRow key={i} insight={ins} />)}
+      <div className="p-4 space-y-2 max-h-[30rem] overflow-y-auto">
+        {tab === 'all' && data.annotations.map((a, i) => <AnnotationRow key={a.annotation_id || i} annotation={a} />)}
+        {tab === 'pinned' && pinned.map((a, i) => <AnnotationRow key={a.annotation_id || i} annotation={a} />)}
+        {tab === 'insights' && data.insights.map((ins, i) => <InsightRow key={`${ins.title}-${i}`} insight={ins} />)}
       </div>
     </div>
   );

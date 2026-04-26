@@ -236,10 +236,10 @@ export default function AIPricing() {
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          className="text-left mb-16"
         >
           {/* Badge - Centered above hero */}
-          <div className="flex justify-center mb-8">
+          <div className="flex justify-start mb-8">
             <div
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
               style={{
@@ -252,7 +252,7 @@ export default function AIPricing() {
             </div>
           </div>
 
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-center">
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
             <span className="text-white">Pay for the AI</span>
             <br />
             <span style={{ color: 'var(--landing-accent-green)' }}>
@@ -260,7 +260,7 @@ export default function AIPricing() {
             </span>
           </h2>
 
-          <p className="text-lg max-w-2xl mx-auto mb-10 text-center" style={{ color: 'var(--landing-text-white-soft)' }}>
+          <p className="text-lg max-w-2xl mb-10" style={{ color: 'var(--landing-text-white-soft)' }}>
             All plans include the core platform. Upgrade for advanced AI models and higher limits.
           </p>
 
@@ -268,7 +268,7 @@ export default function AIPricing() {
           <div className="inline-flex items-center gap-4 p-1.5 rounded-full bg-white/[0.03] border border-white/[0.05]">
             <button
               onClick={() => setBillingCycle('monthly')}
-              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+              className={`px-6 py-2 rounded-full text-sm font-medium transition-colors ${
                 billingCycle === 'monthly'
                   ? 'bg-white/10 text-white'
                   : 'text-gray-400 hover:text-white'
@@ -278,7 +278,7 @@ export default function AIPricing() {
             </button>
             <button
               onClick={() => setBillingCycle('annual')}
-              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+              className={`px-6 py-2 rounded-full text-sm font-medium transition-colors ${
                 billingCycle === 'annual'
                   ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
                   : 'text-gray-400 hover:text-white'
@@ -308,7 +308,7 @@ export default function AIPricing() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={isInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ delay: 0.1 * index, duration: 0.6 }}
-                className={`relative rounded-3xl bg-gradient-to-b ${tier.bgColor} border ${tier.borderColor} backdrop-blur-xl overflow-hidden ${
+                className={`relative rounded-3xl bg-gradient-to-b ${tier.bgColor} border ${tier.borderColor} overflow-hidden ${
                   tier.popular ? 'ring-2 ring-purple-500/50 scale-[1.02]' : ''
                 }`}
               >
@@ -354,7 +354,7 @@ export default function AIPricing() {
                   {/* CTA Button */}
                   <a
                     href={tier.id === 'enterprise' ? '/contact' : '/signup'}
-                    className={`block w-full py-3 px-6 rounded-lg text-center font-medium transition-all ${
+                    className={`block w-full py-3 px-6 rounded-lg text-center font-medium transition-colors ${
                       tier.popular
                         ? 'bg-gradient-to-r from-purple-500 to-violet-500 text-white hover:opacity-90'
                         : 'bg-white/[0.05] border border-white/10 text-white hover:bg-white/10'
@@ -394,7 +394,7 @@ export default function AIPricing() {
         </motion.div>
 
         {/* Feature Comparison Toggle */}
-        <div className="text-center mb-8">
+        <div className="text-left mb-8">
           <button
             onClick={() => setShowAllFeatures(!showAllFeatures)}
             className="inline-flex items-center gap-2 text-sm text-purple-400 hover:text-purple-300 transition-colors"
@@ -427,7 +427,7 @@ export default function AIPricing() {
           transition={{ duration: 0.4 }}
           className="overflow-hidden"
         >
-          <div className="rounded-3xl border border-white/[0.05] bg-white/[0.02] backdrop-blur-xl overflow-hidden">
+          <div className="rounded-3xl border border-white/[0.05] bg-white/[0.02] backdrop-blur-sm overflow-hidden">
             {/* Header */}
             <div className="grid grid-cols-4 gap-4 p-6 border-b border-white/[0.05] bg-white/[0.02]">
               <div className="text-sm font-medium text-gray-400">Feature</div>
@@ -475,14 +475,14 @@ export default function AIPricing() {
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ delay: 0.4, duration: 0.6 }}
-          className="mt-16 text-center"
+          className="mt-16 text-left"
         >
           <p className="text-gray-400 mb-4">
             Need custom integrations, dedicated support, or volume pricing?
           </p>
           <a
             href="/contact"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 text-white font-medium hover:brightness-110 transition-all"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 text-white font-medium hover:brightness-110 transition-colors"
           >
             Talk to Sales
             <ArrowRightIcon className="w-4 h-4" />

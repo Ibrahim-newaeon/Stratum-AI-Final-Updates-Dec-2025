@@ -4,6 +4,7 @@
  */
 
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { queryClient } from '@/main';
 import { useTenantStore } from '@/stores/tenantStore';
 import { useIdleTimeout } from '@/hooks/useIdleTimeout';
 import IdleTimeoutWarning from '@/components/auth/IdleTimeoutWarning';
@@ -17,7 +18,7 @@ const API_BASE = window.__RUNTIME_CONFIG__?.VITE_API_URL || import.meta.env.VITE
  */
 function isDemoModeEnabled(): boolean {
   return (
-    (window as any).__RUNTIME_CONFIG__?.VITE_ENABLE_DEMO_MODE === 'true' ||
+    window.__RUNTIME_CONFIG__?.VITE_ENABLE_DEMO_MODE === 'true' ||
     import.meta.env.VITE_ENABLE_DEMO_MODE === 'true'
   );
 }
@@ -272,7 +273,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               : error instanceof TypeError
                 ? `Cannot reach server (${API_BASE}). Check your connection.`
                 : `Connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
-          console.error('[Auth] Login failed after retries:', error);
+
           return { success: false, error: msg };
         }
         // Wait briefly before retrying (1s, then 2s)
@@ -350,6 +351,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('stratum_available_tenants');
     // Clear Zustand tenant store on logout
     useTenantStore.getState().logout();
+    // Clear React Query cache to prevent stale tenant data after switching accounts
+    queryClient.clear();
   };
 
   const updateUser = (userData: Partial<User>) => {

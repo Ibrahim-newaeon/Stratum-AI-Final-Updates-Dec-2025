@@ -48,7 +48,7 @@ export function useFeatureFlags(tenantId: number) {
     queryKey: ['feature-flags', tenantId],
     queryFn: async () => {
       const response = await apiClient.get<{ data: FeatureFlagsResponse }>(
-        `/tenant/${tenantId}/features`
+        `/tenants/${tenantId}/features`
       )
       return response.data.data
     },
@@ -82,7 +82,7 @@ export function useUpdateFeatureFlags(tenantId: number) {
   return useMutation({
     mutationFn: async (updates: FeatureFlagsUpdate) => {
       const response = await apiClient.put<{ data: { features: FeatureFlags } }>(
-        `/tenant/${tenantId}/features`,
+        `/tenants/${tenantId}/features`,
         updates
       )
       return response.data.data

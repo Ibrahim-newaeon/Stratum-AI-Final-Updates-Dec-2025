@@ -148,6 +148,7 @@ export function LearningHub({ isOpen, onClose }: LearningHubProps) {
         </div>
         <button
           onClick={onClose}
+          aria-label="Close"
           className="p-1.5 rounded-lg hover:bg-muted transition-colors"
         >
           <X className="w-5 h-5" />

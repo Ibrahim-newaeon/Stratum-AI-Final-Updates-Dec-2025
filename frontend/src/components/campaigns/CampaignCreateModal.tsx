@@ -139,6 +139,10 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
   useEffect(() => {
     if (formData.platform) {
       const tenantId = getTenantId()
+      if (!tenantId) {
+        setIsLoadingAccounts(false)
+        return
+      }
 
       // Fetch ad accounts from campaign-builder endpoint
       setIsLoadingAccounts(true)
@@ -358,6 +362,7 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
           </div>
           <button
             onClick={handleClose}
+            aria-label="Close"
             className="p-2 rounded-lg hover:bg-muted transition-colors"
           >
             <X className="w-5 h-5" />
@@ -371,7 +376,7 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
               <div key={step} className="flex items-center">
                 <div
                   className={cn(
-                    'flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium transition-all',
+                    'flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium transition-colors',
                     index < currentStepIndex
                       ? 'bg-green-500 text-white'
                       : index === currentStepIndex
@@ -414,7 +419,7 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
                     key={platform.id}
                     onClick={() => updateFormData('platform', platform.id)}
                     className={cn(
-                      'flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left',
+                      'flex items-center gap-4 p-4 rounded-xl border-2 transition-colors text-left',
                       formData.platform === platform.id
                         ? 'border-primary bg-primary/5'
                         : 'border-transparent bg-muted/50 hover:bg-muted'
@@ -481,7 +486,7 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
                       key={obj}
                       onClick={() => updateFormData('objective', obj)}
                       className={cn(
-                        'px-3 py-2 rounded-lg text-sm font-medium border transition-all',
+                        'px-3 py-2 rounded-lg text-sm font-medium border transition-colors',
                         formData.objective === obj
                           ? 'border-primary bg-primary/10 text-primary'
                           : 'border-transparent bg-muted hover:bg-muted/80 text-foreground'
@@ -539,7 +544,7 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
                       key={status}
                       onClick={() => updateFormData('status', status)}
                       className={cn(
-                        'px-4 py-2 rounded-lg text-sm font-medium border transition-all',
+                        'px-4 py-2 rounded-lg text-sm font-medium border transition-colors',
                         formData.status === status
                           ? 'border-primary bg-primary/10 text-primary'
                           : 'border-transparent bg-muted hover:bg-muted/80 text-foreground'
@@ -692,7 +697,7 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
                     <button
                       onClick={() => setAudienceTab('custom')}
                       className={cn(
-                        'flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all',
+                        'flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
                         audienceTab === 'custom'
                           ? 'bg-primary text-primary-foreground'
                           : 'bg-muted hover:bg-muted/80'
@@ -704,7 +709,7 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
                     <button
                       onClick={() => setAudienceTab('lookalike')}
                       className={cn(
-                        'flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all',
+                        'flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
                         audienceTab === 'lookalike'
                           ? 'bg-primary text-primary-foreground'
                           : 'bg-muted hover:bg-muted/80'
@@ -716,7 +721,7 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
                     <button
                       onClick={() => setAudienceTab('saved')}
                       className={cn(
-                        'flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all',
+                        'flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
                         audienceTab === 'saved'
                           ? 'bg-primary text-primary-foreground'
                           : 'bg-muted hover:bg-muted/80'
@@ -734,7 +739,7 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
                         <label
                           key={audience.id}
                           className={cn(
-                            'flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all',
+                            'flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors',
                             formData.custom_audiences.includes(audience.id)
                               ? 'border-primary bg-primary/5'
                               : 'border-transparent bg-muted/50 hover:bg-muted'
@@ -762,7 +767,7 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
                         <label
                           key={audience.id}
                           className={cn(
-                            'flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all',
+                            'flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors',
                             formData.lookalike_audiences.includes(audience.id)
                               ? 'border-primary bg-primary/5'
                               : 'border-transparent bg-muted/50 hover:bg-muted'
@@ -793,7 +798,7 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
                         <label
                           key={audience.id}
                           className={cn(
-                            'flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all',
+                            'flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors',
                             formData.saved_audiences.includes(audience.id)
                               ? 'border-primary bg-primary/5'
                               : 'border-transparent bg-muted/50 hover:bg-muted'
@@ -885,7 +890,7 @@ export function CampaignCreateModal({ open, onClose, onSuccess }: CampaignCreate
                         }
                       }}
                       className={cn(
-                        'px-4 py-2 rounded-lg text-sm font-medium border transition-all',
+                        'px-4 py-2 rounded-lg text-sm font-medium border transition-colors',
                         (gender === 'all' && formData.targeting_genders.length === 0) ||
                         formData.targeting_genders.includes(gender)
                           ? 'border-primary bg-primary/10 text-primary'

@@ -203,7 +203,7 @@ export default function CMSPosts() {
                   >
                     {/* Title */}
                     <div className="col-span-5 flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500/20 to-cyan-500/20 flex items-center justify-center flex-shrink-0">
+                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                         <DocumentTextIcon className="w-5 h-5 text-purple-400" />
                       </div>
                       <div className="min-w-0">

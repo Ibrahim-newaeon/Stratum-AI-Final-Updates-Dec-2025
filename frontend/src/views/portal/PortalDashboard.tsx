@@ -6,7 +6,7 @@
  * Uses placeholder data until connected to real APIs.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import apiClient from '@/api/client';
 import {
@@ -90,6 +90,15 @@ function statusBadge(status: Campaign['status']): { bg: string; text: string; la
 export default function PortalDashboard() {
   const { user } = useAuth();
   const [showRequestModal, setShowRequestModal] = useState(false);
+  const timeoutsRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
+
+  useEffect(() => {
+    return () => {
+      timeoutsRef.current.forEach(clearTimeout);
+      timeoutsRef.current.clear();
+    };
+  }, []);
+
   const [requestSubmitted, setRequestSubmitted] = useState(false);
   const [requestForm, setRequestForm] = useState<ClientRequest>({
     type: 'general',
@@ -161,7 +170,7 @@ export default function PortalDashboard() {
       // Fetch campaigns
       const campaignsRes = await apiClient.get('/campaigns', { params: { limit: 10 } });
       const campaignData = campaignsRes.data?.data || campaignsRes.data?.items || [];
-      const mappedCampaigns: Campaign[] = (Array.isArray(campaignData) ? campaignData : []).map((c: any) => ({
+      const mappedCampaigns: Campaign[] = (Array.isArray(campaignData) ? campaignData : []).map((c) => ({
         id: String(c.id),
         name: c.name || '—',
         platform: c.platform || '—',
@@ -197,20 +206,22 @@ export default function PortalDashboard() {
         description: requestForm.description,
       });
       setRequestSubmitted(true);
-      setTimeout(() => {
+      const id1 = setTimeout(() => {
         setShowRequestModal(false);
         setRequestSubmitted(false);
         setRequestForm({ type: 'general', campaignName: '', description: '' });
       }, 2000);
+      timeoutsRef.current.add(id1);
     } catch (err) {
       // If the endpoint doesn't exist yet, still provide UX feedback
-      console.warn('Request submission endpoint not available, saving locally', err);
+
       setRequestSubmitted(true);
-      setTimeout(() => {
+      const id2 = setTimeout(() => {
         setShowRequestModal(false);
         setRequestSubmitted(false);
         setRequestForm({ type: 'general', campaignName: '', description: '' });
       }, 2000);
+      timeoutsRef.current.add(id2);
     }
   };
 
@@ -407,7 +418,7 @@ export default function PortalDashboard() {
       <div className="flex justify-end">
         <button
           onClick={() => setShowRequestModal(true)}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-colors duration-200"
           style={{
             background: theme.primary,
             color: '#000',
@@ -489,7 +500,7 @@ export default function PortalDashboard() {
                           type: e.target.value as ClientRequest['type'],
                         }))
                       }
-                      className="w-full px-4 py-2.5 rounded-xl text-sm outline-none transition-all duration-200"
+                      className="w-full px-4 py-2.5 rounded-xl text-sm outline-none transition-colors duration-200"
                       style={{
                         background: theme.bgInput,
                         border: `1px solid ${theme.border}`,
@@ -527,7 +538,7 @@ export default function PortalDashboard() {
                       onChange={(e) =>
                         setRequestForm((prev) => ({ ...prev, campaignName: e.target.value }))
                       }
-                      className="w-full px-4 py-2.5 rounded-xl text-sm outline-none transition-all duration-200"
+                      className="w-full px-4 py-2.5 rounded-xl text-sm outline-none transition-colors duration-200"
                       style={{
                         background: theme.bgInput,
                         border: `1px solid ${theme.border}`,
@@ -559,7 +570,7 @@ export default function PortalDashboard() {
                       onChange={(e) =>
                         setRequestForm((prev) => ({ ...prev, description: e.target.value }))
                       }
-                      className="w-full px-4 py-2.5 rounded-xl text-sm outline-none resize-none transition-all duration-200"
+                      className="w-full px-4 py-2.5 rounded-xl text-sm outline-none resize-none transition-colors duration-200"
                       style={{
                         background: theme.bgInput,
                         border: `1px solid ${theme.border}`,
@@ -591,7 +602,7 @@ export default function PortalDashboard() {
                   <button
                     onClick={handleSubmitRequest}
                     disabled={!requestForm.description.trim()}
-                    className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
                     style={{
                       background: theme.primary,
                       color: '#000',

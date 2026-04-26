@@ -332,7 +332,7 @@ export function SignalRecoveryCard() {
             </div>
             <div className="w-full h-1.5 bg-muted/30 rounded-full overflow-hidden">
               <div
-                className={cn('h-full rounded-full transition-all duration-500', config.color.replace('text-', 'bg-'))}
+                className={cn('h-full rounded-full transition-[width] duration-500', config.color.replace('text-', 'bg-'))}
                 style={{ width: `${data.recovery_progress_pct}%` }}
               />
             </div>
@@ -400,7 +400,7 @@ export function SignalRecoveryCard() {
           </button>
           {showTimeline && (
             <div className="px-6 pb-4">
-              <div className="border-l-2 border-muted/40 pl-3 ml-1 space-y-0.5">
+              <div className="pl-3 ml-1 space-y-0.5">
                 {data.timeline.map((entry, i) => (
                   <TimelineEntry key={i} entry={entry} />
                 ))}

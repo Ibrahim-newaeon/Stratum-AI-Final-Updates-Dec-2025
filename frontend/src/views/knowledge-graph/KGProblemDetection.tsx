@@ -118,7 +118,7 @@ export default function KGProblemDetection() {
             <div
               key={card.label}
               className={cn(
-                'rounded-xl border p-4 backdrop-blur-sm',
+                'rounded-xl border p-4',
                 card.borderColor,
                 card.bgColor
               )}

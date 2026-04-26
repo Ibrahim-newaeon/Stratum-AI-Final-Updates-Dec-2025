@@ -38,19 +38,18 @@ logger = get_task_logger(__name__)
 def async_task(func):
     """
     Decorator to run async functions in Celery tasks.
-    Celery doesn't natively support async, so we run in an event loop.
+    Reuses an existing event loop if available; otherwise creates one cleanly
+    via asyncio.run() to avoid resource leaks from manual loop management.
     """
 
     @wraps(func)
     def wrapper(*args, **kwargs):
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+        coro = asyncio.wait_for(func(*args, **kwargs), timeout=300)
         try:
-            return loop.run_until_complete(
-                asyncio.wait_for(func(*args, **kwargs), timeout=300)
-            )
-        finally:
-            loop.close()
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            return asyncio.run(coro)
+        return loop.run_until_complete(coro)
 
     return wrapper
 

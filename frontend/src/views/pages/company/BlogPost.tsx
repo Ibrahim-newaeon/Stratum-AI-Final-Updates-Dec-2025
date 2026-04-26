@@ -58,7 +58,7 @@ export default function BlogPost() {
             </p>
             <Link
               to="/blog"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-white transition-all hover:opacity-90"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-white transition-opacity hover:opacity-90"
               style={{
                 background: 'var(--landing-accent-coral)',
                 boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
@@ -146,6 +146,8 @@ export default function BlogPost() {
                     src={post.author.avatar_url}
                     alt={post.author.name}
                     className="w-10 h-10 rounded-full object-cover"
+                    loading="lazy"
+                    decoding="async"
                   />
                 ) : (
                   <div
@@ -174,7 +176,7 @@ export default function BlogPost() {
           {/* Featured Image */}
           {post.featured_image_url && (
             <div className="my-8 rounded-2xl overflow-hidden">
-              <img src={post.featured_image_url} alt={post.title} className="w-full h-auto" />
+              <img src={post.featured_image_url} alt={post.title} className="w-full h-auto"  loading="lazy" />
             </div>
           )}
 
@@ -227,6 +229,8 @@ export default function BlogPost() {
                     src={post.author.avatar_url}
                     alt={post.author.name}
                     className="w-16 h-16 rounded-full object-cover"
+                    loading="lazy"
+                    decoding="async"
                   />
                 ) : (
                   <div
@@ -270,7 +274,7 @@ export default function BlogPost() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 to="/signup"
-                className="px-6 py-3 rounded-full font-semibold text-white transition-all hover:opacity-90"
+                className="px-6 py-3 rounded-full font-semibold text-white transition-opacity hover:opacity-90"
                 style={{
                   background: 'var(--landing-accent-coral)',
                   boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
@@ -280,7 +284,7 @@ export default function BlogPost() {
               </Link>
               <Link
                 to="/contact"
-                className="px-6 py-3 rounded-xl font-semibold transition-all hover:bg-white/10"
+                className="px-6 py-3 rounded-xl font-semibold transition-colors hover:bg-white/10"
                 style={{
                   background: 'var(--landing-surface-glass)',
                   border: '1px solid rgba(255, 255, 255, 0.2)',

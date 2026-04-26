@@ -300,6 +300,7 @@ export function Benchmarks() {
           <button
             onClick={handleRefresh}
             disabled={isRefreshing}
+            aria-label="Refresh benchmark data"
             className="p-2 rounded-lg border hover:bg-muted transition-colors disabled:opacity-50"
             title="Refresh benchmark data"
           >
@@ -365,7 +366,7 @@ export function Benchmarks() {
                   <div className="mt-3 h-2 bg-muted rounded-full overflow-hidden">
                     <div
                       className={cn(
-                        'h-full rounded-full transition-all',
+                        'h-full rounded-full transition-[width]',
                         isAboveAvg ? 'bg-green-500' : 'bg-red-500'
                       )}
                       style={{ width: `${metric.percentile || 0}%` }}
@@ -388,10 +389,10 @@ export function Benchmarks() {
       <div className="rounded-xl border bg-card p-5">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="font-semibold flex items-center gap-2">
+            <h2 className="font-semibold flex items-center gap-2">
               <Target className="w-5 h-5 text-primary" />
               Your Tracked Competitors
-            </h3>
+            </h2>
             <p className="text-xs text-muted-foreground">
               Click to view their ads in Meta Ads Library or Google Transparency
             </p>
@@ -463,7 +464,7 @@ export function Benchmarks() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Competitor Comparison */}
         <div className="rounded-xl border bg-card p-5">
-          <h3 className="font-semibold mb-4">{t('benchmarks.competitorComparison')}</h3>
+          <h2 className="font-semibold mb-4">{t('benchmarks.competitorComparison')}</h2>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartCompetitors} layout="vertical">
@@ -497,7 +498,7 @@ export function Benchmarks() {
 
         {/* Performance Radar */}
         <div className="rounded-xl border bg-card p-5">
-          <h3 className="font-semibold mb-4">{t('benchmarks.performanceRadar')}</h3>
+          <h2 className="font-semibold mb-4">{t('benchmarks.performanceRadar')}</h2>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart data={radarData}>
@@ -547,10 +548,10 @@ export function Benchmarks() {
         <div className="rounded-xl border bg-card p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="font-semibold flex items-center gap-2">
+              <h2 className="font-semibold flex items-center gap-2">
                 <Globe className="w-5 h-5 text-primary" />
                 Language Breakdown
-              </h3>
+              </h2>
               <p className="text-xs text-muted-foreground">Performance by audience language</p>
             </div>
           </div>
@@ -586,10 +587,10 @@ export function Benchmarks() {
         <div className="rounded-xl border bg-card p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="font-semibold flex items-center gap-2">
+              <h2 className="font-semibold flex items-center gap-2">
                 <Smartphone className="w-5 h-5 text-primary" />
                 Device Breakdown
-              </h3>
+              </h2>
               <p className="text-xs text-muted-foreground">Performance by device type</p>
             </div>
           </div>
@@ -609,7 +610,7 @@ export function Benchmarks() {
                     </div>
                     <div className="h-2 bg-muted rounded-full overflow-hidden">
                       <div
-                        className="h-full rounded-full bg-primary transition-all"
+                        className="h-full rounded-full bg-primary transition-[width]"
                         style={{ width: `${pct}%` }}
                       />
                     </div>
@@ -635,10 +636,10 @@ export function Benchmarks() {
       <div className="rounded-xl border bg-card p-5">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="font-semibold flex items-center gap-2">
+            <h2 className="font-semibold flex items-center gap-2">
               <Monitor className="w-5 h-5 text-primary" />
               Operating System
-            </h3>
+            </h2>
             <p className="text-xs text-muted-foreground">Performance breakdown by OS</p>
           </div>
         </div>
@@ -674,10 +675,10 @@ export function Benchmarks() {
       <div className="rounded-xl border bg-card p-5">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="font-semibold flex items-center gap-2">
+            <h2 className="font-semibold flex items-center gap-2">
               <Globe className="w-5 h-5 text-primary" />
               {t('benchmarks.geographicPerformance')}
-            </h3>
+            </h2>
             <p className="text-xs text-muted-foreground">{t('benchmarks.performanceByRegion')}</p>
           </div>
         </div>

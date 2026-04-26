@@ -9,7 +9,7 @@
  * 5. Trust Gate Configuration - Safety thresholds
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   BarChart3,
@@ -169,6 +169,14 @@ const AUTOMATION_MODES: {
 export default function Onboarding() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const timeoutsRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
+
+  useEffect(() => {
+    return () => {
+      timeoutsRef.current.forEach(clearTimeout);
+      timeoutsRef.current.clear();
+    };
+  }, []);
   const { data: status, isLoading: statusLoading } = useOnboardingStatus();
 
   // Form state
@@ -313,9 +321,10 @@ export default function Onboarding() {
             title: 'Setup Complete!',
             description: 'Your account is ready. Redirecting to dashboard...',
           });
-          setTimeout(() => {
+          const id = setTimeout(() => {
             navigate('/dashboard/overview');
           }, 1500);
+          timeoutsRef.current.add(id);
           return;
       }
 
@@ -370,12 +379,12 @@ export default function Onboarding() {
   const StepIcon = step.icon;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
+    <div className="min-h-screen bg-background">
       <div className="container max-w-4xl mx-auto py-12 px-4">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
-            <div className="h-10 w-10 rounded-xl bg-gradient-stratum flex items-center justify-center shadow-glow">
+            <div className="h-10 w-10 rounded-xl  flex items-center justify-center shadow-glow">
               <span className="text-white font-bold text-xl">S</span>
             </div>
             <span className="text-2xl font-bold">Stratum AI</span>
@@ -406,7 +415,7 @@ export default function Onboarding() {
               onClick={handleSkip}
               disabled={isSubmitting}
               className={cn(
-                'flex-shrink-0 px-5 py-2.5 rounded-xl font-medium text-sm transition-all',
+                'flex-shrink-0 px-5 py-2.5 rounded-xl font-medium text-sm transition-colors',
                 'border-2 border-primary/30 text-primary hover:bg-primary/10 hover:border-primary/50',
                 'flex items-center gap-2',
                 'disabled:opacity-50 disabled:cursor-not-allowed'
@@ -582,7 +591,7 @@ export default function Onboarding() {
                     type="button"
                     onClick={() => togglePlatform(p.value)}
                     className={cn(
-                      'p-4 rounded-xl border-2 text-left transition-all',
+                      'p-4 rounded-xl border-2 text-left transition-colors',
                       formData.platforms.includes(p.value)
                         ? 'border-primary bg-primary/5'
                         : 'border-muted hover:border-muted-foreground/50'
@@ -626,7 +635,7 @@ export default function Onboarding() {
                         type="button"
                         onClick={() => setFormData((prev) => ({ ...prev, primaryKpi: kpi.value }))}
                         className={cn(
-                          'p-3 rounded-lg border text-center transition-all',
+                          'p-3 rounded-lg border text-center transition-colors',
                           formData.primaryKpi === kpi.value
                             ? 'border-primary bg-primary/5'
                             : 'border-muted hover:border-muted-foreground/50'
@@ -746,7 +755,7 @@ export default function Onboarding() {
                           setFormData((prev) => ({ ...prev, automationMode: mode.value }))
                         }
                         className={cn(
-                          'w-full p-4 rounded-xl border-2 text-left transition-all',
+                          'w-full p-4 rounded-xl border-2 text-left transition-[width]',
                           formData.automationMode === mode.value
                             ? 'border-primary bg-primary/5'
                             : 'border-muted hover:border-muted-foreground/50'
@@ -948,7 +957,7 @@ export default function Onboarding() {
               type="button"
               onClick={handleSkip}
               disabled={isSubmitting}
-              className="px-4 py-2 rounded-lg border border-muted-foreground/20 text-sm font-medium text-muted-foreground hover:text-foreground hover:border-muted-foreground/40 hover:bg-muted/50 transition-all flex items-center gap-2 disabled:opacity-50"
+              className="px-4 py-2 rounded-lg border border-muted-foreground/20 text-sm font-medium text-muted-foreground hover:text-foreground hover:border-muted-foreground/40 hover:bg-muted/50 transition-colors flex items-center gap-2 disabled:opacity-50"
             >
               <SkipForward className="w-4 h-4" />
               Skip setup
@@ -971,7 +980,7 @@ export default function Onboarding() {
                 onClick={handleNext}
                 disabled={isSubmitting}
                 className={cn(
-                  'px-6 py-2 rounded-lg font-medium text-white bg-gradient-stratum shadow-glow transition-all',
+                  'px-6 py-2 rounded-lg font-medium text-white  shadow-glow transition-colors',
                   'hover:shadow-glow-lg hover:scale-[1.02]',
                   'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100',
                   'flex items-center gap-2'

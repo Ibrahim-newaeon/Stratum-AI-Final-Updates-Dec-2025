@@ -1143,11 +1143,7 @@ def apply_actions_queue(self, tenant_id: Optional[int] = None):
                 raise self.retry(exc=e)
 
     import asyncio
-    loop = asyncio.new_event_loop()
-    try:
-        return loop.run_until_complete(run_apply())
-    finally:
-        loop.close()
+    return asyncio.run(run_apply())
 
 
 async def log_action_audit(db: AsyncSession, action: FactActionsQueue, result: Dict[str, Any]):
@@ -1298,8 +1294,4 @@ def apply_single_action(self, action_id: str, user_id: Optional[int] = None):
                 raise self.retry(exc=e)
 
     import asyncio
-    loop = asyncio.new_event_loop()
-    try:
-        return loop.run_until_complete(run_single())
-    finally:
-        loop.close()
+    return asyncio.run(run_single())

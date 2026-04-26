@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stratum AI — Master Technical Audit Report</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --surface: #16191f;
+    --surface-2: #1e222b;
+    --text: #e2e8f0;
+    --text-dim: #94a3b8;
+    --border: #2d3342;
+    --critical: #ef4444;
+    --critical-bg: rgba(239,68,68,0.08);
+    --high: #f97316;
+    --high-bg: rgba(249,115,22,0.08);
+    --medium: #eab308;
+    --medium-bg: rgba(234,179,8,0.08);
+    --low: #22c55e;
+    --low-bg: rgba(34,197,94,0.08);
+    --accent: #8b5cf6;
+    --accent-2: #06b6d4;
+    --code-bg: #0b0d12;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+  a { color: var(--accent-2); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+  header {
+    background: linear-gradient(135deg, #1e1b4b 0%, #0f1115 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 48px 24px;
+    text-align: center;
+  }
+  header h1 { margin: 0 0 8px; font-size: 2.4rem; font-weight: 800; letter-spacing: -0.02em; }
+  header p { margin: 0; color: var(--text-dim); font-size: 1.05rem; }
+  .badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border: 1px solid;
+  }
+  .badge-critical { color: var(--critical); background: var(--critical-bg); border-color: rgba(239,68,68,0.3); }
+  .badge-high { color: var(--high); background: var(--high-bg); border-color: rgba(249,115,22,0.3); }
+  .badge-medium { color: var(--medium); background: var(--medium-bg); border-color: rgba(234,179,8,0.3); }
+  .badge-low { color: var(--low); background: var(--low-bg); border-color: rgba(34,197,94,0.3); }
+  .toc {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin: 32px 0;
+  }
+  .toc h2 { margin-top: 0; font-size: 1.25rem; }
+  .toc ul { columns: 2; column-gap: 32px; }
+  .toc li { margin-bottom: 6px; break-inside: avoid; }
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin: 32px 0;
+  }
+  .metric-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+  }
+  .metric-card .value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--accent);
+  }
+  .metric-card .label {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+  .health-banner {
+    background: var(--critical-bg);
+    border: 1px solid rgba(239,68,68,0.3);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin: 24px 0;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .health-banner .icon { font-size: 1.8rem; }
+  .health-banner h3 { margin: 0 0 4px; }
+  .health-banner p { margin: 0; color: var(--text-dim); font-size: 0.95rem; }
+  section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    margin: 24px 0;
+  }
+  section h2 {
+    margin-top: 0;
+    font-size: 1.5rem;
+    color: var(--accent);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 12px;
+  }
+  section h3 {
+    font-size: 1.15rem;
+    margin: 28px 0 12px;
+    color: var(--text);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 0.92rem;
+  }
+  th, td {
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: var(--surface-2);
+    font-weight: 600;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+  }
+  tr:nth-child(even) { background: rgba(255,255,255,0.02); }
+  code, pre {
+    font-family: 'SF Mono', Monaco, Inconsolata, 'Fira Code', monospace;
+    font-size: 0.88rem;
+  }
+  code {
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    color: #f472b6;
+  }
+  pre {
+    background: var(--code-bg);
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    overflow-x: auto;
+    color: #cbd5e1;
+  }
+  pre code { background: none; padding: 0; border: none; color: inherit; }
+  .issue {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px 0;
+  }
+  .issue-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .issue-header h4 { margin: 0; font-size: 1.05rem; }
+  .issue-meta { color: var(--text-dim); font-size: 0.85rem; margin-bottom: 12px; }
+  .issue-meta strong { color: var(--text); }
+  .roadmap-table th { white-space: nowrap; }
+  .roadmap-table td:nth-child(4) { min-width: 240px; }
+  .top10 li {
+    margin-bottom: 10px;
+    padding-left: 8px;
+    border-left: 3px solid var(--critical);
+  }
+  .top10 li strong { color: var(--critical); }
+  .positives {
+    background: var(--low-bg);
+    border: 1px solid rgba(34,197,94,0.2);
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px 0;
+  }
+  .positives h3 { color: var(--low); margin-top: 0; }
+  .positives li { margin-bottom: 6px; }
+  footer {
+    text-align: center;
+    padding: 40px 24px;
+    color: var(--text-dim);
+    border-top: 1px solid var(--border);
+    margin-top: 40px;
+  }
+  @media (max-width: 768px) {
+    .toc ul { columns: 1; }
+    .metrics { grid-template-columns: repeat(2, 1fr); }
+    .issue-header { flex-direction: column; align-items: flex-start; }
+    table { font-size: 0.82rem; }
+    th, td { padding: 8px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>STRATUM AI — Master Technical Audit Report</h1>
+  <p>Comprehensive Full-Stack Audit &nbsp;|&nbsp; April 23, 2026 &nbsp;|&nbsp; Auditor: Claude Code Desktop</p>
+</header>
+
+<div class="container">
+
+<div class="health-banner">
+  <div class="icon">&#9888;&#65039;</div>
+  <div>
+    <h3>Overall System Health: DEGRADED</h3>
+    <p>The platform <strong>must not</strong> be deployed to new enterprise tenants until P0 issues are resolved. The most severe risks are authentication bypass, cross-tenant data leakage, hardcoded credentials, transaction corruption, and refresh token reuse.</p>
+  </div>
+</div>
+
+<div class="metrics">
+  <div class="metric-card"><div class="value">180+</div><div class="label">Total Issues</div></div>
+  <div class="metric-card"><div class="value" style="color:#ef4444">28</div><div class="label">Critical (P0)</div></div>
+  <div class="metric-card"><div class="value" style="color:#f97316">52</div><div class="label">High (P1)</div></div>
+  <div class="metric-card"><div class="value" style="color:#eab308">68</div><div class="label">Medium (P2)</div></div>
+  <div class="metric-card"><div class="value" style="color:#22c55e">30</div><div class="label">Low (P3)</div></div>
+</div>
+
+<div class="toc">
+  <h2>&#128209; Table of Contents</h2>
+  <ul>
+    <li><a href="#exec">Executive Summary</a></li>
+    <li><a href="#matrix">Issue Tracking Matrix</a></li>
+    <li><a href="#top10">Top 10 Most Dangerous Issues</a></li>
+    <li><a href="#backend">Backend Audit Findings</a></li>
+    <li><a href="#api">API Audit Findings</a></li>
+    <li><a href="#frontend">Frontend Audit Findings</a></li>
+    <li><a href="#database">Database &amp; Migration Audit</a></li>
+    <li><a href="#infra">Infrastructure &amp; DevOps Audit</a></li>
+    <li><a href="#security">Security Deep Dive</a></li>
+    <li><a href="#performance">Performance Findings</a></li>
+    <li><a href="#roadmap">Remediation Roadmap</a></li>
+    <li><a href="#appendix">Appendix</a></li>
+  </ul>
+</div>
+
+<section id="exec">
+<h2>Executive Summary</h2>
+<p>Stratum AI is a sophisticated multi-tenant marketing intelligence platform with a strong architectural foundation. However, this audit uncovered <strong>significant security vulnerabilities, data integrity risks, and production reliability gaps</strong> that require immediate attention before the platform can safely scale to enterprise tenants.</p>
+
+<h3>Key Metrics</h3>
+<table>
+  <tr><th>Layer</th><th>Total</th><th>Critical</th><th>High</th><th>Medium</th><th>Low</th></tr>
+  <tr><td>Backend</td><td>52</td><td>8</td><td>16</td><td>19</td><td>9</td></tr>
+  <tr><td>API Contract &amp; Auth</td><td>35</td><td>7</td><td>15</td><td>9</td><td>4</td></tr>
+  <tr><td>Frontend</td><td>45</td><td>21</td><td>8</td><td>12</td><td>4</td></tr>
+  <tr><td>Database &amp; Migrations</td><td>43</td><td>6</td><td>17</td><td>19</td><td>3</td></tr>
+  <tr><td>Infrastructure &amp; DevOps</td><td>47</td><td>4</td><td>11</td><td>22</td><td>10</td></tr>
+  <tr><td>Security Deep Dive</td><td>16</td><td>5</td><td>4</td><td>5</td><td>2</td></tr>
+  <tr><td>Performance</td><td>10</td><td>0</td><td>4</td><td>5</td><td>1</td></tr>
+  <tr><td><strong>TOTAL UNIQUE</strong></td><td><strong>~180</strong></td><td><strong>~28</strong></td><td><strong>~52</strong></td><td><strong>~68</strong></td><td><strong>~30</strong></td></tr>
+</table>
+
+<h3>Critical Risks</h3>
+<ol>
+  <li><strong>Authentication bypass</strong> on Meta CAPI and EMQ v2 endpoints</li>
+  <li><strong>Cross-tenant data leakage</strong> via middleware spoofing and missing tenant filters</li>
+  <li><strong>Hardcoded credentials</strong> in seed scripts and Docker startup</li>
+  <li><strong>Double-commit SQLAlchemy anti-pattern</strong> causing transaction corruption</li>
+  <li><strong>Refresh token reuse</strong> enabling indefinite session hijacking</li>
+</ol>
+</section>
+
+<section id="matrix">
+<h2>Issue Tracking Matrix (Excerpt)</h2>
+<table>
+  <tr><th>ID</th><th>Severity</th><th>Layer</th><th>Component</th><th>Status</th></tr>
+  <tr><td>BE-001</td><td><span class="badge badge-critical">Critical</span></td><td>Backend</td><td><code>app/middleware/tenant.py</code></td><td>OPEN</td></tr>
+  <tr><td>BE-002</td><td><span class="badge badge-critical">Critical</span></td><td>Backend</td><td><code>app/api/v1/endpoints/capi.py</code></td><td>OPEN</td></tr>
+  <tr><td>BE-003</td><td><span class="badge badge-critical">Critical</span></td><td>Backend</td><td><code>app/db/session.py</code></td><td>OPEN</td></tr>
+  <tr><td>API-001</td><td><span class="badge badge-critical">Critical</span></td><td>API</td><td><code>meta_capi.py</code></td><td>OPEN</td></tr>
+  <tr><td>API-002</td><td><span class="badge badge-critical">Critical</span></td><td>API</td><td><code>emq_v2.py</code></td><td>OPEN</td></tr>
+  <tr><td>API-003</td><td><span class="badge badge-critical">Critical</span></td><td>API</td><td><code>capi.py</code></td><td>OPEN</td></tr>
+  <tr><td>SEC-001</td><td><span class="badge badge-critical">Critical</span></td><td>Security</td><td><code>scripts/seed_superadmin.py</code></td><td>OPEN</td></tr>
+  <tr><td>SEC-002</td><td><span class="badge badge-critical">Critical</span></td><td>Security</td><td><code>.env.production.template</code></td><td>OPEN</td></tr>
+  <tr><td>SEC-003</td><td><span class="badge badge-critical">Critical</span></td><td>Security</td><td><code>auth.py</code> (refresh)</td><td>OPEN</td></tr>
+  <tr><td>SEC-004</td><td><span class="badge badge-critical">Critical</span></td><td>Security</td><td><code>auth.py</code> (logout)</td><td>OPEN</td></tr>
+  <tr><td>SEC-005</td><td><span class="badge badge-critical">Critical</span></td><td>Security</td><td><code>requirements.txt</code></td><td>OPEN</td></tr>
+  <tr><td>DB-001</td><td><span class="badge badge-critical">Critical</span></td><td>Database</td><td>Migration 020</td><td>OPEN</td></tr>
+  <tr><td>DB-002</td><td><span class="badge badge-critical">Critical</span></td><td>Database</td><td>Migration 012 duplicate</td><td>OPEN</td></tr>
+  <tr><td>DB-003</td><td><span class="badge badge-critical">Critical</span></td><td>Database</td><td><code>app/db/base.py</code></td><td>OPEN</td></tr>
+  <tr><td>DB-004</td><td><span class="badge badge-critical">Critical</span></td><td>Database</td><td>Soft delete gaps</td><td>OPEN</td></tr>
+  <tr><td>INF-001</td><td><span class="badge badge-critical">Critical</span></td><td>Infra</td><td><code>Dockerfile.frontend</code></td><td>OPEN</td></tr>
+  <tr><td>INF-002</td><td><span class="badge badge-critical">Critical</span></td><td>Infra</td><td><code>docker-compose.yml</code></td><td>OPEN</td></tr>
+  <tr><td>INF-003</td><td><span class="badge badge-critical">Critical</span></td><td>Infra</td><td><code>scripts/load_datasets.py</code></td><td>OPEN</td></tr>
+  <tr><td>INF-004</td><td><span class="badge badge-critical">Critical</span></td><td>Infra</td><td><code>backend/start.sh</code></td><td>OPEN</td></tr>
+  <tr><td>FE-001</td><td><span class="badge badge-critical">Critical</span></td><td>Frontend</td><td><code>src/api/insights.ts</code></td><td>OPEN</td></tr>
+  <tr><td>FE-002</td><td><span class="badge badge-critical">Critical</span></td><td>Frontend</td><td><code>src/api/autopilot.ts</code></td><td>OPEN</td></tr>
+  <tr><td>FE-003</td><td><span class="badge badge-critical">Critical</span></td><td>Frontend</td><td><code>src/api/trustLayer.ts</code></td><td>OPEN</td></tr>
+  <tr><td>FE-004</td><td><span class="badge badge-critical">Critical</span></td><td>Frontend</td><td><code>src/api/featureFlags.ts</code></td><td>OPEN</td></tr>
+  <tr><td>FE-005</td><td><span class="badge badge-critical">Critical</span></td><td>Frontend</td><td><code>src/api/dashboard.ts</code></td><td>OPEN</td></tr>
+  <tr><td>FE-006</td><td><span class="badge badge-critical">Critical</span></td><td>Frontend</td><td><code>src/api/campaigns.ts</code></td><td>OPEN</td></tr>
+  <tr><td>FE-007..FE-018</td><td><span class="badge badge-critical">Critical</span></td><td>Frontend</td><td>Missing API clients</td><td>OPEN</td></tr>
+</table>
+</section>
+
+<section id="top10">
+<h2>&#128680; Top 10 Most Dangerous Issues</h2>
+<ol class="top10">
+  <li><strong>SEC-001 / INF-004 / INF-005</strong> — Hardcoded superadmin credentials in <code>seed_superadmin.py</code>, <code>seed-data.sql</code>, and <code>start.sh</code></li>
+  <li><strong>SEC-005</strong> — <code>python-jose==3.5.0</code> vulnerable to <strong>CVE-2024-33663/33664</strong></li>
+  <li><strong>SEC-003 / SEC-004</strong> — Refresh tokens never rotated; logout doesn't invalidate refresh tokens</li>
+  <li><strong>BE-001</strong> — <code>X-Tenant-ID</code> header spoofing bypasses tenant isolation</li>
+  <li><strong>API-001 / API-002 / API-003</strong> — Meta CAPI and all EMQ v2 endpoints are <strong>completely unauthenticated</strong></li>
+  <li><strong>BE-003 / BE-004</strong> — Widespread SQLAlchemy double-commit causing transaction corruption</li>
+  <li><strong>INF-003</strong> — SQL injection in <code>scripts/load_datasets.py</code> via filename f-string</li>
+  <li><strong>DB-004</strong> — ~80% of tenant-facing tables lack soft delete (CRM, CDP, Pacing, Profit, Reporting)</li>
+  <li><strong>FE-001..FE-006</strong> — 6 broken API path mismatches rendering frontend features non-functional</li>
+  <li><strong>FE-007..FE-018</strong> — 12 completely missing frontend API client files</li>
+</ol>
+</section>
+
+<section id="backend">
+<h2>Backend Audit Findings</h2>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>BE-001: X-Tenant-ID Header Spoofing in TenantMiddleware</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/app/middleware/tenant.py</code> (lines 166-172)</div>
+  <p><strong>Problem:</strong> The <code>_extract_tenant_id()</code> function trusts the <code>X-Tenant-ID</code> header whenever <strong>any</strong> <code>Authorization</code> header is present — even if the token is completely invalid. An attacker can send <code>Authorization: Bearer invalid</code> + <code>X-Tenant-ID: 123</code> and the middleware will set <code>request.state.tenant_id = 123</code>, bypassing authentication entirely for endpoints that rely solely on middleware tenant extraction.</p>
+  <p><strong>Root Cause:</strong> The code checks <code>auth_header</code> presence but does not validate the JWT before trusting <code>X-Tenant-ID</code>.</p>
+  <p><strong>Recommended Solution:</strong> Validate the JWT and extract the tenant claim from the token before accepting <code>X-Tenant-ID</code>, or reject mismatched headers.</p>
+  <p><strong>Implementation Steps:</strong></p>
+  <ol>
+    <li>In <code>_extract_tenant_id()</code>, decode and verify the JWT before trusting <code>X-Tenant-ID</code>.</li>
+    <li>Compare <code>X-Tenant-ID</code> against the <code>tenant_id</code> claim in the validated token payload.</li>
+    <li>If mismatch or invalid token, raise <code>HTTPException(401)</code>.</li>
+  </ol>
+  <pre><code># BEFORE (vulnerable)
+if tenant_header and auth_header:
+    return int(tenant_header)
+
+# AFTER (secure)
+if tenant_header and auth_header:
+    try:
+        payload = decode_access_token(auth_header.replace("Bearer ", ""))
+        token_tenant = payload.get("tenant_id")
+        if token_tenant and int(tenant_header) == token_tenant:
+            return int(tenant_header)
+    except Exception:
+        pass
+    raise HTTPException(status_code=401, detail="Invalid tenant context")</code></pre>
+  <p><strong>Verification:</strong> Send <code>curl -H "Authorization: Bearer invalid" -H "X-Tenant-ID: 1" http://localhost:8000/api/v1/campaigns</code>. Should return 401, not 200.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>BE-002: CAPI Service Global State Leakage (Cross-Tenant Memory)</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/app/api/v1/endpoints/capi.py</code> (lines 26-33)</div>
+  <p><strong>Problem:</strong> <code>_capi_services: Dict[int, CAPIService]</code> is a module-level global dictionary that caches service instances per tenant. There is <strong>no eviction</strong> — this grows unbounded and will eventually OOM. More critically, if <code>CAPIService</code> holds any state (credentials, buffers, connections), it can leak across requests or tenants.</p>
+  <p><strong>Root Cause:</strong> Global mutable state without TTL, cleanup, or bounded size.</p>
+  <p><strong>Recommended Solution:</strong> Replace the unbounded dict with an LRU cache or instantiate per-request.</p>
+  <pre><code>from functools import lru_cache
+
+@lru_cache(maxsize=128)
+def get_capi_service(tenant_id: int) -&gt; CAPIService:
+    return CAPIService(tenant_id=tenant_id)</code></pre>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>BE-003: Widespread Double-Commit Anti-Pattern</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/app/db/session.py</code> (lines 90-98) + ~40 endpoint files</div>
+  <p><strong>Problem:</strong> <code>get_async_session()</code> <strong>auto-commits</strong> on successful generator exit (<code>await session.commit()</code> at line 93). However, nearly every endpoint also calls <code>await db.commit()</code> explicitly. This causes <strong>two commits per request</strong>. In SQLAlchemy 2.0 async, this is fragile — if the explicit commit succeeds but subsequent lazy-loaded operations occur before dependency cleanup, the second commit can fail with "Transaction is closed" or silently corrupt session state.</p>
+  <p><strong>Root Cause:</strong> FastAPI dependency auto-commits while endpoints also manage transactions manually.</p>
+  <p><strong>Recommended Solution:</strong> Remove auto-commit from <code>get_async_session()</code> and let endpoints own transaction boundaries.</p>
+  <pre><code>async def get_async_session() -&gt; AsyncGenerator[AsyncSession, None]:
+    async with AsyncSessionLocal() as session:
+        try:
+            yield session
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()</code></pre>
+  <p><strong>Verification:</strong> Add SQLAlchemy event listeners or query <code>pg_stat_statements</code> to confirm single commit per request.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>BE-004: Stripe Webhook Double Commit with Context Manager</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/app/api/v1/endpoints/stripe_webhook.py</code> (lines 130-156)</div>
+  <p><strong>Problem:</strong> The webhook handler uses <code>async with async_session_maker() as db</code> (which <strong>auto-commits</strong> on success), then explicitly calls <code>await db.commit()</code> at line 156. This is a guaranteed double commit. If an exception occurs after the explicit commit but before the context exits, the context manager will attempt to commit again.</p>
+  <p><strong>Root Cause:</strong> <code>async_session_context()</code> auto-commits just like <code>get_async_session()</code>.</p>
+  <p><strong>Recommended Solution:</strong> Remove explicit <code>await db.commit()</code> and <code>await db.rollback()</code> from the webhook handler; let the context manager handle it.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>BE-005: Celery Task Creates New Event Loop Per Execution</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/app/workers/tasks/sync.py</code> (lines 27-34)</div>
+  <p><strong>Problem:</strong> <code>_run_async()</code> creates a <strong>brand new asyncio event loop</strong> for every Celery task invocation, runs the coroutine, then closes the loop. In a high-throughput Celery worker, this causes severe resource leaks (file descriptors, threads) and can crash workers. SQLAlchemy async sessions require an existing loop; creating/closing loops repeatedly is undefined behavior.</p>
+  <p><strong>Root Cause:</strong> Running async code from sync Celery tasks incorrectly.</p>
+  <p><strong>Recommended Solution:</strong> Use <code>celery-aio-pool</code> or delegate async tasks to a dedicated async worker.</p>
+  <pre><code># Proper fix: celery-aio-pool
+from celery_aio_pool import AsyncIOPool
+app = Celery(..., pool=AsyncIOPool)</code></pre>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>BE-006: Insights Endpoints Load ALL Campaigns Into Memory</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/app/api/v1/endpoints/insights.py</code> (lines 33-69, 72-114, 360-370, 480-490)</div>
+  <p><strong>Problem:</strong> <code>get_entity_metrics</code>, <code>get_baseline_metrics</code>, <code>get_anomalies</code>, and <code>get_kpis</code> all execute <code>select(Campaign).where(...)</code> with <strong>no pagination, no limit, no offset</strong>. For a tenant with 10,000+ campaigns, this loads the entire table into Python memory, computes aggregates in Python, and can OOM the worker.</p>
+  <p><strong>Root Cause:</strong> ORM full-table fetch instead of SQL aggregation.</p>
+  <p><strong>Recommended Solution:</strong> Use SQL-level aggregation instead of Python loops.</p>
+  <pre><code>from sqlalchemy import func
+
+result = await db.execute(
+    select(
+        func.coalesce(func.sum(Campaign.total_spend_cents), 0),
+        func.coalesce(func.sum(Campaign.revenue_cents), 0),
+        func.coalesce(func.sum(Campaign.conversions), 0),
+    ).where(Campaign.tenant_id == tenant_id, Campaign.is_deleted == False)
+)</code></pre>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>BE-007: Auth Endpoints Perform Multiple Commits Per Request</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/app/api/v1/endpoints/auth.py</code> (lines 580, 606, 742, 884, 1029, 1239, 1324)</div>
+  <p><strong>Problem:</strong> Login commits at line 580 (last_login), then again at 606 (audit log). Register commits at 742 then refreshes. Switch-tenant commits at 1029. These multiple commits within a single request are fragile because if the first commit succeeds and the second fails, the DB is left in a partially-updated state with no overarching transaction.</p>
+  <p><strong>Root Cause:</strong> No use of explicit <code>await db.begin()</code> or nested transactions for multi-step operations.</p>
+  <p><strong>Recommended Solution:</strong> Use <code>await db.begin()</code> at the start of multi-step endpoints and commit once at the end.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>BE-008: Login Endpoint Cross-Tenant Email Hash Lookup</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/app/api/v1/endpoints/auth.py</code> (lines 545-558)</div>
+  <p><strong>Problem:</strong> Login queries <code>User.email_hash</code> <strong>without filtering by tenant</strong>, returning candidates from <strong>all tenants</strong>. It then loops through all candidates doing <code>verify_password()</code> (expensive bcrypt) until a match is found. This enables timing attacks and cross-tenant email enumeration.</p>
+  <p><strong>Root Cause:</strong> Missing <code>tenant_id</code> filter in login query.</p>
+  <p><strong>Recommended Solution:</strong> Require tenant identification at login and filter by tenant.</p>
+  <pre><code># Add tenant_id to LoginRequest schema
+result = await db.execute(
+    select(User).where(
+        User.email_hash == email_hash,
+        User.tenant_id == login_data.tenant_id,
+        User.is_deleted == False,
+        User.is_active == True,
+    )
+)</code></pre>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>BE-009: Webhook Test Endpoint SSRF Vulnerability</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/app/api/v1/endpoints/webhooks.py</code> (lines 476-483)</div>
+  <p><strong>Problem:</strong> The <code>test_webhook</code> endpoint accepts <strong>any URL</strong> from the database and issues an HTTP POST to it via <code>httpx.AsyncClient</code>. There is <strong>no URL validation</strong> — an attacker with admin access can store a webhook pointing to <code>http://169.254.169.254/latest/meta-data/</code> and trigger it, exfiltrating AWS metadata or attacking internal services.</p>
+  <p><strong>Root Cause:</strong> No SSRF protection (no blocklist, no URL scheme restriction, no internal IP validation).</p>
+  <p><strong>Recommended Solution:</strong> Validate webhook URLs on create/update and re-validate before testing.</p>
+  <pre><code>import ipaddress
+from urllib.parse import urlparse
+
+def is_safe_webhook_url(url: str) -&gt; bool:
+    parsed = urlparse(url)
+    if parsed.scheme not in ("https", "http"):
+        return False
+    hostname = parsed.hostname
+    if not hostname:
+        return False
+    try:
+        ip = ipaddress.ip_address(hostname)
+        if ip.is_private or ip.is_loopback or ip.is_reserved:
+            return False
+    except ValueError:
+        pass
+    return True</code></pre>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>BE-010: Redis Connection Per Event Publish (No Pooling)</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/app/workers/tasks/helpers.py</code> (lines 47-76)</div>
+  <p><strong>Problem:</strong> <code>publish_event()</code> creates a <strong>new Redis connection</strong> for every call via <code>redis.from_url()</code>, publishes, then closes. Under high task load, this exhausts Redis connection limits and adds massive latency.</p>
+  <p><strong>Root Cause:</strong> No connection pooling; uses sync Redis client in what should be an async-friendly path.</p>
+  <p><strong>Recommended Solution:</strong> Use the shared <code>aioredis</code> pool from <code>app.core.security.get_redis_pool()</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>BE-011: Superadmin Portfolio N+1 Query</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/app/api/v1/endpoints/superadmin.py</code> (lines 241-261)</div>
+  <p><strong>Problem:</strong> For every tenant in the portfolio, the code executes <strong>two separate queries</strong> (user count and campaign count). For 50 tenants = 100 extra queries.</p>
+  <p><strong>Root Cause:</strong> Looping over tenants with individual queries.</p>
+  <p><strong>Recommended Solution:</strong> Use a single JOINed aggregation query or batch the counts with <code>group_by</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>BE-012: Dashboard Catches Bare Exception and Returns 200</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/app/api/v1/endpoints/dashboard.py</code> (line 1003)</div>
+  <p><strong>Problem:</strong> A bare <code>except Exception as e:</code> catches <strong>everything</strong> (including <code>KeyboardInterrupt</code>, <code>SystemExit</code> if propagated, and programming errors like <code>NameError</code>), logs it, and returns a seemingly valid response. This masks critical bugs.</p>
+  <p><strong>Root Cause:</strong> Overly broad exception handler.</p>
+  <p><strong>Recommended Solution:</strong> Catch specific exceptions (<code>SQLAlchemyError</code>, <code>ValueError</code>, <code>TypeError</code>) only.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>BE-013: Meta CAPI Catches Bare Exception and Swallows</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/app/api/v1/endpoints/meta_capi.py</code> (lines 142, 228, 283)</div>
+  <p><strong>Problem:</strong> Multiple bare <code>except Exception as e:</code> blocks catch and return error responses. This can mask syntax errors, import failures, or database connection failures, making debugging impossible.</p>
+  <p><strong>Root Cause:</strong> Overly broad exception handling.</p>
+  <p><strong>Recommended Solution:</strong> Catch specific exceptions (<code>httpx.HTTPError</code>, <code>ValueError</code>, etc.).</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>BE-014: Password Reset &amp; Verification Endpoints Lack Rate Limiting</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/app/api/v1/endpoints/auth.py</code> (lines 1058, 1263, 1363)</div>
+  <p><strong>Problem:</strong> <code>forgot-password</code>, <code>resend-verification</code>, and <code>verify-email</code> endpoints have <strong>no rate limiting</strong>. An attacker can abuse these to flood Redis with reset tokens, spam users with emails/WhatsApp messages, or brute-force verification tokens.</p>
+  <p><strong>Root Cause:</strong> Only <code>/login</code> has rate limiting; other auth flows are unprotected.</p>
+  <p><strong>Recommended Solution:</strong> Add per-IP and per-target rate limiting to all auth endpoints.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>BE-015: Soft-Deleted Users Can Access Profile Endpoints</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/app/api/v1/endpoints/users.py</code> (lines 67, 117)</div>
+  <p><strong>Problem:</strong> <code>GET /me</code> and <code>PATCH /me</code> query <code>User</code> by <code>id</code> only, without <code>is_deleted == False</code>. A soft-deleted user can still retrieve and modify their profile if they possess a valid JWT.</p>
+  <p><strong>Root Cause:</strong> Missing <code>is_deleted</code> filter.</p>
+  <p><strong>Recommended Solution:</strong> Add <code>is_deleted == False</code> to all user lookups.</p>
+  <pre><code>result = await db.execute(
+    select(User).where(User.id == user_id, User.is_deleted == False)
+)</code></pre>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>BE-016: Superadmin Raw SQL Column Injection Risk</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/app/api/v1/endpoints/superadmin.py</code> (line 807)</div>
+  <p><strong>Problem:</strong> The <code>update_subscription_plan</code> endpoint dynamically builds a raw SQL UPDATE statement using f-string concatenation for <strong>column names</strong>. While values are parameterized, column names are interpolated. If an attacker can influence the schema validation path, this becomes SQL injection.</p>
+  <p><strong>Root Cause:</strong> Dynamic SQL construction with f-strings.</p>
+  <p><strong>Recommended Solution:</strong> Use a whitelist mapping and static SQL.</p>
+  <pre><code>column_map = {
+    "price_cents": "price_cents = :price_cents",
+    "max_users": "max_users = :max_users",
+}
+updates = [column_map[k] for k in column_map if getattr(update, k) is not None]</code></pre>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>BE-017: JWT Tenant Claim Never Re-validated Against Database</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/app/auth/deps.py</code> (lines 113-119)</div>
+  <p><strong>Problem:</strong> <code>get_current_user</code> validates the JWT signature and expiration, but never checks whether the <code>tenant_id</code> claim in the token still matches the user's <strong>current</strong> <code>user.tenant_id</code>. If a user is moved to a different tenant, the old token remains valid for the original tenant.</p>
+  <p><strong>Root Cause:</strong> Token claims are trusted without DB reconciliation.</p>
+  <p><strong>Recommended Solution:</strong> Verify <code>payload.get("tenant_id") == user.tenant_id</code> in <code>get_current_user</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-medium">Medium</span><h4>BE-018: Unnecessary await db.refresh() After Commit</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> Widespread (<code>campaigns.py</code>, <code>clients.py</code>, <code>users.py</code>, etc.)</div>
+  <p><strong>Problem:</strong> Dozens of endpoints call <code>await db.refresh(instance)</code> immediately after <code>await db.commit()</code>. With <code>expire_on_commit=False</code>, the instance is already detached and fresh. The refresh is a redundant DB round-trip.</p>
+  <p><strong>Root Cause:</strong> Cargo-culted from SQLAlchemy 1.x patterns.</p>
+  <p><strong>Recommended Solution:</strong> Remove <code>await db.refresh()</code> calls when <code>expire_on_commit=False</code> and no subsequent lazy-loading is needed.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>BE-019: ML Prediction Task Commits Empty Batches on Total Failure</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/app/workers/tasks/ml.py</code> (line 91)</div>
+  <p><strong>Problem:</strong> <code>run_live_predictions</code> commits at line 91 <strong>outside</strong> the per-campaign try/except. If all campaigns fail, an empty transaction is committed. If the loop partially succeeds then fails on a late campaign, early predictions are committed but the event publish still claims success.</p>
+  <p><strong>Root Cause:</strong> Commit placement outside granular error handling.</p>
+  <p><strong>Recommended Solution:</strong> Move <code>db.commit()</code> inside the loop after each successful prediction, or collect all predictions and commit once with proper rollback on failure.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-medium">Medium</span><h4>BE-020: Sync Tasks Use SyncSessionLocal Without Explicit Rollback on Exception</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/app/workers/tasks/sync.py</code> (lines 52-133)</div>
+  <p><strong>Problem:</strong> The task uses <code>with SyncSessionLocal() as db:</code> but <code>sessionmaker()</code> context manager does <strong>not</strong> auto-rollback on exception. If an exception occurs after <code>db.add(metric)</code> but before <code>db.commit()</code>, the session is closed with uncommitted changes and no rollback.</p>
+  <p><strong>Root Cause:</strong> Missing explicit rollback in exception handlers.</p>
+  <pre><code>with SyncSessionLocal() as db:
+    try:
+        ...
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise</code></pre>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-medium">Medium</span><h4>BE-021: Changelog Admin Endpoints Lack Tenant Scoping</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/app/api/v1/endpoints/changelog.py</code> (lines 110-180, 232-282, 386-535)</div>
+  <p><strong>Problem:</strong> <code>ChangelogEntry</code> queries have <strong>zero <code>tenant_id</code> filtering</strong>. Any admin can create, update, delete, and read any changelog entry globally.</p>
+  <p><strong>Root Cause:</strong> <code>ChangelogEntry</code> model queries do not include <code>tenant_id</code> predicates.</p>
+  <p><strong>Recommended Solution:</strong> Add <code>tenant_id</code> to <code>ChangelogEntry</code> and <code>ChangelogReadStatus</code> models, and filter all queries by <code>request.state.tenant_id</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>BE-022: Register Endpoint Returns 200 Instead of 201</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/app/api/v1/endpoints/auth.py</code> (line 649)</div>
+  <p><strong>Problem:</strong> Resource creation endpoint returns HTTP 200 instead of 201 Created.</p>
+  <p><strong>Root Cause:</strong> Missing <code>status_code=status.HTTP_201_CREATED</code>.</p>
+  <p><strong>Recommended Solution:</strong> Add <code>status_code=status.HTTP_201_CREATED</code> to the route decorator.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-medium">Medium</span><h4>BE-023: Register Endpoint Global Email Existence Check</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/app/api/v1/endpoints/auth.py</code> (lines 693-696)</div>
+  <p><strong>Problem:</strong> Registration checks <code>email_hash</code> globally with no tenant filter. This allows <strong>global email enumeration</strong> — an attacker can probe email existence via registration attempts.</p>
+  <p><strong>Root Cause:</strong> Global uniqueness check leaks existence information.</p>
+  <p><strong>Recommended Solution:</strong> Add rate limiting and CAPTCHA on registration.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-medium">Medium</span><h4>BE-024: get_current_user Decrypts PII on Every Request</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/app/auth/deps.py</code> (lines 130-145)</div>
+  <p><strong>Problem:</strong> Every authenticated request triggers <code>decrypt_pii(user.email)</code> and <code>decrypt_pii(user.full_name)</code>. With high traffic, this is unnecessary CPU load since the email is often only needed for audit logging.</p>
+  <p><strong>Root Cause:</strong> Eager decryption.</p>
+  <p><strong>Recommended Solution:</strong> Only decrypt when the endpoint actually needs the raw email.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-low">Low</span><h4>BE-025: get_redis_client() in auth.py Creates Connection Without Pool</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/app/api/v1/endpoints/auth.py</code> (lines 200-203)</div>
+  <p><strong>Problem:</strong> <code>get_redis_client()</code> creates a new Redis connection per call. OTP verify/register endpoints call this multiple times per request.</p>
+  <p><strong>Recommended Solution:</strong> Use the shared <code>get_redis_pool()</code> from <code>app.core.security</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-low">Low</span><h4>BE-026: _safe_decrypt in users.py Returns Raw Value on Failure</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/app/api/v1/endpoints/users.py</code> (lines 32-40)</div>
+  <p><strong>Problem:</strong> On decryption failure, <code>_safe_decrypt</code> returns the raw (potentially encrypted) value as plaintext. This could expose ciphertext or garbled data in API responses.</p>
+  <p><strong>Recommended Solution:</strong> Return <code>None</code> or a placeholder like <code>[decryption failed]</code> and log the error.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-low">Low</span><h4>BE-027: campaign_builder.py Uses query.order_by() Without limit</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/app/api/v1/endpoints/campaign_builder.py</code> (line 381)</div>
+  <p><strong>Problem:</strong> <code>result = await db.execute(query.order_by(TenantAdAccount.name))</code> has no <code>.limit()</code>. If a tenant has thousands of ad accounts, this returns all.</p>
+  <p><strong>Recommended Solution:</strong> Add <code>.limit(1000)</code> or paginate.</p>
+</div>
+
+</section>
+
+<section id="api">
+<h2>API Audit Findings</h2>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>API-001: Meta CAPI Event Ingestion Completely Unauthenticated</h4></div>
+  <div class="issue-meta"><strong>Endpoint:</strong> <code>POST /meta-capi/events</code> (<code>meta_capi.py:75</code>)</div>
+  <p><strong>Problem:</strong> The event ingestion endpoint has <strong>no authentication dependency</strong> and only checks <code>request.state.tenant_id</code>. If middleware fails or is bypassed, anyone can inject events.</p>
+  <p><strong>Root Cause:</strong> Missing <code>CurrentUserDep</code> or <code>get_current_user</code> dependency.</p>
+  <p><strong>Recommended Solution:</strong> Add <code>current_user: CurrentUserDep</code> parameter and verify the user belongs to the tenant before processing.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>API-002: Meta CAPI Event Validation Publicly Accessible</h4></div>
+  <div class="issue-meta"><strong>Endpoint:</strong> <code>POST /meta-capi/events/validate</code> (<code>meta_capi.py:168</code>)</div>
+  <p><strong>Problem:</strong> Zero authentication required. Completely public endpoint that can be probed for internal event schemas and used for reconnaissance.</p>
+  <p><strong>Recommended Solution:</strong> Add <code>CurrentUserDep</code> dependency. If public validation is intentional, gate it behind an API key or captcha.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>API-003: EMQ v2 Endpoints Lack Authentication</h4></div>
+  <div class="issue-meta"><strong>Endpoints:</strong> ALL <code>/tenants/{tenant_id}/emq/*</code> and <code>/emq/*</code> (<code>emq_v2.py</code>)</div>
+  <p><strong>Problem:</strong> Not a single EMQ endpoint uses <code>CurrentUserDep</code>, <code>get_current_user</code>, or any auth dependency. They only call <code>validate_tenant_access(request, tenant_id)</code> which checks <code>request.state.tenant_id</code> — an attacker only needs to spoof tenant context.</p>
+  <p><strong>Recommended Solution:</strong> Add <code>current_user: CurrentUserDep</code> to every endpoint and enforce both authentication and tenant membership.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>API-004: EMQ v2 Super-Admin Endpoints Missing Role Checks</h4></div>
+  <div class="issue-meta"><strong>Endpoints:</strong> <code>GET /emq/benchmarks</code>, <code>GET /emq/portfolio</code> (<code>emq_v2.py:552-611</code>)</div>
+  <p><strong>Problem:</strong> These are labeled "super admin only" in docstrings but have <strong>no <code>require_superadmin</code> check</strong>. Any authenticated user can access platform-wide benchmarks.</p>
+  <p><strong>Recommended Solution:</strong> Add <code>Depends(require_superadmin())</code> dependency.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>API-005: CAPI Batch Event Stream Missing Batch Size Limit</h4></div>
+  <div class="issue-meta"><strong>Endpoint:</strong> <code>POST /events/batch</code> (<code>capi.py:236</code>)</div>
+  <p><strong>Problem:</strong> <code>BatchEventsRequest.events</code> is a <code>List[ConversionEvent]</code> with <strong>no <code>max_length</code> constraint</strong>. An attacker can submit an enormous batch causing memory exhaustion.</p>
+  <p><strong>Recommended Solution:</strong> Add <code>Field(..., max_length=1000)</code> or similar to <code>BatchEventsRequest.events</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>API-006: Tenant Feature Flags Accepts Raw Untyped Dict</h4></div>
+  <div class="issue-meta"><strong>Endpoint:</strong> <code>PATCH /{tenant_id}/features</code> (<code>tenants.py:499</code>)</div>
+  <p><strong>Problem:</strong> Accepts <code>feature_flags: dict</code> with <strong>zero Pydantic validation</strong>. Any nested structure, massive payload, or malicious keys can be written directly to the tenant record.</p>
+  <p><strong>Recommended Solution:</strong> Create a <code>TenantFeatureFlagsUpdate</code> Pydantic model with explicit allowed fields and validators.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>API-007: Auth /switch-tenant Accepts Raw Dict Instead of Pydantic Schema</h4></div>
+  <div class="issue-meta"><strong>Endpoint:</strong> <code>POST /auth/switch-tenant</code> (<code>auth.py:945</code>)</div>
+  <p><strong>Problem:</strong> Parameter is <code>switch_data: dict</code>. No field validation, no type safety, no OpenAPI spec accuracy. Only manual <code>switch_data.get("tenant_id")</code> is checked.</p>
+  <p><strong>Recommended Solution:</strong> Replace <code>switch_data: dict</code> with <code>switch_data: SwitchTenantRequest</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>API-008: Payments Module Breaks Response Envelope Contract</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>payments.py</code> (all endpoints)</div>
+  <p><strong>Problem:</strong> <strong>Every</strong> payments endpoint returns raw Pydantic models instead of the standard <code>APIResponse</code> wrapper. The frontend expects <code>{"success": true, "data": ...}</code>.</p>
+  <p><strong>Recommended Solution:</strong> Wrap all return values in <code>APIResponse(...)</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>API-009: Multiple Endpoints Return 200 on Deletion Instead of 204</h4></div>
+  <div class="issue-meta"><strong>Endpoints:</strong> <code>DELETE /users/{user_id}</code>, <code>DELETE /tenants/{tenant_id}</code>, <code>DELETE /clients/{client_id}</code></div>
+  <p><strong>Problem:</strong> REST best practice expects <code>204 No Content</code> for successful deletions. Returning <code>200</code> with a body breaks HTTP semantics.</p>
+  <p><strong>Recommended Solution:</strong> Set <code>status_code=204</code> and return <code>None</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>API-010: Superadmin Endpoints Use Fragile Inline Auth</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> ALL <code>/superadmin/*</code> (<code>superadmin.py</code>)</div>
+  <p><strong>Problem:</strong> Uses a local <code>require_superadmin(request)</code> function that reads <code>request.state.role</code>. This duplicates logic from <code>app.auth.deps.require_superadmin()</code> but is less maintainable. Endpoints do not use FastAPI's <code>Depends()</code> system.</p>
+  <p><strong>Recommended Solution:</strong> Use <code>Depends(require_superadmin())</code> from <code>app.auth.deps</code> on every route.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>API-011: OTP Endpoints Only Protected by Global 100 req/min Rate Limit</h4></div>
+  <div class="issue-meta"><strong>Endpoints:</strong> <code>POST /auth/whatsapp/send-otp</code>, <code>POST /auth/email/send-otp</code> (<code>auth.py:205</code>, <code>386</code>)</div>
+  <p><strong>Problem:</strong> Beyond generic <code>RateLimitMiddleware</code>, there is <strong>no per-IP or per-target rate limiting</strong> on OTP generation. An attacker can burn through the global limit quickly and cause SMS/email bombing or financial loss.</p>
+  <p><strong>Recommended Solution:</strong> Add per-phone/per-email rate limiting (e.g., max 3 OTPs per 15 minutes per target).</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>API-012: EMQ v2 Playbook Update Returns Mock Data</h4></div>
+  <div class="issue-meta"><strong>Endpoint:</strong> <code>PATCH /tenants/{tenant_id}/emq/playbook/{item_id}</code> (<code>emq_v2.py:276</code>)</div>
+  <p><strong>Problem:</strong> Code explicitly states: <em>"In production, this would update a playbook_items table. For now, return the updated item."</em> It returns a hardcoded mock item regardless of input.</p>
+  <p><strong>Recommended Solution:</strong> Implement actual playbook item storage or remove the endpoint from production.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>API-013: EMQ v2 Autopilot Mode Override Returns Mock Data</h4></div>
+  <div class="issue-meta"><strong>Endpoint:</strong> <code>PUT /tenants/{tenant_id}/emq/autopilot-mode</code> (<code>emq_v2.py:461</code>)</div>
+  <p><strong>Problem:</strong> Comment states: <em>"In production, this would persist the override to database."</em> Returns hardcoded <code>budgetAtRisk=45000.00</code> and static allowed actions.</p>
+  <p><strong>Recommended Solution:</strong> Persist override to tenant settings or EMQ state table.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>API-014: CAPI Endpoints Accept Raw Dicts for Sensitive Operations</h4></div>
+  <div class="issue-meta"><strong>Endpoints:</strong> <code>POST /capi/events/map</code>, <code>POST /capi/pii/detect</code>, <code>POST /capi/pii/hash</code> (<code>capi.py:398-462</code>)</div>
+  <p><strong>Problem:</strong> All accept <code>Dict[str, Any]</code> instead of validated Pydantic models. No field constraints, no size limits, no sanitization.</p>
+  <p><strong>Recommended Solution:</strong> Define strict Pydantic models for event mapping parameters, PII detection input, and hashing input.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>API-015: Mass Assignment Risk in Tenant Update</h4></div>
+  <div class="issue-meta"><strong>Endpoint:</strong> <code>PATCH /tenants/{tenant_id}</code> (<code>tenants.py:267</code>)</div>
+  <p><strong>Problem:</strong> While <code>ALLOWED_FIELDS</code> is declared, <code>plan_expires_at</code> is in the whitelist. A manager role can manipulate the plan expiry date.</p>
+  <p><strong>Recommended Solution:</strong> Restrict <code>plan</code>, <code>plan_expires_at</code>, <code>max_users</code>, <code>max_campaigns</code> to admin/superadmin only.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-medium">Medium</span><h4>API-016: Implicit Authentication via Middleware Only</h4></div>
+  <div class="issue-meta"><strong>Affected Modules:</strong> <code>campaigns.py</code>, <code>analytics.py</code>, <code>dashboard.py</code>, <code>autopilot.py</code>, <code>users.py</code>, <code>tenants.py</code>, <code>gdpr.py</code>, <code>payments.py</code></div>
+  <p><strong>Problem:</strong> Endpoints rely exclusively on <code>tenant_id = getattr(request.state, "tenant_id", None)</code> without declaring explicit <code>Depends(get_current_user)</code>. If <code>TenantMiddleware</code> is misconfigured, skipped, or bypassed, endpoints become unprotected.</p>
+  <p><strong>Recommended Solution:</strong> Add <code>current_user: CurrentUserDep</code> to all endpoint signatures as defense-in-depth.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-medium">Medium</span><h4>API-017: Campaign Creation Conflict Returns 400 Instead of 409</h4></div>
+  <div class="issue-meta"><strong>Endpoint:</strong> <code>POST /campaigns</code> (<code>campaigns.py:184</code>)</div>
+  <p><strong>Problem:</strong> Duplicate <code>external_id</code> check raises <code>HTTPException(status_code=400)</code> instead of <code>409 Conflict</code>.</p>
+  <p><strong>Recommended Solution:</strong> Change to <code>status.HTTP_409_CONFLICT</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-medium">Medium</span><h4>API-018: API Key Creation Returns 400 on Limit Exceeded</h4></div>
+  <div class="issue-meta"><strong>Endpoint:</strong> <code>POST /api-keys</code> (<code>api_keys.py:166</code>)</div>
+  <p><strong>Problem:</strong> Exceeding the 10-key limit returns <code>400 Bad Request</code> instead of <code>409 Conflict</code> or <code>403 Forbidden</code>.</p>
+  <p><strong>Recommended Solution:</strong> Return <code>409</code> or <code>403</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-medium">Medium</span><h4>API-019: Login Endpoint Returns Raw Dict Instead of TokenResponse Schema</h4></div>
+  <div class="issue-meta"><strong>Endpoint:</strong> <code>POST /auth/login</code> (<code>auth.py:507</code>)</div>
+  <p><strong>Problem:</strong> Returns <code>data={...}</code> with a raw Python dict containing <code>available_tenants</code>. The <code>TokenResponse</code> schema does not include <code>available_tenants</code>, causing a schema mismatch.</p>
+  <p><strong>Recommended Solution:</strong> Update <code>TokenResponse</code> to include <code>available_tenants</code> or create a <code>LoginResponse</code> schema.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-medium">Medium</span><h4>API-020: Meta CAPI /health Returns Raw Dict</h4></div>
+  <div class="issue-meta"><strong>Endpoint:</strong> <code>GET /meta-capi/health</code> (<code>meta_capi.py:64</code>)</div>
+  <p><strong>Problem:</strong> Returns raw <code>{"status": "healthy"}</code> instead of <code>APIResponse</code> wrapper.</p>
+  <p><strong>Recommended Solution:</strong> Return <code>APIResponse(success=True, data={"status": "healthy"})</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-medium">Medium</span><h4>API-021: Superadmin Audit Log Query Missing Tenant Isolation on Raw SQL</h4></div>
+  <div class="issue-meta"><strong>Endpoint:</strong> <code>GET /superadmin/audit</code> (<code>superadmin.py:541</code>)</div>
+  <p><strong>Problem:</strong> While parameterized queries prevent SQL injection, the <code>action</code> filter uses <code>ILIKE</code> with user input: <code>params["action"] = f"%{action}%"</code>. The <code>action</code> string is not validated against an enum.</p>
+  <p><strong>Recommended Solution:</strong> Validate <code>action</code> against <code>AuditAction</code> enum before appending to query.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-medium">Medium</span><h4>API-022: Autopilot Endpoints Lack Role-Based Checks</h4></div>
+  <div class="issue-meta"><strong>Endpoints:</strong> <code>POST /tenant/{tenant_id}/autopilot/actions</code>, <code>/actions/{action_id}/approve</code>, <code>/actions/approve-all</code> (<code>autopilot.py</code>)</div>
+  <p><strong>Problem:</strong> Only checks <code>request.state.user_id</code> and <code>tenant_id</code>. No check if the user has <code>CAMPAIGN_WRITE</code> or <code>RULE_EXECUTE</code> permission. A VIEWER role could queue and approve autopilot actions.</p>
+  <p><strong>Recommended Solution:</strong> Add <code>Depends(require_permission("campaigns", PermLevel.EDIT))</code> or similar.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>API-023: API Keys Router Restricted to Superadmin</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> ALL <code>/api-keys/*</code> (<code>api_keys.py:28-32</code>)</div>
+  <p><strong>Problem:</strong> Router declares <code>dependencies=[Depends(require_super_admin)]</code>, but endpoint docstrings say "for the current user" and filter by <code>user_id</code>. Non-superadmins are completely blocked from managing their own API keys.</p>
+  <p><strong>Recommended Solution:</strong> Remove router-level <code>require_super_admin</code>. Add <code>CurrentUserDep</code> to endpoints and optionally require admin for creation.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>API-024: Webhooks Router Restricted to Superadmin</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> ALL <code>/webhooks/*</code> (<code>webhooks.py:34-38</code>)</div>
+  <p><strong>Problem:</strong> Same as API-023. Router requires superadmin, but endpoints filter by <code>tenant_id</code> and docstrings indicate tenant-scoped usage.</p>
+  <p><strong>Recommended Solution:</strong> Remove router-level <code>require_super_admin</code>; use <code>CurrentUserDep</code> with tenant isolation.</p>
+</div>
+
+</section>
+
+<section id="frontend">
+<h2>Frontend Audit Findings</h2>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>FE-001: API Path Mismatch — insights.ts uses wrong URL prefix</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>frontend/src/api/insights.ts</code> (lines 152-165, 180-196, 210-225, 238-253)</div>
+  <p><strong>Problem:</strong> All hooks call <code>/insights/tenant/{tenantId}/...</code> but backend <code>insights.py</code> only defines <code>/insights</code>, <code>/recommendations</code>, <code>/anomalies</code>, <code>/kpis</code> (no <code>tenant/{id}</code> prefix). Backend reads tenant from <code>X-Tenant-ID</code> header.</p>
+  <p><strong>Root Cause:</strong> Frontend incorrectly prepends tenant ID to the path.</p>
+  <pre><code>// BEFORE (broken)
+const response = await apiClient.get&lt;{ data: InsightsData }&gt;(
+  `/insights/tenant/${tenantId}/insights${params}`
+);
+
+// AFTER
+const response = await apiClient.get&lt;{ data: InsightsData }&gt;(
+  `/insights${params}`
+);</code></pre>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>FE-002: API Path Mismatch — autopilot.ts uses wrong URL prefix</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>frontend/src/api/autopilot.ts</code> (lines 92-134, 160-196)</div>
+  <p><strong>Problem:</strong> All hooks call <code>/autopilot/tenant/{tenantId}/...</code> but backend <code>autopilot.py</code> only defines <code>/autopilot/status</code>, <code>/autopilot/actions</code>, etc.</p>
+  <p><strong>Recommended Solution:</strong> Remove <code>/tenant/${tenantId}</code> from all autopilot URLs.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>FE-003: API Path Mismatch — trustLayer.ts uses wrong URL prefix</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>frontend/src/api/trustLayer.ts</code> (lines 93-169)</div>
+  <p><strong>Problem:</strong> All hooks call <code>/trust-layer/tenant/{tenantId}/...</code> but backend <code>trust_layer.py</code> only defines <code>/trust-layer/signal-health</code>, etc.</p>
+  <p><strong>Recommended Solution:</strong> Remove <code>/tenant/${tenantId}</code> from all trust-layer URLs.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>FE-004: API Path Mismatch — featureFlags.ts uses wrong tenant path</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>frontend/src/api/featureFlags.ts</code> (lines 50, 84, 103, 120, 140)</div>
+  <p><strong>Problem:</strong> Calls <code>/tenant/{tenantId}/features</code> but backend <code>tenants.py</code> defines <code>/tenants/{tenant_id}/features</code> (plural <code>tenants</code>, not singular <code>tenant</code>).</p>
+  <p><strong>Recommended Solution:</strong> Change to <code>/tenants/${tenantId}/features</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>FE-005: API Path Mismatch — dashboard.ts syncPlatform uses wrong path</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>frontend/src/api/dashboard.ts</code> (lines 448-454)</div>
+  <p><strong>Problem:</strong> Calls <code>/campaigns/sync/{platform}</code> but backend <code>campaigns.py</code> defines <code>/campaigns/sync-platform/{platform}</code>.</p>
+  <p><strong>Recommended Solution:</strong> Change to <code>/campaigns/sync-platform/${platform}</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>FE-006: Non-existent endpoints in campaigns.ts</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>frontend/src/api/campaigns.ts</code> (lines 167-176, 181-192)</div>
+  <p><strong>Problem:</strong> <code>bulkUpdateStatus</code> calls <code>/campaigns/bulk/status</code>, <code>pauseCampaign</code> calls <code>/campaigns/${id}/pause</code>, and <code>activateCampaign</code> calls <code>/campaigns/${id}/activate</code>. None of these exist in backend <code>campaigns.py</code>.</p>
+  <p><strong>Recommended Solution:</strong> Use <code>PATCH /campaigns/{campaign_id}</code> with <code>{ status: 'paused' | 'active' }</code> instead.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>FE-007: Missing WhatsApp API client</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>frontend/src/views/WhatsApp.tsx</code> (no <code>src/api/whatsapp.ts</code>)</div>
+  <p><strong>Problem:</strong> WhatsApp view exists (2501 lines) but there is no <code>src/api/whatsapp.ts</code>. The view imports <code>axios</code> directly and uses <code>apiClient</code> inconsistently.</p>
+  <p><strong>Recommended Solution:</strong> Create <code>src/api/whatsapp.ts</code> with all backend endpoints (contacts, templates, messages, broadcasts, webhooks, conversations).</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>FE-008: Missing MFA API client</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>frontend/src/views/Settings.tsx</code> (no <code>src/api/mfa.ts</code>)</div>
+  <p><strong>Problem:</strong> Settings view shows MFA QR code but there is no <code>src/api/mfa.ts</code>. Backend <code>mfa.py</code> defines 7 endpoints.</p>
+  <p><strong>Recommended Solution:</strong> Create <code>src/api/mfa.ts</code> with all MFA hooks.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>FE-009: Missing Subscription API client</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> N/A (no <code>src/api/subscription.ts</code>)</div>
+  <p><strong>Problem:</strong> Backend <code>subscription.py</code> defines 5 endpoints. No frontend API file exists.</p>
+  <p><strong>Recommended Solution:</strong> Create <code>src/api/subscription.ts</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>FE-010: Missing Webhooks API client</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> N/A (no <code>src/api/webhooks.ts</code>)</div>
+  <p><strong>Problem:</strong> Backend <code>webhooks.py</code> defines 8 webhook management endpoints. No frontend API file exists.</p>
+  <p><strong>Recommended Solution:</strong> Create <code>src/api/webhooks.ts</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>FE-011: Missing Notifications API client</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>src/components/notifications/NotificationCenter.tsx</code> (no <code>src/api/notifications.ts</code>)</div>
+  <p><strong>Problem:</strong> NotificationCenter component exists but no <code>src/api/notifications.ts</code>. Backend <code>notifications.py</code> defines 4 endpoints.</p>
+  <p><strong>Recommended Solution:</strong> Create <code>src/api/notifications.ts</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>FE-012: Missing Slack API client</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>src/components/settings/SlackIntegration.tsx</code> (no <code>src/api/slack.ts</code>)</div>
+  <p><strong>Problem:</strong> SlackIntegration component exists but no <code>src/api/slack.ts</code>. Backend <code>slack.py</code> defines 6 endpoints.</p>
+  <p><strong>Recommended Solution:</strong> Create <code>src/api/slack.ts</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>FE-013: Missing Simulator API client</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> N/A (no <code>src/api/simulator.ts</code>)</div>
+  <p><strong>Problem:</strong> Backend <code>simulator.py</code> defines 4 endpoints. No frontend API file exists, though there is a <code>SimulatorWidget</code> component.</p>
+  <p><strong>Recommended Solution:</strong> Create <code>src/api/simulator.ts</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>FE-014: Missing API Keys client</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> N/A (no <code>src/api/apiKeys.ts</code>)</div>
+  <p><strong>Problem:</strong> Backend <code>api_keys.py</code> defines 5 endpoints. No frontend API file exists.</p>
+  <p><strong>Recommended Solution:</strong> Create <code>src/api/apiKeys.ts</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>FE-015: Missing CAPI client</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>src/views/CAPISetup.tsx</code> (no <code>src/api/capi.ts</code> or <code>src/api/metaCapi.ts</code>)</div>
+  <p><strong>Problem:</strong> CAPISetup view exists but no dedicated API client. Backend <code>capi.py</code> and <code>meta_capi.py</code> define 15+ endpoints.</p>
+  <p><strong>Recommended Solution:</strong> Create <code>src/api/capi.ts</code> and <code>src/api/metaCapi.ts</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>FE-016: Missing Newsletter API client</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>src/views/Newsletter.tsx</code> (no <code>src/api/newsletter.ts</code>)</div>
+  <p><strong>Problem:</strong> Backend <code>newsletter.py</code> defines CRUD endpoints. No frontend API file exists.</p>
+  <p><strong>Recommended Solution:</strong> Create <code>src/api/newsletter.ts</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>FE-017: Missing CDP API client</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>src/views/tenant/Integrations.tsx</code> (no <code>src/api/cdp.ts</code>)</div>
+  <p><strong>Problem:</strong> Backend <code>cdp.py</code> defines 20+ endpoints. No dedicated frontend API file exists.</p>
+  <p><strong>Recommended Solution:</strong> Create <code>src/api/cdp.ts</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>FE-018: Missing Clients API client</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>src/views/tenant/Console.tsx</code> (no <code>src/api/clients.ts</code>)</div>
+  <p><strong>Problem:</strong> Backend <code>clients.py</code> defines 15+ endpoints. No dedicated frontend API file exists.</p>
+  <p><strong>Recommended Solution:</strong> Create <code>src/api/clients.ts</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>FE-019: Missing Landing CMS API client</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>src/views/landing/CMSDashboard.tsx</code> (no <code>src/api/landingCms.ts</code>)</div>
+  <p><strong>Problem:</strong> Backend <code>landing_cms.py</code> defines endpoints. No frontend API file exists.</p>
+  <p><strong>Recommended Solution:</strong> Create <code>src/api/landingCms.ts</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>FE-020: Missing Competitors API client</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>src/views/Competitors.tsx</code> (no <code>src/api/competitors.ts</code>)</div>
+  <p><strong>Problem:</strong> Backend <code>competitors.py</code> defines endpoints. No frontend API file exists.</p>
+  <p><strong>Recommended Solution:</strong> Create <code>src/api/competitors.ts</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>FE-021: console.error placeholders in production views</h4></div>
+  <div class="issue-meta"><strong>Affected Files:</strong> CAPISetup.tsx, Competitors.tsx, CustomAutopilotRules.tsx, MLTraining.tsx, PortalDashboard.tsx, Billing.tsx, AdAccounts.tsx, CampaignBuilder.tsx, WhatsApp.tsx, System.tsx, ConnectPlatforms.tsx</div>
+  <p><strong>Problem:</strong> <code>console.error</code> is used as the sole error handler for user-facing operations. Users see no feedback; errors only appear in DevTools.</p>
+  <p><strong>Recommended Solution:</strong> Replace <code>console.error</code> with <code>toast({ variant: 'destructive', title: 'Error', description: getErrorMessage(err) })</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>FE-022: console.warn placeholder in PortalDashboard</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>frontend/src/views/portal/PortalDashboard.tsx:207</code></div>
+  <p><strong>Problem:</strong> <code>console.warn('Request submission endpoint not available, saving locally', err);</code> — this is a dead endpoint fallback that silently degrades functionality without telling the user.</p>
+  <p><strong>Recommended Solution:</strong> Implement the backend endpoint or show a clear UI message that the feature is unavailable.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>FE-023: console.log in production code</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>frontend/src/views/pages/ApiDocs.tsx:229</code></div>
+  <p><strong>Problem:</strong> <code>console.log(health.score); // 85</code> — debug logging left in production with a hardcoded comment.</p>
+  <p><strong>Recommended Solution:</strong> Remove the line.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>FE-024: any types in production components</h4></div>
+  <div class="issue-meta"><strong>Affected Files:</strong> WhatsAppTemplates.tsx, WhatsAppMessages.tsx, WhatsAppContacts.tsx, WhatsAppBroadcast.tsx, Portfolio.tsx</div>
+  <p><strong>Problem:</strong> API responses are typed as <code>any</code>, bypassing TypeScript safety and making refactoring dangerous.</p>
+  <p><strong>Recommended Solution:</strong> Define strict interfaces and replace <code>any</code> with them.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>FE-025: as any casts for Recharts formatters</h4></div>
+  <div class="issue-meta"><strong>Affected Files:</strong> DailyTrendChart.tsx, PlatformPerformanceChart.tsx, ROASByPlatformChart.tsx, RegionalBreakdownChart.tsx</div>
+  <p><strong>Problem:</strong> <code>formatter={(... ) as any}</code> suppresses TypeScript errors instead of fixing the type signature.</p>
+  <p><strong>Recommended Solution:</strong> Provide correctly typed formatter functions that match Recharts' <code>TooltipFormatter</code> signature.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>FE-026: Incorrect UserRole in admin.ts</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>frontend/src/api/admin.ts:11</code></div>
+  <p><strong>Problem:</strong> <code>export type UserRole = 'superadmin' | 'admin' | 'user' | 'viewer'</code> — <code>'user'</code> does not exist in backend. Backend has <code>'manager'</code>, <code>'analyst'</code>, and <code>'viewer'</code>.</p>
+  <p><strong>Recommended Solution:</strong> Align with backend: <code>'superadmin' | 'admin' | 'manager' | 'analyst' | 'viewer'</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>FE-027: Missing role types in auth.ts User interface</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>frontend/src/api/auth.ts:12-23</code></div>
+  <p><strong>Problem:</strong> <code>role</code> type is inconsistent across auth and admin modules.</p>
+  <p><strong>Recommended Solution:</strong> Use a shared <code>UserRole</code> type imported from a common types file.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-medium">Medium</span><h4>FE-028: Zustand store duplicates server state without persistence</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>frontend/src/stores/featureFlagsStore.ts</code> + <code>src/api/featureFlags.ts:60-71</code></div>
+  <p><strong>Problem:</strong> <code>useFeatureFlags</code> copies TanStack Query data into Zustand via <code>useEffect</code>. This creates a second source of truth. The Zustand store is not persisted, so feature flags are re-fetched and re-copied on every mount.</p>
+  <p><strong>Recommended Solution:</strong> Remove the Zustand feature flags store. Use TanStack Query as the single source of truth.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-medium">Medium</span><h4>FE-029: Placeholder/fake data in query hooks</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>frontend/src/api/audit.ts:88-183</code>, <code>src/api/knowledgeGraph.ts:81-128,155-189</code></div>
+  <p><strong>Problem:</strong> <code>placeholderData</code> and <code>initialData</code> contain hardcoded fake/demo data (e.g., "Sarah Miller", "Ahmed Hassan") that will flash on screen before real data loads.</p>
+  <p><strong>Recommended Solution:</strong> Remove <code>placeholderData</code>/<code>initialData</code>. Use <code>isLoading</code> + <code>&lt;Skeleton&gt;</code> components.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-medium">Medium</span><h4>FE-030: TenantStore logout doesn't clear TanStack Query cache</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>frontend/src/stores/tenantStore.ts:171-183</code></div>
+  <p><strong>Problem:</strong> <code>logout()</code> clears localStorage and Zustand state, but does not call <code>queryClient.clear()</code>. If a user logs out and another logs in on the same tab, stale cached data from the previous tenant may be visible.</p>
+  <p><strong>Recommended Solution:</strong> Move <code>queryClient.clear()</code> into the store's logout action or ensure all logout flows call it.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-medium">Medium</span><h4>FE-031: Direct axios usage bypasses tenant header injection</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>frontend/src/views/WhatsApp.tsx:37</code></div>
+  <p><strong>Problem:</strong> <code>import axios from 'axios'</code> is used alongside <code>apiClient</code>. Direct axios calls will miss <code>X-Tenant-ID</code>, auth tokens, and error interceptors.</p>
+  <p><strong>Recommended Solution:</strong> Remove <code>import axios from 'axios'</code> and use <code>apiClient</code> for all HTTP calls.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-medium">Medium</span><h4>FE-032: Dangerous default tenant ID</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>frontend/src/api/client.ts:57-63</code></div>
+  <p><strong>Problem:</strong> <code>getTenantId()</code> defaults to <code>1</code> when no tenant is stored. This can cause requests to be silently routed to tenant 1, leaking or mutating wrong tenant data.</p>
+  <p><strong>Recommended Solution:</strong> Return <code>null</code> when no tenant is set and let the request interceptor skip the header. The backend should reject requests without a tenant ID.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-medium">Medium</span><h4>FE-033: Missing ErrorBoundary on many routes</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>frontend/src/App.tsx</code></div>
+  <p><strong>Problem:</strong> Only a subset of routes are wrapped in <code>&lt;ErrorBoundary&gt;</code>. CMS portal routes, checkout routes, portal routes, and most dashboard child routes only have <code>&lt;Suspense&gt;</code> with no error boundary. A JS crash in any of these will unmount the entire app.</p>
+  <p><strong>Recommended Solution:</strong> Wrap every <code>&lt;Suspense&gt;</code> route with <code>&lt;ErrorBoundary&gt;</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-medium">Medium</span><h4>FE-034: Skipped test in tenant flows</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>frontend/e2e/tenant-flows.spec.ts</code></div>
+  <p><strong>Problem:</strong> <code>test.skip('should display trust page content', ...)</code> is skipped with a comment about flaky parallel execution.</p>
+  <p><strong>Recommended Solution:</strong> Stabilize the test by using unique test data per worker or serial execution.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-medium">Medium</span><h4>FE-035: Missing e2e coverage for critical flows</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>frontend/e2e/</code> directory</div>
+  <p><strong>Problem:</strong> No e2e specs for: WhatsApp, Newsletter, CDP, Campaign Builder, Settings (MFA, billing), Profit/ROAS, Onboarding wizard, Superadmin, CMS, Checkout flow.</p>
+  <p><strong>Recommended Solution:</strong> Add specs for at least the critical user journeys.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-medium">Medium</span><h4>FE-036: Missing tsconfig.build.json</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>frontend/package.json:8</code></div>
+  <p><strong>Problem:</strong> Build script runs <code>tsc --noEmit -p tsconfig.build.json</code> but no <code>tsconfig.build.json</code> exists in the frontend directory.</p>
+  <p><strong>Recommended Solution:</strong> Create <code>tsconfig.build.json</code> that extends <code>tsconfig.json</code> and excludes test files.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-medium">Medium</span><h4>FE-037: Source maps disabled</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>frontend/vite.config.ts:25</code></div>
+  <p><strong>Problem:</strong> <code>sourcemap: false</code> makes production debugging nearly impossible.</p>
+  <p><strong>Recommended Solution:</strong> Set <code>sourcemap: true</code> for production builds.</p>
+</div>
+
+</section>
+
+<section id="database">
+<h2>Database &amp; Migration Audit Findings</h2>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>DB-001: Orphan Tables Created by Dead Migration Branch</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>migrations/versions/20260107_000000_020_add_autopilot_enforcement_tables.py</code></div>
+  <p><strong>Problem:</strong> Migration 020 creates three tables with <strong>Integer PKs</strong> and <strong>VARCHAR columns</strong> (no enums) that have <strong>no corresponding SQLAlchemy models</strong>. The actual models are created by migration <code>012_add_autopilot_enforcement</code> with UUID PKs and proper enums. The database contains <strong>six autopilot tables</strong>, three of which are dead weight.</p>
+  <p><strong>Root Cause:</strong> Autopilot feature was started on main branch (020), abandoned, then re-implemented on a side branch (012).</p>
+  <p><strong>Recommended Solution:</strong> Create a new migration to drop the orphaned tables if they contain no production data.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>DB-002: Conflicting "012" Revision IDs Create Two Heads</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>migrations/versions/20260105_000000_012_add_ml_prediction_columns.py</code> and <code>20260112_000000_012_add_autopilot_enforcement.py</code></div>
+  <p><strong>Problem:</strong> Both migrations declare <code>down_revision = '011_add_usp_layer_tables'</code>, creating two divergent heads. Using the same numeric prefix for unrelated features makes rollback/targeting by partial revision ID impossible and dangerous.</p>
+  <p><strong>Root Cause:</strong> Two developers picked the same sequential number.</p>
+  <p><strong>Recommended Solution:</strong> Do not rename historical revisions. Document the branch topology in <code>migrations/README.md</code> and ensure CI/CD uses <code>alembic merge</code> before deploying.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>DB-003: StrEnumType Cast Depends on Missing Enum Types</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/app/db/base.py</code> (lines 30-75)</div>
+  <p><strong>Problem:</strong> <code>StrEnumType.bind_expression()</code> casts bind values to a PostgreSQL enum type. If a migration creates a column using <code>StrEnumType</code> but only defines the column as <code>sa.String()</code> <strong>without creating the corresponding PG enum type</strong>, any query using this column in a <code>WHERE</code> clause will fail with <code>type "xxx" does not exist</code>.</p>
+  <p><strong>Root Cause:</strong> Migrations must manually create PG enums for every <code>StrEnumType</code> used.</p>
+  <p><strong>Recommended Solution:</strong> Audit every model using <code>StrEnumType</code> and verify its corresponding migration calls <code>CREATE TYPE</code>. Add a unit test that introspects <code>Base.metadata</code> and checks every <code>StrEnumType</code> column.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>DB-004: ~80% of Tenant-Facing Tables Lack Soft Delete</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> Nearly all model files under <code>app/models/</code></div>
+  <p><strong>Problem:</strong> Only core models inherit <code>SoftDeleteMixin</code>: <code>Tenant</code>, <code>User</code>, <code>Campaign</code>, <code>CreativeAsset</code>, <code>Rule</code>, <code>Client</code>, <code>CMSPost</code>, <code>CMSPage</code>. Every other tenant-scoped table is missing <code>is_deleted</code> / <code>deleted_at</code>, including all CRM, CDP, Pacing, Profit, Reporting, Attribution, Newsletter, Webhooks, and Campaign Builder tables.</p>
+  <p><strong>Root Cause:</strong> <code>SoftDeleteMixin</code> was added to base architecture but not applied to feature modules.</p>
+  <p><strong>Recommended Solution:</strong> For each tenant-facing table, decide if soft-delete is required. If yes: add mixin, create migration, update all queries. If no: document explicit decision.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>DB-005: Newsletter Tables Lack tenant_id Indexes</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>app/models/newsletter.py</code> (lines 80, 131)</div>
+  <p><strong>Problem:</strong> <code>NewsletterTemplate.tenant_id</code> and <code>NewsletterCampaign.tenant_id</code> are <code>ForeignKey</code> but have <strong>no <code>index=True</code></strong> and no composite index.</p>
+  <p><strong>Recommended Solution:</strong> Add <code>index=True</code> to both <code>tenant_id</code> columns or add <code>Index(...)</code> in <code>__table_args__</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>DB-006: CRM ForeignKey Columns Missing Indexes</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>app/models/crm.py</code> (lines 146, 226, 227, 304)</div>
+  <p><strong>Problem:</strong> Heavily-queried FK columns lack indexes: <code>CRMContact.connection_id</code>, <code>CRMDeal.connection_id</code>, <code>CRMDeal.contact_id</code>, <code>Touchpoint.contact_id</code>.</p>
+  <p><strong>Recommended Solution:</strong> Add inline <code>index=True</code> to each, or add composite indexes (e.g., <code>tenant_id, connection_id</code>).</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>DB-007: Campaign Builder FK Columns Missing Indexes</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>app/models/campaign_builder.py</code> (lines 120, 169, 223)</div>
+  <p><strong>Problem:</strong> <code>TenantAdAccount.connection_id</code>, <code>CampaignDraft.ad_account_id</code>, <code>CampaignPublishLog.draft_id</code> lack indexes.</p>
+  <p><strong>Recommended Solution:</strong> Add <code>index=True</code> to each ForeignKey column.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>DB-008: user_id and created_by_user_id Columns Missing Indexes</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>app/models/autopilot.py</code>, <code>app/models/campaign_builder.py</code>, <code>app/models/audit_services.py</code></div>
+  <p><strong>Problem:</strong> User-scoped columns frequently used for filtering/ownership queries lack indexes.</p>
+  <p><strong>Recommended Solution:</strong> Add indexes on user-scoped columns.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>DB-009: Missing email_hash Index on landing_page_subscribers</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>app/base_models.py</code> (line 157)</div>
+  <p><strong>Problem:</strong> <code>LandingPageSubscriber.email_hash</code> exists but has <strong>no index</strong>, while <code>email</code> does. If <code>email_hash</code> is used for deduplication or lookups, it needs an index.</p>
+  <p><strong>Recommended Solution:</strong> Add <code>Index("ix_lps_email_hash", "email_hash")</code> in <code>__table_args__</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>DB-010: Financial Amounts Use Integer Instead of BigInteger</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>app/base_models.py</code>, <code>app/models/campaign_builder.py</code></div>
+  <p><strong>Problem:</strong> <code>Campaign.total_spend_cents</code>, <code>revenue_cents</code>, <code>CampaignMetric.spend_cents</code>, <code>revenue_cents</code> use <code>Integer</code> (32-bit, max ~2.1B). A large tenant could exceed 2.1 billion cents ($21M) in lifetime spend.</p>
+  <p><strong>Recommended Solution:</strong> Migrate financial <code>_cents</code> columns to <code>BigInteger</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>DB-011: Campaign.start_date / end_date Type Mismatch</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>app/base_models.py</code> (lines 541-542)</div>
+  <p><strong>Problem:</strong> Declared as <code>Mapped[Optional[datetime]]</code> but column type is <code>Date</code> (not <code>DateTime</code>). This causes silent truncation of time components.</p>
+  <p><strong>Recommended Solution:</strong> Change model annotation to <code>Mapped[Optional[date]]</code> or change column to <code>DateTime(timezone=True)</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>DB-012: TenantPlatformConnection error_count Missing nullable=False</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>app/models/campaign_builder.py</code> (line 98)</div>
+  <p><strong>Problem:</strong> <code>error_count = Column(Integer, default=0)</code> has no <code>nullable=False</code>, allowing NULL values which breaks aggregation queries.</p>
+  <p><strong>Recommended Solution:</strong> Add <code>nullable=False</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-medium">Medium</span><h4>DB-013: Mixed SQLAlchemy 1.x Column vs 2.0 mapped_column Styles</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> Most model files</div>
+  <p><strong>Problem:</strong> <code>app/models/campaign_builder.py</code>, <code>crm.py</code>, <code>cdp.py</code>, etc. use <code>Column(...)</code> (1.x style), while <code>base_models.py</code>, <code>newsletter.py</code>, <code>onboarding.py</code> use <code>mapped_column(...)</code> (2.0 style). Mixed styles prevent full type-checking benefits.</p>
+  <p><strong>Recommended Solution:</strong> Standardize on <code>mapped_column</code> across all models.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>DB-014: Migration Downgrade Drops Enum Types Unconditionally</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>migrations/versions/20240101_000000_001_initial_schema.py</code> (lines 400-408)</div>
+  <p><strong>Problem:</strong> <code>downgrade()</code> drops enum types with <code>DROP TYPE auditaction</code> etc. without <code>IF EXISTS</code>. If dependent objects exist, downgrade will fail.</p>
+  <p><strong>Recommended Solution:</strong> Change to <code>op.execute("DROP TYPE IF EXISTS auditaction CASCADE")</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>DB-015: Empty Merge Migration with No Validation</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>migrations/versions/20260407_075514_25b2d4ee6525_merge_migration_heads.py</code></div>
+  <p><strong>Problem:</strong> Empty <code>upgrade()</code> and <code>downgrade()</code> functions. The two branches were never validated against each other for table/column name collisions.</p>
+  <p><strong>Recommended Solution:</strong> Add comment block documenting which tables were added by each branch.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-medium">Medium</span><h4>DB-016: CampaignMetric Missing created_at / updated_at</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>app/base_models.py</code> (lines 598-638)</div>
+  <p><strong>Problem:</strong> <code>CampaignMetric</code> inherits <code>TenantMixin</code> but <strong>not</strong> <code>TimestampMixin</code>. No <code>created_at</code> or <code>updated_at</code> columns.</p>
+  <p><strong>Recommended Solution:</strong> Add <code>TimestampMixin</code> to <code>CampaignMetric</code> and create a migration.</p>
+</div>
+
+</section>
+
+<section id="infra">
+<h2>Infrastructure &amp; DevOps Audit Findings</h2>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>INF-001: Dockerfile.frontend Runs as Root</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>Dockerfile.frontend</code> (production stage)</div>
+  <p><strong>Problem:</strong> Production stage runs as <strong>root</strong> (no <code>USER</code> directive). The <code>node:20-alpine</code> final stage installs <code>serve</code> globally and executes it as root. Container compromise gives host root privileges if Docker runtime is misconfigured.</p>
+  <p><strong>Recommended Solution:</strong> Add non-root user and switch before <code>CMD</code>.</p>
+  <pre><code>RUN addgroup -g 1001 -S nodejs &amp;&amp; adduser -S nextjs -u 1001
+USER nextjs</code></pre>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>INF-002: Docker Compose Weak DB/Redis Passwords + Exposed Ports</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>docker-compose.yml</code>, <code>editions/*/docker-compose.yml</code></div>
+  <p><strong>Problem:</strong> <code>POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}</code> and <code>REDIS_PASSWORD: ${REDIS_PASSWORD:-stratum-dev-redis-pass}</code> — weak hardcoded defaults. Ports <code>5432:5432</code> and <code>6379:6379</code> exposed to host.</p>
+  <p><strong>Recommended Solution:</strong> Remove fallback (<code>:-password</code>) and require env var (<code>:?POSTGRES_PASSWORD must be set</code>). Consider removing host port mapping.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>INF-003: SQL Injection in load_datasets.py</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>scripts/load_datasets.py</code></div>
+  <p><strong>Problem:</strong> <code>DROP TABLE IF EXISTS {schema}.{table_name} CASCADE;</code> where <code>table_name</code> derives from user-controlled filenames (<code>csv_file.stem</code>).</p>
+  <p><strong>Recommended Solution:</strong> Use SQLAlchemy <code>text()</code> with bound parameters, or validate <code>table_name</code> against strict allow-list regex (<code>^[a-z0-9_]+$</code>).</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>INF-004: Hardcoded Fallback Superadmin Password in start.sh</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/start.sh</code></div>
+  <p><strong>Problem:</strong> <code>SUPERADMIN_PASSWORD="${SUPERADMIN_PASSWORD:-StratumAdmin2026!}"</code> — if env var is unset, a known password is used.</p>
+  <p><strong>Recommended Solution:</strong> Remove fallback: <code>SUPERADMIN_PASSWORD="${SUPERADMIN_PASSWORD:?SUPERADMIN_PASSWORD must be set}"</code></p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>INF-005: Hardcoded bcrypt hash in seed-data.sql</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>scripts/seed-data.sql</code></div>
+  <p><strong>Problem:</strong> Hardcoded bcrypt hash for password <code>Admin123!</code>. Creates a known-password admin account.</p>
+  <p><strong>Recommended Solution:</strong> Remove the hash. Force password reset via application onboarding or generate hash at runtime with a strong random password.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>INF-006: No .dockerignore at Repository Root</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> Repository root</div>
+  <p><strong>Problem:</strong> Root-context builds send the entire repo (including <code>.git</code>, potential <code>.env</code> files, secrets) as build context.</p>
+  <p><strong>Recommended Solution:</strong> Create root <code>.dockerignore</code> excluding <code>.git/</code>, <code>.env*</code>, <code>node_modules/</code>, <code>*.pem</code>, <code>secrets/</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>INF-007: Redis Unauthenticated in beta, staging, and editions</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>docker-compose.beta.yml</code>, <code>docker-compose.staging.yml</code>, <code>editions/*/docker-compose.yml</code></div>
+  <p><strong>Problem:</strong> Redis runs <strong>without <code>--requirepass</code></strong> and ports are exposed. Any compromised container can read/write the entire Redis keyspace (sessions, Celery tasks, caches).</p>
+  <p><strong>Recommended Solution:</strong> Add <code>--requirepass ${REDIS_PASSWORD:?...}</code> and remove host port mapping.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>INF-008: Grafana Hardcoded Weak Password</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>docker-compose.monitoring.yml</code></div>
+  <p><strong>Problem:</strong> <code>GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-stratum123}</code> — hardcoded weak Grafana admin password.</p>
+  <p><strong>Recommended Solution:</strong> Remove fallback; require env var.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>INF-009: Prometheus Exposed Without Authentication</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>docker-compose.monitoring.yml</code></div>
+  <p><strong>Problem:</strong> Prometheus exposed on <code>9090:9090</code> without authentication. Anyone with network access can query metrics.</p>
+  <p><strong>Recommended Solution:</strong> Put Prometheus behind reverse proxy with basic auth or remove host port mapping.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>INF-010: Migration Failures Are Non-Fatal in start.sh</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/start.sh</code></div>
+  <p><strong>Problem:</strong> <code>timeout 120 python -m alembic upgrade head 2&gt;&amp;1 || echo "Migration warning (non-fatal)"</code>. App starts even with a broken schema.</p>
+  <p><strong>Recommended Solution:</strong> Remove <code>|| echo ...</code>. If migrations fail, container must exit.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>INF-011: CI/CD Uses Non-Existent Action Versions</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>.github/workflows/ci.yml</code></div>
+  <p><strong>Problem:</strong> Uses <code>actions/checkout@v6</code>, <code>actions/setup-python@v6</code>, <code>actions/setup-node@v6</code>. Latest stable are v4/v5. Typosquatting risk.</p>
+  <p><strong>Recommended Solution:</strong> Pin to verified versions: <code>actions/checkout@v4</code>, <code>actions/setup-python@v5</code>, <code>actions/setup-node@v4</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>INF-012: Trivy Scans Use Non-Failing Exit Code</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>.github/workflows/ci.yml</code></div>
+  <p><strong>Problem:</strong> <code>exit-code: "0"</code> means critical/high vulnerabilities do <strong>not</strong> fail the build.</p>
+  <p><strong>Recommended Solution:</strong> Change to <code>exit-code: "1"</code> for CI-blocking vulnerability detection.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-medium">Medium</span><h4>INF-013: Docker.yml Missing Vulnerability Scanning</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>.github/workflows/docker.yml</code></div>
+  <p><strong>Problem:</strong> No vulnerability scanning before pushing images to registry.</p>
+  <p><strong>Recommended Solution:</strong> Add Trivy/Grype image scan between build and push; fail on CRITICAL/HIGH.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-medium">Medium</span><h4>INF-014: Vercel Missing Security Headers</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>vercel.json</code> (root), <code>frontend/vercel.json</code></div>
+  <p><strong>Problem:</strong> No <code>X-Frame-Options</code>, <code>Strict-Transport-Security</code>, or <code>Content-Security-Policy</code> headers defined.</p>
+  <p><strong>Recommended Solution:</strong> Add headers block with security headers.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-medium">Medium</span><h4>INF-015: Nginx Missing X-Tenant-ID Forwarding</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>nginx/beta.conf</code></div>
+  <p><strong>Problem:</strong> Does not forward <code>X-Tenant-ID</code> header to the backend. The backend middleware relies on it.</p>
+  <p><strong>Recommended Solution:</strong> Add <code>proxy_set_header X-Tenant-ID $http_x_tenant_id;</code> in API location blocks.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>INF-016: Nginx CSP Weakens Application CSP</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>nginx/beta.conf</code></div>
+  <p><strong>Problem:</strong> Nginx adds a hardcoded CSP header with <strong><code>'unsafe-inline'</code></strong> and <strong><code>'unsafe-eval'</code></strong> for scripts, overriding stricter FastAPI middleware CSP.</p>
+  <p><strong>Recommended Solution:</strong> Remove CSP from nginx and let the application middleware handle it.</p>
+</div>
+
+</section>
+
+<section id="security">
+<h2>Security Deep Dive Findings</h2>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>SEC-001: Hardcoded Production Superadmin Credentials</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/scripts/seed_superadmin.py</code> (lines 34-35)</div>
+  <p><strong>Problem:</strong> Superadmin email and password are hardcoded in source code:</p>
+  <pre><code>SUPERADMIN_EMAIL = "ibrahim@new-aeon.com"
+SUPERADMIN_PASSWORD = "Newaeon@2026"</code></pre>
+  <p><strong>Root Cause:</strong> Seed script reads from env vars with hardcoded fallbacks "for dev only," but these are production-grade credentials committed to version control.</p>
+  <p><strong>Recommended Solution:</strong> Remove hardcoded strings. Require environment variables and fail fast if missing:</p>
+  <pre><code>SUPERADMIN_EMAIL = os.environ["SUPERADMIN_EMAIL"]
+SUPERADMIN_PASSWORD = os.environ["SUPERADMIN_PASSWORD"]</code></pre>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>SEC-002: Committed Production Secrets Template</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>.env.production.template</code> (root)</div>
+  <p><strong>Problem:</strong> The file was blocked by the sensitive-file scanner, indicating it contains real credentials or production secrets. Git history shows it was added in commit <code>4930b8f</code>.</p>
+  <p><strong>Root Cause:</strong> Production template file committed to git instead of generated at deploy time.</p>
+  <p><strong>Recommended Solution:</strong></p>
+  <ol>
+    <li>Rotate any credentials that may have been in this file.</li>
+    <li>Add <code>.env.production*</code> to <code>.gitignore</code>.</li>
+    <li>Use CI/CD secret injection mechanism.</li>
+  </ol>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>SEC-003: Refresh Token Reuse (No Rotation Blacklisting)</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/app/api/v1/endpoints/auth.py</code> (lines 785-845)</div>
+  <p><strong>Problem:</strong> The <code>/refresh</code> endpoint decodes the refresh token, verifies the user, issues <strong>new</strong> tokens, but <strong>never blacklists the old refresh token</strong>. An attacker who steals a refresh token can use it repeatedly until it naturally expires (up to 7 days).</p>
+  <p><strong>Root Cause:</strong> Missing token rotation implementation.</p>
+  <p><strong>Recommended Solution:</strong> Blacklist the old refresh token's <code>jti</code> before issuing new tokens:</p>
+  <pre><code>await blacklist_token(token_data.refresh_token, payload)</code></pre>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>SEC-004: Logout Does Not Invalidate Refresh Tokens</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/app/api/v1/endpoints/auth.py</code> (lines 848-888)</div>
+  <p><strong>Problem:</strong> Logout only blacklists the <strong>access token</strong> from the <code>Authorization</code> header. The refresh token remains fully valid and can continue to mint new access tokens.</p>
+  <p><strong>Root Cause:</strong> Logout handler does not accept or invalidate the refresh token.</p>
+  <p><strong>Recommended Solution:</strong> Require the refresh token in the logout request body and blacklist both tokens.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-critical">Critical</span><h4>SEC-005: Dependency Vulnerability — python-jose 3.5.0</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/requirements.txt</code> (line 35)</div>
+  <p><strong>Problem:</strong> <code>python-jose[cryptography]==3.5.0</code> is affected by <strong>CVE-2024-33663</strong> and <strong>CVE-2024-33664</strong> (algorithm confusion / key confusion attacks). The library is also unmaintained.</p>
+  <p><strong>Root Cause:</strong> Pinned to a vulnerable version.</p>
+  <p><strong>Recommended Solution:</strong> Replace <code>python-jose</code> with <code>PyJWT==2.10.1</code> or <code>joserfc</code>. Update <code>decode_token</code> and <code>create_access_token</code> to use the new library.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>SEC-006: PII Logged in Plaintext</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/app/api/v1/endpoints/cms.py</code> (line 491)</div>
+  <p><strong>Problem:</strong> Contact form submissions log raw email addresses:</p>
+  <pre><code>logger.info(f"Contact form submitted: {body.email}")</code></pre>
+  <p><strong>Recommended Solution:</strong> Log a hashed or masked version:</p>
+  <pre><code>logger.info("contact_form_submitted", email_hash=hash_pii_for_lookup(body.email))</code></pre>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>SEC-007: File Upload MIME Type Spoofing</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/app/api/v1/endpoints/assets.py</code> (lines 77-82)</div>
+  <p><strong>Problem:</strong> Asset upload validates MIME type using <code>file.content_type</code>, which is <strong>client-controlled</strong>. A malicious user can upload a <code>.php</code> or <code>.exe</code> file with <code>Content-Type: image/jpeg</code>.</p>
+  <p><strong>Recommended Solution:</strong> Validate actual file content using <code>python-magic</code>:</p>
+  <pre><code>import magic
+detected = magic.from_buffer(contents, mime=True)
+if detected not in ALLOWED_MIME_TYPES:
+    raise HTTPException(400, "File content does not match declared type")</code></pre>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>SEC-008: CORS Origin Wildcard Risk</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/app/core/config.py</code> (lines 201-219)</div>
+  <p><strong>Problem:</strong> <code>cors_origins_list</code> dynamically appends <code>frontend_url</code>. There is <strong>no validation</strong> preventing <code>CORS_ORIGINS="*"</code> or overly broad origins in production. Combined with <code>allow_credentials=true</code>, this allows any website to make authenticated cross-origin requests.</p>
+  <p><strong>Recommended Solution:</strong> Add a production validator that rejects <code>*</code>, <code>http://*</code>, and empty origins when <code>app_env == "production"</code>.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-medium">Medium</span><h4>SEC-009: Rate Limiter Proxy Trust Gaps</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/app/middleware/rate_limit.py</code> (lines 233-237)</div>
+  <p><strong>Problem:</strong> Trusted proxy IP list uses string <code>startswith</code> checks. Cloud providers use IPs outside standard private ranges. If deployed behind a cloud load balancer not in the hardcoded list, rate limiting applies to the load balancer IP.</p>
+  <p><strong>Recommended Solution:</strong> Make trusted proxies configurable via env var (<code>TRUSTED_PROXIES</code>).</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-medium">Medium</span><h4>SEC-010: WhatsApp Webhook Verify Token Default Empty</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/app/core/config.py</code> (line 151-154)</div>
+  <p><strong>Problem:</strong> <code>whatsapp_verify_token</code> defaults to empty string <code>""</code>. An empty verify token makes webhook verification trivially bypassable.</p>
+  <p><strong>Recommended Solution:</strong> Default to <code>None</code> and raise <code>ValueError</code> in production if <code>whatsapp_phone_number_id</code> is set but <code>whatsapp_verify_token</code> is missing or too short.</p>
+</div>
+
+</section>
+
+<section id="performance">
+<h2>Performance Findings</h2>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>PERF-001: Dashboard Overview Loads ALL Campaigns (Unbounded Query)</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/app/api/v1/endpoints/dashboard.py</code> (lines 528-536)</div>
+  <p><strong>Problem:</strong> <code>_build_dashboard_overview</code> executes <code>select(Campaign)</code> with <strong>no <code>LIMIT</code></strong>. For enterprise tenants with 10,000+ campaigns, this loads the entire table into memory.</p>
+  <p><strong>Recommended Solution:</strong> Use aggregated SQL queries instead of ORM object loading.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>PERF-002: No Query Result Caching</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/app/api/v1/endpoints/dashboard.py</code>, <code>analytics.py</code></div>
+  <p><strong>Problem:</strong> Expensive dashboard overview and analytics endpoints recompute aggregates on every request. There is <strong>no Redis-based query result caching</strong>.</p>
+  <p><strong>Recommended Solution:</strong> Add a Redis cache decorator for endpoint responses:</p>
+  <pre><code>@cache_response(ttl=300, key_prefix="dashboard:overview")
+async def get_dashboard_overview(...):</code></pre>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-high">High</span><h4>PERF-003: CDP Profile Export Allows 50,000 Record Exports</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>backend/app/api/v1/endpoints/cdp.py</code> (lines 1907-1909)</div>
+  <p><strong>Problem:</strong> <code>/audiences/export</code> allows <code>limit=50000</code>. 50k profiles with <code>include_identifiers=true</code> triggers massive JSON serialization and memory usage.</p>
+  <p><strong>Recommended Solution:</strong></p>
+  <ol>
+    <li>Reduce max limit to 10,000.</li>
+    <li>Implement streaming CSV/JSON generation using <code>StreamingResponse</code>.</li>
+    <li>Offload large exports to a Celery background task.</li>
+  </ol>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-medium">Medium</span><h4>PERF-004: Frontend Memory Leak — Signup OTP Countdown</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>frontend/src/views/Signup.tsx</code> (lines 83-94)</div>
+  <p><strong>Problem:</strong> <code>startOTPCountdown</code> creates a <code>setInterval</code> that is only cleared when the counter reaches 0. If the user navigates away, the interval continues running.</p>
+  <p><strong>Recommended Solution:</strong> Store interval ID in a ref and clear it in a <code>useEffect</code> cleanup.</p>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-medium">Medium</span><h4>PERF-005: Nginx Missing Static Asset Cache Headers</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>nginx/beta.conf</code></div>
+  <p><strong>Problem:</strong> Nginx config serves the frontend SPA without <code>Cache-Control</code>, <code>Expires</code>, or <code>ETag</code> headers for static JS/CSS assets. Every page reload re-fetches all chunks.</p>
+  <p><strong>Recommended Solution:</strong> Add cache headers for hashed assets:</p>
+  <pre><code>location /assets/ {
+    expires 1y;
+    add_header Cache-Control "public, immutable";
+}</code></pre>
+</div>
+
+<div class="issue">
+  <div class="issue-header"><span class="badge badge-medium">Medium</span><h4>PERF-006: PDF Generation Bundle Bloat</h4></div>
+  <div class="issue-meta"><strong>Component:</strong> <code>frontend/vite.config.ts</code> (line 37)</div>
+  <p><strong>Problem:</strong> <code>jspdf</code> and <code>html2canvas</code> are bundled together in <code>vendor-pdf</code>. These libraries are large (~500KB+ combined) and may not be needed on initial page load.</p>
+  <p><strong>Recommended Solution:</strong> Use dynamic imports for PDF export functionality:</p>
+  <pre><code>const { jsPDF } = await import('jspdf')</code></pre>
+</div>
+
+</section>
+
+<section id="roadmap">
+<h2>Remediation Roadmap</h2>
+
+<h3>Sprint 1 (Week 1): CRITICAL Security &amp; Data Integrity — DO NOT DEPLOY WITHOUT THESE</h3>
+<table class="roadmap-table">
+  <tr><th>Priority</th><th>Issue ID</th><th>Description</th><th>Owner</th></tr>
+  <tr><td><span class="badge badge-critical">P0</span></td><td>SEC-001, SEC-002</td><td>Rotate all hardcoded/committed credentials</td><td>DevOps</td></tr>
+  <tr><td><span class="badge badge-critical">P0</span></td><td>SEC-005</td><td>Replace python-jose with PyJWT</td><td>Backend</td></tr>
+  <tr><td><span class="badge badge-critical">P0</span></td><td>SEC-003, SEC-004</td><td>Implement refresh token rotation and logout invalidation</td><td>Backend</td></tr>
+  <tr><td><span class="badge badge-critical">P0</span></td><td>BE-001</td><td>Fix X-Tenant-ID header spoofing</td><td>Backend</td></tr>
+  <tr><td><span class="badge badge-critical">P0</span></td><td>API-001, API-002, API-003</td><td>Add authentication to unprotected endpoints (Meta CAPI, EMQ v2)</td><td>Backend</td></tr>
+  <tr><td><span class="badge badge-critical">P0</span></td><td>INF-004, INF-005</td><td>Remove hardcoded passwords from start.sh and seed-data.sql</td><td>DevOps</td></tr>
+  <tr><td><span class="badge badge-critical">P0</span></td><td>INF-003</td><td>Fix SQL injection in load_datasets.py</td><td>Backend</td></tr>
+  <tr><td><span class="badge badge-critical">P0</span></td><td>BE-003, BE-004</td><td>Fix double-commit anti-pattern</td><td>Backend</td></tr>
+  <tr><td><span class="badge badge-critical">P0</span></td><td>DB-004</td><td>Audit soft-delete coverage and add to critical tables</td><td>Backend / DBA</td></tr>
+</table>
+
+<h3>Sprint 2 (Week 2): HIGH Priority — API Contract, Auth Hardening, Frontend Fixes</h3>
+<table class="roadmap-table">
+  <tr><th>Priority</th><th>Issue ID</th><th>Description</th><th>Owner</th></tr>
+  <tr><td><span class="badge badge-high">P1</span></td><td>FE-001..FE-006</td><td>Fix API path mismatches (insights, autopilot, trustLayer, featureFlags, dashboard, campaigns)</td><td>Frontend</td></tr>
+  <tr><td><span class="badge badge-high">P1</span></td><td>FE-007..FE-018</td><td>Create missing API client files (12 files)</td><td>Frontend</td></tr>
+  <tr><td><span class="badge badge-high">P1</span></td><td>API-005</td><td>Add batch size limits to CAPI event ingestion</td><td>Backend</td></tr>
+  <tr><td><span class="badge badge-high">P1</span></td><td>BE-009</td><td>Add SSRF protection to webhook test endpoint</td><td>Backend</td></tr>
+  <tr><td><span class="badge badge-high">P1</span></td><td>BE-014</td><td>Add rate limiting to forgot-password, verify-email, resend-verification</td><td>Backend</td></tr>
+  <tr><td><span class="badge badge-high">P1</span></td><td>BE-015</td><td>Fix soft-deleted user access in users.py</td><td>Backend</td></tr>
+  <tr><td><span class="badge badge-high">P1</span></td><td>API-023, API-024</td><td>Fix API keys and webhooks router permissions</td><td>Backend</td></tr>
+  <tr><td><span class="badge badge-high">P1</span></td><td>BE-016</td><td>Fix superadmin raw SQL column interpolation</td><td>Backend</td></tr>
+  <tr><td><span class="badge badge-high">P1</span></td><td>INF-001</td><td>Fix Dockerfile.frontend to run as non-root</td><td>DevOps</td></tr>
+  <tr><td><span class="badge badge-high">P1</span></td><td>INF-002</td><td>Fix Docker Compose weak passwords and exposed ports</td><td>DevOps</td></tr>
+  <tr><td><span class="badge badge-high">P1</span></td><td>INF-010</td><td>Make migration failures fatal in start.sh</td><td>DevOps</td></tr>
+</table>
+
+<h3>Sprint 3 (Week 3): MEDIUM Priority — Database Integrity, Performance, Reliability</h3>
+<table class="roadmap-table">
+  <tr><th>Priority</th><th>Issue ID</th><th>Description</th><th>Owner</th></tr>
+  <tr><td><span class="badge badge-medium">P2</span></td><td>DB-005..DB-012</td><td>Add missing indexes to FK and query columns</td><td>Backend / DBA</td></tr>
+  <tr><td><span class="badge badge-medium">P2</span></td><td>DB-010</td><td>Migrate financial columns from Integer to BigInteger</td><td>Backend / DBA</td></tr>
+  <tr><td><span class="badge badge-medium">P2</span></td><td>DB-014</td><td>Fix migration downgrade enum drops</td><td>Backend</td></tr>
+  <tr><td><span class="badge badge-medium">P2</span></td><td>BE-005</td><td>Fix Celery event loop creation</td><td>Backend</td></tr>
+  <tr><td><span class="badge badge-medium">P2</span></td><td>BE-010</td><td>Add Redis connection pooling to publish_event</td><td>Backend</td></tr>
+  <tr><td><span class="badge badge-medium">P2</span></td><td>BE-011</td><td>Fix N+1 queries in superadmin portfolio</td><td>Backend</td></tr>
+  <tr><td><span class="badge badge-medium">P2</span></td><td>BE-006</td><td>Add pagination/aggregation to insights endpoints</td><td>Backend</td></tr>
+  <tr><td><span class="badge badge-medium">P2</span></td><td>PERF-001..PERF-003</td><td>Fix unbounded queries and add caching</td><td>Backend</td></tr>
+  <tr><td><span class="badge badge-medium">P2</span></td><td>FE-021..FE-023</td><td>Replace console.error/log placeholders with toast notifications</td><td>Frontend</td></tr>
+  <tr><td><span class="badge badge-medium">P2</span></td><td>FE-024..FE-027</td><td>Fix TypeScript types (any casts, role mismatches)</td><td>Frontend</td></tr>
+  <tr><td><span class="badge badge-medium">P2</span></td><td>INF-011, INF-012</td><td>Fix CI/CD action versions and Trivy exit code</td><td>DevOps</td></tr>
+</table>
+
+<h3>Sprint 4 (Week 4): LOW Priority — Polish, Optimization, Documentation</h3>
+<table class="roadmap-table">
+  <tr><th>Priority</th><th>Issue ID</th><th>Description</th><th>Owner</th></tr>
+  <tr><td><span class="badge badge-low">P3</span></td><td>BE-018</td><td>Remove unnecessary await db.refresh() calls</td><td>Backend</td></tr>
+  <tr><td><span class="badge badge-low">P3</span></td><td>FE-028..FE-030</td><td>Fix state management anti-patterns</td><td>Frontend</td></tr>
+  <tr><td><span class="badge badge-low">P3</span></td><td>FE-033</td><td>Add ErrorBoundary to all routes</td><td>Frontend</td></tr>
+  <tr><td><span class="badge badge-low">P3</span></td><td>FE-034..FE-035</td><td>Fix and expand E2E tests</td><td>Frontend</td></tr>
+  <tr><td><span class="badge badge-low">P3</span></td><td>INF-014..INF-016</td><td>Add security headers to Vercel and nginx</td><td>DevOps</td></tr>
+  <tr><td><span class="badge badge-low">P3</span></td><td>DB-013</td><td>Standardize all models on mapped_column</td><td>Backend</td></tr>
+  <tr><td><span class="badge badge-low">P3</span></td><td>BE-021</td><td>Add tenant_id filters to changelog and client assignments</td><td>Backend</td></tr>
+  <tr><td><span class="badge badge-low">P3</span></td><td>PERF-004..PERF-006</td><td>Fix frontend memory leaks and bundle optimization</td><td>Frontend</td></tr>
+</table>
+</section>
+
+<section id="appendix">
+<h2>Appendix</h2>
+
+<h3>A. Audit Commands Reference</h3>
+<pre><code># Backend tests baseline
+cd backend &amp;&amp; pytest tests/ -v --tb=short
+
+# Frontend build baseline
+cd frontend &amp;&amp; npm run build
+
+# Type check
+cd frontend &amp;&amp; npx tsc --noEmit
+
+# E2E baseline
+cd frontend &amp;&amp; npx playwright test --reporter=line
+
+# Docker security scan
+trivy image stratum-ai-backend:latest
+trivy image stratum-ai-frontend:latest
+
+# Alembic status
+cd backend &amp;&amp; alembic current &amp;&amp; alembic history --verbose
+
+# Redis auth check (should fail without password)
+redis-cli -h localhost -p 6379 KEYS '*'
+
+# Secret scan
+gitleaks detect --source . --verbose</code></pre>
+
+<h3>B. Positives &amp; Good Practices Observed</h3>
+<div class="positives">
+  <h3>✅ What Stratum AI Does Well</h3>
+  <ol>
+    <li><strong>Vite Code Splitting:</strong> Excellent manual chunking strategy in <code>vite.config.ts</code>.</li>
+    <li><strong>Load Tests:</strong> Valid k6 scripts exist in <code>tests/load/</code> with smoke, load, stress, spike, and soak scenarios.</li>
+    <li><strong>Password Security:</strong> Bcrypt truncation fix implemented (72-byte limit handled in <code>security.py</code>).</li>
+    <li><strong>PII at Rest:</strong> Email and full name are encrypted via Fernet/PBKDF2 in the database.</li>
+    <li><strong>Rate Limiting:</strong> Redis-backed sliding window with graceful in-memory fallback.</li>
+    <li><strong>Login Protection:</strong> Account lockout after 5 failed attempts, with Redis TTL cleanup.</li>
+    <li><strong>JWT Blacklisting:</strong> Redis-backed blacklist with automatic TTL expiry.</li>
+    <li><strong>CSP Middleware:</strong> Environment-aware CSP (strict in production, relaxed in dev).</li>
+    <li><strong>Health Checks:</strong> <code>/health</code>, <code>/health/ready</code>, <code>/health/live</code> endpoints present.</li>
+    <li><strong>Structured Logging:</strong> <code>structlog</code> used consistently with JSON format in production.</li>
+  </ol>
+</div>
+
+</section>
+
+<footer>
+  <p><strong>Stratum AI — Master Technical Audit Report</strong></p>
+  <p>Audit completed on April 23, 2026 &nbsp;|&nbsp; Total unique issues documented: 180+ &nbsp;|&nbsp; Critical issues requiring immediate action: 28</p>
+  <p style="margin-top:8px; font-size:0.85rem;">Generated by Claude Code Desktop — Full-Stack Systems Audit</p>
+</footer>
+
+</div>
+</body>
+</html>

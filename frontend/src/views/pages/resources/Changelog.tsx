@@ -286,7 +286,7 @@ export default function ChangelogPage() {
                   }}
                 />
                 <button
-                  className="px-6 py-3 rounded-full font-semibold text-white transition-all duration-200"
+                  className="px-6 py-3 rounded-full font-semibold text-white transition-colors duration-200"
                   style={{
                     background: 'var(--landing-accent-coral)',
                     boxShadow: 'var(--landing-glow-coral)',

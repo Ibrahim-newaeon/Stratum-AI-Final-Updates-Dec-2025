@@ -3,7 +3,7 @@
  * Horizontal bar chart showing ROAS comparison across platforms
  */
 
-import React from 'react'
+import React, { useMemo } from 'react'
 import {
   BarChart,
   Bar,
@@ -41,7 +41,7 @@ function ROASByPlatformChartInner({
   }
 
   // Sort by ROAS descending for better visualization
-  const sortedData = [...data].sort((a, b) => b.roas - a.roas)
+  const sortedData = useMemo(() => [...data].sort((a, b) => b.roas - a.roas), [data])
 
   return (
     <div className="rounded-xl border bg-card p-6">
@@ -62,7 +62,7 @@ function ROASByPlatformChartInner({
             <defs>
               {sortedData.map((entry, index) => (
                 <linearGradient
-                  key={`gradient-${index}`}
+                  key={`gradient-${entry.platform}`}
                   id={`roasGradient-${index}`}
                   x1="0"
                   y1="0"
@@ -123,9 +123,9 @@ function ROASByPlatformChartInner({
               radius={[0, 4, 4, 0]}
               animationDuration={chartTheme.animation.duration}
             >
-              {sortedData.map((entry, index) => (
+              {sortedData.map((entry) => (
                 <Cell
-                  key={`cell-${index}`}
+                  key={`cell-${entry.platform}`}
                   fill={entry.roas >= targetROAS ? chartTheme.colors.success : chartTheme.colors.warning}
                 />
               ))}

@@ -68,7 +68,7 @@ export function PasswordStrength({ password, className }: PasswordStrengthProps)
           aria-valuemax={100}
         >
           <div
-            className={cn('h-full transition-all duration-300 rounded-full', strength.bgColor)}
+            className={cn('h-full transition-[width] duration-300 rounded-full', strength.bgColor)}
             style={{ width: `${percentage}%` }}
           />
         </div>
@@ -122,7 +122,7 @@ export function PasswordStrengthBar({ password, className }: PasswordStrengthPro
         aria-label={`Password strength: ${strength.label}`}
       >
         <div
-          className={cn('h-full transition-all duration-300 rounded-full', strength.bgColor)}
+          className={cn('h-full transition-[width] duration-300 rounded-full', strength.bgColor)}
           style={{ width: `${percentage}%` }}
         />
       </div>

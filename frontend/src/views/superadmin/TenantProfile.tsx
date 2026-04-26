@@ -82,6 +82,7 @@ function ConfirmDialog({
       <div className="relative bg-surface-primary border border-white/10 rounded-2xl p-6 max-w-md w-full mx-4 shadow-xl">
         <button
           onClick={onCancel}
+          aria-label="Cancel"
           className="absolute top-4 right-4 text-text-muted hover:text-white transition-colors"
         >
           <XMarkIcon className="w-5 h-5" />
@@ -114,7 +115,7 @@ function ConfirmDialog({
 
 export default function TenantProfile() {
   const { tenantId } = useParams<{ tenantId: string }>()
-  const tid = parseInt(tenantId || '1', 10)
+  const tid = parseInt(tenantId || '', 10)
 
   const { toast } = useToast()
 

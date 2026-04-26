@@ -67,7 +67,7 @@ class ProductCatalog(Base):
     __tablename__ = "product_catalog"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Product identification
     sku = Column(String(100), nullable=False)
@@ -120,8 +120,8 @@ class ProductMargin(Base):
     __tablename__ = "product_margins"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
-    product_id = Column(UUID(as_uuid=True), ForeignKey("product_catalog.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    product_id = Column(UUID(as_uuid=True), ForeignKey("product_catalog.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Effective period
     effective_date = Column(Date, nullable=False)
@@ -152,7 +152,7 @@ class ProductMargin(Base):
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
-    created_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -177,7 +177,7 @@ class MarginRule(Base):
     __tablename__ = "margin_rules"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Rule identification
     name = Column(String(255), nullable=False)
@@ -227,7 +227,7 @@ class DailyProfitMetrics(Base):
     __tablename__ = "daily_profit_metrics"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
     date = Column(Date, nullable=False)
 
     # Scope
@@ -235,7 +235,7 @@ class DailyProfitMetrics(Base):
     campaign_id = Column(String(255), nullable=True)
     adset_id = Column(String(255), nullable=True)
     ad_id = Column(String(255), nullable=True)
-    product_id = Column(UUID(as_uuid=True), ForeignKey("product_catalog.id", ondelete="SET NULL"), nullable=True)
+    product_id = Column(UUID(as_uuid=True), ForeignKey("product_catalog.id", ondelete="SET NULL"), nullable=True, index=True)
 
     # Revenue metrics
     units_sold = Column(Integer, default=0, nullable=False)
@@ -271,7 +271,7 @@ class DailyProfitMetrics(Base):
 
     # Data quality
     cogs_source = Column(StrEnumType(COGSSource), nullable=True)
-    margin_rule_id = Column(UUID(as_uuid=True), ForeignKey("margin_rules.id", ondelete="SET NULL"), nullable=True)
+    margin_rule_id = Column(UUID(as_uuid=True), ForeignKey("margin_rules.id", ondelete="SET NULL"), nullable=True, index=True)
     is_estimated = Column(Boolean, default=False, nullable=False)  # True if using default margins
 
     # Timestamps
@@ -303,7 +303,7 @@ class ProfitROASReport(Base):
     __tablename__ = "profit_roas_reports"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Report period
     report_type = Column(String(50), nullable=False)  # daily, weekly, monthly, custom
@@ -347,7 +347,7 @@ class ProfitROASReport(Base):
 
     # Report metadata
     generated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
-    generated_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    generated_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -370,7 +370,7 @@ class COGSUpload(Base):
     __tablename__ = "cogs_uploads"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Upload metadata
     filename = Column(String(500), nullable=True)
@@ -391,7 +391,7 @@ class COGSUpload(Base):
     # Timestamps
     uploaded_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     processed_at = Column(DateTime(timezone=True), nullable=True)
-    uploaded_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    uploaded_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])

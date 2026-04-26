@@ -78,7 +78,7 @@ class NewsletterTemplate(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     tenant_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True
+        Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True, index=True
     )
 
     # Template content
@@ -95,7 +95,7 @@ class NewsletterTemplate(Base):
     )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     created_by_user_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
     )
 
     # Timestamps
@@ -129,7 +129,7 @@ class NewsletterCampaign(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     tenant_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True
+        Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True, index=True
     )
 
     # Campaign details
@@ -143,7 +143,7 @@ class NewsletterCampaign(Base):
 
     # Template reference (optional — campaign can be from scratch)
     template_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("newsletter_templates.id", ondelete="SET NULL"), nullable=True
+        Integer, ForeignKey("newsletter_templates.id", ondelete="SET NULL"), nullable=True, index=True
     )
 
     # Status
@@ -176,7 +176,7 @@ class NewsletterCampaign(Base):
 
     # Creator
     created_by_user_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
     )
 
     # Timestamps
@@ -212,10 +212,10 @@ class NewsletterEvent(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     campaign_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("newsletter_campaigns.id", ondelete="CASCADE"), nullable=False
+        Integer, ForeignKey("newsletter_campaigns.id", ondelete="CASCADE"), nullable=False, index=True
     )
     subscriber_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("landing_page_subscribers.id", ondelete="CASCADE"), nullable=False
+        Integer, ForeignKey("landing_page_subscribers.id", ondelete="CASCADE"), nullable=False, index=True
     )
 
     # Event

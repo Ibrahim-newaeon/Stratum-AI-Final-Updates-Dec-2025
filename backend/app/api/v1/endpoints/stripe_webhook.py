@@ -161,15 +161,27 @@ async def stripe_webhook(request: Request):
                 # Evict oldest entries to prevent unbounded growth
                 _processed_events.clear()
 
-        except (ValueError, KeyError, TypeError, OSError) as e:
+        except (ValueError, KeyError, TypeError) as e:
             logger.error(
                 "stripe_webhook_handler_error",
                 event_type=event_type,
                 error=str(e),
             )
             await db.rollback()
-            # Don't raise - return 200 to Stripe to prevent retries for our errors
+            # Don't raise - return 200 to Stripe to prevent retries for our app logic errors
             # Stripe will retry on 5xx errors
+        except OSError as e:
+            logger.error(
+                "stripe_webhook_os_error",
+                event_type=event_type,
+                error=str(e),
+            )
+            await db.rollback()
+            # Re-raise DB/connection errors as 500 so Stripe retries
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Database connection error",
+            ) from e
 
     return {"status": "received", "event_type": event_type}
 

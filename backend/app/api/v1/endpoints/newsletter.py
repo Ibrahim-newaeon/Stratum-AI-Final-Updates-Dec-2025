@@ -233,7 +233,7 @@ async def list_templates(
     query = select(NewsletterTemplate).where(NewsletterTemplate.is_active == is_active)
     if category:
         query = query.where(NewsletterTemplate.category == category)
-    query = query.order_by(NewsletterTemplate.updated_at.desc())
+    query = query.order_by(NewsletterTemplate.updated_at.desc()).limit(1000)
 
     result = await db.execute(query)
     templates = result.scalars().all()
@@ -258,7 +258,6 @@ async def create_template(
     )
     db.add(template)
     await db.commit()
-    await db.refresh(template)
     return TemplateResponse.model_validate(template)
 
 
@@ -281,7 +280,6 @@ async def update_template(
         setattr(template, field, value)
 
     await db.commit()
-    await db.refresh(template)
     return TemplateResponse.model_validate(template)
 
 
@@ -364,7 +362,6 @@ async def create_campaign(
 
     db.add(campaign)
     await db.commit()
-    await db.refresh(campaign)
     return CampaignResponse.model_validate(campaign)
 
 
@@ -409,7 +406,6 @@ async def update_campaign(
         campaign.total_recipients = await _count_audience(db, data.audience_filters)
 
     await db.commit()
-    await db.refresh(campaign)
     return CampaignResponse.model_validate(campaign)
 
 
@@ -465,7 +461,6 @@ async def duplicate_campaign(
     )
     db.add(clone)
     await db.commit()
-    await db.refresh(clone)
     return CampaignResponse.model_validate(clone)
 
 

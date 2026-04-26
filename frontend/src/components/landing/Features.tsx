@@ -64,7 +64,7 @@ export function Features() {
           </div>
           <h2 className="text-h1 text-white mb-4">
             Three layers.{' '}
-            <span className="bg-gradient-stratum bg-clip-text text-transparent">
+            <span className=" text-foreground">
               One intelligent system.
             </span>
           </h2>
@@ -79,7 +79,7 @@ export function Features() {
           {layers.map((layer, index) => (
             <div
               key={layer.name}
-              className="motion-card group relative rounded-2xl bg-surface-secondary border border-white/5 p-8 hover:border-white/10 transition-all duration-base"
+              className="motion-card group relative rounded-2xl bg-surface-secondary border border-white/5 p-8 hover:border-white/10 transition-colors duration-base"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
               {/* Gradient accent */}

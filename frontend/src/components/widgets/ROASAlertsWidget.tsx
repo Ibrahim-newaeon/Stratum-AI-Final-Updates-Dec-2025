@@ -172,6 +172,7 @@ export function ROASAlertsWidget({ className, limit = 5 }: ROASAlertsWidgetProps
     fetchAlerts()
     // Refresh every 30 seconds for live feel
     const interval = setInterval(() => {
+      if (document.hidden) return
       if (usingSimulation) {
         loadSimulationData()
       } else {
@@ -231,6 +232,7 @@ export function ROASAlertsWidget({ className, limit = 5 }: ROASAlertsWidgetProps
           <button
             onClick={fetchAlerts}
             disabled={refreshing}
+            aria-label="Refresh alerts"
             className="p-2 hover:bg-muted rounded-lg transition-colors disabled:opacity-50"
           >
             <RefreshCw className={cn('w-4 h-4', refreshing && 'animate-spin')} />
@@ -282,7 +284,7 @@ export function ROASAlertsWidget({ className, limit = 5 }: ROASAlertsWidgetProps
               <div
                 key={`${alert.campaign_id}-${index}`}
                 className={cn(
-                  'p-4 rounded-lg border-l-4 motion-card hover:shadow-card-hover cursor-pointer',
+                  'p-4 rounded-lg border motion-card hover:shadow-card-hover cursor-pointer',
                   config.bg,
                   config.border,
                   config.motion

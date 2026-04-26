@@ -152,7 +152,7 @@ export default function AudienceSyncLaunch() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               to="/signup"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full font-semibold text-white transition-all hover:scale-105"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full font-semibold text-white transition-transform hover:scale-105"
               style={{
                 background: 'var(--landing-accent-coral)',
                 boxShadow: 'var(--landing-glow-coral)',
@@ -163,7 +163,7 @@ export default function AudienceSyncLaunch() {
             </Link>
             <Link
               to="/solutions/audience-sync"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-semibold transition-all"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-semibold transition-colors"
               style={{
                 background: 'var(--landing-surface-glass)',
                 border: '1px solid var(--landing-border)',
@@ -187,7 +187,7 @@ export default function AudienceSyncLaunch() {
             {platforms.map((platform) => (
               <div
                 key={platform.name}
-                className="p-6 rounded-2xl text-center transition-all hover:scale-105 group"
+                className="p-6 rounded-2xl text-center transition-transform hover:scale-105 group"
                 style={{
                   background: 'var(--landing-card)',
                   border: '1px solid var(--landing-border)',
@@ -228,7 +228,7 @@ export default function AudienceSyncLaunch() {
             {features.map((feature) => (
               <div
                 key={feature.title}
-                className="p-6 rounded-2xl transition-all hover:scale-[1.02]"
+                className="p-6 rounded-2xl transition-transform hover:scale-[1.02]"
                 style={{
                   background: 'var(--landing-card)',
                   border: '1px solid var(--landing-border)',
@@ -316,7 +316,7 @@ export default function AudienceSyncLaunch() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 to="/signup"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full font-semibold text-white transition-all hover:scale-105"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full font-semibold text-white transition-transform hover:scale-105"
                 style={{
                   background: 'var(--landing-accent-coral)',
                   boxShadow: 'var(--landing-glow-coral)',
@@ -327,7 +327,7 @@ export default function AudienceSyncLaunch() {
               </Link>
               <Link
                 to="/contact"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-semibold transition-all"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-semibold transition-colors"
                 style={{
                   background: 'var(--landing-surface-glass)',
                   border: '1px solid var(--landing-border)',

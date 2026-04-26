@@ -120,7 +120,7 @@ function AnomalyCard({ anomaly }: AnomalyCardProps) {
   return (
     <div
       className={cn(
-        'p-4 rounded-xl border transition-all',
+        'p-4 rounded-xl border transition-colors',
         severityConfig.bgColor.replace('/10', '/5')
       )}
     >

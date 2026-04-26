@@ -160,21 +160,34 @@ class AuditMiddleware(BaseHTTPMiddleware):
         return method_to_action.get(method, AuditAction.UPDATE)
 
     def _get_client_ip(self, request: Request) -> str:
-        """Extract client IP address, handling proxies."""
-        # Check for forwarded headers (behind load balancer)
-        forwarded = request.headers.get("X-Forwarded-For")
-        if forwarded:
-            return forwarded.split(",")[0].strip()
+        """Extract client IP address, handling proxies.
 
-        real_ip = request.headers.get("X-Real-IP")
-        if real_ip:
-            return real_ip
+        Only trusts X-Forwarded-For when the direct connection is from a
+        known proxy (private network or loopback) to prevent header spoofing.
+        """
+        client_ip = request.client.host if request.client else "unknown"
 
-        # Fall back to direct connection
-        if request.client:
-            return request.client.host
+        trusted_prefixes = (
+            "10.", "172.16.", "172.17.", "172.18.", "172.19.",
+            "172.20.", "172.21.", "172.22.", "172.23.", "172.24.",
+            "172.25.", "172.26.", "172.27.", "172.28.", "172.29.",
+            "172.30.", "172.31.", "192.168.", "127.", "::1"
+        )
+        is_trusted_proxy = any(client_ip.startswith(p) for p in trusted_prefixes)
 
-        return "unknown"
+        if is_trusted_proxy:
+            forwarded = request.headers.get("X-Forwarded-For")
+            if forwarded:
+                ips = [ip.strip() for ip in forwarded.split(",")]
+                for ip in reversed(ips):
+                    if not any(ip.startswith(p) for p in trusted_prefixes):
+                        return ip
+                return ips[0]
+            real_ip = request.headers.get("X-Real-IP")
+            if real_ip:
+                return real_ip
+
+        return client_ip
 
     def _sanitize_for_audit(self, data: Optional[dict]) -> Optional[dict]:
         """

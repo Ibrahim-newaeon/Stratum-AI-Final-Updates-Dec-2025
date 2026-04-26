@@ -61,7 +61,7 @@ export function TierPricingCTA({ content }: TierPricingCTAProps) {
           </Badge>
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
             Ready to{' '}
-            <span className={`bg-gradient-to-r ${gradientClass} bg-clip-text text-transparent`}>
+            <span className={`bg-gradient-to-r ${gradientClass} text-foreground`}>
               get started
             </span>
             ?
@@ -96,7 +96,7 @@ export function TierPricingCTA({ content }: TierPricingCTAProps) {
                   <div className="text-sm text-gray-500 mb-2">{name} Plan</div>
                   <div className="flex items-baseline gap-2">
                     <span
-                      className={`text-6xl font-bold bg-gradient-to-r ${gradientClass} bg-clip-text text-transparent`}
+                      className={`text-6xl font-bold bg-gradient-to-r ${gradientClass} text-foreground`}
                     >
                       {pricing.price}
                     </span>

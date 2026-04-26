@@ -162,6 +162,7 @@ export function PostEditor({
             <button
               type="button"
               onClick={onCancel}
+              aria-label="Cancel"
               className="p-2 text-neutral-400 hover:text-white transition-colors"
             >
               <X className="w-5 h-5" />
@@ -322,11 +323,11 @@ export function PostEditor({
                 />
                 {formData.featured_image_url && (
                   <div className="mt-2">
-                    <img
-                      src={formData.featured_image_url}
+                    <img                       src={formData.featured_image_url}
                       alt="Featured preview"
                       className="max-h-40 rounded-lg object-cover"
-                      onError={(e) => (e.currentTarget.style.display = 'none')}
+                      loading="lazy"
+                      onError={(e) => { e.currentTarget.style.display = 'none' }}
                     />
                   </div>
                 )}

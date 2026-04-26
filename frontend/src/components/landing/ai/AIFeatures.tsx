@@ -146,10 +146,10 @@ export default function AIFeatures() {
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
-          className="text-center mb-20"
+          className="text-left mb-20"
         >
           {/* Badge - Centered above hero */}
-          <div className="flex justify-center mb-8">
+          <div className="flex justify-start mb-8">
             <div
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
               style={{
@@ -162,7 +162,7 @@ export default function AIFeatures() {
             </div>
           </div>
 
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-center">
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
             <span className="text-white">Predictive Intelligence</span>
             <br />
             <span style={{ color: 'var(--landing-accent-cyan)' }}>
@@ -170,7 +170,7 @@ export default function AIFeatures() {
             </span>
           </h2>
 
-          <p className="text-lg max-w-2xl mx-auto text-center" style={{ color: 'var(--landing-text-white-soft)' }}>
+          <p className="text-lg max-w-2xl text-left" style={{ color: 'var(--landing-text-white-soft)' }}>
             Every model is trained on YOUR data. No generic predictions—tailored insights for your
             unique business patterns.
           </p>
@@ -187,7 +187,7 @@ export default function AIFeatures() {
             <motion.div
               key={model.id}
               variants={itemVariants}
-              className={`group relative rounded-3xl bg-gradient-to-b ${model.bgGradient} border border-white/[0.05] hover:border-white/10 backdrop-blur-sm overflow-hidden transition-all duration-500 hover:scale-[1.02] ${
+              className={`group relative rounded-3xl bg-gradient-to-b ${model.bgGradient} border border-white/[0.05] hover:border-white/10 overflow-hidden transition-transform transition-colors duration-500 hover:scale-[1.02] ${
                 model.size === 'large' ? 'md:col-span-2 lg:col-span-1' : ''
               }`}
             >
@@ -207,7 +207,7 @@ export default function AIFeatures() {
                 {/* Title & Subtitle */}
                 <h3 className="text-xl font-semibold text-white mb-1">{model.title}</h3>
                 <p
-                  className={`text-sm font-medium bg-gradient-to-r ${model.gradient} bg-clip-text text-transparent mb-3`}
+                  className="text-sm font-medium text-foreground mb-3"
                 >
                   {model.subtitle}
                 </p>
@@ -244,7 +244,7 @@ export default function AIFeatures() {
           {additionalFeatures.map((feature) => (
             <div
               key={feature.title}
-              className="group relative p-6 rounded-2xl transition-all"
+              className="group relative p-6 rounded-2xl transition-colors"
               style={{
                 background: 'rgba(255, 255, 255, 0.02)',
                 border: '1px solid rgba(255, 255, 255, 0.05)',

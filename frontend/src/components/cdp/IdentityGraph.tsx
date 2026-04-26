@@ -70,7 +70,7 @@ function GraphNode({ node, isSelected, isPrimary, onClick, position }: GraphNode
   return (
     <div
       className={cn(
-        'absolute flex items-center gap-2 px-3 py-2 rounded-lg border-2 cursor-pointer transition-all transform -translate-x-1/2 -translate-y-1/2',
+        'absolute flex items-center gap-2 px-3 py-2 rounded-lg border-2 cursor-pointer transition-transform transform -translate-x-1/2 -translate-y-1/2',
         isSelected
           ? 'border-primary ring-2 ring-primary/20 scale-110 z-10'
           : 'border-border hover:border-primary/50',
@@ -84,7 +84,7 @@ function GraphNode({ node, isSelected, isPrimary, onClick, position }: GraphNode
       </div>
       <div className="min-w-0">
         <div className="text-xs text-muted-foreground uppercase tracking-wider">{node.type}</div>
-        <div className="text-sm font-mono truncate max-w-[120px]" title={node.hash}>
+        <div className="text-sm font-mono truncate max-w-28" title={node.hash}>
           {node.hash.slice(0, 12)}...
         </div>
       </div>
@@ -113,7 +113,7 @@ function GraphEdge({ from, to, edge, isHighlighted }: GraphEdgeProps) {
         x2={to.x}
         y2={to.y}
         className={cn(
-          'transition-all',
+          'transition-colors',
           isHighlighted ? 'stroke-primary stroke-2' : 'stroke-muted-foreground/30 stroke-1'
         )}
         strokeDasharray={edge.type === 'inferred' ? '4 2' : undefined}

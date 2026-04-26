@@ -403,7 +403,7 @@ async def list_categories(
     query = select(CMSCategory)
     if conditions:
         query = query.where(and_(*conditions))
-    query = query.order_by(CMSCategory.display_order, CMSCategory.name)
+    query = query.order_by(CMSCategory.display_order, CMSCategory.name).limit(1000)
 
     result = await db.execute(query)
     categories = result.scalars().all()
@@ -436,7 +436,7 @@ async def list_tags(
     db: AsyncSession = Depends(get_async_session),
 ) -> APIResponse[TagListResponse]:
     """List all tags (public endpoint)."""
-    result = await db.execute(select(CMSTag).order_by(desc(CMSTag.usage_count), CMSTag.name))
+    result = await db.execute(select(CMSTag).order_by(desc(CMSTag.usage_count), CMSTag.name).limit(1000))
     tags = result.scalars().all()
 
     return APIResponse(
@@ -846,7 +846,6 @@ async def admin_create_post(
             tag.usage_count += 1
 
     await db.commit()
-    await db.refresh(post)
 
     # Reload with relationships
     result = await db.execute(
@@ -1154,7 +1153,7 @@ async def admin_list_categories(
         )
 
     result = await db.execute(
-        select(CMSCategory).order_by(CMSCategory.display_order, CMSCategory.name)
+        select(CMSCategory).order_by(CMSCategory.display_order, CMSCategory.name).limit(1000)
     )
     categories = result.scalars().all()
 
@@ -1211,7 +1210,6 @@ async def admin_create_category(
 
     db.add(category)
     await db.commit()
-    await db.refresh(category)
 
     return APIResponse(
         success=True,
@@ -1265,7 +1263,6 @@ async def admin_update_category(
         category.is_active = body.is_active
 
     await db.commit()
-    await db.refresh(category)
 
     return APIResponse(
         success=True,
@@ -1322,7 +1319,7 @@ async def admin_list_tags(
             status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
         )
 
-    result = await db.execute(select(CMSTag).order_by(desc(CMSTag.usage_count), CMSTag.name))
+    result = await db.execute(select(CMSTag).order_by(desc(CMSTag.usage_count), CMSTag.name).limit(1000))
     tags = result.scalars().all()
 
     return APIResponse(
@@ -1371,7 +1368,6 @@ async def admin_create_tag(
 
     db.add(tag)
     await db.commit()
-    await db.refresh(tag)
 
     return APIResponse(
         success=True,
@@ -1417,7 +1413,6 @@ async def admin_update_tag(
         tag.color = body.color
 
     await db.commit()
-    await db.refresh(tag)
 
     return APIResponse(
         success=True,
@@ -1472,7 +1467,7 @@ async def admin_list_authors(
             status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
         )
 
-    result = await db.execute(select(CMSAuthor).order_by(CMSAuthor.name))
+    result = await db.execute(select(CMSAuthor).order_by(CMSAuthor.name).limit(1000))
     authors = result.scalars().all()
 
     return APIResponse(
@@ -1553,7 +1548,6 @@ async def admin_create_author(
 
     db.add(author)
     await db.commit()
-    await db.refresh(author)
 
     return APIResponse(
         success=True,
@@ -1625,7 +1619,6 @@ async def admin_update_author(
         author.is_active = body.is_active
 
     await db.commit()
-    await db.refresh(author)
 
     return APIResponse(
         success=True,
@@ -1691,7 +1684,7 @@ async def admin_list_pages(
     result = await db.execute(
         select(CMSPage)
         .where(CMSPage.is_deleted == False)
-        .order_by(CMSPage.navigation_order, CMSPage.title)
+        .order_by(CMSPage.navigation_order, CMSPage.title).limit(1000)
     )
     pages = result.scalars().all()
 
@@ -1756,7 +1749,6 @@ async def admin_create_page(
 
     db.add(page)
     await db.commit()
-    await db.refresh(page)
 
     return APIResponse(
         success=True,
@@ -1828,7 +1820,6 @@ async def admin_update_page(
         page.template = body.template
 
     await db.commit()
-    await db.refresh(page)
 
     return APIResponse(
         success=True,
@@ -1986,7 +1977,6 @@ async def admin_mark_contact_read(
         contact.read_by_user_id = None
 
     await db.commit()
-    await db.refresh(contact)
 
     return APIResponse(
         success=True,
@@ -2041,7 +2031,6 @@ async def admin_mark_contact_responded(
         contact.response_notes = body.response_notes
 
     await db.commit()
-    await db.refresh(contact)
 
     return APIResponse(
         success=True,
@@ -2089,7 +2078,6 @@ async def admin_mark_contact_spam(
     contact.is_spam = body.is_spam
 
     await db.commit()
-    await db.refresh(contact)
 
     return APIResponse(
         success=True,
@@ -2919,7 +2907,7 @@ async def list_cms_users(
             User.cms_role.isnot(None),
             User.is_deleted == False,
         )
-        .order_by(User.cms_role, User.full_name)
+        .order_by(User.cms_role, User.full_name).limit(1000)
     )
 
     result = await db.execute(query)
@@ -2996,7 +2984,6 @@ async def assign_cms_role(
 
     user.cms_role = body.cms_role
     await db.commit()
-    await db.refresh(user)
 
     return APIResponse(
         success=True,
@@ -3126,7 +3113,6 @@ async def invite_cms_user(
     )
     db.add(new_user)
     await db.commit()
-    await db.refresh(new_user)
 
     return APIResponse(
         success=True,

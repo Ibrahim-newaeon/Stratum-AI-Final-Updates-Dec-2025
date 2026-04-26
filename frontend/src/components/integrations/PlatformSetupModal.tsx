@@ -5,7 +5,7 @@
  * each integration platform. Opens when user clicks a platform card.
  */
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   XMarkIcon,
   ClipboardDocumentIcon,
@@ -890,10 +890,19 @@ export function PlatformSetupModal({ platform, onClose, onConnect }: PlatformSet
 
   if (!platform) return null
 
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    }
+  }, [])
+
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text)
     setCopiedField(field)
-    setTimeout(() => setCopiedField(null), 2000)
+    if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    timeoutRef.current = setTimeout(() => setCopiedField(null), 2000)
   }
 
   const toggleVisibility = (field: string) => {
@@ -918,6 +927,7 @@ export function PlatformSetupModal({ platform, onClose, onConnect }: PlatformSet
         <div className={cn('relative rounded-t-2xl p-6 bg-gradient-to-r', platform.color)}>
           <button
             onClick={onClose}
+            aria-label="Close"
             className="absolute top-4 right-4 p-1.5 rounded-lg bg-black/20 hover:bg-black/40 transition-colors text-white"
           >
             <XMarkIcon className="h-5 w-5" />
@@ -1145,7 +1155,7 @@ function CredentialFieldCard({
   const [showWhereToFind, setShowWhereToFind] = useState(false)
 
   return (
-    <div className="rounded-xl border border-white/8 bg-white/[0.02] p-4">
+    <div className="rounded-xl border border-border bg-card p-4">
       <div className="flex items-start justify-between mb-1.5">
         <div>
           <div className="flex items-center gap-2">

@@ -55,80 +55,6 @@ export default function TenantsList() {
   // Fetch tenants from superadmin API
   const { data: tenantsData, isLoading: _isLoading } = useSuperAdminTenants()
 
-  // Default mock tenants
-  const mockTenants: TenantListItem[] = [
-    {
-      id: '1',
-      name: 'Acme Corporation',
-      industry: 'E-commerce',
-      emqScore: 92,
-      emqStatus: 'ok' as EmqStatus,
-      autopilotMode: 'normal' as AutopilotMode,
-      budgetAtRisk: 0,
-      activeIncidents: 0,
-      totalSpend: 85000,
-      platforms: ['Meta', 'Google', 'TikTok'],
-      lastActivity: new Date(Date.now() - 2 * 60 * 60 * 1000),
-      accountManager: 'Sarah Johnson',
-    },
-    {
-      id: '2',
-      name: 'TechStart Inc',
-      industry: 'SaaS',
-      emqScore: 78,
-      emqStatus: 'risk' as EmqStatus,
-      autopilotMode: 'limited' as AutopilotMode,
-      budgetAtRisk: 4500,
-      activeIncidents: 1,
-      totalSpend: 45000,
-      platforms: ['Meta', 'Google'],
-      lastActivity: new Date(Date.now() - 30 * 60 * 1000),
-      accountManager: 'Mike Chen',
-    },
-    {
-      id: '3',
-      name: 'Fashion Forward',
-      industry: 'Retail',
-      emqScore: 65,
-      emqStatus: 'degraded' as EmqStatus,
-      autopilotMode: 'cuts_only' as AutopilotMode,
-      budgetAtRisk: 12000,
-      activeIncidents: 2,
-      totalSpend: 120000,
-      platforms: ['Meta', 'TikTok', 'Snapchat'],
-      lastActivity: new Date(Date.now() - 4 * 60 * 60 * 1000),
-      accountManager: 'Sarah Johnson',
-    },
-    {
-      id: '4',
-      name: 'HealthPlus',
-      industry: 'Healthcare',
-      emqScore: 45,
-      emqStatus: 'critical' as EmqStatus,
-      autopilotMode: 'frozen' as AutopilotMode,
-      budgetAtRisk: 25000,
-      activeIncidents: 4,
-      totalSpend: 65000,
-      platforms: ['Google'],
-      lastActivity: new Date(Date.now() - 24 * 60 * 60 * 1000),
-      accountManager: null,
-    },
-    {
-      id: '5',
-      name: 'GreenGrow',
-      industry: 'Agriculture',
-      emqScore: 88,
-      emqStatus: 'ok' as EmqStatus,
-      autopilotMode: 'normal' as AutopilotMode,
-      budgetAtRisk: 0,
-      activeIncidents: 0,
-      totalSpend: 32000,
-      platforms: ['Meta', 'Google'],
-      lastActivity: new Date(Date.now() - 1 * 60 * 60 * 1000),
-      accountManager: 'Mike Chen',
-    },
-  ]
-
   // Helper to determine EMQ status from score
   const getEmqStatus = (score: number | null): EmqStatus => {
     if (score === null) return 'risk'
@@ -160,7 +86,7 @@ export default function TenantsList() {
     platforms: ['Meta', 'Google'], // Not in API, use defaults
     lastActivity: t.lastActivityAt ? new Date(t.lastActivityAt) : new Date(),
     accountManager: null, // Not in API
-  })) ?? mockTenants
+  })) ?? []
 
   // Filter and sort tenants
   const filteredTenants = useMemo(() => {
@@ -322,7 +248,7 @@ export default function TenantsList() {
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-4">
         {/* Search */}
-        <div className="relative flex-1 min-w-[200px] max-w-md">
+        <div className="relative flex-1 min-w-0 sm:min-w-[200px] max-w-md">
           <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted" />
           <input
             type="text"
@@ -390,14 +316,14 @@ export default function TenantsList() {
         <table className="w-full">
           <thead>
             <tr className="border-b border-white/10">
-              <th className="text-left p-4 text-text-muted font-medium">Tenant</th>
-              <th className="text-left p-4 text-text-muted font-medium">EMQ</th>
-              <th className="text-left p-4 text-text-muted font-medium">Status</th>
-              <th className="text-left p-4 text-text-muted font-medium">Mode</th>
-              <th className="text-left p-4 text-text-muted font-medium">Budget at Risk</th>
-              <th className="text-left p-4 text-text-muted font-medium">Incidents</th>
-              <th className="text-left p-4 text-text-muted font-medium">Last Activity</th>
-              <th className="text-left p-4 text-text-muted font-medium" />
+              <th scope="col" className="text-left p-4 text-text-muted font-medium">Tenant</th>
+              <th scope="col" className="text-left p-4 text-text-muted font-medium">EMQ</th>
+              <th scope="col" className="text-left p-4 text-text-muted font-medium">Status</th>
+              <th scope="col" className="text-left p-4 text-text-muted font-medium">Mode</th>
+              <th scope="col" className="text-left p-4 text-text-muted font-medium">Budget at Risk</th>
+              <th scope="col" className="text-left p-4 text-text-muted font-medium">Incidents</th>
+              <th scope="col" className="text-left p-4 text-text-muted font-medium">Last Activity</th>
+              <th scope="col" className="text-left p-4 text-text-muted font-medium" />
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">

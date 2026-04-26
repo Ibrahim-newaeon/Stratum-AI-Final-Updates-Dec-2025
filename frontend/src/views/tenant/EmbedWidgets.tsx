@@ -5,7 +5,7 @@
  * with tier-appropriate branding levels.
  */
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   ChartBarIcon,
   CheckIcon,
@@ -53,64 +53,6 @@ import {
   WidgetType,
 } from '@/types/embedWidgets';
 
-// Mock data for demonstration
-const mockWidgets: EmbedWidget[] = [
-  {
-    id: '1',
-    name: 'Dashboard Signal Health',
-    description: 'Signal health badge for client dashboard',
-    widget_type: 'signal_health',
-    widget_size: 'standard',
-    branding_level: 'full',
-    data_scope: { date_range_days: 30 },
-    refresh_interval_seconds: 300,
-    is_active: true,
-    total_views: 1250,
-    created_at: '2024-01-15T10:00:00Z',
-    updated_at: '2024-01-15T10:00:00Z',
-  },
-  {
-    id: '2',
-    name: 'ROAS Widget',
-    description: 'ROAS display for stakeholder reports',
-    widget_type: 'roas_display',
-    widget_size: 'compact',
-    branding_level: 'minimal',
-    data_scope: { date_range_days: 7 },
-    refresh_interval_seconds: 600,
-    is_active: true,
-    total_views: 890,
-    created_at: '2024-01-10T14:30:00Z',
-    updated_at: '2024-01-10T14:30:00Z',
-  },
-];
-
-const mockDomains: DomainWhitelist[] = [
-  {
-    id: '1',
-    domain_pattern: 'dashboard.example.com',
-    is_verified: true,
-    is_active: true,
-    description: 'Main client dashboard',
-    created_at: '2024-01-05T09:00:00Z',
-  },
-  {
-    id: '2',
-    domain_pattern: '*.internal.company.com',
-    is_verified: true,
-    is_active: true,
-    description: 'Internal reporting portals',
-    created_at: '2024-01-08T11:00:00Z',
-  },
-];
-
-const mockTierInfo = {
-  tier: 'professional',
-  branding_level: 'minimal' as BrandingLevel,
-  limits: { max_widgets: 10, max_domains: 10 },
-  features: { basic_widgets: true, minimal_branding: true, white_label: false },
-};
-
 const widgetTypeIcons: Record<WidgetType, React.ReactNode> = {
   signal_health: <ShieldCheckIcon className="w-5 h-5" />,
   roas_display: <ChartBarIcon className="w-5 h-5" />,
@@ -127,14 +69,27 @@ const brandingBadgeColors: Record<BrandingLevel, string> = {
 };
 
 export default function EmbedWidgets() {
-  const [widgets, setWidgets] = useState(mockWidgets);
-  const [domains, setDomains] = useState(mockDomains);
-  const [tierInfo] = useState(mockTierInfo);
+  const [widgets, setWidgets] = useState<EmbedWidget[]>([]);
+  const [domains, setDomains] = useState<DomainWhitelist[]>([]);
+  const [tierInfo] = useState<{
+    tier: string;
+    branding_level: BrandingLevel;
+    limits: { max_widgets: number; max_domains: number };
+    features: { basic_widgets: boolean; minimal_branding: boolean; white_label: boolean };
+  } | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showDomainDialog, setShowDomainDialog] = useState(false);
   const [showEmbedCodeDialog, setShowEmbedCodeDialog] = useState(false);
   const [selectedWidget, setSelectedWidget] = useState<EmbedWidget | null>(null);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const timeoutsRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
+
+  useEffect(() => {
+    return () => {
+      timeoutsRef.current.forEach(clearTimeout);
+      timeoutsRef.current.clear();
+    };
+  }, []);
 
   // New widget form state
   const [newWidget, setNewWidget] = useState({
@@ -154,7 +109,7 @@ export default function EmbedWidgets() {
     const widget: EmbedWidget = {
       id: Date.now().toString(),
       ...newWidget,
-      branding_level: tierInfo.branding_level,
+      branding_level: tierInfo?.branding_level ?? 'full',
       data_scope: { date_range_days: 30 },
       refresh_interval_seconds: 300,
       is_active: true,
@@ -189,7 +144,8 @@ export default function EmbedWidgets() {
   const handleCopyCode = (code: string, type: string) => {
     navigator.clipboard.writeText(code);
     setCopiedCode(type);
-    setTimeout(() => setCopiedCode(null), 2000);
+    const id = setTimeout(() => setCopiedCode(null), 2000);
+    timeoutsRef.current.add(id);
   };
 
   const generateIframeCode = (widget: EmbedWidget) => {
@@ -234,11 +190,13 @@ export default function EmbedWidgets() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Badge variant="outline" className={brandingBadgeColors[tierInfo.branding_level]}>
-            {tierInfo.branding_level === 'full' && 'Full Branding'}
-            {tierInfo.branding_level === 'minimal' && 'Minimal Branding'}
-            {tierInfo.branding_level === 'none' && 'White Label'}
-          </Badge>
+          {tierInfo && (
+            <Badge variant="outline" className={brandingBadgeColors[tierInfo.branding_level]}>
+              {tierInfo.branding_level === 'full' && 'Full Branding'}
+              {tierInfo.branding_level === 'minimal' && 'Minimal Branding'}
+              {tierInfo.branding_level === 'none' && 'White Label'}
+            </Badge>
+          )}
           <Button onClick={() => setShowCreateDialog(true)}>
             <PlusIcon className="w-4 h-4 mr-2" />
             Create Widget
@@ -247,42 +205,44 @@ export default function EmbedWidgets() {
       </div>
 
       {/* Tier Info Card */}
-      <Card className="bg-gradient-to-r from-gray-900/50 to-gray-800/50 border-white/10">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              <div>
-                <div className="text-sm text-gray-500">Widgets Used</div>
-                <div className="text-2xl font-bold text-white">
-                  {widgets.length} / {tierInfo.limits.max_widgets}
+      {tierInfo && (
+        <Card className="bg-gradient-to-r from-gray-900/50 to-gray-800/50 border-white/10">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-6">
+                <div>
+                  <div className="text-sm text-gray-500">Widgets Used</div>
+                  <div className="text-2xl font-bold text-white">
+                    {widgets.length} / {tierInfo.limits.max_widgets}
+                  </div>
+                </div>
+                <Separator orientation="vertical" className="h-12 bg-white/10" />
+                <div>
+                  <div className="text-sm text-gray-500">Domains Whitelisted</div>
+                  <div className="text-2xl font-bold text-white">
+                    {domains.length} / {tierInfo.limits.max_domains}
+                  </div>
+                </div>
+                <Separator orientation="vertical" className="h-12 bg-white/10" />
+                <div>
+                  <div className="text-sm text-gray-500">Branding Level</div>
+                  <div className="text-lg font-semibold text-white capitalize">
+                    {tierInfo.branding_level === 'none' ? 'White Label' : tierInfo.branding_level}
+                  </div>
                 </div>
               </div>
-              <Separator orientation="vertical" className="h-12 bg-white/10" />
-              <div>
-                <div className="text-sm text-gray-500">Domains Whitelisted</div>
-                <div className="text-2xl font-bold text-white">
-                  {domains.length} / {tierInfo.limits.max_domains}
-                </div>
-              </div>
-              <Separator orientation="vertical" className="h-12 bg-white/10" />
-              <div>
-                <div className="text-sm text-gray-500">Branding Level</div>
-                <div className="text-lg font-semibold text-white capitalize">
-                  {tierInfo.branding_level === 'none' ? 'White Label' : tierInfo.branding_level}
-                </div>
-              </div>
+              {!tierInfo.features.white_label && (
+                <Button
+                  variant="outline"
+                  className="text-purple-400 border-purple-500/30 hover:bg-purple-500/10"
+                >
+                  Upgrade for White Label
+                </Button>
+              )}
             </div>
-            {!tierInfo.features.white_label && (
-              <Button
-                variant="outline"
-                className="text-purple-400 border-purple-500/30 hover:bg-purple-500/10"
-              >
-                Upgrade for White Label
-              </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="widgets" className="space-y-6">
@@ -310,7 +270,7 @@ export default function EmbedWidgets() {
               {widgets.map((widget) => (
                 <Card
                   key={widget.id}
-                  className="bg-gray-900/30 border-white/5 hover:border-white/10 transition-all"
+                  className="bg-gray-900/30 border-white/5 hover:border-white/10 transition-colors"
                 >
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
@@ -462,7 +422,7 @@ export default function EmbedWidgets() {
           <DialogHeader>
             <DialogTitle className="text-white">Create Embed Widget</DialogTitle>
             <DialogDescription>
-              Create a new embeddable widget. Your branding level ({tierInfo.branding_level}) will
+              Create a new embeddable widget. Your current branding level will
               be applied automatically.
             </DialogDescription>
           </DialogHeader>

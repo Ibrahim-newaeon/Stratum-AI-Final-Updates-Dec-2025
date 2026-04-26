@@ -61,10 +61,10 @@ export default function Portfolio() {
   const { data: tenantsData } = useTenants()
 
   // Sample portfolio data
-  const tenants: TenantPortfolioItem[] = tenantsData?.items?.map((t: any) => ({
-    id: t.id,
+  const tenants: TenantPortfolioItem[] = (tenantsData?.items as unknown as Array<Record<string, unknown> & { id: string | number; name: string; industry?: string }>)?.map((t) => ({
+    id: String(t.id),
     name: t.name,
-    industry: t.industry || 'E-commerce',
+    industry: (t.industry as string) || 'E-commerce',
     emqScore: Math.floor(Math.random() * 40) + 60,
     emqStatus: (['ok', 'risk', 'degraded', 'critical'] as EmqStatus[])[Math.floor(Math.random() * 4)],
     emqTrend: Math.floor(Math.random() * 20) - 10,
@@ -343,7 +343,7 @@ export default function Portfolio() {
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-4">
-        <div className="relative flex-1 min-w-[200px] max-w-md">
+        <div className="relative flex-1 min-w-52 max-w-md">
           <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted" />
           <input
             type="text"
@@ -400,7 +400,7 @@ export default function Portfolio() {
           <div
             key={tenant.id}
             className={cn(
-              'p-4 rounded-xl border transition-all hover:border-white/20',
+              'p-4 rounded-xl border transition-colors hover:border-white/20',
               tenant.emqStatus === 'critical'
                 ? 'bg-danger/5 border-danger/20'
                 : 'bg-surface-secondary border-white/10'
@@ -408,7 +408,7 @@ export default function Portfolio() {
           >
             <div className="flex items-start gap-4">
               {/* EMQ Score */}
-              <div className="flex flex-col items-center p-3 rounded-xl bg-surface-tertiary min-w-[80px]">
+              <div className="flex flex-col items-center p-3 rounded-xl bg-surface-tertiary min-w-20">
                 <span
                   className={cn(
                     'text-3xl font-bold',

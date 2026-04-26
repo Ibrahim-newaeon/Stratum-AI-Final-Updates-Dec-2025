@@ -136,6 +136,7 @@ function StepBuilder({ step, index, onChange, onRemove, canRemove }: StepBuilder
           {canRemove && (
             <button
               onClick={onRemove}
+              aria-label="Remove step"
               className="mt-4 p-1.5 rounded-md hover:bg-red-500/10 text-muted-foreground hover:text-red-500 transition-colors"
             >
               <Trash2 className="w-4 h-4" />
@@ -443,7 +444,7 @@ function FunnelAnalysisView({ funnel, onBack }: FunnelAnalysisViewProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <button onClick={onBack} className="p-2 rounded-lg hover:bg-muted transition-colors">
+          <button onClick={onBack} aria-label="Go back" className="p-2 rounded-lg hover:bg-muted transition-colors">
             <ChevronRight className="w-5 h-5 rotate-180" />
           </button>
           <div>
@@ -558,7 +559,7 @@ function FunnelAnalysisView({ funnel, onBack }: FunnelAnalysisViewProps) {
               <div key={index}>
                 <div
                   className={cn(
-                    'relative p-4 rounded-lg border cursor-pointer transition-all',
+                    'relative p-4 rounded-lg border cursor-pointer transition-colors',
                     isSelected ? 'border-primary bg-primary/5' : 'hover:border-primary/50'
                   )}
                   onClick={() => setSelectedStep(isSelected ? null : step.step)}
@@ -584,7 +585,7 @@ function FunnelAnalysisView({ funnel, onBack }: FunnelAnalysisViewProps) {
                   {/* Progress bar */}
                   <div className="h-2 bg-muted rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-primary transition-all duration-500"
+                      className="h-full bg-primary transition-[width] duration-500"
                       style={{ width: `${(getConversionRate(step) || 0) * 100}%` }}
                     />
                   </div>
@@ -626,16 +627,16 @@ function FunnelAnalysisView({ funnel, onBack }: FunnelAnalysisViewProps) {
               <table className="w-full">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-2 px-3 text-sm font-medium text-muted-foreground">
+                    <th scope="col" className="text-left py-2 px-3 text-sm font-medium text-muted-foreground">
                       Profile ID
                     </th>
-                    <th className="text-left py-2 px-3 text-sm font-medium text-muted-foreground">
+                    <th scope="col" className="text-left py-2 px-3 text-sm font-medium text-muted-foreground">
                       Lifecycle
                     </th>
-                    <th className="text-left py-2 px-3 text-sm font-medium text-muted-foreground">
+                    <th scope="col" className="text-left py-2 px-3 text-sm font-medium text-muted-foreground">
                       Events
                     </th>
-                    <th className="text-left py-2 px-3 text-sm font-medium text-muted-foreground">
+                    <th scope="col" className="text-left py-2 px-3 text-sm font-medium text-muted-foreground">
                       Last Seen
                     </th>
                   </tr>
@@ -816,7 +817,7 @@ export function FunnelBuilder() {
           {filteredFunnels.map((funnel) => (
             <div
               key={funnel.id}
-              className="p-4 rounded-xl border bg-card hover:shadow-md transition-all"
+              className="p-4 rounded-xl border bg-card hover:shadow-md transition-colors"
             >
               <div className="flex items-start justify-between mb-3">
                 <div>

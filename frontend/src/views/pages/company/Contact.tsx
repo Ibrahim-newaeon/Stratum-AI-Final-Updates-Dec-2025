@@ -64,7 +64,7 @@ export default function Contact() {
             </p>
             <button
               onClick={() => setSubmitted(false)}
-              className="px-6 py-3 rounded-full font-semibold text-white transition-all hover:opacity-90"
+              className="px-6 py-3 rounded-full font-semibold text-white transition-opacity hover:opacity-90"
               style={{
                 background: 'var(--landing-accent-coral)',
                 boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
@@ -219,7 +219,7 @@ export default function Contact() {
                       type="text"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-all focus:ring-2"
+                      className="w-full px-4 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-[width] focus:ring-2"
                       style={{
                         background: 'var(--landing-surface-glass)',
                         border: '1px solid var(--landing-border-glass)',
@@ -234,7 +234,7 @@ export default function Contact() {
                       type="email"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-all focus:ring-2"
+                      className="w-full px-4 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-[width] focus:ring-2"
                       style={{
                         background: 'var(--landing-surface-glass)',
                         border: '1px solid var(--landing-border-glass)',
@@ -251,7 +251,7 @@ export default function Contact() {
                       type="text"
                       value={formData.company}
                       onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-all focus:ring-2"
+                      className="w-full px-4 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-[width] focus:ring-2"
                       style={{
                         background: 'var(--landing-surface-glass)',
                         border: '1px solid var(--landing-border-glass)',
@@ -264,7 +264,7 @@ export default function Contact() {
                     <select
                       value={formData.subject}
                       onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl text-white outline-none transition-all focus:ring-2"
+                      className="w-full px-4 py-3 rounded-xl text-white outline-none transition-[width] focus:ring-2"
                       style={{
                         background: 'var(--landing-surface-glass)',
                         border: '1px solid var(--landing-border-glass)',
@@ -285,7 +285,7 @@ export default function Contact() {
                   <textarea
                     value={formData.message}
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-all focus:ring-2 min-h-[150px]"
+                    className="w-full px-4 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-[width] focus:ring-2 min-h-[9.375rem]"
                     style={{
                       background: 'var(--landing-surface-glass)',
                       border: '1px solid var(--landing-border-glass)',
@@ -297,7 +297,7 @@ export default function Contact() {
                 <button
                   type="submit"
                   disabled={submitContact.isPending}
-                  className="w-full py-4 rounded-full font-semibold text-white transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-4 rounded-full font-semibold text-white transition-[width] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{
                     background: 'var(--landing-accent-coral)',
                     boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',

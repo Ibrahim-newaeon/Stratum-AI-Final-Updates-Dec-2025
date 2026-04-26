@@ -424,7 +424,7 @@ export function WhatsApp() {
 
       setConversations(convos)
     } catch (err: unknown) {
-      console.error('Failed to fetch WhatsApp data:', err)
+
       setError(getErrorMessage(err, 'Failed to load data'))
     } finally {
       setIsLoading(false)
@@ -440,7 +440,7 @@ export function WhatsApp() {
         new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
       ))
     } catch (err) {
-      console.error('Failed to fetch messages:', err)
+
     }
   }
 
@@ -491,7 +491,7 @@ export function WhatsApp() {
       setSelectedContactIds([])
       setBroadcastTemplate('')
     } catch (err: unknown) {
-      console.error('Failed to send broadcast:', err)
+
       alert(getErrorMessage(err, 'Failed to send broadcast'))
     } finally {
       setIsSending(false)
@@ -625,7 +625,7 @@ export function WhatsApp() {
       await fetchData()
       resetContactModal()
     } catch (err: unknown) {
-      console.error('Failed to add contact:', err)
+
       alert(getErrorMessage(err, 'Failed to add contact'))
     } finally {
       setIsImporting(false)
@@ -657,7 +657,7 @@ export function WhatsApp() {
       await fetchData()
       resetContactModal()
     } catch (err: unknown) {
-      console.error('Failed to import contacts:', err)
+
       alert('Failed to import contacts: ' + getErrorMessage(err, 'Unknown error'))
     } finally {
       setIsImporting(false)
@@ -721,7 +721,7 @@ export function WhatsApp() {
       setEditingContact(null)
       setEditName('')
     } catch (err: unknown) {
-      console.error('Failed to update contact:', err)
+
       alert(getErrorMessage(err, 'Failed to update contact'))
     } finally {
       setIsUpdating(false)
@@ -736,7 +736,7 @@ export function WhatsApp() {
       await apiClient.delete(`/whatsapp/contacts/${contact.id}`)
       await fetchData()
     } catch (err: unknown) {
-      console.error('Failed to delete contact:', err)
+
       alert(getErrorMessage(err, 'Failed to delete contact'))
     }
   }
@@ -752,7 +752,7 @@ export function WhatsApp() {
       }
       await fetchData()
     } catch (err: unknown) {
-      console.error('Failed to update opt-in status:', err)
+
       alert(getErrorMessage(err, 'Failed to update opt-in status'))
     }
   }
@@ -784,7 +784,7 @@ export function WhatsApp() {
         footer_text: '',
       })
     } catch (err: unknown) {
-      console.error('Failed to create template:', err)
+
       alert(getErrorMessage(err, 'Failed to create template'))
     } finally {
       setIsCreatingTemplate(false)
@@ -798,7 +798,7 @@ export function WhatsApp() {
       await apiClient.delete(`/whatsapp/templates/${template.id}`)
       await fetchData()
     } catch (err: unknown) {
-      console.error('Failed to delete template:', err)
+
       alert(getErrorMessage(err, 'Failed to delete template'))
     }
   }
@@ -1291,10 +1291,10 @@ export function WhatsApp() {
                     Active - 24h window
                   </span>
                 )}
-                <button className="p-2 rounded-lg hover:bg-muted transition-colors">
+                <button aria-label="Call" className="p-2 rounded-lg hover:bg-muted transition-colors">
                   <Phone className="w-5 h-5" />
                 </button>
-                <button className="p-2 rounded-lg hover:bg-muted transition-colors">
+                <button aria-label="More options" className="p-2 rounded-lg hover:bg-muted transition-colors">
                   <MoreHorizontal className="w-5 h-5" />
                 </button>
               </div>
@@ -1383,7 +1383,7 @@ export function WhatsApp() {
                       setChatMessages(prev => [...prev, newMessage])
                       setReplyText('')
                     } catch (err: unknown) {
-                      console.error('Failed to send message:', err)
+
                       alert(getErrorMessage(err, 'Failed to send message'))
                     } finally {
                       setIsSending(false)
@@ -1391,10 +1391,10 @@ export function WhatsApp() {
                   }}
                   className="flex items-center gap-2"
                 >
-                  <button type="button" className="p-2 rounded-lg hover:bg-muted transition-colors">
+                  <button type="button" aria-label="Attach file" className="p-2 rounded-lg hover:bg-muted transition-colors">
                     <Paperclip className="w-5 h-5 text-muted-foreground" />
                   </button>
-                  <button type="button" className="p-2 rounded-lg hover:bg-muted transition-colors">
+                  <button type="button" aria-label="Add image" className="p-2 rounded-lg hover:bg-muted transition-colors">
                     <Image className="w-5 h-5 text-muted-foreground" />
                   </button>
                   <input
@@ -1405,7 +1405,7 @@ export function WhatsApp() {
                     className="flex-1 px-4 py-2 rounded-full border bg-background focus:outline-none focus:ring-2 focus:ring-green-500/20"
                     disabled={isSending}
                   />
-                  <button type="button" className="p-2 rounded-lg hover:bg-muted transition-colors">
+                  <button type="button" aria-label="Add emoji" className="p-2 rounded-lg hover:bg-muted transition-colors">
                     <Smile className="w-5 h-5 text-muted-foreground" />
                   </button>
                   <button
@@ -1887,7 +1887,7 @@ export function WhatsApp() {
                     onDrop={handleDrop}
                     onClick={() => fileInputRef.current?.click()}
                     className={cn(
-                      'relative border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all',
+                      'relative border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors',
                       isDragging
                         ? 'border-green-500 bg-green-500/5'
                         : 'border-muted-foreground/25 hover:border-green-500/50 hover:bg-muted/50'

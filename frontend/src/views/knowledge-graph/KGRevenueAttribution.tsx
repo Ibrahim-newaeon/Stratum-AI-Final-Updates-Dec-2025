@@ -143,7 +143,7 @@ export default function KGRevenueAttribution() {
           {metricCards.filter(card => showPriceMetrics || card.label !== 'Attributed Revenue').map((card) => (
             <div
               key={card.label}
-              className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm p-4"
+              className="rounded-xl border bg-card p-4"
             >
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-white/5">
@@ -163,7 +163,7 @@ export default function KGRevenueAttribution() {
           {/* Channel Breakdown Chart */}
           {showPriceMetrics && (
           <motion.div
-            className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm p-6"
+            className="rounded-xl border bg-card p-6"
             {...fadeIn}
             transition={{ delay: 0.15 }}
           >
@@ -216,7 +216,7 @@ export default function KGRevenueAttribution() {
 
           {/* Model Comparison Table */}
           <motion.div
-            className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm p-6"
+            className="rounded-xl border bg-card p-6"
             {...fadeIn}
             transition={{ delay: 0.2 }}
           >
@@ -225,19 +225,19 @@ export default function KGRevenueAttribution() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-white/10">
-                    <th className="text-left py-2 px-3 text-sm font-medium text-muted-foreground">
+                    <th scope="col" className="text-left py-2 px-3 text-sm font-medium text-muted-foreground">
                       Channel
                     </th>
-                    <th className="text-right py-2 px-3 text-sm font-medium text-muted-foreground">
+                    <th scope="col" className="text-right py-2 px-3 text-sm font-medium text-muted-foreground">
                       First Touch
                     </th>
-                    <th className="text-right py-2 px-3 text-sm font-medium text-muted-foreground">
+                    <th scope="col" className="text-right py-2 px-3 text-sm font-medium text-muted-foreground">
                       Last Touch
                     </th>
-                    <th className="text-right py-2 px-3 text-sm font-medium text-muted-foreground">
+                    <th scope="col" className="text-right py-2 px-3 text-sm font-medium text-muted-foreground">
                       Linear
                     </th>
-                    <th className="text-right py-2 px-3 text-sm font-medium text-primary">
+                    <th scope="col" className="text-right py-2 px-3 text-sm font-medium text-primary">
                       Data-Driven
                     </th>
                   </tr>
@@ -269,3 +269,4 @@ export default function KGRevenueAttribution() {
     </>
   );
 }
+

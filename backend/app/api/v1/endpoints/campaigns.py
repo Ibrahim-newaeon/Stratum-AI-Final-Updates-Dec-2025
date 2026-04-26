@@ -211,7 +211,6 @@ async def create_campaign(
 
     db.add(campaign)
     await db.commit()
-    await db.refresh(campaign)
 
     logger.info("campaign_created", campaign_id=campaign.id, tenant_id=tenant_id)
 
@@ -252,7 +251,6 @@ async def update_campaign(
         setattr(campaign, field, value)
 
     await db.commit()
-    await db.refresh(campaign)
 
     logger.info("campaign_updated", campaign_id=campaign_id)
 
@@ -339,7 +337,7 @@ async def get_campaign_metrics(
             CampaignMetric.date >= start_date,
             CampaignMetric.date <= end_date,
         )
-        .order_by(CampaignMetric.date)
+        .order_by(CampaignMetric.date).limit(1000)
     )
     metrics = result.scalars().all()
 

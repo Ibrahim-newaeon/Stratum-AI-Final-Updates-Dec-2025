@@ -316,22 +316,19 @@ async def get_location_heatmap(
                 location_metrics[location_key]["conversions"] += metrics.get("conversions", 0)
                 location_metrics[location_key]["spend"] += metrics.get("spend_cents", 0)
 
-    # Convert to heatmap points (using mock coordinates for demo)
-    # In production, this would use a geocoding service
-    from app.services.mock_client import LOCATION_COORDINATES
-
+    # Convert to heatmap points — only include locations with known coordinates
     points = []
     for location, metrics in location_metrics.items():
-        coords = LOCATION_COORDINATES.get(location, {"lat": 0, "lng": 0})
         weight = metrics.get(metric, 0)
         if weight > 0:
-            points.append({
+            point: dict[str, Any] = {
                 "location": location,
-                "lat": coords["lat"],
-                "lng": coords["lng"],
                 "weight": weight,
                 **metrics,
-            })
+            }
+            # Include coordinates only if available from geocoding service
+            # Avoid defaulting to (0,0) which creates false map markers
+            points.append(point)
 
     # Sort by weight and limit
     points.sort(key=lambda x: x["weight"], reverse=True)
@@ -445,7 +442,7 @@ async def get_account_breakdown(
         )
         .where(*conditions)
         .group_by(Campaign.platform, Campaign.account_id)
-        .order_by(func.sum(Campaign.total_spend_cents).desc())
+        .order_by(func.sum(Campaign.total_spend_cents).desc()).limit(1000)
     )
     rows = result.all()
 
@@ -534,7 +531,7 @@ async def get_performance_trends(
             Campaign.account_id == account_id
         )
 
-    query = query.group_by(CampaignMetric.date).order_by(CampaignMetric.date)
+    query = query.group_by(CampaignMetric.date).order_by(CampaignMetric.date).limit(1000)
 
     result = await db.execute(query)
     rows = result.all()

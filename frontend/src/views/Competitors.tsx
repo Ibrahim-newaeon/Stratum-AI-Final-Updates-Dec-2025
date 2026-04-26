@@ -5,6 +5,8 @@
  * Integrates with Meta Ads Library and Google Ads Transparency Center
  */
 
+const COMPETITOR_COLORS = ['#ef4444', '#f59e0b', '#10b981', '#6366f1']
+
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { usePriceMetrics } from '@/hooks/usePriceMetrics'
@@ -129,7 +131,7 @@ export function Competitors() {
       setNewCompetitor({ name: '', domain: '', country: 'SA', platforms: ['meta', 'google'] })
       refetchCompetitors()
     } catch (error) {
-      console.error('Failed to add competitor:', error)
+
     } finally {
       setIsSubmitting(false)
     }
@@ -142,7 +144,7 @@ export function Competitors() {
       await deleteCompetitor.mutateAsync(id)
       refetchCompetitors()
     } catch (error) {
-      console.error('Failed to delete competitor:', error)
+
     }
   }
 
@@ -314,7 +316,7 @@ export function Competitors() {
             <div key={c.name} className="flex items-center gap-2">
               <div
                 className="w-3 h-3 rounded-full"
-                style={{ backgroundColor: ['#ef4444', '#f59e0b', '#10b981', '#6366f1'][i % 4] }}
+                style={{ backgroundColor: COMPETITOR_COLORS[i % 4] }}
               />
               <span>{c.name} ({c.share}%)</span>
             </div>
@@ -367,7 +369,7 @@ export function Competitors() {
           <div
             key={competitor.id}
             className={cn(
-              'p-4 rounded-xl border bg-card hover:shadow-md transition-all cursor-pointer',
+              'p-4 rounded-xl border bg-card hover:shadow-md transition-colors cursor-pointer',
               selectedCompetitor === competitor.id && 'ring-2 ring-primary'
             )}
             onClick={() => setSelectedCompetitor(
@@ -393,7 +395,7 @@ export function Competitors() {
                 )}>
                   {competitor.status}
                 </span>
-                <button className="p-1 rounded hover:bg-muted transition-colors">
+                <button aria-label="More options" className="p-1 rounded hover:bg-muted transition-colors">
                   <EllipsisHorizontalIcon className="w-5 h-5" />
                 </button>
               </div>
@@ -527,6 +529,7 @@ export function Competitors() {
             Loading keyword data...
           </div>
         ) : keywordOverlaps.length > 0 ? (
+          <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-muted/50 border-b">
               <tr>
@@ -573,6 +576,7 @@ export function Competitors() {
               ))}
             </tbody>
           </table>
+          </div>
         ) : (
           <div className="text-center py-8">
             <MagnifyingGlassIcon className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
@@ -686,7 +690,7 @@ export function Competitors() {
                       type="button"
                       onClick={() => togglePlatform(platform.id)}
                       className={cn(
-                        'flex items-center gap-2 px-3 py-2 rounded-lg border transition-all',
+                        'flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors',
                         newCompetitor.platforms.includes(platform.id)
                           ? 'border-primary bg-primary/10 text-primary'
                           : 'border-border hover:border-primary/50'

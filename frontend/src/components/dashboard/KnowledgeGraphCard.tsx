@@ -55,7 +55,7 @@ function RelationshipRow({ edge }: { edge: KnowledgeEdge }) {
         {rcfg.label}
       </span>
       <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden shrink-0">
-        <div className="h-full rounded-full bg-blue-500 transition-all" style={{ width: `${Math.min(edge.strength, 100)}%` }} />
+        <div className="h-full rounded-full bg-blue-500 transition-[width]" style={{ width: `${Math.min(edge.strength, 100)}%` }} />
       </div>
       <span className="text-[10px] font-bold text-muted-foreground shrink-0">{edge.strength.toFixed(0)}%</span>
     </div>
@@ -189,10 +189,10 @@ export function KnowledgeGraphCard() {
         ))}
       </div>
 
-      <div className="p-4 space-y-2 max-h-[480px] overflow-y-auto">
-        {tab === 'patterns' && data.patterns.map((p, i) => <PatternRow key={i} pattern={p} />)}
-        {tab === 'relationships' && data.edges.map((e, i) => <RelationshipRow key={i} edge={e} />)}
-        {tab === 'clusters' && data.clusters.map((c, i) => <ClusterRow key={i} cluster={c} />)}
+      <div className="p-4 space-y-2 max-h-[30rem] overflow-y-auto">
+        {tab === 'patterns' && data.patterns.map((p, i) => <PatternRow key={p.pattern_id || i} pattern={p} />)}
+        {tab === 'relationships' && data.edges.map((e, i) => <RelationshipRow key={e.edge_id || i} edge={e} />)}
+        {tab === 'clusters' && data.clusters.map((c, i) => <ClusterRow key={c.cluster_id || i} cluster={c} />)}
       </div>
     </div>
   );

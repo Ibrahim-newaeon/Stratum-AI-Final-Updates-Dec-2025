@@ -71,7 +71,7 @@ export function QuickActionsBar({ actions }: QuickActionsBarProps) {
               'inline-flex items-center gap-2 px-4 py-2.5 rounded-xl',
               'bg-white/[0.04] border border-white/[0.07]',
               'hover:bg-white/[0.08] hover:border-primary/20',
-              'transition-all duration-200 text-sm font-medium group'
+              'transition-colors duration-200 text-sm font-medium group'
             )}
           >
             <Icon className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />

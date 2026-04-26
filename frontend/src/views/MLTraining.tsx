@@ -44,7 +44,7 @@ interface TrainingResult {
   success: boolean
   message: string
   models_trained: string[]
-  metrics: Record<string, any>
+  metrics: Record<string, unknown>
   training_time_seconds: number
 }
 
@@ -72,7 +72,7 @@ export default function MLTraining() {
       const response = await apiClient.get('/ml/models')
       setModels(response.data.models || [])
     } catch (err) {
-      console.error('Failed to fetch models:', err)
+
     }
   }
 
@@ -81,7 +81,7 @@ export default function MLTraining() {
       const response = await apiClient.get('/ml/training-data')
       setTrainingFiles(response.data.files || [])
     } catch (err) {
-      console.error('Failed to fetch training data:', err)
+
     }
   }
 
@@ -126,7 +126,7 @@ export default function MLTraining() {
       const axiosErr = err as { response?: { data?: { detail?: string } } };
       const errorMessage = axiosErr.response?.data?.detail || 'Failed to upload file. Please try again.'
       setError(errorMessage)
-      console.error('Upload error:', err)
+
     } finally {
       setIsLoading(false)
       if (fileInputRef.current) {
@@ -151,7 +151,7 @@ export default function MLTraining() {
       const axiosErr = err as { response?: { data?: { detail?: string } } };
       const errorMessage = axiosErr.response?.data?.detail || 'Failed to generate sample data'
       setError(errorMessage)
-      console.error('Generate sample error:', err)
+
     } finally {
       setIsLoading(false)
     }
@@ -175,7 +175,7 @@ export default function MLTraining() {
       const axiosErr = err as { response?: { data?: { detail?: string } } };
       const errorMessage = axiosErr.response?.data?.detail || 'Training failed. Please ensure you have uploaded training data.'
       setError(errorMessage)
-      console.error('Training error:', err)
+
     } finally {
       setIsTraining(false)
     }
@@ -193,7 +193,7 @@ export default function MLTraining() {
       const axiosErr = err as { response?: { data?: { detail?: string } } };
       const errorMessage = axiosErr.response?.data?.detail || 'Failed to delete model'
       setError(errorMessage)
-      console.error('Delete error:', err)
+
     }
   }
 
@@ -609,7 +609,7 @@ export default function MLTraining() {
 
                   <div className="space-y-3">
                     {trainingResult.models_trained.map((modelName) => {
-                      const metrics = trainingResult.metrics[modelName] || {}
+                      const metrics = (trainingResult.metrics[modelName] || {}) as Record<string, number>
                       return (
                         <div
                           key={modelName}

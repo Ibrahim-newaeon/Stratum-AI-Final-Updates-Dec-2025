@@ -115,7 +115,7 @@ export default function TrustEngineSolution() {
               </p>
               <Link
                 to={hero.ctaLink}
-                className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-all hover:opacity-90"
+                className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-opacity hover:opacity-90"
                 style={{
                   background: 'var(--landing-accent-coral)',
                   boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
@@ -318,7 +318,7 @@ export default function TrustEngineSolution() {
             {benefits.map((benefit) => (
               <div
                 key={benefit.title}
-                className="p-6 rounded-2xl text-center transition-all hover:scale-[1.02]"
+                className="p-6 rounded-2xl text-center transition-transform hover:scale-[1.02]"
                 style={{
                   background: 'var(--landing-card)',
                   border: '1px solid var(--landing-border)',
@@ -351,7 +351,7 @@ export default function TrustEngineSolution() {
             </p>
             <Link
               to="/signup"
-              className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-all hover:opacity-90"
+              className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-opacity hover:opacity-90"
               style={{
                 background: 'var(--landing-accent-coral)',
                 boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',

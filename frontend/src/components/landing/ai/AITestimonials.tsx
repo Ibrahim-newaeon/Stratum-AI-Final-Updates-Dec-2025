@@ -142,7 +142,7 @@ export default function AITestimonials() {
                 className={`absolute -inset-[1px] rounded-3xl bg-gradient-to-r ${testimonial.color} opacity-0 group-hover:opacity-20 blur-sm transition-opacity duration-500`}
               />
 
-              <div className="relative p-8 rounded-3xl bg-white/[0.02] border border-white/[0.05] hover:border-white/10 transition-all">
+              <div className="relative p-8 rounded-3xl bg-white/[0.02] border border-white/[0.05] hover:border-white/10 transition-colors">
                 {/* Stars */}
                 <div className="flex gap-1 mb-4">
                   {[...Array(5)].map((_, i) => (
@@ -176,7 +176,7 @@ export default function AITestimonials() {
                     className={`px-4 py-2 rounded-full bg-gradient-to-r ${testimonial.color} bg-opacity-10`}
                   >
                     <span
-                      className={`text-sm font-bold bg-gradient-to-r ${testimonial.color} bg-clip-text text-transparent`}
+                      className={`text-sm font-bold bg-gradient-to-r ${testimonial.color} text-foreground`}
                     >
                       {testimonial.metric}
                     </span>
@@ -202,7 +202,7 @@ export default function AITestimonials() {
             {platforms.map((platform) => (
               <div
                 key={platform.name}
-                className="flex flex-col items-center justify-center p-6 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:border-white/10 transition-all"
+                className="flex flex-col items-center justify-center p-6 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:border-white/10 transition-colors"
               >
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-3 text-gray-400">
                   {platform.icon}
@@ -228,7 +228,7 @@ export default function AITestimonials() {
             { value: '4.9/5', label: 'Customer Rating' },
           ].map((stat) => (
             <div key={stat.label} className="text-center">
-              <div className="text-3xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent mb-1">
+              <div className="text-3xl font-bold bg-gradient-to-r from-white to-gray-400 text-foreground mb-1">
                 {stat.value}
               </div>
               <div className="text-sm text-gray-500">{stat.label}</div>

@@ -25,7 +25,7 @@ export function DemoBanner({ variant = 'top' }: DemoBannerProps) {
     return (
       <button
         onClick={() => setIsMinimized(false)}
-        className="fixed bottom-4 right-4 z-50 flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-purple-600 to-cyan-500 text-white text-sm font-medium shadow-lg hover:shadow-xl transition-all"
+        className="fixed bottom-4 right-4 z-50 flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-medium shadow-lg hover:shadow-xl transition-colors"
       >
         <Play className="h-4 w-4" />
         Demo Mode
@@ -37,12 +37,12 @@ export function DemoBanner({ variant = 'top' }: DemoBannerProps) {
     return (
       <div className="fixed bottom-4 right-4 z-50 w-80 rounded-2xl bg-card border shadow-2xl overflow-hidden animate-in slide-in-from-bottom-5">
         {/* Header */}
-        <div className="bg-gradient-to-r from-purple-600 to-cyan-500 px-4 py-3 flex items-center justify-between">
+        <div className="bg-primary text-primary-foreground px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2 text-white">
             <Sparkles className="h-4 w-4" />
             <span className="font-semibold text-sm">Demo Mode Active</span>
           </div>
-          <button onClick={() => setIsMinimized(true)} className="text-white/70 hover:text-white">
+          <button onClick={() => setIsMinimized(true)} aria-label="Minimize demo banner" className="text-white/70 hover:text-white">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -75,7 +75,7 @@ export function DemoBanner({ variant = 'top' }: DemoBannerProps) {
 
   // Top banner variant
   return (
-    <div className="bg-gradient-to-r from-purple-600 via-violet-600 to-cyan-500 text-white">
+    <div className="bg-primary text-primary-foreground">
       <div className="max-w-7xl mx-auto px-4 py-2.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-white/20 text-xs font-medium">
@@ -99,6 +99,7 @@ export function DemoBanner({ variant = 'top' }: DemoBannerProps) {
             onClick={exitDemoMode}
             className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
             title="Exit demo mode"
+            aria-label="Exit demo mode"
           >
             <X className="h-4 w-4" />
           </button>
@@ -121,15 +122,10 @@ export function DemoCtaCard() {
   };
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-900/50 to-cyan-900/50 border border-purple-500/20 p-8">
-      {/* Background effects */}
-      <div className="absolute inset-0 bg-grid-white/5 [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]" />
-      <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-64 h-64 bg-cyan-500/20 rounded-full blur-3xl" />
-
+    <div className="relative overflow-hidden rounded-2xl bg-card border p-8">
       <div className="relative">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
             <Play className="h-6 w-6 text-white" />
           </div>
           <div>
@@ -160,7 +156,7 @@ export function DemoCtaCard() {
 
         <button
           onClick={handleEnterDemo}
-          className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-500 text-white font-semibold hover:from-purple-500 hover:to-cyan-400 transition-all shadow-lg shadow-purple-500/25"
+          className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors shadow-lg"
         >
           <Sparkles className="h-5 w-5" />
           Launch Interactive Demo

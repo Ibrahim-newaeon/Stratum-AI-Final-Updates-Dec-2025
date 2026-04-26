@@ -80,6 +80,20 @@ class AttributeWithModelRequest(BaseModel):
     deal_id: UUID
 
 
+class BatchAttributeRequest(BaseModel):
+    """Request to batch attribute multiple deals."""
+    model_type: str
+    model_data: dict
+    deal_ids: List[UUID]
+
+
+class CompareWithRuleBasedRequest(BaseModel):
+    """Request to compare data-driven with rule-based attribution."""
+    data_driven_weights: dict
+    start_date: datetime
+    end_date: datetime
+
+
 class ValidateModelRequest(BaseModel):
     """Request to validate a trained model."""
     model_type: str
@@ -244,9 +258,7 @@ async def attribute_with_model(
 
 @router.post("/batch-attribute")
 async def batch_attribute_with_model(
-    model_type: str,
-    model_data: dict,
-    deal_ids: List[UUID],
+    request: BatchAttributeRequest,
     db: AsyncSession = Depends(get_db),
     tenant_id: int = Depends(get_tenant_id),
     current_user: User = Depends(get_current_user),
@@ -254,22 +266,22 @@ async def batch_attribute_with_model(
     """
     Batch attribute multiple deals using a trained model.
     """
-    if model_type == DataDrivenModelType.MARKOV_CHAIN:
+    if request.model_type == DataDrivenModelType.MARKOV_CHAIN:
         service = MarkovAttributionService(db, tenant_id)
-    elif model_type == DataDrivenModelType.SHAPLEY_VALUE:
+    elif request.model_type == DataDrivenModelType.SHAPLEY_VALUE:
         service = ShapleyAttributionService(db, tenant_id)
     else:
         raise HTTPException(status_code=400, detail="Invalid model_type")
 
     results = []
-    for deal_id in deal_ids:
-        result = await service.attribute_with_model(model_data, deal_id)
+    for deal_id in request.deal_ids:
+        result = await service.attribute_with_model(request.model_data, deal_id)
         results.append(result)
 
     successful = sum(1 for r in results if r.get("success"))
 
     return {
-        "total": len(deal_ids),
+        "total": len(request.deal_ids),
         "successful": successful,
         "failed": len(deal_ids) - successful,
         "results": results,
@@ -305,9 +317,7 @@ async def validate_model(
 
 @router.post("/compare-with-rule-based")
 async def compare_with_rule_based(
-    data_driven_weights: dict,
-    start_date: datetime,
-    end_date: datetime,
+    request: CompareWithRuleBasedRequest,
     db: AsyncSession = Depends(get_db),
     tenant_id: int = Depends(get_tenant_id),
     current_user: User = Depends(get_current_user),
@@ -320,9 +330,9 @@ async def compare_with_rule_based(
     """
     service = ModelTrainingService(db, tenant_id)
     result = await service.compare_with_rule_based(
-        data_driven_weights=data_driven_weights,
-        start_date=start_date,
-        end_date=end_date,
+        data_driven_weights=request.data_driven_weights,
+        start_date=request.start_date,
+        end_date=request.end_date,
     )
 
     return {"data": result}

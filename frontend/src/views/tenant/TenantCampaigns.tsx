@@ -25,14 +25,6 @@ interface Campaign {
   lastUpdated: string
 }
 
-// Mock data for demo
-const mockCampaigns: Campaign[] = [
-  { id: '1', name: 'Summer Sale 2024', platform: 'Meta', status: 'active', spend: 5420, roas: 4.2, conversions: 234, lastUpdated: '2h ago' },
-  { id: '2', name: 'Retargeting - Cart Abandoners', platform: 'Google', status: 'active', spend: 3200, roas: 5.8, conversions: 156, lastUpdated: '4h ago' },
-  { id: '3', name: 'Brand Awareness Q1', platform: 'Meta', status: 'paused', spend: 8900, roas: 2.1, conversions: 89, lastUpdated: '1d ago' },
-  { id: '4', name: 'Product Launch - Winter Collection', platform: 'TikTok', status: 'draft', spend: 0, roas: 0, conversions: 0, lastUpdated: '2d ago' },
-]
-
 const statusColors = {
   active: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
   paused: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
@@ -51,18 +43,18 @@ export default function TenantCampaigns() {
   // Transform API data or fall back to mock
   const campaigns = useMemo((): Campaign[] => {
     if (campaignsData?.items && campaignsData.items.length > 0) {
-      return campaignsData.items.map((c: any) => ({
-        id: c.id?.toString() || c.campaign_id?.toString() || '',
-        name: c.name || c.campaign_name || '',
+      return campaignsData.items.map((c) => ({
+        id: c.id?.toString() || '',
+        name: c.name || '',
         platform: c.platform || 'Unknown',
-        status: c.status?.toLowerCase() || 'active',
-        spend: c.spend || 0,
-        roas: c.roas || (c.spend > 0 ? c.revenue / c.spend : 0),
-        conversions: c.conversions || 0,
-        lastUpdated: c.updated_at ? getRelativeTime(c.updated_at) : '—',
+        status: (c.status?.toLowerCase() as Campaign['status']) || 'active',
+        spend: c.metrics?.spend || 0,
+        roas: c.metrics?.roas || 0,
+        conversions: c.metrics?.conversions || 0,
+        lastUpdated: c.updatedAt ? getRelativeTime(c.updatedAt) : '—',
       }))
     }
-    return mockCampaigns
+    return []
   }, [campaignsData])
 
   // Helper function to get relative time

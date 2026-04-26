@@ -42,7 +42,7 @@ export function VolatilityBadge({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full font-medium transition-all',
+        'inline-flex items-center gap-1.5 rounded-full font-medium transition-colors',
         isCritical ? 'bg-danger/10 text-danger' :
         isUnstable ? 'bg-warning/10 text-warning' :
         'bg-success/10 text-success',

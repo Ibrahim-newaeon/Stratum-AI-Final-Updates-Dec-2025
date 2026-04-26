@@ -206,7 +206,7 @@ export default function ResourcesPage() {
                 <Link
                   key={cat.title}
                   to={cat.href}
-                  className="group p-6 rounded-2xl transition-all duration-300 hover:-translate-y-1"
+                  className="group p-6 rounded-2xl transition-transform duration-300 hover:-translate-y-1"
                   style={{
                     background: 'var(--landing-card)',
                     border: '1px solid var(--landing-border)',
@@ -224,7 +224,7 @@ export default function ResourcesPage() {
                   <h3 className="text-lg font-semibold text-white mb-1">{cat.title}</h3>
                   <p className="text-sm mb-4" style={{ color: 'var(--landing-text)' }}>{cat.description}</p>
                   <div
-                    className="flex items-center gap-2 text-sm font-medium group-hover:gap-3 transition-all"
+                    className="flex items-center gap-2 text-sm font-medium group-hover:gap-3 transition-colors"
                     style={{ color: cat.color }}
                   >
                     <span>{cat.cta}</span>
@@ -251,7 +251,7 @@ export default function ResourcesPage() {
                 <Link
                   key={guide.title}
                   to="#"
-                  className="group flex items-start gap-4 p-5 rounded-xl transition-all duration-200 hover:bg-white/5"
+                  className="group flex items-start gap-4 p-5 rounded-xl transition-colors duration-200 hover:bg-white/5"
                   style={{
                     background: 'var(--landing-card)',
                     border: '1px solid var(--landing-border)',
@@ -416,7 +416,7 @@ export default function ResourcesPage() {
                   }}
                 />
                 <button
-                  className="px-6 py-3 rounded-full font-semibold text-white transition-all duration-200"
+                  className="px-6 py-3 rounded-full font-semibold text-white transition-colors duration-200"
                   style={{
                     background: 'var(--landing-accent-coral)',
                     boxShadow: 'var(--landing-glow-coral)',

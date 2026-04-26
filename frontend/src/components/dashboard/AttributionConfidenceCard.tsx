@@ -73,7 +73,7 @@ function ChannelRow({ channel }: { channel: ChannelAttribution }) {
   const cfg = confidenceConfig[channel.confidence_label] || confidenceConfig.insufficient;
 
   return (
-    <div className={`border rounded-xl transition-all ${open ? cfg.border : 'border'}`}>
+    <div className={`border rounded-xl transition-colors ${open ? cfg.border : 'border'}`}>
       <button onClick={() => setOpen(!open)} className="w-full flex items-center gap-3 p-3 text-left hover:bg-muted/30 rounded-xl transition-colors">
         <ConfidenceRing score={channel.confidence_score} size={44} />
         <div className="flex-1 min-w-0">
@@ -291,17 +291,17 @@ export function AttributionConfidenceCard() {
       </div>
 
       {/* Content */}
-      <div className="p-4 space-y-2 max-h-[480px] overflow-y-auto">
-        {tab === 'channels' && data.channels.map((ch, i) => <ChannelRow key={i} channel={ch} />)}
+      <div className="p-4 space-y-2 max-h-[30rem] overflow-y-auto">
+        {tab === 'channels' && data.channels.map((ch, i) => <ChannelRow key={ch.channel || i} channel={ch} />)}
         {tab === 'models' && (
           <div className="grid sm:grid-cols-2 gap-3">
-            {data.model_comparisons.map((m, i) => (
-              <ModelCard key={i} model={m} isRecommended={m.model_name === data.recommended_model} />
+            {data.model_comparisons.map((m) => (
+              <ModelCard key={m.model_name} model={m} isRecommended={m.model_name === data.recommended_model} />
             ))}
           </div>
         )}
-        {tab === 'quality' && data.data_quality_metrics.map((m, i) => <QualityRow key={i} metric={m} />)}
-        {tab === 'recommendations' && data.recommendations.map((r, i) => <RecommendationRow key={i} rec={r} />)}
+        {tab === 'quality' && data.data_quality_metrics.map((m, i) => <QualityRow key={m.metric_name || i} metric={m} />)}
+        {tab === 'recommendations' && data.recommendations.map((r, i) => <RecommendationRow key={`${r.title}-${i}`} rec={r} />)}
         {tab === 'recommendations' && data.recommendations.length === 0 && (
           <div className="text-center py-8 text-sm text-muted-foreground/50">
             <CheckCircle2 className="w-8 h-8 mx-auto mb-2 text-emerald-400" />

@@ -29,7 +29,7 @@ export default function IdleTimeoutWarning({ secondsLeft, onStay }: IdleTimeoutW
 
         <button
           onClick={onStay}
-          className="w-full py-3 px-4 rounded-xl bg-[#00c7be] hover:bg-[#00b3ab] text-black font-bold text-sm transition-colors"
+          className="w-full py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm transition-colors"
         >
           Stay Logged In
         </button>

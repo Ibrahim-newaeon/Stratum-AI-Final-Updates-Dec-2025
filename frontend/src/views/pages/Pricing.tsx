@@ -146,7 +146,7 @@ export default function Pricing() {
             {tiers.map((tier) => (
               <div
                 key={tier.name}
-                className={`relative p-8 rounded-3xl transition-all hover:scale-[1.02] ${
+                className={`relative p-8 rounded-3xl transition-transform hover:scale-[1.02] ${
                   tier.highlighted ? 'ring-2' : ''
                 }`}
                 style={{
@@ -194,7 +194,7 @@ export default function Pricing() {
 
                 <Link
                   to={tier.href}
-                  className={`block w-full py-3 px-6 text-center font-semibold transition-all ${
+                  className={`block w-full py-3 px-6 text-center font-semibold transition-[width] ${
                     tier.highlighted ? 'rounded-full' : 'rounded-xl'
                   }`}
                   style={{

@@ -183,7 +183,7 @@ function NodeDetailPanel({ node, onClose }: { node: IdentityGraphNode; onClose: 
             </p>
           </div>
         </div>
-        <button onClick={onClose} className="p-1 hover:bg-muted rounded">
+        <button onClick={onClose} aria-label="Close" className="p-1 hover:bg-muted rounded">
           <XMarkIcon className="h-4 w-4" />
         </button>
       </div>
@@ -393,7 +393,7 @@ export default function CDPIdentityGraph() {
             </div>
           ) : graphData?.nodes && graphData.nodes.length > 0 ? (
             <>
-              <svg ref={svgRef} width="100%" height="100%" className="min-h-[500px]">
+              <svg ref={svgRef} width="100%" height="100%" className="min-h-[31.25rem]">
                 {/* Edges */}
                 {graphData.edges.map((edge, i) => {
                   const sourcePos = nodePositions.get(edge.source);

@@ -885,7 +885,6 @@ async def run_writeback_sync(
     )
     db.add(sync_record)
     await db.commit()
-    await db.refresh(sync_record)
 
     # Run sync
     try:
@@ -1037,7 +1036,6 @@ async def update_writeback_config(
 
     config.updated_at = datetime.now(timezone.utc)
     await db.commit()
-    await db.refresh(config)
 
     return APIResponse(
         success=True,

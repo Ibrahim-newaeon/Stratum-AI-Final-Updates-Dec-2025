@@ -3,7 +3,7 @@
  * Create and manage webhook destinations for CDP events
  */
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   CheckCircle2,
   ChevronRight,
@@ -162,7 +162,7 @@ function WebhookForm({ webhook, onSave, onCancel }: WebhookFormProps) {
             <div
               key={type.value}
               className={cn(
-                'p-3 rounded-lg border cursor-pointer transition-all',
+                'p-3 rounded-lg border cursor-pointer transition-colors',
                 eventTypes.includes(type.value)
                   ? 'border-primary bg-primary/5'
                   : 'hover:border-primary/50'
@@ -284,11 +284,20 @@ function WebhookDetail({ webhook, onBack, onRefresh }: WebhookDetailProps) {
     onRefresh();
   };
 
+  const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+    };
+  }, []);
+
   const copySecret = () => {
     if (webhook.secret_key) {
       navigator.clipboard.writeText(webhook.secret_key);
       setCopiedSecret(true);
-      setTimeout(() => setCopiedSecret(false), 2000);
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+      copyTimeoutRef.current = setTimeout(() => setCopiedSecret(false), 2000);
     }
   };
 
@@ -299,7 +308,7 @@ function WebhookDetail({ webhook, onBack, onRefresh }: WebhookDetailProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <button onClick={onBack} className="p-2 rounded-lg hover:bg-muted transition-colors">
+          <button onClick={onBack} aria-label="Go back" className="p-2 rounded-lg hover:bg-muted transition-colors">
             <ChevronRight className="w-5 h-5 rotate-180" />
           </button>
           <div>
@@ -690,7 +699,7 @@ export function WebhookManager() {
                   </td>
                   <td className="py-3 px-4 font-medium">{webhook.name}</td>
                   <td className="py-3 px-4">
-                    <span className="text-sm text-muted-foreground truncate max-w-[200px] block">
+                    <span className="text-sm text-muted-foreground truncate max-w-52 block">
                       {webhook.url}
                     </span>
                   </td>

@@ -46,14 +46,14 @@ export default function PortalLayout() {
     .slice(0, 2) || 'U';
 
   return (
-    <div className="min-h-screen bg-[#050B18] text-white">
+    <div className="min-h-screen bg-background text-white">
       {/* Top Navigation Bar */}
-      <header className="border-b border-white/5 bg-[#0A1628]/80 backdrop-blur-xl sticky top-0 z-30">
+      <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo + Brand */}
             <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-[#FF1F6D] to-[#FF8C00] flex items-center justify-center shadow-lg shadow-[#FF1F6D]/20">
+              <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
                 <span className="text-white font-bold text-sm">S</span>
               </div>
               <div>
@@ -73,7 +73,7 @@ export default function PortalLayout() {
                     key={item.name}
                     to={item.href}
                     className={cn(
-                      'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all',
+                      'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                       isActive
                         ? 'bg-white/10 text-white'
                         : 'text-white/50 hover:text-white/80 hover:bg-white/5'
@@ -89,14 +89,14 @@ export default function PortalLayout() {
             {/* Right Side */}
             <div className="flex items-center gap-3">
               {/* Notifications */}
-              <button className="p-2 rounded-lg hover:bg-white/5 transition-colors relative">
+              <button aria-label="Notifications" className="p-2 rounded-lg hover:bg-white/5 transition-colors relative">
                 <BellIcon className="w-5 h-5 text-white/50" />
               </button>
 
               {/* User */}
               <div className="hidden md:flex items-center gap-2">
                 <span className="text-sm text-white/60">{user?.name}</span>
-                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#FF1F6D] to-[#FF8C00] flex items-center justify-center">
+                <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
                   <span className="text-white text-xs font-medium">{userInitials}</span>
                 </div>
               </div>
@@ -137,7 +137,7 @@ export default function PortalLayout() {
                     to={item.href}
                     onClick={() => setMobileMenuOpen(false)}
                     className={cn(
-                      'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all',
+                      'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
                       isActive
                         ? 'bg-white/10 text-white'
                         : 'text-white/50 hover:text-white/80 hover:bg-white/5'

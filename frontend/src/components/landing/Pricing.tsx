@@ -88,7 +88,7 @@ export function Pricing() {
               {/* Badge */}
               {plan.badge && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="px-4 py-1 rounded-full bg-gradient-stratum text-white text-meta font-medium">
+                  <span className="px-4 py-1 rounded-full  text-white text-meta font-medium">
                     {plan.badge}
                   </span>
                 </div>
@@ -117,9 +117,9 @@ export function Pricing() {
               {/* CTA */}
               <button
                 onClick={() => navigate(plan.name === 'Enterprise' ? '/contact' : '/signup')}
-                className={`w-full py-3 rounded-xl font-medium text-body transition-all duration-base ${
+                className={`w-full py-3 rounded-xl font-medium text-body transition-colors duration-base ${
                   plan.highlighted
-                    ? 'bg-gradient-stratum text-white hover:shadow-glow'
+                    ? ' text-white hover:shadow-glow'
                     : 'bg-white/5 text-white border border-white/10 hover:bg-white/10'
                 }`}
               >

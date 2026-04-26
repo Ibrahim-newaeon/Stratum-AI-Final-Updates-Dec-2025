@@ -35,7 +35,7 @@ function FilterChip({ filter, onRemove }: { filter: ParsedFilter; onRemove?: () 
       <Filter className="w-3 h-3" />
       {filter.display_label}
       {onRemove && (
-        <button onClick={onRemove} className="hover:text-blue-900 transition-colors">
+        <button onClick={onRemove} aria-label="Remove filter" className="hover:text-blue-900 transition-colors">
           <X className="w-3 h-3" />
         </button>
       )}
@@ -47,7 +47,7 @@ function SuggestionChip({ suggestion, onClick }: { suggestion: QuerySuggestion; 
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-2 p-2.5 rounded-lg border hover:bg-muted/30 hover:border-foreground/15 transition-all text-left group"
+      className="flex items-center gap-2 p-2.5 rounded-lg border hover:bg-muted/30 hover:border-foreground/15 transition-colors text-left group"
     >
       <div className="w-7 h-7 rounded-lg bg-muted/30 flex items-center justify-center shrink-0 group-hover:bg-blue-50 transition-colors">
         <Sparkles className="w-3.5 h-3.5 text-muted-foreground/50 group-hover:text-blue-500 transition-colors" />
@@ -118,17 +118,18 @@ export function NLFilterCard() {
         </div>
 
         <form onSubmit={handleSubmit} className="relative">
-          <div className="flex items-center gap-2 px-4 py-3 bg-muted/30 rounded-xl border focus-within:border-blue-300 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+          <div className="flex items-center gap-2 px-4 py-3 bg-muted/30 rounded-xl border focus-within:border-blue-300 focus-within:ring-2 focus-within:ring-blue-100 transition-colors">
             <Sparkles className="w-4 h-4 text-muted-foreground/50 shrink-0" />
             <input
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder="e.g., Show Meta campaigns with ROAS above 3x"
+              aria-label="Filter campaigns"
               className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 outline-none"
             />
             {inputValue && (
-              <button type="button" onClick={handleClear} className="text-muted-foreground/50 hover:text-muted-foreground transition-colors">
+              <button type="button" onClick={handleClear} aria-label="Clear input" className="text-muted-foreground/50 hover:text-muted-foreground transition-colors">
                 <X className="w-4 h-4" />
               </button>
             )}
@@ -163,7 +164,7 @@ export function NLFilterCard() {
         )}
       </div>
 
-      <div className="p-4 space-y-4 max-h-[400px] overflow-y-auto">
+      <div className="p-4 space-y-4 max-h-[25rem] overflow-y-auto">
         {/* Suggestions */}
         {data?.suggestions && data.suggestions.length > 0 && (
           <div>

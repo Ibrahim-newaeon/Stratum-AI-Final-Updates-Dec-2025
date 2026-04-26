@@ -174,7 +174,7 @@ export default function Features() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               to="/signup"
-              className="px-8 py-4 rounded-full text-lg font-semibold text-white transition-all hover:opacity-90"
+              className="px-8 py-4 rounded-full text-lg font-semibold text-white transition-opacity hover:opacity-90"
               style={{
                 background: 'var(--landing-accent-coral)',
                 boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
@@ -184,7 +184,7 @@ export default function Features() {
             </Link>
             <Link
               to="/pricing"
-              className="px-8 py-4 rounded-xl text-lg font-semibold text-white transition-all hover:bg-white/10"
+              className="px-8 py-4 rounded-xl text-lg font-semibold text-white transition-colors hover:bg-white/10"
               style={{
                 background: 'var(--landing-surface-glass)',
                 border: '1px solid rgba(255, 255, 255, 0.2)',
@@ -203,7 +203,7 @@ export default function Features() {
             {features.map((feature) => (
               <div
                 key={feature.title}
-                className="p-6 rounded-2xl transition-all hover:scale-[1.02] group"
+                className="p-6 rounded-2xl transition-transform hover:scale-[1.02] group"
                 style={{
                   background: 'var(--landing-card)',
                   border: '1px solid var(--landing-border)',
@@ -247,7 +247,7 @@ export default function Features() {
             </p>
             <Link
               to="/signup"
-              className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-all hover:opacity-90"
+              className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-opacity hover:opacity-90"
               style={{
                 background: 'var(--landing-accent-coral)',
                 boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',

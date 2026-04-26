@@ -150,7 +150,7 @@ export default function Careers() {
             {jobs.map((job) => (
               <div
                 key={job.title}
-                className="p-6 rounded-2xl transition-all hover:scale-[1.01] cursor-pointer"
+                className="p-6 rounded-2xl transition-transform hover:scale-[1.01] cursor-pointer"
                 style={{
                   background: 'var(--landing-card)',
                   border: '1px solid var(--landing-border)',
@@ -186,7 +186,7 @@ export default function Careers() {
                     </div>
                   </div>
                   <button
-                    className="px-6 py-2 rounded-lg text-sm font-medium transition-all hover:bg-white/10"
+                    className="px-6 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-white/10"
                     style={{
                       background: 'var(--landing-surface-glass)',
                       border: '1px solid rgba(255, 255, 255, 0.2)',
@@ -219,7 +219,7 @@ export default function Careers() {
             </p>
             <Link
               to="/contact"
-              className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-all hover:opacity-90"
+              className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-opacity hover:opacity-90"
               style={{
                 background: 'var(--landing-accent-coral)',
                 boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',

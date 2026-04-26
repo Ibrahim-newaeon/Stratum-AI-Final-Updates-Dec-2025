@@ -124,7 +124,7 @@ export function FeedbackWidget() {
             whileHover={{ scale: 1.12 }}
             whileTap={{ scale: 0.92 }}
             onClick={() => setIsOpen(true)}
-            className="fixed bottom-20 right-4 w-12 h-12 rounded-full text-[#0b1215] shadow-lg hover:shadow-xl transition-shadow z-40 flex items-center justify-center"
+            className="fixed bottom-20 right-4 w-12 h-12 rounded-full text-primary-foreground shadow-lg hover:shadow-xl transition-shadow z-40 flex items-center justify-center"
             style={{
               background: 'var(--landing-accent-cyan)',
               boxShadow: '0 0 25px rgba(0, 199, 190, 0.35)',
@@ -146,7 +146,7 @@ export function FeedbackWidget() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-            className="fixed bottom-20 right-4 w-[380px] max-h-[520px] rounded-2xl border border-[#00c7be]/20 shadow-2xl flex flex-col overflow-hidden z-50"
+            className="fixed bottom-20 right-4 w-[380px] max-w-[calc(100vw-2rem)] max-h-[520px] rounded-2xl border border-primary/20 shadow-2xl flex flex-col overflow-hidden z-50"
             style={{
               background: '#0b1215',
               boxShadow:
@@ -155,10 +155,10 @@ export function FeedbackWidget() {
             }}
           >
             {/* ---- Header ---- */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-[#00c7be]/15 bg-gradient-to-r from-[#00c7be]/10 to-transparent">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-muted">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-[#00c7be]/15 flex items-center justify-center">
-                  <Heart className="w-4 h-4 text-[#00c7be]" />
+                <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center">
+                  <Heart className="w-4 h-4 text-primary" />
                 </div>
                 <div>
                   <h3 className="text-sm font-semibold text-white">
@@ -184,7 +184,7 @@ export function FeedbackWidget() {
               <div>
                 <label className="block text-xs font-medium text-white/50 mb-3">
                   How's your experience?{' '}
-                  <span className="text-[#00c7be]">*</span>
+                  <span className="text-primary">*</span>
                 </label>
                 <div className="flex justify-center gap-3">
                   {ratings.map((r) => (
@@ -192,9 +192,9 @@ export function FeedbackWidget() {
                       key={r.value}
                       onClick={() => setRating(r.value)}
                       className={cn(
-                        'flex flex-col items-center gap-1.5 p-2.5 rounded-xl transition-all duration-200',
+                        'flex flex-col items-center gap-1.5 p-2.5 rounded-xl transition-colors duration-200',
                         rating === r.value
-                          ? 'bg-[#00c7be]/15 ring-2 ring-[#00c7be]/40 scale-110'
+                          ? 'bg-primary/15 ring-2 ring-primary/40 scale-110'
                           : 'opacity-50 hover:opacity-100 hover:bg-white/5',
                       )}
                       aria-label={r.label}
@@ -236,9 +236,9 @@ export function FeedbackWidget() {
                           )
                         }
                         className={cn(
-                          'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border',
+                          'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border',
                           category === cat.value
-                            ? 'bg-[#00c7be]/15 border-[#00c7be]/40 text-[#00c7be]'
+                            ? 'bg-primary/15 border-primary/40 text-primary'
                             : 'bg-transparent border-white/10 text-white/40 hover:border-white/20 hover:text-white/60',
                         )}
                       >
@@ -261,7 +261,7 @@ export function FeedbackWidget() {
                   onChange={(e) => setComment(e.target.value)}
                   placeholder="What can we do better?"
                   rows={3}
-                  className="w-full bg-[rgba(255,255,255,0.05)] border border-[#00c7be]/10 rounded-xl px-4 py-3 text-white text-sm placeholder-white/25 focus:outline-none focus:border-[#00c7be]/40 transition-colors resize-none"
+                  className="w-full bg-muted border border-primary/10 rounded-xl px-4 py-3 text-foreground text-sm placeholder-foreground/25 focus:outline-none focus:border-primary/40 transition-colors resize-none"
                 />
               </div>
             </div>
@@ -272,9 +272,9 @@ export function FeedbackWidget() {
                 onClick={handleSubmit}
                 disabled={!rating}
                 className={cn(
-                  'w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold transition-all',
+                  'w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold transition-[width]',
                   rating
-                    ? 'bg-[#00c7be] hover:bg-[#00b3ab] text-[#0b1215] shadow-[0_0_20px_rgba(0,199,190,0.3)]'
+                    ? 'bg-primary hover:bg-primary/90 text-primary-foreground '
                     : 'bg-white/5 text-white/25 cursor-not-allowed',
                 )}
               >
@@ -290,3 +290,4 @@ export function FeedbackWidget() {
 }
 
 export default FeedbackWidget;
+

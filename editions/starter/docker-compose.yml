@@ -15,8 +15,8 @@ services:
     container_name: stratum_starter_db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-stratum_starter}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-starter_secure_password}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
       POSTGRES_DB: ${POSTGRES_DB:-stratum_starter}
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -24,7 +24,7 @@ services:
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-stratum_starter}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:?}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -66,8 +66,8 @@ services:
       - SUBSCRIPTION_TIER=starter
       - DEBUG=false
       - SECRET_KEY=${SECRET_KEY}
-      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-stratum_starter}:${POSTGRES_PASSWORD:-starter_secure_password}@db:5432/${POSTGRES_DB:-stratum_starter}
-      - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER:-stratum_starter}:${POSTGRES_PASSWORD:-starter_secure_password}@db:5432/${POSTGRES_DB:-stratum_starter}
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:?}:${POSTGRES_PASSWORD:?}@db:5432/${POSTGRES_DB:-stratum_starter}
+      - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER:?}:${POSTGRES_PASSWORD:?}@db:5432/${POSTGRES_DB:-stratum_starter}
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/1
       - ML_PROVIDER=local
@@ -108,8 +108,8 @@ services:
     environment:
       - APP_ENV=${APP_ENV:-production}
       - SUBSCRIPTION_TIER=starter
-      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-stratum_starter}:${POSTGRES_PASSWORD:-starter_secure_password}@db:5432/${POSTGRES_DB:-stratum_starter}
-      - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER:-stratum_starter}:${POSTGRES_PASSWORD:-starter_secure_password}@db:5432/${POSTGRES_DB:-stratum_starter}
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:?}:${POSTGRES_PASSWORD:?}@db:5432/${POSTGRES_DB:-stratum_starter}
+      - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER:?}:${POSTGRES_PASSWORD:?}@db:5432/${POSTGRES_DB:-stratum_starter}
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/1
       - CELERY_RESULT_BACKEND=redis://redis:6379/2

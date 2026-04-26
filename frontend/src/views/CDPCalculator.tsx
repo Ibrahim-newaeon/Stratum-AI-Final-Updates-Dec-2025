@@ -10,7 +10,7 @@ import { ErrorBoundary, WidgetErrorFallback } from '@/components/ui/ErrorBoundar
 
 export default function CDPCalculator() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+    <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -54,7 +54,7 @@ export default function CDPCalculator() {
               <Users className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h3 className="font-semibold mb-1">Identity Resolution</h3>
+              <h2 className="font-semibold mb-1">Identity Resolution</h2>
               <p className="text-sm text-muted-foreground">
                 Unify customer profiles across devices and touchpoints
               </p>
@@ -65,7 +65,7 @@ export default function CDPCalculator() {
               <TrendingUp className="w-5 h-5 text-green-500" />
             </div>
             <div>
-              <h3 className="font-semibold mb-1">Improved Attribution</h3>
+              <h2 className="font-semibold mb-1">Improved Attribution</h2>
               <p className="text-sm text-muted-foreground">
                 Recover conversions lost to tracking limitations
               </p>
@@ -76,7 +76,7 @@ export default function CDPCalculator() {
               <Shield className="w-5 h-5 text-amber-500" />
             </div>
             <div>
-              <h3 className="font-semibold mb-1">Privacy-First</h3>
+              <h2 className="font-semibold mb-1">Privacy-First</h2>
               <p className="text-sm text-muted-foreground">
                 GDPR/PDPL compliant with built-in consent management
               </p>
@@ -97,7 +97,7 @@ export default function CDPCalculator() {
         </ErrorBoundary>
 
         {/* CTA Section */}
-        <div className="text-center p-8 rounded-xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
+        <div className="text-center p-8 rounded-xl bg-primary/5 border border-primary/20">
           <h2 className="text-2xl font-bold mb-4">Ready to See These Results?</h2>
           <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
             Start your 30-day pilot program and measure the real impact on your business. Free setup

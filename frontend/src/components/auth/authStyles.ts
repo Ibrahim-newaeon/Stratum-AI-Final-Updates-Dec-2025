@@ -107,12 +107,9 @@ export const authStyles = `
     filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.15));
   }
 
-  /* Gradient text — spectral pink to orange */
+  /* Solid accent text — replaced gradient */
   .auth-gradient-text {
-    background: linear-gradient(135deg, #FF1F6D 0%, #FF8C00 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: hsl(var(--primary));
   }
 
   /* Spectral ring — trust gauge glow */

@@ -157,7 +157,7 @@ export default function Billing() {
         description: 'Payment retry initiated successfully',
       })
     } catch (error) {
-      console.error('Failed to retry payment:', error)
+
       toast({
         title: 'Error',
         description: 'Failed to retry payment. Please try again.',
@@ -471,6 +471,7 @@ ${invoice.paidAt ? `Paid At: ${invoice.paidAt.toLocaleDateString()}` : ''}
       {/* Subscriptions Tab */}
       {activeTab === 'subscriptions' && (
         <div className="rounded-2xl bg-surface-secondary border border-white/10 overflow-hidden">
+          <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-white/10">
@@ -529,12 +530,14 @@ ${invoice.paidAt ? `Paid At: ${invoice.paidAt.toLocaleDateString()}` : ''}
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 
       {/* Invoices Tab */}
       {activeTab === 'invoices' && (
         <div className="rounded-2xl bg-surface-secondary border border-white/10 overflow-hidden">
+          <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-white/10">
@@ -584,6 +587,7 @@ ${invoice.paidAt ? `Paid At: ${invoice.paidAt.toLocaleDateString()}` : ''}
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 

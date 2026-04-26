@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react'
+import React, { useState, useMemo, useRef, memo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import apiClient from '@/api/client'
 import {
@@ -44,6 +44,241 @@ interface Asset {
 
 type ViewMode = 'grid' | 'list'
 
+const TypeIcon = memo(function TypeIcon({ type }: { type: AssetType }) {
+  switch (type) {
+    case 'image':
+      return <ImageIcon className="w-4 h-4" />
+    case 'video':
+      return <Video className="w-4 h-4" />
+    case 'copy':
+      return <FileText className="w-4 h-4" />
+  }
+})
+
+const StatusBadge = memo(function StatusBadge({ status }: { status: AssetStatus }) {
+  const config: Record<AssetStatus, { color: string; icon: React.ComponentType<{ className?: string }>; label: string }> = {
+    active: { color: 'bg-green-500/10 text-green-500', icon: CheckCircle2, label: 'Active' },
+    paused: { color: 'bg-amber-500/10 text-amber-500', icon: Clock, label: 'Paused' },
+    fatigued: { color: 'bg-red-500/10 text-red-500', icon: AlertTriangle, label: 'Fatigued' },
+    draft: { color: 'bg-gray-500/10 text-gray-500', icon: FileText, label: 'Draft' },
+  }
+  const { color, icon: Icon, label } = config[status]
+  return (
+    <span className={cn('px-2 py-1 rounded-full text-xs font-medium inline-flex items-center gap-1', color)}>
+      <Icon className="w-3 h-3" />
+      {label}
+    </span>
+  )
+})
+
+function getFatigueColor(score: number) {
+  if (score >= 70) return 'text-red-500 bg-red-500'
+  if (score >= 40) return 'text-amber-500 bg-amber-500'
+  return 'text-green-500 bg-green-500'
+}
+
+function handleCopyLink(asset: Asset) {
+  if (asset.thumbnail) {
+    navigator.clipboard.writeText(asset.thumbnail)
+  }
+}
+
+function handleDownload(asset: Asset) {
+  if (asset.thumbnail) {
+    const link = document.createElement('a')
+    link.href = asset.thumbnail
+    link.download = asset.name || 'asset'
+    link.target = '_blank'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+}
+
+const AssetGridCard = memo(function AssetGridCard({
+  asset,
+  isSelected,
+  onToggleSelect,
+  onPreview,
+  fatigueLabel,
+}: {
+  asset: Asset
+  isSelected: boolean
+  onToggleSelect: (id: number) => void
+  onPreview: (asset: Asset) => void
+  fatigueLabel: string
+}) {
+  return (
+    <div
+      className={cn(
+        'rounded-xl border bg-card overflow-hidden hover:shadow-md transition-shadow',
+        isSelected && 'ring-2 ring-primary'
+      )}
+    >
+      {/* Thumbnail */}
+      <div className="relative aspect-video bg-muted">
+        <img
+          src={asset.thumbnail}
+          alt={asset.name}
+          className="w-full h-full object-cover"
+          loading="lazy"
+        />
+        <div className="absolute top-2 left-2">
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => onToggleSelect(asset.id)}
+            className="rounded border-white/50 bg-black/30"
+          />
+        </div>
+        <div className="absolute top-2 right-2">
+          <StatusBadge status={asset.status} />
+        </div>
+        <div className="absolute bottom-2 left-2 flex items-center gap-1 px-2 py-1 rounded bg-black/50 text-white text-xs">
+          <TypeIcon type={asset.type} />
+          <span>{asset.dimensions || asset.duration || 'Copy'}</span>
+        </div>
+      </div>
+
+      {/* Details */}
+      <div className="p-4">
+        <h4 className="font-medium text-sm truncate mb-2">{asset.name}</h4>
+
+        <div className="flex items-center justify-between text-sm mb-3">
+          <div className="flex items-center gap-1 text-muted-foreground">
+            <Eye className="w-3 h-3" />
+            <span>{formatCompactNumber(asset.impressions)}</span>
+          </div>
+          <div className="text-muted-foreground">
+            CTR: <span className="font-medium">{formatPercent(asset.ctr)}</span>
+          </div>
+        </div>
+
+        {/* Fatigue Score */}
+        {asset.status !== 'draft' && (
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">{fatigueLabel}</span>
+              <span className={cn('font-medium', getFatigueColor(asset.fatigueScore).split(' ')[0])}>
+                {asset.fatigueScore}%
+              </span>
+            </div>
+            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+              <div
+                className={cn('h-full rounded-full', getFatigueColor(asset.fatigueScore).split(' ')[1])}
+                style={{ width: `${asset.fatigueScore}%` }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="flex items-center justify-between mt-4 pt-3 border-t">
+          <div className="flex gap-1">
+            <button
+              onClick={() => onPreview(asset)}
+              className="p-2.5 rounded hover:bg-muted transition-colors"
+              title="Preview"
+              aria-label="Preview asset"
+            >
+              <Eye className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => handleCopyLink(asset)}
+              className="p-2.5 rounded hover:bg-muted transition-colors"
+              title="Copy link"
+              aria-label="Copy link"
+            >
+              <Copy className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => handleDownload(asset)}
+              className="p-2.5 rounded hover:bg-muted transition-colors"
+              title="Download"
+              aria-label="Download asset"
+            >
+              <Download className="w-4 h-4" />
+            </button>
+          </div>
+          <button aria-label="More options" className="p-2.5 rounded hover:bg-muted transition-colors">
+            <MoreHorizontal className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+})
+
+const AssetListRow = memo(function AssetListRow({
+  asset,
+  isSelected,
+  onToggleSelect,
+}: {
+  asset: Asset
+  isSelected: boolean
+  onToggleSelect: (id: number) => void
+}) {
+  return (
+    <tr className="hover:bg-muted/30 transition-colors">
+      <td className="p-4">
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={() => onToggleSelect(asset.id)}
+          className="rounded"
+        />
+      </td>
+      <td className="p-4">
+        <div className="flex items-center gap-3">
+          <img
+            src={asset.thumbnail}
+            alt={asset.name}
+            className="w-12 h-12 rounded object-cover"
+            loading="lazy"
+          />
+          <div>
+            <p className="font-medium text-sm">{asset.name}</p>
+            <p className="text-xs text-muted-foreground">
+              {asset.campaigns.length > 0
+                ? `${asset.campaigns.length} campaigns`
+                : 'Not assigned'}
+            </p>
+          </div>
+        </div>
+      </td>
+      <td className="p-4">
+        <div className="flex items-center gap-2 text-sm">
+          <TypeIcon type={asset.type} />
+          <span className="capitalize">{asset.type}</span>
+        </div>
+      </td>
+      <td className="p-4"><StatusBadge status={asset.status} /></td>
+      <td className="p-4 text-right font-medium">
+        {formatCompactNumber(asset.impressions)}
+      </td>
+      <td className="p-4 text-right font-medium">{formatPercent(asset.ctr)}</td>
+      <td className="p-4">
+        <div className="flex items-center justify-center gap-2">
+          <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
+            <div
+              className={cn('h-full rounded-full', getFatigueColor(asset.fatigueScore).split(' ')[1])}
+              style={{ width: `${asset.fatigueScore}%` }}
+            />
+          </div>
+          <span className={cn('text-sm font-medium', getFatigueColor(asset.fatigueScore).split(' ')[0])}>
+            {asset.fatigueScore}%
+          </span>
+        </div>
+      </td>
+      <td className="p-4 text-right">
+        <button aria-label="More options" className="p-2 rounded hover:bg-muted transition-colors">
+          <MoreHorizontal className="w-4 h-4" />
+        </button>
+      </td>
+    </tr>
+  )
+})
+
 export function Assets() {
   const { t } = useTranslation()
   const [searchQuery, setSearchQuery] = useState('')
@@ -72,31 +307,13 @@ export function Assets() {
     }
   }
 
-  // Handle download
-  const handleDownload = (asset: Asset) => {
-    if (asset.thumbnail) {
-      const link = document.createElement('a')
-      link.href = asset.thumbnail
-      link.download = asset.name || 'asset'
-      link.target = '_blank'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-    }
-  }
-
   // Handle bulk download
   const handleBulkDownload = () => {
     const selectedItems = assets.filter((a) => selectedAssets.includes(a.id))
     selectedItems.forEach((asset) => handleDownload(asset))
   }
 
-  // Handle copy asset link
-  const handleCopyLink = (asset: Asset) => {
-    if (asset.thumbnail) {
-      navigator.clipboard.writeText(asset.thumbnail)
-    }
-  }
+  const handlePreview = useCallback((asset: Asset) => setPreviewAsset(asset), [])
 
   // Transform API data into view-layer Asset shape
   const assets = useMemo((): Asset[] => {
@@ -136,44 +353,11 @@ export function Assets() {
     return true
   })
 
-  const toggleSelectAsset = (id: number) => {
+  const handleToggleSelect = useCallback((id: number) => {
     setSelectedAssets((prev) =>
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
     )
-  }
-
-  const getTypeIcon = (type: AssetType) => {
-    switch (type) {
-      case 'image':
-        return <ImageIcon className="w-4 h-4" />
-      case 'video':
-        return <Video className="w-4 h-4" />
-      case 'copy':
-        return <FileText className="w-4 h-4" />
-    }
-  }
-
-  const getStatusBadge = (status: AssetStatus) => {
-    const config: Record<AssetStatus, { color: string; icon: React.ComponentType<{ className?: string }>; label: string }> = {
-      active: { color: 'bg-green-500/10 text-green-500', icon: CheckCircle2, label: 'Active' },
-      paused: { color: 'bg-amber-500/10 text-amber-500', icon: Clock, label: 'Paused' },
-      fatigued: { color: 'bg-red-500/10 text-red-500', icon: AlertTriangle, label: 'Fatigued' },
-      draft: { color: 'bg-gray-500/10 text-gray-500', icon: FileText, label: 'Draft' },
-    }
-    const { color, icon: Icon, label } = config[status]
-    return (
-      <span className={cn('px-2 py-1 rounded-full text-xs font-medium inline-flex items-center gap-1', color)}>
-        <Icon className="w-3 h-3" />
-        {label}
-      </span>
-    )
-  }
-
-  const getFatigueColor = (score: number) => {
-    if (score >= 70) return 'text-red-500 bg-red-500'
-    if (score >= 40) return 'text-amber-500 bg-amber-500'
-    return 'text-green-500 bg-green-500'
-  }
+  }, [])
 
   return (
     <div className="space-y-6">
@@ -245,6 +429,7 @@ export function Assets() {
           <div className="flex rounded-lg border overflow-hidden">
             <button
               onClick={() => setViewMode('grid')}
+              aria-label="Grid view"
               className={cn(
                 'p-2 transition-colors',
                 viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
@@ -254,6 +439,7 @@ export function Assets() {
             </button>
             <button
               onClick={() => setViewMode('list')}
+              aria-label="List view"
               className={cn(
                 'p-2 transition-colors',
                 viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
@@ -277,7 +463,7 @@ export function Assets() {
       {!isLoading && assets.length === 0 && (
         <div className="text-center py-16 rounded-xl border bg-card">
           <ImageIcon className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold mb-2">No assets yet</h3>
+          <h2 className="text-lg font-semibold mb-2">No assets yet</h2>
           <p className="text-muted-foreground mb-6 max-w-md mx-auto">
             Upload your first creative asset to start tracking performance and fatigue scores across campaigns.
           </p>
@@ -341,100 +527,14 @@ export function Assets() {
       {!isLoading && assets.length > 0 && viewMode === 'grid' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredAssets.map((asset) => (
-            <div
+            <AssetGridCard
               key={asset.id}
-              className={cn(
-                'rounded-xl border bg-card overflow-hidden hover:shadow-md transition-shadow',
-                selectedAssets.includes(asset.id) && 'ring-2 ring-primary'
-              )}
-            >
-              {/* Thumbnail */}
-              <div className="relative aspect-video bg-muted">
-                <img
-                  src={asset.thumbnail}
-                  alt={asset.name}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute top-2 left-2">
-                  <input
-                    type="checkbox"
-                    checked={selectedAssets.includes(asset.id)}
-                    onChange={() => toggleSelectAsset(asset.id)}
-                    className="rounded border-white/50 bg-black/30"
-                  />
-                </div>
-                <div className="absolute top-2 right-2">
-                  {getStatusBadge(asset.status)}
-                </div>
-                <div className="absolute bottom-2 left-2 flex items-center gap-1 px-2 py-1 rounded bg-black/50 text-white text-xs">
-                  {getTypeIcon(asset.type)}
-                  <span>{asset.dimensions || asset.duration || 'Copy'}</span>
-                </div>
-              </div>
-
-              {/* Details */}
-              <div className="p-4">
-                <h4 className="font-medium text-sm truncate mb-2">{asset.name}</h4>
-
-                <div className="flex items-center justify-between text-sm mb-3">
-                  <div className="flex items-center gap-1 text-muted-foreground">
-                    <Eye className="w-3 h-3" />
-                    <span>{formatCompactNumber(asset.impressions)}</span>
-                  </div>
-                  <div className="text-muted-foreground">
-                    CTR: <span className="font-medium">{formatPercent(asset.ctr)}</span>
-                  </div>
-                </div>
-
-                {/* Fatigue Score */}
-                {asset.status !== 'draft' && (
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">{t('assets.fatigueScore')}</span>
-                      <span className={cn('font-medium', getFatigueColor(asset.fatigueScore).split(' ')[0])}>
-                        {asset.fatigueScore}%
-                      </span>
-                    </div>
-                    <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                      <div
-                        className={cn('h-full rounded-full', getFatigueColor(asset.fatigueScore).split(' ')[1])}
-                        style={{ width: `${asset.fatigueScore}%` }}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* Actions */}
-                <div className="flex items-center justify-between mt-4 pt-3 border-t">
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => setPreviewAsset(asset)}
-                      className="p-1.5 rounded hover:bg-muted transition-colors"
-                      title="Preview"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleCopyLink(asset)}
-                      className="p-1.5 rounded hover:bg-muted transition-colors"
-                      title="Copy link"
-                    >
-                      <Copy className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDownload(asset)}
-                      className="p-1.5 rounded hover:bg-muted transition-colors"
-                      title="Download"
-                    >
-                      <Download className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <button className="p-1.5 rounded hover:bg-muted transition-colors">
-                    <MoreHorizontal className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
+              asset={asset}
+              isSelected={selectedAssets.includes(asset.id)}
+              onToggleSelect={handleToggleSelect}
+              onPreview={handlePreview}
+              fatigueLabel={t('assets.fatigueScore')}
+            />
           ))}
         </div>
       )}
@@ -442,10 +542,11 @@ export function Assets() {
       {/* List View */}
       {!isLoading && assets.length > 0 && viewMode === 'list' && (
         <div className="rounded-xl border bg-card overflow-hidden">
+          <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-muted/50 border-b">
               <tr>
-                <th className="p-4 text-left">
+                <th scope="col" className="p-4 text-left">
                   <input
                     type="checkbox"
                     onChange={() => {
@@ -459,76 +560,27 @@ export function Assets() {
                     className="rounded"
                   />
                 </th>
-                <th className="p-4 text-left text-sm font-medium">{t('assets.name')}</th>
-                <th className="p-4 text-left text-sm font-medium">{t('assets.type')}</th>
-                <th className="p-4 text-left text-sm font-medium">{t('assets.status')}</th>
-                <th className="p-4 text-right text-sm font-medium">{t('assets.impressions')}</th>
-                <th className="p-4 text-right text-sm font-medium">CTR</th>
-                <th className="p-4 text-center text-sm font-medium">{t('assets.fatigue')}</th>
-                <th className="p-4 text-right text-sm font-medium">{t('assets.actions')}</th>
+                <th scope="col" className="p-4 text-left text-sm font-medium">{t('assets.name')}</th>
+                <th scope="col" className="p-4 text-left text-sm font-medium">{t('assets.type')}</th>
+                <th scope="col" className="p-4 text-left text-sm font-medium">{t('assets.status')}</th>
+                <th scope="col" className="p-4 text-right text-sm font-medium">{t('assets.impressions')}</th>
+                <th scope="col" className="p-4 text-right text-sm font-medium">CTR</th>
+                <th scope="col" className="p-4 text-center text-sm font-medium">{t('assets.fatigue')}</th>
+                <th scope="col" className="p-4 text-right text-sm font-medium">{t('assets.actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {filteredAssets.map((asset) => (
-                <tr key={asset.id} className="hover:bg-muted/30 transition-colors">
-                  <td className="p-4">
-                    <input
-                      type="checkbox"
-                      checked={selectedAssets.includes(asset.id)}
-                      onChange={() => toggleSelectAsset(asset.id)}
-                      className="rounded"
-                    />
-                  </td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={asset.thumbnail}
-                        alt={asset.name}
-                        className="w-12 h-12 rounded object-cover"
-                      />
-                      <div>
-                        <p className="font-medium text-sm">{asset.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {asset.campaigns.length > 0
-                            ? `${asset.campaigns.length} campaigns`
-                            : 'Not assigned'}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-2 text-sm">
-                      {getTypeIcon(asset.type)}
-                      <span className="capitalize">{asset.type}</span>
-                    </div>
-                  </td>
-                  <td className="p-4">{getStatusBadge(asset.status)}</td>
-                  <td className="p-4 text-right font-medium">
-                    {formatCompactNumber(asset.impressions)}
-                  </td>
-                  <td className="p-4 text-right font-medium">{formatPercent(asset.ctr)}</td>
-                  <td className="p-4">
-                    <div className="flex items-center justify-center gap-2">
-                      <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
-                        <div
-                          className={cn('h-full rounded-full', getFatigueColor(asset.fatigueScore).split(' ')[1])}
-                          style={{ width: `${asset.fatigueScore}%` }}
-                        />
-                      </div>
-                      <span className={cn('text-sm font-medium', getFatigueColor(asset.fatigueScore).split(' ')[0])}>
-                        {asset.fatigueScore}%
-                      </span>
-                    </div>
-                  </td>
-                  <td className="p-4 text-right">
-                    <button className="p-2 rounded hover:bg-muted transition-colors">
-                      <MoreHorizontal className="w-4 h-4" />
-                    </button>
-                  </td>
-                </tr>
+                <AssetListRow
+                  key={asset.id}
+                  asset={asset}
+                  isSelected={selectedAssets.includes(asset.id)}
+                  onToggleSelect={handleToggleSelect}
+                />
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 

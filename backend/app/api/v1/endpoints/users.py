@@ -143,7 +143,6 @@ async def update_current_user(
             setattr(user, field, value)
 
     await db.commit()
-    await db.refresh(user)
 
     return APIResponse(
         success=True,
@@ -286,7 +285,6 @@ async def invite_user(
 
     db.add(user)
     await db.commit()
-    await db.refresh(user)
 
     # Generate invite token for the invitation link
     invite_token = secrets.token_urlsafe(32)
@@ -410,7 +408,6 @@ async def update_user(
         user.is_active = update_data.is_active
 
     await db.commit()
-    await db.refresh(user)
 
     logger.info(f"Updated user {user_id} in tenant {tenant_id}")
 

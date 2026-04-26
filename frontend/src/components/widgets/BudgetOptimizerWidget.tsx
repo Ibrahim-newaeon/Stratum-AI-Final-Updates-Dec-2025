@@ -4,7 +4,7 @@
  * Falls back to live simulation data when API is unavailable
  */
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import {
   Wallet,
   RefreshCw,
@@ -34,6 +34,11 @@ interface PotentialUplift {
   expected: number
   conservative: number
   optimistic: number
+}
+
+interface Performer {
+  name?: string
+  campaign_name?: string
 }
 
 interface BudgetOptimizerWidgetProps {
@@ -121,8 +126,8 @@ export function BudgetOptimizerWidget({ className }: BudgetOptimizerWidgetProps)
   const [refreshing, setRefreshing] = useState(false)
   const [reallocations, setReallocations] = useState<BudgetReallocation[]>([])
   const [potentialUplift, setPotentialUplift] = useState<PotentialUplift | null>(null)
-  const [topPerformers, setTopPerformers] = useState<any[]>([])
-  const [bottomPerformers, setBottomPerformers] = useState<any[]>([])
+  const [topPerformers, setTopPerformers] = useState<Performer[]>([])
+  const [bottomPerformers, setBottomPerformers] = useState<Performer[]>([])
   const [error, setError] = useState<string | null>(null)
   const [usingSimulation, setUsingSimulation] = useState(false)
 
@@ -165,6 +170,7 @@ export function BudgetOptimizerWidget({ className }: BudgetOptimizerWidgetProps)
     fetchOptimization()
     // Refresh every 45 seconds for live feel
     const interval = setInterval(() => {
+      if (document.hidden) return
       if (usingSimulation) {
         loadSimulationData()
       } else {
@@ -183,8 +189,8 @@ export function BudgetOptimizerWidget({ className }: BudgetOptimizerWidgetProps)
     }).format(value)
   }
 
-  const increaseCount = reallocations.filter(r => r.action === 'increase').length
-  const decreaseCount = reallocations.filter(r => r.action === 'decrease').length
+  const increaseCount = useMemo(() => reallocations.filter(r => r.action === 'increase').length, [reallocations])
+  const decreaseCount = useMemo(() => reallocations.filter(r => r.action === 'decrease').length, [reallocations])
 
   if (loading) {
     return (
@@ -205,7 +211,7 @@ export function BudgetOptimizerWidget({ className }: BudgetOptimizerWidgetProps)
   return (
     <div className={cn('rounded-xl border bg-card overflow-hidden', className)}>
       {/* Header */}
-      <div className="px-6 py-4 border-b bg-gradient-to-r from-violet-500/5 to-transparent">
+      <div className="px-6 py-4 border-b bg-card">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-violet-500/10 rounded-lg">
@@ -222,6 +228,7 @@ export function BudgetOptimizerWidget({ className }: BudgetOptimizerWidgetProps)
           <button
             onClick={fetchOptimization}
             disabled={refreshing}
+            aria-label="Refresh optimization"
             className="p-2 hover:bg-muted rounded-lg transition-colors disabled:opacity-50"
           >
             <RefreshCw className={cn('w-4 h-4', refreshing && 'animate-spin')} />
@@ -244,7 +251,7 @@ export function BudgetOptimizerWidget({ className }: BudgetOptimizerWidgetProps)
           <>
             {/* Potential Impact */}
             {potentialUplift && (
-              <div className="p-4 rounded-lg bg-gradient-to-r from-violet-500/10 to-purple-500/10 border border-violet-500/20">
+              <div className="p-4 rounded-lg bg-violet-500/10 border border-violet-500/20">
                 <div className="flex items-center gap-2 mb-3">
                   <Sparkles className="w-4 h-4 text-violet-500" />
                   <span className="font-medium text-sm">Potential Impact</span>
@@ -350,7 +357,7 @@ export function BudgetOptimizerWidget({ className }: BudgetOptimizerWidgetProps)
                     Top Performers
                   </h5>
                   <div className="space-y-1">
-                    {topPerformers.slice(0, 3).map((c: any, i: number) => (
+                    {topPerformers.slice(0, 3).map((c, i) => (
                       <div key={i} className="text-xs truncate text-foreground">
                         {c.name || c.campaign_name}
                       </div>
@@ -365,7 +372,7 @@ export function BudgetOptimizerWidget({ className }: BudgetOptimizerWidgetProps)
                     Needs Work
                   </h5>
                   <div className="space-y-1">
-                    {bottomPerformers.slice(0, 3).map((c: any, i: number) => (
+                    {bottomPerformers.slice(0, 3).map((c, i) => (
                       <div key={i} className="text-xs truncate text-foreground">
                         {c.name || c.campaign_name}
                       </div>

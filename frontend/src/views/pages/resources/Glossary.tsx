@@ -687,7 +687,7 @@ export default function GlossaryPage() {
             <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
               <button
                 onClick={() => setActiveCategory(null)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
+                className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
                   activeCategory === null
                     ? 'bg-[#FFB347] text-white'
                     : 'bg-white/5 hover:text-white'
@@ -700,7 +700,7 @@ export default function GlossaryPage() {
                 <button
                   key={category.id}
                   onClick={() => setActiveCategory(category.id)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all flex items-center gap-2 ${
+                  className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-2 ${
                     activeCategory === category.id
                       ? 'text-white'
                       : 'bg-white/5 hover:text-white'
@@ -828,7 +828,7 @@ export default function GlossaryPage() {
               <div className="flex gap-4 justify-center">
                 <a
                   href="/docs"
-                  className="px-6 py-3 rounded-full font-semibold text-white transition-all duration-200"
+                  className="px-6 py-3 rounded-full font-semibold text-white transition-colors duration-200"
                   style={{
                     background: 'var(--landing-accent-coral)',
                     boxShadow: 'var(--landing-glow-coral)',
@@ -838,7 +838,7 @@ export default function GlossaryPage() {
                 </a>
                 <a
                   href="/contact"
-                  className="px-6 py-3 rounded-xl font-semibold text-white transition-all duration-200"
+                  className="px-6 py-3 rounded-xl font-semibold text-white transition-colors duration-200"
                   style={{
                     background: 'var(--landing-surface-glass)',
                     border: '1px solid var(--landing-border)',

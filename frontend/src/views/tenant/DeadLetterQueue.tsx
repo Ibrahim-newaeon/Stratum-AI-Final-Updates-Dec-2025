@@ -31,7 +31,7 @@ interface DLQEntry {
   eventType: string
   platform: Platform
   status: DLQStatus
-  payload: Record<string, any>
+  payload: Record<string, unknown>
   errorMessage: string
   errorCode?: string
   retryCount: number
@@ -323,6 +323,7 @@ export default function DeadLetterQueue() {
 
       {/* Entries Table */}
       <div className="rounded-xl border bg-card shadow-card overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="w-full">
           <thead className="bg-muted/50">
             <tr>
@@ -425,6 +426,7 @@ export default function DeadLetterQueue() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Payload Modal */}

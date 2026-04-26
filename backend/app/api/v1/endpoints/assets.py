@@ -54,6 +54,43 @@ MIME_TO_ASSET_TYPE = {
     "text/html": "html5",
 }
 
+# Whitelist of safe file extensions mapped to expected MIME types
+# Used to validate that uploaded files match their claimed content type
+ALLOWED_EXTENSIONS = {
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".gif": "image/gif",
+    ".webp": "image/webp",
+    ".svg": "image/svg+xml",
+    ".mp4": "video/mp4",
+    ".webm": "video/webm",
+    ".mov": "video/quicktime",
+    ".html": "text/html",
+    ".htm": "text/html",
+}
+
+
+def _validate_file_extension(filename: str | None, content_type: str) -> None:
+    """Validate that file extension matches claimed MIME type to prevent spoofing."""
+    if not filename:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Filename is required",
+        )
+    ext = Path(filename).suffix.lower()
+    if ext not in ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unsupported file extension: {ext}. Allowed: {', '.join(sorted(ALLOWED_EXTENSIONS.keys()))}",
+        )
+    expected_mime = ALLOWED_EXTENSIONS[ext]
+    if content_type != expected_mime:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"File extension '{ext}' does not match content type '{content_type}'. Expected: {expected_mime}",
+        )
+
 
 @router.post("/upload", response_model=APIResponse[CreativeAssetResponse], status_code=status.HTTP_201_CREATED)
 async def upload_asset(
@@ -73,8 +110,9 @@ async def upload_asset(
     """
     tenant_id = getattr(request.state, "tenant_id", None)
 
-    # Validate MIME type
+    # Validate MIME type and file extension to prevent MIME spoofing
     content_type = file.content_type or "application/octet-stream"
+    _validate_file_extension(file.filename, content_type)
     if content_type not in ALLOWED_MIME_TYPES:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -92,9 +130,33 @@ async def upload_asset(
     # Generate unique filename
     ext = Path(file.filename or "file").suffix or ".bin"
     unique_name = f"{uuid.uuid4().hex}{ext}"
-    tenant_dir = UPLOAD_DIR / str(tenant_id or "default")
+
+    # Sanitize tenant_id to prevent path traversal
+    tenant_id_safe = str(tenant_id or "default")
+    if any(c in tenant_id_safe for c in ("/", "\\", "..", "\x00")):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid tenant identifier",
+        )
+
+    tenant_dir = UPLOAD_DIR / tenant_id_safe
     tenant_dir.mkdir(parents=True, exist_ok=True)
     file_path = tenant_dir / unique_name
+
+    # Defense in depth: verify resolved path stays within UPLOAD_DIR
+    try:
+        resolved_path = file_path.resolve()
+        resolved_upload_dir = UPLOAD_DIR.resolve()
+        if not str(resolved_path).startswith(str(resolved_upload_dir)):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid file path",
+            )
+    except (OSError, RuntimeError):
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Could not resolve file path",
+        )
 
     # Write file
     with open(file_path, "wb") as f:
@@ -120,7 +182,6 @@ async def upload_asset(
 
     db.add(asset)
     await db.commit()
-    await db.refresh(asset)
 
     logger.info("asset_uploaded", asset_id=asset.id, tenant_id=tenant_id, size=len(contents))
 
@@ -295,7 +356,6 @@ async def create_asset(
 
     db.add(asset)
     await db.commit()
-    await db.refresh(asset)
 
     logger.info("asset_created", asset_id=asset.id, tenant_id=tenant_id)
 
@@ -335,7 +395,6 @@ async def update_asset(
         setattr(asset, field, value)
 
     await db.commit()
-    await db.refresh(asset)
 
     return APIResponse(
         success=True,
@@ -429,7 +488,6 @@ async def calculate_fatigue_score(
 
     asset.fatigue_score = min(100, base_score)
     await db.commit()
-    await db.refresh(asset)
 
     return APIResponse(
         success=True,

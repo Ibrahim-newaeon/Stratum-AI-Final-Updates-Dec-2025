@@ -236,7 +236,7 @@ export default function FAQ() {
               placeholder="Search questions..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 rounded-2xl text-white placeholder-white/40 outline-none transition-all focus:ring-2 focus:ring-[#FF4D4D]/50"
+              className="w-full pl-12 pr-4 py-4 rounded-2xl text-white placeholder-white/40 outline-none transition-[width] focus:ring-2 focus:ring-[#FF4D4D]/50"
               style={{ background: 'var(--landing-card)', border: '1px solid var(--landing-border)' }}
             />
           </div>
@@ -265,7 +265,7 @@ export default function FAQ() {
                 <button
                   key={category.id}
                   onClick={() => setSelectedCategory(category.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
                     isSelected ? 'text-white' : 'text-[var(--landing-text)] hover:text-white'
                   }`}
                   style={{
@@ -314,7 +314,7 @@ export default function FAQ() {
                 return (
                   <div
                     key={faq.id}
-                    className="group p-6 rounded-2xl transition-all duration-300 hover:scale-[1.02]"
+                    className="group p-6 rounded-2xl transition-transform duration-300 hover:scale-[1.02]"
                     style={{
                       background: `linear-gradient(135deg, ${accentColor}08 0%, transparent 100%)`,
                       border: `1px solid ${accentColor}20`,
@@ -322,7 +322,7 @@ export default function FAQ() {
                   >
                     {/* Icon */}
                     <div
-                      className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-all duration-300 group-hover:scale-110"
+                      className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110"
                       style={{
                         background: `${accentColor}15`,
                         border: `1px solid ${accentColor}30`,

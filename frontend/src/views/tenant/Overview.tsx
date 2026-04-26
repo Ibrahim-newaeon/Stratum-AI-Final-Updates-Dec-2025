@@ -386,7 +386,7 @@ export default function TenantOverview() {
           </button>
           <button
             onClick={handleExportReport}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-stratum text-white font-medium hover:shadow-glow transition-all"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-stratum text-white font-medium hover:shadow-glow transition-colors"
           >
             <DocumentArrowDownIcon className="w-4 h-4" />
             Export Report

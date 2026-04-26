@@ -280,7 +280,7 @@ export const TrustBannerCompact: React.FC<TrustBannerProps> = ({
 
   return (
     <button
-      className={`w-full rounded-lg px-4 py-2 flex items-center justify-between cursor-pointer hover:opacity-90 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+      className={`w-full rounded-lg px-4 py-2 flex items-center justify-between cursor-pointer hover:opacity-90 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
         trustStatus.overall_status === 'critical'
           ? 'bg-red-500/10 border border-red-500/30 dark:border-red-500/20'
           : trustStatus.overall_status === 'degraded'

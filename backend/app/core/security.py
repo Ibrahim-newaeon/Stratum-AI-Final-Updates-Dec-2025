@@ -16,7 +16,8 @@ from typing import Any, Optional, Union
 from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-from jose import JWTError, jwt
+import jwt
+from jwt.exceptions import PyJWTError as JWTError
 from passlib.context import CryptContext
 
 from app.core.config import settings
@@ -158,7 +159,7 @@ def decode_token(token: str) -> Optional[dict[str, Any]]:
             token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm]
         )
         return payload
-    except JWTError:
+    except (JWTError, jwt.DecodeError, jwt.ExpiredSignatureError):
         return None
 
 

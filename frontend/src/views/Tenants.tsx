@@ -267,6 +267,7 @@ export function Tenants() {
             onClick={fetchTenants}
             className="flex items-center gap-2 px-3 py-2 rounded-lg border hover:bg-muted transition-colors"
             title="Refresh"
+            aria-label="Refresh tenants"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -339,15 +340,16 @@ export function Tenants() {
 
       {/* Tenants Table */}
       <div className="rounded-xl border bg-card overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="w-full">
           <thead className="bg-muted/50">
             <tr>
-              <th className="px-4 py-3 text-left text-sm font-medium">Organization</th>
-              <th className="px-4 py-3 text-left text-sm font-medium">Plan</th>
-              <th className="px-4 py-3 text-left text-sm font-medium">Users</th>
-              <th className="px-4 py-3 text-left text-sm font-medium">Features</th>
-              <th className="px-4 py-3 text-left text-sm font-medium">Created</th>
-              <th className="px-4 py-3 text-right text-sm font-medium">Actions</th>
+              <th scope="col" className="px-4 py-3 text-left text-sm font-medium">Organization</th>
+              <th scope="col" className="px-4 py-3 text-left text-sm font-medium">Plan</th>
+              <th scope="col" className="px-4 py-3 text-left text-sm font-medium">Users</th>
+              <th scope="col" className="px-4 py-3 text-left text-sm font-medium">Features</th>
+              <th scope="col" className="px-4 py-3 text-left text-sm font-medium">Created</th>
+              <th scope="col" className="px-4 py-3 text-right text-sm font-medium">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -380,6 +382,7 @@ export function Tenants() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Create Modal */}
@@ -644,7 +647,7 @@ function TenantFormModal({
       <div className="w-full max-w-lg bg-card rounded-xl shadow-xl border">
         <div className="flex items-center justify-between p-4 border-b">
           <h2 className="text-lg font-semibold">{title}</h2>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-muted transition-colors">
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-muted transition-colors" aria-label="Close">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -831,7 +834,7 @@ function FeaturesModal({
             <h2 className="text-lg font-semibold">Feature Flags</h2>
             <p className="text-sm text-muted-foreground">{tenant.name}</p>
           </div>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-muted transition-colors">
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-muted transition-colors" aria-label="Close">
             <X className="h-4 w-4" />
           </button>
         </div>
