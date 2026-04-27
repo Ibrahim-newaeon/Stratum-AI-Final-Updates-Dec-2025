@@ -3,12 +3,12 @@
   <defs>
     <!-- Gold to Purple gradient for top left -->
     <linearGradient id="hybrid-gold-purple" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#D4AF37"/>
+      <stop offset="0%" stop-color="#FF4D8F"/>
       <stop offset="100%" stop-color="#8B5CF6"/>
     </linearGradient>
     <!-- Gold to Cyan gradient for top right -->
     <linearGradient id="hybrid-gold-cyan" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#D4AF37"/>
+      <stop offset="0%" stop-color="#FF4D8F"/>
       <stop offset="100%" stop-color="#14F0C6"/>
     </linearGradient>
     <!-- Green accent for output nodes -->
@@ -33,18 +33,18 @@
     <!-- Middle segment right (cyan-tinted) -->
     <path d="M129,82 L100,82 L100,117 L146,117Z" fill="#142840"/>
     <!-- Top ambient glow -->
-    <path d="M100,25 L77,70 L123,70Z" fill="#D4AF37" opacity="0.06" filter="url(#hybrid-glow)"/>
+    <path d="M100,25 L77,70 L123,70Z" fill="#FF4D8F" opacity="0.06" filter="url(#hybrid-glow)"/>
     <!-- Top segment left (gold → purple) -->
     <path d="M100,25 L77,70 L100,70Z" fill="url(#hybrid-gold-purple)"/>
     <!-- Top segment right (gold → cyan) -->
     <path d="M100,25 L100,70 L123,70Z" fill="url(#hybrid-gold-cyan)"/>
     <!-- Peak edge highlights -->
-    <line x1="100" y1="25" x2="77" y2="70" stroke="#F4D03F" stroke-width="0.6" opacity="0.5"/>
+    <line x1="100" y1="25" x2="77" y2="70" stroke="#FF75B0" stroke-width="0.6" opacity="0.5"/>
     <line x1="100" y1="25" x2="123" y2="70" stroke="#14F0C6" stroke-width="0.6" opacity="0.5"/>
     <!-- Center line accent -->
     <line x1="100" y1="25" x2="100" y2="164" stroke="#8B5CF6" stroke-width="0.3" opacity="0.15"/>
     <!-- Energy nodes -->
-    <circle cx="100" cy="76" r="1.5" fill="#D4AF37" opacity="0.5"/>
+    <circle cx="100" cy="76" r="1.5" fill="#FF4D8F" opacity="0.5"/>
     <circle cx="88" cy="76" r="0.7" fill="#8B5CF6" opacity="0.4"/>
     <circle cx="112" cy="76" r="0.7" fill="#14F0C6" opacity="0.4"/>
     <circle cx="100" cy="123" r="1.2" fill="#22C55E" opacity="0.4"/>
@@ -59,7 +59,7 @@
       Stratum
     </text>
     <!-- AI — multi-color using individual letters -->
-    <text x="316" y="120" font-family="'Inter','SF Pro Display','Segoe UI',system-ui,-apple-system,sans-serif" font-size="72" letter-spacing="-1.5" font-weight="700" fill="#D4AF37">
+    <text x="316" y="120" font-family="'Inter','SF Pro Display','Segoe UI',system-ui,-apple-system,sans-serif" font-size="72" letter-spacing="-1.5" font-weight="700" fill="#FF4D8F">
       A
     </text>
     <text x="360" y="120" font-family="'Inter','SF Pro Display','Segoe UI',system-ui,-apple-system,sans-serif" font-size="72" letter-spacing="-1.5" font-weight="700" fill="#8B5CF6">

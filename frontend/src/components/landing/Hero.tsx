@@ -29,7 +29,7 @@ export function Hero() {
           style={{ animationDelay: '0.1s' }}
         >
           Your AI Partner for{' '}
-          <span className="text-gradient-gold">Unstoppable Ad Growth</span>
+          <span className="text-gradient-primary">Unstoppable Ad Growth</span>
         </h1>
 
         {/* Subheadline */}

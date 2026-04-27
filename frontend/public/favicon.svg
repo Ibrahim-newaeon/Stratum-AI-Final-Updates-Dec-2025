@@ -2,12 +2,12 @@
   <title id="fav-title">Stratum AI</title>
   <defs>
     <linearGradient id="gold-top" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#D4AF37"/>
-      <stop offset="100%" stop-color="#C9A227"/>
+      <stop offset="0%" stop-color="#FF4D8F"/>
+      <stop offset="100%" stop-color="#FF1F6D"/>
     </linearGradient>
     <linearGradient id="gold-top-right" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#C9A227"/>
-      <stop offset="100%" stop-color="#A08020"/>
+      <stop offset="0%" stop-color="#FF1F6D"/>
+      <stop offset="100%" stop-color="#CC1857"/>
     </linearGradient>
     <filter id="gold-glow" x="-50%" y="-50%" width="200%" height="200%">
       <feGaussianBlur stdDeviation="8" result="blur"/>
@@ -29,16 +29,16 @@
     <path d="M100,128 L162,110 L162,117 L100,135Z" fill="#1E2740"/>
     <path d="M38,110 L100,128 L100,135 L38,117Z" fill="#22222B"/>
     <!-- Top slab glow -->
-    <path d="M46,58 L100,74 L154,58 L100,42Z" fill="#C9A227" opacity="0.15" filter="url(#gold-glow)"/>
+    <path d="M46,58 L100,74 L154,58 L100,42Z" fill="#FF1F6D" opacity="0.15" filter="url(#gold-glow)"/>
     <!-- Top slab left -->
     <path d="M46,58 L100,74 L100,42Z" fill="url(#gold-top)"/>
     <!-- Top slab right -->
     <path d="M100,74 L154,58 L100,42Z" fill="url(#gold-top-right)"/>
     <!-- Edge highlight -->
-    <path d="M46,58 L100,42 L154,58" fill="none" stroke="#D4AF37" stroke-width="0.8" opacity="0.7"/>
+    <path d="M46,58 L100,42 L154,58" fill="none" stroke="#FF4D8F" stroke-width="0.8" opacity="0.7"/>
     <!-- Energy nodes -->
-    <circle cx="100" cy="86" r="2.5" fill="#D4AF37" opacity="0.6"/>
-    <circle cx="76" cy="87" r="1.2" fill="#D4AF37" opacity="0.3"/>
-    <circle cx="124" cy="87" r="1.2" fill="#D4AF37" opacity="0.3"/>
+    <circle cx="100" cy="86" r="2.5" fill="#FF4D8F" opacity="0.6"/>
+    <circle cx="76" cy="87" r="1.2" fill="#FF4D8F" opacity="0.3"/>
+    <circle cx="124" cy="87" r="1.2" fill="#FF4D8F" opacity="0.3"/>
   </g>
 </svg>

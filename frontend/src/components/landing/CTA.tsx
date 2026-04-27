@@ -21,7 +21,7 @@ export function CTA() {
           className="text-display-sm md:text-display text-text-primary mb-6 animate-enter"
           style={{ animationDelay: '0.1s' }}
         >
-          Ready to partner with <span className="text-gradient-gold">AI?</span>
+          Ready to partner with <span className="text-gradient-primary">AI?</span>
         </h2>
 
         <p

@@ -57,7 +57,7 @@ export default function ResetPassword() {
             </p>
             <Link
               to="/forgot-password"
-              className="block w-full bg-[#C9A227] text-[#080C14] font-semibold rounded-lg py-3 hover:bg-[#D4AF37] transition-colors duration-200 text-center"
+              className="block w-full bg-[#FF1F6D] text-[#080C14] font-semibold rounded-lg py-3 hover:bg-[#FF4D8F] transition-colors duration-200 text-center"
             >
               Request new link
             </Link>
@@ -89,7 +89,7 @@ export default function ResetPassword() {
             </p>
             <button
               onClick={() => navigate('/login')}
-              className="w-full bg-[#C9A227] text-[#080C14] font-semibold rounded-lg py-3 hover:bg-[#D4AF37] transition-colors duration-200"
+              className="w-full bg-[#FF1F6D] text-[#080C14] font-semibold rounded-lg py-3 hover:bg-[#FF4D8F] transition-colors duration-200"
             >
               Sign in
             </button>
@@ -137,7 +137,7 @@ export default function ResetPassword() {
                   id="reset-password"
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Min. 8 characters"
-                  className="w-full bg-[#181F33] border border-[#1E2740] rounded-lg pl-11 pr-11 py-3 text-sm text-[#F0EDE5] placeholder-[#5A6278] outline-none focus:ring-2 focus:ring-[#C9A227]/30 focus:border-[#C9A227]/50 transition-colors duration-200"
+                  className="w-full bg-[#181F33] border border-[#1E2740] rounded-lg pl-11 pr-11 py-3 text-sm text-[#F0EDE5] placeholder-[#5A6278] outline-none focus:ring-2 focus:ring-[#FF1F6D]/30 focus:border-[#FF1F6D]/50 transition-colors duration-200"
                 />
                 <button
                   type="button"
@@ -165,7 +165,7 @@ export default function ResetPassword() {
                   id="reset-confirm-password"
                   type={showConfirmPassword ? 'text' : 'password'}
                   placeholder="Re-enter password"
-                  className="w-full bg-[#181F33] border border-[#1E2740] rounded-lg pl-11 pr-11 py-3 text-sm text-[#F0EDE5] placeholder-[#5A6278] outline-none focus:ring-2 focus:ring-[#C9A227]/30 focus:border-[#C9A227]/50 transition-colors duration-200"
+                  className="w-full bg-[#181F33] border border-[#1E2740] rounded-lg pl-11 pr-11 py-3 text-sm text-[#F0EDE5] placeholder-[#5A6278] outline-none focus:ring-2 focus:ring-[#FF1F6D]/30 focus:border-[#FF1F6D]/50 transition-colors duration-200"
                 />
                 <button
                   type="button"
@@ -185,7 +185,7 @@ export default function ResetPassword() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-[#C9A227] text-[#080C14] font-semibold rounded-lg py-3 hover:bg-[#D4AF37] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full bg-[#FF1F6D] text-[#080C14] font-semibold rounded-lg py-3 hover:bg-[#FF4D8F] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <span className="flex items-center gap-2">

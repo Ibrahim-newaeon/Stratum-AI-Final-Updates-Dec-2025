@@ -73,7 +73,7 @@ export default function AcceptInvite() {
             </p>
             <Link
               to="/login"
-              className="block w-full bg-[#C9A227] text-[#080C14] font-semibold rounded-lg py-3 hover:bg-[#D4AF37] transition-colors duration-200 text-center"
+              className="block w-full bg-[#FF1F6D] text-[#080C14] font-semibold rounded-lg py-3 hover:bg-[#FF4D8F] transition-colors duration-200 text-center"
             >
               Go to login
             </Link>
@@ -101,7 +101,7 @@ export default function AcceptInvite() {
             </p>
             <button
               onClick={() => navigate('/login', { state: { inviteAccepted: true } })}
-              className="w-full bg-[#C9A227] text-[#080C14] font-semibold rounded-lg py-3 hover:bg-[#D4AF37] transition-colors duration-200"
+              className="w-full bg-[#FF1F6D] text-[#080C14] font-semibold rounded-lg py-3 hover:bg-[#FF4D8F] transition-colors duration-200"
             >
               Sign in
             </button>
@@ -220,7 +220,7 @@ export default function AcceptInvite() {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   onBlur={() => setTouched((prev) => ({ ...prev, fullName: true }))}
-                  className="w-full bg-[#181F33] border border-[#1E2740] rounded-lg pl-11 pr-4 py-3 text-sm text-[#F0EDE5] placeholder-[#5A6278] outline-none focus:ring-2 focus:ring-[#C9A227]/30 focus:border-[#C9A227]/50 transition-colors duration-200"
+                  className="w-full bg-[#181F33] border border-[#1E2740] rounded-lg pl-11 pr-4 py-3 text-sm text-[#F0EDE5] placeholder-[#5A6278] outline-none focus:ring-2 focus:ring-[#FF1F6D]/30 focus:border-[#FF1F6D]/50 transition-colors duration-200"
                 />
               </div>
               {fullNameError && (
@@ -242,7 +242,7 @@ export default function AcceptInvite() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   onBlur={() => setTouched((prev) => ({ ...prev, password: true }))}
-                  className="w-full bg-[#181F33] border border-[#1E2740] rounded-lg pl-11 pr-11 py-3 text-sm text-[#F0EDE5] placeholder-[#5A6278] outline-none focus:ring-2 focus:ring-[#C9A227]/30 focus:border-[#C9A227]/50 transition-colors duration-200"
+                  className="w-full bg-[#181F33] border border-[#1E2740] rounded-lg pl-11 pr-11 py-3 text-sm text-[#F0EDE5] placeholder-[#5A6278] outline-none focus:ring-2 focus:ring-[#FF1F6D]/30 focus:border-[#FF1F6D]/50 transition-colors duration-200"
                 />
                 <button
                   type="button"
@@ -272,7 +272,7 @@ export default function AcceptInvite() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   onBlur={() => setTouched((prev) => ({ ...prev, confirmPassword: true }))}
-                  className="w-full bg-[#181F33] border border-[#1E2740] rounded-lg pl-11 pr-11 py-3 text-sm text-[#F0EDE5] placeholder-[#5A6278] outline-none focus:ring-2 focus:ring-[#C9A227]/30 focus:border-[#C9A227]/50 transition-colors duration-200"
+                  className="w-full bg-[#181F33] border border-[#1E2740] rounded-lg pl-11 pr-11 py-3 text-sm text-[#F0EDE5] placeholder-[#5A6278] outline-none focus:ring-2 focus:ring-[#FF1F6D]/30 focus:border-[#FF1F6D]/50 transition-colors duration-200"
                 />
                 <button
                   type="button"
@@ -292,7 +292,7 @@ export default function AcceptInvite() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-[#C9A227] text-[#080C14] font-semibold rounded-lg py-3 hover:bg-[#D4AF37] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full bg-[#FF1F6D] text-[#080C14] font-semibold rounded-lg py-3 hover:bg-[#FF4D8F] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -313,7 +313,7 @@ export default function AcceptInvite() {
             Already have an account?{' '}
             <Link
               to="/login"
-              className="text-[#C9A227] hover:text-[#D4AF37] transition-colors duration-200 font-medium"
+              className="text-[#FF1F6D] hover:text-[#FF4D8F] transition-colors duration-200 font-medium"
             >
               Sign in
             </Link>

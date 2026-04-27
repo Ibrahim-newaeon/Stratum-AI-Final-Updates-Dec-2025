@@ -153,7 +153,7 @@ export default function Login() {
                   <Mail className="w-4 h-4 flex-shrink-0 mt-0.5" />
                   <div>
                     <span>Please verify your email before signing in. Check your inbox for a verification link.</span>
-                    <Link to="/verify-email" className="block mt-1 text-[#C9A227] font-medium hover:text-[#D4AF37] transition-colors duration-200 text-xs">
+                    <Link to="/verify-email" className="block mt-1 text-[#FF1F6D] font-medium hover:text-[#FF4D8F] transition-colors duration-200 text-xs">
                       Resend verification email
                     </Link>
                   </div>
@@ -203,7 +203,7 @@ export default function Login() {
                     disabled={isLoading}
                     aria-invalid={!!emailError}
                     aria-describedby={emailError ? 'login-email-error' : undefined}
-                    className="w-full bg-[#181F33] border border-[#1E2740] rounded-lg pl-11 pr-4 py-3 text-sm text-[#F0EDE5] placeholder-[#5A6278] outline-none focus:ring-2 focus:ring-[#C9A227]/30 focus:border-[#C9A227]/50 transition-colors duration-200"
+                    className="w-full bg-[#181F33] border border-[#1E2740] rounded-lg pl-11 pr-4 py-3 text-sm text-[#F0EDE5] placeholder-[#5A6278] outline-none focus:ring-2 focus:ring-[#FF1F6D]/30 focus:border-[#FF1F6D]/50 transition-colors duration-200"
                   />
                 </div>
                 {emailError && (
@@ -219,7 +219,7 @@ export default function Login() {
                   </label>
                   <Link
                     to="/forgot-password"
-                    className="text-xs text-[#C9A227] hover:text-[#D4AF37] transition-colors duration-200 font-medium"
+                    className="text-xs text-[#FF1F6D] hover:text-[#FF4D8F] transition-colors duration-200 font-medium"
                   >
                     Forgot password?
                   </Link>
@@ -240,7 +240,7 @@ export default function Login() {
                     disabled={isLoading}
                     aria-invalid={!!passwordError}
                     aria-describedby={passwordError ? 'login-password-error' : undefined}
-                    className="w-full bg-[#181F33] border border-[#1E2740] rounded-lg pl-11 pr-11 py-3 text-sm text-[#F0EDE5] placeholder-[#5A6278] outline-none focus:ring-2 focus:ring-[#C9A227]/30 focus:border-[#C9A227]/50 transition-colors duration-200"
+                    className="w-full bg-[#181F33] border border-[#1E2740] rounded-lg pl-11 pr-11 py-3 text-sm text-[#F0EDE5] placeholder-[#5A6278] outline-none focus:ring-2 focus:ring-[#FF1F6D]/30 focus:border-[#FF1F6D]/50 transition-colors duration-200"
                   />
                   <button
                     type="button"
@@ -263,7 +263,7 @@ export default function Login() {
                   id="remember"
                   checked={rememberMe}
                   onChange={() => setRememberMe(!rememberMe)}
-                  className="w-4 h-4 rounded border-[#1E2740] bg-[#181F33] text-[#C9A227] focus:ring-[#C9A227]/30 focus:ring-offset-0 cursor-pointer"
+                  className="w-4 h-4 rounded border-[#1E2740] bg-[#181F33] text-[#FF1F6D] focus:ring-[#FF1F6D]/30 focus:ring-offset-0 cursor-pointer"
                 />
                 <label htmlFor="remember" className="text-xs text-[#8B92A8] font-medium cursor-pointer select-none">
                   Keep session active for 24h
@@ -274,7 +274,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={isLoading || isLockedOut}
-                className="w-full bg-[#C9A227] text-[#080C14] font-semibold rounded-lg py-3 hover:bg-[#D4AF37] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full bg-[#FF1F6D] text-[#080C14] font-semibold rounded-lg py-3 hover:bg-[#FF4D8F] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isLockedOut ? (
                   <span className="flex items-center gap-2">
@@ -302,7 +302,7 @@ export default function Login() {
               Don't have an account?{' '}
               <Link
                 to="/signup"
-                className="text-[#C9A227] hover:text-[#D4AF37] transition-colors duration-200 font-medium"
+                className="text-[#FF1F6D] hover:text-[#FF4D8F] transition-colors duration-200 font-medium"
               >
                 Sign up
               </Link>

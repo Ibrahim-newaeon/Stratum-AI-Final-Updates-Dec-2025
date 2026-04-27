@@ -94,7 +94,7 @@ export function Features() {
         <div className="text-center mb-16 lg:mb-20">
           <h2 className="text-display-sm text-text-primary mb-4 animate-enter">
             Intelligence you can{' '}
-            <span className="text-gradient-gold">trust and scale</span>
+            <span className="text-gradient-primary">trust and scale</span>
           </h2>
           <p
             className="text-body text-text-secondary max-w-2xl mx-auto animate-enter"

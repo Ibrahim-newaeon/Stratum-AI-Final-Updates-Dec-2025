@@ -1,47 +1,37 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 200" width="360" height="100" role="img" aria-labelledby="logo-title">
-  <title id="logo-title">Stratum AI</title>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 200" width="360" height="100" role="img" aria-labelledby="logo2-title">
+  <title id="logo2-title">Stratum AI — Option 2: Cyber Performance</title>
   <defs>
-    <!-- Rich gold gradient for top slab -->
-    <linearGradient id="gold-top" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#F4D03F"/>
-      <stop offset="50%" stop-color="#D4AF37"/>
-      <stop offset="100%" stop-color="#C9A227"/>
+    <!-- Pink to Orange gradient -->
+    <linearGradient id="cyber-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FF1F6D"/>
+      <stop offset="50%" stop-color="#FF5E3A"/>
+      <stop offset="100%" stop-color="#FF8C00"/>
     </linearGradient>
-    <!-- Warm gold gradient for top slab right -->
-    <linearGradient id="gold-top-right" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#C9A227"/>
-      <stop offset="100%" stop-color="#A08020"/>
-    </linearGradient>
-    <!-- Subtle glow filter -->
-    <filter id="gold-glow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="8" result="blur"/>
+    <!-- Cyan accent glow -->
+    <filter id="cyan-glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
       <feComposite in="SourceGraphic" in2="blur" operator="over"/>
     </filter>
   </defs>
 
-  <!-- Strata Symbol (left side) -->
+  <!-- Ascent Symbol (left side) — three ascending angular bars -->
   <g transform="translate(24, 20)">
-    <!-- Bottom slab -->
-    <path d="M30,165 L100,185 L170,165 L100,145Z" fill="#1A2238"/>
-    <path d="M100,185 L170,165 L170,172 L100,192Z" fill="#111827"/>
-    <path d="M30,165 L100,185 L100,192 L30,172Z" fill="#141C2E"/>
-    <!-- Middle slab -->
-    <path d="M38,110 L100,128 L162,110 L100,92Z" fill="#242B3D"/>
-    <path d="M100,128 L162,110 L162,117 L100,135Z" fill="#1A2238"/>
-    <path d="M38,110 L100,128 L100,135 L38,117Z" fill="#1E2638"/>
-    <!-- Top slab ambient glow -->
-    <path d="M46,58 L100,74 L154,58 L100,42Z" fill="#D4AF37" opacity="0.08" filter="url(#gold-glow)"/>
-    <!-- Top slab left -->
-    <path d="M46,58 L100,74 L100,42Z" fill="url(#gold-top)"/>
-    <!-- Top slab right -->
-    <path d="M100,74 L154,58 L100,42Z" fill="url(#gold-top-right)"/>
-    <!-- Edge highlight -->
-    <path d="M46,58 L100,42 L154,58" fill="none" stroke="#F4D03F" stroke-width="0.8" opacity="0.7"/>
-    <!-- Energy nodes -->
-    <circle cx="100" cy="86" r="2" fill="#D4AF37" opacity="0.5"/>
-    <circle cx="76" cy="87" r="1" fill="#D4AF37" opacity="0.25"/>
-    <circle cx="124" cy="87" r="1" fill="#D4AF37" opacity="0.25"/>
-    <circle cx="100" cy="140" r="1.5" fill="#C9A227" opacity="0.35"/>
+    <!-- Bar 1 (bottom, widest, darkest) -->
+    <path d="M18,148 L160,148 L172,126 L30,126Z" fill="#0f1525"/>
+    <!-- Bar 2 (middle) -->
+    <path d="M38,111 L148,111 L160,89 L50,89Z" fill="#1a2540"/>
+    <!-- Bar 3 ambient glow -->
+    <path d="M55,74 L138,74 L150,52 L67,52Z" fill="#FF1F6D" opacity="0.08" filter="url(#cyan-glow)"/>
+    <!-- Bar 3 (top, narrowest, brightest) -->
+    <path d="M55,74 L138,74 L150,52 L67,52Z" fill="url(#cyber-grad)"/>
+    <!-- Edge highlights -->
+    <line x1="67" y1="52" x2="150" y2="52" stroke="#00F5FF" stroke-width="0.6" opacity="0.5"/>
+    <line x1="55" y1="74" x2="67" y2="52" stroke="#FF1F6D" stroke-width="0.4" opacity="0.3"/>
+    <!-- Energy dots -->
+    <circle cx="105" cy="100" r="1.5" fill="#00F5FF" opacity="0.4"/>
+    <circle cx="80" cy="100" r="0.8" fill="#00F5FF" opacity="0.2"/>
+    <circle cx="130" cy="100" r="0.8" fill="#00F5FF" opacity="0.2"/>
+    <circle cx="97" cy="82" r="1.2" fill="#FF5E3A" opacity="0.5"/>
   </g>
 
   <!-- Wordmark (right side) -->
@@ -51,7 +41,7 @@
       Stratum
     </text>
     <!-- AI -->
-    <text x="316" y="120" font-family="'Inter','SF Pro Display','Segoe UI',system-ui,-apple-system,sans-serif" font-size="72" letter-spacing="-1.5" font-weight="700" fill="#D4AF37">
+    <text x="316" y="120" font-family="'Inter','SF Pro Display','Segoe UI',system-ui,-apple-system,sans-serif" font-size="72" letter-spacing="-1.5" font-weight="700" fill="url(#cyber-grad)">
       AI
     </text>
     <!-- Tagline -->

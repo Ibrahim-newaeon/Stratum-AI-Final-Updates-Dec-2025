@@ -217,7 +217,7 @@ export default function DashboardLayout() {
           'group flex items-center gap-3 rounded-lg text-sm font-medium transition-colors duration-200',
           variant === 'default' ? 'px-3 py-2' : 'px-3 py-1.5',
           isActive
-            ? 'border-l-2 border-[#C9A227] bg-[#C9A227]/5 text-[#C9A227]'
+            ? 'border-l-2 border-[#FF1F6D] bg-[#FF1F6D]/5 text-[#FF1F6D]'
             : 'text-[#8B92A8] hover:text-[#F0EDE5] hover:bg-[#F0EDE5]/[0.03]'
         )}
       >
@@ -317,7 +317,7 @@ export default function DashboardLayout() {
                           className={cn(
                             'w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200',
                             location.pathname.startsWith('/dashboard/cdp')
-                              ? 'border-l-2 border-[#C9A227] bg-[#C9A227]/5 text-[#C9A227]'
+                              ? 'border-l-2 border-[#FF1F6D] bg-[#FF1F6D]/5 text-[#FF1F6D]'
                               : 'text-[#8B92A8] hover:text-[#F0EDE5] hover:bg-[#F0EDE5]/[0.03]'
                           )}
                         >
@@ -364,7 +364,7 @@ export default function DashboardLayout() {
                       className={cn(
                         'w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200',
                         location.pathname.startsWith('/dashboard/superadmin')
-                          ? 'border-l-2 border-[#C9A227] bg-[#C9A227]/5 text-[#C9A227]'
+                          ? 'border-l-2 border-[#FF1F6D] bg-[#FF1F6D]/5 text-[#FF1F6D]'
                           : 'text-[#8B92A8] hover:text-[#F0EDE5] hover:bg-[#F0EDE5]/[0.03]'
                       )}
                     >
@@ -396,7 +396,7 @@ export default function DashboardLayout() {
                                 className={cn(
                                   'flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm transition-colors duration-200',
                                   isActive
-                                    ? 'border-l-2 border-[#C9A227] bg-[#C9A227]/5 text-[#C9A227]'
+                                    ? 'border-l-2 border-[#FF1F6D] bg-[#FF1F6D]/5 text-[#FF1F6D]'
                                     : 'text-[#8B92A8] hover:text-[#F0EDE5] hover:bg-[#F0EDE5]/[0.03]'
                                 )}
                               >
@@ -416,8 +416,8 @@ export default function DashboardLayout() {
             {/* User Section */}
             <div className="p-3 border-t border-[#1E2740]">
               <div className="flex items-center gap-3 px-2 py-2">
-                <div className="h-9 w-9 rounded-lg bg-[#C9A227]/10 flex items-center justify-center flex-shrink-0">
-                  <span className="text-xs font-semibold text-[#C9A227]">{getUserInitials()}</span>
+                <div className="h-9 w-9 rounded-lg bg-[#FF1F6D]/10 flex items-center justify-center flex-shrink-0">
+                  <span className="text-xs font-semibold text-[#FF1F6D]">{getUserInitials()}</span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-[#F0EDE5] truncate">{user?.name || 'User'}</p>
@@ -441,7 +441,7 @@ export default function DashboardLayout() {
           <button
             onClick={() => setSidebarCollapsed(false)}
             aria-label="Expand sidebar"
-            className="hidden lg:flex fixed top-4 left-4 z-50 h-8 w-8 items-center justify-center rounded-lg bg-[#0F1320] border border-[#1E2740] text-[#C9A227] hover:border-[#C9A227]/30 transition-colors duration-200"
+            className="hidden lg:flex fixed top-4 left-4 z-50 h-8 w-8 items-center justify-center rounded-lg bg-[#0F1320] border border-[#1E2740] text-[#FF1F6D] hover:border-[#FF1F6D]/30 transition-colors duration-200"
           >
             <ChevronRight className="h-4 w-4" />
           </button>
@@ -521,7 +521,7 @@ export default function DashboardLayout() {
                 title="Notifications"
               >
                 <Bell className="h-5 w-5" />
-                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[#C9A227]" />
+                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[#FF1F6D]" />
               </button>
 
               <button
@@ -537,8 +537,8 @@ export default function DashboardLayout() {
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
                   className="flex items-center gap-2 p-1.5 rounded-lg transition-colors duration-200 hover:bg-[#F0EDE5]/[0.03]"
                 >
-                  <div className="h-8 w-8 rounded-lg bg-[#C9A227]/10 flex items-center justify-center">
-                    <span className="text-xs font-semibold text-[#C9A227]">{getUserInitials()}</span>
+                  <div className="h-8 w-8 rounded-lg bg-[#FF1F6D]/10 flex items-center justify-center">
+                    <span className="text-xs font-semibold text-[#FF1F6D]">{getUserInitials()}</span>
                   </div>
                 </button>
 

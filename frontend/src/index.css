@@ -21,7 +21,7 @@
        ═══════════════════════════════════════════════════════════════ */
 
     /* Core surface — deep void, not pure black */
-    --background: 220 30% 4%;             /* #080C14 */
+    --background: 221 66% 6%;             /* #080C14 */
     --foreground: 40 20% 95%;             /* #F0EDE5 warm white */
 
     /* Elevated surfaces */
@@ -31,18 +31,18 @@
     --popover: 222 28% 8%;
     --popover-foreground: 40 20% 95%;
 
-    /* Primary accent — Warm Gold (trust, premium, partnership) */
-    --primary: 45 65% 47%;                /* #C9A227 */
+    /* Primary accent — Cyber Pink (energy, performance, edge) */
+    --primary: 339 100% 56%;                /* #FF1F6D */
     --primary-foreground: 220 30% 4%;
 
-    /* Secondary — Soft Indigo (intelligence, depth) */
-    --secondary: 225 35% 28%;             /* #2E3A59 */
+    /* Secondary — Electric Orange (momentum, heat, action) */
+    --secondary: 33 100% 50%;             /* #2E3A59 */
     --secondary-foreground: 40 20% 95%;
 
     --muted: 222 22% 12%;                 /* #181F33 */
     --muted-foreground: 225 12% 55%;      /* #7D859C */
 
-    --accent: 45 65% 47%;
+    --accent: 182 100% 50%;
     --accent-foreground: 220 30% 4%;
 
     --destructive: 0 65% 58%;
@@ -50,7 +50,7 @@
 
     --border: 222 22% 16%;                /* #1E2740 */
     --input: 222 22% 16%;
-    --ring: 45 65% 47%;
+    --ring: 339 100% 56%;
 
     --radius: 0.5rem;
 
@@ -78,28 +78,28 @@
     --surface-tertiary: 222 22% 12%;
     --surface-elevated: 222 28% 10%;
 
-    /* Gold glow effects */
-    --glow-brand: 45 65% 47% / 0.15;
-    --glow-insight: 25 85% 55% / 0.15;
+    /* Pink glow effects */
+    --glow-brand: 339 100% 56% / 0.15;
+    --glow-insight: 33 100% 50% / 0.15;
 
     /* Landing / marketing page tokens */
-    --landing-bg: #080C14;
-    --landing-card: #0F1320;
-    --landing-border: #1E2740;
+    --landing-bg: #050B18;
+    --landing-card: #0A1020;
+    --landing-border: #151E33;
     --landing-text: #8B92A8;
     --landing-text-dim: rgba(139, 146, 168, 0.7);
     --landing-text-faint: rgba(139, 146, 168, 0.5);
-    --landing-accent-gold: #C9A227;
-    --landing-accent-gold-light: #D4AF37;
-    --landing-accent-teal: #27C39D;
+    --landing-accent-primary: #FF1F6D;
+    --landing-accent-primary-light: #FF4D8F;
+    --landing-accent-cyan: #00F5FF;
     --landing-accent-blue: #5B8DEF;
     --landing-surface-glass: rgba(255, 255, 255, 0.04);
     --landing-border-glass: rgba(255, 255, 255, 0.1);
     --landing-text-white-soft: rgba(240, 237, 229, 0.5);
     --landing-text-white-mid: rgba(240, 237, 229, 0.8);
     --landing-border-white-dim: rgba(255, 255, 255, 0.06);
-    --landing-bg-deep: #05080F;
-    --landing-glow-gold: 0 4px 24px rgba(201, 162, 39, 0.25);
+    --landing-bg-deep: #030610;
+    --landing-glow-primary: 0 4px 24px rgba(255, 31, 109, 0.25);
     --landing-status-green: #27C39D;
     --landing-status-red: #E85D5D;
     --landing-status-yellow: #F5A623;
@@ -115,16 +115,16 @@
     --popover: 0 0% 100%;
     --popover-foreground: 220 30% 10%;
 
-    --primary: 45 65% 47%;
+    --primary: 339 100% 56%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 225 25% 92%;
+    --secondary: 33 100% 92%;
     --secondary-foreground: 220 30% 10%;
 
     --muted: 220 15% 94%;
     --muted-foreground: 220 12% 45%;
 
-    --accent: 45 65% 47%;
+    --accent: 182 100% 50%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 65% 58%;
@@ -132,7 +132,7 @@
 
     --border: 220 15% 88%;
     --input: 220 15% 88%;
-    --ring: 45 65% 47%;
+    --ring: 339 100% 56%;
 
     --success: 162 65% 38%;
     --warning: 38 85% 48%;
@@ -145,8 +145,8 @@
     --surface-tertiary: 220 15% 94%;
     --surface-elevated: 220 15% 0% / 0.02;
 
-    --glow-brand: 45 65% 47% / 0.12;
-    --glow-insight: 25 85% 55% / 0.12;
+    --glow-brand: 339 100% 56% / 0.12;
+    --glow-insight: 33 100% 50% / 0.12;
   }
 
   * {
@@ -179,7 +179,7 @@
     @apply hover:border-primary/20 hover:shadow-lg;
   }
 
-  /* Primary button — gold fill */
+  /* Primary button — pink fill */
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2;
     @apply px-5 py-2.5 rounded-lg;
@@ -218,10 +218,10 @@
     @apply focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50;
   }
 
-  /* Gradient text — gold */
-  .text-gradient-gold {
+  /* Gradient text — pink */
+  .text-gradient-primary {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, #D4AF37 0%, #C9A227 50%, #A08020 100%);
+    background-image: linear-gradient(135deg, #FF4D8F 0%, #FF1F6D 50%, #CC1857 100%);
   }
 
   /* Subtle grid background pattern */
@@ -233,10 +233,10 @@
   }
 
   /* Ambient glow behind hero elements */
-  .ambient-gold {
+  .ambient-primary {
     position: relative;
   }
-  .ambient-gold::before {
+  .ambient-primary::before {
     content: '';
     position: absolute;
     inset: -40%;

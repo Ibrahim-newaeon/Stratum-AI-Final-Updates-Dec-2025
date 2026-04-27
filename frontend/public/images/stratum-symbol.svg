@@ -3,13 +3,13 @@
   <desc id="sym-desc">Three ascending isometric data planes representing layered intelligence</desc>
   <defs>
     <linearGradient id="sym-gold" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#F4D03F"/>
-      <stop offset="50%" stop-color="#D4AF37"/>
-      <stop offset="100%" stop-color="#C9A227"/>
+      <stop offset="0%" stop-color="#FF75B0"/>
+      <stop offset="50%" stop-color="#FF4D8F"/>
+      <stop offset="100%" stop-color="#FF1F6D"/>
     </linearGradient>
     <linearGradient id="sym-gold-r" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#C9A227"/>
-      <stop offset="100%" stop-color="#A08020"/>
+      <stop offset="0%" stop-color="#FF1F6D"/>
+      <stop offset="100%" stop-color="#CC1857"/>
     </linearGradient>
     <filter id="sym-glow" x="-50%" y="-50%" width="200%" height="200%">
       <feGaussianBlur stdDeviation="10" result="blur"/>
@@ -28,7 +28,7 @@
   <path d="M38,110 L100,128 L100,135 L38,117Z" fill="#1E2638"/>
 
   <!-- Top slab ambient glow -->
-  <path d="M46,58 L100,74 L154,58 L100,42Z" fill="#D4AF37" opacity="0.08" filter="url(#sym-glow)"/>
+  <path d="M46,58 L100,74 L154,58 L100,42Z" fill="#FF4D8F" opacity="0.08" filter="url(#sym-glow)"/>
 
   <!-- Top slab left -->
   <path d="M46,58 L100,74 L100,42Z" fill="url(#sym-gold)"/>
@@ -36,11 +36,11 @@
   <path d="M100,74 L154,58 L100,42Z" fill="url(#sym-gold-r)"/>
 
   <!-- Edge highlight -->
-  <path d="M46,58 L100,42 L154,58" fill="none" stroke="#F4D03F" stroke-width="0.8" opacity="0.7"/>
+  <path d="M46,58 L100,42 L154,58" fill="none" stroke="#FF75B0" stroke-width="0.8" opacity="0.7"/>
 
   <!-- Energy nodes -->
-  <circle cx="100" cy="86" r="2" fill="#D4AF37" opacity="0.5"/>
-  <circle cx="76" cy="87" r="1" fill="#D4AF37" opacity="0.25"/>
-  <circle cx="124" cy="87" r="1" fill="#D4AF37" opacity="0.25"/>
-  <circle cx="100" cy="140" r="1.5" fill="#C9A227" opacity="0.35"/>
+  <circle cx="100" cy="86" r="2" fill="#FF4D8F" opacity="0.5"/>
+  <circle cx="76" cy="87" r="1" fill="#FF4D8F" opacity="0.25"/>
+  <circle cx="124" cy="87" r="1" fill="#FF4D8F" opacity="0.25"/>
+  <circle cx="100" cy="140" r="1.5" fill="#FF1F6D" opacity="0.35"/>
 </svg>

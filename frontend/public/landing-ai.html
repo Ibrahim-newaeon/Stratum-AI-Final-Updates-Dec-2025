@@ -73,8 +73,8 @@ tailwind.config = {
       --border-default: rgba(255, 255, 255, 0.06);
       --border-hover: rgba(255, 255, 255, 0.10);
       --border-gold: rgba(212, 175, 55, 0.15);
-      --gold: #D4AF37;
-      --gold-bright: #F4D03F;
+      --primary: #FF4D8F;
+      --primary-bright: #FF75B0;
       --gold-glow: rgba(212, 175, 55, 0.5);
       --gold-subtle: rgba(212, 175, 55, 0.1);
       --cyan: #14F0C6;
@@ -97,7 +97,7 @@ tailwind.config = {
       --text-muted: #94a3b8;
       --text-inverse: #ffffff;
       --border-default: rgba(0, 0, 0, 0.08);
-      --gold: #B8860B;
+      --primary: #991242;
       --gold-glow: rgba(180, 134, 11, 0.3);
       --glass-bg: rgba(255, 255, 255, 0.85);
       --glass-border: rgba(0, 0, 0, 0.06);
@@ -137,8 +137,8 @@ tailwind.config = {
     .glass:hover { border-color: var(--border-hover); }
 
     /* Gradient text - Gold theme */
-    .gradient-text { background: linear-gradient(135deg, var(--gold) 0%, var(--gold-bright, #F4D03F) 100%);   color: transparent; }
-    .gradient-text-gold { background: linear-gradient(135deg, var(--gold) 0%, var(--gold-bright, #F4D03F) 100%);   color: transparent; }
+    .gradient-text { background: linear-gradient(135deg, var(--gold) 0%, var(--gold-bright, #FF75B0) 100%);   color: transparent; }
+    .gradient-text-gold { background: linear-gradient(135deg, var(--gold) 0%, var(--gold-bright, #FF75B0) 100%);   color: transparent; }
     .gradient-text-purple { background: linear-gradient(135deg, var(--purple) 0%, #a855f7 100%);   color: transparent; }
     .gradient-text-cyan { background: linear-gradient(135deg, var(--cyan) 0%, #0FB89A 100%);   color: transparent; }
     .gradient-text-green { background: linear-gradient(to right, #22c55e, var(--cyan));   color: transparent; }
@@ -146,7 +146,7 @@ tailwind.config = {
 
     /* Button styles - Gold primary */
     .btn-primary { position: relative; overflow: hidden; background: var(--gold); color: var(--text-inverse); font-weight: 700; border-radius: var(--radius-md); }
-    .btn-primary:hover { background: var(--gold-bright, #F4D03F); box-shadow: var(--shadow-gold); transform: translateY(-2px); }
+    .btn-primary:hover { background: var(--gold-bright, #FF75B0); box-shadow: var(--shadow-gold); transform: translateY(-2px); }
     .btn-primary::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); transition: left 0.5s ease; }
     .btn-primary:hover::before { left: 100%; }
     .btn-primary span, .btn-primary svg { position: relative; z-index: 1; }

@@ -173,7 +173,7 @@ export default function Landing() {
             <div className="text-center mb-16">
               <h2 className="text-display-sm text-text-primary mb-4">
                 Trusted by teams who{' '}
-                <span className="text-gradient-gold">demand more</span>
+                <span className="text-gradient-primary">demand more</span>
               </h2>
               <p className="text-body text-text-secondary max-w-2xl mx-auto">
                 Partnering with growth teams to unlock unprecedented
