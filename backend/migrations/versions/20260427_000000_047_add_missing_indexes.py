@@ -23,77 +23,81 @@ branch_labels = None
 depends_on = None
 
 
+def _index_exists(table_name: str, index_name: str) -> bool:
+    """Check if an index already exists on the given table."""
+    conn = op.get_bind()
+    result = conn.execute(
+        sa.text(
+            """
+            SELECT 1 FROM pg_indexes
+            WHERE tablename = :table_name AND indexname = :index_name
+            """
+        ),
+        {"table_name": table_name, "index_name": index_name},
+    )
+    return result.scalar() is not None
+
+
+def _create_index_if_not_exists(
+    index_name: str, table_name: str, columns: list[str]
+) -> None:
+    """Create an index only if it doesn't already exist."""
+    if _index_exists(table_name, index_name):
+        return
+    op.create_index(index_name, table_name, columns)
+
+
 def upgrade() -> None:
     # -------------------------------------------------------------------------
     # Campaigns — list query optimization
     # -------------------------------------------------------------------------
-    op.create_index(
-        "ix_campaigns_tenant_deleted",
-        "campaigns",
-        ["tenant_id", "is_deleted"],
+    _create_index_if_not_exists(
+        "ix_campaigns_tenant_deleted", "campaigns", ["tenant_id", "is_deleted"]
     )
-    op.create_index(
-        "ix_campaigns_tenant_updated",
-        "campaigns",
-        ["tenant_id", "updated_at"],
+    _create_index_if_not_exists(
+        "ix_campaigns_tenant_updated", "campaigns", ["tenant_id", "updated_at"]
     )
-    op.create_index(
-        "ix_campaigns_name_search",
-        "campaigns",
-        ["tenant_id", "name"],
+    _create_index_if_not_exists(
+        "ix_campaigns_name_search", "campaigns", ["tenant_id", "name"]
     )
-    op.create_index(
-        "ix_campaigns_external",
-        "campaigns",
-        ["external_id"],
+    _create_index_if_not_exists(
+        "ix_campaigns_external", "campaigns", ["external_id"]
     )
 
     # -------------------------------------------------------------------------
     # Campaign Metrics — time-series analytics
     # -------------------------------------------------------------------------
-    op.create_index(
-        "ix_campaign_metrics_campaign_date",
-        "campaign_metrics",
-        ["campaign_id", "date"],
+    _create_index_if_not_exists(
+        "ix_campaign_metrics_campaign_date", "campaign_metrics", ["campaign_id", "date"]
     )
-    op.create_index(
-        "ix_campaign_metrics_tenant_date",
-        "campaign_metrics",
-        ["tenant_id", "date"],
+    _create_index_if_not_exists(
+        "ix_campaign_metrics_tenant_date", "campaign_metrics", ["tenant_id", "date"]
     )
 
     # -------------------------------------------------------------------------
     # CDP Profiles — identity resolution lookups
     # -------------------------------------------------------------------------
-    op.create_index(
-        "ix_cdp_profiles_tenant_email",
-        "cdp_profiles",
-        ["tenant_id", "email"],
+    _create_index_if_not_exists(
+        "ix_cdp_profiles_tenant_email", "cdp_profiles", ["tenant_id", "email"]
     )
-    op.create_index(
-        "ix_cdp_profiles_tenant_external",
-        "cdp_profiles",
-        ["tenant_id", "external_id"],
+    _create_index_if_not_exists(
+        "ix_cdp_profiles_tenant_external", "cdp_profiles", ["tenant_id", "external_id"]
     )
 
     # -------------------------------------------------------------------------
     # Audience Sync — segment → platform lookups
     # -------------------------------------------------------------------------
-    op.create_index(
-        "ix_audience_sync_jobs_segment",
-        "audience_sync_jobs",
-        ["segment_id"],
+    _create_index_if_not_exists(
+        "ix_audience_sync_jobs_segment", "audience_sync_jobs", ["segment_id"]
     )
-    op.create_index(
-        "ix_audience_sync_jobs_tenant",
-        "audience_sync_jobs",
-        ["tenant_id"],
+    _create_index_if_not_exists(
+        "ix_audience_sync_jobs_tenant", "audience_sync_jobs", ["tenant_id"]
     )
 
     # -------------------------------------------------------------------------
     # Trust Gate Evaluations — recent evaluations dashboard
     # -------------------------------------------------------------------------
-    op.create_index(
+    _create_index_if_not_exists(
         "ix_trust_evaluations_tenant_created",
         "trust_gate_evaluations",
         ["tenant_id", "created_at"],
@@ -102,7 +106,7 @@ def upgrade() -> None:
     # -------------------------------------------------------------------------
     # Webhook Logs — delivery status lookups
     # -------------------------------------------------------------------------
-    op.create_index(
+    _create_index_if_not_exists(
         "ix_webhook_logs_webhook_status",
         "webhook_delivery_logs",
         ["webhook_id", "status"],
@@ -111,10 +115,8 @@ def upgrade() -> None:
     # -------------------------------------------------------------------------
     # Campaign Builder — draft lookups
     # -------------------------------------------------------------------------
-    op.create_index(
-        "ix_campaign_drafts_tenant_status",
-        "campaign_drafts",
-        ["tenant_id", "status"],
+    _create_index_if_not_exists(
+        "ix_campaign_drafts_tenant_status", "campaign_drafts", ["tenant_id", "status"]
     )
 
 
@@ -136,4 +138,5 @@ def downgrade() -> None:
         ("ix_campaigns_tenant_deleted", "campaigns"),
     ]
     for idx_name, table in indexes_to_drop:
-        op.drop_index(idx_name, table_name=table)
+        if _index_exists(table, idx_name):
+            op.drop_index(idx_name, table_name=table)
