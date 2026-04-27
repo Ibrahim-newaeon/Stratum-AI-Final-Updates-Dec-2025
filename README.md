@@ -11,7 +11,7 @@
 
 | Component | URL | Status |
 |-----------|-----|--------|
-| Frontend | https://stratum-ai-final-updates-dec-2025.vercel.app | Live |
+| Frontend | https://stratumai.app | Live |
 | API | https://api.stratumai.app | Live |
 | API Documentation (Swagger) | https://api.stratumai.app/docs | Protected |
 | API Documentation (ReDoc) | https://api.stratumai.app/redoc | Protected |
