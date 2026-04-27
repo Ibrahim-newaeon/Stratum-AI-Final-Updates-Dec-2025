@@ -27,7 +27,7 @@ export default function AuthLeftPanel({ className }: AuthLeftPanelProps) {
       <div className="relative z-10">
         <Link to="/" className="flex items-center gap-3">
           <img
-            src="/images/stratum-logo.svg"
+            src="/images/stratum-logo.png"
             alt="Stratum AI"
             className="h-8"
             

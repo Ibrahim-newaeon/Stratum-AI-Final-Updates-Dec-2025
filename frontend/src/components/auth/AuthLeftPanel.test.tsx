@@ -38,7 +38,7 @@ describe('AuthLeftPanel', () => {
 
     const logo = screen.getByAltText('Stratum AI');
     expect(logo).toBeInTheDocument();
-    expect(logo).toHaveAttribute('src', '/images/stratum-logo.svg');
+    expect(logo).toHaveAttribute('src', '/images/stratum-logo.png');
   });
 
   it('renders the logo as a link to home page', () => {

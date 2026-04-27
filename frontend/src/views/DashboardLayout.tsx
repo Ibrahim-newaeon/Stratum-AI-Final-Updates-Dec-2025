@@ -272,7 +272,7 @@ export default function DashboardLayout() {
             {/* Logo */}
             <div className="flex h-16 items-center justify-between px-4 border-b border-[#1E2740]">
               <div className="flex items-center gap-3">
-                <img src="/images/stratum-logo.svg" alt="Stratum AI" className="h-7" loading="lazy" decoding="async" />
+                <img src="/images/stratum-logo.png" alt="Stratum AI" className="h-7" loading="lazy" decoding="async" />
               </div>
               <button
                 onClick={() => setSidebarCollapsed(true)}

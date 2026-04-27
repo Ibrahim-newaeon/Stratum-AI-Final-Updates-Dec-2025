@@ -66,7 +66,7 @@ export function Footer() {
           <div className="col-span-2">
             <Link to="/" className="inline-flex items-center gap-2 mb-4">
               <img
-                src="/images/stratum-logo.svg"
+                src="/images/stratum-logo.png"
                 alt="Stratum AI"
                 className="h-7"
               />

@@ -180,7 +180,7 @@ export default function AcceptInvite() {
         {/* Mobile logo */}
         <div className="lg:hidden mb-8">
           <img
-            src="/images/stratum-logo.svg"
+            src="/images/stratum-logo.png"
             alt="Stratum AI"
             className="h-8"
             

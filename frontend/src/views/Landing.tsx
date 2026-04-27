@@ -53,7 +53,7 @@ export default function Landing() {
             {/* Logo */}
             <Link to="/" className="flex items-center gap-3">
               <img
-                src="/images/stratum-logo.svg"
+                src="/images/stratum-logo.png"
                 alt="Stratum AI"
                 className="h-7"
               />

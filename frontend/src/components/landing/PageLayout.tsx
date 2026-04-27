@@ -99,7 +99,7 @@ export function PageLayout({ children }: PageLayoutProps) {
             {/* Logo */}
             <Link to="/" className="flex items-center gap-3 group">
               <img
-                src="/images/stratum-logo.svg"
+                src="/images/stratum-logo.png"
                 alt="Stratum AI"
                 className="h-8"
               />
@@ -302,7 +302,7 @@ export function PageLayout({ children }: PageLayoutProps) {
             <div className="col-span-2">
               <Link to="/" className="inline-flex items-center gap-3 mb-4">
                 <img
-                  src="/images/stratum-logo.svg"
+                  src="/images/stratum-logo.png"
                   alt="Stratum AI"
                   className="h-7"
                 />

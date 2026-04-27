@@ -84,7 +84,7 @@ export default function AIFooter() {
           {/* Brand Column */}
           <div className="col-span-2 md:col-span-1">
             <a href="/" className="flex items-center gap-3 mb-6">
-              <img src="/images/stratum-logo.svg" alt="Stratum AI" className="h-7" loading="lazy" decoding="async" />
+              <img src="/images/stratum-logo.png" alt="Stratum AI" className="h-7" loading="lazy" decoding="async" />
             </a>
             <p className="text-sm text-gray-500 mb-6">
               AI-Powered Revenue Operating System with Trust-Gated Autopilot.
