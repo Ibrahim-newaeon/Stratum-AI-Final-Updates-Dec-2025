@@ -99,6 +99,8 @@ interface PlatformBreakdownProps {
 
 export function PlatformBreakdown({ platforms, loading = false }: PlatformBreakdownProps) {
   const syncPlatform = useSyncPlatform();
+  const totalSpend = useMemo(() => platforms.reduce((sum, p) => sum + p.spend, 0), [platforms]);
+  const totalRevenue = useMemo(() => platforms.reduce((sum, p) => sum + p.revenue, 0), [platforms]);
 
   if (loading) {
     return (
@@ -116,9 +118,6 @@ export function PlatformBreakdown({ platforms, loading = false }: PlatformBreakd
       </div>
     );
   }
-
-  const totalSpend = useMemo(() => platforms.reduce((sum, p) => sum + p.spend, 0), [platforms]);
-  const totalRevenue = useMemo(() => platforms.reduce((sum, p) => sum + p.revenue, 0), [platforms]);
 
   return (
     <div className="bg-card border rounded-lg">

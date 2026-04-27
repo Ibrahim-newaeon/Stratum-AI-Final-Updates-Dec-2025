@@ -165,7 +165,7 @@ export default function ConnectPlatforms() {
         window.location.href = result.oauth_url
       }
     } catch (error) {
-
+      // no-op
     } finally {
       setConnecting(null)
     }
@@ -176,7 +176,7 @@ export default function ConnectPlatforms() {
       try {
         await disconnectPlatform.mutateAsync(platformId as Platform)
       } catch (error) {
-
+        // no-op
       }
     }
   }
@@ -185,7 +185,7 @@ export default function ConnectPlatforms() {
     try {
       await refreshToken.mutateAsync(platformId as Platform)
     } catch (error) {
-
+      // no-op
     }
   }
 

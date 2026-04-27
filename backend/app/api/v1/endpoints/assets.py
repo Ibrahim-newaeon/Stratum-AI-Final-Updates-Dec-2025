@@ -182,6 +182,7 @@ async def upload_asset(
 
     db.add(asset)
     await db.commit()
+    await db.refresh(asset)
 
     logger.info("asset_uploaded", asset_id=asset.id, tenant_id=tenant_id, size=len(contents))
 
@@ -356,6 +357,7 @@ async def create_asset(
 
     db.add(asset)
     await db.commit()
+    await db.refresh(asset)
 
     logger.info("asset_created", asset_id=asset.id, tenant_id=tenant_id)
 
@@ -395,6 +397,7 @@ async def update_asset(
         setattr(asset, field, value)
 
     await db.commit()
+    await db.refresh(asset)
 
     return APIResponse(
         success=True,

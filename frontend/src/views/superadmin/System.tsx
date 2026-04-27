@@ -132,7 +132,7 @@ export default function System() {
         await refetch()
       }
     } catch (error) {
-
+      // no-op
     } finally {
       setActionLoading(prev => ({ ...prev, [loadingKey]: false }))
     }

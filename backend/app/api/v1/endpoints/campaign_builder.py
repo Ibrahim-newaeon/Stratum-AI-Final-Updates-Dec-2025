@@ -458,6 +458,7 @@ async def update_ad_account(
         account.daily_budget_cap = update_data.daily_budget_cap
 
     await db.commit()
+    await db.refresh(account)
 
     return APIResponse(
         success=True,
@@ -513,6 +514,7 @@ async def create_campaign_draft(
 
     db.add(draft)
     await db.commit()
+    await db.refresh(draft)
 
     return APIResponse(
         success=True,
@@ -629,6 +631,7 @@ async def update_campaign_draft(
         draft.rejection_reason = None
 
     await db.commit()
+    await db.refresh(draft)
 
     return APIResponse(
         success=True,
@@ -673,6 +676,7 @@ async def submit_campaign_draft(
     draft.submitted_at = datetime.now(timezone.utc)
 
     await db.commit()
+    await db.refresh(draft)
 
     return APIResponse(
         success=True,
@@ -717,6 +721,7 @@ async def approve_campaign_draft(
     draft.approved_at = datetime.now(timezone.utc)
 
     await db.commit()
+    await db.refresh(draft)
 
     return APIResponse(
         success=True,
@@ -763,6 +768,7 @@ async def reject_campaign_draft(
     draft.rejection_reason = reason
 
     await db.commit()
+    await db.refresh(draft)
 
     return APIResponse(
         success=True,
@@ -841,6 +847,7 @@ async def publish_campaign_draft(
     draft.status = DraftStatus.PUBLISHED
     draft.published_at = datetime.now(timezone.utc)
     await db.commit()
+    await db.refresh(draft)
 
     return APIResponse(
         success=True,

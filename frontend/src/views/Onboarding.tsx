@@ -307,7 +307,7 @@ export default function Onboarding() {
           });
           break;
 
-        case 'trust_gate_config':
+        case 'trust_gate_config': {
           await submitTrustGateConfig.mutateAsync({
             trust_threshold_autopilot: formData.trustThresholdAutopilot,
             trust_threshold_alert: formData.trustThresholdAlert,
@@ -326,6 +326,7 @@ export default function Onboarding() {
           }, 1500);
           timeoutsRef.current.add(id);
           return;
+        }
       }
 
       // Move to next step

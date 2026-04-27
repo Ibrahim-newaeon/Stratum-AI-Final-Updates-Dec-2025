@@ -241,6 +241,7 @@ async def create_tenant(
 
     db.add(tenant)
     await db.commit()
+    await db.refresh(tenant)
 
     logger.info(f"Tenant created: {tenant.slug} (ID: {tenant.id})")
 

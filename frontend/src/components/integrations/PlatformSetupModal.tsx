@@ -887,9 +887,6 @@ export function PlatformSetupModal({ platform, onClose, onConnect }: PlatformSet
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [visibleFields, setVisibleFields] = useState<Set<string>>(new Set())
   const [activeTab, setActiveTab] = useState<'credentials' | 'info'>('credentials')
-
-  if (!platform) return null
-
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -897,6 +894,8 @@ export function PlatformSetupModal({ platform, onClose, onConnect }: PlatformSet
       if (timeoutRef.current) clearTimeout(timeoutRef.current)
     }
   }, [])
+
+  if (!platform) return null
 
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text)
@@ -992,7 +991,7 @@ export function PlatformSetupModal({ platform, onClose, onConnect }: PlatformSet
               {/* Required Credentials */}
               <div>
                 <h3 className="text-sm font-semibold text-white/90 uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-red-400"></span>
+                  <span className="w-2 h-2 rounded-full bg-red-400" />
                   Required ({requiredFields.length})
                 </h3>
                 <div className="space-y-3">
@@ -1013,7 +1012,7 @@ export function PlatformSetupModal({ platform, onClose, onConnect }: PlatformSet
               {optionalFields.length > 0 && (
                 <div>
                   <h3 className="text-sm font-semibold text-white/90 uppercase tracking-wider mb-3 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-gray-400"></span>
+                    <span className="w-2 h-2 rounded-full bg-gray-400" />
                     Optional ({optionalFields.length})
                   </h3>
                   <div className="space-y-3">

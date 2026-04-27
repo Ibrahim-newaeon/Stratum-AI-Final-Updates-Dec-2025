@@ -77,7 +77,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
           handleMessage(message)
           onMessage?.(message)
         } catch (error) {
-
+          // no-op
         }
       }
 
@@ -124,7 +124,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       }
       wsRef.current.send(JSON.stringify(message))
     } else {
-
+      // no-op
     }
   }, [])
 

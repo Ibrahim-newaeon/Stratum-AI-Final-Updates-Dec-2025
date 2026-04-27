@@ -98,7 +98,7 @@ export default function AdAccounts() {
         syncAccounts.mutateAsync('snapchat'),
       ])
     } catch (error) {
-
+      // no-op
     }
   }
 

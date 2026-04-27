@@ -65,15 +65,18 @@ function RegionalBreakdownChartInner({
   innerRadius = 60,
   outerRadius = 100,
 }: Omit<RegionalBreakdownChartProps, 'loading' | 'onRefresh' | 'showLabels'>) {
+  // Assign colors if not provided
+  const chartData = useMemo(() => {
+    if (!data || data.length === 0) return []
+    return data.map((item, index) => ({
+      ...item,
+      color: item.color || chartTheme.regionColors[index % chartTheme.regionColors.length],
+    }))
+  }, [data])
+
   if (!data || data.length === 0) {
     return <NoChartDataState />
   }
-
-  // Assign colors if not provided
-  const chartData = useMemo(() => data.map((item, index) => ({
-    ...item,
-    color: item.color || chartTheme.regionColors[index % chartTheme.regionColors.length],
-  })), [data])
 
   return (
     <div className="rounded-xl border bg-card p-6">

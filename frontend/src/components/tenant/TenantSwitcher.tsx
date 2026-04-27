@@ -124,7 +124,7 @@ export default function TenantSwitcher() {
           window.location.reload();
         }
       } catch (err) {
-
+        // no-op
       } finally {
         setIsSwitching(false);
       }

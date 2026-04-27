@@ -93,6 +93,8 @@ export function RecommendationsCard({
     }
   };
 
+  const pendingRecommendations = useMemo(() => recommendations.filter((r) => r.status === 'pending'), [recommendations]);
+
   if (loading) {
     return (
       <div className="bg-card border rounded-lg p-5 flex items-center justify-center min-h-52">
@@ -100,8 +102,6 @@ export function RecommendationsCard({
       </div>
     );
   }
-
-  const pendingRecommendations = useMemo(() => recommendations.filter((r) => r.status === 'pending'), [recommendations]);
 
   return (
     <div className="bg-card border rounded-lg">

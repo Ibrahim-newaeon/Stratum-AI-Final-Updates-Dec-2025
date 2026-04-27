@@ -26,9 +26,9 @@
       "@/*": ["./src/*"]
     },
 
-    /* TypeScript 6.0 deprecated baseUrl with a warning treated as error by
-       the build. Silence until we migrate away from baseUrl. */
-    "ignoreDeprecations": "6.0"
+    /* TypeScript 6.0 may deprecate baseUrl with a warning.
+       Re-enable ignoreDeprecations when on TS >= 6.0. */
+    // "ignoreDeprecations": "6.0"
   },
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]

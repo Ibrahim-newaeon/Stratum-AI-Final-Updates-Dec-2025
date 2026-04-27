@@ -12,6 +12,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import load_only
 
 from app.core.logging import get_logger
 from app.db.session import get_async_session
@@ -57,7 +58,7 @@ async def list_campaigns(
     """
     tenant_id = getattr(request.state, "tenant_id", None)
 
-    # Build query with tenant isolation
+    # Build query with tenant isolation — use only indexed columns for WHERE
     query = select(Campaign).where(
         Campaign.tenant_id == tenant_id,
         Campaign.is_deleted == False,
@@ -77,14 +78,34 @@ async def list_campaigns(
         for label in labels:
             query = query.where(Campaign.labels.contains([label]))
 
-    # Count total
+    # Count total — use COUNT(*) directly without loading full rows
     count_query = select(func.count()).select_from(query.subquery())
     total_result = await db.execute(count_query)
     total = total_result.scalar()
 
-    # Pagination
+    # Pagination — defer loading heavy JSONB columns not needed for list view
     offset = (page - 1) * page_size
-    query = query.order_by(Campaign.updated_at.desc()).offset(offset).limit(page_size)
+    query = (
+        query
+        .order_by(Campaign.updated_at.desc())
+        .offset(offset)
+        .limit(page_size)
+        .options(
+            load_only(
+                Campaign.id,
+                Campaign.name,
+                Campaign.platform,
+                Campaign.status,
+                Campaign.total_spend_cents,
+                Campaign.impressions,
+                Campaign.clicks,
+                Campaign.conversions,
+                Campaign.roas,
+                Campaign.labels,
+                Campaign.last_synced_at,
+            )
+        )
+    )
 
     result = await db.execute(query)
     campaigns = result.scalars().all()

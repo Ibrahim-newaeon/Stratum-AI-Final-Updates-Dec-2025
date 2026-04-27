@@ -131,7 +131,7 @@ export function Competitors() {
       setNewCompetitor({ name: '', domain: '', country: 'SA', platforms: ['meta', 'google'] })
       refetchCompetitors()
     } catch (error) {
-
+      // no-op
     } finally {
       setIsSubmitting(false)
     }
@@ -144,7 +144,7 @@ export function Competitors() {
       await deleteCompetitor.mutateAsync(id)
       refetchCompetitors()
     } catch (error) {
-
+      // no-op
     }
   }
 

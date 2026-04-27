@@ -3,12 +3,55 @@
   "buildCommand": "cd frontend && npm install && npm run build",
   "outputDirectory": "frontend/dist",
   "framework": "vite",
-  "build": {
-    "env": {
-      "VITE_API_URL": "https://app.stratumai.app/api/v1",
-      "VITE_WS_URL": "wss://app.stratumai.app"
-    }
-  },
+  "rewrites": [
+    { "source": "/docs", "destination": "/docs/index.html" },
+    { "source": "/docs/:path*", "destination": "/docs/index.html" },
+    { "source": "/login", "destination": "/index.html" },
+    { "source": "/signup", "destination": "/index.html" },
+    { "source": "/dashboard", "destination": "/index.html" },
+    { "source": "/dashboard/:path*", "destination": "/index.html" },
+    { "source": "/campaigns", "destination": "/index.html" },
+    { "source": "/campaigns/:path*", "destination": "/index.html" },
+    { "source": "/settings", "destination": "/index.html" },
+    { "source": "/settings/:path*", "destination": "/index.html" },
+    { "source": "/tenants", "destination": "/index.html" },
+    { "source": "/tenants/:path*", "destination": "/index.html" },
+    { "source": "/superadmin", "destination": "/index.html" },
+    { "source": "/superadmin/:path*", "destination": "/index.html" },
+    { "source": "/features", "destination": "/index.html" },
+    { "source": "/pricing", "destination": "/index.html" },
+    { "source": "/about", "destination": "/index.html" },
+    { "source": "/resources", "destination": "/index.html" },
+    { "source": "/solutions", "destination": "/index.html" },
+    { "source": "/contact", "destination": "/index.html" },
+    { "source": "/privacy", "destination": "/index.html" },
+    { "source": "/terms", "destination": "/index.html" },
+    { "source": "/forgot-password", "destination": "/index.html" },
+    { "source": "/reset-password", "destination": "/index.html" },
+    { "source": "/verify-email", "destination": "/index.html" },
+    { "source": "/onboarding", "destination": "/index.html" },
+    { "source": "/onboarding/:path*", "destination": "/index.html" },
+    { "source": "/landing", "destination": "/index.html" },
+    { "source": "/landing-ar", "destination": "/index.html" },
+    { "source": "/benchmarks", "destination": "/index.html" },
+    { "source": "/assets", "destination": "/index.html" },
+    { "source": "/rules", "destination": "/index.html" },
+    { "source": "/competitors", "destination": "/index.html" },
+    { "source": "/predictions", "destination": "/index.html" },
+    { "source": "/whatsapp", "destination": "/index.html" },
+    { "source": "/capi-setup", "destination": "/index.html" },
+    { "source": "/stratum", "destination": "/index.html" },
+    { "source": "/cdp", "destination": "/index.html" },
+    { "source": "/cdp/:path*", "destination": "/index.html" },
+    { "source": "/newsletter", "destination": "/index.html" },
+    { "source": "/newsletter/:path*", "destination": "/index.html" },
+    { "source": "/knowledge-graph", "destination": "/index.html" },
+    { "source": "/knowledge-graph/:path*", "destination": "/index.html" },
+    { "source": "/ml-training", "destination": "/index.html" },
+    { "source": "/custom-dashboard", "destination": "/index.html" },
+    { "source": "/api-docs", "destination": "/index.html" },
+    { "source": "/:path*", "destination": "/index.html" }
+  ],
   "headers": [
     {
       "source": "/(.*)",
@@ -39,7 +82,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.sentry.io; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://app.stratumai.app wss://app.stratumai.app https://sentry.io; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.sentry.io; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://api.stratumai.app https://app.stratumai.app wss://app.stratumai.app wss://api.stratumai.app https://sentry.io; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
         }
       ]
     }

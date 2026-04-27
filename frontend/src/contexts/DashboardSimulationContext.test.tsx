@@ -126,11 +126,13 @@ const wrapper = ({ children }: { children: ReactNode }) => (
 );
 
 const wrapperWithInterval = (interval: number) => {
-  return ({ children }: { children: ReactNode }) => (
+  const Wrapper = ({ children }: { children: ReactNode }) => (
     <DashboardSimulationProvider refreshInterval={interval}>
       {children}
     </DashboardSimulationProvider>
   );
+  Wrapper.displayName = 'WrapperWithInterval';
+  return Wrapper;
 };
 
 // =============================================================================

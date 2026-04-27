@@ -570,10 +570,14 @@ class Campaign(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
             "tenant_id", "platform", "external_id", name="uq_campaign_platform_external"
         ),
         Index("ix_campaigns_tenant_status", "tenant_id", "status"),
+        Index("ix_campaigns_tenant_deleted", "tenant_id", "is_deleted"),
+        Index("ix_campaigns_tenant_updated", "tenant_id", "updated_at"),
         Index("ix_campaigns_platform", "tenant_id", "platform"),
         Index("ix_campaigns_date_range", "tenant_id", "start_date", "end_date"),
         Index("ix_campaigns_roas", "tenant_id", "roas"),
         Index("ix_campaigns_client", "client_id"),
+        Index("ix_campaigns_name_search", "tenant_id", "name"),
+        Index("ix_campaigns_external", "external_id"),
     )
 
     def calculate_metrics(self) -> None:

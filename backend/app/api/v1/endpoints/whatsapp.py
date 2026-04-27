@@ -256,6 +256,7 @@ async def create_contact(
 
     db.add(contact)
     await db.commit()
+    await db.refresh(contact)
 
     logger.info(f"Created WhatsApp contact {contact.id} for tenant {tenant_id}")
 
@@ -713,6 +714,8 @@ async def create_template(
     except (ConnectionError, TimeoutError, OSError) as e:
         logger.error("whatsapp_template_submit_failed", error=str(e))
 
+    await db.refresh(template)
+
     logger.info(f"Created WhatsApp template {template.id} for tenant {tenant_id}")
 
     return APIResponse(
@@ -830,6 +833,7 @@ async def send_message(
     contact.last_message_at = datetime.now(timezone.utc)
 
     await db.commit()
+    await db.refresh(message)
 
     # Queue for async sending via Celery worker
     from app.workers.tasks import send_whatsapp_message

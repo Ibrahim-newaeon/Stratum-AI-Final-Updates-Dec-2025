@@ -34,26 +34,22 @@ export async function exportViewToPDF(
     return
   }
 
-  try {
-    const canvas = await html2canvas(element, {
-      scale: 2,
-      backgroundColor: '#060606',
-      logging: false,
-      useCORS: true,
-    })
+  const canvas = await html2canvas(element, {
+    scale: 2,
+    backgroundColor: '#060606',
+    logging: false,
+    useCORS: true,
+  })
 
-    const imgData = canvas.toDataURL('image/png')
-    const pdf = new jsPDF({
-      orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
-      unit: 'px',
-      format: [canvas.width, canvas.height],
-    })
+  const imgData = canvas.toDataURL('image/png')
+  const pdf = new jsPDF({
+    orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
+    unit: 'px',
+    format: [canvas.width, canvas.height],
+  })
 
-    pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height)
-    pdf.save(filename)
-  } catch (error) {
-    throw error
-  }
+  pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height)
+  pdf.save(filename)
 }
 
 /**
@@ -242,48 +238,44 @@ export async function exportDashboardPDF(tenantName: string): Promise<void> {
     return
   }
 
-  try {
-    const canvas = await html2canvas(mainContent as HTMLElement, {
-      scale: 2,
-      backgroundColor: '#060606',
-      logging: false,
-      useCORS: true,
-      windowWidth: 1920,
-    })
+  const canvas = await html2canvas(mainContent as HTMLElement, {
+    scale: 2,
+    backgroundColor: '#060606',
+    logging: false,
+    useCORS: true,
+    windowWidth: 1920,
+  })
 
-    const imgWidth = 210 // A4 width in mm
-    const imgHeight = (canvas.height * imgWidth) / canvas.width
+  const imgWidth = 210 // A4 width in mm
+  const imgHeight = (canvas.height * imgWidth) / canvas.width
 
-    const pdf = new jsPDF({
-      orientation: imgHeight > 297 ? 'portrait' : 'landscape',
-      unit: 'mm',
-      format: 'a4',
-    })
+  const pdf = new jsPDF({
+    orientation: imgHeight > 297 ? 'portrait' : 'landscape',
+    unit: 'mm',
+    format: 'a4',
+  })
 
-    // Add header
-    pdf.setFillColor('#060606')
-    pdf.rect(0, 0, 210, 20, 'F')
-    pdf.setTextColor('#a855f7')
-    pdf.setFontSize(12)
-    pdf.setFont('helvetica', 'bold')
-    pdf.text('STRATUM AI', 10, 12)
-    pdf.setTextColor('#ffffff')
-    pdf.setFontSize(10)
-    pdf.text(tenantName, 50, 12)
-    pdf.setTextColor('#9ca3af')
-    pdf.setFontSize(8)
-    pdf.text(new Date().toLocaleDateString(), 190, 12, { align: 'right' })
+  // Add header
+  pdf.setFillColor('#060606')
+  pdf.rect(0, 0, 210, 20, 'F')
+  pdf.setTextColor('#a855f7')
+  pdf.setFontSize(12)
+  pdf.setFont('helvetica', 'bold')
+  pdf.text('STRATUM AI', 10, 12)
+  pdf.setTextColor('#ffffff')
+  pdf.setFontSize(10)
+  pdf.text(tenantName, 50, 12)
+  pdf.setTextColor('#9ca3af')
+  pdf.setFontSize(8)
+  pdf.text(new Date().toLocaleDateString(), 190, 12, { align: 'right' })
 
-    // Add screenshot
-    const imgData = canvas.toDataURL('image/png')
-    pdf.addImage(imgData, 'PNG', 0, 25, imgWidth, imgHeight)
+  // Add screenshot
+  const imgData = canvas.toDataURL('image/png')
+  pdf.addImage(imgData, 'PNG', 0, 25, imgWidth, imgHeight)
 
-    // Save
-    const filename = `${tenantName.replace(/\s+/g, '_')}_Dashboard_${new Date().toISOString().split('T')[0]}.pdf`
-    pdf.save(filename)
-  } catch (error) {
-    throw error
-  }
+  // Save
+  const filename = `${tenantName.replace(/\s+/g, '_')}_Dashboard_${new Date().toISOString().split('T')[0]}.pdf`
+  pdf.save(filename)
 }
 
 export default {

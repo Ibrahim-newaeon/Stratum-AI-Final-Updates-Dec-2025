@@ -61,10 +61,12 @@ function fmt(v: number): string {
 }
 
 function TrendIcon({ trend }: { trend: string }) {
-  if (trend === 'growing' || trend === 'rising' || trend === 'increasing')
+  if (trend === 'growing' || trend === 'rising' || trend === 'increasing') {
     return <TrendingUp className="w-3.5 h-3.5 text-red-500" />;
-  if (trend === 'declining' || trend === 'falling' || trend === 'decreasing')
+  }
+  if (trend === 'declining' || trend === 'falling' || trend === 'decreasing') {
     return <TrendingDown className="w-3.5 h-3.5 text-emerald-500" />;
+  }
   return <Minus className="w-3.5 h-3.5 text-muted-foreground/50" />;
 }
 

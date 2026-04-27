@@ -1332,28 +1332,84 @@ document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
   }
 })();
 
-// Trust Score ring + counter animation
+// Trust Score ring + counter animation with live API data
 (function() {
   var ring = document.getElementById('trust-ring');
   var text = document.getElementById('trust-score-text');
+  var spendEl = document.getElementById('total-spend');
+  var convEl = document.getElementById('conversions');
+  var statusEl = document.getElementById('trust-status');
   if (!ring || !text) return;
-  var targetPercent = 97.4;
+
+  var targetPercent = 97.4; // default fallback
   var circumference = 553;
-  var targetOffset = circumference * (1 - targetPercent / 100); // ~14.4
+
+  // Fetch live demo metrics from public API
+  async function fetchMetrics() {
+    try {
+      var apiUrl = 'https://api.stratumai.app/public/demo-metrics';
+      var resp = await fetch(apiUrl, { cache: 'no-store' });
+      if (!resp.ok) return;
+      var data = await resp.json();
+      if (typeof data.trust_score === 'number') {
+        targetPercent = data.trust_score;
+        if (spendEl && typeof data.total_spend_usd === 'number') {
+          spendEl.textContent = '$' + data.total_spend_usd.toLocaleString();
+        }
+        if (convEl && typeof data.conversions_today === 'number') {
+          convEl.textContent = data.conversions_today.toLocaleString();
+        }
+        if (statusEl) {
+          statusEl.textContent = targetPercent >= 90 ? 'HEALTHY' : targetPercent >= 70 ? 'DEGRADED' : 'UNHEALTHY';
+          statusEl.style.color = targetPercent >= 90 ? '#00F5FF' : targetPercent >= 70 ? '#FFD700' : '#FF3D00';
+        }
+      }
+    } catch (e) {
+      // Silent fail — keep defaults
+    }
+  }
+
+  // Fetch once before animation, then every 30s
+  fetchMetrics();
+  setInterval(fetchMetrics, 30000);
+
+  // Connect to SSE for real-time updates
+  var evtSource = null;
+  function connectSSE() {
+    try {
+      evtSource = new EventSource('https://api.stratumai.app/public/events/stream');
+      evtSource.addEventListener('metrics', function(e) {
+        try {
+          var data = JSON.parse(e.data);
+          if (typeof data.trust_score === 'number') {
+            targetPercent = data.trust_score;
+            var targetOffset = circumference * (1 - targetPercent / 100);
+            ring.style.strokeDashoffset = targetOffset;
+            text.textContent = targetPercent.toFixed(1) + '%';
+            if (spendEl && typeof data.total_spend_usd === 'number') spendEl.textContent = '$' + data.total_spend_usd.toLocaleString();
+            if (convEl && typeof data.conversions_today === 'number') convEl.textContent = data.conversions_today.toLocaleString();
+          }
+        } catch (err) {}
+      });
+      evtSource.addEventListener('heartbeat', function() {});
+      evtSource.onerror = function() {
+        if (evtSource) evtSource.close();
+        setTimeout(connectSSE, 5000);
+      };
+    } catch (e) {}
+  }
+  connectSSE();
 
   var observer = new IntersectionObserver(function(entries) {
     entries.forEach(function(entry) {
       if (entry.isIntersecting) {
-        // Reset to 0 first, then animate
+        var targetOffset = circumference * (1 - targetPercent / 100);
         ring.style.transition = 'none';
         ring.setAttribute('stroke-dashoffset', circumference);
         text.textContent = '0%';
-        // Force reflow
         ring.getBoundingClientRect();
         ring.style.transition = 'stroke-dashoffset 2s cubic-bezier(0.16,1,0.3,1)';
-        // Animate the ring via CSS transition
         ring.style.strokeDashoffset = targetOffset;
-        // Animate the counter text
         var duration = 2000;
         var startTime = null;
         function step(timestamp) {

@@ -440,7 +440,7 @@ export function WhatsApp() {
         new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
       ))
     } catch (err) {
-
+      // no-op
     }
   }
 

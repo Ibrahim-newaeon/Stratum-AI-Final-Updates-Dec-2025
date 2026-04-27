@@ -72,7 +72,7 @@ export default function CheckoutPage() {
       // Redirect to Stripe Checkout
       window.location.href = result.checkout_url;
     } catch (error) {
-
+      // no-op
     }
   };
 

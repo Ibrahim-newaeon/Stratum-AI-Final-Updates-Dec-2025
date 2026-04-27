@@ -196,7 +196,7 @@ function InsightRow({ insight }: { insight: LTVInsight }) {
   const Icon = cfg.icon;
 
   return (
-    <div className={`flex items-start gap-3 p-3 rounded-xl border border`}>
+    <div className="flex items-start gap-3 p-3 rounded-xl border border">
       <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${cfg.bg}`}>
         <Icon className={`w-4 h-4 ${cfg.color}`} />
       </div>

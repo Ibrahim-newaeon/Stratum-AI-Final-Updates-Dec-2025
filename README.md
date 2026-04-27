@@ -5,6 +5,17 @@
 [![Version](https://img.shields.io/badge/version-1.1.0-purple.svg)](https://github.com/Ibrahim-newaeon/Javna-StratumAi/releases/tag/v1.1.0)
 [![Tests](https://img.shields.io/badge/tests-231%20passed-brightgreen.svg)](#production-validation)
 [![License](https://img.shields.io/badge/license-Proprietary-blue.svg)](#)
+[![API Docs](https://img.shields.io/badge/API%20Docs-Swagger%20%7C%20ReDoc-orange.svg)](https://api.stratumai.app/docs)
+
+## Live Environment
+
+| Component | URL | Status |
+|-----------|-----|--------|
+| Frontend | https://stratum-ai-final-updates-dec-2025.vercel.app | Live |
+| API | https://api.stratumai.app | Live |
+| API Documentation (Swagger) | https://api.stratumai.app/docs | Protected |
+| API Documentation (ReDoc) | https://api.stratumai.app/redoc | Protected |
+| Health Check | https://api.stratumai.app/health | Public |
 
 ## Documentation
 
@@ -15,6 +26,8 @@ Interactive documentation including:
 - Complete 60+ screen directory
 - All feature specifications
 - API reference (150+ endpoints)
+- [SQLAlchemy 2.0 Modernization Guide](docs/SQLALCHEMY_MODERNIZATION_GUIDE.md)
+- [API Explorer & Integration Guide](docs/API_EXPLORER.md)
 
 ---
 
@@ -43,6 +56,25 @@ Signal Health Check → Trust Gate → Automation Decision
 | **Attribution** | 6 models including Markov Chain & Shapley Value |
 | **Pacing** | Budget forecasting with EWMA predictions |
 | **A/B Testing** | Statistical analysis with power calculations |
+| **Real-Time Dashboard** | WebSocket + Server-Sent Events for live updates |
+| **Public Demo Metrics** | Live landing page trust score from real platform data |
+
+## API Documentation
+
+The platform provides interactive API documentation powered by FastAPI's OpenAPI schema:
+
+```bash
+# Swagger UI (interactive testing)
+curl "https://api.stratumai.app/docs?api_key=$DOCS_API_KEY"
+
+# ReDoc (clean reference)
+curl "https://api.stratumai.app/redoc?api_key=$DOCS_API_KEY"
+
+# OpenAPI JSON schema
+curl "https://api.stratumai.app/openapi.json?api_key=$DOCS_API_KEY"
+```
+
+For local development, documentation is available at `http://localhost:8000/docs` without authentication.
 
 ## CDP (Customer Data Platform) v1.1.0
 
@@ -100,6 +132,7 @@ Interactive calculator at `/calculator` estimates the business impact of improve
 ### Backend
 - Python 3.11+, FastAPI, PostgreSQL 15, Redis, Celery
 - SQLAlchemy 2.x, Pydantic 2.x, Alembic
+- WebSocket (starlette), SSE (sse-starlette)
 
 ### Frontend
 - React 18, TypeScript, Tailwind CSS, Vite
@@ -108,11 +141,14 @@ Interactive calculator at `/calculator` estimates the business impact of improve
 ### Infrastructure
 - Docker, AWS-ready (ECS, RDS, ElastiCache)
 - Prometheus, Grafana, Sentry
+- Vercel (frontend), Railway (backend)
 
 ## Quick Start
 
 ```bash
-# Start the full stack
+# Clone and start the full stack
+git clone https://github.com/Ibrahim-newaeon/Stratum-AI-Final-Updates-Dec-2025.git
+cd Stratum-AI-Final-Updates-Dec-2025
 docker compose up -d
 
 # Run all tests
@@ -121,7 +157,7 @@ docker compose exec api pytest tests/ -v
 # Access the application
 open http://localhost:5173
 
-# API documentation
+# API documentation (local — no auth required)
 open http://localhost:8000/docs
 ```
 
@@ -134,6 +170,23 @@ open http://localhost:8000/docs
 | Load Tests | 100% checks, 0% errors |
 | Security Audit | No hardcoded credentials |
 | Frontend Build | Successful |
+| SPA Routing | All routes accessible |
+| API Documentation | Enabled with access control |
+| Database Indexes | Optimized for query performance |
+| Real-Time Streaming | WebSocket + SSE operational |
+
+## Recent Fixes (2026-04-27)
+
+| Issue | Severity | Fix |
+|-------|----------|-----|
+| SPA Routing 404 | Critical | Added Vercel rewrite rules for all React Router paths |
+| API Docs Inaccessible | Critical | Enabled `/docs`, `/redoc`, `/openapi.json` with API key gate |
+| Landing Mock Data | Critical | Connected trust score widget to live `/public/demo-metrics` API |
+| Campaign Timeout | High | Added DB indexes + `load_only()` column optimization |
+| Real-Time Data | High | SSE endpoint connected to landing page widget |
+| SQLAlchemy Modernization | Medium | Generated 1,613 declaration migration guide |
+| Missing FK Indexes | Medium | Created migration for 12 new composite indexes |
+| Bot Protection | Medium | Verified Vercel rewrite rules resolve curl 404s |
 
 ## Project Structure
 
@@ -141,16 +194,22 @@ open http://localhost:8000/docs
 stratum-ai/
 ├── backend/
 │   ├── app/
-│   │   ├── api/v1/endpoints/    # API routes
-│   │   ├── core/                # Business logic
-│   │   ├── models/              # SQLAlchemy models
+│   │   ├── api/v1/endpoints/    # API routes (150+ endpoints)
+│   │   ├── core/                # Business logic, config, exceptions
+│   │   ├── models/              # SQLAlchemy models (SQLAlchemy 2.0)
 │   │   ├── schemas/             # Pydantic schemas
-│   │   └── services/            # External integrations
-│   └── tests/
+│   │   ├── services/            # External integrations (Meta, Google, etc.)
+│   │   ├── ml/                  # Machine learning models
+│   │   └── middleware/          # Security, rate limit, tenant, audit
+│   ├── tests/
+│   │   ├── unit/                # 30 test files
+│   │   └── integration/         # 8 integration suites
+│   ├── migrations/              # Alembic migrations (47+ versions)
+│   └── scripts/                 # Utility scripts
 ├── frontend/
 │   ├── src/
 │   │   ├── components/          # React components
-│   │   ├── views/               # Page views
+│   │   ├── views/               # Page views (30+ screens)
 │   │   ├── api/                 # API clients
 │   │   └── stores/              # State management
 │   └── public/
@@ -162,8 +221,9 @@ stratum-ai/
 ## Links
 
 - [Full Documentation](https://ibrahim-newaeon.github.io/Javna-StratumAi/)
-- [Release v1.0.0](https://github.com/Ibrahim-newaeon/Javna-StratumAi/releases/tag/v1.0.0)
-- [API Reference](http://localhost:8000/docs) (when running locally)
+- [Release v1.1.0](https://github.com/Ibrahim-newaeon/Javna-StratumAi/releases/tag/v1.1.0)
+- [API Reference (Live)](https://api.stratumai.app/docs)
+- [SQLAlchemy Modernization Guide](docs/SQLALCHEMY_MODERNIZATION_GUIDE.md)
 
 ---
 

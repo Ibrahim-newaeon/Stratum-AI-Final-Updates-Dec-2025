@@ -112,11 +112,13 @@ function createWrapper(tierData?: TierInfo) {
     mockGet.mockResolvedValue({ data: tierData });
   }
 
-  return ({ children }: { children: ReactNode }) => (
+  const Wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>
       <TierProvider>{children}</TierProvider>
     </QueryClientProvider>
   );
+  Wrapper.displayName = 'TierTestWrapper';
+  return Wrapper;
 }
 
 // =============================================================================

@@ -72,7 +72,7 @@ export default function MLTraining() {
       const response = await apiClient.get('/ml/models')
       setModels(response.data.models || [])
     } catch (err) {
-
+      // no-op
     }
   }
 
@@ -81,7 +81,7 @@ export default function MLTraining() {
       const response = await apiClient.get('/ml/training-data')
       setTrainingFiles(response.data.files || [])
     } catch (err) {
-
+      // no-op
     }
   }
 

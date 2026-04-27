@@ -589,7 +589,6 @@ function NotificationSettings() {
     if (savedNotifications) {
       setNotifications((prev) => ({ ...prev, ...savedNotifications }));
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [savedNotifications]);
 
   const persistNotifications = useCallback(

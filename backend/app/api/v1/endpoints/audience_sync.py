@@ -206,6 +206,7 @@ async def create_platform_audience(
             sync_interval_hours=request.sync_interval_hours,
         )
         await db.commit()
+        await db.refresh(platform_audience)
         return PlatformAudienceResponse.model_validate(platform_audience)
 
     except ValueError as e:
@@ -295,6 +296,7 @@ async def trigger_sync(
             triggered_by_user_id=current_user.id,
         )
         await db.commit()
+        await db.refresh(sync_job)
         return SyncJobResponse.model_validate(sync_job)
 
     except ValueError as e:
@@ -450,5 +452,7 @@ async def sync_segment_to_all_platforms(
             )
 
     await db.commit()
+    for job in jobs:
+        await db.refresh(job)
 
     return [SyncJobResponse.model_validate(j) for j in jobs]

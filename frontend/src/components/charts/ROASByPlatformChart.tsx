@@ -36,12 +36,15 @@ function ROASByPlatformChartInner({
   title = 'ROAS by Platform',
   targetROAS = 3.0,
 }: Omit<ROASByPlatformChartProps, 'loading' | 'onRefresh'>) {
+  // Sort by ROAS descending for better visualization
+  const sortedData = useMemo(() => {
+    if (!data || data.length === 0) return []
+    return [...data].sort((a, b) => b.roas - a.roas)
+  }, [data])
+
   if (!data || data.length === 0) {
     return <NoChartDataState />
   }
-
-  // Sort by ROAS descending for better visualization
-  const sortedData = useMemo(() => [...data].sort((a, b) => b.roas - a.roas), [data])
 
   return (
     <div className="rounded-xl border bg-card p-6">

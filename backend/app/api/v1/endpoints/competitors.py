@@ -163,6 +163,7 @@ async def add_competitor(
 
     db.add(competitor)
     await db.commit()
+    await db.refresh(competitor)
 
     # Queue initial data fetch
     from app.workers.tasks import fetch_competitor_data
@@ -206,6 +207,7 @@ async def update_competitor(
         setattr(competitor, field, value)
 
     await db.commit()
+    await db.refresh(competitor)
 
     return APIResponse(
         success=True,
