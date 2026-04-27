@@ -1,6 +1,7 @@
 [build]
 builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
+noCache = true
 
 [deploy]
 startCommand = ""
