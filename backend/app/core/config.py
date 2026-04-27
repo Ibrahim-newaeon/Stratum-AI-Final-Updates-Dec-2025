@@ -247,7 +247,7 @@ class Settings(BaseSettings):
     smtp_ssl: bool = Field(default=False, description="Use SSL")
     email_from_name: str = Field(default="Stratum AI", description="Sender display name")
     email_from_address: str = Field(
-        default="noreply@stratumhq.com", description="Sender email address"
+        default="noreply@stratumai.app", description="Sender email address"
     )
     frontend_url: str = Field(
         default="http://localhost:5173", description="Frontend base URL for email links"
