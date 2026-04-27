@@ -129,7 +129,7 @@ export default function Login() {
               src="/images/stratum-logo.svg"
               alt="Stratum AI"
               className="h-8"
-              style={{ filter: 'invert(1) brightness(2)' }}
+              
               loading="lazy"
               decoding="async"
             />
@@ -319,3 +319,4 @@ export default function Login() {
     </>
   );
 }
+

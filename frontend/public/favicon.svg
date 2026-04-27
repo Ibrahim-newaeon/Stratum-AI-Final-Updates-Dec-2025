@@ -1,12 +1,44 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-labelledby="fav-title">
+  <title id="fav-title">Stratum AI</title>
   <defs>
-    <linearGradient id="favGrad" x1="0" y1="0" x2="1" y2="1">
+    <linearGradient id="gold-top" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#D4AF37"/>
       <stop offset="100%" stop-color="#C9A227"/>
     </linearGradient>
+    <linearGradient id="gold-top-right" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#C9A227"/>
+      <stop offset="100%" stop-color="#A08020"/>
+    </linearGradient>
+    <filter id="gold-glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
   </defs>
-  <rect width="32" height="32" rx="8" fill="#080C14"/>
-  <path d="M6 10C6 7.79 7.79 6 10 6h8c2.21 0 4 1.79 4 4v4c0 2.21-1.79 4-4 4h-4c-2.21 0-4 1.79-4 4v4c0 2.21 1.79 4 4 4h8c2.21 0 4-1.79 4-4v-4c0-2.21-1.79-4-4-4" 
-        stroke="url(#favGrad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <circle cx="20" cy="8" r="2" fill="url(#favGrad)"/>
+
+  <!-- Dark rounded square background -->
+  <rect width="200" height="200" rx="40" fill="#080C14"/>
+
+  <!-- Strata symbol centered -->
+  <g transform="translate(0, 10)">
+    <!-- Bottom slab -->
+    <path d="M30,165 L100,185 L170,165 L100,145Z" fill="#1E2740"/>
+    <path d="M100,185 L170,165 L170,172 L100,192Z" fill="#141B2D"/>
+    <path d="M30,165 L100,185 L100,192 L30,172Z" fill="#181F33"/>
+    <!-- Middle slab -->
+    <path d="M38,110 L100,128 L162,110 L100,92Z" fill="#2A2A32"/>
+    <path d="M100,128 L162,110 L162,117 L100,135Z" fill="#1E2740"/>
+    <path d="M38,110 L100,128 L100,135 L38,117Z" fill="#22222B"/>
+    <!-- Top slab glow -->
+    <path d="M46,58 L100,74 L154,58 L100,42Z" fill="#C9A227" opacity="0.15" filter="url(#gold-glow)"/>
+    <!-- Top slab left -->
+    <path d="M46,58 L100,74 L100,42Z" fill="url(#gold-top)"/>
+    <!-- Top slab right -->
+    <path d="M100,74 L154,58 L100,42Z" fill="url(#gold-top-right)"/>
+    <!-- Edge highlight -->
+    <path d="M46,58 L100,42 L154,58" fill="none" stroke="#D4AF37" stroke-width="0.8" opacity="0.7"/>
+    <!-- Energy nodes -->
+    <circle cx="100" cy="86" r="2.5" fill="#D4AF37" opacity="0.6"/>
+    <circle cx="76" cy="87" r="1.2" fill="#D4AF37" opacity="0.3"/>
+    <circle cx="124" cy="87" r="1.2" fill="#D4AF37" opacity="0.3"/>
+  </g>
 </svg>
