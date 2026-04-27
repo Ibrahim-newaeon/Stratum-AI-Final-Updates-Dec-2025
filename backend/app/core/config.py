@@ -248,6 +248,10 @@ class Settings(BaseSettings):
     sendgrid_api_key: Optional[str] = Field(
         default=None, description="SendGrid API key (preferred over SMTP)"
     )
+    sendgrid_webhook_token: Optional[str] = Field(
+        default=None,
+        description="Secret token for verifying SendGrid inbound webhooks",
+    )
     email_from_name: str = Field(default="Stratum AI", description="Sender display name")
     email_from_address: str = Field(
         default="noreply@stratumai.app", description="Sender email address"

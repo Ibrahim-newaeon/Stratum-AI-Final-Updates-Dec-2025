@@ -20,6 +20,7 @@ from app.core.config import settings
 from app.core.logging import get_logger
 from app.db.session import get_async_session
 from app.models import Campaign, CampaignMetric, CampaignStatus
+from app.schemas.response import APIResponse
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/analytics/insights", tags=["AI Intelligence"])

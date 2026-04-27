@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.logging import get_logger
 from app.db.session import get_async_session
 from app.models import Campaign, CampaignMetric
+from app.schemas.response import APIResponse
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/analytics/advanced", tags=["Advanced Analytics"])

@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.db.session import get_async_session
+from app.schemas.response import APIResponse
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/admin/compliance", tags=["Enterprise Compliance"])
@@ -422,7 +423,7 @@ async def list_user_role_assignments(
 # API Endpoints — GDPR / Data Retention
 # =============================================================================
 
-@router.get("/gdpr/retention-policy", response_model=APIResponse[GdprRetentionPolicy])
+@router.get("/gdpr/retention-policy", response_model=APIResponse[GDPRRetentionPolicy])
 async def get_retention_policy(
     req: Request,
     db: AsyncSession = Depends(get_async_session),
@@ -433,7 +434,7 @@ async def get_retention_policy(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required")
 
     # In production, query tenant_settings table
-    policy = GdprRetentionPolicy(
+    policy = GDPRRetentionPolicy(
         tenant_id=tenant_id,
         profile_retention_days=365,
         event_retention_days=180,
@@ -447,9 +448,9 @@ async def get_retention_policy(
     return APIResponse(success=True, data=policy, message="Retention policy retrieved")
 
 
-@router.put("/gdpr/retention-policy", response_model=APIResponse[GdprRetentionPolicy])
+@router.put("/gdpr/retention-policy", response_model=APIResponse[GDPRRetentionPolicy])
 async def update_retention_policy(
-    policy: GdprRetentionPolicy,
+    policy: GDPRRetentionPolicy,
     req: Request,
     db: AsyncSession = Depends(get_async_session),
 ):
@@ -600,3 +601,5 @@ async def export_user_data(
         data=export_data,
         message="Data export package generated",
     )
+
+

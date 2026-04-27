@@ -460,7 +460,20 @@ def create_application() -> FastAPI:
         except (ConnectionError, TimeoutError, OSError) as e:
             redis_status = f"unhealthy: {str(e)}"
 
-        overall_status = "healthy" if db_health["status"] == "healthy" and redis_status == "healthy" else "unhealthy"
+        # Check SendGrid
+        sendgrid_status = "not_configured"
+        if settings.sendgrid_api_key:
+            try:
+                from sendgrid import SendGridAPIClient
+                sg = SendGridAPIClient(api_key=settings.sendgrid_api_key)
+                # Lightweight API call to validate key
+                response = sg.client.user.profile.get()
+                sendgrid_status = "healthy" if response.status_code == 200 else f"unhealthy: status {response.status_code}"
+            except Exception as e:
+                sendgrid_status = f"unhealthy: {str(e)}"
+
+        deps_healthy = db_health["status"] == "healthy" and redis_status == "healthy"
+        overall_status = "healthy" if deps_healthy else "unhealthy"
 
         return {
             "status": overall_status,
@@ -468,6 +481,7 @@ def create_application() -> FastAPI:
             "environment": settings.app_env,
             "database": db_health["status"],
             "redis": redis_status,
+            "sendgrid": sendgrid_status,
         }
 
     @app.get("/health/ready", tags=["Health"])

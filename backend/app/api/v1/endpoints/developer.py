@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.logging import get_logger
+from app.schemas.response import APIResponse
 from app.db.session import get_async_session
 
 logger = get_logger(__name__)
@@ -477,3 +478,4 @@ async def test_webhook_endpoint(
             data={"webhook_id": webhook_id, "error": str(e)},
             message=f"Test failed: {str(e)}",
         )
+

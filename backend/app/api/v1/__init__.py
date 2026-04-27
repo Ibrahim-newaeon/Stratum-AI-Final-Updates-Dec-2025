@@ -73,6 +73,8 @@ from app.api.v1.endpoints import (
     compliance,
     outbound_integrations,
     developer,
+    # SendGrid inbound webhook
+    sendgrid_webhook,
 )
 
 api_router = APIRouter()
@@ -512,4 +514,10 @@ api_router.include_router(
     developer.router,
     prefix="/developer",
     tags=["Developer Portal"],
+)
+
+# SendGrid Inbound Webhook (no auth — verified by URL token)
+api_router.include_router(
+    sendgrid_webhook.router,
+    tags=["SendGrid Webhooks"],
 )
