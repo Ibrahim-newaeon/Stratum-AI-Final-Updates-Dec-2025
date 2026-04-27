@@ -1,5 +1,5 @@
 # =============================================================================
-# Stratum AI - Backend Dockerfile (backend-only, backend/ build context)
+# Stratum AI - Backend Dockerfile (repo root build context)
 # =============================================================================
 FROM python:3.11-slim-bookworm
 
@@ -25,16 +25,16 @@ RUN groupadd --gid 1000 appgroup && \
 WORKDIR /app
 RUN chown appuser:appgroup /app
 
-# Install Python dependencies (this layer rebuilds when requirements change)
-COPY requirements-prod.txt .
+# Install Python dependencies (repo root context → backend/ prefix)
+COPY backend/requirements-prod.txt .
 RUN pip install --no-cache-dir -r requirements-prod.txt
 
 # Remove build dependencies to reduce image size (~200MB savings)
 RUN apt-get purge -y --auto-remove build-essential libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy application code (.dockerignore excludes tests, cache, etc.)
-COPY --chown=appuser:appgroup . .
+# Copy application code (repo root context → backend/ prefix)
+COPY --chown=appuser:appgroup backend/ .
 
 # Ensure start.sh is executable
 RUN chmod +x /app/start.sh
@@ -49,7 +49,7 @@ USER appuser
 # Expose port (Railway assigns dynamic PORT)
 EXPOSE ${PORT:-8000}
 
-# Health check - overridden by docker-compose when running locally
+# Health check
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=40s \
   CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
 
