@@ -221,7 +221,7 @@
   /* Gradient text — pink */
   .text-gradient-primary {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, #FF4D8F 0%, #FF1F6D 50%, #CC1857 100%);
+    background-image: linear-gradient(135deg, #FF4D8F 0%, #FF1F6D 50%, #FF8C00 100%);
   }
 
   /* Subtle grid background pattern */
@@ -230,6 +230,19 @@
       linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
       linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
     background-size: 48px 48px;
+  }
+
+  /* Ambient glow — orange */
+  .ambient-orange {
+    position: relative;
+  }
+  .ambient-orange::before {
+    content: '';
+    position: absolute;
+    inset: -40%;
+    background: radial-gradient(circle, hsl(var(--secondary) / 0.15) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: -1;
   }
 
   /* Ambient glow behind hero elements */

@@ -118,6 +118,7 @@ export default {
         'glow': '0 0 24px rgba(255, 31, 109, 0.18)',
         'glow-lg': '0 0 40px rgba(255, 31, 109, 0.22)',
         'glow-cyan': '0 0 24px rgba(0, 245, 255, 0.15)',
+        'glow-orange': '0 0 24px rgba(255, 140, 0, 0.18)',
         'card': '0 1px 3px rgba(0, 0, 0, 0.2)',
         'card-hover': '0 8px 32px rgba(0, 0, 0, 0.35)',
         'glass': '0 2px 8px rgba(0, 0, 0, 0.15)',
@@ -139,6 +140,7 @@ export default {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-primary': 'linear-gradient(135deg, #FF4D8F 0%, #FF1F6D 50%, #CC1857 100%)',
         'gradient-primary-soft': 'linear-gradient(135deg, rgba(255, 77, 143, 0.08) 0%, rgba(255, 31, 109, 0.04) 100%)',
+        'gradient-cyber': 'linear-gradient(135deg, #FF4D8F 0%, #FF1F6D 50%, #FF8C00 100%)',
         'gradient-void': 'linear-gradient(180deg, #050B18 0%, #0A1020 100%)',
       },
       keyframes: {

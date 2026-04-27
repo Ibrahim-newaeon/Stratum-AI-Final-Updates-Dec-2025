@@ -42,7 +42,7 @@ export default function VerifyEmail() {
             </p>
             <Link
               to="/login"
-              className="block w-full bg-[#FF1F6D] text-[#080C14] font-semibold rounded-lg py-3 hover:bg-[#FF4D8F] transition-colors duration-200 text-center"
+              className="block w-full bg-gradient-to-r from-[#FF1F6D] to-[#FF8C00] text-[#080C14] font-semibold rounded-lg py-3 hover:brightness-110 transition-colors duration-200 text-center"
             >
               Back to login
             </Link>
@@ -59,7 +59,7 @@ export default function VerifyEmail() {
         <AuthLeftPanel />
         <section className="w-full lg:w-3/5 flex flex-col items-center justify-center p-6 lg:p-12 relative">
           <div className="w-full max-w-md bg-[#0F1320] border border-[#1E2740] rounded-xl p-8 shadow-xl text-center">
-            <div className="w-16 h-16 rounded-full border-4 border-[#FF1F6D]/20 border-t-[#FF1F6D] animate-spin mx-auto mb-6" />
+            <div className="w-16 h-16 rounded-full border-4 border-[#FF8C00]/20 border-t-[#FF1F6D] animate-spin mx-auto mb-6" />
             <h2 className="text-2xl font-semibold text-[#F0EDE5] mb-2">
               Verifying your email
             </h2>
@@ -90,7 +90,7 @@ export default function VerifyEmail() {
             </p>
             <Link
               to="/login"
-              className="inline-flex items-center justify-center gap-2 w-full bg-[#FF1F6D] text-[#080C14] font-semibold rounded-lg py-3 hover:bg-[#FF4D8F] transition-colors duration-200"
+              className="inline-flex items-center justify-center gap-2 w-full bg-gradient-to-r from-[#FF1F6D] to-[#FF8C00] text-[#080C14] font-semibold rounded-lg py-3 hover:brightness-110 transition-colors duration-200"
             >
               Continue to dashboard
               <ArrowRight className="w-4 h-4" />
@@ -119,14 +119,14 @@ export default function VerifyEmail() {
           <div className="space-y-4">
             <Link
               to="/signup"
-              className="block w-full bg-[#FF1F6D] text-[#080C14] font-semibold rounded-lg py-3 hover:bg-[#FF4D8F] transition-colors duration-200 text-center"
+              className="block w-full bg-gradient-to-r from-[#FF1F6D] to-[#FF8C00] text-[#080C14] font-semibold rounded-lg py-3 hover:brightness-110 transition-colors duration-200 text-center"
             >
               Create account
             </Link>
             {!showResendForm ? (
               <button
                 onClick={() => setShowResendForm(true)}
-                className="text-xs text-[#8B92A8] hover:text-[#FF4D8F] transition-colors duration-200 font-medium"
+                className="text-xs text-[#8B92A8] hover:text-[#FFB347] transition-colors duration-200 font-medium"
               >
                 Resend verification
               </button>
@@ -139,7 +139,7 @@ export default function VerifyEmail() {
                     value={resendEmail}
                     onChange={(e) => setResendEmail(e.target.value)}
                     placeholder="Enter your email"
-                    className="w-full bg-[#181F33] border border-[#1E2740] rounded-lg pl-11 pr-4 py-3 text-sm text-[#F0EDE5] placeholder-[#5A6278] outline-none focus:ring-2 focus:ring-[#FF1F6D]/30 focus:border-[#FF1F6D]/50 transition-colors duration-200"
+                    className="w-full bg-[#181F33] border border-[#1E2740] rounded-lg pl-11 pr-4 py-3 text-sm text-[#F0EDE5] placeholder-[#5A6278] outline-none focus:ring-2 focus:ring-[#FF8C00]/30 focus:border-[#FF8C00]/50 transition-colors duration-200"
                   />
                 </div>
                 <button
@@ -151,7 +151,7 @@ export default function VerifyEmail() {
                     );
                   }}
                   disabled={resendMutation.isPending || !resendEmail}
-                  className="text-xs text-[#FF1F6D] hover:text-[#FF4D8F] transition-colors duration-200 disabled:opacity-50 font-medium"
+                  className="text-xs text-[#FF8C00] hover:text-[#FFB347] transition-colors duration-200 disabled:opacity-50 font-medium"
                 >
                   {resendMutation.isPending
                     ? 'Sending...'

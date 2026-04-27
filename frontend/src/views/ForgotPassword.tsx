@@ -52,7 +52,7 @@ export default function ForgotPassword() {
               <p className="text-sm text-[#8B92A8] mb-2">
                 We've sent a password reset link to:
               </p>
-              <p className="text-[#FF1F6D] text-sm font-semibold mb-8">
+              <p className="text-[#FF8C00] text-sm font-semibold mb-8">
                 {submittedEmail}
               </p>
               <p className="text-xs text-[#5A6278] mb-8">
@@ -61,13 +61,13 @@ export default function ForgotPassword() {
               <div className="space-y-4">
                 <Link
                   to="/login"
-                  className="block w-full bg-[#FF1F6D] text-[#080C14] font-semibold rounded-lg py-3 hover:bg-[#FF4D8F] transition-colors duration-200 text-center"
+                  className="block w-full bg-gradient-to-r from-[#FF1F6D] to-[#FF8C00] text-[#080C14] font-semibold rounded-lg py-3 hover:brightness-110 transition-colors duration-200 text-center"
                 >
                   Back to login
                 </Link>
                 <button
                   onClick={() => forgotPasswordMutation.reset()}
-                  className="text-xs text-[#8B92A8] hover:text-[#FF4D8F] transition-colors duration-200 font-medium"
+                  className="text-xs text-[#8B92A8] hover:text-[#FFB347] transition-colors duration-200 font-medium"
                 >
                   Try a different email
                 </button>
@@ -91,7 +91,7 @@ export default function ForgotPassword() {
             {/* Back link */}
             <Link
               to="/login"
-              className="inline-flex items-center gap-2 text-xs text-[#8B92A8] hover:text-[#FF4D8F] transition-colors duration-200 font-medium mb-8"
+              className="inline-flex items-center gap-2 text-xs text-[#8B92A8] hover:text-[#FFB347] transition-colors duration-200 font-medium mb-8"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to login
@@ -128,7 +128,7 @@ export default function ForgotPassword() {
                     id="forgot-email"
                     type="email"
                     placeholder="you@company.com"
-                    className="w-full bg-[#181F33] border border-[#1E2740] rounded-lg pl-11 pr-4 py-3 text-sm text-[#F0EDE5] placeholder-[#5A6278] outline-none focus:ring-2 focus:ring-[#FF1F6D]/30 focus:border-[#FF1F6D]/50 transition-colors duration-200"
+                    className="w-full bg-[#181F33] border border-[#1E2740] rounded-lg pl-11 pr-4 py-3 text-sm text-[#F0EDE5] placeholder-[#5A6278] outline-none focus:ring-2 focus:ring-[#FF8C00]/30 focus:border-[#FF8C00]/50 transition-colors duration-200"
                   />
                 </div>
                 {errors.email && (
@@ -140,7 +140,7 @@ export default function ForgotPassword() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-[#FF1F6D] text-[#080C14] font-semibold rounded-lg py-3 hover:bg-[#FF4D8F] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full bg-gradient-to-r from-[#FF1F6D] to-[#FF8C00] text-[#080C14] font-semibold rounded-lg py-3 hover:brightness-110 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isLoading ? (
                   <span className="flex items-center gap-2">
@@ -160,7 +160,7 @@ export default function ForgotPassword() {
             <div className="mt-8 text-center">
               <p className="text-sm text-[#5A6278]">
                 Remember your password?{' '}
-                <Link to="/login" className="text-[#FF1F6D] hover:text-[#FF4D8F] transition-colors duration-200 font-medium">
+                <Link to="/login" className="text-[#FF8C00] hover:text-[#FFB347] transition-colors duration-200 font-medium">
                   Sign in
                 </Link>
               </p>

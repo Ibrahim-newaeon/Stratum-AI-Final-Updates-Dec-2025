@@ -246,8 +246,8 @@ export default function Signup() {
       <AuthLayout>
         <div className="w-full max-w-md bg-[#0F1320] border border-[#1E2740] rounded-xl p-8 shadow-xl">
           <div className="text-left mb-8">
-            <div className="w-12 h-12 rounded-lg bg-[#FF1F6D]/10 border border-[#FF1F6D]/20 flex items-center justify-center mb-6">
-              <Lock className="w-6 h-6 text-[#FF1F6D]" />
+            <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-[#FF1F6D] to-[#FF8C00]/10 border border-[#FF8C00]/20 flex items-center justify-center mb-6">
+              <Lock className="w-6 h-6 text-[#FF8C00]" />
             </div>
             <h2 className="text-2xl font-semibold text-[#F0EDE5] mb-2">
               Verify your identity
@@ -269,13 +269,13 @@ export default function Signup() {
             <button
               onClick={handleChooseEmail}
               disabled={isSendingOTP}
-              className="w-full flex items-center gap-4 p-4 rounded-lg bg-[#181F33] border border-[#1E2740] hover:border-[#FF1F6D]/40 transition-colors duration-200 group disabled:opacity-50"
+              className="w-full flex items-center gap-4 p-4 rounded-lg bg-[#181F33] border border-[#1E2740] hover:border-[#FF8C00]/40 transition-colors duration-200 group disabled:opacity-50"
             >
-              <div className="w-12 h-12 rounded-lg bg-[#FF1F6D]/10 border border-[#FF1F6D]/20 flex items-center justify-center flex-shrink-0">
-                <Mail className="w-6 h-6 text-[#FF1F6D]" />
+              <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-[#FF1F6D] to-[#FF8C00]/10 border border-[#FF8C00]/20 flex items-center justify-center flex-shrink-0">
+                <Mail className="w-6 h-6 text-[#FF8C00]" />
               </div>
               <div className="text-left flex-1">
-                <div className="text-sm font-semibold text-[#F0EDE5] group-hover:text-[#FF1F6D] transition-colors duration-200">
+                <div className="text-sm font-semibold text-[#F0EDE5] group-hover:text-[#FF8C00] transition-colors duration-200">
                   Verify via Email
                 </div>
                 <div className="text-xs text-[#5A6278] mt-0.5">
@@ -309,7 +309,7 @@ export default function Signup() {
           <div className="flex justify-center mt-6">
             <button
               onClick={() => setStep('details')}
-              className="text-xs text-[#8B92A8] hover:text-[#FF4D8F] transition-colors duration-200 font-medium"
+              className="text-xs text-[#8B92A8] hover:text-[#FFB347] transition-colors duration-200 font-medium"
             >
               &larr; Back to registration
             </button>
@@ -325,8 +325,8 @@ export default function Signup() {
       <AuthLayout>
         <div className="w-full max-w-md bg-[#0F1320] border border-[#1E2740] rounded-xl p-8 shadow-xl">
           <div className="text-left mb-8">
-            <div className="w-12 h-12 rounded-lg bg-[#FF1F6D]/10 border border-[#FF1F6D]/20 flex items-center justify-center mb-6">
-              <Mail className="w-6 h-6 text-[#FF1F6D]" />
+            <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-[#FF1F6D] to-[#FF8C00]/10 border border-[#FF8C00]/20 flex items-center justify-center mb-6">
+              <Mail className="w-6 h-6 text-[#FF8C00]" />
             </div>
             <h2 className="text-2xl font-semibold text-[#F0EDE5] mb-2">
               Check your email
@@ -334,7 +334,7 @@ export default function Signup() {
             <p className="text-sm text-[#8B92A8] mb-1">
               We've sent a 6-digit code to
             </p>
-            <p className="text-[#FF1F6D] text-sm font-semibold">
+            <p className="text-[#FF8C00] text-sm font-semibold">
               {formData?.email}
             </p>
           </div>
@@ -350,7 +350,7 @@ export default function Signup() {
               }}
               placeholder="000000"
               aria-label="One-time password"
-              className="w-full text-center text-2xl tracking-[0.5em] h-14 rounded-lg bg-[#181F33] border border-[#1E2740] text-[#F0EDE5] placeholder-[#5A6278] focus:ring-2 focus:ring-[#FF1F6D]/30 focus:border-[#FF1F6D]/50 transition-colors duration-200 outline-none font-mono"
+              className="w-full text-center text-2xl tracking-[0.5em] h-14 rounded-lg bg-[#181F33] border border-[#1E2740] text-[#F0EDE5] placeholder-[#5A6278] focus:ring-2 focus:ring-[#FF8C00]/30 focus:border-[#FF8C00]/50 transition-colors duration-200 outline-none font-mono"
               maxLength={6}
             />
             {otpError && (
@@ -362,7 +362,7 @@ export default function Signup() {
             <button
               onClick={handleVerifyEmailOTP}
               disabled={isVerifying || otpCode.length !== 6}
-              className="w-full bg-[#FF1F6D] text-[#080C14] font-semibold rounded-lg py-3 hover:bg-[#FF4D8F] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full bg-gradient-to-r from-[#FF1F6D] to-[#FF8C00] text-[#080C14] font-semibold rounded-lg py-3 hover:brightness-110 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isVerifying ? (
                 <span className="flex items-center gap-2">{spinner} Verifying...</span>
@@ -375,7 +375,7 @@ export default function Signup() {
               <button
                 onClick={handleResendOTP}
                 disabled={otpCountdown > 0 || sendEmailOTP.isPending}
-                className="text-xs text-[#FF1F6D] hover:text-[#FF4D8F] transition-colors duration-200 disabled:opacity-40 disabled:hover:text-[#FF1F6D] font-medium"
+                className="text-xs text-[#FF8C00] hover:text-[#FFB347] transition-colors duration-200 disabled:opacity-40 disabled:hover:text-[#FF8C00] font-medium"
               >
                 {sendEmailOTP.isPending ? 'Sending...' : otpCountdown > 0 ? `Resend in ${otpCountdown}s` : 'Resend code'}
               </button>
@@ -384,7 +384,7 @@ export default function Signup() {
             <div className="flex justify-center">
               <button
                 onClick={() => setStep('choose-method')}
-                className="text-xs text-[#8B92A8] hover:text-[#FF4D8F] transition-colors duration-200 font-medium"
+                className="text-xs text-[#8B92A8] hover:text-[#FFB347] transition-colors duration-200 font-medium"
               >
                 &larr; Try different method
               </button>
@@ -426,7 +426,7 @@ export default function Signup() {
               }}
               placeholder="000000"
               aria-label="One-time password"
-              className="w-full text-center text-2xl tracking-[0.5em] h-14 rounded-lg bg-[#181F33] border border-[#1E2740] text-[#F0EDE5] placeholder-[#5A6278] focus:ring-2 focus:ring-[#FF1F6D]/30 focus:border-[#FF1F6D]/50 transition-colors duration-200 outline-none font-mono"
+              className="w-full text-center text-2xl tracking-[0.5em] h-14 rounded-lg bg-[#181F33] border border-[#1E2740] text-[#F0EDE5] placeholder-[#5A6278] focus:ring-2 focus:ring-[#FF8C00]/30 focus:border-[#FF8C00]/50 transition-colors duration-200 outline-none font-mono"
               maxLength={6}
             />
             {otpError && (
@@ -438,7 +438,7 @@ export default function Signup() {
             <button
               onClick={handleVerifyWhatsAppOTP}
               disabled={isVerifying || otpCode.length !== 6}
-              className="w-full bg-[#FF1F6D] text-[#080C14] font-semibold rounded-lg py-3 hover:bg-[#FF4D8F] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full bg-gradient-to-r from-[#FF1F6D] to-[#FF8C00] text-[#080C14] font-semibold rounded-lg py-3 hover:brightness-110 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isVerifying ? (
                 <span className="flex items-center gap-2">{spinner} Verifying...</span>
@@ -451,7 +451,7 @@ export default function Signup() {
               <button
                 onClick={handleResendOTP}
                 disabled={otpCountdown > 0 || sendWhatsAppOTP.isPending}
-                className="text-xs text-[#FF1F6D] hover:text-[#FF4D8F] transition-colors duration-200 disabled:opacity-40 disabled:hover:text-[#FF1F6D] font-medium"
+                className="text-xs text-[#FF8C00] hover:text-[#FFB347] transition-colors duration-200 disabled:opacity-40 disabled:hover:text-[#FF8C00] font-medium"
               >
                 {sendWhatsAppOTP.isPending ? 'Sending...' : otpCountdown > 0 ? `Resend in ${otpCountdown}s` : 'Resend code'}
               </button>
@@ -460,7 +460,7 @@ export default function Signup() {
             <div className="flex justify-center">
               <button
                 onClick={() => setStep('choose-method')}
-                className="text-xs text-[#8B92A8] hover:text-[#FF4D8F] transition-colors duration-200 font-medium"
+                className="text-xs text-[#8B92A8] hover:text-[#FFB347] transition-colors duration-200 font-medium"
               >
                 &larr; Try different method
               </button>
@@ -483,7 +483,7 @@ export default function Signup() {
             Account created
           </h2>
           <p className="text-sm text-[#8B92A8] mb-4">
-            Your profile has been created and your <span className="text-[#FF1F6D] font-semibold">Free Tier</span> is now active.
+            Your profile has been created and your <span className="text-[#FF8C00] font-semibold">Free Tier</span> is now active.
           </p>
 
           {/* Free Tier Banner */}
@@ -496,7 +496,7 @@ export default function Signup() {
             </p>
             <button
               onClick={() => navigate('/login', { state: { registered: true, showUpgrade: true } })}
-              className="mt-3 text-xs text-amber-500 hover:text-[#FF4D8F] transition-colors duration-200 font-medium"
+              className="mt-3 text-xs text-amber-500 hover:text-[#FFB347] transition-colors duration-200 font-medium"
             >
               View Plans &rarr;
             </button>
@@ -504,7 +504,7 @@ export default function Signup() {
 
           <button
             onClick={() => navigate('/login', { state: { registered: true } })}
-            className="w-full bg-[#FF1F6D] text-[#080C14] font-semibold rounded-lg py-3 hover:bg-[#FF4D8F] transition-colors duration-200 inline-flex items-center justify-center gap-2"
+            className="w-full bg-gradient-to-r from-[#FF1F6D] to-[#FF8C00] text-[#080C14] font-semibold rounded-lg py-3 hover:brightness-110 transition-colors duration-200 inline-flex items-center justify-center gap-2"
           >
             Sign in
             <ArrowRight className="w-4 h-4" />
@@ -567,7 +567,7 @@ export default function Signup() {
                     id="signup-name"
                     type="text"
                     placeholder="John Doe"
-                    className="w-full bg-[#181F33] border border-[#1E2740] rounded-lg pl-11 pr-4 py-3 text-sm text-[#F0EDE5] placeholder-[#5A6278] outline-none focus:ring-2 focus:ring-[#FF1F6D]/30 focus:border-[#FF1F6D]/50 transition-colors duration-200"
+                    className="w-full bg-[#181F33] border border-[#1E2740] rounded-lg pl-11 pr-4 py-3 text-sm text-[#F0EDE5] placeholder-[#5A6278] outline-none focus:ring-2 focus:ring-[#FF8C00]/30 focus:border-[#FF8C00]/50 transition-colors duration-200"
                   />
                 </div>
                 {errors.name && (
@@ -587,7 +587,7 @@ export default function Signup() {
                     id="signup-email"
                     type="email"
                     placeholder="you@company.com"
-                    className="w-full bg-[#181F33] border border-[#1E2740] rounded-lg pl-11 pr-4 py-3 text-sm text-[#F0EDE5] placeholder-[#5A6278] outline-none focus:ring-2 focus:ring-[#FF1F6D]/30 focus:border-[#FF1F6D]/50 transition-colors duration-200"
+                    className="w-full bg-[#181F33] border border-[#1E2740] rounded-lg pl-11 pr-4 py-3 text-sm text-[#F0EDE5] placeholder-[#5A6278] outline-none focus:ring-2 focus:ring-[#FF8C00]/30 focus:border-[#FF8C00]/50 transition-colors duration-200"
                   />
                 </div>
                 {errors.email && (
@@ -607,7 +607,7 @@ export default function Signup() {
                     id="signup-phone"
                     type="tel"
                     placeholder="+1 234 567 8900"
-                    className="w-full bg-[#181F33] border border-[#1E2740] rounded-lg pl-11 pr-4 py-3 text-sm text-[#F0EDE5] placeholder-[#5A6278] outline-none focus:ring-2 focus:ring-[#FF1F6D]/30 focus:border-[#FF1F6D]/50 transition-colors duration-200"
+                    className="w-full bg-[#181F33] border border-[#1E2740] rounded-lg pl-11 pr-4 py-3 text-sm text-[#F0EDE5] placeholder-[#5A6278] outline-none focus:ring-2 focus:ring-[#FF8C00]/30 focus:border-[#FF8C00]/50 transition-colors duration-200"
                   />
                 </div>
                 <p className="text-xs text-[#5A6278] ml-1">Include country code to enable WhatsApp verification</p>
@@ -628,7 +628,7 @@ export default function Signup() {
                     id="signup-password"
                     type={showPassword ? 'text' : 'password'}
                     placeholder="Min. 8 characters"
-                    className="w-full bg-[#181F33] border border-[#1E2740] rounded-lg pl-11 pr-11 py-3 text-sm text-[#F0EDE5] placeholder-[#5A6278] outline-none focus:ring-2 focus:ring-[#FF1F6D]/30 focus:border-[#FF1F6D]/50 transition-colors duration-200"
+                    className="w-full bg-[#181F33] border border-[#1E2740] rounded-lg pl-11 pr-11 py-3 text-sm text-[#F0EDE5] placeholder-[#5A6278] outline-none focus:ring-2 focus:ring-[#FF8C00]/30 focus:border-[#FF8C00]/50 transition-colors duration-200"
                   />
                   <button
                     type="button"
@@ -656,7 +656,7 @@ export default function Signup() {
                     id="signup-confirm-password"
                     type={showConfirmPassword ? 'text' : 'password'}
                     placeholder="Re-enter password"
-                    className="w-full bg-[#181F33] border border-[#1E2740] rounded-lg pl-11 pr-11 py-3 text-sm text-[#F0EDE5] placeholder-[#5A6278] outline-none focus:ring-2 focus:ring-[#FF1F6D]/30 focus:border-[#FF1F6D]/50 transition-colors duration-200"
+                    className="w-full bg-[#181F33] border border-[#1E2740] rounded-lg pl-11 pr-11 py-3 text-sm text-[#F0EDE5] placeholder-[#5A6278] outline-none focus:ring-2 focus:ring-[#FF8C00]/30 focus:border-[#FF8C00]/50 transition-colors duration-200"
                   />
                   <button
                     type="button"
@@ -678,13 +678,13 @@ export default function Signup() {
                   {...register('acceptTerms')}
                   type="checkbox"
                   id="terms"
-                  className="mt-0.5 w-4 h-4 rounded border-[#1E2740] bg-[#181F33] text-[#FF1F6D] focus:ring-[#FF1F6D]/30 focus:ring-offset-0 cursor-pointer"
+                  className="mt-0.5 w-4 h-4 rounded border-[#1E2740] bg-[#181F33] text-[#FF8C00] focus:ring-[#FF8C00]/30 focus:ring-offset-0 cursor-pointer"
                 />
                 <label htmlFor="terms" className="text-xs text-[#8B92A8] cursor-pointer select-none">
                   I accept the{' '}
-                  <a href="/terms" className="text-[#FF1F6D] hover:text-[#FF4D8F] transition-colors duration-200 font-medium">Terms</a>
+                  <a href="/terms" className="text-[#FF8C00] hover:text-[#FFB347] transition-colors duration-200 font-medium">Terms</a>
                   {' '}and{' '}
-                  <a href="/privacy" className="text-[#FF1F6D] hover:text-[#FF4D8F] transition-colors duration-200 font-medium">Privacy Policy</a>
+                  <a href="/privacy" className="text-[#FF8C00] hover:text-[#FFB347] transition-colors duration-200 font-medium">Privacy Policy</a>
                 </label>
               </div>
               {errors.acceptTerms && (
@@ -695,7 +695,7 @@ export default function Signup() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-[#FF1F6D] text-[#080C14] font-semibold rounded-lg py-3 hover:bg-[#FF4D8F] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full bg-gradient-to-r from-[#FF1F6D] to-[#FF8C00] text-[#080C14] font-semibold rounded-lg py-3 hover:brightness-110 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isLoading ? (
                   <span className="flex items-center gap-2">
@@ -715,7 +715,7 @@ export default function Signup() {
               Already have an account?{' '}
               <Link
                 to="/login"
-                className="text-[#FF1F6D] hover:text-[#FF4D8F] transition-colors duration-200 font-medium"
+                className="text-[#FF8C00] hover:text-[#FFB347] transition-colors duration-200 font-medium"
               >
                 Sign in
               </Link>
