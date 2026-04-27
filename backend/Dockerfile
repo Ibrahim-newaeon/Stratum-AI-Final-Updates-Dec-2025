@@ -1,6 +1,23 @@
 # =============================================================================
-# Stratum AI - Backend Dockerfile (single-stage for Railway compatibility)
+# Stratum AI - Backend + Frontend Dockerfile (Railway monorepo)
 # =============================================================================
+
+# -----------------------------------------------------------------------------
+# Stage 1: Build frontend
+# -----------------------------------------------------------------------------
+FROM node:20-alpine AS frontend-build
+
+WORKDIR /app/frontend
+
+COPY frontend/package*.json ./
+RUN npm ci --legacy-peer-deps
+
+COPY frontend/ ./
+RUN npm run build
+
+# -----------------------------------------------------------------------------
+# Stage 2: Python backend
+# -----------------------------------------------------------------------------
 FROM python:3.11-slim-bookworm
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -26,7 +43,7 @@ WORKDIR /app
 RUN chown appuser:appgroup /app
 
 # Install Python dependencies (this layer rebuilds when requirements change)
-COPY requirements-prod.txt .
+COPY backend/requirements-prod.txt .
 RUN pip install --no-cache-dir -r requirements-prod.txt
 
 # Remove build dependencies to reduce image size (~200MB savings)
@@ -34,7 +51,10 @@ RUN apt-get purge -y --auto-remove build-essential libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy application code (.dockerignore excludes tests, cache, etc.)
-COPY --chown=appuser:appgroup . .
+COPY --chown=appuser:appgroup backend/ .
+
+# Copy built frontend from stage 1
+COPY --from=frontend-build --chown=appuser:appgroup /app/frontend/dist /app/frontend/dist
 
 # Ensure start.sh is executable
 RUN chmod +x /app/start.sh

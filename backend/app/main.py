@@ -13,7 +13,8 @@ from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Optional
 
 import sentry_sdk
-from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, Query, status
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, Query, status, HTTPException
+from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
@@ -430,13 +431,35 @@ def create_application() -> FastAPI:
     app.include_router(api_router, prefix=settings.api_v1_prefix)
 
     # -------------------------------------------------------------------------
-    # Static Files - Serve uploaded assets
+    # Static Files - Frontend SPA + uploaded assets
     # -------------------------------------------------------------------------
     from pathlib import Path as _Path
+    from starlette.staticfiles import StaticFiles
+
+    # Uploads
     uploads_dir = _Path(os.environ.get("ASSET_UPLOAD_DIR", "uploads/assets"))
     uploads_dir.mkdir(parents=True, exist_ok=True)
-    from starlette.staticfiles import StaticFiles
     app.mount("/uploads/assets", StaticFiles(directory=str(uploads_dir)), name="uploaded-assets")
+
+    # Frontend SPA — serve built React app from /app/frontend/dist
+    frontend_dist = _Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
+    if frontend_dist.exists():
+        app.mount("/assets", StaticFiles(directory=str(frontend_dist / "assets")), name="frontend-assets")
+        app.mount("/images", StaticFiles(directory=str(frontend_dist / "images")), name="frontend-images")
+        app.mount("/icons", StaticFiles(directory=str(frontend_dist / "icons")), name="frontend-icons")
+
+        @app.get("/{full_path:path}", response_class=HTMLResponse)
+        async def serve_spa(full_path: str, request: Request):
+            """Serve index.html for all non-API routes (React Router support)."""
+            # Don't intercept API or docs routes
+            if full_path.startswith(("api", "docs", "openapi.json", "uploads", "health")):
+                raise HTTPException(status_code=404, detail="Not Found")
+            index_html = frontend_dist / "index.html"
+            if index_html.exists():
+                return HTMLResponse(content=index_html.read_text(encoding="utf-8"))
+            raise HTTPException(status_code=404, detail="Frontend not built")
+    else:
+        logger.warning("Frontend dist not found at %s", frontend_dist)
 
     # -------------------------------------------------------------------------
     # Health Check Endpoints
