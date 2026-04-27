@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-labelledby="fav-title">
+  <title id="fav-title">Stratum AI</title>
+  <defs>
+    <linearGradient id="fav-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F4D03F"/>
+      <stop offset="100%" stop-color="#C9A227"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="6" fill="#080C14"/>
+  <!-- Mini strata symbol -->
+  <path d="M6,24 L16,28 L26,24 L16,20Z" fill="#1A2238"/>
+  <path d="M8,17 L16,20 L24,17 L16,14Z" fill="#242B3D"/>
+  <path d="M10,10 L16,12 L22,10 L16,7Z" fill="url(#fav-gold)"/>
+  <path d="M10,10 L16,7 L22,10" fill="none" stroke="#F4D03F" stroke-width="0.6" opacity="0.8"/>
+</svg>

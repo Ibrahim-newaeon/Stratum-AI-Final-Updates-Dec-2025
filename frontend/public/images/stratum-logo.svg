@@ -1,9 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 200" width="360" height="100" role="img" aria-labelledby="logo-title">
   <title id="logo-title">Stratum AI</title>
   <defs>
-    <!-- Gold gradient for top slab -->
+    <!-- Rich gold gradient for top slab -->
     <linearGradient id="gold-top" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#D4AF37"/>
+      <stop offset="0%" stop-color="#F4D03F"/>
+      <stop offset="50%" stop-color="#D4AF37"/>
       <stop offset="100%" stop-color="#C9A227"/>
     </linearGradient>
     <!-- Warm gold gradient for top slab right -->
@@ -11,50 +12,50 @@
       <stop offset="0%" stop-color="#C9A227"/>
       <stop offset="100%" stop-color="#A08020"/>
     </linearGradient>
-    <!-- Glow filter -->
+    <!-- Subtle glow filter -->
     <filter id="gold-glow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feGaussianBlur stdDeviation="8" result="blur"/>
       <feComposite in="SourceGraphic" in2="blur" operator="over"/>
     </filter>
   </defs>
 
   <!-- Strata Symbol (left side) -->
-  <g transform="translate(20, 20)">
+  <g transform="translate(24, 20)">
     <!-- Bottom slab -->
-    <path d="M30,165 L100,185 L170,165 L100,145Z" fill="#1E2740"/>
-    <path d="M100,185 L170,165 L170,172 L100,192Z" fill="#141B2D"/>
-    <path d="M30,165 L100,185 L100,192 L30,172Z" fill="#181F33"/>
+    <path d="M30,165 L100,185 L170,165 L100,145Z" fill="#1A2238"/>
+    <path d="M100,185 L170,165 L170,172 L100,192Z" fill="#111827"/>
+    <path d="M30,165 L100,185 L100,192 L30,172Z" fill="#141C2E"/>
     <!-- Middle slab -->
-    <path d="M38,110 L100,128 L162,110 L100,92Z" fill="#2A2A32"/>
-    <path d="M100,128 L162,110 L162,117 L100,135Z" fill="#1E2740"/>
-    <path d="M38,110 L100,128 L100,135 L38,117Z" fill="#22222B"/>
-    <!-- Top slab glow -->
-    <path d="M46,58 L100,74 L154,58 L100,42Z" fill="#C9A227" opacity="0.12" filter="url(#gold-glow)"/>
+    <path d="M38,110 L100,128 L162,110 L100,92Z" fill="#242B3D"/>
+    <path d="M100,128 L162,110 L162,117 L100,135Z" fill="#1A2238"/>
+    <path d="M38,110 L100,128 L100,135 L38,117Z" fill="#1E2638"/>
+    <!-- Top slab ambient glow -->
+    <path d="M46,58 L100,74 L154,58 L100,42Z" fill="#D4AF37" opacity="0.08" filter="url(#gold-glow)"/>
     <!-- Top slab left -->
     <path d="M46,58 L100,74 L100,42Z" fill="url(#gold-top)"/>
     <!-- Top slab right -->
     <path d="M100,74 L154,58 L100,42Z" fill="url(#gold-top-right)"/>
     <!-- Edge highlight -->
-    <path d="M46,58 L100,42 L154,58" fill="none" stroke="#D4AF37" stroke-width="0.7" opacity="0.6"/>
+    <path d="M46,58 L100,42 L154,58" fill="none" stroke="#F4D03F" stroke-width="0.8" opacity="0.7"/>
     <!-- Energy nodes -->
     <circle cx="100" cy="86" r="2" fill="#D4AF37" opacity="0.5"/>
     <circle cx="76" cy="87" r="1" fill="#D4AF37" opacity="0.25"/>
     <circle cx="124" cy="87" r="1" fill="#D4AF37" opacity="0.25"/>
-    <circle cx="100" cy="140" r="1.5" fill="#C9A227" opacity="0.3"/>
+    <circle cx="100" cy="140" r="1.5" fill="#C9A227" opacity="0.35"/>
   </g>
 
   <!-- Wordmark (right side) -->
   <g transform="translate(240, 0)">
     <!-- Stratum -->
-    <text x="0" y="120" font-family="'Inter','SF Pro Display','Segoe UI',system-ui,-apple-system,sans-serif" font-size="72" letter-spacing="-2" font-weight="300" fill="#F0EDE5">
+    <text x="0" y="120" font-family="'Inter','SF Pro Display','Segoe UI',system-ui,-apple-system,sans-serif" font-size="72" letter-spacing="-1.5" font-weight="300" fill="#F0EDE5">
       Stratum
     </text>
     <!-- AI -->
-    <text x="320" y="120" font-family="'Inter','SF Pro Display','Segoe UI',system-ui,-apple-system,sans-serif" font-size="72" letter-spacing="-2" font-weight="700" fill="#C9A227">
+    <text x="316" y="120" font-family="'Inter','SF Pro Display','Segoe UI',system-ui,-apple-system,sans-serif" font-size="72" letter-spacing="-1.5" font-weight="700" fill="#D4AF37">
       AI
     </text>
     <!-- Tagline -->
-    <text x="0" y="155" font-family="'Inter','SF Pro Display','Segoe UI',system-ui,-apple-system,sans-serif" font-size="16" letter-spacing="4" font-weight="500" fill="#8B92A8">
+    <text x="0" y="155" font-family="'Inter','SF Pro Display','Segoe UI',system-ui,-apple-system,sans-serif" font-size="15" letter-spacing="5" font-weight="500" fill="#6B7280">
       YOUR AI PARTNER FOR AD GROWTH
     </text>
   </g>
