@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stratum AI — Logo Showcase</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #080C14;
+    color: #F0EDE5;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    padding: 48px 24px;
+  }
+  .container { max-width: 1200px; margin: 0 auto; }
+  h1 {
+    font-size: 32px;
+    font-weight: 300;
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+  }
+  h1 span { font-weight: 700; color: #C9A227; }
+  .subtitle {
+    font-size: 14px;
+    color: #6B7280;
+    margin-bottom: 48px;
+    letter-spacing: 0.5px;
+  }
+
+  /* Section headers */
+  .section-title {
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: #C9A227;
+    margin: 48px 0 24px;
+    font-weight: 500;
+    border-bottom: 1px solid rgba(201, 162, 39, 0.15);
+    padding-bottom: 12px;
+  }
+
+  /* Logo cards */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 24px;
+  }
+  .card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 16px;
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    transition: border-color 0.2s;
+  }
+  .card:hover { border-color: rgba(201, 162, 39, 0.25); }
+  .card .preview {
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+  .card .preview img {
+    max-width: 100%;
+    height: auto;
+  }
+  .card .name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #F0EDE5;
+  }
+  .card .desc {
+    font-size: 12px;
+    color: #6B7280;
+    text-align: center;
+    line-height: 1.5;
+  }
+  .card .file {
+    font-size: 10px;
+    color: #3D4852;
+    font-family: 'SF Mono', monospace;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
+
+  /* Light mode cards */
+  .light-bg {
+    background: #F0EDE6 !important;
+    border-color: rgba(0, 0, 0, 0.08) !important;
+  }
+  .light-bg .name { color: #0A0A0F; }
+  .light-bg .desc { color: #5A5040; }
+
+  /* Favicon row */
+  .favicon-row {
+    display: flex;
+    gap: 48px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .favicon-item {
+    text-align: center;
+  }
+  .favicon-item img {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+  }
+  .favicon-item .label {
+    font-size: 11px;
+    color: #6B7280;
+    margin-top: 8px;
+  }
+
+  /* Current badge */
+  .badge {
+    display: inline-block;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 100px;
+    font-weight: 600;
+    margin-left: 8px;
+  }
+  .badge.current {
+    background: rgba(201, 162, 39, 0.15);
+    color: #C9A227;
+    border: 1px solid rgba(201, 162, 39, 0.3);
+  }
+  .badge.alt {
+    background: rgba(255, 255, 255, 0.05);
+    color: #6B7280;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  footer {
+    margin-top: 64px;
+    text-align: center;
+    font-size: 11px;
+    color: #3D4852;
+    letter-spacing: 0.1em;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Stratum <span>AI</span></h1>
+  <p class="subtitle">Logo Showcase &mdash; 3 Options + 4 Variants</p>
+
+  <!-- OPTION 1 -->
+  <div class="section-title">
+    Option 1: Gold Authority
+    <span class="badge current">Current</span>
+  </div>
+  <div class="grid">
+    <div class="card">
+      <div class="preview">
+        <img src="/images/stratum-logo.svg" alt="Stratum AI Logo Option 1" width="360">
+      </div>
+      <div class="name">Full Lockup</div>
+      <div class="desc">Gold strata symbol + "Stratum AI" wordmark + tagline<br>Best for headers, auth pages, landing</div>
+      <div class="file">stratum-logo.svg</div>
+    </div>
+    <div class="card">
+      <div class="preview">
+        <img src="/images/stratum-symbol.svg" alt="Stratum AI Symbol" width="160">
+      </div>
+      <div class="name">Symbol Only</div>
+      <div class="desc">3 isometric data planes in gold gradients<br>Best for favicon, app icon, social avatar</div>
+      <div class="file">stratum-symbol.svg</div>
+    </div>
+    <div class="card">
+      <div class="preview">
+        <img src="/images/stratum-wordmark-light.svg" alt="Stratum AI Wordmark Light" width="360">
+      </div>
+      <div class="name">Wordmark &mdash; Light</div>
+      <div class="desc">"Stratum" in white + "AI" in gold<br>Best for dark backgrounds (navbar, dashboard)</div>
+      <div class="file">stratum-wordmark-light.svg</div>
+    </div>
+    <div class="card light-bg">
+      <div class="preview">
+        <img src="/images/stratum-wordmark-dark.svg" alt="Stratum AI Wordmark Dark" width="360">
+      </div>
+      <div class="name">Wordmark &mdash; Dark</div>
+      <div class="desc">"Stratum" in dark + "AI" in dark gold<br>Best for light backgrounds (print, white pages)</div>
+      <div class="file">stratum-wordmark-dark.svg</div>
+    </div>
+  </div>
+
+  <!-- FAVICON -->
+  <div class="section-title">Favicon Variant</div>
+  <div class="favicon-row">
+    <div class="favicon-item">
+      <img src="/images/stratum-favicon.svg" alt="Favicon">
+      <div class="label">32&times;32 SVG</div>
+    </div>
+    <div class="favicon-item">
+      <img src="/images/favicon.svg" alt="Current Favicon" style="width:32px;height:32px;">
+      <div class="label">Current favicon.svg</div>
+    </div>
+  </div>
+
+  <!-- OPTION 2 -->
+  <div class="section-title">
+    Option 2: Cyber Performance
+    <span class="badge alt">Alternative</span>
+  </div>
+  <div class="grid">
+    <div class="card">
+      <div class="preview">
+        <img src="/images/stratum-logo-option2.svg" alt="Stratum AI Logo Option 2" width="360">
+      </div>
+      <div class="name">Full Lockup</div>
+      <div class="desc">Pink-to-orange ascending bars + cyan accents<br>High-energy, conversion-focused aesthetic</div>
+      <div class="file">stratum-logo-option2.svg</div>
+    </div>
+  </div>
+
+  <!-- OPTION 3 -->
+  <div class="section-title">
+    Option 3: Hybrid Intelligence
+    <span class="badge alt">Alternative</span>
+  </div>
+  <div class="grid">
+    <div class="card">
+      <div class="preview">
+        <img src="/images/stratum-logo-option3.svg" alt="Stratum AI Logo Option 3" width="360">
+      </div>
+      <div class="name">Full Lockup</div>
+      <div class="desc">Stratified peak with gold, purple, cyan, green layers<br>Represents multi-layer AI intelligence</div>
+      <div class="file">stratum-logo-option3.svg</div>
+    </div>
+  </div>
+
+  <footer>
+    Stratum AI Brand Identity &mdash; Generated 2026
+  </footer>
+</div>
+</body>
+</html>
