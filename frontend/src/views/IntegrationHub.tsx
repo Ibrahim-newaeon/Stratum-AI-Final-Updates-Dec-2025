@@ -64,7 +64,7 @@ export default function IntegrationHub() {
 function ZapierPanel() {
   
   const [webhooks, setWebhooks] = useState<any[]>([
-    { id: 'zap_001', name: 'Campaign Alert → CRM', webhook_url: 'https://hooks.zapier.com/hooks/catch/123/abc', event_types: ['campaign_created', 'roas_alert'], is_active: true },
+    { id: 'zap_001', name: 'Campaign Alert → CRM', webhook_url: 'https://example.com/zapier-placeholder', event_types: ['campaign_created', 'roas_alert'], is_active: true },
   ]);
   const [newWebhook, setNewWebhook] = useState({ name: '', webhook_url: '', event_types: [] as string[] });
   const [testResult, setTestResult] = useState<any>(null);

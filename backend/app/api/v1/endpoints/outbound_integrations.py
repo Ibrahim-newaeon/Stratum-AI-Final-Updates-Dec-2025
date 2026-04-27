@@ -124,7 +124,7 @@ async def list_zapier_webhooks(
         ZapierWebhookConfig(
             id="zap_001",
             name="Campaign Alert → CRM",
-            webhook_url="https://hooks.zapier.com/hooks/catch/123/abc",
+            webhook_url="https://example.com/zapier-placeholder",
             event_types=["campaign_created", "roas_alert"],
             is_active=True,
             created_at=datetime.now(UTC).isoformat(),
@@ -177,7 +177,7 @@ async def trigger_zapier_webhook(
     start = time.perf_counter()
 
     # In production, fetch webhook URL from DB, validate tenant ownership
-    webhook_url = "https://hooks.zapier.com/hooks/catch/123/abc"
+    webhook_url = "https://example.com/zapier-placeholder"
 
     payload = {
         "event": request.event_type,
