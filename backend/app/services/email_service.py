@@ -17,9 +17,34 @@ from app.core.logging import get_logger
 
 logger = get_logger(__name__)
 
+# Optional SendGrid integration — loaded lazily to avoid hard dependency errors
+_sendgrid_client = None
+
+
+def _get_sendgrid_client():
+    global _sendgrid_client
+    if _sendgrid_client is not None:
+        return _sendgrid_client
+    if not settings.sendgrid_api_key:
+        return None
+    try:
+        from sendgrid import SendGridAPIClient
+
+        _sendgrid_client = SendGridAPIClient(api_key=settings.sendgrid_api_key)
+        return _sendgrid_client
+    except Exception as e:
+        logger.error("Failed to initialize SendGrid client", error=str(e))
+        return None
+
 
 class EmailService:
-    """Service for sending transactional emails."""
+    """Service for sending transactional emails.
+
+    Priority:
+        1. SendGrid API (if SENDGRID_API_KEY is set)
+        2. SMTP fallback (if SMTP_USER and SMTP_PASSWORD are set)
+        3. Dev mode logging (local development only)
+    """
 
     def __init__(self) -> None:
         self.host = settings.smtp_host
@@ -31,6 +56,7 @@ class EmailService:
         self.from_name = settings.email_from_name
         self.from_address = settings.email_from_address
         self.frontend_url = settings.frontend_url
+        self._sg = _get_sendgrid_client()
 
     def _create_message(
         self,
@@ -55,21 +81,66 @@ class EmailService:
         return message
 
     def _send_email(self, to_email: str, message: MIMEMultipart) -> bool:
-        """Send an email using SMTP."""
-        if not self.user or not self.password:
-            logger.warning(
-                "SMTP credentials not configured, email not sent",
-                to_email=to_email[:20] + "...",
+        """Send an email via SendGrid API or SMTP fallback."""
+        # 1. Try SendGrid API first
+        if self._sg is not None:
+            return self._send_sendgrid(to_email, message)
+
+        # 2. Fall back to SMTP
+        if self.user and self.password:
+            return self._send_smtp(to_email, message)
+
+        # 3. Nothing configured — log and return
+        logger.warning(
+            "No email provider configured (SENDGRID_API_KEY or SMTP credentials required)",
+            to_email=to_email[:20] + "...",
+        )
+        if settings.is_development:
+            logger.info(
+                "Development mode: Email would be sent",
+                subject=message["Subject"],
+                to=to_email,
             )
-            if settings.is_development:
+            return True
+        return False
+
+    def _send_sendgrid(self, to_email: str, message: MIMEMultipart) -> bool:
+        """Send via SendGrid Web API."""
+        try:
+            from sendgrid.helpers.mail import Mail
+
+            sg_mail = Mail(
+                from_email=f"{self.from_name} <{self.from_address}>",
+                to_emails=to_email,
+                subject=message["Subject"],
+                html_content=message.get_payload(1).get_payload()
+                if len(message.get_payload()) > 1
+                else message.get_payload(0).get_payload(),
+            )
+            # Attach plain text if available
+            if len(message.get_payload()) > 1:
+                sg_mail.plain_text_content = message.get_payload(0).get_payload()
+
+            response = self._sg.send(sg_mail)
+            if response.status_code in (200, 201, 202):
                 logger.info(
-                    "Development mode: Email would be sent",
-                    subject=message["Subject"],
-                    to=to_email,
+                    "Email sent via SendGrid",
+                    to_email=to_email[:20] + "...",
+                    status=response.status_code,
                 )
                 return True
+            logger.error(
+                "SendGrid API returned non-success status",
+                status=response.status_code,
+                body=response.body,
+            )
+            return False
+        except Exception as e:
+            logger.error("SendGrid API error sending email", error=str(e))
             return False
 
+    def _send_smtp(self, to_email: str, message: MIMEMultipart) -> bool:
+        """Send an email using SMTP."""
         try:
             if self.use_ssl:
                 context = ssl.create_default_context()
@@ -84,7 +155,7 @@ class EmailService:
                     server.login(self.user, self.password)
                     server.sendmail(self.from_address, to_email, message.as_string())
 
-            logger.info("Email sent successfully", to_email=to_email[:20] + "...")
+            logger.info("Email sent via SMTP", to_email=to_email[:20] + "...")
             return True
 
         except smtplib.SMTPException as e:

@@ -245,6 +245,9 @@ class Settings(BaseSettings):
     smtp_password: Optional[str] = Field(default=None, description="SMTP password")
     smtp_tls: bool = Field(default=True, description="Use STARTTLS")
     smtp_ssl: bool = Field(default=False, description="Use SSL")
+    sendgrid_api_key: Optional[str] = Field(
+        default=None, description="SendGrid API key (preferred over SMTP)"
+    )
     email_from_name: str = Field(default="Stratum AI", description="Sender display name")
     email_from_address: str = Field(
         default="noreply@stratumai.app", description="Sender email address"
