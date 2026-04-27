@@ -226,6 +226,19 @@ const CheckoutCancel = lazyWithRetry(() => import('./views/checkout/CheckoutCanc
 // Announcement pages
 const AudienceSyncLaunch = lazyWithRetry(() => import('./views/pages/announcements/AudienceSyncLaunch'));
 
+// Gap implementation views
+const AIInsights = lazyWithRetry(() => import('./views/AIInsights'));
+const FunnelAnalysis = lazyWithRetry(() => import('./views/FunnelAnalysis'));
+const CohortAnalysis = lazyWithRetry(() => import('./views/CohortAnalysis'));
+const SQLEditor = lazyWithRetry(() => import('./views/SQLEditor'));
+const ComplianceDashboard = lazyWithRetry(() => import('./views/ComplianceDashboard'));
+const IntegrationHub = lazyWithRetry(() => import('./views/IntegrationHub'));
+const DeveloperPortal = lazyWithRetry(() => import('./views/DeveloperPortal'));
+
+// Drip Campaigns & Push Notifications
+const DripCampaignBuilder = lazyWithRetry(() => import('./views/DripCampaignBuilder'));
+const PushNotifications = lazyWithRetry(() => import('./views/PushNotifications'));
+
 function App() {
   return (
     <HelmetProvider>
@@ -1162,6 +1175,100 @@ function App() {
                           <ProtectedRoute requiredRole="manager">
                             <Suspense fallback={<LoadingSpinner />}>
                               <CustomReportBuilder />
+                            </Suspense>
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      {/* Gap implementation routes */}
+                      <Route
+                        path="ai-insights"
+                        element={
+                          <ProtectedRoute requiredRole="manager">
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <AIInsights />
+                            </Suspense>
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="funnel-analysis"
+                        element={
+                          <ProtectedRoute requiredRole="manager">
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <FunnelAnalysis />
+                            </Suspense>
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="cohort-analysis"
+                        element={
+                          <ProtectedRoute requiredRole="manager">
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <CohortAnalysis />
+                            </Suspense>
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="sql-editor"
+                        element={
+                          <ProtectedRoute requiredRole="admin">
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <SQLEditor />
+                            </Suspense>
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="compliance"
+                        element={
+                          <ProtectedRoute requiredRole="admin">
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <ComplianceDashboard />
+                            </Suspense>
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="integration-hub"
+                        element={
+                          <ProtectedRoute requiredRole="admin">
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <IntegrationHub />
+                            </Suspense>
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="developer"
+                        element={
+                          <ProtectedRoute requiredRole="admin">
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <DeveloperPortal />
+                            </Suspense>
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      {/* Drip Campaigns & Push Notifications */}
+                      <Route
+                        path="drip-campaigns"
+                        element={
+                          <ProtectedRoute requiredRole="manager">
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <DripCampaignBuilder />
+                            </Suspense>
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="push-notifications"
+                        element={
+                          <ProtectedRoute requiredRole="manager">
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <PushNotifications />
                             </Suspense>
                           </ProtectedRoute>
                         }

@@ -521,3 +521,17 @@ api_router.include_router(
     sendgrid_webhook.router,
     tags=["SendGrid Webhooks"],
 )
+
+# Drip Campaigns — Automated email sequences
+# Note: drip_campaigns.router has prefix="/drip-campaigns"
+api_router.include_router(
+    drip_campaigns.router,
+    tags=["Drip Campaigns"],
+)
+
+# Push Notifications — Web Push via VAPID
+# Note: push_notifications.router has prefix="/push-notifications"
+api_router.include_router(
+    push_notifications.router,
+    tags=["Push Notifications"],
+)

@@ -40,6 +40,8 @@ import { AnalyticsWidget } from './widgets/AnalyticsWidget';
 import { ComplianceWidget } from './widgets/ComplianceWidget';
 import { IntegrationsWidget } from './widgets/IntegrationsWidget';
 import { DevPortalWidget } from './widgets/DevPortalWidget';
+import { DripCampaignsWidget } from './widgets/DripCampaignsWidget';
+import { PushNotificationsWidget } from './widgets/PushNotificationsWidget';
 
 // Period options
 const periodOptions: { value: TimePeriod; label: string }[] = [
@@ -335,6 +337,16 @@ export default function UnifiedDashboard() {
         {/* Developer Portal (Gap #8) */}
         <div className="bento-span-2 bento-row-2">
           <DevPortalWidget />
+        </div>
+
+        {/* Drip Campaigns — Automated email sequences */}
+        <div className="bento-span-2 bento-row-2">
+          <DripCampaignsWidget />
+        </div>
+
+        {/* Push Notifications — Web push via VAPID */}
+        <div className="bento-span-2 bento-row-2">
+          <PushNotificationsWidget />
         </div>
       </div>
     </div>
