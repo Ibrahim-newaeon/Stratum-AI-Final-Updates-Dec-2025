@@ -67,6 +67,12 @@ from app.api.v1.endpoints import (
     audience_sync,
     copilot,
     launch_readiness,
+    # Gap endpoints
+    intelligence,
+    advanced_analytics,
+    compliance,
+    outbound_integrations,
+    developer,
 )
 
 api_router = APIRouter()
@@ -471,4 +477,39 @@ api_router.include_router(
 api_router.include_router(
     copilot.router,
     tags=["AI Copilot"],
+)
+
+# AI Intelligence (Gap #3)
+api_router.include_router(
+    intelligence.router,
+    prefix="/intelligence",
+    tags=["AI Intelligence"],
+)
+
+# Advanced Analytics (Gap #4)
+api_router.include_router(
+    advanced_analytics.router,
+    prefix="/analytics/advanced",
+    tags=["Advanced Analytics"],
+)
+
+# Compliance (Gap #5)
+api_router.include_router(
+    compliance.router,
+    prefix="/compliance",
+    tags=["Compliance"],
+)
+
+# Outbound Integrations (Gap #6)
+api_router.include_router(
+    outbound_integrations.router,
+    prefix="/integrations/outbound",
+    tags=["Outbound Integrations"],
+)
+
+# Developer Portal (Gap #8)
+api_router.include_router(
+    developer.router,
+    prefix="/developer",
+    tags=["Developer Portal"],
 )

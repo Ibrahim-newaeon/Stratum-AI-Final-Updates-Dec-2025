@@ -35,6 +35,11 @@ import { SignalScoreTrend } from './widgets/SignalScoreTrend';
 import { BudgetPacingCard } from './widgets/BudgetPacingCard';
 import { AutopilotActionsCard } from './widgets/AutopilotActionsCard';
 import { AnomalyFeedCard } from './widgets/AnomalyFeedCard';
+import { AIInsightsWidget } from './widgets/AIInsightsWidget';
+import { AnalyticsWidget } from './widgets/AnalyticsWidget';
+import { ComplianceWidget } from './widgets/ComplianceWidget';
+import { IntegrationsWidget } from './widgets/IntegrationsWidget';
+import { DevPortalWidget } from './widgets/DevPortalWidget';
 
 // Period options
 const periodOptions: { value: TimePeriod; label: string }[] = [
@@ -305,6 +310,31 @@ export default function UnifiedDashboard() {
         {/* Anomaly Feed — spans 2 columns, 2 rows */}
         <div className="bento-span-2 bento-row-2">
           <AnomalyFeedCard />
+        </div>
+
+        {/* AI Intelligence (Gap #3) */}
+        <div className="bento-span-2 bento-row-2">
+          <AIInsightsWidget />
+        </div>
+
+        {/* Advanced Analytics (Gap #4) */}
+        <div className="bento-span-2 bento-row-2">
+          <AnalyticsWidget />
+        </div>
+
+        {/* Compliance (Gap #5) */}
+        <div className="bento-span-2 bento-row-2">
+          <ComplianceWidget />
+        </div>
+
+        {/* Integrations (Gap #6) */}
+        <div className="bento-span-2 bento-row-2">
+          <IntegrationsWidget />
+        </div>
+
+        {/* Developer Portal (Gap #8) */}
+        <div className="bento-span-2 bento-row-2">
+          <DevPortalWidget />
         </div>
       </div>
     </div>
