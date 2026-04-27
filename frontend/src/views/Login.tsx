@@ -1,32 +1,14 @@
 /**
  * Login Page - Stratum AI
- * Split-screen layout: Trust Gauge left panel + glass card form
- * Cyberpunk Dark theme — midnight navy + spectral pink/orange/gold
- *
- * Fixes applied:
- * - BUG-001/002: Demo login now uses demoLogin() with client-side fallback
- * - BUG-003: Autofill captured via onInput + form ref reading on submit
- * - BUG-006: SSO button shows "Coming Soon" tooltip on hover
- * - BUG-007: Remember Me persists session via localStorage flag
- * - BUG-012: Page title no longer flickers (SEO title set immediately)
- * - BUG-016: Inline validation for email & password fields
+ * Command Center design system — split-screen layout
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import {
-  ClockIcon,
-  EnvelopeIcon,
-  ExclamationCircleIcon,
-  EyeIcon,
-  EyeSlashIcon,
-  FingerPrintIcon,
-  LockClosedIcon,
-} from '@heroicons/react/24/outline';
+import { Mail, Lock, Eye, EyeOff, Clock, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { pageSEO, SEO } from '@/components/common/SEO';
 import AuthLeftPanel from '@/components/auth/AuthLeftPanel';
-import { authStyles } from '@/components/auth/authStyles';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -73,7 +55,7 @@ export default function Login() {
   const from = location.state?.from?.pathname || '/dashboard/overview';
   const showVerificationBanner = location.state?.registered || location.state?.needsVerification;
 
-  // BUG-016: Inline validation helpers
+  // Inline validation helpers
   const emailError = touched.email && !email.trim()
     ? 'Email is required'
     : touched.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
@@ -89,7 +71,7 @@ export default function Login() {
     e.preventDefault();
     setError('');
 
-    // BUG-003: Read directly from form inputs to capture browser autofill
+    // Read directly from form inputs to capture browser autofill
     const formEl = formRef.current;
     const actualEmail = formEl?.querySelector<HTMLInputElement>('#login-email')?.value || email;
     const actualPassword = formEl?.querySelector<HTMLInputElement>('#login-password')?.value || password;
@@ -111,12 +93,11 @@ export default function Login() {
     try {
       const result = await login(actualEmail, actualPassword);
       if (result.success) {
-        // BUG-007: Persist remember-me preference
+        // Persist remember-me preference
         if (rememberMe) {
           localStorage.setItem('stratum_remember_me', 'true');
         } else {
           localStorage.removeItem('stratum_remember_me');
-          // Session-only: don't remove tokens, but mark for cleanup on window close
           sessionStorage.setItem('stratum_session_only', 'true');
         }
         navigate(from, { replace: true });
@@ -137,230 +118,204 @@ export default function Login() {
   return (
     <>
       <SEO {...pageSEO.login} url="https://stratum-ai.com/login" />
-      <style>{authStyles}</style>
 
-      <div className="dark bg-background text-foreground min-h-screen flex font-sans selection:bg-primary/30 overflow-hidden">
-        {/* Background mesh */}
-        <div className="fixed inset-0 auth-cyber-grid pointer-events-none" />
-        <div className="fixed inset-0 pointer-events-none overflow-hidden">
-          <div className="auth-float-1 absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(255, 31, 109, 0.08), transparent 60%)' }} />
-          <div className="auth-float-2 absolute bottom-[-15%] right-[-5%] w-[500px] h-[500px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(255, 140, 0, 0.06), transparent 60%)' }} />
-          <div className="auth-float-3 absolute top-[30%] right-[20%] w-[400px] h-[400px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(255, 215, 0, 0.05), transparent 60%)' }} />
-        </div>
+      <div className="min-h-screen flex bg-[#080C14] text-[#F0EDE5] font-[Satoshi,system-ui]">
+        <AuthLeftPanel />
 
-        <main className="relative z-10 w-full flex min-h-screen mx-auto" style={{ maxWidth: '1500px' }}>
-          {/* Left Panel — hidden on mobile */}
-          <AuthLeftPanel className="hidden lg:flex" />
+        <section className="w-full lg:w-3/5 flex flex-col items-center justify-center p-6 lg:p-12 relative">
+          {/* Mobile logo */}
+          <div className="lg:hidden mb-8">
+            <img
+              src="/images/stratum-logo.svg"
+              alt="Stratum AI"
+              className="h-8"
+              style={{ filter: 'invert(1) brightness(2)' }}
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
 
-          {/* Right Panel — Form */}
-          <section className="lg:w-5/12 w-full flex flex-col items-center justify-center p-6 lg:p-8 bg-background relative">
-            {/* Subtle gradient overlay */}
-            <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-bl from-primary/5 to-transparent pointer-events-none" />
+          <div className="w-full max-w-md bg-[#0F1320] border border-[#1E2740] rounded-xl p-8 shadow-xl">
+            {/* Header */}
+            <div className="mb-8">
+              <h1 className="text-2xl font-semibold text-[#F0EDE5] mb-2">
+                Welcome back, partner.
+              </h1>
+              <p className="text-sm text-[#8B92A8]">
+                Enter your credentials to access your command center.
+              </p>
+            </div>
 
-            <div className="w-full max-w-md auth-glass-card rounded-xl p-10 dark:border-white/10 border-border/50 relative z-10 shadow-2xl auth-fade-up mb-12">
-              {/* Header */}
-              <div className="mb-10">
-                <h2 className="text-3xl font-display font-extrabold text-foreground mb-2 tracking-tight">
-                  Dashboard Access
-                </h2>
-                <p className="text-muted-foreground text-sm">
-                  Enter your neural credentials to initialize session.
-                </p>
-              </div>
-
-              {/* Mobile logo */}
-              <div className="lg:hidden flex items-center justify-center gap-3 mb-6">
-                <img src="/images/stratum-logo.svg" alt="Stratum AI" className="h-7" style={{ filter: 'invert(1) brightness(2)' }} loading="lazy" decoding="async" />
-              </div>
-
-              <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
-                {/* Verification Banner — shown after signup redirect */}
-                {showVerificationBanner && (
-                  <div className="auth-slide-in flex items-start gap-2 p-3 rounded-xl text-[13px] bg-amber-500/10 border border-amber-500/20 text-amber-400">
-                    <EnvelopeIcon className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <span>Please verify your email before signing in. Check your inbox for a verification link.</span>
-                      <Link to="/verify-email" className="block mt-1 text-primary font-bold hover:underline text-[12px]">
-                        Resend verification email
-                      </Link>
-                    </div>
-                  </div>
-                )}
-
-                {/* Lockout Alert — shows countdown timer */}
-                {isLockedOut && (
-                  <div className="auth-slide-in flex items-center gap-3 p-4 rounded-xl text-[13px] bg-amber-500/10 border border-amber-500/20 text-amber-400">
-                    <ClockIcon className="w-5 h-5 flex-shrink-0 animate-pulse" />
-                    <div className="flex-1">
-                      <p className="font-bold text-amber-300 text-sm mb-0.5">Account temporarily locked</p>
-                      <p className="text-amber-400/80">Too many failed attempts. Try again in{' '}
-                        <span className="font-bold text-amber-300">{formatCountdown(lockoutSeconds)}</span>
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Error Alert */}
-                {error && !isLockedOut && (
-                  <div className="auth-slide-in flex items-center gap-2 p-3 rounded-xl text-[13px] bg-red-500/10 border border-red-500/20 text-red-400">
-                    <ExclamationCircleIcon className="w-4 h-4 flex-shrink-0" />
-                    <span>{error}</span>
-                  </div>
-                )}
-
-                {/* Neural Identifier (Email) */}
-                <div className="space-y-2 auth-fade-up-d1">
-                  <label
-                    htmlFor="login-email"
-                    className="text-[10px] uppercase font-bold tracking-[0.15em] text-muted-foreground ml-1"
-                  >
-                    Neural Identifier
-                  </label>
-                  <div className="relative">
-                    <FingerPrintIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
-                    <input
-                      id="login-email"
-                      name="email"
-                      type="email"
-                      autoComplete="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      onInput={(e) => setEmail((e.target as HTMLInputElement).value)}
-                      onBlur={() => setTouched((t) => ({ ...t, email: true }))}
-                      placeholder="u_alpha_772"
-                      required
-                      disabled={isLoading}
-                      aria-invalid={!!emailError}
-                      aria-describedby={emailError ? 'login-email-error' : undefined}
-                      className="w-full h-11 bg-background/80 border dark:border-white/10 border-border/50 rounded-[12px] pl-12 pr-4 text-foreground text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary "
-                    />
-                  </div>
-                  {emailError && (
-                    <p id="login-email-error" className="text-xs text-red-400 mt-1 ml-1">{emailError}</p>
-                  )}
-                </div>
-
-                {/* Security Key (Password) */}
-                <div className="space-y-2 auth-fade-up-d2">
-                  <div className="flex justify-between items-center px-1">
-                    <label
-                      htmlFor="login-password"
-                      className="text-[10px] uppercase font-bold tracking-[0.15em] text-muted-foreground"
-                    >
-                      Security Key
-                    </label>
-                    <Link
-                      to="/forgot-password"
-                      className="text-[10px] uppercase font-bold tracking-[0.15em] text-primary hover:text-foreground transition-colors"
-                    >
-                      Reset Key
+            <form ref={formRef} onSubmit={handleSubmit} className="space-y-5">
+              {/* Verification Banner — shown after signup redirect */}
+              {showVerificationBanner && (
+                <div className="flex items-start gap-2 p-3 rounded-lg text-sm bg-amber-500/10 border border-amber-500/20 text-amber-400">
+                  <Mail className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <span>Please verify your email before signing in. Check your inbox for a verification link.</span>
+                    <Link to="/verify-email" className="block mt-1 text-[#C9A227] font-medium hover:text-[#D4AF37] transition-colors duration-200 text-xs">
+                      Resend verification email
                     </Link>
                   </div>
-                  <div className="relative">
-                    <LockClosedIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
-                    <input
-                      id="login-password"
-                      name="password"
-                      type={showPassword ? 'text' : 'password'}
-                      autoComplete="current-password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      onInput={(e) => setPassword((e.target as HTMLInputElement).value)}
-                      onBlur={() => setTouched((t) => ({ ...t, password: true }))}
-                      placeholder="••••••••••••"
-                      required
-                      disabled={isLoading}
-                      aria-invalid={!!passwordError}
-                      aria-describedby={passwordError ? 'login-password-error' : undefined}
-                      className="w-full h-11 bg-background/80 border dark:border-white/10 border-border/50 rounded-[12px] pl-12 pr-11 text-foreground text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary "
-                    />
-                    <button
-                      type="button"
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-foreground/25 hover:text-muted-foreground transition-colors"
-                      onClick={() => setShowPassword(!showPassword)}
-                      aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    >
-                      {showPassword ? (
-                        <EyeSlashIcon className="w-5 h-5" />
-                      ) : (
-                        <EyeIcon className="w-5 h-5" />
-                      )}
-                    </button>
+                </div>
+              )}
+
+              {/* Lockout Alert — shows countdown timer */}
+              {isLockedOut && (
+                <div className="flex items-center gap-3 p-4 rounded-lg text-sm bg-amber-500/10 border border-amber-500/20 text-amber-400">
+                  <Clock className="w-5 h-5 flex-shrink-0 animate-pulse" />
+                  <div className="flex-1">
+                    <p className="font-semibold text-amber-300 text-sm mb-0.5">Account temporarily locked</p>
+                    <p className="text-amber-400/80">
+                      Too many failed attempts. Try again in{' '}
+                      <span className="font-semibold text-amber-300">{formatCountdown(lockoutSeconds)}</span>
+                    </p>
                   </div>
-                  {passwordError && (
-                    <p id="login-password-error" className="text-xs text-red-400 mt-1 ml-1">{passwordError}</p>
-                  )}
                 </div>
+              )}
 
-                {/* Remember Me */}
-                <div className="flex items-center gap-3 px-1 py-2 auth-fade-up-d2">
+              {/* Error Alert */}
+              {error && !isLockedOut && (
+                <div className="flex items-center gap-2 p-3 rounded-lg text-sm bg-red-500/10 border border-red-500/20 text-red-400">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              {/* Email */}
+              <div className="space-y-2">
+                <label htmlFor="login-email" className="text-xs font-medium text-[#8B92A8] ml-1">
+                  Email
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-[#5A6278] pointer-events-none" />
                   <input
-                    type="checkbox"
-                    id="remember"
-                    checked={rememberMe}
-                    onChange={() => setRememberMe(!rememberMe)}
-                    className="w-4 h-4 rounded dark:border-white/10 border-border/50 bg-background text-primary focus:ring-primary focus:ring-offset-background cursor-pointer"
+                    id="login-email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    onInput={(e) => setEmail((e.target as HTMLInputElement).value)}
+                    onBlur={() => setTouched((t) => ({ ...t, email: true }))}
+                    placeholder="you@company.com"
+                    required
+                    disabled={isLoading}
+                    aria-invalid={!!emailError}
+                    aria-describedby={emailError ? 'login-email-error' : undefined}
+                    className="w-full bg-[#181F33] border border-[#1E2740] rounded-lg pl-11 pr-4 py-3 text-sm text-[#F0EDE5] placeholder-[#5A6278] outline-none focus:ring-2 focus:ring-[#C9A227]/30 focus:border-[#C9A227]/50 transition-colors duration-200"
                   />
-                  <label
-                    htmlFor="remember"
-                    className="text-xs text-muted-foreground font-medium cursor-pointer select-none"
-                  >
-                    Keep session active for 24h
-                  </label>
                 </div>
-
-                {/* Submit Button */}
-                <button
-                  type="submit"
-                  disabled={isLoading || isLockedOut}
-                  className="auth-fade-up-d3 w-full auth-gradient-btn auth-shimmer-btn text-foreground font-black h-14 rounded-xl tracking-[0.2em] text-sm flex items-center justify-center gap-3 transition-colors active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
-                >
-                  {isLockedOut ? (
-                    <span className="flex items-center gap-2">
-                      <ClockIcon className="w-5 h-5" />
-                      LOCKED — {formatCountdown(lockoutSeconds)}
-                    </span>
-                  ) : isLoading ? (
-                    <span className="flex items-center gap-2">
-                      <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                      </svg>
-                      INITIALIZING...
-                    </span>
-                  ) : (
-                    <>INITIALIZE SESSION</>
-                  )}
-                </button>
-              </form>
-
-            </div>
-
-            {/* Footer links */}
-            <div className="w-full max-w-md px-10 relative z-10">
-              <div className="flex flex-col items-center gap-4">
-                <p className="text-center text-[13px] text-white/30">
-                  New entity?{' '}
-                  <Link
-                    to="/signup"
-                    className="text-primary font-bold hover:text-foreground transition-colors"
-                  >
-                    Request access
-                  </Link>
-                </p>
-                <div className="flex gap-6">
-                  <a className="text-[10px] text-muted-foreground hover:text-foreground transition-colors uppercase tracking-widest" href="/privacy">Privacy Protocol</a>
-                  <a className="text-[10px] text-muted-foreground hover:text-foreground transition-colors uppercase tracking-widest" href="/terms">Legal Core</a>
-                  <a className="text-[10px] text-muted-foreground hover:text-foreground transition-colors uppercase tracking-widest" href="/contact">Support</a>
-                </div>
-                <span className="text-[10px] text-muted-foreground tracking-widest">&copy; 2026 STRATUM ARTIFICIAL INTELLIGENCE</span>
+                {emailError && (
+                  <p id="login-email-error" className="text-xs text-red-400 mt-1 ml-1">{emailError}</p>
+                )}
               </div>
+
+              {/* Password */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-center ml-1">
+                  <label htmlFor="login-password" className="text-xs font-medium text-[#8B92A8]">
+                    Password
+                  </label>
+                  <Link
+                    to="/forgot-password"
+                    className="text-xs text-[#C9A227] hover:text-[#D4AF37] transition-colors duration-200 font-medium"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-[#5A6278] pointer-events-none" />
+                  <input
+                    id="login-password"
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    onInput={(e) => setPassword((e.target as HTMLInputElement).value)}
+                    onBlur={() => setTouched((t) => ({ ...t, password: true }))}
+                    placeholder="••••••••••••"
+                    required
+                    disabled={isLoading}
+                    aria-invalid={!!passwordError}
+                    aria-describedby={passwordError ? 'login-password-error' : undefined}
+                    className="w-full bg-[#181F33] border border-[#1E2740] rounded-lg pl-11 pr-11 py-3 text-sm text-[#F0EDE5] placeholder-[#5A6278] outline-none focus:ring-2 focus:ring-[#C9A227]/30 focus:border-[#C9A227]/50 transition-colors duration-200"
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#5A6278] hover:text-[#8B92A8] transition-colors duration-200"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+                {passwordError && (
+                  <p id="login-password-error" className="text-xs text-red-400 mt-1 ml-1">{passwordError}</p>
+                )}
+              </div>
+
+              {/* Remember Me */}
+              <div className="flex items-center gap-3 px-1 py-1">
+                <input
+                  type="checkbox"
+                  id="remember"
+                  checked={rememberMe}
+                  onChange={() => setRememberMe(!rememberMe)}
+                  className="w-4 h-4 rounded border-[#1E2740] bg-[#181F33] text-[#C9A227] focus:ring-[#C9A227]/30 focus:ring-offset-0 cursor-pointer"
+                />
+                <label htmlFor="remember" className="text-xs text-[#8B92A8] font-medium cursor-pointer select-none">
+                  Keep session active for 24h
+                </label>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={isLoading || isLockedOut}
+                className="w-full bg-[#C9A227] text-[#080C14] font-semibold rounded-lg py-3 hover:bg-[#D4AF37] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isLockedOut ? (
+                  <span className="flex items-center gap-2">
+                    <Clock className="w-5 h-5" />
+                    Locked — {formatCountdown(lockoutSeconds)}
+                  </span>
+                ) : isLoading ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Signing in...
+                  </span>
+                ) : (
+                  'Sign in'
+                )}
+              </button>
+            </form>
+          </div>
+
+          {/* Footer links */}
+          <div className="w-full max-w-md mt-8 text-center">
+            <p className="text-sm text-[#5A6278]">
+              Don't have an account?{' '}
+              <Link
+                to="/signup"
+                className="text-[#C9A227] hover:text-[#D4AF37] transition-colors duration-200 font-medium"
+              >
+                Sign up
+              </Link>
+            </p>
+            <div className="mt-6 flex items-center justify-center gap-6 text-xs text-[#5A6278]">
+              <a href="/privacy" className="hover:text-[#8B92A8] transition-colors duration-200">Privacy</a>
+              <a href="/terms" className="hover:text-[#8B92A8] transition-colors duration-200">Terms</a>
+              <a href="/contact" className="hover:text-[#8B92A8] transition-colors duration-200">Support</a>
             </div>
-          </section>
-        </main>
+            <p className="mt-6 text-[10px] text-[#5A6278] tracking-wider">&copy; 2026 STRATUM AI</p>
+          </div>
+        </section>
       </div>
     </>
   );
 }
-
-

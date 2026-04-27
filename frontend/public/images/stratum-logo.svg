@@ -1,7 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 50" fill="currentColor">
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&amp;display=swap');
-    text { font-family: 'Playfair Display', 'Georgia', 'Times New Roman', serif; }
-  </style>
-  <text x="0" y="40" font-size="46" font-weight="900" letter-spacing="4" fill="currentColor">STRATUM AI</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 32" fill="none">
+  <defs>
+    <linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#D4AF37"/>
+      <stop offset="100%" stop-color="#C9A227"/>
+    </linearGradient>
+  </defs>
+  <!-- Geometric S mark -->
+  <path d="M4 8C4 5.79 5.79 4 8 4h8c2.21 0 4 1.79 4 4v4c0 2.21-1.79 4-4 4H8c-2.21 0-4 1.79-4 4v4c0 2.21 1.79 4 4 4h8c2.21 0 4-1.79 4-4v-4c0-2.21-1.79-4-4-4" 
+        stroke="url(#logoGrad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Top right accent node -->
+  <circle cx="18" cy="6" r="2" fill="url(#logoGrad)"/>
+  <!-- Wordmark -->
+  <text x="28" y="22" font-family="Satoshi, system-ui, sans-serif" font-size="18" font-weight="700" fill="#F0EDE5" letter-spacing="-0.02em">
+    Stratum
+  </text>
+  <text x="84" y="22" font-family="Satoshi, system-ui, sans-serif" font-size="18" font-weight="400" fill="#8B92A8" letter-spacing="-0.02em">
+    AI
+  </text>
 </svg>

@@ -3,14 +3,10 @@ import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import {
-  CheckCircleIcon,
-  ExclamationCircleIcon,
-  FingerPrintIcon,
-} from '@heroicons/react/24/outline';
+import { CheckCircle, AlertCircle, Mail, ArrowLeft } from 'lucide-react';
 import { useForgotPassword } from '@/api/auth';
 import { SEO } from '@/components/common/SEO';
-import { authStyles } from '@/components/auth/authStyles';
+import AuthLeftPanel from '@/components/auth/AuthLeftPanel';
 
 const forgotPasswordSchema = z.object({
   email: z.string().email('Please enter a valid email'),
@@ -42,47 +38,42 @@ export default function ForgotPassword() {
   if (isSuccess) {
     return (
       <>
-        <style>{authStyles}</style>
-        <div className="dark bg-background text-foreground min-h-screen flex font-sans selection:bg-primary/30 overflow-hidden">
-          <div className="fixed inset-0 auth-cyber-grid pointer-events-none" />
-          <div className="fixed inset-0 pointer-events-none overflow-hidden">
-            <div className="auth-float-1 absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(255, 31, 109, 0.08), transparent 60%)' }} />
-            <div className="auth-float-3 absolute top-[30%] right-[20%] w-[400px] h-[400px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(255, 215, 0, 0.05), transparent 60%)' }} />
-          </div>
-
-          <main className="relative z-10 w-full flex items-center justify-center min-h-screen p-6">
-            <div className="w-full max-w-md auth-glass-card rounded-xl p-10 dark:border-white/10 border-border/50 relative z-10 shadow-2xl auth-fade-up text-center">
+        <SEO title="Forgot Password" description="Reset your Stratum AI account password." noIndex url="https://stratum-ai.com/forgot-password" />
+        <div className="min-h-screen flex bg-[#080C14] text-[#F0EDE5] font-[Satoshi,system-ui]">
+          <AuthLeftPanel />
+          <section className="w-full lg:w-3/5 flex flex-col items-center justify-center p-6 lg:p-12 relative">
+            <div className="w-full max-w-md bg-[#0F1320] border border-[#1E2740] rounded-xl p-8 shadow-xl text-center">
               <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-6">
-                <CheckCircleIcon className="w-8 h-8 text-emerald-400" />
+                <CheckCircle className="w-8 h-8 text-emerald-400" />
               </div>
-              <h2 className="text-2xl font-display font-extrabold text-foreground mb-2 tracking-tight">
-                Transmission Sent
+              <h2 className="text-2xl font-semibold text-[#F0EDE5] mb-2">
+                Check your email
               </h2>
-              <p className="text-muted-foreground text-sm mb-2">
-                We've transmitted a key reset link to:
+              <p className="text-sm text-[#8B92A8] mb-2">
+                We've sent a password reset link to:
               </p>
-              <p className="text-amber-500 text-sm font-bold mb-8">
+              <p className="text-[#C9A227] text-sm font-semibold mb-8">
                 {submittedEmail}
               </p>
-              <p className="text-[10px] text-muted-foreground mb-8">
+              <p className="text-xs text-[#5A6278] mb-8">
                 If you don't see it in your inbox, check your spam folder.
               </p>
               <div className="space-y-4">
                 <Link
                   to="/login"
-                  className="block w-full auth-gradient-btn auth-shimmer-btn text-foreground font-black h-14 rounded-xl tracking-[0.2em] text-sm flex items-center justify-center transition-colors active:scale-[0.98]"
+                  className="block w-full bg-[#C9A227] text-[#080C14] font-semibold rounded-lg py-3 hover:bg-[#D4AF37] transition-colors duration-200 text-center"
                 >
-                  BACK TO SESSION
+                  Back to login
                 </Link>
                 <button
                   onClick={() => forgotPasswordMutation.reset()}
-                  className="text-xs text-primary hover:text-foreground transition-colors font-bold uppercase tracking-widest"
+                  className="text-xs text-[#8B92A8] hover:text-[#D4AF37] transition-colors duration-200 font-medium"
                 >
-                  Try different identifier
+                  Try a different email
                 </button>
               </div>
             </div>
-          </main>
+          </section>
         </div>
       </>
     );
@@ -91,60 +82,53 @@ export default function ForgotPassword() {
   return (
     <>
       <SEO title="Forgot Password" description="Reset your Stratum AI account password." noIndex url="https://stratum-ai.com/forgot-password" />
-      <style>{authStyles}</style>
 
-      <div className="dark bg-background text-foreground min-h-screen flex font-sans selection:bg-primary/30 overflow-hidden">
-        <div className="fixed inset-0 auth-cyber-grid pointer-events-none" />
-        <div className="fixed inset-0 pointer-events-none overflow-hidden">
-          <div className="auth-float-1 absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(255, 31, 109, 0.08), transparent 60%)' }} />
-          <div className="auth-float-2 absolute bottom-[-15%] right-[-5%] w-[500px] h-[500px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(255, 140, 0, 0.06), transparent 60%)' }} />
-        </div>
+      <div className="min-h-screen flex bg-[#080C14] text-[#F0EDE5] font-[Satoshi,system-ui]">
+        <AuthLeftPanel />
 
-        <main className="relative z-10 w-full flex items-center justify-center min-h-screen p-6">
-          <div className="w-full max-w-md auth-glass-card rounded-xl p-10 dark:border-white/10 border-border/50 relative z-10 shadow-2xl auth-fade-up">
+        <section className="w-full lg:w-3/5 flex flex-col items-center justify-center p-6 lg:p-12 relative">
+          <div className="w-full max-w-md bg-[#0F1320] border border-[#1E2740] rounded-xl p-8 shadow-xl">
             {/* Back link */}
             <Link
               to="/login"
-              className="inline-flex items-center gap-2 text-[10px] text-muted-foreground hover:text-foreground transition-colors uppercase tracking-widest mb-8"
+              className="inline-flex items-center gap-2 text-xs text-[#8B92A8] hover:text-[#D4AF37] transition-colors duration-200 font-medium mb-8"
             >
-              &larr; Back to session
+              <ArrowLeft className="w-4 h-4" />
+              Back to login
             </Link>
 
             {/* Header */}
             <div className="mb-8">
-              <h2 className="text-2xl font-display font-extrabold text-foreground mb-2 tracking-tight">
-                Reset Security Key
+              <h2 className="text-2xl font-semibold text-[#F0EDE5] mb-2">
+                Reset your password
               </h2>
-              <p className="text-muted-foreground text-sm">
-                Enter your neural identifier and we'll transmit a reset link.
+              <p className="text-sm text-[#8B92A8]">
+                Enter your email and we'll send you a reset link.
               </p>
             </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
               {/* API Error */}
               {apiError && (
-                <div className="auth-slide-in flex items-center gap-2 p-3 rounded-xl text-[13px] bg-red-500/10 border border-red-500/20 text-red-400">
-                  <ExclamationCircleIcon className="w-4 h-4 flex-shrink-0" />
+                <div className="flex items-center gap-2 p-3 rounded-lg text-sm bg-red-500/10 border border-red-500/20 text-red-400">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
                   <span>{apiError}</span>
                 </div>
               )}
 
               {/* Email */}
-              <div className="space-y-2 auth-fade-up-d1">
-                <label
-                  htmlFor="forgot-email"
-                  className="text-[10px] uppercase font-bold tracking-[0.15em] text-muted-foreground ml-1"
-                >
-                  Neural Identifier
+              <div className="space-y-2">
+                <label htmlFor="forgot-email" className="text-xs font-medium text-[#8B92A8] ml-1">
+                  Email
                 </label>
                 <div className="relative">
-                  <FingerPrintIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-[#5A6278] pointer-events-none" />
                   <input
                     {...register('email')}
                     id="forgot-email"
                     type="email"
-                    placeholder="u_alpha_772"
-                    className="w-full h-11 bg-background/80 border dark:border-white/10 border-border/50 rounded-[12px] pl-12 pr-4 text-foreground text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary "
+                    placeholder="you@company.com"
+                    className="w-full bg-[#181F33] border border-[#1E2740] rounded-lg pl-11 pr-4 py-3 text-sm text-[#F0EDE5] placeholder-[#5A6278] outline-none focus:ring-2 focus:ring-[#C9A227]/30 focus:border-[#C9A227]/50 transition-colors duration-200"
                   />
                 </div>
                 {errors.email && (
@@ -156,7 +140,7 @@ export default function ForgotPassword() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="auth-fade-up-d2 w-full auth-gradient-btn auth-shimmer-btn text-foreground font-black h-14 rounded-xl tracking-[0.2em] text-sm flex items-center justify-center gap-3 transition-colors active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
+                className="w-full bg-[#C9A227] text-[#080C14] font-semibold rounded-lg py-3 hover:bg-[#D4AF37] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isLoading ? (
                   <span className="flex items-center gap-2">
@@ -164,29 +148,26 @@ export default function ForgotPassword() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    TRANSMITTING...
+                    Sending...
                   </span>
                 ) : (
-                  <>TRANSMIT RESET LINK</>
+                  'Send reset link'
                 )}
               </button>
             </form>
 
             {/* Footer */}
             <div className="mt-8 text-center">
-              <p className="text-[13px] text-white/30">
-                Remember your key?{' '}
-                <Link to="/login" className="text-primary font-bold hover:text-foreground transition-colors">
-                  Initialize session
+              <p className="text-sm text-[#5A6278]">
+                Remember your password?{' '}
+                <Link to="/login" className="text-[#C9A227] hover:text-[#D4AF37] transition-colors duration-200 font-medium">
+                  Sign in
                 </Link>
               </p>
             </div>
           </div>
-        </main>
+        </section>
       </div>
     </>
   );
 }
-
-
-

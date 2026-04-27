@@ -1,6 +1,6 @@
 /**
- * Dashboard Layout - WHITE LIGHT THEME
- * Clean minimal design: #F5F5F7 page, #FFFFFF cards, #FF1F6D accent
+ * Dashboard Layout — COMMAND CENTER DESIGN SYSTEM
+ * Premium sidebar + header layout for Stratum AI
  */
 
 import { useEffect, useState } from 'react';
@@ -9,57 +9,47 @@ import { useTranslation } from 'react-i18next';
 import { AnimatePresence, motion } from 'framer-motion';
 import { dropdownVariants } from '@/lib/animations';
 import {
-  AdjustmentsHorizontalIcon,
-  ArrowRightOnRectangleIcon,
-  ArrowUpOnSquareIcon,
-  Bars3Icon,
-  BoltIcon,
-  BookOpenIcon,
-  BuildingOffice2Icon,
-  CalculatorIcon,
-  ChartBarIcon,
-  ChartPieIcon,
-  ChatBubbleLeftRightIcon,
-  ChevronDownIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  CircleStackIcon,
-  ClockIcon,
-  CogIcon,
-  CpuChipIcon,
-  CurrencyDollarIcon,
-  DocumentChartBarIcon,
-  DocumentDuplicateIcon,
-  DocumentTextIcon,
-  EnvelopeIcon,
-  ExclamationTriangleIcon,
-  EyeIcon,
-  FolderIcon,
-  FunnelIcon,
-  GiftIcon,
-  HomeIcon,
-  PhotoIcon,
-  PresentationChartBarIcon,
-  RocketLaunchIcon,
-  ShareIcon,
-  ShieldCheckIcon,
-  ShieldExclamationIcon,
-  SignalIcon,
-  SparklesIcon,
-  Squares2X2Icon,
-  TagIcon,
-  TrophyIcon,
-  UserGroupIcon,
-  UserMinusIcon,
-  XMarkIcon,
-} from '@heroicons/react/24/outline';
+  LayoutDashboard,
+  BarChart3,
+  Image,
+  Zap,
+  Brain,
+  TrendingUp,
+  FolderKanban,
+    Settings,
+  Users,
+  CreditCard,
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+  Menu,
+  X,
+  Search,
+  Bell,
+    ChevronDown,
+  Sparkles,
+  ShieldCheck,
+  Rocket,
+  PieChart,
+      Radio,
+  Database,
+    Tag,
+  Clock,
+  Share2,
+  Funnel,
+  Calculator,
+    UserMinus,
+    Mail,
+      MessageSquareText,
+  Gift,
+  BookOpen,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import LearningHub from '@/components/guide/LearningHub';
 import { CommandPalette } from '@/components/ui/command-palette';
 import { DemoBanner } from '@/components/demo/DemoBanner';
 import {
-  NotificationBell,
-  NotificationCenter,
+    NotificationCenter,
 } from '@/components/notifications/NotificationCenter';
 import { useWhatsNew, WhatsNewModal } from '@/components/changelog/WhatsNew';
 import { KeyboardShortcutsModal } from '@/components/ui/keyboard-shortcuts';
@@ -72,10 +62,9 @@ import { FeedbackWidget } from '@/components/feedback/FeedbackWidget';
 import ClientContextSwitcher from '@/components/client/ClientContextSwitcher';
 import TenantSwitcher from '@/components/tenant/TenantSwitcher';
 
-/**
- * Sidebar visibility per role — mirrors backend SIDEBAR_VISIBILITY.
- * Each role sees only the sections listed here.
- */
+/* ═══════════════════════════════════════════════════════════════
+   SIDEBAR VISIBILITY — mirrors backend SIDEBAR_VISIBILITY
+   ═══════════════════════════════════════════════════════════════ */
 const SIDEBAR_VISIBILITY: Record<AppRole, string[]> = {
   superadmin: [
     'dashboard', 'clients', 'campaigns', 'demographics', 'analytics',
@@ -112,7 +101,6 @@ const SIDEBAR_VISIBILITY: Record<AppRole, string[]> = {
   ],
 };
 
-/** Check if current user role can see a given sidebar section */
 function canSeeSection(role: string | undefined, section: string): boolean {
   if (!role) return false;
   const visible = SIDEBAR_VISIBILITY[role as AppRole];
@@ -120,145 +108,83 @@ function canSeeSection(role: string | undefined, section: string): boolean {
   return visible.includes(section);
 }
 
-// Stratum AI Dashboard Theme — Dark Luxury (tokenised via CSS variables)
-const theme = {
-  primary: 'hsl(var(--primary))',                   // Spectral Pink — CTA, active nav
-  primaryLight: 'hsl(var(--accent))',               // light pink tint
-  secondary: 'hsl(var(--secondary))',               // Indigo — users / mid metric
-  tertiary: '#0EA5E9',                              // Sky — conversions (Tailwind sky-500)
-  green: 'hsl(var(--success))',                      // Success
-  orange: '#f59e0b',
-  bgBase: 'hsl(var(--background))',                 // Page background
-  bgCard: 'hsl(var(--card))',                       // Cards
-  bgSurface: 'rgba(0, 0, 0, 0.03)',                // Hover surface
-  bgOverlay: 'rgba(0, 0, 0, 0.3)',                 // Modal overlay
-  textPrimary: 'hsl(var(--foreground))',             // Headings
-  textSecondary: 'hsl(var(--muted-foreground))',     // Body text
-  textMuted: 'hsl(var(--muted-foreground))',         // Labels / icons
-  border: 'hsl(var(--border))',                     // Clean borders
-  borderHover: 'hsl(var(--border))',                // Hover borders
-  borderAccent: 'hsl(var(--ring) / 0.2)',
-  success: 'hsl(var(--success))',
-  danger: 'hsl(var(--destructive))',
-};
+/* ═══════════════════════════════════════════════════════════════
+   NAVIGATION DATA
+   ═══════════════════════════════════════════════════════════════ */
+interface NavItem {
+  name: string;
+  href: string;
+  icon: React.ElementType;
+  section: string;
+  tourId?: string;
+  dataTour?: string;
+}
 
-const navigation = [
-  {
-    name: 'nav.overview',
-    href: '/dashboard/overview',
-    icon: HomeIcon,
-    tourId: 'nav-overview',
-    dataTour: 'overview',
-    section: 'dashboard',
-  },
-  { name: 'nav.dashboard', href: '/dashboard/custom-dashboard', icon: Squares2X2Icon, tourId: 'nav-dashboard', section: 'dashboard' },
-  {
-    name: 'nav.campaigns',
-    href: '/dashboard/campaigns',
-    icon: ChartBarIcon,
-    tourId: 'nav-campaigns',
-    section: 'campaigns',
-  },
-  { name: 'nav.stratum', href: '/dashboard/stratum', icon: TrophyIcon, tourId: 'nav-stratum', section: 'stratum' },
-  {
-    name: 'nav.benchmarks',
-    href: '/dashboard/benchmarks',
-    icon: FolderIcon,
-    tourId: 'nav-benchmarks',
-    section: 'benchmarks',
-  },
-  {
-    name: 'Competitor Intelligence',
-    href: '/dashboard/competitors',
-    icon: EyeIcon,
-    tourId: 'nav-competitors',
-    section: 'competitors',
-  },
-  { name: 'nav.assets', href: '/dashboard/assets', icon: PhotoIcon, tourId: 'nav-assets', section: 'creatives' },
-  { name: 'nav.rules', href: '/dashboard/rules', icon: BoltIcon, tourId: 'nav-rules', section: 'rules' },
-  {
-    name: 'Custom Autopilot',
-    href: '/dashboard/custom-autopilot-rules',
-    icon: AdjustmentsHorizontalIcon,
-    tourId: 'nav-custom-autopilot',
-    section: 'custom-autopilot',
-  },
-  {
-    name: 'Custom Reports',
-    href: '/dashboard/custom-reports',
-    icon: DocumentChartBarIcon,
-    tourId: 'nav-custom-reports',
-    section: 'custom-reports',
-  },
-  {
-    name: 'nav.whatsapp',
-    href: '/dashboard/whatsapp',
-    icon: ChatBubbleLeftRightIcon,
-    tourId: 'nav-whatsapp',
-    section: 'whatsapp',
-  },
+const mainNav: NavItem[] = [
+  { name: 'nav.overview', href: '/dashboard/overview', icon: LayoutDashboard, section: 'dashboard', tourId: 'nav-overview', dataTour: 'overview' },
+  { name: 'nav.campaigns', href: '/dashboard/campaigns', icon: BarChart3, section: 'campaigns', tourId: 'nav-campaigns' },
+  { name: 'nav.analytics', href: '/dashboard/custom-dashboard', icon: PieChart, section: 'dashboard', tourId: 'nav-dashboard' },
+  { name: 'nav.assets', href: '/dashboard/assets', icon: Image, section: 'creatives', tourId: 'nav-assets' },
+  { name: 'nav.rules', href: '/dashboard/rules', icon: Zap, section: 'rules', tourId: 'nav-rules' },
 ];
 
-const cdpNavigation = [
-  { name: 'CDP Overview', href: '/dashboard/cdp', icon: CircleStackIcon },
-  { name: 'Profiles', href: '/dashboard/cdp/profiles', icon: UserGroupIcon },
-  { name: 'Segments', href: '/dashboard/cdp/segments', icon: TagIcon },
-  { name: 'Events', href: '/dashboard/cdp/events', icon: ClockIcon },
-  { name: 'Identity Graph', href: '/dashboard/cdp/identity', icon: ShareIcon },
-  { name: 'RFM Analysis', href: '/dashboard/cdp/rfm', icon: PresentationChartBarIcon },
-  { name: 'Funnels', href: '/dashboard/cdp/funnels', icon: FunnelIcon },
-  { name: 'Computed Traits', href: '/dashboard/cdp/computed-traits', icon: CalculatorIcon },
-  { name: 'Consent', href: '/dashboard/cdp/consent', icon: ShieldExclamationIcon },
-  { name: 'Predictive Churn', href: '/dashboard/cdp/predictive-churn', icon: UserMinusIcon },
-  { name: 'Audience Sync', href: '/dashboard/cdp/audience-sync', icon: ArrowUpOnSquareIcon },
+const intelligenceNav: NavItem[] = [
+  { name: 'Insights', href: '/dashboard/knowledge-graph/insights', icon: Brain, section: 'knowledge-graph' },
+  { name: 'Predictions', href: '/dashboard/stratum', icon: TrendingUp, section: 'stratum', tourId: 'nav-stratum' },
+  { name: 'Benchmarks', href: '/dashboard/benchmarks', icon: FolderKanban, section: 'benchmarks', tourId: 'nav-benchmarks' },
+  { name: 'Simulator', href: '/dashboard/custom-autopilot-rules', icon: Sparkles, section: 'custom-autopilot' },
 ];
 
-const kgNavigation = [
-  { name: 'Insights', href: '/dashboard/knowledge-graph/insights', icon: SparklesIcon },
-  { name: 'Problem Detection', href: '/dashboard/knowledge-graph/problems', icon: ExclamationTriangleIcon },
-  { name: 'Revenue Attribution', href: '/dashboard/knowledge-graph/revenue', icon: CurrencyDollarIcon },
+const platformNav: NavItem[] = [
+  { name: 'Integrations', href: '/dashboard/integrations', icon: Radio, section: 'integrations' },
+  { name: 'CDP', href: '/dashboard/cdp', icon: Database, section: 'cdp' },
+  { name: 'WhatsApp', href: '/dashboard/whatsapp', icon: MessageSquareText, section: 'whatsapp', tourId: 'nav-whatsapp' },
+  { name: 'Newsletter', href: '/dashboard/newsletter', icon: Mail, section: 'newsletter' },
 ];
 
-const newsletterNavigation = [
-  { name: 'Overview', href: '/dashboard/newsletter', icon: EnvelopeIcon },
-  { name: 'Campaigns', href: '/dashboard/newsletter/campaigns', icon: DocumentTextIcon },
-  { name: 'Templates', href: '/dashboard/newsletter/templates', icon: DocumentDuplicateIcon },
-  { name: 'Subscribers', href: '/dashboard/newsletter/subscribers', icon: UserGroupIcon },
+const settingsNav: NavItem[] = [
+  { name: 'nav.settings', href: '/dashboard/settings', icon: Settings, section: 'settings', dataTour: 'settings' },
+  { name: 'Team', href: '/dashboard/tenants', icon: Users, section: 'tenants' },
+  { name: 'Billing', href: '/dashboard/ml-training', icon: CreditCard, section: 'billing' },
 ];
 
+const cdpSubNav: NavItem[] = [
+  { name: 'Overview', href: '/dashboard/cdp', icon: Database, section: 'cdp' },
+  { name: 'Profiles', href: '/dashboard/cdp/profiles', icon: Users, section: 'cdp' },
+  { name: 'Segments', href: '/dashboard/cdp/segments', icon: Tag, section: 'cdp' },
+  { name: 'Events', href: '/dashboard/cdp/events', icon: Clock, section: 'cdp' },
+  { name: 'Identity Graph', href: '/dashboard/cdp/identity', icon: Share2, section: 'cdp' },
+  { name: 'Funnels', href: '/dashboard/cdp/funnels', icon: Funnel, section: 'cdp' },
+  { name: 'Computed Traits', href: '/dashboard/cdp/computed-traits', icon: Calculator, section: 'cdp' },
+  { name: 'Predictive Churn', href: '/dashboard/cdp/predictive-churn', icon: UserMinus, section: 'cdp' },
+];
+
+/* ═══════════════════════════════════════════════════════════════
+   COMPONENT
+   ═══════════════════════════════════════════════════════════════ */
 export default function DashboardLayout() {
   const { t, i18n } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [learningHubOpen, setLearningHubOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [cdpExpanded, setCdpExpanded] = useState(location.pathname.startsWith('/dashboard/cdp'));
-  const [kgExpanded, setKgExpanded] = useState(location.pathname.startsWith('/dashboard/knowledge-graph'));
-  const [newsletterExpanded, setNewsletterExpanded] = useState(location.pathname.startsWith('/dashboard/newsletter'));
-  const [superadminExpanded, setSuperadminExpanded] = useState(
-    location.pathname.startsWith('/dashboard/superadmin')
-  );
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [whatsNewOpen, setWhatsNewOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [onboardingChatOpen, setOnboardingChatOpen] = useState(false);
+  const [learningHubOpen, setLearningHubOpen] = useState(false);
+  const [cdpExpanded, setCdpExpanded] = useState(location.pathname.startsWith('/dashboard/cdp'));
+  const [superadminExpanded, setSuperadminExpanded] = useState(location.pathname.startsWith('/dashboard/superadmin'));
   const { hasNewUpdates } = useWhatsNew();
 
-  // Ensure dark theme is active for dashboard
   useEffect(() => {
     document.documentElement.classList.remove('light');
     document.documentElement.classList.add('dark');
     localStorage.setItem('stratum-theme', 'dark');
   }, []);
-
-  const toggleLanguage = () => {
-    const newLang = i18n.language === 'en' ? 'ar' : 'en';
-    i18n.changeLanguage(newLang);
-    document.documentElement.dir = newLang === 'ar' ? 'rtl' : 'ltr';
-  };
 
   const handleLogout = () => {
     logout();
@@ -268,19 +194,54 @@ export default function DashboardLayout() {
   const getUserInitials = () => {
     if (!user?.name) return 'U';
     const names = user.name.split(' ');
-    return names
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
+    return names.map((n) => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
+  const toggleLanguage = () => {
+    const newLang = i18n.language === 'en' ? 'ar' : 'en';
+    i18n.changeLanguage(newLang);
+    document.documentElement.dir = newLang === 'ar' ? 'rtl' : 'ltr';
+  };
+
+  /* ── Nav Link Renderer ────────────────────────────────────── */
+  const renderNavLink = (item: NavItem, variant: 'default' | 'sub' = 'default') => {
+    const isActive = location.pathname === item.href;
+    return (
+      <NavLink
+        key={item.name}
+        to={item.href}
+        id={item.tourId}
+        data-tour={item.dataTour}
+        onClick={() => setSidebarOpen(false)}
+        className={cn(
+          'group flex items-center gap-3 rounded-lg text-sm font-medium transition-colors duration-200',
+          variant === 'default' ? 'px-3 py-2' : 'px-3 py-1.5',
+          isActive
+            ? 'border-l-2 border-[#C9A227] bg-[#C9A227]/5 text-[#C9A227]'
+            : 'text-[#8B92A8] hover:text-[#F0EDE5] hover:bg-[#F0EDE5]/[0.03]'
+        )}
+      >
+        <item.icon className={cn('flex-shrink-0', variant === 'default' ? 'h-5 w-5' : 'h-4 w-4')} />
+        <span className="truncate">{t(item.name)}</span>
+      </NavLink>
+    );
+  };
+
+  /* ── Section Header ───────────────────────────────────────── */
+  const SectionHeader = ({ title }: { title: string }) => (
+    <div className="px-3 pt-5 pb-2">
+      <span className="text-[10px] font-semibold uppercase tracking-wider text-[#5A6278]">
+        {title}
+      </span>
+    </div>
+  );
+
   return (
-    <div className="flex flex-col h-screen overflow-hidden" style={{ background: theme.bgBase }}>
+    <div className="flex h-screen overflow-hidden bg-[#080C14]" style={{ fontFamily: 'Satoshi, system-ui, sans-serif' }}>
       <DemoBanner variant="top" />
 
       <div className="flex flex-1 overflow-hidden relative z-10">
-        {/* Mobile sidebar overlay */}
+        {/* Mobile overlay */}
         <AnimatePresence>
           {sidebarOpen && (
             <motion.div
@@ -288,531 +249,296 @@ export default function DashboardLayout() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-40 lg:hidden"
-              style={{ background: 'rgba(0, 0, 0, 0.3)' }}
+              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
               onClick={() => setSidebarOpen(false)}
             />
           )}
         </AnimatePresence>
 
-        {/* Sidebar */}
+        {/* ═══════════════════════════════════════════════════════
+            SIDEBAR
+           ═══════════════════════════════════════════════════════ */}
         <aside
           data-tour="sidebar"
           aria-label="Main navigation"
           className={cn(
-            'fixed inset-y-0 left-0 z-50 w-64 transition-colors duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]',
+            'fixed inset-y-0 left-0 z-50 flex flex-col border-r border-[#1E2740] bg-[#0A0E17] transition-[width] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]',
             sidebarOpen ? 'translate-x-0' : '-translate-x-full',
             'lg:translate-x-0',
-            sidebarCollapsed ? 'lg:w-0 lg:overflow-hidden' : 'lg:w-64'
+            sidebarCollapsed ? 'lg:w-0 lg:overflow-hidden lg:border-r-0' : 'w-[240px] lg:w-[240px]'
           )}
-          style={{
-            background: 'hsl(var(--card))',
-            borderRight: `0.5px solid ${theme.border}`,
-          }}
         >
-          <div
-            className={cn(
-              'flex h-full flex-col w-64 transition-opacity duration-200',
-              sidebarCollapsed ? 'lg:opacity-0' : 'lg:opacity-100'
-            )}
-          >
+          <div className={cn('flex h-full flex-col w-[240px]', sidebarCollapsed ? 'lg:opacity-0' : 'lg:opacity-100')}>
             {/* Logo */}
-            <div
-              className="flex h-16 items-center justify-between px-4"
-              style={{ borderBottom: `1px solid ${theme.border}` }}
-            >
+            <div className="flex h-16 items-center justify-between px-4 border-b border-[#1E2740]">
               <div className="flex items-center gap-3">
                 <img src="/images/stratum-logo.svg" alt="Stratum AI" className="h-7" loading="lazy" decoding="async" />
               </div>
               <button
                 onClick={() => setSidebarCollapsed(true)}
-                className="hidden lg:flex p-1.5 rounded-md transition-colors"
-                style={{ color: theme.textMuted }}
+                className="hidden lg:flex p-1.5 rounded-md text-[#5A6278] hover:text-[#F0EDE5] transition-colors duration-200"
                 aria-label="Collapse sidebar"
               >
-                <ChevronLeftIcon className="h-4 w-4" />
+                <ChevronLeft className="h-4 w-4" />
               </button>
               <button
-                className="lg:hidden p-1.5 rounded-md transition-colors"
-                style={{ color: theme.textMuted }}
+                className="lg:hidden p-1.5 rounded-md text-[#5A6278] hover:text-[#F0EDE5] transition-colors duration-200"
                 onClick={() => setSidebarOpen(false)}
                 aria-label="Close navigation"
               >
-                <XMarkIcon className="h-5 w-5" />
+                <X className="h-5 w-5" />
               </button>
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1" id="sidebar-nav">
-              {navigation.filter((item) => canSeeSection(user?.role, item.section)).map((item) => {
-                const isActive = location.pathname === item.href;
-                return (
-                  <NavLink
-                    key={item.name}
-                    to={item.href}
-                    id={item.tourId}
-                    data-tour={item.dataTour}
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-colors duration-150",
-                      isActive
-                        ? "bg-accent text-primary"
-                        : "text-muted-foreground hover:bg-black/[0.03]"
-                    )}
-                    onClick={() => setSidebarOpen(false)}
-                  >
-                    <item.icon
-                      className={cn("h-5 w-5", isActive ? "text-primary" : "text-muted-foreground")}
-                    />
-                    {t(item.name)}
-                  </NavLink>
-                );
-              })}
-
-              {/* CDP Section — visible to superadmin, admin, manager, analyst */}
-              {canSeeSection(user?.role, 'cdp') && (
-              <div className="pt-2">
-                <button
-                  onClick={() => setCdpExpanded(!cdpExpanded)}
-                  aria-expanded={cdpExpanded}
-                  className={cn(
-                    "w-full flex items-center justify-between gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150",
-                    location.pathname.startsWith('/dashboard/cdp')
-                      ? "bg-accent text-primary"
-                      : "text-muted-foreground"
-                  )}
-                >
-                  <div className="flex items-center gap-3">
-                    <CircleStackIcon
-                      className={cn(
-                        "h-5 w-5",
-                        location.pathname.startsWith('/dashboard/cdp')
-                          ? "text-primary"
-                          : "text-muted-foreground"
-                      )}
-                    />
-                    <span>CDP</span>
-                  </div>
-                  <ChevronDownIcon
-                    className={cn(
-                      'h-4 w-4 transition-transform duration-200 text-muted-foreground',
-                      cdpExpanded && 'rotate-180'
-                    )}
-                  />
-                </button>
-
-                <AnimatePresence>
-                  {cdpExpanded && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                      className="mt-1 ml-2 pl-3 space-y-0.5 overflow-hidden"
-                    >
-                      {cdpNavigation.map((item, index) => {
-                        const isActive = location.pathname === item.href;
-                        return (
-                          <motion.div
-                            key={item.name}
-                            initial={{ opacity: 0, x: -8 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.02, duration: 0.15 }}
-                          >
-                            <NavLink
-                              to={item.href}
-                              className={cn(
-                                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors duration-150",
-                                isActive
-                                  ? "bg-accent text-primary"
-                                  : "text-muted-foreground hover:bg-black/[0.03]"
-                              )}
-                              onClick={() => setSidebarOpen(false)}
-                            >
-                              <item.icon
-                                className={cn("h-4 w-4", isActive ? "text-primary" : "text-muted-foreground")}
-                              />
-                              {item.name}
-                            </NavLink>
-                          </motion.div>
-                        );
-                      })}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+            <nav className="flex-1 overflow-y-auto px-3 py-2 scrollbar-thin" id="sidebar-nav">
+              {/* Main */}
+              <SectionHeader title={t('nav.main') || 'Main'} />
+              <div className="space-y-0.5">
+                {mainNav.filter((item) => canSeeSection(user?.role, item.section)).map((item) => renderNavLink(item))}
               </div>
-              )}
 
-              {/* Knowledge Graph Section — visible to superadmin, admin, manager */}
-              {canSeeSection(user?.role, 'knowledge-graph') && (
-              <div className="pt-2">
-                <button
-                  onClick={() => setKgExpanded(!kgExpanded)}
-                  aria-expanded={kgExpanded}
-                  className={cn(
-                    "w-full flex items-center justify-between gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150",
-                    location.pathname.startsWith('/dashboard/knowledge-graph')
-                      ? "bg-accent text-primary"
-                      : "text-muted-foreground"
-                  )}
-                >
-                  <div className="flex items-center gap-3">
-                    <SparklesIcon
-                      className={cn(
-                        "h-5 w-5",
-                        location.pathname.startsWith('/dashboard/knowledge-graph')
-                          ? "text-primary"
-                          : "text-muted-foreground"
-                      )}
-                    />
-                    <span>Knowledge Graph</span>
-                  </div>
-                  <ChevronDownIcon
-                    className={cn(
-                      'h-4 w-4 transition-transform duration-200 text-muted-foreground',
-                      kgExpanded && 'rotate-180'
-                    )}
-                  />
-                </button>
-
-                <AnimatePresence>
-                  {kgExpanded && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                      className="mt-1 ml-2 pl-3 space-y-0.5 overflow-hidden"
-                    >
-                      {kgNavigation.map((item, index) => {
-                        const isActive = location.pathname === item.href;
-                        return (
-                          <motion.div
-                            key={item.name}
-                            initial={{ opacity: 0, x: -8 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.02, duration: 0.15 }}
-                          >
-                            <NavLink
-                              to={item.href}
-                              className={cn(
-                                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors duration-150",
-                                isActive
-                                  ? "bg-accent text-primary"
-                                  : "text-muted-foreground hover:bg-black/[0.03]"
-                              )}
-                              onClick={() => setSidebarOpen(false)}
-                            >
-                              <item.icon
-                                className={cn("h-4 w-4", isActive ? "text-primary" : "text-muted-foreground")}
-                              />
-                              {item.name}
-                            </NavLink>
-                          </motion.div>
-                        );
-                      })}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+              {/* Intelligence */}
+              <SectionHeader title={t('nav.intelligence') || 'Intelligence'} />
+              <div className="space-y-0.5">
+                {intelligenceNav.filter((item) => canSeeSection(user?.role, item.section)).map((item) => renderNavLink(item))}
               </div>
-              )}
 
-              {/* Newsletter Section — visible to superadmin, admin, manager, analyst */}
-              {canSeeSection(user?.role, 'newsletter') && (
-              <div className="pt-2">
-                <button
-                  onClick={() => setNewsletterExpanded(!newsletterExpanded)}
-                  aria-expanded={newsletterExpanded}
-                  className={cn(
-                    "w-full flex items-center justify-between gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150",
-                    location.pathname.startsWith('/dashboard/newsletter')
-                      ? "bg-accent text-primary"
-                      : "text-muted-foreground"
-                  )}
-                >
-                  <div className="flex items-center gap-3">
-                    <EnvelopeIcon
-                      className={cn(
-                        "h-5 w-5",
-                        location.pathname.startsWith('/dashboard/newsletter')
-                          ? "text-primary"
-                          : "text-muted-foreground"
-                      )}
-                    />
-                    <span>Newsletter</span>
-                  </div>
-                  <ChevronDownIcon
-                    className={cn(
-                      'h-4 w-4 transition-transform duration-200 text-muted-foreground',
-                      newsletterExpanded && 'rotate-180'
-                    )}
-                  />
-                </button>
-
-                <AnimatePresence>
-                  {newsletterExpanded && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                      className="mt-1 ml-2 pl-3 space-y-0.5 overflow-hidden"
-                    >
-                      {newsletterNavigation.map((item, index) => {
-                        const isActive = location.pathname === item.href;
-                        return (
-                          <motion.div
-                            key={item.name}
-                            initial={{ opacity: 0, x: -8 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.02, duration: 0.15 }}
-                          >
-                            <NavLink
-                              to={item.href}
-                              className={cn(
-                                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors duration-150",
-                                isActive
-                                  ? "bg-accent text-primary"
-                                  : "text-muted-foreground hover:bg-black/[0.03]"
-                              )}
-                              onClick={() => setSidebarOpen(false)}
+              {/* Platform */}
+              <SectionHeader title={t('nav.platform') || 'Platform'} />
+              <div className="space-y-0.5">
+                {platformNav.filter((item) => canSeeSection(user?.role, item.section)).map((item) => {
+                  if (item.name === 'CDP') {
+                    return (
+                      <div key={item.name}>
+                        <button
+                          onClick={() => setCdpExpanded(!cdpExpanded)}
+                          aria-expanded={cdpExpanded}
+                          className={cn(
+                            'w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200',
+                            location.pathname.startsWith('/dashboard/cdp')
+                              ? 'border-l-2 border-[#C9A227] bg-[#C9A227]/5 text-[#C9A227]'
+                              : 'text-[#8B92A8] hover:text-[#F0EDE5] hover:bg-[#F0EDE5]/[0.03]'
+                          )}
+                        >
+                          <div className="flex items-center gap-3">
+                            <Database className="h-5 w-5 flex-shrink-0" />
+                            <span>CDP</span>
+                          </div>
+                          <ChevronDown className={cn('h-4 w-4 transition-transform duration-200', cdpExpanded && 'rotate-180')} />
+                        </button>
+                        <AnimatePresence>
+                          {cdpExpanded && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              exit={{ opacity: 0, height: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className="mt-1 ml-2 pl-3 space-y-0.5 overflow-hidden border-l border-[#1E2740]"
                             >
-                              <item.icon
-                                className={cn("h-4 w-4", isActive ? "text-primary" : "text-muted-foreground")}
-                              />
-                              {item.name}
-                            </NavLink>
-                          </motion.div>
-                        );
-                      })}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                              {cdpSubNav.filter((sub) => canSeeSection(user?.role, sub.section)).map((sub) => renderNavLink(sub, 'sub'))}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    );
+                  }
+                  return renderNavLink(item);
+                })}
               </div>
+
+              {/* Settings */}
+              <SectionHeader title={t('nav.settings') || 'Settings'} />
+              <div className="space-y-0.5">
+                {settingsNav.filter((item) => canSeeSection(user?.role, item.section)).map((item) => renderNavLink(item))}
+              </div>
+
+              {/* Superadmin */}
+              {user?.role === 'superadmin' && (
+                <div className="mt-4">
+                  <SectionHeader title="Admin" />
+                  <div className="space-y-0.5">
+                    <button
+                      onClick={() => setSuperadminExpanded(!superadminExpanded)}
+                      aria-expanded={superadminExpanded}
+                      className={cn(
+                        'w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200',
+                        location.pathname.startsWith('/dashboard/superadmin')
+                          ? 'border-l-2 border-[#C9A227] bg-[#C9A227]/5 text-[#C9A227]'
+                          : 'text-[#8B92A8] hover:text-[#F0EDE5] hover:bg-[#F0EDE5]/[0.03]'
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <ShieldCheck className="h-5 w-5 flex-shrink-0" />
+                        <span>Superadmin</span>
+                      </div>
+                      <ChevronDown className={cn('h-4 w-4 transition-transform duration-200', superadminExpanded && 'rotate-180')} />
+                    </button>
+                    <AnimatePresence>
+                      {superadminExpanded && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="mt-1 ml-2 pl-3 space-y-0.5 overflow-hidden border-l border-[#1E2740]"
+                        >
+                          {[
+                            { href: '/dashboard/superadmin', icon: PieChart, name: 'Dashboard' },
+                            { href: '/dashboard/superadmin/users', icon: Users, name: 'Users' },
+                            { href: '/dashboard/superadmin/launch-readiness', icon: Rocket, name: 'Launch Readiness' },
+                          ].map((sub) => {
+                            const isActive = location.pathname === sub.href;
+                            return (
+                              <NavLink
+                                key={sub.href}
+                                to={sub.href}
+                                className={cn(
+                                  'flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm transition-colors duration-200',
+                                  isActive
+                                    ? 'border-l-2 border-[#C9A227] bg-[#C9A227]/5 text-[#C9A227]'
+                                    : 'text-[#8B92A8] hover:text-[#F0EDE5] hover:bg-[#F0EDE5]/[0.03]'
+                                )}
+                              >
+                                <sub.icon className="h-4 w-4 flex-shrink-0" />
+                                {sub.name}
+                              </NavLink>
+                            );
+                          })}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
               )}
             </nav>
 
-            {/* Bottom section */}
-            <div className="px-3 py-4 space-y-1" style={{ borderTop: `1px solid ${theme.border}` }}>
-              {/* Superadmin */}
-              {user?.role === 'superadmin' && (
-                <div>
-                  <button
-                    onClick={() => setSuperadminExpanded(!superadminExpanded)}
-                    aria-expanded={superadminExpanded}
-                    className={cn(
-                      "w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150",
-                      location.pathname.startsWith('/dashboard/superadmin')
-                        ? "bg-accent text-primary"
-                        : "text-muted-foreground"
-                    )}
-                  >
-                    <div className="flex items-center gap-3">
-                      <ShieldCheckIcon className="h-5 w-5 text-muted-foreground" />
-                      <span>Superadmin</span>
-                    </div>
-                    <ChevronDownIcon
-                      className={cn(
-                        'h-4 w-4 transition-transform text-muted-foreground',
-                        superadminExpanded && 'rotate-180'
-                      )}
-                    />
-                  </button>
-                  {superadminExpanded && (
-                    <div
-                      className="mt-1 ml-2 pl-3 space-y-0.5"
-                    >
-                      {[
-                        {
-                          href: '/dashboard/superadmin',
-                          icon: ChartPieIcon,
-                          name: 'Dashboard',
-                          end: true,
-                        },
-                        { href: '/dashboard/superadmin/users', icon: UserGroupIcon, name: 'Users' },
-                        { href: '/dashboard/superadmin/launch-readiness', icon: RocketLaunchIcon, name: 'Launch Readiness' },
-                      ].map((item) => {
-                        const isActive = location.pathname === item.href;
-                        return (
-                          <NavLink
-                            key={item.href}
-                            to={item.href}
-                            end={item.end}
-                            className={cn(
-                              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors duration-150",
-                              isActive
-                                ? "bg-accent text-primary"
-                                : "text-muted-foreground hover:bg-black/[0.03]"
-                            )}
-                          >
-                            <item.icon className={cn("h-4 w-4", isActive ? "text-primary" : "text-muted-foreground")} />
-                            {item.name}
-                          </NavLink>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Other nav items — filtered by role */}
-              {[
-                { href: '/dashboard/tenants', icon: BuildingOffice2Icon, name: 'nav.tenants', section: 'tenants' },
-                { href: '/dashboard/ml-training', icon: CpuChipIcon, name: 'nav.mlTraining', section: 'ml' },
-                { href: '/dashboard/integrations', icon: SignalIcon, name: 'nav.integrations', section: 'integrations' },
-                {
-                  href: '/dashboard/settings',
-                  icon: CogIcon,
-                  name: 'nav.settings',
-                  dataTour: 'settings',
-                  section: 'settings',
-                },
-              ].filter((item) => canSeeSection(user?.role, item.section)).map((item) => {
-                const isActive = location.pathname === item.href;
-                return (
-                  <NavLink
-                    key={item.href}
-                    to={item.href}
-                    data-tour={item.dataTour}
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-colors duration-150",
-                      isActive
-                        ? "bg-accent text-primary"
-                        : "text-muted-foreground hover:bg-black/[0.03]"
-                    )}
-                  >
-                    <item.icon
-                      className={cn("h-5 w-5", isActive ? "text-primary" : "text-muted-foreground")}
-                    />
-                    {t(item.name)}
-                  </NavLink>
-                );
-              })}
-            </div>
-
-            {/* User section */}
-            <div className="px-3 py-4" style={{ borderTop: `1px solid ${theme.border}` }}>
-              <div className="flex items-center gap-3 px-2">
-                <div
-                  className="h-8 w-8 rounded-xl flex items-center justify-center"
-                  style={{ background: theme.primaryLight }}
-                >
-                  <span className="text-xs font-medium" style={{ color: theme.primary }}>
-                    {getUserInitials()}
-                  </span>
+            {/* User Section */}
+            <div className="p-3 border-t border-[#1E2740]">
+              <div className="flex items-center gap-3 px-2 py-2">
+                <div className="h-9 w-9 rounded-lg bg-[#C9A227]/10 flex items-center justify-center flex-shrink-0">
+                  <span className="text-xs font-semibold text-[#C9A227]">{getUserInitials()}</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate" style={{ color: theme.textPrimary }}>
-                    {user?.name || 'User'}
-                  </p>
-                  <p className="text-xs truncate capitalize" style={{ color: theme.textMuted }}>
-                    {user?.role || 'analyst'}
-                  </p>
+                  <p className="text-sm font-medium text-[#F0EDE5] truncate">{user?.name || 'User'}</p>
+                  <p className="text-xs text-[#5A6278] truncate capitalize">{user?.role || 'analyst'}</p>
                 </div>
+                <button
+                  onClick={handleLogout}
+                  className="p-1.5 rounded-md text-[#5A6278] hover:text-[#E85D5D] hover:bg-[#E85D5D]/5 transition-colors duration-200"
+                  aria-label="Log out"
+                  title="Log out"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
               </div>
             </div>
           </div>
         </aside>
 
-        {/* Sidebar expand button */}
+        {/* Sidebar expand button (desktop) */}
         {sidebarCollapsed && (
           <button
             onClick={() => setSidebarCollapsed(false)}
             aria-label="Expand sidebar"
-            className="hidden lg:flex fixed top-4 left-4 z-50 h-8 w-8 items-center justify-center rounded-xl transition-colors duration-200"
-            style={{
-              background: '#FFFFFF',
-              border: `0.5px solid ${theme.border}`,
-              color: theme.primary,
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-            }}
+            className="hidden lg:flex fixed top-4 left-4 z-50 h-8 w-8 items-center justify-center rounded-lg bg-[#0F1320] border border-[#1E2740] text-[#C9A227] hover:border-[#C9A227]/30 transition-colors duration-200"
           >
-            <ChevronRightIcon className="h-4 w-4" />
+            <ChevronRight className="h-4 w-4" />
           </button>
         )}
 
-        {/* Main content */}
+        {/* ═══════════════════════════════════════════════════════
+            MAIN CONTENT
+           ═══════════════════════════════════════════════════════ */}
         <main
           className={cn(
-            'flex flex-1 flex-col overflow-hidden transition-colors duration-300',
-            sidebarCollapsed ? 'lg:ml-0' : 'lg:ml-64'
+            'flex flex-1 flex-col overflow-hidden transition-[margin] duration-300',
+            sidebarCollapsed ? 'lg:ml-0' : 'lg:ml-[240px]'
           )}
         >
           {/* Header */}
-          <header
-            className="flex h-14 items-center justify-between px-4 lg:px-6"
-            style={{
-              background: 'hsl(var(--card))',
-              borderBottom: `0.5px solid ${theme.border}`,
-            }}
-          >
-            <button
-              className="lg:hidden p-2 rounded-lg transition-colors"
-              style={{ color: theme.textMuted }}
-              onClick={() => setSidebarOpen(true)}
-              aria-label="Open navigation"
-            >
-              <Bars3Icon className="h-5 w-5" />
-            </button>
-
-            <div className="flex-1 flex items-center justify-center">
-              <CommandPalette />
+          <header className="flex h-16 items-center justify-between px-6 bg-[#080C14] border-b border-[#1E2740]">
+            {/* Left: Mobile hamburger + breadcrumb */}
+            <div className="flex items-center gap-4">
+              <button
+                className="lg:hidden p-2 rounded-lg text-[#5A6278] hover:text-[#F0EDE5] transition-colors duration-200"
+                onClick={() => setSidebarOpen(true)}
+                aria-label="Open navigation"
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+              <h1 className="text-sm font-medium text-[#F0EDE5] hidden sm:block">
+                {location.pathname.split('/').filter(Boolean).slice(1).map((part) => (
+                  <span key={part} className="capitalize">{part.replace(/-/g, ' ')}</span>
+                )).reduce((prev, curr, i) => (
+                  <span key={i}>
+                    {prev}
+                    <span className="mx-2 text-[#1E2740]">/</span>
+                    {curr}
+                  </span>
+                ), <span key="root" className="text-[#5A6278]">Dashboard</span>)}
+              </h1>
             </div>
 
-            {/* Header actions */}
-            <div className="flex items-center gap-2">
-              {/* Tenant/Workspace Switcher (visible when user has multiple tenants) */}
-              <TenantSwitcher />
+            {/* Center: Global Search */}
+            <div className="flex-1 max-w-md mx-4 hidden md:block">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#5A6278]" />
+                <CommandPalette />
+              </div>
+            </div>
 
-              {/* Client Context Switcher (visible for MANAGER/ANALYST roles) */}
+            {/* Right: Actions */}
+            <div className="flex items-center gap-2">
+              <TenantSwitcher />
               <ClientContextSwitcher />
 
               <button
-                className="p-2 rounded-xl transition-colors text-muted-foreground hover:text-primary"
                 onClick={() => setLearningHubOpen(!learningHubOpen)}
-                title="Learning Hub"
+                className="p-2 rounded-lg text-[#8B92A8] hover:text-[#F0EDE5] hover:bg-[#F0EDE5]/[0.03] transition-colors duration-200"
                 aria-label="Learning Hub"
+                title="Learning Hub"
               >
-                <BookOpenIcon className="h-5 w-5" />
+                <BookOpen className="h-5 w-5" />
               </button>
 
               <button
-                className="px-2.5 py-1 rounded-lg text-xs font-medium transition-colors text-muted-foreground border border-border hover:text-primary hover:border-border"
+                onClick={() => setWhatsNewOpen(true)}
+                className="relative p-2 rounded-lg text-[#8B92A8] hover:text-[#F0EDE5] hover:bg-[#F0EDE5]/[0.03] transition-colors duration-200"
+                aria-label="What's New"
+                title="What's New"
+              >
+                <Gift className="h-5 w-5" />
+                {hasNewUpdates && (
+                  <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[#E85D5D]" />
+                )}
+              </button>
+
+              <button
+                onClick={() => setNotificationsOpen(true)}
+                className="relative p-2 rounded-lg text-[#8B92A8] hover:text-[#F0EDE5] hover:bg-[#F0EDE5]/[0.03] transition-colors duration-200"
+                aria-label="Notifications"
+                title="Notifications"
+              >
+                <Bell className="h-5 w-5" />
+                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[#C9A227]" />
+              </button>
+
+              <button
+                className="hidden sm:flex px-2.5 py-1 rounded-md text-xs font-medium text-[#8B92A8] border border-[#1E2740] hover:text-[#F0EDE5] hover:border-[#1E2740] transition-colors duration-200"
                 onClick={toggleLanguage}
               >
                 {i18n.language === 'en' ? 'AR' : 'EN'}
               </button>
 
-              <button
-                onClick={() => setWhatsNewOpen(true)}
-                className="relative p-2 rounded-xl transition-colors text-muted-foreground hover:text-primary"
-                title="What's New"
-                aria-label="What's New"
-              >
-                <GiftIcon className="h-5 w-5" />
-                {hasNewUpdates && (
-                  <span
-                    className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full"
-                    style={{ background: theme.danger }}
-                  />
-                )}
-              </button>
-
-              <NotificationBell onClick={() => setNotificationsOpen(true)} unreadCount={3} />
-
-              {/* User menu */}
+              {/* User dropdown */}
               <div className="relative">
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="flex items-center gap-2 p-1.5 rounded-xl transition-colors"
-                  style={{ background: userMenuOpen ? theme.bgSurface : 'transparent' }}
+                  className="flex items-center gap-2 p-1.5 rounded-lg transition-colors duration-200 hover:bg-[#F0EDE5]/[0.03]"
                 >
-                  <div
-                    className="h-7 w-7 rounded-xl flex items-center justify-center"
-                    style={{ background: theme.primaryLight }}
-                  >
-                    <span className="text-xs font-medium" style={{ color: theme.primary }}>
-                      {getUserInitials()}
-                    </span>
+                  <div className="h-8 w-8 rounded-lg bg-[#C9A227]/10 flex items-center justify-center">
+                    <span className="text-xs font-semibold text-[#C9A227]">{getUserInitials()}</span>
                   </div>
                 </button>
 
@@ -825,37 +551,28 @@ export default function DashboardLayout() {
                         initial="hidden"
                         animate="visible"
                         exit="exit"
-                        className="absolute right-0 mt-2 w-48 py-1 rounded-2xl z-50"
-                        style={{
-                          background: 'hsl(var(--card))',
-                          border: `0.5px solid ${theme.border}`,
-                          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-                        }}
+                        className="absolute right-0 mt-2 w-52 py-1 rounded-xl z-50 bg-[#0F1320] border border-[#1E2740] shadow-xl"
                       >
-                        <div
-                          className="px-3 py-2"
-                          style={{ borderBottom: `1px solid ${theme.border}` }}
-                        >
-                          <p className="text-sm font-medium" style={{ color: theme.textPrimary }}>
-                            {user?.name}
-                          </p>
-                          <p className="text-xs" style={{ color: theme.textMuted }}>
-                            {user?.email}
-                          </p>
+                        <div className="px-3 py-2 border-b border-[#1E2740]">
+                          <p className="text-sm font-medium text-[#F0EDE5]">{user?.name}</p>
+                          <p className="text-xs text-[#5A6278]">{user?.email}</p>
                         </div>
                         <NavLink
                           to="/dashboard/settings"
-                          className="flex items-center gap-2 px-3 py-2 text-sm transition-colors rounded-lg mx-1 text-muted-foreground hover:bg-black/[0.03]"
+                          className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg mx-1 text-[#8B92A8] hover:text-[#F0EDE5] hover:bg-[#F0EDE5]/[0.03] transition-colors duration-200"
                           onClick={() => setUserMenuOpen(false)}
                         >
-                          <CogIcon className="w-4 h-4" />
+                          <Settings className="w-4 h-4" />
                           {t('common.settings')}
                         </NavLink>
                         <button
-                          onClick={handleLogout}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors rounded-lg mx-1 text-destructive hover:bg-black/[0.03]"
+                          onClick={() => {
+                            setUserMenuOpen(false);
+                            handleLogout();
+                          }}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg mx-1 text-[#E85D5D] hover:bg-[#E85D5D]/5 transition-colors duration-200"
                         >
-                          <ArrowRightOnRectangleIcon className="w-4 h-4" />
+                          <LogOut className="w-4 h-4" />
                           {t('common.logout')}
                         </button>
                       </motion.div>
@@ -869,7 +586,7 @@ export default function DashboardLayout() {
           <OnboardingChecklist variant="horizontal" />
 
           {/* Page content */}
-          <main className="flex-1 overflow-y-auto p-4 lg:p-6">
+          <main className="flex-1 overflow-y-auto p-6 lg:p-8">
             <AnimatePresence mode="wait">
               <motion.div
                 key={location.pathname}
@@ -885,22 +602,13 @@ export default function DashboardLayout() {
           </main>
         </main>
 
+        {/* Floating widgets */}
         <LearningHub isOpen={learningHubOpen} onClose={() => setLearningHubOpen(false)} />
-        <NotificationCenter
-          isOpen={notificationsOpen}
-          onClose={() => setNotificationsOpen(false)}
-        />
+        <NotificationCenter isOpen={notificationsOpen} onClose={() => setNotificationsOpen(false)} />
         <WhatsNewModal isOpen={whatsNewOpen} onClose={() => setWhatsNewOpen(false)} />
         <KeyboardShortcutsModal isOpen={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
-
-        {/* Trust Gate Indicator - Fixed bottom-left */}
         <TrustGateIndicator />
-
-        {/* Root Agent Onboarding Chat - For guided onboarding */}
-        {!onboardingChatOpen && (
-          <OnboardingChatButton onClick={() => setOnboardingChatOpen(true)} />
-        )}
-
+        {!onboardingChatOpen && <OnboardingChatButton onClick={() => setOnboardingChatOpen(true)} />}
         <OnboardingChat
           isOpen={onboardingChatOpen}
           onClose={() => setOnboardingChatOpen(false)}
@@ -909,8 +617,6 @@ export default function DashboardLayout() {
           initialEmail={user?.email}
           language={i18n.language}
         />
-
-        {/* In-App Feedback Widget */}
         <FeedbackWidget />
       </div>
     </div>

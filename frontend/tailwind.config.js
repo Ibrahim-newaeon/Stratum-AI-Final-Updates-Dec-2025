@@ -49,21 +49,21 @@ export default {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
-        // Stratum AI brand colors — Warm Coral accent
+        // Stratum AI brand — Warm Gold
         stratum: {
-          50: '#fff5f5',
-          100: '#ffe3e3',
-          200: '#ffc9c9',
-          300: '#ffa8a8',
-          400: '#ff8585',
-          500: '#ff4d4d',
-          600: '#e63a3a',
-          700: '#c42b2b',
-          800: '#9b2323',
-          900: '#7a1f1f',
-          950: '#420c0c',
+          50: '#FCF9F0',
+          100: '#F5EDD6',
+          200: '#EBDBAD',
+          300: '#DEC57E',
+          400: '#D4AF37',
+          500: '#C9A227',
+          600: '#A08020',
+          700: '#7A6118',
+          800: '#544312',
+          900: '#2E250A',
+          950: '#1A1506',
         },
-        // Platform colors - Analytics Design System
+        // Platform colors — refined
         meta: '#0866FF',
         google: '#4285F4',
         tiktok: '#00F2EA',
@@ -86,44 +86,44 @@ export default {
           elevated: 'hsl(var(--surface-elevated))',
         },
         // Text colors
-        'text-primary': '#1A1A2E',
-        'text-secondary': '#9090A0',
-        'text-muted': '#B0B0BA',
+        'text-primary': '#F0EDE5',
+        'text-secondary': '#8B92A8',
+        'text-muted': '#5A6278',
       },
       borderRadius: {
-        sm: '10px',
-        md: '12px',
-        lg: '16px',
-        xl: '20px',
+        sm: '8px',
+        md: '10px',
+        lg: '14px',
+        xl: '18px',
       },
       fontFamily: {
-        sans: ['Satoshi', 'sans-serif'],
-        display: ['Clash Display', 'sans-serif'],
+        sans: ['Satoshi', 'system-ui', 'sans-serif'],
+        display: ['Clash Display', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
       },
       fontSize: {
-        // Analytics Design System typography scale
         'micro': ['10px', { lineHeight: '1.4', fontWeight: '400' }],
         'meta': ['12px', { lineHeight: '1.5', fontWeight: '400' }],
         'body': ['14px', { lineHeight: '1.55', fontWeight: '400' }],
         'h3': ['18px', { lineHeight: '1.35', fontWeight: '600' }],
         'h2': ['22px', { lineHeight: '1.3', fontWeight: '600' }],
         'h1': ['28px', { lineHeight: '1.25', fontWeight: '700' }],
+        'display-xs': ['32px', { lineHeight: '1.15', fontWeight: '700', letterSpacing: '-0.02em' }],
+        'display-sm': ['40px', { lineHeight: '1.1', fontWeight: '700', letterSpacing: '-0.02em' }],
+        'display': ['56px', { lineHeight: '1.05', fontWeight: '700', letterSpacing: '-0.03em' }],
+        'display-lg': ['72px', { lineHeight: '1.0', fontWeight: '700', letterSpacing: '-0.03em' }],
       },
       boxShadow: {
-        // Light theme shadows — subtle and clean
-        'glow-sm': '0 0 8px rgba(255, 31, 109, 0.10)',
-        'glow': '0 0 15px rgba(255, 31, 109, 0.12)',
-        'glow-lg': '0 0 22px rgba(255, 31, 109, 0.18)',
-        'glow-insight': '0 0 12px rgba(249, 115, 22, 0.15)',
-        'card': '0 1px 3px rgba(0, 0, 0, 0.06)',
-        'card-hover': '0 4px 16px rgba(0, 0, 0, 0.08)',
-        'glass': '0 2px 8px rgba(0, 0, 0, 0.04)',
-        'glass-hover': '0 4px 16px rgba(0, 0, 0, 0.06)',
-        'bento': '0 1px 4px rgba(0, 0, 0, 0.04)',
+        'glow-sm': '0 0 12px rgba(201, 162, 39, 0.15)',
+        'glow': '0 0 24px rgba(201, 162, 39, 0.18)',
+        'glow-lg': '0 0 40px rgba(201, 162, 39, 0.22)',
+        'glow-teal': '0 0 24px rgba(39, 195, 157, 0.15)',
+        'card': '0 1px 3px rgba(0, 0, 0, 0.2)',
+        'card-hover': '0 8px 32px rgba(0, 0, 0, 0.35)',
+        'glass': '0 2px 8px rgba(0, 0, 0, 0.15)',
+        'elevated': '0 4px 24px rgba(0, 0, 0, 0.3)',
       },
       spacing: {
-        // Analytics Design System spacing (8px grid)
         '1': '4px',
         '2': '8px',
         '3': '12px',
@@ -132,11 +132,14 @@ export default {
         '6': '32px',
         '7': '48px',
         '8': '64px',
+        '9': '96px',
+        '10': '128px',
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-stratum': 'linear-gradient(135deg, #FF4D4D 0%, #FF8C00 100%)',
-        'gradient-stratum-soft': 'linear-gradient(135deg, rgba(255, 77, 77, 0.06) 0%, rgba(255, 140, 0, 0.06) 100%)',
+        'gradient-gold': 'linear-gradient(135deg, #D4AF37 0%, #C9A227 50%, #A08020 100%)',
+        'gradient-gold-soft': 'linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(201, 162, 39, 0.04) 100%)',
+        'gradient-void': 'linear-gradient(180deg, #080C14 0%, #0A1020 100%)',
       },
       keyframes: {
         'accordion-down': {
@@ -159,49 +162,38 @@ export default {
           '0%': { opacity: 0 },
           '100%': { opacity: 1 },
         },
-        // Analytics Design System - fadeUp entrance
         'fade-up': {
-          '0%': { opacity: 0, transform: 'translateY(8px)' },
+          '0%': { opacity: 0, transform: 'translateY(12px)' },
           '100%': { opacity: 1, transform: 'translateY(0)' },
         },
         'scale-in': {
-          '0%': { opacity: 0, transform: 'scale(0.95)' },
+          '0%': { opacity: 0, transform: 'scale(0.96)' },
           '100%': { opacity: 1, transform: 'scale(1)' },
         },
-        // Analytics Design System - KPI delta pop
         'delta-pop': {
           '0%': { transform: 'scale(0.98)', opacity: 0.6 },
           '100%': { transform: 'scale(1)', opacity: 1 },
         },
-        // Analytics Design System - chart sweep
         'sweep': {
           '0%': { opacity: 0, transform: 'translateX(-12px)' },
           '100%': { opacity: 1, transform: 'translateX(0)' },
         },
-        // Analytics Design System - brand glow pulse
         'glow-pulse': {
           '0%': { boxShadow: '0 0 0 rgba(0,0,0,0)' },
-          '60%': { boxShadow: '0 0 22px rgba(168,85,247,0.18)' },
+          '60%': { boxShadow: '0 0 32px rgba(201, 162, 39, 0.2)' },
           '100%': { boxShadow: '0 0 0 rgba(0,0,0,0)' },
         },
-        // Analytics Design System - insight ember glow
-        'ember-glow': {
-          '0%': { boxShadow: '0 0 0 rgba(0,0,0,0)' },
-          '50%': { boxShadow: '0 0 18px rgba(249,115,22,0.22)' },
-          '100%': { boxShadow: '0 0 0 rgba(0,0,0,0)' },
-        },
-        // Analytics Design System - critical alert shake
-        'micro-shake': {
-          '0%, 100%': { transform: 'translateX(0)' },
-          '20%': { transform: 'translateX(-2px)' },
-          '40%': { transform: 'translateX(2px)' },
-          '60%': { transform: 'translateX(-1px)' },
-          '80%': { transform: 'translateX(1px)' },
-        },
-        // Analytics Design System - skeleton shimmer
         'shimmer': {
           '0%': { backgroundPosition: '-200% 0' },
           '100%': { backgroundPosition: '200% 0' },
+        },
+        'float': {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-8px)' },
+        },
+        'orbit': {
+          '0%': { transform: 'rotate(0deg) translateX(80px) rotate(0deg)' },
+          '100%': { transform: 'rotate(360deg) translateX(80px) rotate(-360deg)' },
         },
       },
       animation: {
@@ -209,25 +201,24 @@ export default {
         'accordion-up': 'accordion-up 0.2s ease-out',
         'slide-in': 'slide-in-from-right 0.3s ease-out',
         'slide-in-left': 'slide-in-from-left 0.3s ease-out',
-        'fade-in': 'fade-in 0.18s cubic-bezier(0.2, 0.8, 0.2, 1)',
-        // Analytics Design System motion
-        'enter': 'fade-up 0.28s cubic-bezier(0.16, 1, 0.3, 1) both',
-        'delta': 'delta-pop 0.18s cubic-bezier(0.2, 0.8, 0.2, 1) both',
-        'sweep': 'sweep 0.28s cubic-bezier(0.16, 1, 0.3, 1) both',
-        'glow-pulse': 'glow-pulse 0.42s cubic-bezier(0.16, 1, 0.3, 1) both',
-        'insight': 'ember-glow 0.42s cubic-bezier(0.16, 1, 0.3, 1) both',
-        'critical': 'micro-shake 0.18s cubic-bezier(0.2, 0.8, 0.2, 1) both',
-        'scale-in': 'scale-in 0.18s cubic-bezier(0.2, 0.8, 0.2, 1)',
-        'shimmer': 'shimmer 0.9s linear infinite',
+        'fade-in': 'fade-in 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+        'enter': 'fade-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both',
+        'delta': 'delta-pop 0.2s cubic-bezier(0.16, 1, 0.3, 1) both',
+        'sweep': 'sweep 0.35s cubic-bezier(0.16, 1, 0.3, 1) both',
+        'glow-pulse': 'glow-pulse 0.6s cubic-bezier(0.16, 1, 0.3, 1) both',
+        'scale-in': 'scale-in 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+        'shimmer': 'shimmer 1.2s linear infinite',
+        'float': 'float 4s ease-in-out infinite',
+        'orbit': 'orbit 20s linear infinite',
       },
       transitionDuration: {
         'fast': '120ms',
-        'base': '180ms',
-        'slow': '280ms',
-        'xl': '420ms',
+        'base': '200ms',
+        'slow': '350ms',
+        'xl': '500ms',
       },
       transitionTimingFunction: {
-        'standard': 'cubic-bezier(0.2, 0.8, 0.2, 1)',
+        'standard': 'cubic-bezier(0.16, 1, 0.3, 1)',
         'enter': 'cubic-bezier(0.16, 1, 0.3, 1)',
         'exit': 'cubic-bezier(0.7, 0, 0.84, 0)',
       },

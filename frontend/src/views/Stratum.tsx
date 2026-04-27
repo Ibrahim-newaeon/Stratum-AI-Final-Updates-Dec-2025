@@ -135,9 +135,9 @@ function InsightDetailModal({
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'opportunity': return 'text-green-500 bg-green-500/10'
-      case 'warning': return 'text-amber-500 bg-amber-500/10'
-      case 'suggestion': return 'text-blue-500 bg-blue-500/10'
+      case 'opportunity': return 'text-[#27C39D] bg-[#27C39D]/10'
+      case 'warning': return 'text-[#F5A623] bg-[#F5A623]/10'
+      case 'suggestion': return 'text-[#5B8DEF] bg-[#5B8DEF]/10'
       default: return 'text-primary bg-primary/10'
     }
   }
@@ -172,9 +172,9 @@ function InsightDetailModal({
               <div className="flex items-center gap-2 mt-1">
                 <span className={cn(
                   'px-2 py-0.5 rounded-full text-xs font-medium',
-                  insight.priority === 'high' ? 'bg-red-500/10 text-red-500' :
-                  insight.priority === 'medium' ? 'bg-amber-500/10 text-amber-500' :
-                  'bg-blue-500/10 text-blue-500'
+                  insight.priority === 'high' ? 'bg-[#E85D5D]/10 text-[#E85D5D]' :
+                  insight.priority === 'medium' ? 'bg-[#F5A623]/10 text-[#F5A623]' :
+                  'bg-[#5B8DEF]/10 text-[#5B8DEF]'
                 )}>
                   {insight.priority.charAt(0).toUpperCase() + insight.priority.slice(1)} Priority
                 </span>
@@ -219,7 +219,7 @@ function InsightDetailModal({
               <span className="text-sm text-muted-foreground">Estimated Impact</span>
               <span className={cn(
                 'text-lg font-bold',
-                insight.impact.startsWith('+') ? 'text-green-500' : 'text-red-500'
+                insight.impact.startsWith('+') ? 'text-[#27C39D]' : 'text-[#E85D5D]'
               )}>
                 {insight.impact}
               </span>
@@ -253,17 +253,17 @@ function InsightDetailModal({
                     <div className="p-3 rounded-lg border bg-card">
                       <p className="text-xs text-muted-foreground">Conversion Rate</p>
                       <p className="text-lg font-semibold">{insight.metrics.conversionRate.current}%</p>
-                      <p className="text-xs text-green-500">+{insight.metrics.conversionRate.change}% vs avg</p>
+                      <p className="text-xs text-[#27C39D]">+{insight.metrics.conversionRate.change}% vs avg</p>
                     </div>
                     <div className="p-3 rounded-lg border bg-card">
                       <p className="text-xs text-muted-foreground">Avg Order Value</p>
                       <p className="text-lg font-semibold">${insight.metrics.avgOrderValue?.current ?? 0}</p>
-                      <p className="text-xs text-green-500">+{insight.metrics.avgOrderValue?.change ?? 0}% vs avg</p>
+                      <p className="text-xs text-[#27C39D]">+{insight.metrics.avgOrderValue?.change ?? 0}% vs avg</p>
                     </div>
                     <div className="p-3 rounded-lg border bg-card">
                       <p className="text-xs text-muted-foreground">Cost Per Acquisition</p>
                       <p className="text-lg font-semibold">${insight.metrics.cpa?.current ?? 0}</p>
-                      <p className="text-xs text-green-500">{insight.metrics.cpa?.change ?? 0}% vs avg</p>
+                      <p className="text-xs text-[#27C39D]">{insight.metrics.cpa?.change ?? 0}% vs avg</p>
                     </div>
                     <div className="p-3 rounded-lg border bg-card">
                       <p className="text-xs text-muted-foreground">Audience Size</p>
@@ -277,12 +277,12 @@ function InsightDetailModal({
                     <div className="p-3 rounded-lg border bg-card">
                       <p className="text-xs text-muted-foreground">Current CTR</p>
                       <p className="text-lg font-semibold">{insight.metrics.ctr.current}%</p>
-                      <p className="text-xs text-red-500">{insight.metrics.ctr.change}% decline</p>
+                      <p className="text-xs text-[#E85D5D]">{insight.metrics.ctr.change}% decline</p>
                     </div>
                     <div className="p-3 rounded-lg border bg-card">
                       <p className="text-xs text-muted-foreground">Frequency</p>
                       <p className="text-lg font-semibold">{insight.metrics.frequency?.current ?? 0}x</p>
-                      <p className="text-xs text-amber-500">Optimal: {insight.metrics.frequency?.optimal ?? 0}x</p>
+                      <p className="text-xs text-[#F5A623]">Optimal: {insight.metrics.frequency?.optimal ?? 0}x</p>
                     </div>
                     <div className="p-3 rounded-lg border bg-card">
                       <p className="text-xs text-muted-foreground">Total Impressions</p>
@@ -291,7 +291,7 @@ function InsightDetailModal({
                     </div>
                     <div className="p-3 rounded-lg border bg-card">
                       <p className="text-xs text-muted-foreground">Est. Weekly Loss</p>
-                      <p className="text-lg font-semibold text-red-500">-${formatCompactNumber(insight.metrics.estimatedLoss ?? 0)}</p>
+                      <p className="text-lg font-semibold text-[#E85D5D]">-${formatCompactNumber(insight.metrics.estimatedLoss ?? 0)}</p>
                       <p className="text-xs text-muted-foreground">If unchanged</p>
                     </div>
                   </>
@@ -306,7 +306,7 @@ function InsightDetailModal({
                     <div className="p-3 rounded-lg border bg-card">
                       <p className="text-xs text-muted-foreground">Off-Peak CPC</p>
                       <p className="text-lg font-semibold">${insight.metrics.cpcPeak.offPeak}</p>
-                      <p className="text-xs text-green-500">{insight.metrics.cpcPeak.savings}% savings</p>
+                      <p className="text-xs text-[#27C39D]">{insight.metrics.cpcPeak.savings}% savings</p>
                     </div>
                     <div className="p-3 rounded-lg border bg-card">
                       <p className="text-xs text-muted-foreground">Optimal Hours</p>
@@ -315,7 +315,7 @@ function InsightDetailModal({
                     </div>
                     <div className="p-3 rounded-lg border bg-card">
                       <p className="text-xs text-muted-foreground">Monthly Savings</p>
-                      <p className="text-lg font-semibold text-green-500">+${insight.metrics.monthlySavings}</p>
+                      <p className="text-lg font-semibold text-[#27C39D]">+${insight.metrics.monthlySavings}</p>
                       <p className="text-xs text-muted-foreground">Estimated</p>
                     </div>
                   </>
@@ -367,7 +367,7 @@ function InsightDetailModal({
               <ul className="space-y-2">
                 {insight.recommendations.map((rec, idx) => (
                   <li key={idx} className="flex items-start gap-2 text-sm">
-                    <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-[#27C39D] mt-0.5 flex-shrink-0" />
                     <span>{rec}</span>
                   </li>
                 ))}
@@ -390,7 +390,7 @@ function InsightDetailModal({
             className={cn(
               'flex-1 px-4 py-2.5 rounded-lg font-medium transition-colors flex items-center justify-center gap-2',
               insight.type === 'warning'
-                ? 'bg-amber-500 hover:bg-amber-600 text-white'
+                ? 'bg-[#F5A623] hover:bg-amber-600 text-white'
                 : 'bg-primary hover:bg-primary/90 text-primary-foreground'
             )}
           >
@@ -452,12 +452,12 @@ function AnomalyDetailModal({
         {/* Header */}
         <div className={cn(
           'sticky top-0 border-b px-6 py-4 flex items-start justify-between',
-          isPositive ? 'bg-green-500/5' : 'bg-red-500/5'
+          isPositive ? 'bg-[#27C39D]/5' : 'bg-[#E85D5D]/5'
         )}>
           <div className="flex items-start gap-3">
             <div className={cn(
               'p-2 rounded-lg',
-              isPositive ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'
+              isPositive ? 'bg-[#27C39D]/10 text-[#27C39D]' : 'bg-[#E85D5D]/10 text-[#E85D5D]'
             )}>
               {isPositive ? (
                 <TrendingUp className="w-5 h-5" />
@@ -472,15 +472,15 @@ function AnomalyDetailModal({
               <div className="flex items-center gap-2 mt-1">
                 <span className={cn(
                   'px-2 py-0.5 rounded-full text-xs font-medium',
-                  isPositive ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'
+                  isPositive ? 'bg-[#27C39D]/10 text-[#27C39D]' : 'bg-[#E85D5D]/10 text-[#E85D5D]'
                 )}>
                   {isPositive ? 'Positive' : 'Negative'} Anomaly
                 </span>
                 <span className={cn(
                   'px-2 py-0.5 rounded-full text-xs font-medium',
-                  anomaly.severity === 'critical' ? 'bg-red-500/10 text-red-500' :
-                  anomaly.severity === 'high' ? 'bg-amber-500/10 text-amber-500' :
-                  'bg-blue-500/10 text-blue-500'
+                  anomaly.severity === 'critical' ? 'bg-[#E85D5D]/10 text-[#E85D5D]' :
+                  anomaly.severity === 'high' ? 'bg-[#F5A623]/10 text-[#F5A623]' :
+                  'bg-[#5B8DEF]/10 text-[#5B8DEF]'
                 )}>
                   {anomaly.severity?.charAt(0).toUpperCase()}{anomaly.severity?.slice(1)} Severity
                 </span>
@@ -524,13 +524,13 @@ function AnomalyDetailModal({
           {/* Metric Comparison */}
           <div className={cn(
             'p-4 rounded-lg border',
-            isPositive ? 'border-green-500/30 bg-green-500/5' : 'border-red-500/30 bg-red-500/5'
+            isPositive ? 'border-green-500/30 bg-[#27C39D]/5' : 'border-red-500/30 bg-[#E85D5D]/5'
           )}>
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm font-medium">{anomaly.metric} Value</span>
               <span className={cn(
                 'text-2xl font-bold',
-                isPositive ? 'text-green-500' : 'text-red-500'
+                isPositive ? 'text-[#27C39D]' : 'text-[#E85D5D]'
               )}>
                 {anomaly.deviation}
               </span>
@@ -555,7 +555,7 @@ function AnomalyDetailModal({
                   <div
                     className={cn(
                       'h-full rounded-full transition-[width]',
-                      isPositive ? 'bg-green-500' : 'bg-red-500'
+                      isPositive ? 'bg-[#27C39D]' : 'bg-[#E85D5D]'
                     )}
                     style={{ width: `${anomaly.confidence}%` }}
                   />
@@ -630,7 +630,7 @@ function AnomalyDetailModal({
                     </p>
                     <p className={cn(
                       'text-xs',
-                      data.change > 0 ? 'text-green-500' : 'text-red-500'
+                      data.change > 0 ? 'text-[#27C39D]' : 'text-[#E85D5D]'
                     )}>
                       {data.change > 0 ? '+' : ''}{data.change}%
                     </p>
@@ -644,7 +644,7 @@ function AnomalyDetailModal({
           {anomaly.possibleCauses && (
             <div>
               <h3 className="font-medium mb-3 flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-amber-500" />
+                <AlertTriangle className="w-4 h-4 text-[#F5A623]" />
                 Possible Causes
               </h3>
               <ul className="space-y-2">
@@ -672,7 +672,7 @@ function AnomalyDetailModal({
                   <li key={idx} className="flex items-start gap-2 text-sm">
                     <CheckCircle2 className={cn(
                       'w-4 h-4 mt-0.5 flex-shrink-0',
-                      isPositive ? 'text-green-500' : 'text-amber-500'
+                      isPositive ? 'text-[#27C39D]' : 'text-[#F5A623]'
                     )} />
                     <span>{action}</span>
                   </li>
@@ -708,8 +708,8 @@ function AnomalyDetailModal({
             className={cn(
               'flex-1 px-4 py-2.5 rounded-lg font-medium transition-colors flex items-center justify-center gap-2',
               isPositive
-                ? 'bg-green-500 hover:bg-green-600 text-white'
-                : 'bg-amber-500 hover:bg-amber-600 text-white'
+                ? 'bg-[#27C39D] hover:bg-green-600 text-white'
+                : 'bg-[#F5A623] hover:bg-amber-600 text-white'
             )}
           >
             {isProcessing && selectedAction === 'alert' ? (
@@ -922,14 +922,14 @@ function AlertConfigurationModal({
         <div className="p-6 space-y-5 max-h-[60vh] overflow-y-auto">
           {/* Error Message */}
           {error && (
-            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-500 text-sm">
+            <div className="p-3 rounded-lg bg-[#E85D5D]/10 border border-red-500/30 text-[#E85D5D] text-sm">
               {error}
             </div>
           )}
 
           {/* Duplicate Warning */}
           {mode === 'duplicate' && (
-            <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-600 text-sm">
+            <div className="p-3 rounded-lg bg-[#F5A623]/10 border border-amber-500/30 text-amber-600 text-sm">
               You must modify the alert name or settings before saving to avoid duplicate rules.
             </div>
           )}
@@ -1069,7 +1069,7 @@ function AlertConfigurationModal({
               >
                 <div className={cn(
                   'p-2 rounded-lg',
-                  alertRule.channels.whatsapp ? 'bg-green-500 text-white' : 'bg-muted'
+                  alertRule.channels.whatsapp ? 'bg-[#27C39D] text-white' : 'bg-muted'
                 )}>
                   <MessageSquare className="w-4 h-4" />
                 </div>
@@ -1078,7 +1078,7 @@ function AlertConfigurationModal({
                   <p className="text-xs text-muted-foreground">WhatsApp messages</p>
                 </div>
                 {alertRule.channels.whatsapp && (
-                  <CheckCircle2 className="w-4 h-4 text-green-500 ml-auto" />
+                  <CheckCircle2 className="w-4 h-4 text-[#27C39D] ml-auto" />
                 )}
               </button>
 
@@ -1306,9 +1306,9 @@ export function Stratum() {
   const getInsightIcon = (type: string) => {
     switch (type) {
       case 'opportunity':
-        return <Lightbulb className="w-5 h-5 text-green-500" />
+        return <Lightbulb className="w-5 h-5 text-[#27C39D]" />
       case 'warning':
-        return <AlertTriangle className="w-5 h-5 text-amber-500" />
+        return <AlertTriangle className="w-5 h-5 text-[#F5A623]" />
       case 'suggestion':
         return <Sparkles className="w-5 h-5 text-primary" />
       default:
@@ -1318,9 +1318,9 @@ export function Stratum() {
 
   const getPriorityBadge = (priority: string) => {
     const styles = {
-      high: 'bg-red-500/10 text-red-500',
-      medium: 'bg-amber-500/10 text-amber-500',
-      low: 'bg-blue-500/10 text-blue-500',
+      high: 'bg-[#E85D5D]/10 text-[#E85D5D]',
+      medium: 'bg-[#F5A623]/10 text-[#F5A623]',
+      low: 'bg-[#5B8DEF]/10 text-[#5B8DEF]',
     }
     return (
       <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', styles[priority as keyof typeof styles])}>
@@ -1406,12 +1406,12 @@ export function Stratum() {
                 >
                   <div className="flex items-start justify-between mb-2">
                     {isApplied ? (
-                      <CheckCircle2 className="w-5 h-5 text-green-500" />
+                      <CheckCircle2 className="w-5 h-5 text-[#27C39D]" />
                     ) : (
                       getInsightIcon(insight.type)
                     )}
                     {isApplied ? (
-                      <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-500/10 text-green-500">
+                      <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-[#27C39D]/10 text-[#27C39D]">
                         Applied
                       </span>
                     ) : (
@@ -1426,7 +1426,7 @@ export function Stratum() {
                     <span
                       className={cn(
                         'text-xs font-medium',
-                        insight.impact.startsWith('+') ? 'text-green-500' : 'text-red-500'
+                        insight.impact.startsWith('+') ? 'text-[#27C39D]' : 'text-[#E85D5D]'
                       )}
                     >
                       {insight.impact}
@@ -1463,7 +1463,7 @@ export function Stratum() {
                 <span className="text-muted-foreground">Actual</span>
               </div>
               <div className="flex items-center gap-1">
-                <div className="w-2 h-2 rounded-full bg-green-500" />
+                <div className="w-2 h-2 rounded-full bg-[#27C39D]" />
                 <span className="text-muted-foreground">Predicted</span>
               </div>
             </div>
@@ -1555,7 +1555,7 @@ export function Stratum() {
             <div>
               <p className="text-xs text-muted-foreground">{t('stratum.forecastedRevenue')}</p>
               <p className="text-lg font-semibold">$156,890</p>
-              <p className="text-xs text-green-500">+12.4% vs last period</p>
+              <p className="text-xs text-[#27C39D]">+12.4% vs last period</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">{t('stratum.confidence')}</p>
@@ -1655,8 +1655,8 @@ export function Stratum() {
                     className={cn(
                       'p-3 rounded-lg border transition-colors',
                       anomaly.type === 'positive'
-                        ? 'bg-green-500/10 border-green-500'
-                        : 'bg-red-500/10 border-red-500',
+                        ? 'bg-[#27C39D]/10 border-green-500'
+                        : 'bg-[#E85D5D]/10 border-red-500',
                       isReviewed
                         ? 'opacity-60 cursor-default'
                         : 'cursor-pointer hover:shadow-md'
@@ -1667,9 +1667,9 @@ export function Stratum() {
                         {isReviewed ? (
                           <CheckCircle2 className="w-4 h-4 text-muted-foreground" />
                         ) : anomaly.type === 'positive' ? (
-                          <CheckCircle2 className="w-4 h-4 text-green-500" />
+                          <CheckCircle2 className="w-4 h-4 text-[#27C39D]" />
                         ) : (
-                          <AlertTriangle className="w-4 h-4 text-red-500" />
+                          <AlertTriangle className="w-4 h-4 text-[#E85D5D]" />
                         )}
                         <span className="font-medium text-sm">{anomaly.metric}</span>
                         {isReviewed && (
@@ -1695,7 +1695,7 @@ export function Stratum() {
                       <span
                         className={cn(
                           'font-semibold',
-                          anomaly.type === 'positive' ? 'text-green-500' : 'text-red-500'
+                          anomaly.type === 'positive' ? 'text-[#27C39D]' : 'text-[#E85D5D]'
                         )}
                       >
                       {anomaly.deviation}
@@ -1754,7 +1754,7 @@ export function Stratum() {
                         <h4 className="font-medium text-sm truncate">{alert.name}</h4>
                         <span className={cn(
                           'px-2 py-0.5 rounded-full text-xs font-medium',
-                          alert.enabled ? 'bg-green-500/10 text-green-500' : 'bg-muted text-muted-foreground'
+                          alert.enabled ? 'bg-[#27C39D]/10 text-[#27C39D]' : 'bg-muted text-muted-foreground'
                         )}>
                           {alert.enabled ? 'Active' : 'Paused'}
                         </span>
@@ -1799,7 +1799,7 @@ export function Stratum() {
                           e.stopPropagation()
                           handleDuplicateAlert(alert)
                         }}
-                        className="px-3 py-1.5 rounded-lg text-xs font-medium border border-blue-500/30 text-blue-500 bg-blue-500/10 hover:bg-blue-500/20 transition-colors"
+                        className="px-3 py-1.5 rounded-lg text-xs font-medium border border-blue-500/30 text-[#5B8DEF] bg-[#5B8DEF]/10 hover:bg-[#5B8DEF]/20 transition-colors"
                       >
                         Duplicate
                       </button>
@@ -1811,7 +1811,7 @@ export function Stratum() {
                         className={cn(
                           'px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors',
                           alert.enabled
-                            ? 'bg-green-500/10 text-green-600 border-green-500/30 hover:bg-green-500/20'
+                            ? 'bg-[#27C39D]/10 text-green-600 border-green-500/30 hover:bg-[#27C39D]/20'
                             : 'bg-muted text-muted-foreground border-muted hover:bg-muted/80'
                         )}
                       >
@@ -1822,7 +1822,7 @@ export function Stratum() {
                           e.stopPropagation()
                           handleDeleteAlert(alert.id!)
                         }}
-                        className="px-3 py-1.5 rounded-lg text-xs font-medium border border-red-500/30 text-red-500 bg-red-500/10 hover:bg-red-500/20 transition-colors"
+                        className="px-3 py-1.5 rounded-lg text-xs font-medium border border-red-500/30 text-[#E85D5D] bg-[#E85D5D]/10 hover:bg-[#E85D5D]/20 transition-colors"
                       >
                         Delete
                       </button>

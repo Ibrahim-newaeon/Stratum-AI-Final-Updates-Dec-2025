@@ -1,130 +1,132 @@
+import { useMemo } from 'react';
 import {
-  ShieldCheckIcon,
-  SparklesIcon,
-  BoltIcon,
-  ChartBarIcon,
-  ExclamationTriangleIcon,
-  CpuChipIcon,
-  ArrowTrendingUpIcon,
-  ClockIcon,
-  CheckBadgeIcon,
-} from '@heroicons/react/24/outline';
+  Brain,
+  ShieldCheck,
+  TrendingUp,
+  RefreshCw,
+  Activity,
+  PieChart,
+  Sparkles,
+  Zap,
+  Target,
+  BarChart3,
+  Layers,
+  Globe,
+  type LucideIcon,
+} from 'lucide-react';
+import { useFeatureLayers } from '@/api/cms';
+
+const ICON_MAP: Record<string, LucideIcon> = {
+  BrainIcon: Brain,
+  ShieldCheckIcon: ShieldCheck,
+  TrendingUpIcon: TrendingUp,
+  RefreshCwIcon: RefreshCw,
+  ActivityIcon: Activity,
+  PieChartIcon: PieChart,
+  SparklesIcon: Sparkles,
+  ZapIcon: Zap,
+  TargetIcon: Target,
+  BarChart3Icon: BarChart3,
+  LayersIcon: Layers,
+  GlobeIcon: Globe,
+  ChartBarIcon: BarChart3,
+};
+
+const DEFAULT_FEATURES = [
+  {
+    icon: Brain,
+    title: 'Unified Intelligence',
+    description:
+      'A single command center that unifies your data across every ad platform. No more fragmented dashboards.',
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Trust-Gated Automation',
+    description:
+      'We only automate what the data supports. Built-in guardrails ensure every action is grounded in trust.',
+  },
+  {
+    icon: TrendingUp,
+    title: 'Predictive Optimization',
+    description:
+      'Partner with AI that forecasts performance trends and surfaces opportunities before they peak.',
+  },
+  {
+    icon: RefreshCw,
+    title: 'Cross-Platform Sync',
+    description:
+      'Seamlessly synchronize audiences, creatives, and budgets across Meta, Google, TikTok, and Snapchat.',
+  },
+  {
+    icon: Activity,
+    title: 'Real-Time Signals',
+    description:
+      'Instant alerts on spend anomalies, creative fatigue, and performance shifts that demand attention.',
+  },
+  {
+    icon: PieChart,
+    title: 'Revenue Attribution',
+    description:
+      'Understand exactly how every touchpoint contributes to revenue with transparent, reliable attribution.',
+  },
+];
 
 export function Features() {
-  const layers = [
-    {
-      name: 'Trust Layer',
-      description: 'Know when to trust your data',
-      color: 'from-green-500 to-emerald-500',
-      bgColor: 'bg-green-500/10',
-      borderColor: 'border-green-500/20',
-      icon: ShieldCheckIcon,
-      features: [
-        { icon: ChartBarIcon, title: 'Signal Health (EMQ)', description: 'Real-time data quality scoring across all platforms' },
-        { icon: ExclamationTriangleIcon, title: 'Attribution Variance', description: 'Platform vs GA4 reconciliation with alerts' },
-        { icon: ClockIcon, title: 'Freshness Monitoring', description: 'Know when your data is stale or delayed' },
-      ],
-    },
-    {
-      name: 'Intelligence Layer',
-      description: 'AI that explains itself',
-      color: 'from-stratum-500 to-cyan-500',
-      bgColor: 'bg-stratum-500/10',
-      borderColor: 'border-stratum-500/20',
-      icon: SparklesIcon,
-      features: [
-        { icon: CpuChipIcon, title: 'Scaling Score', description: 'Know exactly which campaigns to scale, watch, or fix' },
-        { icon: ArrowTrendingUpIcon, title: 'Creative Fatigue', description: 'Detect declining performance before it impacts ROAS' },
-        { icon: CheckBadgeIcon, title: 'Anomaly Detection', description: 'Catch unusual spend or performance shifts instantly' },
-      ],
-    },
-    {
-      name: 'Execution Layer',
-      description: 'Automate with guardrails',
-      color: 'from-amber-500 to-orange-500',
-      bgColor: 'bg-amber-500/10',
-      borderColor: 'border-amber-500/20',
-      icon: BoltIcon,
-      features: [
-        { icon: BoltIcon, title: 'Autopilot Modes', description: 'Normal, Limited, Cuts-Only, or Frozen based on signal quality' },
-        { icon: ShieldCheckIcon, title: 'Action Queue', description: 'Review, approve, or dismiss recommended actions' },
-        { icon: ChartBarIcon, title: 'Campaign Builder', description: 'Draft, approve, and publish campaigns with version control' },
-      ],
-    },
-  ];
+  const { data: layers } = useFeatureLayers();
+
+  const features = useMemo(() => {
+    if (!layers || layers.length === 0) return DEFAULT_FEATURES;
+    // Flatten all features from all layers
+    const cmsFeatures = layers.flatMap((layer) =>
+      layer.features.map((f) => ({
+        icon: ICON_MAP[f.iconName] || Sparkles,
+        title: f.title,
+        description: f.description,
+      }))
+    );
+    return cmsFeatures.length > 0 ? cmsFeatures : DEFAULT_FEATURES;
+  }, [layers]);
 
   return (
-    <section className="py-32 bg-surface-primary">
-      <div className="max-w-7xl mx-auto px-6">
+    <section id="product" className="py-24 lg:py-32 bg-background">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8">
         {/* Section header */}
-        <div className="text-center mb-20">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-stratum-500/10 border border-stratum-500/20 mb-6">
-            <SparklesIcon className="w-4 h-4 text-stratum-400" />
-            <span className="text-meta text-stratum-400">The USP Stack</span>
-          </div>
-          <h2 className="text-h1 text-white mb-4">
-            Three layers.{' '}
-            <span className=" text-foreground">
-              One intelligent system.
-            </span>
+        <div className="text-center mb-16 lg:mb-20">
+          <h2 className="text-display-sm text-text-primary mb-4 animate-enter">
+            Intelligence you can{' '}
+            <span className="text-gradient-gold">trust and scale</span>
           </h2>
-          <p className="text-body text-text-secondary max-w-2xl mx-auto">
-            Trust your data before you act on it. Get AI recommendations you can explain.
-            Automate only when it's safe.
+          <p
+            className="text-body text-text-secondary max-w-2xl mx-auto animate-enter"
+            style={{ animationDelay: '0.1s' }}
+          >
+            Every feature is designed around partnership — giving you control,
+            transparency, and confidence at every step.
           </p>
         </div>
 
         {/* Feature cards */}
-        <div className="grid md:grid-cols-3 gap-8">
-          {layers.map((layer, index) => (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {features.map((feature, index) => (
             <div
-              key={layer.name}
-              className="motion-card group relative rounded-2xl bg-surface-secondary border border-white/5 p-8 hover:border-white/10 transition-colors duration-base"
-              style={{ animationDelay: `${index * 0.1}s` }}
+              key={feature.title}
+              className="group relative rounded-2xl bg-card border border-border p-8 hover:border-stratum-500/20 transition-colors duration-200 animate-enter"
+              style={{ animationDelay: `${0.1 + index * 0.05}s` }}
             >
-              {/* Gradient accent */}
-              <div className={`absolute top-0 left-0 right-0 h-1 rounded-t-2xl bg-gradient-to-r ${layer.color}`} />
-
               {/* Icon */}
-              <div className={`w-14 h-14 rounded-xl ${layer.bgColor} ${layer.borderColor} border flex items-center justify-center mb-6`}>
-                <layer.icon className="w-7 h-7 text-white" />
+              <div className="w-12 h-12 rounded-xl bg-stratum-500/10 border border-stratum-500/20 flex items-center justify-center mb-6">
+                <feature.icon className="w-6 h-6 text-stratum-400" />
               </div>
 
               {/* Title */}
-              <h3 className="text-h3 text-white mb-2">{layer.name}</h3>
-              <p className="text-body text-text-muted mb-8">{layer.description}</p>
-
-              {/* Features list */}
-              <ul className="space-y-4">
-                {layer.features.map((feature) => (
-                  <li key={feature.title} className="flex items-start gap-3">
-                    <div className="mt-0.5 p-1.5 rounded-lg bg-white/5">
-                      <feature.icon className="w-4 h-4 text-text-secondary" />
-                    </div>
-                    <div>
-                      <div className="text-body text-white font-medium">{feature.title}</div>
-                      <div className="text-meta text-text-muted">{feature.description}</div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              <h3 className="text-h3 text-text-primary mb-2">
+                {feature.title}
+              </h3>
+              <p className="text-body text-text-secondary leading-relaxed">
+                {feature.description}
+              </p>
             </div>
           ))}
-        </div>
-
-        {/* Bottom highlight */}
-        <div className="mt-20 text-center">
-          <div className="inline-flex items-center gap-4 px-6 py-4 rounded-2xl bg-surface-secondary border border-white/5">
-            <div className="flex -space-x-2">
-              {['bg-meta', 'bg-google', 'bg-tiktok', 'bg-snapchat'].map((bg, i) => (
-                <div key={i} className={`w-8 h-8 rounded-full ${bg} border-2 border-surface-secondary`} />
-              ))}
-            </div>
-            <div className="text-left">
-              <div className="text-body text-white font-medium">Works with your entire stack</div>
-              <div className="text-meta text-text-muted">Meta, Google, TikTok, Snapchat + GA4</div>
-            </div>
-          </div>
         </div>
       </div>
     </section>

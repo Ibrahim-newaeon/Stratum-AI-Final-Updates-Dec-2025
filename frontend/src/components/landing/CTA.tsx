@@ -1,76 +1,78 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowRightIcon, SparklesIcon } from '@heroicons/react/24/outline';
+import { ArrowRight, Sparkles } from 'lucide-react';
 
 export function CTA() {
   const navigate = useNavigate();
 
   return (
-    <section className="py-32 bg-surface-secondary border-y border-white/5 relative overflow-hidden">
-      {/* Background effects */}
-      <div className="absolute inset-0">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-gradient-to-r from-stratum-500/20 via-cyan-500/10 to-stratum-500/20 blur-3xl opacity-50" />
+    <section className="relative py-24 lg:py-32 bg-card/30 border-y border-border overflow-hidden">
+      {/* Background glow */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-stratum-500/10 blur-3xl" />
       </div>
 
       <div className="relative max-w-4xl mx-auto px-6 text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-stratum-500/10 border border-stratum-500/20 mb-8">
-          <SparklesIcon className="w-4 h-4 text-stratum-400" />
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-stratum-500/10 border border-stratum-500/20 mb-8 animate-enter">
+          <Sparkles className="w-4 h-4 text-stratum-400" />
           <span className="text-meta text-stratum-400">14-day free trial</span>
         </div>
 
-        <h2 className="text-h1 md:text-[40px] text-white mb-6">
-          Ready to transform your{' '}
-          <span className=" text-foreground">
-            ad operations?
-          </span>
+        <h2
+          className="text-display-sm md:text-display text-text-primary mb-6 animate-enter"
+          style={{ animationDelay: '0.1s' }}
+        >
+          Ready to partner with <span className="text-gradient-gold">AI?</span>
         </h2>
 
-        <p className="text-body text-text-secondary max-w-2xl mx-auto mb-10">
-          Join marketing teams who trust Stratum AI to optimize their campaigns
-          with confidence. No credit card required to start.
+        <p
+          className="text-body text-text-secondary max-w-2xl mx-auto mb-10 animate-enter"
+          style={{ animationDelay: '0.2s' }}
+        >
+          Join enterprise growth teams who partner with Stratum AI to optimize
+          their campaigns with confidence. No credit card required to start.
         </p>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <div
+          className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-enter"
+          style={{ animationDelay: '0.3s' }}
+        >
           <button
             onClick={() => navigate('/signup')}
-            className="group flex items-center gap-2 px-8 py-4 rounded-xl  text-white font-semibold text-body
-                       shadow-glow hover:shadow-glow-lg transition-transform transition-colors duration-base
-                       hover:scale-[1.02] active:scale-[0.98]"
+            className="group inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-stratum-500 text-primary-foreground font-semibold text-body shadow-glow hover:shadow-glow-lg hover:scale-[1.02] active:scale-[0.98] transition-transform transition-shadow duration-200"
           >
-            Get Started Free
-            <ArrowRightIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-          </button>
-
-          <button
-            onClick={() => navigate('/login')}
-            className="px-8 py-4 rounded-xl text-text-secondary hover:text-white font-medium text-body transition-colors"
-          >
-            Already have an account? Sign in
+            Start Free — No Credit Card
+            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
           </button>
         </div>
 
         {/* Social proof */}
-        <div className="mt-16 flex flex-wrap items-center justify-center gap-8">
+        <div
+          className="mt-16 flex flex-wrap items-center justify-center gap-8 animate-enter"
+          style={{ animationDelay: '0.4s' }}
+        >
           <div className="flex items-center gap-3">
             <div className="flex -space-x-2">
               {[1, 2, 3, 4, 5].map((i) => (
                 <div
                   key={i}
-                  className="w-8 h-8 rounded-full bg-surface-tertiary border-2 border-surface-secondary flex items-center justify-center"
+                  className="w-8 h-8 rounded-full bg-card border-2 border-background flex items-center justify-center"
                 >
                   <span className="text-micro text-text-muted">{i}</span>
                 </div>
               ))}
             </div>
-            <span className="text-meta text-text-muted">500+ teams trust Stratum</span>
+            <span className="text-meta text-text-muted">
+              500+ teams partner with Stratum
+            </span>
           </div>
 
-          <div className="h-6 w-px bg-white/10 hidden sm:block" />
+          <div className="h-6 w-px bg-border hidden sm:block" />
 
           <div className="flex items-center gap-2">
             {[1, 2, 3, 4, 5].map((i) => (
               <svg
                 key={i}
-                className="w-4 h-4 text-amber-400"
+                className="w-4 h-4 text-stratum-400"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >

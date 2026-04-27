@@ -1,6 +1,6 @@
 /**
- * Shared Left Panel for Login & Signup pages
- * Cyberpunk Dark theme — Trust Gauge, spectral gradient, brand metrics
+ * Shared Left Panel for Authentication pages
+ * Command Center design system — deep void, testimonial, trust badge
  */
 
 import { Link } from 'react-router-dom';
@@ -14,116 +14,59 @@ export default function AuthLeftPanel({ className }: AuthLeftPanelProps) {
   return (
     <section
       className={cn(
-        'w-7/12 bg-background relative overflow-hidden items-center justify-center border-r border-border',
+        'hidden lg:flex w-2/5 bg-[#05080F] relative flex-col justify-between p-12 border-r border-[#1E2740]',
         className
       )}
       style={{
         backgroundImage:
-          'radial-gradient(circle at 1px 1px, rgba(255, 31, 109, 0.05) 1px, transparent 0)',
-        backgroundSize: '40px 40px',
+          'linear-gradient(rgba(30,39,64,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(30,39,64,0.12) 1px, transparent 1px)',
+        backgroundSize: '32px 32px',
       }}
     >
-      {/* Hero glow */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background:
-            'radial-gradient(circle at 50% 50%, rgba(255, 31, 109, 0.1) 0%, transparent 70%)',
-        }}
-      />
-
-      {/* Top: Logo */}
-      <div className="absolute top-12 left-12 flex items-center gap-2 z-20">
-        <Link to="/" className="flex items-center gap-2 group">
-          <img src="/images/stratum-logo.svg" alt="Stratum AI" className="h-9" style={{ filter: 'invert(1) brightness(2)' }} loading="lazy" decoding="async" />
+      {/* Logo */}
+      <div className="relative z-10">
+        <Link to="/" className="flex items-center gap-3">
+          <img
+            src="/images/stratum-logo.svg"
+            alt="Stratum AI"
+            className="h-8"
+            style={{ filter: 'invert(1) brightness(2)' }}
+            loading="lazy"
+            decoding="async"
+          />
         </Link>
       </div>
 
-      {/* Center: Trust Gauge Card */}
-      <div className="relative z-10 w-full max-w-lg">
-        <div className="auth-glass-card rounded-3xl p-10 border-border shadow-lg">
-          {/* Window chrome */}
-          <div className="flex items-center justify-between mb-12">
-            <div className="flex gap-2">
-              <div className="w-3 h-3 rounded-full bg-destructive" />
-              <div className="w-3 h-3 rounded-full bg-amber-500" />
-              <div className="w-3 h-3 rounded-full bg-primary" />
-            </div>
-            <div className="text-[11px] text-muted-foreground uppercase tracking-widest bg-muted px-3 py-1 rounded-full">
-              System Monitoring Active
-            </div>
+      {/* Testimonial */}
+      <div className="relative z-10 max-w-sm">
+        <blockquote className="text-2xl font-medium text-[#F0EDE5] leading-relaxed mb-6">
+          "Stratum doesn't just manage our ads. It partners with us to grow revenue."
+        </blockquote>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-[#1E2740] flex items-center justify-center text-[#8B92A8] text-sm font-semibold">
+            JD
           </div>
-
-          {/* Trust Gauge SVG */}
-          <div className="flex flex-col items-center justify-center mb-12">
-            <div className="relative w-64 h-64 flex items-center justify-center">
-              <svg className="w-full h-full -rotate-90 auth-spectral-ring" viewBox="0 0 256 256">
-                <circle
-                  cx="128"
-                  cy="128"
-                  r="110"
-                  fill="transparent"
-                  stroke="rgba(255,255,255,0.05)"
-                  strokeWidth="10"
-                />
-                <circle
-                  cx="128"
-                  cy="128"
-                  r="110"
-                  fill="transparent"
-                  stroke="url(#spectralGrad)"
-                  strokeWidth="16"
-                  strokeDasharray="690"
-                  strokeDashoffset="36"
-                  strokeLinecap="round"
-                />
-                <defs>
-                  <linearGradient id="spectralGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#FF3D00" />
-                    <stop offset="33%" stopColor="#f59e0b" />
-                    <stop offset="66%" stopColor="#FFD700" />
-                    <stop offset="100%" stopColor="hsl(var(--primary))" />
-                  </linearGradient>
-                </defs>
-              </svg>
-              <div className="absolute text-center">
-                <div className="text-6xl font-display font-black text-foreground tracking-tighter">
-                  94.7<span className="text-primary text-3xl">%</span>
-                </div>
-                <div className="text-[12px] uppercase font-bold tracking-[0.2em] text-muted-foreground mt-1">
-                  Trust Score
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 gap-6">
-            <div className="p-5">
-              <div className="text-[10px] uppercase font-bold tracking-widest text-amber-500 mb-2">
-                Revenue Growth
-              </div>
-              <div className="text-2xl font-bold text-foreground">+124.8%</div>
-            </div>
-            <div className="p-5">
-              <div className="text-[10px] uppercase font-bold tracking-widest text-primary mb-2">
-                AI Efficiency
-              </div>
-              <div className="text-2xl font-bold text-foreground">99.2%</div>
-            </div>
+          <div>
+            <p className="text-sm font-medium text-[#F0EDE5]">Jane Doe</p>
+            <p className="text-xs text-[#5A6278]">CMO, GrowthCo</p>
           </div>
         </div>
-
-        {/* Ambient blurs behind card */}
-        <div className="absolute -top-12 -right-12 w-32 h-32 bg-primary/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl" />
       </div>
 
-      {/* Bottom: Protocol text */}
-      <div className="absolute bottom-12 left-12 text-[10px] text-slate-500 uppercase tracking-widest z-20">
-        Protocol v4.0.26 // Quantum Encrypted Session
+      {/* Bottom trust badge */}
+      <div className="relative z-10">
+        <p className="text-xs text-[#5A6278] tracking-wide">
+          Trusted by 500+ growth teams
+        </p>
       </div>
+
+      {/* Subtle ambient glow */}
+      <div
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full pointer-events-none"
+        style={{
+          background: 'radial-gradient(circle, rgba(201,162,39,0.04), transparent 70%)',
+        }}
+      />
     </section>
   );
 }
-
