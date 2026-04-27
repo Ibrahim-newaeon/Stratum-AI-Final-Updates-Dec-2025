@@ -3,7 +3,7 @@
 // =============================================================================
 
 import { useState, useEffect } from 'react';
-import { Bell, Send, Users, Smartphone, Globe, BarChart3, Trash2, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
+import { Bell, Send, Users, Smartphone, Globe, BarChart3, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Notification {
@@ -57,7 +57,7 @@ export default function PushNotifications() {
       const registration = await navigator.serviceWorker.register('/push-notifications/service-worker.js');
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array('BJO_xP9SdCW7Lr0w0y0Z0X0Y0Z0X0Y0Z0X0Y0Z0X0Y0Z0X0Y0Z0X0Y0Z0'),
+        applicationServerKey: urlBase64ToUint8Array('BJO_xP9SdCW7Lr0w0y0Z0X0Y0Z0X0Y0Z0X0Y0Z0X0Y0Z0X0Y0Z0X0Y0Z0') as BufferSource,
       });
 
       const token = getToken();

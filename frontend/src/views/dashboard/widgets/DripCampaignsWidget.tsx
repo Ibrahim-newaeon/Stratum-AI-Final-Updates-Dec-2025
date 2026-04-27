@@ -1,9 +1,8 @@
 /**
  * Stratum AI — Drip Campaigns Dashboard Widget
  */
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Workflow, Plus, Play, Pause, Users, Mail, Clock, ArrowRight, Zap } from 'lucide-react';
+import { Workflow, Plus, Play, Pause, Users, Mail, ArrowRight, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const MOCK_SEQUENCES = [

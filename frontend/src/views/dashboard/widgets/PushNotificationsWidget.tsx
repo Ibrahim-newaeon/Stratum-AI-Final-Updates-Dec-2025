@@ -3,8 +3,7 @@
  */
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, Send, Users, Smartphone, Globe, ArrowRight, CheckCircle2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Bell, Send, Users, Smartphone, ArrowRight, CheckCircle2 } from 'lucide-react';
 
 const RECENT_PUSHES = [
   { id: 'push_001', title: 'ROAS Alert: Campaign #452', body: 'ROAS dropped to 1.2x', sent: 12, delivered: 11, time: '5m ago' },

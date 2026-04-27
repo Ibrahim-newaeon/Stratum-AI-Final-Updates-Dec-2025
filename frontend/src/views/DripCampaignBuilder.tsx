@@ -2,14 +2,14 @@
 // Stratum AI — Drip Campaign Builder (Drag & Drop Flow Editor)
 // =============================================================================
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
   Workflow, Mail, Clock, GitBranch, Play, Pause, Trash2, Copy,
-  Plus, Save, Send, ChevronRight, Zap, UserPlus, ShoppingCart,
+  Plus, Save, Zap, UserPlus, ShoppingCart,
   AlertTriangle, LogIn, Package, Bell, MousePointerClick,
-  GripVertical, X, Settings, BarChart3
+  GripVertical, X, Settings
 } from 'lucide-react';
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -28,6 +28,7 @@ interface FlowEdge {
   label?: string;
 }
 
+/*
 interface DripSequence {
   id: string;
   name: string;
@@ -38,6 +39,7 @@ interface DripSequence {
   edges: FlowEdge[];
   entry_count: number;
 }
+*/
 
 // ── Node Templates ─────────────────────────────────────────────────────────
 
@@ -114,7 +116,7 @@ const CONDITION_OPTIONS = [
 // ── Component ──────────────────────────────────────────────────────────────
 
 export default function DripCampaignBuilder() {
-  const navigate = useNavigate();
+  useNavigate(); // imported for future navigation hooks
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const [sequenceName, setSequenceName] = useState('New Drip Sequence');
@@ -139,7 +141,7 @@ export default function DripCampaignBuilder() {
 
   const [edges, setEdges] = useState<FlowEdge[]>([]);
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
-  const [draggedType, setDraggedType] = useState<string | null>(null);
+  const [, setDraggedType] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
 
   // ── Drag & Drop ──────────────────────────────────────────────────────
@@ -238,8 +240,7 @@ export default function DripCampaignBuilder() {
     const token = sessionStorage.getItem('access_token') || '';
     const API_URL = import.meta.env.VITE_API_URL || 'https://api.stratumai.app/api/v1';
 
-    try {
-      const body = {
+    const body = {
         name: sequenceName,
         description: sequenceDesc,
         trigger_type: selectedTrigger,
@@ -249,6 +250,7 @@ export default function DripCampaignBuilder() {
         status: status,
       };
 
+    try {
       const res = await fetch(`${API_URL}/drip-campaigns`, {
         method: 'POST',
         headers: {
@@ -261,12 +263,13 @@ export default function DripCampaignBuilder() {
       const data = await res.json();
       if (data.success) {
         alert('Sequence saved successfully!');
+        return;
       }
     } catch {
       // Save locally for demo
-      localStorage.setItem('drip_sequence', JSON.stringify(body));
-      alert('Sequence saved locally (demo mode)');
     }
+    localStorage.setItem('drip_sequence', JSON.stringify(body));
+    alert('Sequence saved locally (demo mode)');
   };
 
   // ── Render ───────────────────────────────────────────────────────────
