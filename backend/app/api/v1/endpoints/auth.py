@@ -334,6 +334,11 @@ async def verify_whatsapp_otp(request: VerifyOTPRequest):
 
         if not stored_otp:
             await redis_client.close()
+            logger.warning(
+                "whatsapp_otp_verify_miss",
+                phone_prefix=phone_number[:6] + "***",
+                reason="redis_key_absent",
+            )
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="OTP expired or not found. Please request a new code.",
@@ -341,6 +346,10 @@ async def verify_whatsapp_otp(request: VerifyOTPRequest):
 
         if not hmac.compare_digest(str(stored_otp), str(request.otp_code)):
             await redis_client.close()
+            logger.warning(
+                "whatsapp_otp_verify_mismatch",
+                phone_prefix=phone_number[:6] + "***",
+            )
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid OTP code. Please try again.",
@@ -457,6 +466,11 @@ async def verify_email_otp(request: VerifyEmailOTPRequest):
 
         if not stored_otp:
             await redis_client.close()
+            logger.warning(
+                "email_otp_verify_miss",
+                email_prefix=email[:6] + "***",
+                reason="redis_key_absent",
+            )
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="OTP expired or not found. Please request a new code.",
@@ -464,6 +478,10 @@ async def verify_email_otp(request: VerifyEmailOTPRequest):
 
         if not hmac.compare_digest(str(stored_otp), str(request.otp_code)):
             await redis_client.close()
+            logger.warning(
+                "email_otp_verify_mismatch",
+                email_prefix=email[:6] + "***",
+            )
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid OTP code. Please try again.",
