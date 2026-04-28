@@ -30,17 +30,19 @@ import {
 import { pageSEO, SEO } from '@/components/common/SEO';
 import AuthLeftPanel from '@/components/auth/AuthLeftPanel';
 
-const signupSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Please enter a valid email'),
-  phone: z.string(),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-  confirmPassword: z.string(),
-  acceptTerms: z.boolean().refine(val => val === true, 'You must accept the terms'),
-}).refine(data => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword'],
-});
+const signupSchema = z
+  .object({
+    name: z.string().min(2, 'Name must be at least 2 characters'),
+    email: z.string().email('Please enter a valid email'),
+    phone: z.string(),
+    password: z.string().min(8, 'Password must be at least 8 characters'),
+    confirmPassword: z.string(),
+    acceptTerms: z.boolean().refine((val) => val === true, 'You must accept the terms'),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  });
 
 type SignupForm = z.infer<typeof signupSchema>;
 
@@ -76,9 +78,7 @@ export default function Signup() {
   const isLoading = signupMutation.isPending || sendWhatsAppOTP.isPending || sendEmailOTP.isPending;
   const isSuccess = signupMutation.isSuccess;
   const apiError =
-    signupMutation.error?.message ||
-    sendWhatsAppOTP.error?.message ||
-    sendEmailOTP.error?.message;
+    signupMutation.error?.message || sendWhatsAppOTP.error?.message || sendEmailOTP.error?.message;
 
   const {
     register,
@@ -101,6 +101,18 @@ export default function Signup() {
       }
     };
   }, []);
+
+  // When the signup mutation succeeds, transition the step to 'success' so the
+  // user sees the "Account created" screen instead of remaining on the verify
+  // form. Without this, step stays at 'verify-email' / 'verify-phone' and the
+  // step-based render branches return their UI before the isSuccess block
+  // is ever reached — the user clicks Verify again and hits 400 because the
+  // OTP was already consumed.
+  useEffect(() => {
+    if (isSuccess && step !== 'success') {
+      setStep('success');
+    }
+  }, [isSuccess, step]);
 
   // Start countdown timer for OTP resend
   const startOTPCountdown = useCallback(() => {
@@ -219,24 +231,49 @@ export default function Signup() {
     if (step === 'verify-email') {
       sendEmailOTP.mutate(
         { email: formData.email },
-        { onSuccess: () => { startOTPCountdown(); setOtpCode(''); setOtpError(''); } }
+        {
+          onSuccess: () => {
+            startOTPCountdown();
+            setOtpCode('');
+            setOtpError('');
+          },
+        }
       );
     } else if (step === 'verify-phone') {
       sendWhatsAppOTP.mutate(
         { phone_number: formData.phone || '' },
-        { onSuccess: () => { startOTPCountdown(); setOtpCode(''); setOtpError(''); } }
+        {
+          onSuccess: () => {
+            startOTPCountdown();
+            setOtpCode('');
+            setOtpError('');
+          },
+        }
       );
     }
   };
 
   const isSendingOTP = sendEmailOTP.isPending || sendWhatsAppOTP.isPending;
-  const isVerifying = verifyEmailOTP.isPending || verifyWhatsAppOTP.isPending || signupMutation.isPending;
+  const isVerifying =
+    verifyEmailOTP.isPending || verifyWhatsAppOTP.isPending || signupMutation.isPending;
 
   // Loading spinner
   const spinner = (
     <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24">
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+      <circle
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="4"
+        fill="none"
+      />
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+      />
     </svg>
   );
 
@@ -249,12 +286,8 @@ export default function Signup() {
             <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-[#FF1F6D] to-[#FF8C00]/10 border border-[#FF8C00]/20 flex items-center justify-center mb-6">
               <Lock className="w-6 h-6 text-[#FF8C00]" />
             </div>
-            <h2 className="text-2xl font-semibold text-[#F0EDE5] mb-2">
-              Verify your identity
-            </h2>
-            <p className="text-sm text-[#8B92A8]">
-              Choose how you'd like to verify your identity
-            </p>
+            <h2 className="text-2xl font-semibold text-[#F0EDE5] mb-2">Verify your identity</h2>
+            <p className="text-sm text-[#8B92A8]">Choose how you'd like to verify your identity</p>
           </div>
 
           {(sendEmailOTP.error || sendWhatsAppOTP.error) && (
@@ -278,9 +311,7 @@ export default function Signup() {
                 <div className="text-sm font-semibold text-[#F0EDE5] group-hover:text-[#FF8C00] transition-colors duration-200">
                   Verify via Email
                 </div>
-                <div className="text-xs text-[#5A6278] mt-0.5">
-                  Send code to {formData?.email}
-                </div>
+                <div className="text-xs text-[#5A6278] mt-0.5">Send code to {formData?.email}</div>
               </div>
               {sendEmailOTP.isPending && spinner}
             </button>
@@ -328,15 +359,9 @@ export default function Signup() {
             <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-[#FF1F6D] to-[#FF8C00]/10 border border-[#FF8C00]/20 flex items-center justify-center mb-6">
               <Mail className="w-6 h-6 text-[#FF8C00]" />
             </div>
-            <h2 className="text-2xl font-semibold text-[#F0EDE5] mb-2">
-              Check your email
-            </h2>
-            <p className="text-sm text-[#8B92A8] mb-1">
-              We've sent a 6-digit code to
-            </p>
-            <p className="text-[#FF8C00] text-sm font-semibold">
-              {formData?.email}
-            </p>
+            <h2 className="text-2xl font-semibold text-[#F0EDE5] mb-2">Check your email</h2>
+            <p className="text-sm text-[#8B92A8] mb-1">We've sent a 6-digit code to</p>
+            <p className="text-[#FF8C00] text-sm font-semibold">{formData?.email}</p>
           </div>
 
           <div className="mb-6">
@@ -353,9 +378,7 @@ export default function Signup() {
               className="w-full text-center text-2xl tracking-[0.5em] h-14 rounded-lg bg-[#181F33] border border-[#1E2740] text-[#F0EDE5] placeholder-[#5A6278] focus:ring-2 focus:ring-[#FF8C00]/30 focus:border-[#FF8C00]/50 transition-colors duration-200 outline-none font-mono"
               maxLength={6}
             />
-            {otpError && (
-              <p className="mt-2 text-xs text-red-400 text-center">{otpError}</p>
-            )}
+            {otpError && <p className="mt-2 text-xs text-red-400 text-center">{otpError}</p>}
           </div>
 
           <div className="space-y-4">
@@ -377,7 +400,11 @@ export default function Signup() {
                 disabled={otpCountdown > 0 || sendEmailOTP.isPending}
                 className="text-xs text-[#FF8C00] hover:text-[#FFB347] transition-colors duration-200 disabled:opacity-40 disabled:hover:text-[#FF8C00] font-medium"
               >
-                {sendEmailOTP.isPending ? 'Sending...' : otpCountdown > 0 ? `Resend in ${otpCountdown}s` : 'Resend code'}
+                {sendEmailOTP.isPending
+                  ? 'Sending...'
+                  : otpCountdown > 0
+                    ? `Resend in ${otpCountdown}s`
+                    : 'Resend code'}
               </button>
             </div>
 
@@ -404,15 +431,11 @@ export default function Signup() {
             <div className="w-12 h-12 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-6">
               <Phone className="w-6 h-6 text-emerald-500" />
             </div>
-            <h2 className="text-2xl font-semibold text-[#F0EDE5] mb-2">
-              Check your WhatsApp
-            </h2>
+            <h2 className="text-2xl font-semibold text-[#F0EDE5] mb-2">Check your WhatsApp</h2>
             <p className="text-sm text-[#8B92A8] mb-1">
               We've sent a 6-digit code to your WhatsApp
             </p>
-            <p className="text-emerald-500 text-sm font-semibold">
-              {formData?.phone}
-            </p>
+            <p className="text-emerald-500 text-sm font-semibold">{formData?.phone}</p>
           </div>
 
           <div className="mb-6">
@@ -429,9 +452,7 @@ export default function Signup() {
               className="w-full text-center text-2xl tracking-[0.5em] h-14 rounded-lg bg-[#181F33] border border-[#1E2740] text-[#F0EDE5] placeholder-[#5A6278] focus:ring-2 focus:ring-[#FF8C00]/30 focus:border-[#FF8C00]/50 transition-colors duration-200 outline-none font-mono"
               maxLength={6}
             />
-            {otpError && (
-              <p className="mt-2 text-xs text-red-400 text-center">{otpError}</p>
-            )}
+            {otpError && <p className="mt-2 text-xs text-red-400 text-center">{otpError}</p>}
           </div>
 
           <div className="space-y-4">
@@ -453,7 +474,11 @@ export default function Signup() {
                 disabled={otpCountdown > 0 || sendWhatsAppOTP.isPending}
                 className="text-xs text-[#FF8C00] hover:text-[#FFB347] transition-colors duration-200 disabled:opacity-40 disabled:hover:text-[#FF8C00] font-medium"
               >
-                {sendWhatsAppOTP.isPending ? 'Sending...' : otpCountdown > 0 ? `Resend in ${otpCountdown}s` : 'Resend code'}
+                {sendWhatsAppOTP.isPending
+                  ? 'Sending...'
+                  : otpCountdown > 0
+                    ? `Resend in ${otpCountdown}s`
+                    : 'Resend code'}
               </button>
             </div>
 
@@ -472,6 +497,10 @@ export default function Signup() {
   }
 
   // ─── Success Step ───
+  // Must be checked BEFORE step-based branches: when signup completes
+  // successfully, the `step` state is still 'verify-email' (or 'verify-phone'),
+  // so without this guard the verify form keeps rendering and the user
+  // clicks Verify again, hitting a 400 because the OTP was already consumed.
   if (isSuccess) {
     return (
       <AuthLayout>
@@ -479,11 +508,10 @@ export default function Signup() {
           <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="w-8 h-8 text-emerald-400" />
           </div>
-          <h2 className="text-2xl font-semibold text-[#F0EDE5] mb-2">
-            Account created
-          </h2>
+          <h2 className="text-2xl font-semibold text-[#F0EDE5] mb-2">Account created</h2>
           <p className="text-sm text-[#8B92A8] mb-4">
-            Your profile has been created and your <span className="text-[#FF8C00] font-semibold">Free Tier</span> is now active.
+            Your profile has been created and your{' '}
+            <span className="text-[#FF8C00] font-semibold">Free Tier</span> is now active.
           </p>
 
           {/* Free Tier Banner */}
@@ -492,7 +520,10 @@ export default function Signup() {
               Free Plan Active
             </p>
             <p className="text-xs text-[#8B92A8]">
-              Upgrade to <span className="text-[#F0EDE5] font-medium">Starter</span>, <span className="text-[#F0EDE5] font-medium">Professional</span>, or <span className="text-[#F0EDE5] font-medium">Enterprise</span> to unlock advanced automation, unlimited campaigns, and priority support.
+              Upgrade to <span className="text-[#F0EDE5] font-medium">Starter</span>,{' '}
+              <span className="text-[#F0EDE5] font-medium">Professional</span>, or{' '}
+              <span className="text-[#F0EDE5] font-medium">Enterprise</span> to unlock advanced
+              automation, unlimited campaigns, and priority support.
             </p>
             <button
               onClick={() => navigate('/login', { state: { registered: true, showUpgrade: true } })}
@@ -529,7 +560,6 @@ export default function Signup() {
               src="/images/stratum-logo.png"
               alt="Stratum AI"
               className="h-8"
-              
               loading="lazy"
               decoding="async"
             />
@@ -541,9 +571,7 @@ export default function Signup() {
               <h1 className="text-2xl font-semibold text-[#F0EDE5] mb-2">
                 Let's build something great together.
               </h1>
-              <p className="text-sm text-[#8B92A8]">
-                Create your account to get started.
-              </p>
+              <p className="text-sm text-[#8B92A8]">Create your account to get started.</p>
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -610,7 +638,9 @@ export default function Signup() {
                     className="w-full bg-[#181F33] border border-[#1E2740] rounded-lg pl-11 pr-4 py-3 text-sm text-[#F0EDE5] placeholder-[#5A6278] outline-none focus:ring-2 focus:ring-[#FF8C00]/30 focus:border-[#FF8C00]/50 transition-colors duration-200"
                   />
                 </div>
-                <p className="text-xs text-[#5A6278] ml-1">Include country code to enable WhatsApp verification</p>
+                <p className="text-xs text-[#5A6278] ml-1">
+                  Include country code to enable WhatsApp verification
+                </p>
                 {errors.phone && (
                   <p className="text-xs text-red-400 mt-1 ml-1">{errors.phone.message}</p>
                 )}
@@ -618,7 +648,10 @@ export default function Signup() {
 
               {/* Password */}
               <div className="space-y-2">
-                <label htmlFor="signup-password" className="text-xs font-medium text-[#8B92A8] ml-1">
+                <label
+                  htmlFor="signup-password"
+                  className="text-xs font-medium text-[#8B92A8] ml-1"
+                >
                   Password
                 </label>
                 <div className="relative">
@@ -646,7 +679,10 @@ export default function Signup() {
 
               {/* Confirm Password */}
               <div className="space-y-2">
-                <label htmlFor="signup-confirm-password" className="text-xs font-medium text-[#8B92A8] ml-1">
+                <label
+                  htmlFor="signup-confirm-password"
+                  className="text-xs font-medium text-[#8B92A8] ml-1"
+                >
                   Confirm Password
                 </label>
                 <div className="relative">
@@ -664,7 +700,11 @@ export default function Signup() {
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
                   >
-                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    {showConfirmPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
                   </button>
                 </div>
                 {errors.confirmPassword && (
@@ -680,11 +720,24 @@ export default function Signup() {
                   id="terms"
                   className="mt-0.5 w-4 h-4 rounded border-[#1E2740] bg-[#181F33] text-[#FF8C00] focus:ring-[#FF8C00]/30 focus:ring-offset-0 cursor-pointer"
                 />
-                <label htmlFor="terms" className="text-xs text-[#8B92A8] cursor-pointer select-none">
+                <label
+                  htmlFor="terms"
+                  className="text-xs text-[#8B92A8] cursor-pointer select-none"
+                >
                   I accept the{' '}
-                  <a href="/terms" className="text-[#FF8C00] hover:text-[#FFB347] transition-colors duration-200 font-medium">Terms</a>
-                  {' '}and{' '}
-                  <a href="/privacy" className="text-[#FF8C00] hover:text-[#FFB347] transition-colors duration-200 font-medium">Privacy Policy</a>
+                  <a
+                    href="/terms"
+                    className="text-[#FF8C00] hover:text-[#FFB347] transition-colors duration-200 font-medium"
+                  >
+                    Terms
+                  </a>{' '}
+                  and{' '}
+                  <a
+                    href="/privacy"
+                    className="text-[#FF8C00] hover:text-[#FFB347] transition-colors duration-200 font-medium"
+                  >
+                    Privacy Policy
+                  </a>
                 </label>
               </div>
               {errors.acceptTerms && (
@@ -721,9 +774,15 @@ export default function Signup() {
               </Link>
             </p>
             <div className="mt-6 flex items-center justify-center gap-6 text-xs text-[#5A6278]">
-              <a href="/privacy" className="hover:text-[#8B92A8] transition-colors duration-200">Privacy</a>
-              <a href="/terms" className="hover:text-[#8B92A8] transition-colors duration-200">Terms</a>
-              <a href="/contact" className="hover:text-[#8B92A8] transition-colors duration-200">Support</a>
+              <a href="/privacy" className="hover:text-[#8B92A8] transition-colors duration-200">
+                Privacy
+              </a>
+              <a href="/terms" className="hover:text-[#8B92A8] transition-colors duration-200">
+                Terms
+              </a>
+              <a href="/contact" className="hover:text-[#8B92A8] transition-colors duration-200">
+                Support
+              </a>
             </div>
             <p className="mt-6 text-[10px] text-[#5A6278] tracking-wider">&copy; 2026 STRATUM AI</p>
           </div>
@@ -732,4 +791,3 @@ export default function Signup() {
     </>
   );
 }
-
