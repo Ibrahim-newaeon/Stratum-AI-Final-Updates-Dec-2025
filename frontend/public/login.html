@@ -1,209 +1,275 @@
 <!DOCTYPE html>
-<html class="scroll-smooth" lang="en"><head>
+<html lang="en" class="scroll-smooth">
+<head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Stratum AI | Dashboard Access</title>
-<meta name="description" content="Sign in to your Stratum AI dashboard. Access trust-gated autopilot, real-time signal health monitoring, and revenue operations.">
-<link href="https://api.fontshare.com/v2/css?f[]=clash-display@200,300,400,500,600,700&amp;display=swap" rel="stylesheet"/>
-<link href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,600,700&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com" rel="preconnect"/>
-<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<title>Stratum AI — Sign In</title>
+<meta name="description" content="Sign in to your Stratum AI dashboard. Trust-gated autopilot for revenue operations."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet"/>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
 tailwind.config = {
   theme: {
     extend: {
       fontFamily: {
-        display: ['"Clash Display"', 'sans-serif'],
-        sans: ['"Satoshi"', 'sans-serif'],
-        mono: ['"JetBrains Mono"', 'monospace'],
+        sans: ['"Geist"', 'system-ui', 'sans-serif'],
+        mono: ['"Geist Mono"', 'monospace'],
       },
       colors: {
-        midnight: { DEFAULT: '#050B18' },
-        'cyber-blue': { DEFAULT: '#0A1628' },
-        'cyber-cyan': { DEFAULT: '#00F5FF' },
-        'cyber-red': { DEFAULT: '#FF3D00' },
-        'cyber-yellow': { DEFAULT: '#FFD700' },
-        primary: { DEFAULT: '#FF1F6D' },
-        secondary: { DEFAULT: '#FF8C00' },
+        ink:      '#0B0B0B',
+        surface:  '#141414',
+        line:     '#1F1F1F',
+        line2:    '#262626',
+        muted:    '#9A9A9A',
+        micro:    '#6B6B6B',
+        ember:    '#FF5A1F',
+        'ember-2':'#FF8A4A',
       },
+      maxWidth: { content: '1200px' },
     }
   }
 }
 </script>
 <style>
-        /* ── Arbitrary-value utilities (replaces CDN JIT) ── */
-        .text-\[11px\] { font-size: 11px; }
-        .text-\[10px\] { font-size: 10px; }
-        .tracking-\[0\.15em\] { letter-spacing: 0.15em; }
-        .tracking-\[0\.2em\] { letter-spacing: 0.2em; }
-        .bg-\[\#080E1C\] { background-color: #080E1C; }
-        .h-\[44px\] { height: 44px; }
-        .h-\[1px\] { height: 1px; }
-        .rounded-\[12px\] { border-radius: 12px; }
-        .hover\:shadow-\[0_0_30px_rgba\(255\,31\,109\,0\.5\)\]:hover { box-shadow: 0 0 30px rgba(255,31,109,0.5); }
-        .active\:scale-\[0\.98\]:active { transform: scale(0.98); }
-        /* ── Custom theme color utilities ── */
-        .bg-midnight { background-color: #050B18; }
-        .bg-midnight\/80 { background-color: rgba(5, 11, 24, 0.8); }
-        .bg-cyber-blue { background-color: #0A1628; }
-        .bg-cyber-cyan { background-color: #00F5FF; }
-        .bg-cyber-red { background-color: #FF3D00; }
-        .bg-secondary { background-color: #FF8C00; }
-        .bg-primary { background-color: #FF1F6D; }
-        .from-primary\/5 { --tw-gradient-from: rgba(255, 31, 109, 0.05) var(--tw-gradient-from-position); --tw-gradient-to: rgba(255, 31, 109, 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
-        .selection\:bg-primary\/30 *::selection { background-color: rgba(255, 31, 109, 0.3); }
-        .selection\:bg-primary\/30::selection { background-color: rgba(255, 31, 109, 0.3); }
-        .text-primary { color: #FF1F6D; }
-        .hover\:text-primary:hover { color: #FF1F6D; }
-        .text-secondary { color: #FF8C00; }
-        .text-cyber-cyan { color: #00F5FF; }
-        .text-cyber-red { color: #FF3D00; }
-        .text-cyber-yellow { color: #FFD700; }
-        .border-primary { border-color: #FF1F6D; }
-        .focus\:ring-primary:focus { --tw-ring-color: #FF1F6D; }
-        .focus\:ring-offset-midnight:focus { --tw-ring-offset-color: #050B18; }
-        /* Custom font families */
-        .font-display { font-family: "Clash Display", sans-serif; }
-        .font-sans { font-family: "Satoshi", sans-serif; }
-        .font-mono { font-family: "JetBrains Mono", monospace; }
-        /* ── Component classes ── */
-        .container {
-            box-sizing: border-box;
-            margin-left: auto;
-            margin-right: auto;
-            max-width: 1500px;
-            width: 100%;
-        }
-        .glass-morphism {
-            background: #0d1424;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        .glass-card-blue {
-            background: #0a1020;
-            border: 1px solid rgba(255, 255, 255, 0.06);
-        }
-        .mesh-bg {
-            background-image: radial-gradient(circle at 1px 1px, rgba(255, 31, 109, 0.05) 1px, transparent 0);
-            background-size: 40px 40px;
-        }
-        .hero-glow {
-            background: radial-gradient(circle at 50% 50%, rgba(255, 31, 109, 0.1) 0%, transparent 70%);
-        }
-        .btn-cyber-primary {
-            background: linear-gradient(135deg, #FF1F6D 0%, #FF3D00 100%);
-            color: white;
-        }
-        .input-glow-orange:focus {
-            border-color: #FF8C00;
-            box-shadow: 0 0 0 2px rgba(255, 140, 0, 0.15);
-        }
-        .input-glow-cyan:focus {
-            border-color: #FF1F6D;
-            box-shadow: 0 0 0 2px rgba(255, 31, 109, 0.15);
-        }
-        .spectral-ring {
-            filter: none;
-        }
-    </style>
+  :root {
+    --ink: #0B0B0B;
+    --surface: #141414;
+    --line: #1F1F1F;
+    --line2: #262626;
+    --muted: #9A9A9A;
+    --micro: #6B6B6B;
+    --ember: #FF5A1F;
+  }
+  html, body { background: var(--ink); }
+  body { font-feature-settings: 'ss01', 'cv11'; -webkit-font-smoothing: antialiased; }
+
+  .pill {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.4rem 0.85rem;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-size: 11.5px; letter-spacing: 0.06em; text-transform: uppercase;
+    color: #ECECEC; font-weight: 500;
+  }
+  .pill .dot { width: 6px; height: 6px; border-radius: 999px; background: var(--ember); box-shadow: 0 0 8px var(--ember); }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+  }
+
+  .glow-warm {
+    background: radial-gradient(60% 60% at 50% 0%, rgba(255,90,31,0.16) 0%, rgba(255,90,31,0.04) 40%, transparent 70%);
+  }
+  .glow-side {
+    background: radial-gradient(70% 60% at 0% 50%, rgba(255,90,31,0.18) 0%, rgba(255,90,31,0.04) 45%, transparent 75%);
+    filter: blur(40px);
+  }
+
+  .hairline { border-top: 1px solid var(--line); }
+
+  .btn-ember-fill {
+    background: var(--ember); color: #fff;
+    padding: 0.85rem 1.2rem; border-radius: 999px;
+    font-weight: 500; font-size: 14px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
+    box-shadow: 0 4px 14px rgba(255,90,31,0.3);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    width: 100%;
+  }
+  .btn-ember-fill:hover {
+    transform: translateY(-1px);
+    background: #FF6E3A;
+    box-shadow: 0 8px 22px rgba(255,90,31,0.42);
+  }
+  .btn-ghost {
+    color: #ECECEC;
+    padding: 0.65rem 1.2rem; border-radius: 999px;
+    font-weight: 500; font-size: 13px;
+    border: 1px solid var(--line);
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    transition: border-color 0.2s ease;
+  }
+  .btn-ghost:hover { border-color: #333; }
+
+  .auth-input {
+    width: 100%;
+    height: 48px;
+    background: rgba(255,255,255,0.015);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    color: #fff;
+    padding: 0 1rem 0 2.75rem;
+    font-size: 14px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .auth-input::placeholder { color: var(--micro); }
+  .auth-input:focus {
+    outline: none;
+    border-color: rgba(255,90,31,0.45);
+    box-shadow: 0 0 0 4px rgba(255,90,31,0.12);
+  }
+
+  .input-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--micro);
+    font-size: 18px;
+    pointer-events: none;
+  }
+
+  .checkbox-ember {
+    appearance: none;
+    width: 16px; height: 16px;
+    border: 1px solid var(--line2);
+    border-radius: 4px;
+    background: var(--surface);
+    cursor: pointer;
+    position: relative;
+    transition: border-color 0.2s ease, background 0.2s ease;
+  }
+  .checkbox-ember:checked {
+    border-color: var(--ember);
+    background: var(--ember);
+  }
+  .checkbox-ember:checked::after {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" d="M3 8l3 3 7-7"/></svg>') no-repeat center / 90%;
+  }
+
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
+
+  .giant-wordmark {
+    font-size: clamp(80px, 14vw, 200px);
+    font-weight: 600;
+    line-height: 0.85;
+    letter-spacing: -0.06em;
+    background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.01) 100%);
+    -webkit-background-clip: text; background-clip: text;
+    color: transparent;
+  }
+</style>
 </head>
-<body class="bg-midnight text-white font-sans selection:bg-primary/30 min-h-screen overflow-hidden">
+<body class="bg-ink text-white font-sans min-h-screen">
 <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-white focus:text-black focus:rounded">Skip to content</a>
-<div class="container flex min-h-screen">
-<div class="hidden lg:flex lg:w-7/12 bg-midnight relative overflow-hidden items-center justify-center border-r border-white/5 mesh-bg">
-<div class="absolute inset-0 hero-glow" aria-hidden="true"></div>
-<div class="absolute top-12 left-12 flex items-center gap-2">
-<img src="/images/stratum-logo.svg" alt="Stratum AI" class="h-9" style="filter: invert(1) brightness(2);">
-</div>
-<div class="relative z-10 w-full max-w-lg">
-<div class="glass-morphism rounded-3xl p-10 border-white/10 shadow-2xl">
-<div class="flex items-center justify-between mb-12">
-<div class="flex gap-2">
-<div class="w-3 h-3 rounded-full bg-cyber-red"></div>
-<div class="w-3 h-3 rounded-full bg-secondary"></div>
-<div class="w-3 h-3 rounded-full bg-cyber-cyan"></div>
-</div>
-<div class="text-[11px] font-mono text-slate-400 uppercase tracking-widest bg-white/5 px-3 py-1 rounded-full">Secure Connection</div>
-</div>
-<div class="flex flex-col items-center justify-center mb-12">
-<div class="relative w-48 h-48 flex items-center justify-center">
-<svg class="w-full h-full -rotate-90" aria-hidden="true">
-<circle class="text-white/5" cx="96" cy="96" fill="transparent" r="80" stroke="currentColor" stroke-width="8"></circle>
-<circle cx="96" cy="96" fill="transparent" r="80" stroke="#FF1F6D" stroke-dasharray="503" stroke-dashoffset="26" stroke-linecap="round" stroke-width="10" opacity="0.8"></circle>
-</svg>
-<div class="absolute text-center">
-<div class="text-4xl font-display font-bold text-white tracking-tight">Stratum</div>
-<div class="text-[11px] uppercase font-medium tracking-[0.15em] text-slate-400 mt-1">Trust Engine</div>
-</div>
-</div>
-</div>
-<div class="grid grid-cols-2 gap-4">
-<div class="bg-white/5 rounded-xl p-4 border border-white/5">
-<div class="text-[10px] uppercase font-semibold tracking-widest text-slate-400 mb-1">Signal Health</div>
-<div class="text-sm text-slate-300">Real-time monitoring</div>
-</div>
-<div class="bg-white/5 rounded-xl p-4 border border-white/5">
-<div class="text-[10px] uppercase font-semibold tracking-widest text-slate-400 mb-1">Automation</div>
-<div class="text-sm text-slate-300">Trust-gated execution</div>
-</div>
-</div>
-</div>
-</div>
-<div class="absolute bottom-12 left-12 text-[10px] font-mono text-slate-500 uppercase tracking-widest">
-            Stratum AI // Enterprise Platform
+
+<div class="min-h-screen flex">
+  <!-- Brand panel (left) -->
+  <aside class="hidden lg:flex lg:w-1/2 relative overflow-hidden border-r border-line flex-col justify-between p-12">
+    <div class="absolute inset-0 glow-side opacity-70 pointer-events-none" aria-hidden="true"></div>
+
+    <!-- Logo + back-home -->
+    <div class="relative z-10 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-2" aria-label="Stratum AI home">
+        <span class="text-[19px] font-medium tracking-tight">stratum.ai</span>
+      </a>
+      <a href="/" class="text-[12px] text-muted hover:text-white transition-colors flex items-center gap-1">
+        <span class="material-symbols-outlined" style="font-size:16px;">arrow_back</span>
+        Back to site
+      </a>
+    </div>
+
+    <!-- Testimonial -->
+    <div class="relative z-10 max-w-md">
+      <span class="pill mb-6"><span class="dot"></span> Trusted by 500+ growth teams</span>
+      <blockquote class="text-[28px] leading-tight tracking-tight mt-6 mb-8">
+        &ldquo;Stratum doesn't just manage our ads. It partners with us to grow revenue &mdash; with every decision auditable and reversible.&rdquo;
+      </blockquote>
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-line2 flex items-center justify-center text-muted text-sm font-medium">JD</div>
+        <div>
+          <p class="text-sm text-white font-medium">Jane Doe</p>
+          <p class="text-xs text-micro">CMO, GrowthCo</p>
         </div>
-</div>
-<main id="main-content" class="w-full lg:w-5/12 bg-[#080E1C] flex flex-col items-center justify-center p-6 relative">
-<div class="absolute top-0 right-0 w-full h-full bg-gradient-to-bl from-primary/5 to-transparent pointer-events-none" aria-hidden="true"></div>
-<div class="w-full max-w-md glass-card-blue rounded-xl p-10 border-white/10 relative z-10 shadow-2xl mb-12">
-<div class="mb-10">
-<h2 class="text-3xl font-display font-extrabold text-white mb-2 tracking-tight">Sign In</h2>
-<p class="text-slate-400 text-sm">Access your Stratum AI dashboard.</p>
-</div>
-<form class="space-y-6">
-<div class="space-y-2">
-<label for="login-email" class="text-[10px] uppercase font-bold tracking-[0.15em] text-slate-500 ml-1">Email</label>
-<div class="relative">
-<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-lg" aria-hidden="true">fingerprint</span>
-<input id="login-email" class="w-full h-[44px] bg-midnight/80 border border-white/10 rounded-[12px] pl-12 pr-4 text-white text-sm outline-none transition-all input-glow-cyan placeholder:text-slate-600" placeholder="you@company.com" type="email" autocomplete="email"/>
-</div>
-</div>
-<div class="space-y-2">
-<div class="flex justify-between items-center px-1">
-<label for="login-password" class="text-[10px] uppercase font-bold tracking-[0.15em] text-slate-500">Password</label>
-<a class="text-[10px] uppercase font-bold tracking-[0.15em] text-primary hover:text-white transition-colors" href="/forgot-password">Reset Password</a>
-</div>
-<div class="relative">
-<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-lg" aria-hidden="true">encrypted</span>
-<input id="login-password" class="w-full h-[44px] bg-midnight/80 border border-white/10 rounded-[12px] pl-12 pr-4 text-white text-sm outline-none transition-all input-glow-orange placeholder:text-slate-600" placeholder="••••••••••••" type="password" autocomplete="current-password"/>
-</div>
-</div>
-<div class="flex items-center gap-3 px-1 py-2">
-<input class="w-4 h-4 rounded border-white/10 bg-midnight text-primary focus:ring-primary focus:ring-offset-midnight" id="remember" type="checkbox"/>
-<label class="text-xs text-slate-400 font-medium" for="remember">Keep session active for 24h</label>
-</div>
-<button type="submit" class="w-full btn-cyber-primary h-14 rounded-xl font-black text-sm tracking-[0.2em] flex items-center justify-center gap-3 hover:shadow-[0_0_30px_rgba(255,31,109,0.5)] transition-all active:scale-[0.98]">
-                    SIGN IN
-                    <span class="material-symbols-outlined text-xl" aria-hidden="true">arrow_forward</span>
-</button>
-</form>
-</div>
-<div class="w-full max-w-md px-10 mb-8">
-<div class="h-[1px] w-full bg-white/10"></div>
-</div>
-<div class="w-full max-w-md px-10 flex flex-col items-center gap-4 relative z-10">
-<div class="flex gap-6">
-<a class="text-[10px] text-slate-500 hover:text-white transition-colors uppercase tracking-widest font-mono" href="/privacy">Privacy Protocol</a>
-<a class="text-[10px] text-slate-500 hover:text-white transition-colors uppercase tracking-widest font-mono" href="/terms">Legal Core</a>
-<a class="text-[10px] text-slate-500 hover:text-white transition-colors uppercase tracking-widest font-mono" href="/support">Support</a>
-</div>
-<div class="text-center">
-<span class="text-[10px] text-slate-600 font-mono tracking-widest">&copy; 2026 STRATUM ARTIFICIAL INTELLIGENCE</span>
-</div>
-</div>
-</main>
+      </div>
+    </div>
+
+    <!-- Bottom marker -->
+    <div class="relative z-10 flex items-center gap-2 text-[11px] text-micro font-mono uppercase tracking-[0.12em]">
+      <span class="w-1.5 h-1.5 rounded-full bg-ember"></span>
+      Trust engine — operational
+    </div>
+  </aside>
+
+  <!-- Form panel (right) -->
+  <main id="main-content" class="w-full lg:w-1/2 flex flex-col items-center justify-center p-6 lg:p-12 relative">
+    <div class="absolute inset-x-0 top-0 h-72 glow-warm pointer-events-none" aria-hidden="true"></div>
+
+    <div class="w-full max-w-[420px] relative z-10">
+      <!-- Mobile logo -->
+      <div class="lg:hidden mb-8 flex items-center justify-between">
+        <span class="text-[18px] font-medium tracking-tight">stratum.ai</span>
+        <a href="/" class="text-[12px] text-muted">Back</a>
+      </div>
+
+      <!-- Heading -->
+      <div class="mb-8">
+        <span class="pill mb-5"><span class="dot"></span> Sign in</span>
+        <h1 class="text-[34px] leading-[1.1] tracking-tight font-medium mt-5">Welcome back.</h1>
+        <p class="text-[14.5px] text-muted mt-2">Access your trust-gated revenue operations.</p>
+      </div>
+
+      <!-- Form -->
+      <form class="space-y-5" action="/api/v1/auth/login" method="post">
+        <div class="space-y-2">
+          <label for="login-email" class="text-[11px] uppercase tracking-[0.12em] text-micro font-mono ml-1">Email</label>
+          <div class="relative">
+            <span class="material-symbols-outlined input-icon" aria-hidden="true">mail</span>
+            <input id="login-email" name="email" type="email" autocomplete="email" required placeholder="you@company.com" class="auth-input"/>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <div class="flex items-center justify-between ml-1">
+            <label for="login-password" class="text-[11px] uppercase tracking-[0.12em] text-micro font-mono">Password</label>
+            <a href="/forgot-password" class="text-[12px] text-ember hover:text-ember-2 transition-colors">Forgot?</a>
+          </div>
+          <div class="relative">
+            <span class="material-symbols-outlined input-icon" aria-hidden="true">lock</span>
+            <input id="login-password" name="password" type="password" autocomplete="current-password" required placeholder="••••••••••••" class="auth-input"/>
+          </div>
+        </div>
+
+        <label class="flex items-center gap-2.5 select-none cursor-pointer">
+          <input type="checkbox" id="remember" name="remember" class="checkbox-ember"/>
+          <span class="text-[13px] text-muted">Keep session active for 24h</span>
+        </label>
+
+        <button type="submit" class="btn-ember-fill mt-2">
+          Sign in
+          <span class="material-symbols-outlined" style="font-size:18px;">arrow_forward</span>
+        </button>
+      </form>
+
+      <!-- Hairline + footer -->
+      <div class="mt-10 pt-6 hairline">
+        <p class="text-[13px] text-muted">
+          Don't have an account?
+          <a href="/signup" class="text-white hover:text-ember transition-colors font-medium ml-1">Create one</a>
+        </p>
+        <div class="mt-6 flex items-center gap-5 text-[11px] uppercase tracking-[0.12em] font-mono text-micro">
+          <a href="/privacy" class="hover:text-white transition-colors">Privacy</a>
+          <a href="/terms" class="hover:text-white transition-colors">Terms</a>
+          <a href="/contact" class="hover:text-white transition-colors">Support</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom wordmark -->
+    <div class="hidden lg:block absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/4 pointer-events-none select-none">
+      <div class="giant-wordmark">stratum</div>
+    </div>
+  </main>
 </div>
 
-</body></html>
+</body>
+</html>

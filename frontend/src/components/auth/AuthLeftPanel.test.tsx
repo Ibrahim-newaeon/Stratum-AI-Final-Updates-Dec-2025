@@ -1,8 +1,8 @@
 /**
  * AuthLeftPanel Component Tests
  *
- * Tests for the shared left panel on Login/Signup pages,
- * including brand elements, trust gauge, and stats display.
+ * Tests for the shared left panel on Login/Signup pages —
+ * Stratum figma theme (testimonial, ember accent, status marker).
  */
 
 import { describe, it, expect } from 'vitest';
@@ -23,69 +23,38 @@ vi.mock('@/lib/utils', () => ({
 
 import AuthLeftPanel from './AuthLeftPanel';
 
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
-
 describe('AuthLeftPanel', () => {
   it('renders the component', () => {
     const { container } = render(<AuthLeftPanel />);
     expect(container.firstChild).toBeInTheDocument();
   });
 
-  it('renders the Stratum AI logo', () => {
+  it('renders the stratum.ai wordmark linking home', () => {
     render(<AuthLeftPanel />);
-
-    const logo = screen.getByAltText('Stratum AI');
-    expect(logo).toBeInTheDocument();
-    expect(logo).toHaveAttribute('src', '/images/stratum-logo.png');
+    const wordmark = screen.getAllByText('stratum.ai')[0];
+    expect(wordmark).toBeInTheDocument();
+    expect(wordmark.closest('a')).toHaveAttribute('href', '/');
   });
 
-  it('renders the logo as a link to home page', () => {
+  it('renders the testimonial', () => {
     render(<AuthLeftPanel />);
-
-    const logo = screen.getByAltText('Stratum AI');
-    expect(logo.closest('a')).toHaveAttribute('href', '/');
+    expect(screen.getByText(/partners with us to grow revenue/)).toBeInTheDocument();
+    expect(screen.getByText('Jane Doe')).toBeInTheDocument();
+    expect(screen.getByText('CMO, GrowthCo')).toBeInTheDocument();
   });
 
-  it('displays the trust score of 94.7%', () => {
+  it('renders the trust badge', () => {
     render(<AuthLeftPanel />);
-
-    expect(screen.getByText(/94\.7/)).toBeInTheDocument();
-    expect(screen.getByText('Trust Score')).toBeInTheDocument();
+    expect(screen.getByText(/Trusted by 500\+ growth teams/i)).toBeInTheDocument();
   });
 
-  it('displays the Revenue Growth stat', () => {
+  it('renders the trust engine status marker', () => {
     render(<AuthLeftPanel />);
-
-    expect(screen.getByText('Revenue Growth')).toBeInTheDocument();
-    expect(screen.getByText('+124.8%')).toBeInTheDocument();
+    expect(screen.getByText(/Trust engine — operational/i)).toBeInTheDocument();
   });
 
-  it('displays the AI Efficiency stat', () => {
-    render(<AuthLeftPanel />);
-
-    expect(screen.getByText('AI Efficiency')).toBeInTheDocument();
-    expect(screen.getByText('99.2%')).toBeInTheDocument();
-  });
-
-  it('displays the System Monitoring status', () => {
-    render(<AuthLeftPanel />);
-
-    expect(screen.getByText('System Monitoring Active')).toBeInTheDocument();
-  });
-
-  it('displays the protocol version', () => {
-    render(<AuthLeftPanel />);
-
-    expect(
-      screen.getByText('Protocol v4.0.26 // Quantum Encrypted Session')
-    ).toBeInTheDocument();
-  });
-
-  it('applies custom className', () => {
-    const { container } = render(<AuthLeftPanel className="hidden lg:flex" />);
-
+  it('hides on mobile and shows on lg breakpoint', () => {
+    const { container } = render(<AuthLeftPanel />);
     expect(container.firstChild).toHaveClass('hidden');
     expect(container.firstChild).toHaveClass('lg:flex');
   });
