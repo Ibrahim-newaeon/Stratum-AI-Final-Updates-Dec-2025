@@ -4,7 +4,9 @@ dockerfilePath = "Dockerfile"
 noCache = true
 
 [deploy]
-healthcheckPath = "/"
+# `/` now 302s to /landing.html; use the dedicated /health endpoint
+# (returns 200) so the healthcheck doesn't follow redirects.
+healthcheckPath = "/health"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
