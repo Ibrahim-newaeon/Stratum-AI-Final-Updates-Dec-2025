@@ -84,7 +84,7 @@ prometheus-fastapi-instrumentator>=6.1.0
 psutil>=5.9.0
 
 # PDF & Reporting
-weasyprint>=68.0
+weasyprint>=68.1
 PyYAML>=6.0
 
 # AWS (S3 for CMS assets & report delivery)
