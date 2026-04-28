@@ -327,7 +327,11 @@ function ProfileSettings() {
           disabled={profileSaving}
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
         >
-          {profileSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          {profileSaving ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Save className="w-4 h-4" />
+          )}
           Save Profile
         </button>
       </div>
@@ -571,7 +575,7 @@ function NotificationSettings() {
   const { data: user } = useCurrentUser();
   const updatePreferences = useUpdatePreferences();
   const { toast } = useToast();
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const statusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -870,7 +874,11 @@ function SecuritySettings({
             </div>
             {mfaEnabled ? (
               <button
-                onClick={() => { setMfaStep('disable'); setMfaError(''); setMfaCode(''); }}
+                onClick={() => {
+                  setMfaStep('disable');
+                  setMfaError('');
+                  setMfaCode('');
+                }}
                 className="px-4 py-2 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-colors"
               >
                 Disable 2FA
@@ -908,7 +916,9 @@ function SecuritySettings({
               </code>
             </div>
             <div className="space-y-2">
-              <label className="text-sm text-muted-foreground">Enter the 6-digit code from your app:</label>
+              <label className="text-sm text-muted-foreground">
+                Enter the 6-digit code from your app:
+              </label>
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -934,7 +944,11 @@ function SecuritySettings({
               </p>
             )}
             <button
-              onClick={() => { setMfaStep('idle'); setMfaSetupData(null); setMfaError(''); }}
+              onClick={() => {
+                setMfaStep('idle');
+                setMfaSetupData(null);
+                setMfaError('');
+              }}
               className="text-sm text-muted-foreground hover:text-white transition-colors"
             >
               Cancel setup
@@ -952,17 +966,23 @@ function SecuritySettings({
             {mfaBackupCodes.length > 0 && (
               <div>
                 <p className="text-sm text-muted-foreground mb-2">
-                  Save these backup codes somewhere safe. You can use them if you lose access to your authenticator app.
+                  Save these backup codes somewhere safe. You can use them if you lose access to
+                  your authenticator app.
                 </p>
                 <div className="grid grid-cols-2 gap-2 p-3 rounded-lg bg-white/5 border border-white/10">
                   {mfaBackupCodes.map((code, i) => (
-                    <code key={i} className="text-sm font-mono text-center py-1">{code}</code>
+                    <code key={i} className="text-sm font-mono text-center py-1">
+                      {code}
+                    </code>
                   ))}
                 </div>
               </div>
             )}
             <button
-              onClick={() => { setMfaStep('idle'); setMfaBackupCodes([]); }}
+              onClick={() => {
+                setMfaStep('idle');
+                setMfaBackupCodes([]);
+              }}
               className="px-4 py-2 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
             >
               Done
@@ -1001,7 +1021,11 @@ function SecuritySettings({
               </p>
             )}
             <button
-              onClick={() => { setMfaStep('idle'); setMfaError(''); setMfaCode(''); }}
+              onClick={() => {
+                setMfaStep('idle');
+                setMfaError('');
+                setMfaCode('');
+              }}
               className="text-sm text-muted-foreground hover:text-white transition-colors"
             >
               Cancel
@@ -1022,7 +1046,9 @@ function SecuritySettings({
           {apiKeys.length === 0 && (
             <div className="p-4 rounded-xl border border-white/10 glass text-center">
               <p className="text-muted-foreground">No API keys created yet</p>
-              <p className="text-xs text-muted-foreground mt-1">Create a key to integrate with the Stratum API</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Create a key to integrate with the Stratum API
+              </p>
             </div>
           )}
           {apiKeys.map((apiKey) => {
@@ -1227,8 +1253,7 @@ function IntegrationSettings() {
             const backendKey = platformMap[p.id];
             if (backendKey) {
               const isConnected =
-                connectedMap[backendKey]?.connected === true ||
-                connectedList.includes(backendKey);
+                connectedMap[backendKey]?.connected === true || connectedList.includes(backendKey);
               return {
                 ...p,
                 connected: isConnected,
@@ -1236,7 +1261,7 @@ function IntegrationSettings() {
               };
             }
             return p;
-          }),
+          })
         );
       } catch {
         // If API fails, leave defaults
@@ -1369,7 +1394,13 @@ function IntegrationSettings() {
     showDescription = false,
     onConnect,
   }: {
-    integration: { id: string; name: string; connected: boolean; color: string; description?: string };
+    integration: {
+      id: string;
+      name: string;
+      connected: boolean;
+      color: string;
+      description?: string;
+    };
     showDescription?: boolean;
     onConnect?: () => void;
   }) => (
@@ -1400,13 +1431,19 @@ function IntegrationSettings() {
           </span>
         )}
         <button
-          onClick={(e) => { e.stopPropagation(); handleViewCredentials(integration.id); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleViewCredentials(integration.id);
+          }}
           className="px-3 py-1.5 rounded-xl text-xs font-medium border border-white/10 hover:bg-white/5 text-white/50 hover:text-white/80 transition-colors"
         >
           View Setup
         </button>
         <button
-          onClick={(e) => { e.stopPropagation(); onConnect?.(); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onConnect?.();
+          }}
           className={cn(
             'px-4 py-2 rounded-xl text-sm font-medium transition-colors',
             integration.connected
@@ -1553,7 +1590,11 @@ function IntegrationSettings() {
         </div>
         <div className="space-y-3">
           {adPlatforms.map((integration) => (
-            <IntegrationCard key={integration.id} integration={integration} onConnect={() => navigate('/dashboard/campaigns/connect')} />
+            <IntegrationCard
+              key={integration.id}
+              integration={integration}
+              onConnect={() => navigate('/dashboard/campaigns/connect')}
+            />
           ))}
         </div>
       </div>
@@ -1563,7 +1604,12 @@ function IntegrationSettings() {
         <h3 className="font-medium mb-3">Analytics & Tracking</h3>
         <div className="space-y-3">
           {analyticsIntegrations.map((integration) => (
-            <IntegrationCard key={integration.id} integration={integration} showDescription onConnect={() => handleViewCredentials(integration.id)} />
+            <IntegrationCard
+              key={integration.id}
+              integration={integration}
+              showDescription
+              onConnect={() => handleViewCredentials(integration.id)}
+            />
           ))}
         </div>
       </div>
@@ -1598,10 +1644,7 @@ function IntegrationSettings() {
       </div>
 
       {/* Platform Setup Modal */}
-      <PlatformSetupModal
-        platform={selectedPlatform}
-        onClose={() => setSelectedPlatform(null)}
-      />
+      <PlatformSetupModal platform={selectedPlatform} onClose={() => setSelectedPlatform(null)} />
     </div>
   );
 }
@@ -1684,7 +1727,7 @@ function PriceMetricsToggle() {
   const setFeatures = useFeatureFlagsStore((state) => state.setFeatures);
 
   // Load feature flags from API (populates Zustand store)
-  const effectiveTenantId = tenantId ?? 0
+  const effectiveTenantId = tenantId ?? 0;
   useFeatureFlags(effectiveTenantId);
 
   const updateFlags = useUpdateFeatureFlags(effectiveTenantId);
@@ -1929,7 +1972,8 @@ function MetricVisibilitySettings() {
         )}
       </div>
       <p className="text-sm text-muted-foreground mb-4">
-        Choose which metrics to show on the dashboard. Hidden metrics will not appear in cards or tables.
+        Choose which metrics to show on the dashboard. Hidden metrics will not appear in cards or
+        tables.
       </p>
       <div className="space-y-3">
         {metricsByCategory.map((cat) => {
@@ -1954,9 +1998,7 @@ function MetricVisibilitySettings() {
                   </span>
                 </button>
                 <button
-                  onClick={() =>
-                    handleToggleCategory(cat.id, allVisible ? 'hide' : 'show')
-                  }
+                  onClick={() => handleToggleCategory(cat.id, allVisible ? 'hide' : 'show')}
                   className="text-xs px-2 py-1 rounded border hover:bg-muted transition-colors text-muted-foreground"
                 >
                   {allVisible ? 'Hide All' : 'Show All'}
@@ -1980,12 +2022,7 @@ function MetricVisibilitySettings() {
                           )}
                           <div className="min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span
-                                className={cn(
-                                  'text-sm',
-                                  isHidden && 'text-muted-foreground'
-                                )}
-                              >
+                              <span className={cn('text-sm', isHidden && 'text-muted-foreground')}>
                                 {getMetricLabel(metric.id)}
                               </span>
                               {metric.showWithCostTrigger && (
@@ -2063,40 +2100,69 @@ function BillingSettings() {
       const { portal_url } = await createPortal.mutateAsync();
       window.location.href = portal_url;
     } catch {
-      toast({ title: 'Error', description: 'Could not open billing portal.', variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: 'Could not open billing portal.',
+        variant: 'destructive',
+      });
     }
   };
 
   const handleCancel = async () => {
-    if (!confirm('Are you sure you want to cancel your subscription? You will retain access until the end of the current period.')) return;
+    if (
+      !confirm(
+        'Are you sure you want to cancel your subscription? You will retain access until the end of the current period.'
+      )
+    )
+      return;
     try {
       await cancelSub.mutateAsync();
-      toast({ title: 'Subscription canceled', description: 'Your plan will remain active until the end of the billing period.' });
+      toast({
+        title: 'Subscription canceled',
+        description: 'Your plan will remain active until the end of the billing period.',
+      });
     } catch {
-      toast({ title: 'Error', description: 'Failed to cancel subscription.', variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: 'Failed to cancel subscription.',
+        variant: 'destructive',
+      });
     }
   };
 
   const handleReactivate = async () => {
     try {
       await reactivateSub.mutateAsync();
-      toast({ title: 'Subscription reactivated', description: 'Your plan will continue as normal.' });
+      toast({
+        title: 'Subscription reactivated',
+        description: 'Your plan will continue as normal.',
+      });
     } catch {
-      toast({ title: 'Error', description: 'Failed to reactivate subscription.', variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: 'Failed to reactivate subscription.',
+        variant: 'destructive',
+      });
     }
   };
 
   const statusColor = (status: string | null | undefined) => {
     switch (status) {
-      case 'active': return 'bg-green-500/15 text-green-600 border-green-500/30';
-      case 'trialing': return 'bg-blue-500/15 text-blue-600 border-blue-500/30';
-      case 'past_due': return 'bg-amber-500/15 text-amber-600 border-amber-500/30';
-      case 'canceled': return 'bg-red-500/15 text-red-600 border-red-500/30';
-      default: return 'bg-muted text-muted-foreground border-border';
+      case 'active':
+        return 'bg-green-500/15 text-green-600 border-green-500/30';
+      case 'trialing':
+        return 'bg-blue-500/15 text-blue-600 border-blue-500/30';
+      case 'past_due':
+        return 'bg-amber-500/15 text-amber-600 border-amber-500/30';
+      case 'canceled':
+        return 'bg-red-500/15 text-red-600 border-red-500/30';
+      default:
+        return 'bg-muted text-muted-foreground border-border';
     }
   };
 
-  const formatDate = (d: string | null | undefined) => d ? new Date(d).toLocaleDateString() : '--';
+  const formatDate = (d: string | null | undefined) =>
+    d ? new Date(d).toLocaleDateString() : '--';
   const formatCurrency = (amount: number, currency = 'usd') =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount / 100);
 
@@ -2119,11 +2185,18 @@ function BillingSettings() {
             <div>
               <p className="font-medium capitalize">{planName} Plan</p>
               <div className="flex items-center gap-2 mt-1">
-                <span className={cn('text-xs px-2 py-0.5 rounded-full border font-medium capitalize', statusColor(sub?.status))}>
+                <span
+                  className={cn(
+                    'text-xs px-2 py-0.5 rounded-full border font-medium capitalize',
+                    statusColor(sub?.status)
+                  )}
+                >
                   {sub?.status || 'inactive'}
                 </span>
                 {isCanceling && (
-                  <span className="text-xs text-amber-600">Cancels {formatDate(sub?.current_period_end)}</span>
+                  <span className="text-xs text-amber-600">
+                    Cancels {formatDate(sub?.current_period_end)}
+                  </span>
                 )}
               </div>
               {hasActiveSub && !isCanceling && (
@@ -2164,9 +2237,16 @@ function BillingSettings() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Next payment</p>
-              <p className="font-medium">{formatCurrency(overview.upcoming_invoice.amount_due, overview.upcoming_invoice.currency)}</p>
+              <p className="font-medium">
+                {formatCurrency(
+                  overview.upcoming_invoice.amount_due,
+                  overview.upcoming_invoice.currency
+                )}
+              </p>
             </div>
-            <p className="text-sm text-muted-foreground">{formatDate(overview.upcoming_invoice.next_payment_date)}</p>
+            <p className="text-sm text-muted-foreground">
+              {formatDate(overview.upcoming_invoice.next_payment_date)}
+            </p>
           </div>
         </div>
       )}
@@ -2203,15 +2283,15 @@ function BillingSettings() {
                     </div>
                   </div>
                   {pm.is_default && (
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">Default</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                      Default
+                    </span>
                   )}
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground text-center py-2">
-              No payment method on file.
-            </p>
+            <p className="text-muted-foreground text-center py-2">No payment method on file.</p>
           )}
         </div>
       </div>
@@ -2226,58 +2306,84 @@ function BillingSettings() {
             </div>
           ) : invoices && invoices.length > 0 ? (
             <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-muted/50">
-                  <th scope="col" className="text-left px-4 py-2 font-medium text-muted-foreground">Date</th>
-                  <th scope="col" className="text-left px-4 py-2 font-medium text-muted-foreground">Amount</th>
-                  <th scope="col" className="text-left px-4 py-2 font-medium text-muted-foreground">Status</th>
-                  <th scope="col" className="text-right px-4 py-2 font-medium text-muted-foreground">Invoice</th>
-                </tr>
-              </thead>
-              <tbody>
-                {invoices.map((inv) => (
-                  <tr key={inv.id} className="border-b last:border-0">
-                    <td className="px-4 py-3">{formatDate(inv.created)}</td>
-                    <td className="px-4 py-3">{formatCurrency(inv.amount_paid || inv.amount_due, inv.currency)}</td>
-                    <td className="px-4 py-3">
-                      <span className={cn(
-                        'text-xs px-2 py-0.5 rounded-full border font-medium capitalize',
-                        inv.status === 'paid' ? 'bg-green-500/15 text-green-600 border-green-500/30' :
-                        inv.status === 'open' ? 'bg-amber-500/15 text-amber-600 border-amber-500/30' :
-                        'bg-muted text-muted-foreground border-border'
-                      )}>
-                        {inv.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      {inv.invoice_pdf ? (
-                        <a
-                          href={inv.invoice_pdf}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-primary hover:underline"
-                        >
-                          <Download className="w-3.5 h-3.5" />
-                          PDF
-                        </a>
-                      ) : inv.hosted_invoice_url ? (
-                        <a
-                          href={inv.hosted_invoice_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary hover:underline"
-                        >
-                          View
-                        </a>
-                      ) : (
-                        <span className="text-muted-foreground">--</span>
-                      )}
-                    </td>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-muted/50">
+                    <th
+                      scope="col"
+                      className="text-left px-4 py-2 font-medium text-muted-foreground"
+                    >
+                      Date
+                    </th>
+                    <th
+                      scope="col"
+                      className="text-left px-4 py-2 font-medium text-muted-foreground"
+                    >
+                      Amount
+                    </th>
+                    <th
+                      scope="col"
+                      className="text-left px-4 py-2 font-medium text-muted-foreground"
+                    >
+                      Status
+                    </th>
+                    <th
+                      scope="col"
+                      className="text-right px-4 py-2 font-medium text-muted-foreground"
+                    >
+                      Invoice
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {invoices.map((inv) => (
+                    <tr key={inv.id} className="border-b last:border-0">
+                      <td className="px-4 py-3">{formatDate(inv.created)}</td>
+                      <td className="px-4 py-3">
+                        {formatCurrency(inv.amount_paid || inv.amount_due, inv.currency)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={cn(
+                            'text-xs px-2 py-0.5 rounded-full border font-medium capitalize',
+                            inv.status === 'paid'
+                              ? 'bg-green-500/15 text-green-600 border-green-500/30'
+                              : inv.status === 'open'
+                                ? 'bg-amber-500/15 text-amber-600 border-amber-500/30'
+                                : 'bg-muted text-muted-foreground border-border'
+                          )}
+                        >
+                          {inv.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        {inv.invoice_pdf ? (
+                          <a
+                            href={inv.invoice_pdf}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-primary hover:underline"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                            PDF
+                          </a>
+                        ) : inv.hosted_invoice_url ? (
+                          <a
+                            href={inv.hosted_invoice_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline"
+                          >
+                            View
+                          </a>
+                        ) : (
+                          <span className="text-muted-foreground">--</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           ) : (
             <div className="p-6 text-center text-muted-foreground">
@@ -2413,8 +2519,8 @@ function TrustEngineSettings() {
     <div className="space-y-6">
       <h2 className="text-lg font-semibold">Trust Engine Configuration</h2>
       <p className="text-sm text-muted-foreground">
-        Configure signal health thresholds that control when automations can execute.
-        The Trust Engine ensures automations only run when signal quality meets safety requirements.
+        Configure signal health thresholds that control when automations can execute. The Trust
+        Engine ensures automations only run when signal quality meets safety requirements.
       </p>
 
       <div className="space-y-6">
