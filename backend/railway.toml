@@ -6,6 +6,6 @@ noCache = true
 [deploy]
 startCommand = ""
 healthcheckPath = "/health"
-healthcheckTimeout = 300
+healthcheckTimeout = 600
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
