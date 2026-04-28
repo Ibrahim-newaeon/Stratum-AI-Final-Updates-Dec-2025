@@ -1,6 +1,7 @@
-import { useState, useCallback, useRef, useEffect, Component, type ReactNode } from 'react'
-import { useTranslation } from 'react-i18next'
-import GridLayout, { Layout } from 'react-grid-layout'
+import { useState, useCallback, useRef, useEffect, Component, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
+import { ReactGridLayout as GridLayout } from 'react-grid-layout/legacy'
+import type { Layout, LayoutItem } from 'react-grid-layout';
 import {
   Settings,
   Plus,
@@ -11,30 +12,30 @@ import {
   Trash2,
   LayoutDashboard,
   AlertTriangle,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
-import { usePriceMetrics } from '@/hooks/usePriceMetrics'
-import { DashboardSimulationProvider } from '@/contexts/DashboardSimulationContext'
-import { KPIWidget } from '@/components/widgets/KPIWidget'
-import { ChartWidget } from '@/components/widgets/ChartWidget'
-import { CampaignsWidget } from '@/components/widgets/CampaignsWidget'
-import { PlatformBreakdownWidget } from '@/components/widgets/PlatformBreakdownWidget'
-import { AlertsWidget } from '@/components/widgets/AlertsWidget'
-import { QuickActionsWidget } from '@/components/widgets/QuickActionsWidget'
-import { SimulatorWidget } from '@/components/widgets/SimulatorWidget'
-import { LivePredictionsWidget } from '@/components/widgets/LivePredictionsWidget'
-import { ROASAlertsWidget } from '@/components/widgets/ROASAlertsWidget'
-import { BudgetOptimizerWidget } from '@/components/widgets/BudgetOptimizerWidget'
-import { WidgetConfig, WidgetType, defaultWidgets, availableWidgets } from '@/components/widgets'
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { usePriceMetrics } from '@/hooks/usePriceMetrics';
+import { DashboardSimulationProvider } from '@/contexts/DashboardSimulationContext';
+import { KPIWidget } from '@/components/widgets/KPIWidget';
+import { ChartWidget } from '@/components/widgets/ChartWidget';
+import { CampaignsWidget } from '@/components/widgets/CampaignsWidget';
+import { PlatformBreakdownWidget } from '@/components/widgets/PlatformBreakdownWidget';
+import { AlertsWidget } from '@/components/widgets/AlertsWidget';
+import { QuickActionsWidget } from '@/components/widgets/QuickActionsWidget';
+import { SimulatorWidget } from '@/components/widgets/SimulatorWidget';
+import { LivePredictionsWidget } from '@/components/widgets/LivePredictionsWidget';
+import { ROASAlertsWidget } from '@/components/widgets/ROASAlertsWidget';
+import { BudgetOptimizerWidget } from '@/components/widgets/BudgetOptimizerWidget';
+import { WidgetConfig, WidgetType, defaultWidgets, availableWidgets } from '@/components/widgets';
 
-import 'react-grid-layout/css/styles.css'
-import 'react-resizable/css/styles.css'
+import 'react-grid-layout/css/styles.css';
+import 'react-resizable/css/styles.css';
 
-const GRID_COLS = 12
-const ROW_HEIGHT = 80
+const GRID_COLS = 12;
+const ROW_HEIGHT = 80;
 
-const COST_WIDGET_TYPES = ['kpi-spend', 'kpi-revenue', 'kpi-roas', 'chart-revenue', 'chart-spend']
+const COST_WIDGET_TYPES = ['kpi-spend', 'kpi-revenue', 'kpi-roas', 'chart-revenue', 'chart-spend'];
 
 // Error boundary to prevent one broken widget from crashing the entire dashboard
 class WidgetErrorBoundary extends Component<
@@ -42,12 +43,12 @@ class WidgetErrorBoundary extends Component<
   { hasError: boolean }
 > {
   constructor(props: { children: ReactNode; widgetTitle: string }) {
-    super(props)
-    this.state = { hasError: false }
+    super(props);
+    this.state = { hasError: false };
   }
 
   static getDerivedStateFromError() {
-    return { hasError: true }
+    return { hasError: true };
   }
 
   render() {
@@ -56,23 +57,21 @@ class WidgetErrorBoundary extends Component<
         <div className="h-full flex items-center justify-center p-4 text-center">
           <div>
             <AlertTriangle className="w-6 h-6 text-amber-500 mx-auto mb-2" />
-            <p className="text-xs text-muted-foreground">
-              Failed to load {this.props.widgetTitle}
-            </p>
+            <p className="text-xs text-muted-foreground">Failed to load {this.props.widgetTitle}</p>
           </div>
         </div>
-      )
+      );
     }
-    return this.props.children
+    return this.props.children;
   }
 }
 
 function loadSavedWidgets(): WidgetConfig[] {
   try {
-    const saved = localStorage.getItem('stratum-dashboard-layout')
-    if (!saved) return defaultWidgets
-    const parsed = JSON.parse(saved)
-    if (!Array.isArray(parsed) || parsed.length === 0) return defaultWidgets
+    const saved = localStorage.getItem('stratum-dashboard-layout');
+    if (!saved) return defaultWidgets;
+    const parsed = JSON.parse(saved);
+    if (!Array.isArray(parsed) || parsed.length === 0) return defaultWidgets;
     // Validate each widget has required fields
     const valid = parsed.every(
       (w: unknown) =>
@@ -84,62 +83,71 @@ function loadSavedWidgets(): WidgetConfig[] {
         'y' in w &&
         'w' in w &&
         'h' in w
-    )
-    return valid ? parsed : defaultWidgets
+    );
+    return valid ? parsed : defaultWidgets;
   } catch {
-    localStorage.removeItem('stratum-dashboard-layout')
-    return defaultWidgets
+    localStorage.removeItem('stratum-dashboard-layout');
+    return defaultWidgets;
   }
 }
 
 function CustomDashboardContent() {
-  const { t } = useTranslation()
-  const { showPriceMetrics } = usePriceMetrics()
-  const containerRef = useRef<HTMLDivElement>(null)
-  const [containerWidth, setContainerWidth] = useState(1200)
-  const [widgets, setWidgets] = useState<WidgetConfig[]>(loadSavedWidgets)
-  const [isEditing, setIsEditing] = useState(false)
-  const [showAddWidget, setShowAddWidget] = useState(false)
+  const { t } = useTranslation();
+  const { showPriceMetrics } = usePriceMetrics();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState(1200);
+  const [widgets, setWidgets] = useState<WidgetConfig[]>(loadSavedWidgets);
+  const [isEditing, setIsEditing] = useState(false);
+  const [showAddWidget, setShowAddWidget] = useState(false);
 
   // Measure container width on mount and resize
   useEffect(() => {
     const updateWidth = () => {
       if (containerRef.current) {
-        setContainerWidth(containerRef.current.offsetWidth)
+        setContainerWidth(containerRef.current.offsetWidth);
       }
-    }
+    };
 
-    updateWidth()
-    window.addEventListener('resize', updateWidth)
-    return () => window.removeEventListener('resize', updateWidth)
-  }, [])
+    updateWidth();
+    window.addEventListener('resize', updateWidth);
+    return () => window.removeEventListener('resize', updateWidth);
+  }, []);
 
-  const handleLayoutChange = useCallback((layout: Layout[]) => {
-    if (!isEditing) return
-    setWidgets((prev) =>
-      prev.map((widget) => {
-        const layoutItem = layout.find((l) => l.i === widget.id)
-        if (layoutItem) {
-          return { ...widget, x: layoutItem.x, y: layoutItem.y, w: layoutItem.w, h: layoutItem.h }
-        }
-        return widget
-      })
-    )
-  }, [isEditing])
+  const handleLayoutChange = useCallback(
+    (layout: Layout) => {
+      if (!isEditing) return;
+      setWidgets((prev) =>
+        prev.map((widget) => {
+          const layoutItem = layout.find((l) => l.i === widget.id);
+          if (layoutItem) {
+            return {
+              ...widget,
+              x: layoutItem.x,
+              y: layoutItem.y,
+              w: layoutItem.w,
+              h: layoutItem.h,
+            };
+          }
+          return widget;
+        })
+      );
+    },
+    [isEditing]
+  );
 
   const handleSave = () => {
-    localStorage.setItem('stratum-dashboard-layout', JSON.stringify(widgets))
-    setIsEditing(false)
-  }
+    localStorage.setItem('stratum-dashboard-layout', JSON.stringify(widgets));
+    setIsEditing(false);
+  };
 
   const handleReset = () => {
-    setWidgets(defaultWidgets)
-    localStorage.removeItem('stratum-dashboard-layout')
-  }
+    setWidgets(defaultWidgets);
+    localStorage.removeItem('stratum-dashboard-layout');
+  };
 
   const handleAddWidget = (type: WidgetType) => {
-    const widgetDef = availableWidgets.find((w) => w.type === type)
-    if (!widgetDef) return
+    const widgetDef = availableWidgets.find((w) => w.type === type);
+    if (!widgetDef) return;
 
     const newWidget: WidgetConfig = {
       id: `${type}-${Date.now()}`,
@@ -151,56 +159,62 @@ function CustomDashboardContent() {
       h: widgetDef.defaultSize.h,
       minW: 2,
       minH: 2,
-    }
-    setWidgets((prev) => [...prev, newWidget])
-    setShowAddWidget(false)
-  }
+    };
+    setWidgets((prev) => [...prev, newWidget]);
+    setShowAddWidget(false);
+  };
 
   const handleRemoveWidget = (id: string) => {
-    setWidgets((prev) => prev.filter((w) => w.id !== id))
-  }
+    setWidgets((prev) => prev.filter((w) => w.id !== id));
+  };
 
   const renderWidget = (widget: WidgetConfig) => {
-    const type = widget.type
-    if (!type) return <div className="p-4 text-muted-foreground">Unknown widget</div>
+    const type = widget.type;
+    if (!type) return <div className="p-4 text-muted-foreground">Unknown widget</div>;
 
     if (type.startsWith('kpi-')) {
-      const kpiType = type.replace('kpi-', '') as 'spend' | 'revenue' | 'roas' | 'conversions' | 'ctr' | 'impressions'
-      return <KPIWidget type={kpiType} />
+      const kpiType = type.replace('kpi-', '') as
+        | 'spend'
+        | 'revenue'
+        | 'roas'
+        | 'conversions'
+        | 'ctr'
+        | 'impressions';
+      return <KPIWidget type={kpiType} />;
     }
 
     if (type.startsWith('chart-')) {
-      const chartType = type.replace('chart-', '') as 'revenue' | 'spend' | 'performance'
-      return <ChartWidget type={chartType} />
+      const chartType = type.replace('chart-', '') as 'revenue' | 'spend' | 'performance';
+      return <ChartWidget type={chartType} />;
     }
 
     switch (type) {
       case 'campaigns-top':
-        return <CampaignsWidget />
+        return <CampaignsWidget />;
       case 'platform-breakdown':
-        return <PlatformBreakdownWidget />
+        return <PlatformBreakdownWidget />;
       case 'alerts':
-        return <AlertsWidget />
+        return <AlertsWidget />;
       case 'quick-actions':
-        return <QuickActionsWidget />
+        return <QuickActionsWidget />;
       case 'simulator':
-        return <SimulatorWidget />
+        return <SimulatorWidget />;
       case 'live-predictions':
-        return <LivePredictionsWidget className="h-full" />
+        return <LivePredictionsWidget className="h-full" />;
       case 'roas-alerts':
-        return <ROASAlertsWidget className="h-full" />
+        return <ROASAlertsWidget className="h-full" />;
       case 'budget-optimizer':
-        return <BudgetOptimizerWidget className="h-full" />
+        return <BudgetOptimizerWidget className="h-full" />;
       default:
-        return <div className="p-4 text-muted-foreground">Unknown widget</div>
+        return <div className="p-4 text-muted-foreground">Unknown widget</div>;
     }
-  }
+  };
 
   const visibleWidgets = showPriceMetrics
     ? widgets
-    : widgets.filter((w) => !COST_WIDGET_TYPES.includes(w.type))
+    : widgets.filter((w) => !COST_WIDGET_TYPES.includes(w.type));
 
-  const layout: Layout[] = visibleWidgets.map((widget) => ({
+  const layout: LayoutItem[] = visibleWidgets.map((widget) => ({
     i: widget.id,
     x: widget.x,
     y: widget.y,
@@ -210,7 +224,7 @@ function CustomDashboardContent() {
     minH: widget.minH || 2,
     maxW: widget.maxW,
     maxH: widget.maxH,
-  }))
+  }));
 
   return (
     <div className="space-y-4">
@@ -221,7 +235,9 @@ function CustomDashboardContent() {
             <LayoutDashboard className="w-7 h-7 text-primary" />
             {t('dashboard.title', 'Dashboard')}
           </h1>
-          <p className="text-muted-foreground">{t('dashboard.welcome', 'Your performance at a glance')}</p>
+          <p className="text-muted-foreground">
+            {t('dashboard.welcome', 'Your performance at a glance')}
+          </p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -270,7 +286,8 @@ function CustomDashboardContent() {
 
       {isEditing && (
         <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 text-sm">
-          <strong>Edit Mode:</strong> Drag widgets to rearrange, resize from corners, or remove widgets.
+          <strong>Edit Mode:</strong> Drag widgets to rearrange, resize from corners, or remove
+          widgets.
         </div>
       )}
 
@@ -289,41 +306,43 @@ function CustomDashboardContent() {
           compactType="vertical"
           preventCollision={false}
         >
-        {visibleWidgets.map((widget) => (
-          <div
-            key={widget.id}
-            className={cn(
-              'rounded-xl border bg-card overflow-hidden',
-              isEditing && 'ring-2 ring-primary/20'
-            )}
-          >
-            {/* Widget Header */}
-            <div className={cn(
-              'flex items-center justify-between px-4 py-2 border-b bg-muted/30',
-              isEditing && 'cursor-move widget-drag-handle'
-            )}>
-              <div className="flex items-center gap-2">
-                {isEditing && <GripVertical className="w-4 h-4 text-muted-foreground" />}
-                <span className="font-medium text-sm">{widget.title}</span>
-              </div>
-              {isEditing && (
-                <button
-                  onClick={() => handleRemoveWidget(widget.id)}
-                  className="p-1 rounded hover:bg-destructive/10 text-destructive transition-colors"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+          {visibleWidgets.map((widget) => (
+            <div
+              key={widget.id}
+              className={cn(
+                'rounded-xl border bg-card overflow-hidden',
+                isEditing && 'ring-2 ring-primary/20'
               )}
-            </div>
+            >
+              {/* Widget Header */}
+              <div
+                className={cn(
+                  'flex items-center justify-between px-4 py-2 border-b bg-muted/30',
+                  isEditing && 'cursor-move widget-drag-handle'
+                )}
+              >
+                <div className="flex items-center gap-2">
+                  {isEditing && <GripVertical className="w-4 h-4 text-muted-foreground" />}
+                  <span className="font-medium text-sm">{widget.title}</span>
+                </div>
+                {isEditing && (
+                  <button
+                    onClick={() => handleRemoveWidget(widget.id)}
+                    className="p-1 rounded hover:bg-destructive/10 text-destructive transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
 
-            {/* Widget Content */}
-            <div className="h-[calc(100%-40px)] overflow-auto">
-              <WidgetErrorBoundary widgetTitle={widget.title}>
-                {renderWidget(widget)}
-              </WidgetErrorBoundary>
+              {/* Widget Content */}
+              <div className="h-[calc(100%-40px)] overflow-auto">
+                <WidgetErrorBoundary widgetTitle={widget.title}>
+                  {renderWidget(widget)}
+                </WidgetErrorBoundary>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
         </GridLayout>
       </div>
 
@@ -357,17 +376,17 @@ function CustomDashboardContent() {
         </div>
       )}
     </div>
-  )
+  );
 }
 
 export function CustomDashboard() {
   return (
     <ErrorBoundary>
-    <DashboardSimulationProvider>
-      <CustomDashboardContent />
-    </DashboardSimulationProvider>
+      <DashboardSimulationProvider>
+        <CustomDashboardContent />
+      </DashboardSimulationProvider>
     </ErrorBoundary>
-  )
+  );
 }
 
-export default CustomDashboard
+export default CustomDashboard;
