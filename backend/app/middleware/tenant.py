@@ -138,8 +138,15 @@ class TenantMiddleware(BaseHTTPMiddleware):
             return True
         if path.startswith("/docs") or path.startswith("/redoc"):
             return True
-        # Allow webhook endpoints (they authenticate via signature)
+        # Allow webhook endpoints (they authenticate via signature/verify-token, not JWT)
+        # Platform webhooks live under /api/v1/<platform>/webhooks/, generic ones under
+        # /api/v1/webhooks/. Each handler is responsible for verifying the request
+        # (HMAC signature for Meta/Stripe/SendGrid, hub.verify_token for WhatsApp).
         if path.startswith("/api/v1/webhooks/"):
+            return True
+        if path.startswith("/api/v1/whatsapp/webhooks/"):
+            return True
+        if path.startswith("/api/v1/stripe/webhooks/"):
             return True
         # CMS public endpoints — content is global, not tenant-scoped
         if path.startswith("/api/v1/cms/") and "/admin/" not in path:
