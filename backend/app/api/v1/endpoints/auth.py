@@ -431,8 +431,18 @@ async def send_email_otp(
     async def send_otp_email_bg() -> None:
         try:
             email_service = get_email_service()
-            email_service.send_otp_email(to_email=email, otp_code=otp_code)
-            logger.info(f"Email OTP sent to {email[:6]}***")
+            sent = email_service.send_otp_email(to_email=email, otp_code=otp_code)
+            if sent:
+                logger.info(f"Email OTP sent to {email[:6]}***")
+            else:
+                # Provider returned False (SendGrid error, SMTP auth failure, no
+                # provider configured, etc.). The user will see the OTP screen
+                # but no email will arrive — make this loud in logs.
+                logger.error(
+                    "email_otp_delivery_failed",
+                    email_prefix=email[:6] + "***",
+                    detail="email_service.send_otp_email returned False — check SENDGRID_API_KEY / SMTP creds",
+                )
         except (ConnectionError, TimeoutError, OSError) as e:
             logger.error("email_otp_send_failed", error=str(e))
 
