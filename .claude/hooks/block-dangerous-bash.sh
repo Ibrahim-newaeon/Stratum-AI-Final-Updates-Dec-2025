@@ -46,9 +46,13 @@ if echo "${command_str}" | grep -Eq 'git[[:space:]]+branch[[:space:]]+-D[[:space
   deny "force-delete of a protected branch"
 fi
 
-# rm -rf danger zones
-if echo "${command_str}" | grep -Eq 'rm[[:space:]]+(-[a-zA-Z]*r[a-zA-Z]*f|-rf|-fr)[[:space:]]+(/|~|\$HOME|/\*|/[a-z])'; then
-  deny "rm -rf targeting filesystem root or home"
+# rm -rf danger zones — block filesystem root, $HOME, and protected system dirs.
+# Allow /tmp, /var/folders, and anything under the project working tree.
+if echo "${command_str}" | grep -Eq 'rm[[:space:]]+(-[a-zA-Z]*r[a-zA-Z]*f|-rf|-fr)[[:space:]]+(/|~|\$HOME)([[:space:]]|$|/\*)'; then
+  deny "rm -rf targeting filesystem root or home directory"
+fi
+if echo "${command_str}" | grep -Eq 'rm[[:space:]]+(-[a-zA-Z]*r[a-zA-Z]*f|-rf|-fr)[[:space:]]+/(etc|usr|bin|sbin|lib|boot|var/lib|root|home)([[:space:]/]|$)'; then
+  deny "rm -rf targeting protected system directory"
 fi
 
 # Skipping commit hooks without explicit user request
