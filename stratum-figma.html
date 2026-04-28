@@ -1,0 +1,1635 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Stratum AI — The First & Only AI That Reasons Before It Executes</title>
+<meta name="description" content="Revenue Operating System with Trust-Gated Autopilot. AI-powered ad optimization with human oversight. Every decision is auditable, explainable, and reversible."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: {
+        sans:  ['"Geist"', 'system-ui', 'sans-serif'],
+        mono:  ['"Geist Mono"', 'monospace'],
+      },
+      colors: {
+        ink:       '#0B0B0B',
+        surface:   '#141414',
+        line:      '#1F1F1F',
+        line2:     '#262626',
+        muted:     '#9A9A9A',
+        micro:     '#6B6B6B',
+        ember:     '#FF5A1F',
+        'ember-2': '#FF8A4A',
+      },
+      maxWidth: { content: '1200px' },
+    }
+  }
+}
+</script>
+<style>
+  :root {
+    --ink: #0B0B0B;
+    --surface: #141414;
+    --line: #1F1F1F;
+    --line2: #262626;
+    --muted: #9A9A9A;
+    --micro: #6B6B6B;
+    --ember: #FF5A1F;
+  }
+  html, body { background: var(--ink); }
+  body { font-feature-settings: 'ss01', 'cv11'; -webkit-font-smoothing: antialiased; }
+
+  /* Pill badge */
+  .pill {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.4rem 0.85rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-size: 11.5px; letter-spacing: 0.06em; text-transform: uppercase;
+    color: #ECECEC; font-weight: 500;
+  }
+  .pill .dot { width: 6px; height: 6px; border-radius: 999px; background: var(--ember); box-shadow: 0 0 8px var(--ember); }
+
+  /* Surface card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+  }
+
+  /* Hero radial glow */
+  .glow-warm {
+    background: radial-gradient(60% 60% at 50% 0%, rgba(255, 90, 31, 0.16) 0%, rgba(255, 90, 31, 0.04) 40%, transparent 70%);
+  }
+  /* Strong warm wash beneath the mockup — matches the reference's bottom-half orange bleed */
+  .glow-mockup {
+    background:
+      radial-gradient(80% 60% at 50% 95%, rgba(255, 90, 31, 0.55) 0%, rgba(255, 90, 31, 0.25) 30%, rgba(255, 90, 31, 0.06) 55%, transparent 75%),
+      radial-gradient(60% 40% at 50% 100%, rgba(255, 138, 74, 0.4) 0%, transparent 70%);
+    filter: blur(28px);
+  }
+  /* Soft glow for security modal */
+  .glow-security {
+    background: radial-gradient(60% 60% at 50% 60%, rgba(255, 90, 31, 0.32) 0%, rgba(255, 90, 31, 0.08) 45%, transparent 75%);
+    filter: blur(24px);
+  }
+
+  /* Hairline divider */
+  .hairline { border-top: 1px solid var(--line); }
+
+  /* Section separator: hairline runs full-width, pill sits centered on top breaking the line */
+  .section-sep {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+  }
+  .section-sep::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0; right: 0;
+    height: 1px;
+    background: var(--line);
+    z-index: 0;
+  }
+  .section-sep .pill {
+    position: relative;
+    z-index: 1;
+    background: var(--ink);
+    padding-left: 1rem; padding-right: 1rem;
+  }
+
+  /* Section number pill */
+  .step {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    color: var(--muted);
+    font-family: 'Geist Mono', monospace; font-size: 10px;
+  }
+
+  /* CTA pills */
+  .btn-light {
+    background: #fff; color: #0B0B0B;
+    padding: 0.85rem 1.5rem; border-radius: 999px;
+    font-weight: 500; font-size: 14.5px;
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .btn-light:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(255,255,255,0.1); }
+  .btn-ember {
+    background: var(--ink); color: #fff;
+    padding: 0.85rem 1.5rem; border-radius: 999px;
+    font-weight: 500; font-size: 14.5px;
+    display: inline-flex; align-items: center; gap: 0.5rem;
+  }
+  .btn-ghost {
+    color: #ECECEC;
+    padding: 0.85rem 1.5rem; border-radius: 999px;
+    font-weight: 500; font-size: 14.5px;
+    border: 1px solid var(--line);
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    transition: border-color 0.2s ease;
+  }
+  .btn-ghost:hover { border-color: #333; }
+
+  /* Solid ember-orange pill (used in nav) */
+  .btn-ember-fill {
+    background: var(--ember); color: #fff;
+    padding: 0.65rem 1.2rem; border-radius: 999px;
+    font-weight: 500; font-size: 13px;
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    box-shadow: 0 4px 14px rgba(255, 90, 31, 0.3);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  }
+  .btn-ember-fill:hover {
+    transform: translateY(-1px);
+    background: #FF6E3A;
+    box-shadow: 0 8px 22px rgba(255, 90, 31, 0.42);
+  }
+
+  /* CTA banner gradient (full-bleed orange) */
+  .cta-banner-bg {
+    background:
+      radial-gradient(120% 100% at 0% 50%, #FF7A3A 0%, transparent 50%),
+      radial-gradient(120% 100% at 100% 50%, #FF3D00 0%, transparent 55%),
+      linear-gradient(95deg, #FF5A1F 0%, #FF8A4A 50%, #FF5A1F 100%);
+  }
+
+  /* Verification code input cells */
+  .vc-cell {
+    width: 56px; height: 64px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: rgba(255,255,255,0.015);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: 'Geist Mono', monospace; font-size: 22px; color: #fff;
+    position: relative;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  .vc-cell.active {
+    border-color: var(--ember);
+    box-shadow: 0 0 0 4px rgba(255, 90, 31, 0.12), 0 0 24px rgba(255, 90, 31, 0.25);
+  }
+  .vc-cell .digit {
+    display: inline-block;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.25s ease, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .vc-cell.filled .digit {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .vc-cell .vc-cursor {
+    position: absolute;
+    width: 2px;
+    height: 28px;
+    background: var(--ember);
+    border-radius: 1px;
+    opacity: 0;
+  }
+  .vc-cell.active:not(.filled) .vc-cursor {
+    opacity: 1;
+    animation: cursor-blink 1.05s step-end infinite;
+  }
+  @keyframes cursor-blink {
+    0%, 50%   { opacity: 1; }
+    50.01%, 100% { opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .vc-cell .digit { opacity: 1; transform: none; transition: none; }
+    .vc-cell .vc-cursor { animation: none; }
+  }
+
+  /* Star (custom) */
+  .star {
+    width: 14px; height: 14px;
+    background: var(--ember);
+    -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 .8l3.4 7.4L23 9.6l-5.6 5.4 1.5 7.8L12 19l-6.9 3.8 1.5-7.8L1 9.6l7.6-1.4z"/></svg>') no-repeat center / contain;
+            mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 .8l3.4 7.4L23 9.6l-5.6 5.4 1.5 7.8L12 19l-6.9 3.8 1.5-7.8L1 9.6l7.6-1.4z"/></svg>') no-repeat center / contain;
+  }
+
+  /* Bar chart bars (legacy) */
+  .bar { background: linear-gradient(180deg, var(--ember) 0%, #B33A0F 100%); border-radius: 4px 4px 0 0; }
+
+  /* Slider drag-hint indicator */
+  .slider-wrap {
+    position: relative;
+    padding-bottom: 22px;
+  }
+  .slider-hint {
+    position: absolute;
+    top: 22px;
+    transform: translateX(-50%);
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 9.5px;
+    color: var(--ember);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-family: 'Geist Mono', monospace;
+    transition: left 0.05s linear, opacity 0.3s ease;
+    white-space: nowrap;
+  }
+  .slider-hint .material-symbols-outlined {
+    font-size: 14px;
+    font-variation-settings: 'wght' 400;
+  }
+  @keyframes hint-bounce {
+    0%, 100%   { transform: translateX(-50%) translateY(0); }
+    50%        { transform: translateX(-50%) translateY(3px); }
+  }
+  .slider-hint.bounce { animation: hint-bounce 1.6s ease-in-out 3; }
+
+  /* Range input — visible orange thumb consistent across browsers */
+  input[type="range"]#spend-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    cursor: grab;
+  }
+  input[type="range"]#spend-slider:active { cursor: grabbing; }
+  input[type="range"]#spend-slider::-webkit-slider-runnable-track {
+    height: 6px;
+    background: var(--line2);
+    border-radius: 999px;
+  }
+  input[type="range"]#spend-slider::-moz-range-track {
+    height: 6px;
+    background: var(--line2);
+    border-radius: 999px;
+  }
+  input[type="range"]#spend-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px; height: 18px;
+    background: var(--ember);
+    border-radius: 50%;
+    margin-top: -6px;
+    box-shadow: 0 0 0 4px rgba(255, 90, 31, 0.15), 0 2px 8px rgba(255, 90, 31, 0.45);
+    transition: transform 0.15s ease;
+  }
+  input[type="range"]#spend-slider::-webkit-slider-thumb:active { transform: scale(1.12); }
+  input[type="range"]#spend-slider::-moz-range-thumb {
+    width: 18px; height: 18px;
+    background: var(--ember);
+    border: none;
+    border-radius: 50%;
+    box-shadow: 0 0 0 4px rgba(255, 90, 31, 0.15), 0 2px 8px rgba(255, 90, 31, 0.45);
+  }
+
+  /* Scroll-triggered line chart animation */
+  .line-chart .line-path {
+    stroke-dasharray: 1800;
+    stroke-dashoffset: 1800;
+    transition: stroke-dashoffset 1.6s cubic-bezier(0.5, 0.1, 0.3, 1);
+  }
+  .line-chart.in-view .line-path { stroke-dashoffset: 0; }
+
+  .line-chart .line-path.line-spend { transition-delay: 0.15s; }
+
+  .line-chart .area-fill {
+    opacity: 0;
+    transition: opacity 0.6s ease 1.0s;
+  }
+  .line-chart.in-view .area-fill { opacity: 1; }
+
+  .line-chart .data-dot {
+    opacity: 0;
+    transform: scale(0);
+    transform-origin: center;
+    transform-box: fill-box;
+    transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .line-chart.in-view .data-dot { opacity: 1; transform: scale(1); }
+  .line-chart .data-dot:nth-of-type(1)  { transition-delay: 0.30s; }
+  .line-chart .data-dot:nth-of-type(2)  { transition-delay: 0.40s; }
+  .line-chart .data-dot:nth-of-type(3)  { transition-delay: 0.50s; }
+  .line-chart .data-dot:nth-of-type(4)  { transition-delay: 0.60s; }
+  .line-chart .data-dot:nth-of-type(5)  { transition-delay: 0.70s; }
+  .line-chart .data-dot:nth-of-type(6)  { transition-delay: 0.80s; }
+  .line-chart .data-dot:nth-of-type(7)  { transition-delay: 0.90s; }
+  .line-chart .data-dot.live-dot { transition-delay: 1.6s; }
+
+  @keyframes pulse-ring {
+    0%   { r: 6;  opacity: 0.7; }
+    100% { r: 14; opacity: 0; }
+  }
+  .line-chart.in-view .live-pulse {
+    animation: pulse-ring 1.8s ease-out infinite;
+    animation-delay: 1.7s;
+  }
+  .line-chart .live-pulse { opacity: 0; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .line-chart .line-path,
+    .line-chart .area-fill,
+    .line-chart .data-dot { stroke-dashoffset: 0; opacity: 1; transform: scale(1); transition: none; }
+    .line-chart .live-pulse { animation: none; opacity: 0; }
+  }
+
+  /* Reveal-on-scroll for section headers and cards */
+  .reveal-up {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .reveal-up.in-view { opacity: 1; transform: translateY(0); }
+  .reveal-up.delay-1 { transition-delay: 0.08s; }
+  .reveal-up.delay-2 { transition-delay: 0.16s; }
+  .reveal-up.delay-3 { transition-delay: 0.24s; }
+  .reveal-up.delay-4 { transition-delay: 0.32s; }
+  .reveal-up.delay-5 { transition-delay: 0.40s; }
+  .reveal-up.delay-6 { transition-delay: 0.48s; }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal-up { opacity: 1; transform: none; transition: none; }
+  }
+
+  /* Card hover lift (used on AI model cards) */
+  .card-lift {
+    transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    will-change: transform;
+  }
+  .card-lift:hover {
+    transform: translateY(-3px);
+    border-color: rgba(255, 90, 31, 0.25) !important;
+    box-shadow: 0 12px 36px -12px rgba(255, 90, 31, 0.18);
+  }
+
+  /* Warm gradient fill on AI Model cards (the alternative to glass-brown) */
+  .card-warm {
+    background:
+      radial-gradient(80% 100% at 50% 100%, rgba(255, 90, 31, 0.06) 0%, transparent 60%),
+      var(--surface) !important;
+  }
+
+  /* Logo cloud item */
+  .lc { color: #6B6B6B; transition: color 0.2s ease; }
+  .lc:hover { color: #ECECEC; }
+
+  /* Footer giant wordmark */
+  .giant-wordmark {
+    font-size: clamp(110px, 18vw, 280px);
+    font-weight: 600;
+    line-height: 0.85;
+    letter-spacing: -0.06em;
+    background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.01) 100%);
+    -webkit-background-clip: text; background-clip: text;
+    color: transparent;
+    text-align: center;
+  }
+
+  /* Mockup card pulses for liveness */
+  @keyframes pulse-live { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+  .pulse-live { animation: pulse-live 2.4s ease-in-out infinite; }
+
+  /* Trust ring */
+  @keyframes draw-ring {
+    from { stroke-dashoffset: 553; }
+    to   { stroke-dashoffset: 14.4; }
+  }
+  .ring-anim { animation: draw-ring 2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+  /* Section spacing helper */
+  .section { padding: clamp(56px, 8vw, 96px) 0; }
+  .section-tight { padding: clamp(40px, 6vw, 72px) 0; }
+
+  /* Reveal */
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+  .reveal { opacity: 0; animation: fadeUp 0.9s ease-out forwards; }
+  .reveal-2 { animation-delay: 0.1s; }
+  .reveal-3 { animation-delay: 0.2s; }
+
+  /* Hide scrollbar on horizontal scroll containers */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* Material symbols sizing */
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
+
+  /* ─── Smart sticky nav ─── */
+  nav {
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                background-color 0.3s ease,
+                border-color 0.3s ease;
+    will-change: transform;
+  }
+  nav > div {
+    transition: height 0.3s ease;
+  }
+  nav.nav-scrolled {
+    background: rgba(11, 11, 11, 0.88);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-color: rgba(31, 31, 31, 0.95);
+  }
+  nav.nav-scrolled > div { height: 3.25rem; }
+  nav.nav-hidden { transform: translateY(-100%); }
+
+  /* ─── Floating mockup ─── */
+  @keyframes mockup-float {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-10px); }
+  }
+  .mockup-floating {
+    animation: mockup-float 7s ease-in-out infinite;
+    will-change: transform;
+  }
+
+  /* Parallax wrapper — JS sets translate3d on this; the inner card runs the float independently */
+  #mockup-wrap {
+    will-change: transform;
+    transition: transform 0.05s linear;
+  }
+
+  /* ─── Hero ember spotlight ─── */
+  #hero-spotlight {
+    position: absolute;
+    width: 700px;
+    height: 700px;
+    top: 0; left: 0;
+    margin-left: -350px;
+    margin-top: -350px;
+    background: radial-gradient(circle, rgba(255, 90, 31, 0.18) 0%, rgba(255, 90, 31, 0.05) 40%, transparent 65%);
+    filter: blur(20px);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.7s ease;
+    will-change: transform;
+    z-index: 1;
+  }
+  #hero-spotlight.active { opacity: 1; }
+
+  /* ─── Activity stream item enter/exit ─── */
+  .activity-item {
+    overflow: hidden;
+    will-change: opacity, transform, max-height;
+  }
+  .activity-item.entering {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-8px);
+    margin-top: 0;
+  }
+  .activity-item.entered {
+    opacity: 1;
+    max-height: 60px;
+    transform: translateY(0);
+    transition: opacity 0.45s ease,
+                max-height 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .activity-item.leaving {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(6px);
+    margin-top: 0;
+    transition: opacity 0.35s ease, max-height 0.35s ease, transform 0.35s ease, margin-top 0.35s ease;
+  }
+  /* Pulse on the latest dot */
+  @keyframes dot-pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(255, 90, 31, 0.6); }
+    100% { box-shadow: 0 0 0 8px rgba(255, 90, 31, 0); }
+  }
+  .activity-item.fresh .dot-pulse { animation: dot-pulse 1.4s ease-out 1; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mockup-floating { animation: none; }
+    #hero-spotlight { display: none; }
+    nav { transition: none; }
+    #mockup-wrap { transform: none !important; }
+  }
+</style>
+</head>
+<body class="font-sans text-white">
+
+<!-- ═══════════════════ 1. NAV ═══════════════════ -->
+<nav class="fixed top-0 inset-x-0 z-50 bg-ink/70 backdrop-blur-md border-b border-line">
+  <div class="max-w-content mx-auto px-6 lg:px-10 h-16 flex items-center justify-between">
+    <a href="/" class="flex items-center" aria-label="Stratum AI home">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 195 40" class="h-10 w-auto" role="img" aria-label="Stratum AI">
+        <defs>
+          <linearGradient id="stratumEmberNav" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#FF8A4A"/>
+            <stop offset="55%" stop-color="#FF5A1F"/>
+            <stop offset="100%" stop-color="#FF3D00"/>
+          </linearGradient>
+        </defs>
+        <g>
+          <path d="M3 10 L26 10 L31 18 L8 18 Z" fill="url(#stratumEmberNav)"/>
+          <path d="M6 22 L29 22 L34 30 L11 30 Z" fill="#1E2A47"/>
+        </g>
+        <text x="42" y="27" font-family="'Geist', system-ui, sans-serif" font-weight="600" font-size="20" letter-spacing="-0.5">
+          <tspan fill="#ffffff">Stratum </tspan>
+          <tspan fill="url(#stratumEmberNav)">AI</tspan>
+        </text>
+      </svg>
+    </a>
+    <ul class="hidden md:flex items-center gap-8 text-[13.5px] text-muted">
+      <li><a href="#features" class="hover:text-white transition-colors">Features</a></li>
+      <li><a href="#pricing" class="hover:text-white transition-colors">Pricing</a></li>
+      <li><a href="#about" class="hover:text-white transition-colors">About</a></li>
+      <li><a href="#blog" class="hover:text-white transition-colors">Blog</a></li>
+      <li><a href="#contact" class="hover:text-white transition-colors">Contact</a></li>
+    </ul>
+    <div class="flex items-center gap-2">
+      <a href="/login" class="hidden md:inline text-[13.5px] text-muted hover:text-white transition-colors px-3">Sign in</a>
+      <a href="/signup" class="btn-ember-fill">Get Started <span class="material-symbols-outlined" style="font-size:16px;">arrow_outward</span></a>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════ 2. HERO ═══════════════════ -->
+<header class="relative pt-36 pb-16 overflow-hidden" id="hero">
+  <div id="hero-spotlight"></div>
+  <div class="absolute inset-0 glow-warm pointer-events-none"></div>
+  <div class="max-w-content mx-auto px-6 lg:px-10 text-center relative z-10">
+    <span class="pill reveal"><span class="dot"></span> AI Engine Active</span>
+    <h1 class="reveal reveal-2 mt-7 text-white text-[44px] sm:text-[56px] lg:text-[72px] font-medium leading-[1.02] tracking-[-0.025em] max-w-4xl mx-auto">
+      The first &amp; only AI that<br/>
+      <span class="text-ember">reasons</span> before it executes.
+    </h1>
+    <p class="reveal reveal-3 mt-7 text-muted text-[16px] lg:text-[17px] leading-[1.55] max-w-xl mx-auto">
+      A revenue operating system with Trust-Gated Autopilot.<br/>
+      Every AI decision is auditable, explainable, and reversible.
+    </p>
+    <div class="reveal reveal-3 mt-10 flex flex-wrap items-center justify-center gap-3">
+      <a href="/signup" class="btn-light">Start 14-day free trial <span class="material-symbols-outlined" style="font-size:18px;">arrow_forward</span></a>
+      <a href="#mockup" class="btn-ghost"><span class="material-symbols-outlined" style="font-size:18px;">play_circle</span> See it run</a>
+    </div>
+    <p class="mt-6 text-micro text-[12px]">No credit card &middot; Connect any ad account &middot; Read-only by default</p>
+  </div>
+</header>
+
+<!-- ═══════════════════ 3. PRODUCT MOCKUP ═══════════════════ -->
+<section id="mockup" class="relative pb-16 overflow-hidden">
+  <div class="absolute inset-x-0 bottom-[-10%] h-[80%] glow-mockup pointer-events-none"></div>
+  <div class="max-w-content mx-auto px-6 lg:px-10 relative">
+    <div id="mockup-wrap">
+    <div class="card mockup-floating overflow-hidden shadow-[0_30px_80px_-20px_rgba(0,0,0,0.6)]" style="background: linear-gradient(180deg, #161616 0%, #0F0F0F 100%);">
+      <!-- Mockup window chrome -->
+      <div class="flex items-center justify-between px-5 py-3.5 border-b border-line">
+        <div class="flex items-center gap-1.5">
+          <span class="w-2.5 h-2.5 rounded-full bg-[#3a3a3a]"></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-[#3a3a3a]"></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-[#3a3a3a]"></span>
+        </div>
+        <div class="text-[11px] font-mono text-micro tracking-widest uppercase">stratum-trust-engine.ai</div>
+        <div class="flex items-center gap-1.5 text-[10px] font-mono text-muted">
+          <span class="w-1.5 h-1.5 rounded-full bg-ember pulse-live"></span> LIVE
+        </div>
+      </div>
+
+      <!-- Mockup body -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 p-6 lg:p-8">
+        <!-- Sidebar -->
+        <aside class="hidden lg:flex lg:col-span-2 flex-col gap-1.5 text-[12px]">
+          <div class="text-micro text-[10px] uppercase tracking-widest mb-2 px-2">Workspace</div>
+          <a class="flex items-center gap-2 px-2 py-1.5 rounded-md text-white" style="background: rgba(255, 90, 31, 0.08); border: 1px solid rgba(255, 90, 31, 0.2);"><span class="material-symbols-outlined" style="font-size:15px;">monitor_heart</span> Trust Engine</a>
+          <a class="flex items-center gap-2 px-2 py-1.5 rounded-md text-muted hover:text-white"><span class="material-symbols-outlined" style="font-size:15px;">campaign</span> Campaigns</a>
+          <a class="flex items-center gap-2 px-2 py-1.5 rounded-md text-muted hover:text-white"><span class="material-symbols-outlined" style="font-size:15px;">insights</span> Attribution</a>
+          <a class="flex items-center gap-2 px-2 py-1.5 rounded-md text-muted hover:text-white"><span class="material-symbols-outlined" style="font-size:15px;">history</span> Audit Log</a>
+          <a class="flex items-center gap-2 px-2 py-1.5 rounded-md text-muted hover:text-white"><span class="material-symbols-outlined" style="font-size:15px;">tune</span> Settings</a>
+        </aside>
+
+        <!-- Trust gauge -->
+        <div class="lg:col-span-5 card p-6 flex flex-col items-center justify-center" style="background: #0F0F0F;">
+          <div class="relative w-44 h-44 flex items-center justify-center">
+            <svg class="w-full h-full -rotate-90" viewBox="0 0 200 200">
+              <circle cx="100" cy="100" r="88" fill="transparent" stroke="rgba(255,255,255,0.06)" stroke-width="10"/>
+              <circle cx="100" cy="100" r="88" fill="transparent" stroke="var(--ember)" stroke-width="12" stroke-linecap="round" stroke-dasharray="553" stroke-dashoffset="14.4" class="ring-anim"/>
+            </svg>
+            <div class="absolute text-center">
+              <div class="text-3xl font-medium tracking-tight">97.4<span class="text-muted text-base">%</span></div>
+              <div class="text-[10px] uppercase tracking-widest text-micro">Trust Score</div>
+            </div>
+          </div>
+          <div class="mt-4 grid grid-cols-2 gap-3 w-full text-center">
+            <div class="card p-2.5" style="background:#0B0B0B;">
+              <div class="text-[10px] uppercase tracking-widest text-micro">Total Spend</div>
+              <div class="font-mono text-[15px] mt-1">$182,440</div>
+            </div>
+            <div class="card p-2.5" style="background:#0B0B0B;">
+              <div class="text-[10px] uppercase tracking-widest text-micro">Conversions</div>
+              <div class="font-mono text-[15px] mt-1">2,418</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Activity log -->
+        <div class="lg:col-span-5 card p-5" style="background: #0F0F0F;">
+          <div class="flex items-center justify-between mb-4">
+            <div class="text-[11px] uppercase tracking-widest text-micro">Activity Stream</div>
+            <div class="text-[11px] font-mono text-muted">Last 60s</div>
+          </div>
+          <div class="space-y-3 text-[12.5px]" id="activity-stream">
+            <div class="activity-item entered flex items-start gap-3">
+              <span class="dot-pulse mt-1 w-2 h-2 rounded-full bg-ember shrink-0"></span>
+              <div>
+                <div class="text-white">Budget shift: <span class="text-muted">Meta Ads → Google Ads</span> +$1,200/day</div>
+                <div class="text-micro font-mono text-[11px] mt-0.5">trust score 96.2 &middot; 14:32:08</div>
+              </div>
+            </div>
+            <div class="activity-item entered flex items-start gap-3">
+              <span class="mt-1 w-2 h-2 rounded-full bg-ember shrink-0"></span>
+              <div>
+                <div class="text-white">Pause approved: <span class="text-muted">"FY26 Retargeting v2" — CAC drift</span></div>
+                <div class="text-micro font-mono text-[11px] mt-0.5">human-confirmed &middot; 14:31:51</div>
+              </div>
+            </div>
+            <div class="activity-item entered flex items-start gap-3">
+              <span class="mt-1 w-2 h-2 rounded-full bg-line2 shrink-0"></span>
+              <div>
+                <div class="text-muted">Audience refresh queued: <span class="text-white">Lookalike 1% — APAC</span></div>
+                <div class="text-micro font-mono text-[11px] mt-0.5">awaiting review &middot; 14:31:27</div>
+              </div>
+            </div>
+            <div class="activity-item entered flex items-start gap-3">
+              <span class="mt-1 w-2 h-2 rounded-full bg-line2 shrink-0"></span>
+              <div>
+                <div class="text-muted">Bid cap raised: <span class="text-white">"Brand Search — US"</span> → +18%</div>
+                <div class="text-micro font-mono text-[11px] mt-0.5">trust score 91.4 &middot; 14:30:55</div>
+              </div>
+            </div>
+          </div>
+          <div class="mt-5 pt-4 border-t border-line flex items-center justify-between">
+            <div class="text-[11px] text-micro">8 decisions pending review</div>
+            <button class="btn-ember text-[12px] py-2 px-3.5 border border-line2">Review queue <span class="material-symbols-outlined" style="font-size:15px;">arrow_forward</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ 4. LOGO CLOUD ═══════════════════ -->
+<section class="section-tight">
+  <div class="max-w-content mx-auto px-6 lg:px-10">
+    <p class="text-center text-[11px] uppercase tracking-[0.3em] text-micro mb-10">Plugged into every channel that matters</p>
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-y-8 gap-x-10 items-center justify-items-center">
+      <!-- Google Ads -->
+      <div class="lc flex items-center gap-2.5">
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12.48 10.92v3.28h7.84c-.24 1.84-.91 3.29-2.09 4.46-1.49 1.49-3.39 2.45-6.09 2.45-4.59 0-8.2-3.67-8.2-8.21S7.55 4.7 12.14 4.7c2.49 0 4.41.98 5.85 2.37l2.31-2.31C18.18 2.5 15.59 1 12.14 1 5.96 1 .95 6.01.95 12.19s5.01 11.19 11.19 11.19c3.3 0 5.8-1.08 7.79-3.15 2.01-2.01 2.65-4.85 2.65-7.15 0-.68-.06-1.32-.18-1.89H12.48z"/></svg>
+        <span class="font-medium tracking-tight text-[15px]">Google Ads</span>
+      </div>
+      <!-- Meta -->
+      <div class="lc flex items-center gap-2.5">
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.07 10.13 24v-8.39H7.08v-3.54h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.69.24 2.69.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.27h3.33l-.53 3.54h-2.79V24C19.61 23.07 24 18.1 24 12.07z"/></svg>
+        <span class="font-medium tracking-tight text-[15px]">Meta Ads</span>
+      </div>
+      <!-- TikTok -->
+      <div class="lc flex items-center gap-2.5">
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12.53.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
+        <span class="font-medium tracking-tight text-[15px]">TikTok Ads</span>
+      </div>
+      <!-- LinkedIn -->
+      <div class="lc flex items-center gap-2.5">
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43c-1.14 0-2.06-.93-2.06-2.07 0-1.14.92-2.06 2.06-2.06 1.14 0 2.06.92 2.06 2.06 0 1.14-.92 2.07-2.06 2.07zm1.78 13.02H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45C23.2 24 24 23.23 24 22.27V1.73C24 .77 23.2 0 22.22 0z"/></svg>
+        <span class="font-medium tracking-tight text-[15px]">LinkedIn Ads</span>
+      </div>
+      <!-- Twitter / X -->
+      <div class="lc flex items-center gap-2.5">
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z"/></svg>
+        <span class="font-medium tracking-tight text-[15px]">X Ads</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="hairline max-w-content mx-auto"></div>
+
+<!-- ═══════════════════ 5. STATS ═══════════════════ -->
+<section class="section-tight">
+  <div class="max-w-content mx-auto px-6 lg:px-10">
+    <div class="grid md:grid-cols-3 gap-5">
+      <!-- Stat 1 -->
+      <article class="card p-7 flex items-start justify-between gap-6 reveal-up">
+        <div>
+          <div class="text-[64px] font-medium leading-none tracking-[-0.04em]"><span class="text-ember count-up" data-target="3.2" data-decimals="1">3.2</span><span>×</span></div>
+          <div class="mt-3 text-white text-[15px] font-medium">ROAS Improvement</div>
+          <p class="mt-1.5 text-muted text-[14px] leading-relaxed max-w-[260px]">Average lift our customers see in the first 90 days, holdout-tested.</p>
+        </div>
+        <!-- Mini ascending bars -->
+        <svg class="w-16 h-16 shrink-0" viewBox="0 0 64 64" fill="none">
+          <rect x="6"  y="40" width="8" height="18" fill="#2A2A2A" rx="1.5"/>
+          <rect x="20" y="32" width="8" height="26" fill="#3A3A3A" rx="1.5"/>
+          <rect x="34" y="22" width="8" height="36" fill="#FF8A4A" rx="1.5"/>
+          <rect x="48" y="10" width="8" height="48" fill="#FF5A1F" rx="1.5"/>
+        </svg>
+      </article>
+
+      <!-- Stat 2 -->
+      <article class="card p-7 flex items-start justify-between gap-6 reveal-up delay-1">
+        <div>
+          <div class="text-[64px] font-medium leading-none tracking-[-0.04em]"><span>$</span><span class="text-ember count-up" data-target="42" data-decimals="0">42</span><span>K</span></div>
+          <div class="mt-3 text-white text-[15px] font-medium">Monthly Savings</div>
+          <p class="mt-1.5 text-muted text-[14px] leading-relaxed max-w-[260px]">Average wasted ad spend caught and paused by Trust-Gated Autopilot.</p>
+        </div>
+        <!-- Mini coin/savings glyph -->
+        <svg class="w-16 h-16 shrink-0" viewBox="0 0 64 64" fill="none">
+          <circle cx="32" cy="32" r="20" stroke="#2A2A2A" stroke-width="2"/>
+          <circle cx="32" cy="32" r="20" stroke="#FF5A1F" stroke-width="2" stroke-dasharray="125.6" stroke-dashoffset="40" transform="rotate(-90 32 32)"/>
+          <path d="M28 26h6a3 3 0 010 6h-4a3 3 0 000 6h6M32 22v4M32 38v4" stroke="#FF8A4A" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </article>
+
+      <!-- Stat 3 -->
+      <article class="card p-7 flex items-start justify-between gap-6 reveal-up delay-2">
+        <div>
+          <div class="text-[64px] font-medium leading-none tracking-[-0.04em]"><span class="text-ember count-up" data-target="97" data-decimals="0">97</span><span>%</span></div>
+          <div class="mt-3 text-white text-[15px] font-medium">Trust Score</div>
+          <p class="mt-1.5 text-muted text-[14px] leading-relaxed max-w-[260px]">Of decisions execute autonomously — every other one queued for human review.</p>
+        </div>
+        <!-- Mini gauge ring -->
+        <svg class="w-16 h-16 shrink-0" viewBox="0 0 64 64" fill="none">
+          <circle cx="32" cy="32" r="22" stroke="#2A2A2A" stroke-width="6"/>
+          <circle cx="32" cy="32" r="22" stroke="#FF5A1F" stroke-width="6" stroke-linecap="round" stroke-dasharray="138.2" stroke-dashoffset="4" transform="rotate(-90 32 32)"/>
+        </svg>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ 6. FEATURES ═══════════════════ -->
+<section id="features" class="section">
+  <div class="max-w-content mx-auto px-6 lg:px-10">
+    <div class="text-center mb-12">
+      <div class="section-sep mb-7 reveal-up">
+        <span class="pill">Powerful Features</span>
+      </div>
+      <h2 class="reveal-up delay-1 text-white text-[38px] sm:text-[44px] lg:text-[52px] font-medium leading-[1.05] tracking-[-0.02em] max-w-3xl mx-auto">
+        AI that works <em class="not-italic text-ember">with</em> you,<br/>not around you.
+      </h2>
+      <p class="mt-5 text-muted text-[16px] max-w-xl mx-auto leading-relaxed">
+        Every optimization is explainable, every decision is auditable, and every action is reversible.
+      </p>
+    </div>
+
+    <!-- 2 small on top -->
+    <div class="grid md:grid-cols-2 gap-5 mb-5">
+      <!-- Feature: Trust Gate System -->
+      <article class="card p-7">
+        <div class="flex items-center gap-2.5 mb-5">
+          <span class="w-7 h-7 rounded-md flex items-center justify-center" style="background: rgba(255,90,31,0.1); border: 1px solid rgba(255,90,31,0.25);">
+            <span class="material-symbols-outlined text-ember" style="font-size:16px;">security</span>
+          </span>
+          <h3 class="text-[17px] font-medium">Trust Gate System</h3>
+        </div>
+        <p class="text-muted text-[14.5px] leading-relaxed mb-6">Every AI recommendation passes through our spectral trust gate. No black boxes — see exactly why each decision was made.</p>
+
+        <!-- Mini UI: trust evaluation card -->
+        <div class="card p-4 font-mono text-[12px]" style="background: #0F0F0F;">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-micro text-[10px] uppercase tracking-widest">Decision · gate eval</span>
+            <span class="px-1.5 py-0.5 text-[10px] rounded" style="background: rgba(255,90,31,0.1); color: var(--ember);">PASS</span>
+          </div>
+          <div class="space-y-2">
+            <div class="flex justify-between"><span class="text-muted">Signal strength</span><span>0.92</span></div>
+            <div class="h-1 bg-line rounded-full overflow-hidden"><div class="h-full bg-ember rounded-full" style="width: 92%;"></div></div>
+            <div class="flex justify-between"><span class="text-muted">Drift tolerance</span><span>0.04</span></div>
+            <div class="h-1 bg-line rounded-full overflow-hidden"><div class="h-full bg-ember rounded-full" style="width: 12%;"></div></div>
+            <div class="flex justify-between"><span class="text-muted">Confidence</span><span class="text-ember">98.4%</span></div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Feature: Human Override -->
+      <article class="card p-7">
+        <div class="flex items-center gap-2.5 mb-5">
+          <span class="w-7 h-7 rounded-md flex items-center justify-center" style="background: rgba(255,90,31,0.1); border: 1px solid rgba(255,90,31,0.25);">
+            <span class="material-symbols-outlined text-ember" style="font-size:16px;">person_check</span>
+          </span>
+          <h3 class="text-[17px] font-medium">Human Override</h3>
+        </div>
+        <p class="text-muted text-[14.5px] leading-relaxed mb-6">One-click override on any AI decision. Your expertise always takes precedence. Rollback any action instantly.</p>
+
+        <!-- Mini UI: pending action card -->
+        <div class="card p-4" style="background: #0F0F0F;">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-[11px] text-micro uppercase tracking-widest">Pending review</span>
+            <span class="text-[11px] font-mono text-muted">2m 14s</span>
+          </div>
+          <div class="text-[13.5px] mb-3">Pause campaign <span class="text-muted">"FY26 Retargeting v2"</span> — CAC drift +21%.</div>
+          <div class="flex gap-2">
+            <button class="flex-1 py-2 rounded-md text-[12.5px] font-medium" style="background: var(--ember); color: white;">Approve</button>
+            <button class="flex-1 py-2 rounded-md text-[12.5px] font-medium border border-line text-white hover:bg-white/5">Override</button>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <!-- 1 wide bottom — bar chart -->
+    <article class="card p-7 lg:p-10">
+      <div class="grid lg:grid-cols-12 gap-8 items-center">
+        <div class="lg:col-span-4">
+          <div class="flex items-center gap-2.5 mb-5">
+            <span class="w-7 h-7 rounded-md flex items-center justify-center" style="background: rgba(255,90,31,0.1); border: 1px solid rgba(255,90,31,0.25);">
+              <span class="material-symbols-outlined text-ember" style="font-size:16px;">bolt</span>
+            </span>
+            <h3 class="text-[17px] font-medium">Real-Time Optimization</h3>
+          </div>
+          <p class="text-muted text-[14.5px] leading-relaxed">24/7 monitoring and adjustment. Budgets shift automatically to top performers while you sleep.</p>
+          <div class="mt-6 flex items-center gap-4 text-[12px]">
+            <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-ember"></span> <span class="text-muted">Revenue</span></div>
+            <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-line2"></span> <span class="text-muted">Spend</span></div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-8">
+          <!-- Line chart -->
+          <div class="card p-5" style="background: #0F0F0F;">
+            <div class="flex items-center justify-between mb-4">
+              <div class="text-[11px] text-micro uppercase tracking-widest">Live revenue attribution &middot; 14 days</div>
+              <div class="text-[11px] font-mono text-ember">+38.4%</div>
+            </div>
+
+            <svg id="revenue-chart" class="line-chart w-full" viewBox="0 0 700 200" preserveAspectRatio="none" style="height: 160px;" aria-label="Revenue and spend trends over 14 days">
+              <defs>
+                <linearGradient id="revenue-fill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%"   stop-color="rgba(255,90,31,0.35)"/>
+                  <stop offset="100%" stop-color="rgba(255,90,31,0)"/>
+                </linearGradient>
+                <linearGradient id="revenue-stroke" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%"   stop-color="#FF8A4A"/>
+                  <stop offset="100%" stop-color="#FF5A1F"/>
+                </linearGradient>
+              </defs>
+
+              <!-- Grid lines -->
+              <line x1="0" y1="40"  x2="700" y2="40"  stroke="rgba(255,255,255,0.04)" stroke-dasharray="3 6"/>
+              <line x1="0" y1="100" x2="700" y2="100" stroke="rgba(255,255,255,0.04)" stroke-dasharray="3 6"/>
+              <line x1="0" y1="160" x2="700" y2="160" stroke="rgba(255,255,255,0.04)" stroke-dasharray="3 6"/>
+
+              <!-- Spend (gray) - flat-ish lower line, drawn first so revenue overlays -->
+              <path
+                class="line-path line-spend"
+                d="M 0 178 C 60 177, 110 175, 160 174 S 280 170, 340 168 S 460 163, 520 161 S 640 158, 700 156"
+                fill="none"
+                stroke="#3A3A3A"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+
+              <!-- Revenue area fill (renders behind line) -->
+              <path
+                class="area-fill"
+                d="M 0 150 C 50 148, 90 140, 140 136 S 250 122, 300 116 S 410 96, 460 84 S 580 50, 640 36 L 700 28 L 700 200 L 0 200 Z"
+                fill="url(#revenue-fill)"
+              />
+
+              <!-- Revenue (orange) line -->
+              <path
+                class="line-path line-revenue"
+                d="M 0 150 C 50 148, 90 140, 140 136 S 250 122, 300 116 S 410 96, 460 84 S 580 50, 640 36 L 700 28"
+                fill="none"
+                stroke="url(#revenue-stroke)"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+
+              <!-- Data dots on revenue line -->
+              <circle class="data-dot" cx="50"  cy="148" r="3" fill="#FF5A1F"/>
+              <circle class="data-dot" cx="140" cy="136" r="3" fill="#FF5A1F"/>
+              <circle class="data-dot" cx="240" cy="124" r="3" fill="#FF5A1F"/>
+              <circle class="data-dot" cx="340" cy="108" r="3" fill="#FF5A1F"/>
+              <circle class="data-dot" cx="450" cy="86"  r="3" fill="#FF5A1F"/>
+              <circle class="data-dot" cx="560" cy="56"  r="3" fill="#FF5A1F"/>
+
+              <!-- Live "today" point with pulse -->
+              <circle class="live-pulse" cx="700" cy="28" r="6" fill="none" stroke="#FF5A1F" stroke-width="2"/>
+              <circle class="data-dot live-dot" cx="700" cy="28" r="5" fill="#FF5A1F" stroke="#0F0F0F" stroke-width="2"/>
+            </svg>
+
+            <div class="mt-3 grid grid-cols-7 text-[10px] text-micro font-mono">
+              <span>W1·M</span><span>W1·W</span><span>W1·F</span><span>W2·M</span><span>W2·W</span><span>W2·F</span><span class="text-right text-ember">Today</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- ═══════════════════ 6.5 ROI CALCULATOR ═══════════════════ -->
+<section id="roi" class="section">
+  <div class="max-w-content mx-auto px-6 lg:px-10">
+    <div class="text-center mb-12">
+      <div class="section-sep mb-7 reveal-up">
+        <span class="pill">ROI Calculator</span>
+      </div>
+      <h2 class="reveal-up delay-1 text-white text-[38px] sm:text-[44px] lg:text-[52px] font-medium leading-[1.05] tracking-[-0.02em] max-w-3xl mx-auto">
+        Calculate your<br/>potential <span class="text-ember">ROI</span>.
+      </h2>
+      <p class="mt-5 text-muted text-[16px] max-w-xl mx-auto leading-relaxed">
+        Plug in your real campaign metrics. See projected lift from Trust-Gated Autopilot before you ever connect an account.
+      </p>
+    </div>
+
+    <div class="grid lg:grid-cols-12 gap-5">
+      <!-- LEFT: explainer -->
+      <div class="lg:col-span-5 card p-7 lg:p-9 flex flex-col justify-between">
+        <div class="space-y-7">
+          <div class="flex gap-4">
+            <span class="w-9 h-9 rounded-md flex items-center justify-center shrink-0" style="background: rgba(255,90,31,0.1); border: 1px solid rgba(255,90,31,0.25);">
+              <span class="material-symbols-outlined text-ember" style="font-size:18px;">database</span>
+            </span>
+            <div>
+              <h4 class="text-[15.5px] font-medium mb-1.5">Based on your data</h4>
+              <p class="text-muted text-[14px] leading-relaxed">Enter your campaign metrics to see projected improvements from AI-powered optimization.</p>
+            </div>
+          </div>
+          <div class="flex gap-4">
+            <span class="w-9 h-9 rounded-md flex items-center justify-center shrink-0" style="background: rgba(255,90,31,0.1); border: 1px solid rgba(255,90,31,0.25);">
+              <span class="material-symbols-outlined text-ember" style="font-size:18px;">visibility</span>
+            </span>
+            <div>
+              <h4 class="text-[15.5px] font-medium mb-1.5">Transparent calculations</h4>
+              <p class="text-muted text-[14px] leading-relaxed">No hidden assumptions. Results based on your actual metrics and our optimization algorithms.</p>
+            </div>
+          </div>
+          <div class="flex gap-4">
+            <span class="w-9 h-9 rounded-md flex items-center justify-center shrink-0" style="background: rgba(255,90,31,0.1); border: 1px solid rgba(255,90,31,0.25);">
+              <span class="material-symbols-outlined text-ember" style="font-size:18px;">verified</span>
+            </span>
+            <div>
+              <h4 class="text-[15.5px] font-medium mb-1.5">Holdout-tested</h4>
+              <p class="text-muted text-[14px] leading-relaxed">Lift numbers come from controlled holdouts on real customer accounts — not marketing math.</p>
+            </div>
+          </div>
+        </div>
+        <p class="mt-8 pt-6 border-t border-line text-[12px] text-micro font-mono">avg. customer · 90 days · q4 2025 cohort</p>
+      </div>
+
+      <!-- RIGHT: calculator -->
+      <div class="lg:col-span-7 card p-7 lg:p-9 relative overflow-hidden" style="background: linear-gradient(180deg, #161616 0%, #0F0F0F 100%);">
+        <div class="absolute top-0 right-0 w-40 h-40 rounded-full blur-3xl pointer-events-none" style="background: rgba(255, 90, 31, 0.15);"></div>
+
+        <div class="flex items-center justify-between mb-7 relative z-10">
+          <h3 class="text-[18px] font-medium">See your potential returns</h3>
+          <span class="text-[11px] font-mono text-micro uppercase tracking-widest">Live</span>
+        </div>
+
+        <!-- Slider input -->
+        <div class="space-y-7 relative z-10">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <label class="text-[13px] text-muted">Monthly ad spend</label>
+              <output class="text-[15px] font-mono text-white" id="spend-output">$60,000</output>
+            </div>
+            <div class="slider-wrap">
+              <input
+                id="spend-slider"
+                type="range" min="1000" max="500000" step="1000" value="60000"
+                class="w-full h-1.5 outline-none"
+                oninput="recalc()"
+              />
+              <div class="slider-hint bounce" id="slider-hint">
+                <span class="material-symbols-outlined">swap_horiz</span>
+                <span>drag</span>
+              </div>
+            </div>
+            <div class="mt-1.5 flex justify-between text-[10.5px] font-mono text-micro">
+              <span>$1K</span><span>$100K</span><span>$500K</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-[13px] text-muted block mb-2">Industry</label>
+              <select id="industry" onchange="recalc()" class="w-full bg-ink border border-line rounded-lg px-3.5 py-2.5 text-[14px] text-white outline-none focus:border-ember/50">
+                <option value="1.0">E-commerce</option>
+                <option value="0.95">SaaS</option>
+                <option value="1.1">DTC</option>
+                <option value="0.9">Lead Gen</option>
+                <option value="0.85">Local Services</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-[13px] text-muted block mb-2">Current ROAS</label>
+              <select id="roas" onchange="recalc()" class="w-full bg-ink border border-line rounded-lg px-3.5 py-2.5 text-[14px] text-white outline-none focus:border-ember/50">
+                <option value="1.5">1.5×</option>
+                <option value="2.0" selected>2.0×</option>
+                <option value="3.0">3.0×</option>
+                <option value="4.0">4.0×</option>
+                <option value="5.0">5.0×</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Result cards -->
+          <div class="grid grid-cols-2 gap-3 pt-4">
+            <div class="card p-5" style="background: rgba(255, 90, 31, 0.06); border-color: rgba(255, 90, 31, 0.2);">
+              <div class="text-[10.5px] uppercase tracking-widest text-ember mb-2 font-mono">Additional Revenue</div>
+              <div class="text-[28px] font-medium tracking-tight text-white" id="revenue-display">$3,000</div>
+              <div class="text-[11px] text-micro mt-1">per month</div>
+            </div>
+            <div class="card p-5" style="background: rgba(255, 90, 31, 0.06); border-color: rgba(255, 90, 31, 0.2);">
+              <div class="text-[10.5px] uppercase tracking-widest text-ember mb-2 font-mono">Additional Profit</div>
+              <div class="text-[28px] font-medium tracking-tight text-white" id="profit-display">$1,200</div>
+              <div class="text-[11px] text-micro mt-1">per month</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="section">
+  <div class="max-w-content mx-auto px-6 lg:px-10 text-center">
+    <div class="section-sep mb-7 reveal-up">
+      <span class="pill">Enterprise-Grade Security</span>
+    </div>
+    <h2 class="reveal-up delay-1 text-white text-[38px] sm:text-[44px] lg:text-[52px] font-medium leading-[1.05] tracking-[-0.02em] max-w-3xl mx-auto">
+      Your customer data.<br/><span class="text-ember">Locked down</span> by default.
+    </h2>
+    <p class="mt-5 text-muted text-[16px] max-w-xl mx-auto leading-relaxed">
+      SOC 2 Type II, end-to-end encryption, regional data residency, and per-agent permissions on every workspace.
+    </p>
+
+    <!-- Verification modal mockup -->
+    <div class="relative mt-16 inline-block">
+      <div class="absolute inset-0 -m-12 glow-security pointer-events-none"></div>
+      <div class="card p-9 relative z-10 text-left max-w-md" style="background: linear-gradient(180deg, #161616 0%, #0F0F0F 100%);">
+        <div class="flex items-center gap-3 mb-5">
+          <span class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(255,90,31,0.1); border: 1px solid rgba(255,90,31,0.25);">
+            <span class="material-symbols-outlined text-ember" style="font-size:20px;">lock</span>
+          </span>
+          <div>
+            <div class="text-[15px] font-medium">Verify workspace access</div>
+            <div class="text-[12px] text-micro">Code sent to maya@northstar.tech</div>
+          </div>
+        </div>
+
+        <div class="flex justify-between gap-2 my-7" id="verify-cells">
+          <div class="vc-cell" data-digit="8"><span class="digit">8</span><span class="vc-cursor"></span></div>
+          <div class="vc-cell" data-digit="2"><span class="digit">2</span><span class="vc-cursor"></span></div>
+          <div class="vc-cell" data-digit="4"><span class="digit">4</span><span class="vc-cursor"></span></div>
+          <div class="vc-cell"><span class="digit"></span><span class="vc-cursor"></span></div>
+          <div class="vc-cell"><span class="digit"></span><span class="vc-cursor"></span></div>
+          <div class="vc-cell"><span class="digit"></span><span class="vc-cursor"></span></div>
+        </div>
+
+        <button class="w-full py-3.5 rounded-full font-medium text-[14px]" style="background: var(--ember); color: white; box-shadow: 0 8px 32px rgba(255, 90, 31, 0.3);">Verify access</button>
+        <div class="mt-4 flex items-center justify-between text-[12px] text-micro">
+          <span>Resend code in 0:42</span>
+          <span class="flex items-center gap-1.5"><span class="material-symbols-outlined" style="font-size:13px;">shield_lock</span> SOC 2 Type II</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ 8. AI MODELS BENTO GRID ═══════════════════ -->
+<section class="section">
+  <div class="max-w-content mx-auto px-6 lg:px-10">
+    <div class="text-center mb-12">
+      <div class="section-sep mb-7 reveal-up">
+        <span class="pill">6 AI Models Built-In</span>
+      </div>
+      <h2 class="reveal-up delay-1 text-white text-[38px] sm:text-[44px] lg:text-[52px] font-medium leading-[1.05] tracking-[-0.02em] max-w-3xl mx-auto">
+        Predictive intelligence.<br/>
+        <span class="text-ember">Not just analytics.</span>
+      </h2>
+      <p class="mt-5 text-muted text-[16px] max-w-xl mx-auto leading-relaxed">
+        Every model is trained on YOUR data. No generic predictions — tailored insights for your unique business patterns.
+      </p>
+    </div>
+
+    <!-- Bento Grid -->
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5 mb-12">
+      <!-- 1. ROAS Predictor -->
+      <article class="card card-lift card-warm p-7 relative overflow-hidden group">
+        <div class="absolute top-0 left-0 right-0 h-[2px] bg-ember opacity-50"></div>
+        <span class="w-11 h-11 rounded-xl flex items-center justify-center mb-6" style="background: rgba(255,90,31,0.1); border: 1px solid rgba(255,90,31,0.25);">
+          <span class="material-symbols-outlined text-ember" style="font-size:22px;">paid</span>
+        </span>
+        <h3 class="text-[17px] font-medium mb-1">ROAS Predictor</h3>
+        <p class="text-ember text-[12.5px] font-mono uppercase tracking-wider mb-3">Know ROI Before You Spend</p>
+        <p class="text-muted text-[14px] leading-relaxed mb-6">ML-powered predictions for Meta, Google, TikTok &amp; Snapchat campaigns with platform-specific baselines.</p>
+        <div class="flex items-center gap-6 pt-5 border-t border-line">
+          <div><div class="text-[18px] font-medium tracking-tight">94<span class="text-muted text-[13px]">%</span></div><div class="text-[10px] text-micro uppercase tracking-widest mt-0.5 font-mono">accuracy</div></div>
+          <div><div class="text-[18px] font-medium tracking-tight">23<span class="text-muted text-[13px]">ms</span></div><div class="text-[10px] text-micro uppercase tracking-widest mt-0.5 font-mono">latency</div></div>
+        </div>
+      </article>
+
+      <!-- 2. LTV Predictor -->
+      <article class="card card-lift card-warm p-7 relative overflow-hidden group">
+        <div class="absolute top-0 left-0 right-0 h-[2px] bg-ember opacity-50"></div>
+        <span class="w-11 h-11 rounded-xl flex items-center justify-center mb-6" style="background: rgba(255,90,31,0.1); border: 1px solid rgba(255,90,31,0.25);">
+          <span class="material-symbols-outlined text-ember" style="font-size:22px;">groups</span>
+        </span>
+        <h3 class="text-[17px] font-medium mb-1">LTV Predictor</h3>
+        <p class="text-ember text-[12.5px] font-mono uppercase tracking-wider mb-3">Target High-Value Customers</p>
+        <p class="text-muted text-[14px] leading-relaxed mb-6">30 / 90 / 180 / 365-day plus lifetime value predictions with full customer segmentation.</p>
+        <div class="flex items-center gap-6 pt-5 border-t border-line">
+          <div><div class="text-[18px] font-medium tracking-tight">5</div><div class="text-[10px] text-micro uppercase tracking-widest mt-0.5 font-mono">segments</div></div>
+          <div><div class="text-[18px] font-medium tracking-tight">4</div><div class="text-[10px] text-micro uppercase tracking-widest mt-0.5 font-mono">timeframes</div></div>
+        </div>
+      </article>
+
+      <!-- 3. Churn Predictor -->
+      <article class="card card-lift card-warm p-7 relative overflow-hidden group">
+        <div class="absolute top-0 left-0 right-0 h-[2px] bg-ember opacity-50"></div>
+        <span class="w-11 h-11 rounded-xl flex items-center justify-center mb-6" style="background: rgba(255,90,31,0.1); border: 1px solid rgba(255,90,31,0.25);">
+          <span class="material-symbols-outlined text-ember" style="font-size:22px;">warning</span>
+        </span>
+        <h3 class="text-[17px] font-medium mb-1">Churn Predictor</h3>
+        <p class="text-ember text-[12.5px] font-mono uppercase tracking-wider mb-3">Retain Revenue at Risk</p>
+        <p class="text-muted text-[14px] leading-relaxed mb-6">Identify at-risk customers with contributing factors and recommended actions, ranked by urgency.</p>
+        <div class="flex items-center gap-6 pt-5 border-t border-line">
+          <div><div class="text-[18px] font-medium tracking-tight">0.89</div><div class="text-[10px] text-micro uppercase tracking-widest mt-0.5 font-mono">roc-auc</div></div>
+          <div><div class="text-[18px] font-medium tracking-tight">87<span class="text-muted text-[13px]">%</span></div><div class="text-[10px] text-micro uppercase tracking-widest mt-0.5 font-mono">precision</div></div>
+        </div>
+      </article>
+
+      <!-- 4. Conversion Predictor -->
+      <article class="card card-lift card-warm p-7 relative overflow-hidden group">
+        <div class="absolute top-0 left-0 right-0 h-[2px] bg-ember opacity-50"></div>
+        <span class="w-11 h-11 rounded-xl flex items-center justify-center mb-6" style="background: rgba(255,90,31,0.1); border: 1px solid rgba(255,90,31,0.25);">
+          <span class="material-symbols-outlined text-ember" style="font-size:22px;">trending_up</span>
+        </span>
+        <h3 class="text-[17px] font-medium mb-1">Conversion Predictor</h3>
+        <p class="text-ember text-[12.5px] font-mono uppercase tracking-wider mb-3">Prioritize High-Intent Audiences</p>
+        <p class="text-muted text-[14px] leading-relaxed mb-6">Predict conversion likelihood per campaign with platform-specific baselines and behavioral signals.</p>
+        <div class="flex items-center gap-6 pt-5 border-t border-line">
+          <div><div class="text-[18px] font-medium tracking-tight">91<span class="text-muted text-[13px]">%</span></div><div class="text-[10px] text-micro uppercase tracking-widest mt-0.5 font-mono">accuracy</div></div>
+          <div><div class="text-[18px] font-medium tracking-tight">12</div><div class="text-[10px] text-micro uppercase tracking-widest mt-0.5 font-mono">features</div></div>
+        </div>
+      </article>
+
+      <!-- 5. Creative Lifecycle -->
+      <article class="card card-lift card-warm p-7 relative overflow-hidden group">
+        <div class="absolute top-0 left-0 right-0 h-[2px] bg-ember opacity-50"></div>
+        <span class="w-11 h-11 rounded-xl flex items-center justify-center mb-6" style="background: rgba(255,90,31,0.1); border: 1px solid rgba(255,90,31,0.25);">
+          <span class="material-symbols-outlined text-ember" style="font-size:22px;">auto_awesome</span>
+        </span>
+        <h3 class="text-[17px] font-medium mb-1">Creative Lifecycle</h3>
+        <p class="text-ember text-[12.5px] font-mono uppercase tracking-wider mb-3">Refresh Before Performance Drops</p>
+        <p class="text-muted text-[14px] leading-relaxed mb-6">Predicts creative fatigue with lifecycle phases: Learning &rarr; Growth &rarr; Maturity &rarr; Decline.</p>
+        <div class="flex items-center gap-6 pt-5 border-t border-line">
+          <div><div class="text-[18px] font-medium tracking-tight">5</div><div class="text-[10px] text-micro uppercase tracking-widest mt-0.5 font-mono">phases</div></div>
+          <div><div class="text-[18px] font-medium tracking-tight">5</div><div class="text-[10px] text-micro uppercase tracking-widest mt-0.5 font-mono">urgency levels</div></div>
+        </div>
+      </article>
+
+      <!-- 6. ROAS Forecaster -->
+      <article class="card card-lift card-warm p-7 relative overflow-hidden group">
+        <div class="absolute top-0 left-0 right-0 h-[2px] bg-ember opacity-50"></div>
+        <span class="w-11 h-11 rounded-xl flex items-center justify-center mb-6" style="background: rgba(255,90,31,0.1); border: 1px solid rgba(255,90,31,0.25);">
+          <span class="material-symbols-outlined text-ember" style="font-size:22px;">show_chart</span>
+        </span>
+        <h3 class="text-[17px] font-medium mb-1">ROAS Forecaster</h3>
+        <p class="text-ember text-[12.5px] font-mono uppercase tracking-wider mb-3">Plan Budget Cycles</p>
+        <p class="text-muted text-[14px] leading-relaxed mb-6">Time-series revenue forecasting with confidence intervals and baseline calculations.</p>
+        <div class="flex items-center gap-6 pt-5 border-t border-line">
+          <div><div class="text-[18px] font-medium tracking-tight">3</div><div class="text-[10px] text-micro uppercase tracking-widest mt-0.5 font-mono">granularity</div></div>
+          <div><div class="text-[18px] font-medium tracking-tight">90<span class="text-muted text-[13px]">d</span></div><div class="text-[10px] text-micro uppercase tracking-widest mt-0.5 font-mono">horizon</div></div>
+        </div>
+      </article>
+    </div>
+
+    <!-- Infrastructure footer strip -->
+    <div class="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-[12.5px] text-micro pt-8 border-t border-line">
+      <div class="flex items-center gap-2">
+        <span class="w-1.5 h-1.5 rounded-full bg-ember pulse-live"></span>
+        <span>Hybrid inference (local + cloud)</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined" style="font-size:14px;">schedule</span>
+        <span>&lt;50ms average latency</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span>Powered by</span>
+        <span class="text-muted font-mono">scikit-learn + Vertex AI</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ 9. FULL-BLEED CTA BANNER ═══════════════════ -->
+<section id="pricing" class="px-4 lg:px-6">
+  <div class="max-w-content mx-auto cta-banner-bg rounded-[28px] overflow-hidden p-10 lg:p-16 relative">
+    <!-- Subtle inner texture -->
+    <div class="absolute inset-0 opacity-[0.06] pointer-events-none" style="background-image: radial-gradient(circle at 25% 30%, white 0.5px, transparent 1px); background-size: 14px 14px;"></div>
+
+    <div class="grid lg:grid-cols-2 gap-10 items-center relative z-10">
+      <div>
+        <h2 class="text-white text-[36px] sm:text-[42px] lg:text-[52px] font-medium leading-[1.05] tracking-[-0.02em]">
+          Start optimizing<br/>your ad spend with AI.
+        </h2>
+        <p class="mt-5 text-white/80 text-[16px] max-w-md leading-relaxed">
+          Start your 14-day free trial today. No credit card required. Get full access to Trust-Gated Autopilot and AI-powered optimization.
+        </p>
+      </div>
+
+      <form onsubmit="event.preventDefault();" class="flex flex-col sm:flex-row gap-2 bg-ink/95 p-2 rounded-full border border-black/30">
+        <input type="email" required placeholder="Enter your work email" class="flex-1 bg-transparent px-5 py-3 text-[14.5px] outline-none placeholder:text-micro text-white"/>
+        <button type="submit" class="btn-ember whitespace-nowrap py-3 px-6 border border-line2">Unlock free trial <span class="material-symbols-outlined" style="font-size:17px;">arrow_forward</span></button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ 10. FOOTER ═══════════════════ -->
+<footer id="contact" class="pt-16 pb-0 mt-12">
+  <div class="max-w-content mx-auto px-6 lg:px-10">
+    <div class="grid md:grid-cols-12 gap-10 pb-14">
+      <!-- Brand col -->
+      <div class="md:col-span-4">
+        <a href="/" class="inline-flex items-center mb-5" aria-label="Stratum AI home">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 195 40" class="h-12 w-auto" role="img" aria-label="Stratum AI">
+            <defs>
+              <linearGradient id="stratumEmberFooter" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#FF8A4A"/>
+                <stop offset="55%" stop-color="#FF5A1F"/>
+                <stop offset="100%" stop-color="#FF3D00"/>
+              </linearGradient>
+            </defs>
+            <g>
+              <path d="M3 10 L26 10 L31 18 L8 18 Z" fill="url(#stratumEmberFooter)"/>
+              <path d="M6 22 L29 22 L34 30 L11 30 Z" fill="#1E2A47"/>
+            </g>
+            <text x="42" y="27" font-family="'Geist', system-ui, sans-serif" font-weight="600" font-size="20" letter-spacing="-0.5">
+              <tspan fill="#ffffff">Stratum </tspan>
+              <tspan fill="url(#stratumEmberFooter)">AI</tspan>
+            </text>
+          </svg>
+        </a>
+        <p class="text-muted text-[14px] leading-relaxed max-w-[280px]">AI-Powered Revenue Operating System with Trust-Gated Autopilot.</p>
+        <div class="flex items-center gap-3 mt-6">
+          <div class="px-2.5 py-1 rounded border border-line bg-white/[0.02] text-[10px] font-mono text-micro uppercase tracking-wider">SOC 2</div>
+          <div class="px-2.5 py-1 rounded border border-line bg-white/[0.02] text-[10px] font-mono text-micro uppercase tracking-wider">GDPR</div>
+          <div class="px-2.5 py-1 rounded border border-line bg-white/[0.02] text-[10px] font-mono text-micro uppercase tracking-wider">CCPA</div>
+        </div>
+      </div>
+
+      <!-- Product -->
+      <div class="md:col-span-2">
+        <h4 class="text-[11px] uppercase tracking-widest text-white mb-4">Product</h4>
+        <ul class="space-y-2.5 text-[14px] text-muted">
+          <li><a href="/features" class="hover:text-white transition-colors">Features</a></li>
+          <li><a href="/pricing" class="hover:text-white transition-colors">Pricing</a></li>
+          <li><a href="/integrations" class="hover:text-white transition-colors">Integrations</a></li>
+          <li><a href="/api-docs" class="hover:text-white transition-colors">API</a></li>
+          <li><a href="/changelog" class="hover:text-white transition-colors">Changelog</a></li>
+        </ul>
+      </div>
+
+      <!-- Solutions -->
+      <div class="md:col-span-2">
+        <h4 class="text-[11px] uppercase tracking-widest text-white mb-4">Solutions</h4>
+        <ul class="space-y-2.5 text-[14px] text-muted">
+          <li><a href="/solutions/cdp" class="hover:text-white transition-colors">Customer Data Platform</a></li>
+          <li><a href="/solutions/audience-sync" class="hover:text-white transition-colors">Audience Sync</a></li>
+          <li><a href="/solutions/predictions" class="hover:text-white transition-colors">Predictive Analytics</a></li>
+          <li><a href="/solutions/trust-engine" class="hover:text-white transition-colors">Trust Engine</a></li>
+        </ul>
+      </div>
+
+      <!-- Resources -->
+      <div class="md:col-span-2">
+        <h4 class="text-[11px] uppercase tracking-widest text-white mb-4">Resources</h4>
+        <ul class="space-y-2.5 text-[14px] text-muted">
+          <li><a href="/docs" class="hover:text-white transition-colors">Documentation</a></li>
+          <li><a href="/blog" class="hover:text-white transition-colors">Blog</a></li>
+          <li><a href="/case-studies" class="hover:text-white transition-colors">Case Studies</a></li>
+          <li><a href="/status" class="hover:text-white transition-colors">System Status</a></li>
+        </ul>
+      </div>
+
+      <!-- Company -->
+      <div class="md:col-span-2">
+        <h4 class="text-[11px] uppercase tracking-widest text-white mb-4">Company</h4>
+        <ul class="space-y-2.5 text-[14px] text-muted">
+          <li><a href="/about" class="hover:text-white transition-colors">About</a></li>
+          <li><a href="/careers" class="hover:text-white transition-colors">Careers</a></li>
+          <li><a href="/contact" class="hover:text-white transition-colors">Contact</a></li>
+          <li><a href="/privacy" class="hover:text-white transition-colors">Privacy</a></li>
+          <li><a href="/terms" class="hover:text-white transition-colors">Terms</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="hairline pt-6 pb-8 flex flex-col md:flex-row items-center justify-between gap-4">
+      <p class="text-[12px] font-mono text-micro">© 2026 Stratum AI. All rights reserved.</p>
+      <div class="flex items-center gap-5 text-muted">
+        <a href="#" aria-label="X" class="hover:text-white"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z"/></svg></a>
+        <a href="#" aria-label="LinkedIn" class="hover:text-white"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43c-1.14 0-2.06-.93-2.06-2.07 0-1.14.92-2.06 2.06-2.06 1.14 0 2.06.92 2.06 2.06 0 1.14-.92 2.07-2.06 2.07zm1.78 13.02H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45C23.2 24 24 23.23 24 22.27V1.73C24 .77 23.2 0 22.22 0z"/></svg></a>
+        <a href="#" aria-label="GitHub" class="hover:text-white"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58v-2.04c-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.74.08-.73.08-.73 1.21.08 1.85 1.24 1.85 1.24 1.07 1.84 2.81 1.31 3.5 1 .11-.78.42-1.31.76-1.61-2.66-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.31-.54-1.53.11-3.18 0 0 1-.32 3.3 1.23A11.5 11.5 0 0112 5.8c1.02 0 2.05.14 3.01.4 2.3-1.55 3.3-1.23 3.3-1.23.65 1.65.24 2.87.12 3.18.77.84 1.23 1.91 1.23 3.22 0 4.61-2.81 5.62-5.49 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.21.7.83.58A12 12 0 0024 12c0-6.63-5.37-12-12-12z"/></svg></a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Giant faded wordmark -->
+  <div class="overflow-hidden mt-4 pb-4">
+    <div class="giant-wordmark select-none">STRATUM</div>
+  </div>
+</footer>
+
+<script>
+  // ROI Calculator
+  function recalc() {
+    const slider   = document.getElementById('spend-slider');
+    const spend    = parseInt(slider.value, 10);
+    const industry = parseFloat(document.getElementById('industry').value);
+    const roas     = parseFloat(document.getElementById('roas').value);
+
+    // Format spend
+    document.getElementById('spend-output').textContent =
+      '$' + spend.toLocaleString();
+
+    // Reposition the drag-hint to follow the thumb
+    const hint = document.getElementById('slider-hint');
+    if (hint) {
+      const min = parseFloat(slider.min);
+      const max = parseFloat(slider.max);
+      const pct = ((spend - min) / (max - min)) * 100;
+      hint.style.left = pct + '%';
+    }
+
+    // Stratum's lift model
+    const upliftFactor      = 0.30 * industry;
+    const additionalRevenue = spend * roas * upliftFactor;
+    const additionalProfit  = additionalRevenue * 0.40;
+
+    document.getElementById('revenue-display').textContent =
+      '$' + Math.round(additionalRevenue).toLocaleString();
+    document.getElementById('profit-display').textContent =
+      '$' + Math.round(additionalProfit).toLocaleString();
+  }
+  // Stop the hint's attention-bounce after the user touches the slider
+  document.addEventListener('DOMContentLoaded', () => {
+    const slider = document.getElementById('spend-slider');
+    const hint = document.getElementById('slider-hint');
+    if (slider && hint) {
+      slider.addEventListener('pointerdown', () => hint.classList.remove('bounce'), { once: true });
+    }
+  });
+  // Initial render
+  if (document.readyState !== 'loading') recalc();
+  else document.addEventListener('DOMContentLoaded', recalc);
+
+  // Reset count-up elements to 0 before they animate (avoids final-value flash)
+  document.querySelectorAll('.count-up').forEach(el => {
+    const decimals = parseInt(el.dataset.decimals, 10) || 0;
+    el.textContent = (0).toFixed(decimals);
+  });
+
+  // ─── SCROLL-TRIGGERED ANIMATIONS ────────────────────────────────
+  // One observer for chart bars, reveal-ups, and stat counters.
+  // Threshold: 0.15 = fires once 15% of element is visible (reliable).
+
+  function animateCount(el) {
+    const target   = parseFloat(el.dataset.target);
+    const decimals = parseInt(el.dataset.decimals, 10) || 0;
+    const duration = 1500;
+    const start    = performance.now();
+    const fmt = (n) => {
+      const fixed = n.toFixed(decimals);
+      // Add thousands separator for ints with many digits (e.g. $42 K stays as "42")
+      return fixed;
+    };
+    function frame(now) {
+      const elapsed = now - start;
+      const t = Math.min(elapsed / duration, 1);
+      // Ease-out cubic
+      const eased = 1 - Math.pow(1 - t, 3);
+      el.textContent = fmt(target * eased);
+      if (t < 1) requestAnimationFrame(frame);
+      else el.textContent = fmt(target);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  const animObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const el = entry.target;
+      el.classList.add('in-view');
+      // If this is a stat counter, kick off the count animation
+      if (el.classList.contains('count-up')) animateCount(el);
+      animObserver.unobserve(el);
+    });
+  }, { threshold: 0.15 });
+
+  // Observe everything that should animate on scroll
+  document.querySelectorAll('.line-chart, .reveal-up, .count-up')
+    .forEach(el => animObserver.observe(el));
+
+  // ─── LIVE ACTIVITY STREAM ──────────────────────────────────────
+  const stream = document.getElementById('activity-stream');
+  const events = [
+    ['ROAS spike: <span class="text-white">"Holiday Bundle"</span> +47%', 'auto-scaled'],
+    ['Creative fatigue: <span class="text-white">"Q1 Hero v3"</span> entering decline', 'fatigue 0.78'],
+    ['Anomaly: <span class="text-muted">CPC up 23% on TikTok Reels</span>', 'investigating'],
+    ['Holdout rebalanced: <span class="text-white">cohort 7B</span>', 'p &lt; 0.05'],
+    ['LTV model retrained: <span class="text-white">365d horizon</span>', 'rmse 0.12'],
+    ['Conversion verified: <span class="text-white">248 events</span>', 'attribution synced'],
+    ['Bid floor raised: <span class="text-white">"YouTube Pre-Roll"</span> +12%', 'trust score 94.6'],
+    ['Audience drift detected: <span class="text-muted">cohort APAC-2</span>', 'rebuilding lookalike'],
+    ['Pause executed: <span class="text-white">"Display Network v8"</span>', 'trust score 88.1'],
+    ['Budget reallocation: <span class="text-muted">Snapchat → Meta</span> +$840/day', 'human-confirmed'],
+  ];
+  let evtIdx = 0;
+  function pad2(n) { return n.toString().padStart(2, '0'); }
+  function nowStamp() {
+    const d = new Date();
+    return `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
+  }
+  function pushActivityItem() {
+    if (!stream) return;
+    const [text, meta] = events[evtIdx % events.length];
+    evtIdx++;
+
+    const item = document.createElement('div');
+    item.className = 'activity-item entering fresh flex items-start gap-3';
+    item.innerHTML = `
+      <span class="dot-pulse mt-1 w-2 h-2 rounded-full bg-ember shrink-0"></span>
+      <div>
+        <div class="text-white">${text}</div>
+        <div class="text-micro font-mono text-[11px] mt-0.5">${meta} &middot; ${nowStamp()}</div>
+      </div>
+    `;
+    stream.prepend(item);
+
+    // Force reflow then transition in
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        item.classList.remove('entering');
+        item.classList.add('entered');
+      });
+    });
+
+    // Demote previous "fresh" item & dim older items
+    const items = stream.querySelectorAll('.activity-item');
+    items.forEach((it, idx) => {
+      if (idx > 0) it.classList.remove('fresh');
+      // Visually mute dot for older items
+      if (idx >= 2) {
+        const dot = it.querySelector('span.shrink-0');
+        if (dot) dot.classList.replace('bg-ember', 'bg-line2');
+      }
+    });
+
+    // Remove if too many
+    if (items.length > 4) {
+      const last = items[items.length - 1];
+      last.classList.remove('entered');
+      last.classList.add('leaving');
+      setTimeout(() => last.remove(), 380);
+    }
+  }
+  // Only run when tab is visible (saves battery, looks fresh on return)
+  let streamTimer = null;
+  function startStream() {
+    if (streamTimer) return;
+    streamTimer = setInterval(pushActivityItem, 4200);
+  }
+  function stopStream() {
+    if (streamTimer) { clearInterval(streamTimer); streamTimer = null; }
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) stopStream(); else startStream();
+  });
+  startStream();
+
+  // ─── HERO EMBER SPOTLIGHT ──────────────────────────────────────
+  const hero = document.getElementById('hero');
+  const spot = document.getElementById('hero-spotlight');
+  if (hero && spot && window.matchMedia('(hover: hover)').matches) {
+    let targetX = 0, targetY = 0, currentX = 0, currentY = 0;
+    let spotRunning = false;
+    function spotFrame() {
+      currentX += (targetX - currentX) * 0.18;
+      currentY += (targetY - currentY) * 0.18;
+      spot.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
+      if (Math.abs(targetX - currentX) > 0.5 || Math.abs(targetY - currentY) > 0.5) {
+        requestAnimationFrame(spotFrame);
+      } else {
+        spotRunning = false;
+      }
+    }
+    hero.addEventListener('mousemove', (e) => {
+      const rect = hero.getBoundingClientRect();
+      targetX = e.clientX - rect.left;
+      targetY = e.clientY - rect.top;
+      spot.classList.add('active');
+      if (!spotRunning) {
+        spotRunning = true;
+        requestAnimationFrame(spotFrame);
+      }
+    });
+    hero.addEventListener('mouseleave', () => spot.classList.remove('active'));
+  }
+
+  // ─── SMART STICKY NAV + MOCKUP PARALLAX ────────────────────────
+  const navEl = document.querySelector('nav');
+  const mockupSec = document.getElementById('mockup');
+  const mockupWrap = document.getElementById('mockup-wrap');
+  let lastScrollY = window.scrollY;
+  let scrollTicking = false;
+
+  function onScroll() {
+    const y = window.scrollY;
+    const dy = y - lastScrollY;
+
+    // Sticky nav
+    if (navEl) {
+      if (y > 80) navEl.classList.add('nav-scrolled');
+      else navEl.classList.remove('nav-scrolled');
+
+      if (y > 320 && dy > 6) navEl.classList.add('nav-hidden');
+      else if (dy < -3 || y < 80) navEl.classList.remove('nav-hidden');
+    }
+
+    // Mockup parallax — translate the wrapper based on section's distance from viewport center
+    if (mockupSec && mockupWrap) {
+      const rect = mockupSec.getBoundingClientRect();
+      const winH = window.innerHeight;
+      if (rect.bottom > 0 && rect.top < winH) {
+        const sectionCenter = rect.top + rect.height / 2;
+        const viewportCenter = winH / 2;
+        const distance = sectionCenter - viewportCenter;
+        // Subtle: 8% of distance, capped ±40px
+        const offset = Math.max(-40, Math.min(40, -distance * 0.08));
+        mockupWrap.style.transform = `translate3d(0, ${offset}px, 0)`;
+      }
+    }
+
+    lastScrollY = y;
+    scrollTicking = false;
+  }
+
+  window.addEventListener('scroll', () => {
+    if (!scrollTicking) {
+      requestAnimationFrame(onScroll);
+      scrollTicking = true;
+    }
+  }, { passive: true });
+  // Initial call so parallax position is correct on load
+  onScroll();
+
+  // ─── VERIFY CODE TYPING ANIMATION ──────────────────────────────
+  function playVerifyTyping() {
+    const wrap = document.getElementById('verify-cells');
+    if (!wrap) return;
+    const cells = Array.from(wrap.querySelectorAll('.vc-cell'));
+    if (!cells.length) return;
+
+    // Reset state
+    cells.forEach(c => c.classList.remove('active', 'filled'));
+
+    // Start: first cell is active, cursor blinking
+    cells[0].classList.add('active');
+    let i = 0;
+
+    function step() {
+      // Fill the current active cell (if it has a digit)
+      cells[i].classList.remove('active');
+      if (cells[i].dataset.digit) cells[i].classList.add('filled');
+      i++;
+      if (i < cells.length) {
+        cells[i].classList.add('active');
+        // Continue typing only if next cell has a digit to type
+        if (cells[i].dataset.digit) {
+          setTimeout(step, 520);
+        }
+        // Otherwise leave cursor blinking on this empty cell
+      }
+    }
+    setTimeout(step, 700); // initial pause so user sees the first cursor blink
+  }
+
+  const verifyEl = document.getElementById('verify-cells');
+  if (verifyEl) {
+    const verifyObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          playVerifyTyping();
+          verifyObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.4 });
+    verifyObserver.observe(verifyEl);
+  }
+</script>
+
+</body>
+</html>
