@@ -1021,12 +1021,20 @@ async def get_message(
 # Webhook Endpoint
 # =============================================================================
 @router.post("/webhooks/status")
+@router.post("/webhooks/verify")
 async def whatsapp_webhook(
     request: Request,
     db: AsyncSession = Depends(get_async_session),
     x_hub_signature_256: Optional[str] = Header(None, alias="X-Hub-Signature-256"),
 ):
-    """Webhook endpoint for WhatsApp status updates from Meta."""
+    """Webhook endpoint for WhatsApp status updates from Meta.
+
+    Accepts POST on both `/webhooks/status` and `/webhooks/verify`. Meta uses
+    a single configured URL for both the GET verification handshake and POST
+    event delivery; since our verification URL is `.../webhooks/verify`, this
+    route also accepts POST events at that path so Meta can deliver messages
+    and status updates without a 405.
+    """
     # Get raw body for signature verification
     raw_body = await request.body()
 
