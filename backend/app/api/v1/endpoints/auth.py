@@ -56,7 +56,7 @@ logger = get_logger(__name__)
 router = APIRouter()
 
 # Redis connection for OTP storage
-OTP_EXPIRY_SECONDS = 300  # 5 minutes
+OTP_EXPIRY_SECONDS = 600  # 10 minutes — tight 5min window was failing real users on prod
 OTP_PREFIX = "whatsapp_otp:"
 PASSWORD_RESET_PREFIX = "password_reset:"
 PASSWORD_RESET_EXPIRY_SECONDS = 3600  # 1 hour
