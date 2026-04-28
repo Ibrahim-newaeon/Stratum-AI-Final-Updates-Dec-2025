@@ -54,7 +54,7 @@
     "i18next": "^26.0.6",
     "i18next-browser-languagedetector": "^7.2.0",
     "jspdf": "^4.2.1",
-    "lucide-react": "^0.577.0",
+    "lucide-react": "^1.11.0",
     "react": "^18.2.0",
     "react-countup": "^6.5.3",
     "react-dom": "^18.2.0",
