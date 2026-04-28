@@ -6,6 +6,13 @@ echo "PORT=${PORT:-not set}"
 echo "PWD=$(pwd)"
 echo "Python: $(python --version 2>&1)"
 
+# Derive DATABASE_URL_SYNC from DATABASE_URL if not set (Railway only injects DATABASE_URL)
+if [ -z "$DATABASE_URL_SYNC" ] && [ -n "$DATABASE_URL" ]; then
+    DATABASE_URL_SYNC=$(echo "$DATABASE_URL" | sed 's/postgresql+asyncpg/postgresql/g')
+    export DATABASE_URL_SYNC
+    echo "Derived DATABASE_URL_SYNC from DATABASE_URL"
+fi
+
 # Run migrations if DATABASE_URL_SYNC is available
 if [ -n "$DATABASE_URL_SYNC" ]; then
     echo "Running alembic version fix..."

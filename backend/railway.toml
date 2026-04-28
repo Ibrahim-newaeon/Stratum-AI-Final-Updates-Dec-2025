@@ -4,6 +4,7 @@ dockerfilePath = "Dockerfile"
 noCache = true
 
 [deploy]
+startCommand = ""
 healthcheckPath = "/health"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
