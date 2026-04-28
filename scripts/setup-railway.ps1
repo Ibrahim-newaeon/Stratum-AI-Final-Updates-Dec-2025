@@ -12,6 +12,7 @@
 #>
 
 param(
+    [string]$ProjectName = "stratum-ai2",
     [switch]$DryRun,
     [switch]$SkipDeploy
 )
@@ -102,7 +103,7 @@ if (Test-Path ".railway") {
     ok "Using existing project"
 } else {
     info "Creating new Railway project..."
-    Invoke-Railway "init --name stratum-ai"
+    Invoke-Railway "init --name $ProjectName"
     ok "Project created"
 }
 
@@ -235,7 +236,7 @@ step "Summary"
 Write-Host @"
 ${G}Setup complete!${X}
 
-Project:     stratum-ai
+Project:     $ProjectName
 Backend:     https://$backendDomain
 Frontend:    https://$frontendDomain
 
