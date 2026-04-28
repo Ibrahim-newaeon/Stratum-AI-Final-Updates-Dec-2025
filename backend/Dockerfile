@@ -43,6 +43,18 @@ RUN chmod +x /app/start.sh
 RUN mkdir -p /app/ml_service/training_data /app/uploads /app/temp && \
     chown -R appuser:appgroup /app/ml_service /app/uploads /app/temp
 
+# Pre-train ML models at build time so they're baked into the image.
+# Runtime auto-train (in app/main.py) consumes ~9.5 GB and blocks /health
+# from responding within Railway's healthcheck window. Doing it here makes
+# every container start fast and idempotent.
+ENV ML_MODELS_PATH=/app/ml_service/models \
+    APP_ENV=development
+RUN python scripts/build_ml_models.py && \
+    chown -R appuser:appgroup /app/ml_service/models
+# Re-set APP_ENV to production for runtime — build-time only needed dev
+# defaults to avoid Pydantic validators tripping on missing prod secrets.
+ENV APP_ENV=production
+
 # Switch to non-root user
 USER appuser
 
