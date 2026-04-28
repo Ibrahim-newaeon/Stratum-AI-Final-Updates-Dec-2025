@@ -72,7 +72,7 @@ prometheus-client==0.25.0
 # Ad Platform SDKs
 stripe>=7.0.0
 requests>=2.33.1
-facebook-business>=19.0.0
+facebook-business>=25.0.1
 google-ads>=24.0.0
 
 # Analytics & ML (scipy needed by ml/ab_testing.py)
