@@ -13,6 +13,33 @@ if [ -z "$DATABASE_URL_SYNC" ] && [ -n "$DATABASE_URL" ]; then
     echo "Derived DATABASE_URL_SYNC from DATABASE_URL"
 fi
 
+# Wait for the database hostname to resolve. Railway's internal DNS sometimes
+# isn't ready in the first 1-2 seconds of container start; without this wait,
+# fix_alembic_version.py was hitting "Temporary failure in name resolution"
+# and silently skipping the version-column widening step.
+if [ -n "$DATABASE_URL_SYNC" ]; then
+    DB_HOST=$(python - <<'PY'
+import os, urllib.parse
+url = os.environ.get("DATABASE_URL_SYNC", "")
+try:
+    parsed = urllib.parse.urlparse(url)
+    print(parsed.hostname or "")
+except Exception:
+    print("")
+PY
+)
+    if [ -n "$DB_HOST" ]; then
+        for i in 1 2 3 4 5 6 7 8 9 10; do
+            if getent hosts "$DB_HOST" >/dev/null 2>&1; then
+                echo "DB host $DB_HOST resolved (attempt $i)"
+                break
+            fi
+            echo "Waiting for DB host $DB_HOST to resolve (attempt $i/10)..."
+            sleep 1
+        done
+    fi
+fi
+
 # Run migrations if DATABASE_URL_SYNC is available
 if [ -n "$DATABASE_URL_SYNC" ]; then
     echo "Running alembic version fix..."

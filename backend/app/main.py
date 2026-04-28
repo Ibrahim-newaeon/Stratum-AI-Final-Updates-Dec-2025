@@ -441,7 +441,9 @@ def create_application() -> FastAPI:
     uploads_dir.mkdir(parents=True, exist_ok=True)
     app.mount("/uploads/assets", StaticFiles(directory=str(uploads_dir)), name="uploaded-assets")
 
-    # Frontend SPA — serve built React app from /app/frontend/dist
+    # Frontend SPA — serve built React app from /app/frontend/dist when present.
+    # On Railway, frontend ships as a separate nginx service so this directory
+    # legitimately won't exist on the backend container; that's not an error.
     frontend_dist = _Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
     if frontend_dist.exists():
         app.mount("/assets", StaticFiles(directory=str(frontend_dist / "assets")), name="frontend-assets")
@@ -459,7 +461,8 @@ def create_application() -> FastAPI:
                 return HTMLResponse(content=index_html.read_text(encoding="utf-8"))
             raise HTTPException(status_code=404, detail="Frontend not built")
     else:
-        logger.warning("Frontend dist not found at %s", frontend_dist)
+        logger.info("frontend_dist_not_present", path=str(frontend_dist),
+                    detail="backend-only deployment; frontend served by separate service")
 
     # -------------------------------------------------------------------------
     # Health Check Endpoints
