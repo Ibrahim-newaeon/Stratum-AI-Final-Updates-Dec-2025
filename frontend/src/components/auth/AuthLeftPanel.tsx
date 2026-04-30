@@ -3,7 +3,6 @@
  * Stratum figma theme — ink surface, ember accent, Geist typography
  */
 
-import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
 interface AuthLeftPanelProps {
@@ -30,17 +29,17 @@ export default function AuthLeftPanel({ className }: AuthLeftPanelProps) {
         aria-hidden="true"
       />
 
-      {/* Top: logo + back-home */}
+      {/* Top: logo + back-home (plain <a> for full page load → figma landing) */}
       <div className="relative z-10 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2" aria-label="Stratum AI home">
+        <a href="/landing.html" className="flex items-center gap-2" aria-label="Stratum AI home">
           <span className="text-[19px] font-medium tracking-tight text-white">stratum.ai</span>
-        </Link>
-        <Link
-          to="/"
+        </a>
+        <a
+          href="/landing.html"
           className="text-[12px] text-[#9A9A9A] hover:text-white transition-colors flex items-center gap-1"
         >
           ← Back to site
-        </Link>
+        </a>
       </div>
 
       {/* Center: testimonial */}
