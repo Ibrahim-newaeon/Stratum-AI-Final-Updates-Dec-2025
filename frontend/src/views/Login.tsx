@@ -132,9 +132,9 @@ export default function Login() {
 
           {/* Mobile wordmark */}
           <div className="lg:hidden mb-8 self-start">
-            <Link to="/" className="text-[18px] font-medium tracking-tight text-white">
+            <a href="/landing.html" className="text-[18px] font-medium tracking-tight text-white">
               stratum.ai
-            </Link>
+            </a>
           </div>
 
           <div className="w-full max-w-[420px] relative z-10">

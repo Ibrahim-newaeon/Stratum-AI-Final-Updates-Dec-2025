@@ -29,11 +29,13 @@ describe('AuthLeftPanel', () => {
     expect(container.firstChild).toBeInTheDocument();
   });
 
-  it('renders the stratum.ai wordmark linking home', () => {
+  it('renders the stratum.ai wordmark linking to the figma landing', () => {
     render(<AuthLeftPanel />);
     const wordmark = screen.getAllByText('stratum.ai')[0];
     expect(wordmark).toBeInTheDocument();
-    expect(wordmark.closest('a')).toHaveAttribute('href', '/');
+    // Plain <a> (not React Router Link) so the browser does a full page
+    // load and lands on the figma marketing page, not the SPA route.
+    expect(wordmark.closest('a')).toHaveAttribute('href', '/landing.html');
   });
 
   it('renders the testimonial', () => {
