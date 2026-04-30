@@ -8,12 +8,45 @@
     <meta name="theme-color" content="#0B0B0B" />
     <style>html, body { background-color: #0B0B0B; margin: 0; }</style>
     <title>Stratum AI — Your AI Partner for Ad Growth</title>
-    <!-- Fonts: Geist (auth/marketing surfaces), Clash Display + Satoshi (dashboard), Cairo (Arabic) -->
+    <!-- Pre-paint theme bootstrap.
+         Runs before React mounts so the correct .dark / .light class is on
+         <html> on the first paint — avoids the dreaded theme flash.
+         Reads localStorage('stratum-theme') ∈ {dark, light, system}; falls
+         back to system preference; defaults to dark.
+         The theme-no-transition class disables CSS transitions during
+         this initial swap, then is removed on next animation frame so
+         subsequent toggles cross-fade smoothly. -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('stratum-theme');
+          var resolved;
+          if (stored === 'light' || stored === 'dark') {
+            resolved = stored;
+          } else {
+            resolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          }
+          var html = document.documentElement;
+          html.classList.add('theme-no-transition');
+          html.classList.remove('light', 'dark');
+          html.classList.add(resolved);
+          // Drop the transition-suppressor on the next paint so user toggles
+          // animate, but the initial paint doesn't.
+          window.requestAnimationFrame(function () {
+            window.requestAnimationFrame(function () {
+              html.classList.remove('theme-no-transition');
+            });
+          });
+        } catch (_) {
+          // localStorage / matchMedia unavailable (SSR, sandboxed iframe) —
+          // leave default class state alone.
+        }
+      })();
+    </script>
+    <!-- Fonts: Geist + Geist Mono (whole product), Cairo (Arabic locale) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link href="https://api.fontshare.com/v2/css?f[]=clash-display@200,300,400,500,600,700&display=swap" rel="stylesheet">
-    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,600,700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   </head>
   <body>

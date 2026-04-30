@@ -30,7 +30,7 @@ import {
   DocumentChartBarIcon,
 } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
-import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { ThemeToggle } from '@/components/primitives/theme/ThemeToggle';
 import { CommandPalette } from '@/components/ui/command-palette';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTenantStore } from '@/stores/tenantStore';
@@ -294,7 +294,10 @@ export default function TenantLayout() {
             </button>
 
             {/* Notifications */}
-            <button aria-label="Notifications" className="p-2 rounded-lg hover:bg-accent transition-colors relative">
+            <button
+              aria-label="Notifications"
+              className="p-2 rounded-lg hover:bg-accent transition-colors relative"
+            >
               <BellIcon className="h-5 w-5" />
             </button>
 

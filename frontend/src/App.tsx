@@ -6,7 +6,7 @@ import TenantLayout from './views/TenantLayout';
 import { Toaster } from './components/ui/toaster';
 import { TooltipProvider } from './components/ui/tooltip';
 import { JoyrideProvider } from './components/guide/JoyrideWrapper';
-import { ThemeProvider } from './contexts/ThemeContext';
+import { ThemeProvider } from './components/primitives/theme/ThemeProvider';
 import { AuthProvider } from './contexts/AuthContext';
 import { DemoProvider } from './contexts/DemoContext';
 import LoadingSpinner from './components/common/LoadingSpinner';
