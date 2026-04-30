@@ -10,6 +10,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { DemoProvider } from './contexts/DemoContext';
 import LoadingSpinner from './components/common/LoadingSpinner';
+import AuthLoader from './components/auth/AuthLoader';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import CMSProtectedRoute from './components/auth/CMSProtectedRoute';
 import OnboardingGuard from './components/auth/OnboardingGuard';
@@ -90,15 +91,23 @@ const CDPPredictiveChurn = lazyWithRetry(() => import('./views/cdp/CDPPredictive
 // Newsletter / Email Campaigns views
 const NewsletterDashboard = lazyWithRetry(() => import('./views/newsletter/NewsletterDashboard'));
 const NewsletterCampaigns = lazyWithRetry(() => import('./views/newsletter/NewsletterCampaigns'));
-const NewsletterCampaignEditor = lazyWithRetry(() => import('./views/newsletter/NewsletterCampaignEditor'));
+const NewsletterCampaignEditor = lazyWithRetry(
+  () => import('./views/newsletter/NewsletterCampaignEditor')
+);
 const NewsletterTemplates = lazyWithRetry(() => import('./views/newsletter/NewsletterTemplates'));
-const NewsletterSubscribers = lazyWithRetry(() => import('./views/newsletter/NewsletterSubscribers'));
+const NewsletterSubscribers = lazyWithRetry(
+  () => import('./views/newsletter/NewsletterSubscribers')
+);
 const NewsletterAnalytics = lazyWithRetry(() => import('./views/newsletter/NewsletterAnalytics'));
 
 // Knowledge Graph views
 const KnowledgeGraphInsights = lazyWithRetry(() => import('./views/KnowledgeGraphInsights'));
-const KGProblemDetection = lazyWithRetry(() => import('./views/knowledge-graph/KGProblemDetection'));
-const KGRevenueAttribution = lazyWithRetry(() => import('./views/knowledge-graph/KGRevenueAttribution'));
+const KGProblemDetection = lazyWithRetry(
+  () => import('./views/knowledge-graph/KGProblemDetection')
+);
+const KGRevenueAttribution = lazyWithRetry(
+  () => import('./views/knowledge-graph/KGRevenueAttribution')
+);
 
 // Super Admin views
 const ControlTower = lazyWithRetry(() => import('./views/superadmin/ControlTower'));
@@ -191,7 +200,9 @@ const ApiDocsPage = lazyWithRetry(() => import('./views/pages/ApiDocs'));
 // Public pages (Solutions)
 const CDPSolutionPage = lazyWithRetry(() => import('./views/pages/solutions/CDP'));
 const AudienceSyncPage = lazyWithRetry(() => import('./views/pages/solutions/AudienceSync'));
-const PredictionsSolutionPage = lazyWithRetry(() => import('./views/pages/solutions/PredictionsSolution'));
+const PredictionsSolutionPage = lazyWithRetry(
+  () => import('./views/pages/solutions/PredictionsSolution')
+);
 const TrustEnginePage = lazyWithRetry(() => import('./views/pages/solutions/TrustEngine'));
 
 // Public pages (Company)
@@ -224,7 +235,9 @@ const CheckoutSuccess = lazyWithRetry(() => import('./views/checkout/CheckoutSuc
 const CheckoutCancel = lazyWithRetry(() => import('./views/checkout/CheckoutCancel'));
 
 // Announcement pages
-const AudienceSyncLaunch = lazyWithRetry(() => import('./views/pages/announcements/AudienceSyncLaunch'));
+const AudienceSyncLaunch = lazyWithRetry(
+  () => import('./views/pages/announcements/AudienceSyncLaunch')
+);
 
 // Gap implementation views
 const AIInsights = lazyWithRetry(() => import('./views/AIInsights'));
@@ -278,7 +291,7 @@ function App() {
                       path="/login"
                       element={
                         <ErrorBoundary message="Failed to load the login page">
-                          <Suspense fallback={<LoadingSpinner />}>
+                          <Suspense fallback={<AuthLoader />}>
                             <Login />
                           </Suspense>
                         </ErrorBoundary>
@@ -288,7 +301,7 @@ function App() {
                       path="/signup"
                       element={
                         <ErrorBoundary message="Failed to load the signup page">
-                          <Suspense fallback={<LoadingSpinner />}>
+                          <Suspense fallback={<AuthLoader />}>
                             <Signup />
                           </Suspense>
                         </ErrorBoundary>
@@ -298,7 +311,7 @@ function App() {
                       path="/forgot-password"
                       element={
                         <ErrorBoundary message="Failed to load the page">
-                          <Suspense fallback={<LoadingSpinner />}>
+                          <Suspense fallback={<AuthLoader />}>
                             <ForgotPassword />
                           </Suspense>
                         </ErrorBoundary>
@@ -308,7 +321,7 @@ function App() {
                       path="/reset-password"
                       element={
                         <ErrorBoundary message="Failed to load the page">
-                          <Suspense fallback={<LoadingSpinner />}>
+                          <Suspense fallback={<AuthLoader />}>
                             <ResetPassword />
                           </Suspense>
                         </ErrorBoundary>
@@ -318,7 +331,7 @@ function App() {
                       path="/verify-email"
                       element={
                         <ErrorBoundary message="Failed to load the page">
-                          <Suspense fallback={<LoadingSpinner />}>
+                          <Suspense fallback={<AuthLoader />}>
                             <VerifyEmail />
                           </Suspense>
                         </ErrorBoundary>
@@ -469,7 +482,13 @@ function App() {
                       <Route
                         path="users"
                         element={
-                          <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400" /></div>}>
+                          <Suspense
+                            fallback={
+                              <div className="flex items-center justify-center min-h-screen">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400" />
+                              </div>
+                            }
+                          >
                             <CMSUsers />
                           </Suspense>
                         }
