@@ -21,7 +21,7 @@ export default function IdleTimeoutWarning({ secondsLeft, onStay }: IdleTimeoutW
         </div>
 
         <h3 className="text-lg font-bold text-white mb-2">Session Expiring</h3>
-        <p className="text-sm text-white/50 mb-4">
+        <p className="text-sm text-foreground/50 mb-4">
           You will be logged out in{' '}
           <span className="text-amber-400 font-bold tabular-nums">{secondsLeft}s</span>{' '}
           due to inactivity.

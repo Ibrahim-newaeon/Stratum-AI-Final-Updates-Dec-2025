@@ -90,7 +90,7 @@ export default function CMSDashboard() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-white">CMS Dashboard</h1>
-        <p className="text-white/60 mt-2">
+        <p className="text-foreground/60 mt-2">
           Manage your website content, blog posts, and landing page sections.
         </p>
       </div>
@@ -103,14 +103,14 @@ export default function CMSDashboard() {
           <Link
             key={stat.name}
             to={stat.href}
-            className="group relative overflow-hidden rounded-2xl bg-white/5 border border-white/10 p-6 hover:border-white/20 transition-colors"
+            className="group relative overflow-hidden rounded-2xl bg-foreground/5 border border-foreground/10 p-6 hover:border-foreground/20 transition-colors"
           >
             {/* Gradient accent */}
             <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${stat.color}`} />
 
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm font-medium text-white/60">{stat.name}</p>
+                <p className="text-sm font-medium text-foreground/60">{stat.name}</p>
                 <p className="text-3xl font-bold text-white mt-2">{stat.value}</p>
               </div>
               <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.color} bg-opacity-20`}>
@@ -127,27 +127,27 @@ export default function CMSDashboard() {
       {/* Content Status */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Post Status */}
-        <div className="rounded-2xl bg-white/5 border border-white/10 p-6">
+        <div className="rounded-2xl bg-foreground/5 border border-foreground/10 p-6">
           <h2 className="text-lg font-semibold text-white mb-4">Content Status</h2>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-3 h-3 rounded-full bg-green-500" />
-                <span className="text-white/80">Published Posts</span>
+                <span className="text-foreground/80">Published Posts</span>
               </div>
               <span className="text-white font-medium">{publishedPosts}</span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                <span className="text-white/80">Draft Posts</span>
+                <span className="text-foreground/80">Draft Posts</span>
               </div>
               <span className="text-white font-medium">{draftPosts}</span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-3 h-3 rounded-full bg-orange-500" />
-                <span className="text-white/80">Unread Messages</span>
+                <span className="text-foreground/80">Unread Messages</span>
               </div>
               <span className="text-white font-medium">{unreadContacts}</span>
             </div>
@@ -156,12 +156,12 @@ export default function CMSDashboard() {
           {/* Progress bar */}
           <div className="mt-6">
             <div className="flex justify-between text-sm mb-2">
-              <span className="text-white/60">Published vs Draft</span>
-              <span className="text-white/60">
+              <span className="text-foreground/60">Published vs Draft</span>
+              <span className="text-foreground/60">
                 {postsList.length ? Math.round((publishedPosts / postsList.length) * 100) : 0}% published
               </span>
             </div>
-            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+            <div className="h-2 bg-foreground/10 rounded-full overflow-hidden">
               <div
                 className="h-full bg-green-500 transition-[width]"
                 style={{
@@ -173,7 +173,7 @@ export default function CMSDashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="rounded-2xl bg-white/5 border border-white/10 p-6">
+        <div className="rounded-2xl bg-foreground/5 border border-foreground/10 p-6">
           <h2 className="text-lg font-semibold text-white mb-4">Quick Actions</h2>
           <div className="grid grid-cols-2 gap-4">
             {quickActions.map((action) => (
@@ -181,7 +181,7 @@ export default function CMSDashboard() {
                 key={action.name}
                 to={action.href}
                 target={action.external ? '_blank' : undefined}
-                className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-colors"
+                className="flex items-center gap-3 p-4 rounded-xl bg-foreground/5 border border-foreground/10 hover:bg-foreground/10 hover:border-foreground/20 transition-colors"
               >
                 <action.icon className="w-5 h-5 text-purple-400" />
                 <span className="text-white font-medium">{action.name}</span>
@@ -192,7 +192,7 @@ export default function CMSDashboard() {
       </div>
 
       {/* Recent Activity */}
-      <div className="rounded-2xl bg-white/5 border border-white/10 p-6">
+      <div className="rounded-2xl bg-foreground/5 border border-foreground/10 p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-semibold text-white">Recent Posts</h2>
           <Link
@@ -208,7 +208,7 @@ export default function CMSDashboard() {
             {recentPosts.map((post) => (
               <div
                 key={post.id}
-                className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10"
+                className="flex items-center justify-between p-4 rounded-xl bg-foreground/5 border border-foreground/10"
               >
                 <div className="flex items-center gap-4 min-w-0">
                   <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -216,7 +216,7 @@ export default function CMSDashboard() {
                   </div>
                   <div className="min-w-0">
                     <p className="text-white font-medium truncate">{post.title}</p>
-                    <p className="text-sm text-white/50">
+                    <p className="text-sm text-foreground/50">
                       {post.author?.name || 'Unknown'} &middot;{' '}
                       {post.published_at ? new Date(post.published_at).toLocaleDateString() : 'Draft'}
                     </p>
@@ -234,7 +234,7 @@ export default function CMSDashboard() {
                   </span>
                   <Link
                     to={`/cms/posts/${post.id}`}
-                    className="text-white/40 hover:text-white transition-colors"
+                    className="text-foreground/40 hover:text-white transition-colors"
                   >
                     <PencilSquareIcon className="w-5 h-5" />
                   </Link>
@@ -244,8 +244,8 @@ export default function CMSDashboard() {
           </div>
         ) : (
           <div className="text-center py-8">
-            <DocumentTextIcon className="w-12 h-12 text-white/20 mx-auto mb-4" />
-            <p className="text-white/60">No posts yet</p>
+            <DocumentTextIcon className="w-12 h-12 text-foreground/20 mx-auto mb-4" />
+            <p className="text-foreground/60">No posts yet</p>
             <Link
               to="/cms/posts/new"
               className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-lg bg-purple-500 text-white hover:bg-purple-600 transition-colors"

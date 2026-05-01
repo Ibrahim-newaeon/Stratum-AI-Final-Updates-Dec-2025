@@ -234,7 +234,7 @@ export default function ChangelogPage() {
                       return (
                         <div
                           key={i}
-                          className="flex items-start gap-3 p-3 rounded-lg transition-colors hover:bg-white/5"
+                          className="flex items-start gap-3 p-3 rounded-lg transition-colors hover:bg-foreground/5"
                           style={{
                             background: 'var(--landing-card)',
                             border: '1px solid var(--landing-border)',

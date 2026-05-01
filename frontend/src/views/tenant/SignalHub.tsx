@@ -264,13 +264,13 @@ export default function SignalHub() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Signal Hub</h1>
-          <p className="text-text-muted">Diagnose signal issues, recover fast</p>
+          <p className="text-muted-foreground">Diagnose signal issues, recover fast</p>
         </div>
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-secondary border border-white/10">
+          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-secondary border border-foreground/10">
             <SignalIcon className="w-5 h-5 text-stratum-400" />
             <span className="text-white font-semibold">{emqScore}</span>
-            <span className="text-text-muted">EMQ</span>
+            <span className="text-muted-foreground">EMQ</span>
           </div>
           <div data-tour="volatility-badge">
             <VolatilityBadge svi={svi} showValue />
@@ -278,7 +278,7 @@ export default function SignalHub() {
           <button
             onClick={handleRefreshAll}
             disabled={isRefreshing}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-secondary border border-white/10 text-text-secondary hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-secondary border border-foreground/10 text-muted-foreground hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <ArrowPathIcon className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
             {isRefreshing ? 'Refreshing...' : 'Refresh All'}
@@ -298,7 +298,7 @@ export default function SignalHub() {
               'p-4 rounded-xl border transition-colors text-left',
               selectedPlatform === signal.platform
                 ? 'ring-2 ring-stratum-500'
-                : 'hover:border-white/20',
+                : 'hover:border-foreground/20',
               getStatusColor(signal.status)
             )}
           >
@@ -339,7 +339,7 @@ export default function SignalHub() {
               </div>
             </div>
 
-            <div className="mt-3 pt-3 border-t border-white/10 text-xs text-text-muted">
+            <div className="mt-3 pt-3 border-t border-foreground/10 text-xs text-muted-foreground">
               Last sync: {formatLastSync(signal.lastSync)}
             </div>
           </button>
@@ -359,28 +359,28 @@ export default function SignalHub() {
           </div>
 
           {/* Active Incidents */}
-          <div data-tour="active-incidents" className="rounded-2xl bg-surface-secondary border border-white/10 overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b border-white/10">
+          <div data-tour="active-incidents" className="rounded-2xl bg-surface-secondary border border-foreground/10 overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-foreground/10">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-danger/10">
                   <ExclamationCircleIcon className="w-5 h-5 text-danger" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-white">Active Incidents</h3>
-                  <p className="text-sm text-text-muted">
+                  <p className="text-sm text-muted-foreground">
                     {activeIncidents.length} open
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="divide-y divide-white/5">
+            <div className="divide-y divide-foreground/5">
               {activeIncidents.map((incident) => (
                 <div
                   key={incident.id}
                   className={cn(
-                    'p-4 transition-colors cursor-pointer hover:bg-white/5',
-                    selectedIncident === incident.id && 'bg-white/5'
+                    'p-4 transition-colors cursor-pointer hover:bg-foreground/5',
+                    selectedIncident === incident.id && 'bg-foreground/5'
                   )}
                   onClick={() => setSelectedIncident(
                     selectedIncident === incident.id ? null : incident.id
@@ -389,7 +389,7 @@ export default function SignalHub() {
                   <div className="flex items-start justify-between">
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs bg-surface-tertiary text-text-muted px-2 py-0.5 rounded">
+                        <span className="text-xs bg-surface-tertiary text-muted-foreground px-2 py-0.5 rounded">
                           {incident.platform}
                         </span>
                         <span className={cn(
@@ -402,31 +402,31 @@ export default function SignalHub() {
                         </span>
                       </div>
                       <h4 className="font-medium text-white">{incident.title}</h4>
-                      <p className="text-sm text-text-muted mt-1">{incident.description}</p>
+                      <p className="text-sm text-muted-foreground mt-1">{incident.description}</p>
                     </div>
-                    <span className="text-xs text-text-muted">
+                    <span className="text-xs text-muted-foreground">
                       {formatLastSync(incident.openedAt)}
                     </span>
                   </div>
 
                   {/* Expanded incident details */}
                   {selectedIncident === incident.id && (
-                    <div className="mt-4 pt-4 border-t border-white/10 space-y-3">
+                    <div className="mt-4 pt-4 border-t border-foreground/10 space-y-3">
                       <div className="text-sm">
-                        <span className="text-text-muted">Driver:</span>{' '}
+                        <span className="text-muted-foreground">Driver:</span>{' '}
                         <span className="text-white capitalize">{incident.driver}</span>
                       </div>
                       <div data-tour="resolution-steps">
-                        <span className="text-sm text-text-muted block mb-2">Resolution steps:</span>
+                        <span className="text-sm text-muted-foreground block mb-2">Resolution steps:</span>
                         <div className="space-y-2">
                           {incident.actions.map((a, i) => (
                             <div key={i} className="flex items-center gap-2 text-sm">
                               {a.completedAt ? (
                                 <CheckCircleIcon className="w-4 h-4 text-success" />
                               ) : (
-                                <div className="w-4 h-4 rounded-full border border-white/20" />
+                                <div className="w-4 h-4 rounded-full border border-foreground/20" />
                               )}
-                              <span className={a.completedAt ? 'text-text-muted line-through' : 'text-white'}>
+                              <span className={a.completedAt ? 'text-muted-foreground line-through' : 'text-white'}>
                                 {a.action}
                               </span>
                             </div>
@@ -448,15 +448,15 @@ export default function SignalHub() {
                             e.stopPropagation()
                             setNoteModalOpen(incident.id)
                           }}
-                          className="py-2 px-4 rounded-lg bg-surface-tertiary text-text-secondary text-sm hover:text-white transition-colors"
+                          className="py-2 px-4 rounded-lg bg-surface-tertiary text-muted-foreground text-sm hover:text-white transition-colors"
                         >
                           Add Note
                         </button>
                       </div>
                       {/* Display existing notes */}
                       {incidentNotes[incident.id]?.length > 0 && (
-                        <div className="mt-3 pt-3 border-t border-white/10">
-                          <span className="text-sm text-text-muted block mb-2">Notes:</span>
+                        <div className="mt-3 pt-3 border-t border-foreground/10">
+                          <span className="text-sm text-muted-foreground block mb-2">Notes:</span>
                           <div className="space-y-1">
                             {incidentNotes[incident.id].map((note, idx) => (
                               <div key={idx} className="text-sm text-white bg-surface-tertiary px-3 py-2 rounded">
@@ -477,33 +477,33 @@ export default function SignalHub() {
         {/* Right - Timeline & Metrics */}
         <div className="space-y-6">
           {/* Recovery Metrics */}
-          <div data-tour="recovery-metrics" className="rounded-2xl bg-surface-secondary border border-white/10 p-4">
+          <div data-tour="recovery-metrics" className="rounded-2xl bg-surface-secondary border border-foreground/10 p-4">
             <h3 className="font-semibold text-white mb-4">Recovery Metrics</h3>
             <div className="space-y-4">
               <div>
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="text-text-muted">Avg MTTR</span>
+                  <span className="text-muted-foreground">Avg MTTR</span>
                   <span className="text-white font-medium">2.4 hours</span>
                 </div>
-                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                <div className="h-2 bg-foreground/10 rounded-full overflow-hidden">
                   <div className="h-full w-2/3 bg-success rounded-full" />
                 </div>
               </div>
               <div>
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="text-text-muted">Resolution Rate</span>
+                  <span className="text-muted-foreground">Resolution Rate</span>
                   <span className="text-white font-medium">92%</span>
                 </div>
-                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                <div className="h-2 bg-foreground/10 rounded-full overflow-hidden">
                   <div className="h-full w-[92%] bg-success rounded-full" />
                 </div>
               </div>
               <div>
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="text-text-muted">Repeat Incidents</span>
+                  <span className="text-muted-foreground">Repeat Incidents</span>
                   <span className="text-warning font-medium">15%</span>
                 </div>
-                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                <div className="h-2 bg-foreground/10 rounded-full overflow-hidden">
                   <div className="h-full w-[15%] bg-warning rounded-full" />
                 </div>
               </div>
@@ -518,7 +518,7 @@ export default function SignalHub() {
       {/* Add Note Modal */}
       {noteModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-surface-secondary rounded-xl border border-white/10 p-6 w-full max-w-md mx-4 shadow-xl">
+          <div className="bg-surface-secondary rounded-xl border border-foreground/10 p-6 w-full max-w-md mx-4 shadow-xl">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-white">Add Note</h3>
               <button
@@ -526,16 +526,16 @@ export default function SignalHub() {
                   setNoteModalOpen(null)
                   setNoteInput('')
                 }}
-                className="p-1 rounded-lg hover:bg-white/10 transition-colors"
+                className="p-1 rounded-lg hover:bg-foreground/10 transition-colors"
               >
-                <XMarkIcon className="w-5 h-5 text-text-muted" />
+                <XMarkIcon className="w-5 h-5 text-muted-foreground" />
               </button>
             </div>
             <textarea
               value={noteInput}
               onChange={(e) => setNoteInput(e.target.value)}
               placeholder="Enter your note..."
-              className="w-full h-32 px-3 py-2 rounded-lg bg-surface-tertiary border border-white/10 text-white placeholder:text-text-muted resize-none focus:outline-none focus:ring-2 focus:ring-stratum-500"
+              className="w-full h-32 px-3 py-2 rounded-lg bg-surface-tertiary border border-foreground/10 text-white placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-stratum-500"
               autoFocus
             />
             <div className="flex gap-3 mt-4">
@@ -544,7 +544,7 @@ export default function SignalHub() {
                   setNoteModalOpen(null)
                   setNoteInput('')
                 }}
-                className="flex-1 py-2 rounded-lg bg-surface-tertiary text-text-secondary hover:text-white transition-colors"
+                className="flex-1 py-2 rounded-lg bg-surface-tertiary text-muted-foreground hover:text-white transition-colors"
               >
                 Cancel
               </button>

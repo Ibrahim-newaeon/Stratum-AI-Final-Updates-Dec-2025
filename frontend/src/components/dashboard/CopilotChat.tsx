@@ -222,25 +222,25 @@ export function CopilotChat() {
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b bg-primary text-primary-foreground">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full bg-foreground/20 flex items-center justify-center">
                 <Sparkles className="w-4 h-4" />
               </div>
               <div>
                 <h3 className="text-sm font-bold tracking-tight">AI Copilot</h3>
-                <p className="text-[10px] text-white/70 font-medium">Stratum Intelligence</p>
+                <p className="text-[10px] text-foreground/70 font-medium">Stratum Intelligence</p>
               </div>
             </div>
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setIsOpen(false)}
-                className="p-1.5 rounded-lg hover:bg-white/20 transition-colors"
+                className="p-1.5 rounded-lg hover:bg-foreground/20 transition-colors"
                 aria-label="Minimize"
               >
                 <Minimize2 className="w-4 h-4" />
               </button>
               <button
                 onClick={() => { setIsOpen(false); setMessages([]); setSessionId(undefined); }}
-                className="p-1.5 rounded-lg hover:bg-white/20 transition-colors"
+                className="p-1.5 rounded-lg hover:bg-foreground/20 transition-colors"
                 aria-label="Close"
               >
                 <X className="w-4 h-4" />

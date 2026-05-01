@@ -122,7 +122,7 @@ export default function TenantInsights() {
 
   // Skeleton loader component
   const Skeleton = ({ className = '' }: { className?: string }) => (
-    <div className={cn('animate-pulse bg-white/10 rounded', className)} />
+    <div className={cn('animate-pulse bg-foreground/10 rounded', className)} />
   );
 
   return (
@@ -138,7 +138,7 @@ export default function TenantInsights() {
             <h1 className="text-2xl font-bold">Insights</h1>
             <p className="text-muted-foreground">Performance overview across all platforms</p>
           </div>
-          <div className="flex items-center gap-1 p-1 rounded-lg bg-white/5 border border-white/10">
+          <div className="flex items-center gap-1 p-1 rounded-lg bg-foreground/5 border border-foreground/10">
             {(['7d', '30d', '90d'] as DateRange[]).map((range) => (
               <button
                 key={range}
@@ -220,7 +220,7 @@ export default function TenantInsights() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-white/10">
+                  <tr className="border-b border-foreground/10">
                     {['Platform', 'Status', ...(showPriceMetrics ? ['Spend', 'Revenue', 'ROAS'] : []), 'Campaigns'].map((h) => (
                       <th
                         key={h}
@@ -233,7 +233,7 @@ export default function TenantInsights() {
                 </thead>
                 <tbody>
                   {platformPerformance.map((row) => (
-                    <tr key={row.platform} className="border-b border-white/5 hover:bg-white/5">
+                    <tr key={row.platform} className="border-b border-foreground/5 hover:bg-foreground/5">
                       <td className="py-3 px-3">
                         <span
                           className={cn(
@@ -304,7 +304,7 @@ export default function TenantInsights() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-white/10">
+                  <tr className="border-b border-foreground/10">
                     {['Campaign', 'Platform', 'Status', ...(showPriceMetrics ? ['Spend', 'Revenue', 'ROAS'] : [])].map((h) => (
                       <th
                         key={h}
@@ -317,7 +317,7 @@ export default function TenantInsights() {
                 </thead>
                 <tbody>
                   {topCampaigns.map((c) => (
-                    <tr key={c.id} className="border-b border-white/5 hover:bg-white/5">
+                    <tr key={c.id} className="border-b border-foreground/5 hover:bg-foreground/5">
                       <td className="py-3 px-3 text-sm font-medium">{c.name}</td>
                       <td className="py-3 px-3">
                         <span

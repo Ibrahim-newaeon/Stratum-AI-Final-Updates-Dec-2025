@@ -135,11 +135,11 @@ export default function AIFooter() {
             <div className="flex items-center gap-6">
               {/* Compliance Badges */}
               <div className="flex items-center gap-2 text-xs text-gray-500">
-                <div className="px-2 py-1 rounded border border-white/10 bg-white/[0.02]">
+                <div className="px-2 py-1 rounded border border-foreground/10 bg-white/[0.02]">
                   SOC 2
                 </div>
-                <div className="px-2 py-1 rounded border border-white/10 bg-white/[0.02]">GDPR</div>
-                <div className="px-2 py-1 rounded border border-white/10 bg-white/[0.02]">CCPA</div>
+                <div className="px-2 py-1 rounded border border-foreground/10 bg-white/[0.02]">GDPR</div>
+                <div className="px-2 py-1 rounded border border-foreground/10 bg-white/[0.02]">CCPA</div>
               </div>
             </div>
           </div>

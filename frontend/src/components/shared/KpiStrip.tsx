@@ -96,7 +96,7 @@ function KpiItem({
       {/* Label with confidence */}
       <div className="flex items-center gap-1.5">
         <span className={cn(
-          'text-text-muted',
+          'text-muted-foreground',
           compact ? 'text-xs' : 'text-sm'
         )}>
           {kpi.label}
@@ -115,7 +115,7 @@ function KpiItem({
           {formatValue(kpi)}
         </span>
         {kpi.unit && (
-          <span className="text-sm text-text-muted">{kpi.unit}</span>
+          <span className="text-sm text-muted-foreground">{kpi.unit}</span>
         )}
       </div>
 
@@ -124,11 +124,11 @@ function KpiItem({
         <div className={cn(
           'flex items-center gap-1',
           compact ? 'text-xs' : 'text-sm',
-          isTrendPositive ? 'text-success' : trend === 'flat' ? 'text-text-muted' : 'text-danger'
+          isTrendPositive ? 'text-success' : trend === 'flat' ? 'text-muted-foreground' : 'text-danger'
         )}>
           <TrendIcon className="w-3 h-3" />
           <span>{Math.abs(change).toFixed(1)}%</span>
-          <span className="text-text-muted">vs prev</span>
+          <span className="text-muted-foreground">vs prev</span>
         </div>
       )}
     </div>
@@ -146,13 +146,13 @@ export function KpiStrip({
 
   return (
     <div className={cn(
-      'rounded-xl bg-surface-secondary border border-white/10',
+      'rounded-xl bg-surface-secondary border border-foreground/10',
       className
     )}>
       {/* Header with EMQ stamp */}
       {band && (
         <div className={cn(
-          'flex items-center justify-between px-4 py-2 border-b border-white/10',
+          'flex items-center justify-between px-4 py-2 border-b border-foreground/10',
           band === 'reliable' && 'bg-success/5',
           band === 'directional' && 'bg-warning/5',
           band === 'unsafe' && 'bg-danger/5',

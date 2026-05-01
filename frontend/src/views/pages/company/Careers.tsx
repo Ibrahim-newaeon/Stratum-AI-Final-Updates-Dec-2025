@@ -186,7 +186,7 @@ export default function Careers() {
                     </div>
                   </div>
                   <button
-                    className="px-6 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-white/10"
+                    className="px-6 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-foreground/10"
                     style={{
                       background: 'var(--landing-surface-glass)',
                       border: '1px solid rgba(255, 255, 255, 0.2)',

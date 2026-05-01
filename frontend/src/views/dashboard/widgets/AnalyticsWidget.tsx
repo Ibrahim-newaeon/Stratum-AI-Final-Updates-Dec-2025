@@ -70,7 +70,7 @@ export function AnalyticsWidget() {
                     <span className="text-xs font-medium text-foreground">{step.step}</span>
                     <span className="text-xs text-muted-foreground">{step.count.toLocaleString()}</span>
                   </div>
-                  <div className="h-6 bg-white/5 rounded-md overflow-hidden">
+                  <div className="h-6 bg-foreground/5 rounded-md overflow-hidden">
                     <div
                       className={cn(
                         'h-full rounded-md transition-all flex items-center px-2',
@@ -78,7 +78,7 @@ export function AnalyticsWidget() {
                       )}
                       style={{ width: `${(step.count / MOCK_FUNNEL[0].count) * 100}%` }}
                     >
-                      <span className="text-[10px] font-bold text-white/90">{step.rate}%</span>
+                      <span className="text-[10px] font-bold text-foreground/90">{step.rate}%</span>
                     </div>
                   </div>
                   {i > 0 && (

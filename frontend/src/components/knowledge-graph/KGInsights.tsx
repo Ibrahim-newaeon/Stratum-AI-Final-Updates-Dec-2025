@@ -131,7 +131,7 @@ function HealthScoreRing({ score, status }: { score: number; status: string }) {
           stroke="currentColor"
           strokeWidth="8"
           fill="none"
-          className="text-white/10"
+          className="text-foreground/10"
         />
         <circle
           cx="64"
@@ -169,7 +169,7 @@ function ProblemCard({ problem, isExpanded, onToggle }: {
       {/* Header */}
       <button
         onClick={onToggle}
-        className="w-full p-4 flex items-start gap-4 text-left hover:bg-white/5 transition-colors"
+        className="w-full p-4 flex items-start gap-4 text-left hover:bg-foreground/5 transition-colors"
       >
         <div className={`p-2 rounded-lg ${config.bg} ${config.color}`}>
           <SeverityIcon className="w-5 h-5" />
@@ -203,7 +203,7 @@ function ProblemCard({ problem, isExpanded, onToggle }: {
 
       {/* Expanded Content */}
       {isExpanded && (
-        <div className="border-t border-white/10 p-4 space-y-4">
+        <div className="border-t border-foreground/10 p-4 space-y-4">
           {/* Root Cause Path */}
           {problem.root_cause_path.length > 0 && (
             <div>
@@ -214,7 +214,7 @@ function ProblemCard({ problem, isExpanded, onToggle }: {
               <div className="space-y-2">
                 {problem.root_cause_path.map((cause, idx) => (
                   <div key={idx} className="flex items-start gap-2 text-sm">
-                    <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-xs text-gray-400">
+                    <div className="w-6 h-6 rounded-full bg-foreground/10 flex items-center justify-center text-xs text-gray-400">
                       {idx + 1}
                     </div>
                     <div>
@@ -240,7 +240,7 @@ function ProblemCard({ problem, isExpanded, onToggle }: {
               </h4>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {Object.entries(problem.metrics).slice(0, 6).map(([key, value]) => (
-                  <div key={key} className="bg-white/5 rounded-lg p-2">
+                  <div key={key} className="bg-foreground/5 rounded-lg p-2">
                     <div className="text-xs text-gray-500 truncate">
                       {key.replace(/_/g, ' ')}
                     </div>
@@ -285,7 +285,7 @@ function SolutionCard({ solution, priority }: { solution: Solution; priority: nu
   };
 
   return (
-    <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+    <div className="bg-foreground/5 rounded-lg p-4 border border-foreground/10">
       <div className="flex items-start gap-3">
         <div className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center text-xs font-bold text-amber-400">
           {priority}
@@ -387,17 +387,17 @@ export function KGInsights() {
         <button
           onClick={handleRefresh}
           aria-label="Refresh insights"
-          className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+          className="p-2 rounded-lg bg-foreground/5 hover:bg-foreground/10 text-gray-400 hover:text-white transition-colors"
         >
           <RefreshCw className="w-5 h-5" />
         </button>
       </div>
 
       {/* Health Summary Card */}
-      <div className="bg-[rgba(255,_255,_255,_0.05)] rounded-xl border border-white/10 p-6">
+      <div className="bg-[rgba(255,_255,_255,_0.05)] rounded-xl border border-foreground/10 p-6">
         <div className="flex items-center gap-8">
           {healthLoading ? (
-            <div className="w-32 h-32 rounded-full bg-white/5 animate-pulse" />
+            <div className="w-32 h-32 rounded-full bg-foreground/5 animate-pulse" />
           ) : health ? (
             <HealthScoreRing score={health.health_score} status={health.status} />
           ) : null}
@@ -414,7 +414,7 @@ export function KGInsights() {
                     className={`p-3 rounded-lg border transition-colors ${
                       severityFilter === severity
                         ? `${config?.border} ${config?.bg}`
-                        : 'border-white/10 bg-white/5 hover:bg-white/10'
+                        : 'border-foreground/10 bg-foreground/5 hover:bg-foreground/10'
                     }`}
                   >
                     <div className={`text-2xl font-bold ${config?.color || 'text-white'}`}>
@@ -429,7 +429,7 @@ export function KGInsights() {
 
           {/* Top Problem Preview */}
           {health?.top_problem && (
-            <div className="w-80 bg-white/5 rounded-lg p-4 border border-white/10">
+            <div className="w-80 bg-foreground/5 rounded-lg p-4 border border-foreground/10">
               <div className="text-xs text-gray-500 mb-2">Top Priority</div>
               <div className="flex items-start gap-2">
                 <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5" />
@@ -468,11 +468,11 @@ export function KGInsights() {
         {problemsLoading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-24 bg-white/5 rounded-xl animate-pulse" />
+              <div key={i} className="h-24 bg-foreground/5 rounded-xl animate-pulse" />
             ))}
           </div>
         ) : problems.length === 0 ? (
-          <div className="text-center py-12 bg-[rgba(255,_255,_255,_0.05)] rounded-xl border border-white/10">
+          <div className="text-center py-12 bg-[rgba(255,_255,_255,_0.05)] rounded-xl border border-foreground/10">
             <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-white mb-2">All Systems Healthy</h3>
             <p className="text-gray-400">No problems detected in the last 7 days.</p>

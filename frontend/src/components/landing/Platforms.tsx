@@ -8,10 +8,10 @@ export function Platforms() {
   ];
 
   return (
-    <section className="py-24 bg-surface-secondary border-y border-white/5">
+    <section className="py-24 bg-surface-secondary border-y border-foreground/5">
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-12">
-          <p className="text-meta text-text-muted uppercase tracking-wider mb-4">
+          <p className="text-meta text-muted-foreground uppercase tracking-wider mb-4">
             Unified Across Your Entire Ad Stack
           </p>
           <h2 className="text-h2 text-white">
@@ -31,7 +31,7 @@ export function Platforms() {
               >
                 <platform.icon className="w-8 h-8" style={{ color: platform.color }} />
               </div>
-              <span className="text-meta text-text-secondary group-hover:text-white transition-colors">
+              <span className="text-meta text-muted-foreground group-hover:text-white transition-colors">
                 {platform.name}
               </span>
             </div>
@@ -39,17 +39,17 @@ export function Platforms() {
         </div>
 
         <div className="mt-16 flex items-center justify-center gap-8 text-center">
-          <div className="px-8 py-4 border-r border-white/10">
+          <div className="px-8 py-4 border-r border-foreground/10">
             <div className="text-h2 text-white font-bold">4B+</div>
-            <div className="text-meta text-text-muted">Events Processed</div>
+            <div className="text-meta text-muted-foreground">Events Processed</div>
           </div>
-          <div className="px-8 py-4 border-r border-white/10">
+          <div className="px-8 py-4 border-r border-foreground/10">
             <div className="text-h2 text-white font-bold">$2.1B</div>
-            <div className="text-meta text-text-muted">Ad Spend Managed</div>
+            <div className="text-meta text-muted-foreground">Ad Spend Managed</div>
           </div>
           <div className="px-8 py-4">
             <div className="text-h2 text-white font-bold">99.9%</div>
-            <div className="text-meta text-text-muted">Uptime SLA</div>
+            <div className="text-meta text-muted-foreground">Uptime SLA</div>
           </div>
         </div>
       </div>

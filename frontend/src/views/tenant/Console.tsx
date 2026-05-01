@@ -159,14 +159,14 @@ export default function Console() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-2xl font-bold text-white">Daily Console</h1>
-            <p className="text-text-muted">Optimize fast, but safely</p>
+            <p className="text-muted-foreground">Optimize fast, but safely</p>
           </div>
           <div className="flex items-center gap-4">
             {/* EMQ Score */}
-            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-secondary border border-white/10">
+            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-secondary border border-foreground/10">
               <span className="text-2xl font-bold text-white">{emqScore}</span>
               <div className="flex flex-col">
-                <span className="text-xs text-text-muted">EMQ</span>
+                <span className="text-xs text-muted-foreground">EMQ</span>
                 <ConfidenceBandBadge score={emqScore} size="sm" />
               </div>
             </div>
@@ -203,7 +203,7 @@ export default function Console() {
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex items-center gap-2 border-b border-white/10 pb-4">
+      <div className="flex items-center gap-2 border-b border-foreground/10 pb-4">
         {tabs.map((tab) => {
           const Icon = tab.icon
           return (
@@ -214,7 +214,7 @@ export default function Console() {
                 'flex items-center gap-2 px-4 py-2 rounded-lg transition-colors',
                 activeTab === tab.id
                   ? 'bg-stratum-500/10 text-stratum-400'
-                  : 'text-text-muted hover:text-white hover:bg-white/5'
+                  : 'text-muted-foreground hover:text-white hover:bg-foreground/5'
               )}
             >
               {Icon && <Icon className="w-4 h-4" />}
@@ -250,7 +250,7 @@ export default function Console() {
               <CheckCircleIcon className="w-8 h-8 text-success" />
             </div>
             <h3 className="text-lg font-semibold text-white mb-2">All caught up!</h3>
-            <p className="text-text-muted">
+            <p className="text-muted-foreground">
               No pending actions in this category. Check back later.
             </p>
           </div>
@@ -259,7 +259,7 @@ export default function Console() {
 
       {/* Applied/Dismissed Summary */}
       {(appliedActions.size > 0 || dismissedActions.size > 0) && (
-        <div className="flex items-center gap-4 pt-4 border-t border-white/10">
+        <div className="flex items-center gap-4 pt-4 border-t border-foreground/10">
           {appliedActions.size > 0 && (
             <div className="flex items-center gap-2 text-success text-sm">
               <CheckCircleIcon className="w-4 h-4" />
@@ -267,7 +267,7 @@ export default function Console() {
             </div>
           )}
           {dismissedActions.size > 0 && (
-            <div className="flex items-center gap-2 text-text-muted text-sm">
+            <div className="flex items-center gap-2 text-muted-foreground text-sm">
               <XMarkIcon className="w-4 h-4" />
               {dismissedActions.size} dismissed
             </div>

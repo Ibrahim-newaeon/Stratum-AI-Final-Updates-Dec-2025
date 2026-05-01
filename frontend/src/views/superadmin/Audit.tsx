@@ -219,7 +219,7 @@ export default function Audit() {
   const getSeverityColor = (severity: LogSeverity) => {
     switch (severity) {
       case 'info':
-        return 'text-text-muted bg-surface-tertiary'
+        return 'text-muted-foreground bg-surface-tertiary'
       case 'warning':
         return 'text-warning bg-warning/10'
       case 'error':
@@ -322,7 +322,7 @@ export default function Audit() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Audit Logs</h1>
-          <p className="text-text-muted">System-wide activity and security logs</p>
+          <p className="text-muted-foreground">System-wide activity and security logs</p>
         </div>
         <div className="flex items-center gap-3">
           {exportFeedback && (
@@ -335,7 +335,7 @@ export default function Audit() {
           )}
           <button
             onClick={handleExport}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-secondary border border-white/10 text-text-secondary hover:text-white transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-secondary border border-foreground/10 text-muted-foreground hover:text-white transition-colors"
           >
             <ArrowDownTrayIcon className="w-4 h-4" />
             Export
@@ -345,20 +345,20 @@ export default function Audit() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
-          <div className="text-text-muted text-sm mb-1">Total Events</div>
+        <div className="p-4 rounded-xl bg-surface-secondary border border-foreground/10">
+          <div className="text-muted-foreground text-sm mb-1">Total Events</div>
           <div className="text-2xl font-bold text-white">{stats.total}</div>
         </div>
-        <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
-          <div className="text-text-muted text-sm mb-1">Warnings</div>
+        <div className="p-4 rounded-xl bg-surface-secondary border border-foreground/10">
+          <div className="text-muted-foreground text-sm mb-1">Warnings</div>
           <div className="text-2xl font-bold text-warning">{stats.warnings}</div>
         </div>
-        <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
-          <div className="text-text-muted text-sm mb-1">Errors</div>
+        <div className="p-4 rounded-xl bg-surface-secondary border border-foreground/10">
+          <div className="text-muted-foreground text-sm mb-1">Errors</div>
           <div className="text-2xl font-bold text-danger">{stats.errors}</div>
         </div>
-        <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
-          <div className="text-text-muted text-sm mb-1">Critical</div>
+        <div className="p-4 rounded-xl bg-surface-secondary border border-foreground/10">
+          <div className="text-muted-foreground text-sm mb-1">Critical</div>
           <div className="text-2xl font-bold text-danger">{stats.critical}</div>
         </div>
       </div>
@@ -367,13 +367,13 @@ export default function Audit() {
       <div className="flex flex-wrap items-center gap-4">
         {/* Search */}
         <div className="relative flex-1 min-w-0 sm:min-w-[200px] max-w-md">
-          <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted" />
+          <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <input
             type="text"
             placeholder="Search logs..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-lg bg-surface-secondary border border-white/10 text-white placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-stratum-500"
+            className="w-full pl-10 pr-4 py-2 rounded-lg bg-surface-secondary border border-foreground/10 text-white placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-stratum-500"
           />
         </div>
 
@@ -383,24 +383,24 @@ export default function Audit() {
             type="date"
             value={dateRange.start}
             onChange={(e) => setDateRange((d) => ({ ...d, start: e.target.value }))}
-            className="px-3 py-2 rounded-lg bg-surface-secondary border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-stratum-500"
+            className="px-3 py-2 rounded-lg bg-surface-secondary border border-foreground/10 text-white focus:outline-none focus:ring-2 focus:ring-stratum-500"
           />
-          <span className="text-text-muted">to</span>
+          <span className="text-muted-foreground">to</span>
           <input
             type="date"
             value={dateRange.end}
             onChange={(e) => setDateRange((d) => ({ ...d, end: e.target.value }))}
-            className="px-3 py-2 rounded-lg bg-surface-secondary border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-stratum-500"
+            className="px-3 py-2 rounded-lg bg-surface-secondary border border-foreground/10 text-white focus:outline-none focus:ring-2 focus:ring-stratum-500"
           />
         </div>
 
         {/* Category Filter */}
         <div className="flex items-center gap-2">
-          <FunnelIcon className="w-4 h-4 text-text-muted" />
+          <FunnelIcon className="w-4 h-4 text-muted-foreground" />
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value as LogCategory)}
-            className="px-3 py-2 rounded-lg bg-surface-secondary border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-stratum-500"
+            className="px-3 py-2 rounded-lg bg-surface-secondary border border-foreground/10 text-white focus:outline-none focus:ring-2 focus:ring-stratum-500"
           >
             <option value="all">All Categories</option>
             <option value="user">User Actions</option>
@@ -414,7 +414,7 @@ export default function Audit() {
         <select
           value={severityFilter}
           onChange={(e) => setSeverityFilter(e.target.value as LogSeverity | 'all')}
-          className="px-3 py-2 rounded-lg bg-surface-secondary border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-stratum-500"
+          className="px-3 py-2 rounded-lg bg-surface-secondary border border-foreground/10 text-white focus:outline-none focus:ring-2 focus:ring-stratum-500"
         >
           <option value="all">All Severities</option>
           <option value="info">Info</option>
@@ -425,15 +425,15 @@ export default function Audit() {
       </div>
 
       {/* Logs List */}
-      <div className="rounded-2xl bg-surface-secondary border border-white/10 overflow-hidden">
+      <div className="rounded-2xl bg-surface-secondary border border-foreground/10 overflow-hidden">
         {isLoading ? (
-          <div className="p-8 text-center text-text-muted">Loading audit logs...</div>
+          <div className="p-8 text-center text-muted-foreground">Loading audit logs...</div>
         ) : filteredLogs.length === 0 ? (
-          <div className="p-8 text-center text-text-muted">No logs found matching your filters.</div>
+          <div className="p-8 text-center text-muted-foreground">No logs found matching your filters.</div>
         ) : (
-          <div className="divide-y divide-white/5">
+          <div className="divide-y divide-foreground/5">
             {paginatedLogs.map((log) => (
-              <div key={log.id} className="hover:bg-white/5 transition-colors">
+              <div key={log.id} className="hover:bg-foreground/5 transition-colors">
                 <button
                   onClick={() => setExpandedLog(expandedLog === log.id ? null : log.id)}
                   className="w-full p-4 text-left"
@@ -445,7 +445,7 @@ export default function Audit() {
                         'p-2 rounded-lg',
                         log.category === 'security'
                           ? 'bg-warning/10 text-warning'
-                          : 'bg-surface-tertiary text-text-muted'
+                          : 'bg-surface-tertiary text-muted-foreground'
                       )}
                     >
                       {getCategoryIcon(log.category)}
@@ -465,7 +465,7 @@ export default function Audit() {
                         </span>
                       </div>
                       <p className="text-white">{log.description}</p>
-                      <div className="flex items-center gap-4 mt-2 text-sm text-text-muted">
+                      <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <UserIcon className="w-3 h-3" />
                           {log.actor.name}
@@ -483,7 +483,7 @@ export default function Audit() {
                     </div>
 
                     {/* Expand Icon */}
-                    <div className="text-text-muted">
+                    <div className="text-muted-foreground">
                       {expandedLog === log.id ? (
                         <ChevronUpIcon className="w-5 h-5" />
                       ) : (
@@ -499,30 +499,30 @@ export default function Audit() {
                     <div className="p-4 rounded-lg bg-surface-tertiary space-y-3">
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
-                          <span className="text-text-muted">Timestamp:</span>
+                          <span className="text-muted-foreground">Timestamp:</span>
                           <span className="text-white ml-2">
                             {log.timestamp.toLocaleString()}
                           </span>
                         </div>
                         {log.ipAddress && (
                           <div>
-                            <span className="text-text-muted">IP Address:</span>
+                            <span className="text-muted-foreground">IP Address:</span>
                             <span className="text-white ml-2 font-mono">{log.ipAddress}</span>
                           </div>
                         )}
                         <div>
-                          <span className="text-text-muted">Actor Type:</span>
+                          <span className="text-muted-foreground">Actor Type:</span>
                           <span className="text-white ml-2 capitalize">{log.actor.type}</span>
                         </div>
                         <div>
-                          <span className="text-text-muted">Actor ID:</span>
+                          <span className="text-muted-foreground">Actor ID:</span>
                           <span className="text-white ml-2 font-mono">{log.actor.id}</span>
                         </div>
                       </div>
 
                       {log.userAgent && (
                         <div className="text-sm">
-                          <span className="text-text-muted">User Agent:</span>
+                          <span className="text-muted-foreground">User Agent:</span>
                           <p className="text-white font-mono text-xs mt-1 break-all">
                             {log.userAgent}
                           </p>
@@ -531,7 +531,7 @@ export default function Audit() {
 
                       {Object.keys(log.metadata).length > 0 && (
                         <div className="text-sm">
-                          <span className="text-text-muted">Metadata:</span>
+                          <span className="text-muted-foreground">Metadata:</span>
                           <pre className="text-white font-mono text-xs mt-1 p-2 rounded bg-surface-primary overflow-x-auto">
                             {JSON.stringify(log.metadata, null, 2)}
                           </pre>
@@ -547,7 +547,7 @@ export default function Audit() {
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between text-sm text-text-muted">
+      <div className="flex items-center justify-between text-sm text-muted-foreground">
         <span>
           Showing {paginatedLogs.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}-
           {Math.min(currentPage * itemsPerPage, filteredLogs.length)} of {filteredLogs.length} logs

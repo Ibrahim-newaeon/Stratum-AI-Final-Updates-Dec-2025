@@ -104,7 +104,7 @@ export default function CMSLogin() {
 
           {/* Feature cards */}
           <div className="space-y-4">
-            <div className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10">
+            <div className="flex items-center gap-4 p-4 rounded-xl bg-foreground/5 border border-foreground/10">
               <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
                 <DocumentTextIcon className="w-5 h-5 text-purple-400" />
               </div>
@@ -113,7 +113,7 @@ export default function CMSLogin() {
                 <div className="text-sm text-foreground/50">Create, edit, and publish blog posts</div>
               </div>
             </div>
-            <div className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10">
+            <div className="flex items-center gap-4 p-4 rounded-xl bg-foreground/5 border border-foreground/10">
               <div className="w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center">
                 <PhotoIcon className="w-5 h-5 text-cyan-400" />
               </div>
@@ -122,7 +122,7 @@ export default function CMSLogin() {
                 <div className="text-sm text-foreground/50">Manage features, FAQ, and pricing</div>
               </div>
             </div>
-            <div className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10">
+            <div className="flex items-center gap-4 p-4 rounded-xl bg-foreground/5 border border-foreground/10">
               <div className="w-10 h-10 rounded-lg bg-orange-500/20 flex items-center justify-center">
                 <TagIcon className="w-5 h-5 text-orange-400" />
               </div>
@@ -182,7 +182,7 @@ export default function CMSLogin() {
                 placeholder="admin@stratum.ai"
                 required
                 autoComplete="email"
-                className="bg-white/5 border-white/10 text-foreground placeholder:text-foreground/30 focus:border-purple-500 focus:ring-purple-500/20"
+                className="bg-foreground/5 border-foreground/10 text-foreground placeholder:text-foreground/30 focus:border-purple-500 focus:ring-purple-500/20"
               />
             </div>
 
@@ -199,7 +199,7 @@ export default function CMSLogin() {
                   placeholder="Enter your password"
                   required
                   autoComplete="current-password"
-                  className="bg-white/5 border-white/10 text-foreground placeholder:text-foreground/30 focus:border-purple-500 focus:ring-purple-500/20 pr-10"
+                  className="bg-foreground/5 border-foreground/10 text-foreground placeholder:text-foreground/30 focus:border-purple-500 focus:ring-purple-500/20 pr-10"
                 />
                 <button
                   type="button"
@@ -255,7 +255,7 @@ export default function CMSLogin() {
                 Contact your administrator
               </a>
             </p>
-            <div className="pt-4 border-t border-white/10">
+            <div className="pt-4 border-t border-foreground/10">
               <Link to="/login" className="text-sm text-foreground/60 hover:text-foreground">
                 Back to main login
               </Link>

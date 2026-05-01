@@ -184,7 +184,7 @@ export default function Features() {
             </Link>
             <Link
               to="/pricing"
-              className="px-8 py-4 rounded-xl text-lg font-semibold text-white transition-colors hover:bg-white/10"
+              className="px-8 py-4 rounded-xl text-lg font-semibold text-white transition-colors hover:bg-foreground/10"
               style={{
                 background: 'var(--landing-surface-glass)',
                 border: '1px solid rgba(255, 255, 255, 0.2)',

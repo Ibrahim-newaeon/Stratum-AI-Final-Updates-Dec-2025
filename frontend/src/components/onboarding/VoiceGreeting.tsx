@@ -179,7 +179,7 @@ export default function VoiceGreeting({
           )}
           dir={language === 'ar' ? 'rtl' : 'ltr'}
         >
-          <div className="relative max-w-sm bg-[#0b1215] border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
+          <div className="relative max-w-sm bg-[#0b1215] border border-foreground/10 rounded-2xl shadow-2xl overflow-hidden">
             {/* Gradient top border */}
             <div className="absolute top-0 left-0 right-0 h-1 bg-primary" />
 
@@ -187,7 +187,7 @@ export default function VoiceGreeting({
             <button
               onClick={handleDismiss}
               aria-label="Dismiss"
-              className="absolute top-3 right-3 p-1.5 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors z-10"
+              className="absolute top-3 right-3 p-1.5 rounded-full bg-foreground/5 hover:bg-foreground/10 text-gray-400 hover:text-white transition-colors z-10"
             >
               <XMarkIcon className="w-4 h-4" />
             </button>
@@ -263,7 +263,7 @@ export default function VoiceGreeting({
                 </button>
                 <button
                   onClick={handleDismiss}
-                  className="py-3 px-4 bg-white/5 text-gray-400 font-medium rounded-xl hover:bg-white/10 hover:text-white transition-colors"
+                  className="py-3 px-4 bg-foreground/5 text-gray-400 font-medium rounded-xl hover:bg-foreground/10 hover:text-white transition-colors"
                 >
                   {texts.dismissText}
                 </button>

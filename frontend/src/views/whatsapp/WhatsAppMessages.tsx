@@ -153,7 +153,7 @@ export default function WhatsAppMessages() {
             placeholder="Search by name, phone, or content..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-muted/50 border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
+            className="w-full pl-10 pr-4 py-3 bg-muted/50 border border-foreground/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
           />
         </div>
         <button
@@ -162,7 +162,7 @@ export default function WhatsAppMessages() {
             'flex items-center gap-2 px-4 py-3 rounded-xl border transition-colors',
             showFilters
               ? 'bg-[#25D366]/10 border-[#25D366]/30 text-[#25D366]'
-              : 'bg-muted/50 border-white/10 text-gray-400 hover:text-foreground'
+              : 'bg-muted/50 border-foreground/10 text-gray-400 hover:text-foreground'
           )}
         >
           <FunnelIcon className="w-5 h-5" />
@@ -171,7 +171,7 @@ export default function WhatsAppMessages() {
         <button
           onClick={fetchMessages}
           disabled={loading}
-          className="flex items-center gap-2 px-4 py-3 bg-muted/50 border border-white/10 rounded-xl text-gray-400 hover:text-foreground transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-3 bg-muted/50 border border-foreground/10 rounded-xl text-gray-400 hover:text-foreground transition-colors disabled:opacity-50"
         >
           <ArrowPathIcon className={cn('w-5 h-5', loading && 'animate-spin')} />
           Refresh
@@ -184,7 +184,7 @@ export default function WhatsAppMessages() {
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           exit={{ opacity: 0, height: 0 }}
-          className="flex flex-wrap gap-4 p-4 bg-muted/50 rounded-xl border border-white/5"
+          className="flex flex-wrap gap-4 p-4 bg-muted/50 rounded-xl border border-foreground/5"
         >
           <div>
             <label className="block text-sm text-gray-400 mb-2">Status</label>
@@ -230,8 +230,8 @@ export default function WhatsAppMessages() {
       )}
 
       {/* Messages List */}
-      <div className="bg-muted/50 rounded-2xl border border-white/5 overflow-hidden">
-        <div className="divide-y divide-white/5">
+      <div className="bg-muted/50 rounded-2xl border border-foreground/5 overflow-hidden">
+        <div className="divide-y divide-foreground/5">
           {paginatedMessages.map((message) => {
             const status = statusConfig[message.status];
             const StatusIcon = status.icon;
@@ -317,7 +317,7 @@ export default function WhatsAppMessages() {
         </div>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between p-4 border-t border-white/5">
+        <div className="flex items-center justify-between p-4 border-t border-foreground/5">
           <span className="text-sm text-gray-400">
             Showing {(currentPage - 1) * pageSize + 1}-
             {Math.min(currentPage * pageSize, filteredMessages.length)} of {filteredMessages.length}
@@ -354,7 +354,7 @@ function MiniStat({
   color?: string;
 }) {
   return (
-    <div className="bg-muted/50 rounded-xl border border-white/5 p-3 text-center">
+    <div className="bg-muted/50 rounded-xl border border-foreground/5 p-3 text-center">
       <div className={cn('text-xl font-bold', color)}>{value}</div>
       <div className="text-xs text-gray-500">{label}</div>
     </div>

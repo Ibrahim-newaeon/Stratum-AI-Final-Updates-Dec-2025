@@ -289,7 +289,7 @@ export function OnboardingChecklist({
                     'flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors',
                     item.completed
                       ? 'bg-green-500/10 text-green-600'
-                      : 'bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-foreground'
+                      : 'bg-foreground/5 hover:bg-foreground/10 text-muted-foreground hover:text-foreground'
                   )}
                 >
                   {item.completed ? (

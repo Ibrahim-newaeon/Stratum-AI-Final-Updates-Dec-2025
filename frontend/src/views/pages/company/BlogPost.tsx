@@ -33,11 +33,11 @@ export default function BlogPost() {
         <div className="py-20 px-6">
           <div className="max-w-4xl mx-auto">
             <div className="animate-pulse">
-              <div className="h-8 bg-white/10 rounded w-3/4 mb-4" />
-              <div className="h-4 bg-white/10 rounded w-1/2 mb-8" />
+              <div className="h-8 bg-foreground/10 rounded w-3/4 mb-4" />
+              <div className="h-4 bg-foreground/10 rounded w-1/2 mb-8" />
               <div className="space-y-4">
                 {[...Array(8)].map((_, i) => (
-                  <div key={i} className="h-4 bg-white/10 rounded w-full" />
+                  <div key={i} className="h-4 bg-foreground/10 rounded w-full" />
                 ))}
               </div>
             </div>
@@ -284,7 +284,7 @@ export default function BlogPost() {
               </Link>
               <Link
                 to="/contact"
-                className="px-6 py-3 rounded-xl font-semibold transition-colors hover:bg-white/10"
+                className="px-6 py-3 rounded-xl font-semibold transition-colors hover:bg-foreground/10"
                 style={{
                   background: 'var(--landing-surface-glass)',
                   border: '1px solid rgba(255, 255, 255, 0.2)',

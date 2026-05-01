@@ -128,7 +128,7 @@ const AssetGridCard = memo(function AssetGridCard({
             type="checkbox"
             checked={isSelected}
             onChange={() => onToggleSelect(asset.id)}
-            className="rounded border-white/50 bg-black/30"
+            className="rounded border-foreground/50 bg-black/30"
           />
         </div>
         <div className="absolute top-2 right-2">

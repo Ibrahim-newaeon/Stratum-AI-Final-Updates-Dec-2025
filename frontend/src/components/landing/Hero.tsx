@@ -25,7 +25,7 @@ export function Hero() {
 
         {/* Main headline */}
         <h1
-          className="text-display-sm md:text-display text-text-primary leading-tight mb-6 animate-enter"
+          className="text-display-sm md:text-display text-foreground leading-tight mb-6 animate-enter"
           style={{ animationDelay: '0.1s' }}
         >
           Your AI Partner for{' '}
@@ -34,7 +34,7 @@ export function Hero() {
 
         {/* Subheadline */}
         <p
-          className="text-h2 md:text-h1 text-text-secondary mb-4 animate-enter"
+          className="text-h2 md:text-h1 text-muted-foreground mb-4 animate-enter"
           style={{ animationDelay: '0.2s' }}
         >
           We optimize together. You stay in control.
@@ -42,7 +42,7 @@ export function Hero() {
 
         {/* Description */}
         <p
-          className="max-w-2xl mx-auto text-body text-text-muted mb-12 animate-enter"
+          className="max-w-2xl mx-auto text-body text-muted-foreground mb-12 animate-enter"
           style={{ animationDelay: '0.3s' }}
         >
           Stratum AI partners with your growth team to unify ad operations across
@@ -63,7 +63,7 @@ export function Hero() {
             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
           </button>
 
-          <button className="group inline-flex items-center gap-2 px-8 py-4 rounded-xl border border-border bg-card text-text-primary font-medium text-body hover:bg-white/5 hover:border-border/80 transition-colors duration-200">
+          <button className="group inline-flex items-center gap-2 px-8 py-4 rounded-xl border border-border bg-card text-foreground font-medium text-body hover:bg-foreground/5 hover:border-border/80 transition-colors duration-200">
             <Play className="w-5 h-5 text-secondary" />
             See How We Partner
           </button>
@@ -87,7 +87,7 @@ export function Hero() {
                     <div className="w-3 h-3 rounded-full bg-success/60" />
                   </div>
                   <div className="flex-1 flex justify-center">
-                    <div className="px-4 py-1 rounded-md bg-background text-meta text-text-muted">
+                    <div className="px-4 py-1 rounded-md bg-background text-meta text-muted-foreground">
                       app.stratum.ai
                     </div>
                   </div>
@@ -127,10 +127,10 @@ export function Hero() {
                         key={i}
                         className="bg-card rounded-lg p-4 border border-border"
                       >
-                        <div className="text-meta text-text-muted mb-1">
+                        <div className="text-meta text-muted-foreground mb-1">
                           {kpi.label}
                         </div>
-                        <div className="text-h3 text-text-primary font-semibold">
+                        <div className="text-h3 text-foreground font-semibold">
                           {kpi.value}
                         </div>
                         <div

@@ -57,8 +57,8 @@ export default function PortalLayout() {
                 <span className="text-white font-bold text-sm">S</span>
               </div>
               <div>
-                <h1 className="text-sm font-semibold text-white/90">Client Portal</h1>
-                <p className="text-xs text-white/40">{user?.organization || 'Portal'}</p>
+                <h1 className="text-sm font-semibold text-foreground/90">Client Portal</h1>
+                <p className="text-xs text-foreground/40">{user?.organization || 'Portal'}</p>
               </div>
             </div>
 
@@ -75,8 +75,8 @@ export default function PortalLayout() {
                     className={cn(
                       'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                       isActive
-                        ? 'bg-white/10 text-white'
-                        : 'text-white/50 hover:text-white/80 hover:bg-white/5'
+                        ? 'bg-foreground/10 text-white'
+                        : 'text-foreground/50 hover:text-foreground/80 hover:bg-foreground/5'
                     )}
                   >
                     <item.icon className="w-4 h-4" />
@@ -89,13 +89,13 @@ export default function PortalLayout() {
             {/* Right Side */}
             <div className="flex items-center gap-3">
               {/* Notifications */}
-              <button aria-label="Notifications" className="p-2 rounded-lg hover:bg-white/5 transition-colors relative">
-                <BellIcon className="w-5 h-5 text-white/50" />
+              <button aria-label="Notifications" className="p-2 rounded-lg hover:bg-foreground/5 transition-colors relative">
+                <BellIcon className="w-5 h-5 text-foreground/50" />
               </button>
 
               {/* User */}
               <div className="hidden md:flex items-center gap-2">
-                <span className="text-sm text-white/60">{user?.name}</span>
+                <span className="text-sm text-foreground/60">{user?.name}</span>
                 <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
                   <span className="text-white text-xs font-medium">{userInitials}</span>
                 </div>
@@ -113,12 +113,12 @@ export default function PortalLayout() {
               {/* Mobile menu toggle */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden p-2 rounded-lg hover:bg-white/5"
+                className="md:hidden p-2 rounded-lg hover:bg-foreground/5"
               >
                 {mobileMenuOpen ? (
-                  <XMarkIcon className="w-6 h-6 text-white/70" />
+                  <XMarkIcon className="w-6 h-6 text-foreground/70" />
                 ) : (
-                  <Bars3Icon className="w-6 h-6 text-white/70" />
+                  <Bars3Icon className="w-6 h-6 text-foreground/70" />
                 )}
               </button>
             </div>
@@ -126,7 +126,7 @@ export default function PortalLayout() {
 
           {/* Mobile Navigation */}
           {mobileMenuOpen && (
-            <div className="md:hidden py-3 border-t border-white/5 space-y-1">
+            <div className="md:hidden py-3 border-t border-foreground/5 space-y-1">
               {portalNavItems.map((item) => {
                 const isActive = item.end
                   ? location.pathname === item.href
@@ -139,8 +139,8 @@ export default function PortalLayout() {
                     className={cn(
                       'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
                       isActive
-                        ? 'bg-white/10 text-white'
-                        : 'text-white/50 hover:text-white/80 hover:bg-white/5'
+                        ? 'bg-foreground/10 text-white'
+                        : 'text-foreground/50 hover:text-foreground/80 hover:bg-foreground/5'
                     )}
                   >
                     <item.icon className="w-5 h-5" />

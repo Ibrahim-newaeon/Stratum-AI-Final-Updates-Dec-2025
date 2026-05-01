@@ -119,7 +119,7 @@ export default function TenantAuditLog() {
           <button
             onClick={() => exportMutation.mutate({})}
             disabled={exportMutation.isPending}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 hover:bg-white/5 transition-colors text-sm"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-foreground/10 hover:bg-foreground/5 transition-colors text-sm"
           >
             <ArrowDownTrayIcon className="h-4 w-4" />
             {exportMutation.isPending ? 'Exporting...' : 'Export CSV'}
@@ -138,7 +138,7 @@ export default function TenantAuditLog() {
               className="rounded-xl border bg-card p-4"
             >
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-white/5">
+                <div className="p-2 rounded-lg bg-foreground/5">
                   <card.icon className={cn('h-5 w-5', card.color)} />
                 </div>
                 <div>
@@ -175,13 +175,13 @@ export default function TenantAuditLog() {
               placeholder="Search by user, resource, or details..."
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-              className="w-full pl-9 pr-4 py-2 rounded-lg border border-white/10 bg-white/5 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
+              className="w-full pl-9 pr-4 py-2 rounded-lg border border-foreground/10 bg-foreground/5 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
             />
           </div>
           <select
             value={actionFilter}
             onChange={(e) => { setActionFilter(e.target.value as AuditAction | ''); setPage(1); }}
-            className="px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="px-3 py-2 rounded-lg border border-foreground/10 bg-foreground/5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
           >
             <option value="">All Actions</option>
             {Object.keys(actionConfig).map((action) => (
@@ -206,7 +206,7 @@ export default function TenantAuditLog() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-white/10 bg-white/5">
+                  <tr className="border-b border-foreground/10 bg-foreground/5">
                     {['Timestamp', 'User', 'Action', 'Resource', 'Details', 'Status', 'IP'].map(
                       (h) => (
                         <th scope="col"
@@ -232,7 +232,7 @@ export default function TenantAuditLog() {
                       return (
                         <tr
                           key={entry.id}
-                          className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                          className="border-b border-foreground/5 hover:bg-foreground/5 transition-colors"
                         >
                           <td className="py-3 px-4 text-xs text-muted-foreground whitespace-nowrap">
                             {formatTimestamp(entry.timestamp)}
@@ -289,7 +289,7 @@ export default function TenantAuditLog() {
 
           {/* Pagination */}
           {logs && logs.total > limit && (
-            <div className="flex items-center justify-between px-4 py-3 border-t border-white/10">
+            <div className="flex items-center justify-between px-4 py-3 border-t border-foreground/10">
               <span className="text-xs text-muted-foreground">
                 Showing {(page - 1) * limit + 1}-{Math.min(page * limit, logs.total)} of{' '}
                 {logs.total}
@@ -298,7 +298,7 @@ export default function TenantAuditLog() {
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="p-1.5 rounded-lg hover:bg-white/5 disabled:opacity-30 transition-colors"
+                  className="p-1.5 rounded-lg hover:bg-foreground/5 disabled:opacity-30 transition-colors"
                 >
                   <ChevronLeftIcon className="h-4 w-4" />
                 </button>
@@ -308,7 +308,7 @@ export default function TenantAuditLog() {
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
-                  className="p-1.5 rounded-lg hover:bg-white/5 disabled:opacity-30 transition-colors"
+                  className="p-1.5 rounded-lg hover:bg-foreground/5 disabled:opacity-30 transition-colors"
                 >
                   <ChevronRightIcon className="h-4 w-4" />
                 </button>

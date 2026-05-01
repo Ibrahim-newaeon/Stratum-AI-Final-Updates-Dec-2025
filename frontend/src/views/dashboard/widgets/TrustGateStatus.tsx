@@ -33,7 +33,7 @@ interface TrustGateStatusProps {
 export function TrustGateStatus({ signalHealth, loading = false }: TrustGateStatusProps) {
   if (loading) {
     return (
-      <div className="glass border border-white/10 rounded-xl p-6 h-full flex items-center justify-center min-h-52">
+      <div className="glass border border-foreground/10 rounded-xl p-6 h-full flex items-center justify-center min-h-52">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     );
@@ -98,7 +98,7 @@ export function TrustGateStatus({ signalHealth, loading = false }: TrustGateStat
   return (
     <div
       className={cn(
-        'glass border border-white/10 rounded-xl p-6 h-full card-3d',
+        'glass border border-foreground/10 rounded-xl p-6 h-full card-3d',
         config.borderColor
       )}
     >

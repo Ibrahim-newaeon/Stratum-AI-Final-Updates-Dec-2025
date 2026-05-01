@@ -690,7 +690,7 @@ export default function GlossaryPage() {
                 className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
                   activeCategory === null
                     ? 'bg-secondary text-white'
-                    : 'bg-white/5 hover:text-white'
+                    : 'bg-foreground/5 hover:text-white'
                 }`}
                 style={activeCategory !== null ? { color: '#8B8D9E' } : {}}
               >
@@ -703,7 +703,7 @@ export default function GlossaryPage() {
                   className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-2 ${
                     activeCategory === category.id
                       ? 'text-white'
-                      : 'bg-white/5 hover:text-white'
+                      : 'bg-foreground/5 hover:text-white'
                   }`}
                   style={activeCategory === category.id ? { background: category.color } : { color: '#8B8D9E' }}
                 >

@@ -56,11 +56,11 @@ export function EmqImpactPanel({
 
   return (
     <div className={cn(
-      'rounded-2xl bg-surface-secondary border border-white/10 overflow-hidden',
+      'rounded-2xl bg-surface-secondary border border-foreground/10 overflow-hidden',
       className
     )}>
       {/* Header */}
-      <div className="p-4 border-b border-white/10">
+      <div className="p-4 border-b border-foreground/10">
         <div className="flex items-center gap-3">
           <div className={cn(
             'p-2 rounded-lg',
@@ -73,7 +73,7 @@ export function EmqImpactPanel({
           </div>
           <div>
             <h3 className="font-semibold text-white">Estimated ROAS Impact</h3>
-            <p className="text-sm text-text-muted">
+            <p className="text-sm text-muted-foreground">
               Based on current data quality
             </p>
           </div>
@@ -97,17 +97,17 @@ export function EmqImpactPanel({
                 <ArrowTrendingDownIcon className="w-6 h-6 text-danger" />
               )}
             </div>
-            <p className="text-sm text-text-muted mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               {isPositive ? 'Potential revenue gain' : 'Revenue at risk'}
             </p>
           </div>
 
           <div className="text-right">
             <div className="flex items-center gap-2 justify-end">
-              <span className="text-sm text-text-muted">Confidence:</span>
+              <span className="text-sm text-muted-foreground">Confidence:</span>
               <ConfidenceBandBadge score={emqScore} size="sm" />
             </div>
-            <p className="text-xs text-text-muted mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Estimate has {confidenceLabel} accuracy
             </p>
           </div>
@@ -124,7 +124,7 @@ export function EmqImpactPanel({
             band === 'reliable' ? 'text-success' :
             band === 'directional' ? 'text-warning' : 'text-danger'
           )} />
-          <p className="text-sm text-text-secondary">
+          <p className="text-sm text-muted-foreground">
             {band === 'reliable'
               ? 'This estimate is based on reliable data and can be used for decision-making.'
               : band === 'directional'
@@ -136,15 +136,15 @@ export function EmqImpactPanel({
 
       {/* Breakdown by platform */}
       {showBreakdown && breakdown.length > 0 && (
-        <div className="border-t border-white/10">
+        <div className="border-t border-foreground/10">
           <div className="p-4">
             <h4 className="text-sm font-medium text-white mb-3">Impact by Platform</h4>
             <div className="space-y-3">
               {breakdown.map((item) => (
                 <div key={item.platform} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <span className="text-sm text-text-secondary">{item.platform}</span>
-                    <span className="text-xs text-text-muted">
+                    <span className="text-sm text-muted-foreground">{item.platform}</span>
+                    <span className="text-xs text-muted-foreground">
                       ROAS: {item.actualRoas.toFixed(2)}x → {item.estimatedRoas.toFixed(2)}x
                     </span>
                   </div>

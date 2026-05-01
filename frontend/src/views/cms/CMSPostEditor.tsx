@@ -60,7 +60,7 @@ export default function CMSPostEditor() {
       {/* Back Link */}
       <button
         onClick={() => navigate('/cms/posts')}
-        className="flex items-center gap-2 text-white/60 hover:text-white transition-colors"
+        className="flex items-center gap-2 text-foreground/60 hover:text-white transition-colors"
       >
         <ArrowLeftIcon className="w-4 h-4" />
         Back to Posts

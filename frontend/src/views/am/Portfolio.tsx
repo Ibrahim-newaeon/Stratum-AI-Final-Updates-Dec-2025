@@ -259,10 +259,10 @@ export default function Portfolio() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">My Portfolio</h1>
-          <p className="text-text-muted">Manage your assigned tenants</p>
+          <p className="text-muted-foreground">Manage your assigned tenants</p>
         </div>
         <div className="flex items-center gap-3">
-          <button data-tour="export-pdf" className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-secondary border border-white/10 text-text-secondary hover:text-white transition-colors">
+          <button data-tour="export-pdf" className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-secondary border border-foreground/10 text-muted-foreground hover:text-white transition-colors">
             <DocumentArrowDownIcon className="w-4 h-4" />
             Export Summary
           </button>
@@ -274,36 +274,36 @@ export default function Portfolio() {
         'grid grid-cols-2 md:grid-cols-4 gap-4',
         showPriceMetrics && 'lg:grid-cols-7'
       )}>
-        <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
-          <div className="text-text-muted text-sm mb-1">Total Tenants</div>
+        <div className="p-4 rounded-xl bg-surface-secondary border border-foreground/10">
+          <div className="text-muted-foreground text-sm mb-1">Total Tenants</div>
           <div className="text-2xl font-bold text-white">{stats.total}</div>
         </div>
-        <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
-          <div className="text-text-muted text-sm mb-1">Healthy</div>
+        <div className="p-4 rounded-xl bg-surface-secondary border border-foreground/10">
+          <div className="text-muted-foreground text-sm mb-1">Healthy</div>
           <div className="text-2xl font-bold text-success">{stats.healthy}</div>
         </div>
-        <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
-          <div className="text-text-muted text-sm mb-1">At Risk</div>
+        <div className="p-4 rounded-xl bg-surface-secondary border border-foreground/10">
+          <div className="text-muted-foreground text-sm mb-1">At Risk</div>
           <div className="text-2xl font-bold text-warning">{stats.atRisk}</div>
         </div>
-        <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
-          <div className="text-text-muted text-sm mb-1">Critical</div>
+        <div className="p-4 rounded-xl bg-surface-secondary border border-foreground/10">
+          <div className="text-muted-foreground text-sm mb-1">Critical</div>
           <div className="text-2xl font-bold text-danger">{stats.critical}</div>
         </div>
         {showPriceMetrics && (
-        <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
-          <div className="text-text-muted text-sm mb-1">Budget at Risk</div>
+        <div className="p-4 rounded-xl bg-surface-secondary border border-foreground/10">
+          <div className="text-muted-foreground text-sm mb-1">Budget at Risk</div>
           <div className="text-2xl font-bold text-danger">${stats.totalBudgetAtRisk.toLocaleString()}</div>
         </div>
         )}
         {showPriceMetrics && (
-        <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
-          <div className="text-text-muted text-sm mb-1">Portfolio MRR</div>
+        <div className="p-4 rounded-xl bg-surface-secondary border border-foreground/10">
+          <div className="text-muted-foreground text-sm mb-1">Portfolio MRR</div>
           <div className="text-2xl font-bold text-white">${stats.totalMRR.toLocaleString()}</div>
         </div>
         )}
-        <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
-          <div className="text-text-muted text-sm mb-1">Renewals (30d)</div>
+        <div className="p-4 rounded-xl bg-surface-secondary border border-foreground/10">
+          <div className="text-muted-foreground text-sm mb-1">Renewals (30d)</div>
           <div className="text-2xl font-bold text-warning">{stats.upcomingRenewals}</div>
         </div>
       </div>
@@ -325,7 +325,7 @@ export default function Portfolio() {
                 >
                   <div>
                     <span className="font-medium text-white">{t.name}</span>
-                    <span className="text-sm text-text-muted ml-2">
+                    <span className="text-sm text-muted-foreground ml-2">
                       EMQ {t.emqScore} | {t.activeIncidents} incidents open {t.incidentOpenTime}h
                     </span>
                   </div>
@@ -344,22 +344,22 @@ export default function Portfolio() {
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-4">
         <div className="relative flex-1 min-w-52 max-w-md">
-          <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted" />
+          <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <input
             type="text"
             placeholder="Search tenants..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-lg bg-surface-secondary border border-white/10 text-white placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-stratum-500"
+            className="w-full pl-10 pr-4 py-2 rounded-lg bg-surface-secondary border border-foreground/10 text-white placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-stratum-500"
           />
         </div>
 
         <div className="flex items-center gap-2">
-          <FunnelIcon className="w-4 h-4 text-text-muted" />
+          <FunnelIcon className="w-4 h-4 text-muted-foreground" />
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as EmqStatus | 'all')}
-            className="px-3 py-2 rounded-lg bg-surface-secondary border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-stratum-500"
+            className="px-3 py-2 rounded-lg bg-surface-secondary border border-foreground/10 text-white focus:outline-none focus:ring-2 focus:ring-stratum-500"
           >
             <option value="all">All Status</option>
             <option value="ok">Healthy</option>
@@ -372,7 +372,7 @@ export default function Portfolio() {
         <select
           value={sortField}
           onChange={(e) => setSortField(e.target.value as SortField)}
-          className="px-3 py-2 rounded-lg bg-surface-secondary border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-stratum-500"
+          className="px-3 py-2 rounded-lg bg-surface-secondary border border-foreground/10 text-white focus:outline-none focus:ring-2 focus:ring-stratum-500"
         >
           <option value="emq">Sort by EMQ</option>
           <option value="name">Sort by Name</option>
@@ -386,7 +386,7 @@ export default function Portfolio() {
             'flex items-center gap-2 px-4 py-2 rounded-lg transition-colors',
             showAtRiskOnly
               ? 'bg-warning/10 text-warning border border-warning/30'
-              : 'bg-surface-secondary border border-white/10 text-text-muted hover:text-white'
+              : 'bg-surface-secondary border border-foreground/10 text-muted-foreground hover:text-white'
           )}
         >
           <BellAlertIcon className="w-4 h-4" />
@@ -400,10 +400,10 @@ export default function Portfolio() {
           <div
             key={tenant.id}
             className={cn(
-              'p-4 rounded-xl border transition-colors hover:border-white/20',
+              'p-4 rounded-xl border transition-colors hover:border-foreground/20',
               tenant.emqStatus === 'critical'
                 ? 'bg-danger/5 border-danger/20'
-                : 'bg-surface-secondary border-white/10'
+                : 'bg-surface-secondary border-foreground/10'
             )}
           >
             <div className="flex items-start gap-4">
@@ -442,13 +442,13 @@ export default function Portfolio() {
                   )}>
                     {tenant.emqStatus}
                   </span>
-                  <span className="px-2 py-0.5 rounded bg-surface-tertiary text-text-muted text-xs">
+                  <span className="px-2 py-0.5 rounded bg-surface-tertiary text-muted-foreground text-xs">
                     {tenant.plan}
                   </span>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-4 text-sm">
-                  <span className="text-text-muted">{tenant.industry}</span>
+                  <span className="text-muted-foreground">{tenant.industry}</span>
                   <AutopilotModeBanner mode={tenant.autopilotMode} compact />
                   {showPriceMetrics && tenant.budgetAtRisk > 0 && (
                     <BudgetAtRiskChip amount={tenant.budgetAtRisk} />
@@ -458,14 +458,14 @@ export default function Portfolio() {
                       <ExclamationTriangleIcon className="w-4 h-4" />
                       {tenant.activeIncidents} incident{tenant.activeIncidents > 1 ? 's' : ''}
                       {tenant.incidentOpenTime && (
-                        <span className="text-text-muted">({tenant.incidentOpenTime}h)</span>
+                        <span className="text-muted-foreground">({tenant.incidentOpenTime}h)</span>
                       )}
                     </span>
                   )}
                 </div>
 
                 {tenant.notes && (
-                  <p className="mt-2 text-sm text-text-muted italic">{tenant.notes}</p>
+                  <p className="mt-2 text-sm text-muted-foreground italic">{tenant.notes}</p>
                 )}
               </div>
 
@@ -473,7 +473,7 @@ export default function Portfolio() {
               <div className="flex items-center gap-6 text-sm">
                 {showPriceMetrics && (
                 <div className="text-right">
-                  <div className="text-text-muted">ROAS</div>
+                  <div className="text-muted-foreground">ROAS</div>
                   <div className="flex items-center gap-1">
                     <span className="text-white font-medium">{tenant.roas.toFixed(1)}x</span>
                     <span className={cn(
@@ -487,12 +487,12 @@ export default function Portfolio() {
                 )}
                 {showPriceMetrics && (
                 <div className="text-right">
-                  <div className="text-text-muted">Spend</div>
+                  <div className="text-muted-foreground">Spend</div>
                   <div className="text-white font-medium">${(tenant.monthlySpend / 1000).toFixed(0)}k</div>
                 </div>
                 )}
                 <div className="text-right">
-                  <div className="text-text-muted">Renewal</div>
+                  <div className="text-muted-foreground">Renewal</div>
                   <div className={cn(
                     'font-medium',
                     tenant.renewalDate && (tenant.renewalDate.getTime() - Date.now()) < 30 * 24 * 60 * 60 * 1000
@@ -503,7 +503,7 @@ export default function Portfolio() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-text-muted">Last Contact</div>
+                  <div className="text-muted-foreground">Last Contact</div>
                   <div className="text-white">{formatLastContact(tenant.lastContact)}</div>
                 </div>
               </div>
@@ -511,7 +511,7 @@ export default function Portfolio() {
               {/* Action */}
               <Link
                 to={`/dashboard/am/tenant/${tenant.id}`}
-                className="flex items-center gap-1 px-4 py-2 rounded-lg bg-surface-tertiary text-text-secondary hover:text-white transition-colors"
+                className="flex items-center gap-1 px-4 py-2 rounded-lg bg-surface-tertiary text-muted-foreground hover:text-white transition-colors"
               >
                 View
                 <ChevronRightIcon className="w-4 h-4" />
@@ -521,7 +521,7 @@ export default function Portfolio() {
         ))}
 
         {filteredTenants.length === 0 && (
-          <div className="text-center py-12 text-text-muted">
+          <div className="text-center py-12 text-muted-foreground">
             No tenants found matching your filters.
           </div>
         )}

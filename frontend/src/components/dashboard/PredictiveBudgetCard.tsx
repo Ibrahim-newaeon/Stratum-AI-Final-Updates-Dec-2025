@@ -129,7 +129,7 @@ function ForecastCard({ data }: { data: PredictiveBudgetResponse }) {
       <div className="flex items-center gap-2 mb-3">
         <BarChart3 className="w-4 h-4 text-blue-500" />
         <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Projected Impact</span>
-        <span className={cn('text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-white/60 border', confColor)}>
+        <span className={cn('text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-foreground/60 border', confColor)}>
           {forecast.confidence_level} confidence
         </span>
       </div>

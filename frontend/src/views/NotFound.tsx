@@ -57,7 +57,7 @@ export default function NotFound() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 px-6 py-3 rounded-xl font-medium text-white transition-colors hover:bg-white/10"
+            className="flex items-center gap-2 px-6 py-3 rounded-xl font-medium text-white transition-colors hover:bg-foreground/10"
             style={{
               background: 'rgba(255, 255, 255, 0.06)',
               border: '1px solid rgba(255, 255, 255, 0.12)',

@@ -132,7 +132,7 @@ export function ComplianceWidget() {
                   <span className="text-foreground">{item.label}</span>
                   <span className="text-muted-foreground">{item.days}d retention · {item.used} used</span>
                 </div>
-                <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                <div className="h-1.5 bg-foreground/10 rounded-full overflow-hidden">
                   <div className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full" style={{ width: item.used }} />
                 </div>
               </div>

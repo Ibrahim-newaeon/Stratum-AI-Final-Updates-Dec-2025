@@ -251,7 +251,7 @@ export default function ResourcesPage() {
                 <Link
                   key={guide.title}
                   to="#"
-                  className="group flex items-start gap-4 p-5 rounded-xl transition-colors duration-200 hover:bg-white/5"
+                  className="group flex items-start gap-4 p-5 rounded-xl transition-colors duration-200 hover:bg-foreground/5"
                   style={{
                     background: 'var(--landing-card)',
                     border: '1px solid var(--landing-border)',

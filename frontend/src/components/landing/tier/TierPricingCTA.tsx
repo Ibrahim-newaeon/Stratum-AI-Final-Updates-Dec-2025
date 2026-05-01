@@ -55,7 +55,7 @@ export function TierPricingCTA({ content }: TierPricingCTAProps) {
         <div className="text-center mb-12">
           <Badge
             variant="outline"
-            className={`mb-4 px-4 py-1 ${visuals.accentColor} border-white/20 bg-white/5`}
+            className={`mb-4 px-4 py-1 ${visuals.accentColor} border-foreground/20 bg-foreground/5`}
           >
             Pricing
           </Badge>
@@ -74,7 +74,7 @@ export function TierPricingCTA({ content }: TierPricingCTAProps) {
         </div>
 
         {/* Pricing Card */}
-        <Card className="relative overflow-hidden bg-gradient-to-b from-gray-900 to-gray-950 border-2 border-white/10 shadow-xl">
+        <Card className="relative overflow-hidden bg-gradient-to-b from-gray-900 to-gray-950 border-2 border-foreground/10 shadow-xl">
           {/* Gradient accent */}
           <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${gradientClass}`} />
 
@@ -149,7 +149,7 @@ export function TierPricingCTA({ content }: TierPricingCTAProps) {
                   <Button
                     variant="outline"
                     size="lg"
-                    className="border-white/20 text-white hover:bg-white/10"
+                    className="border-foreground/20 text-white hover:bg-foreground/10"
                     onClick={() => navigate('/contact')}
                   >
                     Talk to Sales
@@ -178,7 +178,7 @@ export function TierPricingCTA({ content }: TierPricingCTAProps) {
               </div>
             </div>
 
-            <Separator className="my-8 bg-white/10" />
+            <Separator className="my-8 bg-foreground/10" />
 
             {/* Trust Badges */}
             <div className="flex flex-wrap justify-center gap-4">
@@ -186,7 +186,7 @@ export function TierPricingCTA({ content }: TierPricingCTAProps) {
                 <SmartTooltip key={i} content={badge.tooltip} position="top">
                   <Badge
                     variant="outline"
-                    className="px-4 py-2 text-sm bg-gray-900/50 border-white/10 text-gray-400 cursor-help"
+                    className="px-4 py-2 text-sm bg-gray-900/50 border-foreground/10 text-gray-400 cursor-help"
                   >
                     <span className="mr-2">{badge.icon}</span>
                     {badge.text}
@@ -200,7 +200,7 @@ export function TierPricingCTA({ content }: TierPricingCTAProps) {
         {/* Next Tier Prompt */}
         {pricing.nextTier && (
           <div className="mt-12 text-center">
-            <Card className="inline-block bg-gray-900/50 border-white/10 px-8 py-6">
+            <Card className="inline-block bg-gray-900/50 border-foreground/10 px-8 py-6">
               <div className="flex flex-col sm:flex-row items-center gap-4">
                 <div className="text-left">
                   <p className="text-white font-medium">{pricing.nextTier.teaser}</p>
@@ -210,7 +210,7 @@ export function TierPricingCTA({ content }: TierPricingCTAProps) {
                 </div>
                 <Button
                   variant="outline"
-                  className={`${visuals.accentColor} border-white/20 hover:bg-white/5`}
+                  className={`${visuals.accentColor} border-foreground/20 hover:bg-foreground/5`}
                   onClick={() => navigate(pricing.nextTier!.link)}
                 >
                   View {pricing.nextTier.name}

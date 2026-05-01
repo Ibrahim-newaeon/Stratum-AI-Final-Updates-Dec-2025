@@ -270,7 +270,7 @@ export default function AIPricing() {
               onClick={() => setBillingCycle('monthly')}
               className={`px-6 py-2 rounded-full text-sm font-medium transition-colors ${
                 billingCycle === 'monthly'
-                  ? 'bg-white/10 text-white'
+                  ? 'bg-foreground/10 text-white'
                   : 'text-gray-400 hover:text-white'
               }`}
             >
@@ -357,7 +357,7 @@ export default function AIPricing() {
                     className={`block w-full py-3 px-6 rounded-lg text-center font-medium transition-colors ${
                       tier.popular
                         ? 'bg-gradient-to-r from-purple-500 to-violet-500 text-white hover:opacity-90'
-                        : 'bg-white/[0.05] border border-white/10 text-white hover:bg-white/10'
+                        : 'bg-white/[0.05] border border-foreground/10 text-white hover:bg-foreground/10'
                     }`}
                   >
                     {tier.cta}
@@ -454,7 +454,7 @@ export default function AIPricing() {
                       {feature.tooltip && (
                         <div className="group relative">
                           <InformationCircleIcon className="w-4 h-4 text-gray-500 cursor-help" />
-                          <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-3 py-2 bg-gray-900 border border-white/10 rounded-lg text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                          <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-3 py-2 bg-gray-900 border border-foreground/10 rounded-lg text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                             {feature.tooltip}
                           </div>
                         </div>

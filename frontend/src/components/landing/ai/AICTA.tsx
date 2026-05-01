@@ -116,7 +116,7 @@ export default function AICTA() {
 
           <a
             href="/demo"
-            className="inline-flex items-center gap-2 px-8 py-4 rounded-lg text-base font-semibold text-white transition-colors hover:bg-white/10"
+            className="inline-flex items-center gap-2 px-8 py-4 rounded-lg text-base font-semibold text-white transition-colors hover:bg-foreground/10"
             style={{
               background: 'rgba(255, 255, 255, 0.03)',
               backdropFilter: 'blur(40px)',

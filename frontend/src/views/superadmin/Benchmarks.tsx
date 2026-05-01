@@ -106,7 +106,7 @@ export default function Benchmarks() {
           style={{ left: `${p75}%` }}
         />
         {/* Labels */}
-        <div className="absolute inset-0 flex items-center justify-between px-2 text-xs text-text-muted">
+        <div className="absolute inset-0 flex items-center justify-between px-2 text-xs text-muted-foreground">
           <span>0</span>
           <span>100</span>
         </div>
@@ -128,12 +128,12 @@ export default function Benchmarks() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">EMQ Benchmarks</h1>
-          <p className="text-text-muted">Cross-tenant performance benchmarks</p>
+          <p className="text-muted-foreground">Cross-tenant performance benchmarks</p>
         </div>
         <div className="flex items-center gap-3">
           {/* Time Range */}
-          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-secondary border border-white/10">
-            <CalendarIcon className="w-5 h-5 text-text-muted" />
+          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-secondary border border-foreground/10">
+            <CalendarIcon className="w-5 h-5 text-muted-foreground" />
             <select
               value={timeRange}
               onChange={(e) => setTimeRange(e.target.value as TimeRange)}
@@ -157,7 +157,7 @@ export default function Benchmarks() {
               'px-4 py-2 rounded-lg transition-colors',
               selectedMetric === m.id
                 ? 'bg-stratum-500/10 text-stratum-400 border border-stratum-500/30'
-                : 'bg-surface-secondary border border-white/10 text-text-muted hover:text-white'
+                : 'bg-surface-secondary border border-foreground/10 text-muted-foreground hover:text-white'
             )}
           >
             {m.label}
@@ -167,8 +167,8 @@ export default function Benchmarks() {
 
       {/* Summary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
-          <div className="text-text-muted text-sm mb-1">Platform Average</div>
+        <div className="p-4 rounded-xl bg-surface-secondary border border-foreground/10">
+          <div className="text-muted-foreground text-sm mb-1">Platform Average</div>
           <div className="text-3xl font-bold text-white">82</div>
           <div className="flex items-center gap-1 text-success text-sm mt-1">
             <ArrowTrendingUpIcon className="w-4 h-4" />
@@ -176,33 +176,33 @@ export default function Benchmarks() {
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
-          <div className="text-text-muted text-sm mb-1">P25 (Bottom Quartile)</div>
+        <div className="p-4 rounded-xl bg-surface-secondary border border-foreground/10">
+          <div className="text-muted-foreground text-sm mb-1">P25 (Bottom Quartile)</div>
           <div className="text-3xl font-bold text-warning">68</div>
-          <div className="text-sm text-text-muted mt-1">Needs improvement</div>
+          <div className="text-sm text-muted-foreground mt-1">Needs improvement</div>
         </div>
 
-        <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
-          <div className="text-text-muted text-sm mb-1">P50 (Median)</div>
+        <div className="p-4 rounded-xl bg-surface-secondary border border-foreground/10">
+          <div className="text-muted-foreground text-sm mb-1">P50 (Median)</div>
           <div className="text-3xl font-bold text-stratum-400">82</div>
-          <div className="text-sm text-text-muted mt-1">Typical performance</div>
+          <div className="text-sm text-muted-foreground mt-1">Typical performance</div>
         </div>
 
-        <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
-          <div className="text-text-muted text-sm mb-1">P75 (Top Quartile)</div>
+        <div className="p-4 rounded-xl bg-surface-secondary border border-foreground/10">
+          <div className="text-muted-foreground text-sm mb-1">P75 (Top Quartile)</div>
           <div className="text-3xl font-bold text-success">91</div>
-          <div className="text-sm text-text-muted mt-1">Best performers</div>
+          <div className="text-sm text-muted-foreground mt-1">Best performers</div>
         </div>
       </div>
 
       {/* Platform Benchmarks */}
-      <div className="rounded-2xl bg-surface-secondary border border-white/10 overflow-hidden">
-        <div className="flex items-center justify-between p-4 border-b border-white/10">
+      <div className="rounded-2xl bg-surface-secondary border border-foreground/10 overflow-hidden">
+        <div className="flex items-center justify-between p-4 border-b border-foreground/10">
           <div className="flex items-center gap-3">
             <ChartBarIcon className="w-5 h-5 text-stratum-400" />
             <h2 className="font-semibold text-white">Platform Benchmarks</h2>
           </div>
-          <div className="flex items-center gap-2 text-sm text-text-muted">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <InformationCircleIcon className="w-4 h-4" />
             Based on {platformBenchmarks.reduce((sum, p) => sum + p.sampleSize, 0)} tenants
           </div>
@@ -215,7 +215,7 @@ export default function Benchmarks() {
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-3">
                     <span className="font-medium text-white">{benchmark.platform}</span>
-                    <span className="text-xs text-text-muted">
+                    <span className="text-xs text-muted-foreground">
                       ({benchmark.sampleSize} tenants)
                     </span>
                   </div>
@@ -227,11 +227,11 @@ export default function Benchmarks() {
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
-                      <span className="text-text-muted">P25:</span>
+                      <span className="text-muted-foreground">P25:</span>
                       <span className={getScoreColor(benchmark.p25)}>{benchmark.p25}</span>
-                      <span className="text-text-muted ml-2">P50:</span>
+                      <span className="text-muted-foreground ml-2">P50:</span>
                       <span className={getScoreColor(benchmark.p50)}>{benchmark.p50}</span>
-                      <span className="text-text-muted ml-2">P75:</span>
+                      <span className="text-muted-foreground ml-2">P75:</span>
                       <span className={getScoreColor(benchmark.p75)}>{benchmark.p75}</span>
                     </div>
                   </div>
@@ -244,8 +244,8 @@ export default function Benchmarks() {
       </div>
 
       {/* Driver Benchmarks */}
-      <div className="rounded-2xl bg-surface-secondary border border-white/10 overflow-hidden">
-        <div className="flex items-center gap-3 p-4 border-b border-white/10">
+      <div className="rounded-2xl bg-surface-secondary border border-foreground/10 overflow-hidden">
+        <div className="flex items-center gap-3 p-4 border-b border-foreground/10">
           <ChartBarIcon className="w-5 h-5 text-stratum-400" />
           <h2 className="font-semibold text-white">Driver Benchmarks</h2>
         </div>
@@ -257,11 +257,11 @@ export default function Benchmarks() {
                 <div className="flex items-center justify-between mb-2">
                   <span className="font-medium text-white">{benchmark.label}</span>
                   <div className="flex items-center gap-2 text-sm">
-                    <span className="text-text-muted">P25:</span>
+                    <span className="text-muted-foreground">P25:</span>
                     <span className={getScoreColor(benchmark.p25)}>{benchmark.p25}</span>
-                    <span className="text-text-muted ml-2">P50:</span>
+                    <span className="text-muted-foreground ml-2">P50:</span>
                     <span className={getScoreColor(benchmark.p50)}>{benchmark.p50}</span>
-                    <span className="text-text-muted ml-2">P75:</span>
+                    <span className="text-muted-foreground ml-2">P75:</span>
                     <span className={getScoreColor(benchmark.p75)}>{benchmark.p75}</span>
                   </div>
                 </div>
@@ -273,8 +273,8 @@ export default function Benchmarks() {
       </div>
 
       {/* Industry Benchmarks */}
-      <div className="rounded-2xl bg-surface-secondary border border-white/10 overflow-hidden">
-        <div className="flex items-center gap-3 p-4 border-b border-white/10">
+      <div className="rounded-2xl bg-surface-secondary border border-foreground/10 overflow-hidden">
+        <div className="flex items-center gap-3 p-4 border-b border-foreground/10">
           <ChartBarIcon className="w-5 h-5 text-stratum-400" />
           <h2 className="font-semibold text-white">Industry Benchmarks</h2>
         </div>
@@ -284,11 +284,11 @@ export default function Benchmarks() {
             {industryBenchmarks.map((benchmark) => (
               <div
                 key={benchmark.industry}
-                className="p-4 rounded-xl bg-surface-tertiary border border-white/5"
+                className="p-4 rounded-xl bg-surface-tertiary border border-foreground/5"
               >
                 <div className="flex items-center justify-between mb-3">
                   <span className="font-medium text-white">{benchmark.industry}</span>
-                  <span className="text-xs text-text-muted">
+                  <span className="text-xs text-muted-foreground">
                     {benchmark.count} tenants
                   </span>
                 </div>
@@ -303,7 +303,7 @@ export default function Benchmarks() {
                     </span>
                   </div>
                 </div>
-                <div className="text-xs text-text-muted mt-2">Median EMQ</div>
+                <div className="text-xs text-muted-foreground mt-2">Median EMQ</div>
               </div>
             ))}
           </div>
@@ -311,7 +311,7 @@ export default function Benchmarks() {
       </div>
 
       {/* Legend */}
-      <div className="flex items-center justify-center gap-8 py-4 text-sm text-text-muted">
+      <div className="flex items-center justify-center gap-8 py-4 text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded bg-stratum-500/20 border border-stratum-400/50" />
           <span>P25-P75 Range</span>

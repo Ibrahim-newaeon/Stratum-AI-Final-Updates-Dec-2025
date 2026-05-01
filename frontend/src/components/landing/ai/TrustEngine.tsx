@@ -252,7 +252,7 @@ export default function TrustEngine() {
               </div>
 
               {/* Health Bar */}
-              <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+              <div className="h-2 rounded-full bg-foreground/10 overflow-hidden">
                 <motion.div
                   className={`h-full rounded-full bg-gradient-to-r ${colors.gradient}`}
                   initial={{ width: 0 }}
@@ -304,7 +304,7 @@ export default function TrustEngine() {
             {healthComponents.map((component) => (
               <div
                 key={component.name}
-                className="group relative p-5 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-white/10 transition-colors"
+                className="group relative p-5 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-foreground/10 transition-colors"
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium text-white">{component.name}</span>

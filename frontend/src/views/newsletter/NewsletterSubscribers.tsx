@@ -200,7 +200,7 @@ function SubscriberRow({
   const scoreColor = getScoreColor(subscriber.lead_score);
 
   return (
-    <tr className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+    <tr className="border-b border-foreground/5 hover:bg-white/[0.02] transition-colors">
       {/* Name + Company */}
       <td className="p-4">
         <div>
@@ -334,7 +334,7 @@ function SkeletonRows({ count = 5 }: { count?: number }) {
   return (
     <>
       {Array.from({ length: count }).map((_, i) => (
-        <tr key={i} className="border-b border-white/5">
+        <tr key={i} className="border-b border-foreground/5">
           <td className="p-4">
             <div className="h-4 w-28 bg-white/[0.08] rounded animate-pulse" />
             <div className="h-3 w-20 bg-white/[0.06] rounded animate-pulse mt-1.5" />

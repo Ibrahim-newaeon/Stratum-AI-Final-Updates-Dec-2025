@@ -277,10 +277,10 @@ export default function System() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">System Health</h1>
-          <p className="text-text-muted">Pipeline and infrastructure monitoring</p>
+          <p className="text-muted-foreground">Pipeline and infrastructure monitoring</p>
         </div>
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 text-text-muted text-sm">
+          <div className="flex items-center gap-2 text-muted-foreground text-sm">
             <ClockIcon className="w-4 h-4" />
             Last updated: {formatTime(lastRefresh)}
           </div>
@@ -288,7 +288,7 @@ export default function System() {
             onClick={handleRefresh}
             disabled={refreshing}
             className={cn(
-              'flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-secondary border border-white/10 text-text-secondary hover:text-white transition-colors',
+              'flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-secondary border border-foreground/10 text-muted-foreground hover:text-white transition-colors',
               refreshing && 'opacity-50 cursor-not-allowed'
             )}
           >
@@ -314,7 +314,7 @@ export default function System() {
             {overallStatus === 'degraded' && 'Some Systems Degraded'}
             {overallStatus === 'down' && 'System Issues Detected'}
           </span>
-          <p className="text-sm text-text-muted">
+          <p className="text-sm text-muted-foreground">
             {services.filter(s => s.status === 'healthy').length}/{services.length} services healthy,{' '}
             {connectors.filter(c => c.status === 'healthy').length}/{connectors.length} connectors online
           </p>
@@ -323,8 +323,8 @@ export default function System() {
 
       {/* System Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-        <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
-          <div className="flex items-center gap-2 text-text-muted text-sm mb-2">
+        <div className="p-4 rounded-xl bg-surface-secondary border border-foreground/10">
+          <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">
             <CpuChipIcon className="w-4 h-4" />
             CPU
           </div>
@@ -333,8 +333,8 @@ export default function System() {
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
-          <div className="flex items-center gap-2 text-text-muted text-sm mb-2">
+        <div className="p-4 rounded-xl bg-surface-secondary border border-foreground/10">
+          <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">
             <CircleStackIcon className="w-4 h-4" />
             Memory
           </div>
@@ -343,24 +343,24 @@ export default function System() {
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
-          <div className="flex items-center gap-2 text-text-muted text-sm mb-2">
+        <div className="p-4 rounded-xl bg-surface-secondary border border-foreground/10">
+          <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">
             <ServerIcon className="w-4 h-4" />
             Disk
           </div>
           <div className="text-2xl font-bold text-white">{systemMetrics.disk}%</div>
         </div>
 
-        <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
-          <div className="flex items-center gap-2 text-text-muted text-sm mb-2">
+        <div className="p-4 rounded-xl bg-surface-secondary border border-foreground/10">
+          <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">
             <CloudIcon className="w-4 h-4" />
             Network
           </div>
           <div className="text-2xl font-bold text-white">{systemMetrics.network} Mbps</div>
         </div>
 
-        <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
-          <div className="flex items-center gap-2 text-text-muted text-sm mb-2">
+        <div className="p-4 rounded-xl bg-surface-secondary border border-foreground/10">
+          <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">
             <SignalIcon className="w-4 h-4" />
             Connections
           </div>
@@ -369,8 +369,8 @@ export default function System() {
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
-          <div className="flex items-center gap-2 text-text-muted text-sm mb-2">
+        <div className="p-4 rounded-xl bg-surface-secondary border border-foreground/10">
+          <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">
             <BoltIcon className="w-4 h-4" />
             Requests/min
           </div>
@@ -379,8 +379,8 @@ export default function System() {
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
-          <div className="flex items-center gap-2 text-text-muted text-sm mb-2">
+        <div className="p-4 rounded-xl bg-surface-secondary border border-foreground/10">
+          <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">
             <ExclamationTriangleIcon className="w-4 h-4" />
             Error Rate
           </div>
@@ -392,29 +392,29 @@ export default function System() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Services */}
-        <div className="rounded-2xl bg-surface-secondary border border-white/10 overflow-hidden">
-          <div className="flex items-center gap-3 p-4 border-b border-white/10">
+        <div className="rounded-2xl bg-surface-secondary border border-foreground/10 overflow-hidden">
+          <div className="flex items-center gap-3 p-4 border-b border-foreground/10">
             <ServerIcon className="w-5 h-5 text-stratum-400" />
             <h2 className="font-semibold text-white">Core Services</h2>
           </div>
-          <div className="divide-y divide-white/5">
+          <div className="divide-y divide-foreground/5">
             {services.map((service) => (
-              <div key={service.id} className="p-4 hover:bg-white/5 transition-colors">
+              <div key={service.id} className="p-4 hover:bg-foreground/5 transition-colors">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     {getStatusIcon(service.status)}
                     <div>
                       <div className="font-medium text-white">{service.name}</div>
-                      <div className="text-xs text-text-muted">v{service.version}</div>
+                      <div className="text-xs text-muted-foreground">v{service.version}</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-6 text-sm">
                     <div className="text-right">
-                      <div className="text-text-muted">Uptime</div>
+                      <div className="text-muted-foreground">Uptime</div>
                       <div className="text-white">{service.uptime}%</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-text-muted">Latency</div>
+                      <div className="text-muted-foreground">Latency</div>
                       <div className={cn(service.latency > 1000 ? 'text-warning' : 'text-white')}>
                         {service.latency}ms
                       </div>
@@ -427,31 +427,31 @@ export default function System() {
         </div>
 
         {/* Platform Connectors */}
-        <div className="rounded-2xl bg-surface-secondary border border-white/10 overflow-hidden">
-          <div className="flex items-center gap-3 p-4 border-b border-white/10">
+        <div className="rounded-2xl bg-surface-secondary border border-foreground/10 overflow-hidden">
+          <div className="flex items-center gap-3 p-4 border-b border-foreground/10">
             <CloudIcon className="w-5 h-5 text-stratum-400" />
             <h2 className="font-semibold text-white">Platform Connectors</h2>
           </div>
-          <div className="divide-y divide-white/5">
+          <div className="divide-y divide-foreground/5">
             {connectors.map((connector) => (
-              <div key={connector.platform} className="p-4 hover:bg-white/5 transition-colors">
+              <div key={connector.platform} className="p-4 hover:bg-foreground/5 transition-colors">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     {getStatusIcon(connector.status)}
                     <div>
                       <div className="font-medium text-white">{connector.platform}</div>
-                      <div className="text-xs text-text-muted">
+                      <div className="text-xs text-muted-foreground">
                         Last sync: {formatTime(connector.lastSync)}
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-6 text-sm">
                     <div className="text-right">
-                      <div className="text-text-muted">Records</div>
+                      <div className="text-muted-foreground">Records</div>
                       <div className="text-white">{connector.recordsProcessed.toLocaleString()}</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-text-muted">Errors</div>
+                      <div className="text-muted-foreground">Errors</div>
                       <div className={cn(connector.errors > 0 ? 'text-danger' : 'text-success')}>
                         {connector.errors}
                       </div>
@@ -465,26 +465,26 @@ export default function System() {
       </div>
 
       {/* Job Queues */}
-      <div className="rounded-2xl bg-surface-secondary border border-white/10 overflow-hidden">
-        <div className="flex items-center gap-3 p-4 border-b border-white/10">
+      <div className="rounded-2xl bg-surface-secondary border border-foreground/10 overflow-hidden">
+        <div className="flex items-center gap-3 p-4 border-b border-foreground/10">
           <ChartBarIcon className="w-5 h-5 text-stratum-400" />
           <h2 className="font-semibold text-white">Job Queues</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-white/10">
-                <th className="text-left p-4 text-text-muted font-medium">Queue</th>
-                <th className="text-left p-4 text-text-muted font-medium">Status</th>
-                <th className="text-right p-4 text-text-muted font-medium">Pending</th>
-                <th className="text-right p-4 text-text-muted font-medium">Processing</th>
-                <th className="text-right p-4 text-text-muted font-medium">Completed</th>
-                <th className="text-right p-4 text-text-muted font-medium">Failed</th>
-                <th className="text-right p-4 text-text-muted font-medium">Avg Time</th>
-                <th className="text-left p-4 text-text-muted font-medium">Actions</th>
+              <tr className="border-b border-foreground/10">
+                <th className="text-left p-4 text-muted-foreground font-medium">Queue</th>
+                <th className="text-left p-4 text-muted-foreground font-medium">Status</th>
+                <th className="text-right p-4 text-muted-foreground font-medium">Pending</th>
+                <th className="text-right p-4 text-muted-foreground font-medium">Processing</th>
+                <th className="text-right p-4 text-muted-foreground font-medium">Completed</th>
+                <th className="text-right p-4 text-muted-foreground font-medium">Failed</th>
+                <th className="text-right p-4 text-muted-foreground font-medium">Avg Time</th>
+                <th className="text-left p-4 text-muted-foreground font-medium">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="divide-y divide-foreground/5">
               {queues.map((queue) => {
                 const effectiveStatus = getEffectiveQueueStatus(queue)
                 const isPauseLoading = actionLoading[`pause-${queue.id}`]
@@ -493,7 +493,7 @@ export default function System() {
                 const isToggleLoading = isPauseLoading || isResumeLoading
 
                 return (
-                  <tr key={queue.id} className="hover:bg-white/5 transition-colors">
+                  <tr key={queue.id} className="hover:bg-foreground/5 transition-colors">
                     <td className="p-4 font-medium text-white">{queue.name}</td>
                     <td className="p-4">
                       <span
@@ -510,18 +510,18 @@ export default function System() {
                     <td className="p-4 text-right text-stratum-400">{queue.processing}</td>
                     <td className="p-4 text-right text-success">{queue.completed.toLocaleString()}</td>
                     <td className="p-4 text-right">
-                      <span className={queue.failed > 0 ? 'text-danger' : 'text-text-muted'}>
+                      <span className={queue.failed > 0 ? 'text-danger' : 'text-muted-foreground'}>
                         {queue.failed}
                       </span>
                     </td>
-                    <td className="p-4 text-right text-text-muted">{formatDuration(queue.avgProcessTime)}</td>
+                    <td className="p-4 text-right text-muted-foreground">{formatDuration(queue.avgProcessTime)}</td>
                     <td className="p-4">
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => handleQueueToggle(queue.id, queue.name, effectiveStatus)}
                           disabled={isToggleLoading}
                           className={cn(
-                            'text-text-muted hover:text-white text-sm transition-colors',
+                            'text-muted-foreground hover:text-white text-sm transition-colors',
                             isToggleLoading && 'opacity-50 cursor-not-allowed'
                           )}
                         >
@@ -572,7 +572,7 @@ export default function System() {
             onClick={() => setConfirmDialog(null)}
           />
           {/* Dialog */}
-          <div className="relative bg-surface-secondary border border-white/10 rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
+          <div className="relative bg-surface-secondary border border-foreground/10 rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
             <div className="flex items-center gap-3 mb-4">
               {confirmDialog.type === 'retry' ? (
                 <ArrowPathIcon className="w-6 h-6 text-warning" />
@@ -587,7 +587,7 @@ export default function System() {
                 {confirmDialog.type === 'retry' && 'Retry Failed Jobs'}
               </h3>
             </div>
-            <p className="text-text-secondary mb-6">
+            <p className="text-muted-foreground mb-6">
               {confirmDialog.type === 'pause' && (
                 <>
                   Are you sure you want to pause the <span className="font-medium text-white">{confirmDialog.queueName}</span> queue?
@@ -610,7 +610,7 @@ export default function System() {
             <div className="flex items-center justify-end gap-3">
               <button
                 onClick={() => setConfirmDialog(null)}
-                className="px-4 py-2 rounded-lg text-text-secondary hover:text-white transition-colors"
+                className="px-4 py-2 rounded-lg text-muted-foreground hover:text-white transition-colors"
               >
                 Cancel
               </button>

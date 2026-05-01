@@ -45,9 +45,9 @@ const statusConfig = {
   },
   disconnected: {
     icon: XCircleIcon,
-    color: 'text-white/40',
-    bgColor: 'bg-white/5',
-    borderColor: 'border-white/10',
+    color: 'text-foreground/40',
+    bgColor: 'bg-foreground/5',
+    borderColor: 'border-foreground/10',
     label: 'Not Connected',
   },
   expired: {
@@ -209,7 +209,7 @@ export default function ConnectPlatforms() {
         <div className="flex items-center gap-3">
           <div className="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-sm">
             <span className="text-emerald-400 font-semibold">{connectedCount}</span>
-            <span className="text-white/40">/{totalPlatforms} connected</span>
+            <span className="text-foreground/40">/{totalPlatforms} connected</span>
           </div>
         </div>
       </div>
@@ -217,13 +217,13 @@ export default function ConnectPlatforms() {
       {/* Search + Category Filter */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
+          <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/30" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search integrations..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-white/10 bg-white/[0.02] text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-colors"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-foreground/10 bg-white/[0.02] text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-colors"
           />
         </div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -233,7 +233,7 @@ export default function ConnectPlatforms() {
               'px-3 py-2 rounded-lg text-xs font-medium transition-colors',
               selectedCategory === 'all'
                 ? 'bg-primary text-primary-foreground'
-                : 'bg-white/5 text-white/50 hover:text-white/80 hover:bg-white/10 border border-white/10'
+                : 'bg-foreground/5 text-foreground/50 hover:text-foreground/80 hover:bg-foreground/10 border border-foreground/10'
             )}
           >
             All
@@ -246,7 +246,7 @@ export default function ConnectPlatforms() {
                 'px-3 py-2 rounded-lg text-xs font-medium transition-colors',
                 selectedCategory === cat
                   ? 'bg-primary text-primary-foreground'
-                  : 'bg-white/5 text-white/50 hover:text-white/80 hover:bg-white/10 border border-white/10'
+                  : 'bg-foreground/5 text-foreground/50 hover:text-foreground/80 hover:bg-foreground/10 border border-foreground/10'
               )}
             >
               {categoryLabels[cat]}
@@ -262,7 +262,7 @@ export default function ConnectPlatforms() {
 
         return (
           <div key={cat}>
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-white/50 mb-3">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-foreground/50 mb-3">
               {categoryLabels[cat]}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -277,10 +277,10 @@ export default function ConnectPlatforms() {
                   <div
                     key={platform.id}
                     className={cn(
-                      'group relative rounded-xl border transition-colors cursor-pointer hover:border-white/20',
+                      'group relative rounded-xl border transition-colors cursor-pointer hover:border-foreground/20',
                       status === 'connected'
                         ? 'border-emerald-500/20 bg-emerald-500/[0.03]'
-                        : 'border-white/8 bg-white/[0.02] hover:bg-white/[0.04]'
+                        : 'border-foreground/8 bg-white/[0.02] hover:bg-white/[0.04]'
                     )}
                     onClick={() => setSelectedPlatform(platform)}
                   >
@@ -292,7 +292,7 @@ export default function ConnectPlatforms() {
                           </div>
                           <div>
                             <h3 className="font-semibold text-sm">{platform.name}</h3>
-                            <p className="text-xs text-white/40">{platform.subtitle}</p>
+                            <p className="text-xs text-foreground/40">{platform.subtitle}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -307,10 +307,10 @@ export default function ConnectPlatforms() {
 
                       {/* Credential count + auth method */}
                       <div className="flex items-center gap-3 mt-3">
-                        <span className="text-[11px] px-2 py-0.5 rounded-md bg-white/5 text-white/40 border border-white/8">
+                        <span className="text-[11px] px-2 py-0.5 rounded-md bg-foreground/5 text-foreground/40 border border-foreground/8">
                           {platform.credentials.filter((c) => c.required).length} required fields
                         </span>
-                        <span className="text-[11px] px-2 py-0.5 rounded-md bg-white/5 text-white/40 border border-white/8">
+                        <span className="text-[11px] px-2 py-0.5 rounded-md bg-foreground/5 text-foreground/40 border border-foreground/8">
                           {platform.authMethod === 'oauth' ? 'OAuth' : platform.authMethod === 'oauth+api-key' ? 'OAuth + API' : platform.authMethod === 'webhook' ? 'Webhook' : 'API Key'}
                         </span>
                         {platform.capiEvents && platform.capiEvents.length > 0 && (
@@ -322,9 +322,9 @@ export default function ConnectPlatforms() {
 
                       {/* Connected info for OAuth platforms */}
                       {isOAuth && status === 'connected' && connInfo && (
-                        <div className="flex items-center gap-4 mt-3 pt-3 border-t border-white/5 text-xs text-white/40">
-                          <span>Accounts: <span className="text-white/70 font-medium">{connInfo.accountCount}</span></span>
-                          <span>Since: <span className="text-white/70 font-medium">{connInfo.connectedAt || '—'}</span></span>
+                        <div className="flex items-center gap-4 mt-3 pt-3 border-t border-foreground/5 text-xs text-foreground/40">
+                          <span>Accounts: <span className="text-foreground/70 font-medium">{connInfo.accountCount}</span></span>
+                          <span>Since: <span className="text-foreground/70 font-medium">{connInfo.connectedAt || '—'}</span></span>
                         </div>
                       )}
 
@@ -335,7 +335,7 @@ export default function ConnectPlatforms() {
                             <>
                               <button
                                 onClick={() => handleRefresh(platform.id)}
-                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border border-white/10 hover:bg-white/5 transition-colors"
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border border-foreground/10 hover:bg-foreground/5 transition-colors"
                               >
                                 <ArrowPathIcon className="h-3.5 w-3.5" />
                                 Refresh
@@ -374,27 +374,27 @@ export default function ConnectPlatforms() {
 
       {/* Empty state */}
       {filteredPlatforms.length === 0 && (
-        <div className="text-center py-12 text-white/40">
+        <div className="text-center py-12 text-foreground/40">
           <MagnifyingGlassIcon className="h-10 w-10 mx-auto mb-3 opacity-30" />
           <p className="text-sm">No integrations match your search.</p>
         </div>
       )}
 
       {/* Feature Support Matrix */}
-      <div className="rounded-xl border border-white/10 bg-white/[0.02] p-6">
+      <div className="rounded-xl border border-foreground/10 bg-white/[0.02] p-6">
         <h3 className="font-semibold mb-4">Ad Platform Feature Matrix</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-white/10 text-left">
-                <th className="pb-3 font-medium text-white/50">Feature</th>
-                <th className="pb-3 font-medium text-white/50 text-center">Meta</th>
-                <th className="pb-3 font-medium text-white/50 text-center">Google</th>
-                <th className="pb-3 font-medium text-white/50 text-center">TikTok</th>
-                <th className="pb-3 font-medium text-white/50 text-center">Snapchat</th>
+              <tr className="border-b border-foreground/10 text-left">
+                <th className="pb-3 font-medium text-foreground/50">Feature</th>
+                <th className="pb-3 font-medium text-foreground/50 text-center">Meta</th>
+                <th className="pb-3 font-medium text-foreground/50 text-center">Google</th>
+                <th className="pb-3 font-medium text-foreground/50 text-center">TikTok</th>
+                <th className="pb-3 font-medium text-foreground/50 text-center">Snapchat</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="divide-y divide-foreground/5">
               {[
                 ['OAuth Flow',          true, true, true, true],
                 ['Token Auto-Refresh',  true, true, true, true],
@@ -406,7 +406,7 @@ export default function ConnectPlatforms() {
                 ['Webhook Support',     true, true, true, true],
               ].map(([feature, ...platforms], i) => (
                 <tr key={i}>
-                  <td className="py-2.5 font-medium text-white/70">{feature as string}</td>
+                  <td className="py-2.5 font-medium text-foreground/70">{feature as string}</td>
                   {(platforms as (boolean | string)[]).map((v, j) => (
                     <td key={j} className="py-2.5 text-center">
                       {v === true ? (
@@ -424,9 +424,9 @@ export default function ConnectPlatforms() {
       </div>
 
       {/* Security info */}
-      <div className="rounded-xl border border-white/10 bg-white/[0.02] p-6">
+      <div className="rounded-xl border border-foreground/10 bg-white/[0.02] p-6">
         <h3 className="font-semibold mb-2">Security & Data Handling</h3>
-        <ul className="space-y-2 text-sm text-white/50">
+        <ul className="space-y-2 text-sm text-foreground/50">
           <li>&#8226; OAuth tokens are AES-256 encrypted at rest and auto-refreshed before expiry</li>
           <li>&#8226; All PII data (emails, phone numbers) is SHA-256 hashed before sending to any platform</li>
           <li>&#8226; API keys and secrets are encrypted with Fernet symmetric encryption</li>

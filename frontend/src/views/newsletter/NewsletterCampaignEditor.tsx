@@ -39,7 +39,7 @@ const INPUT_CLASS =
   'bg-muted border border-white/[0.08] rounded-xl px-4 py-2.5 text-foreground placeholder:text-foreground/30 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/50 w-full';
 
 const BUTTON_PRIMARY =
-  'bg-primary hover:bg-[#00b5ad] text-black font-semibold rounded-xl px-4 py-2.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+  'bg-primary hover:bg-primary/90 text-black font-semibold rounded-xl px-4 py-2.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
 
 const BUTTON_SECONDARY =
   'bg-muted border border-white/[0.08] hover:bg-muted text-foreground rounded-xl px-4 py-2.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
@@ -379,7 +379,7 @@ export default function NewsletterCampaignEditor() {
                       type="checkbox"
                       checked={audienceFilters.status?.includes(status) ?? false}
                       onChange={() => toggleAudienceStatus(status)}
-                      className="rounded border-white/20 bg-muted text-primary focus:ring-primary/50"
+                      className="rounded border-foreground/20 bg-muted text-primary focus:ring-primary/50"
                     />
                     <span className="capitalize">{status}</span>
                   </label>
@@ -421,7 +421,7 @@ export default function NewsletterCampaignEditor() {
                       type="checkbox"
                       checked={audienceFilters.platforms?.includes(platform) ?? false}
                       onChange={() => toggleAudiencePlatform(platform)}
-                      className="rounded border-white/20 bg-muted text-primary focus:ring-primary/50"
+                      className="rounded border-foreground/20 bg-muted text-primary focus:ring-primary/50"
                     />
                     <span className="capitalize">{platform}</span>
                   </label>

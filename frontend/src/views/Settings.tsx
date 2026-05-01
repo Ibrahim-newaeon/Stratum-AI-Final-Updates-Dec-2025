@@ -838,17 +838,17 @@ function SecuritySettings({
           <input
             type="password"
             placeholder={t('settings.currentPassword')}
-            className="w-full px-4 py-2 rounded-xl border border-white/10 glass bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="w-full px-4 py-2 rounded-xl border border-foreground/10 glass bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
           <input
             type="password"
             placeholder={t('settings.newPassword')}
-            className="w-full px-4 py-2 rounded-xl border border-white/10 glass bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="w-full px-4 py-2 rounded-xl border border-foreground/10 glass bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
           <input
             type="password"
             placeholder={t('settings.confirmPassword')}
-            className="w-full px-4 py-2 rounded-xl border border-white/10 glass bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="w-full px-4 py-2 rounded-xl border border-foreground/10 glass bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
           <button className="px-4 py-2 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
             {t('settings.updatePassword')}
@@ -856,12 +856,12 @@ function SecuritySettings({
         </div>
       </div>
 
-      <div className="border-t border-white/10 pt-6">
+      <div className="border-t border-foreground/10 pt-6">
         <h3 className="font-medium mb-3">{t('settings.twoFactorAuth')}</h3>
 
         {/* MFA Status / Idle */}
         {mfaStep === 'idle' && (
-          <div className="flex items-center justify-between p-4 rounded-xl border border-white/10 glass">
+          <div className="flex items-center justify-between p-4 rounded-xl border border-foreground/10 glass">
             <div>
               <p className="font-medium">
                 {mfaEnabled ? '2FA is Enabled' : t('settings.enable2FA')}
@@ -887,7 +887,7 @@ function SecuritySettings({
               <button
                 onClick={handleMfaSetup}
                 disabled={mfaLoading}
-                className="px-4 py-2 rounded-xl border border-white/10 hover:bg-white/5 transition-colors flex items-center gap-2"
+                className="px-4 py-2 rounded-xl border border-foreground/10 hover:bg-foreground/5 transition-colors flex items-center gap-2"
               >
                 {mfaLoading && <Loader2 className="w-4 h-4 animate-spin" />}
                 {t('settings.setup')}
@@ -898,7 +898,7 @@ function SecuritySettings({
 
         {/* MFA Setup - Show QR Code */}
         {mfaStep === 'setup' && mfaSetupData && (
-          <div className="p-4 rounded-xl border border-white/10 glass space-y-4">
+          <div className="p-4 rounded-xl border border-foreground/10 glass space-y-4">
             <p className="font-medium">Scan this QR code with your authenticator app</p>
             <div className="flex justify-center">
               <img
@@ -911,7 +911,7 @@ function SecuritySettings({
             </div>
             <div className="text-center">
               <p className="text-xs text-muted-foreground mb-1">Or enter this secret manually:</p>
-              <code className="text-sm bg-white/5 px-3 py-1 rounded-lg select-all">
+              <code className="text-sm bg-foreground/5 px-3 py-1 rounded-lg select-all">
                 {mfaSetupData.secret}
               </code>
             </div>
@@ -926,7 +926,7 @@ function SecuritySettings({
                   onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   placeholder="000000"
                   maxLength={6}
-                  className="flex-1 px-4 py-2 rounded-xl border border-white/10 glass bg-transparent text-center text-lg tracking-widest focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="flex-1 px-4 py-2 rounded-xl border border-foreground/10 glass bg-transparent text-center text-lg tracking-widest focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
                 <button
                   onClick={handleMfaVerify}
@@ -969,7 +969,7 @@ function SecuritySettings({
                   Save these backup codes somewhere safe. You can use them if you lose access to
                   your authenticator app.
                 </p>
-                <div className="grid grid-cols-2 gap-2 p-3 rounded-lg bg-white/5 border border-white/10">
+                <div className="grid grid-cols-2 gap-2 p-3 rounded-lg bg-foreground/5 border border-foreground/10">
                   {mfaBackupCodes.map((code, i) => (
                     <code key={i} className="text-sm font-mono text-center py-1">
                       {code}
@@ -1004,7 +1004,7 @@ function SecuritySettings({
                 onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 placeholder="000000"
                 maxLength={6}
-                className="flex-1 px-4 py-2 rounded-xl border border-white/10 glass bg-transparent text-center text-lg tracking-widest focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                className="flex-1 px-4 py-2 rounded-xl border border-foreground/10 glass bg-transparent text-center text-lg tracking-widest focus:outline-none focus:ring-2 focus:ring-red-500/20"
               />
               <button
                 onClick={handleMfaDisable}
@@ -1034,7 +1034,7 @@ function SecuritySettings({
         )}
       </div>
 
-      <div className="border-t border-white/10 pt-6">
+      <div className="border-t border-foreground/10 pt-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-medium">API Keys</h3>
           <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-primary hover:bg-primary/10 transition-colors">
@@ -1044,7 +1044,7 @@ function SecuritySettings({
 
         <div className="space-y-4">
           {apiKeys.length === 0 && (
-            <div className="p-4 rounded-xl border border-white/10 glass text-center">
+            <div className="p-4 rounded-xl border border-foreground/10 glass text-center">
               <p className="text-muted-foreground">No API keys created yet</p>
               <p className="text-xs text-muted-foreground mt-1">
                 Create a key to integrate with the Stratum API
@@ -1056,7 +1056,7 @@ function SecuritySettings({
             const setVisible = apiKey.type === 'live' ? setShowApiKey : setShowTestKey;
 
             return (
-              <div key={apiKey.id} className="p-4 rounded-xl border border-white/10 glass card-3d">
+              <div key={apiKey.id} className="p-4 rounded-xl border border-foreground/10 glass card-3d">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <h4 className="font-medium">{apiKey.name}</h4>
@@ -1074,7 +1074,7 @@ function SecuritySettings({
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => copyToClipboard(apiKey.fullKey, apiKey.id)}
-                      className="px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 transition-colors text-sm flex items-center gap-1.5"
+                      className="px-3 py-1.5 rounded-lg border border-foreground/10 hover:bg-foreground/5 transition-colors text-sm flex items-center gap-1.5"
                     >
                       {copiedKey === apiKey.id ? (
                         <>
@@ -1091,7 +1091,7 @@ function SecuritySettings({
                     <button
                       onClick={() => handleRegenerate(apiKey.id)}
                       disabled={regenerating === apiKey.id}
-                      className="px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 transition-colors text-sm flex items-center gap-1.5 disabled:opacity-50"
+                      className="px-3 py-1.5 rounded-lg border border-foreground/10 hover:bg-foreground/5 transition-colors text-sm flex items-center gap-1.5 disabled:opacity-50"
                     >
                       {regenerating === apiKey.id ? (
                         <>
@@ -1109,12 +1109,12 @@ function SecuritySettings({
                 </div>
 
                 <div className="flex items-center gap-2 mb-3">
-                  <code className="flex-1 px-3 py-2.5 rounded-lg bg-black/30 border border-white/5 text-sm">
+                  <code className="flex-1 px-3 py-2.5 rounded-lg bg-black/30 border border-foreground/5 text-sm">
                     {isVisible ? apiKey.fullKey : apiKey.key}
                   </code>
                   <button
                     onClick={() => setVisible(!isVisible)}
-                    className="p-2.5 rounded-lg hover:bg-white/5 transition-colors"
+                    className="p-2.5 rounded-lg hover:bg-foreground/5 transition-colors"
                   >
                     {isVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -1405,7 +1405,7 @@ function IntegrationSettings() {
     onConnect?: () => void;
   }) => (
     <div
-      className="flex items-center justify-between p-4 rounded-xl border border-white/10 glass card-3d cursor-pointer hover:border-white/20 transition-colors"
+      className="flex items-center justify-between p-4 rounded-xl border border-foreground/10 glass card-3d cursor-pointer hover:border-foreground/20 transition-colors"
       onClick={() => handleViewCredentials(integration.id)}
     >
       <div className="flex items-center gap-4">
@@ -1435,7 +1435,7 @@ function IntegrationSettings() {
             e.stopPropagation();
             handleViewCredentials(integration.id);
           }}
-          className="px-3 py-1.5 rounded-xl text-xs font-medium border border-white/10 hover:bg-white/5 text-white/50 hover:text-white/80 transition-colors"
+          className="px-3 py-1.5 rounded-xl text-xs font-medium border border-foreground/10 hover:bg-foreground/5 text-foreground/50 hover:text-foreground/80 transition-colors"
         >
           View Setup
         </button>
@@ -1447,7 +1447,7 @@ function IntegrationSettings() {
           className={cn(
             'px-4 py-2 rounded-xl text-sm font-medium transition-colors',
             integration.connected
-              ? 'border border-white/10 hover:bg-white/5 text-red-400'
+              ? 'border border-foreground/10 hover:bg-foreground/5 text-red-400'
               : 'bg-primary text-primary-foreground hover:bg-primary/90'
           )}
         >
@@ -1480,7 +1480,7 @@ function IntegrationSettings() {
 
         <div className="space-y-3">
           {webhooks.map((webhook) => (
-            <div key={webhook.id} className="p-4 rounded-xl border border-white/10 glass">
+            <div key={webhook.id} className="p-4 rounded-xl border border-foreground/10 glass">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1 min-w-0">
                   <code className="text-sm text-cyan-400 break-all">{webhook.url}</code>
@@ -1499,7 +1499,7 @@ function IntegrationSettings() {
                   <span className="px-2.5 py-1 rounded-full bg-green-500/20 text-green-400 text-xs font-medium border border-green-500/30">
                     Active
                   </span>
-                  <button className="px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 text-sm">
+                  <button className="px-3 py-1.5 rounded-lg border border-foreground/10 hover:bg-foreground/5 text-sm">
                     Edit
                   </button>
                   <button
@@ -1520,7 +1520,7 @@ function IntegrationSettings() {
         {/* Add Webhook Modal */}
         {showAddWebhook && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="w-full max-w-lg rounded-2xl border border-white/10 glass-strong p-6">
+            <div className="w-full max-w-lg rounded-2xl border border-foreground/10 glass-strong p-6">
               <h3 className="text-lg font-semibold mb-4">Add Webhook Endpoint</h3>
 
               <div className="space-y-4">
@@ -1531,7 +1531,7 @@ function IntegrationSettings() {
                     value={newWebhookUrl}
                     onChange={(e) => setNewWebhookUrl(e.target.value)}
                     placeholder="https://your-app.com/webhooks/stratum"
-                    className="w-full px-4 py-2 rounded-xl border border-white/10 glass bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    className="w-full px-4 py-2 rounded-xl border border-foreground/10 glass bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
                 </div>
 
@@ -1546,7 +1546,7 @@ function IntegrationSettings() {
                           'p-3 rounded-xl border text-left transition-colors',
                           newWebhookEvents.includes(event.id)
                             ? 'border-primary bg-primary/10'
-                            : 'border-white/10 hover:border-white/20'
+                            : 'border-foreground/10 hover:border-foreground/20'
                         )}
                       >
                         <p className="font-medium text-sm">{event.label}</p>
@@ -1557,10 +1557,10 @@ function IntegrationSettings() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-white/10">
+              <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-foreground/10">
                 <button
                   onClick={() => setShowAddWebhook(false)}
-                  className="px-4 py-2 rounded-xl border border-white/10 hover:bg-white/5"
+                  className="px-4 py-2 rounded-xl border border-foreground/10 hover:bg-foreground/5"
                 >
                   Cancel
                 </button>
@@ -1621,7 +1621,7 @@ function IntegrationSettings() {
           {commerceIntegrations.map((integration) => (
             <div
               key={integration.id}
-              className="p-4 rounded-xl border border-white/10 glass card-3d text-center cursor-pointer hover:border-white/20 transition-colors"
+              className="p-4 rounded-xl border border-foreground/10 glass card-3d text-center cursor-pointer hover:border-foreground/20 transition-colors"
               onClick={() => handleViewCredentials(integration.id)}
             >
               <div className={cn('p-3 rounded-xl bg-black/30 inline-flex mb-3', integration.color)}>
@@ -2540,12 +2540,12 @@ function TrustEngineSettings() {
                 max={100}
                 value={healthyThreshold}
                 onChange={(e) => setHealthyThreshold(Number(e.target.value))}
-                className="w-20 px-3 py-2 rounded-lg border border-white/10 bg-transparent text-center font-mono text-lg focus:outline-none focus:ring-2 focus:ring-green-500/30"
+                className="w-20 px-3 py-2 rounded-lg border border-foreground/10 bg-transparent text-center font-mono text-lg focus:outline-none focus:ring-2 focus:ring-green-500/30"
               />
               <span className="text-muted-foreground text-sm">/100</span>
             </div>
           </div>
-          <div className="w-full bg-white/10 rounded-full h-2">
+          <div className="w-full bg-foreground/10 rounded-full h-2">
             <div
               className="bg-green-500 rounded-full h-2 transition-colors"
               style={{ width: `${healthyThreshold}%` }}
@@ -2569,12 +2569,12 @@ function TrustEngineSettings() {
                 max={100}
                 value={degradedThreshold}
                 onChange={(e) => setDegradedThreshold(Number(e.target.value))}
-                className="w-20 px-3 py-2 rounded-lg border border-white/10 bg-transparent text-center font-mono text-lg focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+                className="w-20 px-3 py-2 rounded-lg border border-foreground/10 bg-transparent text-center font-mono text-lg focus:outline-none focus:ring-2 focus:ring-amber-500/30"
               />
               <span className="text-muted-foreground text-sm">/100</span>
             </div>
           </div>
-          <div className="w-full bg-white/10 rounded-full h-2">
+          <div className="w-full bg-foreground/10 rounded-full h-2">
             <div
               className="bg-amber-500 rounded-full h-2 transition-colors"
               style={{ width: `${degradedThreshold}%` }}
@@ -2593,7 +2593,7 @@ function TrustEngineSettings() {
         </div>
 
         {/* Autopilot Toggle */}
-        <div className="p-4 rounded-xl border border-white/10 bg-white/5">
+        <div className="p-4 rounded-xl border border-foreground/10 bg-foreground/5">
           <div className="flex items-center justify-between">
             <div>
               <label className="font-medium">Autopilot Mode</label>
@@ -2620,7 +2620,7 @@ function TrustEngineSettings() {
         </div>
 
         {/* Visual summary */}
-        <div className="p-4 rounded-xl border border-white/10 bg-white/5">
+        <div className="p-4 rounded-xl border border-foreground/10 bg-foreground/5">
           <h3 className="font-medium mb-3">Trust Gate Logic</h3>
           <div className="space-y-2 text-sm">
             <div className="flex items-center gap-3">

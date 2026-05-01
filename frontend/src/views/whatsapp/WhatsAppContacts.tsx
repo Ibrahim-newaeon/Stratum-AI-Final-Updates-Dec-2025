@@ -146,7 +146,7 @@ export default function WhatsAppContacts() {
         <div className="flex gap-3">
           <button
             onClick={() => setShowImportModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-card border border-white/10 rounded-xl hover:bg-muted transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-card border border-foreground/10 rounded-xl hover:bg-muted transition-colors"
           >
             <ArrowUpTrayIcon className="w-4 h-4" />
             Import CSV
@@ -170,7 +170,7 @@ export default function WhatsAppContacts() {
             placeholder="Search by phone or name..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-muted/50 border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none transition-colors"
+            className="w-full pl-10 pr-4 py-3 bg-muted/50 border border-foreground/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none transition-colors"
           />
         </div>
         <div className="flex gap-2">
@@ -182,7 +182,7 @@ export default function WhatsAppContacts() {
                 'px-4 py-2 rounded-xl transition-colors text-sm font-medium',
                 statusFilter === status
                   ? 'bg-[#25D366] text-foreground'
-                  : 'bg-muted/50 text-gray-400 hover:text-foreground border border-white/10'
+                  : 'bg-muted/50 text-gray-400 hover:text-foreground border border-foreground/10'
               )}
             >
               {status === 'all' ? 'All' : statusConfig[status as keyof typeof statusConfig]?.label}
@@ -214,11 +214,11 @@ export default function WhatsAppContacts() {
       )}
 
       {/* Contacts Table */}
-      <div className="bg-muted/50 rounded-2xl border border-white/5 overflow-hidden">
+      <div className="bg-muted/50 rounded-2xl border border-foreground/5 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-white/5">
+              <tr className="border-b border-foreground/5">
                 <th className="p-4 text-left">
                   <input
                     type="checkbox"
@@ -227,7 +227,7 @@ export default function WhatsAppContacts() {
                       paginatedContacts.length > 0
                     }
                     onChange={handleSelectAll}
-                    className="rounded border-white/20 bg-transparent"
+                    className="rounded border-foreground/20 bg-transparent"
                   />
                 </th>
                 <th className="p-4 text-left text-sm font-medium text-gray-400">Contact</th>
@@ -245,14 +245,14 @@ export default function WhatsAppContacts() {
                 return (
                   <tr
                     key={contact.id}
-                    className="border-b border-white/5 hover:bg-white/[0.02] transition-colors"
+                    className="border-b border-foreground/5 hover:bg-white/[0.02] transition-colors"
                   >
                     <td className="p-4">
                       <input
                         type="checkbox"
                         checked={selectedContacts.includes(contact.id)}
                         onChange={() => handleToggleSelect(contact.id)}
-                        className="rounded border-white/20 bg-transparent"
+                        className="rounded border-foreground/20 bg-transparent"
                       />
                     </td>
                     <td className="p-4">
@@ -312,7 +312,7 @@ export default function WhatsAppContacts() {
                             <XCircleIcon className="w-4 h-4" />
                           </button>
                         )}
-                        <button aria-label="Edit contact" className="p-2 text-gray-400 hover:bg-white/5 rounded-lg transition-colors">
+                        <button aria-label="Edit contact" className="p-2 text-gray-400 hover:bg-foreground/5 rounded-lg transition-colors">
                           <PencilIcon className="w-4 h-4" />
                         </button>
                         <button aria-label="Delete contact" className="p-2 text-gray-400 hover:bg-red-500/10 hover:text-red-400 rounded-lg transition-colors">
@@ -328,7 +328,7 @@ export default function WhatsAppContacts() {
         </div>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between p-4 border-t border-white/5">
+        <div className="flex items-center justify-between p-4 border-t border-foreground/5">
           <span className="text-sm text-gray-400">
             Showing {(currentPage - 1) * pageSize + 1}-
             {Math.min(currentPage * pageSize, filteredContacts.length)} of {filteredContacts.length}
@@ -431,12 +431,12 @@ function AddContactModal({
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className="w-full max-w-md bg-muted/50 rounded-2xl border border-white/10 p-6"
+        className="w-full max-w-md bg-muted/50 rounded-2xl border border-foreground/10 p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-semibold">Add Contact</h3>
-          <button onClick={onClose} aria-label="Close" className="p-2 hover:bg-white/5 rounded-lg">
+          <button onClick={onClose} aria-label="Close" className="p-2 hover:bg-foreground/5 rounded-lg">
             <XMarkIcon className="w-5 h-5" />
           </button>
         </div>
@@ -450,7 +450,7 @@ function AddContactModal({
               placeholder="+1234567890"
               value={formData.phone_number}
               onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
-              className="w-full px-4 py-3 bg-background border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
+              className="w-full px-4 py-3 bg-background border border-foreground/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
             />
           </div>
           <div>
@@ -458,7 +458,7 @@ function AddContactModal({
             <select
               value={formData.country_code}
               onChange={(e) => setFormData({ ...formData, country_code: e.target.value })}
-              className="w-full px-4 py-3 bg-background border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
+              className="w-full px-4 py-3 bg-background border border-foreground/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
             >
               <option value="US">United States (+1)</option>
               <option value="GB">United Kingdom (+44)</option>
@@ -475,7 +475,7 @@ function AddContactModal({
               placeholder="John Doe"
               value={formData.display_name}
               onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
-              className="w-full px-4 py-3 bg-background border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
+              className="w-full px-4 py-3 bg-background border border-foreground/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
             />
           </div>
 
@@ -483,7 +483,7 @@ function AddContactModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-3 bg-card border border-white/10 rounded-xl hover:bg-muted transition-colors"
+              className="flex-1 px-4 py-3 bg-card border border-foreground/10 rounded-xl hover:bg-muted transition-colors"
             >
               Cancel
             </button>
@@ -532,12 +532,12 @@ function ImportContactsModal({
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className="w-full max-w-lg bg-muted/50 rounded-2xl border border-white/10 p-6"
+        className="w-full max-w-lg bg-muted/50 rounded-2xl border border-foreground/10 p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-semibold">Import Contacts</h3>
-          <button onClick={onClose} aria-label="Close" className="p-2 hover:bg-white/5 rounded-lg">
+          <button onClick={onClose} aria-label="Close" className="p-2 hover:bg-foreground/5 rounded-lg">
             <XMarkIcon className="w-5 h-5" />
           </button>
         </div>
@@ -551,7 +551,7 @@ function ImportContactsModal({
           onDrop={handleDrop}
           className={cn(
             'border-2 border-dashed rounded-xl p-8 text-center transition-colors',
-            isDragging ? 'border-[#25D366] bg-[#25D366]/5' : 'border-white/10',
+            isDragging ? 'border-[#25D366] bg-[#25D366]/5' : 'border-foreground/10',
             file ? 'border-green-500 bg-green-500/5' : ''
           )}
         >
@@ -595,7 +595,7 @@ function ImportContactsModal({
         <div className="flex gap-3 mt-6">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-3 bg-card border border-white/10 rounded-xl hover:bg-muted transition-colors"
+            className="flex-1 px-4 py-3 bg-card border border-foreground/10 rounded-xl hover:bg-muted transition-colors"
           >
             Cancel
           </button>

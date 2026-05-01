@@ -65,7 +65,7 @@ export default function Landing() {
                 <a
                   key={link.name}
                   href={link.href}
-                  className="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors duration-200"
+                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200"
                 >
                   {link.name}
                 </a>
@@ -76,7 +76,7 @@ export default function Landing() {
             <div className="hidden lg:flex items-center gap-4">
               <Link
                 to="/login"
-                className="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors duration-200"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200"
               >
                 Sign In
               </Link>
@@ -90,7 +90,7 @@ export default function Landing() {
 
             {/* Mobile Menu Button */}
             <button
-              className="lg:hidden p-2 rounded-lg bg-card border border-border text-text-primary"
+              className="lg:hidden p-2 rounded-lg bg-card border border-border text-foreground"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               aria-label="Toggle menu"
             >
@@ -110,7 +110,7 @@ export default function Landing() {
                   <a
                     key={link.name}
                     href={link.href}
-                    className="py-3 px-4 rounded-lg text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-white/5 transition-colors duration-200"
+                    className="py-3 px-4 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-foreground/5 transition-colors duration-200"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     {link.name}
@@ -119,7 +119,7 @@ export default function Landing() {
                 <hr className="my-2 border-border" />
                 <Link
                   to="/login"
-                  className="py-3 px-4 rounded-lg text-sm font-medium text-text-secondary hover:text-text-primary transition-colors duration-200"
+                  className="py-3 px-4 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Sign In
@@ -143,7 +143,7 @@ export default function Landing() {
         {/* Trust Bar */}
         <section className="py-12 border-y border-border bg-card/30">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
-            <p className="text-center text-sm text-text-muted mb-8 tracking-wide uppercase">
+            <p className="text-center text-sm text-muted-foreground mb-8 tracking-wide uppercase">
               Trusted by growth teams at
             </p>
             <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-4">
@@ -156,7 +156,7 @@ export default function Landing() {
               ].map((name) => (
                 <span
                   key={name}
-                  className="text-lg font-semibold text-text-muted/60 tracking-tight"
+                  className="text-lg font-semibold text-muted-foreground/60 tracking-tight"
                 >
                   {name}
                 </span>
@@ -171,11 +171,11 @@ export default function Landing() {
         <section id="solutions" className="py-24 lg:py-32 bg-card/20">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
             <div className="text-center mb-16">
-              <h2 className="text-display-sm text-text-primary mb-4">
+              <h2 className="text-display-sm text-foreground mb-4">
                 Trusted by teams who{' '}
                 <span className="text-gradient-primary">demand more</span>
               </h2>
-              <p className="text-body text-text-secondary max-w-2xl mx-auto">
+              <p className="text-body text-muted-foreground max-w-2xl mx-auto">
                 Partnering with growth teams to unlock unprecedented
                 performance.
               </p>
@@ -218,14 +218,14 @@ export default function Landing() {
                       </svg>
                     ))}
                   </div>
-                  <p className="text-body text-text-primary mb-6 leading-relaxed">
+                  <p className="text-body text-foreground mb-6 leading-relaxed">
                     &ldquo;{testimonial.quote}&rdquo;
                   </p>
                   <div>
-                    <p className="text-sm font-semibold text-text-primary">
+                    <p className="text-sm font-semibold text-foreground">
                       {testimonial.name}
                     </p>
-                    <p className="text-meta text-text-muted">
+                    <p className="text-meta text-muted-foreground">
                       {testimonial.title}
                     </p>
                   </div>

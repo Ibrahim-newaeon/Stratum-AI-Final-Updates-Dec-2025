@@ -34,14 +34,14 @@ export function HowItWorks() {
   ];
 
   return (
-    <section className="py-32 bg-surface-secondary border-y border-white/5">
+    <section className="py-32 bg-surface-secondary border-y border-foreground/5">
       <div className="max-w-7xl mx-auto px-6">
         {/* Section header */}
         <div className="text-center mb-20">
           <h2 className="text-h1 text-white mb-4">
             How it works
           </h2>
-          <p className="text-body text-text-secondary max-w-2xl mx-auto">
+          <p className="text-body text-muted-foreground max-w-2xl mx-auto">
             From connection to optimization in three simple steps
           </p>
         </div>
@@ -60,19 +60,19 @@ export function HowItWorks() {
                     <step.icon className={`w-10 h-10 ${step.color}`} />
                   </div>
                   {/* Number badge */}
-                  <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-surface-primary border border-white/10 flex items-center justify-center">
+                  <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-surface-primary border border-foreground/10 flex items-center justify-center">
                     <span className="text-meta text-white font-bold">{step.number}</span>
                   </div>
                 </div>
 
                 {/* Content */}
                 <h3 className="text-h3 text-white mb-3">{step.title}</h3>
-                <p className="text-body text-text-muted max-w-sm mx-auto">{step.description}</p>
+                <p className="text-body text-muted-foreground max-w-sm mx-auto">{step.description}</p>
 
                 {/* Arrow for mobile */}
                 {index < steps.length - 1 && (
                   <div className="md:hidden flex justify-center my-6">
-                    <svg className="w-6 h-6 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-6 h-6 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                     </svg>
                   </div>
@@ -84,7 +84,7 @@ export function HowItWorks() {
 
         {/* Result highlight */}
         <div className="mt-20 max-w-3xl mx-auto">
-          <div className="relative rounded-2xl bg-surface-primary border border-white/10 p-8 overflow-hidden">
+          <div className="relative rounded-2xl bg-surface-primary border border-foreground/10 p-8 overflow-hidden">
             {/* Gradient background */}
             <div className="absolute inset-0 bg-gradient-to-br from-stratum-500/5 to-cyan-500/5" />
 
@@ -94,11 +94,11 @@ export function HowItWorks() {
               </div>
               <div>
                 <h4 className="text-h3 text-white mb-2">The Result?</h4>
-                <p className="text-body text-text-secondary mb-4">
+                <p className="text-body text-muted-foreground mb-4">
                   Teams using Stratum AI report an average <span className="text-success font-semibold">23% improvement in ROAS</span> within
                   the first 90 days, with <span className="text-success font-semibold">60% less time</span> spent on manual optimization.
                 </p>
-                <div className="flex flex-wrap gap-4 text-meta text-text-muted">
+                <div className="flex flex-wrap gap-4 text-meta text-muted-foreground">
                   <span className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-success" />
                     Fewer false optimizations

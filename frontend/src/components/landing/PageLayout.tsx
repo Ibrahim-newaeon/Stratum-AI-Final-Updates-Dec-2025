@@ -113,8 +113,8 @@ export function PageLayout({ children }: PageLayoutProps) {
                   to={link.href}
                   className={`group relative text-sm font-medium py-2 transition-colors duration-200 ${
                     isActiveLink(link.href)
-                      ? 'text-text-primary font-semibold'
-                      : 'text-text-secondary hover:text-text-primary'
+                      ? 'text-foreground font-semibold'
+                      : 'text-muted-foreground hover:text-foreground'
                   }`}
                   style={{ letterSpacing: '0.01em' }}
                 >
@@ -134,7 +134,7 @@ export function PageLayout({ children }: PageLayoutProps) {
               <div className="relative lang-toggle">
                 <button
                   onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-white/5 transition-colors duration-200"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-foreground/5 transition-colors duration-200"
                   aria-label="Change language"
                 >
                   <Globe className="w-4 h-4" />
@@ -144,10 +144,10 @@ export function PageLayout({ children }: PageLayoutProps) {
                   <div className="absolute top-full mt-2 right-0 py-2 rounded-xl min-w-28 z-50 bg-card border border-border shadow-elevated animate-scale-in">
                     <button
                       onClick={() => toggleLanguage('en')}
-                      className={`w-full px-4 py-2 text-sm text-left hover:bg-white/5 transition-colors flex items-center justify-between ${
+                      className={`w-full px-4 py-2 text-sm text-left hover:bg-foreground/5 transition-colors flex items-center justify-between ${
                         currentLanguage === 'en'
-                          ? 'text-text-primary'
-                          : 'text-text-secondary'
+                          ? 'text-foreground'
+                          : 'text-muted-foreground'
                       }`}
                     >
                       <span>English</span>
@@ -157,10 +157,10 @@ export function PageLayout({ children }: PageLayoutProps) {
                     </button>
                     <button
                       onClick={() => toggleLanguage('ar')}
-                      className={`w-full px-4 py-2 text-sm text-left hover:bg-white/5 transition-colors flex items-center justify-between ${
+                      className={`w-full px-4 py-2 text-sm text-left hover:bg-foreground/5 transition-colors flex items-center justify-between ${
                         currentLanguage === 'ar'
-                          ? 'text-text-primary'
-                          : 'text-text-secondary'
+                          ? 'text-foreground'
+                          : 'text-muted-foreground'
                       }`}
                     >
                       <span>العربية</span>
@@ -174,7 +174,7 @@ export function PageLayout({ children }: PageLayoutProps) {
 
               <Link
                 to="/login"
-                className="text-sm font-medium py-2 px-4 text-text-secondary hover:text-text-primary transition-colors duration-200"
+                className="text-sm font-medium py-2 px-4 text-muted-foreground hover:text-foreground transition-colors duration-200"
               >
                 Sign In
               </Link>
@@ -188,7 +188,7 @@ export function PageLayout({ children }: PageLayoutProps) {
 
             {/* Mobile Menu Button */}
             <button
-              className="lg:hidden p-2 rounded-lg bg-card border border-border text-text-primary"
+              className="lg:hidden p-2 rounded-lg bg-card border border-border text-foreground"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               aria-label="Toggle mobile menu"
             >
@@ -210,8 +210,8 @@ export function PageLayout({ children }: PageLayoutProps) {
                     to={link.href}
                     className={`py-3 px-4 rounded-lg text-sm font-medium transition-colors ${
                       isActiveLink(link.href)
-                        ? 'text-text-primary bg-white/5'
-                        : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
+                        ? 'text-foreground bg-foreground/5'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-foreground/5'
                     }`}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
@@ -222,14 +222,14 @@ export function PageLayout({ children }: PageLayoutProps) {
 
                 {/* Mobile Language Toggle */}
                 <div className="px-4 py-2">
-                  <p className="text-xs text-text-muted mb-2">Language</p>
+                  <p className="text-xs text-muted-foreground mb-2">Language</p>
                   <div className="flex gap-2">
                     <button
                       onClick={() => toggleLanguage('en')}
                       className={`flex-1 py-2 px-4 rounded-xl text-sm font-medium transition-colors ${
                         currentLanguage === 'en'
-                          ? 'text-text-primary'
-                          : 'text-text-secondary'
+                          ? 'text-foreground'
+                          : 'text-muted-foreground'
                       }`}
                       style={{
                         background:
@@ -248,8 +248,8 @@ export function PageLayout({ children }: PageLayoutProps) {
                       onClick={() => toggleLanguage('ar')}
                       className={`flex-1 py-2 px-4 rounded-xl text-sm font-medium transition-colors ${
                         currentLanguage === 'ar'
-                          ? 'text-text-primary'
-                          : 'text-text-secondary'
+                          ? 'text-foreground'
+                          : 'text-muted-foreground'
                       }`}
                       style={{
                         background:
@@ -270,7 +270,7 @@ export function PageLayout({ children }: PageLayoutProps) {
                 <hr className="my-2 border-border" />
                 <Link
                   to="/login"
-                  className="py-3 px-4 rounded-lg text-sm font-medium text-text-secondary hover:text-text-primary transition-colors"
+                  className="py-3 px-4 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Sign In
@@ -307,7 +307,7 @@ export function PageLayout({ children }: PageLayoutProps) {
                   className="h-7"
                 />
               </Link>
-              <p className="text-sm text-text-muted mb-6 max-w-xs">
+              <p className="text-sm text-muted-foreground mb-6 max-w-xs">
                 Your AI Partner for Ad Growth. Unify, optimize, and scale with
                 intelligence you can trust.
               </p>
@@ -318,7 +318,7 @@ export function PageLayout({ children }: PageLayoutProps) {
                   href="https://linkedin.com/company/stratumhq"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-text-muted hover:text-stratum-400 transition-colors duration-200"
+                  className="text-muted-foreground hover:text-stratum-400 transition-colors duration-200"
                   aria-label="Follow us on LinkedIn"
                 >
                   <svg
@@ -333,7 +333,7 @@ export function PageLayout({ children }: PageLayoutProps) {
                   href="https://instagram.com/stratumhq"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-text-muted hover:text-stratum-400 transition-colors duration-200"
+                  className="text-muted-foreground hover:text-stratum-400 transition-colors duration-200"
                   aria-label="Follow us on Instagram"
                 >
                   <svg
@@ -385,7 +385,7 @@ export function PageLayout({ children }: PageLayoutProps) {
               },
             ].map((section) => (
               <div key={section.title}>
-                <h4 className="text-sm text-text-primary font-semibold mb-4">
+                <h4 className="text-sm text-foreground font-semibold mb-4">
                   {section.title}
                 </h4>
                 <ul className="space-y-3">
@@ -393,7 +393,7 @@ export function PageLayout({ children }: PageLayoutProps) {
                     <li key={link.name}>
                       <Link
                         to={link.href}
-                        className="text-sm text-text-muted hover:text-text-primary transition-colors duration-200"
+                        className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200"
                       >
                         {link.name}
                       </Link>
@@ -406,13 +406,13 @@ export function PageLayout({ children }: PageLayoutProps) {
 
           {/* Bottom bar */}
           <div className="pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-xs text-text-muted">
+            <p className="text-xs text-muted-foreground">
               &copy; {new Date().getFullYear()} Stratum AI. All rights
               reserved.
             </p>
 
             <div className="flex items-center gap-6">
-              <span className="flex items-center gap-2 text-xs text-text-muted">
+              <span className="flex items-center gap-2 text-xs text-muted-foreground">
                 <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
                 All systems operational
               </span>

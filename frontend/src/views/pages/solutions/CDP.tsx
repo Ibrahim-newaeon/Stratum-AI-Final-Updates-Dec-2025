@@ -162,7 +162,7 @@ export default function CDPSolution() {
                 </Link>
                 <Link
                   to="/cdp-calculator"
-                  className="px-8 py-4 rounded-xl text-lg font-semibold text-white transition-colors hover:bg-white/10 text-center"
+                  className="px-8 py-4 rounded-xl text-lg font-semibold text-white transition-colors hover:bg-foreground/10 text-center"
                   style={{
                     background: 'var(--landing-surface-glass)',
                     border: '1px solid rgba(255, 255, 255, 0.12)',

@@ -219,7 +219,7 @@ export default function Contact() {
                       type="text"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-[width] focus:ring-2"
+                      className="w-full px-4 py-3 rounded-xl text-white placeholder-foreground/40 outline-none transition-[width] focus:ring-2"
                       style={{
                         background: 'var(--landing-surface-glass)',
                         border: '1px solid var(--landing-border-glass)',
@@ -234,7 +234,7 @@ export default function Contact() {
                       type="email"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-[width] focus:ring-2"
+                      className="w-full px-4 py-3 rounded-xl text-white placeholder-foreground/40 outline-none transition-[width] focus:ring-2"
                       style={{
                         background: 'var(--landing-surface-glass)',
                         border: '1px solid var(--landing-border-glass)',
@@ -251,7 +251,7 @@ export default function Contact() {
                       type="text"
                       value={formData.company}
                       onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-[width] focus:ring-2"
+                      className="w-full px-4 py-3 rounded-xl text-white placeholder-foreground/40 outline-none transition-[width] focus:ring-2"
                       style={{
                         background: 'var(--landing-surface-glass)',
                         border: '1px solid var(--landing-border-glass)',
@@ -285,7 +285,7 @@ export default function Contact() {
                   <textarea
                     value={formData.message}
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-[width] focus:ring-2 min-h-[9.375rem]"
+                    className="w-full px-4 py-3 rounded-xl text-white placeholder-foreground/40 outline-none transition-[width] focus:ring-2 min-h-[9.375rem]"
                     style={{
                       background: 'var(--landing-surface-glass)',
                       border: '1px solid var(--landing-border-glass)',

@@ -67,7 +67,7 @@ function FAQItem({
   const gradientClass = `${visuals.gradientFrom} ${visuals.gradientTo}`;
 
   return (
-    <div className="border-b border-white/5 last:border-0">
+    <div className="border-b border-foreground/5 last:border-0">
       <button
         className="w-full py-6 flex items-start justify-between gap-4 text-left group"
         onClick={onToggle}
@@ -77,7 +77,7 @@ function FAQItem({
           {faq.question}
         </span>
         <span
-          className={`flex-shrink-0 p-1 rounded-full ${isOpen ? `bg-gradient-to-r ${gradientClass}` : 'bg-white/10'} transition-colors`}
+          className={`flex-shrink-0 p-1 rounded-full ${isOpen ? `bg-gradient-to-r ${gradientClass}` : 'bg-foreground/10'} transition-colors`}
         >
           <ChevronDownIcon
             className={`w-4 h-4 ${isOpen ? 'text-white rotate-180' : 'text-gray-400'} transition-transform duration-200`}
@@ -109,7 +109,7 @@ export function TierFAQ({ content }: TierFAQProps) {
         <div className="text-center mb-12">
           <Badge
             variant="outline"
-            className={`mb-4 px-4 py-1 ${visuals.accentColor} border-white/20 bg-white/5`}
+            className={`mb-4 px-4 py-1 ${visuals.accentColor} border-foreground/20 bg-foreground/5`}
           >
             FAQs
           </Badge>
@@ -126,7 +126,7 @@ export function TierFAQ({ content }: TierFAQProps) {
         </div>
 
         {/* FAQ List */}
-        <div className="bg-gray-900/30 rounded-2xl border border-white/5 px-6">
+        <div className="bg-gray-900/30 rounded-2xl border border-foreground/5 px-6">
           {faqs.map((faq, index) => (
             <FAQItem
               key={index}

@@ -119,10 +119,10 @@ export default function Blog() {
                     border: '1px solid var(--landing-border)',
                   }}
                 >
-                  <div className="h-4 bg-white/10 rounded w-1/4 mb-4" />
-                  <div className="h-6 bg-white/10 rounded w-3/4 mb-3" />
-                  <div className="h-4 bg-white/10 rounded w-full mb-2" />
-                  <div className="h-4 bg-white/10 rounded w-2/3" />
+                  <div className="h-4 bg-foreground/10 rounded w-1/4 mb-4" />
+                  <div className="h-6 bg-foreground/10 rounded w-3/4 mb-3" />
+                  <div className="h-4 bg-foreground/10 rounded w-full mb-2" />
+                  <div className="h-4 bg-foreground/10 rounded w-2/3" />
                 </div>
               ))}
             </div>
@@ -224,7 +224,7 @@ export default function Blog() {
                 type="email"
                 placeholder="Enter your email"
                 aria-label="Email address"
-                className="flex-1 px-4 py-3 rounded-xl text-white placeholder-white/40 outline-none focus:ring-2 focus:ring-primary"
+                className="flex-1 px-4 py-3 rounded-xl text-white placeholder-foreground/40 outline-none focus:ring-2 focus:ring-primary"
                 style={{
                   background: 'var(--landing-surface-glass)',
                   border: '1px solid rgba(255, 255, 255, 0.2)',

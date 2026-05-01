@@ -171,7 +171,7 @@ export default function WhatsAppTemplates() {
               layout
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-muted/50 rounded-2xl border border-white/5 p-5 hover:border-white/10 transition-colors"
+              className="bg-muted/50 rounded-2xl border border-foreground/5 p-5 hover:border-foreground/10 transition-colors"
             >
               {/* Header */}
               <div className="flex items-start justify-between mb-4">
@@ -215,7 +215,7 @@ export default function WhatsAppTemplates() {
                   <div className="text-gray-400 text-xs mt-2">{template.footer_text}</div>
                 )}
                 {template.buttons.length > 0 && (
-                  <div className="flex gap-2 mt-3 pt-2 border-t border-white/10">
+                  <div className="flex gap-2 mt-3 pt-2 border-t border-foreground/10">
                     {template.buttons.map((btn, i) => (
                       <span key={i} className="text-cyan-400 text-xs">
                         {btn.text}
@@ -250,7 +250,7 @@ export default function WhatsAppTemplates() {
                     Use
                   </button>
                 )}
-                <button className="p-2 text-gray-400 hover:bg-white/5 rounded-lg transition-colors" aria-label="Edit template">
+                <button className="p-2 text-gray-400 hover:bg-foreground/5 rounded-lg transition-colors" aria-label="Edit template">
                   <PencilIcon className="w-4 h-4" />
                 </button>
                 <button className="p-2 text-gray-400 hover:bg-red-500/10 hover:text-red-400 rounded-lg transition-colors" aria-label="Delete template">
@@ -371,12 +371,12 @@ function CreateTemplateModal({
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className="w-full max-w-2xl bg-muted/50 rounded-2xl border border-white/10 p-6 my-8"
+        className="w-full max-w-2xl bg-muted/50 rounded-2xl border border-foreground/10 p-6 my-8"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-semibold">Create Message Template</h3>
-          <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-lg" aria-label="Close">
+          <button onClick={onClose} className="p-2 hover:bg-foreground/5 rounded-lg" aria-label="Close">
             <XMarkIcon className="w-5 h-5" />
           </button>
         </div>
@@ -398,7 +398,7 @@ function CreateTemplateModal({
                     name: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '_'),
                   })
                 }
-                className="w-full px-4 py-3 bg-background border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
+                className="w-full px-4 py-3 bg-background border border-foreground/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
               />
               <span className="text-xs text-gray-500">Lowercase, underscores only</span>
             </div>
@@ -410,7 +410,7 @@ function CreateTemplateModal({
                 onChange={(e) =>
                   setFormData({ ...formData, category: e.target.value as Template['category'] })
                 }
-                className="w-full px-4 py-3 bg-background border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
+                className="w-full px-4 py-3 bg-background border border-foreground/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
               >
                 <option value="UTILITY">Utility - Transactional</option>
                 <option value="MARKETING">Marketing - Promotional</option>
@@ -424,7 +424,7 @@ function CreateTemplateModal({
             <select
               value={formData.language}
               onChange={(e) => setFormData({ ...formData, language: e.target.value })}
-              className="w-full px-4 py-3 bg-background border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
+              className="w-full px-4 py-3 bg-background border border-foreground/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
             >
               <option value="en">English</option>
               <option value="ar">Arabic</option>
@@ -472,7 +472,7 @@ function CreateTemplateModal({
                 maxLength={60}
                 value={formData.header_content}
                 onChange={(e) => setFormData({ ...formData, header_content: e.target.value })}
-                className="w-full px-4 py-3 bg-background border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
+                className="w-full px-4 py-3 bg-background border border-foreground/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
               />
             )}
             {['IMAGE', 'VIDEO', 'DOCUMENT'].includes(formData.header_type) && (
@@ -481,7 +481,7 @@ function CreateTemplateModal({
                 placeholder="Media URL for preview"
                 value={formData.header_content}
                 onChange={(e) => setFormData({ ...formData, header_content: e.target.value })}
-                className="w-full px-4 py-3 bg-background border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
+                className="w-full px-4 py-3 bg-background border border-foreground/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
               />
             )}
           </div>
@@ -496,7 +496,7 @@ function CreateTemplateModal({
               placeholder="Hi {{1}}, your order #{{2}} has been confirmed..."
               value={formData.body_text}
               onChange={(e) => setFormData({ ...formData, body_text: e.target.value })}
-              className="w-full px-4 py-3 bg-background border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none resize-none"
+              className="w-full px-4 py-3 bg-background border border-foreground/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none resize-none"
             />
             <span className="text-xs text-gray-500">
               Use {'{{1}}'}, {'{{2}}'} for variables. {formData.body_text.length}/1024
@@ -514,7 +514,7 @@ function CreateTemplateModal({
               placeholder="e.g., Reply STOP to unsubscribe"
               value={formData.footer_text}
               onChange={(e) => setFormData({ ...formData, footer_text: e.target.value })}
-              className="w-full px-4 py-3 bg-background border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
+              className="w-full px-4 py-3 bg-background border border-foreground/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
             />
           </div>
 
@@ -532,7 +532,7 @@ function CreateTemplateModal({
                     maxLength={25}
                     value={btn.text}
                     onChange={(e) => updateButton(i, { text: e.target.value })}
-                    className="flex-1 px-3 py-2 bg-background border border-white/10 rounded-lg text-sm"
+                    className="flex-1 px-3 py-2 bg-background border border-foreground/10 rounded-lg text-sm"
                   />
                   {btn.type === 'URL' && (
                     <input
@@ -540,7 +540,7 @@ function CreateTemplateModal({
                       placeholder="URL"
                       value={btn.url}
                       onChange={(e) => updateButton(i, { url: e.target.value })}
-                      className="flex-1 px-3 py-2 bg-background border border-white/10 rounded-lg text-sm"
+                      className="flex-1 px-3 py-2 bg-background border border-foreground/10 rounded-lg text-sm"
                     />
                   )}
                   {btn.type === 'PHONE_NUMBER' && (
@@ -549,7 +549,7 @@ function CreateTemplateModal({
                       placeholder="Phone"
                       value={btn.phone}
                       onChange={(e) => updateButton(i, { phone: e.target.value })}
-                      className="flex-1 px-3 py-2 bg-background border border-white/10 rounded-lg text-sm"
+                      className="flex-1 px-3 py-2 bg-background border border-foreground/10 rounded-lg text-sm"
                     />
                   )}
                   <span className="text-xs text-gray-500 w-16">{btn.type}</span>
@@ -595,7 +595,7 @@ function CreateTemplateModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-3 bg-card border border-white/10 rounded-xl hover:bg-muted transition-colors"
+              className="flex-1 px-4 py-3 bg-card border border-foreground/10 rounded-xl hover:bg-muted transition-colors"
             >
               Cancel
             </button>
@@ -635,12 +635,12 @@ function TemplatePreviewModal({ template, onClose }: { template: Template; onClo
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className="w-full max-w-lg bg-muted/50 rounded-2xl border border-white/10 p-6"
+        className="w-full max-w-lg bg-muted/50 rounded-2xl border border-foreground/10 p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-semibold">Template Preview</h3>
-          <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-lg" aria-label="Close">
+          <button onClick={onClose} className="p-2 hover:bg-foreground/5 rounded-lg" aria-label="Close">
             <XMarkIcon className="w-5 h-5" />
           </button>
         </div>
@@ -675,7 +675,7 @@ function TemplatePreviewModal({ template, onClose }: { template: Template; onClo
             </div>
           </div>
           {template.buttons.length > 0 && (
-            <div className="bg-success rounded-lg mt-1 max-w-72 ml-auto divide-y divide-white/10">
+            <div className="bg-success rounded-lg mt-1 max-w-72 ml-auto divide-y divide-foreground/10">
               {template.buttons.map((btn, i) => (
                 <div key={i} className="text-center py-2 text-info text-sm">
                   {btn.text}
@@ -700,7 +700,7 @@ function TemplatePreviewModal({ template, onClose }: { template: Template; onClo
                   setSampleValues(newValues);
                 }}
                 placeholder={`Value for variable ${num}`}
-                className="flex-1 px-3 py-2 bg-background border border-white/10 rounded-lg text-sm"
+                className="flex-1 px-3 py-2 bg-background border border-foreground/10 rounded-lg text-sm"
               />
             </div>
           ))}
@@ -708,7 +708,7 @@ function TemplatePreviewModal({ template, onClose }: { template: Template; onClo
 
         <button
           onClick={onClose}
-          className="w-full mt-6 px-4 py-3 bg-card border border-white/10 rounded-xl hover:bg-muted transition-colors"
+          className="w-full mt-6 px-4 py-3 bg-card border border-foreground/10 rounded-xl hover:bg-muted transition-colors"
         >
           Close
         </button>

@@ -162,7 +162,7 @@ export default function AIHero() {
 
             <a
               href="#demo"
-              className="group inline-flex items-center gap-2 px-8 py-4 rounded-lg text-base font-semibold text-white transition-colors hover:bg-white/10"
+              className="group inline-flex items-center gap-2 px-8 py-4 rounded-lg text-base font-semibold text-white transition-colors hover:bg-foreground/10"
               style={{
                 background: 'rgba(255, 255, 255, 0.03)',
                 backdropFilter: 'blur(40px)',
@@ -190,7 +190,7 @@ export default function AIHero() {
             {stats.map((stat) => (
               <div
                 key={stat.label}
-                className="group relative p-6 rounded-2xl bg-card border hover:border-white/10 transition-colors"
+                className="group relative p-6 rounded-2xl bg-card border hover:border-foreground/10 transition-colors"
               >
                 <div className="text-3xl sm:text-4xl font-bold text-foreground mb-1">
                   {stat.value}
@@ -256,7 +256,7 @@ export default function AIHero() {
                   </div>
                 </div>
                 <div className="text-4xl font-bold text-white mb-2">87</div>
-                <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+                <div className="h-2 rounded-full bg-foreground/10 overflow-hidden">
                   <motion.div
                     className="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full"
                     initial={{ width: 0 }}
@@ -267,7 +267,7 @@ export default function AIHero() {
               </div>
 
               {/* ROAS Prediction Section */}
-              <div className="col-span-1 p-6 rounded-2xl border-l border-white/10">
+              <div className="col-span-1 p-6 rounded-2xl border-l border-foreground/10">
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-sm text-gray-400">Predicted ROAS</span>
                   <ChartBarIcon className="w-4 h-4 text-purple-400" />
@@ -280,7 +280,7 @@ export default function AIHero() {
               </div>
 
               {/* Trust Gate Section */}
-              <div className="col-span-1 p-6 rounded-2xl border-l border-white/10">
+              <div className="col-span-1 p-6 rounded-2xl border-l border-foreground/10">
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-sm text-gray-400">Trust Gate</span>
                   <ShieldCheckIcon className="w-4 h-4 text-cyan-400" />
@@ -305,9 +305,9 @@ export default function AIHero() {
           <motion.div
             animate={{ y: [0, 8, 0] }}
             transition={{ duration: 1.5, repeat: Infinity }}
-            className="w-6 h-10 rounded-full border border-white/20 flex items-start justify-center p-2"
+            className="w-6 h-10 rounded-full border border-foreground/20 flex items-start justify-center p-2"
           >
-            <div className="w-1 h-2 rounded-full bg-white/40" />
+            <div className="w-1 h-2 rounded-full bg-foreground/40" />
           </motion.div>
         </div>
       </motion.div>

@@ -17,7 +17,7 @@ function TestimonialCard({
   const gradientClass = `${visuals.gradientFrom} ${visuals.gradientTo}`;
 
   return (
-    <Card className="bg-gray-900/50 border-white/5 hover:border-white/10 transition-colors">
+    <Card className="bg-gray-900/50 border-foreground/5 hover:border-foreground/10 transition-colors">
       <CardContent className="p-6">
         {/* Stars */}
         <div className="flex gap-1 mb-4">
@@ -83,7 +83,7 @@ export function TierTestimonials({ content }: TierTestimonialsProps) {
         <div className="text-center mb-16">
           <Badge
             variant="outline"
-            className={`mb-4 px-4 py-1 ${visuals.accentColor} border-white/20 bg-white/5`}
+            className={`mb-4 px-4 py-1 ${visuals.accentColor} border-foreground/20 bg-foreground/5`}
           >
             Customer Stories
           </Badge>

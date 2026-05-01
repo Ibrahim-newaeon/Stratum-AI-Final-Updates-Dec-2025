@@ -105,7 +105,7 @@ function IssueCard({ issue }: { issue: SignalIssue }) {
           {issue.affected_platforms.length > 0 && (
             <div className="flex items-center gap-1.5 mt-1.5">
               {issue.affected_platforms.map((p) => (
-                <span key={p} className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground bg-white/60 px-2 py-0.5 rounded border">
+                <span key={p} className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground bg-foreground/60 px-2 py-0.5 rounded border">
                   {p}
                 </span>
               ))}

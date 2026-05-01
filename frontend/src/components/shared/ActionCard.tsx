@@ -79,10 +79,10 @@ const typeConfig: Record<ActionType, {
 }
 
 const statusConfig: Record<ActionStatus, { label: string; color: string }> = {
-  pending: { label: 'Pending', color: 'text-text-muted' },
+  pending: { label: 'Pending', color: 'text-muted-foreground' },
   queued: { label: 'Queued', color: 'text-warning' },
   applied: { label: 'Applied', color: 'text-success' },
-  dismissed: { label: 'Dismissed', color: 'text-text-muted' },
+  dismissed: { label: 'Dismissed', color: 'text-muted-foreground' },
 }
 
 export function ActionCard({
@@ -103,7 +103,7 @@ export function ActionCard({
   if (compact) {
     return (
       <div className={cn(
-        'flex items-center gap-3 p-3 rounded-xl bg-surface-secondary border border-white/10',
+        'flex items-center gap-3 p-3 rounded-xl bg-surface-secondary border border-foreground/10',
         className
       )}>
         <div className={cn('p-2 rounded-lg', config.bgColor)}>
@@ -113,7 +113,7 @@ export function ActionCard({
           <h4 className="text-sm font-medium text-white truncate">{action.title}</h4>
           <div className="flex items-center gap-2 mt-0.5">
             {action.platform && (
-              <span className="text-xs text-text-muted">{action.platform}</span>
+              <span className="text-xs text-muted-foreground">{action.platform}</span>
             )}
             <ConfidenceBandBadge score={action.confidence} size="sm" showLabel={false} />
           </div>
@@ -128,7 +128,7 @@ export function ActionCard({
             </button>
             <button
               onClick={() => onDismiss?.(action)}
-              className="p-1.5 rounded-lg bg-surface-tertiary text-text-muted hover:text-white transition-colors"
+              className="p-1.5 rounded-lg bg-surface-tertiary text-muted-foreground hover:text-white transition-colors"
             >
               <XMarkIcon className="w-4 h-4" />
             </button>
@@ -140,8 +140,8 @@ export function ActionCard({
 
   return (
     <div className={cn(
-      'rounded-xl bg-surface-secondary border border-white/10 overflow-hidden transition-colors',
-      isActionable && 'hover:border-white/20',
+      'rounded-xl bg-surface-secondary border border-foreground/10 overflow-hidden transition-colors',
+      isActionable && 'hover:border-foreground/20',
       className
     )}>
       <div className="p-4">
@@ -166,7 +166,7 @@ export function ActionCard({
                   )}
                 </div>
                 <h4 className="font-medium text-white mt-1">{action.title}</h4>
-                <p className="text-sm text-text-muted mt-1">{action.description}</p>
+                <p className="text-sm text-muted-foreground mt-1">{action.description}</p>
               </div>
               <ConfidenceBandBadge score={action.confidence} size="sm" />
             </div>
@@ -174,12 +174,12 @@ export function ActionCard({
             {/* Meta row */}
             <div className="flex items-center gap-4 mt-3">
               {action.platform && (
-                <span className="text-xs bg-surface-tertiary text-text-muted px-2 py-0.5 rounded">
+                <span className="text-xs bg-surface-tertiary text-muted-foreground px-2 py-0.5 rounded">
                   {action.platform}
                 </span>
               )}
               {action.campaign && (
-                <span className="text-xs text-text-muted truncate max-w-36">
+                <span className="text-xs text-muted-foreground truncate max-w-36">
                   {action.campaign}
                 </span>
               )}
@@ -190,7 +190,7 @@ export function ActionCard({
                   {action.estimatedImpact.value > 0 ? '+' : ''}
                   {action.estimatedImpact.value}{action.estimatedImpact.unit}
                 </span>
-                <span className="text-text-muted">{action.estimatedImpact.metric}</span>
+                <span className="text-muted-foreground">{action.estimatedImpact.metric}</span>
               </div>
             </div>
           </div>
@@ -209,14 +209,14 @@ export function ActionCard({
           </button>
           <button
             onClick={() => onQueue?.(action)}
-            className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-surface-tertiary text-text-secondary hover:text-white transition-colors text-sm"
+            className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-surface-tertiary text-muted-foreground hover:text-white transition-colors text-sm"
           >
             <ClockIcon className="w-4 h-4" />
             Queue
           </button>
           <button
             onClick={() => onDismiss?.(action)}
-            className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-text-muted hover:text-white transition-colors text-sm"
+            className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-muted-foreground hover:text-white transition-colors text-sm"
           >
             <XMarkIcon className="w-4 h-4" />
           </button>

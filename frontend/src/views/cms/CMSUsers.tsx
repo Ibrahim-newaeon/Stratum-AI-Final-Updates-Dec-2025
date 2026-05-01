@@ -44,12 +44,12 @@ const CMS_ROLES: { value: CMSRole; label: string; color: string }[] = [
   { value: 'author', label: 'Author', color: 'text-purple-400 bg-purple-400/10' },
   { value: 'contributor', label: 'Contributor', color: 'text-blue-400 bg-blue-400/10' },
   { value: 'reviewer', label: 'Reviewer', color: 'text-green-400 bg-green-400/10' },
-  { value: 'viewer', label: 'Viewer', color: 'text-white/50 bg-white/5' },
+  { value: 'viewer', label: 'Viewer', color: 'text-foreground/50 bg-foreground/5' },
 ];
 
 function getRoleBadge(role: CMSRole) {
   const cfg = CMS_ROLES.find((r) => r.value === role);
-  if (!cfg) return { label: role, color: 'text-white/50 bg-white/5' };
+  if (!cfg) return { label: role, color: 'text-foreground/50 bg-foreground/5' };
   return cfg;
 }
 
@@ -167,8 +167,8 @@ export default function CMSUsers() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <UserCircleIcon className="w-12 h-12 text-white/20 mx-auto mb-4" />
-          <p className="text-white/60">You do not have permission to manage CMS users.</p>
+          <UserCircleIcon className="w-12 h-12 text-foreground/20 mx-auto mb-4" />
+          <p className="text-foreground/60">You do not have permission to manage CMS users.</p>
         </div>
       </div>
     );
@@ -180,7 +180,7 @@ export default function CMSUsers() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">CMS Users</h1>
-          <p className="text-white/60 mt-1">
+          <p className="text-foreground/60 mt-1">
             {users.length} user{users.length !== 1 ? 's' : ''} with CMS access
           </p>
         </div>
@@ -195,18 +195,18 @@ export default function CMSUsers() {
 
       {/* Search */}
       <div className="relative max-w-md">
-        <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+        <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/40" />
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by name or email..."
-          className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-purple-500/50"
+          className="w-full pl-10 pr-4 py-2.5 bg-foreground/5 border border-foreground/10 rounded-lg text-white placeholder-foreground/40 focus:outline-none focus:border-purple-500/50"
         />
       </div>
 
       {/* Users Table */}
-      <div className="rounded-2xl bg-white/5 border border-white/10 overflow-hidden">
+      <div className="rounded-2xl bg-foreground/5 border border-foreground/10 overflow-hidden">
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
             <div className="animate-spin w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full" />
@@ -217,8 +217,8 @@ export default function CMSUsers() {
           </div>
         ) : users.length === 0 ? (
           <div className="text-center py-20">
-            <UserCircleIcon className="w-12 h-12 text-white/20 mx-auto mb-4" />
-            <p className="text-white/60 mb-4">No CMS users found</p>
+            <UserCircleIcon className="w-12 h-12 text-foreground/20 mx-auto mb-4" />
+            <p className="text-foreground/60 mb-4">No CMS users found</p>
             <button
               onClick={() => setShowInviteModal(true)}
               className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
@@ -230,7 +230,7 @@ export default function CMSUsers() {
         ) : (
           <>
             {/* Table Header */}
-            <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-3 border-b border-white/10 text-xs font-medium text-white/50 uppercase tracking-wider">
+            <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-3 border-b border-foreground/10 text-xs font-medium text-foreground/50 uppercase tracking-wider">
               <div className="col-span-3">Name</div>
               <div className="col-span-3">Email</div>
               <div className="col-span-2">CMS Role</div>
@@ -240,13 +240,13 @@ export default function CMSUsers() {
             </div>
 
             {/* User Rows */}
-            <div className="divide-y divide-white/5">
+            <div className="divide-y divide-foreground/5">
               {users.map((u) => {
                 const roleBadge = getRoleBadge(u.cms_role);
                 return (
                   <div
                     key={u.id}
-                    className="grid grid-cols-1 md:grid-cols-12 gap-4 px-6 py-4 hover:bg-white/5 transition-colors items-center"
+                    className="grid grid-cols-1 md:grid-cols-12 gap-4 px-6 py-4 hover:bg-foreground/5 transition-colors items-center"
                   >
                     {/* Name */}
                     <div className="col-span-3 flex items-center gap-3 min-w-0">
@@ -259,7 +259,7 @@ export default function CMSUsers() {
                     </div>
 
                     {/* Email */}
-                    <div className="col-span-3 text-sm text-white/60 truncate">{u.email}</div>
+                    <div className="col-span-3 text-sm text-foreground/60 truncate">{u.email}</div>
 
                     {/* Role */}
                     <div className="col-span-2">
@@ -295,7 +295,7 @@ export default function CMSUsers() {
                     </div>
 
                     {/* Last Login */}
-                    <div className="col-span-2 text-sm text-white/50">
+                    <div className="col-span-2 text-sm text-foreground/50">
                       {formatDate(u.last_login_at)}
                     </div>
 
@@ -319,7 +319,7 @@ export default function CMSUsers() {
       {/* ── Invite User Modal ─────────────────────────────────────────────── */}
       {showInviteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="bg-neutral-900 border border-white/10 rounded-xl p-6 max-w-md w-full mx-4">
+          <div className="bg-neutral-900 border border-foreground/10 rounded-xl p-6 max-w-md w-full mx-4">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-white">Invite CMS User</h3>
               <button
@@ -327,7 +327,7 @@ export default function CMSUsers() {
                   setShowInviteModal(false);
                   setInviteError(null);
                 }}
-                className="p-1 text-white/40 hover:text-white"
+                className="p-1 text-foreground/40 hover:text-white"
               >
                 <XMarkIcon className="w-5 h-5" />
               </button>
@@ -341,7 +341,7 @@ export default function CMSUsers() {
 
             <form onSubmit={handleInviteSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-white/70 mb-1">
+                <label className="block text-sm font-medium text-foreground/70 mb-1">
                   Full Name
                 </label>
                 <input
@@ -352,12 +352,12 @@ export default function CMSUsers() {
                   }
                   placeholder="Jane Smith"
                   required
-                  className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-purple-500/50"
+                  className="w-full px-3 py-2.5 bg-foreground/5 border border-foreground/10 rounded-lg text-white placeholder-foreground/30 focus:outline-none focus:border-purple-500/50"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white/70 mb-1">
+                <label className="block text-sm font-medium text-foreground/70 mb-1">
                   Email Address
                 </label>
                 <input
@@ -368,12 +368,12 @@ export default function CMSUsers() {
                   }
                   placeholder="jane@company.com"
                   required
-                  className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-purple-500/50"
+                  className="w-full px-3 py-2.5 bg-foreground/5 border border-foreground/10 rounded-lg text-white placeholder-foreground/30 focus:outline-none focus:border-purple-500/50"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white/70 mb-1">
+                <label className="block text-sm font-medium text-foreground/70 mb-1">
                   Password
                 </label>
                 <input
@@ -384,12 +384,12 @@ export default function CMSUsers() {
                   }
                   placeholder="Temporary password"
                   required
-                  className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-purple-500/50"
+                  className="w-full px-3 py-2.5 bg-foreground/5 border border-foreground/10 rounded-lg text-white placeholder-foreground/30 focus:outline-none focus:border-purple-500/50"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white/70 mb-1">
+                <label className="block text-sm font-medium text-foreground/70 mb-1">
                   CMS Role
                 </label>
                 <select
@@ -397,7 +397,7 @@ export default function CMSUsers() {
                   onChange={(e) =>
                     setInviteForm((f) => ({ ...f, cms_role: e.target.value as CMSRole }))
                   }
-                  className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white appearance-none focus:outline-none focus:border-purple-500/50"
+                  className="w-full px-3 py-2.5 bg-foreground/5 border border-foreground/10 rounded-lg text-white appearance-none focus:outline-none focus:border-purple-500/50"
                 >
                   {CMS_ROLES.map((r) => (
                     <option key={r.value} value={r.value} className="bg-neutral-900">
@@ -414,7 +414,7 @@ export default function CMSUsers() {
                     setShowInviteModal(false);
                     setInviteError(null);
                   }}
-                  className="px-4 py-2 text-white/60 hover:text-white transition-colors"
+                  className="px-4 py-2 text-foreground/60 hover:text-white transition-colors"
                 >
                   Cancel
                 </button>
@@ -434,16 +434,16 @@ export default function CMSUsers() {
       {/* ── Revoke Confirmation Modal ─────────────────────────────────────── */}
       {revokeConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="bg-neutral-900 border border-white/10 rounded-xl p-6 max-w-md w-full mx-4">
+          <div className="bg-neutral-900 border border-foreground/10 rounded-xl p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-semibold text-white mb-2">Revoke CMS Access</h3>
-            <p className="text-white/60 mb-6">
+            <p className="text-foreground/60 mb-6">
               Are you sure you want to revoke this user's CMS access? They will no longer be
               able to log in to the CMS.
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setRevokeConfirm(null)}
-                className="px-4 py-2 text-white/60 hover:text-white transition-colors"
+                className="px-4 py-2 text-foreground/60 hover:text-white transition-colors"
               >
                 Cancel
               </button>

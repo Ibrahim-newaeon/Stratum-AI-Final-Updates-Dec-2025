@@ -154,8 +154,8 @@ export default function TenantSwitcher() {
         className={cn(
           'flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors text-sm',
           isOpen
-            ? 'bg-white/10 border-[#00c7be]/30 text-white'
-            : 'bg-white/5 border-white/10 text-white/80 hover:bg-white/10 hover:border-white/20'
+            ? 'bg-foreground/10 border-[#00c7be]/30 text-white'
+            : 'bg-foreground/5 border-foreground/10 text-foreground/80 hover:bg-foreground/10 hover:border-foreground/20'
         )}
       >
         <BuildingOffice2Icon className="w-4 h-4 text-[#00c7be] flex-shrink-0" />
@@ -163,7 +163,7 @@ export default function TenantSwitcher() {
         {isSwitching ? (
           <ArrowsRightLeftIcon className="w-4 h-4 text-[#00c7be] animate-spin flex-shrink-0" />
         ) : (
-          <ChevronUpDownIcon className="w-4 h-4 text-white/40 flex-shrink-0" />
+          <ChevronUpDownIcon className="w-4 h-4 text-foreground/40 flex-shrink-0" />
         )}
       </button>
 
@@ -181,7 +181,7 @@ export default function TenantSwitcher() {
             className="px-4 py-3"
             style={{ borderBottom: '1px solid var(--landing-border-white-dim)' }}
           >
-            <p className="text-xs font-medium text-white/50 uppercase tracking-wider">
+            <p className="text-xs font-medium text-foreground/50 uppercase tracking-wider">
               Switch Workspace
             </p>
           </div>
@@ -199,19 +199,19 @@ export default function TenantSwitcher() {
                     'w-full flex items-center gap-3 px-4 py-3 text-left transition-colors',
                     isActive
                       ? 'bg-[#00c7be]/10'
-                      : 'hover:bg-white/5'
+                      : 'hover:bg-foreground/5'
                   )}
                 >
                   <div
                     className={cn(
                       'w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0',
-                      isActive ? 'bg-[#00c7be]/20' : 'bg-white/5'
+                      isActive ? 'bg-[#00c7be]/20' : 'bg-foreground/5'
                     )}
                   >
                     <span
                       className={cn(
                         'text-xs font-bold',
-                        isActive ? 'text-[#00c7be]' : 'text-white/50'
+                        isActive ? 'text-[#00c7be]' : 'text-foreground/50'
                       )}
                     >
                       {t.tenant_name
@@ -227,7 +227,7 @@ export default function TenantSwitcher() {
                     <p
                       className={cn(
                         'text-sm font-medium truncate',
-                        isActive ? 'text-[#00c7be]' : 'text-white/90'
+                        isActive ? 'text-[#00c7be]' : 'text-foreground/90'
                       )}
                     >
                       {t.tenant_name}
@@ -241,7 +241,7 @@ export default function TenantSwitcher() {
                       >
                         {t.role}
                       </span>
-                      <span className="text-[10px] text-white/30 capitalize">
+                      <span className="text-[10px] text-foreground/30 capitalize">
                         {t.tenant_plan}
                       </span>
                     </div>
@@ -265,7 +265,7 @@ export default function TenantSwitcher() {
             className="px-4 py-2.5"
             style={{ borderTop: '1px solid var(--landing-border-white-dim)' }}
           >
-            <p className="text-[11px] text-white/30">
+            <p className="text-[11px] text-foreground/30">
               {tenants.length} workspace{tenants.length !== 1 ? 's' : ''} available
             </p>
           </div>

@@ -175,7 +175,7 @@ export default function PushNotifications() {
         {activeTab === 'send' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="space-y-4">
-              <div className="bg-white/[0.02] border border-white/10 rounded-xl p-5">
+              <div className="bg-white/[0.02] border border-foreground/10 rounded-xl p-5">
                 <h3 className="font-semibold mb-4">Compose Notification</h3>
                 <div className="space-y-3">
                   <div>
@@ -184,7 +184,7 @@ export default function PushNotifications() {
                       value={form.title}
                       onChange={(e) => setForm({ ...form, title: e.target.value })}
                       placeholder="Campaign Alert: ROAS Drop"
-                      className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
+                      className="w-full bg-white/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
                     />
                   </div>
                   <div>
@@ -194,7 +194,7 @@ export default function PushNotifications() {
                       onChange={(e) => setForm({ ...form, body: e.target.value })}
                       rows={3}
                       placeholder="Your Meta campaign ROAS dropped to 1.2x..."
-                      className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-primary/40"
+                      className="w-full bg-white/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-primary/40"
                     />
                   </div>
                   <div>
@@ -202,7 +202,7 @@ export default function PushNotifications() {
                     <input
                       value={form.url}
                       onChange={(e) => setForm({ ...form, url: e.target.value })}
-                      className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-sm"
+                      className="w-full bg-white/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-sm"
                     />
                   </div>
                   <div className="flex items-center gap-3 pt-2">
@@ -236,7 +236,7 @@ export default function PushNotifications() {
 
             {/* Preview */}
             <div>
-              <div className="bg-white/[0.02] border border-white/10 rounded-xl p-5">
+              <div className="bg-white/[0.02] border border-foreground/10 rounded-xl p-5">
                 <h3 className="font-semibold mb-4">Preview</h3>
                 <div className="bg-[#1a1a2e] rounded-2xl p-4 max-w-sm mx-auto">
                   <div className="flex items-start gap-3">
@@ -254,17 +254,17 @@ export default function PushNotifications() {
 
               {/* Quick Stats */}
               <div className="grid grid-cols-3 gap-3 mt-4">
-                <div className="bg-white/[0.02] border border-white/10 rounded-xl p-4 text-center">
+                <div className="bg-white/[0.02] border border-foreground/10 rounded-xl p-4 text-center">
                   <Users className="w-5 h-5 text-sky-400 mx-auto mb-1" />
                   <div className="text-xl font-bold">{subscribers.length}</div>
                   <div className="text-[10px] text-muted-foreground">Subscribers</div>
                 </div>
-                <div className="bg-white/[0.02] border border-white/10 rounded-xl p-4 text-center">
+                <div className="bg-white/[0.02] border border-foreground/10 rounded-xl p-4 text-center">
                   <Send className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
                   <div className="text-xl font-bold">{notifications.length}</div>
                   <div className="text-[10px] text-muted-foreground">Sent</div>
                 </div>
-                <div className="bg-white/[0.02] border border-white/10 rounded-xl p-4 text-center">
+                <div className="bg-white/[0.02] border border-foreground/10 rounded-xl p-4 text-center">
                   <Globe className="w-5 h-5 text-purple-400 mx-auto mb-1" />
                   <div className="text-xl font-bold">95%</div>
                   <div className="text-[10px] text-muted-foreground">Delivery</div>
@@ -276,10 +276,10 @@ export default function PushNotifications() {
 
         {/* Subscribers Tab */}
         {activeTab === 'subscribers' && (
-          <div className="bg-white/[0.02] border border-white/10 rounded-xl overflow-hidden">
+          <div className="bg-white/[0.02] border border-foreground/10 rounded-xl overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-white/10 bg-white/[0.02]">
+                <tr className="border-b border-foreground/10 bg-white/[0.02]">
                   <th className="text-left py-3 px-4 text-muted-foreground font-medium">ID</th>
                   <th className="text-left py-3 px-4 text-muted-foreground font-medium">Platform</th>
                   <th className="text-left py-3 px-4 text-muted-foreground font-medium">Status</th>
@@ -295,7 +295,7 @@ export default function PushNotifications() {
                   </tr>
                 )}
                 {subscribers.map((sub) => (
-                  <tr key={sub.id} className="border-b border-white/5 hover:bg-white/[0.02]">
+                  <tr key={sub.id} className="border-b border-foreground/5 hover:bg-white/[0.02]">
                     <td className="py-3 px-4 font-mono text-xs">{sub.id.slice(0, 12)}...</td>
                     <td className="py-3 px-4">
                       <span className="flex items-center gap-1">
@@ -325,7 +325,7 @@ export default function PushNotifications() {
               </div>
             )}
             {notifications.map((n) => (
-              <div key={n.id} className="bg-white/[0.02] border border-white/10 rounded-xl p-4 flex items-center justify-between">
+              <div key={n.id} className="bg-white/[0.02] border border-foreground/10 rounded-xl p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-lg bg-rose-500/15 flex items-center justify-center">
                     <Bell className="w-4 h-4 text-rose-400" />
@@ -357,7 +357,7 @@ export default function PushNotifications() {
               { label: 'Click Rate', value: '12.5%', icon: BarChart3, color: 'text-amber-400' },
               { label: 'Platforms', value: '1', icon: Globe, color: 'text-purple-400' },
             ].map((m) => (
-              <div key={m.label} className="bg-white/[0.02] border border-white/10 rounded-xl p-5 text-center">
+              <div key={m.label} className="bg-white/[0.02] border border-foreground/10 rounded-xl p-5 text-center">
                 <m.icon className={cn('w-6 h-6 mx-auto mb-2', m.color)} />
                 <div className="text-2xl font-bold">{m.value}</div>
                 <div className="text-xs text-muted-foreground mt-1">{m.label}</div>

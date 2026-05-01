@@ -152,7 +152,7 @@ export default function KGProblemDetection() {
                 'px-3 py-1.5 text-sm rounded-lg transition-colors capitalize',
                 severityFilter === filter
                   ? 'bg-primary/10 text-primary font-medium'
-                  : 'hover:bg-white/5 text-muted-foreground'
+                  : 'hover:bg-foreground/5 text-muted-foreground'
               )}
             >
               {filter === 'all' ? 'All Issues' : filter}

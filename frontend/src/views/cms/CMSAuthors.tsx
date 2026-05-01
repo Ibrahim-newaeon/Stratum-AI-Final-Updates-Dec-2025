@@ -115,7 +115,7 @@ export default function CMSAuthors() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Authors</h1>
-          <p className="text-white/60 mt-1">
+          <p className="text-foreground/60 mt-1">
             {authors.length} author{authors.length !== 1 ? 's' : ''}
           </p>
         </div>
@@ -134,9 +134,9 @@ export default function CMSAuthors() {
           <div className="animate-spin w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full" />
         </div>
       ) : authors.length === 0 ? (
-        <div className="rounded-2xl bg-white/5 border border-white/10 text-center py-20">
-          <UserCircleIcon className="w-12 h-12 text-white/20 mx-auto mb-4" />
-          <p className="text-white/60 mb-4">No authors yet</p>
+        <div className="rounded-2xl bg-foreground/5 border border-foreground/10 text-center py-20">
+          <UserCircleIcon className="w-12 h-12 text-foreground/20 mx-auto mb-4" />
+          <p className="text-foreground/60 mb-4">No authors yet</p>
           <button
             onClick={() => openEditor()}
             className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
@@ -150,7 +150,7 @@ export default function CMSAuthors() {
           {authors.map((author) => (
             <div
               key={author.id}
-              className="rounded-2xl bg-white/5 border border-white/10 p-6 hover:border-white/20 transition-colors group"
+              className="rounded-2xl bg-foreground/5 border border-foreground/10 p-6 hover:border-foreground/20 transition-colors group"
             >
               <div className="flex items-start gap-4">
                 {author.avatar_url ? (
@@ -172,31 +172,31 @@ export default function CMSAuthors() {
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => openEditor(author)}
-                        className="p-1 text-white/40 hover:text-white"
+                        className="p-1 text-foreground/40 hover:text-white"
                       >
                         <PencilSquareIcon className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => setDeleteConfirm(author.id)}
-                        className="p-1 text-white/40 hover:text-red-400"
+                        className="p-1 text-foreground/40 hover:text-red-400"
                       >
                         <TrashIcon className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
                   {author.job_title && (
-                    <p className="text-sm text-white/50">
+                    <p className="text-sm text-foreground/50">
                       {author.job_title}
                       {author.company && ` at ${author.company}`}
                     </p>
                   )}
                   {author.bio && (
-                    <p className="text-sm text-white/40 mt-2 line-clamp-2">{author.bio}</p>
+                    <p className="text-sm text-foreground/40 mt-2 line-clamp-2">{author.bio}</p>
                   )}
                 </div>
               </div>
 
-              <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/5 text-xs text-white/40">
+              <div className="flex items-center justify-between mt-4 pt-4 border-t border-foreground/5 text-xs text-foreground/40">
                 <span>{author.email || 'No email'}</span>
                 <span
                   className={`px-2 py-0.5 rounded-full ${author.is_active ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'}`}
@@ -212,14 +212,14 @@ export default function CMSAuthors() {
       {/* Editor Modal */}
       {showEditor && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="bg-neutral-900 border border-white/10 rounded-xl w-full max-w-lg max-h-[85vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-4 border-b border-white/10 sticky top-0 bg-neutral-900 z-10">
+          <div className="bg-neutral-900 border border-foreground/10 rounded-xl w-full max-w-lg max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-4 border-b border-foreground/10 sticky top-0 bg-neutral-900 z-10">
               <h2 className="text-lg font-semibold text-white">
                 {editingAuthor ? 'Edit Author' : 'New Author'}
               </h2>
               <button
                 onClick={() => setShowEditor(false)}
-                className="p-2 text-white/40 hover:text-white"
+                className="p-2 text-foreground/40 hover:text-white"
               >
                 <XMarkIcon className="w-5 h-5" />
               </button>
@@ -227,7 +227,7 @@ export default function CMSAuthors() {
 
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-white/70 mb-1.5">Name *</label>
+                <label className="block text-sm font-medium text-foreground/70 mb-1.5">Name *</label>
                 <input
                   type="text"
                   value={formData.name}
@@ -239,79 +239,79 @@ export default function CMSAuthors() {
                       slug: f.slug || generateSlug(name),
                     }));
                   }}
-                  className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-purple-500/50"
+                  className="w-full px-4 py-2.5 bg-foreground/5 border border-foreground/10 rounded-lg text-white placeholder-foreground/30 focus:outline-none focus:border-purple-500/50"
                   placeholder="Author name"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white/70 mb-1.5">Slug</label>
+                <label className="block text-sm font-medium text-foreground/70 mb-1.5">Slug</label>
                 <input
                   type="text"
                   value={formData.slug}
                   onChange={(e) => setFormData((f) => ({ ...f, slug: e.target.value }))}
-                  className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-purple-500/50"
+                  className="w-full px-4 py-2.5 bg-foreground/5 border border-foreground/10 rounded-lg text-white placeholder-foreground/30 focus:outline-none focus:border-purple-500/50"
                   placeholder="author-slug"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white/70 mb-1.5">Email</label>
+                <label className="block text-sm font-medium text-foreground/70 mb-1.5">Email</label>
                 <input
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData((f) => ({ ...f, email: e.target.value }))}
-                  className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-purple-500/50"
+                  className="w-full px-4 py-2.5 bg-foreground/5 border border-foreground/10 rounded-lg text-white placeholder-foreground/30 focus:outline-none focus:border-purple-500/50"
                   placeholder="author@example.com"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white/70 mb-1.5">Bio</label>
+                <label className="block text-sm font-medium text-foreground/70 mb-1.5">Bio</label>
                 <textarea
                   value={formData.bio}
                   onChange={(e) => setFormData((f) => ({ ...f, bio: e.target.value }))}
                   rows={3}
-                  className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-purple-500/50 resize-none"
+                  className="w-full px-4 py-2.5 bg-foreground/5 border border-foreground/10 rounded-lg text-white placeholder-foreground/30 focus:outline-none focus:border-purple-500/50 resize-none"
                   placeholder="Short bio..."
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white/70 mb-1.5">
+                <label className="block text-sm font-medium text-foreground/70 mb-1.5">
                   Avatar URL
                 </label>
                 <input
                   type="url"
                   value={formData.avatar_url}
                   onChange={(e) => setFormData((f) => ({ ...f, avatar_url: e.target.value }))}
-                  className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-purple-500/50"
+                  className="w-full px-4 py-2.5 bg-foreground/5 border border-foreground/10 rounded-lg text-white placeholder-foreground/30 focus:outline-none focus:border-purple-500/50"
                   placeholder="https://..."
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-white/70 mb-1.5">
+                  <label className="block text-sm font-medium text-foreground/70 mb-1.5">
                     Job Title
                   </label>
                   <input
                     type="text"
                     value={formData.job_title}
                     onChange={(e) => setFormData((f) => ({ ...f, job_title: e.target.value }))}
-                    className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-purple-500/50"
+                    className="w-full px-4 py-2.5 bg-foreground/5 border border-foreground/10 rounded-lg text-white placeholder-foreground/30 focus:outline-none focus:border-purple-500/50"
                     placeholder="Content Writer"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-white/70 mb-1.5">
+                  <label className="block text-sm font-medium text-foreground/70 mb-1.5">
                     Company
                   </label>
                   <input
                     type="text"
                     value={formData.company}
                     onChange={(e) => setFormData((f) => ({ ...f, company: e.target.value }))}
-                    className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-purple-500/50"
+                    className="w-full px-4 py-2.5 bg-foreground/5 border border-foreground/10 rounded-lg text-white placeholder-foreground/30 focus:outline-none focus:border-purple-500/50"
                     placeholder="Stratum AI"
                   />
                 </div>
@@ -319,51 +319,51 @@ export default function CMSAuthors() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-white/70 mb-1.5">Twitter</label>
+                  <label className="block text-sm font-medium text-foreground/70 mb-1.5">Twitter</label>
                   <input
                     type="text"
                     value={formData.twitter_handle}
                     onChange={(e) =>
                       setFormData((f) => ({ ...f, twitter_handle: e.target.value }))
                     }
-                    className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-purple-500/50"
+                    className="w-full px-4 py-2.5 bg-foreground/5 border border-foreground/10 rounded-lg text-white placeholder-foreground/30 focus:outline-none focus:border-purple-500/50"
                     placeholder="@handle"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-white/70 mb-1.5">GitHub</label>
+                  <label className="block text-sm font-medium text-foreground/70 mb-1.5">GitHub</label>
                   <input
                     type="text"
                     value={formData.github_handle}
                     onChange={(e) =>
                       setFormData((f) => ({ ...f, github_handle: e.target.value }))
                     }
-                    className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-purple-500/50"
+                    className="w-full px-4 py-2.5 bg-foreground/5 border border-foreground/10 rounded-lg text-white placeholder-foreground/30 focus:outline-none focus:border-purple-500/50"
                     placeholder="username"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white/70 mb-1.5">
+                <label className="block text-sm font-medium text-foreground/70 mb-1.5">
                   LinkedIn URL
                 </label>
                 <input
                   type="url"
                   value={formData.linkedin_url}
                   onChange={(e) => setFormData((f) => ({ ...f, linkedin_url: e.target.value }))}
-                  className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-purple-500/50"
+                  className="w-full px-4 py-2.5 bg-foreground/5 border border-foreground/10 rounded-lg text-white placeholder-foreground/30 focus:outline-none focus:border-purple-500/50"
                   placeholder="https://linkedin.com/in/..."
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white/70 mb-1.5">Website</label>
+                <label className="block text-sm font-medium text-foreground/70 mb-1.5">Website</label>
                 <input
                   type="url"
                   value={formData.website_url}
                   onChange={(e) => setFormData((f) => ({ ...f, website_url: e.target.value }))}
-                  className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-purple-500/50"
+                  className="w-full px-4 py-2.5 bg-foreground/5 border border-foreground/10 rounded-lg text-white placeholder-foreground/30 focus:outline-none focus:border-purple-500/50"
                   placeholder="https://..."
                 />
               </div>
@@ -373,16 +373,16 @@ export default function CMSAuthors() {
                   type="checkbox"
                   checked={formData.is_active}
                   onChange={(e) => setFormData((f) => ({ ...f, is_active: e.target.checked }))}
-                  className="w-4 h-4 rounded bg-white/5 border-white/20 text-purple-600 focus:ring-purple-500"
+                  className="w-4 h-4 rounded bg-foreground/5 border-foreground/20 text-purple-600 focus:ring-purple-500"
                 />
-                <span className="text-sm text-white/70">Active author</span>
+                <span className="text-sm text-foreground/70">Active author</span>
               </label>
             </div>
 
-            <div className="flex justify-end gap-3 p-4 border-t border-white/10 sticky bottom-0 bg-neutral-900">
+            <div className="flex justify-end gap-3 p-4 border-t border-foreground/10 sticky bottom-0 bg-neutral-900">
               <button
                 onClick={() => setShowEditor(false)}
-                className="px-4 py-2 text-white/60 hover:text-white transition-colors"
+                className="px-4 py-2 text-foreground/60 hover:text-white transition-colors"
               >
                 Cancel
               </button>
@@ -407,15 +407,15 @@ export default function CMSAuthors() {
       {/* Delete Confirmation */}
       {deleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="bg-neutral-900 border border-white/10 rounded-xl p-6 max-w-md w-full mx-4">
+          <div className="bg-neutral-900 border border-foreground/10 rounded-xl p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-semibold text-white mb-2">Delete Author</h3>
-            <p className="text-white/60 mb-6">
+            <p className="text-foreground/60 mb-6">
               Posts by this author will become unassigned.
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="px-4 py-2 text-white/60 hover:text-white"
+                className="px-4 py-2 text-foreground/60 hover:text-white"
               >
                 Cancel
               </button>

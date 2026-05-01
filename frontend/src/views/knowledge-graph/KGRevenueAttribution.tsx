@@ -112,7 +112,7 @@ export default function KGRevenueAttribution() {
               Multi-touch attribution across all channels
             </p>
           </div>
-          <div className="flex items-center gap-1 p-1 rounded-lg bg-white/5 border border-white/10">
+          <div className="flex items-center gap-1 p-1 rounded-lg bg-foreground/5 border border-foreground/10">
             {periods.map((p) => (
               <button
                 key={p.value}
@@ -146,7 +146,7 @@ export default function KGRevenueAttribution() {
               className="rounded-xl border bg-card p-4"
             >
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-white/5">
+                <div className="p-2 rounded-lg bg-foreground/5">
                   <card.icon className={cn('h-5 w-5', card.color)} />
                 </div>
                 <div>
@@ -224,7 +224,7 @@ export default function KGRevenueAttribution() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-white/10">
+                  <tr className="border-b border-foreground/10">
                     <th scope="col" className="text-left py-2 px-3 text-sm font-medium text-muted-foreground">
                       Channel
                     </th>
@@ -244,7 +244,7 @@ export default function KGRevenueAttribution() {
                 </thead>
                 <tbody>
                   {(revenueData?.modelComparison || []).map((row) => (
-                    <tr key={row.channel} className="border-b border-white/5 hover:bg-white/5">
+                    <tr key={row.channel} className="border-b border-foreground/5 hover:bg-foreground/5">
                       <td className="py-3 px-3 text-sm font-medium">{row.channel}</td>
                       <td className="py-3 px-3 text-sm text-right text-muted-foreground">
                         {row.firstTouch}%

@@ -270,7 +270,7 @@ export default function OnboardingChat({
         <div className="flex items-center justify-between p-4 border-b border-border bg-muted">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-lg" style={{  }}>
-              <SparklesIcon className="w-5 h-5 text-[#0b1215]" />
+              <SparklesIcon className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
               <h3 className="font-semibold text-white">Stratum AI Assistant</h3>
@@ -319,7 +319,7 @@ export default function OnboardingChat({
                 className={cn(
                   'max-w-[85%] rounded-2xl px-4 py-3',
                   message.role === 'user'
-                    ? 'bg-primary text-[#0b1215] font-medium'
+                    ? 'bg-primary text-primary-foreground font-medium'
                     : 'bg-muted border border-primary/10 text-foreground'
                 )}
               >
@@ -360,7 +360,7 @@ export default function OnboardingChat({
                 {message.requiresAction && message.actionType === 'oauth_redirect' && (
                   <button
                     onClick={() => handleOAuthRedirect(message.actionData?.platform as string)}
-                    className="mt-3 w-full py-2 px-4 bg-primary hover:bg-[#f0c95c] text-[#0b1215] text-sm font-semibold rounded-lg transition-colors hover:shadow-lg"
+                    className="mt-3 w-full py-2 px-4 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-semibold rounded-lg transition-colors hover:shadow-lg"
                     style={{ boxShadow: '0 0 20px rgba(0, 199, 190, 0.3)' }}
                   >
                     Connect {String(message.actionData?.platform)}
@@ -449,7 +449,7 @@ export default function OnboardingChat({
             <button
               onClick={() => sendMessage(inputValue)}
               disabled={!inputValue.trim() || isLoading || progress === 100}
-              className="p-3 bg-primary hover:bg-[#f0c95c] rounded-xl text-[#0b1215] transition-colors disabled:opacity-50 disabled:hover:bg-primary"
+              className="p-3 bg-primary hover:bg-primary/90 rounded-xl text-primary-foreground transition-colors disabled:opacity-50 disabled:hover:bg-primary"
               style={{ boxShadow: '0 0 15px rgba(0, 199, 190, 0.3)' }}
             >
               <PaperAirplaneIcon className="w-5 h-5" />

@@ -53,7 +53,7 @@ export function BudgetAtRiskChip({
         'inline-flex items-center gap-1.5 rounded-full font-medium',
         isCritical ? 'bg-danger/10 text-danger' :
         isHighRisk ? 'bg-warning/10 text-warning' :
-        'bg-surface-tertiary text-text-secondary',
+        'bg-surface-tertiary text-muted-foreground',
         sizeClasses[size],
         className
       )}

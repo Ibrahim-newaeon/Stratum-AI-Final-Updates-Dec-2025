@@ -142,15 +142,15 @@ export function PhoneInput({
           disabled={disabled}
           className={cn(
             'flex items-center gap-1.5 px-3 py-3',
-            'text-white hover:bg-white/5 transition-colors rounded-l-xl',
+            'text-white hover:bg-foreground/5 transition-colors rounded-l-xl',
             disabled && 'cursor-not-allowed'
           )}
           style={{ borderRight: '1px solid rgba(255, 255, 255, 0.12)' }}
         >
           <span className="text-lg">{selectedCountry.flag}</span>
-          <span className="text-sm font-medium text-text-secondary">{selectedCountry.code}</span>
+          <span className="text-sm font-medium text-muted-foreground">{selectedCountry.code}</span>
           <ChevronDownIcon
-            className={cn('w-4 h-4 text-text-muted transition-transform', isOpen && 'rotate-180')}
+            className={cn('w-4 h-4 text-muted-foreground transition-transform', isOpen && 'rotate-180')}
           />
         </button>
 
@@ -188,7 +188,7 @@ export function PhoneInput({
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search country..."
               autoFocus
-              className="w-full px-3 py-2 rounded-lg text-white placeholder-white/40 text-sm outline-none transition-[width]"
+              className="w-full px-3 py-2 rounded-lg text-white placeholder-foreground/40 text-sm outline-none transition-[width]"
               style={{
                 background: 'rgba(255, 255, 255, 0.06)',
                 border: '1px solid rgba(255, 255, 255, 0.12)',
@@ -213,7 +213,7 @@ export function PhoneInput({
                   key={`${country.country}-${index}`}
                   type="button"
                   onClick={() => handleCountrySelect(country)}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-white/5 transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-foreground/5 transition-colors"
                   style={{
                     background:
                       selectedCountry.country === country.country &&

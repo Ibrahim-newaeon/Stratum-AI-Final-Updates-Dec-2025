@@ -85,7 +85,7 @@ export default function CMSLayout() {
   const NavContent = () => (
     <>
       {/* Logo */}
-      <div className="flex items-center gap-3 px-4 py-6 border-b border-white/10">
+      <div className="flex items-center gap-3 px-4 py-6 border-b border-foreground/10">
         <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
           <PencilSquareIcon className="w-6 h-6 text-foreground" />
         </div>
@@ -110,7 +110,7 @@ export default function CMSLayout() {
                   'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
                   active || isActive(item.href)
                     ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
-                    : 'text-foreground/60 hover:text-foreground hover:bg-white/5'
+                    : 'text-foreground/60 hover:text-foreground hover:bg-foreground/5'
                 )
               }
             >
@@ -127,7 +127,7 @@ export default function CMSLayout() {
 
         {/* Landing Content Section */}
         {filteredLandingContent.length > 0 && (
-        <div className="pt-4 mt-4 border-t border-white/10">
+        <div className="pt-4 mt-4 border-t border-foreground/10">
           <button
             onClick={() => setLandingExpanded(!landingExpanded)}
             className="flex items-center justify-between w-full px-3 py-2 text-sm font-medium text-foreground/60 hover:text-foreground"
@@ -149,7 +149,7 @@ export default function CMSLayout() {
                       'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ml-2',
                       active
                         ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
-                        : 'text-foreground/50 hover:text-foreground hover:bg-white/5'
+                        : 'text-foreground/50 hover:text-foreground hover:bg-foreground/5'
                     )
                   }
                 >
@@ -164,7 +164,7 @@ export default function CMSLayout() {
 
         {/* Users Management */}
         {hasPermission('manage_users') && (
-        <div className="pt-4 mt-4 border-t border-white/10">
+        <div className="pt-4 mt-4 border-t border-foreground/10">
           <NavLink
             to="/cms/users"
             onClick={() => setSidebarOpen(false)}
@@ -173,7 +173,7 @@ export default function CMSLayout() {
                 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
                 active
                   ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
-                  : 'text-foreground/60 hover:text-foreground hover:bg-white/5'
+                  : 'text-foreground/60 hover:text-foreground hover:bg-foreground/5'
               )
             }
           >
@@ -185,7 +185,7 @@ export default function CMSLayout() {
 
         {/* Settings */}
         {hasPermission('access_settings') && (
-        <div className="pt-4 mt-4 border-t border-white/10">
+        <div className="pt-4 mt-4 border-t border-foreground/10">
           <NavLink
             to="/cms/settings"
             onClick={() => setSidebarOpen(false)}
@@ -194,7 +194,7 @@ export default function CMSLayout() {
                 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
                 active
                   ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
-                  : 'text-foreground/60 hover:text-foreground hover:bg-white/5'
+                  : 'text-foreground/60 hover:text-foreground hover:bg-foreground/5'
               )
             }
           >
@@ -206,7 +206,7 @@ export default function CMSLayout() {
       </nav>
 
       {/* User section */}
-      <div className="p-4 border-t border-white/10">
+      <div className="p-4 border-t border-foreground/10">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-foreground font-medium">
             {user?.name?.charAt(0) || user?.email?.charAt(0) || 'A'}
@@ -221,7 +221,7 @@ export default function CMSLayout() {
             variant="outline"
             size="sm"
             onClick={() => navigate('/dashboard')}
-            className="flex-1 border-white/10 text-foreground/60 hover:text-foreground hover:bg-white/5"
+            className="flex-1 border-foreground/10 text-foreground/60 hover:text-foreground hover:bg-foreground/5"
           >
             <HomeIcon className="w-4 h-4 mr-1" />
             Main App
@@ -230,7 +230,7 @@ export default function CMSLayout() {
             variant="outline"
             size="sm"
             onClick={handleLogout}
-            className="border-white/10 text-foreground/60 hover:text-red-400 hover:border-red-500/30 hover:bg-red-500/10"
+            className="border-foreground/10 text-foreground/60 hover:text-red-400 hover:border-red-500/30 hover:bg-red-500/10"
           >
             <ArrowLeftOnRectangleIcon className="w-4 h-4" />
           </Button>
@@ -251,7 +251,7 @@ export default function CMSLayout() {
         <div className="absolute inset-0 bg-background/50" role="presentation" onClick={() => setSidebarOpen(false)} />
         <div
           className={cn(
-            'absolute left-0 top-0 bottom-0 w-72 bg-surface-secondary border-r border-white/10 flex flex-col transition-transform',
+            'absolute left-0 top-0 bottom-0 w-72 bg-surface-secondary border-r border-foreground/10 flex flex-col transition-transform',
             sidebarOpen ? 'translate-x-0' : '-translate-x-full'
           )}
         >
@@ -266,7 +266,7 @@ export default function CMSLayout() {
       </div>
 
       {/* Desktop sidebar */}
-      <div className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:w-72 lg:flex lg:flex-col bg-surface-secondary border-r border-white/10">
+      <div className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:w-72 lg:flex lg:flex-col bg-surface-secondary border-r border-foreground/10">
         <NavContent />
       </div>
 

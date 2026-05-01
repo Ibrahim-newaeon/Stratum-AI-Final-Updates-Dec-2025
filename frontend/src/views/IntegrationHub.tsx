@@ -104,16 +104,16 @@ function ZapierPanel() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white/[0.02] border border-white/10 rounded-xl p-6">
+      <div className="bg-white/[0.02] border border-foreground/10 rounded-xl p-6">
         <h3 className="text-lg font-semibold mb-4">Zapier / Make.com Webhooks</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
             <label className="text-xs text-gray-400">Name</label>
-            <input value={newWebhook.name} onChange={(e) => setNewWebhook({ ...newWebhook, name: e.target.value })} className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-white text-sm" placeholder="My Zapier Hook" />
+            <input value={newWebhook.name} onChange={(e) => setNewWebhook({ ...newWebhook, name: e.target.value })} className="w-full bg-white/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white text-sm" placeholder="My Zapier Hook" />
           </div>
           <div>
             <label className="text-xs text-gray-400">Webhook URL (https://)</label>
-            <input value={newWebhook.webhook_url} onChange={(e) => setNewWebhook({ ...newWebhook, webhook_url: e.target.value })} className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-white text-sm" placeholder="https://hooks.zapier.com/..." />
+            <input value={newWebhook.webhook_url} onChange={(e) => setNewWebhook({ ...newWebhook, webhook_url: e.target.value })} className="w-full bg-white/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white text-sm" placeholder="https://hooks.zapier.com/..." />
           </div>
         </div>
         <div className="mb-4">
@@ -131,7 +131,7 @@ function ZapierPanel() {
                   'text-xs px-3 py-1.5 rounded-full border transition-colors',
                   newWebhook.event_types.includes(e)
                     ? 'bg-primary/20 border-primary text-primary'
-                    : 'bg-white/[0.03] border-white/10 text-gray-400 hover:bg-white/[0.06]'
+                    : 'bg-white/[0.03] border-foreground/10 text-gray-400 hover:bg-white/[0.06]'
                 )}
               >
                 {e}
@@ -139,13 +139,13 @@ function ZapierPanel() {
             ))}
           </div>
         </div>
-        <button onClick={addWebhook} className="bg-primary hover:bg-[#ff4d85] text-white px-5 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors">
+        <button onClick={addWebhook} className="bg-primary hover:bg-primary/90 text-white px-5 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors">
           <PlusIcon className="w-4 h-4" /> Add Webhook
         </button>
       </div>
 
       {webhooks.map((wh) => (
-        <div key={wh.id} className="bg-white/[0.02] border border-white/10 rounded-xl p-5">
+        <div key={wh.id} className="bg-white/[0.02] border border-foreground/10 rounded-xl p-5">
           <div className="flex items-center justify-between mb-3">
             <div>
               <h4 className="font-medium">{wh.name}</h4>
@@ -172,7 +172,7 @@ function ZapierPanel() {
       ))}
 
       {testResult && (
-        <div className="bg-white/[0.02] border border-white/10 rounded-xl p-4">
+        <div className="bg-white/[0.02] border border-foreground/10 rounded-xl p-4">
           <h4 className="text-sm font-medium mb-2">Test Result</h4>
           <div className="text-xs text-gray-400 space-y-1">
             <div>Status: <span className={testResult.status === 'success' ? 'text-green-400' : 'text-red-400'}>{testResult.status}</span></div>
@@ -221,7 +221,7 @@ function WarehousePanel() {
     <div className="space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {providers.map((p) => (
-          <div key={p.id} className="bg-white/[0.02] border border-white/10 rounded-xl p-4 text-center">
+          <div key={p.id} className="bg-white/[0.02] border border-foreground/10 rounded-xl p-4 text-center">
             <div className={`text-lg font-bold ${p.color}`}>{p.name}</div>
             <div className="text-xs text-gray-500 mt-1">Available</div>
           </div>
@@ -229,7 +229,7 @@ function WarehousePanel() {
       </div>
 
       {exports.map((ex) => (
-        <div key={ex.id} className="bg-white/[0.02] border border-white/10 rounded-xl p-5">
+        <div key={ex.id} className="bg-white/[0.02] border border-foreground/10 rounded-xl p-5">
           <div className="flex items-center justify-between mb-3">
             <div>
               <h4 className="font-medium">{ex.name}</h4>
@@ -239,7 +239,7 @@ function WarehousePanel() {
               <span className={cn('text-xs px-2 py-0.5 rounded-full', ex.is_active ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400')}>
                 {ex.is_active ? 'Active' : 'Inactive'}
               </span>
-              <button onClick={() => syncNow(ex.id)} disabled={syncing} className="text-xs bg-primary hover:bg-[#ff4d85] text-white px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50">
+              <button onClick={() => syncNow(ex.id)} disabled={syncing} className="text-xs bg-primary hover:bg-primary/90 text-white px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50">
                 {syncing ? <ArrowPathIcon className="w-3 h-3 animate-spin" /> : 'Sync Now'}
               </button>
             </div>
@@ -298,7 +298,7 @@ function TeamsPanel() {
   return (
     <div className="space-y-6">
       {webhooks.map((wh) => (
-        <div key={wh.id} className="bg-white/[0.02] border border-white/10 rounded-xl p-5">
+        <div key={wh.id} className="bg-white/[0.02] border border-foreground/10 rounded-xl p-5">
           <div className="flex items-center justify-between mb-3">
             <div>
               <h4 className="font-medium">{wh.name}</h4>

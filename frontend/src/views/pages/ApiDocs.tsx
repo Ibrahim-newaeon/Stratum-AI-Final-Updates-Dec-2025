@@ -159,7 +159,7 @@ export default function ApiDocs() {
               {endpoints.map((endpoint) => (
                 <div
                   key={`${endpoint.method}-${endpoint.path}`}
-                  className="p-4 flex items-center gap-4 hover:bg-white/5 transition-colors"
+                  className="p-4 flex items-center gap-4 hover:bg-foreground/5 transition-colors"
                 >
                   <span
                     className="px-2 py-1 rounded text-xs font-mono font-bold"

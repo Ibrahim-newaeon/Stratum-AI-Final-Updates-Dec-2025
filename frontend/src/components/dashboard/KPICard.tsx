@@ -233,7 +233,7 @@ export const KPICard: React.FC<KPICardProps> = ({
             <span
               className={cn(
                 'ml-1 text-meta',
-                highlight ? 'text-primary-foreground/70' : 'text-text-muted'
+                highlight ? 'text-primary-foreground/70' : 'text-muted-foreground'
               )}
             >
               {deltaText}

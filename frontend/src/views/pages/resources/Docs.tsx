@@ -227,7 +227,7 @@ export default function DocsPage() {
                     <Link
                       key={article.title}
                       to="#"
-                      className="flex items-center gap-4 p-4 rounded-xl transition-colors duration-200 hover:bg-white/5 group"
+                      className="flex items-center gap-4 p-4 rounded-xl transition-colors duration-200 hover:bg-foreground/5 group"
                       style={{
                         background: 'var(--landing-card)',
                         border: '1px solid var(--landing-border)',

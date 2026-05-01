@@ -74,12 +74,12 @@ export default function LaunchReadiness() {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="h-24 rounded-2xl bg-surface-secondary border border-white/10 animate-pulse" />
+        <div className="h-24 rounded-2xl bg-surface-secondary border border-foreground/10 animate-pulse" />
         <div className="space-y-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <div
               key={i}
-              className="h-20 rounded-2xl bg-surface-secondary border border-white/10 animate-pulse"
+              className="h-20 rounded-2xl bg-surface-secondary border border-foreground/10 animate-pulse"
             />
           ))}
         </div>
@@ -111,30 +111,30 @@ export default function LaunchReadiness() {
           <RocketLaunchIcon className="w-6 h-6 text-stratum-400" />
           <h1 className="text-2xl font-bold text-white tracking-tight">Launch Readiness</h1>
         </div>
-        <p className="text-text-muted max-w-2xl">
+        <p className="text-muted-foreground max-w-2xl">
           Sequential go-live gate. Each phase must be 100% complete before the next
           unlocks. No skipping. Every check is recorded in the audit trail.
         </p>
       </header>
 
       {/* Overall progress card */}
-      <section className="rounded-2xl bg-surface-secondary border border-white/10 p-6">
+      <section className="rounded-2xl bg-surface-secondary border border-foreground/10 p-6">
         <div className="flex items-start justify-between gap-6 flex-wrap">
           <div className="space-y-1">
-            <p className="text-xs uppercase tracking-widest text-text-muted">
+            <p className="text-xs uppercase tracking-widest text-muted-foreground">
               Overall progress
             </p>
             <p className="text-3xl font-bold text-white">
               {state.overall_completed}
-              <span className="text-text-muted font-normal text-xl">
+              <span className="text-muted-foreground font-normal text-xl">
                 {' / '}
                 {state.overall_total}
               </span>
-              <span className="ml-3 text-base text-text-muted font-normal">
+              <span className="ml-3 text-base text-muted-foreground font-normal">
                 ({overallPct}%)
               </span>
             </p>
-            <p className="text-sm text-text-muted">
+            <p className="text-sm text-muted-foreground">
               {state.is_launched ? (
                 <span className="inline-flex items-center gap-2 text-success font-medium">
                   <CheckCircleSolid className="w-4 h-4" />
@@ -151,7 +151,7 @@ export default function LaunchReadiness() {
             </p>
           </div>
           <div className="flex-1 min-w-[240px] max-w-xl">
-            <div className="h-2 rounded-full bg-white/5 overflow-hidden">
+            <div className="h-2 rounded-full bg-foreground/5 overflow-hidden">
               <div
                 className={cn(
                   'h-full rounded-full transition-all duration-500',
@@ -176,7 +176,7 @@ export default function LaunchReadiness() {
                       st === 'active' &&
                         'bg-stratum-500/20 text-stratum-300 border border-stratum-400/40 ring-2 ring-stratum-400/30',
                       st === 'locked' &&
-                        'bg-white/5 text-text-muted border border-white/10'
+                        'bg-foreground/5 text-muted-foreground border border-foreground/10'
                     )}
                     title={`Phase ${phase.number} — ${phase.title} (${st})`}
                   >
@@ -230,7 +230,7 @@ function PhaseCard({ phase, expanded, onToggleExpand }: PhaseCardProps) {
         status === 'complete' && 'bg-surface-secondary border-success/20',
         status === 'active' &&
           'bg-surface-secondary border-stratum-400/40 shadow-[0_0_0_1px_rgba(168,85,247,0.15)]',
-        status === 'locked' && 'bg-surface-secondary/60 border-white/5'
+        status === 'locked' && 'bg-surface-secondary/60 border-foreground/5'
       )}
     >
       <button
@@ -245,7 +245,7 @@ function PhaseCard({ phase, expanded, onToggleExpand }: PhaseCardProps) {
             'w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg shrink-0',
             status === 'complete' && 'bg-success/15 text-success border border-success/30',
             status === 'active' && 'bg-stratum-500/20 text-stratum-300 border border-stratum-400/40',
-            status === 'locked' && 'bg-white/5 text-text-muted border border-white/10'
+            status === 'locked' && 'bg-foreground/5 text-muted-foreground border border-foreground/10'
           )}
         >
           {status === 'complete' ? (
@@ -263,7 +263,7 @@ function PhaseCard({ phase, expanded, onToggleExpand }: PhaseCardProps) {
             <h2
               className={cn(
                 'text-lg font-semibold tracking-tight',
-                status === 'locked' ? 'text-text-muted' : 'text-white'
+                status === 'locked' ? 'text-muted-foreground' : 'text-white'
               )}
             >
               Phase {phase.number} — {phase.title}
@@ -271,7 +271,7 @@ function PhaseCard({ phase, expanded, onToggleExpand }: PhaseCardProps) {
             <StatusPill status={status} />
           </div>
           {phase.description && (
-            <p className="text-sm text-text-muted mt-1 line-clamp-1">
+            <p className="text-sm text-muted-foreground mt-1 line-clamp-1">
               {phase.description}
             </p>
           )}
@@ -280,18 +280,18 @@ function PhaseCard({ phase, expanded, onToggleExpand }: PhaseCardProps) {
         {/* Progress */}
         <div className="hidden md:flex flex-col items-end gap-2 min-w-[160px]">
           <div className="text-sm font-medium">
-            <span className={status === 'locked' ? 'text-text-muted' : 'text-white'}>
+            <span className={status === 'locked' ? 'text-muted-foreground' : 'text-white'}>
               {phase.completed_count}
             </span>
-            <span className="text-text-muted">{' / '}{phase.total_count}</span>
+            <span className="text-muted-foreground">{' / '}{phase.total_count}</span>
           </div>
-          <div className="w-40 h-1.5 rounded-full bg-white/5 overflow-hidden">
+          <div className="w-40 h-1.5 rounded-full bg-foreground/5 overflow-hidden">
             <div
               className={cn(
                 'h-full rounded-full transition-all duration-500',
                 status === 'complete' && 'bg-success',
                 status === 'active' && 'bg-stratum-400',
-                status === 'locked' && 'bg-white/20'
+                status === 'locked' && 'bg-foreground/20'
               )}
               style={{ width: `${pct}%` }}
             />
@@ -299,7 +299,7 @@ function PhaseCard({ phase, expanded, onToggleExpand }: PhaseCardProps) {
         </div>
 
         {/* Chevron */}
-        <div className="shrink-0 text-text-muted">
+        <div className="shrink-0 text-muted-foreground">
           {expanded ? (
             <ChevronDownIcon className="w-5 h-5" />
           ) : (
@@ -309,11 +309,11 @@ function PhaseCard({ phase, expanded, onToggleExpand }: PhaseCardProps) {
       </button>
 
       {expanded && (
-        <div className="border-t border-white/5 bg-surface-primary/30 px-5 py-4 space-y-2">
+        <div className="border-t border-foreground/5 bg-surface-primary/30 px-5 py-4 space-y-2">
           {status === 'locked' && (
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-white/5 border border-white/10 mb-2">
-              <LockClosedIcon className="w-4 h-4 text-text-muted mt-0.5 shrink-0" />
-              <p className="text-sm text-text-muted">
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-foreground/5 border border-foreground/10 mb-2">
+              <LockClosedIcon className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+              <p className="text-sm text-muted-foreground">
                 This phase is locked. Complete the preceding phase first — no skipping.
               </p>
             </div>
@@ -350,7 +350,7 @@ function StatusPill({ status }: { status: PhaseStatus }) {
     )
   }
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-white/5 text-text-muted border border-white/10">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-foreground/5 text-muted-foreground border border-foreground/10">
       <LockClosedIcon className="w-3 h-3" />
       Locked
     </span>
@@ -388,7 +388,7 @@ function ItemRow({ item, disabled, phaseIsComplete }: ItemRowProps) {
         'flex items-start gap-3 p-3 rounded-lg border',
         item.is_checked
           ? 'bg-success/5 border-success/15'
-          : 'bg-white/[0.02] border-white/5',
+          : 'bg-white/[0.02] border-foreground/5',
         disabled && 'opacity-60'
       )}
     >
@@ -403,7 +403,7 @@ function ItemRow({ item, disabled, phaseIsComplete }: ItemRowProps) {
           'focus:outline-none focus-visible:ring-2 focus-visible:ring-stratum-400',
           item.is_checked
             ? 'bg-success border border-success text-white'
-            : 'bg-transparent border border-white/20 hover:border-white/40',
+            : 'bg-transparent border border-foreground/20 hover:border-foreground/40',
           (disabled || toggle.isPending) && 'cursor-not-allowed'
         )}
       >
@@ -423,17 +423,17 @@ function ItemRow({ item, disabled, phaseIsComplete }: ItemRowProps) {
         <p
           className={cn(
             'text-sm',
-            item.is_checked ? 'text-white' : 'text-white/90',
-            disabled && 'text-text-muted'
+            item.is_checked ? 'text-white' : 'text-foreground/90',
+            disabled && 'text-muted-foreground'
           )}
         >
           {item.title}
         </p>
         {item.description && (
-          <p className="text-xs text-text-muted mt-0.5">{item.description}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
         )}
         {item.is_checked && (item.checked_by_user_name || item.checked_at) && (
-          <p className="text-xs text-text-muted mt-1.5 flex items-center gap-1.5">
+          <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1.5">
             <CheckCircleIcon className="w-3 h-3 text-success" />
             {item.checked_by_user_name && <span>{item.checked_by_user_name}</span>}
             {item.checked_by_user_name && item.checked_at && <span>·</span>}
@@ -452,38 +452,38 @@ function AuditTrail() {
   const { data: events, isLoading } = useLaunchReadinessEvents(undefined, 50)
 
   return (
-    <section className="rounded-2xl bg-surface-secondary border border-white/10 p-6">
+    <section className="rounded-2xl bg-surface-secondary border border-foreground/10 p-6">
       <div className="flex items-center gap-2 mb-4">
-        <ClockIcon className="w-5 h-5 text-text-muted" />
+        <ClockIcon className="w-5 h-5 text-muted-foreground" />
         <h2 className="text-lg font-semibold text-white">Activity</h2>
       </div>
       {isLoading ? (
         <div className="space-y-2">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-8 rounded bg-white/5 animate-pulse" />
+            <div key={i} className="h-8 rounded bg-foreground/5 animate-pulse" />
           ))}
         </div>
       ) : !events || events.length === 0 ? (
-        <p className="text-sm text-text-muted">No activity yet.</p>
+        <p className="text-sm text-muted-foreground">No activity yet.</p>
       ) : (
         <ol className="space-y-2">
           {events.map((event) => (
             <li
               key={event.id}
-              className="flex items-start gap-3 text-sm border-l-2 border-white/10 pl-3 py-1"
+              className="flex items-start gap-3 text-sm border-l-2 border-foreground/10 pl-3 py-1"
             >
               <ActionBadge action={event.action} />
               <div className="flex-1 min-w-0">
-                <p className="text-white/90">
-                  <span className="text-text-muted">Phase {event.phase_number}</span>
+                <p className="text-foreground/90">
+                  <span className="text-muted-foreground">Phase {event.phase_number}</span>
                   {event.item_key && (
                     <>
-                      <span className="text-text-muted">{' · '}</span>
+                      <span className="text-muted-foreground">{' · '}</span>
                       <span className="font-mono text-xs">{event.item_key}</span>
                     </>
                   )}
                 </p>
-                <p className="text-xs text-text-muted">
+                <p className="text-xs text-muted-foreground">
                   {event.user_name ?? 'system'} · {formatRelative(event.created_at)}
                 </p>
               </div>
@@ -506,7 +506,7 @@ function ActionBadge({ action }: { action: string }) {
           ? 'bg-stratum-500/20 text-stratum-300 border-stratum-400/40'
           : action === 'phase_reopened'
             ? 'bg-danger/15 text-danger border-danger/30'
-            : 'bg-white/5 text-text-muted border-white/10'
+            : 'bg-foreground/5 text-muted-foreground border-foreground/10'
   return (
     <span
       className={cn(

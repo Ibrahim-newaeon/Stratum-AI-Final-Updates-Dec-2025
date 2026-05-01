@@ -55,7 +55,7 @@ const platformConfigs: Record<string, {
   default: {
     color: 'text-muted-foreground', bgColor: 'bg-muted',
     brandHex: '#6B7280',
-    borderColor: 'border-white/10',
+    borderColor: 'border-foreground/10',
     gradientBg: 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
   },
 };
