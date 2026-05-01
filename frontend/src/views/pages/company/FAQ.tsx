@@ -236,7 +236,7 @@ export default function FAQ() {
               placeholder="Search questions..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 rounded-2xl text-white placeholder-white/40 outline-none transition-[width] focus:ring-2 focus:ring-[#FF4D4D]/50"
+              className="w-full pl-12 pr-4 py-4 rounded-2xl text-white placeholder-white/40 outline-none transition-[width] focus:ring-2 focus:ring-[#FF5A1F]/50"
               style={{ background: 'var(--landing-card)', border: '1px solid var(--landing-border)' }}
             />
           </div>

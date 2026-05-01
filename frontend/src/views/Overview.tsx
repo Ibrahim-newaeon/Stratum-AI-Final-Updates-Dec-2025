@@ -85,8 +85,8 @@ function Sparkline({ positive = true }: { positive?: boolean }) {
       <svg viewBox="0 0 120 40" className="w-full h-full" preserveAspectRatio="none">
         <defs>
           <linearGradient id={`spark-${positive}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={positive ? '#FF1F6D' : '#E85D5D'} stopOpacity="0.3" />
-            <stop offset="100%" stopColor={positive ? '#FF1F6D' : '#E85D5D'} stopOpacity="0" />
+            <stop offset="0%" stopColor={positive ? '#FF5A1F' : '#E85D5D'} stopOpacity="0.3" />
+            <stop offset="100%" stopColor={positive ? '#FF5A1F' : '#E85D5D'} stopOpacity="0" />
           </linearGradient>
         </defs>
         <path
@@ -102,7 +102,7 @@ function Sparkline({ positive = true }: { positive?: boolean }) {
             : 'M0,5 C10,8 20,12 30,10 C40,18 50,22 60,20 C70,28 80,25 90,32 C100,35 110,38 120,40'
           }
           fill="none"
-          stroke={positive ? '#FF8C00' : '#E85D5D'}
+          stroke={positive ? '#FF8A4A' : '#E85D5D'}
           strokeWidth="1.5"
           strokeLinecap="round"
         />
@@ -133,10 +133,10 @@ function CommandKPI({
     <div className="surface-card p-5 hover:shadow-lg transition-shadow duration-200">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-md bg-[#FF8C00]/10">
-            <Icon className="h-4 w-4 text-[#FF8C00]" />
+          <div className="p-1.5 rounded-md bg-secondary/10">
+            <Icon className="h-4 w-4 text-secondary" />
           </div>
-          <span className="text-xs font-medium uppercase tracking-wider text-[#5A6278]">{title}</span>
+          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{title}</span>
         </div>
         {delta !== undefined && (
           <div className={cn('flex items-center gap-1 text-xs font-medium', positive ? 'text-[#27C39D]' : 'text-[#E85D5D]')}>
@@ -145,10 +145,10 @@ function CommandKPI({
           </div>
         )}
       </div>
-      <div className="text-2xl font-semibold text-[#F0EDE5] tracking-tight mb-3">{value}</div>
+      <div className="text-2xl font-semibold text-foreground tracking-tight mb-3">{value}</div>
       <Sparkline positive={positive} />
       {deltaLabel && (
-        <p className="mt-2 text-xs text-[#5A6278]">{deltaLabel}</p>
+        <p className="mt-2 text-xs text-muted-foreground">{deltaLabel}</p>
       )}
     </div>
   )
@@ -170,19 +170,19 @@ function PlatformHealthItem({
 }) {
   const statusConfig = {
     connected: { dot: 'bg-[#27C39D]', text: 'text-[#27C39D]', label: 'Connected' },
-    syncing: { dot: 'bg-[#FF1F6D]', text: 'text-[#FF8C00]', label: 'Syncing' },
+    syncing: { dot: 'bg-primary', text: 'text-secondary', label: 'Syncing' },
     warning: { dot: 'bg-[#F5A623]', text: 'text-[#F5A623]', label: 'Warning' },
     error: { dot: 'bg-[#E85D5D]', text: 'text-[#E85D5D]', label: 'Error' },
   }
   const cfg = statusConfig[status]
 
   return (
-    <div className="flex items-center justify-between py-3 border-b border-[#1E2740]/50 last:border-0">
+    <div className="flex items-center justify-between py-3 border-b border-border/50 last:border-0">
       <div className="flex items-center gap-3">
         <div className={cn('h-2.5 w-2.5 rounded-full', cfg.dot)} />
         <div>
-          <p className="text-sm font-medium text-[#F0EDE5]">{platform}</p>
-          <p className="text-xs text-[#5A6278]">{campaigns} campaigns · {syncTime}</p>
+          <p className="text-sm font-medium text-foreground">{platform}</p>
+          <p className="text-xs text-muted-foreground">{campaigns} campaigns · {syncTime}</p>
         </div>
       </div>
       <span className={cn('text-xs font-medium', cfg.text)}>{cfg.label}</span>
@@ -205,19 +205,19 @@ function AIRecommendationCard({
   action: string
 }) {
   return (
-    <div className="surface-card p-4 border-l-2 border-l-[#FF1F6D] hover:shadow-lg transition-shadow duration-200">
+    <div className="surface-card p-4 border-l-2 border-l-[#FF5A1F] hover:shadow-lg transition-shadow duration-200">
       <div className="flex items-start gap-3 mb-3">
-        <div className="p-1.5 rounded-md bg-[#FF8C00]/10 flex-shrink-0">
-          <Brain className="h-4 w-4 text-[#FF8C00]" />
+        <div className="p-1.5 rounded-md bg-secondary/10 flex-shrink-0">
+          <Brain className="h-4 w-4 text-secondary" />
         </div>
         <div>
-          <h4 className="text-sm font-medium text-[#F0EDE5]">{title}</h4>
-          <p className="text-xs text-[#8B92A8] mt-1 leading-relaxed">{description}</p>
+          <h4 className="text-sm font-medium text-foreground">{title}</h4>
+          <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{description}</p>
         </div>
       </div>
       <div className="flex items-center justify-between mt-3">
         <span className="text-xs text-[#27C39D] font-medium">{impact}</span>
-        <button className="text-xs font-medium text-[#FF8C00] hover:text-[#FF4D8F] transition-colors duration-200 flex items-center gap-1">
+        <button className="text-xs font-medium text-secondary hover:text-primary transition-colors duration-200 flex items-center gap-1">
           {action} <ChevronRight className="h-3 w-3" />
         </button>
       </div>
@@ -447,16 +447,16 @@ export function Overview() {
       {/* ── KEYBOARD SHORTCUTS MODAL ─────────────────────────── */}
       {showKeyboardHints && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setShowKeyboardHints(false)}>
-          <div className="bg-[#0F1320] border border-[#1E2740] rounded-xl p-6 shadow-xl max-w-sm w-full mx-4 animate-in fade-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-card border border-border rounded-xl p-6 shadow-xl max-w-sm w-full mx-4 animate-in fade-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 mb-4">
-              <Keyboard className="w-5 h-5 text-[#FF8C00]" />
-              <h3 className="text-lg font-semibold text-[#F0EDE5]">Keyboard Shortcuts</h3>
+              <Keyboard className="w-5 h-5 text-secondary" />
+              <h3 className="text-lg font-semibold text-foreground">Keyboard Shortcuts</h3>
             </div>
             <div className="space-y-3">
               {[{ key: 'R', action: 'Refresh data' }, { key: 'E', action: 'Export dashboard' }, { key: '?', action: 'Toggle shortcuts' }, { key: 'Esc', action: 'Close modal' }].map((shortcut) => (
                 <div key={shortcut.key} className="flex items-center justify-between">
-                  <span className="text-[#8B92A8]">{shortcut.action}</span>
-                  <kbd className="px-2 py-1 text-xs font-mono bg-[#1E2740] rounded border border-[#1E2740]">{shortcut.key}</kbd>
+                  <span className="text-muted-foreground">{shortcut.action}</span>
+                  <kbd className="px-2 py-1 text-xs font-mono bg-border rounded border border-border">{shortcut.key}</kbd>
                 </div>
               ))}
             </div>
@@ -467,27 +467,27 @@ export function Overview() {
       {/* ── PAGE HEADER ──────────────────────────────────────── */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-[#F0EDE5]">{t('overview.title')}</h1>
-          <p className="mt-1 text-sm text-[#5A6278]">
+          <h1 className="text-2xl lg:text-3xl font-bold text-foreground">{t('overview.title')}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             Last updated: {simulation.lastUpdated.toLocaleString()} · <span className="text-[#27C39D]">Stratum AI</span>
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button onClick={() => setShowKeyboardHints(true)} className="hidden lg:flex items-center px-3 py-2 text-xs text-[#5A6278] hover:text-[#F0EDE5] transition-colors duration-200" title="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts">
+          <button onClick={() => setShowKeyboardHints(true)} className="hidden lg:flex items-center px-3 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors duration-200" title="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts">
             <Keyboard className="w-4 h-4 mr-1" />
-            <kbd className="px-1.5 py-0.5 text-xs bg-[#1E2740] rounded">?</kbd>
+            <kbd className="px-1.5 py-0.5 text-xs bg-border rounded">?</kbd>
           </button>
-          <button onClick={() => navigate('/dashboard/custom-dashboard')} className="inline-flex items-center px-4 py-2 border border-[#1E2740] rounded-lg text-sm font-medium bg-[#0F1320] text-[#F0EDE5] hover:bg-[#1E2740] transition-colors duration-200">
+          <button onClick={() => navigate('/dashboard/custom-dashboard')} className="inline-flex items-center px-4 py-2 border border-border rounded-lg text-sm font-medium bg-card text-foreground hover:bg-border transition-colors duration-200">
             <LayoutDashboard className="w-4 h-4 mr-2" />
             Customize
           </button>
-          <button onClick={handleSyncAll} disabled={syncAllMutation.isPending} className="inline-flex items-center px-4 py-2 border border-[#FF1F6D]/30 rounded-lg text-sm font-medium bg-[#FF1F6D]/5 text-[#FF8C00] hover:bg-[#FF8C00]/10 transition-colors duration-200 disabled:opacity-50" aria-label="Sync all campaigns from ad platforms" title="Pull latest data from Meta, TikTok, Snapchat & Google">
+          <button onClick={handleSyncAll} disabled={syncAllMutation.isPending} className="inline-flex items-center px-4 py-2 border border-primary/30 rounded-lg text-sm font-medium bg-primary/5 text-secondary hover:bg-secondary/10 transition-colors duration-200 disabled:opacity-50" aria-label="Sync all campaigns from ad platforms" title="Pull latest data from Meta, TikTok, Snapchat & Google">
             {syncAllMutation.isPending ? (<><DownloadCloud className="w-4 h-4 mr-2 animate-pulse" /> Syncing...</>) : syncAllMutation.isSuccess ? (<><CheckCircle className="w-4 h-4 mr-2 text-[#27C39D]" /> Synced!</>) : (<><DownloadCloud className="w-4 h-4 mr-2" /> Sync All Platforms</>)}
           </button>
-          <button onClick={handleRefresh} disabled={loading} className="inline-flex items-center px-4 py-2 border border-[#1E2740] rounded-lg text-sm font-medium bg-[#0F1320] text-[#F0EDE5] hover:bg-[#1E2740] transition-colors duration-200 disabled:opacity-50" aria-label="Refresh data (R)">
+          <button onClick={handleRefresh} disabled={loading} className="inline-flex items-center px-4 py-2 border border-border rounded-lg text-sm font-medium bg-card text-foreground hover:bg-border transition-colors duration-200 disabled:opacity-50" aria-label="Refresh data (R)">
             {loading ? (<><RefreshCw className="w-4 h-4 mr-2 animate-spin" /> Refreshing...</>) : (<><RefreshCw className="w-4 h-4 mr-2" /> Refresh</>)}
           </button>
-          <button onClick={handleExport} className="inline-flex items-center px-4 py-2 rounded-lg bg-[#FF1F6D] text-[#080C14] hover:bg-[#FF4D8F] transition-colors duration-200 font-medium" aria-label="Export dashboard (E)">
+          <button onClick={handleExport} className="inline-flex items-center px-4 py-2 rounded-lg bg-primary text-background hover:bg-primary transition-colors duration-200 font-medium" aria-label="Export dashboard (E)">
             <Download className="w-4 h-4 mr-2" />
             {t('common.export')}
           </button>
@@ -519,17 +519,17 @@ export function Overview() {
         <div className="lg:col-span-2 surface-card p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-base font-semibold text-[#F0EDE5]">Performance Over Time</h3>
-              <p className="text-xs text-[#5A6278] mt-0.5">Revenue and spend trends</p>
+              <h3 className="text-base font-semibold text-foreground">Performance Over Time</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">Revenue and spend trends</p>
             </div>
-            <div className="flex items-center gap-1 p-1 rounded-lg bg-[#1E2740]/30 border border-[#1E2740]">
+            <div className="flex items-center gap-1 p-1 rounded-lg bg-border/30 border border-border">
               {(['7D', '30D', '90D'] as const).map((range) => (
                 <button
                   key={range}
                   onClick={() => setTimeRange(range)}
                   className={cn(
                     'px-3 py-1 text-xs font-medium rounded-md transition-colors duration-200',
-                    timeRange === range ? 'bg-gradient-to-r from-[#FF1F6D]/10 to-[#FF8C00]/10 text-[#FF8C00]' : 'text-[#5A6278] hover:text-[#F0EDE5]'
+                    timeRange === range ? 'bg-gradient-to-r from-primary/10 to-secondary/10 text-secondary' : 'text-muted-foreground hover:text-foreground'
                   )}
                 >
                   {range}
@@ -538,28 +538,28 @@ export function Overview() {
             </div>
           </div>
           {/* Chart placeholder with gradient fill */}
-          <div className="h-64 w-full relative rounded-lg overflow-hidden bg-[#080C14] border border-[#1E2740]">
+          <div className="h-64 w-full relative rounded-lg overflow-hidden bg-background border border-border">
             <div className="absolute inset-0 opacity-30">
               <svg viewBox="0 0 600 200" className="w-full h-full" preserveAspectRatio="none">
                 <defs>
                   <linearGradient id="perf-grad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#FF8C00" stopOpacity="0.4" />
-                    <stop offset="100%" stopColor="#FF8C00" stopOpacity="0" />
+                    <stop offset="0%" stopColor="#FF8A4A" stopOpacity="0.4" />
+                    <stop offset="100%" stopColor="#FF8A4A" stopOpacity="0" />
                   </linearGradient>
                 </defs>
                 <path d="M0,180 C50,170 100,140 150,150 C200,120 250,80 300,90 C350,50 400,60 450,30 C500,20 550,10 600,5 L600,200 L0,200 Z" fill="url(#perf-grad)" />
-                <path d="M0,180 C50,170 100,140 150,150 C200,120 250,80 300,90 C350,50 400,60 450,30 C500,20 550,10 600,5" fill="none" stroke="#FF8C00" strokeWidth="2" />
+                <path d="M0,180 C50,170 100,140 150,150 C200,120 250,80 300,90 C350,50 400,60 450,30 C500,20 550,10 600,5" fill="none" stroke="#FF8A4A" strokeWidth="2" />
                 <path d="M0,190 C60,185 120,175 180,180 C240,170 300,160 360,165 C420,155 480,150 540,145 C580,140 600,138" fill="none" stroke="#27C39D" strokeWidth="2" strokeDasharray="4 4" />
               </svg>
             </div>
             <div className="absolute bottom-4 left-4 flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-[#FF1F6D]" />
-                <span className="text-xs text-[#8B92A8]">Revenue</span>
+                <div className="h-2 w-2 rounded-full bg-primary" />
+                <span className="text-xs text-muted-foreground">Revenue</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full bg-[#27C39D]" />
-                <span className="text-xs text-[#8B92A8]">Spend</span>
+                <span className="text-xs text-muted-foreground">Spend</span>
               </div>
             </div>
           </div>
@@ -568,7 +568,7 @@ export function Overview() {
         {/* Platform Health */}
         <div className="surface-card p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-base font-semibold text-[#F0EDE5]">Platform Health</h3>
+            <h3 className="text-base font-semibold text-foreground">Platform Health</h3>
             <div className="flex items-center gap-1.5">
               <Radio className="w-3.5 h-3.5 text-[#27C39D]" />
               <span className="text-xs text-[#27C39D] font-medium">Live</span>
@@ -580,7 +580,7 @@ export function Overview() {
             <PlatformHealthItem platform="TikTok Ads" status="syncing" syncTime="Now" campaigns={4} />
             <PlatformHealthItem platform="Snapchat Ads" status="warning" syncTime="15m ago" campaigns={3} />
           </div>
-          <button className="mt-4 w-full py-2 text-xs font-medium text-[#FF8C00] hover:text-[#FF4D8F] transition-colors duration-200 border border-[#1E2740] rounded-lg hover:border-[#FF1F6D]/30">
+          <button className="mt-4 w-full py-2 text-xs font-medium text-secondary hover:text-primary transition-colors duration-200 border border-border rounded-lg hover:border-primary/30">
             View All Connections
           </button>
         </div>
@@ -593,16 +593,16 @@ export function Overview() {
         {/* Recent Alerts */}
         <div className="surface-card p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-base font-semibold text-[#F0EDE5] flex items-center gap-2">
-              <Bell className="w-4 h-4 text-[#FF8C00]" />
+            <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+              <Bell className="w-4 h-4 text-secondary" />
               Recent Alerts
             </h3>
-            <button className="text-xs text-[#FF8C00] hover:text-[#FF4D8F] transition-colors duration-200">View all</button>
+            <button className="text-xs text-secondary hover:text-primary transition-colors duration-200">View all</button>
           </div>
           {initialLoading ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="h-16 bg-[#1E2740]/30 rounded-lg animate-pulse" />
+                <div key={i} className="h-16 bg-border/30 rounded-lg animate-pulse" />
               ))}
             </div>
           ) : (
@@ -624,10 +624,10 @@ export function Overview() {
                   {alert.severity === 'good' && <CheckCircle className="w-4 h-4 text-[#27C39D] mt-0.5 flex-shrink-0" aria-hidden="true" />}
                   {alert.severity === 'critical' && <Info className="w-4 h-4 text-[#E85D5D] mt-0.5 flex-shrink-0" aria-hidden="true" />}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[#F0EDE5]">{alert.title}</p>
-                    <p className="text-xs text-[#5A6278] mt-0.5 line-clamp-2">{alert.message}</p>
+                    <p className="text-sm font-medium text-foreground">{alert.title}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{alert.message}</p>
                   </div>
-                  <span className="text-[10px] text-[#5A6278] flex-shrink-0">{alert.time}</span>
+                  <span className="text-[10px] text-muted-foreground flex-shrink-0">{alert.time}</span>
                 </div>
               ))}
             </div>
@@ -637,11 +637,11 @@ export function Overview() {
         {/* AI Recommendations */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-base font-semibold text-[#F0EDE5] flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-[#FF8C00]" />
+            <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-secondary" />
               AI Recommendations
             </h3>
-            <span className="text-xs text-[#5A6278]">3 new today</span>
+            <span className="text-xs text-muted-foreground">3 new today</span>
           </div>
           <AIRecommendationCard
             title="Increase Meta Budget"
@@ -683,16 +683,16 @@ export function Overview() {
             <TableSkeleton rows={5} columns={7} />
           ) : hasNoFilterResults ? (
             <div className="surface-card overflow-hidden">
-              <div className="px-6 py-4 border-b border-[#1E2740]">
-                <h3 className="text-lg font-semibold text-[#F0EDE5]">Top Performing Campaigns</h3>
+              <div className="px-6 py-4 border-b border-border">
+                <h3 className="text-lg font-semibold text-foreground">Top Performing Campaigns</h3>
               </div>
               <NoFilterResultsState onClearFilters={handleClearFilters} filterCount={activeFilterCount} />
             </div>
           ) : (
             <div className="surface-card overflow-hidden">
-              <div className="px-6 py-4 border-b border-[#1E2740] flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-[#F0EDE5]">Top Performing Campaigns</h3>
-                <span className="text-xs text-[#5A6278]">{filteredCampaigns.length} campaigns across {new Set(filteredCampaigns.map(c => c.platform)).size} platforms</span>
+              <div className="px-6 py-4 border-b border-border flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-foreground">Top Performing Campaigns</h3>
+                <span className="text-xs text-muted-foreground">{filteredCampaigns.length} campaigns across {new Set(filteredCampaigns.map(c => c.platform)).size} platforms</span>
               </div>
               <ErrorBoundary>
                 <CampaignTable campaigns={filteredCampaigns} onCampaignClick={(campaignId) => { window.location.href = `/dashboard/campaigns/${campaignId}` }} onSyncCampaign={handleSyncCampaign} syncingCampaignId={syncingCampaignId} showPriceMetrics={showPriceMetrics} />

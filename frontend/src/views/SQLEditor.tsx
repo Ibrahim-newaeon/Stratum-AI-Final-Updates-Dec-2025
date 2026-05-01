@@ -90,7 +90,7 @@ export default function SQLEditor() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 rows={10}
-                className="w-full bg-black/40 border border-white/10 rounded-lg p-4 font-mono text-sm text-gray-300 focus:outline-none focus:border-[#FF1F6D] resize-y"
+                className="w-full bg-black/40 border border-white/10 rounded-lg p-4 font-mono text-sm text-gray-300 focus:outline-none focus:border-primary resize-y"
                 spellCheck={false}
               />
               <div className="flex items-center justify-between mt-3">
@@ -98,7 +98,7 @@ export default function SQLEditor() {
                 <button
                   onClick={runQuery}
                   disabled={loading || !query.trim()}
-                  className="bg-[#FF1F6D] hover:bg-[#ff4d85] disabled:opacity-50 text-white px-5 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors"
+                  className="bg-primary hover:bg-[#ff4d85] disabled:opacity-50 text-white px-5 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors"
                 >
                   {loading ? <ArrowPathIcon className="w-5 h-5 animate-spin" /> : <PlayIcon className="w-5 h-5" />}
                   Run Query

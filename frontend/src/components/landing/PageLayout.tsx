@@ -1,7 +1,7 @@
 /**
  * PageLayout Component
  * Shared layout for all public-facing pages with header and footer
- * Theme: Stratum AI Command Center (#080C14 + solid surfaces)
+ * Theme: Stratum AI Command Center (#0B0B0B + solid surfaces)
  */
 
 import { useEffect, useState } from 'react';

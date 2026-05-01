@@ -102,7 +102,7 @@ export default function CohortAnalysis() {
           <button
             onClick={analyze}
             disabled={loading}
-            className="bg-[#FF1F6D] hover:bg-[#ff4d85] disabled:opacity-50 text-white px-6 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors"
+            className="bg-primary hover:bg-[#ff4d85] disabled:opacity-50 text-white px-6 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors"
           >
             {loading ? <ArrowPathIcon className="w-5 h-5 animate-spin" /> : <PlayIcon className="w-5 h-5" />}
             Analyze

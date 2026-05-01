@@ -110,12 +110,12 @@ export function Features() {
           {features.map((feature, index) => (
             <div
               key={feature.title}
-              className="group relative rounded-2xl bg-card border border-border p-8 hover:border-[#FF8C00]/30 transition-colors duration-200 animate-enter"
+              className="group relative rounded-2xl bg-card border border-border p-8 hover:border-secondary/30 transition-colors duration-200 animate-enter"
               style={{ animationDelay: `${0.1 + index * 0.05}s` }}
             >
               {/* Icon */}
-              <div className="w-12 h-12 rounded-xl bg-[#FF8C00]/10 border border-[#FF8C00]/20 flex items-center justify-center mb-6">
-                <feature.icon className="w-6 h-6 text-[#FF8C00]" />
+              <div className="w-12 h-12 rounded-xl bg-secondary/10 border border-secondary/20 flex items-center justify-center mb-6">
+                <feature.icon className="w-6 h-6 text-secondary" />
               </div>
 
               {/* Title */}

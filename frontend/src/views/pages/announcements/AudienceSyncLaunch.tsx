@@ -130,7 +130,7 @@ export default function AudienceSyncLaunch() {
 
           <h1
             className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6"
-            style={{ fontFamily: "'Clash Display', sans-serif" }}
+            style={{ fontFamily: "Geist, system-ui, sans-serif" }}
           >
             <span className="text-white">Multi-Platform</span>
             <br />

@@ -8,13 +8,13 @@ export function CTA() {
     <section className="relative py-24 lg:py-32 bg-card/30 border-y border-border overflow-hidden">
       {/* Background glow */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-[#FF8C00]/10 blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-secondary/10 blur-3xl" />
       </div>
 
       <div className="relative max-w-4xl mx-auto px-6 text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#FF8C00]/10 border border-[#FF8C00]/20 mb-8 animate-enter">
-          <Sparkles className="w-4 h-4 text-[#FF8C00]" />
-          <span className="text-meta text-[#FF8C00]">14-day free trial</span>
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 border border-secondary/20 mb-8 animate-enter">
+          <Sparkles className="w-4 h-4 text-secondary" />
+          <span className="text-meta text-secondary">14-day free trial</span>
         </div>
 
         <h2
@@ -38,7 +38,7 @@ export function CTA() {
         >
           <button
             onClick={() => navigate('/signup')}
-            className="group inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-[#FF1F6D] to-[#FF8C00] text-white font-semibold text-body shadow-glow hover:shadow-glow-orange hover:scale-[1.02] active:scale-[0.98] transition-transform transition-shadow duration-200"
+            className="group inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-semibold text-body shadow-glow hover:shadow-glow-orange hover:scale-[1.02] active:scale-[0.98] transition-transform transition-shadow duration-200"
           >
             Start Free — No Credit Card
             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
@@ -72,7 +72,7 @@ export function CTA() {
             {[1, 2, 3, 4, 5].map((i) => (
               <svg
                 key={i}
-                className="w-4 h-4 text-[#FF8C00]"
+                className="w-4 h-4 text-secondary"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >

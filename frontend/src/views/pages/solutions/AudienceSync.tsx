@@ -153,7 +153,7 @@ export default function AudienceSyncSolution() {
           </div>
           <h1
             className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6"
-            style={{ fontFamily: "'Clash Display', sans-serif" }}
+            style={{ fontFamily: "Geist, system-ui, sans-serif" }}
           >
             <span className="text-white">{hero.title}</span>
             <br />
@@ -199,7 +199,7 @@ export default function AudienceSyncSolution() {
                 <div
                   className="w-14 h-14 rounded-xl flex items-center justify-center font-bold text-xl mx-auto mb-3 transition-colors"
                   style={{
-                    background: 'linear-gradient(135deg, #FF4D4D 0%, #FFB347 100%)',
+                    background: 'linear-gradient(135deg, #FF5A1F 0%, #FF8A4A 100%)',
                     color: 'var(--landing-text-white-mid)',
                   }}
                 >

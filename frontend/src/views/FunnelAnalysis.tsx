@@ -118,7 +118,7 @@ export default function FunnelAnalysis() {
           <button
             onClick={analyze}
             disabled={loading || steps.filter(Boolean).length < 2}
-            className="mt-4 bg-[#FF1F6D] hover:bg-[#ff4d85] disabled:opacity-50 text-white px-6 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors"
+            className="mt-4 bg-primary hover:bg-[#ff4d85] disabled:opacity-50 text-white px-6 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors"
           >
             {loading ? <ArrowPathIcon className="w-5 h-5 animate-spin" /> : <PlayIcon className="w-5 h-5" />}
             Analyze Funnel
@@ -153,7 +153,7 @@ export default function FunnelAnalysis() {
                             'h-full rounded-lg transition-all flex items-center px-3',
                             i === 0 ? 'bg-[#00F5FF]' :
                             i === result.steps.length - 1 ? 'bg-green-400' :
-                            'bg-[#FF1F6D]'
+                            'bg-primary'
                           )}
                           style={{ width: `${widthPct}%` }}
                         >

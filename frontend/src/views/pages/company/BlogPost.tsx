@@ -119,7 +119,7 @@ export default function BlogPost() {
           {/* Title */}
           <h1
             className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6"
-            style={{ fontFamily: "'Clash Display', sans-serif" }}
+            style={{ fontFamily: "Geist, system-ui, sans-serif" }}
           >
             {post.title}
           </h1>

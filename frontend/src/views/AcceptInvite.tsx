@@ -58,22 +58,22 @@ export default function AcceptInvite() {
   // No token state
   if (!token) {
     return (
-      <div className="min-h-screen flex bg-[#080C14] text-[#F0EDE5] font-[Satoshi,system-ui]">
+      <div className="min-h-screen flex bg-background text-foreground font-sans">
         <AuthLeftPanel />
         <section className="w-full lg:w-3/5 flex flex-col items-center justify-center p-6 lg:p-12 relative">
-          <div className="w-full max-w-md bg-[#0F1320] border border-[#1E2740] rounded-xl p-8 shadow-xl text-center">
+          <div className="w-full max-w-md bg-card border border-border rounded-xl p-8 shadow-xl text-center">
             <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-6">
               <AlertTriangle className="w-8 h-8 text-red-400" />
             </div>
-            <h1 className="text-2xl font-semibold text-[#F0EDE5] mb-3">
+            <h1 className="text-2xl font-semibold text-foreground mb-3">
               Invalid invitation link
             </h1>
-            <p className="text-sm text-[#8B92A8] mb-8">
+            <p className="text-sm text-muted-foreground mb-8">
               This invitation link is invalid or has expired. Please ask your administrator to send a new invitation.
             </p>
             <Link
               to="/login"
-              className="block w-full bg-gradient-to-r from-[#FF1F6D] to-[#FF8C00] text-[#080C14] font-semibold rounded-lg py-3 hover:brightness-110 transition-colors duration-200 text-center"
+              className="block w-full bg-gradient-to-r from-primary to-secondary text-background font-semibold rounded-lg py-3 hover:brightness-110 transition-colors duration-200 text-center"
             >
               Go to login
             </Link>
@@ -86,22 +86,22 @@ export default function AcceptInvite() {
   // Success state
   if (isSuccess) {
     return (
-      <div className="min-h-screen flex bg-[#080C14] text-[#F0EDE5] font-[Satoshi,system-ui]">
+      <div className="min-h-screen flex bg-background text-foreground font-sans">
         <AuthLeftPanel />
         <section className="w-full lg:w-3/5 flex flex-col items-center justify-center p-6 lg:p-12 relative">
-          <div className="w-full max-w-md bg-[#0F1320] border border-[#1E2740] rounded-xl p-8 shadow-xl text-center">
+          <div className="w-full max-w-md bg-card border border-border rounded-xl p-8 shadow-xl text-center">
             <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-6">
               <CheckCircle className="w-8 h-8 text-emerald-400" />
             </div>
-            <h1 className="text-2xl font-semibold text-[#F0EDE5] mb-3">
+            <h1 className="text-2xl font-semibold text-foreground mb-3">
               Account activated
             </h1>
-            <p className="text-sm text-[#8B92A8] mb-8">
+            <p className="text-sm text-muted-foreground mb-8">
               Your account has been set up successfully. You can now sign in with your new password.
             </p>
             <button
               onClick={() => navigate('/login', { state: { inviteAccepted: true } })}
-              className="w-full bg-gradient-to-r from-[#FF1F6D] to-[#FF8C00] text-[#080C14] font-semibold rounded-lg py-3 hover:brightness-110 transition-colors duration-200"
+              className="w-full bg-gradient-to-r from-primary to-secondary text-background font-semibold rounded-lg py-3 hover:brightness-110 transition-colors duration-200"
             >
               Sign in
             </button>
@@ -173,7 +173,7 @@ export default function AcceptInvite() {
 
   // Main form
   return (
-    <div className="min-h-screen flex bg-[#080C14] text-[#F0EDE5] font-[Satoshi,system-ui]">
+    <div className="min-h-screen flex bg-background text-foreground font-sans">
       <AuthLeftPanel />
 
       <section className="w-full lg:w-3/5 flex flex-col items-center justify-center p-6 lg:p-12 relative">
@@ -189,11 +189,11 @@ export default function AcceptInvite() {
           />
         </div>
 
-        <div className="w-full max-w-md bg-[#0F1320] border border-[#1E2740] rounded-xl p-8 shadow-xl">
-          <h1 className="text-2xl font-semibold text-[#F0EDE5] mb-2">
+        <div className="w-full max-w-md bg-card border border-border rounded-xl p-8 shadow-xl">
+          <h1 className="text-2xl font-semibold text-foreground mb-2">
             Join your team
           </h1>
-          <p className="text-sm text-[#8B92A8] mb-6">
+          <p className="text-sm text-muted-foreground mb-6">
             You've been invited to Stratum AI. Set up your account to get started.
           </p>
 
@@ -208,11 +208,11 @@ export default function AcceptInvite() {
 
             {/* Full Name */}
             <div className="space-y-2">
-              <label htmlFor="invite-name" className="text-xs font-medium text-[#8B92A8] ml-1">
+              <label htmlFor="invite-name" className="text-xs font-medium text-muted-foreground ml-1">
                 Full Name
               </label>
               <div className="relative">
-                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-[#5A6278] pointer-events-none" />
+                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
                 <input
                   type="text"
                   id="invite-name"
@@ -220,7 +220,7 @@ export default function AcceptInvite() {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   onBlur={() => setTouched((prev) => ({ ...prev, fullName: true }))}
-                  className="w-full bg-[#181F33] border border-[#1E2740] rounded-lg pl-11 pr-4 py-3 text-sm text-[#F0EDE5] placeholder-[#5A6278] outline-none focus:ring-2 focus:ring-[#FF8C00]/30 focus:border-[#FF8C00]/50 transition-colors duration-200"
+                  className="w-full bg-muted border border-border rounded-lg pl-11 pr-4 py-3 text-sm text-foreground placeholder-muted-foreground outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary/50 transition-colors duration-200"
                 />
               </div>
               {fullNameError && (
@@ -230,11 +230,11 @@ export default function AcceptInvite() {
 
             {/* Password */}
             <div className="space-y-2">
-              <label htmlFor="invite-password" className="text-xs font-medium text-[#8B92A8] ml-1">
+              <label htmlFor="invite-password" className="text-xs font-medium text-muted-foreground ml-1">
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-[#5A6278] pointer-events-none" />
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   id="invite-password"
@@ -242,12 +242,12 @@ export default function AcceptInvite() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   onBlur={() => setTouched((prev) => ({ ...prev, password: true }))}
-                  className="w-full bg-[#181F33] border border-[#1E2740] rounded-lg pl-11 pr-11 py-3 text-sm text-[#F0EDE5] placeholder-[#5A6278] outline-none focus:ring-2 focus:ring-[#FF8C00]/30 focus:border-[#FF8C00]/50 transition-colors duration-200"
+                  className="w-full bg-muted border border-border rounded-lg pl-11 pr-11 py-3 text-sm text-foreground placeholder-muted-foreground outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary/50 transition-colors duration-200"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#5A6278] hover:text-[#8B92A8] transition-colors duration-200"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground transition-colors duration-200"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -260,11 +260,11 @@ export default function AcceptInvite() {
 
             {/* Confirm Password */}
             <div className="space-y-2">
-              <label htmlFor="invite-confirm-password" className="text-xs font-medium text-[#8B92A8] ml-1">
+              <label htmlFor="invite-confirm-password" className="text-xs font-medium text-muted-foreground ml-1">
                 Confirm Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-[#5A6278] pointer-events-none" />
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
                 <input
                   type={showConfirmPassword ? 'text' : 'password'}
                   id="invite-confirm-password"
@@ -272,12 +272,12 @@ export default function AcceptInvite() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   onBlur={() => setTouched((prev) => ({ ...prev, confirmPassword: true }))}
-                  className="w-full bg-[#181F33] border border-[#1E2740] rounded-lg pl-11 pr-11 py-3 text-sm text-[#F0EDE5] placeholder-[#5A6278] outline-none focus:ring-2 focus:ring-[#FF8C00]/30 focus:border-[#FF8C00]/50 transition-colors duration-200"
+                  className="w-full bg-muted border border-border rounded-lg pl-11 pr-11 py-3 text-sm text-foreground placeholder-muted-foreground outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary/50 transition-colors duration-200"
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#5A6278] hover:text-[#8B92A8] transition-colors duration-200"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground transition-colors duration-200"
                   aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
                 >
                   {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -292,7 +292,7 @@ export default function AcceptInvite() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-[#FF1F6D] to-[#FF8C00] text-[#080C14] font-semibold rounded-lg py-3 hover:brightness-110 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full bg-gradient-to-r from-primary to-secondary text-background font-semibold rounded-lg py-3 hover:brightness-110 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -309,11 +309,11 @@ export default function AcceptInvite() {
           </form>
 
           {/* Footer link */}
-          <p className="text-center text-sm mt-6 text-[#5A6278]">
+          <p className="text-center text-sm mt-6 text-muted-foreground">
             Already have an account?{' '}
             <Link
               to="/login"
-              className="text-[#FF8C00] hover:text-[#FFB347] transition-colors duration-200 font-medium"
+              className="text-secondary hover:text-secondary transition-colors duration-200 font-medium"
             >
               Sign in
             </Link>

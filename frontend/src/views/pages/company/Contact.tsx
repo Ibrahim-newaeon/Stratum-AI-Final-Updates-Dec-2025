@@ -89,7 +89,7 @@ export default function Contact() {
             style={{
               background: 'rgba(255, 179, 71, 0.1)',
               border: '1px solid rgba(255, 179, 71, 0.3)',
-              color: '#FFB347',
+              color: '#FF8A4A',
             }}
           >
             <ChatBubbleLeftRightIcon className="w-4 h-4" />
@@ -97,7 +97,7 @@ export default function Contact() {
           </div>
           <h1
             className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6"
-            style={{ fontFamily: "'Clash Display', sans-serif" }}
+            style={{ fontFamily: "Geist, system-ui, sans-serif" }}
           >
             <span className="text-white">Get in</span>
             <br />

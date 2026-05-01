@@ -72,7 +72,7 @@ export default function About() {
           </div>
           <h1
             className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6"
-            style={{ fontFamily: "'Clash Display', sans-serif" }}
+            style={{ fontFamily: "Geist, system-ui, sans-serif" }}
           >
             <span className="text-white">Building the Future of</span>
             <br />
@@ -175,7 +175,7 @@ export default function About() {
                 <div
                   className="w-20 h-20 rounded-2xl flex items-center justify-center text-2xl font-bold mx-auto mb-3"
                   style={{
-                    background: 'linear-gradient(135deg, #FF4D4D 0%, #FFB347 100%)',
+                    background: 'linear-gradient(135deg, #FF5A1F 0%, #FF8A4A 100%)',
                     color: '#ffffff',
                   }}
                 >

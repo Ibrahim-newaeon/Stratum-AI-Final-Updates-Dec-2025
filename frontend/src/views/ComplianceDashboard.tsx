@@ -41,7 +41,7 @@ export default function ComplianceDashboard() {
               onClick={() => setActiveTab(tab.id)}
               className={cn(
                 'flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all',
-                activeTab === tab.id ? 'bg-[#FF1F6D] text-white' : 'bg-white/[0.03] text-gray-400 hover:bg-white/[0.06]'
+                activeTab === tab.id ? 'bg-primary text-white' : 'bg-white/[0.03] text-gray-400 hover:bg-white/[0.06]'
               )}
             >
               <tab.icon className="w-5 h-5" />
@@ -132,7 +132,7 @@ function AuditLogPanel() {
           </div>
         </div>
         <div className="flex gap-2">
-          <button onClick={search} disabled={loading} className="bg-[#FF1F6D] hover:bg-[#ff4d85] disabled:opacity-50 text-white px-4 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors">
+          <button onClick={search} disabled={loading} className="bg-primary hover:bg-[#ff4d85] disabled:opacity-50 text-white px-4 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors">
             {loading ? <ArrowPathIcon className="w-4 h-4 animate-spin" /> : <MagnifyingGlassIcon className="w-4 h-4" />}
             Search
           </button>
@@ -363,7 +363,7 @@ function GDPRPanel() {
                   max={field.max}
                   value={policy[field.key as keyof typeof policy] as number}
                   onChange={(e) => setPolicy({ ...policy, [field.key]: parseInt(e.target.value) })}
-                  className="flex-1 accent-[#FF1F6D]"
+                  className="flex-1 accent-primary"
                 />
                 <span className="text-sm font-mono w-16 text-right">{policy[field.key as keyof typeof policy]}d</span>
               </div>
@@ -375,11 +375,11 @@ function GDPRPanel() {
             type="checkbox"
             checked={policy.auto_purge_enabled}
             onChange={(e) => setPolicy({ ...policy, auto_purge_enabled: e.target.checked })}
-            className="w-4 h-4 accent-[#FF1F6D]"
+            className="w-4 h-4 accent-primary"
           />
           <label className="text-sm text-gray-300">Enable automated purge</label>
         </div>
-        <button onClick={savePolicy} className="mt-4 bg-[#FF1F6D] hover:bg-[#ff4d85] text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors">
+        <button onClick={savePolicy} className="mt-4 bg-primary hover:bg-[#ff4d85] text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors">
           Save Policy
         </button>
       </div>

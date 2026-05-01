@@ -153,7 +153,7 @@ export default function DocsPage() {
                   placeholder="Search documentation..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 rounded-xl text-white placeholder-gray-500 transition-[width] duration-200 focus:outline-none focus:ring-2 focus:ring-[#FF4D4D]/50"
+                  className="w-full pl-12 pr-4 py-4 rounded-xl text-white placeholder-gray-500 transition-[width] duration-200 focus:outline-none focus:ring-2 focus:ring-[#FF5A1F]/50"
                   style={{
                     background: 'var(--landing-card)',
                     border: '1px solid var(--landing-border)',

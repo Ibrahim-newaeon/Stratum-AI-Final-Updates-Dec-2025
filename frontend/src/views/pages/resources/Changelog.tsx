@@ -279,7 +279,7 @@ export default function ChangelogPage() {
                 <input
                   type="email"
                   placeholder="Enter your email"
-                  className="flex-1 px-4 py-3 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF4D4D]/50"
+                  className="flex-1 px-4 py-3 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF5A1F]/50"
                   style={{
                     background: 'var(--landing-bg)',
                     border: '1px solid var(--landing-border)',

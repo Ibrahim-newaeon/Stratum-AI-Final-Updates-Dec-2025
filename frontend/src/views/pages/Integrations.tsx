@@ -75,7 +75,7 @@ export default function Integrations() {
         <div className="max-w-7xl mx-auto text-center">
           <h1
             className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6"
-            style={{ fontFamily: "'Clash Display', sans-serif" }}
+            style={{ fontFamily: "Geist, system-ui, sans-serif" }}
           >
             <span className="text-white">Connect Your</span>
             <br />

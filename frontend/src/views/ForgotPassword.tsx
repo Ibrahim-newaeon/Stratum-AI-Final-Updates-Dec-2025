@@ -39,35 +39,35 @@ export default function ForgotPassword() {
     return (
       <>
         <SEO title="Forgot Password" description="Reset your Stratum AI account password." noIndex url="https://stratum-ai.com/forgot-password" />
-        <div className="min-h-screen flex bg-[#080C14] text-[#F0EDE5] font-[Satoshi,system-ui]">
+        <div className="min-h-screen flex bg-background text-foreground font-sans">
           <AuthLeftPanel />
           <section className="w-full lg:w-3/5 flex flex-col items-center justify-center p-6 lg:p-12 relative">
-            <div className="w-full max-w-md bg-[#0F1320] border border-[#1E2740] rounded-xl p-8 shadow-xl text-center">
+            <div className="w-full max-w-md bg-card border border-border rounded-xl p-8 shadow-xl text-center">
               <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-6">
                 <CheckCircle className="w-8 h-8 text-emerald-400" />
               </div>
-              <h2 className="text-2xl font-semibold text-[#F0EDE5] mb-2">
+              <h2 className="text-2xl font-semibold text-foreground mb-2">
                 Check your email
               </h2>
-              <p className="text-sm text-[#8B92A8] mb-2">
+              <p className="text-sm text-muted-foreground mb-2">
                 We've sent a password reset link to:
               </p>
-              <p className="text-[#FF8C00] text-sm font-semibold mb-8">
+              <p className="text-secondary text-sm font-semibold mb-8">
                 {submittedEmail}
               </p>
-              <p className="text-xs text-[#5A6278] mb-8">
+              <p className="text-xs text-muted-foreground mb-8">
                 If you don't see it in your inbox, check your spam folder.
               </p>
               <div className="space-y-4">
                 <Link
                   to="/login"
-                  className="block w-full bg-gradient-to-r from-[#FF1F6D] to-[#FF8C00] text-[#080C14] font-semibold rounded-lg py-3 hover:brightness-110 transition-colors duration-200 text-center"
+                  className="block w-full bg-gradient-to-r from-primary to-secondary text-background font-semibold rounded-lg py-3 hover:brightness-110 transition-colors duration-200 text-center"
                 >
                   Back to login
                 </Link>
                 <button
                   onClick={() => forgotPasswordMutation.reset()}
-                  className="text-xs text-[#8B92A8] hover:text-[#FFB347] transition-colors duration-200 font-medium"
+                  className="text-xs text-muted-foreground hover:text-secondary transition-colors duration-200 font-medium"
                 >
                   Try a different email
                 </button>
@@ -83,15 +83,15 @@ export default function ForgotPassword() {
     <>
       <SEO title="Forgot Password" description="Reset your Stratum AI account password." noIndex url="https://stratum-ai.com/forgot-password" />
 
-      <div className="min-h-screen flex bg-[#080C14] text-[#F0EDE5] font-[Satoshi,system-ui]">
+      <div className="min-h-screen flex bg-background text-foreground font-sans">
         <AuthLeftPanel />
 
         <section className="w-full lg:w-3/5 flex flex-col items-center justify-center p-6 lg:p-12 relative">
-          <div className="w-full max-w-md bg-[#0F1320] border border-[#1E2740] rounded-xl p-8 shadow-xl">
+          <div className="w-full max-w-md bg-card border border-border rounded-xl p-8 shadow-xl">
             {/* Back link */}
             <Link
               to="/login"
-              className="inline-flex items-center gap-2 text-xs text-[#8B92A8] hover:text-[#FFB347] transition-colors duration-200 font-medium mb-8"
+              className="inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-secondary transition-colors duration-200 font-medium mb-8"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to login
@@ -99,10 +99,10 @@ export default function ForgotPassword() {
 
             {/* Header */}
             <div className="mb-8">
-              <h2 className="text-2xl font-semibold text-[#F0EDE5] mb-2">
+              <h2 className="text-2xl font-semibold text-foreground mb-2">
                 Reset your password
               </h2>
-              <p className="text-sm text-[#8B92A8]">
+              <p className="text-sm text-muted-foreground">
                 Enter your email and we'll send you a reset link.
               </p>
             </div>
@@ -118,17 +118,17 @@ export default function ForgotPassword() {
 
               {/* Email */}
               <div className="space-y-2">
-                <label htmlFor="forgot-email" className="text-xs font-medium text-[#8B92A8] ml-1">
+                <label htmlFor="forgot-email" className="text-xs font-medium text-muted-foreground ml-1">
                   Email
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-[#5A6278] pointer-events-none" />
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
                   <input
                     {...register('email')}
                     id="forgot-email"
                     type="email"
                     placeholder="you@company.com"
-                    className="w-full bg-[#181F33] border border-[#1E2740] rounded-lg pl-11 pr-4 py-3 text-sm text-[#F0EDE5] placeholder-[#5A6278] outline-none focus:ring-2 focus:ring-[#FF8C00]/30 focus:border-[#FF8C00]/50 transition-colors duration-200"
+                    className="w-full bg-muted border border-border rounded-lg pl-11 pr-4 py-3 text-sm text-foreground placeholder-muted-foreground outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary/50 transition-colors duration-200"
                   />
                 </div>
                 {errors.email && (
@@ -140,7 +140,7 @@ export default function ForgotPassword() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-gradient-to-r from-[#FF1F6D] to-[#FF8C00] text-[#080C14] font-semibold rounded-lg py-3 hover:brightness-110 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full bg-gradient-to-r from-primary to-secondary text-background font-semibold rounded-lg py-3 hover:brightness-110 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isLoading ? (
                   <span className="flex items-center gap-2">
@@ -158,9 +158,9 @@ export default function ForgotPassword() {
 
             {/* Footer */}
             <div className="mt-8 text-center">
-              <p className="text-sm text-[#5A6278]">
+              <p className="text-sm text-muted-foreground">
                 Remember your password?{' '}
-                <Link to="/login" className="text-[#FF8C00] hover:text-[#FFB347] transition-colors duration-200 font-medium">
+                <Link to="/login" className="text-secondary hover:text-secondary transition-colors duration-200 font-medium">
                   Sign in
                 </Link>
               </p>

@@ -76,7 +76,7 @@ export default function AIInsights() {
               className={cn(
                 'flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all',
                 activeTab === tab.id
-                  ? 'bg-[#FF1F6D] text-white'
+                  ? 'bg-primary text-white'
                   : 'bg-white/[0.03] text-gray-400 hover:bg-white/[0.06]'
               )}
             >
@@ -132,12 +132,12 @@ function NLQPanel() {
             onChange={(e) => setQuestion(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && ask()}
             placeholder="e.g. What are my top campaigns by ROAS?"
-            className="flex-1 bg-white/[0.03] border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#FF1F6D]"
+            className="flex-1 bg-white/[0.03] border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-primary"
           />
           <button
             onClick={ask}
             disabled={loading || !question.trim()}
-            className="bg-[#FF1F6D] hover:bg-[#ff4d85] disabled:opacity-50 text-white px-6 py-3 rounded-lg font-medium flex items-center gap-2 transition-colors"
+            className="bg-primary hover:bg-[#ff4d85] disabled:opacity-50 text-white px-6 py-3 rounded-lg font-medium flex items-center gap-2 transition-colors"
           >
             {loading ? <ArrowPathIcon className="w-5 h-5 animate-spin" /> : <PaperAirplaneIcon className="w-5 h-5" />}
             Ask
@@ -282,7 +282,7 @@ function AnomalyPanel() {
         <button
           onClick={analyze}
           disabled={loading}
-          className="mt-4 bg-[#FF1F6D] hover:bg-[#ff4d85] disabled:opacity-50 text-white px-6 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors"
+          className="mt-4 bg-primary hover:bg-[#ff4d85] disabled:opacity-50 text-white px-6 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors"
         >
           {loading ? <ArrowPathIcon className="w-5 h-5 animate-spin" /> : <ExclamationTriangleIcon className="w-5 h-5" />}
           Analyze Anomaly
@@ -339,7 +339,7 @@ function AnomalyPanel() {
                 <div className="space-y-2">
                   {result.recommended_actions.map((a, i) => (
                     <div key={i} className="flex items-start gap-2">
-                      <div className="w-5 h-5 rounded-full bg-[#FF1F6D]/20 text-[#FF1F6D] flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">{i + 1}</div>
+                      <div className="w-5 h-5 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">{i + 1}</div>
                       <span className="text-sm text-gray-300">{a}</span>
                     </div>
                   ))}
@@ -408,7 +408,7 @@ function PredictPanel() {
             <input
               type="range" min={1} max={30} value={days}
               onChange={(e) => setDays(parseInt(e.target.value))}
-              className="w-full accent-[#FF1F6D]"
+              className="w-full accent-primary"
             />
           </div>
           <div>
@@ -424,7 +424,7 @@ function PredictPanel() {
         <button
           onClick={predict}
           disabled={loading || !campaignId}
-          className="mt-4 bg-[#FF1F6D] hover:bg-[#ff4d85] disabled:opacity-50 text-white px-6 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors"
+          className="mt-4 bg-primary hover:bg-[#ff4d85] disabled:opacity-50 text-white px-6 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors"
         >
           {loading ? <ArrowPathIcon className="w-5 h-5 animate-spin" /> : <ChartBarIcon className="w-5 h-5" />}
           Generate Forecast

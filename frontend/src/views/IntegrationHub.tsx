@@ -42,7 +42,7 @@ export default function IntegrationHub() {
               onClick={() => setActiveTab(tab.id)}
               className={cn(
                 'flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all',
-                activeTab === tab.id ? 'bg-[#FF1F6D] text-white' : 'bg-white/[0.03] text-gray-400 hover:bg-white/[0.06]'
+                activeTab === tab.id ? 'bg-primary text-white' : 'bg-white/[0.03] text-gray-400 hover:bg-white/[0.06]'
               )}
             >
               <tab.icon className="w-5 h-5" />
@@ -130,7 +130,7 @@ function ZapierPanel() {
                 className={cn(
                   'text-xs px-3 py-1.5 rounded-full border transition-colors',
                   newWebhook.event_types.includes(e)
-                    ? 'bg-[#FF1F6D]/20 border-[#FF1F6D] text-[#FF1F6D]'
+                    ? 'bg-primary/20 border-primary text-primary'
                     : 'bg-white/[0.03] border-white/10 text-gray-400 hover:bg-white/[0.06]'
                 )}
               >
@@ -139,7 +139,7 @@ function ZapierPanel() {
             ))}
           </div>
         </div>
-        <button onClick={addWebhook} className="bg-[#FF1F6D] hover:bg-[#ff4d85] text-white px-5 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors">
+        <button onClick={addWebhook} className="bg-primary hover:bg-[#ff4d85] text-white px-5 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors">
           <PlusIcon className="w-4 h-4" /> Add Webhook
         </button>
       </div>
@@ -239,7 +239,7 @@ function WarehousePanel() {
               <span className={cn('text-xs px-2 py-0.5 rounded-full', ex.is_active ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400')}>
                 {ex.is_active ? 'Active' : 'Inactive'}
               </span>
-              <button onClick={() => syncNow(ex.id)} disabled={syncing} className="text-xs bg-[#FF1F6D] hover:bg-[#ff4d85] text-white px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50">
+              <button onClick={() => syncNow(ex.id)} disabled={syncing} className="text-xs bg-primary hover:bg-[#ff4d85] text-white px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50">
                 {syncing ? <ArrowPathIcon className="w-3 h-3 animate-spin" /> : 'Sync Now'}
               </button>
             </div>

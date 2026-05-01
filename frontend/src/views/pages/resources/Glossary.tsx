@@ -671,7 +671,7 @@ export default function GlossaryPage() {
                   placeholder="Search terms..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 bg-transparent text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF4D4D]/50 rounded-xl"
+                  className="w-full pl-12 pr-4 py-4 bg-transparent text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF5A1F]/50 rounded-xl"
                 />
               </div>
             </div>
@@ -689,7 +689,7 @@ export default function GlossaryPage() {
                 onClick={() => setActiveCategory(null)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
                   activeCategory === null
-                    ? 'bg-[#FFB347] text-white'
+                    ? 'bg-secondary text-white'
                     : 'bg-white/5 hover:text-white'
                 }`}
                 style={activeCategory !== null ? { color: '#8B8D9E' } : {}}
