@@ -35,7 +35,7 @@ export interface ChartSeries {
   color?: string;
 }
 
-export interface ChartProps<T extends Record<string, unknown> = Record<string, unknown>> {
+export interface ChartProps<T extends object = Record<string, unknown>> {
   data: T[];
   series: ChartSeries[];
   /** Column to use for the X axis. */
@@ -158,7 +158,7 @@ function resolveColor(series: ChartSeries, idx: number): string {
   return series.color ?? DEFAULT_PALETTE[idx % DEFAULT_PALETTE.length];
 }
 
-export function LineChart<T extends Record<string, unknown>>({
+export function LineChart<T extends object>({
   data,
   series,
   xKey,
@@ -268,7 +268,7 @@ export function LineChart<T extends Record<string, unknown>>({
   );
 }
 
-export function AreaChart<T extends Record<string, unknown>>({
+export function AreaChart<T extends object>({
   data,
   series,
   xKey,
