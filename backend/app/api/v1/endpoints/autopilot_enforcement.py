@@ -369,6 +369,12 @@ async def add_custom_rule(
     if not user_id:
         raise HTTPException(status_code=401, detail="User authentication required")
 
+    # Tier-limit gate — raises 402 when max_automations is hit so the
+    # frontend UpgradePromptProvider can route the user to checkout.
+    from app.services.tenant.limits import LimitType, check_tenant_limit
+
+    await check_tenant_limit(db, tenant_id, LimitType.AUTOMATIONS, raise_on_exceeded=True)
+
     # Validate rule type
     try:
         rule_type = ViolationType(body.rule_type)
