@@ -6,6 +6,18 @@
 
 import { describe, it, expect, vi, beforeAll } from 'vitest';
 import { render, screen } from '@testing-library/react';
+
+// TrustHoldsView (P15) pulls in useAuth + approve/dismiss mutations.
+// Mock those so the focus-routing test stays scoped to "which sub-view
+// renders for which focus key" without wiring providers.
+vi.mock('@/contexts/AuthContext', () => ({
+  useAuth: () => ({ user: { tenant_id: 1 }, isAuthenticated: true }),
+}));
+vi.mock('@/api/autopilot', () => ({
+  useApproveAction: () => ({ mutateAsync: () => Promise.resolve(), isPending: false }),
+  useDismissAction: () => ({ mutateAsync: () => Promise.resolve(), isPending: false }),
+}));
+
 import { FocusPane } from './FocusPane';
 import { mockAutopilotDecisions } from './mockData';
 
