@@ -14,13 +14,22 @@ import { Activity, TrendingUp, Target } from 'lucide-react';
 import { KPI } from '@/components/primitives/KPI';
 import { mockKpis } from './mockData';
 
+interface KpiData {
+  trustGate: { status: 'pass' | 'hold' | 'block'; holds: number; delta: number };
+  signalHealth: { score: number; delta: number; status: 'healthy' | 'degraded' | 'critical' };
+  roas: { value: number; delta: number };
+  pacing: { onTrack: number; breaches: number; deltaPercent: number };
+}
+
 interface KpiStripProps {
+  /** When omitted, the strip falls back to deterministic mock data. */
+  kpis?: KpiData;
   loading?: boolean;
   error?: string;
 }
 
-export function KpiStrip({ loading, error }: KpiStripProps) {
-  const k = mockKpis;
+export function KpiStrip({ kpis, loading, error }: KpiStripProps) {
+  const k = kpis ?? mockKpis;
 
   // Decide which card gets the "glow" emphasis treatment — typically the
   // most-attention-needing surface. If trust gate is degraded or has holds,

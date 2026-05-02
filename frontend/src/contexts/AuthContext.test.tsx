@@ -32,6 +32,28 @@ const mockLocalStorage = {
 
 Object.defineProperty(window, 'localStorage', { value: mockLocalStorage });
 
+// AuthContext stores access_token / refresh_token in sessionStorage
+// for security; keep a separate mock so tests can assert on the
+// right surface.
+const mockSessionStore: Record<string, string> = {};
+const mockSessionStorage = {
+  getItem: vi.fn((key: string) => mockSessionStore[key] ?? null),
+  setItem: vi.fn((key: string, value: string) => {
+    mockSessionStore[key] = value;
+  }),
+  removeItem: vi.fn((key: string) => {
+    delete mockSessionStore[key];
+  }),
+  clear: vi.fn(() => {
+    Object.keys(mockSessionStore).forEach((k) => delete mockSessionStore[k]);
+  }),
+  get length() {
+    return Object.keys(mockSessionStore).length;
+  },
+  key: vi.fn((index: number) => Object.keys(mockSessionStore)[index] ?? null),
+};
+Object.defineProperty(window, 'sessionStorage', { value: mockSessionStorage });
+
 // ---------------------------------------------------------------------------
 // Enable demo mode for tests (must be set before AuthContext import)
 // ---------------------------------------------------------------------------
@@ -101,9 +123,13 @@ function renderAuthConsumer(onRender = vi.fn()) {
 // ---------------------------------------------------------------------------
 function resetAll() {
   Object.keys(mockStore).forEach((k) => delete mockStore[k]);
+  Object.keys(mockSessionStore).forEach((k) => delete mockSessionStore[k]);
   mockLocalStorage.getItem.mockClear();
   mockLocalStorage.setItem.mockClear();
   mockLocalStorage.removeItem.mockClear();
+  mockSessionStorage.getItem.mockClear();
+  mockSessionStorage.setItem.mockClear();
+  mockSessionStorage.removeItem.mockClear();
   mockFetch.mockReset();
 }
 
@@ -246,8 +272,8 @@ describe('AuthContext', () => {
     });
 
     expect(result.success).toBe(true);
-    expect(mockLocalStorage.setItem).toHaveBeenCalledWith('access_token', 'tok_abc');
-    expect(mockLocalStorage.setItem).toHaveBeenCalledWith('refresh_token', 'ref_xyz');
+    expect(mockSessionStorage.setItem).toHaveBeenCalledWith('access_token', 'tok_abc');
+    expect(mockSessionStorage.setItem).toHaveBeenCalledWith('refresh_token', 'ref_xyz');
   });
 
   it('login returns error on 401', async () => {
@@ -322,8 +348,8 @@ describe('AuthContext', () => {
       tenant_id: 1,
     };
     mockStore['stratum_auth'] = JSON.stringify(storedUser);
-    mockStore['access_token'] = 'tok';
-    mockStore['refresh_token'] = 'ref';
+    mockSessionStore['access_token'] = 'tok';
+    mockSessionStore['refresh_token'] = 'ref';
     mockStore['stratum_demo_mode'] = 'false';
 
     const onRender = vi.fn();
@@ -345,8 +371,8 @@ describe('AuthContext', () => {
 
     // Verify all keys are cleaned up
     expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('stratum_auth');
-    expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('access_token');
-    expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('refresh_token');
+    expect(mockSessionStorage.removeItem).toHaveBeenCalledWith('access_token');
+    expect(mockSessionStorage.removeItem).toHaveBeenCalledWith('refresh_token');
     expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('stratum_demo_mode');
     expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('stratum_onboarding_progress');
     expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('stratum_available_tenants');
@@ -377,7 +403,7 @@ describe('AuthContext', () => {
 
     expect(result.success).toBe(true);
     expect(mockLocalStorage.setItem).toHaveBeenCalledWith('stratum_demo_mode', 'true');
-    expect(mockLocalStorage.setItem).toHaveBeenCalledWith('access_token', 'demo-token');
+    expect(mockSessionStorage.setItem).toHaveBeenCalledWith('access_token', 'demo-token');
   });
 
   it('demoLogin returns error for unknown role', async () => {

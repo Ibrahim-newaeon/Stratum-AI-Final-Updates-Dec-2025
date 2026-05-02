@@ -24,6 +24,7 @@ import {
   useMemo,
   useState,
 } from 'react';
+import { Link } from 'react-router-dom';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -165,8 +166,8 @@ export function Sidebar({
                 const active = isItemActive(item.href, currentPath);
                 return (
                   <li key={item.href}>
-                    <a
-                      href={item.href}
+                    <Link
+                      to={item.href}
                       aria-current={active ? 'page' : undefined}
                       className={cn(
                         'group flex items-center gap-3',
@@ -200,15 +201,13 @@ export function Sidebar({
                           className={cn(
                             'text-[10px] px-1.5 py-0.5 rounded-full',
                             'font-mono uppercase tracking-[0.06em]',
-                            active
-                              ? 'bg-primary/15 text-primary'
-                              : 'bg-muted text-muted-foreground'
+                            active ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'
                           )}
                         >
                           {item.badge}
                         </span>
                       )}
-                    </a>
+                    </Link>
                   </li>
                 );
               })}
@@ -221,16 +220,11 @@ export function Sidebar({
 
   return (
     <aside
-      className={cn(
-        'flex flex-col h-full w-60 bg-card border-r border-border',
-        className
-      )}
+      className={cn('flex flex-col h-full w-60 bg-card border-r border-border', className)}
       aria-label="Primary navigation"
     >
       {brand && <div className="px-4 py-5 border-b border-border">{brand}</div>}
-      <nav className="flex-1 overflow-y-auto px-2 py-4 scrollbar-thin">
-        {renderedGroups}
-      </nav>
+      <nav className="flex-1 overflow-y-auto px-2 py-4 scrollbar-thin">{renderedGroups}</nav>
       {footer && <div className="px-4 py-3 border-t border-border">{footer}</div>}
     </aside>
   );
