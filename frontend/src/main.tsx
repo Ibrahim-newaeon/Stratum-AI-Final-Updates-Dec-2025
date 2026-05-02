@@ -1,21 +1,17 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClientProvider } from '@tanstack/react-query'
 import { init as sentryInit, browserTracingIntegration } from '@sentry/react'
 import App from './App'
+import { queryClient } from './lib/queryClient'
 import './index.css'
 import './i18n'
 
-export const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
-})
+// Re-exported for backward compat with imports from `@/main`. New code
+// should import directly from `@/lib/queryClient` so test code can
+// load that module without triggering the top-level createRoot below.
+export { queryClient }
 
 // Initialize Sentry for production error tracking
 const sentryDsn = import.meta.env.VITE_SENTRY_DSN;

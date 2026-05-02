@@ -4,7 +4,7 @@
  */
 
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { queryClient } from '@/main';
+import { queryClient } from '@/lib/queryClient';
 import { useTenantStore } from '@/stores/tenantStore';
 import { useIdleTimeout } from '@/hooks/useIdleTimeout';
 import IdleTimeoutWarning from '@/components/auth/IdleTimeoutWarning';

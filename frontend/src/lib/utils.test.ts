@@ -164,20 +164,24 @@ describe('generateId', () => {
 });
 
 describe('getPlatformColor', () => {
-  it('should return correct color for google', () => {
-    expect(getPlatformColor('google')).toBe('#4285F4');
+  // Implementation now returns CSS-var refs so theme swaps propagate
+  // through chart/badge palettes without per-platform hex hardcoding.
+  // The exact hex resolution lives in `--meta` / `--google` / etc. in
+  // index.css; this test asserts the CSS-var contract instead.
+  it('returns the google CSS var', () => {
+    expect(getPlatformColor('google')).toBe('hsl(var(--google))');
   });
 
-  it('should return correct color for meta', () => {
-    expect(getPlatformColor('meta')).toBe('#1877F2');
+  it('returns the meta CSS var', () => {
+    expect(getPlatformColor('meta')).toBe('hsl(var(--meta))');
   });
 
-  it('should be case insensitive', () => {
-    expect(getPlatformColor('GOOGLE')).toBe('#4285F4');
-    expect(getPlatformColor('Meta')).toBe('#1877F2');
+  it('is case insensitive', () => {
+    expect(getPlatformColor('GOOGLE')).toBe('hsl(var(--google))');
+    expect(getPlatformColor('Meta')).toBe('hsl(var(--meta))');
   });
 
-  it('should return default color for unknown platforms', () => {
-    expect(getPlatformColor('unknown')).toBe('#6B7280');
+  it('returns the muted-foreground fallback for unknown platforms', () => {
+    expect(getPlatformColor('unknown')).toBe('hsl(var(--muted-foreground))');
   });
 });
