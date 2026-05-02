@@ -19,7 +19,12 @@ Object.defineProperty(window, 'localStorage', {
   },
 });
 
+import { MemoryRouter } from 'react-router-dom';
+import type { ReactElement } from 'react';
 import { Sidebar, type SidebarGroup } from './Sidebar';
+
+const wrap = (ui: ReactElement, path = '/') =>
+  render(<MemoryRouter initialEntries={[path]}>{ui}</MemoryRouter>);
 
 const groups: SidebarGroup[] = [
   {
@@ -46,7 +51,7 @@ beforeEach(() => {
 
 describe('Sidebar', () => {
   it('renders all groups and items', () => {
-    render(<Sidebar groups={groups} currentPath="/dashboard/overview" />);
+    wrap(<Sidebar groups={groups} currentPath="/dashboard/overview" />, "/dashboard/overview");
     expect(screen.getByText('Operate')).toBeInTheDocument();
     expect(screen.getByText('Intelligence')).toBeInTheDocument();
     expect(screen.getByText('Overview')).toBeInTheDocument();
@@ -54,24 +59,24 @@ describe('Sidebar', () => {
   });
 
   it('marks the active item with aria-current="page"', () => {
-    render(<Sidebar groups={groups} currentPath="/dashboard/overview" />);
+    wrap(<Sidebar groups={groups} currentPath="/dashboard/overview" />, "/dashboard/overview");
     const link = screen.getByRole('link', { name: /Overview/ });
     expect(link.getAttribute('aria-current')).toBe('page');
   });
 
   it('treats nested paths as active for the parent route', () => {
-    render(<Sidebar groups={groups} currentPath="/dashboard/campaigns/123" />);
+    wrap(<Sidebar groups={groups} currentPath="/dashboard/campaigns/123" />, "/dashboard/campaigns/123");
     const link = screen.getByRole('link', { name: /Campaigns/ });
     expect(link.getAttribute('aria-current')).toBe('page');
   });
 
   it('renders item badges', () => {
-    render(<Sidebar groups={groups} currentPath="/" />);
+    wrap(<Sidebar groups={groups} currentPath="/" />, "/");
     expect(screen.getByText('3')).toBeInTheDocument();
   });
 
   it('group header toggles aria-expanded on click', () => {
-    render(<Sidebar groups={groups} currentPath="/" />);
+    wrap(<Sidebar groups={groups} currentPath="/" />, "/");
     // 'Operate' header is initially expanded (no stored state).
     const header = screen.getByRole('button', { name: /Operate/ });
     expect(header.getAttribute('aria-expanded')).toBe('true');
@@ -80,7 +85,7 @@ describe('Sidebar', () => {
   });
 
   it('persists collapse state to localStorage', () => {
-    render(<Sidebar groups={groups} currentPath="/" />);
+    wrap(<Sidebar groups={groups} currentPath="/" />, "/");
     fireEvent.click(screen.getByRole('button', { name: /Operate/ }));
     expect(mockStore['stratum-sidebar-groups']).toBeDefined();
     expect(JSON.parse(mockStore['stratum-sidebar-groups']).operate).toBe(true);
@@ -89,26 +94,27 @@ describe('Sidebar', () => {
   it('force-expands the group containing the active route', () => {
     // Pre-collapse the operate group.
     mockStore['stratum-sidebar-groups'] = JSON.stringify({ operate: true });
-    render(<Sidebar groups={groups} currentPath="/dashboard/overview" />);
+    wrap(<Sidebar groups={groups} currentPath="/dashboard/overview" />, "/dashboard/overview");
     const header = screen.getByRole('button', { name: /Operate/ });
     expect(header.getAttribute('aria-expanded')).toBe('true');
   });
 
   it('renders the brand and footer slots', () => {
-    render(
+    wrap(
       <Sidebar
         groups={groups}
         currentPath="/"
         brand={<span data-testid="brand">stratum.ai</span>}
         footer={<span data-testid="footer">jane@co.com</span>}
-      />
+      />,
+      '/'
     );
     expect(screen.getByTestId('brand')).toBeInTheDocument();
     expect(screen.getByTestId('footer')).toBeInTheDocument();
   });
 
   it('exposes role=navigation via the <aside> aria-label', () => {
-    render(<Sidebar groups={groups} currentPath="/" />);
+    wrap(<Sidebar groups={groups} currentPath="/" />, "/");
     expect(
       screen.getByRole('complementary', { name: 'Primary navigation' })
     ).toBeInTheDocument();
