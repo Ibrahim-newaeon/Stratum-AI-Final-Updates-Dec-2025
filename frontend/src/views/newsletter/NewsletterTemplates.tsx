@@ -51,7 +51,7 @@ const categoryColors: Record<TemplateCategory, { text: string; bg: string }> = {
 };
 
 const INPUT_CLS =
-  'bg-muted border border-white/[0.08] rounded-xl px-4 py-2.5 text-foreground placeholder:text-foreground/30 focus:border-primary focus:outline-none w-full';
+  'bg-muted border border-foreground/[0.08] rounded-xl px-4 py-2.5 text-foreground placeholder:text-foreground/30 focus:border-primary focus:outline-none w-full';
 
 // ---------------------------------------------------------------------------
 // Main Component
@@ -130,17 +130,17 @@ export default function NewsletterTemplates() {
           {Array.from({ length: 6 }).map((_, i) => (
             <div
               key={i}
-              className="bg-muted border border-white/[0.08] rounded-2xl overflow-hidden animate-pulse"
+              className="bg-muted border border-foreground/[0.08] rounded-2xl overflow-hidden animate-pulse"
             >
-              <div className="h-40 bg-white/[0.03]" />
+              <div className="h-40 bg-foreground/[0.03]" />
               <div className="p-4 space-y-3">
-                <div className="h-4 bg-white/[0.06] rounded w-3/4" />
-                <div className="h-3 bg-white/[0.04] rounded w-1/2" />
+                <div className="h-4 bg-foreground/[0.06] rounded w-3/4" />
+                <div className="h-3 bg-foreground/[0.04] rounded w-1/2" />
                 <div className="flex gap-2">
-                  <div className="h-5 bg-white/[0.04] rounded-full w-20" />
-                  <div className="h-5 bg-white/[0.04] rounded-full w-16" />
+                  <div className="h-5 bg-foreground/[0.04] rounded-full w-20" />
+                  <div className="h-5 bg-foreground/[0.04] rounded-full w-16" />
                 </div>
-                <div className="h-8 bg-white/[0.04] rounded-lg w-full mt-2" />
+                <div className="h-8 bg-foreground/[0.04] rounded-lg w-full mt-2" />
               </div>
             </div>
           ))}
@@ -187,10 +187,10 @@ export default function NewsletterTemplates() {
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  className="bg-muted border border-white/[0.08] rounded-2xl overflow-hidden hover:border-white/[0.15] transition-colors group"
+                  className="bg-muted border border-foreground/[0.08] rounded-2xl overflow-hidden hover:border-foreground/[0.15] transition-colors group"
                 >
                   {/* Preview Area */}
-                  <div className="relative h-40 bg-white/[0.02] overflow-hidden">
+                  <div className="relative h-40 bg-foreground/[0.02] overflow-hidden">
                     {template.content_html ? (
                       <div
                         className="origin-top-left pointer-events-none opacity-80 p-2"
@@ -482,7 +482,7 @@ function TemplateModal({ mode, template, onClose }: TemplateModalProps) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2.5 bg-muted border border-white/[0.08] rounded-xl text-[rgba(245,245,247,0.6)] hover:bg-white/[0.08] transition-colors"
+              className="flex-1 px-4 py-2.5 bg-muted border border-foreground/[0.08] rounded-xl text-[rgba(245,245,247,0.6)] hover:bg-foreground/[0.08] transition-colors"
             >
               Cancel
             </button>

@@ -187,7 +187,7 @@ export default function AIFeatures() {
             <motion.div
               key={model.id}
               variants={itemVariants}
-              className={`group relative rounded-3xl bg-gradient-to-b ${model.bgGradient} border border-white/[0.05] hover:border-foreground/10 overflow-hidden transition-transform transition-colors duration-500 hover:scale-[1.02] ${
+              className={`group relative rounded-3xl bg-gradient-to-b ${model.bgGradient} border border-foreground/[0.05] hover:border-foreground/10 overflow-hidden transition-transform transition-colors duration-500 hover:scale-[1.02] ${
                 model.size === 'large' ? 'md:col-span-2 lg:col-span-1' : ''
               }`}
             >

@@ -195,7 +195,7 @@ export default function WhatsAppBroadcast() {
                 return (
                   <tr
                     key={broadcast.id}
-                    className="border-b border-foreground/5 hover:bg-white/[0.02] transition-colors"
+                    className="border-b border-foreground/5 hover:bg-foreground/[0.02] transition-colors"
                   >
                     <td className="p-4">
                       <div className="flex items-center gap-3">

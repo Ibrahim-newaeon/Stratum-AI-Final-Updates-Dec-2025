@@ -110,7 +110,7 @@ function StatCard({
             {title}
           </p>
           {loading ? (
-            <div className="h-8 w-20 bg-white/[0.08] rounded-md animate-pulse mt-1" />
+            <div className="h-8 w-20 bg-foreground/[0.08] rounded-md animate-pulse mt-1" />
           ) : (
             <p
               className="text-2xl font-bold tracking-tight"
@@ -200,7 +200,7 @@ function SubscriberRow({
   const scoreColor = getScoreColor(subscriber.lead_score);
 
   return (
-    <tr className="border-b border-foreground/5 hover:bg-white/[0.02] transition-colors">
+    <tr className="border-b border-foreground/5 hover:bg-foreground/[0.02] transition-colors">
       {/* Name + Company */}
       <td className="p-4">
         <div>
@@ -336,32 +336,32 @@ function SkeletonRows({ count = 5 }: { count?: number }) {
       {Array.from({ length: count }).map((_, i) => (
         <tr key={i} className="border-b border-foreground/5">
           <td className="p-4">
-            <div className="h-4 w-28 bg-white/[0.08] rounded animate-pulse" />
-            <div className="h-3 w-20 bg-white/[0.06] rounded animate-pulse mt-1.5" />
+            <div className="h-4 w-28 bg-foreground/[0.08] rounded animate-pulse" />
+            <div className="h-3 w-20 bg-foreground/[0.06] rounded animate-pulse mt-1.5" />
           </td>
           <td className="p-4">
-            <div className="h-4 w-40 bg-white/[0.08] rounded animate-pulse" />
+            <div className="h-4 w-40 bg-foreground/[0.08] rounded animate-pulse" />
           </td>
           <td className="p-4">
-            <div className="h-6 w-16 bg-white/[0.08] rounded-full animate-pulse" />
+            <div className="h-6 w-16 bg-foreground/[0.08] rounded-full animate-pulse" />
           </td>
           <td className="p-4">
-            <div className="h-4 w-10 bg-white/[0.08] rounded animate-pulse" />
+            <div className="h-4 w-10 bg-foreground/[0.08] rounded animate-pulse" />
           </td>
           <td className="p-4">
-            <div className="h-6 w-20 bg-white/[0.08] rounded-full animate-pulse" />
+            <div className="h-6 w-20 bg-foreground/[0.08] rounded-full animate-pulse" />
           </td>
           <td className="p-4">
-            <div className="h-4 w-8 bg-white/[0.08] rounded animate-pulse" />
+            <div className="h-4 w-8 bg-foreground/[0.08] rounded animate-pulse" />
           </td>
           <td className="p-4">
-            <div className="h-4 w-8 bg-white/[0.08] rounded animate-pulse" />
+            <div className="h-4 w-8 bg-foreground/[0.08] rounded animate-pulse" />
           </td>
           <td className="p-4">
-            <div className="h-4 w-20 bg-white/[0.08] rounded animate-pulse" />
+            <div className="h-4 w-20 bg-foreground/[0.08] rounded animate-pulse" />
           </td>
           <td className="p-4">
-            <div className="h-7 w-20 bg-white/[0.08] rounded-lg animate-pulse ml-auto" />
+            <div className="h-7 w-20 bg-foreground/[0.08] rounded-lg animate-pulse ml-auto" />
           </td>
         </tr>
       ))}
@@ -481,7 +481,7 @@ export default function NewsletterSubscribers() {
       >
         <div className="flex flex-col lg:flex-row lg:items-center gap-4">
           {/* Status filter (radio-style buttons) */}
-          <div className="flex items-center gap-1 bg-white/[0.04] rounded-xl p-1">
+          <div className="flex items-center gap-1 bg-foreground/[0.04] rounded-xl p-1">
             {STATUS_OPTIONS.map((opt) => (
               <button
                 key={opt.value}
@@ -510,7 +510,7 @@ export default function NewsletterSubscribers() {
             <select
               value={platformFilter}
               onChange={(e) => handlePlatformChange(e.target.value)}
-              className="px-3 py-2 rounded-xl text-sm bg-white/[0.05] border border-white/[0.08] focus:border-primary/50 focus:outline-none transition-colors appearance-none cursor-pointer"
+              className="px-3 py-2 rounded-xl text-sm bg-foreground/[0.05] border border-foreground/[0.08] focus:border-primary/50 focus:outline-none transition-colors appearance-none cursor-pointer"
               style={{ color: theme.textPrimary }}
             >
               {PLATFORMS.map((p) => (
@@ -536,7 +536,7 @@ export default function NewsletterSubscribers() {
               placeholder="0"
               value={minScore}
               onChange={(e) => handleMinScoreChange(e.target.value)}
-              className="w-20 px-3 py-2 rounded-xl text-sm bg-white/[0.05] border border-white/[0.08] focus:border-primary/50 focus:outline-none transition-colors"
+              className="w-20 px-3 py-2 rounded-xl text-sm bg-foreground/[0.05] border border-foreground/[0.08] focus:border-primary/50 focus:outline-none transition-colors"
               style={{ color: theme.textPrimary }}
             />
           </div>
@@ -554,7 +554,7 @@ export default function NewsletterSubscribers() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-white/[0.08]">
+              <tr className="border-b border-foreground/[0.08]">
                 {[
                   'Name',
                   'Email',
@@ -622,7 +622,7 @@ export default function NewsletterSubscribers() {
 
         {/* Pagination */}
         {!subscribersLoading && subscribers && subscribers.length > 0 && (
-          <div className="flex items-center justify-between p-4 border-t border-white/[0.06]">
+          <div className="flex items-center justify-between p-4 border-t border-foreground/[0.06]">
             <span className="text-sm" style={{ color: theme.textMuted }}>
               Showing {offset + 1}&ndash;{offset + (subscribers?.length ?? 0)} &middot; Page{' '}
               {currentPage}
@@ -631,7 +631,7 @@ export default function NewsletterSubscribers() {
               <button
                 onClick={handlePrev}
                 disabled={!hasPrev}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/[0.06]"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed hover:bg-foreground/[0.06]"
                 style={{ color: theme.textSecondary }}
               >
                 <ChevronLeftIcon className="w-4 h-4" />
@@ -640,7 +640,7 @@ export default function NewsletterSubscribers() {
               <button
                 onClick={handleNext}
                 disabled={!hasMore}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/[0.06]"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed hover:bg-foreground/[0.06]"
                 style={{ color: theme.textSecondary }}
               >
                 Next

@@ -72,20 +72,20 @@ export default function FunnelAnalysis() {
           <p className="text-gray-400 mt-2">Multi-step conversion funnels with drop-off visualization</p>
         </header>
 
-        <div className="bg-white/[0.02] border border-foreground/10 rounded-xl p-6 mb-6">
+        <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-sm text-gray-400 mb-1">Funnel Name</label>
-              <input value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-white/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white" />
+              <input value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white" />
             </div>
             <div className="flex gap-3">
               <div className="flex-1">
                 <label className="block text-sm text-gray-400 mb-1">From</label>
-                <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-full bg-white/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white" />
+                <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-full bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white" />
               </div>
               <div className="flex-1">
                 <label className="block text-sm text-gray-400 mb-1">To</label>
-                <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-full bg-white/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white" />
+                <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-full bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white" />
               </div>
             </div>
           </div>
@@ -97,7 +97,7 @@ export default function FunnelAnalysis() {
               <select
                 value={s}
                 onChange={(e) => updateStep(i, e.target.value)}
-                className="flex-1 bg-white/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white"
+                className="flex-1 bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white"
               >
                 <option value="" className="bg-[#0A1628]">Select event...</option>
                 {['impression', 'click', 'landing', 'add_to_cart', 'conversion', 'purchase'].map((opt) => (
@@ -127,7 +127,7 @@ export default function FunnelAnalysis() {
 
         {result && (
           <div className="space-y-6">
-            <div className="bg-white/[0.02] border border-foreground/10 rounded-xl p-6">
+            <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-semibold">{result.name}</h3>
                 <div className="text-right">

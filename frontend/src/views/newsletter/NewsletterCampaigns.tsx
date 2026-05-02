@@ -67,10 +67,10 @@ function StatusBadge({ status }: { status: CampaignStatus }) {
 
 function SkeletonRow() {
   return (
-    <tr className="border-t border-white/[0.06]">
+    <tr className="border-t border-foreground/[0.06]">
       {Array.from({ length: 6 }).map((_, i) => (
         <td key={i} className="px-6 py-4">
-          <div className="h-4 bg-white/[0.06] rounded animate-pulse" />
+          <div className="h-4 bg-foreground/[0.06] rounded animate-pulse" />
         </td>
       ))}
     </tr>
@@ -188,7 +188,7 @@ export default function NewsletterCampaigns() {
           value={statusFilter ?? ''}
           onChange={(e) => handleStatusChange(e.target.value)}
           className={cn(
-            'bg-muted border border-white/[0.08] rounded-xl',
+            'bg-muted border border-foreground/[0.08] rounded-xl',
             'px-4 py-2 text-sm text-[rgba(245,245,247,0.92)]',
             'focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50',
             'appearance-none cursor-pointer',
@@ -203,7 +203,7 @@ export default function NewsletterCampaigns() {
       </div>
 
       {/* Campaign Table */}
-      <div className="bg-muted border border-white/[0.08] rounded-2xl overflow-hidden">
+      <div className="bg-muted border border-foreground/[0.08] rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -235,7 +235,7 @@ export default function NewsletterCampaigns() {
                 campaigns.map((campaign) => (
                   <tr
                     key={campaign.id}
-                    className="border-t border-white/[0.06] hover:bg-white/[0.03] transition-colors"
+                    className="border-t border-foreground/[0.06] hover:bg-foreground/[0.03] transition-colors"
                   >
                     {/* Campaign name + subject */}
                     <td className="px-6 py-4 max-w-xs">
@@ -274,7 +274,7 @@ export default function NewsletterCampaigns() {
                         {campaign.status === 'draft' && (
                           <Link
                             to={`/dashboard/newsletter/campaigns/${campaign.id}/edit`}
-                            className="p-2 rounded-lg text-[rgba(245,245,247,0.6)] hover:text-[rgba(245,245,247,0.92)] hover:bg-white/[0.06] transition-colors"
+                            className="p-2 rounded-lg text-[rgba(245,245,247,0.6)] hover:text-[rgba(245,245,247,0.92)] hover:bg-foreground/[0.06] transition-colors"
                             title="Edit"
                           >
                             <PencilIcon className="h-4 w-4" />
@@ -285,7 +285,7 @@ export default function NewsletterCampaigns() {
                         <button
                           onClick={() => handleDuplicate(campaign)}
                           disabled={duplicateCampaign.isPending}
-                          className="p-2 rounded-lg text-[rgba(245,245,247,0.6)] hover:text-[rgba(245,245,247,0.92)] hover:bg-white/[0.06] transition-colors disabled:opacity-40"
+                          className="p-2 rounded-lg text-[rgba(245,245,247,0.6)] hover:text-[rgba(245,245,247,0.92)] hover:bg-foreground/[0.06] transition-colors disabled:opacity-40"
                           title="Duplicate"
                         >
                           <DocumentDuplicateIcon className="h-4 w-4" />
@@ -295,7 +295,7 @@ export default function NewsletterCampaigns() {
                         {campaign.status === 'sent' && (
                           <Link
                             to={`/dashboard/newsletter/campaigns/${campaign.id}/analytics`}
-                            className="p-2 rounded-lg text-[rgba(245,245,247,0.6)] hover:text-[rgba(245,245,247,0.92)] hover:bg-white/[0.06] transition-colors"
+                            className="p-2 rounded-lg text-[rgba(245,245,247,0.6)] hover:text-[rgba(245,245,247,0.92)] hover:bg-foreground/[0.06] transition-colors"
                             title="Analytics"
                           >
                             <ChartBarIcon className="h-4 w-4" />
@@ -335,7 +335,7 @@ export default function NewsletterCampaigns() {
 
         {/* Pagination */}
         {!isLoading && total > PAGE_SIZE && (
-          <div className="flex items-center justify-between border-t border-white/[0.06] px-6 py-3">
+          <div className="flex items-center justify-between border-t border-foreground/[0.06] px-6 py-3">
             <span className="text-sm text-[rgba(245,245,247,0.35)]">
               Showing {offset + 1}–{Math.min(offset + PAGE_SIZE, total)} of{' '}
               {formatNumber(total)} campaigns
@@ -347,8 +347,8 @@ export default function NewsletterCampaigns() {
                 className={cn(
                   'px-3 py-1.5 text-sm rounded-lg border transition-colors',
                   hasPrevPage
-                    ? 'border-white/[0.08] text-[rgba(245,245,247,0.92)] hover:bg-white/[0.06] cursor-pointer'
-                    : 'border-white/[0.04] text-[rgba(245,245,247,0.2)] cursor-not-allowed',
+                    ? 'border-foreground/[0.08] text-[rgba(245,245,247,0.92)] hover:bg-foreground/[0.06] cursor-pointer'
+                    : 'border-foreground/[0.04] text-[rgba(245,245,247,0.2)] cursor-not-allowed',
                 )}
               >
                 Previous
@@ -359,8 +359,8 @@ export default function NewsletterCampaigns() {
                 className={cn(
                   'px-3 py-1.5 text-sm rounded-lg border transition-colors',
                   hasNextPage
-                    ? 'border-white/[0.08] text-[rgba(245,245,247,0.92)] hover:bg-white/[0.06] cursor-pointer'
-                    : 'border-white/[0.04] text-[rgba(245,245,247,0.2)] cursor-not-allowed',
+                    ? 'border-foreground/[0.08] text-[rgba(245,245,247,0.92)] hover:bg-foreground/[0.06] cursor-pointer'
+                    : 'border-foreground/[0.04] text-[rgba(245,245,247,0.2)] cursor-not-allowed',
                 )}
               >
                 Next

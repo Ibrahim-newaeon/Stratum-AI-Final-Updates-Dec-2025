@@ -212,7 +212,7 @@ export default function AIHero() {
             {trustBadges.map((badge) => (
               <div
                 key={badge.text}
-                className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.02] border border-white/[0.05]"
+                className="flex items-center gap-2 px-4 py-2 rounded-full bg-foreground/[0.02] border border-foreground/[0.05]"
               >
                 <badge.icon
                   className={`w-4 h-4 bg-gradient-to-r ${badge.color} text-foreground`}
@@ -237,7 +237,7 @@ export default function AIHero() {
           {/* Dashboard Card */}
           <div className="relative rounded-3xl border bg-card overflow-hidden">
             {/* Window Controls */}
-            <div className="flex items-center gap-2 px-6 py-4 border-b border-white/[0.05]">
+            <div className="flex items-center gap-2 px-6 py-4 border-b border-foreground/[0.05]">
               <div className="w-3 h-3 rounded-full bg-red-500/80" />
               <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
               <div className="w-3 h-3 rounded-full bg-green-500/80" />

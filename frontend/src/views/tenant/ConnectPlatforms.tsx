@@ -223,7 +223,7 @@ export default function ConnectPlatforms() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search integrations..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-foreground/10 bg-white/[0.02] text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-colors"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-foreground/10 bg-foreground/[0.02] text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-colors"
           />
         </div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -280,7 +280,7 @@ export default function ConnectPlatforms() {
                       'group relative rounded-xl border transition-colors cursor-pointer hover:border-foreground/20',
                       status === 'connected'
                         ? 'border-emerald-500/20 bg-emerald-500/[0.03]'
-                        : 'border-foreground/8 bg-white/[0.02] hover:bg-white/[0.04]'
+                        : 'border-foreground/8 bg-foreground/[0.02] hover:bg-foreground/[0.04]'
                     )}
                     onClick={() => setSelectedPlatform(platform)}
                   >
@@ -381,7 +381,7 @@ export default function ConnectPlatforms() {
       )}
 
       {/* Feature Support Matrix */}
-      <div className="rounded-xl border border-foreground/10 bg-white/[0.02] p-6">
+      <div className="rounded-xl border border-foreground/10 bg-foreground/[0.02] p-6">
         <h3 className="font-semibold mb-4">Ad Platform Feature Matrix</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -424,7 +424,7 @@ export default function ConnectPlatforms() {
       </div>
 
       {/* Security info */}
-      <div className="rounded-xl border border-foreground/10 bg-white/[0.02] p-6">
+      <div className="rounded-xl border border-foreground/10 bg-foreground/[0.02] p-6">
         <h3 className="font-semibold mb-2">Security & Data Handling</h3>
         <ul className="space-y-2 text-sm text-foreground/50">
           <li>&#8226; OAuth tokens are AES-256 encrypted at rest and auto-refreshed before expiry</li>

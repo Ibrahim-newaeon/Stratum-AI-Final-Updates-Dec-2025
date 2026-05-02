@@ -41,7 +41,7 @@ export default function ComplianceDashboard() {
               onClick={() => setActiveTab(tab.id)}
               className={cn(
                 'flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all',
-                activeTab === tab.id ? 'bg-primary text-white' : 'bg-white/[0.03] text-gray-400 hover:bg-white/[0.06]'
+                activeTab === tab.id ? 'bg-primary text-white' : 'bg-foreground/[0.03] text-gray-400 hover:bg-foreground/[0.06]'
               )}
             >
               <tab.icon className="w-5 h-5" />
@@ -110,24 +110,24 @@ function AuditLogPanel() {
 
   return (
     <div className="space-y-4">
-      <div className="bg-white/[0.02] border border-foreground/10 rounded-xl p-4">
+      <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
           <div>
             <label className="text-xs text-gray-400">From</label>
-            <input type="date" value={filters.dateFrom} onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })} className="w-full bg-white/[0.03] border border-foreground/10 rounded px-2 py-1.5 text-sm text-white" />
+            <input type="date" value={filters.dateFrom} onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })} className="w-full bg-foreground/[0.03] border border-foreground/10 rounded px-2 py-1.5 text-sm text-white" />
           </div>
           <div>
             <label className="text-xs text-gray-400">To</label>
-            <input type="date" value={filters.dateTo} onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })} className="w-full bg-white/[0.03] border border-foreground/10 rounded px-2 py-1.5 text-sm text-white" />
+            <input type="date" value={filters.dateTo} onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })} className="w-full bg-foreground/[0.03] border border-foreground/10 rounded px-2 py-1.5 text-sm text-white" />
           </div>
           <div>
             <label className="text-xs text-gray-400">Severity</label>
-            <input value={filters.severity} onChange={(e) => setFilters({ ...filters, severity: e.target.value })} placeholder="info,warning,critical" className="w-full bg-white/[0.03] border border-foreground/10 rounded px-2 py-1.5 text-sm text-white placeholder-gray-600" />
+            <input value={filters.severity} onChange={(e) => setFilters({ ...filters, severity: e.target.value })} placeholder="info,warning,critical" className="w-full bg-foreground/[0.03] border border-foreground/10 rounded px-2 py-1.5 text-sm text-white placeholder-gray-600" />
           </div>
           <div>
             <label className="text-xs text-gray-400">Search</label>
             <div className="flex gap-1">
-              <input value={filters.searchTerm} onChange={(e) => setFilters({ ...filters, searchTerm: e.target.value })} placeholder="keyword..." className="flex-1 bg-white/[0.03] border border-foreground/10 rounded px-2 py-1.5 text-sm text-white placeholder-gray-600" />
+              <input value={filters.searchTerm} onChange={(e) => setFilters({ ...filters, searchTerm: e.target.value })} placeholder="keyword..." className="flex-1 bg-foreground/[0.03] border border-foreground/10 rounded px-2 py-1.5 text-sm text-white placeholder-gray-600" />
             </div>
           </div>
         </div>
@@ -136,17 +136,17 @@ function AuditLogPanel() {
             {loading ? <ArrowPathIcon className="w-4 h-4 animate-spin" /> : <MagnifyingGlassIcon className="w-4 h-4" />}
             Search
           </button>
-          <button onClick={() => { setFilters({ dateFrom: '', dateTo: '', actions: '', resourceTypes: '', severity: '', searchTerm: '' }); setEntries([]); setTotal(0); }} className="bg-white/[0.03] hover:bg-white/[0.06] text-gray-400 px-4 py-1.5 rounded-lg text-sm transition-colors">
+          <button onClick={() => { setFilters({ dateFrom: '', dateTo: '', actions: '', resourceTypes: '', severity: '', searchTerm: '' }); setEntries([]); setTotal(0); }} className="bg-foreground/[0.03] hover:bg-foreground/[0.06] text-gray-400 px-4 py-1.5 rounded-lg text-sm transition-colors">
             Reset
           </button>
         </div>
       </div>
 
-      <div className="bg-white/[0.02] border border-foreground/10 rounded-xl overflow-hidden">
+      <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-foreground/10 bg-white/[0.02]">
+              <tr className="border-b border-foreground/10 bg-foreground/[0.02]">
                 <th className="text-left py-3 px-4 text-gray-400 font-medium">Time</th>
                 <th className="text-left py-3 px-4 text-gray-400 font-medium">User</th>
                 <th className="text-left py-3 px-4 text-gray-400 font-medium">Action</th>
@@ -162,7 +162,7 @@ function AuditLogPanel() {
                 </tr>
               )}
               {entries.map((entry, i) => (
-                <tr key={i} className="border-b border-foreground/5 hover:bg-white/[0.02]">
+                <tr key={i} className="border-b border-foreground/5 hover:bg-foreground/[0.02]">
                   <td className="py-3 px-4 text-gray-400 whitespace-nowrap">{entry.timestamp?.slice(0, 16).replace('T', ' ')}</td>
                   <td className="py-3 px-4 text-gray-300">{entry.user_email || `User #${entry.user_id}`}</td>
                   <td className="py-3 px-4 text-gray-300">{entry.action}</td>
@@ -180,9 +180,9 @@ function AuditLogPanel() {
           <div className="flex items-center justify-between p-4 border-t border-foreground/10">
             <span className="text-sm text-gray-400">{total} total entries</span>
             <div className="flex gap-2">
-              <button onClick={() => { setPage(Math.max(1, page - 1)); search(); }} disabled={page === 1} className="px-3 py-1 bg-white/[0.03] rounded text-sm text-gray-400 hover:bg-white/[0.06] disabled:opacity-30">Previous</button>
+              <button onClick={() => { setPage(Math.max(1, page - 1)); search(); }} disabled={page === 1} className="px-3 py-1 bg-foreground/[0.03] rounded text-sm text-gray-400 hover:bg-foreground/[0.06] disabled:opacity-30">Previous</button>
               <span className="px-3 py-1 text-sm text-gray-400">Page {page}</span>
-              <button onClick={() => { setPage(page + 1); search(); }} disabled={entries.length < 50} className="px-3 py-1 bg-white/[0.03] rounded text-sm text-gray-400 hover:bg-white/[0.06] disabled:opacity-30">Next</button>
+              <button onClick={() => { setPage(page + 1); search(); }} disabled={entries.length < 50} className="px-3 py-1 bg-foreground/[0.03] rounded text-sm text-gray-400 hover:bg-foreground/[0.06] disabled:opacity-30">Next</button>
             </div>
           </div>
         )}
@@ -275,10 +275,10 @@ function RBACPanel() {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {displayRoles.map((role) => (
-          <div key={role.id} className="bg-white/[0.02] border border-foreground/10 rounded-xl p-5">
+          <div key={role.id} className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-5">
             <div className="flex items-center justify-between mb-2">
               <h3 className="font-semibold">{role.name}</h3>
-              {!role.is_custom && <span className="text-xs bg-white/[0.05] text-gray-500 px-2 py-0.5 rounded-full">Built-in</span>}
+              {!role.is_custom && <span className="text-xs bg-foreground/[0.05] text-gray-500 px-2 py-0.5 rounded-full">Built-in</span>}
             </div>
             <p className="text-sm text-gray-400 mb-3">{role.description}</p>
             <div className="space-y-1">
@@ -294,7 +294,7 @@ function RBACPanel() {
         ))}
       </div>
 
-      <div className="bg-white/[0.02] border border-foreground/10 rounded-xl p-6">
+      <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6">
         <h3 className="text-lg font-semibold mb-4">Create Custom Role</h3>
         <p className="text-sm text-gray-400">Custom roles can be defined with resource-level conditions. Contact support to enable.</p>
       </div>
@@ -345,7 +345,7 @@ function GDPRPanel() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white/[0.02] border border-foreground/10 rounded-xl p-6">
+      <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6">
         <h3 className="text-lg font-semibold mb-4">Data Retention Policy</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {[
@@ -384,13 +384,13 @@ function GDPRPanel() {
         </button>
       </div>
 
-      <div className="bg-white/[0.02] border border-foreground/10 rounded-xl p-6">
+      <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">Purge Preview</h3>
           <button
             onClick={previewPurge}
             disabled={loading}
-            className="bg-white/[0.03] hover:bg-white/[0.06] text-gray-300 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
+            className="bg-foreground/[0.03] hover:bg-foreground/[0.06] text-gray-300 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
           >
             {loading ? <ArrowPathIcon className="w-4 h-4 animate-spin" /> : <TrashIcon className="w-4 h-4" />}
             Preview Purge
@@ -406,12 +406,12 @@ function GDPRPanel() {
               { label: 'Audit Logs', count: preview.audit_logs_to_purge, color: 'text-yellow-400' },
               { label: 'Campaign Metrics', count: preview.campaign_metrics_to_purge, color: 'text-green-400' },
             ].map((item) => (
-              <div key={item.label} className="bg-white/[0.03] border border-foreground/5 rounded-lg p-4 text-center">
+              <div key={item.label} className="bg-foreground/[0.03] border border-foreground/5 rounded-lg p-4 text-center">
                 <div className={`text-2xl font-bold ${item.color}`}>{item.count.toLocaleString()}</div>
                 <div className="text-xs text-gray-500 mt-1">{item.label}</div>
               </div>
             ))}
-            <div className="col-span-2 md:col-span-4 bg-white/[0.03] border border-foreground/5 rounded-lg p-4">
+            <div className="col-span-2 md:col-span-4 bg-foreground/[0.03] border border-foreground/5 rounded-lg p-4">
               <div className="text-sm text-gray-400">Estimated space to reclaim: <span className="text-white font-medium">{preview.total_estimated_mb} MB</span></div>
             </div>
           </div>

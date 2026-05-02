@@ -107,7 +107,7 @@ export const KPICard: React.FC<KPICardProps> = ({
         'relative overflow-hidden rounded-2xl motion-card motion-enter group',
         highlight
           ? 'bg-gradient-to-br from-primary/90 to-cyan-500/80 text-primary-foreground shadow-glow border border-primary/30'
-          : 'bg-white/[0.04] border border-white/[0.07] hover:bg-white/[0.07] hover:border-primary/20 hover:shadow-lg',
+          : 'bg-foreground/[0.04] border border-foreground/[0.07] hover:bg-foreground/[0.07] hover:border-primary/20 hover:shadow-lg',
         size === 'small' ? 'p-4' : 'p-5',
         className
       )}

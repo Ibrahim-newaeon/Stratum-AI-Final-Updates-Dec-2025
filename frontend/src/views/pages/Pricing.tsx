@@ -201,7 +201,7 @@ export default function Pricing() {
                     background: tier.highlighted ? 'var(--landing-accent-coral)' : 'var(--landing-surface-glass)',
                     color: '#ffffff',
                     border: tier.highlighted ? 'none' : '1px solid rgba(255, 255, 255, 0.2)',
-                    boxShadow: tier.highlighted ? '0 4px 20px rgba(255, 77, 77, 0.3)' : 'none',
+                    boxShadow: tier.highlighted ? '0 4px 20px rgba(255, 90, 31, 0.3)' : 'none',
                   }}
                 >
                   {tier.cta}

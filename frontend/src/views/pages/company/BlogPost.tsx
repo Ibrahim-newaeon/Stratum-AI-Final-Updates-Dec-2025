@@ -61,7 +61,7 @@ export default function BlogPost() {
               className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-white transition-opacity hover:opacity-90"
               style={{
                 background: 'var(--landing-accent-coral)',
-                boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
+                boxShadow: '0 4px 20px rgba(255, 90, 31, 0.3)',
               }}
             >
               <ArrowLeftIcon className="w-5 h-5" />
@@ -152,7 +152,7 @@ export default function BlogPost() {
                 ) : (
                   <div
                     className="w-10 h-10 rounded-full flex items-center justify-center"
-                    style={{ background: 'rgba(255, 77, 77, 0.2)' }}
+                    style={{ background: 'rgba(255, 90, 31, 0.2)' }}
                   >
                     <UserIcon className="w-5 h-5 text-purple-400" />
                   </div>
@@ -235,7 +235,7 @@ export default function BlogPost() {
                 ) : (
                   <div
                     className="w-16 h-16 rounded-full flex items-center justify-center"
-                    style={{ background: 'rgba(255, 77, 77, 0.2)' }}
+                    style={{ background: 'rgba(255, 90, 31, 0.2)' }}
                   >
                     <UserIcon className="w-8 h-8 text-purple-400" />
                   </div>
@@ -277,7 +277,7 @@ export default function BlogPost() {
                 className="px-6 py-3 rounded-full font-semibold text-white transition-opacity hover:opacity-90"
                 style={{
                   background: 'var(--landing-accent-coral)',
-                  boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
+                  boxShadow: '0 4px 20px rgba(255, 90, 31, 0.3)',
                 }}
               >
                 Start Free Trial

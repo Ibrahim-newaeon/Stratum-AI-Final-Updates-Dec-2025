@@ -48,7 +48,7 @@ export function DripCampaignsWidget() {
           <button
             key={seq.id}
             onClick={() => navigate('/drip-campaigns')}
-            className="w-full text-left flex items-center gap-3 bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.04] rounded-lg p-3 transition-colors group"
+            className="w-full text-left flex items-center gap-3 bg-foreground/[0.02] hover:bg-foreground/[0.05] border border-foreground/[0.04] rounded-lg p-3 transition-colors group"
           >
             <div className={cn(
               'w-8 h-8 rounded-lg flex items-center justify-center shrink-0',
@@ -80,14 +80,14 @@ export function DripCampaignsWidget() {
       </div>
 
       {/* Pre-built Templates */}
-      <div className="mt-3 pt-3 border-t border-white/[0.04]">
+      <div className="mt-3 pt-3 border-t border-foreground/[0.04]">
         <div className="text-[10px] text-muted-foreground uppercase mb-2">Quick Start Templates</div>
         <div className="flex gap-1.5">
           {['Welcome', 'Cart Recovery', 'Re-engage'].map((t) => (
             <button
               key={t}
               onClick={() => navigate('/drip-campaigns')}
-              className="text-[10px] bg-white/[0.03] hover:bg-white/[0.08] text-muted-foreground hover:text-foreground px-2.5 py-1 rounded-full transition-colors"
+              className="text-[10px] bg-foreground/[0.03] hover:bg-foreground/[0.08] text-muted-foreground hover:text-foreground px-2.5 py-1 rounded-full transition-colors"
             >
               {t}
             </button>

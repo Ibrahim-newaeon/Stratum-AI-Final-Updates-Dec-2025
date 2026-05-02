@@ -84,9 +84,9 @@ function LoadingSkeleton() {
     <div className="space-y-6 animate-pulse">
       {/* Header skeleton */}
       <div className="space-y-2">
-        <div className="h-5 w-32 bg-white/[0.06] rounded" />
-        <div className="h-8 w-64 bg-white/[0.06] rounded" />
-        <div className="h-4 w-48 bg-white/[0.06] rounded" />
+        <div className="h-5 w-32 bg-foreground/[0.06] rounded" />
+        <div className="h-8 w-64 bg-foreground/[0.06] rounded" />
+        <div className="h-4 w-48 bg-foreground/[0.06] rounded" />
       </div>
 
       {/* Stats cards skeleton */}
@@ -94,20 +94,20 @@ function LoadingSkeleton() {
         {Array.from({ length: 6 }).map((_, i) => (
           <div
             key={i}
-            className="bg-muted border border-white/[0.08] rounded-2xl p-5 space-y-3"
+            className="bg-muted border border-foreground/[0.08] rounded-2xl p-5 space-y-3"
           >
-            <div className="h-10 w-10 bg-white/[0.06] rounded-full" />
-            <div className="h-7 w-16 bg-white/[0.06] rounded" />
-            <div className="h-4 w-20 bg-white/[0.06] rounded" />
+            <div className="h-10 w-10 bg-foreground/[0.06] rounded-full" />
+            <div className="h-7 w-16 bg-foreground/[0.06] rounded" />
+            <div className="h-4 w-20 bg-foreground/[0.06] rounded" />
           </div>
         ))}
       </div>
 
       {/* Funnel skeleton */}
-      <div className="bg-muted border border-white/[0.08] rounded-2xl p-6 space-y-4">
-        <div className="h-6 w-40 bg-white/[0.06] rounded" />
+      <div className="bg-muted border border-foreground/[0.08] rounded-2xl p-6 space-y-4">
+        <div className="h-6 w-40 bg-foreground/[0.06] rounded" />
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-10 bg-white/[0.06] rounded" />
+          <div key={i} className="h-10 bg-foreground/[0.06] rounded" />
         ))}
       </div>
     </div>
@@ -128,7 +128,7 @@ function StatCard({
   rateColor?: string;
 }) {
   return (
-    <div className="bg-muted border border-white/[0.08] rounded-2xl p-5">
+    <div className="bg-muted border border-foreground/[0.08] rounded-2xl p-5">
       <div className="flex items-center justify-between mb-3">
         <div className="h-10 w-10 rounded-full bg-primary/15 flex items-center justify-center">
           <Icon className="h-5 w-5 text-primary" />
@@ -286,7 +286,7 @@ export default function NewsletterAnalytics() {
       {/* ----------------------------------------------------------------- */}
       {/* Delivery Funnel                                                   */}
       {/* ----------------------------------------------------------------- */}
-      <div className="bg-muted border border-white/[0.08] rounded-2xl p-6">
+      <div className="bg-muted border border-foreground/[0.08] rounded-2xl p-6">
         <h2 className="text-lg font-semibold text-[rgba(245,245,247,0.92)] mb-5">
           Delivery Funnel
         </h2>
@@ -304,7 +304,7 @@ export default function NewsletterAnalytics() {
                 {/* Drop-off indicator */}
                 {dropPct !== null && (
                   <div className="flex items-center gap-2 mb-1.5 ml-2">
-                    <div className="h-px w-4 bg-white/[0.15]" />
+                    <div className="h-px w-4 bg-foreground/[0.15]" />
                     <span className="text-xs text-[rgba(245,245,247,0.35)]">
                       -{dropPct}% drop-off
                     </span>
@@ -318,7 +318,7 @@ export default function NewsletterAnalytics() {
                   </div>
 
                   {/* Bar */}
-                  <div className="flex-1 h-9 bg-white/[0.04] rounded-lg overflow-hidden">
+                  <div className="flex-1 h-9 bg-foreground/[0.04] rounded-lg overflow-hidden">
                     <div
                       className="h-full rounded-lg flex items-center px-3 transition-[width] duration-500"
                       style={{
@@ -349,7 +349,7 @@ export default function NewsletterAnalytics() {
       {/* ----------------------------------------------------------------- */}
       {/* Event Timeline                                                    */}
       {/* ----------------------------------------------------------------- */}
-      <div className="bg-muted border border-white/[0.08] rounded-2xl p-6">
+      <div className="bg-muted border border-foreground/[0.08] rounded-2xl p-6">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-lg font-semibold text-[rgba(245,245,247,0.92)]">
             Recent Events
@@ -388,7 +388,7 @@ export default function NewsletterAnalytics() {
                   return (
                     <tr
                       key={event.id}
-                      className="border-t border-white/[0.06] hover:bg-white/[0.03] transition-colors"
+                      className="border-t border-foreground/[0.06] hover:bg-foreground/[0.03] transition-colors"
                     >
                       <td className="px-4 py-3">
                         <EventBadge type={event.event_type} />
@@ -421,7 +421,7 @@ export default function NewsletterAnalytics() {
       {/* ----------------------------------------------------------------- */}
       {/* Link Performance / Click Map                                      */}
       {/* ----------------------------------------------------------------- */}
-      <div className="bg-muted border border-white/[0.08] rounded-2xl p-6">
+      <div className="bg-muted border border-foreground/[0.08] rounded-2xl p-6">
         <h2 className="text-lg font-semibold text-[rgba(245,245,247,0.92)] mb-5">
           Link Performance
         </h2>
@@ -451,7 +451,7 @@ export default function NewsletterAnalytics() {
                       {formatNumber(link.count)} {link.count === 1 ? 'click' : 'clicks'}
                     </span>
                   </div>
-                  <div className="h-2.5 bg-white/[0.04] rounded-full overflow-hidden">
+                  <div className="h-2.5 bg-foreground/[0.04] rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full transition-[width] duration-500"
                       style={{

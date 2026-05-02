@@ -34,7 +34,7 @@ const statusColors = {
   ahead: 'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300',
   behind: 'bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300',
   at_risk: 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300',
-  missed: 'bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300',
+  missed: 'bg-gray-100 dark:bg-gray-900/20 text-foreground',
 }
 
 export default function Pacing() {
@@ -241,7 +241,7 @@ export default function Pacing() {
                         Active
                       </span>
                     ) : (
-                      <span className="px-2 py-1 rounded-full text-xs bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300">
+                      <span className="px-2 py-1 rounded-full text-xs bg-gray-100 dark:bg-gray-900/20 text-foreground">
                         Inactive
                       </span>
                     )}

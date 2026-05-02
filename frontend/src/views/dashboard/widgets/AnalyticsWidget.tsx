@@ -39,7 +39,7 @@ export function AnalyticsWidget() {
       </div>
 
       {/* Mini Tabs */}
-      <div className="flex gap-1 mb-3 bg-white/[0.03] rounded-lg p-0.5">
+      <div className="flex gap-1 mb-3 bg-foreground/[0.03] rounded-lg p-0.5">
         {[
           { id: 'funnel', label: 'Funnel', icon: TrendingDown },
           { id: 'cohort', label: 'Cohorts', icon: Users },
@@ -49,7 +49,7 @@ export function AnalyticsWidget() {
             onClick={() => setActiveView(t.id as any)}
             className={cn(
               'flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-medium rounded-md transition-all',
-              activeView === t.id ? 'bg-white/[0.08] text-foreground' : 'text-muted-foreground hover:text-foreground/70'
+              activeView === t.id ? 'bg-foreground/[0.08] text-foreground' : 'text-muted-foreground hover:text-foreground/70'
             )}
           >
             <t.icon className="w-3.5 h-3.5" />
@@ -118,7 +118,7 @@ export function AnalyticsWidget() {
                   { label: '2026-W15', size: 38, cells: [100, 82, 71, 58] },
                   { label: '2026-W16', size: 52, cells: [100, 75, 60, null] },
                 ].map((row) => (
-                  <tr key={row.label} className="border-t border-white/[0.04]">
+                  <tr key={row.label} className="border-t border-foreground/[0.04]">
                     <td className="py-1 text-foreground">{row.label}</td>
                     <td className="py-1 text-center text-muted-foreground">{row.size}</td>
                     {row.cells.map((cell, j) => (

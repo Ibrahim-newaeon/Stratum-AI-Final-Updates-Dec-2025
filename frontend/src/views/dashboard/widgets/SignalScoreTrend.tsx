@@ -136,13 +136,13 @@ export function SignalScoreTrend({ signalHealth, loading }: SignalScoreTrendProp
 
       {/* Sub-metrics grid — frosted sub-cards */}
       <div className="grid grid-cols-2 gap-2.5">
-        <div className="p-3 rounded-xl bg-white/[0.04] border border-white/[0.05]">
+        <div className="p-3 rounded-xl bg-foreground/[0.04] border border-foreground/[0.05]">
           <p className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide">EMQ Score</p>
           <p className="text-sm font-bold tabular-nums">
             {signalHealth?.emq_score != null ? signalHealth.emq_score : '--'}
           </p>
         </div>
-        <div className="p-3 rounded-xl bg-white/[0.04] border border-white/[0.05]">
+        <div className="p-3 rounded-xl bg-foreground/[0.04] border border-foreground/[0.05]">
           <p className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide">Data Freshness</p>
           <p className="text-sm font-bold tabular-nums">
             {signalHealth?.data_freshness_minutes != null
@@ -150,7 +150,7 @@ export function SignalScoreTrend({ signalHealth, loading }: SignalScoreTrendProp
               : '--'}
           </p>
         </div>
-        <div className="p-3 rounded-xl bg-white/[0.04] border border-white/[0.05]">
+        <div className="p-3 rounded-xl bg-foreground/[0.04] border border-foreground/[0.05]">
           <p className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide">API Health</p>
           <div className="flex items-center gap-1.5">
             <div className={cn('w-1.5 h-1.5 rounded-full', signalHealth?.api_health ? 'bg-emerald-500' : 'bg-red-500')} />
@@ -159,7 +159,7 @@ export function SignalScoreTrend({ signalHealth, loading }: SignalScoreTrendProp
             </p>
           </div>
         </div>
-        <div className="p-3 rounded-xl bg-white/[0.04] border border-white/[0.05]">
+        <div className="p-3 rounded-xl bg-foreground/[0.04] border border-foreground/[0.05]">
           <p className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide">Autopilot</p>
           <div className="flex items-center gap-1.5">
             <div className={cn('w-1.5 h-1.5 rounded-full', signalHealth?.autopilot_enabled ? 'bg-emerald-500' : 'bg-muted-foreground')} />

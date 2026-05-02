@@ -67,7 +67,7 @@ export default function Contact() {
               className="px-6 py-3 rounded-full font-semibold text-white transition-opacity hover:opacity-90"
               style={{
                 background: 'var(--landing-accent-coral)',
-                boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
+                boxShadow: '0 4px 20px rgba(255, 90, 31, 0.3)',
               }}
             >
               Send Another Message
@@ -300,7 +300,7 @@ export default function Contact() {
                   className="w-full py-4 rounded-full font-semibold text-white transition-[width] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{
                     background: 'var(--landing-accent-coral)',
-                    boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
+                    boxShadow: '0 4px 20px rgba(255, 90, 31, 0.3)',
                   }}
                 >
                   {submitContact.isPending ? 'Sending...' : 'Send Message'}

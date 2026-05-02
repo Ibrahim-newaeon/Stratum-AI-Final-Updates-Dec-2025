@@ -197,7 +197,7 @@ export default function UnifiedDashboard() {
                 setShowPeriodDropdown(!showPeriodDropdown);
                 setShowCustomPicker(false);
               }}
-              className="inline-flex items-center px-4 py-2.5 border border-white/[0.08] rounded-xl text-sm font-medium bg-white/[0.04] hover:bg-white/[0.08] transition-colors duration-200"
+              className="inline-flex items-center px-4 py-2.5 border border-foreground/[0.08] rounded-xl text-sm font-medium bg-foreground/[0.04] hover:bg-foreground/[0.08] transition-colors duration-200"
             >
               <Calendar className="w-4 h-4 mr-2 text-primary/70" />
               {period === 'custom' && appliedStartDate && appliedEndDate
@@ -215,13 +215,13 @@ export default function UnifiedDashboard() {
                     setShowCustomPicker(false);
                   }}
                 />
-                <div className="absolute right-0 mt-2 w-64 bg-popover border border-white/[0.08] rounded-xl shadow-2xl z-20 py-1.5 overflow-hidden">
+                <div className="absolute right-0 mt-2 w-64 bg-popover border border-foreground/[0.08] rounded-xl shadow-2xl z-20 py-1.5 overflow-hidden">
                   {periodOptions.map((option) => (
                     <button
                       key={option.value}
                       onClick={() => handlePeriodChange(option.value)}
                       className={cn(
-                        'w-full px-4 py-2.5 text-left text-sm hover:bg-white/[0.06] transition-colors flex items-center gap-2',
+                        'w-full px-4 py-2.5 text-left text-sm hover:bg-foreground/[0.06] transition-colors flex items-center gap-2',
                         period === option.value && !showCustomPicker && 'bg-primary/10 text-primary font-medium'
                       )}
                     >
@@ -232,7 +232,7 @@ export default function UnifiedDashboard() {
 
                   {/* Custom Date Range Picker */}
                   {showCustomPicker && (
-                    <div className="border-t border-white/[0.06] px-4 py-3 space-y-3">
+                    <div className="border-t border-foreground/[0.06] px-4 py-3 space-y-3">
                       <div className="space-y-2">
                         <label className="block text-xs font-medium text-muted-foreground">
                           Start Date
@@ -242,7 +242,7 @@ export default function UnifiedDashboard() {
                           value={customStartDate}
                           onChange={(e) => setCustomStartDate(e.target.value)}
                           max={customEndDate || undefined}
-                          className="w-full px-3 py-2 text-sm border border-white/[0.08] rounded-lg bg-white/[0.04] focus:outline-none focus:ring-2 focus:ring-primary/40"
+                          className="w-full px-3 py-2 text-sm border border-foreground/[0.08] rounded-lg bg-foreground/[0.04] focus:outline-none focus:ring-2 focus:ring-primary/40"
                         />
                       </div>
                       <div className="space-y-2">
@@ -255,7 +255,7 @@ export default function UnifiedDashboard() {
                           onChange={(e) => setCustomEndDate(e.target.value)}
                           min={customStartDate || undefined}
                           max={new Date().toISOString().split('T')[0]}
-                          className="w-full px-3 py-2 text-sm border border-white/[0.08] rounded-lg bg-white/[0.04] focus:outline-none focus:ring-2 focus:ring-primary/40"
+                          className="w-full px-3 py-2 text-sm border border-foreground/[0.08] rounded-lg bg-foreground/[0.04] focus:outline-none focus:ring-2 focus:ring-primary/40"
                         />
                       </div>
                       <button
@@ -276,7 +276,7 @@ export default function UnifiedDashboard() {
           <button
             onClick={handleRefresh}
             disabled={isLoading}
-            className="inline-flex items-center p-2.5 border border-white/[0.08] rounded-xl text-sm font-medium bg-white/[0.04] hover:bg-white/[0.08] transition-colors duration-200 disabled:opacity-50"
+            className="inline-flex items-center p-2.5 border border-foreground/[0.08] rounded-xl text-sm font-medium bg-foreground/[0.04] hover:bg-foreground/[0.08] transition-colors duration-200 disabled:opacity-50"
             title="Refresh"
             aria-label="Refresh dashboard"
           >

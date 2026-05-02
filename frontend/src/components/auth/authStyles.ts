@@ -57,10 +57,10 @@ export const authStyles = `
   /* CTA button — spectral pink-to-red gradient */
   .auth-gradient-btn {
     background: linear-gradient(135deg, #FF5A1F 0%, #FF5A1F 100%);
-    box-shadow: 0 0 20px rgba(255, 31, 109, 0.4);
+    box-shadow: 0 0 20px rgba(255, 90, 31, 0.4);
   }
   .auth-gradient-btn:hover {
-    box-shadow: 0 0 35px rgba(255, 31, 109, 0.6);
+    box-shadow: 0 0 35px rgba(255, 90, 31, 0.6);
     transform: translateY(-1px);
   }
 
@@ -87,7 +87,7 @@ export const authStyles = `
   /* Mesh background — matching landing page */
   .auth-cyber-grid {
     background-image:
-      radial-gradient(circle at 1px 1px, rgba(255, 31, 109, 0.05) 1px, transparent 0);
+      radial-gradient(circle at 1px 1px, rgba(255, 90, 31, 0.05) 1px, transparent 0);
     background-size: 40px 40px;
     opacity: 0.5;
   }
@@ -114,6 +114,6 @@ export const authStyles = `
 
   /* Spectral ring — trust gauge glow */
   .auth-spectral-ring {
-    filter: drop-shadow(0 0 12px rgba(255, 31, 109, 0.3));
+    filter: drop-shadow(0 0 12px rgba(255, 90, 31, 0.3));
   }
 `;

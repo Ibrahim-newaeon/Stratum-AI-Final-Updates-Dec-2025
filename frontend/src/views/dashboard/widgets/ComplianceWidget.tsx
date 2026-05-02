@@ -53,7 +53,7 @@ export function ComplianceWidget() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-3 bg-white/[0.03] rounded-lg p-0.5">
+      <div className="flex gap-1 mb-3 bg-foreground/[0.03] rounded-lg p-0.5">
         {[
           { id: 'audit', label: 'Audit', icon: FileText },
           { id: 'rbac', label: 'Roles', icon: Users },
@@ -64,7 +64,7 @@ export function ComplianceWidget() {
             onClick={() => setActiveTab(t.id as any)}
             className={cn(
               'flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-medium rounded-md transition-all',
-              activeTab === t.id ? 'bg-white/[0.08] text-foreground' : 'text-muted-foreground hover:text-foreground/70'
+              activeTab === t.id ? 'bg-foreground/[0.08] text-foreground' : 'text-muted-foreground hover:text-foreground/70'
             )}
           >
             <t.icon className="w-3.5 h-3.5" />
@@ -78,7 +78,7 @@ export function ComplianceWidget() {
         <div className="flex-1 overflow-auto">
           <div className="space-y-1.5">
             {MOCK_AUDIT.map((entry, i) => (
-              <div key={i} className="flex items-center gap-2 bg-white/[0.02] rounded-lg px-2.5 py-2">
+              <div key={i} className="flex items-center gap-2 bg-foreground/[0.02] rounded-lg px-2.5 py-2">
                 {severityIcon(entry.severity)}
                 <div className="flex-1 min-w-0">
                   <div className="text-xs font-medium text-foreground truncate">{entry.action}</div>
@@ -100,7 +100,7 @@ export function ComplianceWidget() {
         <div className="flex-1 overflow-auto">
           <div className="grid grid-cols-2 gap-2">
             {ROLES.map((role) => (
-              <div key={role.id} className="bg-white/[0.02] border border-white/[0.04] rounded-lg p-2.5">
+              <div key={role.id} className="bg-foreground/[0.02] border border-foreground/[0.04] rounded-lg p-2.5">
                 <div className={cn('text-[10px] px-1.5 py-0.5 rounded-full inline-block mb-1', role.color)}>
                   {role.users} users
                 </div>
@@ -110,7 +110,7 @@ export function ComplianceWidget() {
           </div>
           <button
             onClick={() => navigate('/compliance')}
-            className="mt-3 w-full text-xs text-center text-primary hover:underline py-1.5 rounded-lg bg-white/[0.02] hover:bg-white/[0.04] transition-colors"
+            className="mt-3 w-full text-xs text-center text-primary hover:underline py-1.5 rounded-lg bg-foreground/[0.02] hover:bg-foreground/[0.04] transition-colors"
           >
             + Create custom role
           </button>
@@ -141,13 +141,13 @@ export function ComplianceWidget() {
           <div className="flex gap-2 mt-4">
             <button
               onClick={() => navigate('/compliance')}
-              className="flex-1 text-xs text-center py-1.5 rounded-lg bg-white/[0.03] hover:bg-white/[0.06] text-muted-foreground hover:text-foreground transition-colors"
+              className="flex-1 text-xs text-center py-1.5 rounded-lg bg-foreground/[0.03] hover:bg-foreground/[0.06] text-muted-foreground hover:text-foreground transition-colors"
             >
               Purge Preview
             </button>
             <button
               onClick={() => navigate('/compliance')}
-              className="flex-1 text-xs text-center py-1.5 rounded-lg bg-white/[0.03] hover:bg-white/[0.06] text-muted-foreground hover:text-foreground transition-colors"
+              className="flex-1 text-xs text-center py-1.5 rounded-lg bg-foreground/[0.03] hover:bg-foreground/[0.06] text-muted-foreground hover:text-foreground transition-colors"
             >
               Export Data
             </button>

@@ -55,15 +55,15 @@ export function DevPortalWidget() {
 
       {/* API Usage Mini */}
       <div className="grid grid-cols-3 gap-2 mb-3">
-        <div className="bg-white/[0.02] rounded-lg p-2 text-center">
+        <div className="bg-foreground/[0.02] rounded-lg p-2 text-center">
           <div className="text-sm font-bold text-foreground">3.4k</div>
           <div className="text-[10px] text-muted-foreground">24h calls</div>
         </div>
-        <div className="bg-white/[0.02] rounded-lg p-2 text-center">
+        <div className="bg-foreground/[0.02] rounded-lg p-2 text-center">
           <div className="text-sm font-bold text-emerald-400">{errorRate}%</div>
           <div className="text-[10px] text-muted-foreground">Error rate</div>
         </div>
-        <div className="bg-white/[0.02] rounded-lg p-2 text-center">
+        <div className="bg-foreground/[0.02] rounded-lg p-2 text-center">
           <div className="text-sm font-bold text-sky-400">500</div>
           <div className="text-[10px] text-muted-foreground">/min limit</div>
         </div>
@@ -79,7 +79,7 @@ export function DevPortalWidget() {
         </div>
         <div className="space-y-1.5">
           {WEBHOOKS.map((wh) => (
-            <div key={wh.id} className="flex items-center gap-2 bg-white/[0.02] rounded-md px-2 py-1.5">
+            <div key={wh.id} className="flex items-center gap-2 bg-foreground/[0.02] rounded-md px-2 py-1.5">
               {wh.status === 'healthy' ? (
                 <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
               ) : (
@@ -126,7 +126,7 @@ export function DevPortalWidget() {
 
       <button
         onClick={() => navigate('/developer')}
-        className="mt-3 w-full text-xs text-center py-1.5 rounded-lg bg-white/[0.03] hover:bg-white/[0.06] text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-1"
+        className="mt-3 w-full text-xs text-center py-1.5 rounded-lg bg-foreground/[0.03] hover:bg-foreground/[0.06] text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-1"
       >
         <TrendingUp className="w-3 h-3" /> Full Developer Portal →
       </button>

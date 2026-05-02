@@ -238,7 +238,7 @@ export default function WhatsAppMessages() {
             const TypeIcon = messageTypeIcons[message.message_type];
 
             return (
-              <div key={message.id} className="p-4 hover:bg-white/[0.02] transition-colors">
+              <div key={message.id} className="p-4 hover:bg-foreground/[0.02] transition-colors">
                 <div className="flex items-start gap-4">
                   {/* Avatar */}
                   <div

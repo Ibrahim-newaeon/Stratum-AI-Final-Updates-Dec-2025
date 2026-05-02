@@ -373,7 +373,7 @@ export default function FAQ() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
                 href="/contact"
-                className="px-6 py-3 rounded-full font-semibold text-white bg-[var(--landing-accent-coral)] hover:bg-[var(--landing-accent-red)] transition-colors shadow-lg shadow-[rgba(255,77,77,0.3)]"
+                className="px-6 py-3 rounded-full font-semibold text-white bg-[var(--landing-accent-coral)] hover:bg-[var(--landing-accent-red)] transition-colors shadow-lg shadow-[rgba(255, 90, 31,0.3)]"
               >
                 Contact Support
               </a>

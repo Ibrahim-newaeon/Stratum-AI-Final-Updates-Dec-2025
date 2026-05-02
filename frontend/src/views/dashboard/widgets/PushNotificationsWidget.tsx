@@ -45,17 +45,17 @@ export function PushNotificationsWidget() {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-2 mb-3">
-        <div className="bg-white/[0.02] rounded-lg p-2 text-center">
+        <div className="bg-foreground/[0.02] rounded-lg p-2 text-center">
           <Users className="w-4 h-4 text-sky-400 mx-auto mb-1" />
           <div className="text-lg font-bold">{subscribers}</div>
           <div className="text-[10px] text-muted-foreground">Subscribers</div>
         </div>
-        <div className="bg-white/[0.02] rounded-lg p-2 text-center">
+        <div className="bg-foreground/[0.02] rounded-lg p-2 text-center">
           <Send className="w-4 h-4 text-emerald-400 mx-auto mb-1" />
           <div className="text-lg font-bold">{sent24h}</div>
           <div className="text-[10px] text-muted-foreground">Sent 24h</div>
         </div>
-        <div className="bg-white/[0.02] rounded-lg p-2 text-center">
+        <div className="bg-foreground/[0.02] rounded-lg p-2 text-center">
           <Smartphone className="w-4 h-4 text-purple-400 mx-auto mb-1" />
           <div className="text-lg font-bold">95%</div>
           <div className="text-[10px] text-muted-foreground">Delivery</div>
@@ -77,7 +77,7 @@ export function PushNotificationsWidget() {
         <div className="text-[10px] text-muted-foreground uppercase mb-2">Recent Notifications</div>
         <div className="space-y-1.5">
           {RECENT_PUSHES.map((push) => (
-            <div key={push.id} className="flex items-center gap-2 bg-white/[0.02] rounded-lg px-2.5 py-2">
+            <div key={push.id} className="flex items-center gap-2 bg-foreground/[0.02] rounded-lg px-2.5 py-2">
               <div className="w-6 h-6 rounded bg-rose-500/15 flex items-center justify-center shrink-0">
                 <Bell className="w-3 h-3 text-rose-400" />
               </div>

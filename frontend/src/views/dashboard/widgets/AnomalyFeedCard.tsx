@@ -146,7 +146,7 @@ export function AnomalyFeedCard() {
             return (
               <div
                 key={item.id}
-                className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] transition-colors duration-200"
+                className="flex items-start gap-3 p-3 rounded-xl bg-foreground/[0.02] hover:bg-foreground/[0.05] transition-colors duration-200"
               >
                 <div className={cn('shrink-0 p-1.5 rounded-md', cfg.cls)}>
                   <Icon className="w-3.5 h-3.5" />

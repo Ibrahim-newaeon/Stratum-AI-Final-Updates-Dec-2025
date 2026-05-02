@@ -127,7 +127,7 @@ export default function AIFooter() {
       </div>
 
       {/* Bottom Bar */}
-      <div className="border-t border-white/[0.05]">
+      <div className="border-t border-foreground/[0.05]">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-sm text-gray-500">{currentYear} Stratum AI. All rights reserved.</p>
@@ -135,11 +135,11 @@ export default function AIFooter() {
             <div className="flex items-center gap-6">
               {/* Compliance Badges */}
               <div className="flex items-center gap-2 text-xs text-gray-500">
-                <div className="px-2 py-1 rounded border border-foreground/10 bg-white/[0.02]">
+                <div className="px-2 py-1 rounded border border-foreground/10 bg-foreground/[0.02]">
                   SOC 2
                 </div>
-                <div className="px-2 py-1 rounded border border-foreground/10 bg-white/[0.02]">GDPR</div>
-                <div className="px-2 py-1 rounded border border-foreground/10 bg-white/[0.02]">CCPA</div>
+                <div className="px-2 py-1 rounded border border-foreground/10 bg-foreground/[0.02]">GDPR</div>
+                <div className="px-2 py-1 rounded border border-foreground/10 bg-foreground/[0.02]">CCPA</div>
               </div>
             </div>
           </div>

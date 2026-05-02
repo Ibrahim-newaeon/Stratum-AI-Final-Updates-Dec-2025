@@ -245,7 +245,7 @@ export default function WhatsAppContacts() {
                 return (
                   <tr
                     key={contact.id}
-                    className="border-b border-foreground/5 hover:bg-white/[0.02] transition-colors"
+                    className="border-b border-foreground/5 hover:bg-foreground/[0.02] transition-colors"
                   >
                     <td className="p-4">
                       <input

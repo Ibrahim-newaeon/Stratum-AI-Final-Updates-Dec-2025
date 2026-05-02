@@ -54,7 +54,7 @@ export default function CohortAnalysis() {
   };
 
   const cellColor = (pct: number | null) => {
-    if (pct === null) return 'bg-white/[0.02]';
+    if (pct === null) return 'bg-foreground/[0.02]';
     const intensity = pct / 100;
     if (intensity > 0.6) return 'bg-green-500/30 text-green-300';
     if (intensity > 0.3) return 'bg-yellow-500/20 text-yellow-300';
@@ -72,10 +72,10 @@ export default function CohortAnalysis() {
           <p className="text-gray-400 mt-2">Retention and behavior cohorts over time</p>
         </header>
 
-        <div className="bg-white/[0.02] border border-foreground/10 rounded-xl p-6 mb-6 flex flex-wrap gap-4 items-end">
+        <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6 mb-6 flex flex-wrap gap-4 items-end">
           <div>
             <label className="block text-sm text-gray-400 mb-1">Metric</label>
-            <select value={metric} onChange={(e) => setMetric(e.target.value)} className="bg-white/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white">
+            <select value={metric} onChange={(e) => setMetric(e.target.value)} className="bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white">
               <option value="retention" className="bg-[#0A1628]">Retention</option>
               <option value="revenue" className="bg-[#0A1628]">Revenue</option>
               <option value="conversions" className="bg-[#0A1628]">Conversions</option>
@@ -83,7 +83,7 @@ export default function CohortAnalysis() {
           </div>
           <div>
             <label className="block text-sm text-gray-400 mb-1">Period</label>
-            <select value={period} onChange={(e) => setPeriod(e.target.value)} className="bg-white/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white">
+            <select value={period} onChange={(e) => setPeriod(e.target.value)} className="bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white">
               <option value="daily" className="bg-[#0A1628]">Daily</option>
               <option value="weekly" className="bg-[#0A1628]">Weekly</option>
               <option value="monthly" className="bg-[#0A1628]">Monthly</option>
@@ -92,11 +92,11 @@ export default function CohortAnalysis() {
           <div className="flex gap-3">
             <div>
               <label className="block text-sm text-gray-400 mb-1">From</label>
-              <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="bg-white/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white" />
+              <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white" />
             </div>
             <div>
               <label className="block text-sm text-gray-400 mb-1">To</label>
-              <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="bg-white/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white" />
+              <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white" />
             </div>
           </div>
           <button
@@ -111,7 +111,7 @@ export default function CohortAnalysis() {
 
         {result && (
           <div className="space-y-6">
-            <div className="bg-white/[0.02] border border-foreground/10 rounded-xl p-6 overflow-x-auto">
+            <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6 overflow-x-auto">
               <h3 className="text-lg font-semibold mb-4">{metric.charAt(0).toUpperCase() + metric.slice(1)} Cohorts</h3>
               <table className="w-full text-sm">
                 <thead>
@@ -143,7 +143,7 @@ export default function CohortAnalysis() {
             </div>
 
             {result.average_retention.length > 0 && (
-              <div className="bg-white/[0.02] border border-foreground/10 rounded-xl p-6">
+              <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6">
                 <h4 className="text-sm font-medium text-gray-300 mb-3">Average Retention by Period</h4>
                 <div className="flex items-end gap-2 h-32">
                   {result.average_retention.map((v, i) => (
@@ -160,7 +160,7 @@ export default function CohortAnalysis() {
             )}
 
             {result.insights.length > 0 && (
-              <div className="bg-white/[0.02] border border-foreground/10 rounded-xl p-6">
+              <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6">
                 <h4 className="text-sm font-medium text-gray-300 mb-2">Insights</h4>
                 {result.insights.map((insight, i) => (
                   <div key={i} className="text-sm text-gray-400 mb-1">{insight}</div>

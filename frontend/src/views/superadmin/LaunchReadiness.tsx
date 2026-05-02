@@ -388,7 +388,7 @@ function ItemRow({ item, disabled, phaseIsComplete }: ItemRowProps) {
         'flex items-start gap-3 p-3 rounded-lg border',
         item.is_checked
           ? 'bg-success/5 border-success/15'
-          : 'bg-white/[0.02] border-foreground/5',
+          : 'bg-foreground/[0.02] border-foreground/5',
         disabled && 'opacity-60'
       )}
     >

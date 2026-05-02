@@ -40,7 +40,7 @@ interface CampaignDraft {
 }
 
 const statusConfig: Record<DraftStatus, { icon: React.ComponentType<{ className?: string }>; label: string; color: string }> = {
-  draft: { icon: DocumentTextIcon, label: 'Draft', color: 'text-gray-600 bg-gray-100 dark:bg-gray-800' },
+  draft: { icon: DocumentTextIcon, label: 'Draft', color: 'text-gray-600 bg-muted' },
   submitted: { icon: ClockIcon, label: 'Pending Approval', color: 'text-amber-600 bg-amber-100 dark:bg-amber-900/30' },
   approved: { icon: CheckCircleIcon, label: 'Approved', color: 'text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30' },
   rejected: { icon: XCircleIcon, label: 'Rejected', color: 'text-red-600 bg-red-100 dark:bg-red-900/30' },

@@ -77,7 +77,7 @@ export default function AIInsights() {
                 'flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all',
                 activeTab === tab.id
                   ? 'bg-primary text-white'
-                  : 'bg-white/[0.03] text-gray-400 hover:bg-white/[0.06]'
+                  : 'bg-foreground/[0.03] text-gray-400 hover:bg-foreground/[0.06]'
               )}
             >
               <tab.icon className="w-5 h-5" />
@@ -124,7 +124,7 @@ function NLQPanel() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white/[0.02] border border-foreground/10 rounded-xl p-6">
+      <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6">
         <label className="block text-sm font-medium text-gray-300 mb-2">Ask anything about your data</label>
         <div className="flex gap-3">
           <input
@@ -132,7 +132,7 @@ function NLQPanel() {
             onChange={(e) => setQuestion(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && ask()}
             placeholder="e.g. What are my top campaigns by ROAS?"
-            className="flex-1 bg-white/[0.03] border border-foreground/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-primary"
+            className="flex-1 bg-foreground/[0.03] border border-foreground/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-primary"
           />
           <button
             onClick={ask}
@@ -148,7 +148,7 @@ function NLQPanel() {
             <button
               key={s}
               onClick={() => setQuestion(s)}
-              className="text-xs bg-white/[0.03] hover:bg-white/[0.08] text-gray-400 hover:text-white px-3 py-1.5 rounded-full transition-colors"
+              className="text-xs bg-foreground/[0.03] hover:bg-foreground/[0.08] text-gray-400 hover:text-white px-3 py-1.5 rounded-full transition-colors"
             >
               {s}
             </button>
@@ -160,7 +160,7 @@ function NLQPanel() {
 
       {result && (
         <div className="space-y-4">
-          <div className="bg-white/[0.02] border border-foreground/10 rounded-xl p-6">
+          <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">{result.question}</h3>
               <span className="text-xs text-gray-500">{result.execution_time_ms}ms · {result.result_count} rows</span>
@@ -179,7 +179,7 @@ function NLQPanel() {
                   </thead>
                   <tbody>
                     {result.results.map((row, i) => (
-                      <tr key={i} className="border-b border-foreground/5 hover:bg-white/[0.02]">
+                      <tr key={i} className="border-b border-foreground/5 hover:bg-foreground/[0.02]">
                         {Object.values(row).map((v, j) => (
                           <td key={j} className="py-2 px-3 text-gray-300">{String(v ?? '-')}</td>
                         ))}
@@ -243,14 +243,14 @@ function AnomalyPanel() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white/[0.02] border border-foreground/10 rounded-xl p-6">
+      <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm text-gray-400 mb-1">Metric</label>
             <select
               value={metric}
               onChange={(e) => setMetric(e.target.value)}
-              className="w-full bg-white/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white"
+              className="w-full bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white"
             >
               {['roas', 'cpc', 'ctr', 'conversions', 'spend'].map((m) => (
                 <option key={m} value={m} className="bg-[#0A1628]">{m.toUpperCase()}</option>
@@ -262,7 +262,7 @@ function AnomalyPanel() {
             <select
               value={severity}
               onChange={(e) => setSeverity(e.target.value)}
-              className="w-full bg-white/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white"
+              className="w-full bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white"
             >
               {['critical', 'high', 'medium', 'low'].map((s) => (
                 <option key={s} value={s} className="bg-[#0A1628]">{s}</option>
@@ -275,7 +275,7 @@ function AnomalyPanel() {
               value={campaignId}
               onChange={(e) => setCampaignId(e.target.value)}
               placeholder="e.g. 123"
-              className="w-full bg-white/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white placeholder-gray-500"
+              className="w-full bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white placeholder-gray-500"
             />
           </div>
         </div>
@@ -291,7 +291,7 @@ function AnomalyPanel() {
 
       {result && (
         <div className="space-y-4">
-          <div className="bg-white/[0.02] border border-foreground/10 rounded-xl p-6">
+          <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">Anomaly: {result.metric.toUpperCase()}</h3>
               <div className="flex items-center gap-2">
@@ -307,7 +307,7 @@ function AnomalyPanel() {
               <div>
                 <h4 className="text-sm font-medium text-gray-300 mb-3">Root Causes</h4>
                 {result.root_causes.map((rc, i) => (
-                  <div key={i} className="bg-white/[0.03] border border-foreground/5 rounded-lg p-4 mb-3">
+                  <div key={i} className="bg-foreground/[0.03] border border-foreground/5 rounded-lg p-4 mb-3">
                     <div className="flex items-center gap-2 mb-1">
                       <span className={cn(
                         'text-xs px-2 py-0.5 rounded-full font-medium',
@@ -392,7 +392,7 @@ function PredictPanel() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white/[0.02] border border-foreground/10 rounded-xl p-6">
+      <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm text-gray-400 mb-1">Campaign ID</label>
@@ -400,7 +400,7 @@ function PredictPanel() {
               value={campaignId}
               onChange={(e) => setCampaignId(e.target.value)}
               placeholder="e.g. 123"
-              className="w-full bg-white/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white placeholder-gray-500"
+              className="w-full bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white placeholder-gray-500"
             />
           </div>
           <div>
@@ -417,7 +417,7 @@ function PredictPanel() {
               value={budgetScenario}
               onChange={(e) => setBudgetScenario(e.target.value)}
               placeholder="e.g. 500"
-              className="w-full bg-white/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white placeholder-gray-500"
+              className="w-full bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white placeholder-gray-500"
             />
           </div>
         </div>
@@ -433,7 +433,7 @@ function PredictPanel() {
 
       {result && (
         <div className="space-y-4">
-          <div className="bg-white/[0.02] border border-foreground/10 rounded-xl p-6">
+          <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h3 className="text-lg font-semibold">{result.campaign_name}</h3>
@@ -451,7 +451,7 @@ function PredictPanel() {
                 { label: 'Predicted ROAS', value: `${result.predicted_roas.toFixed(2)}x`, color: result.predicted_roas >= 2 ? 'text-green-400' : 'text-yellow-400' },
                 { label: 'Conversions', value: result.predicted_conversions.toLocaleString(), color: 'text-[#00F5FF]' },
               ].map((m) => (
-                <div key={m.label} className="bg-white/[0.03] border border-foreground/5 rounded-lg p-4">
+                <div key={m.label} className="bg-foreground/[0.03] border border-foreground/5 rounded-lg p-4">
                   <div className="text-xs text-gray-500 mb-1">{m.label}</div>
                   <div className={cn('text-xl font-bold', m.color)}>{m.value}</div>
                 </div>
@@ -469,7 +469,7 @@ function PredictPanel() {
               </div>
             </div>
 
-            <div className="bg-white/[0.03] border border-foreground/5 rounded-lg p-4 mb-4">
+            <div className="bg-foreground/[0.03] border border-foreground/5 rounded-lg p-4 mb-4">
               <h4 className="text-sm font-medium text-gray-300 mb-2">Recommendation</h4>
               <p className="text-sm text-gray-400">{result.recommendation}</p>
             </div>

@@ -147,7 +147,7 @@ export default function AICTA() {
           initial={{ opacity: 0 }}
           animate={isInView ? { opacity: 1 } : {}}
           transition={{ delay: 0.6, duration: 0.6 }}
-          className="mt-16 pt-8 border-t border-white/[0.05]"
+          className="mt-16 pt-8 border-t border-foreground/[0.05]"
         >
           <p className="text-sm text-gray-500">
             No credit card required. SOC 2 Type II compliant. Your data never trains our models.

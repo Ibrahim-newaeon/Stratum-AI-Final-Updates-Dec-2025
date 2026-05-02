@@ -294,7 +294,7 @@ export default function DripCampaignBuilder() {
                 key={template.type}
                 draggable
                 onDragStart={(e) => onDragStart(e, template.type)}
-                className="flex items-center gap-3 p-2.5 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.06] hover:border-white/[0.12] cursor-grab active:cursor-grabbing transition-all group"
+                className="flex items-center gap-3 p-2.5 rounded-lg bg-foreground/[0.03] hover:bg-foreground/[0.08] border border-foreground/[0.06] hover:border-foreground/[0.12] cursor-grab active:cursor-grabbing transition-all group"
               >
                 <div className={cn('w-8 h-8 rounded-md flex items-center justify-center', template.color)}>
                   <Icon className="w-4 h-4 text-white" />
@@ -317,7 +317,7 @@ export default function DripCampaignBuilder() {
           <select
             value={selectedTrigger}
             onChange={(e) => setSelectedTrigger(e.target.value)}
-            className="w-full bg-white/[0.03] border border-foreground/10 rounded-lg px-2 py-1.5 text-xs text-foreground"
+            className="w-full bg-foreground/[0.03] border border-foreground/10 rounded-lg px-2 py-1.5 text-xs text-foreground"
           >
             {TRIGGER_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value} className="bg-[#0A1628]">
@@ -449,7 +449,7 @@ export default function DripCampaignBuilder() {
                 style={{ left: node.position.x, top: node.position.y }}
                 onClick={() => handleNodeClick(node.id)}
               >
-                <div className="flex items-center gap-2 bg-[#0A1628] border border-white/[0.08] hover:border-white/[0.15] rounded-xl px-3 py-2 shadow-lg shadow-black/20 min-w-[160px]">
+                <div className="flex items-center gap-2 bg-[#0A1628] border border-foreground/[0.08] hover:border-foreground/[0.15] rounded-xl px-3 py-2 shadow-lg shadow-black/20 min-w-[160px]">
                   <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center shrink-0', template.color)}>
                     <Icon className="w-4 h-4 text-white" />
                   </div>
@@ -508,7 +508,7 @@ export default function DripCampaignBuilder() {
                 <input
                   value={sequenceName}
                   onChange={(e) => setSequenceName(e.target.value)}
-                  className="w-full bg-white/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
+                  className="w-full bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
                 />
               </div>
               <div>
@@ -519,18 +519,18 @@ export default function DripCampaignBuilder() {
                   value={sequenceDesc}
                   onChange={(e) => setSequenceDesc(e.target.value)}
                   rows={3}
-                  className="w-full bg-white/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/40 resize-none"
+                  className="w-full bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/40 resize-none"
                   placeholder="What does this sequence do?"
                 />
               </div>
               <div className="pt-2 border-t border-foreground/10">
                 <div className="text-[10px] text-muted-foreground mb-2">FLOW STATS</div>
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="bg-white/[0.02] rounded-lg p-2 text-center">
+                  <div className="bg-foreground/[0.02] rounded-lg p-2 text-center">
                     <div className="text-lg font-bold">{nodes.length}</div>
                     <div className="text-[10px] text-muted-foreground">Nodes</div>
                   </div>
-                  <div className="bg-white/[0.02] rounded-lg p-2 text-center">
+                  <div className="bg-foreground/[0.02] rounded-lg p-2 text-center">
                     <div className="text-lg font-bold">{edges.length}</div>
                     <div className="text-[10px] text-muted-foreground">Connections</div>
                   </div>
@@ -564,7 +564,7 @@ export default function DripCampaignBuilder() {
                       value={selectedNodeData.data.subject || ''}
                       onChange={(e) => updateNodeData(selectedNodeData.id, { subject: e.target.value })}
                       placeholder="Email subject..."
-                      className="w-full bg-white/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-sm"
+                      className="w-full bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-sm"
                     />
                   </div>
                   <div>
@@ -572,7 +572,7 @@ export default function DripCampaignBuilder() {
                     <select
                       value={selectedNodeData.data.template_id || ''}
                       onChange={(e) => updateNodeData(selectedNodeData.id, { template_id: e.target.value })}
-                      className="w-full bg-white/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-sm"
+                      className="w-full bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-sm"
                     >
                       <option value="">Select template...</option>
                       <option value="welcome">Welcome Email</option>
@@ -615,7 +615,7 @@ export default function DripCampaignBuilder() {
                           'text-[10px] py-1 rounded transition-colors',
                           (selectedNodeData.data.delay_hours || 24) === h
                             ? 'bg-primary text-primary-foreground'
-                            : 'bg-white/[0.03] text-muted-foreground hover:bg-white/[0.08]'
+                            : 'bg-foreground/[0.03] text-muted-foreground hover:bg-foreground/[0.08]'
                         )}
                       >
                         {h < 24 ? `${h}h` : `${h / 24}d`}
@@ -633,7 +633,7 @@ export default function DripCampaignBuilder() {
                     <select
                       value={selectedNodeData.data.condition || 'email_opened'}
                       onChange={(e) => updateNodeData(selectedNodeData.id, { condition: e.target.value })}
-                      className="w-full bg-white/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-sm"
+                      className="w-full bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-sm"
                     >
                       {CONDITION_OPTIONS.map((opt) => (
                         <option key={opt.value} value={opt.value}>
@@ -642,7 +642,7 @@ export default function DripCampaignBuilder() {
                       ))}
                     </select>
                   </div>
-                  <div className="text-[10px] text-muted-foreground mt-2 p-2 bg-white/[0.02] rounded-lg">
+                  <div className="text-[10px] text-muted-foreground mt-2 p-2 bg-foreground/[0.02] rounded-lg">
                     Connect two outgoing edges:
                     <br />• <span className="text-emerald-400">Yes branch</span> — condition met
                     <br />• <span className="text-red-400">No branch</span> — condition not met
@@ -661,7 +661,7 @@ export default function DripCampaignBuilder() {
                         updateNodeData(selectedNodeData.id, { trigger_type: e.target.value });
                         setSelectedTrigger(e.target.value);
                       }}
-                      className="w-full bg-white/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-sm"
+                      className="w-full bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-sm"
                     >
                       {TRIGGER_OPTIONS.map((opt) => (
                         <option key={opt.value} value={opt.value}>
@@ -682,7 +682,7 @@ export default function DripCampaignBuilder() {
                       value={selectedNodeData.data.title || ''}
                       onChange={(e) => updateNodeData(selectedNodeData.id, { title: e.target.value })}
                       placeholder="Notification title..."
-                      className="w-full bg-white/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-sm"
+                      className="w-full bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-sm"
                     />
                   </div>
                   <div>
@@ -692,7 +692,7 @@ export default function DripCampaignBuilder() {
                       onChange={(e) => updateNodeData(selectedNodeData.id, { body: e.target.value })}
                       rows={3}
                       placeholder="Notification body..."
-                      className="w-full bg-white/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-sm resize-none"
+                      className="w-full bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-sm resize-none"
                     />
                   </div>
                 </>
@@ -702,7 +702,7 @@ export default function DripCampaignBuilder() {
               <div className="flex gap-2 pt-3 border-t border-foreground/10">
                 <button
                   onClick={() => duplicateNode(selectedNodeData.id)}
-                  className="flex-1 flex items-center justify-center gap-1 text-xs py-1.5 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] text-muted-foreground hover:text-foreground transition-colors"
+                  className="flex-1 flex items-center justify-center gap-1 text-xs py-1.5 rounded-lg bg-foreground/[0.03] hover:bg-foreground/[0.08] text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <Copy className="w-3 h-3" /> Duplicate
                 </button>

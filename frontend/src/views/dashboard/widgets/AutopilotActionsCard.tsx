@@ -182,7 +182,7 @@ export function AutopilotActionsCard() {
       </div>
 
       {/* Filter tabs */}
-      <div className="flex gap-1 mb-4 bg-white/[0.04] border border-white/[0.06] rounded-lg p-0.5">
+      <div className="flex gap-1 mb-4 bg-foreground/[0.04] border border-foreground/[0.06] rounded-lg p-0.5">
         {TABS.map((tab) => (
           <button
             key={tab.key}
@@ -211,7 +211,7 @@ export function AutopilotActionsCard() {
           filtered.map((action) => (
             <div
               key={action.id}
-              className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.05] border border-transparent hover:border-white/[0.05] transition-colors duration-200"
+              className="flex items-center justify-between p-3 rounded-xl bg-foreground/[0.02] hover:bg-foreground/[0.05] border border-transparent hover:border-foreground/[0.05] transition-colors duration-200"
             >
               <div className="flex items-center gap-3 min-w-0">
                 <span
