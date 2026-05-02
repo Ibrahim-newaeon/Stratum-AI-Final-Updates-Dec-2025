@@ -374,12 +374,12 @@ export default function TenantOverview() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Overview</h1>
-          <p className="text-text-muted">Trust & Performance Dashboard</p>
+          <p className="text-muted-foreground">Trust & Performance Dashboard</p>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={handleDateRangeChange}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-secondary border border-white/10 text-text-secondary hover:text-white transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-secondary border border-foreground/10 text-muted-foreground hover:text-white transition-colors"
           >
             <CalendarIcon className="w-4 h-4" />
             {dateRangeLabel}

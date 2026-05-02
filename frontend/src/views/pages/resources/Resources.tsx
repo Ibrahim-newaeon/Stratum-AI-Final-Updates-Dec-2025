@@ -241,7 +241,7 @@ export default function ResourcesPage() {
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-2xl font-bold text-white">Guides & Tutorials</h2>
-              <Link to="/docs" className="text-sm text-[#FFB347] hover:underline">
+              <Link to="/docs" className="text-sm text-secondary hover:underline">
                 View All
               </Link>
             </div>
@@ -251,7 +251,7 @@ export default function ResourcesPage() {
                 <Link
                   key={guide.title}
                   to="#"
-                  className="group flex items-start gap-4 p-5 rounded-xl transition-colors duration-200 hover:bg-white/5"
+                  className="group flex items-start gap-4 p-5 rounded-xl transition-colors duration-200 hover:bg-foreground/5"
                   style={{
                     background: 'var(--landing-card)',
                     border: '1px solid var(--landing-border)',
@@ -279,7 +279,7 @@ export default function ResourcesPage() {
                       </span>
                       <span className="text-xs" style={{ color: 'var(--landing-text-dim)' }}>{guide.readTime} read</span>
                     </div>
-                    <h4 className="text-white font-medium group-hover:text-[#FF4D4D] transition-colors">
+                    <h4 className="text-white font-medium group-hover:text-[#FF5A1F] transition-colors">
                       {guide.title}
                     </h4>
                     <p className="text-sm mt-1" style={{ color: 'var(--landing-text)' }}>{guide.description}</p>
@@ -400,7 +400,7 @@ export default function ResourcesPage() {
                 border: '1px solid var(--landing-border)',
               }}
             >
-              <MicrophoneIcon className="w-10 h-10 mx-auto mb-4 text-[#FFB347]" />
+              <MicrophoneIcon className="w-10 h-10 mx-auto mb-4 text-secondary" />
               <h3 className="text-xl font-bold text-white mb-2">Stay in the Loop</h3>
               <p className="mb-6" style={{ color: 'var(--landing-text)' }}>
                 Get the latest resources, guides, and product updates delivered to your inbox.
@@ -409,7 +409,7 @@ export default function ResourcesPage() {
                 <input
                   type="email"
                   placeholder="Enter your email"
-                  className="flex-1 px-4 py-3 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF4D4D]/50"
+                  className="flex-1 px-4 py-3 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF5A1F]/50"
                   style={{
                     background: 'var(--landing-bg)',
                     border: '1px solid var(--landing-border)',

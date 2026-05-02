@@ -424,7 +424,7 @@ export default function ComparisonPage() {
                 <div key={category}>
                   {/* Category Header */}
                   <button
-                    className="w-full flex items-center justify-between p-4 border-b transition-colors hover:bg-white/5"
+                    className="w-full flex items-center justify-between p-4 border-b transition-colors hover:bg-foreground/5"
                     style={{ borderColor: 'var(--landing-border)' }}
                     onClick={() =>
                       setExpandedCategory(expandedCategory === category ? null : category)

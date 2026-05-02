@@ -126,7 +126,7 @@ export function BudgetPacingCard() {
         <h3 className="widget-title">
           Budget Pacing
         </h3>
-        <div className="flex bg-white/[0.04] border border-white/[0.06] rounded-lg p-0.5">
+        <div className="flex bg-foreground/[0.04] border border-foreground/[0.06] rounded-lg p-0.5">
           {(['7d', '14d', '30d'] as PeriodFilter[]).map((p) => (
             <button
               key={p}
@@ -164,7 +164,7 @@ export function BudgetPacingCard() {
               </div>
 
               {/* Progress bar — rounded with glow */}
-              <div className="relative h-2 bg-white/[0.06] rounded-full overflow-hidden">
+              <div className="relative h-2 bg-foreground/[0.06] rounded-full overflow-hidden">
                 <div
                   className={cn('h-full rounded-full transition-[width] duration-700 ease-out', barColor)}
                   style={{ width: `${pct}%`, boxShadow: `0 0 8px ${barColor === 'bg-blue-500' ? 'hsl(var(--primary) / 0.4)' : barColor === 'bg-red-500' ? 'hsl(var(--status-critical) / 0.4)' : barColor === 'bg-cyan-500' ? 'hsl(var(--status-healthy) / 0.4)' : 'rgba(250,204,21,0.4)'}` }}

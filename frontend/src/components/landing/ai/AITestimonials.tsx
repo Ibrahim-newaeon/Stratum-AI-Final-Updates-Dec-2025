@@ -142,7 +142,7 @@ export default function AITestimonials() {
                 className={`absolute -inset-[1px] rounded-3xl bg-gradient-to-r ${testimonial.color} opacity-0 group-hover:opacity-20 blur-sm transition-opacity duration-500`}
               />
 
-              <div className="relative p-8 rounded-3xl bg-white/[0.02] border border-white/[0.05] hover:border-white/10 transition-colors">
+              <div className="relative p-8 rounded-3xl bg-foreground/[0.02] border border-foreground/[0.05] hover:border-foreground/10 transition-colors">
                 {/* Stars */}
                 <div className="flex gap-1 mb-4">
                   {[...Array(5)].map((_, i) => (
@@ -202,7 +202,7 @@ export default function AITestimonials() {
             {platforms.map((platform) => (
               <div
                 key={platform.name}
-                className="flex flex-col items-center justify-center p-6 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:border-white/10 transition-colors"
+                className="flex flex-col items-center justify-center p-6 rounded-2xl bg-foreground/[0.02] border border-foreground/[0.05] hover:border-foreground/10 transition-colors"
               >
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-3 text-gray-400">
                   {platform.icon}

@@ -104,7 +104,7 @@ export function ProblemCard({
               <span className="text-muted-foreground">
                 {affectedCampaigns} campaign{affectedCampaigns !== 1 ? 's' : ''} affected
               </span>
-              <span className="px-2 py-0.5 rounded bg-white/5 text-xs">{platform}</span>
+              <span className="px-2 py-0.5 rounded bg-foreground/5 text-xs">{platform}</span>
             </div>
           </div>
         </div>
@@ -122,7 +122,7 @@ export function ProblemCard({
             {onReview && (
               <button
                 onClick={onReview}
-                className="px-4 py-2 text-sm font-medium rounded-lg border border-white/10 hover:bg-white/5 transition-colors"
+                className="px-4 py-2 text-sm font-medium rounded-lg border border-foreground/10 hover:bg-foreground/5 transition-colors"
               >
                 Review
               </button>

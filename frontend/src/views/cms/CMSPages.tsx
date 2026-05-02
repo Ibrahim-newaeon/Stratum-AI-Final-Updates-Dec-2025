@@ -236,7 +236,7 @@ export default function CMSPages() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Pages</h1>
-          <p className="text-white/60 mt-1">
+          <p className="text-foreground/60 mt-1">
             Manage static website pages &middot; {pages.length} total
           </p>
         </div>
@@ -245,7 +245,7 @@ export default function CMSPages() {
           <div className="relative">
             <button
               onClick={() => setShowPresets(!showPresets)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-lg font-medium transition-colors"
+              className="flex items-center gap-2 px-4 py-2.5 bg-foreground/5 border border-foreground/10 hover:bg-foreground/10 text-white rounded-lg font-medium transition-colors"
             >
               Quick Create
               <ChevronDownIcon className="w-4 h-4" />
@@ -253,9 +253,9 @@ export default function CMSPages() {
             {showPresets && (
               <>
                 <div className="fixed inset-0 z-30" onClick={() => setShowPresets(false)} />
-                <div className="absolute right-0 top-full mt-2 z-40 w-72 bg-neutral-900 border border-white/10 rounded-xl shadow-2xl max-h-80 overflow-y-auto">
+                <div className="absolute right-0 top-full mt-2 z-40 w-72 bg-neutral-900 border border-foreground/10 rounded-xl shadow-2xl max-h-80 overflow-y-auto">
                   <div className="p-2">
-                    <p className="text-xs font-medium text-white/40 px-3 py-2 uppercase tracking-wider">
+                    <p className="text-xs font-medium text-foreground/40 px-3 py-2 uppercase tracking-wider">
                       Page Presets
                     </p>
                     {PAGE_PRESETS.map((preset) => {
@@ -268,7 +268,7 @@ export default function CMSPages() {
                           className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
                             exists
                               ? 'opacity-40 cursor-not-allowed'
-                              : 'hover:bg-white/5 text-white'
+                              : 'hover:bg-foreground/5 text-white'
                           }`}
                         >
                           <div className="flex items-center justify-between">
@@ -277,7 +277,7 @@ export default function CMSPages() {
                               <CheckCircleIcon className="w-4 h-4 text-emerald-400" />
                             )}
                           </div>
-                          <span className="text-white/40 text-xs">/{preset.slug}</span>
+                          <span className="text-foreground/40 text-xs">/{preset.slug}</span>
                         </button>
                       );
                     })}
@@ -298,16 +298,16 @@ export default function CMSPages() {
       </div>
 
       {/* Pages List */}
-      <div className="rounded-2xl bg-white/5 border border-white/10 overflow-hidden">
+      <div className="rounded-2xl bg-foreground/5 border border-foreground/10 overflow-hidden">
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
             <div className="animate-spin w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full" />
           </div>
         ) : pages.length === 0 ? (
           <div className="text-center py-20">
-            <RectangleStackIcon className="w-12 h-12 text-white/20 mx-auto mb-4" />
-            <p className="text-white/60 mb-2">No pages yet</p>
-            <p className="text-white/40 text-sm mb-6">
+            <RectangleStackIcon className="w-12 h-12 text-foreground/20 mx-auto mb-4" />
+            <p className="text-foreground/60 mb-2">No pages yet</p>
+            <p className="text-foreground/40 text-sm mb-6">
               Use Quick Create to set up all public pages instantly
             </p>
             <button
@@ -319,14 +319,14 @@ export default function CMSPages() {
             </button>
           </div>
         ) : (
-          <div className="divide-y divide-white/5">
+          <div className="divide-y divide-foreground/5">
             {pages.map((page) => {
               const statusStyle = PAGE_STATUS_STYLES[page.status];
               const templateInfo = TEMPLATES.find((t) => t.value === page.template);
               return (
                 <div
                   key={page.id}
-                  className="flex items-center justify-between px-6 py-4 hover:bg-white/5 transition-colors"
+                  className="flex items-center justify-between px-6 py-4 hover:bg-foreground/5 transition-colors"
                 >
                   <div className="flex items-center gap-4 min-w-0">
                     <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -334,7 +334,7 @@ export default function CMSPages() {
                     </div>
                     <div className="min-w-0">
                       <p className="text-white font-medium truncate">{page.title}</p>
-                      <div className="flex items-center gap-2 text-xs text-white/40">
+                      <div className="flex items-center gap-2 text-xs text-foreground/40">
                         <span>/{page.slug}</span>
                         <span>&middot;</span>
                         <span>{templateInfo?.label || page.template}</span>
@@ -356,21 +356,21 @@ export default function CMSPages() {
                     </span>
                     <button
                       onClick={() => handlePreview(page.slug)}
-                      className="p-1.5 text-white/40 hover:text-cyan-400 transition-colors"
+                      className="p-1.5 text-foreground/40 hover:text-cyan-400 transition-colors"
                       title="Preview page"
                     >
                       <EyeIcon className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => openEditor(page)}
-                      className="p-1.5 text-white/40 hover:text-white transition-colors"
+                      className="p-1.5 text-foreground/40 hover:text-white transition-colors"
                       title="Edit page"
                     >
                       <PencilSquareIcon className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => setDeleteConfirm(page.id)}
-                      className="p-1.5 text-white/40 hover:text-red-400 transition-colors"
+                      className="p-1.5 text-foreground/40 hover:text-red-400 transition-colors"
                       title="Delete page"
                     >
                       <TrashIcon className="w-4 h-4" />
@@ -386,8 +386,8 @@ export default function CMSPages() {
       {/* Page Editor Modal */}
       {showEditor && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="bg-neutral-900 border border-white/10 rounded-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-4 border-b border-white/10">
+          <div className="bg-neutral-900 border border-foreground/10 rounded-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-4 border-b border-foreground/10">
               <h2 className="text-lg font-semibold text-white">
                 {editingPage ? 'Edit Page' : 'Create New Page'}
               </h2>
@@ -403,7 +403,7 @@ export default function CMSPages() {
                 )}
                 <button
                   onClick={() => setShowEditor(false)}
-                  className="p-2 text-white/40 hover:text-white"
+                  className="p-2 text-foreground/40 hover:text-white"
                 >
                   <XMarkIcon className="w-5 h-5" />
                 </button>
@@ -413,7 +413,7 @@ export default function CMSPages() {
             <div className="p-6 space-y-5">
               {/* Title */}
               <div>
-                <label className="block text-sm font-medium text-white/70 mb-1.5">Title *</label>
+                <label className="block text-sm font-medium text-foreground/70 mb-1.5">Title *</label>
                 <input
                   type="text"
                   value={formData.title}
@@ -425,19 +425,19 @@ export default function CMSPages() {
                       slug: f.slug || generateSlug(title),
                     }));
                   }}
-                  className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-purple-500/50"
+                  className="w-full px-4 py-2.5 bg-foreground/5 border border-foreground/10 rounded-lg text-white placeholder-foreground/30 focus:outline-none focus:border-purple-500/50"
                   placeholder="Page title"
                 />
               </div>
 
               {/* Slug */}
               <div>
-                <label className="block text-sm font-medium text-white/70 mb-1.5">Slug</label>
+                <label className="block text-sm font-medium text-foreground/70 mb-1.5">Slug</label>
                 <input
                   type="text"
                   value={formData.slug}
                   onChange={(e) => setFormData((f) => ({ ...f, slug: e.target.value }))}
-                  className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-purple-500/50"
+                  className="w-full px-4 py-2.5 bg-foreground/5 border border-foreground/10 rounded-lg text-white placeholder-foreground/30 focus:outline-none focus:border-purple-500/50"
                   placeholder="page-url-slug"
                 />
               </div>
@@ -445,13 +445,13 @@ export default function CMSPages() {
               {/* Status + Template */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-white/70 mb-1.5">Status</label>
+                  <label className="block text-sm font-medium text-foreground/70 mb-1.5">Status</label>
                   <select
                     value={formData.status}
                     onChange={(e) =>
                       setFormData((f) => ({ ...f, status: e.target.value as PageStatus }))
                     }
-                    className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-purple-500/50"
+                    className="w-full px-4 py-2.5 bg-foreground/5 border border-foreground/10 rounded-lg text-white focus:outline-none focus:border-purple-500/50"
                   >
                     {Object.entries(PAGE_STATUS_STYLES).map(([val, { label }]) => (
                       <option key={val} value={val} className="bg-neutral-900">
@@ -461,11 +461,11 @@ export default function CMSPages() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-white/70 mb-1.5">Template</label>
+                  <label className="block text-sm font-medium text-foreground/70 mb-1.5">Template</label>
                   <select
                     value={formData.template}
                     onChange={(e) => setFormData((f) => ({ ...f, template: e.target.value }))}
-                    className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-purple-500/50"
+                    className="w-full px-4 py-2.5 bg-foreground/5 border border-foreground/10 rounded-lg text-white focus:outline-none focus:border-purple-500/50"
                   >
                     {TEMPLATES.map((t) => (
                       <option key={t.value} value={t.value} className="bg-neutral-900">
@@ -473,7 +473,7 @@ export default function CMSPages() {
                       </option>
                     ))}
                   </select>
-                  <p className="text-xs text-white/30 mt-1">
+                  <p className="text-xs text-foreground/30 mt-1">
                     {TEMPLATES.find((t) => t.value === formData.template)?.description}
                   </p>
                 </div>
@@ -482,14 +482,14 @@ export default function CMSPages() {
               {/* Content (HTML) — shown for prose templates */}
               {!isStructured && (
                 <div>
-                  <label className="block text-sm font-medium text-white/70 mb-1.5">
+                  <label className="block text-sm font-medium text-foreground/70 mb-1.5">
                     Content (HTML)
                   </label>
                   <textarea
                     value={formData.content}
                     onChange={(e) => setFormData((f) => ({ ...f, content: e.target.value }))}
                     rows={10}
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-purple-500/50 resize-none font-mono text-sm"
+                    className="w-full px-4 py-3 bg-foreground/5 border border-foreground/10 rounded-lg text-white placeholder-foreground/30 focus:outline-none focus:border-purple-500/50 resize-none font-mono text-sm"
                     placeholder="HTML content for the page..."
                   />
                 </div>
@@ -499,7 +499,7 @@ export default function CMSPages() {
               {isStructured && (
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="flex items-center gap-2 text-sm font-medium text-white/70">
+                    <label className="flex items-center gap-2 text-sm font-medium text-foreground/70">
                       <CodeBracketIcon className="w-4 h-4" />
                       Content JSON
                     </label>
@@ -517,10 +517,10 @@ export default function CMSPages() {
                       setJsonError(null);
                     }}
                     rows={14}
-                    className={`w-full px-4 py-3 bg-white/5 border rounded-lg text-white placeholder-white/20 focus:outline-none resize-none font-mono text-sm leading-relaxed ${
+                    className={`w-full px-4 py-3 bg-foreground/5 border rounded-lg text-white placeholder-foreground/20 focus:outline-none resize-none font-mono text-sm leading-relaxed ${
                       jsonError
                         ? 'border-red-500/50 focus:border-red-500'
-                        : 'border-white/10 focus:border-purple-500/50'
+                        : 'border-foreground/10 focus:border-purple-500/50'
                     }`}
                     placeholder="Enter JSON content..."
                     spellCheck={false}
@@ -535,13 +535,13 @@ export default function CMSPages() {
               )}
 
               {/* SEO Fields */}
-              <div className="border-t border-white/5 pt-5">
-                <p className="text-xs font-medium text-white/40 uppercase tracking-wider mb-4">
+              <div className="border-t border-foreground/5 pt-5">
+                <p className="text-xs font-medium text-foreground/40 uppercase tracking-wider mb-4">
                   SEO Metadata
                 </p>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-white/70 mb-1.5">
+                    <label className="block text-sm font-medium text-foreground/70 mb-1.5">
                       Meta Title
                     </label>
                     <input
@@ -551,15 +551,15 @@ export default function CMSPages() {
                         setFormData((f) => ({ ...f, meta_title: e.target.value }))
                       }
                       maxLength={70}
-                      className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-purple-500/50"
+                      className="w-full px-4 py-2.5 bg-foreground/5 border border-foreground/10 rounded-lg text-white placeholder-foreground/30 focus:outline-none focus:border-purple-500/50"
                       placeholder="SEO title (max 70 chars)"
                     />
-                    <p className="text-xs text-white/30 mt-1 text-right">
+                    <p className="text-xs text-foreground/30 mt-1 text-right">
                       {(formData.meta_title || '').length}/70
                     </p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-white/70 mb-1.5">
+                    <label className="block text-sm font-medium text-foreground/70 mb-1.5">
                       Meta Description
                     </label>
                     <textarea
@@ -569,10 +569,10 @@ export default function CMSPages() {
                       }
                       rows={2}
                       maxLength={160}
-                      className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-purple-500/50 resize-none"
+                      className="w-full px-4 py-2.5 bg-foreground/5 border border-foreground/10 rounded-lg text-white placeholder-foreground/30 focus:outline-none focus:border-purple-500/50 resize-none"
                       placeholder="SEO description (max 160 chars)"
                     />
-                    <p className="text-xs text-white/30 mt-1 text-right">
+                    <p className="text-xs text-foreground/30 mt-1 text-right">
                       {(formData.meta_description || '').length}/160
                     </p>
                   </div>
@@ -588,30 +588,30 @@ export default function CMSPages() {
                     onChange={(e) =>
                       setFormData((f) => ({ ...f, show_in_navigation: e.target.checked }))
                     }
-                    className="w-4 h-4 rounded bg-white/5 border-white/20 text-purple-600 focus:ring-purple-500"
+                    className="w-4 h-4 rounded bg-foreground/5 border-foreground/20 text-purple-600 focus:ring-purple-500"
                   />
-                  <span className="text-sm text-white/70">Show in navigation</span>
+                  <span className="text-sm text-foreground/70">Show in navigation</span>
                 </label>
                 {formData.show_in_navigation && (
                   <div className="flex items-center gap-2">
-                    <label className="text-sm text-white/70">Label:</label>
+                    <label className="text-sm text-foreground/70">Label:</label>
                     <input
                       type="text"
                       value={formData.navigation_label || ''}
                       onChange={(e) =>
                         setFormData((f) => ({ ...f, navigation_label: e.target.value }))
                       }
-                      className="w-28 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-purple-500/50"
+                      className="w-28 px-3 py-1.5 bg-foreground/5 border border-foreground/10 rounded-lg text-white text-sm focus:outline-none focus:border-purple-500/50"
                       placeholder="Nav label"
                     />
-                    <label className="text-sm text-white/70">Order:</label>
+                    <label className="text-sm text-foreground/70">Order:</label>
                     <input
                       type="number"
                       value={formData.navigation_order || 0}
                       onChange={(e) =>
                         setFormData((f) => ({ ...f, navigation_order: Number(e.target.value) }))
                       }
-                      className="w-20 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-purple-500/50"
+                      className="w-20 px-3 py-1.5 bg-foreground/5 border border-foreground/10 rounded-lg text-white text-sm focus:outline-none focus:border-purple-500/50"
                     />
                   </div>
                 )}
@@ -619,10 +619,10 @@ export default function CMSPages() {
             </div>
 
             {/* Footer */}
-            <div className="flex justify-end gap-3 p-4 border-t border-white/10">
+            <div className="flex justify-end gap-3 p-4 border-t border-foreground/10">
               <button
                 onClick={() => setShowEditor(false)}
-                className="px-4 py-2 text-white/60 hover:text-white transition-colors"
+                className="px-4 py-2 text-foreground/60 hover:text-white transition-colors"
               >
                 Cancel
               </button>
@@ -647,15 +647,15 @@ export default function CMSPages() {
       {/* Delete Confirmation */}
       {deleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="bg-neutral-900 border border-white/10 rounded-xl p-6 max-w-md w-full mx-4">
+          <div className="bg-neutral-900 border border-foreground/10 rounded-xl p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-semibold text-white mb-2">Delete Page</h3>
-            <p className="text-white/60 mb-6">
+            <p className="text-foreground/60 mb-6">
               Are you sure? This action cannot be undone.
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="px-4 py-2 text-white/60 hover:text-white"
+                className="px-4 py-2 text-foreground/60 hover:text-white"
               >
                 Cancel
               </button>

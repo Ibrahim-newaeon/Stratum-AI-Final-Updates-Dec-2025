@@ -54,7 +54,7 @@ export default function CohortAnalysis() {
   };
 
   const cellColor = (pct: number | null) => {
-    if (pct === null) return 'bg-white/[0.02]';
+    if (pct === null) return 'bg-foreground/[0.02]';
     const intensity = pct / 100;
     if (intensity > 0.6) return 'bg-green-500/30 text-green-300';
     if (intensity > 0.3) return 'bg-yellow-500/20 text-yellow-300';
@@ -72,10 +72,10 @@ export default function CohortAnalysis() {
           <p className="text-gray-400 mt-2">Retention and behavior cohorts over time</p>
         </header>
 
-        <div className="bg-white/[0.02] border border-white/10 rounded-xl p-6 mb-6 flex flex-wrap gap-4 items-end">
+        <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6 mb-6 flex flex-wrap gap-4 items-end">
           <div>
             <label className="block text-sm text-gray-400 mb-1">Metric</label>
-            <select value={metric} onChange={(e) => setMetric(e.target.value)} className="bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-white">
+            <select value={metric} onChange={(e) => setMetric(e.target.value)} className="bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white">
               <option value="retention" className="bg-[#0A1628]">Retention</option>
               <option value="revenue" className="bg-[#0A1628]">Revenue</option>
               <option value="conversions" className="bg-[#0A1628]">Conversions</option>
@@ -83,7 +83,7 @@ export default function CohortAnalysis() {
           </div>
           <div>
             <label className="block text-sm text-gray-400 mb-1">Period</label>
-            <select value={period} onChange={(e) => setPeriod(e.target.value)} className="bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-white">
+            <select value={period} onChange={(e) => setPeriod(e.target.value)} className="bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white">
               <option value="daily" className="bg-[#0A1628]">Daily</option>
               <option value="weekly" className="bg-[#0A1628]">Weekly</option>
               <option value="monthly" className="bg-[#0A1628]">Monthly</option>
@@ -92,17 +92,17 @@ export default function CohortAnalysis() {
           <div className="flex gap-3">
             <div>
               <label className="block text-sm text-gray-400 mb-1">From</label>
-              <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-white" />
+              <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white" />
             </div>
             <div>
               <label className="block text-sm text-gray-400 mb-1">To</label>
-              <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-white" />
+              <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white" />
             </div>
           </div>
           <button
             onClick={analyze}
             disabled={loading}
-            className="bg-[#FF1F6D] hover:bg-[#ff4d85] disabled:opacity-50 text-white px-6 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors"
+            className="bg-primary hover:bg-primary/90 disabled:opacity-50 text-white px-6 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors"
           >
             {loading ? <ArrowPathIcon className="w-5 h-5 animate-spin" /> : <PlayIcon className="w-5 h-5" />}
             Analyze
@@ -111,11 +111,11 @@ export default function CohortAnalysis() {
 
         {result && (
           <div className="space-y-6">
-            <div className="bg-white/[0.02] border border-white/10 rounded-xl p-6 overflow-x-auto">
+            <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6 overflow-x-auto">
               <h3 className="text-lg font-semibold mb-4">{metric.charAt(0).toUpperCase() + metric.slice(1)} Cohorts</h3>
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-white/10">
+                  <tr className="border-b border-foreground/10">
                     <th className="text-left py-2 px-3 text-gray-400 font-medium">Cohort</th>
                     <th className="text-left py-2 px-3 text-gray-400 font-medium">Size</th>
                     <th className="text-left py-2 px-3 text-gray-400 font-medium">Period 0</th>
@@ -126,7 +126,7 @@ export default function CohortAnalysis() {
                 </thead>
                 <tbody>
                   {result.rows.map((row, i) => (
-                    <tr key={i} className="border-b border-white/5">
+                    <tr key={i} className="border-b border-foreground/5">
                       <td className="py-2 px-3 font-medium">{row.cohort_label}</td>
                       <td className="py-2 px-3 text-gray-400">{row.cohort_size}</td>
                       {row.cells.map((cell, j) => (
@@ -143,12 +143,12 @@ export default function CohortAnalysis() {
             </div>
 
             {result.average_retention.length > 0 && (
-              <div className="bg-white/[0.02] border border-white/10 rounded-xl p-6">
+              <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6">
                 <h4 className="text-sm font-medium text-gray-300 mb-3">Average Retention by Period</h4>
                 <div className="flex items-end gap-2 h-32">
                   {result.average_retention.map((v, i) => (
                     <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                      <div className="w-full bg-white/10 rounded-t relative" style={{ height: `${Math.min(v * 1.5, 100)}%` }}>
+                      <div className="w-full bg-foreground/10 rounded-t relative" style={{ height: `${Math.min(v * 1.5, 100)}%` }}>
                         <div className="absolute bottom-0 left-0 right-0 bg-[#00F5FF]/40 rounded-t" style={{ height: '100%' }} />
                       </div>
                       <span className="text-xs text-gray-500">P{i}</span>
@@ -160,7 +160,7 @@ export default function CohortAnalysis() {
             )}
 
             {result.insights.length > 0 && (
-              <div className="bg-white/[0.02] border border-white/10 rounded-xl p-6">
+              <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6">
                 <h4 className="text-sm font-medium text-gray-300 mb-2">Insights</h4>
                 {result.insights.map((insight, i) => (
                   <div key={i} className="text-sm text-gray-400 mb-1">{insight}</div>

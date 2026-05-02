@@ -188,7 +188,7 @@ export default function WhatsAppManager() {
                 'flex items-center gap-2 px-4 py-3 rounded-xl transition-colors whitespace-nowrap',
                 isActive
                   ? 'bg-gradient-to-r from-[#25D366] to-[#128C7E] text-foreground shadow-lg shadow-[#25D366]/20'
-                  : 'bg-muted/50 text-gray-400 hover:text-foreground hover:bg-card border border-white/5'
+                  : 'bg-muted/50 text-gray-400 hover:text-foreground hover:bg-card border border-foreground/5'
               )}
             >
               <Icon className="w-5 h-5" />
@@ -287,7 +287,7 @@ function OverviewDashboard({
       </div>
 
       {/* Message Stats */}
-      <div className="bg-muted/50 rounded-2xl border border-white/5 p-6">
+      <div className="bg-muted/50 rounded-2xl border border-foreground/5 p-6">
         <h3 className="text-lg font-semibold mb-4">Message Delivery Performance</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-2">
@@ -330,7 +330,7 @@ function OverviewDashboard({
       </div>
 
       {/* Template Status */}
-      <div className="bg-muted/50 rounded-2xl border border-white/5 p-6">
+      <div className="bg-muted/50 rounded-2xl border border-foreground/5 p-6">
         <h3 className="text-lg font-semibold mb-4">Template Status</h3>
         <div className="space-y-3">
           <StatusRow
@@ -429,7 +429,7 @@ function QuickActionCard({
     <button
       onClick={onClick}
       className={cn(
-        'group bg-muted/50 rounded-2xl border border-white/5 p-6 text-left transition-colors hover:bg-card',
+        'group bg-muted/50 rounded-2xl border border-foreground/5 p-6 text-left transition-colors hover:bg-card',
         colorClasses[color]
       )}
     >
@@ -459,7 +459,7 @@ function StatusRow({
   };
 
   return (
-    <div className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
+    <div className="flex items-center justify-between py-2 border-b border-foreground/5 last:border-0">
       <div className="flex items-center gap-3">
         <Icon className={cn('w-5 h-5', colorClasses[color])} />
         <span className="text-gray-300">{label}</span>

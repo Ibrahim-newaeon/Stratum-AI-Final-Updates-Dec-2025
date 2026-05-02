@@ -234,7 +234,7 @@ export default function ChangelogPage() {
                       return (
                         <div
                           key={i}
-                          className="flex items-start gap-3 p-3 rounded-lg transition-colors hover:bg-white/5"
+                          className="flex items-start gap-3 p-3 rounded-lg transition-colors hover:bg-foreground/5"
                           style={{
                             background: 'var(--landing-card)',
                             border: '1px solid var(--landing-border)',
@@ -279,7 +279,7 @@ export default function ChangelogPage() {
                 <input
                   type="email"
                   placeholder="Enter your email"
-                  className="flex-1 px-4 py-3 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF4D4D]/50"
+                  className="flex-1 px-4 py-3 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF5A1F]/50"
                   style={{
                     background: 'var(--landing-bg)',
                     border: '1px solid var(--landing-border)',

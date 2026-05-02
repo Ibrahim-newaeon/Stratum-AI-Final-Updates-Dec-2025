@@ -65,7 +65,7 @@ const typeConfig = {
   pause: {
     icon: TrendingDown,
     color: 'text-gray-500',
-    bgColor: 'bg-gray-50 dark:bg-gray-900/20',
+    bgColor: 'bg-muted/20',
     borderColor: 'border-l-gray-500',
     label: 'Consider Pausing',
   },

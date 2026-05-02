@@ -235,13 +235,13 @@ export default function DPA() {
                     className="px-6 py-3 rounded-full font-semibold text-white transition-opacity hover:opacity-90"
                     style={{
                       background: 'var(--landing-accent-coral)',
-                      boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
+                      boxShadow: '0 4px 20px rgba(255, 90, 31, 0.3)',
                     }}
                   >
                     Download DPA (PDF)
                   </button>
                   <button
-                    className="px-6 py-3 rounded-xl font-semibold text-white transition-colors hover:bg-white/10"
+                    className="px-6 py-3 rounded-xl font-semibold text-white transition-colors hover:bg-foreground/10"
                     style={{
                       background: 'var(--landing-surface-glass)',
                       border: '1px solid rgba(255, 255, 255, 0.2)',

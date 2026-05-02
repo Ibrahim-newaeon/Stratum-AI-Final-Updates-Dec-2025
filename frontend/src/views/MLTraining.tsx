@@ -231,10 +231,10 @@ export default function MLTraining() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl font-bold text-foreground">
             ML Training
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-muted-foreground mt-1">
             Upload training data and manage ML models
           </p>
         </div>
@@ -266,7 +266,7 @@ export default function MLTraining() {
       )}
 
       {/* Tabs */}
-      <div className="border-b border-gray-200 dark:border-gray-700">
+      <div className="border-b border-border">
         <nav className="flex gap-4">
           {tabs.map((tab) => (
             <button
@@ -290,8 +290,8 @@ export default function MLTraining() {
       {activeTab === 'upload' && (
         <div className="space-y-6">
           {/* Upload Area */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-border p-6">
+            <h2 className="text-lg font-semibold text-foreground mb-4">
               Upload Training Data
             </h2>
 
@@ -304,7 +304,7 @@ export default function MLTraining() {
                 className="hidden"
               />
               <FileSpreadsheet className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-              <p className="text-gray-600 dark:text-gray-400 mb-2">
+              <p className="text-muted-foreground mb-2">
                 Drag and drop your CSV file here, or
               </p>
               <button
@@ -321,14 +321,14 @@ export default function MLTraining() {
 
             {/* Required Columns */}
             <div className="mt-6">
-              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <h3 className="text-sm font-medium text-foreground mb-2">
                 Required CSV Columns:
               </h3>
               <div className="flex flex-wrap gap-2">
                 {['spend', 'impressions', 'clicks', 'conversions', 'revenue', 'platform', 'date'].map((col) => (
                   <span
                     key={col}
-                    className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm text-gray-600 dark:text-gray-400"
+                    className="px-2 py-1 bg-muted rounded text-sm text-muted-foreground"
                   >
                     {col}
                   </span>
@@ -338,11 +338,11 @@ export default function MLTraining() {
           </div>
 
           {/* Generate Sample Data */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-border p-6">
+            <h2 className="text-lg font-semibold text-foreground mb-4">
               Or Generate Sample Data
             </h2>
-            <p className="text-gray-500 dark:text-gray-400 mb-4">
+            <p className="text-muted-foreground mb-4">
               Generate synthetic training data for testing the ML pipeline
             </p>
             <button
@@ -356,21 +356,21 @@ export default function MLTraining() {
           </div>
 
           {/* Training Files List */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-border p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h2 className="text-lg font-semibold text-foreground">
                 Training Data Files
               </h2>
               <button
                 onClick={fetchTrainingData}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                className="p-2 hover:bg-muted rounded-lg"
               >
                 <RefreshCw className="w-5 h-5 text-gray-500" />
               </button>
             </div>
 
             {trainingFiles.length === 0 ? (
-              <p className="text-gray-500 dark:text-gray-400 text-center py-8">
+              <p className="text-muted-foreground text-center py-8">
                 No training data uploaded yet
               </p>
             ) : (
@@ -383,10 +383,10 @@ export default function MLTraining() {
                     <div className="flex items-center gap-3">
                       <Database className="w-5 h-5 text-blue-500" />
                       <div>
-                        <p className="font-medium text-gray-900 dark:text-white">
+                        <p className="font-medium text-foreground">
                           {file.name}
                         </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                        <p className="text-sm text-muted-foreground">
                           {formatBytes(file.size_bytes)} • {formatDate(file.modified_at)}
                         </p>
                       </div>
@@ -404,12 +404,12 @@ export default function MLTraining() {
       {activeTab === 'models' && (
         <div className="space-y-6">
           {models.length === 0 ? (
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-12 text-center">
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-border p-12 text-center">
               <Brain className="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              <h3 className="text-lg font-semibold text-foreground mb-2">
                 No Models Trained
               </h3>
-              <p className="text-gray-500 dark:text-gray-400 mb-4">
+              <p className="text-muted-foreground mb-4">
                 Upload training data and train models to get started
               </p>
               <button
@@ -424,7 +424,7 @@ export default function MLTraining() {
               {models.map((model) => (
                 <div
                   key={model.name}
-                  className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
+                  className="bg-white dark:bg-gray-800 rounded-xl border border-border p-6"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
@@ -432,10 +432,10 @@ export default function MLTraining() {
                         {getModelIcon(model.name)}
                       </div>
                       <div>
-                        <h3 className="font-semibold text-gray-900 dark:text-white">
+                        <h3 className="font-semibold text-foreground">
                           {model.name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                         </h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                        <p className="text-sm text-muted-foreground">
                           v{model.version}
                         </p>
                       </div>
@@ -452,7 +452,7 @@ export default function MLTraining() {
                   <div className="space-y-2 mb-4">
                     {model.metrics.r2 !== undefined && (
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-500 dark:text-gray-400">R² Score</span>
+                        <span className="text-muted-foreground">R² Score</span>
                         <span className={cn(
                           "font-medium",
                           model.metrics.r2 > 0.7 ? "text-green-600" :
@@ -464,8 +464,8 @@ export default function MLTraining() {
                     )}
                     {model.metrics.mae !== undefined && (
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-500 dark:text-gray-400">MAE</span>
-                        <span className="font-medium text-gray-900 dark:text-white">
+                        <span className="text-muted-foreground">MAE</span>
+                        <span className="font-medium text-foreground">
                           {model.metrics.mae.toFixed(3)}
                         </span>
                       </div>
@@ -474,12 +474,12 @@ export default function MLTraining() {
 
                   {/* Features */}
                   <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Features:</p>
+                    <p className="text-xs text-muted-foreground mb-1">Features:</p>
                     <div className="flex flex-wrap gap-1">
                       {model.features.slice(0, 4).map((feature) => (
                         <span
                           key={feature}
-                          className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs text-gray-600 dark:text-gray-400"
+                          className="px-1.5 py-0.5 bg-muted rounded text-xs text-muted-foreground"
                         >
                           {feature}
                         </span>
@@ -506,8 +506,8 @@ export default function MLTraining() {
       {activeTab === 'training' && (
         <div className="space-y-6">
           {/* Training Options */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-border p-6">
+            <h2 className="text-lg font-semibold text-foreground mb-4">
               Train Models
             </h2>
 
@@ -516,11 +516,11 @@ export default function MLTraining() {
               <div className="p-4 border border-gray-200 dark:border-gray-600 rounded-lg">
                 <div className="flex items-center gap-3 mb-3">
                   <Database className="w-6 h-6 text-blue-500" />
-                  <h3 className="font-medium text-gray-900 dark:text-white">
+                  <h3 className="font-medium text-foreground">
                     Train from Uploaded Data
                   </h3>
                 </div>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                <p className="text-sm text-muted-foreground mb-4">
                   Use your uploaded CSV training data to train models
                 </p>
                 <button
@@ -551,11 +551,11 @@ export default function MLTraining() {
               <div className="p-4 border border-gray-200 dark:border-gray-600 rounded-lg">
                 <div className="flex items-center gap-3 mb-3">
                   <Sparkles className="w-6 h-6 text-purple-500" />
-                  <h3 className="font-medium text-gray-900 dark:text-white">
+                  <h3 className="font-medium text-foreground">
                     Train from Sample Data
                   </h3>
                 </div>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                <p className="text-sm text-muted-foreground mb-4">
                   Generate synthetic data and train models for testing
                 </p>
                 <button
@@ -603,7 +603,7 @@ export default function MLTraining() {
 
               {trainingResult.success && (
                 <>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  <p className="text-sm text-muted-foreground mb-4">
                     Training completed in {trainingResult.training_time_seconds}s
                   </p>
 
@@ -617,7 +617,7 @@ export default function MLTraining() {
                         >
                           <div className="flex items-center gap-3">
                             {getModelIcon(modelName)}
-                            <span className="font-medium text-gray-900 dark:text-white">
+                            <span className="font-medium text-foreground">
                               {modelName}
                             </span>
                           </div>
@@ -638,16 +638,16 @@ export default function MLTraining() {
           )}
 
           {/* Models Being Trained Info */}
-          <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-4">
+          <div className="bg-muted/50 rounded-xl border border-border p-6">
+            <h3 className="font-semibold text-foreground mb-4">
               Models That Will Be Trained
             </h3>
             <div className="grid gap-4 md:grid-cols-3">
               <div className="flex items-start gap-3">
                 <TrendingUp className="w-5 h-5 text-blue-500 mt-0.5" />
                 <div>
-                  <h4 className="font-medium text-gray-900 dark:text-white">ROAS Predictor</h4>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <h4 className="font-medium text-foreground">ROAS Predictor</h4>
+                  <p className="text-sm text-muted-foreground">
                     Predicts Return on Ad Spend from campaign features
                   </p>
                 </div>
@@ -655,8 +655,8 @@ export default function MLTraining() {
               <div className="flex items-start gap-3">
                 <Target className="w-5 h-5 text-green-500 mt-0.5" />
                 <div>
-                  <h4 className="font-medium text-gray-900 dark:text-white">Conversion Predictor</h4>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <h4 className="font-medium text-foreground">Conversion Predictor</h4>
+                  <p className="text-sm text-muted-foreground">
                     Predicts conversions based on spend and engagement
                   </p>
                 </div>
@@ -664,8 +664,8 @@ export default function MLTraining() {
               <div className="flex items-start gap-3">
                 <BarChart3 className="w-5 h-5 text-purple-500 mt-0.5" />
                 <div>
-                  <h4 className="font-medium text-gray-900 dark:text-white">Budget Impact</h4>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <h4 className="font-medium text-foreground">Budget Impact</h4>
+                  <p className="text-sm text-muted-foreground">
                     Predicts revenue changes from budget adjustments
                   </p>
                 </div>

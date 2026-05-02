@@ -96,7 +96,7 @@ export default function CMSLandingFeatures() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Landing Features</h1>
-          <p className="text-white/60 mt-1">Manage feature sections on the landing page</p>
+          <p className="text-foreground/60 mt-1">Manage feature sections on the landing page</p>
         </div>
         <button
           onClick={() => openEditor()}
@@ -113,10 +113,10 @@ export default function CMSLandingFeatures() {
           <div className="animate-spin w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full" />
         </div>
       ) : !layers || layers.length === 0 ? (
-        <div className="rounded-2xl bg-white/5 border border-white/10 text-center py-20">
-          <SparklesIcon className="w-12 h-12 text-white/20 mx-auto mb-4" />
-          <p className="text-white/60 mb-2">No feature layers configured</p>
-          <p className="text-white/40 text-sm mb-6">
+        <div className="rounded-2xl bg-foreground/5 border border-foreground/10 text-center py-20">
+          <SparklesIcon className="w-12 h-12 text-foreground/20 mx-auto mb-4" />
+          <p className="text-foreground/60 mb-2">No feature layers configured</p>
+          <p className="text-foreground/40 text-sm mb-6">
             Create feature posts with the &quot;landing-features&quot; category to populate this section.
           </p>
           <button
@@ -130,44 +130,44 @@ export default function CMSLandingFeatures() {
       ) : (
         <div className="space-y-8">
           {layers.map((layer) => (
-            <div key={layer.id} className="rounded-2xl bg-white/5 border border-white/10 overflow-hidden">
+            <div key={layer.id} className="rounded-2xl bg-foreground/5 border border-foreground/10 overflow-hidden">
               {/* Layer Header */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-foreground/10">
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-lg ${layer.bgColor} flex items-center justify-center`}>
                     <SparklesIcon className="w-5 h-5 text-purple-400" />
                   </div>
                   <div>
                     <h3 className="text-white font-semibold">{layer.name}</h3>
-                    <p className="text-sm text-white/50">{layer.description}</p>
+                    <p className="text-sm text-foreground/50">{layer.description}</p>
                   </div>
                 </div>
-                <span className="text-xs text-white/40">
+                <span className="text-xs text-foreground/40">
                   {layer.features.length} feature{layer.features.length !== 1 ? 's' : ''}
                 </span>
               </div>
 
               {/* Features in Layer */}
-              <div className="divide-y divide-white/5">
+              <div className="divide-y divide-foreground/5">
                 {layer.features.map((feature) => (
                   <div
                     key={feature.id}
-                    className="flex items-center justify-between px-6 py-3 hover:bg-white/5 transition-colors group"
+                    className="flex items-center justify-between px-6 py-3 hover:bg-foreground/5 transition-colors group"
                   >
                     <div className="min-w-0">
                       <p className="text-white font-medium truncate">{feature.title}</p>
-                      <p className="text-sm text-white/40 truncate">{feature.description}</p>
+                      <p className="text-sm text-foreground/40 truncate">{feature.description}</p>
                     </div>
                     <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => openEditor(feature, layer.id)}
-                        className="p-1.5 text-white/40 hover:text-white"
+                        className="p-1.5 text-foreground/40 hover:text-white"
                       >
                         <PencilSquareIcon className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => deleteMutation.mutate(feature.id)}
-                        className="p-1.5 text-white/40 hover:text-red-400"
+                        className="p-1.5 text-foreground/40 hover:text-red-400"
                       >
                         <TrashIcon className="w-4 h-4" />
                       </button>
@@ -182,7 +182,7 @@ export default function CMSLandingFeatures() {
                   setFormData((f) => ({ ...f, layerId: layer.id, layerName: layer.name }));
                   openEditor();
                 }}
-                className="flex items-center gap-2 w-full px-6 py-3 text-sm text-white/40 hover:text-white hover:bg-white/5 transition-colors"
+                className="flex items-center gap-2 w-full px-6 py-3 text-sm text-foreground/40 hover:text-white hover:bg-foreground/5 transition-colors"
               >
                 <PlusIcon className="w-4 h-4" />
                 Add feature to this layer
@@ -195,14 +195,14 @@ export default function CMSLandingFeatures() {
       {/* Editor Modal */}
       {showEditor && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="bg-neutral-900 border border-white/10 rounded-xl w-full max-w-lg">
-            <div className="flex items-center justify-between p-4 border-b border-white/10">
+          <div className="bg-neutral-900 border border-foreground/10 rounded-xl w-full max-w-lg">
+            <div className="flex items-center justify-between p-4 border-b border-foreground/10">
               <h2 className="text-lg font-semibold text-white">
                 {editingFeature ? 'Edit Feature' : 'Add Feature'}
               </h2>
               <button
                 onClick={() => setShowEditor(false)}
-                className="p-2 text-white/40 hover:text-white"
+                className="p-2 text-foreground/40 hover:text-white"
               >
                 <XMarkIcon className="w-5 h-5" />
               </button>
@@ -210,58 +210,58 @@ export default function CMSLandingFeatures() {
 
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-white/70 mb-1.5">Title *</label>
+                <label className="block text-sm font-medium text-foreground/70 mb-1.5">Title *</label>
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData((f) => ({ ...f, title: e.target.value }))}
-                  className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-purple-500/50"
+                  className="w-full px-4 py-2.5 bg-foreground/5 border border-foreground/10 rounded-lg text-white placeholder-foreground/30 focus:outline-none focus:border-purple-500/50"
                   placeholder="Feature title"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white/70 mb-1.5">
+                <label className="block text-sm font-medium text-foreground/70 mb-1.5">
                   Description
                 </label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData((f) => ({ ...f, description: e.target.value }))}
                   rows={3}
-                  className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-purple-500/50 resize-none"
+                  className="w-full px-4 py-2.5 bg-foreground/5 border border-foreground/10 rounded-lg text-white placeholder-foreground/30 focus:outline-none focus:border-purple-500/50 resize-none"
                   placeholder="Feature description..."
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-white/70 mb-1.5">Layer</label>
+                  <label className="block text-sm font-medium text-foreground/70 mb-1.5">Layer</label>
                   <input
                     type="text"
                     value={formData.layerId}
                     onChange={(e) => setFormData((f) => ({ ...f, layerId: e.target.value }))}
-                    className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-purple-500/50"
+                    className="w-full px-4 py-2.5 bg-foreground/5 border border-foreground/10 rounded-lg text-white placeholder-foreground/30 focus:outline-none focus:border-purple-500/50"
                     placeholder="Layer ID"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-white/70 mb-1.5">Order</label>
+                  <label className="block text-sm font-medium text-foreground/70 mb-1.5">Order</label>
                   <input
                     type="number"
                     value={formData.displayOrder}
                     onChange={(e) =>
                       setFormData((f) => ({ ...f, displayOrder: Number(e.target.value) }))
                     }
-                    className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-purple-500/50"
+                    className="w-full px-4 py-2.5 bg-foreground/5 border border-foreground/10 rounded-lg text-white focus:outline-none focus:border-purple-500/50"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 p-4 border-t border-white/10">
+            <div className="flex justify-end gap-3 p-4 border-t border-foreground/10">
               <button
                 onClick={() => setShowEditor(false)}
-                className="px-4 py-2 text-white/60 hover:text-white"
+                className="px-4 py-2 text-foreground/60 hover:text-white"
               >
                 Cancel
               </button>

@@ -72,7 +72,7 @@ function CategoryCard({
   const hasUnavailableFeatures = category.features.some((f) => !f.included);
 
   return (
-    <div className="group relative rounded-2xl bg-gray-900/50 border border-white/5 p-6 hover:border-white/10 transition-colors">
+    <div className="group relative rounded-2xl bg-gray-900/50 border border-foreground/5 p-6 hover:border-foreground/10 transition-colors">
       {/* Gradient accent */}
       <div
         className={`absolute top-0 left-0 right-0 h-1 rounded-t-2xl bg-gradient-to-r ${gradientClass}`}
@@ -143,11 +143,11 @@ function CategoryCard({
 
       {/* Upgrade Prompt for Unavailable Features */}
       {hasUnavailableFeatures && tierId !== 'enterprise' && (
-        <div className="mt-4 pt-4 border-t border-white/5">
+        <div className="mt-4 pt-4 border-t border-foreground/5">
           <Button
             variant="ghost"
             size="sm"
-            className={`w-full ${visuals.accentColor} hover:bg-white/5`}
+            className={`w-full ${visuals.accentColor} hover:bg-foreground/5`}
             onClick={() => {
               const nextTier = tierId === 'starter' ? 'professional' : 'enterprise';
               navigate(`/plans/${nextTier}`);
@@ -182,7 +182,7 @@ export function TierFeatureGrid({ content }: TierFeatureGridProps) {
         <div className="text-center mb-16">
           <Badge
             variant="outline"
-            className={`mb-4 px-4 py-1 ${visuals.accentColor} border-white/20 bg-white/5`}
+            className={`mb-4 px-4 py-1 ${visuals.accentColor} border-foreground/20 bg-foreground/5`}
           >
             What's Included
           </Badge>
@@ -212,7 +212,7 @@ export function TierFeatureGrid({ content }: TierFeatureGridProps) {
 
         {/* All Features Summary */}
         <div className="mt-16 text-center">
-          <div className="inline-flex items-center gap-4 px-6 py-4 rounded-2xl bg-gray-900/50 border border-white/5">
+          <div className="inline-flex items-center gap-4 px-6 py-4 rounded-2xl bg-gray-900/50 border border-foreground/5">
             <div className="flex -space-x-2">
               {['bg-meta', 'bg-google', 'bg-tiktok', 'bg-snapchat'].map((bg, i) => (
                 <div key={i} className={`w-8 h-8 rounded-full ${bg} border-2 border-gray-900`} />

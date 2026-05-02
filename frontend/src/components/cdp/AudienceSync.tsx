@@ -68,8 +68,8 @@ const PLATFORM_CONFIG: Record<
   },
   tiktok: {
     name: 'TikTok',
-    color: 'text-gray-900 dark:text-white',
-    bgColor: 'bg-gray-900/10 dark:bg-white/10',
+    color: 'text-foreground',
+    bgColor: 'bg-gray-900/10 dark:bg-foreground/10',
     icon: 'T',
   },
   snapchat: {

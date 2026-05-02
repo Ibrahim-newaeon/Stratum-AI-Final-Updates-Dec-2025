@@ -919,7 +919,7 @@ export function PlatformSetupModal({ platform, onClose, onConnect }: PlatformSet
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-start justify-center z-50 p-4 overflow-y-auto" onClick={onClose}>
       <div
-        className="w-full max-w-2xl my-8 rounded-2xl border border-white/10 bg-[#0d0d12] shadow-2xl"
+        className="w-full max-w-2xl my-8 rounded-2xl border border-foreground/10 bg-[#0d0d12] shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -932,24 +932,24 @@ export function PlatformSetupModal({ platform, onClose, onConnect }: PlatformSet
             <XMarkIcon className="h-5 w-5" />
           </button>
           <div className="flex items-center gap-4">
-            <div className="h-14 w-14 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+            <div className="h-14 w-14 rounded-xl bg-foreground/20 backdrop-blur-sm flex items-center justify-center">
               <span className="text-xl font-bold text-white">{platform.icon}</span>
             </div>
             <div>
               <h2 className="text-xl font-bold text-white">{platform.name}</h2>
-              <p className="text-sm text-white/80">{platform.subtitle}</p>
+              <p className="text-sm text-foreground/80">{platform.subtitle}</p>
             </div>
           </div>
-          <p className="mt-3 text-sm text-white/70">{platform.description}</p>
+          <p className="mt-3 text-sm text-foreground/70">{platform.description}</p>
 
           {/* Auth badge + API version */}
           <div className="flex items-center gap-2 mt-3">
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/15 text-white text-xs font-medium">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-foreground/15 text-white text-xs font-medium">
               <ShieldCheckIcon className="h-3.5 w-3.5" />
               {platform.authMethod === 'oauth' ? 'OAuth 2.0' : platform.authMethod === 'oauth+api-key' ? 'OAuth 2.0 + API Key' : platform.authMethod === 'webhook' ? 'Webhook' : 'API Key'}
             </span>
             {platform.apiVersion && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/15 text-white text-xs font-medium">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-foreground/15 text-white text-xs font-medium">
                 API {platform.apiVersion}
               </span>
             )}
@@ -957,14 +957,14 @@ export function PlatformSetupModal({ platform, onClose, onConnect }: PlatformSet
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-white/10">
+        <div className="flex border-b border-foreground/10">
           <button
             onClick={() => setActiveTab('credentials')}
             className={cn(
               'flex-1 px-4 py-3 text-sm font-medium transition-colors',
               activeTab === 'credentials'
                 ? 'text-white border-b-2 border-primary'
-                : 'text-white/50 hover:text-white/80'
+                : 'text-foreground/50 hover:text-foreground/80'
             )}
           >
             <KeyIcon className="h-4 w-4 inline mr-2" />
@@ -976,7 +976,7 @@ export function PlatformSetupModal({ platform, onClose, onConnect }: PlatformSet
               'flex-1 px-4 py-3 text-sm font-medium transition-colors',
               activeTab === 'info'
                 ? 'text-white border-b-2 border-primary'
-                : 'text-white/50 hover:text-white/80'
+                : 'text-foreground/50 hover:text-foreground/80'
             )}
           >
             <InformationCircleIcon className="h-4 w-4 inline mr-2" />
@@ -990,7 +990,7 @@ export function PlatformSetupModal({ platform, onClose, onConnect }: PlatformSet
             <div className="space-y-6">
               {/* Required Credentials */}
               <div>
-                <h3 className="text-sm font-semibold text-white/90 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-foreground/90 uppercase tracking-wider mb-3 flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-red-400" />
                   Required ({requiredFields.length})
                 </h3>
@@ -1011,7 +1011,7 @@ export function PlatformSetupModal({ platform, onClose, onConnect }: PlatformSet
               {/* Optional Credentials */}
               {optionalFields.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-white/90 uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <h3 className="text-sm font-semibold text-foreground/90 uppercase tracking-wider mb-3 flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-gray-400" />
                     Optional ({optionalFields.length})
                   </h3>
@@ -1035,12 +1035,12 @@ export function PlatformSetupModal({ platform, onClose, onConnect }: PlatformSet
               {/* OAuth Scopes */}
               {platform.oauthScopes && platform.oauthScopes.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-white/90 uppercase tracking-wider mb-3">OAuth Scopes Required</h3>
+                  <h3 className="text-sm font-semibold text-foreground/90 uppercase tracking-wider mb-3">OAuth Scopes Required</h3>
                   <div className="flex flex-wrap gap-1.5">
                     {platform.oauthScopes.map((scope) => (
                       <span
                         key={scope}
-                        className="inline-block px-2.5 py-1 text-xs rounded-md bg-white/5 text-white/70 border border-white/10 font-mono"
+                        className="inline-block px-2.5 py-1 text-xs rounded-md bg-foreground/5 text-foreground/70 border border-foreground/10 font-mono"
                       >
                         {scope}
                       </span>
@@ -1052,7 +1052,7 @@ export function PlatformSetupModal({ platform, onClose, onConnect }: PlatformSet
               {/* CAPI Events */}
               {platform.capiEvents && platform.capiEvents.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-white/90 uppercase tracking-wider mb-3">Supported Events</h3>
+                  <h3 className="text-sm font-semibold text-foreground/90 uppercase tracking-wider mb-3">Supported Events</h3>
                   <div className="flex flex-wrap gap-2">
                     {platform.capiEvents.map((event) => (
                       <span
@@ -1069,18 +1069,18 @@ export function PlatformSetupModal({ platform, onClose, onConnect }: PlatformSet
               {/* Audience Format */}
               {platform.audienceFormat && (
                 <div>
-                  <h3 className="text-sm font-semibold text-white/90 uppercase tracking-wider mb-3">Audience Sync Format</h3>
-                  <p className="text-sm text-white/60">{platform.audienceFormat}</p>
+                  <h3 className="text-sm font-semibold text-foreground/90 uppercase tracking-wider mb-3">Audience Sync Format</h3>
+                  <p className="text-sm text-foreground/60">{platform.audienceFormat}</p>
                 </div>
               )}
 
               {/* Notes */}
               {platform.notes && platform.notes.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-white/90 uppercase tracking-wider mb-3">Important Notes</h3>
+                  <h3 className="text-sm font-semibold text-foreground/90 uppercase tracking-wider mb-3">Important Notes</h3>
                   <ul className="space-y-2">
                     {platform.notes.map((note, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm text-white/60">
+                      <li key={i} className="flex items-start gap-2 text-sm text-foreground/60">
                         <span className="text-primary mt-0.5 shrink-0">&#8226;</span>
                         <span>{note}</span>
                       </li>
@@ -1104,12 +1104,12 @@ export function PlatformSetupModal({ platform, onClose, onConnect }: PlatformSet
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between p-6 border-t border-white/10">
+        <div className="flex items-center justify-between p-6 border-t border-foreground/10">
           <a
             href={platform.docsUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm text-white/50 hover:text-white/80 transition-colors flex items-center gap-1"
+            className="text-sm text-foreground/50 hover:text-foreground/80 transition-colors flex items-center gap-1"
           >
             <ArrowTopRightOnSquareIcon className="h-3.5 w-3.5" />
             Docs
@@ -1117,7 +1117,7 @@ export function PlatformSetupModal({ platform, onClose, onConnect }: PlatformSet
           <div className="flex items-center gap-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 rounded-xl border border-white/10 hover:bg-white/5 text-sm text-white/70 transition-colors"
+              className="px-4 py-2 rounded-xl border border-foreground/10 hover:bg-foreground/5 text-sm text-foreground/70 transition-colors"
             >
               Close
             </button>
@@ -1158,18 +1158,18 @@ function CredentialFieldCard({
       <div className="flex items-start justify-between mb-1.5">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-white/90">{field.label}</span>
+            <span className="text-sm font-medium text-foreground/90">{field.label}</span>
             {field.required && (
               <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 font-medium">REQUIRED</span>
             )}
           </div>
-          <p className="text-xs text-white/40 mt-0.5">{field.helpText}</p>
+          <p className="text-xs text-foreground/40 mt-0.5">{field.helpText}</p>
         </div>
         <div className="flex items-center gap-1">
           {field.type === 'password' && (
             <button
               onClick={onToggleVisibility}
-              className="p-1.5 rounded-lg hover:bg-white/5 text-white/40 hover:text-white/70 transition-colors"
+              className="p-1.5 rounded-lg hover:bg-foreground/5 text-foreground/40 hover:text-foreground/70 transition-colors"
               title={isVisible ? 'Hide' : 'Show'}
             >
               {isVisible ? <EyeSlashIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
@@ -1177,7 +1177,7 @@ function CredentialFieldCard({
           )}
           <button
             onClick={onCopy}
-            className="p-1.5 rounded-lg hover:bg-white/5 text-white/40 hover:text-white/70 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-foreground/5 text-foreground/40 hover:text-foreground/70 transition-colors"
             title="Copy placeholder"
           >
             {isCopied ? <CheckIcon className="h-4 w-4 text-emerald-400" /> : <ClipboardDocumentIcon className="h-4 w-4" />}
@@ -1191,15 +1191,15 @@ function CredentialFieldCard({
           {field.options.map((opt) => (
             <span
               key={opt.value}
-              className="inline-block px-2.5 py-1 text-xs rounded-md bg-white/5 text-white/60 border border-white/8"
+              className="inline-block px-2.5 py-1 text-xs rounded-md bg-foreground/5 text-foreground/60 border border-foreground/8"
             >
               {opt.label}
             </span>
           ))}
         </div>
       ) : (
-        <div className="mt-2 px-3 py-2 rounded-lg bg-black/30 border border-white/5">
-          <code className="text-xs text-white/50 font-mono">
+        <div className="mt-2 px-3 py-2 rounded-lg bg-black/30 border border-foreground/5">
+          <code className="text-xs text-foreground/50 font-mono">
             {field.type === 'password' && !isVisible
               ? field.placeholder.replace(/./g, '•')
               : field.placeholder}

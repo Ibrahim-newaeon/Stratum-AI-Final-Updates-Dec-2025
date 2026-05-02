@@ -16,137 +16,148 @@
 
   :root {
     /* ═══════════════════════════════════════════════════════════════
-       STRATUM AI — COMMAND CENTER DESIGN SYSTEM
-       Enterprise-grade dark UI. Trust. Intelligence. Partnership.
+       STRATUM AI — FIGMA THEME (DARK, default)
+       Bloomberg-density · Apple restraint · ember warmth
        ═══════════════════════════════════════════════════════════════ */
 
-    /* Core surface — deep void, not pure black */
-    --background: 221 66% 6%;             /* #080C14 */
-    --foreground: 40 20% 95%;             /* #F0EDE5 warm white */
+    /* Surfaces */
+    --background: 0 0% 4.3%; /* #0B0B0B ink */
+    --foreground: 0 0% 100%; /* #FFFFFF */
 
-    /* Elevated surfaces */
-    --card: 222 28% 8%;                   /* #0F1320 */
-    --card-foreground: 40 20% 95%;
+    --card: 0 0% 7.8%; /* #141414 surface */
+    --card-foreground: 0 0% 100%;
 
-    --popover: 222 28% 8%;
-    --popover-foreground: 40 20% 95%;
+    --popover: 0 0% 7.8%;
+    --popover-foreground: 0 0% 100%;
 
-    /* Primary accent — Cyber Pink (energy, performance, edge) */
-    --primary: 339 100% 56%;                /* #FF1F6D */
-    --primary-foreground: 220 30% 4%;
+    /* Primary — ember (CTA, accent, focus ring) */
+    --primary: 15 100% 56%; /* #FF5A1F */
+    --primary-foreground: 0 0% 100%;
 
-    /* Secondary — Electric Orange (momentum, heat, action) */
-    --secondary: 33 100% 50%;             /* #2E3A59 */
-    --secondary-foreground: 40 20% 95%;
+    /* Secondary — ember-2 (gradient stop, hover) */
+    --secondary: 21 100% 64%; /* #FF8A4A */
+    --secondary-foreground: 0 0% 4.3%;
 
-    --muted: 222 22% 12%;                 /* #181F33 */
-    --muted-foreground: 225 12% 55%;      /* #7D859C */
+    /* Muted — line2 surface for subtle fills */
+    --muted: 0 0% 15%; /* #262626 */
+    --muted-foreground: 0 0% 60%; /* #9A9A9A */
 
-    --accent: 182 100% 50%;
-    --accent-foreground: 220 30% 4%;
+    /* Accent — info cyan (multi-series charts, neutral signals) */
+    --accent: 187 95% 43%; /* #06B6D4 */
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 65% 58%;
+    /* Destructive */
+    --destructive: 0 84% 60%; /* #EF4444 */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 222 22% 16%;                /* #1E2740 */
-    --input: 222 22% 16%;
-    --ring: 339 100% 56%;
+    /* Borders / inputs / focus ring */
+    --border: 0 0% 12%; /* #1F1F1F line */
+    --input: 0 0% 12%;
+    --ring: 15 100% 56%; /* ember */
 
-    --radius: 0.5rem;
+    --radius: 1rem; /* 16px (rounded-2xl) */
 
-    /* Platform colors — softer, enterprise-grade */
+    /* Status — semantic */
+    --success: 158 80% 39%; /* #10B981 healthy */
+    --warning: 38 92% 50%; /* #F59E0B hold / degraded */
+    --danger: 0 84% 60%; /* #EF4444 block / unhealthy */
+    --info: 187 95% 43%; /* #06B6D4 insight */
+    --insight: 21 100% 64%; /* ember-2 */
+
+    /* Status (legacy aliases used by widgets) */
+    --status-healthy: 158 80% 39%;
+    --status-critical: 0 84% 60%;
+
+    /* Surface tier (cards, panels, elevated surfaces) */
+    --surface-primary: 0 0% 4.3%; /* page bg */
+    --surface-secondary: 0 0% 7.8%; /* card bg */
+    --surface-tertiary: 0 0% 10.2%; /* #1A1A1A elevated */
+    --surface-elevated: 0 0% 12%; /* line tier */
+
+    /* Platform colors — kept for ad-platform badges */
     --meta: 214 89% 52%;
     --google: 4 90% 58%;
     --tiktok: 180 100% 30%;
     --snapchat: 54 100% 50%;
     --whatsapp: 142 70% 45%;
 
-    /* Status colors — refined */
-    --success: 162 65% 45%;
-    --warning: 38 92% 55%;
-    --danger: 0 65% 58%;
-    --info: 217 70% 58%;
-    --insight: 25 85% 55%;
+    /* Glow tokens — ember radial bleed for primary surfaces */
+    --glow-brand: 15 100% 56% / 0.16;
+    --glow-insight: 21 100% 64% / 0.14;
 
-    /* Widget status colors */
-    --status-healthy: 162 65% 45%;
-    --status-critical: 0 65% 58%;
-
-    /* Surface colors */
-    --surface-primary: 220 30% 4%;
-    --surface-secondary: 222 28% 8%;
-    --surface-tertiary: 222 22% 12%;
-    --surface-elevated: 222 28% 10%;
-
-    /* Pink glow effects */
-    --glow-brand: 339 100% 56% / 0.15;
-    --glow-insight: 33 100% 50% / 0.15;
-
-    /* Landing / marketing page tokens */
-    --landing-bg: #050B18;
-    --landing-card: #0A1020;
-    --landing-border: #151E33;
-    --landing-text: #8B92A8;
-    --landing-text-dim: rgba(139, 146, 168, 0.7);
-    --landing-text-faint: rgba(139, 146, 168, 0.5);
-    --landing-accent-primary: #FF1F6D;
-    --landing-accent-primary-light: #FF4D8F;
-    --landing-accent-cyan: #00F5FF;
-    --landing-accent-blue: #5B8DEF;
-    --landing-surface-glass: rgba(255, 255, 255, 0.04);
-    --landing-border-glass: rgba(255, 255, 255, 0.1);
-    --landing-text-white-soft: rgba(240, 237, 229, 0.5);
-    --landing-text-white-mid: rgba(240, 237, 229, 0.8);
+    /* Landing / marketing tokens (used by figma static HTML in /public) */
+    --landing-bg: #0b0b0b;
+    --landing-card: #141414;
+    --landing-border: #1f1f1f;
+    --landing-text: #9a9a9a;
+    --landing-text-dim: rgba(154, 154, 154, 0.7);
+    --landing-text-faint: rgba(154, 154, 154, 0.5);
+    --landing-accent-primary: #ff5a1f;
+    --landing-accent-primary-light: #ff8a4a;
+    --landing-accent-cyan: #06b6d4;
+    --landing-accent-blue: #5b8def;
+    --landing-surface-glass: rgba(255, 255, 255, 0.02);
+    --landing-border-glass: rgba(255, 255, 255, 0.08);
+    --landing-text-white-soft: rgba(255, 255, 255, 0.5);
+    --landing-text-white-mid: rgba(255, 255, 255, 0.8);
     --landing-border-white-dim: rgba(255, 255, 255, 0.06);
-    --landing-bg-deep: #030610;
-    --landing-glow-primary: 0 4px 24px rgba(255, 31, 109, 0.25);
-    --landing-status-green: #27C39D;
-    --landing-status-red: #E85D5D;
-    --landing-status-yellow: #F5A623;
+    --landing-bg-deep: #050505;
+    --landing-glow-primary: 0 4px 24px rgba(255, 90, 31, 0.25);
+    --landing-status-green: #10b981;
+    --landing-status-red: #ef4444;
+    --landing-status-yellow: #f59e0b;
   }
 
   .light {
-    --background: 220 20% 97%;
-    --foreground: 220 30% 10%;
+    /* ═══════════════════════════════════════════════════════════════
+       STRATUM AI — FIGMA THEME (LIGHT, designed coherent)
+       Warm off-white surfaces · charcoal text · desaturated ember
+       ═══════════════════════════════════════════════════════════════ */
 
-    --card: 0 0% 100%;
-    --card-foreground: 220 30% 10%;
+    --background: 60 12% 97%; /* #FAFAF7 warm off-white */
+    --foreground: 0 0% 10%; /* #1A1A1A charcoal */
+
+    --card: 0 0% 100%; /* #FFFFFF */
+    --card-foreground: 0 0% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 30% 10%;
+    --popover-foreground: 0 0% 10%;
 
-    --primary: 339 100% 56%;
+    --primary: 15 87% 51%; /* #E84F1F slightly desaturated ember */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 33 100% 92%;
-    --secondary-foreground: 220 30% 10%;
+    --secondary: 21 100% 64%; /* ember-2 */
+    --secondary-foreground: 0 0% 10%;
 
-    --muted: 220 15% 94%;
-    --muted-foreground: 220 12% 45%;
+    --muted: 60 14% 92%; /* #F0EFE8 */
+    --muted-foreground: 0 0% 35%; /* #5A5A55 */
 
-    --accent: 182 100% 50%;
+    --accent: 187 95% 35%; /* #0891B2 darker cyan */
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 65% 58%;
+    --destructive: 0 75% 50%; /* #DC2626 */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 15% 88%;
-    --input: 220 15% 88%;
-    --ring: 339 100% 56%;
+    --border: 60 14% 87%; /* #E8E8E0 */
+    --input: 60 14% 87%;
+    --ring: 15 87% 51%;
 
-    --success: 162 65% 38%;
-    --warning: 38 85% 48%;
-    --danger: 0 65% 58%;
-    --info: 217 70% 50%;
-    --insight: 25 85% 50%;
+    --success: 158 84% 31%; /* #059669 */
+    --warning: 30 95% 44%; /* #D97706 */
+    --danger: 0 75% 50%; /* #DC2626 */
+    --info: 187 95% 35%;
+    --insight: 21 90% 55%;
 
-    --surface-primary: 220 20% 97%;
+    --status-healthy: 158 84% 31%;
+    --status-critical: 0 75% 50%;
+
+    --surface-primary: 60 12% 97%;
     --surface-secondary: 0 0% 100%;
-    --surface-tertiary: 220 15% 94%;
-    --surface-elevated: 220 15% 0% / 0.02;
+    --surface-tertiary: 60 14% 92%;
+    --surface-elevated: 0 0% 100%;
 
-    --glow-brand: 339 100% 56% / 0.12;
-    --glow-insight: 33 100% 50% / 0.12;
+    --glow-brand: 15 87% 51% / 0.1;
+    --glow-insight: 21 90% 55% / 0.1;
   }
 
   * {
@@ -157,14 +168,38 @@
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Theme cross-fade — 250ms for color/border, instant for layout */
+    transition:
+      background-color 250ms ease,
+      color 250ms ease,
+      border-color 250ms ease;
+  }
+  html * {
+    transition:
+      background-color 200ms ease,
+      color 200ms ease,
+      border-color 200ms ease,
+      fill 200ms ease,
+      stroke 200ms ease;
+  }
+  /* Don't transition during initial paint or programmatic class swap on <html> */
+  html.theme-no-transition,
+  html.theme-no-transition * {
+    transition: none !important;
   }
 
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    font-feature-settings: 'ss01', 'cv11';
+    font-family:
+      'Geist',
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      sans-serif;
   }
 
-  /* Enterprise selection color */
+  /* Selection — ember tint */
   ::selection {
     background: hsl(var(--primary) / 0.25);
     color: hsl(var(--foreground));
@@ -174,36 +209,36 @@
 @layer components {
   /* Card surface with subtle border and hover lift */
   .surface-card {
-    @apply bg-card border border-border rounded-lg;
+    @apply bg-card border border-border rounded-2xl;
     @apply transition-colors duration-200;
-    @apply hover:border-primary/20 hover:shadow-lg;
+    @apply hover:border-primary/30;
   }
 
-  /* Primary button — pink fill */
+  /* Primary button — ember fill */
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2;
-    @apply px-5 py-2.5 rounded-lg;
+    @apply px-5 py-2.5 rounded-full;
     @apply bg-primary text-primary-foreground font-medium;
     @apply transition-colors duration-200;
-    @apply hover:brightness-110 hover:shadow-md;
+    @apply hover:brightness-110;
     @apply active:scale-[0.98];
   }
 
   /* Secondary button — subtle border */
   .btn-secondary {
     @apply inline-flex items-center justify-center gap-2;
-    @apply px-5 py-2.5 rounded-lg;
-    @apply bg-secondary text-secondary-foreground font-medium;
+    @apply px-5 py-2.5 rounded-full;
+    @apply bg-card text-foreground font-medium;
     @apply border border-border;
     @apply transition-colors duration-200;
-    @apply hover:bg-secondary/80 hover:border-primary/30;
+    @apply hover:border-primary/40;
     @apply active:scale-[0.98];
   }
 
   /* Ghost button — text only */
   .btn-ghost {
     @apply inline-flex items-center justify-center gap-2;
-    @apply px-4 py-2 rounded-lg;
+    @apply px-4 py-2 rounded-full;
     @apply text-muted-foreground font-medium;
     @apply transition-colors duration-200;
     @apply hover:text-foreground hover:bg-muted;
@@ -211,28 +246,28 @@
 
   /* Input field — refined */
   .input-enterprise {
-    @apply w-full px-4 py-2.5 rounded-lg;
-    @apply bg-muted border border-border;
+    @apply w-full px-4 py-2.5 rounded-xl;
+    @apply bg-card border border-border;
     @apply text-foreground placeholder:text-muted-foreground;
     @apply transition-colors duration-200;
-    @apply focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50;
+    @apply focus:outline-none focus:ring-4 focus:ring-primary/15 focus:border-primary/50;
   }
 
-  /* Gradient text — pink */
+  /* Gradient text — ember */
   .text-gradient-primary {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, #FF4D8F 0%, #FF1F6D 50%, #FF8C00 100%);
+    background-image: linear-gradient(135deg, #ff8a4a 0%, #ff5a1f 50%, #ff6e3a 100%);
   }
 
   /* Subtle grid background pattern */
   .bg-grid-pattern {
     background-image:
-      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
     background-size: 48px 48px;
   }
 
-  /* Ambient glow — orange */
+  /* Ambient glow — ember-2 (used for hero / KPI primary card) */
   .ambient-orange {
     position: relative;
   }
@@ -245,7 +280,7 @@
     z-index: -1;
   }
 
-  /* Ambient glow behind hero elements */
+  /* Ambient glow — primary (ember) */
   .ambient-primary {
     position: relative;
   }
@@ -253,19 +288,12 @@
     content: '';
     position: absolute;
     inset: -40%;
-    background: radial-gradient(circle, hsl(var(--primary) / 0.12) 0%, transparent 70%);
+    background: radial-gradient(circle, hsl(var(--primary) / 0.14) 0%, transparent 70%);
     pointer-events: none;
     z-index: -1;
   }
 
-  /* Glass card for landing */
-  .glass-card {
-    @apply rounded-xl border border-white/10;
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(12px);
-  }
-
-  /* Divider — subtle gradient line */
+  /* Hairline divider — figma signature */
   .divider-gradient {
     height: 1px;
     background: linear-gradient(90deg, transparent 0%, hsl(var(--border)) 50%, transparent 100%);
@@ -274,11 +302,19 @@
   /* Status indicator dot */
   .status-dot {
     @apply w-2 h-2 rounded-full;
-    @apply animate-pulse;
   }
-  .status-dot.healthy { @apply bg-emerald-400; }
-  .status-dot.warning { @apply bg-amber-400; }
-  .status-dot.critical { @apply bg-rose-400; }
+  .status-dot.healthy {
+    background: hsl(var(--success));
+    box-shadow: 0 0 8px hsl(var(--success) / 0.6);
+  }
+  .status-dot.warning {
+    background: hsl(var(--warning));
+    box-shadow: 0 0 8px hsl(var(--warning) / 0.6);
+  }
+  .status-dot.critical {
+    background: hsl(var(--danger));
+    box-shadow: 0 0 8px hsl(var(--danger) / 0.6);
+  }
 }
 
 @layer utilities {
@@ -304,5 +340,10 @@
   }
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--muted-foreground) / 0.4);
+  }
+
+  /* Tabular numbers — for KPI values, monetary, percentages */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
   }
 }

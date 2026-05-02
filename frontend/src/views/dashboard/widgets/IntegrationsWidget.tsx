@@ -49,8 +49,8 @@ export function IntegrationsWidget() {
               <div
                 key={service.id}
                 className={cn(
-                  'bg-white/[0.02] border border-white/[0.04] rounded-lg p-2.5 flex items-start gap-2 transition-colors',
-                  service.status === 'connected' ? 'hover:bg-white/[0.04]' : 'opacity-60'
+                  'bg-foreground/[0.02] border border-foreground/[0.04] rounded-lg p-2.5 flex items-start gap-2 transition-colors',
+                  service.status === 'connected' ? 'hover:bg-foreground/[0.04]' : 'opacity-60'
                 )}
               >
                 <div className={cn(
@@ -97,7 +97,7 @@ export function IntegrationsWidget() {
       </div>
 
       {/* Quick Actions */}
-      <div className="flex gap-2 mt-3 pt-3 border-t border-white/[0.04]">
+      <div className="flex gap-2 mt-3 pt-3 border-t border-foreground/[0.04]">
         <button
           onClick={() => navigate('/integration-hub')}
           className="flex-1 text-xs text-center py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary transition-colors"
@@ -106,7 +106,7 @@ export function IntegrationsWidget() {
         </button>
         <button
           onClick={() => navigate('/integration-hub')}
-          className="flex-1 text-xs text-center py-1.5 rounded-lg bg-white/[0.03] hover:bg-white/[0.06] text-muted-foreground hover:text-foreground transition-colors"
+          className="flex-1 text-xs text-center py-1.5 rounded-lg bg-foreground/[0.03] hover:bg-foreground/[0.06] text-muted-foreground hover:text-foreground transition-colors"
         >
           Sync Now
         </button>

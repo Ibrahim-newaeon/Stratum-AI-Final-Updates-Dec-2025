@@ -180,7 +180,7 @@ export const AttributionVariancePanel: React.FC<AttributionVariancePanelProps> =
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-card rounded-lg border border-border p-6">
         <div className="animate-pulse space-y-4">
           <div className="h-6 bg-gray-200 rounded w-1/4" />
           <div className="grid grid-cols-4 gap-4">
@@ -212,7 +212,7 @@ export const AttributionVariancePanel: React.FC<AttributionVariancePanelProps> =
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <div className="bg-card rounded-lg border border-border overflow-hidden">
       {/* Header */}
       <div
         className="px-6 py-4 border-b border-gray-200 flex items-center justify-between cursor-pointer hover:bg-gray-50"
@@ -354,7 +354,7 @@ export const AttributionVariancePanel: React.FC<AttributionVariancePanelProps> =
                           {banner.actions.map((action, i) => (
                             <span
                               key={i}
-                              className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-white border border-gray-200 text-gray-700"
+                              className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-card border border-border text-gray-700"
                             >
                               {action}
                             </span>

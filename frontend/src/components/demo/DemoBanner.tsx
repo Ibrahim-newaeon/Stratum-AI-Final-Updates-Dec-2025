@@ -42,7 +42,7 @@ export function DemoBanner({ variant = 'top' }: DemoBannerProps) {
             <Sparkles className="h-4 w-4" />
             <span className="font-semibold text-sm">Demo Mode Active</span>
           </div>
-          <button onClick={() => setIsMinimized(true)} aria-label="Minimize demo banner" className="text-white/70 hover:text-white">
+          <button onClick={() => setIsMinimized(true)} aria-label="Minimize demo banner" className="text-foreground/70 hover:text-white">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -78,7 +78,7 @@ export function DemoBanner({ variant = 'top' }: DemoBannerProps) {
     <div className="bg-primary text-primary-foreground">
       <div className="max-w-7xl mx-auto px-4 py-2.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-white/20 text-xs font-medium">
+          <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-foreground/20 text-xs font-medium">
             <Play className="h-3 w-3" />
             DEMO MODE
           </div>
@@ -90,14 +90,14 @@ export function DemoBanner({ variant = 'top' }: DemoBannerProps) {
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/signup')}
-            className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-white text-purple-600 text-sm font-semibold hover:bg-white/90 transition-colors"
+            className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-white text-purple-600 text-sm font-semibold hover:bg-foreground/90 transition-colors"
           >
             Start Free Trial
             <ArrowRight className="h-4 w-4" />
           </button>
           <button
             onClick={exitDemoMode}
-            className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-foreground/10 transition-colors"
             title="Exit demo mode"
             aria-label="Exit demo mode"
           >

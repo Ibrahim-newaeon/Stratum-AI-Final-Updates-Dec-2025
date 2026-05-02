@@ -71,7 +71,7 @@ export function Footer() {
                 className="h-7"
               />
             </Link>
-            <p className="text-body text-text-muted mb-6 max-w-xs">
+            <p className="text-body text-muted-foreground mb-6 max-w-xs">
               Your AI Partner for Ad Growth. Unify, optimize, and scale with
               intelligence you can trust.
             </p>
@@ -81,7 +81,7 @@ export function Footer() {
               <a
                 href="https://twitter.com/stratumai"
                 aria-label="Twitter"
-                className="text-text-muted hover:text-text-primary transition-colors duration-200"
+                className="text-muted-foreground hover:text-foreground transition-colors duration-200"
               >
                 <svg
                   className="w-5 h-5"
@@ -95,7 +95,7 @@ export function Footer() {
               <a
                 href="https://github.com/stratumai"
                 aria-label="GitHub"
-                className="text-text-muted hover:text-text-primary transition-colors duration-200"
+                className="text-muted-foreground hover:text-foreground transition-colors duration-200"
               >
                 <svg
                   className="w-5 h-5"
@@ -113,7 +113,7 @@ export function Footer() {
               <a
                 href="https://linkedin.com/company/stratumai"
                 aria-label="LinkedIn"
-                className="text-text-muted hover:text-text-primary transition-colors duration-200"
+                className="text-muted-foreground hover:text-foreground transition-colors duration-200"
               >
                 <svg
                   className="w-5 h-5"
@@ -134,7 +134,7 @@ export function Footer() {
           {/* Links */}
           {columns.map((column) => (
             <div key={column.title}>
-              <h4 className="text-meta text-text-primary font-semibold uppercase tracking-wider mb-4">
+              <h4 className="text-meta text-foreground font-semibold uppercase tracking-wider mb-4">
                 {column.title}
               </h4>
               <ul className="space-y-3">
@@ -142,7 +142,7 @@ export function Footer() {
                   <li key={link.name}>
                     <Link
                       to={link.href}
-                      className="text-body text-text-muted hover:text-text-primary transition-colors duration-200"
+                      className="text-body text-muted-foreground hover:text-foreground transition-colors duration-200"
                     >
                       {link.name}
                     </Link>
@@ -155,12 +155,12 @@ export function Footer() {
 
         {/* Bottom bar */}
         <div className="pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-micro text-text-muted">
+          <p className="text-micro text-muted-foreground">
             &copy; {new Date().getFullYear()} Stratum AI. All rights reserved.
           </p>
 
           <div className="flex items-center gap-6">
-            <span className="flex items-center gap-2 text-micro text-text-muted">
+            <span className="flex items-center gap-2 text-micro text-muted-foreground">
               <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
               All systems operational
             </span>

@@ -175,7 +175,7 @@ export default function TrustEngine() {
                   className={`relative px-6 py-3 rounded-xl font-medium text-sm transition-colors ${
                     isActive
                       ? `${stateColors.bgLight} ${stateColors.border} border-2 ${stateColors.text}`
-                      : 'bg-white/[0.02] border border-white/[0.05] text-gray-400 hover:bg-white/[0.05]'
+                      : 'bg-foreground/[0.02] border border-foreground/[0.05] text-gray-400 hover:bg-foreground/[0.05]'
                   }`}
                 >
                   <div className="flex items-center gap-2">
@@ -197,7 +197,7 @@ export default function TrustEngine() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 }}
-              className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.05]"
+              className="p-6 rounded-2xl bg-foreground/[0.02] border border-foreground/[0.05]"
             >
               <div className="flex items-center gap-3 mb-4">
                 <div className="p-2 rounded-xl bg-blue-500/10">
@@ -252,7 +252,7 @@ export default function TrustEngine() {
               </div>
 
               {/* Health Bar */}
-              <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+              <div className="h-2 rounded-full bg-foreground/10 overflow-hidden">
                 <motion.div
                   className={`h-full rounded-full bg-gradient-to-r ${colors.gradient}`}
                   initial={{ width: 0 }}
@@ -304,7 +304,7 @@ export default function TrustEngine() {
             {healthComponents.map((component) => (
               <div
                 key={component.name}
-                className="group relative p-5 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-white/10 transition-colors"
+                className="group relative p-5 rounded-xl bg-foreground/[0.02] border border-foreground/[0.05] hover:border-foreground/10 transition-colors"
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium text-white">{component.name}</span>

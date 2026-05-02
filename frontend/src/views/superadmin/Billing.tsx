@@ -283,7 +283,7 @@ ${invoice.paidAt ? `Paid At: ${invoice.paidAt.toLocaleDateString()}` : ''}
         return 'text-warning bg-warning/10'
       case 'canceled':
       case 'failed':
-        return 'text-text-muted bg-surface-tertiary'
+        return 'text-muted-foreground bg-surface-tertiary'
     }
   }
 
@@ -317,12 +317,12 @@ ${invoice.paidAt ? `Paid At: ${invoice.paidAt.toLocaleDateString()}` : ''}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Billing</h1>
-          <p className="text-text-muted">Revenue and subscription management</p>
+          <p className="text-muted-foreground">Revenue and subscription management</p>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={handleExportReport}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-secondary border border-white/10 text-text-secondary hover:text-white transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-secondary border border-foreground/10 text-muted-foreground hover:text-white transition-colors"
           >
             <DocumentTextIcon className="w-4 h-4" />
             Export Report
@@ -331,7 +331,7 @@ ${invoice.paidAt ? `Paid At: ${invoice.paidAt.toLocaleDateString()}` : ''}
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-white/10 pb-4">
+      <div className="flex items-center gap-2 border-b border-foreground/10 pb-4">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -340,7 +340,7 @@ ${invoice.paidAt ? `Paid At: ${invoice.paidAt.toLocaleDateString()}` : ''}
               'px-4 py-2 rounded-lg transition-colors',
               activeTab === tab.id
                 ? 'bg-stratum-500/10 text-stratum-400'
-                : 'text-text-muted hover:text-white hover:bg-white/5'
+                : 'text-muted-foreground hover:text-white hover:bg-foreground/5'
             )}
           >
             {tab.label}
@@ -354,7 +354,7 @@ ${invoice.paidAt ? `Paid At: ${invoice.paidAt.toLocaleDateString()}` : ''}
           {/* Revenue Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="p-4 rounded-xl bg-gradient-to-br from-stratum-500/10 to-stratum-600/5 border border-stratum-500/20">
-              <div className="flex items-center gap-2 text-text-muted text-sm mb-2">
+              <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">
                 <CurrencyDollarIcon className="w-4 h-4" />
                 Monthly Recurring Revenue
               </div>
@@ -367,23 +367,23 @@ ${invoice.paidAt ? `Paid At: ${invoice.paidAt.toLocaleDateString()}` : ''}
               </div>
             </div>
 
-            <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
-              <div className="text-text-muted text-sm mb-2">Annual Recurring Revenue</div>
+            <div className="p-4 rounded-xl bg-surface-secondary border border-foreground/10">
+              <div className="text-muted-foreground text-sm mb-2">Annual Recurring Revenue</div>
               <div className="text-3xl font-bold text-white">
                 ${metrics.arr.toLocaleString()}
               </div>
             </div>
 
-            <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
-              <div className="flex items-center gap-2 text-text-muted text-sm mb-2">
+            <div className="p-4 rounded-xl bg-surface-secondary border border-foreground/10">
+              <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">
                 <UserGroupIcon className="w-4 h-4" />
                 Active Subscriptions
               </div>
               <div className="text-3xl font-bold text-white">{metrics.activeSubscriptions}</div>
             </div>
 
-            <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
-              <div className="text-text-muted text-sm mb-2">Churn Rate</div>
+            <div className="p-4 rounded-xl bg-surface-secondary border border-foreground/10">
+              <div className="text-muted-foreground text-sm mb-2">Churn Rate</div>
               <div className="text-3xl font-bold text-warning">{metrics.churnRate}%</div>
               <div className="flex items-center gap-1 text-danger text-sm mt-2">
                 <ExclamationTriangleIcon className="w-4 h-4" />
@@ -393,7 +393,7 @@ ${invoice.paidAt ? `Paid At: ${invoice.paidAt.toLocaleDateString()}` : ''}
           </div>
 
           {/* Plan Distribution */}
-          <div className="rounded-2xl bg-surface-secondary border border-white/10 p-6">
+          <div className="rounded-2xl bg-surface-secondary border border-foreground/10 p-6">
             <h2 className="font-semibold text-white mb-4">Plan Distribution</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {plans.map((plan) => (
@@ -403,7 +403,7 @@ ${invoice.paidAt ? `Paid At: ${invoice.paidAt.toLocaleDateString()}` : ''}
                     'p-4 rounded-xl border',
                     plan.highlighted
                       ? 'bg-stratum-500/10 border-stratum-500/30'
-                      : 'bg-surface-tertiary border-white/5'
+                      : 'bg-surface-tertiary border-foreground/5'
                   )}
                 >
                   <div className="flex items-center justify-between mb-2">
@@ -411,8 +411,8 @@ ${invoice.paidAt ? `Paid At: ${invoice.paidAt.toLocaleDateString()}` : ''}
                     <span className="text-stratum-400">${plan.price}/mo</span>
                   </div>
                   <div className="text-3xl font-bold text-white">{plan.subscribers}</div>
-                  <div className="text-sm text-text-muted">subscribers</div>
-                  <div className="mt-2 text-sm text-text-muted">
+                  <div className="text-sm text-muted-foreground">subscribers</div>
+                  <div className="mt-2 text-sm text-muted-foreground">
                     ${(plan.price * plan.subscribers).toLocaleString()} MRR
                   </div>
                 </div>
@@ -421,7 +421,7 @@ ${invoice.paidAt ? `Paid At: ${invoice.paidAt.toLocaleDateString()}` : ''}
           </div>
 
           {/* Recent Activity */}
-          <div className="rounded-2xl bg-surface-secondary border border-white/10 p-6">
+          <div className="rounded-2xl bg-surface-secondary border border-foreground/10 p-6">
             <h2 className="font-semibold text-white mb-4">Dunning Alerts</h2>
             <div className="space-y-3">
               {subscriptions
@@ -435,7 +435,7 @@ ${invoice.paidAt ? `Paid At: ${invoice.paidAt.toLocaleDateString()}` : ''}
                       <ExclamationTriangleIcon className="w-5 h-5 text-danger" />
                       <div>
                         <div className="font-medium text-white">{sub.tenantName}</div>
-                        <div className="text-sm text-text-muted">
+                        <div className="text-sm text-muted-foreground">
                           {sub.failedPayments} failed payment(s) - {sub.paymentMethod}
                         </div>
                       </div>
@@ -443,7 +443,7 @@ ${invoice.paidAt ? `Paid At: ${invoice.paidAt.toLocaleDateString()}` : ''}
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleContactCustomer(sub.tenantName)}
-                        className="px-3 py-1 rounded-lg bg-surface-tertiary text-text-secondary hover:text-white text-sm transition-colors"
+                        className="px-3 py-1 rounded-lg bg-surface-tertiary text-muted-foreground hover:text-white text-sm transition-colors"
                       >
                         Contact
                       </button>
@@ -470,23 +470,23 @@ ${invoice.paidAt ? `Paid At: ${invoice.paidAt.toLocaleDateString()}` : ''}
 
       {/* Subscriptions Tab */}
       {activeTab === 'subscriptions' && (
-        <div className="rounded-2xl bg-surface-secondary border border-white/10 overflow-hidden">
+        <div className="rounded-2xl bg-surface-secondary border border-foreground/10 overflow-hidden">
           <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-white/10">
-                <th className="text-left p-4 text-text-muted font-medium">Tenant</th>
-                <th className="text-left p-4 text-text-muted font-medium">Plan</th>
-                <th className="text-left p-4 text-text-muted font-medium">Status</th>
-                <th className="text-left p-4 text-text-muted font-medium">MRR</th>
-                <th className="text-left p-4 text-text-muted font-medium">Next Billing</th>
-                <th className="text-left p-4 text-text-muted font-medium">Payment Method</th>
-                <th className="text-left p-4 text-text-muted font-medium">Actions</th>
+              <tr className="border-b border-foreground/10">
+                <th className="text-left p-4 text-muted-foreground font-medium">Tenant</th>
+                <th className="text-left p-4 text-muted-foreground font-medium">Plan</th>
+                <th className="text-left p-4 text-muted-foreground font-medium">Status</th>
+                <th className="text-left p-4 text-muted-foreground font-medium">MRR</th>
+                <th className="text-left p-4 text-muted-foreground font-medium">Next Billing</th>
+                <th className="text-left p-4 text-muted-foreground font-medium">Payment Method</th>
+                <th className="text-left p-4 text-muted-foreground font-medium">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="divide-y divide-foreground/5">
               {subscriptions.map((sub) => (
-                <tr key={sub.id} className="hover:bg-white/5 transition-colors">
+                <tr key={sub.id} className="hover:bg-foreground/5 transition-colors">
                   <td className="p-4">
                     <span className="font-medium text-white">{sub.tenantName}</span>
                   </td>
@@ -509,11 +509,11 @@ ${invoice.paidAt ? `Paid At: ${invoice.paidAt.toLocaleDateString()}` : ''}
                   <td className="p-4 text-white font-medium">
                     ${sub.mrr.toLocaleString()}
                   </td>
-                  <td className="p-4 text-text-muted">
+                  <td className="p-4 text-muted-foreground">
                     {sub.nextBilling.toLocaleDateString()}
                   </td>
                   <td className="p-4">
-                    <div className="flex items-center gap-2 text-text-muted">
+                    <div className="flex items-center gap-2 text-muted-foreground">
                       <CreditCardIcon className="w-4 h-4" />
                       {sub.paymentMethod}
                     </div>
@@ -536,22 +536,22 @@ ${invoice.paidAt ? `Paid At: ${invoice.paidAt.toLocaleDateString()}` : ''}
 
       {/* Invoices Tab */}
       {activeTab === 'invoices' && (
-        <div className="rounded-2xl bg-surface-secondary border border-white/10 overflow-hidden">
+        <div className="rounded-2xl bg-surface-secondary border border-foreground/10 overflow-hidden">
           <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-white/10">
-                <th className="text-left p-4 text-text-muted font-medium">Invoice ID</th>
-                <th className="text-left p-4 text-text-muted font-medium">Tenant</th>
-                <th className="text-left p-4 text-text-muted font-medium">Amount</th>
-                <th className="text-left p-4 text-text-muted font-medium">Status</th>
-                <th className="text-left p-4 text-text-muted font-medium">Due Date</th>
-                <th className="text-left p-4 text-text-muted font-medium">Actions</th>
+              <tr className="border-b border-foreground/10">
+                <th className="text-left p-4 text-muted-foreground font-medium">Invoice ID</th>
+                <th className="text-left p-4 text-muted-foreground font-medium">Tenant</th>
+                <th className="text-left p-4 text-muted-foreground font-medium">Amount</th>
+                <th className="text-left p-4 text-muted-foreground font-medium">Status</th>
+                <th className="text-left p-4 text-muted-foreground font-medium">Due Date</th>
+                <th className="text-left p-4 text-muted-foreground font-medium">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="divide-y divide-foreground/5">
               {invoices.map((invoice) => (
-                <tr key={invoice.id} className="hover:bg-white/5 transition-colors">
+                <tr key={invoice.id} className="hover:bg-foreground/5 transition-colors">
                   <td className="p-4 font-mono text-stratum-400">{invoice.id}</td>
                   <td className="p-4 text-white">{invoice.tenantName}</td>
                   <td className="p-4 text-white font-medium">${invoice.amount.toLocaleString()}</td>
@@ -566,7 +566,7 @@ ${invoice.paidAt ? `Paid At: ${invoice.paidAt.toLocaleDateString()}` : ''}
                       {invoice.status}
                     </span>
                   </td>
-                  <td className="p-4 text-text-muted">{invoice.dueDate.toLocaleDateString()}</td>
+                  <td className="p-4 text-muted-foreground">{invoice.dueDate.toLocaleDateString()}</td>
                   <td className="p-4">
                     <div className="flex items-center gap-2">
                       <button
@@ -577,7 +577,7 @@ ${invoice.paidAt ? `Paid At: ${invoice.paidAt.toLocaleDateString()}` : ''}
                       </button>
                       <button
                         onClick={() => handleDownloadInvoice(invoice)}
-                        className="text-text-muted hover:text-white text-sm"
+                        className="text-muted-foreground hover:text-white text-sm"
                       >
                         Download
                       </button>
@@ -601,23 +601,23 @@ ${invoice.paidAt ? `Paid At: ${invoice.paidAt.toLocaleDateString()}` : ''}
                 'rounded-2xl border p-6',
                 plan.highlighted
                   ? 'bg-gradient-to-br from-stratum-500/10 to-stratum-600/5 border-stratum-500/30'
-                  : 'bg-surface-secondary border-white/10'
+                  : 'bg-surface-secondary border-foreground/10'
               )}
             >
               <h3 className="text-xl font-semibold text-white mb-2">{plan.name}</h3>
               <div className="flex items-baseline gap-1 mb-4">
                 <span className="text-3xl font-bold text-white">${plan.price}</span>
-                <span className="text-text-muted">/month</span>
+                <span className="text-muted-foreground">/month</span>
               </div>
 
-              <div className="py-4 border-t border-b border-white/10 mb-4">
+              <div className="py-4 border-t border-b border-foreground/10 mb-4">
                 <div className="text-lg font-semibold text-white">{plan.subscribers}</div>
-                <div className="text-sm text-text-muted">active subscribers</div>
+                <div className="text-sm text-muted-foreground">active subscribers</div>
               </div>
 
               <ul className="space-y-2">
                 {plan.features.map((feature, i) => (
-                  <li key={i} className="flex items-center gap-2 text-sm text-text-secondary">
+                  <li key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
                     <CheckCircleIcon className="w-4 h-4 text-success" />
                     {feature}
                   </li>
@@ -626,7 +626,7 @@ ${invoice.paidAt ? `Paid At: ${invoice.paidAt.toLocaleDateString()}` : ''}
 
               <button
                 onClick={() => handleEditPlan(plan)}
-                className="w-full mt-6 py-2 rounded-lg bg-surface-tertiary text-text-secondary hover:text-white transition-colors"
+                className="w-full mt-6 py-2 rounded-lg bg-surface-tertiary text-muted-foreground hover:text-white transition-colors"
               >
                 Edit Plan
               </button>
@@ -638,7 +638,7 @@ ${invoice.paidAt ? `Paid At: ${invoice.paidAt.toLocaleDateString()}` : ''}
       {/* Invoice Detail Modal */}
       {showInvoiceModal && selectedInvoice && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-surface-secondary rounded-2xl border border-white/10 p-6 w-full max-w-md mx-4">
+          <div className="bg-surface-secondary rounded-2xl border border-foreground/10 p-6 w-full max-w-md mx-4">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-white">Invoice Details</h2>
               <button
@@ -646,7 +646,7 @@ ${invoice.paidAt ? `Paid At: ${invoice.paidAt.toLocaleDateString()}` : ''}
                   setShowInvoiceModal(false)
                   setSelectedInvoice(null)
                 }}
-                className="text-text-muted hover:text-white"
+                className="text-muted-foreground hover:text-white"
               >
                 <XMarkIcon className="w-5 h-5" />
               </button>
@@ -654,30 +654,30 @@ ${invoice.paidAt ? `Paid At: ${invoice.paidAt.toLocaleDateString()}` : ''}
 
             <div className="space-y-4">
               <div className="flex justify-between">
-                <span className="text-text-muted">Invoice ID</span>
+                <span className="text-muted-foreground">Invoice ID</span>
                 <span className="text-white font-mono">{selectedInvoice.id}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-text-muted">Tenant</span>
+                <span className="text-muted-foreground">Tenant</span>
                 <span className="text-white">{selectedInvoice.tenantName}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-text-muted">Amount</span>
+                <span className="text-muted-foreground">Amount</span>
                 <span className="text-white font-semibold">${selectedInvoice.amount.toLocaleString()}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-text-muted">Status</span>
+                <span className="text-muted-foreground">Status</span>
                 <span className={cn('px-2 py-1 rounded-full text-xs font-medium', getStatusColor(selectedInvoice.status))}>
                   {selectedInvoice.status}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-text-muted">Due Date</span>
+                <span className="text-muted-foreground">Due Date</span>
                 <span className="text-white">{selectedInvoice.dueDate.toLocaleDateString()}</span>
               </div>
               {selectedInvoice.paidAt && (
                 <div className="flex justify-between">
-                  <span className="text-text-muted">Paid At</span>
+                  <span className="text-muted-foreground">Paid At</span>
                   <span className="text-white">{selectedInvoice.paidAt.toLocaleDateString()}</span>
                 </div>
               )}
@@ -696,7 +696,7 @@ ${invoice.paidAt ? `Paid At: ${invoice.paidAt.toLocaleDateString()}` : ''}
                   setShowInvoiceModal(false)
                   setSelectedInvoice(null)
                 }}
-                className="flex-1 py-2 rounded-lg bg-surface-tertiary text-text-secondary hover:text-white transition-colors"
+                className="flex-1 py-2 rounded-lg bg-surface-tertiary text-muted-foreground hover:text-white transition-colors"
               >
                 Close
               </button>
@@ -708,7 +708,7 @@ ${invoice.paidAt ? `Paid At: ${invoice.paidAt.toLocaleDateString()}` : ''}
       {/* Subscription Management Modal */}
       {showSubscriptionModal && selectedSubscription && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-surface-secondary rounded-2xl border border-white/10 p-6 w-full max-w-md mx-4">
+          <div className="bg-surface-secondary rounded-2xl border border-foreground/10 p-6 w-full max-w-md mx-4">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-white">Manage Subscription</h2>
               <button
@@ -716,7 +716,7 @@ ${invoice.paidAt ? `Paid At: ${invoice.paidAt.toLocaleDateString()}` : ''}
                   setShowSubscriptionModal(false)
                   setSelectedSubscription(null)
                 }}
-                className="text-text-muted hover:text-white"
+                className="text-muted-foreground hover:text-white"
               >
                 <XMarkIcon className="w-5 h-5" />
               </button>
@@ -724,40 +724,40 @@ ${invoice.paidAt ? `Paid At: ${invoice.paidAt.toLocaleDateString()}` : ''}
 
             <div className="space-y-4">
               <div className="flex justify-between">
-                <span className="text-text-muted">Tenant</span>
+                <span className="text-muted-foreground">Tenant</span>
                 <span className="text-white font-semibold">{selectedSubscription.tenantName}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-text-muted">Plan</span>
+                <span className="text-muted-foreground">Plan</span>
                 <span className="px-2 py-1 rounded bg-stratum-500/10 text-stratum-400 text-sm capitalize">
                   {selectedSubscription.plan}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-text-muted">Status</span>
+                <span className="text-muted-foreground">Status</span>
                 <span className={cn('px-2 py-1 rounded-full text-xs font-medium', getStatusColor(selectedSubscription.status))}>
                   {selectedSubscription.status.replace('_', ' ')}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-text-muted">MRR</span>
+                <span className="text-muted-foreground">MRR</span>
                 <span className="text-white font-semibold">${selectedSubscription.mrr.toLocaleString()}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-text-muted">Payment Method</span>
+                <span className="text-muted-foreground">Payment Method</span>
                 <span className="text-white">{selectedSubscription.paymentMethod}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-text-muted">Next Billing</span>
+                <span className="text-muted-foreground">Next Billing</span>
                 <span className="text-white">{selectedSubscription.nextBilling.toLocaleDateString()}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-text-muted">Start Date</span>
+                <span className="text-muted-foreground">Start Date</span>
                 <span className="text-white">{selectedSubscription.startDate.toLocaleDateString()}</span>
               </div>
               {selectedSubscription.failedPayments > 0 && (
                 <div className="flex justify-between">
-                  <span className="text-text-muted">Failed Payments</span>
+                  <span className="text-muted-foreground">Failed Payments</span>
                   <span className="text-danger font-semibold">{selectedSubscription.failedPayments}</span>
                 </div>
               )}
@@ -766,7 +766,7 @@ ${invoice.paidAt ? `Paid At: ${invoice.paidAt.toLocaleDateString()}` : ''}
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => handleContactCustomer(selectedSubscription.tenantName)}
-                className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-surface-tertiary text-text-secondary hover:text-white transition-colors"
+                className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-surface-tertiary text-muted-foreground hover:text-white transition-colors"
               >
                 <EnvelopeIcon className="w-4 h-4" />
                 Contact
@@ -801,7 +801,7 @@ ${invoice.paidAt ? `Paid At: ${invoice.paidAt.toLocaleDateString()}` : ''}
       {/* Edit Plan Modal */}
       {showEditPlanModal && selectedPlan && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-surface-secondary rounded-2xl border border-white/10 p-6 w-full max-w-md mx-4">
+          <div className="bg-surface-secondary rounded-2xl border border-foreground/10 p-6 w-full max-w-md mx-4">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-white">Edit Plan: {selectedPlan.name}</h2>
               <button
@@ -809,7 +809,7 @@ ${invoice.paidAt ? `Paid At: ${invoice.paidAt.toLocaleDateString()}` : ''}
                   setShowEditPlanModal(false)
                   setSelectedPlan(null)
                 }}
-                className="text-text-muted hover:text-white"
+                className="text-muted-foreground hover:text-white"
               >
                 <XMarkIcon className="w-5 h-5" />
               </button>
@@ -817,31 +817,31 @@ ${invoice.paidAt ? `Paid At: ${invoice.paidAt.toLocaleDateString()}` : ''}
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-text-muted mb-2">Plan Name</label>
+                <label className="block text-sm text-muted-foreground mb-2">Plan Name</label>
                 <input
                   type="text"
                   defaultValue={selectedPlan.name}
-                  className="w-full px-4 py-2 rounded-lg bg-surface-tertiary border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-stratum-500/50"
+                  className="w-full px-4 py-2 rounded-lg bg-surface-tertiary border border-foreground/10 text-white focus:outline-none focus:ring-2 focus:ring-stratum-500/50"
                 />
               </div>
               <div>
-                <label className="block text-sm text-text-muted mb-2">Price ($/month)</label>
+                <label className="block text-sm text-muted-foreground mb-2">Price ($/month)</label>
                 <input
                   type="number"
                   defaultValue={selectedPlan.price}
-                  className="w-full px-4 py-2 rounded-lg bg-surface-tertiary border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-stratum-500/50"
+                  className="w-full px-4 py-2 rounded-lg bg-surface-tertiary border border-foreground/10 text-white focus:outline-none focus:ring-2 focus:ring-stratum-500/50"
                 />
               </div>
               <div>
-                <label className="block text-sm text-text-muted mb-2">Features (one per line)</label>
+                <label className="block text-sm text-muted-foreground mb-2">Features (one per line)</label>
                 <textarea
                   defaultValue={selectedPlan.features.join('\n')}
                   rows={4}
-                  className="w-full px-4 py-2 rounded-lg bg-surface-tertiary border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-stratum-500/50 resize-none"
+                  className="w-full px-4 py-2 rounded-lg bg-surface-tertiary border border-foreground/10 text-white focus:outline-none focus:ring-2 focus:ring-stratum-500/50 resize-none"
                 />
               </div>
-              <div className="pt-2 border-t border-white/10">
-                <div className="text-sm text-text-muted">
+              <div className="pt-2 border-t border-foreground/10">
+                <div className="text-sm text-muted-foreground">
                   Current Subscribers: <span className="text-white font-semibold">{selectedPlan.subscribers}</span>
                 </div>
               </div>
@@ -867,7 +867,7 @@ ${invoice.paidAt ? `Paid At: ${invoice.paidAt.toLocaleDateString()}` : ''}
                   setShowEditPlanModal(false)
                   setSelectedPlan(null)
                 }}
-                className="flex-1 py-2 rounded-lg bg-surface-tertiary text-text-secondary hover:text-white transition-colors"
+                className="flex-1 py-2 rounded-lg bg-surface-tertiary text-muted-foreground hover:text-white transition-colors"
               >
                 Cancel
               </button>

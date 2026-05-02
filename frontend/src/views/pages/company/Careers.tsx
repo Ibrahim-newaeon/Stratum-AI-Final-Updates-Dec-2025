@@ -102,7 +102,7 @@ export default function Careers() {
           </div>
           <h1
             className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6"
-            style={{ fontFamily: "'Clash Display', sans-serif" }}
+            style={{ fontFamily: "Geist, system-ui, sans-serif" }}
           >
             <span className="text-white">Build the Future</span>
             <br />
@@ -186,7 +186,7 @@ export default function Careers() {
                     </div>
                   </div>
                   <button
-                    className="px-6 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-white/10"
+                    className="px-6 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-foreground/10"
                     style={{
                       background: 'var(--landing-surface-glass)',
                       border: '1px solid rgba(255, 255, 255, 0.2)',
@@ -222,7 +222,7 @@ export default function Careers() {
               className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-opacity hover:opacity-90"
               style={{
                 background: 'var(--landing-accent-coral)',
-                boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
+                boxShadow: '0 4px 20px rgba(255, 90, 31, 0.3)',
               }}
             >
               Get in Touch

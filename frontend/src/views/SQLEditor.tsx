@@ -70,7 +70,7 @@ export default function SQLEditor() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left: Editor */}
           <div className="lg:col-span-2 space-y-4">
-            <div className="bg-white/[0.02] border border-white/10 rounded-xl p-4">
+            <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-4">
               <div className="flex items-center justify-between mb-2">
                 <label className="text-sm text-gray-400">Query</label>
                 <div className="flex items-center gap-3">
@@ -78,7 +78,7 @@ export default function SQLEditor() {
                   <select
                     value={limit}
                     onChange={(e) => setLimit(parseInt(e.target.value))}
-                    className="bg-white/[0.03] border border-white/10 rounded px-2 py-1 text-sm text-white"
+                    className="bg-foreground/[0.03] border border-foreground/10 rounded px-2 py-1 text-sm text-white"
                   >
                     {[50, 100, 250, 500, 1000].map((n) => (
                       <option key={n} value={n} className="bg-[#0A1628]">{n}</option>
@@ -90,7 +90,7 @@ export default function SQLEditor() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 rows={10}
-                className="w-full bg-black/40 border border-white/10 rounded-lg p-4 font-mono text-sm text-gray-300 focus:outline-none focus:border-[#FF1F6D] resize-y"
+                className="w-full bg-black/40 border border-foreground/10 rounded-lg p-4 font-mono text-sm text-gray-300 focus:outline-none focus:border-primary resize-y"
                 spellCheck={false}
               />
               <div className="flex items-center justify-between mt-3">
@@ -98,7 +98,7 @@ export default function SQLEditor() {
                 <button
                   onClick={runQuery}
                   disabled={loading || !query.trim()}
-                  className="bg-[#FF1F6D] hover:bg-[#ff4d85] disabled:opacity-50 text-white px-5 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors"
+                  className="bg-primary hover:bg-primary/90 disabled:opacity-50 text-white px-5 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors"
                 >
                   {loading ? <ArrowPathIcon className="w-5 h-5 animate-spin" /> : <PlayIcon className="w-5 h-5" />}
                   Run Query
@@ -113,7 +113,7 @@ export default function SQLEditor() {
             )}
 
             {result && (
-              <div className="bg-white/[0.02] border border-white/10 rounded-xl p-4">
+              <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div className="text-sm text-gray-400">
                     {result.row_count} rows · {result.execution_time_ms}ms
@@ -128,7 +128,7 @@ export default function SQLEditor() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-white/10">
+                      <tr className="border-b border-foreground/10">
                         {result.columns.map((col) => (
                           <th key={col} className="text-left py-2 px-3 text-gray-400 font-medium whitespace-nowrap">{col}</th>
                         ))}
@@ -136,7 +136,7 @@ export default function SQLEditor() {
                     </thead>
                     <tbody>
                       {result.rows.map((row, i) => (
-                        <tr key={i} className="border-b border-white/5 hover:bg-white/[0.02]">
+                        <tr key={i} className="border-b border-foreground/5 hover:bg-foreground/[0.02]">
                           {row.map((cell, j) => (
                             <td key={j} className="py-2 px-3 text-gray-300 whitespace-nowrap font-mono text-xs">{String(cell ?? 'NULL')}</td>
                           ))}
@@ -151,14 +151,14 @@ export default function SQLEditor() {
 
           {/* Right: Sample Queries */}
           <div className="space-y-4">
-            <div className="bg-white/[0.02] border border-white/10 rounded-xl p-4">
+            <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-4">
               <h3 className="text-sm font-medium text-gray-300 mb-3">Sample Queries</h3>
               <div className="space-y-3">
                 {SAMPLE_QUERIES.map((q, i) => (
                   <button
                     key={i}
                     onClick={() => copyQuery(q)}
-                    className="w-full text-left bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 rounded-lg p-3 text-xs font-mono text-gray-400 hover:text-gray-200 transition-colors"
+                    className="w-full text-left bg-foreground/[0.03] hover:bg-foreground/[0.06] border border-foreground/5 rounded-lg p-3 text-xs font-mono text-gray-400 hover:text-gray-200 transition-colors"
                   >
                     {q.split('\n')[0]}...
                   </button>
@@ -166,7 +166,7 @@ export default function SQLEditor() {
               </div>
             </div>
 
-            <div className="bg-white/[0.02] border border-white/10 rounded-xl p-4">
+            <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-4">
               <h3 className="text-sm font-medium text-gray-300 mb-2">Available Tables</h3>
               <div className="space-y-1 text-xs text-gray-400">
                 <div className="flex items-center gap-2">

@@ -69,8 +69,8 @@ export function QuickActionsBar({ actions }: QuickActionsBarProps) {
             onClick={() => handleAction(action)}
             className={cn(
               'inline-flex items-center gap-2 px-4 py-2.5 rounded-xl',
-              'bg-white/[0.04] border border-white/[0.07]',
-              'hover:bg-white/[0.08] hover:border-primary/20',
+              'bg-foreground/[0.04] border border-foreground/[0.07]',
+              'hover:bg-foreground/[0.08] hover:border-primary/20',
               'transition-colors duration-200 text-sm font-medium group'
             )}
           >

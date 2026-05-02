@@ -57,9 +57,9 @@ const eventConfig = {
   },
   update: {
     icon: ClockIcon,
-    color: 'text-text-secondary',
+    color: 'text-muted-foreground',
     bgColor: 'bg-surface-tertiary',
-    lineColor: 'bg-white/20',
+    lineColor: 'bg-foreground/20',
   },
 }
 
@@ -88,18 +88,18 @@ export function EmqTimeline({
 
   return (
     <div className={cn(
-      'rounded-2xl bg-surface-secondary border border-white/10 overflow-hidden',
+      'rounded-2xl bg-surface-secondary border border-foreground/10 overflow-hidden',
       className
     )}>
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-white/10">
+      <div className="flex items-center justify-between p-4 border-b border-foreground/10">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-surface-tertiary">
-            <ClockIcon className="w-5 h-5 text-text-secondary" />
+            <ClockIcon className="w-5 h-5 text-muted-foreground" />
           </div>
           <div>
             <h3 className="font-semibold text-white">Incident Timeline</h3>
-            <p className="text-sm text-text-muted">
+            <p className="text-sm text-muted-foreground">
               Recent data quality events
             </p>
           </div>
@@ -143,12 +143,12 @@ export function EmqTimeline({
                           {event.title}
                         </h4>
                         {event.description && (
-                          <p className="text-sm text-text-muted mt-0.5">
+                          <p className="text-sm text-muted-foreground mt-0.5">
                             {event.description}
                           </p>
                         )}
                       </div>
-                      <span className="text-xs text-text-muted whitespace-nowrap">
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">
                         {formatRelativeTime(event.timestamp)}
                       </span>
                     </div>
@@ -156,7 +156,7 @@ export function EmqTimeline({
                     {/* Meta info */}
                     <div className="flex items-center gap-3 mt-2">
                       {event.platform && (
-                        <span className="text-xs bg-surface-tertiary text-text-muted px-2 py-0.5 rounded">
+                        <span className="text-xs bg-surface-tertiary text-muted-foreground px-2 py-0.5 rounded">
                           {event.platform}
                         </span>
                       )}
@@ -166,13 +166,13 @@ export function EmqTimeline({
                           event.severity === 'critical' && 'bg-danger/10 text-danger',
                           event.severity === 'high' && 'bg-orange-500/10 text-orange-400',
                           event.severity === 'medium' && 'bg-warning/10 text-warning',
-                          event.severity === 'low' && 'bg-surface-tertiary text-text-muted',
+                          event.severity === 'low' && 'bg-surface-tertiary text-muted-foreground',
                         )}>
                           {event.severity}
                         </span>
                       )}
                       {showRecoveryTime && event.recoveryHours !== undefined && (
-                        <span className="text-xs text-text-muted flex items-center gap-1">
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
                           <ArrowPathIcon className="w-3 h-3" />
                           Recovered in {event.recoveryHours}h
                         </span>

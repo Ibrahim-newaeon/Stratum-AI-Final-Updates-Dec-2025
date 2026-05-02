@@ -206,7 +206,7 @@ export default function Reporting() {
                         Active
                       </span>
                     ) : (
-                      <span className="px-2 py-1 rounded-full text-xs bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300">
+                      <span className="px-2 py-1 rounded-full text-xs bg-gray-100 dark:bg-gray-900/20 text-foreground">
                         Paused
                       </span>
                     )}
@@ -336,7 +336,7 @@ export default function Reporting() {
                   'px-2 py-1 rounded-full text-xs',
                   deliveryConfigs?.find((c) => c.channel === 'email')?.isActive
                     ? 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
-                    : 'bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300'
+                    : 'bg-gray-100 dark:bg-gray-900/20 text-foreground'
                 )}
               >
                 {deliveryConfigs?.find((c) => c.channel === 'email')?.isActive ? 'Enabled' : 'Disabled'}
@@ -368,7 +368,7 @@ export default function Reporting() {
                   'px-2 py-1 rounded-full text-xs',
                   deliveryConfigs?.find((c) => c.channel === 'slack')?.isActive
                     ? 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
-                    : 'bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300'
+                    : 'bg-gray-100 dark:bg-gray-900/20 text-foreground'
                 )}
               >
                 {deliveryConfigs?.find((c) => c.channel === 'slack')?.isActive ? 'Enabled' : 'Disabled'}
@@ -400,7 +400,7 @@ export default function Reporting() {
                   'px-2 py-1 rounded-full text-xs',
                   deliveryConfigs?.find((c) => (c.channel as string) === 'whatsapp')?.isActive
                     ? 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
-                    : 'bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300'
+                    : 'bg-gray-100 dark:bg-gray-900/20 text-foreground'
                 )}
               >
                 {deliveryConfigs?.find((c) => (c.channel as string) === 'whatsapp')?.isActive ? 'Enabled' : 'Disabled'}

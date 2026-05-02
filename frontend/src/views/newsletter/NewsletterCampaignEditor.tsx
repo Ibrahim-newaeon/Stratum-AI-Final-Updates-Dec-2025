@@ -36,15 +36,15 @@ import {
 // ---------------------------------------------------------------------------
 
 const INPUT_CLASS =
-  'bg-muted border border-white/[0.08] rounded-xl px-4 py-2.5 text-foreground placeholder:text-foreground/30 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/50 w-full';
+  'bg-muted border border-foreground/[0.08] rounded-xl px-4 py-2.5 text-foreground placeholder:text-foreground/30 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/50 w-full';
 
 const BUTTON_PRIMARY =
-  'bg-primary hover:bg-[#00b5ad] text-black font-semibold rounded-xl px-4 py-2.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+  'bg-primary hover:bg-primary/90 text-black font-semibold rounded-xl px-4 py-2.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
 
 const BUTTON_SECONDARY =
-  'bg-muted border border-white/[0.08] hover:bg-muted text-foreground rounded-xl px-4 py-2.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+  'bg-muted border border-foreground/[0.08] hover:bg-muted text-foreground rounded-xl px-4 py-2.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
 
-const CARD_CLASS = 'bg-muted border border-white/[0.08] rounded-2xl p-6';
+const CARD_CLASS = 'bg-muted border border-foreground/[0.08] rounded-2xl p-6';
 
 const VARIABLE_TOKENS = [
   { label: 'First Name', token: '{{first_name}}' },
@@ -334,7 +334,7 @@ export default function NewsletterCampaignEditor() {
                     key={token}
                     type="button"
                     onClick={() => insertVariable(token)}
-                    className="text-xs bg-muted border border-white/[0.08] hover:bg-muted text-foreground/70 hover:text-foreground rounded-lg px-3 py-1.5 transition-colors font-mono"
+                    className="text-xs bg-muted border border-foreground/[0.08] hover:bg-muted text-foreground/70 hover:text-foreground rounded-lg px-3 py-1.5 transition-colors font-mono"
                   >
                     {label}
                   </button>
@@ -379,7 +379,7 @@ export default function NewsletterCampaignEditor() {
                       type="checkbox"
                       checked={audienceFilters.status?.includes(status) ?? false}
                       onChange={() => toggleAudienceStatus(status)}
-                      className="rounded border-white/20 bg-muted text-primary focus:ring-primary/50"
+                      className="rounded border-foreground/20 bg-muted text-primary focus:ring-primary/50"
                     />
                     <span className="capitalize">{status}</span>
                   </label>
@@ -421,7 +421,7 @@ export default function NewsletterCampaignEditor() {
                       type="checkbox"
                       checked={audienceFilters.platforms?.includes(platform) ?? false}
                       onChange={() => toggleAudiencePlatform(platform)}
-                      className="rounded border-white/20 bg-muted text-primary focus:ring-primary/50"
+                      className="rounded border-foreground/20 bg-muted text-primary focus:ring-primary/50"
                     />
                     <span className="capitalize">{platform}</span>
                   </label>
@@ -430,7 +430,7 @@ export default function NewsletterCampaignEditor() {
             </div>
 
             {/* Live Audience Count */}
-            <div className="pt-3 border-t border-white/[0.08]">
+            <div className="pt-3 border-t border-foreground/[0.08]">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-foreground/50">Estimated audience</span>
                 <span className="text-lg font-bold text-primary">
@@ -546,7 +546,7 @@ export default function NewsletterCampaignEditor() {
       {/* ------------------------------------------------------------------ */}
       {showScheduleModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-card border border-white/[0.08] rounded-2xl p-6 w-full max-w-md shadow-2xl">
+          <div className="bg-card border border-foreground/[0.08] rounded-2xl p-6 w-full max-w-md shadow-2xl">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-foreground">Schedule Campaign</h3>
               <button
@@ -596,7 +596,7 @@ export default function NewsletterCampaignEditor() {
       {/* ------------------------------------------------------------------ */}
       {showTestEmailModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-card border border-white/[0.08] rounded-2xl p-6 w-full max-w-md shadow-2xl">
+          <div className="bg-card border border-foreground/[0.08] rounded-2xl p-6 w-full max-w-md shadow-2xl">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-foreground">Send Test Email</h3>
               <button

@@ -308,7 +308,7 @@ export default function TenantNarrative() {
         <div className="flex items-center gap-4">
           <Link
             to="/dashboard/am/portfolio"
-            className="p-2 rounded-lg bg-surface-secondary border border-white/10 text-text-muted hover:text-white transition-colors"
+            className="p-2 rounded-lg bg-surface-secondary border border-foreground/10 text-muted-foreground hover:text-white transition-colors"
           >
             <ArrowLeftIcon className="w-5 h-5" />
           </Link>
@@ -319,13 +319,13 @@ export default function TenantNarrative() {
                 {tenant.plan}
               </span>
             </div>
-            <p className="text-text-muted">{tenant.industry}</p>
+            <p className="text-muted-foreground">{tenant.industry}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={handleScheduleCall}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-secondary border border-white/10 text-text-secondary hover:text-white transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-secondary border border-foreground/10 text-muted-foreground hover:text-white transition-colors"
           >
             <CalendarIcon className="w-4 h-4" />
             Schedule Call
@@ -342,7 +342,7 @@ export default function TenantNarrative() {
       </div>
 
       {/* Contact Info */}
-      <div className="flex items-center gap-6 p-4 rounded-xl bg-surface-secondary border border-white/10">
+      <div className="flex items-center gap-6 p-4 rounded-xl bg-surface-secondary border border-foreground/10">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-stratum-500/20 flex items-center justify-center">
             <span className="text-stratum-400 font-semibold">
@@ -351,26 +351,26 @@ export default function TenantNarrative() {
           </div>
           <div>
             <div className="text-white font-medium">{tenant.primaryContact.name}</div>
-            <div className="text-sm text-text-muted">Primary Contact</div>
+            <div className="text-sm text-muted-foreground">Primary Contact</div>
           </div>
         </div>
-        <div className="flex items-center gap-2 text-text-muted">
+        <div className="flex items-center gap-2 text-muted-foreground">
           <EnvelopeIcon className="w-4 h-4" />
           <span>{tenant.primaryContact.email}</span>
         </div>
-        <div className="flex items-center gap-2 text-text-muted">
+        <div className="flex items-center gap-2 text-muted-foreground">
           <PhoneIcon className="w-4 h-4" />
           <span>{tenant.primaryContact.phone}</span>
         </div>
         <div className="ml-auto flex items-center gap-4 text-sm">
           <div>
-            <span className="text-text-muted">Last Contact:</span>
+            <span className="text-muted-foreground">Last Contact:</span>
             <span className="text-white ml-2">
               {Math.floor((Date.now() - tenant.lastContact.getTime()) / (24 * 60 * 60 * 1000))} days ago
             </span>
           </div>
           <div>
-            <span className="text-text-muted">Renewal:</span>
+            <span className="text-muted-foreground">Renewal:</span>
             <span className="text-warning ml-2">
               {Math.floor((tenant.renewalDate.getTime() - Date.now()) / (24 * 60 * 60 * 1000))} days
             </span>
@@ -393,8 +393,8 @@ export default function TenantNarrative() {
         showPriceMetrics ? 'md:grid-cols-4' : 'md:grid-cols-3'
       )}>
         {recoveryMetrics.filter(m => showPriceMetrics || m.label !== 'ROAS Impact').map((metric) => (
-          <div key={metric.label} className="p-4 rounded-xl bg-surface-secondary border border-white/10">
-            <div className="text-text-muted text-sm mb-1">{metric.label}</div>
+          <div key={metric.label} className="p-4 rounded-xl bg-surface-secondary border border-foreground/10">
+            <div className="text-muted-foreground text-sm mb-1">{metric.label}</div>
             <div className="flex items-center gap-2">
               <span className={cn(
                 'text-2xl font-bold',
@@ -424,7 +424,7 @@ export default function TenantNarrative() {
       <KpiStrip kpis={showPriceMetrics ? kpis : kpis.filter(k => !COST_KPI_IDS.includes(k.id))} emqScore={emqScore} />
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-white/10 pb-4">
+      <div className="flex items-center gap-2 border-b border-foreground/10 pb-4">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -433,7 +433,7 @@ export default function TenantNarrative() {
               'px-4 py-2 rounded-lg transition-colors',
               activeTab === tab.id
                 ? 'bg-stratum-500/10 text-stratum-400'
-                : 'text-text-muted hover:text-white hover:bg-white/5'
+                : 'text-muted-foreground hover:text-white hover:bg-foreground/5'
             )}
           >
             {tab.label}
@@ -476,7 +476,7 @@ export default function TenantNarrative() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-lg font-semibold text-white">What We Blocked</h2>
-              <p className="text-sm text-text-muted">
+              <p className="text-sm text-muted-foreground">
                 Actions blocked to protect performance during signal degradation
               </p>
             </div>
@@ -491,7 +491,7 @@ export default function TenantNarrative() {
             {blockedActions.map((action) => (
               <div
                 key={action.id}
-                className="p-4 rounded-xl bg-surface-secondary border border-white/10"
+                className="p-4 rounded-xl bg-surface-secondary border border-foreground/10"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-3">
@@ -500,10 +500,10 @@ export default function TenantNarrative() {
                     </div>
                     <div>
                       <h3 className="font-medium text-white">{action.title}</h3>
-                      <p className="text-sm text-text-muted mt-1">{action.reason}</p>
+                      <p className="text-sm text-muted-foreground mt-1">{action.reason}</p>
                       <div className="flex items-center gap-4 mt-2 text-sm">
                         <span className="text-success">{action.estimatedImpact} missed</span>
-                        <span className="flex items-center gap-1 text-text-muted">
+                        <span className="flex items-center gap-1 text-muted-foreground">
                           <ClockIcon className="w-3 h-3" />
                           Blocked {Math.floor((Date.now() - action.blockedAt.getTime()) / (60 * 60 * 1000))}h ago
                         </span>
@@ -523,8 +523,8 @@ export default function TenantNarrative() {
             ))}
           </div>
 
-          <div className="p-4 rounded-xl bg-surface-tertiary border border-white/5 text-center">
-            <p className="text-text-muted">
+          <div className="p-4 rounded-xl bg-surface-tertiary border border-foreground/5 text-center">
+            <p className="text-muted-foreground">
               These actions will automatically resume once EMQ recovers above 75 and autopilot returns to normal mode.
             </p>
           </div>

@@ -55,9 +55,9 @@ const priorityConfig = {
     label: 'Medium',
   },
   low: {
-    color: 'text-text-secondary',
+    color: 'text-muted-foreground',
     bgColor: 'bg-surface-tertiary',
-    borderColor: 'border-white/10',
+    borderColor: 'border-foreground/10',
     label: 'Low',
   },
 }
@@ -76,18 +76,18 @@ export function EmqFixPlaybookPanel({
 
   return (
     <div className={cn(
-      'rounded-2xl bg-surface-secondary border border-white/10 overflow-hidden',
+      'rounded-2xl bg-surface-secondary border border-foreground/10 overflow-hidden',
       className
     )}>
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-white/10">
+      <div className="flex items-center justify-between p-4 border-b border-foreground/10">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-stratum-500/10">
             <WrenchScrewdriverIcon className="w-5 h-5 text-stratum-400" />
           </div>
           <div>
             <h3 className="font-semibold text-white">Fix Playbook</h3>
-            <p className="text-sm text-text-muted">
+            <p className="text-sm text-muted-foreground">
               {items.filter(i => i.status === 'pending').length} fixes pending
             </p>
           </div>
@@ -95,7 +95,7 @@ export function EmqFixPlaybookPanel({
       </div>
 
       {/* Items */}
-      <div className="divide-y divide-white/5">
+      <div className="divide-y divide-foreground/5">
         {displayItems.map((item, index) => {
           const priority = priorityConfig[item.priority]
           const isCompleted = item.status === 'completed'
@@ -105,7 +105,7 @@ export function EmqFixPlaybookPanel({
               key={item.id}
               className={cn(
                 'p-4 transition-colors',
-                !isCompleted && 'hover:bg-white/5 cursor-pointer',
+                !isCompleted && 'hover:bg-foreground/5 cursor-pointer',
                 isCompleted && 'opacity-60'
               )}
               onClick={() => !isCompleted && onItemClick?.(item)}
@@ -130,11 +130,11 @@ export function EmqFixPlaybookPanel({
                     <div>
                       <h4 className={cn(
                         'font-medium',
-                        isCompleted ? 'text-text-muted line-through' : 'text-white'
+                        isCompleted ? 'text-muted-foreground line-through' : 'text-white'
                       )}>
                         {item.title}
                       </h4>
-                      <p className="text-sm text-text-muted mt-0.5 line-clamp-2">
+                      <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">
                         {item.description}
                       </p>
                     </div>
@@ -152,7 +152,7 @@ export function EmqFixPlaybookPanel({
                   {/* Meta row */}
                   <div className="flex items-center gap-4 mt-3">
                     {item.owner ? (
-                      <div className="flex items-center gap-1.5 text-xs text-text-muted">
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                         <UserCircleIcon className="w-4 h-4" />
                         <span>{item.owner}</span>
                       </div>
@@ -170,7 +170,7 @@ export function EmqFixPlaybookPanel({
                     )}
 
                     {showEstimates && item.estimatedTime && (
-                      <div className="flex items-center gap-1.5 text-xs text-text-muted">
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                         <ClockIcon className="w-4 h-4" />
                         <span>{item.estimatedTime}</span>
                       </div>
@@ -183,7 +183,7 @@ export function EmqFixPlaybookPanel({
                     )}
 
                     {item.platform && (
-                      <span className="text-xs text-text-muted bg-surface-tertiary px-2 py-0.5 rounded">
+                      <span className="text-xs text-muted-foreground bg-surface-tertiary px-2 py-0.5 rounded">
                         {item.platform}
                       </span>
                     )}
@@ -222,7 +222,7 @@ export function EmqFixPlaybookPanel({
 
       {/* Footer - show more */}
       {remainingCount > 0 && (
-        <div className="p-4 border-t border-white/10">
+        <div className="p-4 border-t border-foreground/10">
           <button className="text-sm text-stratum-400 hover:text-stratum-300 transition-colors">
             View {remainingCount} more fixes
           </button>

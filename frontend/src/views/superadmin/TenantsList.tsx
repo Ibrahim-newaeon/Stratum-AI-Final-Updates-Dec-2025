@@ -191,13 +191,13 @@ export default function TenantsList() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Tenant Portfolio</h1>
-          <p className="text-text-muted">Monitor and manage all tenants</p>
+          <p className="text-muted-foreground">Monitor and manage all tenants</p>
         </div>
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-secondary border border-white/10">
+          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-secondary border border-foreground/10">
             <BuildingOfficeIcon className="w-5 h-5 text-stratum-400" />
             <span className="text-white font-semibold">{stats.total}</span>
-            <span className="text-text-muted">Tenants</span>
+            <span className="text-muted-foreground">Tenants</span>
           </div>
           {stats.atRisk > 0 && (
             <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-warning/10 border border-warning/20">
@@ -211,35 +211,35 @@ export default function TenantsList() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
+        <div className="p-4 rounded-xl bg-surface-secondary border border-foreground/10">
           <div className="flex items-center gap-3 mb-2">
             <CheckCircleIcon className="w-5 h-5 text-success" />
-            <span className="text-text-muted">Healthy</span>
+            <span className="text-muted-foreground">Healthy</span>
           </div>
           <span className="text-2xl font-bold text-white">{stats.healthy}</span>
-          <span className="text-text-muted ml-2">/ {stats.total}</span>
+          <span className="text-muted-foreground ml-2">/ {stats.total}</span>
         </div>
 
-        <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
+        <div className="p-4 rounded-xl bg-surface-secondary border border-foreground/10">
           <div className="flex items-center gap-3 mb-2">
             <ExclamationTriangleIcon className="w-5 h-5 text-warning" />
-            <span className="text-text-muted">At Risk</span>
+            <span className="text-muted-foreground">At Risk</span>
           </div>
           <span className="text-2xl font-bold text-white">{stats.atRisk}</span>
         </div>
 
-        <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
+        <div className="p-4 rounded-xl bg-surface-secondary border border-foreground/10">
           <div className="flex items-center gap-3 mb-2">
-            <span className="text-text-muted">Budget at Risk</span>
+            <span className="text-muted-foreground">Budget at Risk</span>
           </div>
           <span className="text-2xl font-bold text-danger">
             ${stats.totalBudgetAtRisk.toLocaleString()}
           </span>
         </div>
 
-        <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
+        <div className="p-4 rounded-xl bg-surface-secondary border border-foreground/10">
           <div className="flex items-center gap-3 mb-2">
-            <span className="text-text-muted">Active Incidents</span>
+            <span className="text-muted-foreground">Active Incidents</span>
           </div>
           <span className="text-2xl font-bold text-warning">{stats.totalIncidents}</span>
         </div>
@@ -249,23 +249,23 @@ export default function TenantsList() {
       <div className="flex flex-wrap items-center gap-4">
         {/* Search */}
         <div className="relative flex-1 min-w-0 sm:min-w-[200px] max-w-md">
-          <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted" />
+          <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <input
             type="text"
             placeholder="Search tenants..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-lg bg-surface-secondary border border-white/10 text-white placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-stratum-500"
+            className="w-full pl-10 pr-4 py-2 rounded-lg bg-surface-secondary border border-foreground/10 text-white placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-stratum-500"
           />
         </div>
 
         {/* Status Filter */}
         <div className="flex items-center gap-2">
-          <FunnelIcon className="w-4 h-4 text-text-muted" />
+          <FunnelIcon className="w-4 h-4 text-muted-foreground" />
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as EmqStatus | 'all')}
-            className="px-3 py-2 rounded-lg bg-surface-secondary border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-stratum-500"
+            className="px-3 py-2 rounded-lg bg-surface-secondary border border-foreground/10 text-white focus:outline-none focus:ring-2 focus:ring-stratum-500"
           >
             <option value="all">All Status</option>
             <option value="ok">Healthy</option>
@@ -279,7 +279,7 @@ export default function TenantsList() {
         <select
           value={modeFilter}
           onChange={(e) => setModeFilter(e.target.value as AutopilotMode | 'all')}
-          className="px-3 py-2 rounded-lg bg-surface-secondary border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-stratum-500"
+          className="px-3 py-2 rounded-lg bg-surface-secondary border border-foreground/10 text-white focus:outline-none focus:ring-2 focus:ring-stratum-500"
         >
           <option value="all">All Modes</option>
           <option value="normal">Normal</option>
@@ -290,11 +290,11 @@ export default function TenantsList() {
 
         {/* Sort */}
         <div className="flex items-center gap-2">
-          <ArrowsUpDownIcon className="w-4 h-4 text-text-muted" />
+          <ArrowsUpDownIcon className="w-4 h-4 text-muted-foreground" />
           <select
             value={sortField}
             onChange={(e) => setSortField(e.target.value as SortField)}
-            className="px-3 py-2 rounded-lg bg-surface-secondary border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-stratum-500"
+            className="px-3 py-2 rounded-lg bg-surface-secondary border border-foreground/10 text-white focus:outline-none focus:ring-2 focus:ring-stratum-500"
           >
             <option value="emq">Sort by EMQ</option>
             <option value="name">Sort by Name</option>
@@ -304,7 +304,7 @@ export default function TenantsList() {
           </select>
           <button
             onClick={() => setSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'))}
-            className="p-2 rounded-lg bg-surface-secondary border border-white/10 text-text-muted hover:text-white transition-colors"
+            className="p-2 rounded-lg bg-surface-secondary border border-foreground/10 text-muted-foreground hover:text-white transition-colors"
           >
             {sortDirection === 'asc' ? '↑' : '↓'}
           </button>
@@ -312,32 +312,32 @@ export default function TenantsList() {
       </div>
 
       {/* Tenants Table */}
-      <div className="rounded-2xl bg-surface-secondary border border-white/10 overflow-hidden">
+      <div className="rounded-2xl bg-surface-secondary border border-foreground/10 overflow-hidden">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-white/10">
-              <th scope="col" className="text-left p-4 text-text-muted font-medium">Tenant</th>
-              <th scope="col" className="text-left p-4 text-text-muted font-medium">EMQ</th>
-              <th scope="col" className="text-left p-4 text-text-muted font-medium">Status</th>
-              <th scope="col" className="text-left p-4 text-text-muted font-medium">Mode</th>
-              <th scope="col" className="text-left p-4 text-text-muted font-medium">Budget at Risk</th>
-              <th scope="col" className="text-left p-4 text-text-muted font-medium">Incidents</th>
-              <th scope="col" className="text-left p-4 text-text-muted font-medium">Last Activity</th>
-              <th scope="col" className="text-left p-4 text-text-muted font-medium" />
+            <tr className="border-b border-foreground/10">
+              <th scope="col" className="text-left p-4 text-muted-foreground font-medium">Tenant</th>
+              <th scope="col" className="text-left p-4 text-muted-foreground font-medium">EMQ</th>
+              <th scope="col" className="text-left p-4 text-muted-foreground font-medium">Status</th>
+              <th scope="col" className="text-left p-4 text-muted-foreground font-medium">Mode</th>
+              <th scope="col" className="text-left p-4 text-muted-foreground font-medium">Budget at Risk</th>
+              <th scope="col" className="text-left p-4 text-muted-foreground font-medium">Incidents</th>
+              <th scope="col" className="text-left p-4 text-muted-foreground font-medium">Last Activity</th>
+              <th scope="col" className="text-left p-4 text-muted-foreground font-medium" />
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/5">
+          <tbody className="divide-y divide-foreground/5">
             {filteredTenants.map((tenant) => (
               <tr
                 key={tenant.id}
-                className="hover:bg-white/5 transition-colors"
+                className="hover:bg-foreground/5 transition-colors"
               >
                 <td className="p-4">
                   <div>
                     <div className="font-medium text-white">{tenant.name}</div>
-                    <div className="text-sm text-text-muted">{tenant.industry}</div>
+                    <div className="text-sm text-muted-foreground">{tenant.industry}</div>
                     {tenant.accountManager && (
-                      <div className="text-xs text-text-muted mt-1">
+                      <div className="text-xs text-muted-foreground mt-1">
                         AM: {tenant.accountManager}
                       </div>
                     )}
@@ -377,7 +377,7 @@ export default function TenantsList() {
                   {tenant.budgetAtRisk > 0 ? (
                     <BudgetAtRiskChip amount={tenant.budgetAtRisk} />
                   ) : (
-                    <span className="text-text-muted">-</span>
+                    <span className="text-muted-foreground">-</span>
                   )}
                 </td>
                 <td className="p-4">
@@ -394,7 +394,7 @@ export default function TenantsList() {
                   )}
                 </td>
                 <td className="p-4">
-                  <span className="flex items-center gap-1 text-text-muted text-sm">
+                  <span className="flex items-center gap-1 text-muted-foreground text-sm">
                     <ClockIcon className="w-4 h-4" />
                     {formatLastActivity(tenant.lastActivity)}
                   </span>
@@ -414,7 +414,7 @@ export default function TenantsList() {
         </table>
 
         {filteredTenants.length === 0 && (
-          <div className="p-8 text-center text-text-muted">
+          <div className="p-8 text-center text-muted-foreground">
             No tenants found matching your filters.
           </div>
         )}

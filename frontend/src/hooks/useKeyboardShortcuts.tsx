@@ -221,12 +221,12 @@ export function KeyboardShortcutsHelp({
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" role="presentation" onClick={onClose} />
 
       {/* Modal */}
-      <div className="relative bg-surface-secondary border border-white/10 rounded-2xl p-6 max-w-lg w-full mx-4 max-h-[80vh] overflow-y-auto">
+      <div className="relative bg-surface-secondary border border-foreground/10 rounded-2xl p-6 max-w-lg w-full mx-4 max-h-[80vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-white">Keyboard Shortcuts</h2>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-white/5 text-text-muted hover:text-white transition-colors"
+            className="p-2 rounded-lg hover:bg-foreground/5 text-muted-foreground hover:text-white transition-colors"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
@@ -242,12 +242,12 @@ export function KeyboardShortcutsHelp({
         <div className="space-y-6">
           {Object.entries(categories).map(([category, label]) => (
             <div key={category}>
-              <h3 className="text-sm font-medium text-text-muted mb-3">{label}</h3>
+              <h3 className="text-sm font-medium text-muted-foreground mb-3">{label}</h3>
               <div className="space-y-2">
                 {groupedShortcuts[category]?.map((shortcut, i) => (
                   <div key={i} className="flex items-center justify-between py-2">
                     <span className="text-white">{shortcut.description}</span>
-                    <kbd className="px-2 py-1 rounded bg-surface-tertiary border border-white/10 text-text-muted text-sm font-mono">
+                    <kbd className="px-2 py-1 rounded bg-surface-tertiary border border-foreground/10 text-muted-foreground text-sm font-mono">
                       {formatKey(shortcut)}
                     </kbd>
                   </div>
@@ -257,8 +257,8 @@ export function KeyboardShortcutsHelp({
           ))}
         </div>
 
-        <div className="mt-6 pt-4 border-t border-white/10">
-          <p className="text-sm text-text-muted text-center">
+        <div className="mt-6 pt-4 border-t border-foreground/10">
+          <p className="text-sm text-muted-foreground text-center">
             Press <kbd className="px-1 py-0.5 rounded bg-surface-tertiary text-xs">?</kbd> anytime
             to show this help
           </p>

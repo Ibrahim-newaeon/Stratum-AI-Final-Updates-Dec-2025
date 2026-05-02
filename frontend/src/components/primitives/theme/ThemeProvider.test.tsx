@@ -1,19 +1,19 @@
 /**
- * Stratum AI - ThemeContext Tests
+ * ThemeProvider tests — Stratum figma theme system.
  *
- * Tests for theme provider rendering, useTheme hook,
- * theme switching, localStorage persistence, system theme
- * resolution, and default values.
+ * Contract under test:
+ * - Defaults to 'system' when localStorage is empty.
+ * - Honors stored 'dark' / 'light' / 'system'.
+ * - Resolves 'system' against prefers-color-scheme: dark.
+ * - Applies the resolved class to <html>; clears the other.
+ * - Persists every theme change to localStorage('stratum-theme').
+ * - Subscribes to matchMedia change while in 'system'.
+ * - Throws when useTheme is consumed outside the provider.
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, renderHook, act } from '@testing-library/react';
-import { ThemeProvider, useTheme } from './ThemeContext';
 import type { ReactNode } from 'react';
-
-// =============================================================================
-// Mock localStorage
-// =============================================================================
 
 const mockStore: Record<string, string> = {};
 const mockLocalStorage = {
@@ -35,18 +35,14 @@ const mockLocalStorage = {
 
 Object.defineProperty(window, 'localStorage', { value: mockLocalStorage });
 
-// =============================================================================
-// Mock matchMedia
-// =============================================================================
-
-let mockMatchMediaMatches = false;
+let mockPrefersDark = false;
 const mockAddEventListener = vi.fn();
 const mockRemoveEventListener = vi.fn();
 
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: vi.fn().mockImplementation((query: string) => ({
-    matches: mockMatchMediaMatches,
+    matches: mockPrefersDark,
     media: query,
     onchange: null,
     addListener: vi.fn(),
@@ -57,9 +53,7 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
-// =============================================================================
-// Helper
-// =============================================================================
+import { ThemeProvider, useTheme } from './ThemeProvider';
 
 function resetAll() {
   Object.keys(mockStore).forEach((k) => delete mockStore[k]);
@@ -68,8 +62,7 @@ function resetAll() {
   mockLocalStorage.removeItem.mockClear();
   mockAddEventListener.mockClear();
   mockRemoveEventListener.mockClear();
-  mockMatchMediaMatches = false;
-  // Clean up document class list
+  mockPrefersDark = false;
   document.documentElement.classList.remove('light', 'dark');
 }
 
@@ -77,218 +70,150 @@ const wrapper = ({ children }: { children: ReactNode }) => (
   <ThemeProvider>{children}</ThemeProvider>
 );
 
-// =============================================================================
-// Tests
-// =============================================================================
-
-describe('ThemeContext', () => {
+describe('ThemeProvider', () => {
   beforeEach(resetAll);
 
-  // ---------------------------------------------------------------------------
-  // useTheme outside provider
-  // ---------------------------------------------------------------------------
-
   describe('useTheme outside provider', () => {
-    it('throws an error when used outside ThemeProvider', () => {
+    it('throws when called outside ThemeProvider', () => {
       const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
       expect(() => {
         renderHook(() => useTheme());
       }).toThrow('useTheme must be used within a ThemeProvider');
-
       spy.mockRestore();
     });
   });
 
-  // ---------------------------------------------------------------------------
-  // Default values
-  // ---------------------------------------------------------------------------
-
-  describe('Default values', () => {
-    it('defaults to "dark" theme when localStorage is empty', () => {
+  describe('Defaults', () => {
+    it('defaults to "system" when localStorage is empty', () => {
       const { result } = renderHook(() => useTheme(), { wrapper });
-
-      expect(result.current.theme).toBe('dark');
+      expect(result.current.theme).toBe('system');
     });
 
-    it('defaults resolvedTheme to "dark"', () => {
+    it('resolves "system" to "light" when OS prefers light', () => {
+      mockPrefersDark = false;
       const { result } = renderHook(() => useTheme(), { wrapper });
+      expect(result.current.resolvedTheme).toBe('light');
+    });
 
+    it('resolves "system" to "dark" when OS prefers dark', () => {
+      mockPrefersDark = true;
+      const { result } = renderHook(() => useTheme(), { wrapper });
       expect(result.current.resolvedTheme).toBe('dark');
     });
 
-    it('provides a setTheme function', () => {
+    it('exposes a setTheme function', () => {
       const { result } = renderHook(() => useTheme(), { wrapper });
-
       expect(typeof result.current.setTheme).toBe('function');
     });
   });
 
-  // ---------------------------------------------------------------------------
-  // localStorage persistence
-  // ---------------------------------------------------------------------------
-
   describe('localStorage persistence', () => {
-    it('reads theme from localStorage on mount', () => {
+    it('reads stored "light" on mount', () => {
       mockStore['stratum-theme'] = 'light';
-
       const { result } = renderHook(() => useTheme(), { wrapper });
-
       expect(result.current.theme).toBe('light');
     });
 
-    it('saves theme to localStorage when theme changes', () => {
+    it('reads stored "dark" on mount', () => {
+      mockStore['stratum-theme'] = 'dark';
       const { result } = renderHook(() => useTheme(), { wrapper });
+      expect(result.current.theme).toBe('dark');
+    });
 
+    it('persists every theme change to localStorage', () => {
+      const { result } = renderHook(() => useTheme(), { wrapper });
       act(() => {
         result.current.setTheme('light');
       });
-
       expect(mockLocalStorage.setItem).toHaveBeenCalledWith('stratum-theme', 'light');
-    });
-
-    it('persists "system" to localStorage when system theme is selected', () => {
-      const { result } = renderHook(() => useTheme(), { wrapper });
-
-      act(() => {
-        result.current.setTheme('system');
-      });
-
-      expect(mockLocalStorage.setItem).toHaveBeenCalledWith('stratum-theme', 'system');
-    });
-  });
-
-  // ---------------------------------------------------------------------------
-  // Theme switching
-  // ---------------------------------------------------------------------------
-
-  describe('Theme switching', () => {
-    it('switches from dark to light', () => {
-      const { result } = renderHook(() => useTheme(), { wrapper });
-
-      act(() => {
-        result.current.setTheme('light');
-      });
-
-      expect(result.current.theme).toBe('light');
-      expect(result.current.resolvedTheme).toBe('light');
-    });
-
-    it('switches from light to dark', () => {
-      mockStore['stratum-theme'] = 'light';
-
-      const { result } = renderHook(() => useTheme(), { wrapper });
 
       act(() => {
         result.current.setTheme('dark');
       });
+      expect(mockLocalStorage.setItem).toHaveBeenCalledWith('stratum-theme', 'dark');
 
-      expect(result.current.theme).toBe('dark');
-      expect(result.current.resolvedTheme).toBe('dark');
+      act(() => {
+        result.current.setTheme('system');
+      });
+      expect(mockLocalStorage.setItem).toHaveBeenCalledWith('stratum-theme', 'system');
     });
 
-    it('applies "dark" class to document element when theme is dark', () => {
-      renderHook(() => useTheme(), { wrapper });
-
-      expect(document.documentElement.classList.contains('dark')).toBe(true);
-      expect(document.documentElement.classList.contains('light')).toBe(false);
-    });
-
-    it('applies "light" class to document element when theme is light', () => {
+    it('ignores garbage stored values and falls back to system', () => {
+      mockStore['stratum-theme'] = 'plaid';
       const { result } = renderHook(() => useTheme(), { wrapper });
+      expect(result.current.theme).toBe('system');
+    });
+  });
+
+  describe('Theme switching', () => {
+    it('switches dark → light and updates resolvedTheme', () => {
+      mockStore['stratum-theme'] = 'dark';
+      const { result } = renderHook(() => useTheme(), { wrapper });
+      expect(result.current.resolvedTheme).toBe('dark');
 
       act(() => {
         result.current.setTheme('light');
       });
+      expect(result.current.theme).toBe('light');
+      expect(result.current.resolvedTheme).toBe('light');
+    });
 
+    it('applies the resolved class to <html> and removes the other', () => {
+      mockStore['stratum-theme'] = 'dark';
+      const { result } = renderHook(() => useTheme(), { wrapper });
+      expect(document.documentElement.classList.contains('dark')).toBe(true);
+      expect(document.documentElement.classList.contains('light')).toBe(false);
+
+      act(() => {
+        result.current.setTheme('light');
+      });
       expect(document.documentElement.classList.contains('light')).toBe(true);
       expect(document.documentElement.classList.contains('dark')).toBe(false);
     });
   });
 
-  // ---------------------------------------------------------------------------
-  // System theme resolution
-  // ---------------------------------------------------------------------------
-
-  describe('System theme resolution', () => {
-    it('resolves to "dark" when system prefers dark', () => {
-      mockMatchMediaMatches = true;
-
+  describe('System theme listener', () => {
+    it('subscribes to matchMedia change while theme is "system"', () => {
       const { result } = renderHook(() => useTheme(), { wrapper });
-
       act(() => {
         result.current.setTheme('system');
       });
-
-      expect(result.current.theme).toBe('system');
-      expect(result.current.resolvedTheme).toBe('dark');
-    });
-
-    it('resolves to "light" when system prefers light', () => {
-      mockMatchMediaMatches = false;
-
-      const { result } = renderHook(() => useTheme(), { wrapper });
-
-      act(() => {
-        result.current.setTheme('system');
-      });
-
-      expect(result.current.theme).toBe('system');
-      expect(result.current.resolvedTheme).toBe('light');
-    });
-
-    it('adds a media query listener when theme is set to system', () => {
-      const { result } = renderHook(() => useTheme(), { wrapper });
-
-      act(() => {
-        result.current.setTheme('system');
-      });
-
       expect(mockAddEventListener).toHaveBeenCalledWith('change', expect.any(Function));
     });
 
-    it('removes media query listener on cleanup', () => {
+    it('cleans up the matchMedia listener on unmount', () => {
       const { unmount } = renderHook(() => useTheme(), { wrapper });
-
       unmount();
-
       expect(mockRemoveEventListener).toHaveBeenCalledWith('change', expect.any(Function));
     });
   });
 
-  // ---------------------------------------------------------------------------
-  // Provider rendering
-  // ---------------------------------------------------------------------------
-
   describe('Provider rendering', () => {
-    it('renders children correctly', () => {
+    it('renders children', () => {
       render(
         <ThemeProvider>
           <div data-testid="child">Hello</div>
         </ThemeProvider>
       );
-
       expect(screen.getByTestId('child')).toBeDefined();
-      expect(screen.getByText('Hello')).toBeDefined();
     });
 
-    it('provides context value to nested components', () => {
-      function ThemeConsumer() {
+    it('exposes context to nested consumers', () => {
+      function Consumer() {
         const { theme, resolvedTheme } = useTheme();
         return (
-          <div>
+          <>
             <span data-testid="theme">{theme}</span>
             <span data-testid="resolved">{resolvedTheme}</span>
-          </div>
+          </>
         );
       }
-
+      mockStore['stratum-theme'] = 'dark';
       render(
         <ThemeProvider>
-          <ThemeConsumer />
+          <Consumer />
         </ThemeProvider>
       );
-
       expect(screen.getByTestId('theme').textContent).toBe('dark');
       expect(screen.getByTestId('resolved').textContent).toBe('dark');
     });

@@ -157,14 +157,14 @@ export default function WhatsAppBroadcast() {
       </div>
 
       {/* Broadcast History */}
-      <div className="bg-muted/50 rounded-2xl border border-white/5 overflow-hidden">
-        <div className="p-5 border-b border-white/5">
+      <div className="bg-muted/50 rounded-2xl border border-foreground/5 overflow-hidden">
+        <div className="p-5 border-b border-foreground/5">
           <h3 className="font-semibold">Broadcast History</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-white/5">
+              <tr className="border-b border-foreground/5">
                 <th className="p-4 text-left text-sm font-medium text-gray-400">Template</th>
                 <th className="p-4 text-left text-sm font-medium text-gray-400">Recipients</th>
                 <th className="p-4 text-left text-sm font-medium text-gray-400">Delivery</th>
@@ -195,7 +195,7 @@ export default function WhatsAppBroadcast() {
                 return (
                   <tr
                     key={broadcast.id}
-                    className="border-b border-white/5 hover:bg-white/[0.02] transition-colors"
+                    className="border-b border-foreground/5 hover:bg-foreground/[0.02] transition-colors"
                   >
                     <td className="p-4">
                       <div className="flex items-center gap-3">
@@ -296,7 +296,7 @@ function StatCard({
   icon: React.ComponentType<{ className?: string }>;
 }) {
   return (
-    <div className="bg-muted/50 rounded-2xl border border-white/5 p-5">
+    <div className="bg-muted/50 rounded-2xl border border-foreground/5 p-5">
       <div className="flex items-center gap-3 mb-3">
         <div className="p-2 bg-[#25D366]/10 rounded-lg">
           <Icon className="w-5 h-5 text-[#25D366]" />
@@ -412,7 +412,7 @@ function CreateBroadcastModal({
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className="w-full max-w-3xl bg-muted/50 rounded-2xl border border-white/10 p-6 my-8"
+        className="w-full max-w-3xl bg-muted/50 rounded-2xl border border-foreground/10 p-6 my-8"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -421,7 +421,7 @@ function CreateBroadcastModal({
             <h3 className="text-xl font-semibold">Create Broadcast</h3>
             <p className="text-sm text-gray-400">Step {step} of 3</p>
           </div>
-          <button onClick={onClose} aria-label="Close" className="p-2 hover:bg-white/5 rounded-lg">
+          <button onClick={onClose} aria-label="Close" className="p-2 hover:bg-foreground/5 rounded-lg">
             <XMarkIcon className="w-5 h-5" />
           </button>
         </div>
@@ -433,7 +433,7 @@ function CreateBroadcastModal({
               key={s}
               className={cn(
                 'flex-1 h-1 rounded-full transition-colors',
-                s <= step ? 'bg-[#25D366]' : 'bg-white/10'
+                s <= step ? 'bg-[#25D366]' : 'bg-foreground/10'
               )}
             />
           ))}
@@ -448,7 +448,7 @@ function CreateBroadcastModal({
               <input
                 type="text"
                 placeholder="Search templates..."
-                className="w-full pl-10 pr-4 py-3 bg-background border border-white/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
+                className="w-full pl-10 pr-4 py-3 bg-background border border-foreground/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
               />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-80 overflow-y-auto">
@@ -460,12 +460,12 @@ function CreateBroadcastModal({
                     'p-4 rounded-xl border text-left transition-colors',
                     selectedTemplate?.id === template.id
                       ? 'border-[#25D366] bg-[#25D366]/10'
-                      : 'border-white/10 hover:border-white/20 bg-background'
+                      : 'border-foreground/10 hover:border-foreground/20 bg-background'
                   )}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-medium">{template.name}</span>
-                    <span className="text-xs text-gray-500 px-2 py-0.5 bg-white/5 rounded">
+                    <span className="text-xs text-gray-500 px-2 py-0.5 bg-foreground/5 rounded">
                       {template.category}
                     </span>
                   </div>
@@ -495,7 +495,7 @@ function CreateBroadcastModal({
                     'w-full p-4 rounded-xl border text-left transition-all flex items-center gap-4',
                     selectedSegments.includes(segment.id)
                       ? 'border-[#25D366] bg-[#25D366]/10'
-                      : 'border-white/10 hover:border-white/20 bg-background'
+                      : 'border-foreground/10 hover:border-foreground/20 bg-background'
                   )}
                 >
                   <div
@@ -549,7 +549,7 @@ function CreateBroadcastModal({
                       placeholder={`Variable ${num}`}
                       value={variables[num] || ''}
                       onChange={(e) => setVariables({ ...variables, [num]: e.target.value })}
-                      className="w-full px-3 py-2 bg-background border border-white/10 rounded-lg text-sm"
+                      className="w-full px-3 py-2 bg-background border border-foreground/10 rounded-lg text-sm"
                     />
                   </div>
                 ))}
@@ -565,7 +565,7 @@ function CreateBroadcastModal({
                     'flex-1 p-4 rounded-xl border transition-colors',
                     scheduleType === 'now'
                       ? 'border-[#25D366] bg-[#25D366]/10'
-                      : 'border-white/10 hover:border-white/20'
+                      : 'border-foreground/10 hover:border-foreground/20'
                   )}
                 >
                   <PaperAirplaneIcon className="w-6 h-6 mb-2 text-[#25D366]" />
@@ -578,7 +578,7 @@ function CreateBroadcastModal({
                     'flex-1 p-4 rounded-xl border transition-colors',
                     scheduleType === 'scheduled'
                       ? 'border-[#25D366] bg-[#25D366]/10'
-                      : 'border-white/10 hover:border-white/20'
+                      : 'border-foreground/10 hover:border-foreground/20'
                   )}
                 >
                   <CalendarIcon className="w-6 h-6 mb-2 text-[#25D366]" />
@@ -592,13 +592,13 @@ function CreateBroadcastModal({
                     type="date"
                     value={scheduledDate}
                     onChange={(e) => setScheduledDate(e.target.value)}
-                    className="px-4 py-3 bg-background border border-white/10 rounded-xl"
+                    className="px-4 py-3 bg-background border border-foreground/10 rounded-xl"
                   />
                   <input
                     type="time"
                     value={scheduledTime}
                     onChange={(e) => setScheduledTime(e.target.value)}
-                    className="px-4 py-3 bg-background border border-white/10 rounded-xl"
+                    className="px-4 py-3 bg-background border border-foreground/10 rounded-xl"
                   />
                 </div>
               )}
@@ -634,14 +634,14 @@ function CreateBroadcastModal({
           {step > 1 && (
             <button
               onClick={() => setStep((s) => s - 1)}
-              className="px-6 py-3 bg-card border border-white/10 rounded-xl hover:bg-muted transition-colors"
+              className="px-6 py-3 bg-card border border-foreground/10 rounded-xl hover:bg-muted transition-colors"
             >
               Back
             </button>
           )}
           <button
             onClick={onClose}
-            className="px-6 py-3 bg-card border border-white/10 rounded-xl hover:bg-muted transition-colors"
+            className="px-6 py-3 bg-card border border-foreground/10 rounded-xl hover:bg-muted transition-colors"
           >
             Cancel
           </button>

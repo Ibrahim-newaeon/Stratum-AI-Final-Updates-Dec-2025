@@ -68,7 +68,7 @@ export function TrustStatusHeader({
   if (compact) {
     return (
       <div className={cn(
-        'flex items-center gap-4 p-3 rounded-xl bg-surface-secondary border border-white/10',
+        'flex items-center gap-4 p-3 rounded-xl bg-surface-secondary border border-foreground/10',
         className
       )}>
         <div className="flex items-center gap-2">
@@ -76,17 +76,17 @@ export function TrustStatusHeader({
           <span className="text-lg font-bold text-white">{emqScore}</span>
           <ConfidenceBandBadge score={emqScore} size="sm" />
         </div>
-        <div className="h-4 w-px bg-white/10" />
+        <div className="h-4 w-px bg-foreground/10" />
         <AutopilotModeBanner mode={autopilotMode} compact />
         {budgetAtRisk > 0 && (
           <>
-            <div className="h-4 w-px bg-white/10" />
+            <div className="h-4 w-px bg-foreground/10" />
             <BudgetAtRiskChip amount={budgetAtRisk} currency={currency} size="sm" />
           </>
         )}
         {svi !== undefined && (
           <>
-            <div className="h-4 w-px bg-white/10" />
+            <div className="h-4 w-px bg-foreground/10" />
             <VolatilityBadge svi={svi} size="sm" />
           </>
         )}
@@ -96,7 +96,7 @@ export function TrustStatusHeader({
 
   return (
     <div className={cn(
-      'rounded-2xl bg-surface-secondary border border-white/10 overflow-hidden',
+      'rounded-2xl bg-surface-secondary border border-foreground/10 overflow-hidden',
       className
     )}>
       {/* Main header */}
@@ -111,7 +111,7 @@ export function TrustStatusHeader({
                 <h2 className="text-2xl font-bold text-white">EMQ {emqScore}</h2>
                 <ConfidenceBandBadge score={emqScore} />
               </div>
-              <p className="text-sm text-text-secondary mt-1">{status.message}</p>
+              <p className="text-sm text-muted-foreground mt-1">{status.message}</p>
             </div>
           </div>
 
@@ -127,19 +127,19 @@ export function TrustStatusHeader({
         </div>
 
         {/* Stats row */}
-        <div className="flex items-center gap-6 mt-6 pt-6 border-t border-white/10">
+        <div className="flex items-center gap-6 mt-6 pt-6 border-t border-foreground/10">
           <div className="flex-1">
             <AutopilotModeBanner mode={autopilotMode} showDescription={false} compact />
           </div>
           {budgetAtRisk > 0 && (
             <div className="flex items-center gap-2">
-              <span className="text-sm text-text-muted">Budget at Risk:</span>
+              <span className="text-sm text-muted-foreground">Budget at Risk:</span>
               <BudgetAtRiskChip amount={budgetAtRisk} currency={currency} />
             </div>
           )}
           {svi !== undefined && (
             <div className="flex items-center gap-2">
-              <span className="text-sm text-text-muted">Volatility:</span>
+              <span className="text-sm text-muted-foreground">Volatility:</span>
               <VolatilityBadge svi={svi} />
             </div>
           )}
@@ -150,7 +150,7 @@ export function TrustStatusHeader({
       <div className={cn(
         'px-6 py-4 border-t',
         status.bgColor,
-        'border-white/10'
+        'border-foreground/10'
       )}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

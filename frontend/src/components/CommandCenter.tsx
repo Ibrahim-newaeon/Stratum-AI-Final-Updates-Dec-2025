@@ -97,7 +97,7 @@ const SignalIndicator: React.FC<{ value: number; label: string }> = ({ value, la
   return (
     <div className="flex items-center gap-1 text-xs">
       <Icon className={`h-3 w-3 ${color}`} />
-      <span className="text-gray-500 dark:text-gray-400">{label}</span>
+      <span className="text-muted-foreground">{label}</span>
     </div>
   )
 }
@@ -135,7 +135,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ tenantId, classNam
 
   const SortHeader: React.FC<{ field: SortField; label: string }> = ({ field, label }) => (
     <th scope="col"
-      className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50"
+      className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50"
       onClick={() => handleSort(field)}
     >
       <div className="flex items-center gap-1">
@@ -177,13 +177,13 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ tenantId, classNam
   return (
     <div className={`rounded-xl border bg-card shadow-card overflow-hidden ${className}`}>
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="px-6 py-4 border-b border-border">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-lg font-semibold text-foreground">
               Command Center
             </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-muted-foreground">
               Campaign actions based on scaling scores
             </p>
           </div>
@@ -222,7 +222,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ tenantId, classNam
                 className={`px-3 py-1 text-sm rounded-lg transition-colors ${
                   actionFilter === filter
                     ? 'bg-primary text-primary-foreground'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    : 'text-muted-foreground hover:bg-muted'
                 }`}
               >
                 {filter.charAt(0).toUpperCase() + filter.slice(1)}
@@ -235,19 +235,19 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ tenantId, classNam
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-gray-50 dark:bg-gray-800/50">
+          <thead className="bg-muted/50">
             <tr>
-              <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Campaign
               </th>
-              <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Action
               </th>
               <SortHeader field="scaling_score" label="Score" />
               <SortHeader field="roas" label="ROAS" />
               <SortHeader field="spend" label="Spend" />
               <SortHeader field="conversions" label="Conv." />
-              <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Signals
               </th>
             </tr>
@@ -263,10 +263,10 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ tenantId, classNam
                 >
                   <td className="px-4 py-3">
                     <div>
-                      <p className="font-medium text-gray-900 dark:text-white">
+                      <p className="font-medium text-foreground">
                         {item.campaign_name}
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="text-xs text-muted-foreground">
                         {item.platform} | {item.status}
                       </p>
                     </div>
@@ -284,16 +284,16 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ tenantId, classNam
                           ? 'text-emerald-600 dark:text-emerald-400'
                           : item.roas < 1
                           ? 'text-red-600 dark:text-red-400'
-                          : 'text-gray-900 dark:text-white'
+                          : 'text-foreground'
                       }`}
                     >
                       {item.roas.toFixed(2)}x
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-gray-900 dark:text-white">
+                  <td className="px-4 py-3 text-foreground">
                     ${item.spend.toLocaleString()}
                   </td>
-                  <td className="px-4 py-3 text-gray-900 dark:text-white">
+                  <td className="px-4 py-3 text-foreground">
                     {item.conversions.toLocaleString()}
                   </td>
                   <td className="px-4 py-3">
@@ -307,14 +307,14 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ tenantId, classNam
 
                 {/* Expanded row with recommendation */}
                 {expandedRow === item.campaign_id && (
-                  <tr className="bg-gray-50 dark:bg-gray-800/30">
+                  <tr className="bg-muted/30">
                     <td colSpan={7} className="px-6 py-4">
                       <div className="flex items-start gap-4">
                         <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          <p className="text-sm font-medium text-foreground">
                             Recommendation
                           </p>
-                          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                          <p className="mt-1 text-sm text-muted-foreground">
                             {item.recommendation}
                           </p>
                         </div>
@@ -336,7 +336,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ tenantId, classNam
                           </button>
                           <button
                             className={`px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg transition-colors ${
-                              onDismiss ? 'hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer' : 'opacity-50 cursor-not-allowed'
+                              onDismiss ? 'hover:bg-muted cursor-pointer' : 'opacity-50 cursor-not-allowed'
                             }`}
                             onClick={(e) => {
                               e.stopPropagation()
@@ -361,7 +361,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({ tenantId, classNam
 
         {sortedItems.length === 0 && (
           <div className="px-6 py-12 text-center">
-            <p className="text-gray-500 dark:text-gray-400">No campaigns found</p>
+            <p className="text-muted-foreground">No campaigns found</p>
           </div>
         )}
       </div>

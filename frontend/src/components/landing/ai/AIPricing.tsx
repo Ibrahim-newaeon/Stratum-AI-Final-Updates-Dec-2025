@@ -265,12 +265,12 @@ export default function AIPricing() {
           </p>
 
           {/* Billing Toggle */}
-          <div className="inline-flex items-center gap-4 p-1.5 rounded-full bg-white/[0.03] border border-white/[0.05]">
+          <div className="inline-flex items-center gap-4 p-1.5 rounded-full bg-foreground/[0.03] border border-foreground/[0.05]">
             <button
               onClick={() => setBillingCycle('monthly')}
               className={`px-6 py-2 rounded-full text-sm font-medium transition-colors ${
                 billingCycle === 'monthly'
-                  ? 'bg-white/10 text-white'
+                  ? 'bg-foreground/10 text-white'
                   : 'text-gray-400 hover:text-white'
               }`}
             >
@@ -357,7 +357,7 @@ export default function AIPricing() {
                     className={`block w-full py-3 px-6 rounded-lg text-center font-medium transition-colors ${
                       tier.popular
                         ? 'bg-gradient-to-r from-purple-500 to-violet-500 text-white hover:opacity-90'
-                        : 'bg-white/[0.05] border border-white/10 text-white hover:bg-white/10'
+                        : 'bg-foreground/[0.05] border border-foreground/10 text-white hover:bg-foreground/10'
                     }`}
                   >
                     {tier.cta}
@@ -367,7 +367,7 @@ export default function AIPricing() {
                   </a>
 
                   {/* Limits */}
-                  <div className="mt-6 pt-6 border-t border-white/[0.05] grid grid-cols-2 gap-4">
+                  <div className="mt-6 pt-6 border-t border-foreground/[0.05] grid grid-cols-2 gap-4">
                     <div>
                       <div className="text-lg font-semibold text-white">{tier.limits.profiles}</div>
                       <div className="text-xs text-gray-500">Profiles</div>
@@ -427,9 +427,9 @@ export default function AIPricing() {
           transition={{ duration: 0.4 }}
           className="overflow-hidden"
         >
-          <div className="rounded-3xl border border-white/[0.05] bg-white/[0.02] backdrop-blur-sm overflow-hidden">
+          <div className="rounded-3xl border border-foreground/[0.05] bg-foreground/[0.02] backdrop-blur-sm overflow-hidden">
             {/* Header */}
-            <div className="grid grid-cols-4 gap-4 p-6 border-b border-white/[0.05] bg-white/[0.02]">
+            <div className="grid grid-cols-4 gap-4 p-6 border-b border-foreground/[0.05] bg-foreground/[0.02]">
               <div className="text-sm font-medium text-gray-400">Feature</div>
               <div className="text-sm font-medium text-center text-blue-400">Starter</div>
               <div className="text-sm font-medium text-center text-purple-400">Professional</div>
@@ -439,14 +439,14 @@ export default function AIPricing() {
             {/* Feature Categories */}
             {featureCategories.map((category) => (
               <div key={category.category}>
-                <div className="px-6 py-3 bg-white/[0.02] border-b border-white/[0.05]">
+                <div className="px-6 py-3 bg-foreground/[0.02] border-b border-foreground/[0.05]">
                   <span className="text-sm font-semibold text-white">{category.category}</span>
                 </div>
                 {category.features.map((feature, index) => (
                   <div
                     key={feature.name}
                     className={`grid grid-cols-4 gap-4 px-6 py-4 items-center ${
-                      index < category.features.length - 1 ? 'border-b border-white/[0.03]' : ''
+                      index < category.features.length - 1 ? 'border-b border-foreground/[0.03]' : ''
                     }`}
                   >
                     <div className="flex items-center gap-2">
@@ -454,7 +454,7 @@ export default function AIPricing() {
                       {feature.tooltip && (
                         <div className="group relative">
                           <InformationCircleIcon className="w-4 h-4 text-gray-500 cursor-help" />
-                          <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-3 py-2 bg-gray-900 border border-white/10 rounded-lg text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                          <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-3 py-2 bg-gray-900 border border-foreground/10 rounded-lg text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                             {feature.tooltip}
                           </div>
                         </div>

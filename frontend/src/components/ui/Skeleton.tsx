@@ -55,7 +55,7 @@ export function ChartSkeleton({ height = 300 }: { height?: number }) {
         style={{ height }}
       >
         {/* Animated shimmer effect */}
-        <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+        <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-foreground/10 to-transparent" />
 
         {/* Chart bars placeholder */}
         <div className="absolute bottom-4 left-4 right-4 flex items-end justify-around gap-2">
@@ -85,7 +85,7 @@ export function AreaChartSkeleton({ height = 300 }: { height?: number }) {
         className="relative overflow-hidden rounded-lg bg-muted/50"
         style={{ height }}
       >
-        <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+        <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-foreground/10 to-transparent" />
 
         {/* Area wave placeholder */}
         <svg className="absolute inset-4" viewBox="0 0 100 50" preserveAspectRatio="none">
@@ -112,7 +112,7 @@ export function PieChartSkeleton({ height = 300 }: { height?: number }) {
         className="relative flex items-center justify-center overflow-hidden rounded-lg bg-muted/50"
         style={{ height }}
       >
-        <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+        <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-foreground/10 to-transparent" />
 
         {/* Donut placeholder */}
         <div className="relative w-40 h-40">
@@ -237,7 +237,7 @@ export function DashboardSkeleton() {
 // EMQ Score Card Skeleton
 export function EmqScoreSkeleton() {
   return (
-    <div className="p-6 rounded-2xl bg-surface-secondary border border-white/10">
+    <div className="p-6 rounded-2xl bg-surface-secondary border border-foreground/10">
       <div className="flex items-center gap-6">
         {/* Score circle */}
         <Skeleton className="h-24 w-24 rounded-full" />
@@ -251,7 +251,7 @@ export function EmqScoreSkeleton() {
         </div>
       </div>
       {/* Drivers */}
-      <div className="grid grid-cols-4 gap-4 mt-6 pt-6 border-t border-white/10">
+      <div className="grid grid-cols-4 gap-4 mt-6 pt-6 border-t border-foreground/10">
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i}>
             <Skeleton className="h-3 w-16 mb-2" />
@@ -266,11 +266,11 @@ export function EmqScoreSkeleton() {
 // Fix Playbook Skeleton
 export function PlaybookSkeleton({ items = 3 }: { items?: number }) {
   return (
-    <div className="rounded-2xl bg-surface-secondary border border-white/10 overflow-hidden">
-      <div className="p-4 border-b border-white/10">
+    <div className="rounded-2xl bg-surface-secondary border border-foreground/10 overflow-hidden">
+      <div className="p-4 border-b border-foreground/10">
         <Skeleton className="h-5 w-32" />
       </div>
-      <div className="divide-y divide-white/5">
+      <div className="divide-y divide-foreground/5">
         {Array.from({ length: items }).map((_, i) => (
           <div key={i} className="p-4">
             <div className="flex items-start gap-3">
@@ -294,7 +294,7 @@ export function PlaybookSkeleton({ items = 3 }: { items?: number }) {
 // Timeline Skeleton
 export function TimelineSkeleton({ items = 4 }: { items?: number }) {
   return (
-    <div className="rounded-2xl bg-surface-secondary border border-white/10 p-4">
+    <div className="rounded-2xl bg-surface-secondary border border-foreground/10 p-4">
       <Skeleton className="h-5 w-24 mb-4" />
       <div className="space-y-4">
         {Array.from({ length: items }).map((_, i) => (
@@ -318,7 +318,7 @@ export function TimelineSkeleton({ items = 4 }: { items?: number }) {
 // Trust Header Skeleton
 export function TrustHeaderSkeleton() {
   return (
-    <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
+    <div className="p-4 rounded-xl bg-surface-secondary border border-foreground/10">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Skeleton className="h-12 w-12 rounded-xl" />

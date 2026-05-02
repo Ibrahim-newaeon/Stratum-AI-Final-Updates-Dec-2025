@@ -217,8 +217,8 @@ export default function DashboardLayout() {
           'group flex items-center gap-3 rounded-lg text-sm font-medium transition-colors duration-200',
           variant === 'default' ? 'px-3 py-2' : 'px-3 py-1.5',
           isActive
-            ? 'border-l-2 border-[#FF8C00] bg-[#FF8C00]/5 text-[#FF8C00]'
-            : 'text-[#8B92A8] hover:text-[#F0EDE5] hover:bg-[#F0EDE5]/[0.03]'
+            ? 'border-l-2 border-secondary bg-secondary/5 text-secondary'
+            : 'text-muted-foreground hover:text-foreground hover:bg-foreground/[0.03]'
         )}
       >
         <item.icon className={cn('flex-shrink-0', variant === 'default' ? 'h-5 w-5' : 'h-4 w-4')} />
@@ -230,14 +230,14 @@ export default function DashboardLayout() {
   /* ── Section Header ───────────────────────────────────────── */
   const SectionHeader = ({ title }: { title: string }) => (
     <div className="px-3 pt-5 pb-2">
-      <span className="text-[10px] font-semibold uppercase tracking-wider text-[#5A6278]">
+      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
         {title}
       </span>
     </div>
   );
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#080C14]" style={{ fontFamily: 'Satoshi, system-ui, sans-serif' }}>
+    <div className="flex h-screen overflow-hidden bg-background" style={{ fontFamily: 'Geist, system-ui, sans-serif' }}>
       <DemoBanner variant="top" />
 
       <div className="flex flex-1 overflow-hidden relative z-10">
@@ -262,7 +262,7 @@ export default function DashboardLayout() {
           data-tour="sidebar"
           aria-label="Main navigation"
           className={cn(
-            'fixed inset-y-0 left-0 z-50 flex flex-col border-r border-[#1E2740] bg-[#0A0E17] transition-[width] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]',
+            'fixed inset-y-0 left-0 z-50 flex flex-col border-r border-border bg-[#0A0E17] transition-[width] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]',
             sidebarOpen ? 'translate-x-0' : '-translate-x-full',
             'lg:translate-x-0',
             sidebarCollapsed ? 'lg:w-0 lg:overflow-hidden lg:border-r-0' : 'w-[240px] lg:w-[240px]'
@@ -270,19 +270,19 @@ export default function DashboardLayout() {
         >
           <div className={cn('flex h-full flex-col w-[240px]', sidebarCollapsed ? 'lg:opacity-0' : 'lg:opacity-100')}>
             {/* Logo */}
-            <div className="flex h-16 items-center justify-between px-4 border-b border-[#1E2740]">
+            <div className="flex h-16 items-center justify-between px-4 border-b border-border">
               <div className="flex items-center gap-3">
                 <img src="/images/stratum-logo.png" alt="Stratum AI" className="h-7" loading="lazy" decoding="async" />
               </div>
               <button
                 onClick={() => setSidebarCollapsed(true)}
-                className="hidden lg:flex p-1.5 rounded-md text-[#5A6278] hover:text-[#F0EDE5] transition-colors duration-200"
+                className="hidden lg:flex p-1.5 rounded-md text-muted-foreground hover:text-foreground transition-colors duration-200"
                 aria-label="Collapse sidebar"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
               <button
-                className="lg:hidden p-1.5 rounded-md text-[#5A6278] hover:text-[#F0EDE5] transition-colors duration-200"
+                className="lg:hidden p-1.5 rounded-md text-muted-foreground hover:text-foreground transition-colors duration-200"
                 onClick={() => setSidebarOpen(false)}
                 aria-label="Close navigation"
               >
@@ -317,8 +317,8 @@ export default function DashboardLayout() {
                           className={cn(
                             'w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200',
                             location.pathname.startsWith('/dashboard/cdp')
-                              ? 'border-l-2 border-[#FF8C00] bg-[#FF8C00]/5 text-[#FF8C00]'
-                              : 'text-[#8B92A8] hover:text-[#F0EDE5] hover:bg-[#F0EDE5]/[0.03]'
+                              ? 'border-l-2 border-secondary bg-secondary/5 text-secondary'
+                              : 'text-muted-foreground hover:text-foreground hover:bg-foreground/[0.03]'
                           )}
                         >
                           <div className="flex items-center gap-3">
@@ -334,7 +334,7 @@ export default function DashboardLayout() {
                               animate={{ opacity: 1, height: 'auto' }}
                               exit={{ opacity: 0, height: 0 }}
                               transition={{ duration: 0.2 }}
-                              className="mt-1 ml-2 pl-3 space-y-0.5 overflow-hidden border-l border-[#1E2740]"
+                              className="mt-1 ml-2 pl-3 space-y-0.5 overflow-hidden border-l border-border"
                             >
                               {cdpSubNav.filter((sub) => canSeeSection(user?.role, sub.section)).map((sub) => renderNavLink(sub, 'sub'))}
                             </motion.div>
@@ -364,8 +364,8 @@ export default function DashboardLayout() {
                       className={cn(
                         'w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200',
                         location.pathname.startsWith('/dashboard/superadmin')
-                          ? 'border-l-2 border-[#FF8C00] bg-[#FF8C00]/5 text-[#FF8C00]'
-                          : 'text-[#8B92A8] hover:text-[#F0EDE5] hover:bg-[#F0EDE5]/[0.03]'
+                          ? 'border-l-2 border-secondary bg-secondary/5 text-secondary'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-foreground/[0.03]'
                       )}
                     >
                       <div className="flex items-center gap-3">
@@ -381,7 +381,7 @@ export default function DashboardLayout() {
                           animate={{ opacity: 1, height: 'auto' }}
                           exit={{ opacity: 0, height: 0 }}
                           transition={{ duration: 0.2 }}
-                          className="mt-1 ml-2 pl-3 space-y-0.5 overflow-hidden border-l border-[#1E2740]"
+                          className="mt-1 ml-2 pl-3 space-y-0.5 overflow-hidden border-l border-border"
                         >
                           {[
                             { href: '/dashboard/superadmin', icon: PieChart, name: 'Dashboard' },
@@ -396,8 +396,8 @@ export default function DashboardLayout() {
                                 className={cn(
                                   'flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm transition-colors duration-200',
                                   isActive
-                                    ? 'border-l-2 border-[#FF8C00] bg-[#FF8C00]/5 text-[#FF8C00]'
-                                    : 'text-[#8B92A8] hover:text-[#F0EDE5] hover:bg-[#F0EDE5]/[0.03]'
+                                    ? 'border-l-2 border-secondary bg-secondary/5 text-secondary'
+                                    : 'text-muted-foreground hover:text-foreground hover:bg-foreground/[0.03]'
                                 )}
                               >
                                 <sub.icon className="h-4 w-4 flex-shrink-0" />
@@ -414,18 +414,18 @@ export default function DashboardLayout() {
             </nav>
 
             {/* User Section */}
-            <div className="p-3 border-t border-[#1E2740]">
+            <div className="p-3 border-t border-border">
               <div className="flex items-center gap-3 px-2 py-2">
-                <div className="h-9 w-9 rounded-lg bg-[#FF8C00]/10 flex items-center justify-center flex-shrink-0">
-                  <span className="text-xs font-semibold text-[#FF8C00]">{getUserInitials()}</span>
+                <div className="h-9 w-9 rounded-lg bg-secondary/10 flex items-center justify-center flex-shrink-0">
+                  <span className="text-xs font-semibold text-secondary">{getUserInitials()}</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-[#F0EDE5] truncate">{user?.name || 'User'}</p>
-                  <p className="text-xs text-[#5A6278] truncate capitalize">{user?.role || 'analyst'}</p>
+                  <p className="text-sm font-medium text-foreground truncate">{user?.name || 'User'}</p>
+                  <p className="text-xs text-muted-foreground truncate capitalize">{user?.role || 'analyst'}</p>
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="p-1.5 rounded-md text-[#5A6278] hover:text-[#E85D5D] hover:bg-[#E85D5D]/5 transition-colors duration-200"
+                  className="p-1.5 rounded-md text-muted-foreground hover:text-[#E85D5D] hover:bg-[#E85D5D]/5 transition-colors duration-200"
                   aria-label="Log out"
                   title="Log out"
                 >
@@ -441,7 +441,7 @@ export default function DashboardLayout() {
           <button
             onClick={() => setSidebarCollapsed(false)}
             aria-label="Expand sidebar"
-            className="hidden lg:flex fixed top-4 left-4 z-50 h-8 w-8 items-center justify-center rounded-lg bg-[#0F1320] border border-[#1E2740] text-[#FF8C00] hover:border-[#FF8C00]/30 transition-colors duration-200"
+            className="hidden lg:flex fixed top-4 left-4 z-50 h-8 w-8 items-center justify-center rounded-lg bg-card border border-border text-secondary hover:border-secondary/30 transition-colors duration-200"
           >
             <ChevronRight className="h-4 w-4" />
           </button>
@@ -457,33 +457,33 @@ export default function DashboardLayout() {
           )}
         >
           {/* Header */}
-          <header className="flex h-16 items-center justify-between px-6 bg-[#080C14] border-b border-[#1E2740]">
+          <header className="flex h-16 items-center justify-between px-6 bg-background border-b border-border">
             {/* Left: Mobile hamburger + breadcrumb */}
             <div className="flex items-center gap-4">
               <button
-                className="lg:hidden p-2 rounded-lg text-[#5A6278] hover:text-[#F0EDE5] transition-colors duration-200"
+                className="lg:hidden p-2 rounded-lg text-muted-foreground hover:text-foreground transition-colors duration-200"
                 onClick={() => setSidebarOpen(true)}
                 aria-label="Open navigation"
               >
                 <Menu className="h-5 w-5" />
               </button>
-              <h1 className="text-sm font-medium text-[#F0EDE5] hidden sm:block">
+              <h1 className="text-sm font-medium text-foreground hidden sm:block">
                 {location.pathname.split('/').filter(Boolean).slice(1).map((part) => (
                   <span key={part} className="capitalize">{part.replace(/-/g, ' ')}</span>
                 )).reduce((prev, curr, i) => (
                   <span key={i}>
                     {prev}
-                    <span className="mx-2 text-[#1E2740]">/</span>
+                    <span className="mx-2 text-border">/</span>
                     {curr}
                   </span>
-                ), <span key="root" className="text-[#5A6278]">Dashboard</span>)}
+                ), <span key="root" className="text-muted-foreground">Dashboard</span>)}
               </h1>
             </div>
 
             {/* Center: Global Search */}
             <div className="flex-1 max-w-md mx-4 hidden md:block">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#5A6278]" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <CommandPalette />
               </div>
             </div>
@@ -495,7 +495,7 @@ export default function DashboardLayout() {
 
               <button
                 onClick={() => setLearningHubOpen(!learningHubOpen)}
-                className="p-2 rounded-lg text-[#8B92A8] hover:text-[#F0EDE5] hover:bg-[#F0EDE5]/[0.03] transition-colors duration-200"
+                className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-foreground/[0.03] transition-colors duration-200"
                 aria-label="Learning Hub"
                 title="Learning Hub"
               >
@@ -504,7 +504,7 @@ export default function DashboardLayout() {
 
               <button
                 onClick={() => setWhatsNewOpen(true)}
-                className="relative p-2 rounded-lg text-[#8B92A8] hover:text-[#F0EDE5] hover:bg-[#F0EDE5]/[0.03] transition-colors duration-200"
+                className="relative p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-foreground/[0.03] transition-colors duration-200"
                 aria-label="What's New"
                 title="What's New"
               >
@@ -516,16 +516,16 @@ export default function DashboardLayout() {
 
               <button
                 onClick={() => setNotificationsOpen(true)}
-                className="relative p-2 rounded-lg text-[#8B92A8] hover:text-[#F0EDE5] hover:bg-[#F0EDE5]/[0.03] transition-colors duration-200"
+                className="relative p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-foreground/[0.03] transition-colors duration-200"
                 aria-label="Notifications"
                 title="Notifications"
               >
                 <Bell className="h-5 w-5" />
-                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[#FF1F6D]" />
+                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-primary" />
               </button>
 
               <button
-                className="hidden sm:flex px-2.5 py-1 rounded-md text-xs font-medium text-[#8B92A8] border border-[#1E2740] hover:text-[#F0EDE5] hover:border-[#1E2740] transition-colors duration-200"
+                className="hidden sm:flex px-2.5 py-1 rounded-md text-xs font-medium text-muted-foreground border border-border hover:text-foreground hover:border-border transition-colors duration-200"
                 onClick={toggleLanguage}
               >
                 {i18n.language === 'en' ? 'AR' : 'EN'}
@@ -535,10 +535,10 @@ export default function DashboardLayout() {
               <div className="relative">
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="flex items-center gap-2 p-1.5 rounded-lg transition-colors duration-200 hover:bg-[#F0EDE5]/[0.03]"
+                  className="flex items-center gap-2 p-1.5 rounded-lg transition-colors duration-200 hover:bg-foreground/[0.03]"
                 >
-                  <div className="h-8 w-8 rounded-lg bg-[#FF8C00]/10 flex items-center justify-center">
-                    <span className="text-xs font-semibold text-[#FF8C00]">{getUserInitials()}</span>
+                  <div className="h-8 w-8 rounded-lg bg-secondary/10 flex items-center justify-center">
+                    <span className="text-xs font-semibold text-secondary">{getUserInitials()}</span>
                   </div>
                 </button>
 
@@ -551,15 +551,15 @@ export default function DashboardLayout() {
                         initial="hidden"
                         animate="visible"
                         exit="exit"
-                        className="absolute right-0 mt-2 w-52 py-1 rounded-xl z-50 bg-[#0F1320] border border-[#1E2740] shadow-xl"
+                        className="absolute right-0 mt-2 w-52 py-1 rounded-xl z-50 bg-card border border-border shadow-xl"
                       >
-                        <div className="px-3 py-2 border-b border-[#1E2740]">
-                          <p className="text-sm font-medium text-[#F0EDE5]">{user?.name}</p>
-                          <p className="text-xs text-[#5A6278]">{user?.email}</p>
+                        <div className="px-3 py-2 border-b border-border">
+                          <p className="text-sm font-medium text-foreground">{user?.name}</p>
+                          <p className="text-xs text-muted-foreground">{user?.email}</p>
                         </div>
                         <NavLink
                           to="/dashboard/settings"
-                          className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg mx-1 text-[#8B92A8] hover:text-[#F0EDE5] hover:bg-[#F0EDE5]/[0.03] transition-colors duration-200"
+                          className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg mx-1 text-muted-foreground hover:text-foreground hover:bg-foreground/[0.03] transition-colors duration-200"
                           onClick={() => setUserMenuOpen(false)}
                         >
                           <Settings className="w-4 h-4" />

@@ -11,21 +11,21 @@ export function Hero() {
 
       {/* Subtle radial glow */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-[#FF8C00]/5 blur-3xl" />
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-secondary/5 blur-3xl" />
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-6 py-24 lg:py-32 text-center">
         {/* Badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#FF8C00]/10 border border-[#FF8C00]/20 mb-8 animate-enter">
-          <span className="w-2 h-2 rounded-full bg-[#FF8C00] animate-pulse" />
-          <span className="text-meta text-[#FF8C00]">
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 border border-secondary/20 mb-8 animate-enter">
+          <span className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
+          <span className="text-meta text-secondary">
             Your AI Partner for Ad Growth
           </span>
         </div>
 
         {/* Main headline */}
         <h1
-          className="text-display-sm md:text-display text-text-primary leading-tight mb-6 animate-enter"
+          className="text-display-sm md:text-display text-foreground leading-tight mb-6 animate-enter"
           style={{ animationDelay: '0.1s' }}
         >
           Your AI Partner for{' '}
@@ -34,7 +34,7 @@ export function Hero() {
 
         {/* Subheadline */}
         <p
-          className="text-h2 md:text-h1 text-text-secondary mb-4 animate-enter"
+          className="text-h2 md:text-h1 text-muted-foreground mb-4 animate-enter"
           style={{ animationDelay: '0.2s' }}
         >
           We optimize together. You stay in control.
@@ -42,7 +42,7 @@ export function Hero() {
 
         {/* Description */}
         <p
-          className="max-w-2xl mx-auto text-body text-text-muted mb-12 animate-enter"
+          className="max-w-2xl mx-auto text-body text-muted-foreground mb-12 animate-enter"
           style={{ animationDelay: '0.3s' }}
         >
           Stratum AI partners with your growth team to unify ad operations across
@@ -57,14 +57,14 @@ export function Hero() {
         >
           <button
             onClick={() => navigate('/signup')}
-            className="group inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-[#FF1F6D] to-[#FF8C00] text-white font-semibold text-body shadow-glow hover:shadow-glow-orange hover:scale-[1.02] active:scale-[0.98] transition-transform transition-shadow duration-200"
+            className="group inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-semibold text-body shadow-glow hover:shadow-glow-orange hover:scale-[1.02] active:scale-[0.98] transition-transform transition-shadow duration-200"
           >
             Start Free
             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
           </button>
 
-          <button className="group inline-flex items-center gap-2 px-8 py-4 rounded-xl border border-border bg-card text-text-primary font-medium text-body hover:bg-white/5 hover:border-border/80 transition-colors duration-200">
-            <Play className="w-5 h-5 text-[#FF8C00]" />
+          <button className="group inline-flex items-center gap-2 px-8 py-4 rounded-xl border border-border bg-card text-foreground font-medium text-body hover:bg-foreground/5 hover:border-border/80 transition-colors duration-200">
+            <Play className="w-5 h-5 text-secondary" />
             See How We Partner
           </button>
         </div>
@@ -75,7 +75,7 @@ export function Hero() {
           style={{ animationDelay: '0.5s' }}
         >
           <div className="relative rounded-2xl overflow-hidden border border-border shadow-elevated">
-            <div className="absolute -inset-4 bg-[#FF8C00]/10 opacity-30 blur-2xl pointer-events-none" />
+            <div className="absolute -inset-4 bg-secondary/10 opacity-30 blur-2xl pointer-events-none" />
 
             <div className="relative bg-card rounded-2xl p-1">
               <div className="bg-background rounded-xl overflow-hidden">
@@ -87,7 +87,7 @@ export function Hero() {
                     <div className="w-3 h-3 rounded-full bg-success/60" />
                   </div>
                   <div className="flex-1 flex justify-center">
-                    <div className="px-4 py-1 rounded-md bg-background text-meta text-text-muted">
+                    <div className="px-4 py-1 rounded-md bg-background text-meta text-muted-foreground">
                       app.stratum.ai
                     </div>
                   </div>
@@ -127,10 +127,10 @@ export function Hero() {
                         key={i}
                         className="bg-card rounded-lg p-4 border border-border"
                       >
-                        <div className="text-meta text-text-muted mb-1">
+                        <div className="text-meta text-muted-foreground mb-1">
                           {kpi.label}
                         </div>
-                        <div className="text-h3 text-text-primary font-semibold">
+                        <div className="text-h3 text-foreground font-semibold">
                           {kpi.value}
                         </div>
                         <div
@@ -148,7 +148,7 @@ export function Hero() {
                       (h, i) => (
                         <div
                           key={i}
-                          className="flex-1 bg-gradient-to-t from-[#FF1F6D]/40 to-[#FF8C00]/80 rounded-t"
+                          className="flex-1 bg-gradient-to-t from-primary/40 to-secondary/80 rounded-t"
                           style={{ height: `${h}%` }}
                         />
                       ),

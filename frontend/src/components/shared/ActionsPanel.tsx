@@ -79,15 +79,15 @@ export function ActionsPanel({
 
   return (
     <div className={cn(
-      'rounded-2xl bg-surface-secondary border border-white/10 overflow-hidden',
+      'rounded-2xl bg-surface-secondary border border-foreground/10 overflow-hidden',
       className
     )}>
       {/* Header */}
-      <div className="p-4 border-b border-white/10">
+      <div className="p-4 border-b border-foreground/10">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-semibold text-white">Actions</h3>
-            <p className="text-sm text-text-muted">
+            <p className="text-sm text-muted-foreground">
               {pendingActions.length} actions pending
             </p>
           </div>
@@ -114,7 +114,7 @@ export function ActionsPanel({
       </div>
 
       {/* Filter tabs */}
-      <div className="flex items-center gap-1 p-2 overflow-x-auto border-b border-white/10">
+      <div className="flex items-center gap-1 p-2 overflow-x-auto border-b border-foreground/10">
         {filterTabs.map((tab) => {
           const count = tab.type === 'all'
             ? Object.values(countByType).reduce((a, b) => a + b, 0)
@@ -129,7 +129,7 @@ export function ActionsPanel({
                 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors whitespace-nowrap',
                 activeFilter === tab.type
                   ? 'bg-stratum-500/10 text-stratum-400'
-                  : 'text-text-muted hover:text-white'
+                  : 'text-muted-foreground hover:text-white'
               )}
             >
               <Icon className="w-4 h-4" />
@@ -166,16 +166,16 @@ export function ActionsPanel({
         ) : (
           <div className="text-center py-8">
             <div className="w-12 h-12 rounded-full bg-surface-tertiary flex items-center justify-center mx-auto mb-3">
-              <SparklesIcon className="w-6 h-6 text-text-muted" />
+              <SparklesIcon className="w-6 h-6 text-muted-foreground" />
             </div>
-            <p className="text-text-muted">No pending actions</p>
+            <p className="text-muted-foreground">No pending actions</p>
           </div>
         )}
       </div>
 
       {/* Footer */}
       {pendingActions.length > maxActions && (
-        <div className="p-4 border-t border-white/10">
+        <div className="p-4 border-t border-foreground/10">
           <button className="text-sm text-stratum-400 hover:text-stratum-300 transition-colors">
             View all {pendingActions.length} actions
           </button>

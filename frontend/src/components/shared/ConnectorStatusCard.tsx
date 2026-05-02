@@ -72,7 +72,7 @@ export function ConnectorStatusCard({
           </div>
         </div>
         {isConnected && emqScore !== undefined && (
-          <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/5">
+          <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-foreground/5">
             <SignalIcon className="h-3.5 w-3.5 text-primary" />
             <span className="text-xs font-medium">EMQ {emqScore}%</span>
           </div>
@@ -82,11 +82,11 @@ export function ConnectorStatusCard({
       {/* Stats */}
       {isConnected && (
         <div className="grid grid-cols-2 gap-3 mb-4">
-          <div className="p-2.5 rounded-lg bg-white/5">
+          <div className="p-2.5 rounded-lg bg-foreground/5">
             <p className="text-xs text-muted-foreground">Last Sync</p>
             <p className="text-sm font-medium">{lastSync || 'Never'}</p>
           </div>
-          <div className="p-2.5 rounded-lg bg-white/5">
+          <div className="p-2.5 rounded-lg bg-foreground/5">
             <p className="text-xs text-muted-foreground">Data Volume</p>
             <p className="text-sm font-medium">{dataVolume || '0 events'}</p>
           </div>
@@ -100,7 +100,7 @@ export function ConnectorStatusCard({
             {onRefresh && (
               <button
                 onClick={onRefresh}
-                className="flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg border border-white/10 hover:bg-white/5 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg border border-foreground/10 hover:bg-foreground/5 transition-colors"
               >
                 <ArrowPathIcon className="h-4 w-4" />
                 Sync Now

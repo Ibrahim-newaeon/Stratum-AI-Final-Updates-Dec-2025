@@ -140,7 +140,7 @@ export default function CDPSolution() {
               </div>
               <h1
                 className="text-4xl md:text-5xl font-bold mb-6"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
+                style={{ fontFamily: "Geist, system-ui, sans-serif" }}
               >
                 <span className="text-white">{hero.title}</span>
                 <br />
@@ -155,14 +155,14 @@ export default function CDPSolution() {
                   className="px-8 py-4 rounded-full text-lg font-semibold text-white transition-opacity hover:opacity-90 text-center"
                   style={{
                     background: 'var(--landing-accent-coral)',
-                    boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
+                    boxShadow: '0 4px 20px rgba(255, 90, 31, 0.3)',
                   }}
                 >
                   {hero.ctaText}
                 </Link>
                 <Link
                   to="/cdp-calculator"
-                  className="px-8 py-4 rounded-xl text-lg font-semibold text-white transition-colors hover:bg-white/10 text-center"
+                  className="px-8 py-4 rounded-xl text-lg font-semibold text-white transition-colors hover:bg-foreground/10 text-center"
                   style={{
                     background: 'var(--landing-surface-glass)',
                     border: '1px solid rgba(255, 255, 255, 0.12)',
@@ -320,7 +320,7 @@ export default function CDPSolution() {
               className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-opacity hover:opacity-90"
               style={{
                 background: 'var(--landing-accent-coral)',
-                boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
+                boxShadow: '0 4px 20px rgba(255, 90, 31, 0.3)',
               }}
             >
               Get Started Free

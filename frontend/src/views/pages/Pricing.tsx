@@ -120,7 +120,7 @@ export default function Pricing() {
         <div className="max-w-7xl mx-auto text-center">
           <h1
             className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6"
-            style={{ fontFamily: "'Clash Display', sans-serif" }}
+            style={{ fontFamily: "Geist, system-ui, sans-serif" }}
           >
             <span className="text-white">Simple, Transparent</span>
             <br />
@@ -152,7 +152,7 @@ export default function Pricing() {
                 style={{
                   background: 'var(--landing-card)',
                   border: '1px solid var(--landing-border)',
-                  borderTop: tier.highlighted ? '3px solid #FF4D4D' : undefined,
+                  borderTop: tier.highlighted ? '3px solid #FF5A1F' : undefined,
                 }}
               >
                 {tier.highlighted && (
@@ -201,7 +201,7 @@ export default function Pricing() {
                     background: tier.highlighted ? 'var(--landing-accent-coral)' : 'var(--landing-surface-glass)',
                     color: '#ffffff',
                     border: tier.highlighted ? 'none' : '1px solid rgba(255, 255, 255, 0.2)',
-                    boxShadow: tier.highlighted ? '0 4px 20px rgba(255, 77, 77, 0.3)' : 'none',
+                    boxShadow: tier.highlighted ? '0 4px 20px rgba(255, 90, 31, 0.3)' : 'none',
                   }}
                 >
                   {tier.cta}

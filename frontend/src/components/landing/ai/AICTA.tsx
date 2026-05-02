@@ -116,7 +116,7 @@ export default function AICTA() {
 
           <a
             href="/demo"
-            className="inline-flex items-center gap-2 px-8 py-4 rounded-lg text-base font-semibold text-white transition-colors hover:bg-white/10"
+            className="inline-flex items-center gap-2 px-8 py-4 rounded-lg text-base font-semibold text-white transition-colors hover:bg-foreground/10"
             style={{
               background: 'rgba(255, 255, 255, 0.03)',
               backdropFilter: 'blur(40px)',
@@ -147,7 +147,7 @@ export default function AICTA() {
           initial={{ opacity: 0 }}
           animate={isInView ? { opacity: 1 } : {}}
           transition={{ delay: 0.6, duration: 0.6 }}
-          className="mt-16 pt-8 border-t border-white/[0.05]"
+          className="mt-16 pt-8 border-t border-foreground/[0.05]"
         >
           <p className="text-sm text-gray-500">
             No credit card required. SOC 2 Type II compliant. Your data never trains our models.

@@ -88,7 +88,7 @@ export default function ControlTower() {
       case 'risk': return 'text-warning bg-warning/10 border-warning/20'
       case 'degraded': return 'text-orange-400 bg-orange-500/10 border-orange-500/20'
       case 'critical': return 'text-danger bg-danger/10 border-danger/20'
-      default: return 'text-text-muted bg-surface-tertiary border-white/10'
+      default: return 'text-muted-foreground bg-surface-tertiary border-foreground/10'
     }
   }
 
@@ -98,12 +98,12 @@ export default function ControlTower() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Control Tower</h1>
-          <p className="text-text-muted">Platform overview & tenant health</p>
+          <p className="text-muted-foreground">Platform overview & tenant health</p>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/dashboard/superadmin')}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-secondary border border-white/10 text-text-secondary hover:text-white transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-secondary border border-foreground/10 text-muted-foreground hover:text-white transition-colors"
           >
             <Cog6ToothIcon className="w-4 h-4" />
             System Settings
@@ -113,8 +113,8 @@ export default function ControlTower() {
 
       {/* Portfolio KPIs */}
       <div data-tour="portfolio-kpis" className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
-          <div className="flex items-center gap-2 text-text-muted mb-2">
+        <div className="p-4 rounded-xl bg-surface-secondary border border-foreground/10">
+          <div className="flex items-center gap-2 text-muted-foreground mb-2">
             <CurrencyDollarIcon className="w-4 h-4" />
             <span className="text-sm">MRR</span>
           </div>
@@ -129,54 +129,54 @@ export default function ControlTower() {
           )}
         </div>
 
-        <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
-          <div className="flex items-center gap-2 text-text-muted mb-2">
+        <div className="p-4 rounded-xl bg-surface-secondary border border-foreground/10">
+          <div className="flex items-center gap-2 text-muted-foreground mb-2">
             <BuildingOffice2Icon className="w-4 h-4" />
             <span className="text-sm">Active Tenants</span>
           </div>
           <div className="text-2xl font-bold text-white">
             {portfolioData?.totalTenants ?? tenantHealth.length}
           </div>
-          <div className="text-sm text-text-muted mt-1">
+          <div className="text-sm text-muted-foreground mt-1">
             across all plans
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
-          <div className="flex items-center gap-2 text-text-muted mb-2">
+        <div className="p-4 rounded-xl bg-surface-secondary border border-foreground/10">
+          <div className="flex items-center gap-2 text-muted-foreground mb-2">
             <ExclamationTriangleIcon className="w-4 h-4" />
             <span className="text-sm">Churn Risk</span>
           </div>
           <div className="text-2xl font-bold text-warning">
             {portfolioKpis.churnRisk}
           </div>
-          <div className="text-sm text-text-muted mt-1">
+          <div className="text-sm text-muted-foreground mt-1">
             tenants at risk
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-surface-secondary border border-white/10">
-          <div className="flex items-center gap-2 text-text-muted mb-2">
+        <div className="p-4 rounded-xl bg-surface-secondary border border-foreground/10">
+          <div className="flex items-center gap-2 text-muted-foreground mb-2">
             <ChartBarIcon className="w-4 h-4" />
             <span className="text-sm">Margin</span>
           </div>
           <div className={cn('text-2xl font-bold', portfolioKpis.margin >= 50 ? 'text-success' : 'text-warning')}>
             {portfolioKpis.margin}%
           </div>
-          <div className="text-sm text-text-muted mt-1">
+          <div className="text-sm text-muted-foreground mt-1">
             gross margin
           </div>
         </div>
 
         <div className="p-4 rounded-xl bg-surface-secondary border border-danger/20">
-          <div className="flex items-center gap-2 text-text-muted mb-2">
+          <div className="flex items-center gap-2 text-muted-foreground mb-2">
             <ExclamationTriangleIcon className="w-4 h-4 text-danger" />
             <span className="text-sm">Budget at Risk</span>
           </div>
           <div className="text-2xl font-bold text-danger">
             ${(portfolioKpis.totalBudgetAtRisk / 1000).toFixed(0)}K
           </div>
-          <div className="text-sm text-text-muted mt-1">
+          <div className="text-sm text-muted-foreground mt-1">
             across all tenants
           </div>
         </div>
@@ -204,8 +204,8 @@ export default function ControlTower() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left - Tenant List */}
         <div className="lg:col-span-2" data-tour="tenant-health">
-          <div className="rounded-2xl bg-surface-secondary border border-white/10 overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b border-white/10">
+          <div className="rounded-2xl bg-surface-secondary border border-foreground/10 overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-foreground/10">
               <h3 className="font-semibold text-white">Tenant Health</h3>
               <button
                 onClick={() => navigate('/dashboard/tenants')}
@@ -215,11 +215,11 @@ export default function ControlTower() {
                 <ChevronRightIcon className="w-4 h-4" />
               </button>
             </div>
-            <div className="divide-y divide-white/5">
+            <div className="divide-y divide-foreground/5">
               {tenantHealth.map((tenant) => (
                 <div
                   key={tenant.id}
-                  className="p-4 hover:bg-white/5 cursor-pointer transition-colors"
+                  className="p-4 hover:bg-foreground/5 cursor-pointer transition-colors"
                   onClick={() => navigate(`/app/${tenant.id}/overview`)}
                 >
                   <div className="flex items-center justify-between">
@@ -244,11 +244,11 @@ export default function ControlTower() {
                     </div>
                     <div className="text-right">
                       <div className="text-lg font-bold text-white">{tenant.emqScore}</div>
-                      <div className="text-xs text-text-muted">EMQ</div>
+                      <div className="text-xs text-muted-foreground">EMQ</div>
                     </div>
                   </div>
                   {(tenant.budgetAtRisk > 0 || tenant.activeIncidents > 0) && (
-                    <div className="flex items-center gap-4 mt-3 pt-3 border-t border-white/5">
+                    <div className="flex items-center gap-4 mt-3 pt-3 border-t border-foreground/5">
                       {tenant.budgetAtRisk > 0 && (
                         <span className="text-sm text-danger">
                           ${tenant.budgetAtRisk.toLocaleString()} at risk
@@ -270,21 +270,21 @@ export default function ControlTower() {
         {/* Right - System Health */}
         <div className="space-y-6">
           {/* EMQ Benchmarks */}
-          <div data-tour="emq-benchmarks" className="rounded-2xl bg-surface-secondary border border-white/10 overflow-hidden">
-            <div className="p-4 border-b border-white/10">
+          <div data-tour="emq-benchmarks" className="rounded-2xl bg-surface-secondary border border-foreground/10 overflow-hidden">
+            <div className="p-4 border-b border-foreground/10">
               <h3 className="font-semibold text-white">EMQ Benchmarks</h3>
-              <p className="text-sm text-text-muted">P25 / P50 / P75 by platform</p>
+              <p className="text-sm text-muted-foreground">P25 / P50 / P75 by platform</p>
             </div>
             <div className="p-4 space-y-4">
               {benchmarks.map((b) => (
                 <div key={b.platform}>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm text-white">{b.platform}</span>
-                    <span className="text-sm text-text-muted">
+                    <span className="text-sm text-muted-foreground">
                       {b.p25} / {b.p50} / {b.p75}
                     </span>
                   </div>
-                  <div className="relative h-2 bg-white/10 rounded-full">
+                  <div className="relative h-2 bg-foreground/10 rounded-full">
                     {/* P25 marker */}
                     <div
                       className="absolute top-0 h-2 bg-danger/50 rounded-l-full"
@@ -307,10 +307,10 @@ export default function ControlTower() {
           </div>
 
           {/* Top Issues */}
-          <div data-tour="top-issues" className="rounded-2xl bg-surface-secondary border border-white/10 overflow-hidden">
-            <div className="p-4 border-b border-white/10">
+          <div data-tour="top-issues" className="rounded-2xl bg-surface-secondary border border-foreground/10 overflow-hidden">
+            <div className="p-4 border-b border-foreground/10">
               <h3 className="font-semibold text-white">Top Issues</h3>
-              <p className="text-sm text-text-muted">Affecting most tenants</p>
+              <p className="text-sm text-muted-foreground">Affecting most tenants</p>
             </div>
             <div className="p-4 space-y-3">
               {topIssues.map((issue, i) => (
@@ -325,8 +325,8 @@ export default function ControlTower() {
           </div>
 
           {/* Autopilot Distribution */}
-          <div data-tour="autopilot-distribution" className="rounded-2xl bg-surface-secondary border border-white/10 overflow-hidden">
-            <div className="p-4 border-b border-white/10">
+          <div data-tour="autopilot-distribution" className="rounded-2xl bg-surface-secondary border border-foreground/10 overflow-hidden">
+            <div className="p-4 border-b border-foreground/10">
               <h3 className="font-semibold text-white">Autopilot Modes</h3>
             </div>
             <div className="p-4">
@@ -341,19 +341,19 @@ export default function ControlTower() {
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-success" />
-                  <span className="text-text-muted">Normal (60%)</span>
+                  <span className="text-muted-foreground">Normal (60%)</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-warning" />
-                  <span className="text-text-muted">Limited (20%)</span>
+                  <span className="text-muted-foreground">Limited (20%)</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-orange-500" />
-                  <span className="text-text-muted">Cuts Only (10%)</span>
+                  <span className="text-muted-foreground">Cuts Only (10%)</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-danger" />
-                  <span className="text-text-muted">Frozen (10%)</span>
+                  <span className="text-muted-foreground">Frozen (10%)</span>
                 </div>
               </div>
             </div>

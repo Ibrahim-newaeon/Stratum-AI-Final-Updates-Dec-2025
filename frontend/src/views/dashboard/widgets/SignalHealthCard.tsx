@@ -23,7 +23,7 @@ interface SignalHealthCardProps {
 export function SignalHealthCard({ signalHealth, loading = false }: SignalHealthCardProps) {
   if (loading) {
     return (
-      <div className="glass border border-white/10 rounded-xl p-5 h-full flex items-center justify-center min-h-52">
+      <div className="glass border border-foreground/10 rounded-xl p-5 h-full flex items-center justify-center min-h-52">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     );
@@ -31,7 +31,7 @@ export function SignalHealthCard({ signalHealth, loading = false }: SignalHealth
 
   if (!signalHealth) {
     return (
-      <div className="glass border border-white/10 rounded-xl p-5 h-full">
+      <div className="glass border border-foreground/10 rounded-xl p-5 h-full">
         <div className="text-center text-muted-foreground py-8">
           <Activity className="w-8 h-8 mx-auto mb-2 opacity-50" />
           <p>No signal health data available</p>
@@ -93,7 +93,7 @@ export function SignalHealthCard({ signalHealth, loading = false }: SignalHealth
   };
 
   return (
-    <div className="glass border border-white/10 rounded-xl p-5 h-full card-3d">
+    <div className="glass border border-foreground/10 rounded-xl p-5 h-full card-3d">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-semibold font-display">Signal Health</h3>
         <div
@@ -123,7 +123,7 @@ export function SignalHealthCard({ signalHealth, loading = false }: SignalHealth
         </div>
         <div className="text-xs text-muted-foreground mt-1">Overall Score</div>
         {/* Progress bar */}
-        <div className="h-1.5 rounded-full bg-white/10 overflow-hidden mt-2">
+        <div className="h-1.5 rounded-full bg-foreground/10 overflow-hidden mt-2">
           <div
             className={cn(
               'h-full rounded-full transition-[width] duration-500',

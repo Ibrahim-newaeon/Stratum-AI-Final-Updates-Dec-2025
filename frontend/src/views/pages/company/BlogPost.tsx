@@ -33,11 +33,11 @@ export default function BlogPost() {
         <div className="py-20 px-6">
           <div className="max-w-4xl mx-auto">
             <div className="animate-pulse">
-              <div className="h-8 bg-white/10 rounded w-3/4 mb-4" />
-              <div className="h-4 bg-white/10 rounded w-1/2 mb-8" />
+              <div className="h-8 bg-foreground/10 rounded w-3/4 mb-4" />
+              <div className="h-4 bg-foreground/10 rounded w-1/2 mb-8" />
               <div className="space-y-4">
                 {[...Array(8)].map((_, i) => (
-                  <div key={i} className="h-4 bg-white/10 rounded w-full" />
+                  <div key={i} className="h-4 bg-foreground/10 rounded w-full" />
                 ))}
               </div>
             </div>
@@ -61,7 +61,7 @@ export default function BlogPost() {
               className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-white transition-opacity hover:opacity-90"
               style={{
                 background: 'var(--landing-accent-coral)',
-                boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
+                boxShadow: '0 4px 20px rgba(255, 90, 31, 0.3)',
               }}
             >
               <ArrowLeftIcon className="w-5 h-5" />
@@ -119,7 +119,7 @@ export default function BlogPost() {
           {/* Title */}
           <h1
             className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6"
-            style={{ fontFamily: "'Clash Display', sans-serif" }}
+            style={{ fontFamily: "Geist, system-ui, sans-serif" }}
           >
             {post.title}
           </h1>
@@ -152,7 +152,7 @@ export default function BlogPost() {
                 ) : (
                   <div
                     className="w-10 h-10 rounded-full flex items-center justify-center"
-                    style={{ background: 'rgba(255, 77, 77, 0.2)' }}
+                    style={{ background: 'rgba(255, 90, 31, 0.2)' }}
                   >
                     <UserIcon className="w-5 h-5 text-purple-400" />
                   </div>
@@ -235,7 +235,7 @@ export default function BlogPost() {
                 ) : (
                   <div
                     className="w-16 h-16 rounded-full flex items-center justify-center"
-                    style={{ background: 'rgba(255, 77, 77, 0.2)' }}
+                    style={{ background: 'rgba(255, 90, 31, 0.2)' }}
                   >
                     <UserIcon className="w-8 h-8 text-purple-400" />
                   </div>
@@ -277,14 +277,14 @@ export default function BlogPost() {
                 className="px-6 py-3 rounded-full font-semibold text-white transition-opacity hover:opacity-90"
                 style={{
                   background: 'var(--landing-accent-coral)',
-                  boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
+                  boxShadow: '0 4px 20px rgba(255, 90, 31, 0.3)',
                 }}
               >
                 Start Free Trial
               </Link>
               <Link
                 to="/contact"
-                className="px-6 py-3 rounded-xl font-semibold transition-colors hover:bg-white/10"
+                className="px-6 py-3 rounded-xl font-semibold transition-colors hover:bg-foreground/10"
                 style={{
                   background: 'var(--landing-surface-glass)',
                   border: '1px solid rgba(255, 255, 255, 0.2)',

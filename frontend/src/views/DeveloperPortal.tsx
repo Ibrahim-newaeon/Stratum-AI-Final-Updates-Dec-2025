@@ -127,7 +127,7 @@ export default function DeveloperPortal() {
               onClick={() => setActiveTab(tab.id)}
               className={cn(
                 'flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all',
-                activeTab === tab.id ? 'bg-[#FF1F6D] text-white' : 'bg-white/[0.03] text-gray-400 hover:bg-white/[0.06]'
+                activeTab === tab.id ? 'bg-primary text-white' : 'bg-foreground/[0.03] text-gray-400 hover:bg-foreground/[0.06]'
               )}
             >
               <tab.icon className="w-5 h-5" />
@@ -155,16 +155,16 @@ function KeysPanel() {
 
   return (
     <div className="space-y-4">
-      <div className="bg-white/[0.02] border border-white/10 rounded-xl p-6">
+      <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">API Keys</h3>
-          <button className="bg-[#FF1F6D] hover:bg-[#ff4d85] text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors">
+          <button className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors">
             <PlusIcon className="w-4 h-4" /> Create Key
           </button>
         </div>
         <div className="space-y-3">
           {keys.map((k) => (
-            <div key={k.id} className="flex items-center justify-between bg-white/[0.03] border border-white/5 rounded-lg p-4">
+            <div key={k.id} className="flex items-center justify-between bg-foreground/[0.03] border border-foreground/5 rounded-lg p-4">
               <div>
                 <div className="font-medium">{k.name}</div>
                 <div className="text-xs text-gray-500">{k.prefix}</div>
@@ -217,20 +217,20 @@ function UsagePanel() {
           { label: 'Rate Limit', value: `${usage.rate_limit_per_minute}/min`, color: 'text-green-400' },
           { label: 'Error Rate', value: `${(usage.daily_trend.reduce((a, d) => a + d.errors, 0) / usage.daily_trend.reduce((a, d) => a + d.requests, 0) * 100).toFixed(2)}%`, color: 'text-yellow-400' },
         ].map((m) => (
-          <div key={m.label} className="bg-white/[0.02] border border-white/10 rounded-xl p-4 text-center">
+          <div key={m.label} className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-4 text-center">
             <div className={`text-2xl font-bold ${m.color}`}>{m.value}</div>
             <div className="text-xs text-gray-500 mt-1">{m.label}</div>
           </div>
         ))}
       </div>
 
-      <div className="bg-white/[0.02] border border-white/10 rounded-xl p-6">
+      <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6">
         <h3 className="text-lg font-semibold mb-4">Daily Requests</h3>
         <div className="flex items-end gap-2 h-40">
           {usage.daily_trend.map((d, i) => (
             <div key={i} className="flex-1 flex flex-col items-center gap-1">
-              <div className="w-full bg-white/10 rounded-t relative" style={{ height: `${(d.requests / maxReq) * 100}%` }}>
-                <div className="absolute bottom-0 left-0 right-0 bg-[#FF1F6D]/40 rounded-t" style={{ height: '100%' }} />
+              <div className="w-full bg-foreground/10 rounded-t relative" style={{ height: `${(d.requests / maxReq) * 100}%` }}>
+                <div className="absolute bottom-0 left-0 right-0 bg-primary/40 rounded-t" style={{ height: '100%' }} />
                 {d.errors > 0 && (
                   <div className="absolute bottom-0 left-0 right-0 bg-red-500/60 rounded-t" style={{ height: `${(d.errors / d.requests) * 100}%` }} />
                 )}
@@ -240,18 +240,18 @@ function UsagePanel() {
           ))}
         </div>
         <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
-          <div className="flex items-center gap-1"><span className="w-3 h-3 bg-[#FF1F6D]/40 rounded" /> Requests</div>
+          <div className="flex items-center gap-1"><span className="w-3 h-3 bg-primary/40 rounded" /> Requests</div>
           <div className="flex items-center gap-1"><span className="w-3 h-3 bg-red-500/60 rounded" /> Errors</div>
         </div>
       </div>
 
-      <div className="bg-white/[0.02] border border-white/10 rounded-xl p-6">
+      <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6">
         <h3 className="text-lg font-semibold mb-4">Endpoint Breakdown</h3>
         <div className="space-y-3">
           {usage.endpoint_breakdown.map((ep, i) => (
             <div key={i} className="flex items-center gap-4">
               <div className="w-48 text-sm text-gray-300 truncate">{ep.endpoint}</div>
-              <div className="flex-1 bg-white/10 rounded-full h-2 overflow-hidden">
+              <div className="flex-1 bg-foreground/10 rounded-full h-2 overflow-hidden">
                 <div className="h-full bg-[#00F5FF]/50 rounded-full" style={{ width: `${(ep.requests / usage.endpoint_breakdown[0].requests) * 100}%` }} />
               </div>
               <div className="w-20 text-right text-sm text-gray-400">{ep.requests.toLocaleString()}</div>
@@ -294,11 +294,11 @@ function WebhooksPanel() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white/[0.02] border border-white/10 rounded-xl p-6">
+      <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6">
         <h3 className="text-lg font-semibold mb-4">Create Webhook</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <input value={newWebhook.name} onChange={(e) => setNewWebhook({ ...newWebhook, name: e.target.value })} placeholder="Webhook name" className="bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-white text-sm" />
-          <input value={newWebhook.url} onChange={(e) => setNewWebhook({ ...newWebhook, url: e.target.value })} placeholder="https://..." className="bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-white text-sm" />
+          <input value={newWebhook.name} onChange={(e) => setNewWebhook({ ...newWebhook, name: e.target.value })} placeholder="Webhook name" className="bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white text-sm" />
+          <input value={newWebhook.url} onChange={(e) => setNewWebhook({ ...newWebhook, url: e.target.value })} placeholder="https://..." className="bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white text-sm" />
         </div>
         <div className="flex gap-2 mb-4">
           {['campaign.created', 'campaign.updated', 'trust_gate.blocked', 'anomaly.critical', 'daily.digest'].map((e) => (
@@ -311,7 +311,7 @@ function WebhooksPanel() {
               }}
               className={cn(
                 'text-xs px-3 py-1.5 rounded-full border transition-colors',
-                newWebhook.events.includes(e) ? 'bg-[#FF1F6D]/20 border-[#FF1F6D] text-[#FF1F6D]' : 'bg-white/[0.03] border-white/10 text-gray-400'
+                newWebhook.events.includes(e) ? 'bg-primary/20 border-primary text-primary' : 'bg-foreground/[0.03] border-foreground/10 text-gray-400'
               )}
             >
               {e}
@@ -325,14 +325,14 @@ function WebhooksPanel() {
               setNewWebhook({ name: '', url: '', events: [] });
             }
           }}
-          className="bg-[#FF1F6D] hover:bg-[#ff4d85] text-white px-5 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
+          className="bg-primary hover:bg-primary/90 text-white px-5 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
         >
           <PlusIcon className="w-4 h-4" /> Register Webhook
         </button>
       </div>
 
       {webhooks.map((wh) => (
-        <div key={wh.id} className="bg-white/[0.02] border border-white/10 rounded-xl p-5">
+        <div key={wh.id} className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-5">
           <div className="flex items-center justify-between mb-3">
             <div>
               <h4 className="font-medium">{wh.name}</h4>
@@ -344,22 +344,22 @@ function WebhooksPanel() {
             </div>
           </div>
           <div className="grid grid-cols-3 gap-4 mb-3">
-            <div className="bg-white/[0.03] rounded-lg p-3 text-center">
+            <div className="bg-foreground/[0.03] rounded-lg p-3 text-center">
               <div className="text-lg font-bold">{wh.delivery_count.toLocaleString()}</div>
               <div className="text-xs text-gray-500">Deliveries</div>
             </div>
-            <div className="bg-white/[0.03] rounded-lg p-3 text-center">
+            <div className="bg-foreground/[0.03] rounded-lg p-3 text-center">
               <div className="text-lg font-bold text-red-400">{wh.failure_count}</div>
               <div className="text-xs text-gray-500">Failures</div>
             </div>
-            <div className="bg-white/[0.03] rounded-lg p-3 text-center">
+            <div className="bg-foreground/[0.03] rounded-lg p-3 text-center">
               <div className="text-lg font-bold">{wh.failure_count > 0 ? ((wh.failure_count / wh.delivery_count) * 100).toFixed(2) : '0.00'}%</div>
               <div className="text-xs text-gray-500">Error Rate</div>
             </div>
           </div>
           <div className="flex gap-2">
-            <button onClick={() => testWebhook(wh.id)} className="text-xs bg-white/[0.03] hover:bg-white/[0.06] text-[#00F5FF] px-3 py-1.5 rounded-lg transition-colors">Test</button>
-            <button onClick={() => setWebhooks(webhooks.filter((w) => w.id !== wh.id))} className="text-xs bg-white/[0.03] hover:bg-white/[0.06] text-red-400 px-3 py-1.5 rounded-lg transition-colors">Delete</button>
+            <button onClick={() => testWebhook(wh.id)} className="text-xs bg-foreground/[0.03] hover:bg-foreground/[0.06] text-[#00F5FF] px-3 py-1.5 rounded-lg transition-colors">Test</button>
+            <button onClick={() => setWebhooks(webhooks.filter((w) => w.id !== wh.id))} className="text-xs bg-foreground/[0.03] hover:bg-foreground/[0.06] text-red-400 px-3 py-1.5 rounded-lg transition-colors">Delete</button>
           </div>
         </div>
       ))}
@@ -383,7 +383,7 @@ function SDKPanel() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white/[0.02] border border-white/10 rounded-xl p-6">
+      <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6">
         <div className="flex gap-2 mb-4">
           {SDK_EXAMPLES.map((ex, i) => (
             <button
@@ -391,7 +391,7 @@ function SDKPanel() {
               onClick={() => setActiveLang(i)}
               className={cn(
                 'px-4 py-2 rounded-lg text-sm font-medium transition-all',
-                activeLang === i ? 'bg-[#FF1F6D] text-white' : 'bg-white/[0.03] text-gray-400 hover:bg-white/[0.06]'
+                activeLang === i ? 'bg-primary text-white' : 'bg-foreground/[0.03] text-gray-400 hover:bg-foreground/[0.06]'
               )}
             >
               {ex.language}
@@ -399,10 +399,10 @@ function SDKPanel() {
           ))}
         </div>
 
-        <div className="bg-black/40 border border-white/10 rounded-lg p-4 relative">
+        <div className="bg-black/40 border border-foreground/10 rounded-lg p-4 relative">
           <button
             onClick={() => copy(example.code)}
-            className="absolute top-3 right-3 text-xs bg-white/[0.05] hover:bg-white/[0.1] text-gray-400 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+            className="absolute top-3 right-3 text-xs bg-foreground/[0.05] hover:bg-foreground/[0.1] text-gray-400 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
           >
             {copied ? <CheckCircleIcon className="w-3 h-3 text-green-400" /> : <DocumentDuplicateIcon className="w-3 h-3" />}
             {copied ? 'Copied' : 'Copy'}
@@ -412,7 +412,7 @@ function SDKPanel() {
         </div>
       </div>
 
-      <div className="bg-white/[0.02] border border-white/10 rounded-xl p-6">
+      <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6">
         <h3 className="text-lg font-semibold mb-4">API Reference</h3>
         <p className="text-sm text-gray-400 mb-4">Interactive documentation is available at:</p>
         <a href="https://api.stratumai.app/docs" target="_blank" rel="noopener noreferrer" className="text-[#00F5FF] hover:underline text-sm">
@@ -420,7 +420,7 @@ function SDKPanel() {
         </a>
         <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
           {['Campaigns', 'Analytics', 'CDP', 'Autopilot', 'Trust Engine', 'Reporting', 'Integrations', 'Compliance'].map((ep) => (
-            <div key={ep} className="bg-white/[0.03] border border-white/5 rounded-lg p-3 text-center text-sm text-gray-300">{ep}</div>
+            <div key={ep} className="bg-foreground/[0.03] border border-foreground/5 rounded-lg p-3 text-center text-sm text-gray-300">{ep}</div>
           ))}
         </div>
       </div>

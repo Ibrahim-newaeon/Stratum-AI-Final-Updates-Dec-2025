@@ -124,7 +124,7 @@ function CorrelationCard({ insight }: { insight: CorrelationInsight }) {
   return (
     <div className={cn('rounded-lg border p-4', sev.border, sev.bg)}>
       <div className="flex items-start gap-3">
-        <div className="w-9 h-9 rounded-lg bg-white/80 border flex items-center justify-center flex-shrink-0">
+        <div className="w-9 h-9 rounded-lg bg-foreground/80 border flex items-center justify-center flex-shrink-0">
           <Link2 className={cn('w-4.5 h-4.5', sev.color)} />
         </div>
         <div className="min-w-0">
@@ -134,7 +134,7 @@ function CorrelationCard({ insight }: { insight: CorrelationInsight }) {
           <p className="text-xs text-muted-foreground leading-relaxed">{insight.description}</p>
           <div className="flex items-center gap-2 mt-2">
             {insight.related_metrics.map((metric) => (
-              <span key={metric} className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground bg-white/60 px-2 py-0.5 rounded border">
+              <span key={metric} className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground bg-foreground/60 px-2 py-0.5 rounded border">
                 {metric.replace('_', ' ')}
               </span>
             ))}

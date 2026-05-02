@@ -230,13 +230,13 @@ export default function FAQ() {
 
           {/* Search */}
           <div className="max-w-xl mx-auto relative">
-            <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+            <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/40" />
             <input
               type="text"
               placeholder="Search questions..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 rounded-2xl text-white placeholder-white/40 outline-none transition-[width] focus:ring-2 focus:ring-[#FF4D4D]/50"
+              className="w-full pl-12 pr-4 py-4 rounded-2xl text-white placeholder-foreground/40 outline-none transition-[width] focus:ring-2 focus:ring-[#FF5A1F]/50"
               style={{ background: 'var(--landing-card)', border: '1px solid var(--landing-border)' }}
             />
           </div>
@@ -290,7 +290,7 @@ export default function FAQ() {
         <div className="max-w-7xl mx-auto">
           {filteredFaqs.length === 0 ? (
             <div className="text-center py-12">
-              <QuestionMarkCircleIcon className="w-12 h-12 text-white/20 mx-auto mb-4" />
+              <QuestionMarkCircleIcon className="w-12 h-12 text-foreground/20 mx-auto mb-4" />
               <p className="text-[var(--landing-text)]">No questions found matching your search.</p>
             </div>
           ) : (
@@ -373,13 +373,13 @@ export default function FAQ() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
                 href="/contact"
-                className="px-6 py-3 rounded-full font-semibold text-white bg-[var(--landing-accent-coral)] hover:bg-[var(--landing-accent-red)] transition-colors shadow-lg shadow-[rgba(255,77,77,0.3)]"
+                className="px-6 py-3 rounded-full font-semibold text-white bg-[var(--landing-accent-coral)] hover:bg-[var(--landing-accent-red)] transition-colors shadow-lg shadow-[rgba(255, 90, 31,0.3)]"
               >
                 Contact Support
               </a>
               <a
                 href="mailto:sales@stratum.ai"
-                className="px-6 py-3 rounded-xl font-semibold text-white hover:bg-white/10 transition-colors"
+                className="px-6 py-3 rounded-xl font-semibold text-white hover:bg-foreground/10 transition-colors"
                 style={{ background: 'var(--landing-card)', border: '1px solid var(--landing-border)' }}
               >
                 Email Us

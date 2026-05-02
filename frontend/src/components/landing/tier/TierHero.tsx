@@ -61,7 +61,7 @@ export function TierHero({ content }: TierHeroProps) {
         <div className="mb-8">
           <Badge
             variant="outline"
-            className={`px-4 py-2 text-sm bg-gradient-to-r ${gradientClass} bg-opacity-10 border-white/20 ${visuals.accentColor}`}
+            className={`px-4 py-2 text-sm bg-gradient-to-r ${gradientClass} bg-opacity-10 border-foreground/20 ${visuals.accentColor}`}
           >
             <span
               className={`w-2 h-2 rounded-full bg-gradient-to-r ${gradientClass} animate-pulse mr-2 inline-block`}
@@ -92,7 +92,7 @@ export function TierHero({ content }: TierHeroProps) {
         {/* Metrics Preview */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto mb-8">
           {hero.metrics.map((metric, i) => (
-            <Card key={i} className="bg-gray-900/50 border-white/10">
+            <Card key={i} className="bg-gray-900/50 border-foreground/10">
               <CardContent className="p-4 text-center">
                 <div
                   className={`text-3xl font-bold bg-gradient-to-r ${gradientClass} text-foreground`}
@@ -129,7 +129,7 @@ export function TierHero({ content }: TierHeroProps) {
           <Button
             variant="outline"
             size="lg"
-            className="group border-white/20 text-white hover:bg-white/10 px-8 py-6 text-lg"
+            className="group border-foreground/20 text-white hover:bg-foreground/10 px-8 py-6 text-lg"
             onClick={() => navigate('/contact')}
           >
             <PlayIcon className="w-5 h-5 mr-2" />
@@ -148,7 +148,7 @@ export function TierHero({ content }: TierHeroProps) {
         </div>
 
         {/* Plan Navigation */}
-        <div className="mt-12 pt-8 border-t border-white/10">
+        <div className="mt-12 pt-8 border-t border-foreground/10">
           <p className="text-sm text-gray-500 mb-4">Compare plans:</p>
           <div className="flex items-center justify-center gap-4">
             {['starter', 'professional', 'enterprise'].map((tier) => (

@@ -63,7 +63,7 @@ function ScoreGauge({ score, size = 120 }: { score: number; size?: number }) {
           fill="none"
           stroke="currentColor"
           strokeWidth={strokeWidth}
-          className="text-white/10"
+          className="text-foreground/10"
         />
         {/* Progress circle */}
         <circle
@@ -82,7 +82,7 @@ function ScoreGauge({ score, size = 120 }: { score: number; size?: number }) {
       {/* Center text */}
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="text-3xl font-bold text-white">{score}</span>
-        <span className="text-xs text-text-muted">EMQ</span>
+        <span className="text-xs text-muted-foreground">EMQ</span>
       </div>
     </div>
   )
@@ -101,7 +101,7 @@ export function EmqScoreCard({
   if (compact) {
     return (
       <div className={cn(
-        'flex items-center gap-3 p-3 rounded-xl bg-surface-secondary border border-white/10',
+        'flex items-center gap-3 p-3 rounded-xl bg-surface-secondary border border-foreground/10',
         className
       )}>
         <ScoreGauge score={score} size={60} />
@@ -113,7 +113,7 @@ export function EmqScoreCard({
           {delta !== null && (
             <span className={cn(
               'text-sm',
-              delta > 0 ? 'text-success' : delta < 0 ? 'text-danger' : 'text-text-muted'
+              delta > 0 ? 'text-success' : delta < 0 ? 'text-danger' : 'text-muted-foreground'
             )}>
               {delta > 0 ? '+' : ''}{delta} from yesterday
             </span>
@@ -125,13 +125,13 @@ export function EmqScoreCard({
 
   return (
     <div className={cn(
-      'p-6 rounded-2xl bg-surface-secondary border border-white/10',
+      'p-6 rounded-2xl bg-surface-secondary border border-foreground/10',
       className
     )}>
       <div className="flex items-start justify-between mb-6">
         <div>
           <h3 className="text-lg font-semibold text-white">Event Measurement Quality</h3>
-          <p className="text-sm text-text-muted mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             How reliable is your data today?
           </p>
         </div>
@@ -154,7 +154,7 @@ export function EmqScoreCard({
                   )} />
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm text-text-secondary">{driver.name}</span>
+                      <span className="text-sm text-muted-foreground">{driver.name}</span>
                       <span className={cn(
                         'text-sm font-medium',
                         driver.status === 'good' ? 'text-success' :
@@ -163,7 +163,7 @@ export function EmqScoreCard({
                         {driver.value}%
                       </span>
                     </div>
-                    <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                    <div className="h-1.5 bg-foreground/10 rounded-full overflow-hidden">
                       <div
                         className={cn(
                           'h-full rounded-full transition-[width] duration-500',
@@ -182,10 +182,10 @@ export function EmqScoreCard({
       </div>
 
       {delta !== null && (
-        <div className="mt-4 pt-4 border-t border-white/10">
+        <div className="mt-4 pt-4 border-t border-foreground/10">
           <span className={cn(
             'text-sm',
-            delta > 0 ? 'text-success' : delta < 0 ? 'text-danger' : 'text-text-muted'
+            delta > 0 ? 'text-success' : delta < 0 ? 'text-danger' : 'text-muted-foreground'
           )}>
             {delta > 0 ? '+' : ''}{delta} points from yesterday
           </span>

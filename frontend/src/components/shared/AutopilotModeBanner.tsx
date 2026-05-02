@@ -115,12 +115,12 @@ export function AutopilotModeBanner({
           </div>
           {showDescription && (
             <>
-              <p className="text-sm text-text-secondary mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 {config.description}
               </p>
               <div className="mt-3 space-y-1">
                 {config.allowedActions.map((action, index) => (
-                  <div key={index} className="flex items-center gap-2 text-sm text-text-muted">
+                  <div key={index} className="flex items-center gap-2 text-sm text-muted-foreground">
                     <span className={cn('w-1 h-1 rounded-full',
                       mode === 'normal' ? 'bg-success' :
                       mode === 'frozen' ? 'bg-danger' : 'bg-warning'

@@ -417,7 +417,7 @@ interface SkeletonProps {
 export const AnimatedSkeleton: React.FC<SkeletonProps> = ({ className }) => {
   return (
     <motion.div
-      className={cn('relative overflow-hidden rounded-md bg-white/5', className)}
+      className={cn('relative overflow-hidden rounded-md bg-foreground/5', className)}
       animate={{ opacity: [0.5, 1, 0.5] }}
       transition={{
         duration: 1.5,
@@ -426,7 +426,7 @@ export const AnimatedSkeleton: React.FC<SkeletonProps> = ({ className }) => {
       }}
     >
       <motion.div
-        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+        className="absolute inset-0 bg-gradient-to-r from-transparent via-foreground/10 to-transparent"
         animate={{ x: ['-100%', '100%'] }}
         transition={{
           duration: 1.2,

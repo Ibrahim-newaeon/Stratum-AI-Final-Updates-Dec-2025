@@ -314,7 +314,7 @@ export default function ProfitROAS() {
                           className={cn(
                             'px-2 py-1 rounded-full text-xs',
                             product.status === 'active' && 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300',
-                            product.status === 'inactive' && 'bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300',
+                            product.status === 'inactive' && 'bg-gray-100 dark:bg-gray-900/20 text-foreground',
                             product.status === 'discontinued' && 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300'
                           )}
                         >
@@ -395,7 +395,7 @@ export default function ProfitROAS() {
                             Active
                           </span>
                         ) : (
-                          <span className="px-2 py-1 rounded-full text-xs bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300">
+                          <span className="px-2 py-1 rounded-full text-xs bg-gray-100 dark:bg-gray-900/20 text-foreground">
                             Inactive
                           </span>
                         )}
@@ -483,7 +483,7 @@ export default function ProfitROAS() {
                             upload.status === 'completed' && 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300',
                             upload.status === 'processing' && 'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300',
                             upload.status === 'failed' && 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300',
-                            upload.status === 'pending' && 'bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300'
+                            upload.status === 'pending' && 'bg-gray-100 dark:bg-gray-900/20 text-foreground'
                           )}
                         >
                           {upload.status}

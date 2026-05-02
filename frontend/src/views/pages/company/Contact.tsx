@@ -67,7 +67,7 @@ export default function Contact() {
               className="px-6 py-3 rounded-full font-semibold text-white transition-opacity hover:opacity-90"
               style={{
                 background: 'var(--landing-accent-coral)',
-                boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
+                boxShadow: '0 4px 20px rgba(255, 90, 31, 0.3)',
               }}
             >
               Send Another Message
@@ -89,7 +89,7 @@ export default function Contact() {
             style={{
               background: 'rgba(255, 179, 71, 0.1)',
               border: '1px solid rgba(255, 179, 71, 0.3)',
-              color: '#FFB347',
+              color: '#FF8A4A',
             }}
           >
             <ChatBubbleLeftRightIcon className="w-4 h-4" />
@@ -97,7 +97,7 @@ export default function Contact() {
           </div>
           <h1
             className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6"
-            style={{ fontFamily: "'Clash Display', sans-serif" }}
+            style={{ fontFamily: "Geist, system-ui, sans-serif" }}
           >
             <span className="text-white">Get in</span>
             <br />
@@ -219,7 +219,7 @@ export default function Contact() {
                       type="text"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-[width] focus:ring-2"
+                      className="w-full px-4 py-3 rounded-xl text-white placeholder-foreground/40 outline-none transition-[width] focus:ring-2"
                       style={{
                         background: 'var(--landing-surface-glass)',
                         border: '1px solid var(--landing-border-glass)',
@@ -234,7 +234,7 @@ export default function Contact() {
                       type="email"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-[width] focus:ring-2"
+                      className="w-full px-4 py-3 rounded-xl text-white placeholder-foreground/40 outline-none transition-[width] focus:ring-2"
                       style={{
                         background: 'var(--landing-surface-glass)',
                         border: '1px solid var(--landing-border-glass)',
@@ -251,7 +251,7 @@ export default function Contact() {
                       type="text"
                       value={formData.company}
                       onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-[width] focus:ring-2"
+                      className="w-full px-4 py-3 rounded-xl text-white placeholder-foreground/40 outline-none transition-[width] focus:ring-2"
                       style={{
                         background: 'var(--landing-surface-glass)',
                         border: '1px solid var(--landing-border-glass)',
@@ -285,7 +285,7 @@ export default function Contact() {
                   <textarea
                     value={formData.message}
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl text-white placeholder-white/40 outline-none transition-[width] focus:ring-2 min-h-[9.375rem]"
+                    className="w-full px-4 py-3 rounded-xl text-white placeholder-foreground/40 outline-none transition-[width] focus:ring-2 min-h-[9.375rem]"
                     style={{
                       background: 'var(--landing-surface-glass)',
                       border: '1px solid var(--landing-border-glass)',
@@ -300,7 +300,7 @@ export default function Contact() {
                   className="w-full py-4 rounded-full font-semibold text-white transition-[width] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{
                     background: 'var(--landing-accent-coral)',
-                    boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
+                    boxShadow: '0 4px 20px rgba(255, 90, 31, 0.3)',
                   }}
                 >
                   {submitContact.isPending ? 'Sending...' : 'Send Message'}

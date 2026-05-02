@@ -30,7 +30,7 @@ export default function TierLandingPage() {
   return (
     <div key={tier} className="min-h-screen bg-surface-primary">
       {/* Navigation Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-surface-primary/80 backdrop-blur-lg border-b border-white/5">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-surface-primary/80 backdrop-blur-lg border-b border-foreground/5">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             {/* Logo and Back */}
@@ -61,7 +61,7 @@ export default function TierLandingPage() {
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                     t === tier
                       ? `bg-gradient-to-r ${gradientClass} text-white`
-                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                      : 'text-gray-400 hover:text-white hover:bg-foreground/5'
                   }`}
                 >
                   {t.charAt(0).toUpperCase() + t.slice(1)}

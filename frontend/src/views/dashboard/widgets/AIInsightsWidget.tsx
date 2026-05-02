@@ -62,7 +62,7 @@ export function AIInsightsWidget() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-3 bg-white/[0.03] rounded-lg p-0.5">
+      <div className="flex gap-1 mb-3 bg-foreground/[0.03] rounded-lg p-0.5">
         {[
           { id: 'ask', label: 'Ask', icon: MessageSquare },
           { id: 'predict', label: 'Predict', icon: TrendingUp },
@@ -72,7 +72,7 @@ export function AIInsightsWidget() {
             onClick={() => setActiveTab(t.id as any)}
             className={cn(
               'flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-medium rounded-md transition-all',
-              activeTab === t.id ? 'bg-white/[0.08] text-foreground' : 'text-muted-foreground hover:text-foreground/70'
+              activeTab === t.id ? 'bg-foreground/[0.08] text-foreground' : 'text-muted-foreground hover:text-foreground/70'
             )}
           >
             <t.icon className="w-3.5 h-3.5" />
@@ -90,7 +90,7 @@ export function AIInsightsWidget() {
               onChange={(e) => setQuestion(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && askQuestion()}
               placeholder="Ask about your data..."
-              className="flex-1 bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/40"
+              className="flex-1 bg-foreground/[0.03] border border-foreground/[0.06] rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/40"
             />
             <button
               onClick={askQuestion}
@@ -108,7 +108,7 @@ export function AIInsightsWidget() {
                 <button
                   key={s}
                   onClick={() => { setQuestion(s); }}
-                  className="text-xs bg-white/[0.03] hover:bg-white/[0.08] text-muted-foreground hover:text-foreground px-2.5 py-1 rounded-full transition-colors"
+                  className="text-xs bg-foreground/[0.03] hover:bg-foreground/[0.08] text-muted-foreground hover:text-foreground px-2.5 py-1 rounded-full transition-colors"
                 >
                   {s}
                 </button>
@@ -124,7 +124,7 @@ export function AIInsightsWidget() {
                 <button onClick={() => setResult(null)} className="text-primary hover:underline">Clear</button>
               </div>
               {result.results.slice(0, 5).map((row: any, i: number) => (
-                <div key={i} className="bg-white/[0.02] rounded-lg p-2 text-xs">
+                <div key={i} className="bg-foreground/[0.02] rounded-lg p-2 text-xs">
                   {Object.entries(row).slice(0, 4).map(([k, v]) => (
                     <span key={k} className="inline-flex items-center gap-1 mr-3">
                       <span className="text-muted-foreground">{k}:</span>
@@ -174,7 +174,7 @@ function PredictWidget({ API_URL, getToken }: { API_URL: string; getToken: () =>
           value={campaignId}
           onChange={(e) => setCampaignId(e.target.value)}
           placeholder="Campaign ID"
-          className="flex-1 bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/40"
+          className="flex-1 bg-foreground/[0.03] border border-foreground/[0.06] rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/40"
         />
         <button
           onClick={predict}
@@ -188,11 +188,11 @@ function PredictWidget({ API_URL, getToken }: { API_URL: string; getToken: () =>
       {prediction && (
         <div className="space-y-2">
           <div className="grid grid-cols-2 gap-2">
-            <div className="bg-white/[0.03] rounded-lg p-2 text-center">
+            <div className="bg-foreground/[0.03] rounded-lg p-2 text-center">
               <div className="text-lg font-bold text-emerald-400">{prediction.predicted_roas?.toFixed(1)}x</div>
               <div className="text-[10px] text-muted-foreground">ROAS</div>
             </div>
-            <div className="bg-white/[0.03] rounded-lg p-2 text-center">
+            <div className="bg-foreground/[0.03] rounded-lg p-2 text-center">
               <div className="text-lg font-bold text-sky-400">${(prediction.predicted_revenue / 1000).toFixed(1)}k</div>
               <div className="text-[10px] text-muted-foreground">Revenue</div>
             </div>

@@ -23,7 +23,10 @@ const tooltipContentVariants = cva(
         light: 'bg-background text-foreground border shadow-md',
         info: 'bg-info/90 text-white',
         success: 'bg-success/90 text-white',
-        warning: 'bg-warning/90 text-black',
+        // Amber stays high-contrast in both themes; explicitly use a
+        // theme-agnostic near-black so the choice reads intentional
+        // (was `text-black` which the audit flagged as ad-hoc).
+        warning: 'bg-warning/90 text-zinc-950',
         destructive: 'bg-destructive/90 text-white',
       },
       size: {
@@ -40,7 +43,8 @@ const tooltipContentVariants = cva(
 );
 
 export interface TooltipContentProps
-  extends React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>,
+  extends
+    React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>,
     VariantProps<typeof tooltipContentVariants> {
   shortcut?: string | string[];
 }

@@ -39,7 +39,7 @@ export function AnalyticsWidget() {
       </div>
 
       {/* Mini Tabs */}
-      <div className="flex gap-1 mb-3 bg-white/[0.03] rounded-lg p-0.5">
+      <div className="flex gap-1 mb-3 bg-foreground/[0.03] rounded-lg p-0.5">
         {[
           { id: 'funnel', label: 'Funnel', icon: TrendingDown },
           { id: 'cohort', label: 'Cohorts', icon: Users },
@@ -49,7 +49,7 @@ export function AnalyticsWidget() {
             onClick={() => setActiveView(t.id as any)}
             className={cn(
               'flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-medium rounded-md transition-all',
-              activeView === t.id ? 'bg-white/[0.08] text-foreground' : 'text-muted-foreground hover:text-foreground/70'
+              activeView === t.id ? 'bg-foreground/[0.08] text-foreground' : 'text-muted-foreground hover:text-foreground/70'
             )}
           >
             <t.icon className="w-3.5 h-3.5" />
@@ -70,7 +70,7 @@ export function AnalyticsWidget() {
                     <span className="text-xs font-medium text-foreground">{step.step}</span>
                     <span className="text-xs text-muted-foreground">{step.count.toLocaleString()}</span>
                   </div>
-                  <div className="h-6 bg-white/5 rounded-md overflow-hidden">
+                  <div className="h-6 bg-foreground/5 rounded-md overflow-hidden">
                     <div
                       className={cn(
                         'h-full rounded-md transition-all flex items-center px-2',
@@ -78,7 +78,7 @@ export function AnalyticsWidget() {
                       )}
                       style={{ width: `${(step.count / MOCK_FUNNEL[0].count) * 100}%` }}
                     >
-                      <span className="text-[10px] font-bold text-white/90">{step.rate}%</span>
+                      <span className="text-[10px] font-bold text-foreground/90">{step.rate}%</span>
                     </div>
                   </div>
                   {i > 0 && (
@@ -118,7 +118,7 @@ export function AnalyticsWidget() {
                   { label: '2026-W15', size: 38, cells: [100, 82, 71, 58] },
                   { label: '2026-W16', size: 52, cells: [100, 75, 60, null] },
                 ].map((row) => (
-                  <tr key={row.label} className="border-t border-white/[0.04]">
+                  <tr key={row.label} className="border-t border-foreground/[0.04]">
                     <td className="py-1 text-foreground">{row.label}</td>
                     <td className="py-1 text-center text-muted-foreground">{row.size}</td>
                     {row.cells.map((cell, j) => (

@@ -52,7 +52,7 @@ export default function Blog() {
           </div>
           <h1
             className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6"
-            style={{ fontFamily: "'Clash Display', sans-serif" }}
+            style={{ fontFamily: "Geist, system-ui, sans-serif" }}
           >
             <span className="text-white">Insights &</span>
             <br />
@@ -119,10 +119,10 @@ export default function Blog() {
                     border: '1px solid var(--landing-border)',
                   }}
                 >
-                  <div className="h-4 bg-white/10 rounded w-1/4 mb-4" />
-                  <div className="h-6 bg-white/10 rounded w-3/4 mb-3" />
-                  <div className="h-4 bg-white/10 rounded w-full mb-2" />
-                  <div className="h-4 bg-white/10 rounded w-2/3" />
+                  <div className="h-4 bg-foreground/10 rounded w-1/4 mb-4" />
+                  <div className="h-6 bg-foreground/10 rounded w-3/4 mb-3" />
+                  <div className="h-4 bg-foreground/10 rounded w-full mb-2" />
+                  <div className="h-4 bg-foreground/10 rounded w-2/3" />
                 </div>
               ))}
             </div>
@@ -224,7 +224,7 @@ export default function Blog() {
                 type="email"
                 placeholder="Enter your email"
                 aria-label="Email address"
-                className="flex-1 px-4 py-3 rounded-xl text-white placeholder-white/40 outline-none focus:ring-2 focus:ring-primary"
+                className="flex-1 px-4 py-3 rounded-xl text-white placeholder-foreground/40 outline-none focus:ring-2 focus:ring-primary"
                 style={{
                   background: 'var(--landing-surface-glass)',
                   border: '1px solid rgba(255, 255, 255, 0.2)',
@@ -234,7 +234,7 @@ export default function Blog() {
                 className="px-6 py-3 rounded-full font-semibold text-white transition-opacity hover:opacity-90"
                 style={{
                   background: 'var(--landing-accent-coral)',
-                  boxShadow: '0 4px 20px rgba(255, 77, 77, 0.3)',
+                  boxShadow: '0 4px 20px rgba(255, 90, 31, 0.3)',
                 }}
               >
                 Subscribe

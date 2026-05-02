@@ -92,12 +92,12 @@ export function Features() {
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         {/* Section header */}
         <div className="text-center mb-16 lg:mb-20">
-          <h2 className="text-display-sm text-text-primary mb-4 animate-enter">
+          <h2 className="text-display-sm text-foreground mb-4 animate-enter">
             Intelligence you can{' '}
             <span className="text-gradient-primary">trust and scale</span>
           </h2>
           <p
-            className="text-body text-text-secondary max-w-2xl mx-auto animate-enter"
+            className="text-body text-muted-foreground max-w-2xl mx-auto animate-enter"
             style={{ animationDelay: '0.1s' }}
           >
             Every feature is designed around partnership — giving you control,
@@ -110,19 +110,19 @@ export function Features() {
           {features.map((feature, index) => (
             <div
               key={feature.title}
-              className="group relative rounded-2xl bg-card border border-border p-8 hover:border-[#FF8C00]/30 transition-colors duration-200 animate-enter"
+              className="group relative rounded-2xl bg-card border border-border p-8 hover:border-secondary/30 transition-colors duration-200 animate-enter"
               style={{ animationDelay: `${0.1 + index * 0.05}s` }}
             >
               {/* Icon */}
-              <div className="w-12 h-12 rounded-xl bg-[#FF8C00]/10 border border-[#FF8C00]/20 flex items-center justify-center mb-6">
-                <feature.icon className="w-6 h-6 text-[#FF8C00]" />
+              <div className="w-12 h-12 rounded-xl bg-secondary/10 border border-secondary/20 flex items-center justify-center mb-6">
+                <feature.icon className="w-6 h-6 text-secondary" />
               </div>
 
               {/* Title */}
-              <h3 className="text-h3 text-text-primary mb-2">
+              <h3 className="text-h3 text-foreground mb-2">
                 {feature.title}
               </h3>
-              <p className="text-body text-text-secondary leading-relaxed">
+              <p className="text-body text-muted-foreground leading-relaxed">
                 {feature.description}
               </p>
             </div>
