@@ -96,8 +96,8 @@ export default function Overview() {
       </Helmet>
 
       <div className="space-y-6">
-        <header className="flex items-start justify-between gap-4">
-          <div>
+        <header className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
             <h1 className="text-h1 font-medium tracking-tight text-foreground">Overview</h1>
             <p className="text-body text-muted-foreground mt-1">
               What needs your attention right now.
@@ -105,7 +105,7 @@ export default function Overview() {
           </div>
           {isMock && (
             <span
-              className="text-meta uppercase tracking-[0.06em] font-mono text-muted-foreground border border-border rounded-full px-3 py-1"
+              className="flex-shrink-0 text-meta uppercase tracking-[0.06em] font-mono text-muted-foreground border border-border rounded-full px-3 py-1"
               title="Showing mock data — no tenant context detected."
             >
               Demo data
