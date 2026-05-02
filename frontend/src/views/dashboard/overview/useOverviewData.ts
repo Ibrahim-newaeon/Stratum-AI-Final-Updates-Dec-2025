@@ -168,11 +168,20 @@ export function useOverviewData(): OverviewData {
         delta: overview?.metrics?.roas?.change_percent ?? mockKpis.roas.delta,
       },
       pacing: {
-        // pacing API returns a list; fall back to mock counts if the
-        // shape doesn't match what we need here.
-        onTrack: mockKpis.pacing.onTrack,
-        breaches: mockKpis.pacing.breaches,
-        deltaPercent: mockKpis.pacing.deltaPercent,
+        // /pacing/summary returns PacingSummary with onTrack / ahead /
+        // behind / atRisk / missed counts + overallHealthScore. We
+        // surface "on track" directly and roll the rest into "breaches"
+        // (anything not on track or ahead). deltaPercent isn't in the
+        // summary response — surface 0 (flat) so the KPI card doesn't
+        // claim a trend it can't substantiate.
+        onTrack: pacingQuery.data?.onTrack ?? mockKpis.pacing.onTrack,
+        breaches:
+          pacingQuery.data != null
+            ? (pacingQuery.data.behind ?? 0) +
+              (pacingQuery.data.atRisk ?? 0) +
+              (pacingQuery.data.missed ?? 0)
+            : mockKpis.pacing.breaches,
+        deltaPercent: pacingQuery.data != null ? 0 : mockKpis.pacing.deltaPercent,
       },
     };
 
