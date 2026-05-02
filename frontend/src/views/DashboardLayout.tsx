@@ -273,6 +273,10 @@ const settingsNav: NavItem[] = [
     dataTour: 'settings',
   },
   { name: 'Team', href: '/dashboard/tenants', icon: Users, section: 'tenants' },
+  // Plans — the tier picker shipped in P12. Route lives in App.tsx
+  // (lazy-loaded). Open to all roles; tier-specific CTAs render
+  // inside the page based on subscription state.
+  { name: 'Plans', href: '/dashboard/plans', icon: Sparkles, section: 'settings' },
   { name: 'Billing', href: '/dashboard/ml-training', icon: CreditCard, section: 'billing' },
 ];
 
