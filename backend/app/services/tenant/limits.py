@@ -22,6 +22,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.base_models import Campaign, Tenant, User
+from app.core.feature_gate import get_tenant_tier
 from app.core.logging import get_logger
 from app.core.tiers import SubscriptionTier, TierLimits, get_tier_limits
 
@@ -283,15 +284,31 @@ async def check_tenant_limit(
     result = await check_methods[limit_type](tenant_id)
 
     if not result.allowed and raise_on_exceeded:
+        # 402 Payment Required carries structured upgrade context so
+        # the frontend can render an inline upgrade card instead of a
+        # generic error toast. `suggested_tier` is the next tier in
+        # the ladder that lifts the limit hit:
+        #   starter  → professional (unlimited campaigns/accounts)
+        #   professional → enterprise (custom contract / SSO)
+        #   enterprise → enterprise (already top tier)
+        current_tier = await get_tenant_tier(tenant_id)
+        suggested_tier = {
+            SubscriptionTier.STARTER: SubscriptionTier.PROFESSIONAL,
+            SubscriptionTier.PROFESSIONAL: SubscriptionTier.ENTERPRISE,
+            SubscriptionTier.ENTERPRISE: SubscriptionTier.ENTERPRISE,
+        }.get(current_tier, SubscriptionTier.PROFESSIONAL)
+
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
             detail={
                 "error": "limit_exceeded",
                 "limit_type": limit_type.value,
                 "current": result.current_count,
                 "max": result.max_allowed,
                 "message": result.message,
-                "upgrade_url": "/settings/billing",
+                "current_tier": current_tier.value,
+                "suggested_tier": suggested_tier.value,
+                "upgrade_url": "/dashboard/plans",
             },
         )
 
