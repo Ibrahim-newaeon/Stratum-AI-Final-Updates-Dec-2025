@@ -23,10 +23,7 @@ import {
   mockAutopilotDecisions,
   mockKpis,
 } from '@/views/dashboard/overview/mockData';
-import type {
-  AlertSummary,
-  AutopilotDecisionRow,
-} from '@/views/dashboard/overview/types';
+import type { AlertSummary, AutopilotDecisionRow } from '@/views/dashboard/overview/types';
 
 interface OverviewKpis {
   trustGate: { status: 'pass' | 'hold' | 'block'; holds: number; delta: number };
@@ -113,12 +110,31 @@ export function useOverviewData(): OverviewData {
       pacingQuery.isPending ||
       autopilotQuery.isPending;
 
+    // Treat any per-query 404 as "endpoint not deployed yet" — fall
+    // back to mock for that block silently, no global error pill.
+    // Auth (401/403) and 5xx still bubble up as a banner so the user
+    // knows something's actually broken.
+    const isIgnorableError = (err: unknown): boolean => {
+      if (!err) return true;
+      const status =
+        (err as { response?: { status?: number }; status?: number })?.response?.status ??
+        (err as { status?: number })?.status;
+      return status === 404;
+    };
+
+    const realError = (err: unknown): string | null => {
+      if (!err || isIgnorableError(err)) return null;
+      const msg = (err as { message?: string })?.message;
+      // Strip the noisy axios prefix; users see a clean line.
+      return msg?.replace(/^Request failed with status code \d+$/i, "Couldn't load") ?? null;
+    };
+
     const errorMsg =
-      overviewQuery.error?.message ||
-      signalHealthQuery.error?.message ||
-      trustQuery.error?.message ||
-      pacingQuery.error?.message ||
-      autopilotQuery.error?.message ||
+      realError(overviewQuery.error) ||
+      realError(signalHealthQuery.error) ||
+      realError(trustQuery.error) ||
+      realError(pacingQuery.error) ||
+      realError(autopilotQuery.error) ||
       null;
 
     const trust = trustQuery.data;
@@ -164,19 +180,17 @@ export function useOverviewData(): OverviewData {
     const apActions = Array.isArray(autopilotQuery.data)
       ? autopilotQuery.data
       : (autopilotQuery.data?.actions ?? []);
-    const decisions: AutopilotDecisionRow[] = apActions.map(
-      (a) => ({
-        id: a.id,
-        time: formatTime(a.created_at),
-        campaign: a.entity_name ?? `${a.entity_type} ${a.entity_id}`,
-        action: ACTION_TO_UI[a.action_type] ?? 'bid_adjust',
-        result: STATUS_TO_RESULT[a.status] ?? 'pending',
-        trust:
-          typeof (a as { trust_score?: number }).trust_score === 'number'
-            ? (a as { trust_score: number }).trust_score
-            : 75,
-      })
-    );
+    const decisions: AutopilotDecisionRow[] = apActions.map((a) => ({
+      id: a.id,
+      time: formatTime(a.created_at),
+      campaign: a.entity_name ?? `${a.entity_type} ${a.entity_id}`,
+      action: ACTION_TO_UI[a.action_type] ?? 'bid_adjust',
+      result: STATUS_TO_RESULT[a.status] ?? 'pending',
+      trust:
+        typeof (a as { trust_score?: number }).trust_score === 'number'
+          ? (a as { trust_score: number }).trust_score
+          : 75,
+    }));
 
     const realDecisions = decisions.length > 0 ? decisions : mockAutopilotDecisions;
 
@@ -203,6 +217,21 @@ export function useOverviewData(): OverviewData {
       },
     ];
 
+    // If every block fell back to mock (e.g., all endpoints 404'd
+    // because the dashboard backend isn't deployed yet), surface
+    // isMock=true so the "Demo data" pill shows. The user knows the
+    // page isn't live data instead of being misled by the figma
+    // surface looking populated.
+    const allEndpointsFailed =
+      !overviewQuery.data &&
+      !signalHealthQuery.data &&
+      !trustQuery.data &&
+      !pacingQuery.data &&
+      (!autopilotQuery.data ||
+        (Array.isArray(autopilotQuery.data)
+          ? autopilotQuery.data.length === 0
+          : (autopilotQuery.data?.actions?.length ?? 0) === 0));
+
     return {
       kpis,
       alertSummaries: alertSummaries.some((s) => s.count > 0)
@@ -211,7 +240,7 @@ export function useOverviewData(): OverviewData {
       autopilotDecisions: realDecisions,
       isLoading,
       error: errorMsg,
-      isMock: false,
+      isMock: allEndpointsFailed && !isLoading,
     };
   }, [
     enabled,
@@ -224,6 +253,7 @@ export function useOverviewData(): OverviewData {
     trustQuery.data,
     trustQuery.isPending,
     trustQuery.error,
+    pacingQuery.data,
     pacingQuery.isPending,
     pacingQuery.error,
     autopilotQuery.data,
