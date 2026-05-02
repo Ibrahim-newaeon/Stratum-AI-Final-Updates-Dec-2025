@@ -20,7 +20,7 @@ import { KpiStrip } from './overview/KpiStrip';
 import { SignalStrip } from './overview/SignalStrip';
 import { FocusPane } from './overview/FocusPane';
 import { RecentAutopilot } from './overview/RecentAutopilot';
-import { mockAlertSummaries, mockAutopilotDecisions } from './overview/mockData';
+import { useOverviewData } from './overview/useOverviewData';
 import type { AlertSummary, FocusKey } from './overview/types';
 
 const SEVERITY_RANK: Record<AlertSummary['severity'], number> = {
@@ -53,9 +53,9 @@ function pickDefaultFocus(summaries: AlertSummary[]): FocusKey {
 export default function Overview() {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Real API hooks would replace these — see overview/mockData.ts.
-  const summaries = mockAlertSummaries;
-  const autopilotDecisions = mockAutopilotDecisions;
+  const { kpis, alertSummaries, autopilotDecisions, isLoading, error, isMock } =
+    useOverviewData();
+  const summaries = alertSummaries;
   const autopilotPending = useMemo(
     () => autopilotDecisions.filter((r) => r.result === 'pending'),
     [autopilotDecisions]
@@ -77,13 +77,17 @@ export default function Overview() {
 
   const handleAcknowledgeAll = useCallback(() => {
     // TODO: wire to bulk-acknowledge mutation with confirmation drawer.
-    // Intentional no-op until the action API + drawer ship in a follow-up.
+    // ConfirmDrawer primitive exists; the mutation endpoint is the
+    // gating piece. Intentional no-op until backend ships.
   }, []);
 
-  const handleAutopilotRowClick = useCallback((_row: (typeof mockAutopilotDecisions)[number]) => {
-    // TODO: navigate to /dashboard/autopilot/:id detail. Deferred to
-    // route-wiring follow-up.
-  }, []);
+  const handleAutopilotRowClick = useCallback(
+    (_row: (typeof autopilotDecisions)[number]) => {
+      // TODO: navigate to /dashboard/autopilot/:id detail. Deferred to
+      // route-wiring follow-up.
+    },
+    []
+  );
 
   return (
     <>
@@ -92,25 +96,41 @@ export default function Overview() {
       </Helmet>
 
       <div className="space-y-6">
-        <header>
-          <h1 className="text-h1 font-medium tracking-tight text-foreground">Overview</h1>
-          <p className="text-body text-muted-foreground mt-1">
-            What needs your attention right now.
-          </p>
+        <header className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-h1 font-medium tracking-tight text-foreground">Overview</h1>
+            <p className="text-body text-muted-foreground mt-1">
+              What needs your attention right now.
+            </p>
+          </div>
+          {isMock && (
+            <span
+              className="text-meta uppercase tracking-[0.06em] font-mono text-muted-foreground border border-border rounded-full px-3 py-1"
+              title="Showing mock data — no tenant context detected."
+            >
+              Demo data
+            </span>
+          )}
         </header>
 
-        <KpiStrip />
+        <KpiStrip kpis={kpis} loading={isLoading} error={error ?? undefined} />
 
         <SignalStrip
           summaries={summaries}
           selectedFocus={selectedFocus}
           onSelectFocus={setFocus}
           onAcknowledgeAll={handleAcknowledgeAll}
+          loading={isLoading}
         />
 
-        <FocusPane focus={selectedFocus} autopilotPending={autopilotPending} />
+        <FocusPane focus={selectedFocus} autopilotPending={autopilotPending} loading={isLoading} />
 
-        <RecentAutopilot rows={autopilotDecisions} onRowClick={handleAutopilotRowClick} />
+        <RecentAutopilot
+          rows={autopilotDecisions}
+          loading={isLoading}
+          error={error ?? undefined}
+          onRowClick={handleAutopilotRowClick}
+        />
       </div>
     </>
   );

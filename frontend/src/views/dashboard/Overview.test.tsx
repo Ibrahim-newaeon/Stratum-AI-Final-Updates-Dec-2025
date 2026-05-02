@@ -12,6 +12,24 @@ import { describe, it, expect, vi, beforeAll } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Routes, Route, useSearchParams } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
+
+// Mock the data adapter so the test doesn't import useAuth →
+// AuthContext → main.tsx → createRoot (pre-existing module-load
+// side-effect tracked separately).
+vi.mock('./overview/useOverviewData', async () => {
+  const mock = await import('./overview/mockData');
+  return {
+    useOverviewData: () => ({
+      kpis: mock.mockKpis,
+      alertSummaries: mock.mockAlertSummaries,
+      autopilotDecisions: mock.mockAutopilotDecisions,
+      isLoading: false,
+      error: null,
+      isMock: true,
+    }),
+  };
+});
+
 import Overview from './Overview';
 
 beforeAll(() => {
