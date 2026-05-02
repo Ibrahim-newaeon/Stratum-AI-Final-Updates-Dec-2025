@@ -553,7 +553,7 @@ export default function Signup() {
           <h2 className="text-[28px] leading-[1.1] tracking-tight font-medium">Account created</h2>
           <p className="text-[14.5px] text-[#9A9A9A] mt-3 mb-6">
             Your profile is ready and your{' '}
-            <span className="text-[#FF5A1F] font-medium">Free Tier</span> is now active.
+            <span className="text-[#FF5A1F] font-medium">14-day Starter trial</span> is now active.
           </p>
 
           <div className="rounded-[14px] border border-[#1F1F1F] bg-[#141414] p-5 mb-6 text-left">
@@ -561,13 +561,13 @@ export default function Signup() {
               className="text-[11px] text-[#FF5A1F] font-medium uppercase tracking-[0.12em] mb-2"
               style={{ fontFamily: MONO_STACK }}
             >
-              Free Plan Active
+              Starter Trial · 14 days
             </p>
             <p className="text-[13px] text-[#9A9A9A] leading-relaxed">
-              Upgrade to <span className="text-white font-medium">Starter</span>,{' '}
-              <span className="text-white font-medium">Professional</span>, or{' '}
-              <span className="text-white font-medium">Enterprise</span> to unlock advanced
-              automation, unlimited campaigns, and priority support.
+              Full Starter access for 14 days — campaigns, autopilot, audiences, trust engine.
+              Upgrade any time to <span className="text-white font-medium">Professional</span> or{' '}
+              <span className="text-white font-medium">Enterprise</span> for unlimited campaigns,
+              advanced automation, and priority support.
             </p>
             <button
               onClick={() => navigate('/login', { state: { registered: true, showUpgrade: true } })}

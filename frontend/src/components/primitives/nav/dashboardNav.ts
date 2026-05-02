@@ -66,6 +66,7 @@ export const dashboardNavGroups: SidebarGroup[] = [
     items: [
       { label: 'Integrations', href: '/dashboard/integrations', icon: Plug },
       { label: 'Settings', href: '/dashboard/settings', icon: Settings },
+      { label: 'Plans', href: '/dashboard/plans', icon: Sparkles },
       { label: 'Billing', href: '/dashboard/billing', icon: CreditCard },
       { label: 'Team', href: '/dashboard/team', icon: Users },
     ],

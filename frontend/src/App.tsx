@@ -58,6 +58,7 @@ const ResetPassword = lazyWithRetry(() => import('./views/ResetPassword'));
 const VerifyEmail = lazyWithRetry(() => import('./views/VerifyEmail'));
 const Onboarding = lazyWithRetry(() => import('./views/Onboarding'));
 const Overview = lazyWithRetry(() => import('./views/dashboard/Overview'));
+const Plans = lazyWithRetry(() => import('./views/dashboard/Plans'));
 const CustomDashboard = lazyWithRetry(() => import('./views/CustomDashboard'));
 const Campaigns = lazyWithRetry(() => import('./views/Campaigns'));
 const CampaignDetail = lazyWithRetry(() => import('./views/CampaignDetail'));
@@ -867,6 +868,14 @@ function App() {
                         element={
                           <Suspense fallback={<LoadingSpinner />}>
                             <Overview />
+                          </Suspense>
+                        }
+                      />
+                      <Route
+                        path="plans"
+                        element={
+                          <Suspense fallback={<LoadingSpinner />}>
+                            <Plans />
                           </Suspense>
                         }
                       />

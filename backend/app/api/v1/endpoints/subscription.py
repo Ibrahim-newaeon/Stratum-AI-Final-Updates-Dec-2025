@@ -63,6 +63,11 @@ class SubscriptionStatusResponse(BaseModel):
     restriction_reason: Optional[str]
     warning_message: Optional[str]
     pricing: Optional[dict]
+    # Trial fields — set during the post-signup 14-day Starter trial
+    # so the frontend can render a "Trial · N days left" pill rather
+    # than the stronger "Renew now" warning.
+    trial_ends_at: Optional[str] = None
+    is_trial: bool = False
 
 
 class SubscriptionConfigResponse(BaseModel):
@@ -119,6 +124,8 @@ async def get_subscription_status(request: Request):
         restriction_reason=info.restriction_reason,
         warning_message=warning_message,
         pricing=pricing,
+        trial_ends_at=info.trial_ends_at.isoformat() if info.trial_ends_at else None,
+        is_trial=info.is_trial,
     )
 
 
