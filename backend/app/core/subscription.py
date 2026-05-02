@@ -64,6 +64,11 @@ class SubscriptionInfo:
     days_in_grace: Optional[int]
     is_access_restricted: bool
     restriction_reason: Optional[str]
+    # Set when the tenant is on a free trial (vs. a paid sub that's
+    # also expiring). Frontend uses this to render a "trial" pill
+    # different from a "renew now" warning.
+    trial_ends_at: Optional[datetime] = None
+    is_trial: bool = False
 
     def to_dict(self) -> dict:
         """Convert to dictionary for API responses."""
@@ -77,6 +82,8 @@ class SubscriptionInfo:
             "days_in_grace": self.days_in_grace,
             "is_access_restricted": self.is_access_restricted,
             "restriction_reason": self.restriction_reason,
+            "trial_ends_at": self.trial_ends_at.isoformat() if self.trial_ends_at else None,
+            "is_trial": self.is_trial,
         }
 
 
@@ -192,7 +199,7 @@ async def get_subscription_info(tenant_id: int) -> SubscriptionInfo:
 
     async for db in get_async_session():
         result = await db.execute(
-            select(Tenant.plan, Tenant.plan_expires_at).where(
+            select(Tenant.plan, Tenant.plan_expires_at, Tenant.trial_ends_at).where(
                 Tenant.id == tenant_id, Tenant.is_deleted == False
             )
         )
@@ -212,7 +219,7 @@ async def get_subscription_info(tenant_id: int) -> SubscriptionInfo:
                 restriction_reason="Tenant not found",
             )
 
-        plan, plan_expires_at = row
+        plan, plan_expires_at, trial_ends_at = row
 
         # Get tier
         tier = await get_tenant_tier(tenant_id)
@@ -220,6 +227,19 @@ async def get_subscription_info(tenant_id: int) -> SubscriptionInfo:
         # Calculate status
         status, days_until_expiry, days_in_grace = calculate_subscription_status(
             plan, plan_expires_at
+        )
+
+        # Trial detection: trial_ends_at is set AND in the future AND
+        # the tenant has no Stripe customer yet (i.e., never paid).
+        # The frontend reads is_trial to render a "Trial — N days left"
+        # pill instead of the standard "renew" warning.
+        now = datetime.now(UTC)
+        is_trial = bool(
+            trial_ends_at
+            and (
+                trial_ends_at.replace(tzinfo=UTC) if trial_ends_at.tzinfo is None else trial_ends_at
+            )
+            > now
         )
 
         # Determine access restriction
@@ -248,6 +268,8 @@ async def get_subscription_info(tenant_id: int) -> SubscriptionInfo:
             days_in_grace=days_in_grace,
             is_access_restricted=is_restricted,
             restriction_reason=restriction_reason,
+            trial_ends_at=trial_ends_at,
+            is_trial=is_trial,
         )
 
     # Fallback if session yields nothing

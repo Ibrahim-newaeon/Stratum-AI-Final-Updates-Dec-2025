@@ -16,7 +16,7 @@ import {
   Brain,
   TrendingUp,
   FolderKanban,
-    Settings,
+  Settings,
   Users,
   CreditCard,
   LogOut,
@@ -26,21 +26,21 @@ import {
   X,
   Search,
   Bell,
-    ChevronDown,
+  ChevronDown,
   Sparkles,
   ShieldCheck,
   Rocket,
   PieChart,
-      Radio,
+  Radio,
   Database,
-    Tag,
+  Tag,
   Clock,
   Share2,
   Funnel,
   Calculator,
-    UserMinus,
-    Mail,
-      MessageSquareText,
+  UserMinus,
+  Mail,
+  MessageSquareText,
   Gift,
   BookOpen,
 } from 'lucide-react';
@@ -48,9 +48,8 @@ import { cn } from '@/lib/utils';
 import LearningHub from '@/components/guide/LearningHub';
 import { CommandPalette } from '@/components/ui/command-palette';
 import { DemoBanner } from '@/components/demo/DemoBanner';
-import {
-    NotificationCenter,
-} from '@/components/notifications/NotificationCenter';
+import { TrialBanner } from '@/components/billing/TrialBanner';
+import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 import { useWhatsNew, WhatsNewModal } from '@/components/changelog/WhatsNew';
 import { KeyboardShortcutsModal } from '@/components/ui/keyboard-shortcuts';
 import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist';
@@ -67,37 +66,107 @@ import TenantSwitcher from '@/components/tenant/TenantSwitcher';
    ═══════════════════════════════════════════════════════════════ */
 const SIDEBAR_VISIBILITY: Record<AppRole, string[]> = {
   superadmin: [
-    'dashboard', 'clients', 'campaigns', 'demographics', 'analytics',
-    'reports', 'creatives', 'rules', 'ml', 'notifications',
-    'settings', 'users', 'tenants', 'audit', 'billing', 'profile',
-    'cdp', 'knowledge-graph', 'newsletter', 'superadmin',
-    'benchmarks', 'competitors', 'custom-autopilot', 'custom-reports',
-    'integrations', 'stratum', 'whatsapp',
+    'dashboard',
+    'clients',
+    'campaigns',
+    'demographics',
+    'analytics',
+    'reports',
+    'creatives',
+    'rules',
+    'ml',
+    'notifications',
+    'settings',
+    'users',
+    'tenants',
+    'audit',
+    'billing',
+    'profile',
+    'cdp',
+    'knowledge-graph',
+    'newsletter',
+    'superadmin',
+    'benchmarks',
+    'competitors',
+    'custom-autopilot',
+    'custom-reports',
+    'integrations',
+    'stratum',
+    'whatsapp',
   ],
   admin: [
-    'dashboard', 'clients', 'campaigns', 'demographics', 'analytics',
-    'reports', 'creatives', 'rules', 'ml', 'notifications',
-    'settings', 'users', 'audit', 'billing', 'profile',
-    'cdp', 'knowledge-graph', 'newsletter',
-    'benchmarks', 'competitors', 'custom-autopilot', 'custom-reports',
-    'integrations', 'stratum', 'whatsapp',
+    'dashboard',
+    'clients',
+    'campaigns',
+    'demographics',
+    'analytics',
+    'reports',
+    'creatives',
+    'rules',
+    'ml',
+    'notifications',
+    'settings',
+    'users',
+    'audit',
+    'billing',
+    'profile',
+    'cdp',
+    'knowledge-graph',
+    'newsletter',
+    'benchmarks',
+    'competitors',
+    'custom-autopilot',
+    'custom-reports',
+    'integrations',
+    'stratum',
+    'whatsapp',
     'tenants',
   ],
   manager: [
-    'dashboard', 'clients', 'campaigns', 'demographics', 'analytics',
-    'reports', 'creatives', 'rules', 'notifications', 'profile',
-    'cdp', 'knowledge-graph', 'newsletter',
-    'benchmarks', 'competitors', 'stratum', 'whatsapp',
+    'dashboard',
+    'clients',
+    'campaigns',
+    'demographics',
+    'analytics',
+    'reports',
+    'creatives',
+    'rules',
+    'notifications',
+    'profile',
+    'cdp',
+    'knowledge-graph',
+    'newsletter',
+    'benchmarks',
+    'competitors',
+    'stratum',
+    'whatsapp',
   ],
   analyst: [
-    'dashboard', 'clients', 'campaigns', 'demographics', 'analytics',
-    'reports', 'creatives', 'rules', 'notifications', 'profile',
-    'cdp', 'newsletter',
-    'benchmarks', 'stratum', 'whatsapp',
+    'dashboard',
+    'clients',
+    'campaigns',
+    'demographics',
+    'analytics',
+    'reports',
+    'creatives',
+    'rules',
+    'notifications',
+    'profile',
+    'cdp',
+    'newsletter',
+    'benchmarks',
+    'stratum',
+    'whatsapp',
   ],
   viewer: [
-    'dashboard', 'campaigns', 'demographics', 'analytics',
-    'reports', 'creatives', 'notifications', 'profile',
+    'dashboard',
+    'campaigns',
+    'demographics',
+    'analytics',
+    'reports',
+    'creatives',
+    'notifications',
+    'profile',
   ],
 };
 
@@ -121,29 +190,88 @@ interface NavItem {
 }
 
 const mainNav: NavItem[] = [
-  { name: 'nav.overview', href: '/dashboard/overview', icon: LayoutDashboard, section: 'dashboard', tourId: 'nav-overview', dataTour: 'overview' },
-  { name: 'nav.campaigns', href: '/dashboard/campaigns', icon: BarChart3, section: 'campaigns', tourId: 'nav-campaigns' },
-  { name: 'nav.analytics', href: '/dashboard/custom-dashboard', icon: PieChart, section: 'dashboard', tourId: 'nav-dashboard' },
-  { name: 'nav.assets', href: '/dashboard/assets', icon: Image, section: 'creatives', tourId: 'nav-assets' },
+  {
+    name: 'nav.overview',
+    href: '/dashboard/overview',
+    icon: LayoutDashboard,
+    section: 'dashboard',
+    tourId: 'nav-overview',
+    dataTour: 'overview',
+  },
+  {
+    name: 'nav.campaigns',
+    href: '/dashboard/campaigns',
+    icon: BarChart3,
+    section: 'campaigns',
+    tourId: 'nav-campaigns',
+  },
+  {
+    name: 'nav.analytics',
+    href: '/dashboard/custom-dashboard',
+    icon: PieChart,
+    section: 'dashboard',
+    tourId: 'nav-dashboard',
+  },
+  {
+    name: 'nav.assets',
+    href: '/dashboard/assets',
+    icon: Image,
+    section: 'creatives',
+    tourId: 'nav-assets',
+  },
   { name: 'nav.rules', href: '/dashboard/rules', icon: Zap, section: 'rules', tourId: 'nav-rules' },
 ];
 
 const intelligenceNav: NavItem[] = [
-  { name: 'Insights', href: '/dashboard/knowledge-graph/insights', icon: Brain, section: 'knowledge-graph' },
-  { name: 'Predictions', href: '/dashboard/stratum', icon: TrendingUp, section: 'stratum', tourId: 'nav-stratum' },
-  { name: 'Benchmarks', href: '/dashboard/benchmarks', icon: FolderKanban, section: 'benchmarks', tourId: 'nav-benchmarks' },
-  { name: 'Simulator', href: '/dashboard/custom-autopilot-rules', icon: Sparkles, section: 'custom-autopilot' },
+  {
+    name: 'Insights',
+    href: '/dashboard/knowledge-graph/insights',
+    icon: Brain,
+    section: 'knowledge-graph',
+  },
+  {
+    name: 'Predictions',
+    href: '/dashboard/stratum',
+    icon: TrendingUp,
+    section: 'stratum',
+    tourId: 'nav-stratum',
+  },
+  {
+    name: 'Benchmarks',
+    href: '/dashboard/benchmarks',
+    icon: FolderKanban,
+    section: 'benchmarks',
+    tourId: 'nav-benchmarks',
+  },
+  {
+    name: 'Simulator',
+    href: '/dashboard/custom-autopilot-rules',
+    icon: Sparkles,
+    section: 'custom-autopilot',
+  },
 ];
 
 const platformNav: NavItem[] = [
   { name: 'Integrations', href: '/dashboard/integrations', icon: Radio, section: 'integrations' },
   { name: 'CDP', href: '/dashboard/cdp', icon: Database, section: 'cdp' },
-  { name: 'WhatsApp', href: '/dashboard/whatsapp', icon: MessageSquareText, section: 'whatsapp', tourId: 'nav-whatsapp' },
+  {
+    name: 'WhatsApp',
+    href: '/dashboard/whatsapp',
+    icon: MessageSquareText,
+    section: 'whatsapp',
+    tourId: 'nav-whatsapp',
+  },
   { name: 'Newsletter', href: '/dashboard/newsletter', icon: Mail, section: 'newsletter' },
 ];
 
 const settingsNav: NavItem[] = [
-  { name: 'nav.settings', href: '/dashboard/settings', icon: Settings, section: 'settings', dataTour: 'settings' },
+  {
+    name: 'nav.settings',
+    href: '/dashboard/settings',
+    icon: Settings,
+    section: 'settings',
+    dataTour: 'settings',
+  },
   { name: 'Team', href: '/dashboard/tenants', icon: Users, section: 'tenants' },
   { name: 'Billing', href: '/dashboard/ml-training', icon: CreditCard, section: 'billing' },
 ];
@@ -155,8 +283,18 @@ const cdpSubNav: NavItem[] = [
   { name: 'Events', href: '/dashboard/cdp/events', icon: Clock, section: 'cdp' },
   { name: 'Identity Graph', href: '/dashboard/cdp/identity', icon: Share2, section: 'cdp' },
   { name: 'Funnels', href: '/dashboard/cdp/funnels', icon: Funnel, section: 'cdp' },
-  { name: 'Computed Traits', href: '/dashboard/cdp/computed-traits', icon: Calculator, section: 'cdp' },
-  { name: 'Predictive Churn', href: '/dashboard/cdp/predictive-churn', icon: UserMinus, section: 'cdp' },
+  {
+    name: 'Computed Traits',
+    href: '/dashboard/cdp/computed-traits',
+    icon: Calculator,
+    section: 'cdp',
+  },
+  {
+    name: 'Predictive Churn',
+    href: '/dashboard/cdp/predictive-churn',
+    icon: UserMinus,
+    section: 'cdp',
+  },
 ];
 
 /* ═══════════════════════════════════════════════════════════════
@@ -177,7 +315,9 @@ export default function DashboardLayout() {
   const [onboardingChatOpen, setOnboardingChatOpen] = useState(false);
   const [learningHubOpen, setLearningHubOpen] = useState(false);
   const [cdpExpanded, setCdpExpanded] = useState(location.pathname.startsWith('/dashboard/cdp'));
-  const [superadminExpanded, setSuperadminExpanded] = useState(location.pathname.startsWith('/dashboard/superadmin'));
+  const [superadminExpanded, setSuperadminExpanded] = useState(
+    location.pathname.startsWith('/dashboard/superadmin')
+  );
   const { hasNewUpdates } = useWhatsNew();
 
   useEffect(() => {
@@ -194,7 +334,11 @@ export default function DashboardLayout() {
   const getUserInitials = () => {
     if (!user?.name) return 'U';
     const names = user.name.split(' ');
-    return names.map((n) => n[0]).join('').toUpperCase().slice(0, 2);
+    return names
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   const toggleLanguage = () => {
@@ -237,7 +381,10 @@ export default function DashboardLayout() {
   );
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background" style={{ fontFamily: 'Geist, system-ui, sans-serif' }}>
+    <div
+      className="flex h-screen overflow-hidden bg-background"
+      style={{ fontFamily: 'Geist, system-ui, sans-serif' }}
+    >
       <DemoBanner variant="top" />
 
       <div className="flex flex-1 overflow-hidden relative z-10">
@@ -268,11 +415,22 @@ export default function DashboardLayout() {
             sidebarCollapsed ? 'lg:w-0 lg:overflow-hidden lg:border-r-0' : 'w-[240px] lg:w-[240px]'
           )}
         >
-          <div className={cn('flex h-full flex-col w-[240px]', sidebarCollapsed ? 'lg:opacity-0' : 'lg:opacity-100')}>
+          <div
+            className={cn(
+              'flex h-full flex-col w-[240px]',
+              sidebarCollapsed ? 'lg:opacity-0' : 'lg:opacity-100'
+            )}
+          >
             {/* Logo */}
             <div className="flex h-16 items-center justify-between px-4 border-b border-border">
               <div className="flex items-center gap-3">
-                <img src="/images/stratum-logo.png" alt="Stratum AI" className="h-7" loading="lazy" decoding="async" />
+                <img
+                  src="/images/stratum-logo.png"
+                  alt="Stratum AI"
+                  className="h-7"
+                  loading="lazy"
+                  decoding="async"
+                />
               </div>
               <button
                 onClick={() => setSidebarCollapsed(true)}
@@ -295,62 +453,77 @@ export default function DashboardLayout() {
               {/* Main */}
               <SectionHeader title={t('nav.main') || 'Main'} />
               <div className="space-y-0.5">
-                {mainNav.filter((item) => canSeeSection(user?.role, item.section)).map((item) => renderNavLink(item))}
+                {mainNav
+                  .filter((item) => canSeeSection(user?.role, item.section))
+                  .map((item) => renderNavLink(item))}
               </div>
 
               {/* Intelligence */}
               <SectionHeader title={t('nav.intelligence') || 'Intelligence'} />
               <div className="space-y-0.5">
-                {intelligenceNav.filter((item) => canSeeSection(user?.role, item.section)).map((item) => renderNavLink(item))}
+                {intelligenceNav
+                  .filter((item) => canSeeSection(user?.role, item.section))
+                  .map((item) => renderNavLink(item))}
               </div>
 
               {/* Platform */}
               <SectionHeader title={t('nav.platform') || 'Platform'} />
               <div className="space-y-0.5">
-                {platformNav.filter((item) => canSeeSection(user?.role, item.section)).map((item) => {
-                  if (item.name === 'CDP') {
-                    return (
-                      <div key={item.name}>
-                        <button
-                          onClick={() => setCdpExpanded(!cdpExpanded)}
-                          aria-expanded={cdpExpanded}
-                          className={cn(
-                            'w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200',
-                            location.pathname.startsWith('/dashboard/cdp')
-                              ? 'border-l-2 border-secondary bg-secondary/5 text-secondary'
-                              : 'text-muted-foreground hover:text-foreground hover:bg-foreground/[0.03]'
-                          )}
-                        >
-                          <div className="flex items-center gap-3">
-                            <Database className="h-5 w-5 flex-shrink-0" />
-                            <span>CDP</span>
-                          </div>
-                          <ChevronDown className={cn('h-4 w-4 transition-transform duration-200', cdpExpanded && 'rotate-180')} />
-                        </button>
-                        <AnimatePresence>
-                          {cdpExpanded && (
-                            <motion.div
-                              initial={{ opacity: 0, height: 0 }}
-                              animate={{ opacity: 1, height: 'auto' }}
-                              exit={{ opacity: 0, height: 0 }}
-                              transition={{ duration: 0.2 }}
-                              className="mt-1 ml-2 pl-3 space-y-0.5 overflow-hidden border-l border-border"
-                            >
-                              {cdpSubNav.filter((sub) => canSeeSection(user?.role, sub.section)).map((sub) => renderNavLink(sub, 'sub'))}
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    );
-                  }
-                  return renderNavLink(item);
-                })}
+                {platformNav
+                  .filter((item) => canSeeSection(user?.role, item.section))
+                  .map((item) => {
+                    if (item.name === 'CDP') {
+                      return (
+                        <div key={item.name}>
+                          <button
+                            onClick={() => setCdpExpanded(!cdpExpanded)}
+                            aria-expanded={cdpExpanded}
+                            className={cn(
+                              'w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200',
+                              location.pathname.startsWith('/dashboard/cdp')
+                                ? 'border-l-2 border-secondary bg-secondary/5 text-secondary'
+                                : 'text-muted-foreground hover:text-foreground hover:bg-foreground/[0.03]'
+                            )}
+                          >
+                            <div className="flex items-center gap-3">
+                              <Database className="h-5 w-5 flex-shrink-0" />
+                              <span>CDP</span>
+                            </div>
+                            <ChevronDown
+                              className={cn(
+                                'h-4 w-4 transition-transform duration-200',
+                                cdpExpanded && 'rotate-180'
+                              )}
+                            />
+                          </button>
+                          <AnimatePresence>
+                            {cdpExpanded && (
+                              <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="mt-1 ml-2 pl-3 space-y-0.5 overflow-hidden border-l border-border"
+                              >
+                                {cdpSubNav
+                                  .filter((sub) => canSeeSection(user?.role, sub.section))
+                                  .map((sub) => renderNavLink(sub, 'sub'))}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      );
+                    }
+                    return renderNavLink(item);
+                  })}
               </div>
 
               {/* Settings */}
               <SectionHeader title={t('nav.settings') || 'Settings'} />
               <div className="space-y-0.5">
-                {settingsNav.filter((item) => canSeeSection(user?.role, item.section)).map((item) => renderNavLink(item))}
+                {settingsNav
+                  .filter((item) => canSeeSection(user?.role, item.section))
+                  .map((item) => renderNavLink(item))}
               </div>
 
               {/* Superadmin */}
@@ -372,7 +545,12 @@ export default function DashboardLayout() {
                         <ShieldCheck className="h-5 w-5 flex-shrink-0" />
                         <span>Superadmin</span>
                       </div>
-                      <ChevronDown className={cn('h-4 w-4 transition-transform duration-200', superadminExpanded && 'rotate-180')} />
+                      <ChevronDown
+                        className={cn(
+                          'h-4 w-4 transition-transform duration-200',
+                          superadminExpanded && 'rotate-180'
+                        )}
+                      />
                     </button>
                     <AnimatePresence>
                       {superadminExpanded && (
@@ -386,7 +564,11 @@ export default function DashboardLayout() {
                           {[
                             { href: '/dashboard/superadmin', icon: PieChart, name: 'Dashboard' },
                             { href: '/dashboard/superadmin/users', icon: Users, name: 'Users' },
-                            { href: '/dashboard/superadmin/launch-readiness', icon: Rocket, name: 'Launch Readiness' },
+                            {
+                              href: '/dashboard/superadmin/launch-readiness',
+                              icon: Rocket,
+                              name: 'Launch Readiness',
+                            },
                           ].map((sub) => {
                             const isActive = location.pathname === sub.href;
                             return (
@@ -420,8 +602,12 @@ export default function DashboardLayout() {
                   <span className="text-xs font-semibold text-secondary">{getUserInitials()}</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">{user?.name || 'User'}</p>
-                  <p className="text-xs text-muted-foreground truncate capitalize">{user?.role || 'analyst'}</p>
+                  <p className="text-sm font-medium text-foreground truncate">
+                    {user?.name || 'User'}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate capitalize">
+                    {user?.role || 'analyst'}
+                  </p>
                 </div>
                 <button
                   onClick={handleLogout}
@@ -468,15 +654,27 @@ export default function DashboardLayout() {
                 <Menu className="h-5 w-5" />
               </button>
               <h1 className="text-sm font-medium text-foreground hidden sm:block">
-                {location.pathname.split('/').filter(Boolean).slice(1).map((part) => (
-                  <span key={part} className="capitalize">{part.replace(/-/g, ' ')}</span>
-                )).reduce((prev, curr, i) => (
-                  <span key={i}>
-                    {prev}
-                    <span className="mx-2 text-border">/</span>
-                    {curr}
-                  </span>
-                ), <span key="root" className="text-muted-foreground">Dashboard</span>)}
+                {location.pathname
+                  .split('/')
+                  .filter(Boolean)
+                  .slice(1)
+                  .map((part) => (
+                    <span key={part} className="capitalize">
+                      {part.replace(/-/g, ' ')}
+                    </span>
+                  ))
+                  .reduce(
+                    (prev, curr, i) => (
+                      <span key={i}>
+                        {prev}
+                        <span className="mx-2 text-border">/</span>
+                        {curr}
+                      </span>
+                    ),
+                    <span key="root" className="text-muted-foreground">
+                      Dashboard
+                    </span>
+                  )}
               </h1>
             </div>
 
@@ -538,7 +736,9 @@ export default function DashboardLayout() {
                   className="flex items-center gap-2 p-1.5 rounded-lg transition-colors duration-200 hover:bg-foreground/[0.03]"
                 >
                   <div className="h-8 w-8 rounded-lg bg-secondary/10 flex items-center justify-center">
-                    <span className="text-xs font-semibold text-secondary">{getUserInitials()}</span>
+                    <span className="text-xs font-semibold text-secondary">
+                      {getUserInitials()}
+                    </span>
                   </div>
                 </button>
 
@@ -587,6 +787,14 @@ export default function DashboardLayout() {
 
           {/* Page content */}
           <main className="flex-1 overflow-y-auto p-6 lg:p-8">
+            {/* Trial banner — surfaces during the 14-day post-signup
+                Starter trial. Hidden once trial ends + the standard
+                expiry/grace flow takes over (or dismissed for the
+                session). */}
+            <div className="mb-4">
+              <TrialBanner />
+            </div>
+
             <AnimatePresence mode="wait">
               <motion.div
                 key={location.pathname}
@@ -604,11 +812,16 @@ export default function DashboardLayout() {
 
         {/* Floating widgets */}
         <LearningHub isOpen={learningHubOpen} onClose={() => setLearningHubOpen(false)} />
-        <NotificationCenter isOpen={notificationsOpen} onClose={() => setNotificationsOpen(false)} />
+        <NotificationCenter
+          isOpen={notificationsOpen}
+          onClose={() => setNotificationsOpen(false)}
+        />
         <WhatsNewModal isOpen={whatsNewOpen} onClose={() => setWhatsNewOpen(false)} />
         <KeyboardShortcutsModal isOpen={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
         <TrustGateIndicator />
-        {!onboardingChatOpen && <OnboardingChatButton onClick={() => setOnboardingChatOpen(true)} />}
+        {!onboardingChatOpen && (
+          <OnboardingChatButton onClick={() => setOnboardingChatOpen(true)} />
+        )}
         <OnboardingChat
           isOpen={onboardingChatOpen}
           onClose={() => setOnboardingChatOpen(false)}

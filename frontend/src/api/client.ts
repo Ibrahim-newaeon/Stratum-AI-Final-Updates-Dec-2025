@@ -5,13 +5,11 @@
  * Re-exports the existing api client with tenant-aware features.
  */
 
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosError } from 'axios'
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosError } from 'axios';
 
 // Runtime config (injected in index.html) takes priority over build-time env
 const API_BASE_URL =
-  window.__RUNTIME_CONFIG__?.VITE_API_URL ||
-  import.meta.env.VITE_API_URL ||
-  '/api/v1'
+  window.__RUNTIME_CONFIG__?.VITE_API_URL || import.meta.env.VITE_API_URL || '/api/v1';
 
 // Create axios instance with default config
 export const apiClient: AxiosInstance = axios.create({
@@ -20,170 +18,182 @@ export const apiClient: AxiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-})
+});
 
 // Token management — use in-memory + sessionStorage to reduce XSS persistence
 // (sessionStorage is cleared when the tab closes, unlike localStorage)
-let accessToken: string | null = null
+let accessToken: string | null = null;
 
 export const setAccessToken = (token: string | null) => {
-  accessToken = token
+  accessToken = token;
   if (token) {
-    sessionStorage.setItem('access_token', token)
+    sessionStorage.setItem('access_token', token);
   } else {
-    sessionStorage.removeItem('access_token')
+    sessionStorage.removeItem('access_token');
   }
-}
+};
 
 export const getAccessToken = (): string | null => {
   if (!accessToken) {
-    accessToken = sessionStorage.getItem('access_token')
+    accessToken = sessionStorage.getItem('access_token');
   }
-  return accessToken
-}
+  return accessToken;
+};
 
 // Tenant ID management
-let currentTenantId: number | null = null
+let currentTenantId: number | null = null;
 
 export const setTenantId = (tenantId: number | null) => {
-  currentTenantId = tenantId
+  currentTenantId = tenantId;
   if (tenantId) {
-    localStorage.setItem('tenant_id', String(tenantId))
+    localStorage.setItem('tenant_id', String(tenantId));
   } else {
-    localStorage.removeItem('tenant_id')
+    localStorage.removeItem('tenant_id');
   }
-}
+};
 
 export const getTenantId = (): number | null => {
   if (!currentTenantId) {
-    const stored = localStorage.getItem('tenant_id')
-    currentTenantId = stored ? parseInt(stored, 10) : null
+    const stored = localStorage.getItem('tenant_id');
+    currentTenantId = stored ? parseInt(stored, 10) : null;
   }
-  return currentTenantId
-}
+  return currentTenantId;
+};
 
 // Request interceptor - add auth token and tenant ID
 // NOTE: X-Superadmin-Bypass removed — bypass must be validated server-side only
 apiClient.interceptors.request.use(
   (config) => {
-    const token = getAccessToken()
+    const token = getAccessToken();
     if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`
+      config.headers.Authorization = `Bearer ${token}`;
     }
 
     // Add tenant ID header
-    const tenantId = getTenantId()
+    const tenantId = getTenantId();
     if (tenantId && config.headers) {
-      config.headers['X-Tenant-ID'] = String(tenantId)
+      config.headers['X-Tenant-ID'] = String(tenantId);
     }
 
     // Let axios set the correct Content-Type with boundary for FormData
     if (config.data instanceof FormData && config.headers) {
-      delete config.headers['Content-Type']
+      delete config.headers['Content-Type'];
     }
 
-    return config
+    return config;
   },
   (error) => Promise.reject(error)
-)
+);
 
 // Token refresh mutex — prevents multiple concurrent 401s from each
 // attempting their own refresh.  The first 401 triggers the refresh;
 // subsequent 401s wait for the same promise to resolve.
-let isRefreshing = false
-let refreshSubscribers: ((token: string) => void)[] = []
+let isRefreshing = false;
+let refreshSubscribers: ((token: string) => void)[] = [];
 
 function subscribeTokenRefresh(cb: (token: string) => void) {
-  refreshSubscribers.push(cb)
+  refreshSubscribers.push(cb);
 }
 
 function onTokenRefreshed(newToken: string) {
-  refreshSubscribers.forEach((cb) => cb(newToken))
-  refreshSubscribers = []
+  refreshSubscribers.forEach((cb) => cb(newToken));
+  refreshSubscribers = [];
 }
 
 // Response interceptor - handle errors and token refresh
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean }
+    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
 
     // Handle 401 - try to refresh token
     if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true
+      originalRequest._retry = true;
 
       // If a refresh is already in progress, queue this request
       if (isRefreshing) {
         return new Promise((resolve) => {
           subscribeTokenRefresh((newToken: string) => {
             if (originalRequest.headers) {
-              originalRequest.headers.Authorization = `Bearer ${newToken}`
+              originalRequest.headers.Authorization = `Bearer ${newToken}`;
             }
-            resolve(apiClient(originalRequest))
-          })
-        })
+            resolve(apiClient(originalRequest));
+          });
+        });
       }
 
-      isRefreshing = true
+      isRefreshing = true;
 
       try {
-        const refreshToken = sessionStorage.getItem('refresh_token')
+        const refreshToken = sessionStorage.getItem('refresh_token');
         if (refreshToken) {
           const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
             refresh_token: refreshToken,
-          })
+          });
 
           // Backend returns APIResponse wrapper: { success, data: { access_token, refresh_token, ... } }
-          const tokenData = response.data?.data ?? response.data
-          const newAccessToken = tokenData.access_token
-          const newRefreshToken = tokenData.refresh_token
+          const tokenData = response.data?.data ?? response.data;
+          const newAccessToken = tokenData.access_token;
+          const newRefreshToken = tokenData.refresh_token;
 
           if (!newAccessToken) {
-            throw new Error('No access_token in refresh response')
+            throw new Error('No access_token in refresh response');
           }
 
-          setAccessToken(newAccessToken)
+          setAccessToken(newAccessToken);
 
           // Persist the rotated refresh token so future refreshes work
           if (newRefreshToken) {
-            sessionStorage.setItem('refresh_token', newRefreshToken)
+            sessionStorage.setItem('refresh_token', newRefreshToken);
           }
 
-          isRefreshing = false
-          onTokenRefreshed(newAccessToken)
+          isRefreshing = false;
+          onTokenRefreshed(newAccessToken);
 
           if (originalRequest.headers) {
-            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
+            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
           }
-          return apiClient(originalRequest)
+          return apiClient(originalRequest);
         }
       } catch (refreshError) {
-        isRefreshing = false
-        refreshSubscribers = []
+        isRefreshing = false;
+        refreshSubscribers = [];
         // Refresh failed - logout user
-        setAccessToken(null)
-        sessionStorage.removeItem('refresh_token')
-        window.location.href = '/login?reason=session_expired'
+        setAccessToken(null);
+        sessionStorage.removeItem('refresh_token');
+        window.location.href = '/login?reason=session_expired';
       }
     }
 
-    return Promise.reject(error)
+    // Handle 402 Payment Required — backend returns structured payload
+    // when a tier limit is hit (see services/tenant/limits.py). Dispatch
+    // a global event so the UpgradePromptProvider can render the
+    // limit-triggered upgrade card without coupling every API caller
+    // to billing logic.
+    if (error.response?.status === 402) {
+      const payload = (error.response.data as { detail?: Record<string, unknown> })?.detail;
+      if (payload && typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('stratum:upgrade-required', { detail: payload }));
+      }
+    }
+
+    return Promise.reject(error);
   }
-)
+);
 
 // API Response types
 export interface ApiResponse<T> {
-  success: boolean
-  data: T
-  message?: string
-  meta?: Record<string, any>
+  success: boolean;
+  data: T;
+  message?: string;
+  meta?: Record<string, any>;
 }
 
 export interface PaginatedResponse<T> {
-  items: T[]
-  total: number
-  skip: number
-  limit: number
+  items: T[];
+  total: number;
+  skip: number;
+  limit: number;
 }
 
-export default apiClient
+export default apiClient;

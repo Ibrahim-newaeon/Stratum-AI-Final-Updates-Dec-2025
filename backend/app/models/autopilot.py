@@ -256,6 +256,14 @@ class EnforcementAuditLog(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
     override_reason = Column(Text, nullable=True)
 
+    # Outcome tracking — populated by services.autopilot.outcomes after
+    # the action fires (or after the worker reconciles against actuals).
+    # Phase A ships the columns + endpoint with a stub estimator that
+    # always returns None; Phase B swaps in counterfactual computation.
+    value_delivered_cents = Column(Integer, nullable=True)
+    outcome_type = Column(String(32), nullable=True)
+    outcome_confidence = Column(String(16), nullable=True)
+
     __table_args__ = (
         Index("ix_enforcement_audit_logs_tenant_id", "tenant_id"),
         Index("ix_enforcement_audit_logs_timestamp", "timestamp"),

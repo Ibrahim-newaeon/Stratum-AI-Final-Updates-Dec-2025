@@ -12,7 +12,7 @@
  * and replaceable in isolation.
  */
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
   AlertCircle,
   AlertTriangle,
@@ -22,11 +22,15 @@ import {
   PlayCircle,
   ShieldAlert,
   TrendingUp,
+  X,
 } from 'lucide-react';
 import { Card } from '@/components/primitives/Card';
 import { DataTable, type DataTableColumn } from '@/components/primitives/DataTable';
 import { LineChart } from '@/components/primitives/Chart';
 import { StatusPill } from '@/components/primitives/StatusPill';
+import { ConfirmDrawer } from '@/components/primitives/ConfirmDrawer';
+import { useApproveAction, useDismissAction } from '@/api/autopilot';
+import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { mockTrustHolds, mockSignalDrop, mockPacingBreaches, mockRevenueSpend } from './mockData';
 import type { AutopilotDecisionRow, FocusKey, PacingBreachRow, TrustHoldRow } from './types';
@@ -82,6 +86,48 @@ const TRUST_ACTION_ICON: Record<TrustHoldRow['recommendedAction'], typeof Pause>
 };
 
 function TrustHoldsView({ rows, loading }: { rows: TrustHoldRow[]; loading?: boolean }) {
+  const { user } = useAuth();
+  const tenantId = user?.tenant_id ?? 0;
+  const approve = useApproveAction(tenantId);
+  const dismiss = useDismissAction(tenantId);
+
+  // Confirm-drawer state. Set when the user clicks the primary action
+  // ([Pause] / [Scale] / [Hold]) on a row; null when the drawer is
+  // closed. The drawer hosts the destructive-action preview because
+  // these mutations affect live ad spend.
+  const [pending, setPending] = useState<TrustHoldRow | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Inline dismiss has no preview drawer — it's the safe default
+  // ("don't fire this autopilot decision") and the row goes from the
+  // table on success via React Query invalidation. We track loading
+  // per-row so the dismiss button shows a spinner without blocking
+  // other rows.
+  const [dismissingId, setDismissingId] = useState<string | null>(null);
+
+  const handleDismiss = async (row: TrustHoldRow) => {
+    setDismissingId(row.id);
+    setErrorMsg(null);
+    try {
+      await dismiss.mutateAsync(row.id);
+    } catch (err) {
+      setErrorMsg(extractError(err));
+    } finally {
+      setDismissingId(null);
+    }
+  };
+
+  const handleApproveConfirm = async () => {
+    if (!pending) return;
+    setErrorMsg(null);
+    try {
+      await approve.mutateAsync(pending.id);
+      setPending(null);
+    } catch (err) {
+      setErrorMsg(extractError(err));
+    }
+  };
+
   const columns: DataTableColumn<TrustHoldRow>[] = useMemo(
     () => [
       {
@@ -120,31 +166,60 @@ function TrustHoldsView({ rows, loading }: { rows: TrustHoldRow[]; loading?: boo
         className: 'w-32',
       },
       {
-        id: 'action',
+        id: 'actions',
         header: '',
         cell: (r) => {
           const Icon = TRUST_ACTION_ICON[r.recommendedAction];
+          const isDismissing = dismissingId === r.id;
           return (
-            <button
-              type="button"
-              className={cn(
-                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full',
-                'text-meta font-medium',
-                'bg-card border border-border text-foreground',
-                'hover:border-primary/50 hover:bg-muted transition-colors',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-              )}
-            >
-              <Icon className="w-3.5 h-3.5" aria-hidden="true" />
-              {TRUST_ACTION_LABEL[r.recommendedAction]}
-            </button>
+            <div className="flex items-center justify-end gap-1.5">
+              {/* Dismiss — safe path, no drawer. Inline confirm is a
+                  small icon button so it doesn't compete with the
+                  primary action visually. */}
+              <button
+                type="button"
+                onClick={() => handleDismiss(r)}
+                disabled={isDismissing || dismiss.isPending}
+                aria-label={`Dismiss autopilot recommendation for ${r.campaign}`}
+                className={cn(
+                  'inline-flex items-center justify-center w-8 h-8 rounded-full',
+                  'text-muted-foreground hover:text-foreground hover:bg-muted transition-colors',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  'disabled:opacity-50 disabled:cursor-not-allowed'
+                )}
+              >
+                <X className="w-3.5 h-3.5" aria-hidden="true" />
+              </button>
+              {/* Primary — destructive, opens drawer. */}
+              <button
+                type="button"
+                onClick={() => setPending(r)}
+                disabled={approve.isPending && pending?.id === r.id}
+                className={cn(
+                  'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full',
+                  'text-meta font-medium',
+                  'bg-card border border-border text-foreground',
+                  'hover:border-primary/50 hover:bg-muted transition-colors',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  'disabled:opacity-50 disabled:cursor-not-allowed'
+                )}
+              >
+                <Icon className="w-3.5 h-3.5" aria-hidden="true" />
+                {TRUST_ACTION_LABEL[r.recommendedAction]}
+              </button>
+            </div>
           );
         },
-        className: 'w-32 text-right',
+        className: 'w-44 text-right',
       },
     ],
-    []
+    [approve.isPending, dismiss.isPending, dismissingId, pending]
   );
+
+  const drawerVariant: 'destructive' | 'default' =
+    pending?.recommendedAction === 'pause' || pending?.recommendedAction === 'hold'
+      ? 'destructive'
+      : 'default';
 
   return (
     <>
@@ -154,6 +229,16 @@ function TrustHoldsView({ rows, loading }: { rows: TrustHoldRow[]; loading?: boo
         description="Automations the trust gate is holding for manual review."
         tone="critical"
       />
+
+      {errorMsg && (
+        <div
+          role="alert"
+          className="mb-4 px-4 py-2 rounded-xl border border-danger/30 bg-danger/8 text-meta text-foreground"
+        >
+          <span className="font-medium text-danger">Action failed.</span> {errorMsg}
+        </div>
+      )}
+
       <DataTable
         data={rows}
         columns={columns}
@@ -162,8 +247,75 @@ function TrustHoldsView({ rows, loading }: { rows: TrustHoldRow[]; loading?: boo
         emptyMessage="No trust holds in the last 24 hours."
         ariaLabel="Trust holds"
       />
+
+      <ConfirmDrawer
+        open={pending !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPending(null);
+            setErrorMsg(null);
+          }
+        }}
+        title={
+          pending
+            ? `${TRUST_ACTION_LABEL[pending.recommendedAction]} ${pending.campaign}?`
+            : 'Confirm action'
+        }
+        description={
+          pending
+            ? `Approving will fire the autopilot's ${TRUST_ACTION_LABEL[pending.recommendedAction].toLowerCase()} action against the live ad platform. This affects spend immediately.`
+            : ''
+        }
+        variant={drawerVariant}
+        confirmLabel={
+          pending
+            ? `Approve ${TRUST_ACTION_LABEL[pending.recommendedAction].toLowerCase()}`
+            : 'Confirm'
+        }
+        cancelLabel="Keep holding"
+        onConfirm={handleApproveConfirm}
+        loading={approve.isPending}
+      >
+        {pending && (
+          <Card className="p-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-meta uppercase tracking-[0.06em] text-muted-foreground font-mono">
+                Campaign
+              </span>
+              <span className="text-body font-medium text-foreground truncate ml-3">
+                {pending.campaign}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-meta uppercase tracking-[0.06em] text-muted-foreground font-mono">
+                Account
+              </span>
+              <span className="text-body text-muted-foreground">{pending.account}</span>
+            </div>
+            <div className="flex items-start justify-between gap-3">
+              <span className="text-meta uppercase tracking-[0.06em] text-muted-foreground font-mono pt-0.5">
+                Violation
+              </span>
+              <span className="text-body text-foreground text-right">{pending.violation}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-meta uppercase tracking-[0.06em] text-muted-foreground font-mono">
+                Action
+              </span>
+              <span className="text-body font-medium text-foreground">
+                {TRUST_ACTION_LABEL[pending.recommendedAction]}
+              </span>
+            </div>
+          </Card>
+        )}
+      </ConfirmDrawer>
     </>
   );
+}
+
+function extractError(err: unknown): string {
+  const e = err as { response?: { data?: { detail?: string } }; message?: string };
+  return e?.response?.data?.detail ?? e?.message ?? 'Unknown error';
 }
 
 // ───────────────────────── Signal drops ─────────────────────────
