@@ -23,7 +23,12 @@ import { Check, Loader2, Sparkles } from 'lucide-react';
 import { Card } from '@/components/primitives/Card';
 import { StatusPill } from '@/components/primitives/StatusPill';
 import { ConfirmDrawer } from '@/components/primitives/ConfirmDrawer';
-import { useCreateCheckout, usePaymentConfig, type TierInfo } from '@/api/payments';
+import {
+  useCancelSubscription,
+  useCreateCheckout,
+  usePaymentConfig,
+  type TierInfo,
+} from '@/api/payments';
 import { useSubscriptionStatus } from '@/api/subscription';
 import { cn } from '@/lib/utils';
 
@@ -120,9 +125,20 @@ export default function Plans() {
   const config = usePaymentConfig();
   const subscription = useSubscriptionStatus();
   const checkout = useCreateCheckout();
+  const cancelMutation = useCancelSubscription();
 
   const [pending, setPending] = useState<PendingUpgrade | null>(null);
   const [redirectError, setRedirectError] = useState<string | null>(null);
+
+  // Cancel-flow state. Two-step: open the drawer with a reason capture
+  // (optional textarea, helps us understand churn), then confirm fires
+  // useCancelSubscription. Subscription stays active until period end —
+  // Stripe handles the prorate/grace via cancel_at_period_end=true on
+  // the backend.
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelError, setCancelError] = useState<string | null>(null);
+  const [cancelDone, setCancelDone] = useState(false);
 
   const tiers = useMemo<UITier[]>(() => {
     const backendTiers = config.data?.tiers ?? [];
@@ -132,6 +148,32 @@ export default function Plans() {
   const currentPlan = (subscription.data?.plan ?? '').toLowerCase();
   const isTrial = subscription.data?.is_trial === true;
   const stripeConfigured = config.data?.stripe_configured ?? false;
+  // Only paid (non-trial, non-free) tenants can cancel — trial users
+  // just let it expire; free tenants don't have a sub to cancel.
+  const isPaid = !isTrial && (currentPlan === 'starter' || currentPlan === 'professional');
+
+  const handleCancelConfirm = async () => {
+    setCancelError(null);
+    try {
+      await cancelMutation.mutateAsync(cancelReason.trim() || undefined);
+      setCancelDone(true);
+      // Leave the drawer open so user sees confirmation; auto-close
+      // after 2s so they go back to the plans grid.
+      setTimeout(() => {
+        setCancelOpen(false);
+        setCancelDone(false);
+        setCancelReason('');
+      }, 2000);
+    } catch (err) {
+      const e = err as {
+        response?: { data?: { detail?: string } };
+        message?: string;
+      };
+      setCancelError(
+        e?.response?.data?.detail ?? e?.message ?? 'Failed to cancel. Please try again.'
+      );
+    }
+  };
 
   const handleConfirm = async () => {
     if (!pending) return;
@@ -280,11 +322,94 @@ export default function Plans() {
           })}
         </div>
 
+        {/* Self-service cancel — only renders for paid tenants. Trial
+            users let the trial expire; free tenants have no sub. */}
+        {isPaid && (
+          <Card className="p-5 flex flex-wrap items-center justify-between gap-4">
+            <div className="min-w-0">
+              <h3 className="text-h3 font-medium text-foreground">Cancel subscription</h3>
+              <p className="text-body text-muted-foreground mt-1">
+                You can cancel anytime. Your access stays active until the end of the current
+                billing period.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setCancelError(null);
+                setCancelDone(false);
+                setCancelOpen(true);
+              }}
+              className={cn(
+                'flex-shrink-0 inline-flex items-center justify-center px-4 py-2 rounded-full',
+                'border border-border bg-card text-foreground text-meta font-medium',
+                'hover:border-danger/40 hover:text-danger transition-colors',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+              )}
+            >
+              Cancel plan
+            </button>
+          </Card>
+        )}
+
         <p className="text-meta uppercase tracking-[0.06em] text-muted-foreground font-mono">
           All prices in USD. Cancel anytime from billing settings. Receipts and invoices mailed
           monthly.
         </p>
       </div>
+
+      {/* Cancel-subscription drawer. Two-state: confirm + (post-cancel)
+          done. Reason textarea is optional but captured if provided so
+          the team can review churn signals later. */}
+      <ConfirmDrawer
+        open={cancelOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setCancelOpen(false);
+            setCancelError(null);
+            // Don't reset reason here — keep it across drawer toggles
+            // until the cancel succeeds.
+          }
+        }}
+        title={cancelDone ? 'Subscription cancelled' : 'Cancel subscription?'}
+        description={
+          cancelDone
+            ? 'Your access stays active until the end of the current billing period. No further charges will be made.'
+            : 'Your access continues until the end of the current billing period. We won’t bill you again. You can resubscribe anytime.'
+        }
+        variant="destructive"
+        confirmLabel={cancelDone ? 'Done' : 'Cancel my plan'}
+        cancelLabel={cancelDone ? '' : 'Keep my plan'}
+        onConfirm={cancelDone ? () => setCancelOpen(false) : handleCancelConfirm}
+        loading={cancelMutation.isPending}
+      >
+        {!cancelDone && (
+          <div className="space-y-3">
+            <label className="block">
+              <span className="text-meta uppercase tracking-[0.06em] text-muted-foreground font-mono">
+                Tell us why (optional)
+              </span>
+              <textarea
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                rows={3}
+                placeholder="What could we have done better?"
+                className={cn(
+                  'mt-1.5 w-full rounded-xl bg-card border border-border',
+                  'px-3 py-2 text-body text-foreground placeholder:text-muted-foreground',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  'resize-none'
+                )}
+              />
+            </label>
+            {cancelError && (
+              <p className="text-meta text-danger" role="alert">
+                <span className="font-medium">Couldn't cancel.</span> {cancelError}
+              </p>
+            )}
+          </div>
+        )}
+      </ConfirmDrawer>
 
       <ConfirmDrawer
         open={pending !== null}
