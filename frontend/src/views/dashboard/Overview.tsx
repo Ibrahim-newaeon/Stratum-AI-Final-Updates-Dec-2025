@@ -21,6 +21,7 @@ import { SignalStrip } from './overview/SignalStrip';
 import { FocusPane } from './overview/FocusPane';
 import { RecentAutopilot } from './overview/RecentAutopilot';
 import { useOverviewData } from './overview/useOverviewData';
+import { OutcomeNudge } from '@/components/billing/OutcomeNudge';
 import type { AlertSummary, FocusKey } from './overview/types';
 
 const SEVERITY_RANK: Record<AlertSummary['severity'], number> = {
@@ -53,8 +54,7 @@ function pickDefaultFocus(summaries: AlertSummary[]): FocusKey {
 export default function Overview() {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const { kpis, alertSummaries, autopilotDecisions, isLoading, error, isMock } =
-    useOverviewData();
+  const { kpis, alertSummaries, autopilotDecisions, isLoading, error, isMock } = useOverviewData();
   const summaries = alertSummaries;
   const autopilotPending = useMemo(
     () => autopilotDecisions.filter((r) => r.result === 'pending'),
@@ -81,13 +81,10 @@ export default function Overview() {
     // gating piece. Intentional no-op until backend ships.
   }, []);
 
-  const handleAutopilotRowClick = useCallback(
-    (_row: (typeof autopilotDecisions)[number]) => {
-      // TODO: navigate to /dashboard/autopilot/:id detail. Deferred to
-      // route-wiring follow-up.
-    },
-    []
-  );
+  const handleAutopilotRowClick = useCallback((_row: (typeof autopilotDecisions)[number]) => {
+    // TODO: navigate to /dashboard/autopilot/:id detail. Deferred to
+    // route-wiring follow-up.
+  }, []);
 
   return (
     <>
@@ -122,6 +119,13 @@ export default function Overview() {
           onAcknowledgeAll={handleAcknowledgeAll}
           loading={isLoading}
         />
+
+        {/* Outcome-triggered upgrade nudge — renders only when the
+            tenant is on Starter/trial AND autopilot has delivered
+            ≥ MIN_VALUE_CENTS over the last 7 days AND frequency cap
+            allows it. Phase A: stub estimator returns 0 so this is
+            invisible in production until Phase B lands. */}
+        <OutcomeNudge />
 
         <FocusPane focus={selectedFocus} autopilotPending={autopilotPending} loading={isLoading} />
 

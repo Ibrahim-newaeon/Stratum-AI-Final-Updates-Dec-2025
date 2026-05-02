@@ -198,6 +198,31 @@ async def get_actions_summary(
     return APIResponse(success=True, data=summary)
 
 
+@router.get("/outcomes/summary", response_model=APIResponse[Dict[str, Any]])
+async def get_outcomes_summary(
+    request: Request,
+    tenant_id: int,
+    period: str = Query(default="7d", pattern="^(24h|7d|30d)$"),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Aggregate the dollar value Stratum's autopilot has delivered for a
+    tenant over a period. Powers the outcome-triggered upgrade nudge
+    on the dashboard home (see frontend/src/components/billing/
+    OutcomeNudge.tsx).
+
+    Phase A: returns 0/0/0 for everyone because the estimator is a stub.
+    Phase B: real counterfactual numbers with conservative_factor=0.5.
+    """
+    if getattr(request.state, "tenant_id", None) != tenant_id:
+        raise HTTPException(status_code=403, detail="Access denied to this tenant")
+
+    from app.services.autopilot import get_outcome_summary
+
+    summary = await get_outcome_summary(db, tenant_id, period=period)
+    return APIResponse(success=True, data=summary.to_dict())
+
+
 @router.post("/actions", response_model=APIResponse[Dict[str, Any]])
 async def queue_action(
     request: Request,

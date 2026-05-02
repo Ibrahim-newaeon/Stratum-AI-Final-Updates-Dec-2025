@@ -30,6 +30,14 @@ vi.mock('./overview/useOverviewData', async () => {
   };
 });
 
+// Mock OutcomeNudge — it pulls in useAuth + useSubscriptionStatus +
+// useUpgradePrompt + useAutopilotOutcomeSummary, all of which need
+// providers we don't want to wire up for the composition test. The
+// component has its own test (committed alongside in P14).
+vi.mock('@/components/billing/OutcomeNudge', () => ({
+  OutcomeNudge: () => null,
+}));
+
 import Overview from './Overview';
 
 beforeAll(() => {
