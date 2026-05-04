@@ -75,6 +75,7 @@ const Tenants = lazyWithRetry(() => import('./views/Tenants'));
 const MLTraining = lazyWithRetry(() => import('./views/MLTraining'));
 const CAPISetup = lazyWithRetry(() => import('./views/CAPISetup'));
 const SuperadminDashboard = lazyWithRetry(() => import('./views/SuperadminDashboard'));
+const ConsoleLayout = lazyWithRetry(() => import('./views/ConsoleLayout'));
 const CDPCalculator = lazyWithRetry(() => import('./views/CDPCalculator'));
 
 // CDP (Customer Data Platform) views
@@ -1304,107 +1305,10 @@ function App() {
                           }
                         />
 
-                        {/* Superadmin only routes */}
-                        <Route
-                          path="superadmin"
-                          element={
-                            <ProtectedRoute requiredRole="superadmin">
-                              <Suspense fallback={<LoadingSpinner />}>
-                                <SuperadminDashboard />
-                              </Suspense>
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="superadmin/control-tower"
-                          element={
-                            <ProtectedRoute requiredRole="superadmin">
-                              <Suspense fallback={<LoadingSpinner />}>
-                                <ControlTower />
-                              </Suspense>
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="superadmin/tenants"
-                          element={
-                            <ProtectedRoute requiredRole="superadmin">
-                              <Suspense fallback={<LoadingSpinner />}>
-                                <SuperAdminTenantsList />
-                              </Suspense>
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="superadmin/tenants/:tenantId"
-                          element={
-                            <ProtectedRoute requiredRole="superadmin">
-                              <Suspense fallback={<LoadingSpinner />}>
-                                <SuperAdminTenantProfile />
-                              </Suspense>
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="superadmin/benchmarks"
-                          element={
-                            <ProtectedRoute requiredRole="superadmin">
-                              <Suspense fallback={<LoadingSpinner />}>
-                                <SuperAdminBenchmarks />
-                              </Suspense>
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="superadmin/audit"
-                          element={
-                            <ProtectedRoute requiredRole="superadmin">
-                              <Suspense fallback={<LoadingSpinner />}>
-                                <SuperAdminAudit />
-                              </Suspense>
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="superadmin/billing"
-                          element={
-                            <ProtectedRoute requiredRole="superadmin">
-                              <Suspense fallback={<LoadingSpinner />}>
-                                <SuperAdminBilling />
-                              </Suspense>
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="superadmin/system"
-                          element={
-                            <ProtectedRoute requiredRole="superadmin">
-                              <Suspense fallback={<LoadingSpinner />}>
-                                <SuperAdminSystem />
-                              </Suspense>
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="superadmin/users"
-                          element={
-                            <ProtectedRoute requiredRole="superadmin">
-                              <Suspense fallback={<LoadingSpinner />}>
-                                <SuperAdminUsers />
-                              </Suspense>
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="superadmin/launch-readiness"
-                          element={
-                            <ProtectedRoute requiredRole="superadmin">
-                              <Suspense fallback={<LoadingSpinner />}>
-                                <SuperAdminLaunchReadiness />
-                              </Suspense>
-                            </ProtectedRoute>
-                          }
-                        />
+                        {/* Superadmin routes moved to /console/* shell.
+                            Sibling-level redirects from /dashboard/superadmin/*
+                            preserve old links. See route block below the
+                            dashboard route closer. */}
 
                         {/* Account Manager routes */}
                         <Route
@@ -1746,10 +1650,213 @@ function App() {
                         />
                       </Route>
 
+                      {/* ═══════════════════════════════════════════════
+                           Platform Console — owner-only shell at /console/*
+                           Distinct from operator dashboard. Reuses
+                           existing superadmin/* views as their canonical
+                           home. Old /dashboard/superadmin/* paths still
+                           work (kept for back-compat).
+                         ═══════════════════════════════════════════════ */}
+                      <Route
+                        path="/console"
+                        element={
+                          <ProtectedRoute requiredRole="superadmin">
+                            <ErrorBoundary message="Something went wrong in the platform console. Please try refreshing.">
+                              <Suspense fallback={<LoadingSpinner />}>
+                                <ConsoleLayout />
+                              </Suspense>
+                            </ErrorBoundary>
+                          </ProtectedRoute>
+                        }
+                      >
+                        <Route
+                          index
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <SuperadminDashboard />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="tenants"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <SuperAdminTenantsList />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="tenants/:tenantId"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <SuperAdminTenantProfile />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="users"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <SuperAdminUsers />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="feature-flags"
+                          element={
+                            <div className="p-12 text-center">
+                              <h1 className="text-2xl font-semibold text-foreground">
+                                Feature Flags
+                              </h1>
+                              <p className="mt-2 text-muted-foreground">
+                                UI surface for{' '}
+                                <code className="font-mono text-primary">
+                                  /api/v1/feature-flags
+                                </code>{' '}
+                                — coming soon.
+                              </p>
+                            </div>
+                          }
+                        />
+                        <Route
+                          path="billing"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <SuperAdminBilling />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="control-tower"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <ControlTower />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="dead-letter-queue"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <DeadLetterQueue />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="publish-logs"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <PublishLogs />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="system"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <SuperAdminSystem />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="launch-readiness"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <SuperAdminLaunchReadiness />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="analytics"
+                          element={
+                            <div className="p-12 text-center">
+                              <h1 className="text-2xl font-semibold text-foreground">
+                                Platform Analytics
+                              </h1>
+                              <p className="mt-2 text-muted-foreground">
+                                UI surface for{' '}
+                                <code className="font-mono text-primary">
+                                  /api/v1/superadmin/analytics
+                                </code>{' '}
+                                — coming soon.
+                              </p>
+                            </div>
+                          }
+                        />
+                        <Route
+                          path="benchmarks"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <SuperAdminBenchmarks />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="audit"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <SuperAdminAudit />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="anomalies"
+                          element={
+                            <div className="p-12 text-center">
+                              <h1 className="text-2xl font-semibold text-foreground">
+                                Cross-Tenant Anomalies
+                              </h1>
+                              <p className="mt-2 text-muted-foreground">
+                                Cross-tenant view of anomaly detections. Coming soon — for now see
+                                per-tenant anomalies at{' '}
+                                <code className="font-mono text-primary">/dashboard/anomalies</code>
+                                .
+                              </p>
+                            </div>
+                          }
+                        />
+                      </Route>
+
                       {/* Legacy route redirects */}
                       <Route
                         path="/overview"
                         element={<Navigate to="/dashboard/overview" replace />}
+                      />
+                      <Route
+                        path="/dashboard/superadmin"
+                        element={<Navigate to="/console" replace />}
+                      />
+                      <Route
+                        path="/dashboard/superadmin/tenants"
+                        element={<Navigate to="/console/tenants" replace />}
+                      />
+                      <Route
+                        path="/dashboard/superadmin/users"
+                        element={<Navigate to="/console/users" replace />}
+                      />
+                      <Route
+                        path="/dashboard/superadmin/launch-readiness"
+                        element={<Navigate to="/console/launch-readiness" replace />}
+                      />
+                      <Route
+                        path="/dashboard/superadmin/control-tower"
+                        element={<Navigate to="/console/control-tower" replace />}
+                      />
+                      <Route
+                        path="/dashboard/superadmin/benchmarks"
+                        element={<Navigate to="/console/benchmarks" replace />}
+                      />
+                      <Route
+                        path="/dashboard/superadmin/audit"
+                        element={<Navigate to="/console/audit" replace />}
+                      />
+                      <Route
+                        path="/dashboard/superadmin/billing"
+                        element={<Navigate to="/console/billing" replace />}
+                      />
+                      <Route
+                        path="/dashboard/superadmin/system"
+                        element={<Navigate to="/console/system" replace />}
                       />
 
                       {/* 404 - Page Not Found */}

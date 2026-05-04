@@ -16,7 +16,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AnimatePresence, motion } from 'framer-motion';
 import { dropdownVariants } from '@/lib/animations';
-import { Bell, BookOpen, Gift, LogOut, Menu, Search, Settings } from 'lucide-react';
+import { Bell, BookOpen, Gift, LogOut, Menu, Search, Settings, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import LearningHub from '@/components/guide/LearningHub';
 import { CommandPalette } from '@/components/ui/command-palette';
@@ -259,7 +259,22 @@ export default function DashboardLayout() {
                         <div className="px-3 py-2 border-b border-border">
                           <p className="text-sm font-medium text-foreground">{user?.name}</p>
                           <p className="text-xs text-muted-foreground">{user?.email}</p>
+                          {role === 'superadmin' && (
+                            <p className="mt-1 text-[10px] font-mono uppercase tracking-wider text-primary">
+                              Platform owner
+                            </p>
+                          )}
                         </div>
+                        {role === 'superadmin' && (
+                          <NavLink
+                            to="/console"
+                            className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg mx-1 text-primary hover:bg-primary/10 transition-colors duration-200"
+                            onClick={() => setUserMenuOpen(false)}
+                          >
+                            <ShieldCheck className="w-4 h-4" />
+                            Switch to platform console
+                          </NavLink>
+                        )}
                         <NavLink
                           to="/dashboard/settings"
                           className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg mx-1 text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors duration-200"

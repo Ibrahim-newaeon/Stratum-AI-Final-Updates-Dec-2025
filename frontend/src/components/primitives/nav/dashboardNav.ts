@@ -1,11 +1,16 @@
 /**
- * dashboardNav — IA configuration for the dashboard sidebar.
+ * dashboardNav — IA configuration for the operator dashboard sidebar.
  *
  * Three top-level groups that match the agency operator's mental model:
  *
  *   Operate       — what's running right now
  *   Intelligence  — what's being learned
- *   Account       — what's configured
+ *   Workspace     — what's configured (agency-scoped)
+ *
+ * Platform-owner concerns (cross-tenant tooling, feature flags, ops)
+ * live in a separate shell at `/console/*` — see `consoleNav.ts`. The
+ * operator dashboard intentionally never surfaces those, so non-owner
+ * users (admin / manager / analyst / viewer) never see them.
  *
  * Each group's `items` array references the existing routes registered
  * in App.tsx. Adding a new route is a one-line append here; no Sidebar
@@ -18,7 +23,6 @@
  */
 
 import {
-  Activity,
   AlertOctagon,
   BarChart3,
   Brain,
@@ -26,6 +30,7 @@ import {
   Clock,
   CreditCard,
   Database,
+  FileText,
   Funnel,
   LayoutDashboard,
   Mail,
@@ -52,6 +57,9 @@ import type { AppRole } from '@/components/auth/ProtectedRoute';
  * appear in the sidebar.
  */
 const SIDEBAR_VISIBILITY: Record<AppRole, ReadonlySet<string>> = {
+  // Owner sees the operator dashboard the same as admin (so they can
+  // QA what their customers see). Owner-only platform tooling lives at
+  // /console/* — not surfaced here.
   superadmin: new Set([
     'dashboard',
     'campaigns',
@@ -68,13 +76,13 @@ const SIDEBAR_VISIBILITY: Record<AppRole, ReadonlySet<string>> = {
     'integrations',
     'settings',
     'billing',
-    'tenants',
+    'team',
     'whatsapp',
     'newsletter',
     'predictions',
     'benchmarks',
     'simulator',
-    'superadmin',
+    'audit',
   ]),
   admin: new Set([
     'dashboard',
@@ -92,12 +100,13 @@ const SIDEBAR_VISIBILITY: Record<AppRole, ReadonlySet<string>> = {
     'integrations',
     'settings',
     'billing',
-    'tenants',
+    'team',
     'whatsapp',
     'newsletter',
     'predictions',
     'benchmarks',
     'simulator',
+    'audit',
   ]),
   manager: new Set([
     'dashboard',
@@ -241,8 +250,8 @@ const navConfig: NavGroup[] = [
     ],
   },
   {
-    id: 'account',
-    label: 'Account',
+    id: 'workspace',
+    label: 'Workspace',
     items: [
       {
         label: 'Integrations',
@@ -257,27 +266,13 @@ const navConfig: NavGroup[] = [
         section: 'whatsapp',
       },
       { label: 'Newsletter', href: '/dashboard/newsletter', icon: Mail, section: 'newsletter' },
+      { label: 'Audit Log', href: '/dashboard/audit-log', icon: FileText, section: 'audit' },
       { label: 'Settings', href: '/dashboard/settings', icon: Settings, section: 'settings' },
-      { label: 'Team', href: '/dashboard/tenants', icon: Users, section: 'tenants' },
+      { label: 'Team', href: '/dashboard/tenants', icon: Users, section: 'team' },
       { label: 'Billing', href: '/dashboard/ml-training', icon: CreditCard, section: 'billing' },
     ],
   },
 ];
-
-const superadminConfig: NavGroup = {
-  id: 'superadmin',
-  label: 'Admin',
-  items: [
-    { label: 'Tenants', href: '/dashboard/superadmin', icon: Activity, section: 'superadmin' },
-    { label: 'Users', href: '/dashboard/superadmin/users', icon: Users, section: 'superadmin' },
-    {
-      label: 'Launch Readiness',
-      href: '/dashboard/superadmin/launch-readiness',
-      icon: Rocket,
-      section: 'superadmin',
-    },
-  ],
-};
 
 function visibleSections(role: AppRole | undefined): ReadonlySet<string> {
   if (!role) return new Set();
@@ -299,32 +294,18 @@ function filterItems(items: NavItem[], visible: ReadonlySet<string>): SidebarIte
 }
 
 /**
- * Build the sidebar groups for a given role. Items the role can't see
- * are filtered out; groups that end up empty are stripped. The
- * superadmin group is appended only when role === 'superadmin'.
+ * Build the operator-dashboard sidebar groups for a given role. Items
+ * the role can't see are filtered out; groups that end up empty are
+ * stripped. Platform-owner items are NOT here — they live in
+ * `consoleNav.ts` and render in the separate /console/* shell.
  */
 export function buildDashboardNav(role: AppRole | undefined): SidebarGroup[] {
   const visible = visibleSections(role);
-  const groups: SidebarGroup[] = navConfig
+  return navConfig
     .map<SidebarGroup>((g) => ({ id: g.id, label: g.label, items: filterItems(g.items, visible) }))
     .filter((g) => g.items.length > 0);
-
-  if (role === 'superadmin') {
-    const superItems = filterItems(superadminConfig.items, visible);
-    if (superItems.length > 0) {
-      groups.push({ id: superadminConfig.id, label: superadminConfig.label, items: superItems });
-    }
-  }
-  return groups;
 }
 
 /** Default IA — matches the previous static export. Used when no role
  *  context is available (story tests, etc.). */
 export const dashboardNavGroups: SidebarGroup[] = buildDashboardNav('admin');
-
-/** Retained for backwards compat with existing imports. */
-export const superadminGroup: SidebarGroup = {
-  id: superadminConfig.id,
-  label: superadminConfig.label,
-  items: superadminConfig.items.map(({ section: _s, ...rest }) => rest),
-};
