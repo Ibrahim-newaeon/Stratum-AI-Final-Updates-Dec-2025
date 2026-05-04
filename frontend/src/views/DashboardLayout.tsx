@@ -1,9 +1,17 @@
 /**
- * Dashboard Layout — COMMAND CENTER DESIGN SYSTEM
- * Premium sidebar + header layout for Stratum AI
+ * Dashboard Layout — figma shell.
+ *
+ * Composes the primitives:
+ *   <Sidebar groups={buildDashboardNav(role)} mobileOpen={...} />
+ *   header (custom — preserves CommandPalette, TenantSwitcher, profile menu)
+ *   <Outlet />
+ *
+ * The legacy ~200-line bespoke sidebar is gone — collapsible groups,
+ * sub-nav (CDP), role-based filtering, and mobile drawer are now all
+ * handled by the Sidebar primitive.
  */
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -60,6 +68,9 @@ import { OnboardingChat, OnboardingChatButton } from '@/components/onboarding';
 import { FeedbackWidget } from '@/components/feedback/FeedbackWidget';
 import ClientContextSwitcher from '@/components/client/ClientContextSwitcher';
 import TenantSwitcher from '@/components/tenant/TenantSwitcher';
+import { Sidebar } from '@/components/primitives/nav/Sidebar';
+import { ThemeToggle } from '@/components/primitives/theme/ThemeToggle';
+import { buildDashboardNav } from '@/components/primitives/nav/dashboardNav';
 
 /* ═══════════════════════════════════════════════════════════════
    SIDEBAR VISIBILITY — mirrors backend SIDEBAR_VISIBILITY
@@ -306,8 +317,7 @@ export default function DashboardLayout() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [whatsNewOpen, setWhatsNewOpen] = useState(false);
@@ -320,11 +330,8 @@ export default function DashboardLayout() {
   );
   const { hasNewUpdates } = useWhatsNew();
 
-  useEffect(() => {
-    document.documentElement.classList.remove('light');
-    document.documentElement.classList.add('dark');
-    localStorage.setItem('stratum-theme', 'dark');
-  }, []);
+  const role = (user?.role as AppRole | undefined) ?? undefined;
+  const navGroups = buildDashboardNav(role);
 
   const handleLogout = () => {
     logout();
@@ -347,36 +354,41 @@ export default function DashboardLayout() {
     document.documentElement.dir = newLang === 'ar' ? 'rtl' : 'ltr';
   };
 
-  /* ── Nav Link Renderer ────────────────────────────────────── */
-  const renderNavLink = (item: NavItem, variant: 'default' | 'sub' = 'default') => {
-    const isActive = location.pathname === item.href;
-    return (
-      <NavLink
-        key={item.name}
-        to={item.href}
-        id={item.tourId}
-        data-tour={item.dataTour}
-        onClick={() => setSidebarOpen(false)}
-        className={cn(
-          'group flex items-center gap-3 rounded-lg text-sm font-medium transition-colors duration-200',
-          variant === 'default' ? 'px-3 py-2' : 'px-3 py-1.5',
-          isActive
-            ? 'border-l-2 border-secondary bg-secondary/5 text-secondary'
-            : 'text-muted-foreground hover:text-foreground hover:bg-foreground/[0.03]'
-        )}
-      >
-        <item.icon className={cn('flex-shrink-0', variant === 'default' ? 'h-5 w-5' : 'h-4 w-4')} />
-        <span className="truncate">{t(item.name)}</span>
-      </NavLink>
-    );
-  };
+  const brand = (
+    <div className="flex items-center gap-3">
+      <img
+        src="/images/stratum-logo.png"
+        alt="Stratum AI"
+        className="h-7"
+        loading="lazy"
+        decoding="async"
+      />
+    </div>
+  );
 
-  /* ── Section Header ───────────────────────────────────────── */
-  const SectionHeader = ({ title }: { title: string }) => (
-    <div className="px-3 pt-5 pb-2">
-      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {title}
-      </span>
+  const sidebarFooter = (
+    <div className="flex items-center gap-3">
+      <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+        <span className="text-xs font-semibold text-primary font-mono">{getUserInitials()}</span>
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-foreground truncate">{user?.name || 'User'}</p>
+        <p className="text-xs text-muted-foreground truncate capitalize">
+          {user?.role || 'analyst'}
+        </p>
+      </div>
+      <button
+        onClick={handleLogout}
+        className={cn(
+          'p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/5',
+          'transition-colors duration-200',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+        )}
+        aria-label="Log out"
+        title="Log out"
+      >
+        <LogOut className="h-4 w-4" />
+      </button>
     </div>
   );
 
@@ -633,22 +645,18 @@ export default function DashboardLayout() {
           </button>
         )}
 
-        {/* ═══════════════════════════════════════════════════════
-            MAIN CONTENT
-           ═══════════════════════════════════════════════════════ */}
-        <main
-          className={cn(
-            'flex flex-1 flex-col overflow-hidden transition-[margin] duration-300',
-            sidebarCollapsed ? 'lg:ml-0' : 'lg:ml-[240px]'
-          )}
-        >
+        {/* Main column */}
+        <main className="flex flex-1 flex-col overflow-hidden">
           {/* Header */}
           <header className="flex h-16 items-center justify-between px-6 bg-background border-b border-border">
-            {/* Left: Mobile hamburger + breadcrumb */}
+            {/* Left: mobile burger + breadcrumb */}
             <div className="flex items-center gap-4">
               <button
-                className="lg:hidden p-2 rounded-lg text-muted-foreground hover:text-foreground transition-colors duration-200"
-                onClick={() => setSidebarOpen(true)}
+                className={cn(
+                  'lg:hidden p-2 rounded-lg text-muted-foreground hover:text-foreground transition-colors duration-200',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                )}
+                onClick={() => setMobileOpen(true)}
                 aria-label="Open navigation"
               >
                 <Menu className="h-5 w-5" />
@@ -678,22 +686,27 @@ export default function DashboardLayout() {
               </h1>
             </div>
 
-            {/* Center: Global Search */}
+            {/* Center: Global search */}
             <div className="flex-1 max-w-md mx-4 hidden md:block">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                 <CommandPalette />
               </div>
             </div>
 
-            {/* Right: Actions */}
+            {/* Right: actions */}
             <div className="flex items-center gap-2">
               <TenantSwitcher />
               <ClientContextSwitcher />
 
+              <ThemeToggle />
+
               <button
                 onClick={() => setLearningHubOpen(!learningHubOpen)}
-                className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-foreground/[0.03] transition-colors duration-200"
+                className={cn(
+                  'p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/40',
+                  'transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                )}
                 aria-label="Learning Hub"
                 title="Learning Hub"
               >
@@ -702,19 +715,25 @@ export default function DashboardLayout() {
 
               <button
                 onClick={() => setWhatsNewOpen(true)}
-                className="relative p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-foreground/[0.03] transition-colors duration-200"
+                className={cn(
+                  'relative p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/40',
+                  'transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                )}
                 aria-label="What's New"
                 title="What's New"
               >
                 <Gift className="h-5 w-5" />
                 {hasNewUpdates && (
-                  <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[#E85D5D]" />
+                  <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive" />
                 )}
               </button>
 
               <button
                 onClick={() => setNotificationsOpen(true)}
-                className="relative p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-foreground/[0.03] transition-colors duration-200"
+                className={cn(
+                  'relative p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/40',
+                  'transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                )}
                 aria-label="Notifications"
                 title="Notifications"
               >
@@ -723,7 +742,11 @@ export default function DashboardLayout() {
               </button>
 
               <button
-                className="hidden sm:flex px-2.5 py-1 rounded-md text-xs font-medium text-muted-foreground border border-border hover:text-foreground hover:border-border transition-colors duration-200"
+                className={cn(
+                  'hidden sm:flex px-2.5 py-1 rounded-md text-xs font-medium font-mono',
+                  'text-muted-foreground border border-border hover:text-foreground hover:border-border',
+                  'transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                )}
                 onClick={toggleLanguage}
               >
                 {i18n.language === 'en' ? 'AR' : 'EN'}
@@ -733,7 +756,10 @@ export default function DashboardLayout() {
               <div className="relative">
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="flex items-center gap-2 p-1.5 rounded-lg transition-colors duration-200 hover:bg-foreground/[0.03]"
+                  className={cn(
+                    'flex items-center gap-2 p-1.5 rounded-lg transition-colors duration-200 hover:bg-muted/40',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                  )}
                 >
                   <div className="h-8 w-8 rounded-lg bg-secondary/10 flex items-center justify-center">
                     <span className="text-xs font-semibold text-secondary">
@@ -759,7 +785,7 @@ export default function DashboardLayout() {
                         </div>
                         <NavLink
                           to="/dashboard/settings"
-                          className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg mx-1 text-muted-foreground hover:text-foreground hover:bg-foreground/[0.03] transition-colors duration-200"
+                          className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg mx-1 text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors duration-200"
                           onClick={() => setUserMenuOpen(false)}
                         >
                           <Settings className="w-4 h-4" />
@@ -770,7 +796,7 @@ export default function DashboardLayout() {
                             setUserMenuOpen(false);
                             handleLogout();
                           }}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg mx-1 text-[#E85D5D] hover:bg-[#E85D5D]/5 transition-colors duration-200"
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg mx-1 text-destructive hover:bg-destructive/5 transition-colors duration-200"
                         >
                           <LogOut className="w-4 h-4" />
                           {t('common.logout')}
