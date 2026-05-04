@@ -59,6 +59,12 @@ class ViolationType(str, Enum):
     DAILY_SPEND_LIMIT = "daily_spend_limit"
     CAMPAIGN_PAUSE_REQUIRED = "campaign_pause_required"
     FREQUENCY_CAP_EXCEEDED = "frequency_cap_exceeded"
+    # Subscription-gate violation: tenant's trial / paid sub has
+    # expired and is no longer entitled to autopilot execution.
+    # Decisions still flow through the system as advisories so
+    # the user sees what the autopilot would have done — they
+    # just don't fire automatically.
+    SUBSCRIPTION_EXPIRED = "subscription_expired"
 
 
 class InterventionAction(str, Enum):
@@ -372,6 +378,39 @@ class AutopilotEnforcer:
             EnforcementResult with allowed status and any violations
         """
         settings = await self.get_settings(tenant_id)
+
+        # Subscription gate — must come before any other enforcement
+        # check. When the trial / paid subscription has lapsed past
+        # the grace period, autopilot drops to advisory: decisions
+        # still surface in the UI so the operator sees what the
+        # system would have done, but nothing fires automatically.
+        # This is the "graceful expiry" pattern — we don't lock the
+        # user out of the dashboard, we just stop spending their ad
+        # budget without consent.
+        from app.core.subscription import get_subscription_info
+
+        sub_info = await get_subscription_info(tenant_id)
+        if sub_info.is_access_restricted:
+            return EnforcementResult(
+                allowed=False,
+                mode=EnforcementMode.ADVISORY,
+                violations=[
+                    {
+                        "type": ViolationType.SUBSCRIPTION_EXPIRED.value,
+                        "rule_id": "subscription_gate",
+                        "message": (
+                            sub_info.restriction_reason
+                            or "Subscription expired. Autopilot is in advisory mode."
+                        ),
+                        "severity": "warning",
+                        "plan": sub_info.plan,
+                        "status": sub_info.status.value,
+                        "days_in_grace": sub_info.days_in_grace,
+                        "upgrade_url": "/dashboard/plans",
+                    }
+                ],
+                warnings=["Autopilot in advisory mode — upgrade to resume execution."],
+            )
 
         # Check kill switch
         if not settings.enforcement_enabled:

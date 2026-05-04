@@ -729,17 +729,28 @@ async def register(
             detail="Email already registered",
         )
 
-    # 3. Auto-create tenant with free tier
+    # 3. Auto-create tenant with a 14-day Starter trial.
+    #
+    # Previous behaviour set plan="free" — but the SubscriptionTier enum
+    # has no FREE value, so feature-gates silently fell through to
+    # STARTER (per licensing.py:200) anyway. Making it explicit here:
+    # new signups get full Starter capabilities for 14 days; after that
+    # plan_expires_at fires the standard expiry → grace → restricted
+    # flow already implemented in core/subscription.py.
     slug_base = re.sub(r'[^a-z0-9]+', '-', email_lower.split('@')[0]).strip('-')
     slug = f"{slug_base}-{secrets.token_hex(4)}"
     tenant_name = f"{request_data.full_name}'s Workspace" if request_data.full_name else f"{slug_base}'s Workspace"
 
+    trial_end = datetime.now(timezone.utc) + timedelta(days=14)
+
     tenant = Tenant(
         name=tenant_name,
         slug=slug,
-        plan="free",
+        plan="starter",
         status="active",
         billing_email=email_lower,
+        trial_ends_at=trial_end,
+        plan_expires_at=trial_end,
     )
     db.add(tenant)
     await db.flush()  # Get tenant.id without committing
@@ -784,7 +795,8 @@ async def register(
         "user_registered",
         user_id=user.id,
         tenant_id=tenant.id,
-        plan="free",
+        plan="starter",
+        trial_ends_at=trial_end.isoformat(),
     )
 
     return APIResponse(
@@ -804,7 +816,7 @@ async def register(
             created_at=user.created_at,
             updated_at=user.updated_at,
         ),
-        message="Registration successful. Free tier activated.",
+        message="Registration successful. 14-day Starter trial activated.",
     )
 
 
