@@ -8,6 +8,7 @@
  */
 
 import { memo, useState, useEffect } from 'react';
+import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getSignalHealth } from '@/lib/liveSimulation';
 import type { SignalHealthDetail } from '@/lib/liveSimulation';
@@ -57,12 +58,21 @@ function getTrustState(score: number): TrustState {
   }
 }
 
+const DISMISS_STORAGE_KEY = 'stratum-trust-gate-dismissed';
+
 export const TrustGateIndicator = memo(function TrustGateIndicator({
   className,
 }: TrustGateIndicatorProps) {
   const [signalHealth, setSignalHealth] = useState(85);
   const [healthDetail, setHealthDetail] = useState<SignalHealthDetail | null>(null);
   const [expanded, setExpanded] = useState(false);
+  const [dismissed, setDismissed] = useState(() => {
+    try {
+      return sessionStorage.getItem(DISMISS_STORAGE_KEY) === '1';
+    } catch {
+      return false;
+    }
+  });
 
   // Use the simulation engine for realistic health updates
   useEffect(() => {
@@ -78,6 +88,18 @@ export const TrustGateIndicator = memo(function TrustGateIndicator({
     const interval = setInterval(updateHealth, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  const handleDismiss = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDismissed(true);
+    try {
+      sessionStorage.setItem(DISMISS_STORAGE_KEY, '1');
+    } catch {
+      // ignore
+    }
+  };
+
+  if (dismissed) return null;
 
   const state = getTrustState(signalHealth);
   const isHealthy = state.status === 'PASS';
@@ -104,6 +126,22 @@ export const TrustGateIndicator = memo(function TrustGateIndicator({
         boxShadow: `0 0 20px ${state.color}40, 0 8px 32px rgba(0, 0, 0, 0.3)`,
       }}
     >
+      {/* Close button — dismisses for the rest of the session */}
+      <button
+        type="button"
+        onClick={handleDismiss}
+        aria-label="Dismiss trust gate indicator"
+        className={cn(
+          'absolute -top-2 -right-2 z-10',
+          'w-6 h-6 rounded-full bg-card border-2 flex items-center justify-center',
+          'text-muted-foreground hover:text-foreground transition-colors',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+        )}
+        style={{ borderColor: state.color }}
+      >
+        <X className="w-3 h-3" />
+      </button>
+
       {/* Expanded Detail Panel */}
       {expanded && healthDetail && (
         <div className="px-4 pt-3 pb-2 space-y-2 min-w-56">
@@ -213,10 +251,10 @@ export const TrustGateIndicator = memo(function TrustGateIndicator({
               {state.score}
             </span>
             <span
-              className="text-xs font-medium px-1.5 py-0.5 rounded"
+              className="text-xs font-bold px-2 py-0.5 rounded"
               style={{
-                backgroundColor: state.bgColor,
-                color: state.color,
+                backgroundColor: state.color,
+                color: '#000',
               }}
             >
               {state.status}
