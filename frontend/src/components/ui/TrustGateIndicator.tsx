@@ -85,13 +85,21 @@ export const TrustGateIndicator = memo(function TrustGateIndicator({
   return (
     <div
       className={cn(
-        'fixed bottom-6 left-6 z-50',
+        // Bottom-right corner, stacked above the OnboardingChatButton
+        // (bottom-4) + FeedbackWidget button (bottom-20). bottom-36
+        // clears both. Was previously bottom-left where it conflicted
+        // with the sidebar.
+        'fixed bottom-36 right-6 z-50',
         'flex flex-col gap-0 rounded-2xl',
         'transition-colors duration-300',
+        // Solid card surface — semantic token, themed correctly in
+        // dark + light. The previous `var(--bg-primary)` resolved to
+        // the page background which read as transparent over the
+        // dashboard surface.
+        'bg-card',
         className
       )}
       style={{
-        background: 'var(--bg-primary)',
         border: `2px solid ${state.color}`,
         boxShadow: `0 0 20px ${state.color}40, 0 8px 32px rgba(0, 0, 0, 0.3)`,
       }}
@@ -99,7 +107,10 @@ export const TrustGateIndicator = memo(function TrustGateIndicator({
       {/* Expanded Detail Panel */}
       {expanded && healthDetail && (
         <div className="px-4 pt-3 pb-2 space-y-2 min-w-56">
-          <div className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.4)' }}>
+          <div
+            className="text-xs font-semibold uppercase tracking-wider"
+            style={{ color: 'rgba(255,255,255,0.4)' }}
+          >
             Signal Components
           </div>
           {[
@@ -114,7 +125,12 @@ export const TrustGateIndicator = memo(function TrustGateIndicator({
                 <div
                   className="w-1.5 h-1.5 rounded-full flex-shrink-0"
                   style={{
-                    backgroundColor: comp.value >= 70 ? 'var(--landing-accent-cyan)' : comp.value >= 40 ? '#f59e0b' : '#ff6b6b',
+                    backgroundColor:
+                      comp.value >= 70
+                        ? 'var(--landing-accent-cyan)'
+                        : comp.value >= 40
+                          ? '#f59e0b'
+                          : '#ff6b6b',
                   }}
                 />
                 <span className="text-xs truncate" style={{ color: 'rgba(255,255,255,0.6)' }}>
@@ -125,7 +141,12 @@ export const TrustGateIndicator = memo(function TrustGateIndicator({
                 <span
                   className="text-xs font-mono font-medium"
                   style={{
-                    color: comp.value >= 70 ? 'var(--landing-accent-cyan)' : comp.value >= 40 ? '#f59e0b' : '#ff6b6b',
+                    color:
+                      comp.value >= 70
+                        ? 'var(--landing-accent-cyan)'
+                        : comp.value >= 40
+                          ? '#f59e0b'
+                          : '#ff6b6b',
                   }}
                 >
                   {comp.value}
@@ -138,19 +159,24 @@ export const TrustGateIndicator = memo(function TrustGateIndicator({
           ))}
           <div
             className="pt-2 mt-1 text-xs"
-            style={{ borderTop: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.35)' }}
+            style={{
+              borderTop: '1px solid rgba(255,255,255,0.08)',
+              color: 'rgba(255,255,255,0.35)',
+            }}
           >
-            Autopilot: {state.status === 'PASS' ? 'Enabled' : state.status === 'HOLD' ? 'Alert Only' : 'Manual Required'}
+            Autopilot:{' '}
+            {state.status === 'PASS'
+              ? 'Enabled'
+              : state.status === 'HOLD'
+                ? 'Alert Only'
+                : 'Manual Required'}
           </div>
         </div>
       )}
 
       {/* Main indicator (always visible) */}
       <button
-        className={cn(
-          'flex items-center gap-3 px-4 py-3',
-          expanded && 'border-t',
-        )}
+        className={cn('flex items-center gap-3 px-4 py-3', expanded && 'border-t')}
         style={{
           borderColor: expanded ? 'rgba(255,255,255,0.08)' : 'transparent',
         }}
@@ -161,10 +187,7 @@ export const TrustGateIndicator = memo(function TrustGateIndicator({
         {/* Pulsing status dot */}
         <div className="relative flex items-center justify-center">
           <div
-            className={cn(
-              'h-3 w-3 rounded-full',
-              isHealthy && 'animate-status-pulse'
-            )}
+            className={cn('h-3 w-3 rounded-full', isHealthy && 'animate-status-pulse')}
             style={{
               backgroundColor: state.color,
               boxShadow: `0 0 12px ${state.color}`,
@@ -186,10 +209,7 @@ export const TrustGateIndicator = memo(function TrustGateIndicator({
         {/* Status info */}
         <div className="flex flex-col items-start">
           <div className="flex items-center gap-2">
-            <span
-              className="text-sm font-semibold font-mono"
-              style={{ color: state.color }}
-            >
+            <span className="text-sm font-semibold font-mono" style={{ color: state.color }}>
               {state.score}
             </span>
             <span
@@ -202,10 +222,7 @@ export const TrustGateIndicator = memo(function TrustGateIndicator({
               {state.status}
             </span>
           </div>
-          <span
-            className="text-xs"
-            style={{ color: 'var(--landing-text-white-soft)' }}
-          >
+          <span className="text-xs" style={{ color: 'var(--landing-text-white-soft)' }}>
             Signal Health
           </span>
         </div>
