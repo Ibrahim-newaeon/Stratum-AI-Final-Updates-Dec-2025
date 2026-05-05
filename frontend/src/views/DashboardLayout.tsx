@@ -31,6 +31,7 @@ import type { AppRole } from '@/components/auth/ProtectedRoute';
 import { TrustGateIndicator } from '@/components/ui/TrustGateIndicator';
 import { OnboardingChat, OnboardingChatButton } from '@/components/onboarding';
 import { FeedbackWidget } from '@/components/feedback/FeedbackWidget';
+import { CopilotChat } from '@/components/dashboard/CopilotChat';
 import ClientContextSwitcher from '@/components/client/ClientContextSwitcher';
 import TenantSwitcher from '@/components/tenant/TenantSwitcher';
 import { Sidebar } from '@/components/primitives/nav/Sidebar';
@@ -343,6 +344,7 @@ export default function DashboardLayout() {
           language={i18n.language}
         />
         <FeedbackWidget />
+        <CopilotChat />
       </div>
     </div>
   );
