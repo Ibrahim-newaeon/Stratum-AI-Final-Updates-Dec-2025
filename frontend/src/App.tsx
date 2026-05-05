@@ -76,6 +76,11 @@ const MLTraining = lazyWithRetry(() => import('./views/MLTraining'));
 const CAPISetup = lazyWithRetry(() => import('./views/CAPISetup'));
 const SuperadminDashboard = lazyWithRetry(() => import('./views/SuperadminDashboard'));
 const ConsoleLayout = lazyWithRetry(() => import('./views/ConsoleLayout'));
+const ConsoleFeatureFlags = lazyWithRetry(() => import('./views/console/FeatureFlags'));
+const ConsolePlatformAnalytics = lazyWithRetry(() => import('./views/console/PlatformAnalytics'));
+const ConsoleCrossTenantAnomalies = lazyWithRetry(
+  () => import('./views/console/CrossTenantAnomalies')
+);
 const CDPCalculator = lazyWithRetry(() => import('./views/CDPCalculator'));
 
 // CDP (Customer Data Platform) views
@@ -1704,18 +1709,9 @@ function App() {
                         <Route
                           path="feature-flags"
                           element={
-                            <div className="p-12 text-center">
-                              <h1 className="text-2xl font-semibold text-foreground">
-                                Feature Flags
-                              </h1>
-                              <p className="mt-2 text-muted-foreground">
-                                UI surface for{' '}
-                                <code className="font-mono text-primary">
-                                  /api/v1/feature-flags
-                                </code>{' '}
-                                — coming soon.
-                              </p>
-                            </div>
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <ConsoleFeatureFlags />
+                            </Suspense>
                           }
                         />
                         <Route
@@ -1769,18 +1765,9 @@ function App() {
                         <Route
                           path="analytics"
                           element={
-                            <div className="p-12 text-center">
-                              <h1 className="text-2xl font-semibold text-foreground">
-                                Platform Analytics
-                              </h1>
-                              <p className="mt-2 text-muted-foreground">
-                                UI surface for{' '}
-                                <code className="font-mono text-primary">
-                                  /api/v1/superadmin/analytics
-                                </code>{' '}
-                                — coming soon.
-                              </p>
-                            </div>
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <ConsolePlatformAnalytics />
+                            </Suspense>
                           }
                         />
                         <Route
@@ -1802,17 +1789,9 @@ function App() {
                         <Route
                           path="anomalies"
                           element={
-                            <div className="p-12 text-center">
-                              <h1 className="text-2xl font-semibold text-foreground">
-                                Cross-Tenant Anomalies
-                              </h1>
-                              <p className="mt-2 text-muted-foreground">
-                                Cross-tenant view of anomaly detections. Coming soon — for now see
-                                per-tenant anomalies at{' '}
-                                <code className="font-mono text-primary">/dashboard/anomalies</code>
-                                .
-                              </p>
-                            </div>
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <ConsoleCrossTenantAnomalies />
+                            </Suspense>
                           }
                         />
                       </Route>
