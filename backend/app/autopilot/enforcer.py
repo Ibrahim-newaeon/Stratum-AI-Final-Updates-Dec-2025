@@ -1033,6 +1033,32 @@ class AutopilotEnforcer:
             # Serialise details to ensure JSONB-safe content
             safe_details = json.loads(json.dumps(details, default=str))
 
+            # Estimate dollar value delivered. Stays soft — the estimator
+            # returns (0, "neutral", "low") whenever inputs are missing,
+            # so we don't surface bogus nudge values. See
+            # services/autopilot/outcomes.py for the routing + horizons.
+            try:
+                from app.services.autopilot.outcomes import estimate_outcome
+
+                outcome = estimate_outcome(
+                    action_type=action_type,
+                    proposed_value=details.get("proposed_value", {}) if isinstance(details, dict) else {},
+                    current_value=details.get("current_value") if isinstance(details, dict) else None,
+                    metrics=details.get("metrics") if isinstance(details, dict) else None,
+                )
+                value_cents = outcome.value_cents
+                outcome_type = outcome.outcome_type
+                outcome_confidence = outcome.confidence
+            except Exception as exc:  # noqa: BLE001 — outcome estimation must never block the audit log
+                logger.warning(
+                    "outcome_estimation_failed",
+                    error=str(exc)[:200],
+                    action_type=action_type,
+                )
+                value_cents = None
+                outcome_type = None
+                outcome_confidence = None
+
             db_log = EnforcementAuditLogDB(
                 tenant_id=tenant_id,
                 timestamp=now,
@@ -1051,6 +1077,9 @@ class AutopilotEnforcer:
                 details=safe_details,
                 user_id=user_id,
                 override_reason=override_reason,
+                value_delivered_cents=value_cents,
+                outcome_type=outcome_type,
+                outcome_confidence=outcome_confidence,
             )
             self.db.add(db_log)
             await self.db.flush()

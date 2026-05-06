@@ -994,7 +994,7 @@ function App() {
                           }
                         />
                         <Route
-                          path="integrations"
+                          path="capi-setup"
                           element={
                             <Suspense fallback={<LoadingSpinner />}>
                               <CAPISetup />
