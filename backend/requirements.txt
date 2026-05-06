@@ -53,6 +53,9 @@ xgboost==2.0.3
 google-cloud-aiplatform==1.150.0
 google-auth==2.50.0
 
+# LLM Integrations (Copilot)
+anthropic==0.45.2
+
 # Web Scraping (Module D)
 beautifulsoup4==4.14.3
 lxml==6.1.0
