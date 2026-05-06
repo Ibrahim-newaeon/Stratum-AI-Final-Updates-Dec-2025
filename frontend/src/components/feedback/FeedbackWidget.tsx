@@ -8,15 +8,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import {
-  MessageSquarePlus,
-  X,
-  Bug,
-  Sparkles,
-  MessageCircle,
-  Send,
-  Heart,
-} from 'lucide-react';
+import { MessageSquarePlus, X, Bug, Sparkles, MessageCircle, Send, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -85,14 +77,11 @@ export function FeedbackWidget() {
 
     // Persist locally (for future backend sync)
     try {
-      const existing: FeedbackEntry[] = JSON.parse(
-        localStorage.getItem(STORAGE_KEY) || '[]',
-      );
+      const existing: FeedbackEntry[] = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
       existing.push(feedback);
       // BUG-021: Trim oldest entries if we exceed the max to prevent unbounded growth
-      const trimmed = existing.length > MAX_FEEDBACK_ENTRIES
-        ? existing.slice(-MAX_FEEDBACK_ENTRIES)
-        : existing;
+      const trimmed =
+        existing.length > MAX_FEEDBACK_ENTRIES ? existing.slice(-MAX_FEEDBACK_ENTRIES) : existing;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
     } catch {
       // Silently ignore storage errors
@@ -124,7 +113,7 @@ export function FeedbackWidget() {
             whileHover={{ scale: 1.12 }}
             whileTap={{ scale: 0.92 }}
             onClick={() => setIsOpen(true)}
-            className="fixed bottom-20 right-4 w-12 h-12 rounded-full text-primary-foreground shadow-lg hover:shadow-xl transition-shadow z-40 flex items-center justify-center"
+            className="fixed bottom-36 right-4 w-12 h-12 rounded-full text-primary-foreground shadow-lg hover:shadow-xl transition-shadow z-40 flex items-center justify-center"
             style={{
               background: 'var(--landing-accent-cyan)',
               boxShadow: '0 0 25px rgba(0, 199, 190, 0.35)',
@@ -146,11 +135,10 @@ export function FeedbackWidget() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-            className="fixed bottom-20 right-4 w-[380px] max-w-[calc(100vw-2rem)] max-h-[520px] rounded-2xl border border-primary/20 shadow-2xl flex flex-col overflow-hidden z-50"
+            className="fixed bottom-36 right-4 w-[380px] max-w-[calc(100vw-2rem)] max-h-[520px] rounded-2xl border border-primary/20 shadow-2xl flex flex-col overflow-hidden z-50"
             style={{
               background: '#0b1215',
-              boxShadow:
-                '0 0 40px rgba(0, 199, 190, 0.15), 0 8px 32px rgba(0,0,0,0.4)',
+              boxShadow: '0 0 40px rgba(0, 199, 190, 0.15), 0 8px 32px rgba(0,0,0,0.4)',
               backdropFilter: 'blur(40px) saturate(1.8)',
             }}
           >
@@ -161,12 +149,8 @@ export function FeedbackWidget() {
                   <Heart className="w-4 h-4 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-white">
-                    Send Feedback
-                  </h3>
-                  <p className="text-[11px] text-foreground/40">
-                    Help us improve Stratum AI
-                  </p>
+                  <h3 className="text-sm font-semibold text-white">Send Feedback</h3>
+                  <p className="text-[11px] text-foreground/40">Help us improve Stratum AI</p>
                 </div>
               </div>
               <button
@@ -183,8 +167,7 @@ export function FeedbackWidget() {
               {/* Rating */}
               <div>
                 <label className="block text-xs font-medium text-foreground/50 mb-3">
-                  How's your experience?{' '}
-                  <span className="text-primary">*</span>
+                  How's your experience? <span className="text-primary">*</span>
                 </label>
                 <div className="flex justify-center gap-3">
                   {ratings.map((r) => (
@@ -195,13 +178,11 @@ export function FeedbackWidget() {
                         'flex flex-col items-center gap-1.5 p-2.5 rounded-xl transition-colors duration-200',
                         rating === r.value
                           ? 'bg-primary/15 ring-2 ring-primary/40 scale-110'
-                          : 'opacity-50 hover:opacity-100 hover:bg-foreground/5',
+                          : 'opacity-50 hover:opacity-100 hover:bg-foreground/5'
                       )}
                       aria-label={r.label}
                     >
-                      <span className="text-2xl leading-none">
-                        {r.emoji}
-                      </span>
+                      <span className="text-2xl leading-none">{r.emoji}</span>
                       <span
                         className="text-[10px] font-medium"
                         style={{
@@ -221,8 +202,7 @@ export function FeedbackWidget() {
               {/* Category */}
               <div>
                 <label className="block text-xs font-medium text-foreground/50 mb-3">
-                  Category{' '}
-                  <span className="text-foreground/25">(optional)</span>
+                  Category <span className="text-foreground/25">(optional)</span>
                 </label>
                 <div className="flex gap-2">
                   {categories.map((cat) => {
@@ -230,16 +210,12 @@ export function FeedbackWidget() {
                     return (
                       <button
                         key={cat.value}
-                        onClick={() =>
-                          setCategory(
-                            category === cat.value ? null : cat.value,
-                          )
-                        }
+                        onClick={() => setCategory(category === cat.value ? null : cat.value)}
                         className={cn(
                           'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border',
                           category === cat.value
                             ? 'bg-primary/15 border-primary/40 text-primary'
-                            : 'bg-transparent border-foreground/10 text-foreground/40 hover:border-foreground/20 hover:text-foreground/60',
+                            : 'bg-transparent border-foreground/10 text-foreground/40 hover:border-foreground/20 hover:text-foreground/60'
                         )}
                       >
                         <Icon className="w-3.5 h-3.5" />
@@ -253,8 +229,7 @@ export function FeedbackWidget() {
               {/* Comment */}
               <div>
                 <label className="block text-xs font-medium text-foreground/50 mb-3">
-                  Tell us more{' '}
-                  <span className="text-foreground/25">(optional)</span>
+                  Tell us more <span className="text-foreground/25">(optional)</span>
                 </label>
                 <textarea
                   value={comment}
@@ -275,7 +250,7 @@ export function FeedbackWidget() {
                   'w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold transition-[width]',
                   rating
                     ? 'bg-primary hover:bg-primary/90 text-primary-foreground '
-                    : 'bg-foreground/5 text-foreground/25 cursor-not-allowed',
+                    : 'bg-foreground/5 text-foreground/25 cursor-not-allowed'
                 )}
               >
                 <Send className="w-4 h-4" />
@@ -290,4 +265,3 @@ export function FeedbackWidget() {
 }
 
 export default FeedbackWidget;
-

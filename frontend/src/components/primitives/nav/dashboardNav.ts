@@ -226,6 +226,12 @@ const navConfig: NavGroup[] = [
         icon: LayoutDashboard,
         section: 'dashboard',
       },
+      {
+        label: 'Custom Dashboard',
+        href: '/dashboard/custom-dashboard',
+        icon: LayoutGrid,
+        section: 'custom-dashboard',
+      },
       { label: 'Campaigns', href: '/dashboard/campaigns', icon: Rocket, section: 'campaigns' },
       { label: 'Autopilot', href: '/dashboard/rules', icon: Sparkles, section: 'autopilot' },
       {
@@ -309,12 +315,6 @@ const navConfig: NavGroup[] = [
             href: '/dashboard/custom-reports',
             icon: FileBarChart,
             section: 'custom-reports',
-          },
-          {
-            label: 'Custom Dashboard',
-            href: '/dashboard/custom-dashboard',
-            icon: LayoutGrid,
-            section: 'custom-dashboard',
           },
         ],
       },
@@ -507,8 +507,8 @@ const navConfig: NavGroup[] = [
         section: 'api-keys',
       },
       { label: 'Settings', href: '/dashboard/settings', icon: Settings, section: 'settings' },
-      { label: 'Team', href: '/dashboard/tenants', icon: Users, section: 'team' },
-      { label: 'Billing', href: '/dashboard/ml-training', icon: CreditCard, section: 'billing' },
+      { label: 'Team', href: '/dashboard/team', icon: Users, section: 'team' },
+      { label: 'Billing', href: '/dashboard/billing', icon: CreditCard, section: 'billing' },
     ],
   },
 ];
