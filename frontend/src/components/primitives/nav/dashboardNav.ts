@@ -26,11 +26,13 @@ import {
   AlertCircle,
   AlertOctagon,
   BarChart3,
+  Bell,
   Brain,
   Cable,
   Calculator,
   Clock,
   Code,
+  Code2,
   CreditCard,
   Database,
   DollarSign,
@@ -62,6 +64,7 @@ import {
   Users,
   Wallet,
   Webhook,
+  Workflow,
   Zap,
 } from 'lucide-react';
 import type { SidebarGroup, SidebarItem } from './Sidebar';
@@ -109,6 +112,9 @@ const SIDEBAR_VISIBILITY: Record<AppRole, ReadonlySet<string>> = {
     'explainability',
     'sql-editor',
     'compliance',
+    'drip-campaigns',
+    'push-notifications',
+    'embed-widgets',
   ]),
   admin: new Set([
     'dashboard',
@@ -143,6 +149,9 @@ const SIDEBAR_VISIBILITY: Record<AppRole, ReadonlySet<string>> = {
     'explainability',
     'sql-editor',
     'compliance',
+    'drip-campaigns',
+    'push-notifications',
+    'embed-widgets',
   ]),
   manager: new Set([
     'dashboard',
@@ -164,6 +173,8 @@ const SIDEBAR_VISIBILITY: Record<AppRole, ReadonlySet<string>> = {
     'ai-insights',
     'cohort',
     'funnel-analysis',
+    'drip-campaigns',
+    'push-notifications',
   ]),
   analyst: new Set([
     'dashboard',
@@ -447,6 +458,24 @@ const navConfig: NavGroup[] = [
             section: 'newsletter',
           },
         ],
+      },
+      {
+        label: 'Drip Campaigns',
+        href: '/dashboard/drip-campaigns',
+        icon: Workflow,
+        section: 'drip-campaigns',
+      },
+      {
+        label: 'Push Notifications',
+        href: '/dashboard/push-notifications',
+        icon: Bell,
+        section: 'push-notifications',
+      },
+      {
+        label: 'Embed Widgets',
+        href: '/dashboard/embed-widgets',
+        icon: Code2,
+        section: 'embed-widgets',
       },
       { label: 'Audit Log', href: '/dashboard/audit-log', icon: FileText, section: 'audit' },
       {
