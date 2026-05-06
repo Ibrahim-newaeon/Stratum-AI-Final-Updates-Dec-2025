@@ -164,7 +164,9 @@ const MediaBuyerConsole = lazyWithRetry(() => import('./views/tenant/Console'));
 const SignalHub = lazyWithRetry(() => import('./views/tenant/SignalHub'));
 
 // Sprint feature views
-const Integrations = lazyWithRetry(() => import('./views/tenant/Integrations'));
+const Integrations = lazyWithRetry(() => import('./views/tenant/IntegrationsHub'));
+const GDPR = lazyWithRetry(() => import('./views/GDPR'));
+const APIKeys = lazyWithRetry(() => import('./views/APIKeys'));
 const Pacing = lazyWithRetry(() => import('./views/tenant/Pacing'));
 const ProfitROAS = lazyWithRetry(() => import('./views/tenant/ProfitROAS'));
 const Attribution = lazyWithRetry(() => import('./views/tenant/Attribution'));
@@ -1263,6 +1265,26 @@ function App() {
                             <ProtectedRoute requiredRole="admin">
                               <Suspense fallback={<LoadingSpinner />}>
                                 <ComplianceDashboard />
+                              </Suspense>
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="gdpr"
+                          element={
+                            <ProtectedRoute requiredRole="admin">
+                              <Suspense fallback={<LoadingSpinner />}>
+                                <GDPR />
+                              </Suspense>
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="api-keys"
+                          element={
+                            <ProtectedRoute requiredRole="admin">
+                              <Suspense fallback={<LoadingSpinner />}>
+                                <APIKeys />
                               </Suspense>
                             </ProtectedRoute>
                           }
