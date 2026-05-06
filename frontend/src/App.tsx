@@ -986,6 +986,10 @@ function App() {
                         />
                         <Route
                           path="settings"
+                          element={<Navigate to="/dashboard/settings/profile" replace />}
+                        />
+                        <Route
+                          path="settings/:tab"
                           element={
                             <ProtectedRoute requiredRole="admin">
                               <Suspense fallback={<LoadingSpinner />}>

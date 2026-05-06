@@ -34,7 +34,7 @@ const EVENT_BADGE_STYLES: Record<string, string> = {
 };
 
 const FUNNEL_COLORS: Record<string, string> = {
-  sent: 'var(--landing-accent-cyan)',
+  sent: 'hsl(var(--primary))',
   delivered: '#3b82f6',
   opened: '#22c55e',
   clicked: '#a855f7',
