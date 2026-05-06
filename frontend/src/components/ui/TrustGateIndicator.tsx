@@ -107,11 +107,13 @@ export const TrustGateIndicator = memo(function TrustGateIndicator({
   return (
     <div
       className={cn(
-        // Bottom-right corner, stacked above the OnboardingChatButton
-        // (bottom-4) + FeedbackWidget button (bottom-20). bottom-36
-        // clears both. Was previously bottom-left where it conflicted
-        // with the sidebar.
-        'fixed bottom-36 right-6 z-50',
+        // Bottom-right corner, top of the floating-widget stack:
+        //   bottom-4   OnboardingChatButton  (56×56)
+        //   bottom-20  CopilotChat button    (56×56)
+        //   bottom-36  FeedbackWidget button (48×48)
+        //   bottom-52  TrustGateIndicator    ← here
+        // Each row leaves a ~16-24px gap above the row below.
+        'fixed bottom-52 right-6 z-50',
         'flex flex-col gap-0 rounded-2xl',
         'transition-colors duration-300',
         // Solid card surface — semantic token, themed correctly in
