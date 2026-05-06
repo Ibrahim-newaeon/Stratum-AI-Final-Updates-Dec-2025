@@ -873,6 +873,21 @@ function App() {
                         }
                       >
                         <Route index element={<Navigate to="/dashboard/overview" replace />} />
+                        {/* Sidebar links from earlier IA pointed at URLs without
+                            backing routes. Redirect to the real destinations so
+                            old bookmarks don't 404. */}
+                        <Route
+                          path="autopilot"
+                          element={<Navigate to="/dashboard/rules" replace />}
+                        />
+                        <Route
+                          path="audiences"
+                          element={<Navigate to="/dashboard/cdp/audience-sync" replace />}
+                        />
+                        <Route
+                          path="trust-engine"
+                          element={<Navigate to="/dashboard/trust" replace />}
+                        />
                         <Route
                           path="overview"
                           element={
