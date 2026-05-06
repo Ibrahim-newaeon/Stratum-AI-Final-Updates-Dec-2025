@@ -27,8 +27,10 @@ import {
   AlertOctagon,
   BarChart3,
   Brain,
+  Cable,
   Calculator,
   Clock,
+  Code,
   CreditCard,
   Database,
   DollarSign,
@@ -49,6 +51,7 @@ import {
   Send,
   Settings,
   Share2,
+  Shield,
   ShieldCheck,
   Sparkles,
   Tag,
@@ -57,6 +60,8 @@ import {
   TrendingUp,
   UserMinus,
   Users,
+  Wallet,
+  Webhook,
   Zap,
 } from 'lucide-react';
 import type { SidebarGroup, SidebarItem } from './Sidebar';
@@ -103,6 +108,7 @@ const SIDEBAR_VISIBILITY: Record<AppRole, ReadonlySet<string>> = {
     'funnel-analysis',
     'explainability',
     'sql-editor',
+    'compliance',
   ]),
   admin: new Set([
     'dashboard',
@@ -136,6 +142,7 @@ const SIDEBAR_VISIBILITY: Record<AppRole, ReadonlySet<string>> = {
     'funnel-analysis',
     'explainability',
     'sql-editor',
+    'compliance',
   ]),
   manager: new Set([
     'dashboard',
@@ -375,6 +382,38 @@ const navConfig: NavGroup[] = [
         href: '/dashboard/integrations',
         icon: Plug,
         section: 'integrations',
+        children: [
+          {
+            label: 'Hub',
+            href: '/dashboard/integrations',
+            icon: Plug,
+            section: 'integrations',
+          },
+          {
+            label: 'Connect Platforms',
+            href: '/dashboard/campaigns/connect',
+            icon: Cable,
+            section: 'integrations',
+          },
+          {
+            label: 'Ad Accounts',
+            href: '/dashboard/campaigns/accounts',
+            icon: Wallet,
+            section: 'integrations',
+          },
+          {
+            label: 'CAPI Setup',
+            href: '/dashboard/capi-setup',
+            icon: Webhook,
+            section: 'integrations',
+          },
+          {
+            label: 'Developer Portal',
+            href: '/dashboard/developer',
+            icon: Code,
+            section: 'integrations',
+          },
+        ],
       },
       {
         label: 'WhatsApp',
@@ -410,6 +449,12 @@ const navConfig: NavGroup[] = [
         ],
       },
       { label: 'Audit Log', href: '/dashboard/audit-log', icon: FileText, section: 'audit' },
+      {
+        label: 'Compliance',
+        href: '/dashboard/compliance',
+        icon: Shield,
+        section: 'compliance',
+      },
       { label: 'Settings', href: '/dashboard/settings', icon: Settings, section: 'settings' },
       { label: 'Team', href: '/dashboard/tenants', icon: Users, section: 'team' },
       { label: 'Billing', href: '/dashboard/ml-training', icon: CreditCard, section: 'billing' },
