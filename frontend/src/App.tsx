@@ -164,7 +164,8 @@ const MediaBuyerConsole = lazyWithRetry(() => import('./views/tenant/Console'));
 const SignalHub = lazyWithRetry(() => import('./views/tenant/SignalHub'));
 
 // Sprint feature views
-const Integrations = lazyWithRetry(() => import('./views/tenant/IntegrationsHub'));
+// IntegrationsHub is rendered from Settings → Integrations tab now;
+// the bare /dashboard/integrations route just 302s there.
 const GDPR = lazyWithRetry(() => import('./views/GDPR'));
 const APIKeys = lazyWithRetry(() => import('./views/APIKeys'));
 const Pacing = lazyWithRetry(() => import('./views/tenant/Pacing'));
@@ -1603,14 +1604,12 @@ function App() {
                         />
 
                         {/* Sprint Feature Routes */}
-                        {/* CRM Integrations */}
+                        {/* Integrations is the canonical surface inside Settings.
+                            Old /dashboard/integrations redirects so bookmarks
+                            and the IntegrationsHub's "Open hub" links stay valid. */}
                         <Route
                           path="integrations"
-                          element={
-                            <Suspense fallback={<LoadingSpinner />}>
-                              <Integrations />
-                            </Suspense>
-                          }
+                          element={<Navigate to="/dashboard/settings/integrations" replace />}
                         />
 
                         {/* Pacing & Forecasting */}

@@ -28,10 +28,8 @@ import {
   BarChart3,
   Bell,
   Brain,
-  Cable,
   Calculator,
   Clock,
-  Code,
   Code2,
   CreditCard,
   Database,
@@ -63,8 +61,6 @@ import {
   TrendingUp,
   UserMinus,
   Users,
-  Wallet,
-  Webhook,
   Workflow,
   Zap,
 } from 'lucide-react';
@@ -399,42 +395,14 @@ const navConfig: NavGroup[] = [
     label: 'Workspace',
     items: [
       {
+        // Canonical Integrations surface lives inside Settings → Integrations
+        // (single deep-linkable URL). The hub itself surfaces buttons that
+        // navigate to Connect Platforms / Ad Accounts / CAPI Setup /
+        // Developer Portal — no need to duplicate those as sidebar children.
         label: 'Integrations',
-        href: '/dashboard/integrations',
+        href: '/dashboard/settings/integrations',
         icon: Plug,
         section: 'integrations',
-        children: [
-          {
-            label: 'Hub',
-            href: '/dashboard/integrations',
-            icon: Plug,
-            section: 'integrations',
-          },
-          {
-            label: 'Connect Platforms',
-            href: '/dashboard/campaigns/connect',
-            icon: Cable,
-            section: 'integrations',
-          },
-          {
-            label: 'Ad Accounts',
-            href: '/dashboard/campaigns/accounts',
-            icon: Wallet,
-            section: 'integrations',
-          },
-          {
-            label: 'CAPI Setup',
-            href: '/dashboard/capi-setup',
-            icon: Webhook,
-            section: 'integrations',
-          },
-          {
-            label: 'Developer Portal',
-            href: '/dashboard/developer',
-            icon: Code,
-            section: 'integrations',
-          },
-        ],
       },
       {
         label: 'WhatsApp',
