@@ -69,6 +69,7 @@ const Assets = lazyWithRetry(() => import('./views/Assets'));
 const Rules = lazyWithRetry(() => import('./views/Rules'));
 const Competitors = lazyWithRetry(() => import('./views/Competitors'));
 const Predictions = lazyWithRetry(() => import('./views/Predictions'));
+const EMQDiagnostics = lazyWithRetry(() => import('./views/EMQDiagnostics'));
 const WhatsApp = lazyWithRetry(() => import('./views/whatsapp/WhatsAppManager'));
 const WhatsAppBroadcast = lazyWithRetry(() => import('./views/whatsapp/WhatsAppBroadcast'));
 const WhatsAppContacts = lazyWithRetry(() => import('./views/whatsapp/WhatsAppContacts'));
@@ -1450,6 +1451,14 @@ function App() {
                           element={
                             <Suspense fallback={<LoadingSpinner />}>
                               <TenantAdminOverview />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="trust/emq"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <EMQDiagnostics />
                             </Suspense>
                           }
                         />

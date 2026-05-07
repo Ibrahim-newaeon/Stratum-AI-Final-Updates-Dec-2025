@@ -241,6 +241,15 @@ const navConfig: NavGroup[] = [
         href: '/dashboard/trust',
         icon: ShieldCheck,
         section: 'trust',
+        children: [
+          { label: 'Overview', href: '/dashboard/trust', icon: ShieldCheck, section: 'trust' },
+          {
+            label: 'EMQ Diagnostics',
+            href: '/dashboard/trust/emq',
+            icon: ShieldCheck,
+            section: 'trust',
+          },
+        ],
       },
       { label: 'Pacing', href: '/dashboard/pacing', icon: Target, section: 'pacing' },
       { label: 'Rules', href: '/dashboard/rules', icon: Zap, section: 'rules' },
