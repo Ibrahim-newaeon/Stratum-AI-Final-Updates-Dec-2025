@@ -50,6 +50,11 @@ const NEW_PAGES: { name: string; loader: () => Promise<{ default: unknown }> }[]
     name: 'tenant/IntegrationsHub',
     loader: () => import('@/views/tenant/IntegrationsHub'),
   },
+  // Backend-feature surface — EMQ v2 diagnostics
+  {
+    name: 'EMQDiagnostics',
+    loader: () => import('@/views/EMQDiagnostics'),
+  },
 ];
 
 describe('module-load smoke — pages added in this branch', () => {
