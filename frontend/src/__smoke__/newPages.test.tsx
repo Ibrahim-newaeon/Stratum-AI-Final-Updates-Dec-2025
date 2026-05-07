@@ -55,6 +55,11 @@ const NEW_PAGES: { name: string; loader: () => Promise<{ default: unknown }> }[]
     name: 'EMQDiagnostics',
     loader: () => import('@/views/EMQDiagnostics'),
   },
+  // Backend-feature surface — analytics_ai recommendations + KPIs
+  {
+    name: 'AIRecommendations',
+    loader: () => import('@/views/AIRecommendations'),
+  },
 ];
 
 describe('module-load smoke — pages added in this branch', () => {

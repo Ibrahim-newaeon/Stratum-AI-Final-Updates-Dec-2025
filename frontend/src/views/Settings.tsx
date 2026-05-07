@@ -42,6 +42,7 @@ import {
   useCancelSubscription,
   useReactivateSubscription,
 } from '@/api/payments';
+import { useAvailableTiers, useTierComparison } from '@/api/tier';
 import {
   METRIC_REGISTRY,
   METRIC_CATEGORIES,
@@ -2445,6 +2446,80 @@ function BillingSettings() {
           </button>
         </div>
       )}
+
+      <ComparePlansPanel />
+    </div>
+  );
+}
+
+function ComparePlansPanel() {
+  const tiersQuery = useAvailableTiers();
+  const compareQuery = useTierComparison();
+
+  if (tiersQuery.isLoading || compareQuery.isLoading) {
+    return null;
+  }
+  const tiers = tiersQuery.data?.tiers ?? [];
+  if (tiers.length === 0) return null;
+
+  const limits = compareQuery.data?.limits;
+  const limitKeys = limits
+    ? Array.from(
+        new Set(
+          Object.values(limits)
+            .filter((v): v is Record<string, number | string | null> => Boolean(v))
+            .flatMap((v) => Object.keys(v))
+        )
+      )
+    : [];
+
+  return (
+    <div className="pt-6 border-t space-y-3">
+      <h3 className="text-base font-semibold">Compare plans</h3>
+      <p className="text-sm text-muted-foreground">
+        What's included in each tier. Limits sourced from the backend tier registry.
+      </p>
+      <div className="overflow-x-auto rounded-lg border">
+        <table className="w-full text-sm">
+          <thead className="bg-muted/40 text-left font-mono text-xs uppercase tracking-wider text-muted-foreground">
+            <tr>
+              <th className="px-4 py-2">Limit</th>
+              {tiers.map((t) => (
+                <th key={t.tier} className="px-4 py-2 capitalize">
+                  {t.tier}
+                  {t.is_current && (
+                    <span className="ml-1 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] text-primary">
+                      current
+                    </span>
+                  )}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {limitKeys.map((key) => (
+              <tr key={key} className="border-t">
+                <td className="px-4 py-2 font-mono text-xs text-muted-foreground">{key}</td>
+                {tiers.map((t) => (
+                  <td key={t.tier} className="px-4 py-2 tabular-nums">
+                    {String(limits?.[t.tier]?.[key] ?? '—')}
+                  </td>
+                ))}
+              </tr>
+            ))}
+            {limitKeys.length === 0 && (
+              <tr>
+                <td
+                  colSpan={tiers.length + 1}
+                  className="px-4 py-3 text-center text-muted-foreground"
+                >
+                  No limit data available.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
