@@ -70,6 +70,10 @@ const Rules = lazyWithRetry(() => import('./views/Rules'));
 const Competitors = lazyWithRetry(() => import('./views/Competitors'));
 const Predictions = lazyWithRetry(() => import('./views/Predictions'));
 const WhatsApp = lazyWithRetry(() => import('./views/whatsapp/WhatsAppManager'));
+const WhatsAppBroadcast = lazyWithRetry(() => import('./views/whatsapp/WhatsAppBroadcast'));
+const WhatsAppContacts = lazyWithRetry(() => import('./views/whatsapp/WhatsAppContacts'));
+const WhatsAppMessages = lazyWithRetry(() => import('./views/whatsapp/WhatsAppMessages'));
+const WhatsAppTemplates = lazyWithRetry(() => import('./views/whatsapp/WhatsAppTemplates'));
 const Settings = lazyWithRetry(() => import('./views/Settings'));
 const Tenants = lazyWithRetry(() => import('./views/Tenants'));
 const MLTraining = lazyWithRetry(() => import('./views/MLTraining'));
@@ -983,6 +987,38 @@ function App() {
                           element={
                             <Suspense fallback={<LoadingSpinner />}>
                               <WhatsApp />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="whatsapp/broadcast"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <WhatsAppBroadcast />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="whatsapp/contacts"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <WhatsAppContacts />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="whatsapp/messages"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <WhatsAppMessages />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="whatsapp/templates"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <WhatsAppTemplates />
                             </Suspense>
                           }
                         />

@@ -409,6 +409,38 @@ const navConfig: NavGroup[] = [
         href: '/dashboard/whatsapp',
         icon: MessageSquareText,
         section: 'whatsapp',
+        children: [
+          {
+            label: 'Manager',
+            href: '/dashboard/whatsapp',
+            icon: MessageSquareText,
+            section: 'whatsapp',
+          },
+          {
+            label: 'Broadcast',
+            href: '/dashboard/whatsapp/broadcast',
+            icon: Send,
+            section: 'whatsapp',
+          },
+          {
+            label: 'Contacts',
+            href: '/dashboard/whatsapp/contacts',
+            icon: Users,
+            section: 'whatsapp',
+          },
+          {
+            label: 'Messages',
+            href: '/dashboard/whatsapp/messages',
+            icon: MessageSquareText,
+            section: 'whatsapp',
+          },
+          {
+            label: 'Templates',
+            href: '/dashboard/whatsapp/templates',
+            icon: FileText,
+            section: 'whatsapp',
+          },
+        ],
       },
       {
         label: 'Newsletter',
