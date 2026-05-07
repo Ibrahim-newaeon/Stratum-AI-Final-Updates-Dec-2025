@@ -6,10 +6,27 @@ import { useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
-  Workflow, Mail, Clock, GitBranch, Play, Pause, Trash2, Copy,
-  Plus, Save, Zap, UserPlus, ShoppingCart,
-  AlertTriangle, LogIn, Package, Bell, MousePointerClick,
-  GripVertical, X, Settings
+  Workflow,
+  Mail,
+  Clock,
+  GitBranch,
+  Play,
+  Pause,
+  Trash2,
+  Copy,
+  Plus,
+  Save,
+  Zap,
+  UserPlus,
+  ShoppingCart,
+  AlertTriangle,
+  LogIn,
+  Package,
+  Bell,
+  MousePointerClick,
+  GripVertical,
+  X,
+  Settings,
 } from 'lucide-react';
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -241,14 +258,14 @@ export default function DripCampaignBuilder() {
     const API_URL = import.meta.env.VITE_API_URL || 'https://api.stratumai.app/api/v1';
 
     const body = {
-        name: sequenceName,
-        description: sequenceDesc,
-        trigger_type: selectedTrigger,
-        trigger_config: {},
-        nodes,
-        edges,
-        status: status,
-      };
+      name: sequenceName,
+      description: sequenceDesc,
+      trigger_type: selectedTrigger,
+      trigger_config: {},
+      nodes,
+      edges,
+      status: status,
+    };
 
     try {
       const res = await fetch(`${API_URL}/drip-campaigns`, {
@@ -275,7 +292,7 @@ export default function DripCampaignBuilder() {
   // ── Render ───────────────────────────────────────────────────────────
 
   return (
-    <div className="h-screen flex bg-[#050B18] text-white">
+    <div className="h-screen flex bg-background text-foreground">
       {/* Left Sidebar — Node Palette */}
       <div className="w-64 border-r border-foreground/10 flex flex-col bg-[#0A1628]">
         <div className="p-4 border-b border-foreground/10">
@@ -296,7 +313,12 @@ export default function DripCampaignBuilder() {
                 onDragStart={(e) => onDragStart(e, template.type)}
                 className="flex items-center gap-3 p-2.5 rounded-lg bg-foreground/[0.03] hover:bg-foreground/[0.08] border border-foreground/[0.06] hover:border-foreground/[0.12] cursor-grab active:cursor-grabbing transition-all group"
               >
-                <div className={cn('w-8 h-8 rounded-md flex items-center justify-center', template.color)}>
+                <div
+                  className={cn(
+                    'w-8 h-8 rounded-md flex items-center justify-center',
+                    template.color
+                  )}
+                >
                   <Icon className="w-4 h-4 text-white" />
                 </div>
                 <div>
@@ -341,7 +363,9 @@ export default function DripCampaignBuilder() {
             <span
               className={cn(
                 'text-[10px] px-2 py-0.5 rounded-full',
-                status === 'active' ? 'bg-emerald-500/15 text-emerald-400' : 'bg-yellow-500/15 text-yellow-400'
+                status === 'active'
+                  ? 'bg-emerald-500/15 text-emerald-400'
+                  : 'bg-yellow-500/15 text-yellow-400'
               )}
             >
               {status}
@@ -381,11 +405,10 @@ export default function DripCampaignBuilder() {
           ref={canvasRef}
           className={cn(
             'flex-1 relative overflow-auto',
-            dragOver ? 'bg-primary/5' : 'bg-[#050B18]'
+            dragOver ? 'bg-primary/5' : 'bg-background'
           )}
           style={{
-            backgroundImage:
-              'radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px)',
+            backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px)',
             backgroundSize: '20px 20px',
           }}
           onDragOver={onDragOver}
@@ -393,7 +416,10 @@ export default function DripCampaignBuilder() {
           onDrop={onDrop}
         >
           {/* Edges (SVG) */}
-          <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ minWidth: 800, minHeight: 600 }}>
+          <svg
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            style={{ minWidth: 800, minHeight: 600 }}
+          >
             {edges.map((edge) => {
               const source = nodes.find((n) => n.id === edge.source);
               const target = nodes.find((n) => n.id === edge.target);
@@ -424,7 +450,14 @@ export default function DripCampaignBuilder() {
               );
             })}
             <defs>
-              <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+              <marker
+                id="arrowhead"
+                markerWidth="10"
+                markerHeight="7"
+                refX="9"
+                refY="3.5"
+                orient="auto"
+              >
                 <polygon points="0 0, 10 3.5, 0 7" fill="rgba(255,255,255,0.3)" />
               </marker>
             </defs>
@@ -450,16 +483,25 @@ export default function DripCampaignBuilder() {
                 onClick={() => handleNodeClick(node.id)}
               >
                 <div className="flex items-center gap-2 bg-[#0A1628] border border-foreground/[0.08] hover:border-foreground/[0.15] rounded-xl px-3 py-2 shadow-lg shadow-black/20 min-w-[160px]">
-                  <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center shrink-0', template.color)}>
+                  <div
+                    className={cn(
+                      'w-8 h-8 rounded-lg flex items-center justify-center shrink-0',
+                      template.color
+                    )}
+                  >
                     <Icon className="w-4 h-4 text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-xs font-medium truncate">{template.label}</div>
                     {node.data.subject && (
-                      <div className="text-[10px] text-muted-foreground truncate">{node.data.subject}</div>
+                      <div className="text-[10px] text-muted-foreground truncate">
+                        {node.data.subject}
+                      </div>
                     )}
                     {node.data.delay_hours && (
-                      <div className="text-[10px] text-muted-foreground">Wait {node.data.delay_hours}h</div>
+                      <div className="text-[10px] text-muted-foreground">
+                        Wait {node.data.delay_hours}h
+                      </div>
                     )}
                   </div>
                   {/* Connection handle */}
@@ -546,7 +588,9 @@ export default function DripCampaignBuilder() {
                   const Icon = t?.icon || Settings;
                   return (
                     <>
-                      <div className={cn('w-6 h-6 rounded flex items-center justify-center', t?.color)}>
+                      <div
+                        className={cn('w-6 h-6 rounded flex items-center justify-center', t?.color)}
+                      >
                         <Icon className="w-3 h-3 text-white" />
                       </div>
                       <span className="text-sm font-medium">{t?.label}</span>
@@ -559,19 +603,27 @@ export default function DripCampaignBuilder() {
               {selectedNodeData.type === 'email' && (
                 <>
                   <div>
-                    <label className="text-[10px] text-muted-foreground uppercase mb-1 block">Subject Line</label>
+                    <label className="text-[10px] text-muted-foreground uppercase mb-1 block">
+                      Subject Line
+                    </label>
                     <input
                       value={selectedNodeData.data.subject || ''}
-                      onChange={(e) => updateNodeData(selectedNodeData.id, { subject: e.target.value })}
+                      onChange={(e) =>
+                        updateNodeData(selectedNodeData.id, { subject: e.target.value })
+                      }
                       placeholder="Email subject..."
                       className="w-full bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-sm"
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] text-muted-foreground uppercase mb-1 block">Template</label>
+                    <label className="text-[10px] text-muted-foreground uppercase mb-1 block">
+                      Template
+                    </label>
                     <select
                       value={selectedNodeData.data.template_id || ''}
-                      onChange={(e) => updateNodeData(selectedNodeData.id, { template_id: e.target.value })}
+                      onChange={(e) =>
+                        updateNodeData(selectedNodeData.id, { template_id: e.target.value })
+                      }
                       className="w-full bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-sm"
                     >
                       <option value="">Select template...</option>
@@ -597,7 +649,9 @@ export default function DripCampaignBuilder() {
                       max={168}
                       value={selectedNodeData.data.delay_hours || 24}
                       onChange={(e) =>
-                        updateNodeData(selectedNodeData.id, { delay_hours: parseInt(e.target.value) })
+                        updateNodeData(selectedNodeData.id, {
+                          delay_hours: parseInt(e.target.value),
+                        })
                       }
                       className="w-full accent-primary"
                     />
@@ -629,10 +683,14 @@ export default function DripCampaignBuilder() {
               {selectedNodeData.type === 'condition' && (
                 <>
                   <div>
-                    <label className="text-[10px] text-muted-foreground uppercase mb-1 block">Condition</label>
+                    <label className="text-[10px] text-muted-foreground uppercase mb-1 block">
+                      Condition
+                    </label>
                     <select
                       value={selectedNodeData.data.condition || 'email_opened'}
-                      onChange={(e) => updateNodeData(selectedNodeData.id, { condition: e.target.value })}
+                      onChange={(e) =>
+                        updateNodeData(selectedNodeData.id, { condition: e.target.value })
+                      }
                       className="w-full bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-sm"
                     >
                       {CONDITION_OPTIONS.map((opt) => (
@@ -654,7 +712,9 @@ export default function DripCampaignBuilder() {
               {selectedNodeData.type === 'trigger' && (
                 <>
                   <div>
-                    <label className="text-[10px] text-muted-foreground uppercase mb-1 block">Trigger Type</label>
+                    <label className="text-[10px] text-muted-foreground uppercase mb-1 block">
+                      Trigger Type
+                    </label>
                     <select
                       value={selectedNodeData.data.trigger_type || 'user_subscribed'}
                       onChange={(e) => {
@@ -677,19 +737,27 @@ export default function DripCampaignBuilder() {
               {selectedNodeData.type === 'notification' && (
                 <>
                   <div>
-                    <label className="text-[10px] text-muted-foreground uppercase mb-1 block">Title</label>
+                    <label className="text-[10px] text-muted-foreground uppercase mb-1 block">
+                      Title
+                    </label>
                     <input
                       value={selectedNodeData.data.title || ''}
-                      onChange={(e) => updateNodeData(selectedNodeData.id, { title: e.target.value })}
+                      onChange={(e) =>
+                        updateNodeData(selectedNodeData.id, { title: e.target.value })
+                      }
                       placeholder="Notification title..."
                       className="w-full bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-sm"
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] text-muted-foreground uppercase mb-1 block">Body</label>
+                    <label className="text-[10px] text-muted-foreground uppercase mb-1 block">
+                      Body
+                    </label>
                     <textarea
                       value={selectedNodeData.data.body || ''}
-                      onChange={(e) => updateNodeData(selectedNodeData.id, { body: e.target.value })}
+                      onChange={(e) =>
+                        updateNodeData(selectedNodeData.id, { body: e.target.value })
+                      }
                       rows={3}
                       placeholder="Notification body..."
                       className="w-full bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-sm resize-none"

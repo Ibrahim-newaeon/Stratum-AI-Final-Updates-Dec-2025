@@ -26,8 +26,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.auth.deps import CurrentUserDep, VerifiedUserDep
-from app.auth.permissions import require_super_admin
+from app.auth.deps import CurrentUserDep, VerifiedUserDep, require_admin
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.db.session import get_async_session
@@ -45,8 +44,12 @@ from app.services.oauth import (
 logger = get_logger(__name__)
 router = APIRouter(prefix="/oauth", tags=["oauth"])
 
-# Dependency for superadmin-only endpoints
-_superadmin_deps = [Depends(require_super_admin)]
+# Auth gate for tenant-scoped OAuth endpoints. Agency admins manage
+# their own platform connections — Connect Platform / Refresh Token /
+# Disconnect — so the gate must permit `admin` and `superadmin`.
+# Originally was `require_super_admin` which 403'd agency admins from
+# the IntegrationsHub, breaking the "Connect" buttons for them.
+_admin_deps = [Depends(require_admin())]
 
 
 # =============================================================================
@@ -138,7 +141,7 @@ class RefreshTokenResponse(BaseModel):
 # =============================================================================
 
 
-@router.post("/{platform}/authorize", response_model=APIResponse[OAuthStartResponse], dependencies=_superadmin_deps)
+@router.post("/{platform}/authorize", response_model=APIResponse[OAuthStartResponse], dependencies=_admin_deps)
 async def start_oauth(
     platform: AdPlatform,
     request_data: OAuthStartRequest,
@@ -369,7 +372,7 @@ async def oauth_callback(
 # =============================================================================
 
 
-@router.get("/{platform}/status", response_model=APIResponse[ConnectionStatusResponse], dependencies=_superadmin_deps)
+@router.get("/{platform}/status", response_model=APIResponse[ConnectionStatusResponse], dependencies=_admin_deps)
 async def get_connection_status(
     platform: AdPlatform,
     current_user: CurrentUserDep,
@@ -425,7 +428,7 @@ async def get_connection_status(
     )
 
 
-@router.get("/status", response_model=APIResponse[list[ConnectionStatusResponse]], dependencies=_superadmin_deps)
+@router.get("/status", response_model=APIResponse[list[ConnectionStatusResponse]], dependencies=_admin_deps)
 async def get_all_connection_statuses(
     current_user: CurrentUserDep,
     db: AsyncSession = Depends(get_async_session),
@@ -488,7 +491,7 @@ async def get_all_connection_statuses(
 # =============================================================================
 
 
-@router.get("/{platform}/accounts", response_model=APIResponse[list[AdAccountResponse]], dependencies=_superadmin_deps)
+@router.get("/{platform}/accounts", response_model=APIResponse[list[AdAccountResponse]], dependencies=_admin_deps)
 async def list_ad_accounts(
     platform: AdPlatform,
     current_user: VerifiedUserDep,
@@ -605,7 +608,7 @@ async def list_ad_accounts(
     )
 
 
-@router.post("/{platform}/accounts/connect", response_model=APIResponse[ConnectAccountsResponse], dependencies=_superadmin_deps)
+@router.post("/{platform}/accounts/connect", response_model=APIResponse[ConnectAccountsResponse], dependencies=_admin_deps)
 async def connect_ad_accounts(
     platform: AdPlatform,
     request_data: ConnectAccountsRequest,
@@ -739,7 +742,7 @@ async def connect_ad_accounts(
 # =============================================================================
 
 
-@router.post("/{platform}/refresh", response_model=APIResponse[RefreshTokenResponse], dependencies=_superadmin_deps)
+@router.post("/{platform}/refresh", response_model=APIResponse[RefreshTokenResponse], dependencies=_admin_deps)
 async def refresh_token(
     platform: AdPlatform,
     current_user: VerifiedUserDep,
@@ -816,7 +819,7 @@ async def refresh_token(
         )
 
 
-@router.delete("/{platform}/disconnect", response_model=APIResponse[dict], dependencies=_superadmin_deps)
+@router.delete("/{platform}/disconnect", response_model=APIResponse[dict], dependencies=_admin_deps)
 async def disconnect_platform(
     platform: AdPlatform,
     current_user: VerifiedUserDep,

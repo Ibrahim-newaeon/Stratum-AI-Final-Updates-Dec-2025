@@ -78,6 +78,7 @@ const SuperadminDashboard = lazyWithRetry(() => import('./views/SuperadminDashbo
 const ConsoleLayout = lazyWithRetry(() => import('./views/ConsoleLayout'));
 const ConsoleFeatureFlags = lazyWithRetry(() => import('./views/console/FeatureFlags'));
 const ConsolePlatformAnalytics = lazyWithRetry(() => import('./views/console/PlatformAnalytics'));
+const ConsoleCredentials = lazyWithRetry(() => import('./views/console/Credentials'));
 const ConsoleCrossTenantAnomalies = lazyWithRetry(
   () => import('./views/console/CrossTenantAnomalies')
 );
@@ -1751,6 +1752,14 @@ function App() {
                           element={
                             <Suspense fallback={<LoadingSpinner />}>
                               <ConsoleFeatureFlags />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="credentials"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <ConsoleCredentials />
                             </Suspense>
                           }
                         />
