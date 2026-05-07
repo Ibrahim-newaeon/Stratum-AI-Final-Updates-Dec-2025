@@ -245,6 +245,14 @@ async def invite_user(
             detail="Only admins can invite users",
         )
 
+    # Tier-limit gate — raises 402 with structured upgrade payload
+    # when the tenant's max_users ceiling is hit (see services/
+    # tenant/limits.py + frontend UpgradePromptProvider listener).
+    from app.services.tenant.limits import LimitType, check_tenant_limit
+
+    if tenant_id:
+        await check_tenant_limit(db, tenant_id, LimitType.USERS, raise_on_exceeded=True)
+
     # Check if email already exists
     email_hash = hash_pii_for_lookup(invite_data.email.lower())
     result = await db.execute(

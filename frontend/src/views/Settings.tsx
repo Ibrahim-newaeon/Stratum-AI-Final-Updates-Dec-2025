@@ -2154,7 +2154,7 @@ function BillingSettings() {
     )
       return;
     try {
-      await cancelSub.mutateAsync();
+      await cancelSub.mutateAsync(undefined);
       toast({
         title: 'Subscription canceled',
         description: 'Your plan will remain active until the end of the billing period.',

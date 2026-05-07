@@ -89,16 +89,29 @@ interface UpgradeRequest {
 
 // API functions
 const paymentsApi = {
-  getConfig: () => apiClient.get<PaymentConfig>('/payments/config').then(r => r.data),
-  getOverview: () => apiClient.get<BillingOverview>('/payments/overview').then(r => r.data),
-  getSubscription: () => apiClient.get<SubscriptionResponse>('/payments/subscription').then(r => r.data),
-  getInvoices: () => apiClient.get<Invoice[]>('/payments/invoices').then(r => r.data),
-  getPaymentMethods: () => apiClient.get<PaymentMethod[]>('/payments/payment-methods').then(r => r.data),
-  createCheckout: (data: CheckoutRequest) => apiClient.post<CheckoutResponse>('/payments/checkout', data).then(r => r.data),
-  createPortal: () => apiClient.post<{ portal_url: string }>('/payments/portal', { return_url: window.location.origin + '/settings' }).then(r => r.data),
-  upgradeSubscription: (data: UpgradeRequest) => apiClient.post<SubscriptionResponse>('/payments/subscription/upgrade', data).then(r => r.data),
-  cancelSubscription: () => apiClient.post('/payments/subscription/cancel').then(r => r.data),
-  reactivateSubscription: () => apiClient.post('/payments/subscription/reactivate').then(r => r.data),
+  getConfig: () => apiClient.get<PaymentConfig>('/payments/config').then((r) => r.data),
+  getOverview: () => apiClient.get<BillingOverview>('/payments/overview').then((r) => r.data),
+  getSubscription: () =>
+    apiClient.get<SubscriptionResponse>('/payments/subscription').then((r) => r.data),
+  getInvoices: () => apiClient.get<Invoice[]>('/payments/invoices').then((r) => r.data),
+  getPaymentMethods: () =>
+    apiClient.get<PaymentMethod[]>('/payments/payment-methods').then((r) => r.data),
+  createCheckout: (data: CheckoutRequest) =>
+    apiClient.post<CheckoutResponse>('/payments/checkout', data).then((r) => r.data),
+  createPortal: () =>
+    apiClient
+      .post<{
+        portal_url: string;
+      }>('/payments/portal', { return_url: window.location.origin + '/settings' })
+      .then((r) => r.data),
+  upgradeSubscription: (data: UpgradeRequest) =>
+    apiClient
+      .post<SubscriptionResponse>('/payments/subscription/upgrade', data)
+      .then((r) => r.data),
+  cancelSubscription: (reason?: string) =>
+    apiClient.post('/payments/subscription/cancel', reason ? { reason } : {}).then((r) => r.data),
+  reactivateSubscription: () =>
+    apiClient.post('/payments/subscription/reactivate').then((r) => r.data),
 };
 
 // Query hooks

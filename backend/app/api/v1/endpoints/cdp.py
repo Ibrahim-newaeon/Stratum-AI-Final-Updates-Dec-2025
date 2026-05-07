@@ -3333,6 +3333,14 @@ async def create_segment(
     """
     tenant_id = current_user.tenant_id
 
+    # Tier-limit gate — raises 402 with structured upgrade payload
+    # when the tenant's max_segments ceiling is hit. Frontend's
+    # UpgradePromptProvider catches the 402 and opens the upgrade
+    # drawer with the suggested-tier preselected.
+    from app.services.tenant.limits import LimitType, check_tenant_limit
+
+    await check_tenant_limit(db, tenant_id, LimitType.SEGMENTS, raise_on_exceeded=True)
+
     service = SegmentService(db, tenant_id)
     segment = await service.create_segment(
         name=segment_data.name,
