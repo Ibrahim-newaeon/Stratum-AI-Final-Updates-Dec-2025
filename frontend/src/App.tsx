@@ -70,6 +70,7 @@ const Rules = lazyWithRetry(() => import('./views/Rules'));
 const Competitors = lazyWithRetry(() => import('./views/Competitors'));
 const Predictions = lazyWithRetry(() => import('./views/Predictions'));
 const EMQDiagnostics = lazyWithRetry(() => import('./views/EMQDiagnostics'));
+const AIRecommendations = lazyWithRetry(() => import('./views/AIRecommendations'));
 const WhatsApp = lazyWithRetry(() => import('./views/whatsapp/WhatsAppManager'));
 const WhatsAppBroadcast = lazyWithRetry(() => import('./views/whatsapp/WhatsAppBroadcast'));
 const WhatsAppContacts = lazyWithRetry(() => import('./views/whatsapp/WhatsAppContacts'));
@@ -1283,6 +1284,16 @@ function App() {
                             <ProtectedRoute requiredRole="manager">
                               <Suspense fallback={<LoadingSpinner />}>
                                 <AIInsights />
+                              </Suspense>
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="ai-recommendations"
+                          element={
+                            <ProtectedRoute requiredRole="manager">
+                              <Suspense fallback={<LoadingSpinner />}>
+                                <AIRecommendations />
                               </Suspense>
                             </ProtectedRoute>
                           }

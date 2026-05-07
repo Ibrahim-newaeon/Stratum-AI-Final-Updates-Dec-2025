@@ -356,6 +356,12 @@ const navConfig: NavGroup[] = [
         section: 'ai-insights',
       },
       {
+        label: 'AI Recommendations',
+        href: '/dashboard/ai-recommendations',
+        icon: Sparkles,
+        section: 'ai-insights',
+      },
+      {
         label: 'Cohort Analysis',
         href: '/dashboard/cohort-analysis',
         icon: GitBranch,
