@@ -193,6 +193,20 @@ async def create_platform_audience(
             detail=f"Invalid platform. Supported: {[p.value for p in SyncPlatform]}",
         )
 
+    # Plan limit check before creating a new platform audience.
+    # AUDIENCE_SYNC_PLATFORMS caps how many distinct ad-platform sync
+    # destinations a tenant can have active. Raises HTTP 402 with the
+    # structured upgrade payload when the tenant is at or above their
+    # plan's audience-sync cap.
+    from app.services.tenant.limits import LimitType, check_tenant_limit
+
+    await check_tenant_limit(
+        db,
+        tenant_id,
+        LimitType.AUDIENCE_SYNC_PLATFORMS,
+        raise_on_exceeded=True,
+    )
+
     service = AudienceSyncService(db, tenant_id)
 
     try:

@@ -1,11 +1,12 @@
 /**
  * GDPR — Data subject rights page at /dashboard/gdpr.
  *
- * Three sections, all backed by existing hooks in `@/api/gdpr`:
+ * Four sections, all backed by existing hooks in `@/api/gdpr`:
  *
- *   1. Export my data       — useExportHistory + useExportData
- *   2. Right to be forgotten — useRequestDeletion (with ConfirmDrawer)
- *   3. Consent records      — useConsentRecords + useUpdateConsent
+ *   1. Export my data        — useExportHistory + useExportData
+ *   2. Consent records       — useConsentRecords + useUpdateConsent
+ *   3. Right to be forgotten — useRequestDeletion (with ConfirmDrawer)
+ *   4. Activity log          — useAuditLogs with action filter
  *
  * Admin+ in operator dashboard. The B2B compliance angle: agencies
  * with EU clients need to be able to honor data-subject requests on
@@ -19,6 +20,9 @@ import {
   useRequestDeletion,
   useConsentRecords,
   useUpdateConsent,
+  useAuditLogs,
+  type AuditAction,
+  type AuditLog,
   type DataExportRequest,
   type ConsentRecord,
 } from '@/api/gdpr';
@@ -39,6 +43,12 @@ export default function GDPR() {
   const [format, setFormat] = useState<'json' | 'csv'>('json');
   const [deletionOpen, setDeletionOpen] = useState(false);
   const [deletionConfirm, setDeletionConfirm] = useState('');
+  const [actionFilter, setActionFilter] = useState<AuditAction | ''>('');
+
+  const auditLogs = useAuditLogs({
+    action: actionFilter || undefined,
+    limit: 50,
+  });
 
   const handleExport = () => {
     exportMutation.mutate(format);
@@ -209,6 +219,56 @@ export default function GDPR() {
         </div>
       </Card>
 
+      {/* 4. Activity log */}
+      <Card>
+        <div className="flex items-start justify-between gap-4 mb-4">
+          <div>
+            <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+              <FileDown className="w-4 h-4 text-primary" />
+              Activity log
+            </h2>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              The 50 most recent actions on data we hold about you. Surfaced here so compliance
+              teams can verify access patterns without filing a ticket.
+            </p>
+          </div>
+          <select
+            value={actionFilter}
+            onChange={(e) => setActionFilter((e.target.value as AuditAction | '') || '')}
+            className={cn(
+              'h-9 px-3 rounded-lg bg-card border border-border text-foreground text-sm',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              'min-w-44'
+            )}
+          >
+            <option value="">All actions</option>
+            <option value="login">Login</option>
+            <option value="logout">Logout</option>
+            <option value="data_export">Data export</option>
+            <option value="data_delete">Data delete</option>
+            <option value="consent_update">Consent update</option>
+            <option value="user_create">User create</option>
+            <option value="user_update">User update</option>
+            <option value="user_delete">User delete</option>
+            <option value="settings_update">Settings update</option>
+          </select>
+        </div>
+
+        <DataTable<AuditLog>
+          data={auditLogs.data?.items ?? []}
+          columns={AUDIT_COLUMNS}
+          loading={auditLogs.isPending}
+          error={auditLogs.error?.message}
+          emptyMessage={
+            actionFilter
+              ? `No ${actionFilter.replace(/_/g, ' ')} events in the recent window.`
+              : 'No activity recorded yet.'
+          }
+          rowKey={(r) => r.id}
+          ariaLabel="Recent audit log entries"
+        />
+      </Card>
+
       {/* Deletion confirmation */}
       <ConfirmDrawer
         open={deletionOpen}
@@ -247,6 +307,59 @@ export default function GDPR() {
     </div>
   );
 }
+
+const AUDIT_COLUMNS: DataTableColumn<AuditLog>[] = [
+  {
+    id: 'time',
+    header: 'When',
+    cell: (r) => (
+      <span className="text-xs font-mono tabular-nums text-muted-foreground">
+        {formatDate(r.createdAt)}
+      </span>
+    ),
+    sortable: true,
+    sortAccessor: (r) => new Date(r.createdAt).getTime(),
+  },
+  {
+    id: 'user',
+    header: 'Actor',
+    cell: (r) => (
+      <span className="text-sm text-foreground truncate">{r.userName || `#${r.userId}`}</span>
+    ),
+    sortable: true,
+    sortAccessor: (r) => r.userName ?? '',
+  },
+  {
+    id: 'action',
+    header: 'Action',
+    cell: (r) => (
+      <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
+        {r.action.replace(/_/g, ' ')}
+      </span>
+    ),
+    sortable: true,
+    sortAccessor: (r) => r.action,
+  },
+  {
+    id: 'resource',
+    header: 'Resource',
+    cell: (r) => (
+      <span className="text-xs font-mono text-foreground/80 truncate">
+        {r.resourceType}
+        {r.resourceId ? <span className="text-muted-foreground"> · {r.resourceId}</span> : null}
+      </span>
+    ),
+    hideOnMobile: true,
+  },
+  {
+    id: 'ip',
+    header: 'IP',
+    cell: (r) => (
+      <span className="text-xs font-mono text-muted-foreground">{r.ipAddress || '—'}</span>
+    ),
+    hideOnMobile: true,
+  },
+];
 
 const EXPORT_COLUMNS: DataTableColumn<DataExportRequest>[] = [
   {

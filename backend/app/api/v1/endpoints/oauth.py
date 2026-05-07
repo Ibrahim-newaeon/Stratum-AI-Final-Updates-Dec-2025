@@ -686,6 +686,20 @@ async def connect_ad_accounts(
             existing.last_synced_at = datetime.now(UTC)
             account = existing
         else:
+            # Plan limit check before creating a new TenantAdAccount.
+            # Re-evaluate per row so multi-account selections don't slip
+            # past the gate. Raises HTTP 402 with the structured upgrade
+            # payload (current/max/suggested_tier) when the tenant is at
+            # or above their plan's ad-account cap.
+            from app.services.tenant.limits import LimitType, check_tenant_limit
+
+            await check_tenant_limit(
+                db,
+                current_user.tenant_id,
+                LimitType.AD_ACCOUNTS,
+                raise_on_exceeded=True,
+            )
+
             # Create new
             account = TenantAdAccount(
                 tenant_id=current_user.tenant_id,
