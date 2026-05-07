@@ -69,12 +69,25 @@ const Assets = lazyWithRetry(() => import('./views/Assets'));
 const Rules = lazyWithRetry(() => import('./views/Rules'));
 const Competitors = lazyWithRetry(() => import('./views/Competitors'));
 const Predictions = lazyWithRetry(() => import('./views/Predictions'));
+const EMQDiagnostics = lazyWithRetry(() => import('./views/EMQDiagnostics'));
+const AIRecommendations = lazyWithRetry(() => import('./views/AIRecommendations'));
 const WhatsApp = lazyWithRetry(() => import('./views/whatsapp/WhatsAppManager'));
+const WhatsAppBroadcast = lazyWithRetry(() => import('./views/whatsapp/WhatsAppBroadcast'));
+const WhatsAppContacts = lazyWithRetry(() => import('./views/whatsapp/WhatsAppContacts'));
+const WhatsAppMessages = lazyWithRetry(() => import('./views/whatsapp/WhatsAppMessages'));
+const WhatsAppTemplates = lazyWithRetry(() => import('./views/whatsapp/WhatsAppTemplates'));
 const Settings = lazyWithRetry(() => import('./views/Settings'));
 const Tenants = lazyWithRetry(() => import('./views/Tenants'));
 const MLTraining = lazyWithRetry(() => import('./views/MLTraining'));
 const CAPISetup = lazyWithRetry(() => import('./views/CAPISetup'));
 const SuperadminDashboard = lazyWithRetry(() => import('./views/SuperadminDashboard'));
+const ConsoleLayout = lazyWithRetry(() => import('./views/ConsoleLayout'));
+const ConsoleFeatureFlags = lazyWithRetry(() => import('./views/console/FeatureFlags'));
+const ConsolePlatformAnalytics = lazyWithRetry(() => import('./views/console/PlatformAnalytics'));
+const ConsoleCredentials = lazyWithRetry(() => import('./views/console/Credentials'));
+const ConsoleCrossTenantAnomalies = lazyWithRetry(
+  () => import('./views/console/CrossTenantAnomalies')
+);
 const CDPCalculator = lazyWithRetry(() => import('./views/CDPCalculator'));
 
 // CDP (Customer Data Platform) views
@@ -158,7 +171,10 @@ const MediaBuyerConsole = lazyWithRetry(() => import('./views/tenant/Console'));
 const SignalHub = lazyWithRetry(() => import('./views/tenant/SignalHub'));
 
 // Sprint feature views
-const Integrations = lazyWithRetry(() => import('./views/tenant/Integrations'));
+// IntegrationsHub is rendered from Settings → Integrations tab now;
+// the bare /dashboard/integrations route just 302s there.
+const GDPR = lazyWithRetry(() => import('./views/GDPR'));
+const APIKeys = lazyWithRetry(() => import('./views/APIKeys'));
 const Pacing = lazyWithRetry(() => import('./views/tenant/Pacing'));
 const ProfitROAS = lazyWithRetry(() => import('./views/tenant/ProfitROAS'));
 const Attribution = lazyWithRetry(() => import('./views/tenant/Attribution'));
@@ -865,6 +881,21 @@ function App() {
                         }
                       >
                         <Route index element={<Navigate to="/dashboard/overview" replace />} />
+                        {/* Sidebar links from earlier IA pointed at URLs without
+                            backing routes. Redirect to the real destinations so
+                            old bookmarks don't 404. */}
+                        <Route
+                          path="autopilot"
+                          element={<Navigate to="/dashboard/rules" replace />}
+                        />
+                        <Route
+                          path="audiences"
+                          element={<Navigate to="/dashboard/cdp/audience-sync" replace />}
+                        />
+                        <Route
+                          path="trust-engine"
+                          element={<Navigate to="/dashboard/trust" replace />}
+                        />
                         <Route
                           path="overview"
                           element={
@@ -962,7 +993,43 @@ function App() {
                           }
                         />
                         <Route
+                          path="whatsapp/broadcast"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <WhatsAppBroadcast />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="whatsapp/contacts"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <WhatsAppContacts />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="whatsapp/messages"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <WhatsAppMessages />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="whatsapp/templates"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <WhatsAppTemplates />
+                            </Suspense>
+                          }
+                        />
+                        <Route
                           path="settings"
+                          element={<Navigate to="/dashboard/settings/profile" replace />}
+                        />
+                        <Route
+                          path="settings/:tab"
                           element={
                             <ProtectedRoute requiredRole="admin">
                               <Suspense fallback={<LoadingSpinner />}>
@@ -988,7 +1055,7 @@ function App() {
                           }
                         />
                         <Route
-                          path="integrations"
+                          path="capi-setup"
                           element={
                             <Suspense fallback={<LoadingSpinner />}>
                               <CAPISetup />
@@ -1222,6 +1289,16 @@ function App() {
                           }
                         />
                         <Route
+                          path="ai-recommendations"
+                          element={
+                            <ProtectedRoute requiredRole="manager">
+                              <Suspense fallback={<LoadingSpinner />}>
+                                <AIRecommendations />
+                              </Suspense>
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
                           path="funnel-analysis"
                           element={
                             <ProtectedRoute requiredRole="manager">
@@ -1257,6 +1334,26 @@ function App() {
                             <ProtectedRoute requiredRole="admin">
                               <Suspense fallback={<LoadingSpinner />}>
                                 <ComplianceDashboard />
+                              </Suspense>
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="gdpr"
+                          element={
+                            <ProtectedRoute requiredRole="admin">
+                              <Suspense fallback={<LoadingSpinner />}>
+                                <GDPR />
+                              </Suspense>
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="api-keys"
+                          element={
+                            <ProtectedRoute requiredRole="admin">
+                              <Suspense fallback={<LoadingSpinner />}>
+                                <APIKeys />
                               </Suspense>
                             </ProtectedRoute>
                           }
@@ -1304,107 +1401,10 @@ function App() {
                           }
                         />
 
-                        {/* Superadmin only routes */}
-                        <Route
-                          path="superadmin"
-                          element={
-                            <ProtectedRoute requiredRole="superadmin">
-                              <Suspense fallback={<LoadingSpinner />}>
-                                <SuperadminDashboard />
-                              </Suspense>
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="superadmin/control-tower"
-                          element={
-                            <ProtectedRoute requiredRole="superadmin">
-                              <Suspense fallback={<LoadingSpinner />}>
-                                <ControlTower />
-                              </Suspense>
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="superadmin/tenants"
-                          element={
-                            <ProtectedRoute requiredRole="superadmin">
-                              <Suspense fallback={<LoadingSpinner />}>
-                                <SuperAdminTenantsList />
-                              </Suspense>
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="superadmin/tenants/:tenantId"
-                          element={
-                            <ProtectedRoute requiredRole="superadmin">
-                              <Suspense fallback={<LoadingSpinner />}>
-                                <SuperAdminTenantProfile />
-                              </Suspense>
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="superadmin/benchmarks"
-                          element={
-                            <ProtectedRoute requiredRole="superadmin">
-                              <Suspense fallback={<LoadingSpinner />}>
-                                <SuperAdminBenchmarks />
-                              </Suspense>
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="superadmin/audit"
-                          element={
-                            <ProtectedRoute requiredRole="superadmin">
-                              <Suspense fallback={<LoadingSpinner />}>
-                                <SuperAdminAudit />
-                              </Suspense>
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="superadmin/billing"
-                          element={
-                            <ProtectedRoute requiredRole="superadmin">
-                              <Suspense fallback={<LoadingSpinner />}>
-                                <SuperAdminBilling />
-                              </Suspense>
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="superadmin/system"
-                          element={
-                            <ProtectedRoute requiredRole="superadmin">
-                              <Suspense fallback={<LoadingSpinner />}>
-                                <SuperAdminSystem />
-                              </Suspense>
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="superadmin/users"
-                          element={
-                            <ProtectedRoute requiredRole="superadmin">
-                              <Suspense fallback={<LoadingSpinner />}>
-                                <SuperAdminUsers />
-                              </Suspense>
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="superadmin/launch-readiness"
-                          element={
-                            <ProtectedRoute requiredRole="superadmin">
-                              <Suspense fallback={<LoadingSpinner />}>
-                                <SuperAdminLaunchReadiness />
-                              </Suspense>
-                            </ProtectedRoute>
-                          }
-                        />
+                        {/* Superadmin routes moved to /console/* shell.
+                            Sibling-level redirects from /dashboard/superadmin/*
+                            preserve old links. See route block below the
+                            dashboard route closer. */}
 
                         {/* Account Manager routes */}
                         <Route
@@ -1462,6 +1462,14 @@ function App() {
                           element={
                             <Suspense fallback={<LoadingSpinner />}>
                               <TenantAdminOverview />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="trust/emq"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <EMQDiagnostics />
                             </Suspense>
                           }
                         />
@@ -1653,14 +1661,12 @@ function App() {
                         />
 
                         {/* Sprint Feature Routes */}
-                        {/* CRM Integrations */}
+                        {/* Integrations is the canonical surface inside Settings.
+                            Old /dashboard/integrations redirects so bookmarks
+                            and the IntegrationsHub's "Open hub" links stay valid. */}
                         <Route
                           path="integrations"
-                          element={
-                            <Suspense fallback={<LoadingSpinner />}>
-                              <Integrations />
-                            </Suspense>
-                          }
+                          element={<Navigate to="/dashboard/settings/integrations" replace />}
                         />
 
                         {/* Pacing & Forecasting */}
@@ -1746,10 +1752,195 @@ function App() {
                         />
                       </Route>
 
+                      {/* ═══════════════════════════════════════════════
+                           Platform Console — owner-only shell at /console/*
+                           Distinct from operator dashboard. Reuses
+                           existing superadmin/* views as their canonical
+                           home. Old /dashboard/superadmin/* paths still
+                           work (kept for back-compat).
+                         ═══════════════════════════════════════════════ */}
+                      <Route
+                        path="/console"
+                        element={
+                          <ProtectedRoute requiredRole="superadmin">
+                            <ErrorBoundary message="Something went wrong in the platform console. Please try refreshing.">
+                              <Suspense fallback={<LoadingSpinner />}>
+                                <ConsoleLayout />
+                              </Suspense>
+                            </ErrorBoundary>
+                          </ProtectedRoute>
+                        }
+                      >
+                        <Route
+                          index
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <SuperadminDashboard />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="tenants"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <SuperAdminTenantsList />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="tenants/:tenantId"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <SuperAdminTenantProfile />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="users"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <SuperAdminUsers />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="feature-flags"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <ConsoleFeatureFlags />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="credentials"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <ConsoleCredentials />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="billing"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <SuperAdminBilling />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="control-tower"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <ControlTower />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="dead-letter-queue"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <DeadLetterQueue />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="publish-logs"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <PublishLogs />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="system"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <SuperAdminSystem />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="launch-readiness"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <SuperAdminLaunchReadiness />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="analytics"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <ConsolePlatformAnalytics />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="benchmarks"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <SuperAdminBenchmarks />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="audit"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <SuperAdminAudit />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="anomalies"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <ConsoleCrossTenantAnomalies />
+                            </Suspense>
+                          }
+                        />
+                      </Route>
+
                       {/* Legacy route redirects */}
                       <Route
                         path="/overview"
                         element={<Navigate to="/dashboard/overview" replace />}
+                      />
+                      <Route
+                        path="/dashboard/superadmin"
+                        element={<Navigate to="/console" replace />}
+                      />
+                      <Route
+                        path="/dashboard/superadmin/tenants"
+                        element={<Navigate to="/console/tenants" replace />}
+                      />
+                      <Route
+                        path="/dashboard/superadmin/users"
+                        element={<Navigate to="/console/users" replace />}
+                      />
+                      <Route
+                        path="/dashboard/superadmin/launch-readiness"
+                        element={<Navigate to="/console/launch-readiness" replace />}
+                      />
+                      <Route
+                        path="/dashboard/superadmin/control-tower"
+                        element={<Navigate to="/console/control-tower" replace />}
+                      />
+                      <Route
+                        path="/dashboard/superadmin/benchmarks"
+                        element={<Navigate to="/console/benchmarks" replace />}
+                      />
+                      <Route
+                        path="/dashboard/superadmin/audit"
+                        element={<Navigate to="/console/audit" replace />}
+                      />
+                      <Route
+                        path="/dashboard/superadmin/billing"
+                        element={<Navigate to="/console/billing" replace />}
+                      />
+                      <Route
+                        path="/dashboard/superadmin/system"
+                        element={<Navigate to="/console/system" replace />}
                       />
 
                       {/* 404 - Page Not Found */}

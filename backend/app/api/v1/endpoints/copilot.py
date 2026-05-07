@@ -28,6 +28,7 @@ from app.services.agents.copilot_agent import (
     CopilotResponse,
     process_message,
 )
+from app.services.agents.copilot_llm import generate_llm_message
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/copilot", tags=["copilot"])
@@ -182,20 +183,40 @@ async def copilot_chat(
         }
 
     # ── Process message through copilot agent ────────────────────
+    # The keyword classifier always runs first — it produces the intent,
+    # the suggestion chips, and the structured data cards that the
+    # frontend renders deterministically. When the LLM bridge is
+    # enabled we additionally swap in a Claude-generated response text
+    # using the same live context. On any LLM failure the template
+    # message stays in place — the user never sees a degraded experience.
+
+    first_name = user_name.split()[0] if user_name else None
 
     response = process_message(
         message=request.message,
-        user_name=user_name.split()[0] if user_name else None,
+        user_name=first_name,
         metrics=metrics,
         health_data=health_data,
         anomaly_data=anomaly_data,
     )
+
+    llm_text = await generate_llm_message(
+        message=request.message,
+        user_name=first_name,
+        metrics=metrics,
+        health_data=health_data,
+        anomaly_data=anomaly_data,
+        intent=response.intent,
+    )
+    if llm_text:
+        response = response.model_copy(update={"message": llm_text})
 
     logger.info(
         "copilot_response_generated",
         tenant_id=tenant_id,
         intent=response.intent,
         message_len=len(response.message),
+        llm_used=llm_text is not None,
     )
 
     return APIResponse(

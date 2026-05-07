@@ -25,14 +25,17 @@ import {
 // ---------------------------------------------------------------------------
 // Theme constants
 // ---------------------------------------------------------------------------
+// Wired to the figma semantic tokens. Was `var(--landing-*)` from the
+// retired nebula-aurora theme — those vars no longer exist, leaving the
+// page rendering with default browser colors.
 const theme = {
-  primary: 'var(--landing-accent-cyan)',
-  primaryLight: 'rgba(0, 199, 190, 0.15)',
-  bgCard: 'rgba(255, 255, 255, 0.05)',
-  border: 'var(--landing-border-white-dim)',
-  textPrimary: 'rgba(245, 245, 247, 0.92)',
-  textSecondary: 'rgba(245, 245, 247, 0.6)',
-  textMuted: 'rgba(245, 245, 247, 0.35)',
+  primary: 'hsl(var(--primary))',
+  primaryLight: 'hsl(var(--primary) / 0.12)',
+  bgCard: 'hsl(var(--card))',
+  border: 'hsl(var(--border))',
+  textPrimary: 'hsl(var(--foreground))',
+  textSecondary: 'hsl(var(--muted-foreground))',
+  textMuted: 'hsl(var(--muted-foreground) / 0.6)',
 };
 
 // ---------------------------------------------------------------------------

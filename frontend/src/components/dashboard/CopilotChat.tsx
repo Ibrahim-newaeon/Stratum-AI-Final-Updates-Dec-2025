@@ -26,7 +26,9 @@ function DataCard({ card }: { card: CopilotDataCard }) {
     elevated: 'text-amber-600',
     high: 'text-red-600',
   };
-  const valueColor = card.status ? (statusColors[card.status] || 'text-foreground') : 'text-foreground';
+  const valueColor = card.status
+    ? statusColors[card.status] || 'text-foreground'
+    : 'text-foreground';
 
   return (
     <div className="flex items-center justify-between bg-muted/30 rounded-lg px-3 py-2 border border-border/50">
@@ -34,8 +36,17 @@ function DataCard({ card }: { card: CopilotDataCard }) {
       <div className="flex items-center gap-1.5">
         <span className={cn('text-sm font-bold', valueColor)}>{card.value}</span>
         {card.change != null && (
-          <span className={cn('text-[10px] font-semibold flex items-center', card.change >= 0 ? 'text-emerald-600' : 'text-red-500')}>
-            {card.change >= 0 ? <TrendingUp className="w-3 h-3 mr-0.5" /> : <TrendingDown className="w-3 h-3 mr-0.5" />}
+          <span
+            className={cn(
+              'text-[10px] font-semibold flex items-center',
+              card.change >= 0 ? 'text-emerald-600' : 'text-red-500'
+            )}
+          >
+            {card.change >= 0 ? (
+              <TrendingUp className="w-3 h-3 mr-0.5" />
+            ) : (
+              <TrendingDown className="w-3 h-3 mr-0.5" />
+            )}
             {Math.abs(card.change).toFixed(1)}%
           </span>
         )}
@@ -52,7 +63,11 @@ function MessageBubble({ msg }: { msg: CopilotMessage }) {
     const parts = text.split(/(\*\*[^*]+\*\*)/g);
     return parts.map((part, i) => {
       if (part.startsWith('**') && part.endsWith('**')) {
-        return <strong key={i} className="font-bold">{part.slice(2, -2)}</strong>;
+        return (
+          <strong key={i} className="font-bold">
+            {part.slice(2, -2)}
+          </strong>
+        );
       }
       return <span key={i}>{part}</span>;
     });
@@ -60,21 +75,26 @@ function MessageBubble({ msg }: { msg: CopilotMessage }) {
 
   return (
     <div className={cn('flex gap-2.5 max-w-[95%]', isUser ? 'ml-auto flex-row-reverse' : '')}>
-      <div className={cn(
-        'w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5',
-        isUser ? 'bg-primary/10' : 'bg-primary'
-      )}>
-        {isUser
-          ? <User className="w-3.5 h-3.5 text-primary" />
-          : <Bot className="w-3.5 h-3.5 text-white" />
-        }
+      <div
+        className={cn(
+          'w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5',
+          isUser ? 'bg-primary/10' : 'bg-primary'
+        )}
+      >
+        {isUser ? (
+          <User className="w-3.5 h-3.5 text-primary" />
+        ) : (
+          <Bot className="w-3.5 h-3.5 text-white" />
+        )}
       </div>
-      <div className={cn(
-        'rounded-2xl px-4 py-2.5 text-sm leading-relaxed',
-        isUser
-          ? 'bg-primary text-primary-foreground rounded-tr-md'
-          : 'bg-muted/50 border border-border/50 text-foreground rounded-tl-md'
-      )}>
+      <div
+        className={cn(
+          'rounded-2xl px-4 py-2.5 text-sm leading-relaxed',
+          isUser
+            ? 'bg-primary text-primary-foreground rounded-tr-md'
+            : 'bg-muted/50 border border-border/50 text-foreground rounded-tl-md'
+        )}
+      >
         <div className="whitespace-pre-wrap">{formatContent(msg.content)}</div>
 
         {/* Data Cards */}
@@ -130,18 +150,21 @@ export function CopilotChat() {
   // Welcome message on first open
   useEffect(() => {
     if (isOpen && messages.length === 0) {
-      setMessages([{
-        id: 'welcome',
-        role: 'assistant',
-        content: "Hi! I'm your Stratum AI Copilot. I can help you understand your campaigns, signal health, anomalies, and more. What would you like to know?",
-        timestamp: new Date().toISOString(),
-        suggestions: [
-          "How are my campaigns doing?",
-          "Any anomalies today?",
-          "What's my signal health?",
-          "Help",
-        ],
-      }]);
+      setMessages([
+        {
+          id: 'welcome',
+          role: 'assistant',
+          content:
+            "Hi! I'm your Stratum AI Copilot. I can help you understand your campaigns, signal health, anomalies, and more. What would you like to know?",
+          timestamp: new Date().toISOString(),
+          suggestions: [
+            'How are my campaigns doing?',
+            'Any anomalies today?',
+            "What's my signal health?",
+            'Help',
+          ],
+        },
+      ]);
     }
   }, [isOpen, messages.length]);
 
@@ -155,7 +178,7 @@ export function CopilotChat() {
       timestamp: new Date().toISOString(),
     };
 
-    setMessages(prev => [...prev, userMsg]);
+    setMessages((prev) => [...prev, userMsg]);
     setInput('');
 
     try {
@@ -176,16 +199,16 @@ export function CopilotChat() {
         intent: response.intent,
       };
 
-      setMessages(prev => [...prev, assistantMsg]);
+      setMessages((prev) => [...prev, assistantMsg]);
     } catch {
       const errorMsg: CopilotMessage = {
         id: `err-${Date.now()}`,
         role: 'assistant',
         content: "Sorry, I couldn't process that request. Please try again.",
         timestamp: new Date().toISOString(),
-        suggestions: ["How are my campaigns doing?", "Help"],
+        suggestions: ['How are my campaigns doing?', 'Help'],
       };
-      setMessages(prev => [...prev, errorMsg]);
+      setMessages((prev) => [...prev, errorMsg]);
     }
   };
 
@@ -199,7 +222,7 @@ export function CopilotChat() {
   };
 
   // Get last assistant message's suggestions
-  const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant');
+  const lastAssistant = [...messages].reverse().find((m) => m.role === 'assistant');
   const suggestions = lastAssistant?.suggestions || [];
 
   return (
@@ -208,7 +231,7 @@ export function CopilotChat() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl hover:scale-105 transition-transform transition-colors flex items-center justify-center group"
+          className="fixed bottom-20 right-4 z-50 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl hover:scale-105 transition-transform transition-colors flex items-center justify-center group"
           aria-label="Open AI Copilot"
         >
           <Sparkles className="w-6 h-6 group-hover:rotate-12 transition-transform" />
@@ -239,7 +262,11 @@ export function CopilotChat() {
                 <Minimize2 className="w-4 h-4" />
               </button>
               <button
-                onClick={() => { setIsOpen(false); setMessages([]); setSessionId(undefined); }}
+                onClick={() => {
+                  setIsOpen(false);
+                  setMessages([]);
+                  setSessionId(undefined);
+                }}
                 className="p-1.5 rounded-lg hover:bg-foreground/20 transition-colors"
                 aria-label="Close"
               >
@@ -301,9 +328,7 @@ export function CopilotChat() {
                 aria-label="Send message"
                 className={cn(
                   'p-1.5 rounded-lg transition-colors',
-                  input.trim()
-                    ? 'text-violet-600 hover:bg-violet-100'
-                    : 'text-muted-foreground/40'
+                  input.trim() ? 'text-violet-600 hover:bg-violet-100' : 'text-muted-foreground/40'
                 )}
               >
                 <Send className="w-4 h-4" />

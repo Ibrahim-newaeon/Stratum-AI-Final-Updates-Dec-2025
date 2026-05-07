@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   AlertTriangle,
@@ -25,6 +25,8 @@ import {
   User,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTheme, type Theme } from '@/components/primitives/theme/ThemeProvider';
+import IntegrationsHub from '@/views/tenant/IntegrationsHub';
 import apiClient from '@/api/client';
 import { useTenantStore } from '@/stores/tenantStore';
 import { useExportData, useRequestDeletion } from '@/api/hooks';
@@ -40,6 +42,7 @@ import {
   useCancelSubscription,
   useReactivateSubscription,
 } from '@/api/payments';
+import { useAvailableTiers, useTierComparison } from '@/api/tier';
 import {
   METRIC_REGISTRY,
   METRIC_CATEGORIES,
@@ -64,9 +67,29 @@ type SettingsTab =
   | 'gdpr'
   | 'trust-engine';
 
+const VALID_TABS: ReadonlySet<SettingsTab> = new Set([
+  'profile',
+  'organization',
+  'notifications',
+  'security',
+  'integrations',
+  'preferences',
+  'billing',
+  'gdpr',
+  'trust-engine',
+]);
+
 export function Settings() {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
+  const navigate = useNavigate();
+  const { tab: tabParam } = useParams<{ tab: string }>();
+
+  // Derive active tab from URL — unknown / missing falls back to profile.
+  // Tab clicks navigate to update the URL, so back/forward and direct
+  // links work the way users expect.
+  const activeTab: SettingsTab =
+    tabParam && VALID_TABS.has(tabParam as SettingsTab) ? (tabParam as SettingsTab) : 'profile';
+  const setActiveTab = (next: SettingsTab) => navigate(`/dashboard/settings/${next}`);
   const [showApiKey, setShowApiKey] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const timeoutsRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
@@ -115,7 +138,12 @@ export function Settings() {
       case 'security':
         return <SecuritySettings showApiKey={showApiKey} setShowApiKey={setShowApiKey} />;
       case 'integrations':
-        return <IntegrationSettings />;
+        // Consolidated entry point: render the unified IntegrationsHub
+        // (ad platforms / CRM / server-side tracking / outbound).
+        // Legacy analytics-tags + webhooks UI from `IntegrationSettings`
+        // is still reachable via the "Outbound" section's
+        // /dashboard/integration-hub link inside IntegrationsHub.
+        return <IntegrationsHub />;
       case 'preferences':
         return <PreferenceSettings />;
       case 'billing':
@@ -1056,7 +1084,10 @@ function SecuritySettings({
             const setVisible = apiKey.type === 'live' ? setShowApiKey : setShowTestKey;
 
             return (
-              <div key={apiKey.id} className="p-4 rounded-xl border border-foreground/10 glass card-3d">
+              <div
+                key={apiKey.id}
+                className="p-4 rounded-xl border border-foreground/10 glass card-3d"
+              >
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <h4 className="font-medium">{apiKey.name}</h4>
@@ -1134,7 +1165,11 @@ function SecuritySettings({
   );
 }
 
-function IntegrationSettings() {
+// Legacy analytics-tags + webhooks UI. No longer wired into the
+// Settings tabs (the integrations case renders IntegrationsHub now),
+// but kept + exported so we can resurrect specific sections (GA, GTM,
+// webhooks) into the Outbound section of IntegrationsHub later.
+export function IntegrationSettings() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [selectedPlatform, setSelectedPlatform] = useState<PlatformCredentialConfig | null>(null);
@@ -1651,7 +1686,10 @@ function IntegrationSettings() {
 
 function PreferenceSettings() {
   const { t, i18n } = useTranslation();
-  const [theme, setTheme] = useState('system');
+  // Wire to the ThemeProvider primitive — the topbar ThemeToggle uses
+  // the same hook, so the two stay in sync. Local useState here was a
+  // bug: it tracked a value nothing read, so clicks did nothing.
+  const { theme, setTheme } = useTheme();
   const [language, setLanguage] = useState(i18n.language);
 
   const handleLanguageChange = (lang: string) => {
@@ -1669,16 +1707,16 @@ function PreferenceSettings() {
       <div>
         <label className="text-sm font-medium mb-2 block">{t('settings.theme')}</label>
         <div className="flex gap-3">
-          {['light', 'dark', 'system'].map((t) => (
+          {(['light', 'dark', 'system'] as Theme[]).map((opt) => (
             <button
-              key={t}
-              onClick={() => setTheme(t)}
+              key={opt}
+              onClick={() => setTheme(opt)}
               className={cn(
                 'px-4 py-2 rounded-lg border transition-colors capitalize',
-                theme === t ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
+                theme === opt ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
               )}
             >
-              {t}
+              {opt}
             </button>
           ))}
         </div>
@@ -2408,6 +2446,80 @@ function BillingSettings() {
           </button>
         </div>
       )}
+
+      <ComparePlansPanel />
+    </div>
+  );
+}
+
+function ComparePlansPanel() {
+  const tiersQuery = useAvailableTiers();
+  const compareQuery = useTierComparison();
+
+  if (tiersQuery.isLoading || compareQuery.isLoading) {
+    return null;
+  }
+  const tiers = tiersQuery.data?.tiers ?? [];
+  if (tiers.length === 0) return null;
+
+  const limits = compareQuery.data?.limits;
+  const limitKeys = limits
+    ? Array.from(
+        new Set(
+          Object.values(limits)
+            .filter((v): v is Record<string, number | string | null> => Boolean(v))
+            .flatMap((v) => Object.keys(v))
+        )
+      )
+    : [];
+
+  return (
+    <div className="pt-6 border-t space-y-3">
+      <h3 className="text-base font-semibold">Compare plans</h3>
+      <p className="text-sm text-muted-foreground">
+        What's included in each tier. Limits sourced from the backend tier registry.
+      </p>
+      <div className="overflow-x-auto rounded-lg border">
+        <table className="w-full text-sm">
+          <thead className="bg-muted/40 text-left font-mono text-xs uppercase tracking-wider text-muted-foreground">
+            <tr>
+              <th className="px-4 py-2">Limit</th>
+              {tiers.map((t) => (
+                <th key={t.tier} className="px-4 py-2 capitalize">
+                  {t.tier}
+                  {t.is_current && (
+                    <span className="ml-1 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] text-primary">
+                      current
+                    </span>
+                  )}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {limitKeys.map((key) => (
+              <tr key={key} className="border-t">
+                <td className="px-4 py-2 font-mono text-xs text-muted-foreground">{key}</td>
+                {tiers.map((t) => (
+                  <td key={t.tier} className="px-4 py-2 tabular-nums">
+                    {String(limits?.[t.tier]?.[key] ?? '—')}
+                  </td>
+                ))}
+              </tr>
+            ))}
+            {limitKeys.length === 0 && (
+              <tr>
+                <td
+                  colSpan={tiers.length + 1}
+                  className="px-4 py-3 text-center text-muted-foreground"
+                >
+                  No limit data available.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -2511,17 +2623,84 @@ function GDPRSettings() {
 }
 
 function TrustEngineSettings() {
-  const [healthyThreshold, setHealthyThreshold] = useState(70);
-  const [degradedThreshold, setDegradedThreshold] = useState(40);
-  const [autopilotEnabled, setAutopilotEnabled] = useState(true);
+  const tenant = useTenantStore((state) => state.tenant);
+  const tenantSettings = (tenant?.settings ?? {}) as Record<string, unknown>;
+
+  // Seed initial state from the tenant's persisted settings, falling
+  // back to the same defaults the onboarding flow ships.
+  const [healthyThreshold, setHealthyThreshold] = useState(
+    typeof tenantSettings.trust_threshold_autopilot === 'number'
+      ? (tenantSettings.trust_threshold_autopilot as number)
+      : 70
+  );
+  const [degradedThreshold, setDegradedThreshold] = useState(
+    typeof tenantSettings.trust_threshold_alert === 'number'
+      ? (tenantSettings.trust_threshold_alert as number)
+      : 40
+  );
+  const [autopilotEnabled, setAutopilotEnabled] = useState(
+    tenantSettings.automation_mode !== 'manual'
+  );
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+
+  const handleSave = async () => {
+    setSaveStatus('saving');
+    try {
+      await apiClient.post('/onboarding/trust-gate-config', {
+        trust_threshold_autopilot: healthyThreshold,
+        trust_threshold_alert: degradedThreshold,
+        max_daily_actions:
+          typeof tenantSettings.max_daily_actions === 'number'
+            ? (tenantSettings.max_daily_actions as number)
+            : 100,
+      });
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus('idle'), 2000);
+    } catch {
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus('idle'), 3000);
+    }
+  };
+
+  const dirty =
+    healthyThreshold !==
+      (typeof tenantSettings.trust_threshold_autopilot === 'number'
+        ? (tenantSettings.trust_threshold_autopilot as number)
+        : 70) ||
+    degradedThreshold !==
+      (typeof tenantSettings.trust_threshold_alert === 'number'
+        ? (tenantSettings.trust_threshold_alert as number)
+        : 40);
 
   return (
     <div className="space-y-6">
-      <h2 className="text-lg font-semibold">Trust Engine Configuration</h2>
-      <p className="text-sm text-muted-foreground">
-        Configure signal health thresholds that control when automations can execute. The Trust
-        Engine ensures automations only run when signal quality meets safety requirements.
-      </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-lg font-semibold">Trust Engine Configuration</h2>
+          <p className="text-sm text-muted-foreground">
+            Configure signal health thresholds that control when automations can execute. The Trust
+            Engine ensures automations only run when signal quality meets safety requirements.
+          </p>
+        </div>
+        <button
+          onClick={handleSave}
+          disabled={!dirty || saveStatus === 'saving'}
+          className={cn(
+            'flex-shrink-0 h-10 inline-flex items-center gap-2 px-4 rounded-lg text-sm font-medium',
+            'bg-primary text-primary-foreground transition-opacity hover:brightness-110',
+            'disabled:opacity-50 disabled:cursor-not-allowed',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+          )}
+        >
+          {saveStatus === 'saving'
+            ? 'Saving…'
+            : saveStatus === 'saved'
+              ? 'Saved ✓'
+              : saveStatus === 'error'
+                ? 'Retry'
+                : 'Save thresholds'}
+        </button>
+      </div>
 
       <div className="space-y-6">
         {/* Healthy Threshold */}

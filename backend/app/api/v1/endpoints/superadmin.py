@@ -23,6 +23,7 @@ from sqlalchemy import select, func, desc, and_, or_
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.logging import get_logger
 from app.db.session import get_async_session
 from app.models import Tenant, User, UserRole, Campaign
@@ -1660,4 +1661,92 @@ WHERE campaigns.id = sub.campaign_id AND campaigns.tenant_id = :tid"""),
             "tenant_id": tenant_id,
         },
         message=f"Seeded {camp_count} campaigns with {metric_count} daily metric rows",
+    )
+
+
+# =============================================================================
+# Credential Health Check
+# =============================================================================
+# Returns presence-only flags for every secret the platform reads from
+# Settings — no actual values, just `set: bool`. Lets the owner verify
+# at a glance which Railway env vars are configured without having to
+# read the dashboard. Powers /console/credentials in the frontend.
+
+@router.get("/credentials/health", response_model=APIResponse)
+async def credentials_health(request: Request):
+    """Presence-only health check across every external-credential setting."""
+    require_superadmin(request)
+
+    def present(value: object) -> bool:
+        if value is None:
+            return False
+        if isinstance(value, str):
+            return bool(value.strip())
+        return bool(value)
+
+    sections = {
+        "ad_platforms": {
+            "meta": {
+                "app_id": present(settings.meta_app_id),
+                "app_secret": present(settings.meta_app_secret),
+                "api_version": settings.meta_api_version or None,
+                "long_lived_token": present(settings.meta_access_token),
+            },
+            "google_ads": {
+                "developer_token": present(settings.google_ads_developer_token),
+                "client_id": present(settings.google_ads_client_id),
+                "client_secret": present(settings.google_ads_client_secret),
+                "refresh_token": present(settings.google_ads_refresh_token),
+                "customer_id_default": present(settings.google_ads_customer_id),
+            },
+            "tiktok": {
+                "app_id": present(settings.tiktok_app_id),
+                "secret": present(settings.tiktok_secret),
+                "long_lived_token": present(settings.tiktok_access_token),
+                "advertiser_id_default": present(settings.tiktok_advertiser_id),
+            },
+            "snapchat": {
+                "client_id": present(settings.snapchat_client_id),
+                "client_secret": present(settings.snapchat_client_secret),
+                "long_lived_token": present(settings.snapchat_access_token),
+                "ad_account_id_default": present(settings.snapchat_ad_account_id),
+            },
+        },
+        "billing": {
+            "stripe": {
+                "secret_key": present(settings.stripe_secret_key),
+                "publishable_key": present(settings.stripe_publishable_key),
+                "webhook_secret": present(settings.stripe_webhook_secret),
+            },
+        },
+        "email": {
+            "smtp": {
+                "host": present(settings.smtp_host),
+                "user": present(settings.smtp_user),
+                "password": present(settings.smtp_password),
+            },
+            "sendgrid": {
+                "api_key": present(settings.sendgrid_api_key),
+                "webhook_token": present(settings.sendgrid_webhook_token),
+            },
+        },
+        "ai": {
+            "anthropic": {
+                "api_key": present(settings.anthropic_api_key),
+                "llm_enabled": settings.copilot_llm_enabled,
+                "model": settings.copilot_llm_model,
+            },
+        },
+        "infra": {
+            "oauth_redirect_base_url": settings.oauth_redirect_base_url,
+            "frontend_url": settings.frontend_url,
+            "sentry_dsn_set": present(settings.sentry_dsn),
+            "pii_encryption_key_set": present(settings.pii_encryption_key),
+        },
+    }
+
+    return APIResponse(
+        success=True,
+        data=sections,
+        message="Credential presence check",
     )

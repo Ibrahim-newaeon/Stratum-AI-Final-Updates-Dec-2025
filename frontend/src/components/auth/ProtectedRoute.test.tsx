@@ -7,7 +7,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import ProtectedRoute, { meetsRoleRequirement } from './ProtectedRoute';
 
 // ---------------------------------------------------------------------------
@@ -30,13 +30,27 @@ vi.mock('@/components/common/LoadingSpinner', () => ({
 
 function renderProtectedRoute(
   props: Partial<React.ComponentProps<typeof ProtectedRoute>> = {},
-  initialEntry = '/'
+  initialEntry = '/protected'
 ) {
+  // Wrap in Routes/Route so <Navigate> redirects land on a real path.
+  // Without these terminal routes, react-router-dom v7's <Navigate> with
+  // `state` payload re-runs its layout effect repeatedly under jsdom and
+  // hangs the worker.
   return render(
     <MemoryRouter initialEntries={[initialEntry]}>
-      <ProtectedRoute {...props}>
-        <div data-testid="protected-content">Secret Content</div>
-      </ProtectedRoute>
+      <Routes>
+        <Route
+          path="/protected"
+          element={
+            <ProtectedRoute {...props}>
+              <div data-testid="protected-content">Secret Content</div>
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/login" element={<div data-testid="login-page" />} />
+        <Route path="/unauthorized" element={<div data-testid="unauthorized-page" />} />
+        <Route path="/portal" element={<div data-testid="portal-page" />} />
+      </Routes>
     </MemoryRouter>
   );
 }
