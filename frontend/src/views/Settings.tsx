@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme, type Theme } from '@/components/primitives/theme/ThemeProvider';
+import IntegrationsHub from '@/views/tenant/IntegrationsHub';
 import apiClient from '@/api/client';
 import { useTenantStore } from '@/stores/tenantStore';
 import { useExportData, useRequestDeletion } from '@/api/hooks';
@@ -136,7 +137,12 @@ export function Settings() {
       case 'security':
         return <SecuritySettings showApiKey={showApiKey} setShowApiKey={setShowApiKey} />;
       case 'integrations':
-        return <IntegrationSettings />;
+        // Consolidated entry point: render the unified IntegrationsHub
+        // (ad platforms / CRM / server-side tracking / outbound).
+        // Legacy analytics-tags + webhooks UI from `IntegrationSettings`
+        // is still reachable via the "Outbound" section's
+        // /dashboard/integration-hub link inside IntegrationsHub.
+        return <IntegrationsHub />;
       case 'preferences':
         return <PreferenceSettings />;
       case 'billing':
@@ -1158,7 +1164,11 @@ function SecuritySettings({
   );
 }
 
-function IntegrationSettings() {
+// Legacy analytics-tags + webhooks UI. No longer wired into the
+// Settings tabs (the integrations case renders IntegrationsHub now),
+// but kept + exported so we can resurrect specific sections (GA, GTM,
+// webhooks) into the Outbound section of IntegrationsHub later.
+export function IntegrationSettings() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [selectedPlatform, setSelectedPlatform] = useState<PlatformCredentialConfig | null>(null);
