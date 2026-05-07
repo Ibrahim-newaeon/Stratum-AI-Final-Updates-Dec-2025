@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   AlertTriangle,
@@ -25,6 +25,7 @@ import {
   User,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTheme, type Theme } from '@/components/primitives/theme/ThemeProvider';
 import apiClient from '@/api/client';
 import { useTenantStore } from '@/stores/tenantStore';
 import { useExportData, useRequestDeletion } from '@/api/hooks';
@@ -64,9 +65,29 @@ type SettingsTab =
   | 'gdpr'
   | 'trust-engine';
 
+const VALID_TABS: ReadonlySet<SettingsTab> = new Set([
+  'profile',
+  'organization',
+  'notifications',
+  'security',
+  'integrations',
+  'preferences',
+  'billing',
+  'gdpr',
+  'trust-engine',
+]);
+
 export function Settings() {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
+  const navigate = useNavigate();
+  const { tab: tabParam } = useParams<{ tab: string }>();
+
+  // Derive active tab from URL — unknown / missing falls back to profile.
+  // Tab clicks navigate to update the URL, so back/forward and direct
+  // links work the way users expect.
+  const activeTab: SettingsTab =
+    tabParam && VALID_TABS.has(tabParam as SettingsTab) ? (tabParam as SettingsTab) : 'profile';
+  const setActiveTab = (next: SettingsTab) => navigate(`/dashboard/settings/${next}`);
   const [showApiKey, setShowApiKey] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const timeoutsRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
@@ -1056,7 +1077,10 @@ function SecuritySettings({
             const setVisible = apiKey.type === 'live' ? setShowApiKey : setShowTestKey;
 
             return (
-              <div key={apiKey.id} className="p-4 rounded-xl border border-foreground/10 glass card-3d">
+              <div
+                key={apiKey.id}
+                className="p-4 rounded-xl border border-foreground/10 glass card-3d"
+              >
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <h4 className="font-medium">{apiKey.name}</h4>
@@ -1651,7 +1675,10 @@ function IntegrationSettings() {
 
 function PreferenceSettings() {
   const { t, i18n } = useTranslation();
-  const [theme, setTheme] = useState('system');
+  // Wire to the ThemeProvider primitive — the topbar ThemeToggle uses
+  // the same hook, so the two stay in sync. Local useState here was a
+  // bug: it tracked a value nothing read, so clicks did nothing.
+  const { theme, setTheme } = useTheme();
   const [language, setLanguage] = useState(i18n.language);
 
   const handleLanguageChange = (lang: string) => {
@@ -1669,16 +1696,16 @@ function PreferenceSettings() {
       <div>
         <label className="text-sm font-medium mb-2 block">{t('settings.theme')}</label>
         <div className="flex gap-3">
-          {['light', 'dark', 'system'].map((t) => (
+          {(['light', 'dark', 'system'] as Theme[]).map((opt) => (
             <button
-              key={t}
-              onClick={() => setTheme(t)}
+              key={opt}
+              onClick={() => setTheme(opt)}
               className={cn(
                 'px-4 py-2 rounded-lg border transition-colors capitalize',
-                theme === t ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
+                theme === opt ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
               )}
             >
-              {t}
+              {opt}
             </button>
           ))}
         </div>
