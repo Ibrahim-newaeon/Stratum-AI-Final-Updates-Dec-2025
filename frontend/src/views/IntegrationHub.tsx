@@ -21,14 +21,16 @@ export default function IntegrationHub() {
   const [activeTab, setActiveTab] = useState<'zapier' | 'warehouse' | 'teams'>('zapier');
 
   return (
-    <div className="min-h-screen bg-[#050B18] text-white p-6">
+    <div className="min-h-screen bg-background text-foreground p-6">
       <div className="max-w-6xl mx-auto">
         <header className="mb-8">
           <h1 className="text-3xl font-bold flex items-center gap-3">
-            <BoltIcon className="w-8 h-8 text-[#00F5FF]" />
+            <BoltIcon className="w-8 h-8 text-primary" />
             Integration Hub
           </h1>
-          <p className="text-gray-400 mt-2">Connect Stratum AI to your external tools and data warehouses</p>
+          <p className="text-gray-400 mt-2">
+            Connect Stratum AI to your external tools and data warehouses
+          </p>
         </header>
 
         <div className="flex gap-2 mb-6">
@@ -42,7 +44,9 @@ export default function IntegrationHub() {
               onClick={() => setActiveTab(tab.id)}
               className={cn(
                 'flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all',
-                activeTab === tab.id ? 'bg-primary text-white' : 'bg-foreground/[0.03] text-gray-400 hover:bg-foreground/[0.06]'
+                activeTab === tab.id
+                  ? 'bg-primary text-white'
+                  : 'bg-foreground/[0.03] text-gray-400 hover:bg-foreground/[0.06]'
               )}
             >
               <tab.icon className="w-5 h-5" />
@@ -62,14 +66,31 @@ export default function IntegrationHub() {
 // ── Zapier Panel ────────────────────────────────────────────────────────────
 
 function ZapierPanel() {
-  
   const [webhooks, setWebhooks] = useState<any[]>([
-    { id: 'zap_001', name: 'Campaign Alert → CRM', webhook_url: 'https://example.com/zapier-placeholder', event_types: ['campaign_created', 'roas_alert'], is_active: true },
+    {
+      id: 'zap_001',
+      name: 'Campaign Alert → CRM',
+      webhook_url: 'https://example.com/zapier-placeholder',
+      event_types: ['campaign_created', 'roas_alert'],
+      is_active: true,
+    },
   ]);
-  const [newWebhook, setNewWebhook] = useState({ name: '', webhook_url: '', event_types: [] as string[] });
+  const [newWebhook, setNewWebhook] = useState({
+    name: '',
+    webhook_url: '',
+    event_types: [] as string[],
+  });
   const [testResult, setTestResult] = useState<any>(null);
 
-  const eventOptions = ['campaign_created', 'campaign_updated', 'campaign_deleted', 'roas_alert', 'trust_gate_blocked', 'daily_summary', 'anomaly_detected'];
+  const eventOptions = [
+    'campaign_created',
+    'campaign_updated',
+    'campaign_deleted',
+    'roas_alert',
+    'trust_gate_blocked',
+    'daily_summary',
+    'anomaly_detected',
+  ];
 
   const addWebhook = async () => {
     const token = getToken();
@@ -85,7 +106,9 @@ function ZapierPanel() {
         setWebhooks([...webhooks, data.data]);
         setNewWebhook({ name: '', webhook_url: '', event_types: [] });
       }
-    } catch (e) { /* ignore */ }
+    } catch (e) {
+      /* ignore */
+    }
   };
 
   const testWebhook = async (id: string) => {
@@ -95,11 +118,17 @@ function ZapierPanel() {
       const res = await fetch(`${API_URL}/integrations/outbound/zapier/trigger`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
-        body: JSON.stringify({ webhook_id: id, event_type: 'campaign_created', payload: { test: true } }),
+        body: JSON.stringify({
+          webhook_id: id,
+          event_type: 'campaign_created',
+          payload: { test: true },
+        }),
       });
       const data = await res.json();
       setTestResult(data.data);
-    } catch (e) { /* ignore */ }
+    } catch (e) {
+      /* ignore */
+    }
   };
 
   return (
@@ -109,11 +138,21 @@ function ZapierPanel() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
             <label className="text-xs text-gray-400">Name</label>
-            <input value={newWebhook.name} onChange={(e) => setNewWebhook({ ...newWebhook, name: e.target.value })} className="w-full bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white text-sm" placeholder="My Zapier Hook" />
+            <input
+              value={newWebhook.name}
+              onChange={(e) => setNewWebhook({ ...newWebhook, name: e.target.value })}
+              className="w-full bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white text-sm"
+              placeholder="My Zapier Hook"
+            />
           </div>
           <div>
             <label className="text-xs text-gray-400">Webhook URL (https://)</label>
-            <input value={newWebhook.webhook_url} onChange={(e) => setNewWebhook({ ...newWebhook, webhook_url: e.target.value })} className="w-full bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white text-sm" placeholder="https://hooks.zapier.com/..." />
+            <input
+              value={newWebhook.webhook_url}
+              onChange={(e) => setNewWebhook({ ...newWebhook, webhook_url: e.target.value })}
+              className="w-full bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white text-sm"
+              placeholder="https://hooks.zapier.com/..."
+            />
           </div>
         </div>
         <div className="mb-4">
@@ -124,7 +163,8 @@ function ZapierPanel() {
                 key={e}
                 onClick={() => {
                   const set = new Set(newWebhook.event_types);
-                  if (set.has(e)) set.delete(e); else set.add(e);
+                  if (set.has(e)) set.delete(e);
+                  else set.add(e);
                   setNewWebhook({ ...newWebhook, event_types: Array.from(set) });
                 }}
                 className={cn(
@@ -139,33 +179,55 @@ function ZapierPanel() {
             ))}
           </div>
         </div>
-        <button onClick={addWebhook} className="bg-primary hover:bg-primary/90 text-white px-5 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors">
+        <button
+          onClick={addWebhook}
+          className="bg-primary hover:bg-primary/90 text-white px-5 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
+        >
           <PlusIcon className="w-4 h-4" /> Add Webhook
         </button>
       </div>
 
       {webhooks.map((wh) => (
-        <div key={wh.id} className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-5">
+        <div
+          key={wh.id}
+          className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-5"
+        >
           <div className="flex items-center justify-between mb-3">
             <div>
               <h4 className="font-medium">{wh.name}</h4>
               <p className="text-xs text-gray-500">{wh.webhook_url}</p>
             </div>
             <div className="flex items-center gap-2">
-              <span className={cn('text-xs px-2 py-0.5 rounded-full', wh.is_active ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400')}>
+              <span
+                className={cn(
+                  'text-xs px-2 py-0.5 rounded-full',
+                  wh.is_active ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'
+                )}
+              >
                 {wh.is_active ? 'Active' : 'Inactive'}
               </span>
-              <button onClick={() => testWebhook(wh.id)} className="text-xs bg-foreground/[0.03] hover:bg-foreground/[0.06] text-[#00F5FF] px-3 py-1.5 rounded-lg transition-colors">
+              <button
+                onClick={() => testWebhook(wh.id)}
+                className="text-xs bg-foreground/[0.03] hover:bg-foreground/[0.06] text-primary px-3 py-1.5 rounded-lg transition-colors"
+              >
                 Test
               </button>
-              <button onClick={() => setWebhooks(webhooks.filter((w) => w.id !== wh.id))} className="text-red-400 hover:text-red-300 p-1">
+              <button
+                onClick={() => setWebhooks(webhooks.filter((w) => w.id !== wh.id))}
+                className="text-red-400 hover:text-red-300 p-1"
+              >
                 <TrashIcon className="w-4 h-4" />
               </button>
             </div>
           </div>
           <div className="flex flex-wrap gap-1">
             {wh.event_types.map((e: string) => (
-              <span key={e} className="text-xs bg-foreground/[0.03] text-gray-400 px-2 py-0.5 rounded-full">{e}</span>
+              <span
+                key={e}
+                className="text-xs bg-foreground/[0.03] text-gray-400 px-2 py-0.5 rounded-full"
+              >
+                {e}
+              </span>
             ))}
           </div>
         </div>
@@ -175,7 +237,12 @@ function ZapierPanel() {
         <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-4">
           <h4 className="text-sm font-medium mb-2">Test Result</h4>
           <div className="text-xs text-gray-400 space-y-1">
-            <div>Status: <span className={testResult.status === 'success' ? 'text-green-400' : 'text-red-400'}>{testResult.status}</span></div>
+            <div>
+              Status:{' '}
+              <span className={testResult.status === 'success' ? 'text-green-400' : 'text-red-400'}>
+                {testResult.status}
+              </span>
+            </div>
             <div>HTTP: {testResult.response_status || 'N/A'}</div>
             <div>Latency: {testResult.latency_ms}ms</div>
           </div>
@@ -188,9 +255,16 @@ function ZapierPanel() {
 // ── Warehouse Panel ─────────────────────────────────────────────────────────
 
 function WarehousePanel() {
-  
   const [exports] = useState<any[]>([
-    { id: 'wh_001', name: 'BigQuery Production', provider: 'bigquery', dataset: 'stratum_analytics', tables: ['campaigns', 'campaign_metrics'], sync_frequency: 'hourly', is_active: true },
+    {
+      id: 'wh_001',
+      name: 'BigQuery Production',
+      provider: 'bigquery',
+      dataset: 'stratum_analytics',
+      tables: ['campaigns', 'campaign_metrics'],
+      sync_frequency: 'hourly',
+      is_active: true,
+    },
   ]);
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<any>(null);
@@ -206,7 +280,9 @@ function WarehousePanel() {
       });
       const data = await res.json();
       if (data.success) setSyncResult(data.data);
-    } catch (e) { /* ignore */ }
+    } catch (e) {
+      /* ignore */
+    }
     setSyncing(false);
   };
 
@@ -221,7 +297,10 @@ function WarehousePanel() {
     <div className="space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {providers.map((p) => (
-          <div key={p.id} className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-4 text-center">
+          <div
+            key={p.id}
+            className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-4 text-center"
+          >
             <div className={`text-lg font-bold ${p.color}`}>{p.name}</div>
             <div className="text-xs text-gray-500 mt-1">Available</div>
           </div>
@@ -229,22 +308,38 @@ function WarehousePanel() {
       </div>
 
       {exports.map((ex) => (
-        <div key={ex.id} className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-5">
+        <div
+          key={ex.id}
+          className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-5"
+        >
           <div className="flex items-center justify-between mb-3">
             <div>
               <h4 className="font-medium">{ex.name}</h4>
-              <p className="text-xs text-gray-500">{ex.provider} · {ex.dataset}</p>
+              <p className="text-xs text-gray-500">
+                {ex.provider} · {ex.dataset}
+              </p>
             </div>
             <div className="flex items-center gap-2">
-              <span className={cn('text-xs px-2 py-0.5 rounded-full', ex.is_active ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400')}>
+              <span
+                className={cn(
+                  'text-xs px-2 py-0.5 rounded-full',
+                  ex.is_active ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'
+                )}
+              >
                 {ex.is_active ? 'Active' : 'Inactive'}
               </span>
-              <button onClick={() => syncNow(ex.id)} disabled={syncing} className="text-xs bg-primary hover:bg-primary/90 text-white px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50">
+              <button
+                onClick={() => syncNow(ex.id)}
+                disabled={syncing}
+                className="text-xs bg-primary hover:bg-primary/90 text-white px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+              >
                 {syncing ? <ArrowPathIcon className="w-3 h-3 animate-spin" /> : 'Sync Now'}
               </button>
             </div>
           </div>
-          <div className="text-xs text-gray-400">Tables: {ex.tables.join(', ')} · Frequency: {ex.sync_frequency}</div>
+          <div className="text-xs text-gray-400">
+            Tables: {ex.tables.join(', ')} · Frequency: {ex.sync_frequency}
+          </div>
         </div>
       ))}
 
@@ -268,9 +363,15 @@ function WarehousePanel() {
 // ── Teams Panel ─────────────────────────────────────────────────────────────
 
 function TeamsPanel() {
-  
   const [webhooks, setWebhooks] = useState<any[]>([
-    { id: 'teams_001', name: 'Marketing Alerts', webhook_url: 'https://company.webhook.office.com/...', channel_name: 'Marketing Ops', alert_types: ['roas_drop', 'trust_gate_blocked'], is_active: true },
+    {
+      id: 'teams_001',
+      name: 'Marketing Alerts',
+      webhook_url: 'https://company.webhook.office.com/...',
+      channel_name: 'Marketing Ops',
+      alert_types: ['roas_drop', 'trust_gate_blocked'],
+      is_active: true,
+    },
   ]);
   const [testMessage, setTestMessage] = useState<any>(null);
 
@@ -286,47 +387,80 @@ function TeamsPanel() {
           title: 'Test Alert from Stratum AI',
           text: 'This is a test message to verify your Microsoft Teams integration is working.',
           theme_color: 'FF1F6D',
-          facts: [{ name: 'Campaign', value: 'Test Campaign' }, { name: 'ROAS', value: '2.4x' }],
+          facts: [
+            { name: 'Campaign', value: 'Test Campaign' },
+            { name: 'ROAS', value: '2.4x' },
+          ],
           actions: [{ name: 'Open Dashboard', url: 'https://stratumai.app/dashboard' }],
         }),
       });
       const data = await res.json();
       setTestMessage(data);
-    } catch (e) { /* ignore */ }
+    } catch (e) {
+      /* ignore */
+    }
   };
 
   return (
     <div className="space-y-6">
       {webhooks.map((wh) => (
-        <div key={wh.id} className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-5">
+        <div
+          key={wh.id}
+          className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-5"
+        >
           <div className="flex items-center justify-between mb-3">
             <div>
               <h4 className="font-medium">{wh.name}</h4>
               <p className="text-xs text-gray-500">Channel: {wh.channel_name}</p>
             </div>
             <div className="flex items-center gap-2">
-              <span className={cn('text-xs px-2 py-0.5 rounded-full', wh.is_active ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400')}>
+              <span
+                className={cn(
+                  'text-xs px-2 py-0.5 rounded-full',
+                  wh.is_active ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'
+                )}
+              >
                 {wh.is_active ? 'Active' : 'Inactive'}
               </span>
-              <button onClick={() => sendTest(wh.id)} className="text-xs bg-foreground/[0.03] hover:bg-foreground/[0.06] text-[#00F5FF] px-3 py-1.5 rounded-lg transition-colors">
+              <button
+                onClick={() => sendTest(wh.id)}
+                className="text-xs bg-foreground/[0.03] hover:bg-foreground/[0.06] text-primary px-3 py-1.5 rounded-lg transition-colors"
+              >
                 Send Test
               </button>
-              <button onClick={() => setWebhooks(webhooks.filter((w) => w.id !== wh.id))} className="text-red-400 hover:text-red-300 p-1">
+              <button
+                onClick={() => setWebhooks(webhooks.filter((w) => w.id !== wh.id))}
+                className="text-red-400 hover:text-red-300 p-1"
+              >
                 <TrashIcon className="w-4 h-4" />
               </button>
             </div>
           </div>
           <div className="flex flex-wrap gap-1">
             {wh.alert_types.map((e: string) => (
-              <span key={e} className="text-xs bg-foreground/[0.03] text-gray-400 px-2 py-0.5 rounded-full">{e}</span>
+              <span
+                key={e}
+                className="text-xs bg-foreground/[0.03] text-gray-400 px-2 py-0.5 rounded-full"
+              >
+                {e}
+              </span>
             ))}
           </div>
         </div>
       ))}
 
       {testMessage && (
-        <div className={cn('rounded-xl p-4 border', testMessage.success ? 'bg-green-500/5 border-green-500/20' : 'bg-red-500/5 border-red-500/20')}>
-          <div className="text-sm font-medium mb-1">{testMessage.success ? 'Message Sent' : 'Failed'}</div>
+        <div
+          className={cn(
+            'rounded-xl p-4 border',
+            testMessage.success
+              ? 'bg-green-500/5 border-green-500/20'
+              : 'bg-red-500/5 border-red-500/20'
+          )}
+        >
+          <div className="text-sm font-medium mb-1">
+            {testMessage.success ? 'Message Sent' : 'Failed'}
+          </div>
           <div className="text-xs text-gray-400">{JSON.stringify(testMessage.data)}</div>
         </div>
       )}
