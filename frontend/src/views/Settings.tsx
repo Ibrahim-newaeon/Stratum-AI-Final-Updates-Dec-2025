@@ -2548,17 +2548,84 @@ function GDPRSettings() {
 }
 
 function TrustEngineSettings() {
-  const [healthyThreshold, setHealthyThreshold] = useState(70);
-  const [degradedThreshold, setDegradedThreshold] = useState(40);
-  const [autopilotEnabled, setAutopilotEnabled] = useState(true);
+  const tenant = useTenantStore((state) => state.tenant);
+  const tenantSettings = (tenant?.settings ?? {}) as Record<string, unknown>;
+
+  // Seed initial state from the tenant's persisted settings, falling
+  // back to the same defaults the onboarding flow ships.
+  const [healthyThreshold, setHealthyThreshold] = useState(
+    typeof tenantSettings.trust_threshold_autopilot === 'number'
+      ? (tenantSettings.trust_threshold_autopilot as number)
+      : 70
+  );
+  const [degradedThreshold, setDegradedThreshold] = useState(
+    typeof tenantSettings.trust_threshold_alert === 'number'
+      ? (tenantSettings.trust_threshold_alert as number)
+      : 40
+  );
+  const [autopilotEnabled, setAutopilotEnabled] = useState(
+    tenantSettings.automation_mode !== 'manual'
+  );
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+
+  const handleSave = async () => {
+    setSaveStatus('saving');
+    try {
+      await apiClient.post('/onboarding/trust-gate-config', {
+        trust_threshold_autopilot: healthyThreshold,
+        trust_threshold_alert: degradedThreshold,
+        max_daily_actions:
+          typeof tenantSettings.max_daily_actions === 'number'
+            ? (tenantSettings.max_daily_actions as number)
+            : 100,
+      });
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus('idle'), 2000);
+    } catch {
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus('idle'), 3000);
+    }
+  };
+
+  const dirty =
+    healthyThreshold !==
+      (typeof tenantSettings.trust_threshold_autopilot === 'number'
+        ? (tenantSettings.trust_threshold_autopilot as number)
+        : 70) ||
+    degradedThreshold !==
+      (typeof tenantSettings.trust_threshold_alert === 'number'
+        ? (tenantSettings.trust_threshold_alert as number)
+        : 40);
 
   return (
     <div className="space-y-6">
-      <h2 className="text-lg font-semibold">Trust Engine Configuration</h2>
-      <p className="text-sm text-muted-foreground">
-        Configure signal health thresholds that control when automations can execute. The Trust
-        Engine ensures automations only run when signal quality meets safety requirements.
-      </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-lg font-semibold">Trust Engine Configuration</h2>
+          <p className="text-sm text-muted-foreground">
+            Configure signal health thresholds that control when automations can execute. The Trust
+            Engine ensures automations only run when signal quality meets safety requirements.
+          </p>
+        </div>
+        <button
+          onClick={handleSave}
+          disabled={!dirty || saveStatus === 'saving'}
+          className={cn(
+            'flex-shrink-0 h-10 inline-flex items-center gap-2 px-4 rounded-lg text-sm font-medium',
+            'bg-primary text-primary-foreground transition-opacity hover:brightness-110',
+            'disabled:opacity-50 disabled:cursor-not-allowed',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+          )}
+        >
+          {saveStatus === 'saving'
+            ? 'Saving…'
+            : saveStatus === 'saved'
+              ? 'Saved ✓'
+              : saveStatus === 'error'
+                ? 'Retry'
+                : 'Save thresholds'}
+        </button>
+      </div>
 
       <div className="space-y-6">
         {/* Healthy Threshold */}
