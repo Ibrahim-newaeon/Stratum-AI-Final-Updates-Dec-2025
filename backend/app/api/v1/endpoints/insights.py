@@ -133,6 +133,94 @@ async def check_signal_health_for_autopilot(db: AsyncSession, tenant_id: int, ta
     }
 
 
+async def detect_campaign_anomalies(
+    db: AsyncSession,
+    tenant_id: int,
+    target_date: date,
+) -> List[Dict[str, Any]]:
+    """
+    Detect anomalies for a tenant's campaigns. Pure function — no auth /
+    feature-gate / response wrapping. Reused by the tenant `/anomalies`
+    endpoint and the `/superadmin/anomalies-rollup` aggregator so the
+    detection logic stays in one place.
+    """
+    from app.models import Campaign
+
+    result = await db.execute(
+        select(Campaign).where(
+            and_(
+                Campaign.tenant_id == tenant_id,
+                Campaign.is_deleted == False,
+            )
+        )
+    )
+    campaigns = result.scalars().all()
+
+    anomalies: List[Dict[str, Any]] = []
+    anomaly_idx = 0
+    detected_at = datetime.now(timezone.utc).isoformat()
+
+    for c in campaigns:
+        spend = (c.total_spend_cents or 0) / 100
+        revenue = (c.revenue_cents or 0) / 100
+        roas = revenue / spend if spend > 0 else 0
+        cpa = spend / c.conversions if c.conversions and c.conversions > 0 else 0
+
+        if spend > 0 and roas < 1.0:
+            anomaly_idx += 1
+            anomalies.append({
+                "id": f"anomaly_{tenant_id}_{anomaly_idx}",
+                "detected_at": detected_at,
+                "metric": "roas",
+                "entity_type": "campaign",
+                "entity_id": str(c.id),
+                "entity_name": c.name or f"Campaign {c.id}",
+                "severity": "critical" if roas < 0.5 else "high",
+                "direction": "drop",
+                "current_value": round(roas, 2),
+                "expected_value": None,
+                "description": f"ROAS at {roas:.2f}x is below break-even threshold",
+                "possible_causes": [
+                    "Audience fatigue",
+                    "Increased competition",
+                    "Poor creative performance",
+                ],
+                "recommended_actions": [
+                    "Review targeting",
+                    "Refresh creatives",
+                    "Consider pausing",
+                ],
+            })
+
+        if c.conversions and c.conversions > 0 and cpa > 100:
+            anomaly_idx += 1
+            anomalies.append({
+                "id": f"anomaly_{tenant_id}_{anomaly_idx}",
+                "detected_at": detected_at,
+                "metric": "cpa",
+                "entity_type": "campaign",
+                "entity_id": str(c.id),
+                "entity_name": c.name or f"Campaign {c.id}",
+                "severity": "medium",
+                "direction": "spike",
+                "current_value": round(cpa, 2),
+                "expected_value": 50.0,
+                "description": f"CPA at ${cpa:.2f} is significantly above target",
+                "possible_causes": [
+                    "Low conversion rate",
+                    "High CPC",
+                    "Landing page issues",
+                ],
+                "recommended_actions": [
+                    "Optimize landing page",
+                    "Narrow targeting",
+                    "Test new creatives",
+                ],
+            })
+
+    return anomalies
+
+
 # =============================================================================
 # Insights Endpoint
 # =============================================================================
@@ -356,67 +444,8 @@ async def get_anomalies(
     if target_date is None:
         target_date = date.today()
 
-    # Detect anomalies from campaign data
-    from app.models import Campaign
+    anomalies = await detect_campaign_anomalies(db, tenant_id, target_date)
 
-    result = await db.execute(
-        select(Campaign).where(
-            and_(
-                Campaign.tenant_id == tenant_id,
-                Campaign.is_deleted == False,
-            )
-        )
-    )
-    campaigns = result.scalars().all()
-
-    anomalies = []
-    anomaly_idx = 0
-
-    for c in campaigns:
-        spend = (c.total_spend_cents or 0) / 100
-        revenue = (c.revenue_cents or 0) / 100
-        roas = revenue / spend if spend > 0 else 0
-        cpa = spend / c.conversions if c.conversions and c.conversions > 0 else 0
-
-        # Detect ROAS anomalies (below 1.0 is concerning)
-        if spend > 0 and roas < 1.0:
-            anomaly_idx += 1
-            anomalies.append({
-                "id": f"anomaly_{anomaly_idx}",
-                "detected_at": datetime.now(timezone.utc).isoformat() if hasattr(datetime, 'now') else target_date.isoformat(),
-                "metric": "roas",
-                "entity_type": "campaign",
-                "entity_id": str(c.id),
-                "entity_name": c.name or f"Campaign {c.id}",
-                "severity": "critical" if roas < 0.5 else "high",
-                "direction": "drop",
-                "current_value": round(roas, 2),
-                "expected_value": None,
-                "description": f"ROAS at {roas:.2f}x is below break-even threshold",
-                "possible_causes": ["Audience fatigue", "Increased competition", "Poor creative performance"],
-                "recommended_actions": ["Review targeting", "Refresh creatives", "Consider pausing"],
-            })
-
-        # Detect high CPA anomalies
-        if c.conversions and c.conversions > 0 and cpa > 100:
-            anomaly_idx += 1
-            anomalies.append({
-                "id": f"anomaly_{anomaly_idx}",
-                "detected_at": datetime.now(timezone.utc).isoformat() if hasattr(datetime, 'now') else target_date.isoformat(),
-                "metric": "cpa",
-                "entity_type": "campaign",
-                "entity_id": str(c.id),
-                "entity_name": c.name or f"Campaign {c.id}",
-                "severity": "medium",
-                "direction": "spike",
-                "current_value": round(cpa, 2),
-                "expected_value": 50.0,
-                "description": f"CPA at ${cpa:.2f} is significantly above target",
-                "possible_causes": ["Low conversion rate", "High CPC", "Landing page issues"],
-                "recommended_actions": ["Optimize landing page", "Narrow targeting", "Test new creatives"],
-            })
-
-    # Apply severity filter
     if severity:
         anomalies = [a for a in anomalies if a.get("severity") == severity]
 

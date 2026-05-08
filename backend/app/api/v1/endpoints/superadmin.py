@@ -1750,3 +1750,91 @@ async def credentials_health(request: Request):
         data=sections,
         message="Credential presence check",
     )
+
+
+# =============================================================================
+# Cross-Tenant Anomalies Rollup
+# =============================================================================
+@router.get("/anomalies-rollup", response_model=APIResponse)
+async def get_anomalies_rollup(
+    request: Request,
+    severity: Optional[str] = Query(
+        default=None,
+        description="Filter by severity: critical, high, medium, low",
+    ),
+    limit_per_tenant: int = Query(default=20, ge=1, le=100),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Aggregate anomalies across every tenant in a single backend call.
+
+    Replaces the platform-owner CrossTenantAnomalies page's client-side
+    HTTP fan-out (one request per tenant) — that pattern is fine at
+    ~50 tenants but quadratic in network/RTT cost as the platform
+    grows. Server-side this is N database queries within one async
+    session, no network hops.
+
+    Each anomaly is enriched with tenant_id and tenant_name so the
+    dashboard can group/click without a second lookup.
+    """
+    require_superadmin(request)
+
+    from app.api.v1.endpoints.insights import detect_campaign_anomalies
+
+    target_date = date.today()
+
+    tenants_result = await db.execute(
+        select(Tenant.id, Tenant.name).order_by(Tenant.id)
+    )
+    tenants = [{"id": row[0], "name": row[1]} for row in tenants_result.all()]
+
+    rollup: List[dict] = []
+    by_tenant: dict = {}
+
+    for t in tenants:
+        try:
+            anomalies = await detect_campaign_anomalies(db, t["id"], target_date)
+        except SQLAlchemyError as exc:
+            logger.warning(
+                "anomalies_rollup_tenant_failed",
+                tenant_id=t["id"],
+                error=str(exc),
+            )
+            continue
+
+        if severity:
+            anomalies = [a for a in anomalies if a.get("severity") == severity]
+
+        anomalies = anomalies[:limit_per_tenant]
+
+        for a in anomalies:
+            rollup.append({
+                **a,
+                "tenant_id": t["id"],
+                "tenant_name": t["name"],
+            })
+
+        by_tenant[t["id"]] = {
+            "tenant_name": t["name"],
+            "count": len(anomalies),
+        }
+
+    rollup.sort(key=lambda a: a.get("detected_at", ""), reverse=True)
+
+    by_severity = {"critical": 0, "high": 0, "medium": 0, "low": 0}
+    for a in rollup:
+        sev = a.get("severity")
+        if sev in by_severity:
+            by_severity[sev] += 1
+
+    return APIResponse(
+        success=True,
+        data={
+            "date": target_date.isoformat(),
+            "anomalies": rollup,
+            "total": len(rollup),
+            "tenants_scanned": len(tenants),
+            "by_severity": by_severity,
+            "by_tenant": by_tenant,
+        },
+    )
