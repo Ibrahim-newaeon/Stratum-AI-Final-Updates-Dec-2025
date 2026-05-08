@@ -195,7 +195,7 @@ export default function NewsletterCampaigns() {
           )}
         >
           {STATUS_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value} className="bg-[#1a1a2e] text-foreground">
+            <option key={opt.value} value={opt.value} className="bg-card text-foreground">
               {opt.label}
             </option>
           ))}
@@ -307,7 +307,7 @@ export default function NewsletterCampaigns() {
                           <button
                             onClick={() => handleSend(campaign)}
                             disabled={sendCampaign.isPending}
-                            className="p-2 rounded-lg text-primary hover:text-[#00b5ad] hover:bg-primary/10 transition-colors disabled:opacity-40"
+                            className="p-2 rounded-lg text-primary hover:text-primary/90 hover:bg-primary/10 transition-colors disabled:opacity-40"
                             title="Send"
                           >
                             <PaperAirplaneIcon className="h-4 w-4" />

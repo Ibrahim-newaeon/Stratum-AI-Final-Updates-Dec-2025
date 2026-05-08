@@ -20,11 +20,11 @@ export default function ComplianceDashboard() {
   const [activeTab, setActiveTab] = useState<'audit' | 'rbac' | 'gdpr'>('audit');
 
   return (
-    <div className="min-h-screen bg-[#050B18] text-white p-6">
+    <div className="min-h-screen bg-background text-white p-6">
       <div className="max-w-7xl mx-auto">
         <header className="mb-8">
           <h1 className="text-3xl font-bold flex items-center gap-3">
-            <ShieldCheckIcon className="w-8 h-8 text-[#00F5FF]" />
+            <ShieldCheckIcon className="w-8 h-8 text-primary" />
             Compliance & Governance
           </h1>
           <p className="text-gray-400 mt-2">Audit logs, role-based access control, and data retention policies</p>
@@ -285,7 +285,7 @@ function RBACPanel() {
               <span className="text-xs text-gray-500 font-medium">Permissions:</span>
               {role.permissions.map((p: any, i: number) => (
                 <div key={i} className="text-xs text-gray-400 flex items-center gap-1">
-                  <span className="w-1 h-1 rounded-full bg-[#00F5FF]" />
+                  <span className="w-1 h-1 rounded-full bg-primary" />
                   {p.resource_type} → {p.action}
                 </div>
               ))}

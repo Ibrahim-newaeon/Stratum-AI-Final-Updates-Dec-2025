@@ -85,6 +85,7 @@ export default function FunnelAnalysis() {
 
   return (
     <div className="min-h-screen bg-background text-foreground p-6">
+    <div className="min-h-screen bg-background text-white p-6">
       <div className="max-w-6xl mx-auto">
         <header className="mb-8">
           <h1 className="text-3xl font-bold flex items-center gap-3">
@@ -147,6 +148,10 @@ export default function FunnelAnalysis() {
                     </option>
                   )
                 )}
+                <option value="" className="bg-card">Select event...</option>
+                {['impression', 'click', 'landing', 'add_to_cart', 'conversion', 'purchase'].map((opt) => (
+                  <option key={opt} value={opt} className="bg-card">{opt}</option>
+                ))}
               </select>
               {steps.length > 2 && (
                 <button
@@ -163,6 +168,7 @@ export default function FunnelAnalysis() {
             onClick={addStep}
             className="text-sm text-primary flex items-center gap-1 mt-2 hover:underline"
           >
+          <button onClick={addStep} className="text-sm text-primary flex items-center gap-1 mt-2 hover:underline">
             <PlusIcon className="w-4 h-4" /> Add step
           </button>
 
@@ -238,6 +244,9 @@ export default function FunnelAnalysis() {
                               : i === result.steps.length - 1
                                 ? 'bg-success'
                                 : 'bg-info'
+                            i === 0 ? 'bg-primary' :
+                            i === result.steps.length - 1 ? 'bg-green-400' :
+                            'bg-primary'
                           )}
                           style={{ width: `${widthPct}%` }}
                         >

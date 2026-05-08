@@ -74,6 +74,7 @@ export default function CohortAnalysis() {
 
   return (
     <div className="min-h-screen bg-background text-foreground p-6">
+    <div className="min-h-screen bg-background text-white p-6">
       <div className="max-w-7xl mx-auto">
         <header className="mb-8">
           <h1 className="text-3xl font-bold flex items-center gap-3">
@@ -118,6 +119,19 @@ export default function CohortAnalysis() {
               <option value="monthly" className="bg-card">
                 Monthly
               </option>
+            <label className="block text-sm text-gray-400 mb-1">Metric</label>
+            <select value={metric} onChange={(e) => setMetric(e.target.value)} className="bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white">
+              <option value="retention" className="bg-card">Retention</option>
+              <option value="revenue" className="bg-card">Revenue</option>
+              <option value="conversions" className="bg-card">Conversions</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Period</label>
+            <select value={period} onChange={(e) => setPeriod(e.target.value)} className="bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white">
+              <option value="daily" className="bg-card">Daily</option>
+              <option value="weekly" className="bg-card">Weekly</option>
+              <option value="monthly" className="bg-card">Monthly</option>
             </select>
           </div>
           <div className="flex gap-3">
@@ -236,6 +250,8 @@ export default function CohortAnalysis() {
                           className="absolute bottom-0 left-0 right-0 bg-primary/40 rounded-t"
                           style={{ height: '100%' }}
                         />
+                      <div className="w-full bg-foreground/10 rounded-t relative" style={{ height: `${Math.min(v * 1.5, 100)}%` }}>
+                        <div className="absolute bottom-0 left-0 right-0 bg-primary/40 rounded-t" style={{ height: '100%' }} />
                       </div>
                       <span className="text-xs text-muted-foreground">P{i}</span>
                       <span className="text-xs text-foreground">{v.toFixed(1)}</span>

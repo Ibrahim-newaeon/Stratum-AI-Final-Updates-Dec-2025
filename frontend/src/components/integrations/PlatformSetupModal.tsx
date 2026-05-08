@@ -919,7 +919,7 @@ export function PlatformSetupModal({ platform, onClose, onConnect }: PlatformSet
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-start justify-center z-50 p-4 overflow-y-auto" onClick={onClose}>
       <div
-        className="w-full max-w-2xl my-8 rounded-2xl border border-foreground/10 bg-[#0d0d12] shadow-2xl"
+        className="w-full max-w-2xl my-8 rounded-2xl border border-foreground/10 bg-background shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

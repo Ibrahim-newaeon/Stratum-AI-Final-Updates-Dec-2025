@@ -68,6 +68,7 @@ export default function SQLEditor() {
 
   return (
     <div className="min-h-screen bg-background text-foreground p-6">
+    <div className="min-h-screen bg-background text-white p-6">
       <div className="max-w-7xl mx-auto">
         <header className="mb-8">
           <h1 className="text-3xl font-bold flex items-center gap-3">
@@ -96,6 +97,7 @@ export default function SQLEditor() {
                       <option key={n} value={n} className="bg-card">
                         {n}
                       </option>
+                      <option key={n} value={n} className="bg-card">{n}</option>
                     ))}
                   </select>
                 </div>
@@ -155,6 +157,7 @@ export default function SQLEditor() {
                     onClick={() =>
                       navigator.clipboard.writeText(JSON.stringify(result.rows, null, 2))
                     }
+                    onClick={() => navigator.clipboard.writeText(JSON.stringify(result.rows, null, 2))}
                     className="text-xs text-primary hover:underline flex items-center gap-1"
                   >
                     <DocumentDuplicateIcon className="w-3 h-3" /> Copy JSON
