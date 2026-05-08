@@ -1,37 +1,22 @@
 /**
  * Cross-Tenant Anomalies — Platform Owner page at /console/anomalies.
  *
- * The backend's /insights/anomalies endpoint is tenant-scoped. For a
- * cross-tenant view, fan out client-side: useTenants() to list all
- * tenants, then useQueries() to fetch each tenant's anomalies in
- * parallel, then aggregate.
- *
- * This is fine for ≤50 tenants (the typical Stratum scale). When the
- * platform grows beyond that, swap in a dedicated
- * /superadmin/anomalies-rollup endpoint that aggregates server-side.
- *
- * Composition:
- *   useTenants                       — tenant list
- *   useQueries( useAnomalies × N )   — per-tenant anomaly fetch
+ * Backed by /superadmin/anomalies-rollup, which aggregates every
+ * tenant's anomalies in one backend call (one async session, N
+ * database queries, zero HTTP fan-out). Replaces the prior pattern
+ * of N parallel useAnomalies() requests from the browser, which
+ * was fine at ~50 tenants but quadratic in network cost as we grow.
  */
 
 import { useMemo, useState } from 'react';
-import { useQueries } from '@tanstack/react-query';
-import { apiClient } from '@/api/client';
-import type { AnomaliesData, Anomaly } from '@/api/insights';
-import { useTenants } from '@/api/admin';
+import { useAnomaliesRollup, type CrossTenantAnomaly } from '@/api/superadminAnalytics';
 import { Card } from '@/components/primitives/Card';
 import { DataTable, type DataTableColumn } from '@/components/primitives/DataTable';
 import { StatusPill } from '@/components/primitives/StatusPill';
 import { cn } from '@/lib/utils';
-import { ArrowDown, ArrowUp, Loader2, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, X } from 'lucide-react';
 
 type Severity = 'critical' | 'high' | 'medium' | 'low';
-
-interface EnrichedAnomaly extends Anomaly {
-  tenant_id: number;
-  tenant_name: string;
-}
 
 const SEVERITIES: { value: Severity | 'all'; label: string }[] = [
   { value: 'all', label: 'All' },
@@ -49,59 +34,21 @@ const SEVERITY_VARIANT: Record<Severity, 'unhealthy' | 'degraded' | 'neutral'> =
 };
 
 export default function CrossTenantAnomalies() {
-  const tenantsQuery = useTenants({ limit: 200 });
   const [filter, setFilter] = useState<Severity | 'all'>('all');
-  const [selected, setSelected] = useState<EnrichedAnomaly | null>(null);
+  const [selected, setSelected] = useState<CrossTenantAnomaly | null>(null);
 
-  const tenants = tenantsQuery.data?.items ?? [];
-
-  // Fan out: one useAnomalies query per tenant. Each runs concurrently.
-  const queries = useQueries({
-    queries: tenants.map((t) => ({
-      queryKey: ['superadmin-anomalies-rollup', t.id, 7],
-      queryFn: async () => {
-        const response = await apiClient.get<{ data: AnomaliesData }>(
-          `/insights/anomalies?days=7`,
-          // tenant scope is enforced via header in the existing client
-          // wrapper; for cross-tenant access we override via X-Tenant-Id
-          { headers: { 'X-Tenant-Id': String(t.id) } }
-        );
-        return { tenantId: t.id, tenantName: t.name, data: response.data.data };
-      },
-      staleTime: 60 * 1000,
-      retry: 1,
-    })),
-  });
-
-  const allAnomalies: EnrichedAnomaly[] = useMemo(() => {
-    const rows: EnrichedAnomaly[] = [];
-    for (const q of queries) {
-      if (!q.data) continue;
-      for (const a of q.data.data.anomalies) {
-        rows.push({ ...a, tenant_id: q.data.tenantId, tenant_name: q.data.tenantName });
-      }
-    }
-    rows.sort(
-      (a, b) => new Date(b.detected_at).getTime() - new Date(a.detected_at).getTime()
-    );
-    return rows;
-  }, [queries]);
+  const rollupQuery = useAnomaliesRollup();
+  const rollup = rollupQuery.data;
+  const allAnomalies = rollup?.anomalies ?? [];
 
   const visible = useMemo(
     () => (filter === 'all' ? allAnomalies : allAnomalies.filter((a) => a.severity === filter)),
     [allAnomalies, filter]
   );
 
-  const tallies = useMemo(() => {
-    const t: Record<Severity, number> = { critical: 0, high: 0, medium: 0, low: 0 };
-    for (const a of allAnomalies) t[a.severity] += 1;
-    return t;
-  }, [allAnomalies]);
+  const tallies = rollup?.by_severity ?? { critical: 0, high: 0, medium: 0, low: 0 };
 
-  const stillLoading = queries.some((q) => q.isPending);
-  const loadedCount = queries.filter((q) => !q.isPending).length;
-
-  const columns: DataTableColumn<EnrichedAnomaly>[] = [
+  const columns: DataTableColumn<CrossTenantAnomaly>[] = [
     {
       id: 'time',
       header: 'Detected',
@@ -125,8 +72,7 @@ export default function CrossTenantAnomalies() {
       header: 'Metric',
       cell: (a) => (
         <span className="font-mono text-xs text-foreground">
-          {a.metric}{' '}
-          <span className="text-muted-foreground">· {a.entity_type}</span>
+          {a.metric} <span className="text-muted-foreground">· {a.entity_type}</span>
         </span>
       ),
       sortable: true,
@@ -142,32 +88,22 @@ export default function CrossTenantAnomalies() {
             a.direction === 'spike' ? 'text-warning' : 'text-info'
           )}
         >
-          {a.direction === 'spike' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
+          {a.direction === 'spike' ? (
+            <ArrowUp className="w-3 h-3" />
+          ) : (
+            <ArrowDown className="w-3 h-3" />
+          )}
           {a.current_value.toLocaleString()}{' '}
-          <span className="text-muted-foreground">vs {a.expected_value.toLocaleString()}</span>
+          {a.expected_value != null && (
+            <span className="text-muted-foreground">vs {a.expected_value.toLocaleString()}</span>
+          )}
         </span>
       ),
     },
     {
-      id: 'zscore',
-      header: 'Z',
-      cell: (a) => (
-        <span className="font-mono tabular-nums text-xs">{a.zscore.toFixed(2)}</span>
-      ),
-      sortable: true,
-      sortAccessor: (a) => Math.abs(a.zscore),
-      cellClassName: 'text-right',
-      headerClassName: 'text-right',
-      hideOnMobile: true,
-    },
-    {
       id: 'severity',
       header: 'Severity',
-      cell: (a) => (
-        <StatusPill variant={SEVERITY_VARIANT[a.severity]}>
-          {a.severity}
-        </StatusPill>
-      ),
+      cell: (a) => <StatusPill variant={SEVERITY_VARIANT[a.severity]}>{a.severity}</StatusPill>,
       sortable: true,
       sortAccessor: (a) => severityWeight(a.severity),
     },
@@ -175,35 +111,20 @@ export default function CrossTenantAnomalies() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <h1 className="text-2xl font-semibold text-foreground tracking-tight">
           Cross-Tenant Anomalies
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          7-day rolling window, aggregated across {tenants.length} tenant
-          {tenants.length === 1 ? '' : 's'}. Click a row for diagnosis + recommended
+          Aggregated across {rollup?.tenants_scanned ?? '—'} tenant
+          {rollup?.tenants_scanned === 1 ? '' : 's'}. Click a row for diagnosis + recommended
           actions.
         </p>
       </div>
 
-      {/* Loading bar */}
-      {stillLoading && tenants.length > 0 && (
-        <Card className="bg-muted/20 border-border/50">
-          <div className="flex items-center gap-3 text-sm text-muted-foreground">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            Fetching anomalies… {loadedCount}/{tenants.length} tenants loaded.
-          </div>
-        </Card>
-      )}
-
-      {/* Severity filter chips */}
       <div className="flex flex-wrap items-center gap-2">
         {SEVERITIES.map((s) => {
-          const count =
-            s.value === 'all'
-              ? allAnomalies.length
-              : tallies[s.value as Severity];
+          const count = s.value === 'all' ? allAnomalies.length : tallies[s.value as Severity];
           const active = filter === s.value;
           return (
             <button
@@ -223,7 +144,9 @@ export default function CrossTenantAnomalies() {
               <span
                 className={cn(
                   'inline-flex items-center justify-center min-w-5 px-1.5 h-5 rounded-full text-[10px] font-bold',
-                  active ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted text-muted-foreground'
+                  active
+                    ? 'bg-primary-foreground/20 text-primary-foreground'
+                    : 'bg-muted text-muted-foreground'
                 )}
               >
                 {count}
@@ -233,44 +156,38 @@ export default function CrossTenantAnomalies() {
         })}
       </div>
 
-      {/* Anomalies table */}
       <Card>
-        <DataTable<EnrichedAnomaly>
+        <DataTable<CrossTenantAnomaly>
           data={visible}
           columns={columns}
           rowKey={(r) => `${r.tenant_id}:${r.id}`}
           onRowClick={(r) => setSelected(r)}
-          loading={stillLoading && allAnomalies.length === 0}
+          loading={rollupQuery.isLoading}
           emptyMessage={
-            filter === 'all'
-              ? 'No anomalies detected in any tenant in the last 7 days.'
-              : `No ${filter} anomalies in the last 7 days.`
+            filter === 'all' ? 'No anomalies detected in any tenant.' : `No ${filter} anomalies.`
           }
           ariaLabel="Cross-tenant anomalies"
         />
       </Card>
 
-      {/* Detail slide-over (simple inline panel) */}
       {selected && <AnomalyDetail anomaly={selected} onClose={() => setSelected(null)} />}
     </div>
   );
 }
 
 interface AnomalyDetailProps {
-  anomaly: EnrichedAnomaly;
+  anomaly: CrossTenantAnomaly;
   onClose: () => void;
 }
 
 function AnomalyDetail({ anomaly, onClose }: AnomalyDetailProps) {
   return (
     <>
-      {/* Backdrop */}
       <div
         aria-hidden="true"
         onClick={onClose}
         className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm animate-fade-in"
       />
-      {/* Panel */}
       <aside
         role="dialog"
         aria-modal="true"
@@ -288,14 +205,13 @@ function AnomalyDetail({ anomaly, onClose }: AnomalyDetailProps) {
               <StatusPill variant={SEVERITY_VARIANT[anomaly.severity]}>
                 {anomaly.severity}
               </StatusPill>
-              <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
-                z = {anomaly.zscore.toFixed(2)}
-              </span>
+              {anomaly.zscore != null && (
+                <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
+                  z = {anomaly.zscore.toFixed(2)}
+                </span>
+              )}
             </div>
-            <h2
-              id="anomaly-detail-title"
-              className="text-lg font-semibold text-foreground"
-            >
+            <h2 id="anomaly-detail-title" className="text-lg font-semibold text-foreground">
               {anomaly.metric} · {anomaly.tenant_name}
             </h2>
             <p className="text-xs text-muted-foreground font-mono mt-0.5">
@@ -339,7 +255,7 @@ function AnomalyDetail({ anomaly, onClose }: AnomalyDetailProps) {
                   Expected
                 </div>
                 <div className="mt-1 text-xl font-semibold tabular-nums text-foreground">
-                  {anomaly.expected_value.toLocaleString()}
+                  {anomaly.expected_value != null ? anomaly.expected_value.toLocaleString() : '—'}
                 </div>
               </div>
             </div>
