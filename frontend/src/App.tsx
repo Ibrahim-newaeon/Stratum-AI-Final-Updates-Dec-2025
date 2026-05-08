@@ -88,6 +88,7 @@ const ConsoleCredentials = lazyWithRetry(() => import('./views/console/Credentia
 const ConsoleCrossTenantAnomalies = lazyWithRetry(
   () => import('./views/console/CrossTenantAnomalies')
 );
+const ConsoleAuditServices = lazyWithRetry(() => import('./views/console/AuditServices'));
 const CDPCalculator = lazyWithRetry(() => import('./views/CDPCalculator'));
 
 // CDP (Customer Data Platform) views
@@ -1896,6 +1897,14 @@ function App() {
                           element={
                             <Suspense fallback={<LoadingSpinner />}>
                               <ConsoleCrossTenantAnomalies />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="audit-services"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <ConsoleAuditServices />
                             </Suspense>
                           }
                         />
