@@ -35,6 +35,11 @@ const NEW_PAGES: { name: string; loader: () => Promise<{ default: unknown }> }[]
     name: 'console/Credentials',
     loader: () => import('@/views/console/Credentials'),
   },
+  // audit_services first slice — read-only operator status pane
+  {
+    name: 'console/AuditServices',
+    loader: () => import('@/views/console/AuditServices'),
+  },
   // Phase H — GDPR data-rights page
   {
     name: 'GDPR',
