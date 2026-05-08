@@ -131,7 +131,7 @@ export default function WhatsAppTemplates() {
               className={cn(
                 'px-3 py-1.5 rounded-lg text-sm transition-colors',
                 categoryFilter === cat
-                  ? 'bg-[#25D366] text-foreground'
+                  ? 'bg-success text-foreground'
                   : 'bg-muted/50 text-gray-400 hover:text-foreground'
               )}
             >
@@ -148,7 +148,7 @@ export default function WhatsAppTemplates() {
               className={cn(
                 'px-3 py-1.5 rounded-lg text-sm transition-colors',
                 statusFilter === status
-                  ? 'bg-[#25D366] text-foreground'
+                  ? 'bg-success text-foreground'
                   : 'bg-muted/50 text-gray-400 hover:text-foreground'
               )}
             >
@@ -245,7 +245,7 @@ export default function WhatsAppTemplates() {
                   Preview
                 </button>
                 {template.status === 'approved' && (
-                  <button className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-[#25D366]/20 text-[#25D366] rounded-lg hover:bg-[#25D366]/30 transition-colors text-sm">
+                  <button className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-success/20 text-success rounded-lg hover:bg-success/30 transition-colors text-sm">
                     <PaperAirplaneIcon className="w-4 h-4" />
                     Use
                   </button>
@@ -398,7 +398,7 @@ function CreateTemplateModal({
                     name: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '_'),
                   })
                 }
-                className="w-full px-4 py-3 bg-background border border-foreground/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
+                className="w-full px-4 py-3 bg-background border border-foreground/10 rounded-xl focus:border-success/50 focus:outline-none"
               />
               <span className="text-xs text-gray-500">Lowercase, underscores only</span>
             </div>
@@ -410,7 +410,7 @@ function CreateTemplateModal({
                 onChange={(e) =>
                   setFormData({ ...formData, category: e.target.value as Template['category'] })
                 }
-                className="w-full px-4 py-3 bg-background border border-foreground/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
+                className="w-full px-4 py-3 bg-background border border-foreground/10 rounded-xl focus:border-success/50 focus:outline-none"
               >
                 <option value="UTILITY">Utility - Transactional</option>
                 <option value="MARKETING">Marketing - Promotional</option>
@@ -424,7 +424,7 @@ function CreateTemplateModal({
             <select
               value={formData.language}
               onChange={(e) => setFormData({ ...formData, language: e.target.value })}
-              className="w-full px-4 py-3 bg-background border border-foreground/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
+              className="w-full px-4 py-3 bg-background border border-foreground/10 rounded-xl focus:border-success/50 focus:outline-none"
             >
               <option value="en">English</option>
               <option value="ar">Arabic</option>
@@ -456,7 +456,7 @@ function CreateTemplateModal({
                   className={cn(
                     'flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm transition-colors',
                     formData.header_type === opt.value
-                      ? 'bg-[#25D366] text-foreground'
+                      ? 'bg-success text-foreground'
                       : 'bg-card text-gray-400 hover:text-foreground'
                   )}
                 >
@@ -472,7 +472,7 @@ function CreateTemplateModal({
                 maxLength={60}
                 value={formData.header_content}
                 onChange={(e) => setFormData({ ...formData, header_content: e.target.value })}
-                className="w-full px-4 py-3 bg-background border border-foreground/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
+                className="w-full px-4 py-3 bg-background border border-foreground/10 rounded-xl focus:border-success/50 focus:outline-none"
               />
             )}
             {['IMAGE', 'VIDEO', 'DOCUMENT'].includes(formData.header_type) && (
@@ -481,7 +481,7 @@ function CreateTemplateModal({
                 placeholder="Media URL for preview"
                 value={formData.header_content}
                 onChange={(e) => setFormData({ ...formData, header_content: e.target.value })}
-                className="w-full px-4 py-3 bg-background border border-foreground/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
+                className="w-full px-4 py-3 bg-background border border-foreground/10 rounded-xl focus:border-success/50 focus:outline-none"
               />
             )}
           </div>
@@ -496,7 +496,7 @@ function CreateTemplateModal({
               placeholder="Hi {{1}}, your order #{{2}} has been confirmed..."
               value={formData.body_text}
               onChange={(e) => setFormData({ ...formData, body_text: e.target.value })}
-              className="w-full px-4 py-3 bg-background border border-foreground/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none resize-none"
+              className="w-full px-4 py-3 bg-background border border-foreground/10 rounded-xl focus:border-success/50 focus:outline-none resize-none"
             />
             <span className="text-xs text-gray-500">
               Use {'{{1}}'}, {'{{2}}'} for variables. {formData.body_text.length}/1024
@@ -514,7 +514,7 @@ function CreateTemplateModal({
               placeholder="e.g., Reply STOP to unsubscribe"
               value={formData.footer_text}
               onChange={(e) => setFormData({ ...formData, footer_text: e.target.value })}
-              className="w-full px-4 py-3 bg-background border border-foreground/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
+              className="w-full px-4 py-3 bg-background border border-foreground/10 rounded-xl focus:border-success/50 focus:outline-none"
             />
           </div>
 
@@ -647,7 +647,7 @@ function TemplatePreviewModal({ template, onClose }: { template: Template; onClo
 
         {/* WhatsApp Style Preview */}
         <div
-          className="bg-[#0b141a] rounded-2xl p-4 mb-6"
+          className="bg-background rounded-2xl p-4 mb-6"
           style={{
             backgroundImage:
               'url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAFklEQVR42mNkYPhfz0AEYBxVOGoFAC6pBAt7z0yRAAAAAElFTkSuQmCC")',
@@ -660,7 +660,7 @@ function TemplatePreviewModal({ template, onClose }: { template: Template; onClo
               </div>
             )}
             {template.header_type === 'IMAGE' && (
-              <div className="bg-[#1a3a34] rounded-lg h-32 flex items-center justify-center mb-2">
+              <div className="bg-success/10 rounded-lg h-32 flex items-center justify-center mb-2">
                 <PhotoIcon className="w-8 h-8 text-gray-400" />
               </div>
             )}

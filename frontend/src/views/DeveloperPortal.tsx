@@ -105,11 +105,11 @@ export default function DeveloperPortal() {
   const [activeTab, setActiveTab] = useState<'keys' | 'usage' | 'webhooks' | 'sdk'>('keys');
 
   return (
-    <div className="min-h-screen bg-[#050B18] text-white p-6">
+    <div className="min-h-screen bg-background text-white p-6">
       <div className="max-w-7xl mx-auto">
         <header className="mb-8">
           <h1 className="text-3xl font-bold flex items-center gap-3">
-            <CodeBracketIcon className="w-8 h-8 text-[#00F5FF]" />
+            <CodeBracketIcon className="w-8 h-8 text-primary" />
             Developer Portal
           </h1>
           <p className="text-gray-400 mt-2">API keys, usage analytics, webhook management, and SDK quickstart</p>
@@ -213,7 +213,7 @@ function UsagePanel() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: '24h Requests', value: usage.total_requests_24h.toLocaleString(), color: 'text-white' },
-          { label: '30d Requests', value: usage.total_requests_30d.toLocaleString(), color: 'text-[#00F5FF]' },
+          { label: '30d Requests', value: usage.total_requests_30d.toLocaleString(), color: 'text-primary' },
           { label: 'Rate Limit', value: `${usage.rate_limit_per_minute}/min`, color: 'text-green-400' },
           { label: 'Error Rate', value: `${(usage.daily_trend.reduce((a, d) => a + d.errors, 0) / usage.daily_trend.reduce((a, d) => a + d.requests, 0) * 100).toFixed(2)}%`, color: 'text-yellow-400' },
         ].map((m) => (
@@ -252,7 +252,7 @@ function UsagePanel() {
             <div key={i} className="flex items-center gap-4">
               <div className="w-48 text-sm text-gray-300 truncate">{ep.endpoint}</div>
               <div className="flex-1 bg-foreground/10 rounded-full h-2 overflow-hidden">
-                <div className="h-full bg-[#00F5FF]/50 rounded-full" style={{ width: `${(ep.requests / usage.endpoint_breakdown[0].requests) * 100}%` }} />
+                <div className="h-full bg-primary/50 rounded-full" style={{ width: `${(ep.requests / usage.endpoint_breakdown[0].requests) * 100}%` }} />
               </div>
               <div className="w-20 text-right text-sm text-gray-400">{ep.requests.toLocaleString()}</div>
               <div className="w-20 text-right text-xs text-gray-500">{ep.avg_latency_ms}ms</div>
@@ -358,7 +358,7 @@ function WebhooksPanel() {
             </div>
           </div>
           <div className="flex gap-2">
-            <button onClick={() => testWebhook(wh.id)} className="text-xs bg-foreground/[0.03] hover:bg-foreground/[0.06] text-[#00F5FF] px-3 py-1.5 rounded-lg transition-colors">Test</button>
+            <button onClick={() => testWebhook(wh.id)} className="text-xs bg-foreground/[0.03] hover:bg-foreground/[0.06] text-primary px-3 py-1.5 rounded-lg transition-colors">Test</button>
             <button onClick={() => setWebhooks(webhooks.filter((w) => w.id !== wh.id))} className="text-xs bg-foreground/[0.03] hover:bg-foreground/[0.06] text-red-400 px-3 py-1.5 rounded-lg transition-colors">Delete</button>
           </div>
         </div>
@@ -415,7 +415,7 @@ function SDKPanel() {
       <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6">
         <h3 className="text-lg font-semibold mb-4">API Reference</h3>
         <p className="text-sm text-gray-400 mb-4">Interactive documentation is available at:</p>
-        <a href="https://api.stratumai.app/docs" target="_blank" rel="noopener noreferrer" className="text-[#00F5FF] hover:underline text-sm">
+        <a href="https://api.stratumai.app/docs" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-sm">
           https://api.stratumai.app/docs
         </a>
         <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">

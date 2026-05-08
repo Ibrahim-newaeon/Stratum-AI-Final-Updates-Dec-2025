@@ -154,14 +154,14 @@ export default function TenantSwitcher() {
         className={cn(
           'flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors text-sm',
           isOpen
-            ? 'bg-foreground/10 border-[#00c7be]/30 text-white'
+            ? 'bg-foreground/10 border-primary/30 text-white'
             : 'bg-foreground/5 border-foreground/10 text-foreground/80 hover:bg-foreground/10 hover:border-foreground/20'
         )}
       >
-        <BuildingOffice2Icon className="w-4 h-4 text-[#00c7be] flex-shrink-0" />
+        <BuildingOffice2Icon className="w-4 h-4 text-info flex-shrink-0" />
         <span className="truncate max-w-[140px] font-medium">{activeName}</span>
         {isSwitching ? (
-          <ArrowsRightLeftIcon className="w-4 h-4 text-[#00c7be] animate-spin flex-shrink-0" />
+          <ArrowsRightLeftIcon className="w-4 h-4 text-info animate-spin flex-shrink-0" />
         ) : (
           <ChevronUpDownIcon className="w-4 h-4 text-foreground/40 flex-shrink-0" />
         )}
@@ -198,20 +198,20 @@ export default function TenantSwitcher() {
                   className={cn(
                     'w-full flex items-center gap-3 px-4 py-3 text-left transition-colors',
                     isActive
-                      ? 'bg-[#00c7be]/10'
+                      ? 'bg-info/10'
                       : 'hover:bg-foreground/5'
                   )}
                 >
                   <div
                     className={cn(
                       'w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0',
-                      isActive ? 'bg-[#00c7be]/20' : 'bg-foreground/5'
+                      isActive ? 'bg-info/20' : 'bg-foreground/5'
                     )}
                   >
                     <span
                       className={cn(
                         'text-xs font-bold',
-                        isActive ? 'text-[#00c7be]' : 'text-foreground/50'
+                        isActive ? 'text-info' : 'text-foreground/50'
                       )}
                     >
                       {t.tenant_name
@@ -227,7 +227,7 @@ export default function TenantSwitcher() {
                     <p
                       className={cn(
                         'text-sm font-medium truncate',
-                        isActive ? 'text-[#00c7be]' : 'text-foreground/90'
+                        isActive ? 'text-info' : 'text-foreground/90'
                       )}
                     >
                       {t.tenant_name}
@@ -253,7 +253,7 @@ export default function TenantSwitcher() {
                         Default
                       </span>
                     )}
-                    {isActive && <CheckIcon className="w-4 h-4 text-[#00c7be]" />}
+                    {isActive && <CheckIcon className="w-4 h-4 text-info" />}
                   </div>
                 </button>
               );

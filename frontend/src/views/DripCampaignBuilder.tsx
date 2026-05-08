@@ -294,7 +294,7 @@ export default function DripCampaignBuilder() {
   return (
     <div className="h-screen flex bg-background text-foreground">
       {/* Left Sidebar — Node Palette */}
-      <div className="w-64 border-r border-foreground/10 flex flex-col bg-[#0A1628]">
+      <div className="w-64 border-r border-foreground/10 flex flex-col bg-card">
         <div className="p-4 border-b border-foreground/10">
           <h2 className="font-semibold text-sm flex items-center gap-2">
             <Workflow className="w-4 h-4 text-primary" />
@@ -342,7 +342,7 @@ export default function DripCampaignBuilder() {
             className="w-full bg-foreground/[0.03] border border-foreground/10 rounded-lg px-2 py-1.5 text-xs text-foreground"
           >
             {TRIGGER_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value} className="bg-[#0A1628]">
+              <option key={opt.value} value={opt.value} className="bg-card">
                 {opt.label}
               </option>
             ))}
@@ -353,7 +353,7 @@ export default function DripCampaignBuilder() {
       {/* Center — Canvas */}
       <div className="flex-1 flex flex-col">
         {/* Top Bar */}
-        <div className="h-14 border-b border-foreground/10 flex items-center justify-between px-4 bg-[#0A1628]/50">
+        <div className="h-14 border-b border-foreground/10 flex items-center justify-between px-4 bg-card/50">
           <div className="flex items-center gap-3">
             <input
               value={sequenceName}
@@ -482,7 +482,7 @@ export default function DripCampaignBuilder() {
                 style={{ left: node.position.x, top: node.position.y }}
                 onClick={() => handleNodeClick(node.id)}
               >
-                <div className="flex items-center gap-2 bg-[#0A1628] border border-foreground/[0.08] hover:border-foreground/[0.15] rounded-xl px-3 py-2 shadow-lg shadow-black/20 min-w-[160px]">
+                <div className="flex items-center gap-2 bg-card border border-foreground/[0.08] hover:border-foreground/[0.15] rounded-xl px-3 py-2 shadow-lg shadow-black/20 min-w-[160px]">
                   <div
                     className={cn(
                       'w-8 h-8 rounded-lg flex items-center justify-center shrink-0',
@@ -532,7 +532,7 @@ export default function DripCampaignBuilder() {
       </div>
 
       {/* Right Sidebar — Node Config */}
-      <div className="w-72 border-l border-foreground/10 bg-[#0A1628] flex flex-col">
+      <div className="w-72 border-l border-foreground/10 bg-card flex flex-col">
         <div className="p-4 border-b border-foreground/10">
           <h2 className="font-semibold text-sm">
             {selectedNodeData ? 'Node Configuration' : 'Sequence Settings'}

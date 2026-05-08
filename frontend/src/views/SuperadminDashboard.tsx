@@ -371,7 +371,7 @@ export default function SuperadminDashboard() {
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 motion-enter">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Crown className="w-7 h-7 text-[#F5A623]" />
+            <Crown className="w-7 h-7 text-warning" />
             Superadmin Dashboard
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -503,10 +503,10 @@ export default function SuperadminDashboard() {
             {/* At Risk Tenants */}
             <div className="rounded-xl border bg-card p-5 shadow-card motion-card">
               <h3 className="font-semibold mb-4 flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-[#F5A623]" />
+                <AlertTriangle className="w-5 h-5 text-warning" />
                 Tenants at Churn Risk
                 {showPriceMetrics && churnRisks.length > 0 && (
-                  <span className="ml-auto text-sm font-normal text-[#F5A623]">
+                  <span className="ml-auto text-sm font-normal text-warning">
                     ${churnRisks.reduce((sum, r) => sum + r.mrr_at_risk, 0).toLocaleString()}/mo at risk
                   </span>
                 )}
@@ -528,7 +528,7 @@ export default function SuperadminDashboard() {
                       <div className="text-right">
                         <p className={cn(
                           'font-bold',
-                          risk.risk_score >= 0.7 ? 'text-[#E85D5D]' : risk.risk_score >= 0.5 ? 'text-[#F5A623]' : 'text-[#27C39D]'
+                          risk.risk_score >= 0.7 ? 'text-danger' : risk.risk_score >= 0.5 ? 'text-warning' : 'text-success'
                         )}>
                           {(risk.risk_score * 100).toFixed(0)}% risk
                         </p>
@@ -543,7 +543,7 @@ export default function SuperadminDashboard() {
             {/* System Health Summary */}
             <div className="rounded-xl border bg-card p-5 shadow-card motion-card">
               <h3 className="font-semibold mb-4 flex items-center gap-2">
-                <Activity className="w-5 h-5 text-[#27C39D]" />
+                <Activity className="w-5 h-5 text-success" />
                 System Health
               </h3>
               {systemHealth ? (
@@ -587,15 +587,15 @@ export default function SuperadminDashboard() {
                   key={alert.id}
                   className={cn(
                     'flex items-start gap-3 p-3 rounded-lg border motion-enter',
-                    alert.type === 'error' && 'bg-[#E85D5D]/5 border-red-500/20',
-                    alert.type === 'warning' && 'bg-[#F5A623]/5 border-amber-500/20',
-                    alert.type === 'info' && 'bg-[#5B8DEF]/5 border-blue-500/20'
+                    alert.type === 'error' && 'bg-danger/5 border-red-500/20',
+                    alert.type === 'warning' && 'bg-warning/5 border-amber-500/20',
+                    alert.type === 'info' && 'bg-info/5 border-blue-500/20'
                   )}
                   style={{ animationDelay: `${idx * 30}ms` }}
                 >
-                  {alert.type === 'error' && <XCircle className="w-5 h-5 text-[#E85D5D] flex-shrink-0" />}
-                  {alert.type === 'warning' && <AlertTriangle className="w-5 h-5 text-[#F5A623] flex-shrink-0" />}
-                  {alert.type === 'info' && <CheckCircle2 className="w-5 h-5 text-[#5B8DEF] flex-shrink-0" />}
+                  {alert.type === 'error' && <XCircle className="w-5 h-5 text-danger flex-shrink-0" />}
+                  {alert.type === 'warning' && <AlertTriangle className="w-5 h-5 text-warning flex-shrink-0" />}
+                  {alert.type === 'info' && <CheckCircle2 className="w-5 h-5 text-info flex-shrink-0" />}
                   <div className="flex-1">
                     <p className="text-sm font-medium">{alert.message}</p>
                     <p className="text-xs text-muted-foreground mt-1">
@@ -643,16 +643,16 @@ export default function SuperadminDashboard() {
                         key={tenant.id}
                         className={cn(
                           'flex items-center justify-between p-3 rounded-lg border motion-enter',
-                          isOverLimit ? 'bg-[#E85D5D]/5 border-red-500/20' :
-                          isNearLimit ? 'bg-[#F5A623]/5 border-amber-500/20' :
-                          'bg-[#5B8DEF]/5 border-blue-500/20'
+                          isOverLimit ? 'bg-danger/5 border-red-500/20' :
+                          isNearLimit ? 'bg-warning/5 border-amber-500/20' :
+                          'bg-info/5 border-blue-500/20'
                         )}
                         style={{ animationDelay: `${idx * 40}ms` }}
                       >
                         <div className="flex items-center gap-3">
                           <div className={cn(
                             'w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-xs',
-                            isOverLimit ? 'bg-[#E85D5D]' : isNearLimit ? 'bg-[#F5A623]' : 'bg-[#5B8DEF]'
+                            isOverLimit ? 'bg-danger' : isNearLimit ? 'bg-warning' : 'bg-info'
                           )}>
                             {tenant.name.charAt(0)}
                           </div>
@@ -666,7 +666,7 @@ export default function SuperadminDashboard() {
                             <Users className="w-4 h-4 text-muted-foreground" />
                             <span className={cn(
                               'font-medium',
-                              isOverLimit ? 'text-[#E85D5D]' : isNearLimit ? 'text-[#F5A623]' : 'text-[#5B8DEF]'
+                              isOverLimit ? 'text-danger' : isNearLimit ? 'text-warning' : 'text-info'
                             )}>
                               {tenant.users_count}/{tenant.users_limit}
                             </span>
@@ -675,7 +675,7 @@ export default function SuperadminDashboard() {
                             <div
                               className={cn(
                                 'h-full rounded-full transition-[width]',
-                                isOverLimit ? 'bg-[#E85D5D]' : isNearLimit ? 'bg-[#F5A623]' : 'bg-[#5B8DEF]'
+                                isOverLimit ? 'bg-danger' : isNearLimit ? 'bg-warning' : 'bg-info'
                               )}
                               style={{ width: `${Math.min(100, usersPct)}%` }}
                             />
@@ -786,8 +786,8 @@ export default function SuperadminDashboard() {
                             <div
                               className={cn(
                                 'h-full rounded-full',
-                                (tenant.users_count / tenant.users_limit) >= 0.9 ? 'bg-[#E85D5D]' :
-                                (tenant.users_count / tenant.users_limit) >= 0.7 ? 'bg-[#F5A623]' : 'bg-[#27C39D]'
+                                (tenant.users_count / tenant.users_limit) >= 0.9 ? 'bg-danger' :
+                                (tenant.users_count / tenant.users_limit) >= 0.7 ? 'bg-warning' : 'bg-success'
                               )}
                               style={{ width: `${Math.min(100, (tenant.users_count / tenant.users_limit) * 100)}%` }}
                             />
@@ -801,8 +801,8 @@ export default function SuperadminDashboard() {
                         {tenant.churn_risk !== null ? (
                           <span className={cn(
                             'font-medium',
-                            tenant.churn_risk >= 0.7 ? 'text-[#E85D5D]' :
-                            tenant.churn_risk >= 0.4 ? 'text-[#F5A623]' : 'text-[#27C39D]'
+                            tenant.churn_risk >= 0.7 ? 'text-danger' :
+                            tenant.churn_risk >= 0.4 ? 'text-warning' : 'text-success'
                           )}>
                             {(tenant.churn_risk * 100).toFixed(0)}%
                           </span>
@@ -818,7 +818,7 @@ export default function SuperadminDashboard() {
                           <button className="p-1.5 rounded hover:bg-muted" title="Edit" aria-label="Edit tenant">
                             <Edit className="w-4 h-4" />
                           </button>
-                          <button className="p-1.5 rounded hover:bg-muted text-[#E85D5D]" title="Suspend" aria-label="Suspend tenant">
+                          <button className="p-1.5 rounded hover:bg-muted text-danger" title="Suspend" aria-label="Suspend tenant">
                             <Ban className="w-4 h-4" />
                           </button>
                         </div>
@@ -886,7 +886,7 @@ export default function SuperadminDashboard() {
                     style={{ animationDelay: `${idx * 30}ms` }}
                   >
                     <div className="flex items-center gap-3">
-                      <div className={cn('w-2 h-2 rounded-full', service.status === 'healthy' ? 'bg-[#27C39D]' : 'bg-[#E85D5D]')} />
+                      <div className={cn('w-2 h-2 rounded-full', service.status === 'healthy' ? 'bg-success' : 'bg-danger')} />
                       <span className="font-medium">{service.name}</span>
                     </div>
                     <div className="flex items-center gap-4 text-sm">
@@ -908,7 +908,7 @@ export default function SuperadminDashboard() {
             {systemHealth && (
               <div className="rounded-xl border bg-card p-6 shadow-card motion-card">
                 <h3 className="font-semibold mb-4 flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-[#F5A623]" />
+                  <Zap className="w-5 h-5 text-warning" />
                   API Metrics (24h)
                 </h3>
                 <div className="grid grid-cols-2 gap-4 mb-4">
@@ -919,7 +919,7 @@ export default function SuperadminDashboard() {
                   <div className="p-4 rounded-lg bg-muted/30">
                     <p className={cn(
                       'text-2xl font-bold',
-                      systemHealth.api.error_rate < 1 ? 'text-[#27C39D]' : 'text-[#E85D5D]'
+                      systemHealth.api.error_rate < 1 ? 'text-success' : 'text-danger'
                     )}>
                       {systemHealth.api.error_rate}%
                     </p>
@@ -944,12 +944,12 @@ export default function SuperadminDashboard() {
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
               {[
-                { icon: Database, label: 'Backup Database', color: 'text-[#5B8DEF]' },
-                { icon: RefreshCw, label: 'Clear Cache', color: 'text-[#27C39D]' },
-                { icon: Key, label: 'Rotate Keys', color: 'text-[#F5A623]' },
+                { icon: Database, label: 'Backup Database', color: 'text-info' },
+                { icon: RefreshCw, label: 'Clear Cache', color: 'text-success' },
+                { icon: Key, label: 'Rotate Keys', color: 'text-warning' },
                 { icon: Globe, label: 'CDN Purge', color: 'text-purple-500' },
                 { icon: Activity, label: 'Health Check', color: 'text-cyan-500' },
-                { icon: Shield, label: 'Security Scan', color: 'text-[#E85D5D]' },
+                { icon: Shield, label: 'Security Scan', color: 'text-danger' },
               ].map((action, idx) => (
                 <button
                   key={idx}
@@ -973,12 +973,12 @@ export default function SuperadminDashboard() {
           <div className={cn('grid grid-cols-1 gap-4', showPriceMetrics ? 'md:grid-cols-3' : 'md:grid-cols-2')}>
             <div className="rounded-xl border bg-card p-5 shadow-card motion-card">
               <p className="text-muted-foreground text-sm mb-2">Tenants at Risk</p>
-              <p className="text-3xl font-bold text-[#E85D5D]">{churnRisks.length}</p>
+              <p className="text-3xl font-bold text-danger">{churnRisks.length}</p>
             </div>
             {showPriceMetrics && (
             <div className="rounded-xl border bg-card p-5 shadow-card motion-card">
               <p className="text-muted-foreground text-sm mb-2">MRR at Risk</p>
-              <p className="text-3xl font-bold text-[#F5A623]">
+              <p className="text-3xl font-bold text-warning">
                 {formatCurrency(churnRisks.reduce((sum, r) => sum + r.mrr_at_risk, 0))}
               </p>
             </div>
@@ -996,7 +996,7 @@ export default function SuperadminDashboard() {
           {/* Churn Risk List */}
           {churnRisks.length === 0 ? (
             <div className="rounded-xl border bg-card p-8 text-center shadow-card motion-card">
-              <CheckCircle2 className="w-12 h-12 text-[#27C39D] mx-auto mb-4" />
+              <CheckCircle2 className="w-12 h-12 text-success mx-auto mb-4" />
               <p className="text-lg font-medium">All Clear!</p>
               <p className="text-muted-foreground">No tenants are at high churn risk at this time.</p>
             </div>
@@ -1016,7 +1016,7 @@ export default function SuperadminDashboard() {
                     <div className="text-right">
                       <p className={cn(
                         'text-2xl font-bold motion-delta',
-                        risk.risk_score >= 0.7 ? 'text-[#E85D5D]' : risk.risk_score >= 0.5 ? 'text-[#F5A623]' : 'text-[#27C39D]'
+                        risk.risk_score >= 0.7 ? 'text-danger' : risk.risk_score >= 0.5 ? 'text-warning' : 'text-success'
                       )}>
                         {(risk.risk_score * 100).toFixed(0)}%
                       </p>
@@ -1030,7 +1030,7 @@ export default function SuperadminDashboard() {
                       <ul className="space-y-2">
                         {risk.risk_factors.map((factor, i) => (
                           <li key={i} className="flex items-center gap-2 text-sm motion-enter" style={{ animationDelay: `${i * 30}ms` }}>
-                            <AlertCircle className="w-4 h-4 text-[#F5A623] flex-shrink-0" />
+                            <AlertCircle className="w-4 h-4 text-warning flex-shrink-0" />
                             {factor}
                           </li>
                         ))}
@@ -1089,9 +1089,9 @@ export default function SuperadminDashboard() {
             <>
               <div className={cn('grid grid-cols-1 gap-4', showPriceMetrics ? 'md:grid-cols-4' : 'md:grid-cols-2')}>
                 {showPriceMetrics && (
-                <div className="p-5 rounded-xl bg-[#27C39D]/10 border border-green-500/20 shadow-card motion-card">
+                <div className="p-5 rounded-xl bg-success/10 border border-green-500/20 shadow-card motion-card">
                   <p className="text-sm text-muted-foreground">MRR</p>
-                  <p className="text-3xl font-bold text-[#27C39D]">
+                  <p className="text-3xl font-bold text-success">
                     {revenueMetrics ? formatCurrency(revenueMetrics.mrr) : '$0'}
                   </p>
                   <p className="text-xs text-green-600 flex items-center gap-1 mt-2">
@@ -1108,18 +1108,18 @@ export default function SuperadminDashboard() {
                   </p>
                 </div>
                 )}
-                <div className="p-5 rounded-xl bg-[#5B8DEF]/10 border border-blue-500/20 shadow-card motion-card">
+                <div className="p-5 rounded-xl bg-info/10 border border-blue-500/20 shadow-card motion-card">
                   <p className="text-sm text-muted-foreground">Pending</p>
-                  <p className="text-3xl font-bold text-[#5B8DEF]">
+                  <p className="text-3xl font-bold text-info">
                     {formatCurrency(invoices.filter(i => i.status === 'pending').reduce((s, i) => s + i.total, 0))}
                   </p>
                   <p className="text-xs text-muted-foreground mt-2">
                     {invoices.filter(i => i.status === 'pending').length} invoices
                   </p>
                 </div>
-                <div className="p-5 rounded-xl bg-[#F5A623]/10 border border-amber-500/20 shadow-card motion-card">
+                <div className="p-5 rounded-xl bg-warning/10 border border-amber-500/20 shadow-card motion-card">
                   <p className="text-sm text-muted-foreground">Overdue</p>
-                  <p className="text-3xl font-bold text-[#F5A623]">
+                  <p className="text-3xl font-bold text-warning">
                     {formatCurrency(invoices.filter(i => i.status === 'overdue').reduce((s, i) => s + i.total, 0))}
                   </p>
                   <p className="text-xs text-amber-600 mt-2">
@@ -1142,8 +1142,8 @@ export default function SuperadminDashboard() {
                         <div className={cn(
                           'w-3 h-3 rounded-full',
                           plan.tier === 'enterprise' ? 'bg-purple-500' :
-                          plan.tier === 'professional' ? 'bg-[#5B8DEF]' :
-                          plan.tier === 'starter' ? 'bg-[#27C39D]' : 'bg-gray-500'
+                          plan.tier === 'professional' ? 'bg-info' :
+                          plan.tier === 'starter' ? 'bg-success' : 'bg-gray-500'
                         )} />
                         <span className="font-medium">{plan.display_name || plan.name}</span>
                       </div>
@@ -1202,7 +1202,7 @@ export default function SuperadminDashboard() {
                       <td className="py-3 px-4 text-center">
                         <span className={cn(
                           'px-2 py-1 rounded-full text-xs',
-                          plan.is_active !== false ? 'bg-[#27C39D]/10 text-[#27C39D]' : 'bg-gray-500/10 text-gray-500'
+                          plan.is_active !== false ? 'bg-success/10 text-success' : 'bg-gray-500/10 text-gray-500'
                         )}>
                           {plan.is_active !== false ? 'Active' : 'Inactive'}
                         </span>
@@ -1265,9 +1265,9 @@ export default function SuperadminDashboard() {
                         <td className="py-3 px-4 text-center">
                           <span className={cn(
                             'px-2 py-1 rounded-full text-xs',
-                            inv.status === 'paid' ? 'bg-[#27C39D]/10 text-[#27C39D]' :
-                            inv.status === 'pending' ? 'bg-[#5B8DEF]/10 text-[#5B8DEF]' :
-                            inv.status === 'overdue' ? 'bg-[#E85D5D]/10 text-[#E85D5D]' : 'bg-gray-500/10 text-gray-500'
+                            inv.status === 'paid' ? 'bg-success/10 text-success' :
+                            inv.status === 'pending' ? 'bg-info/10 text-info' :
+                            inv.status === 'overdue' ? 'bg-danger/10 text-danger' : 'bg-gray-500/10 text-gray-500'
                           )}>
                             {inv.status}
                           </span>
@@ -1319,9 +1319,9 @@ export default function SuperadminDashboard() {
                         </td>
                         <td className="py-3 px-4">
                           <span className={`px-2 py-0.5 rounded-full text-xs ${
-                            sub.status === 'active' ? 'bg-[#27C39D]/10 text-[#27C39D]' :
-                            sub.status === 'past_due' ? 'bg-[#E85D5D]/10 text-[#E85D5D]' :
-                            sub.status === 'trialing' ? 'bg-[#5B8DEF]/10 text-[#5B8DEF]' :
+                            sub.status === 'active' ? 'bg-success/10 text-success' :
+                            sub.status === 'past_due' ? 'bg-danger/10 text-danger' :
+                            sub.status === 'trialing' ? 'bg-info/10 text-info' :
                             'bg-muted text-muted-foreground'
                           }`}>
                             {sub.status}
@@ -1445,9 +1445,9 @@ export default function SuperadminDashboard() {
                         </td>
                         <td className="py-3 px-4 text-center">
                           {log.success ? (
-                            <CheckCircle2 className="w-4 h-4 text-[#27C39D] mx-auto" />
+                            <CheckCircle2 className="w-4 h-4 text-success mx-auto" />
                           ) : (
-                            <XCircle className="w-4 h-4 text-[#E85D5D] mx-auto" />
+                            <XCircle className="w-4 h-4 text-danger mx-auto" />
                           )}
                         </td>
                         <td className="py-3 px-4 text-muted-foreground text-xs max-w-52 truncate">
@@ -1488,10 +1488,10 @@ function KPICard({
   color?: 'blue' | 'green' | 'amber' | 'red' | 'purple'
 }) {
   const colorClasses = {
-    blue: 'bg-[#5B8DEF]/10 text-[#5B8DEF]',
-    green: 'bg-[#27C39D]/10 text-[#27C39D]',
-    amber: 'bg-[#F5A623]/10 text-[#F5A623]',
-    red: 'bg-[#E85D5D]/10 text-[#E85D5D]',
+    blue: 'bg-info/10 text-info',
+    green: 'bg-success/10 text-success',
+    amber: 'bg-warning/10 text-warning',
+    red: 'bg-danger/10 text-danger',
     purple: 'bg-purple-500/10 text-purple-500',
   }
 
@@ -1507,11 +1507,11 @@ function KPICard({
       {delta !== undefined && (
         <div className="flex items-center gap-1 mt-1">
           {delta >= 0 ? (
-            <ArrowUpRight className="w-4 h-4 text-[#27C39D]" />
+            <ArrowUpRight className="w-4 h-4 text-success" />
           ) : (
-            <ArrowDownRight className="w-4 h-4 text-[#E85D5D]" />
+            <ArrowDownRight className="w-4 h-4 text-danger" />
           )}
-          <span className={cn('text-sm font-medium', delta >= 0 ? 'text-[#27C39D]' : 'text-[#E85D5D]')}>
+          <span className={cn('text-sm font-medium', delta >= 0 ? 'text-success' : 'text-danger')}>
             {delta >= 0 ? '+' : ''}{delta}%
           </span>
           {deltaLabel && <span className="text-xs text-muted-foreground">{deltaLabel}</span>}
@@ -1532,10 +1532,10 @@ function MetricCard({
   status: 'green' | 'amber' | 'red' | 'blue'
 }) {
   const statusColors = {
-    green: 'text-[#27C39D]',
-    amber: 'text-[#F5A623]',
-    red: 'text-[#E85D5D]',
-    blue: 'text-[#5B8DEF]',
+    green: 'text-success',
+    amber: 'text-warning',
+    red: 'text-danger',
+    blue: 'text-info',
   }
 
   return (
@@ -1556,9 +1556,9 @@ function HealthRow({
   status: 'green' | 'amber' | 'red'
 }) {
   const icons = {
-    green: <CheckCircle2 className="w-4 h-4 text-[#27C39D]" />,
-    amber: <AlertCircle className="w-4 h-4 text-[#F5A623]" />,
-    red: <AlertTriangle className="w-4 h-4 text-[#E85D5D]" />,
+    green: <CheckCircle2 className="w-4 h-4 text-success" />,
+    amber: <AlertCircle className="w-4 h-4 text-warning" />,
+    red: <AlertTriangle className="w-4 h-4 text-danger" />,
   }
 
   return (
@@ -1576,8 +1576,8 @@ function PlanBadge({ plan }: { plan: string }) {
   const colors: Record<string, string> = {
     free: 'bg-gray-500/10 text-gray-500',
     trial: 'bg-cyan-500/10 text-cyan-500',
-    starter: 'bg-[#27C39D]/10 text-[#27C39D]',
-    professional: 'bg-[#5B8DEF]/10 text-[#5B8DEF]',
+    starter: 'bg-success/10 text-success',
+    professional: 'bg-info/10 text-info',
     enterprise: 'bg-purple-500/10 text-purple-500',
   }
 
@@ -1590,10 +1590,10 @@ function PlanBadge({ plan }: { plan: string }) {
 
 function HealthBadge({ status }: { status: string }) {
   const colors: Record<string, string> = {
-    healthy: 'bg-[#27C39D]/10 text-[#27C39D]',
-    risk: 'bg-[#F5A623]/10 text-[#F5A623]',
+    healthy: 'bg-success/10 text-success',
+    risk: 'bg-warning/10 text-warning',
     degraded: 'bg-orange-500/10 text-orange-500',
-    critical: 'bg-[#E85D5D]/10 text-[#E85D5D]',
+    critical: 'bg-danger/10 text-danger',
   }
 
   const icons: Record<string, React.ReactNode> = {
@@ -1624,9 +1624,9 @@ function ResourceBar({
 }) {
   const percentage = (value / max) * 100
   const getColor = (v: number) => {
-    if (v >= 80) return 'bg-[#E85D5D]'
-    if (v >= 60) return 'bg-[#F5A623]'
-    return 'bg-[#27C39D]'
+    if (v >= 80) return 'bg-danger'
+    if (v >= 60) return 'bg-warning'
+    return 'bg-success'
   }
 
   return (

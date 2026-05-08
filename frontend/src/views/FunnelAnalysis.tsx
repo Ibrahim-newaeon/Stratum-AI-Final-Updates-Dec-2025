@@ -62,11 +62,11 @@ export default function FunnelAnalysis() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050B18] text-white p-6">
+    <div className="min-h-screen bg-background text-white p-6">
       <div className="max-w-6xl mx-auto">
         <header className="mb-8">
           <h1 className="text-3xl font-bold flex items-center gap-3">
-            <FunnelIcon className="w-8 h-8 text-[#00F5FF]" />
+            <FunnelIcon className="w-8 h-8 text-primary" />
             Funnel Analysis
           </h1>
           <p className="text-gray-400 mt-2">Multi-step conversion funnels with drop-off visualization</p>
@@ -99,9 +99,9 @@ export default function FunnelAnalysis() {
                 onChange={(e) => updateStep(i, e.target.value)}
                 className="flex-1 bg-foreground/[0.03] border border-foreground/10 rounded-lg px-3 py-2 text-white"
               >
-                <option value="" className="bg-[#0A1628]">Select event...</option>
+                <option value="" className="bg-card">Select event...</option>
                 {['impression', 'click', 'landing', 'add_to_cart', 'conversion', 'purchase'].map((opt) => (
-                  <option key={opt} value={opt} className="bg-[#0A1628]">{opt}</option>
+                  <option key={opt} value={opt} className="bg-card">{opt}</option>
                 ))}
               </select>
               {steps.length > 2 && (
@@ -111,7 +111,7 @@ export default function FunnelAnalysis() {
               )}
             </div>
           ))}
-          <button onClick={addStep} className="text-sm text-[#00F5FF] flex items-center gap-1 mt-2 hover:underline">
+          <button onClick={addStep} className="text-sm text-primary flex items-center gap-1 mt-2 hover:underline">
             <PlusIcon className="w-4 h-4" /> Add step
           </button>
 
@@ -151,7 +151,7 @@ export default function FunnelAnalysis() {
                         <div
                           className={cn(
                             'h-full rounded-lg transition-all flex items-center px-3',
-                            i === 0 ? 'bg-[#00F5FF]' :
+                            i === 0 ? 'bg-primary' :
                             i === result.steps.length - 1 ? 'bg-green-400' :
                             'bg-primary'
                           )}

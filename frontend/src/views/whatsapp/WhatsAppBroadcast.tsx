@@ -106,7 +106,7 @@ export default function WhatsAppBroadcast() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#25D366]" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-success" />
       </div>
     );
   }
@@ -199,8 +199,8 @@ export default function WhatsAppBroadcast() {
                   >
                     <td className="p-4">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-[#25D366]/10 rounded-lg">
-                          <DocumentTextIcon className="w-4 h-4 text-[#25D366]" />
+                        <div className="p-2 bg-success/10 rounded-lg">
+                          <DocumentTextIcon className="w-4 h-4 text-success" />
                         </div>
                         <span className="font-medium">{broadcast.template_name}</span>
                       </div>
@@ -227,7 +227,7 @@ export default function WhatsAppBroadcast() {
                         </div>
                         <div className="flex gap-1 h-1.5">
                           <div
-                            className="bg-[#25D366] rounded-full"
+                            className="bg-success rounded-full"
                             style={{ width: `${(broadcast.sent / broadcast.recipients) * 100}%` }}
                           />
                           <div
@@ -298,8 +298,8 @@ function StatCard({
   return (
     <div className="bg-muted/50 rounded-2xl border border-foreground/5 p-5">
       <div className="flex items-center gap-3 mb-3">
-        <div className="p-2 bg-[#25D366]/10 rounded-lg">
-          <Icon className="w-5 h-5 text-[#25D366]" />
+        <div className="p-2 bg-success/10 rounded-lg">
+          <Icon className="w-5 h-5 text-success" />
         </div>
         <span className="text-sm text-gray-400">{title}</span>
       </div>
@@ -433,7 +433,7 @@ function CreateBroadcastModal({
               key={s}
               className={cn(
                 'flex-1 h-1 rounded-full transition-colors',
-                s <= step ? 'bg-[#25D366]' : 'bg-foreground/10'
+                s <= step ? 'bg-success' : 'bg-foreground/10'
               )}
             />
           ))}
@@ -448,7 +448,7 @@ function CreateBroadcastModal({
               <input
                 type="text"
                 placeholder="Search templates..."
-                className="w-full pl-10 pr-4 py-3 bg-background border border-foreground/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
+                className="w-full pl-10 pr-4 py-3 bg-background border border-foreground/10 rounded-xl focus:border-success/50 focus:outline-none"
               />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-80 overflow-y-auto">
@@ -459,7 +459,7 @@ function CreateBroadcastModal({
                   className={cn(
                     'p-4 rounded-xl border text-left transition-colors',
                     selectedTemplate?.id === template.id
-                      ? 'border-[#25D366] bg-[#25D366]/10'
+                      ? 'border-success bg-success/10'
                       : 'border-foreground/10 hover:border-foreground/20 bg-background'
                   )}
                 >
@@ -494,7 +494,7 @@ function CreateBroadcastModal({
                   className={cn(
                     'w-full p-4 rounded-xl border text-left transition-all flex items-center gap-4',
                     selectedSegments.includes(segment.id)
-                      ? 'border-[#25D366] bg-[#25D366]/10'
+                      ? 'border-success bg-success/10'
                       : 'border-foreground/10 hover:border-foreground/20 bg-background'
                   )}
                 >
@@ -502,7 +502,7 @@ function CreateBroadcastModal({
                     className={cn(
                       'w-5 h-5 rounded border-2 flex items-center justify-center transition-colors',
                       selectedSegments.includes(segment.id)
-                        ? 'border-[#25D366] bg-[#25D366]'
+                        ? 'border-success bg-success'
                         : 'border-gray-500'
                     )}
                   >
@@ -564,11 +564,11 @@ function CreateBroadcastModal({
                   className={cn(
                     'flex-1 p-4 rounded-xl border transition-colors',
                     scheduleType === 'now'
-                      ? 'border-[#25D366] bg-[#25D366]/10'
+                      ? 'border-success bg-success/10'
                       : 'border-foreground/10 hover:border-foreground/20'
                   )}
                 >
-                  <PaperAirplaneIcon className="w-6 h-6 mb-2 text-[#25D366]" />
+                  <PaperAirplaneIcon className="w-6 h-6 mb-2 text-success" />
                   <div className="font-medium">Send Now</div>
                   <div className="text-sm text-gray-400">Start immediately</div>
                 </button>
@@ -577,11 +577,11 @@ function CreateBroadcastModal({
                   className={cn(
                     'flex-1 p-4 rounded-xl border transition-colors',
                     scheduleType === 'scheduled'
-                      ? 'border-[#25D366] bg-[#25D366]/10'
+                      ? 'border-success bg-success/10'
                       : 'border-foreground/10 hover:border-foreground/20'
                   )}
                 >
-                  <CalendarIcon className="w-6 h-6 mb-2 text-[#25D366]" />
+                  <CalendarIcon className="w-6 h-6 mb-2 text-success" />
                   <div className="font-medium">Schedule</div>
                   <div className="text-sm text-gray-400">Pick date & time</div>
                 </button>

@@ -153,7 +153,7 @@ export default function WhatsAppMessages() {
             placeholder="Search by name, phone, or content..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-muted/50 border border-foreground/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
+            className="w-full pl-10 pr-4 py-3 bg-muted/50 border border-foreground/10 rounded-xl focus:border-success/50 focus:outline-none"
           />
         </div>
         <button
@@ -161,7 +161,7 @@ export default function WhatsAppMessages() {
           className={cn(
             'flex items-center gap-2 px-4 py-3 rounded-xl border transition-colors',
             showFilters
-              ? 'bg-[#25D366]/10 border-[#25D366]/30 text-[#25D366]'
+              ? 'bg-success/10 border-success/30 text-success'
               : 'bg-muted/50 border-foreground/10 text-gray-400 hover:text-foreground'
           )}
         >
@@ -196,7 +196,7 @@ export default function WhatsAppMessages() {
                   className={cn(
                     'px-3 py-1.5 rounded-lg text-sm transition-colors',
                     statusFilter === status
-                      ? 'bg-[#25D366] text-foreground'
+                      ? 'bg-success text-foreground'
                       : 'bg-card text-gray-400 hover:text-foreground'
                   )}
                 >
@@ -217,7 +217,7 @@ export default function WhatsAppMessages() {
                   className={cn(
                     'px-3 py-1.5 rounded-lg text-sm transition-colors',
                     directionFilter === dir
-                      ? 'bg-[#25D366] text-foreground'
+                      ? 'bg-success text-foreground'
                       : 'bg-card text-gray-400 hover:text-foreground'
                   )}
                 >
@@ -364,12 +364,12 @@ function MiniStat({
 function TimelineDot({ active, label }: { active: boolean; label: string }) {
   return (
     <div
-      className={cn('w-2 h-2 rounded-full', active ? 'bg-[#25D366]' : 'bg-gray-600')}
+      className={cn('w-2 h-2 rounded-full', active ? 'bg-success' : 'bg-gray-600')}
       title={label}
     />
   );
 }
 
 function TimelineLine({ active }: { active: boolean }) {
-  return <div className={cn('w-3 h-0.5', active ? 'bg-[#25D366]' : 'bg-gray-600')} />;
+  return <div className={cn('w-3 h-0.5', active ? 'bg-success' : 'bg-gray-600')} />;
 }
