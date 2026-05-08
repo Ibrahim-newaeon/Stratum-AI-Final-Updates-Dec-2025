@@ -170,7 +170,7 @@ export default function WhatsAppContacts() {
             placeholder="Search by phone or name..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-muted/50 border border-foreground/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none transition-colors"
+            className="w-full pl-10 pr-4 py-3 bg-muted/50 border border-foreground/10 rounded-xl focus:border-success/50 focus:outline-none transition-colors"
           />
         </div>
         <div className="flex gap-2">
@@ -181,7 +181,7 @@ export default function WhatsAppContacts() {
               className={cn(
                 'px-4 py-2 rounded-xl transition-colors text-sm font-medium',
                 statusFilter === status
-                  ? 'bg-[#25D366] text-foreground'
+                  ? 'bg-success text-foreground'
                   : 'bg-muted/50 text-gray-400 hover:text-foreground border border-foreground/10'
               )}
             >
@@ -196,7 +196,7 @@ export default function WhatsAppContacts() {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-4 p-4 bg-[#25D366]/10 border border-[#25D366]/20 rounded-xl"
+          className="flex items-center gap-4 p-4 bg-success/10 border border-success/20 rounded-xl"
         >
           <span className="text-sm">{selectedContacts.length} selected</span>
           <div className="flex gap-2">
@@ -450,7 +450,7 @@ function AddContactModal({
               placeholder="+1234567890"
               value={formData.phone_number}
               onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
-              className="w-full px-4 py-3 bg-background border border-foreground/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
+              className="w-full px-4 py-3 bg-background border border-foreground/10 rounded-xl focus:border-success/50 focus:outline-none"
             />
           </div>
           <div>
@@ -458,7 +458,7 @@ function AddContactModal({
             <select
               value={formData.country_code}
               onChange={(e) => setFormData({ ...formData, country_code: e.target.value })}
-              className="w-full px-4 py-3 bg-background border border-foreground/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
+              className="w-full px-4 py-3 bg-background border border-foreground/10 rounded-xl focus:border-success/50 focus:outline-none"
             >
               <option value="US">United States (+1)</option>
               <option value="GB">United Kingdom (+44)</option>
@@ -475,7 +475,7 @@ function AddContactModal({
               placeholder="John Doe"
               value={formData.display_name}
               onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
-              className="w-full px-4 py-3 bg-background border border-foreground/10 rounded-xl focus:border-[#25D366]/50 focus:outline-none"
+              className="w-full px-4 py-3 bg-background border border-foreground/10 rounded-xl focus:border-success/50 focus:outline-none"
             />
           </div>
 
@@ -551,7 +551,7 @@ function ImportContactsModal({
           onDrop={handleDrop}
           className={cn(
             'border-2 border-dashed rounded-xl p-8 text-center transition-colors',
-            isDragging ? 'border-[#25D366] bg-[#25D366]/5' : 'border-foreground/10',
+            isDragging ? 'border-success bg-success/5' : 'border-foreground/10',
             file ? 'border-green-500 bg-green-500/5' : ''
           )}
         >
@@ -568,7 +568,7 @@ function ImportContactsModal({
               <ArrowUpTrayIcon className="w-12 h-12 mx-auto mb-4 text-gray-500" />
               <p className="text-gray-400 mb-2">Drag and drop your CSV file here</p>
               <p className="text-sm text-gray-500">or</p>
-              <label className="inline-block mt-3 px-4 py-2 bg-[#25D366] rounded-lg cursor-pointer hover:opacity-90">
+              <label className="inline-block mt-3 px-4 py-2 bg-success rounded-lg cursor-pointer hover:opacity-90">
                 Browse Files
                 <input
                   type="file"

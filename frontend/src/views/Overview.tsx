@@ -139,7 +139,7 @@ function CommandKPI({
           <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{title}</span>
         </div>
         {delta !== undefined && (
-          <div className={cn('flex items-center gap-1 text-xs font-medium', positive ? 'text-[#27C39D]' : 'text-[#E85D5D]')}>
+          <div className={cn('flex items-center gap-1 text-xs font-medium', positive ? 'text-success' : 'text-danger')}>
             {positive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
             {Math.abs(delta).toFixed(1)}%
           </div>
@@ -169,10 +169,10 @@ function PlatformHealthItem({
   campaigns: number
 }) {
   const statusConfig = {
-    connected: { dot: 'bg-[#27C39D]', text: 'text-[#27C39D]', label: 'Connected' },
+    connected: { dot: 'bg-success', text: 'text-success', label: 'Connected' },
     syncing: { dot: 'bg-primary', text: 'text-secondary', label: 'Syncing' },
-    warning: { dot: 'bg-[#F5A623]', text: 'text-[#F5A623]', label: 'Warning' },
-    error: { dot: 'bg-[#E85D5D]', text: 'text-[#E85D5D]', label: 'Error' },
+    warning: { dot: 'bg-warning', text: 'text-warning', label: 'Warning' },
+    error: { dot: 'bg-danger', text: 'text-danger', label: 'Error' },
   }
   const cfg = statusConfig[status]
 
@@ -216,7 +216,7 @@ function AIRecommendationCard({
         </div>
       </div>
       <div className="flex items-center justify-between mt-3">
-        <span className="text-xs text-[#27C39D] font-medium">{impact}</span>
+        <span className="text-xs text-success font-medium">{impact}</span>
         <button className="text-xs font-medium text-secondary hover:text-primary transition-colors duration-200 flex items-center gap-1">
           {action} <ChevronRight className="h-3 w-3" />
         </button>
@@ -469,7 +469,7 @@ export function Overview() {
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold text-foreground">{t('overview.title')}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Last updated: {simulation.lastUpdated.toLocaleString()} · <span className="text-[#27C39D]">Stratum AI</span>
+            Last updated: {simulation.lastUpdated.toLocaleString()} · <span className="text-success">Stratum AI</span>
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -482,7 +482,7 @@ export function Overview() {
             Customize
           </button>
           <button onClick={handleSyncAll} disabled={syncAllMutation.isPending} className="inline-flex items-center px-4 py-2 border border-primary/30 rounded-lg text-sm font-medium bg-primary/5 text-secondary hover:bg-secondary/10 transition-colors duration-200 disabled:opacity-50" aria-label="Sync all campaigns from ad platforms" title="Pull latest data from Meta, TikTok, Snapchat & Google">
-            {syncAllMutation.isPending ? (<><DownloadCloud className="w-4 h-4 mr-2 animate-pulse" /> Syncing...</>) : syncAllMutation.isSuccess ? (<><CheckCircle className="w-4 h-4 mr-2 text-[#27C39D]" /> Synced!</>) : (<><DownloadCloud className="w-4 h-4 mr-2" /> Sync All Platforms</>)}
+            {syncAllMutation.isPending ? (<><DownloadCloud className="w-4 h-4 mr-2 animate-pulse" /> Syncing...</>) : syncAllMutation.isSuccess ? (<><CheckCircle className="w-4 h-4 mr-2 text-success" /> Synced!</>) : (<><DownloadCloud className="w-4 h-4 mr-2" /> Sync All Platforms</>)}
           </button>
           <button onClick={handleRefresh} disabled={loading} className="inline-flex items-center px-4 py-2 border border-border rounded-lg text-sm font-medium bg-card text-foreground hover:bg-border transition-colors duration-200 disabled:opacity-50" aria-label="Refresh data (R)">
             {loading ? (<><RefreshCw className="w-4 h-4 mr-2 animate-spin" /> Refreshing...</>) : (<><RefreshCw className="w-4 h-4 mr-2" /> Refresh</>)}
@@ -558,7 +558,7 @@ export function Overview() {
                 <span className="text-xs text-muted-foreground">Revenue</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-[#27C39D]" />
+                <div className="h-2 w-2 rounded-full bg-success" />
                 <span className="text-xs text-muted-foreground">Spend</span>
               </div>
             </div>
@@ -570,8 +570,8 @@ export function Overview() {
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-base font-semibold text-foreground">Platform Health</h3>
             <div className="flex items-center gap-1.5">
-              <Radio className="w-3.5 h-3.5 text-[#27C39D]" />
-              <span className="text-xs text-[#27C39D] font-medium">Live</span>
+              <Radio className="w-3.5 h-3.5 text-success" />
+              <span className="text-xs text-success font-medium">Live</span>
             </div>
           </div>
           <div>
@@ -612,17 +612,17 @@ export function Overview() {
                   key={alert.id}
                   className={cn(
                     'flex items-start gap-3 p-3 rounded-lg border transition-colors duration-200 hover:shadow-md cursor-pointer',
-                    alert.severity === 'warning' && 'bg-[#F5A623]/5 border-[#F5A623]/20 hover:bg-[#F5A623]/10',
-                    alert.severity === 'good' && 'bg-[#27C39D]/5 border-[#27C39D]/20 hover:bg-[#27C39D]/10',
-                    alert.severity === 'critical' && 'bg-[#E85D5D]/5 border-[#E85D5D]/20 hover:bg-[#E85D5D]/10'
+                    alert.severity === 'warning' && 'bg-warning/5 border-warning/20 hover:bg-warning/10',
+                    alert.severity === 'good' && 'bg-success/5 border-success/20 hover:bg-success/10',
+                    alert.severity === 'critical' && 'bg-danger/5 border-danger/20 hover:bg-danger/10'
                   )}
                   role="button"
                   tabIndex={0}
                   aria-label={`${alert.severity} alert: ${alert.title}`}
                 >
-                  {alert.severity === 'warning' && <AlertTriangle className="w-4 h-4 text-[#F5A623] mt-0.5 flex-shrink-0" aria-hidden="true" />}
-                  {alert.severity === 'good' && <CheckCircle className="w-4 h-4 text-[#27C39D] mt-0.5 flex-shrink-0" aria-hidden="true" />}
-                  {alert.severity === 'critical' && <Info className="w-4 h-4 text-[#E85D5D] mt-0.5 flex-shrink-0" aria-hidden="true" />}
+                  {alert.severity === 'warning' && <AlertTriangle className="w-4 h-4 text-warning mt-0.5 flex-shrink-0" aria-hidden="true" />}
+                  {alert.severity === 'good' && <CheckCircle className="w-4 h-4 text-success mt-0.5 flex-shrink-0" aria-hidden="true" />}
+                  {alert.severity === 'critical' && <Info className="w-4 h-4 text-danger mt-0.5 flex-shrink-0" aria-hidden="true" />}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground">{alert.title}</p>
                     <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{alert.message}</p>

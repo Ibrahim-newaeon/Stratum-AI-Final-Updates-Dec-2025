@@ -57,11 +57,11 @@ export default function SQLEditor() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050B18] text-white p-6">
+    <div className="min-h-screen bg-background text-white p-6">
       <div className="max-w-7xl mx-auto">
         <header className="mb-8">
           <h1 className="text-3xl font-bold flex items-center gap-3">
-            <CommandLineIcon className="w-8 h-8 text-[#00F5FF]" />
+            <CommandLineIcon className="w-8 h-8 text-primary" />
             SQL Query Editor
           </h1>
           <p className="text-gray-400 mt-2">Write SELECT queries against your tenant-scoped data</p>
@@ -81,7 +81,7 @@ export default function SQLEditor() {
                     className="bg-foreground/[0.03] border border-foreground/10 rounded px-2 py-1 text-sm text-white"
                   >
                     {[50, 100, 250, 500, 1000].map((n) => (
-                      <option key={n} value={n} className="bg-[#0A1628]">{n}</option>
+                      <option key={n} value={n} className="bg-card">{n}</option>
                     ))}
                   </select>
                 </div>
@@ -120,7 +120,7 @@ export default function SQLEditor() {
                   </div>
                   <button
                     onClick={() => navigator.clipboard.writeText(JSON.stringify(result.rows, null, 2))}
-                    className="text-xs text-[#00F5FF] hover:underline flex items-center gap-1"
+                    className="text-xs text-primary hover:underline flex items-center gap-1"
                   >
                     <DocumentDuplicateIcon className="w-3 h-3" /> Copy JSON
                   </button>

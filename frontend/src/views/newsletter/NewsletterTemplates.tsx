@@ -96,7 +96,7 @@ export default function NewsletterTemplates() {
         <h2 className="text-xl font-semibold text-[rgba(245,245,247,0.92)]">Email Templates</h2>
         <button
           onClick={() => setModalState({ mode: 'create' })}
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-[#00b3ab] text-foreground font-medium rounded-xl transition-colors"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary/90 text-foreground font-medium rounded-xl transition-colors"
         >
           <PlusIcon className="w-4 h-4" />
           Create Template
@@ -164,7 +164,7 @@ export default function NewsletterTemplates() {
           </p>
           <button
             onClick={() => setModalState({ mode: 'create' })}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-[#00b3ab] text-foreground font-medium rounded-xl transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary/90 text-foreground font-medium rounded-xl transition-colors"
           >
             <PlusIcon className="w-4 h-4" />
             Create Template
@@ -489,7 +489,7 @@ function TemplateModal({ mode, template, onClose }: TemplateModalProps) {
             <button
               type="submit"
               disabled={saving || !form.name.trim()}
-              className="flex-1 px-4 py-2.5 bg-primary hover:bg-[#00b3ab] text-foreground font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-2.5 bg-primary hover:bg-primary/90 text-foreground font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving
                 ? 'Saving...'

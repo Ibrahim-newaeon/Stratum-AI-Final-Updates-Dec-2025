@@ -293,7 +293,7 @@ function OverviewDashboard({
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-gray-400">Delivery Rate</span>
-              <span className="text-[#25D366] font-medium">{deliveryRate}%</span>
+              <span className="text-success font-medium">{deliveryRate}%</span>
             </div>
             <div className="h-2 bg-card rounded-full overflow-hidden">
               <div
@@ -376,14 +376,14 @@ function StatCard({
   const colorClasses = {
     cyan: 'from-cyan-500/20 to-cyan-500/5 border-cyan-500/20',
     purple: 'from-purple-500/20 to-purple-500/5 border-purple-500/20',
-    green: 'from-[#25D366]/20 to-[#25D366]/5 border-[#25D366]/20',
+    green: 'from-[#25D366]/20 to-[#25D366]/5 border-success/20',
     orange: 'from-orange-500/20 to-orange-500/5 border-orange-500/20',
   };
 
   const iconColors = {
     cyan: 'text-cyan-400',
     purple: 'text-purple-400',
-    green: 'text-[#25D366]',
+    green: 'text-success',
     orange: 'text-orange-400',
   };
 
@@ -422,7 +422,7 @@ function QuickActionCard({
   const colorClasses = {
     cyan: 'hover:border-cyan-500/30 group-hover:text-cyan-400',
     purple: 'hover:border-purple-500/30 group-hover:text-purple-400',
-    green: 'hover:border-[#25D366]/30 group-hover:text-[#25D366]',
+    green: 'hover:border-success/30 group-hover:text-success',
   };
 
   return (
