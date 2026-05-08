@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 
 import { useTenantStore, selectTenantId } from '@/stores/tenantStore';
+import { useQAFixesPlaybook, useQAFixesHistory, type QAFixPlaybookItem } from '@/api/qaFixes';
 import {
   useEmqScore,
   useConfidence,
@@ -328,6 +329,8 @@ export default function EMQDiagnostics() {
         </ul>
       </Card>
 
+      <FixGuideSection tenantId={tenantId} />
+
       <Card className="p-6">
         <header className="mb-4 flex items-center justify-between">
           <h2 className="font-mono text-sm uppercase tracking-wider text-muted-foreground">
@@ -351,5 +354,104 @@ export default function EMQDiagnostics() {
         )}
       </Card>
     </div>
+  );
+}
+
+function FixGuideSection({ tenantId }: { tenantId: number }) {
+  const playbookQuery = useQAFixesPlaybook(tenantId);
+  const historyQuery = useQAFixesHistory(tenantId, 5);
+  const items: QAFixPlaybookItem[] = playbookQuery.data?.items ?? [];
+  const history = historyQuery.data?.history ?? [];
+
+  return (
+    <Card className="p-6 space-y-4">
+      <header className="flex items-center justify-between">
+        <h2 className="font-mono text-sm uppercase tracking-wider text-muted-foreground">
+          Step-by-step fix guide
+        </h2>
+        {playbookQuery.data?.estimated_total_impact != null && (
+          <span className="font-mono text-xs text-muted-foreground">
+            +{playbookQuery.data.estimated_total_impact.toFixed(1)} EMQ available
+          </span>
+        )}
+      </header>
+
+      <ul className="space-y-3">
+        {items.map((it) => (
+          <li
+            key={it.id}
+            className="rounded-xl border border-border bg-muted/40 p-4"
+          >
+            <details>
+              <summary className="cursor-pointer list-none flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <StatusPill variant={PRIORITY_VARIANT[it.priority]} size="sm">
+                      {it.priority}
+                    </StatusPill>
+                    {it.platform && (
+                      <span className="font-mono text-xs text-muted-foreground">
+                        {it.platform}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm font-medium">{it.title}</p>
+                  <p className="text-sm text-muted-foreground">{it.description}</p>
+                </div>
+                <span className="font-mono text-xs text-muted-foreground shrink-0">
+                  +{it.estimated_impact.toFixed(1)} EMQ
+                </span>
+              </summary>
+              {it.steps.length > 0 && (
+                <ol className="mt-3 space-y-1.5 border-t border-border/50 pt-3 text-sm text-foreground">
+                  {it.steps.map((step, idx) => (
+                    <li key={idx} className="flex gap-2">
+                      <span className="font-mono text-xs text-muted-foreground tabular-nums">
+                        {idx + 1}.
+                      </span>
+                      <span>{step}</span>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </details>
+          </li>
+        ))}
+        {!playbookQuery.isLoading && items.length === 0 && (
+          <li className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+            No step-by-step fixes available — connect a platform to detect issues.
+          </li>
+        )}
+      </ul>
+
+      {history.length > 0 && (
+        <details className="rounded-xl border border-border bg-muted/40 p-4">
+          <summary className="cursor-pointer text-sm font-medium">
+            Recent fix activity
+            <span className="ml-2 font-mono text-xs text-muted-foreground">
+              {historyQuery.data?.total ?? history.length}
+            </span>
+          </summary>
+          <ul className="mt-3 space-y-1.5 text-sm">
+            {history.map((h) => (
+              <li
+                key={h.id}
+                className="flex items-baseline justify-between gap-2 text-muted-foreground"
+              >
+                <span>
+                  <span className="font-mono text-xs">{h.action_type}</span>
+                  {h.entity_id && ` · ${h.entity_id}`}
+                </span>
+                {h.timestamp && (
+                  <span className="font-mono text-xs tabular-nums">
+                    {new Date(h.timestamp).toLocaleString()}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+    </Card>
   );
 }
