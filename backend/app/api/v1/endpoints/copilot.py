@@ -10,10 +10,11 @@ contextual recommendations.
 """
 
 from datetime import UTC, datetime
-from typing import Optional
+from typing import Optional, Tuple
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import and_, func, select, text
 from sqlalchemy.exc import SQLAlchemyError
@@ -29,6 +30,7 @@ from app.services.agents.copilot_agent import (
     process_message,
 )
 from app.services.agents.copilot_llm import generate_llm_message
+from app.services.agents.copilot_llm_stream import stream_llm_message
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/copilot", tags=["copilot"])
@@ -64,32 +66,21 @@ class CopilotMessageResponse(BaseModel):
 
 
 # =============================================================================
-# Endpoints
+# Context gathering (shared between /chat and /chat/stream)
 # =============================================================================
 
-@router.post("/chat", response_model=APIResponse[CopilotMessageResponse])
-async def copilot_chat(
-    request: CopilotMessageRequest,
-    user: CurrentUserDep,
-    db: AsyncSession = Depends(get_async_session),
-):
+
+async def _gather_context(
+    *,
+    db: AsyncSession,
+    tenant_id: int,
+) -> Tuple[Optional[dict], dict, Optional[dict]]:
     """
-    Send a message to the AI Copilot and receive a data-aware response.
-
-    The copilot analyzes the user's query, fetches relevant dashboard data,
-    and generates a contextual response with suggestions and data cards.
+    Fetch the live tenant signals the copilot needs: campaign rollup,
+    signal-health snapshot, lightweight anomaly summary. Each block
+    fails open — partial context is better than no response.
     """
-    tenant_id = getattr(user, "tenant_id", None) or 1
-    user_name = getattr(user, "full_name", None) or getattr(user, "email", "User")
-    if user_name and "@" in user_name:
-        user_name = user_name.split("@")[0].title()
-
-    session_id = request.session_id or str(uuid4())
-
-    # ── Gather context data for the copilot ──────────────────────
-
-    # 1. Campaign metrics
-    metrics = None
+    metrics: Optional[dict] = None
     try:
         campaign_result = await db.execute(
             select(
@@ -108,13 +99,11 @@ async def copilot_chat(
             )
         )
         row = campaign_result.one_or_none()
-
         if row and row.total > 0:
             spend = float(row.spend_cents or 0) / 100
             revenue = float(row.revenue_cents or 0) / 100
             conversions = int(row.conversions or 0)
             roas = revenue / spend if spend > 0 else 0.0
-
             metrics = {
                 "spend": spend,
                 "revenue": revenue,
@@ -122,16 +111,14 @@ async def copilot_chat(
                 "conversions": conversions,
                 "active_campaigns": row.active,
                 "total_campaigns": row.total,
-                "spend_change_pct": None,  # Would need historical comparison
+                "spend_change_pct": None,
                 "revenue_change_pct": None,
             }
     except (SQLAlchemyError, ValueError, TypeError) as e:
         logger.debug("copilot_metrics_fetch_error", error=str(e))
 
-    # 2. Signal health data
-    health_data = None
+    health_data: dict
     try:
-        # Check EMQ degradation alerts
         emq_result = await db.execute(
             text(
                 "SELECT COUNT(*) as degraded_count "
@@ -144,7 +131,6 @@ async def copilot_chat(
         )
         emq_row = emq_result.mappings().first()
         emq_degraded = emq_row["degraded_count"] if emq_row else 0
-
         if emq_degraded == 0:
             emq_score = 0.95
             overall = 85
@@ -157,7 +143,6 @@ async def copilot_chat(
             emq_score = 0.50
             overall = 40
             health_status = "critical"
-
         health_data = {
             "overall_score": overall,
             "status": health_status,
@@ -167,7 +152,6 @@ async def copilot_chat(
         }
     except (SQLAlchemyError, TypeError, KeyError) as e:
         logger.debug("copilot_health_fetch_error", error=str(e))
-        # Return unknown status rather than fabricated healthy scores
         health_data = {
             "overall_score": None,
             "status": "unknown",
@@ -176,11 +160,8 @@ async def copilot_chat(
             "issues": ["Unable to fetch signal health data"],
         }
 
-    # 3. Anomaly data (lightweight — just counts)
-    anomaly_data = None
+    anomaly_data: Optional[dict] = None
     if metrics and metrics.get("spend", 0) > 0:
-        # We provide a lightweight anomaly summary
-        # (full anomaly detection is expensive, done by the dedicated endpoint)
         anomaly_data = {
             "total_anomalies": 0,
             "critical_count": 0,
@@ -191,6 +172,42 @@ async def copilot_chat(
             "correlations": [],
         }
 
+    return metrics, health_data, anomaly_data
+
+
+def _resolve_user_name(user) -> Tuple[Optional[str], Optional[str]]:
+    """Return (display_name, first_name) — the bridge wants the first name only."""
+    user_name = getattr(user, "full_name", None) or getattr(user, "email", "User")
+    if user_name and "@" in user_name:
+        user_name = user_name.split("@")[0].title()
+    first_name = user_name.split()[0] if user_name else None
+    return user_name, first_name
+
+
+# =============================================================================
+# Endpoints
+# =============================================================================
+
+@router.post("/chat", response_model=APIResponse[CopilotMessageResponse])
+async def copilot_chat(
+    request: CopilotMessageRequest,
+    user: CurrentUserDep,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Send a message to the AI Copilot and receive a data-aware response.
+
+    The copilot analyzes the user's query, fetches relevant dashboard data,
+    and generates a contextual response with suggestions and data cards.
+    """
+    tenant_id = getattr(user, "tenant_id", None) or 1
+    _, first_name = _resolve_user_name(user)
+
+    session_id = request.session_id or str(uuid4())
+
+    # ── Gather context data for the copilot ──────────────────────
+    metrics, health_data, anomaly_data = await _gather_context(db=db, tenant_id=tenant_id)
+
     # ── Process message through copilot agent ────────────────────
     # The keyword classifier always runs first — it produces the intent,
     # the suggestion chips, and the structured data cards that the
@@ -198,8 +215,6 @@ async def copilot_chat(
     # enabled we additionally swap in a Claude-generated response text
     # using the same live context. On any LLM failure the template
     # message stays in place — the user never sees a degraded experience.
-
-    first_name = user_name.split()[0] if user_name else None
 
     response = process_message(
         message=request.message,
@@ -251,4 +266,77 @@ async def copilot_chat(
             timestamp=datetime.now(UTC).isoformat(),
         ),
         message="Copilot response generated",
+    )
+
+
+# =============================================================================
+# Streaming endpoint
+# =============================================================================
+
+
+@router.post("/chat/stream")
+async def copilot_chat_stream(
+    request: CopilotMessageRequest,
+    user: CurrentUserDep,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Stream the AI Copilot response as Server-Sent Events.
+
+    Wire format (per `app.services.agents.copilot_llm_stream`):
+
+        event: token   data: <text fragment>     ← multiple, in order
+        event: meta    data: {citations, intent, suggestions, data_cards,
+                              fallback_message?}  ← exactly one
+        event: error   data: <short reason>      ← optional, before meta
+        data: [DONE]                              ← always last
+
+    The frontend appends `token` events to a growing assistant bubble,
+    swaps in `fallback_message` if it's present (LLM failed before any
+    tokens), and renders citations + suggestions + data_cards from the
+    `meta` payload once the stream completes.
+    """
+    tenant_id = getattr(user, "tenant_id", None) or 1
+    _, first_name = _resolve_user_name(user)
+    session_id = request.session_id or str(uuid4())
+
+    metrics, health_data, anomaly_data = await _gather_context(db=db, tenant_id=tenant_id)
+    base_response = process_message(
+        message=request.message,
+        user_name=first_name,
+        metrics=metrics,
+        health_data=health_data,
+        anomaly_data=anomaly_data,
+    )
+
+    async def _event_stream():
+        # Emit a session_id event up front so the frontend can pin
+        # this stream to a conversation without waiting for meta.
+        yield (
+            f"event: session\ndata: {session_id}\n\n"
+        )
+        async for chunk in stream_llm_message(
+            message=request.message,
+            user_name=first_name,
+            metrics=metrics,
+            health_data=health_data,
+            anomaly_data=anomaly_data,
+            intent=base_response.intent,
+            suggestions=base_response.suggestions,
+            data_cards=base_response.data_cards,
+            fallback_message=base_response.message,
+            db=db,
+        ):
+            yield chunk
+
+    return StreamingResponse(
+        _event_stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache, no-transform",
+            "Connection": "keep-alive",
+            # Disable buffering on Cloudflare / nginx so tokens render
+            # in real time rather than getting batched at proxy edges.
+            "X-Accel-Buffering": "no",
+        },
     )
