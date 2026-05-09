@@ -1,5 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
-import { ComponentType, lazy, Suspense } from 'react';
+import { ComponentType, lazy } from 'react';
 import { HelmetProvider } from 'react-helmet-async';
 import DashboardLayout from './views/DashboardLayout';
 import TenantLayout from './views/TenantLayout';
@@ -10,7 +10,6 @@ import { ThemeProvider } from './components/primitives/theme/ThemeProvider';
 import { AuthProvider } from './contexts/AuthContext';
 import { DemoProvider } from './contexts/DemoContext';
 import { UpgradePromptProvider } from './components/billing/UpgradePromptProvider';
-import LoadingSpinner from './components/common/LoadingSpinner';
 import AuthLoader from './components/auth/AuthLoader';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import CMSProtectedRoute from './components/auth/CMSProtectedRoute';
@@ -19,6 +18,7 @@ import { SkipToContent } from './components/ui/skip-to-content';
 import { useDocumentDirection } from './hooks/useDocumentDirection';
 import { OfflineIndicator } from './components/common/OfflineIndicator';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
+import { LazyRoute } from './components/ui/LazyRoute';
 
 // Component to handle document direction - must be inside i18n provider
 function DocumentDirectionHandler() {
@@ -296,9 +296,9 @@ function App() {
                         path="/"
                         element={
                           <ErrorBoundary message="Failed to load the landing page">
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <Landing />
-                            </Suspense>
+                            </LazyRoute>
                           </ErrorBoundary>
                         }
                       />
@@ -306,9 +306,9 @@ function App() {
                         path="/ar"
                         element={
                           <ErrorBoundary message="Failed to load the page">
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <LandingAr />
-                            </Suspense>
+                            </LazyRoute>
                           </ErrorBoundary>
                         }
                       />
@@ -316,9 +316,9 @@ function App() {
                         path="/login"
                         element={
                           <ErrorBoundary message="Failed to load the login page">
-                            <Suspense fallback={<AuthLoader />}>
+                            <LazyRoute fallback={<AuthLoader />}>
                               <Login />
-                            </Suspense>
+                            </LazyRoute>
                           </ErrorBoundary>
                         }
                       />
@@ -326,9 +326,9 @@ function App() {
                         path="/signup"
                         element={
                           <ErrorBoundary message="Failed to load the signup page">
-                            <Suspense fallback={<AuthLoader />}>
+                            <LazyRoute fallback={<AuthLoader />}>
                               <Signup />
-                            </Suspense>
+                            </LazyRoute>
                           </ErrorBoundary>
                         }
                       />
@@ -336,9 +336,9 @@ function App() {
                         path="/forgot-password"
                         element={
                           <ErrorBoundary message="Failed to load the page">
-                            <Suspense fallback={<AuthLoader />}>
+                            <LazyRoute fallback={<AuthLoader />}>
                               <ForgotPassword />
-                            </Suspense>
+                            </LazyRoute>
                           </ErrorBoundary>
                         }
                       />
@@ -346,9 +346,9 @@ function App() {
                         path="/reset-password"
                         element={
                           <ErrorBoundary message="Failed to load the page">
-                            <Suspense fallback={<AuthLoader />}>
+                            <LazyRoute fallback={<AuthLoader />}>
                               <ResetPassword />
-                            </Suspense>
+                            </LazyRoute>
                           </ErrorBoundary>
                         }
                       />
@@ -356,9 +356,9 @@ function App() {
                         path="/verify-email"
                         element={
                           <ErrorBoundary message="Failed to load the page">
-                            <Suspense fallback={<AuthLoader />}>
+                            <LazyRoute fallback={<AuthLoader />}>
                               <VerifyEmail />
-                            </Suspense>
+                            </LazyRoute>
                           </ErrorBoundary>
                         }
                       />
@@ -368,9 +368,9 @@ function App() {
                         path="/accept-invite"
                         element={
                           <ErrorBoundary message="Failed to load the page">
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <AcceptInvite />
-                            </Suspense>
+                            </LazyRoute>
                           </ErrorBoundary>
                         }
                       />
@@ -379,9 +379,9 @@ function App() {
                       <Route
                         path="/cms-login"
                         element={
-                          <Suspense fallback={<LoadingSpinner />}>
+                          <LazyRoute>
                             <CMSLogin />
-                          </Suspense>
+                          </LazyRoute>
                         }
                       />
 
@@ -390,124 +390,124 @@ function App() {
                         path="/cms"
                         element={
                           <CMSProtectedRoute>
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <CMSLayout />
-                            </Suspense>
+                            </LazyRoute>
                           </CMSProtectedRoute>
                         }
                       >
                         <Route
                           index
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <CMSDashboard />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         {/* Posts Management */}
                         <Route
                           path="posts"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <CMSPosts />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         {/* Post Create */}
                         <Route
                           path="posts/new"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <CMSPostEditor />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         {/* Post Edit */}
                         <Route
                           path="posts/:id"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <CMSPostEditor />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         {/* Categories Management */}
                         <Route
                           path="categories"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <CMSCategories />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         {/* Authors Management */}
                         <Route
                           path="authors"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <CMSAuthors />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         {/* Contact Submissions */}
                         <Route
                           path="contacts"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <CMSContacts />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         {/* Pages Management */}
                         <Route
                           path="pages"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <CMSPages />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         {/* Landing Content - Features */}
                         <Route
                           path="landing/features"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <CMSLandingFeatures />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         {/* Landing Content - FAQ */}
                         <Route
                           path="landing/faq"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <CMSLandingFAQ />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         {/* Landing Content - Pricing */}
                         <Route
                           path="landing/pricing"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <CMSLandingPricing />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         {/* CMS Settings */}
                         <Route
                           path="settings"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <CMSSettingsView />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         {/* CMS User Management */}
                         <Route
                           path="users"
                           element={
-                            <Suspense
+                            <LazyRoute
                               fallback={
                                 <div className="flex items-center justify-center min-h-screen">
                                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400" />
@@ -515,7 +515,7 @@ function App() {
                               }
                             >
                               <CMSUsers />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                       </Route>
@@ -524,9 +524,9 @@ function App() {
                       <Route
                         path="/cdp-calculator"
                         element={
-                          <Suspense fallback={<LoadingSpinner />}>
+                          <LazyRoute>
                             <CDPCalculator />
-                          </Suspense>
+                          </LazyRoute>
                         }
                       />
 
@@ -534,9 +534,9 @@ function App() {
                       <Route
                         path="/plans/:tier"
                         element={
-                          <Suspense fallback={<LoadingSpinner />}>
+                          <LazyRoute>
                             <TierLandingPage />
-                          </Suspense>
+                          </LazyRoute>
                         }
                       />
 
@@ -544,33 +544,33 @@ function App() {
                       <Route
                         path="/features"
                         element={
-                          <Suspense fallback={<LoadingSpinner />}>
+                          <LazyRoute>
                             <FeaturesPage />
-                          </Suspense>
+                          </LazyRoute>
                         }
                       />
                       <Route
                         path="/pricing"
                         element={
-                          <Suspense fallback={<LoadingSpinner />}>
+                          <LazyRoute>
                             <PricingPage />
-                          </Suspense>
+                          </LazyRoute>
                         }
                       />
                       <Route
                         path="/integrations"
                         element={
-                          <Suspense fallback={<LoadingSpinner />}>
+                          <LazyRoute>
                             <IntegrationsPage />
-                          </Suspense>
+                          </LazyRoute>
                         }
                       />
                       <Route
                         path="/api-docs"
                         element={
-                          <Suspense fallback={<LoadingSpinner />}>
+                          <LazyRoute>
                             <ApiDocsPage />
-                          </Suspense>
+                          </LazyRoute>
                         }
                       />
 
@@ -578,33 +578,33 @@ function App() {
                       <Route
                         path="/solutions/cdp"
                         element={
-                          <Suspense fallback={<LoadingSpinner />}>
+                          <LazyRoute>
                             <CDPSolutionPage />
-                          </Suspense>
+                          </LazyRoute>
                         }
                       />
                       <Route
                         path="/solutions/audience-sync"
                         element={
-                          <Suspense fallback={<LoadingSpinner />}>
+                          <LazyRoute>
                             <AudienceSyncPage />
-                          </Suspense>
+                          </LazyRoute>
                         }
                       />
                       <Route
                         path="/solutions/predictions"
                         element={
-                          <Suspense fallback={<LoadingSpinner />}>
+                          <LazyRoute>
                             <PredictionsSolutionPage />
-                          </Suspense>
+                          </LazyRoute>
                         }
                       />
                       <Route
                         path="/solutions/trust-engine"
                         element={
-                          <Suspense fallback={<LoadingSpinner />}>
+                          <LazyRoute>
                             <TrustEnginePage />
-                          </Suspense>
+                          </LazyRoute>
                         }
                       />
 
@@ -612,49 +612,49 @@ function App() {
                       <Route
                         path="/about"
                         element={
-                          <Suspense fallback={<LoadingSpinner />}>
+                          <LazyRoute>
                             <AboutPage />
-                          </Suspense>
+                          </LazyRoute>
                         }
                       />
                       <Route
                         path="/careers"
                         element={
-                          <Suspense fallback={<LoadingSpinner />}>
+                          <LazyRoute>
                             <CareersPage />
-                          </Suspense>
+                          </LazyRoute>
                         }
                       />
                       <Route
                         path="/blog"
                         element={
-                          <Suspense fallback={<LoadingSpinner />}>
+                          <LazyRoute>
                             <BlogPage />
-                          </Suspense>
+                          </LazyRoute>
                         }
                       />
                       <Route
                         path="/blog/:slug"
                         element={
-                          <Suspense fallback={<LoadingSpinner />}>
+                          <LazyRoute>
                             <BlogPostPage />
-                          </Suspense>
+                          </LazyRoute>
                         }
                       />
                       <Route
                         path="/contact"
                         element={
-                          <Suspense fallback={<LoadingSpinner />}>
+                          <LazyRoute>
                             <ContactPage />
-                          </Suspense>
+                          </LazyRoute>
                         }
                       />
                       <Route
                         path="/faq"
                         element={
-                          <Suspense fallback={<LoadingSpinner />}>
+                          <LazyRoute>
                             <FAQPage />
-                          </Suspense>
+                          </LazyRoute>
                         }
                       />
 
@@ -663,9 +663,9 @@ function App() {
                         path="/privacy"
                         element={
                           <ErrorBoundary message="Failed to load the page">
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <PrivacyPage />
-                            </Suspense>
+                            </LazyRoute>
                           </ErrorBoundary>
                         }
                       />
@@ -673,9 +673,9 @@ function App() {
                         path="/terms"
                         element={
                           <ErrorBoundary message="Failed to load the page">
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <TermsPage />
-                            </Suspense>
+                            </LazyRoute>
                           </ErrorBoundary>
                         }
                       />
@@ -683,9 +683,9 @@ function App() {
                         path="/security"
                         element={
                           <ErrorBoundary message="Failed to load the page">
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <SecurityPage />
-                            </Suspense>
+                            </LazyRoute>
                           </ErrorBoundary>
                         }
                       />
@@ -693,9 +693,9 @@ function App() {
                         path="/dpa"
                         element={
                           <ErrorBoundary message="Failed to load the page">
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <DPAPage />
-                            </Suspense>
+                            </LazyRoute>
                           </ErrorBoundary>
                         }
                       />
@@ -705,9 +705,9 @@ function App() {
                         path="/docs"
                         element={
                           <ErrorBoundary message="Failed to load the documentation page">
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <DocsPage />
-                            </Suspense>
+                            </LazyRoute>
                           </ErrorBoundary>
                         }
                       />
@@ -715,9 +715,9 @@ function App() {
                         path="/changelog"
                         element={
                           <ErrorBoundary message="Failed to load the page">
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <ChangelogPage />
-                            </Suspense>
+                            </LazyRoute>
                           </ErrorBoundary>
                         }
                       />
@@ -725,9 +725,9 @@ function App() {
                         path="/case-studies"
                         element={
                           <ErrorBoundary message="Failed to load the page">
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <CaseStudiesPage />
-                            </Suspense>
+                            </LazyRoute>
                           </ErrorBoundary>
                         }
                       />
@@ -735,9 +735,9 @@ function App() {
                         path="/resources"
                         element={
                           <ErrorBoundary message="Failed to load the page">
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <ResourcesPage />
-                            </Suspense>
+                            </LazyRoute>
                           </ErrorBoundary>
                         }
                       />
@@ -745,9 +745,9 @@ function App() {
                         path="/status"
                         element={
                           <ErrorBoundary message="Failed to load the page">
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <StatusPage />
-                            </Suspense>
+                            </LazyRoute>
                           </ErrorBoundary>
                         }
                       />
@@ -755,9 +755,9 @@ function App() {
                         path="/compare"
                         element={
                           <ErrorBoundary message="Failed to load the page">
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <ComparisonPage />
-                            </Suspense>
+                            </LazyRoute>
                           </ErrorBoundary>
                         }
                       />
@@ -765,9 +765,9 @@ function App() {
                         path="/glossary"
                         element={
                           <ErrorBoundary message="Failed to load the page">
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <GlossaryPage />
-                            </Suspense>
+                            </LazyRoute>
                           </ErrorBoundary>
                         }
                       />
@@ -777,9 +777,9 @@ function App() {
                         path="/announcements/audience-sync"
                         element={
                           <ErrorBoundary message="Failed to load the page">
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <AudienceSyncLaunch />
-                            </Suspense>
+                            </LazyRoute>
                           </ErrorBoundary>
                         }
                       />
@@ -789,42 +789,42 @@ function App() {
                         path="/portal"
                         element={
                           <ProtectedRoute portalOnly>
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <PortalLayout />
-                            </Suspense>
+                            </LazyRoute>
                           </ProtectedRoute>
                         }
                       >
                         <Route
                           index
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <PortalDashboard />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="campaigns"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <PortalDashboard />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="requests"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <PortalDashboard />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="profile"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <Settings />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                       </Route>
@@ -834,9 +834,9 @@ function App() {
                         path="/onboarding"
                         element={
                           <ProtectedRoute>
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <Onboarding />
-                            </Suspense>
+                            </LazyRoute>
                           </ProtectedRoute>
                         }
                       />
@@ -846,9 +846,9 @@ function App() {
                         path="/checkout"
                         element={
                           <ProtectedRoute>
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <CheckoutPage />
-                            </Suspense>
+                            </LazyRoute>
                           </ProtectedRoute>
                         }
                       />
@@ -856,9 +856,9 @@ function App() {
                         path="/checkout/success"
                         element={
                           <ProtectedRoute>
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <CheckoutSuccess />
-                            </Suspense>
+                            </LazyRoute>
                           </ProtectedRoute>
                         }
                       />
@@ -866,9 +866,9 @@ function App() {
                         path="/checkout/cancel"
                         element={
                           <ProtectedRoute>
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <CheckoutCancel />
-                            </Suspense>
+                            </LazyRoute>
                           </ProtectedRoute>
                         }
                       />
@@ -905,129 +905,129 @@ function App() {
                         <Route
                           path="overview"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <Overview />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="plans"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <Plans />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="custom-dashboard"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <CustomDashboard />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="campaigns"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <Campaigns />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="campaigns/:id"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <CampaignDetail />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="stratum"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <Stratum />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="benchmarks"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <Benchmarks />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="assets"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <Assets />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="rules"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <Rules />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="competitors"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <Competitors />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="predictions"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <Predictions />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="whatsapp"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <WhatsApp />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="whatsapp/broadcast"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <WhatsAppBroadcast />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="whatsapp/contacts"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <WhatsAppContacts />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="whatsapp/messages"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <WhatsAppMessages />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="whatsapp/templates"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <WhatsAppTemplates />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
@@ -1038,34 +1038,34 @@ function App() {
                           path="settings/:tab"
                           element={
                             <ProtectedRoute requiredRole="admin">
-                              <Suspense fallback={<LoadingSpinner />}>
+                              <LazyRoute>
                                 <Settings />
-                              </Suspense>
+                              </LazyRoute>
                             </ProtectedRoute>
                           }
                         />
                         <Route
                           path="tenants"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <Tenants />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="ml-training"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <MLTraining />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="capi-setup"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <CAPISetup />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
 
@@ -1073,9 +1073,9 @@ function App() {
                         <Route
                           path="signal-hub"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <SignalHub />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
 
@@ -1083,89 +1083,89 @@ function App() {
                         <Route
                           path="cdp"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <CDPDashboard />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="cdp/profiles"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <CDPProfiles />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="cdp/segments"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <CDPSegments />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="cdp/events"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <CDPEvents />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="cdp/identity"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <CDPIdentityGraph />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="cdp/audience-sync"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <CDPAudienceSync />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="cdp/rfm"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <CDPRfm />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="cdp/funnels"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <CDPFunnels />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="cdp/computed-traits"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <CDPComputedTraits />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="cdp/consent"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <CDPConsent />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="cdp/predictive-churn"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <CDPPredictiveChurn />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
 
@@ -1173,57 +1173,57 @@ function App() {
                         <Route
                           path="newsletter"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <NewsletterDashboard />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="newsletter/campaigns"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <NewsletterCampaigns />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="newsletter/campaigns/new"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <NewsletterCampaignEditor />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="newsletter/campaigns/:id/edit"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <NewsletterCampaignEditor />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="newsletter/campaigns/:id/analytics"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <NewsletterAnalytics />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="newsletter/templates"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <NewsletterTemplates />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="newsletter/subscribers"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <NewsletterSubscribers />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
 
@@ -1231,33 +1231,33 @@ function App() {
                         <Route
                           path="knowledge-graph"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <KnowledgeGraphInsights />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="knowledge-graph/insights"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <KnowledgeGraphInsights />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="knowledge-graph/problems"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <KGProblemDetection />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="knowledge-graph/revenue"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <KGRevenueAttribution />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
 
@@ -1266,9 +1266,9 @@ function App() {
                           path="custom-autopilot-rules"
                           element={
                             <ProtectedRoute requiredRole="admin">
-                              <Suspense fallback={<LoadingSpinner />}>
+                              <LazyRoute>
                                 <CustomAutopilotRules />
-                              </Suspense>
+                              </LazyRoute>
                             </ProtectedRoute>
                           }
                         />
@@ -1276,9 +1276,9 @@ function App() {
                           path="custom-reports"
                           element={
                             <ProtectedRoute requiredRole="manager">
-                              <Suspense fallback={<LoadingSpinner />}>
+                              <LazyRoute>
                                 <CustomReportBuilder />
-                              </Suspense>
+                              </LazyRoute>
                             </ProtectedRoute>
                           }
                         />
@@ -1288,9 +1288,9 @@ function App() {
                           path="ai-insights"
                           element={
                             <ProtectedRoute requiredRole="manager">
-                              <Suspense fallback={<LoadingSpinner />}>
+                              <LazyRoute>
                                 <AIInsights />
-                              </Suspense>
+                              </LazyRoute>
                             </ProtectedRoute>
                           }
                         />
@@ -1298,9 +1298,9 @@ function App() {
                           path="ai-recommendations"
                           element={
                             <ProtectedRoute requiredRole="manager">
-                              <Suspense fallback={<LoadingSpinner />}>
+                              <LazyRoute>
                                 <AIRecommendations />
-                              </Suspense>
+                              </LazyRoute>
                             </ProtectedRoute>
                           }
                         />
@@ -1308,9 +1308,9 @@ function App() {
                           path="funnel-analysis"
                           element={
                             <ProtectedRoute requiredRole="manager">
-                              <Suspense fallback={<LoadingSpinner />}>
+                              <LazyRoute>
                                 <FunnelAnalysis />
-                              </Suspense>
+                              </LazyRoute>
                             </ProtectedRoute>
                           }
                         />
@@ -1318,9 +1318,9 @@ function App() {
                           path="cohort-analysis"
                           element={
                             <ProtectedRoute requiredRole="manager">
-                              <Suspense fallback={<LoadingSpinner />}>
+                              <LazyRoute>
                                 <CohortAnalysis />
-                              </Suspense>
+                              </LazyRoute>
                             </ProtectedRoute>
                           }
                         />
@@ -1328,9 +1328,9 @@ function App() {
                           path="sql-editor"
                           element={
                             <ProtectedRoute requiredRole="admin">
-                              <Suspense fallback={<LoadingSpinner />}>
+                              <LazyRoute>
                                 <SQLEditor />
-                              </Suspense>
+                              </LazyRoute>
                             </ProtectedRoute>
                           }
                         />
@@ -1338,9 +1338,9 @@ function App() {
                           path="compliance"
                           element={
                             <ProtectedRoute requiredRole="admin">
-                              <Suspense fallback={<LoadingSpinner />}>
+                              <LazyRoute>
                                 <ComplianceDashboard />
-                              </Suspense>
+                              </LazyRoute>
                             </ProtectedRoute>
                           }
                         />
@@ -1348,9 +1348,9 @@ function App() {
                           path="gdpr"
                           element={
                             <ProtectedRoute requiredRole="admin">
-                              <Suspense fallback={<LoadingSpinner />}>
+                              <LazyRoute>
                                 <GDPR />
-                              </Suspense>
+                              </LazyRoute>
                             </ProtectedRoute>
                           }
                         />
@@ -1358,9 +1358,9 @@ function App() {
                           path="api-keys"
                           element={
                             <ProtectedRoute requiredRole="admin">
-                              <Suspense fallback={<LoadingSpinner />}>
+                              <LazyRoute>
                                 <APIKeys />
-                              </Suspense>
+                              </LazyRoute>
                             </ProtectedRoute>
                           }
                         />
@@ -1368,9 +1368,9 @@ function App() {
                           path="integration-hub"
                           element={
                             <ProtectedRoute requiredRole="admin">
-                              <Suspense fallback={<LoadingSpinner />}>
+                              <LazyRoute>
                                 <IntegrationHub />
-                              </Suspense>
+                              </LazyRoute>
                             </ProtectedRoute>
                           }
                         />
@@ -1378,9 +1378,9 @@ function App() {
                           path="developer"
                           element={
                             <ProtectedRoute requiredRole="admin">
-                              <Suspense fallback={<LoadingSpinner />}>
+                              <LazyRoute>
                                 <DeveloperPortal />
-                              </Suspense>
+                              </LazyRoute>
                             </ProtectedRoute>
                           }
                         />
@@ -1390,9 +1390,9 @@ function App() {
                           path="drip-campaigns"
                           element={
                             <ProtectedRoute requiredRole="manager">
-                              <Suspense fallback={<LoadingSpinner />}>
+                              <LazyRoute>
                                 <DripCampaignBuilder />
-                              </Suspense>
+                              </LazyRoute>
                             </ProtectedRoute>
                           }
                         />
@@ -1400,9 +1400,9 @@ function App() {
                           path="push-notifications"
                           element={
                             <ProtectedRoute requiredRole="manager">
-                              <Suspense fallback={<LoadingSpinner />}>
+                              <LazyRoute>
                                 <PushNotifications />
-                              </Suspense>
+                              </LazyRoute>
                             </ProtectedRoute>
                           }
                         />
@@ -1416,17 +1416,17 @@ function App() {
                         <Route
                           path="am/portfolio"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <AMPortfolio />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="am/tenant/:tenantId"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <AMTenantNarrative />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                       </Route>
@@ -1448,17 +1448,17 @@ function App() {
                         <Route
                           index
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <TenantOverview />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="overview"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <TenantOverview />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
 
@@ -1466,33 +1466,33 @@ function App() {
                         <Route
                           path="trust"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <TenantAdminOverview />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="trust/emq"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <EMQDiagnostics />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="console"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <MediaBuyerConsole />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="signal-hub"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <SignalHub />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
 
@@ -1500,9 +1500,9 @@ function App() {
                         <Route
                           path="campaigns"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <TenantCampaigns />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
 
@@ -1510,49 +1510,49 @@ function App() {
                         <Route
                           path="campaigns/connect"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <ConnectPlatforms />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="campaigns/accounts"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <AdAccounts />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="campaigns/new"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <CampaignBuilder />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="campaigns/drafts"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <CampaignDrafts />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="campaigns/drafts/:draftId"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <CampaignBuilder />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="campaigns/logs"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <PublishLogs />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
 
@@ -1561,9 +1561,9 @@ function App() {
                           path="settings"
                           element={
                             <ProtectedRoute requiredRole="admin">
-                              <Suspense fallback={<LoadingSpinner />}>
+                              <LazyRoute>
                                 <TenantSettings />
-                              </Suspense>
+                              </LazyRoute>
                             </ProtectedRoute>
                           }
                         />
@@ -1573,9 +1573,9 @@ function App() {
                           path="team"
                           element={
                             <ProtectedRoute requiredRole="admin">
-                              <Suspense fallback={<LoadingSpinner />}>
+                              <LazyRoute>
                                 <TeamManagement />
-                              </Suspense>
+                              </LazyRoute>
                             </ProtectedRoute>
                           }
                         />
@@ -1585,9 +1585,9 @@ function App() {
                           path="client-assignments"
                           element={
                             <ProtectedRoute requiredRole="admin">
-                              <Suspense fallback={<LoadingSpinner />}>
+                              <LazyRoute>
                                 <ClientAssignments />
-                              </Suspense>
+                              </LazyRoute>
                             </ProtectedRoute>
                           }
                         />
@@ -1597,9 +1597,9 @@ function App() {
                           path="insights"
                           element={
                             <ProtectedRoute requiredRole="manager">
-                              <Suspense fallback={<LoadingSpinner />}>
+                              <LazyRoute>
                                 <TenantInsights />
-                              </Suspense>
+                              </LazyRoute>
                             </ProtectedRoute>
                           }
                         />
@@ -1609,9 +1609,9 @@ function App() {
                           path="audit-log"
                           element={
                             <ProtectedRoute requiredRole="admin">
-                              <Suspense fallback={<LoadingSpinner />}>
+                              <LazyRoute>
                                 <TenantAuditLog />
-                              </Suspense>
+                              </LazyRoute>
                             </ProtectedRoute>
                           }
                         />
@@ -1620,9 +1620,9 @@ function App() {
                         <Route
                           path="competitors"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <Competitors />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
 
@@ -1630,9 +1630,9 @@ function App() {
                         <Route
                           path="benchmarks"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <Benchmarks />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
 
@@ -1640,9 +1640,9 @@ function App() {
                         <Route
                           path="assets"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <Assets />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
 
@@ -1650,9 +1650,9 @@ function App() {
                         <Route
                           path="rules"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <Rules />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
 
@@ -1660,9 +1660,9 @@ function App() {
                         <Route
                           path="predictions"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <Predictions />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
 
@@ -1679,9 +1679,9 @@ function App() {
                         <Route
                           path="pacing"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <Pacing />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
 
@@ -1689,9 +1689,9 @@ function App() {
                         <Route
                           path="profit"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <ProfitROAS />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
 
@@ -1699,9 +1699,9 @@ function App() {
                         <Route
                           path="attribution"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <Attribution />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
 
@@ -1710,9 +1710,9 @@ function App() {
                           path="reporting"
                           element={
                             <ProtectedRoute requiredRole="manager">
-                              <Suspense fallback={<LoadingSpinner />}>
+                              <LazyRoute>
                                 <Reporting />
-                              </Suspense>
+                              </LazyRoute>
                             </ProtectedRoute>
                           }
                         />
@@ -1721,9 +1721,9 @@ function App() {
                         <Route
                           path="ab-testing"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <ABTesting />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
 
@@ -1731,9 +1731,9 @@ function App() {
                         <Route
                           path="dead-letter-queue"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <DeadLetterQueue />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
 
@@ -1741,9 +1741,9 @@ function App() {
                         <Route
                           path="explainability"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <ModelExplainability />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
 
@@ -1751,9 +1751,9 @@ function App() {
                         <Route
                           path="embed-widgets"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <EmbedWidgets />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                       </Route>
@@ -1770,9 +1770,9 @@ function App() {
                         element={
                           <ProtectedRoute requiredRole="superadmin">
                             <ErrorBoundary message="Something went wrong in the platform console. Please try refreshing.">
-                              <Suspense fallback={<LoadingSpinner />}>
+                              <LazyRoute>
                                 <ConsoleLayout />
-                              </Suspense>
+                              </LazyRoute>
                             </ErrorBoundary>
                           </ProtectedRoute>
                         }
@@ -1780,177 +1780,177 @@ function App() {
                         <Route
                           index
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <SuperadminDashboard />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="tenants"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <SuperAdminTenantsList />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="tenants/:tenantId"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <SuperAdminTenantProfile />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="users"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <SuperAdminUsers />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="feature-flags"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <ConsoleFeatureFlags />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="credentials"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <ConsoleCredentials />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="billing"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <SuperAdminBilling />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="control-tower"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <ControlTower />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="dead-letter-queue"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <DeadLetterQueue />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="publish-logs"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <PublishLogs />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="system"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <SuperAdminSystem />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="launch-readiness"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <SuperAdminLaunchReadiness />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="analytics"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <ConsolePlatformAnalytics />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="benchmarks"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <SuperAdminBenchmarks />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="audit"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <SuperAdminAudit />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="anomalies"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <ConsoleCrossTenantAnomalies />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="audit-services"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <ConsoleAuditServices />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="emq-measure"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <ConsoleEMQMeasure />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="offline-conversions"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <ConsoleOfflineConversions />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="experiments"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <ConsoleExperiments />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="budget-reallocation"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <ConsoleBudgetReallocation />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                         <Route
                           path="ltv-batch"
                           element={
-                            <Suspense fallback={<LoadingSpinner />}>
+                            <LazyRoute>
                               <ConsoleLTVBatch />
-                            </Suspense>
+                            </LazyRoute>
                           }
                         />
                       </Route>
@@ -2001,9 +2001,9 @@ function App() {
                       <Route
                         path="*"
                         element={
-                          <Suspense fallback={<LoadingSpinner />}>
+                          <LazyRoute>
                             <NotFound />
-                          </Suspense>
+                          </LazyRoute>
                         }
                       />
                     </Routes>
