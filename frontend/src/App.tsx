@@ -89,6 +89,7 @@ const ConsoleCrossTenantAnomalies = lazyWithRetry(
   () => import('./views/console/CrossTenantAnomalies')
 );
 const ConsoleAuditServices = lazyWithRetry(() => import('./views/console/AuditServices'));
+const ConsoleEMQMeasure = lazyWithRetry(() => import('./views/console/EMQMeasureWorkflow'));
 const CDPCalculator = lazyWithRetry(() => import('./views/CDPCalculator'));
 
 // CDP (Customer Data Platform) views
@@ -1905,6 +1906,14 @@ function App() {
                           element={
                             <Suspense fallback={<LoadingSpinner />}>
                               <ConsoleAuditServices />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="emq-measure"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <ConsoleEMQMeasure />
                             </Suspense>
                           }
                         />
