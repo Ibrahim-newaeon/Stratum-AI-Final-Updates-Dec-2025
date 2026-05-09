@@ -55,6 +55,8 @@ google-auth==2.50.0
 
 # LLM Integrations (Copilot)
 anthropic==0.45.2
+openai==1.54.0
+pgvector==0.3.6
 
 # Web Scraping (Module D)
 beautifulsoup4==4.14.3
