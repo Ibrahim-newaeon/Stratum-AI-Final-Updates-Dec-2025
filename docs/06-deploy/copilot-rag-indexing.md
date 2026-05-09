@@ -1,11 +1,13 @@
-# Activation Checklist — Copilot RAG (Phases D-1 + D-2)
+# Activation Checklist — Copilot RAG (Phases D-1 + D-2 + D-3)
 
-The Copilot RAG bridge is shipped in three pieces. This doc covers
-**Phase D Part 1 — indexing infrastructure** and **Phase D Part 2 —
-bridge wiring + citations**. The bridge is now active; toggling
-`COPILOT_RAG_ENABLED=true` will retrieve docs and pass them to Claude.
+The Copilot RAG bridge is shipped complete. This doc covers all three
+parts:
 
-**Phase D Part 3** (SSE streaming) is a separate PR.
+- **Part 1** — pgvector + indexing infrastructure
+- **Part 2** — RAG retrieval wired into the bridge with citations
+- **Part 3** — SSE streaming endpoint (`POST /copilot/chat/stream`)
+  with frontend token-by-token rendering and graceful fallback to
+  the buffered `POST /copilot/chat` endpoint on stream failure.
 
 ## What this PR ships
 
@@ -137,9 +139,18 @@ auto-cleaned — drop them manually:
 DELETE FROM copilot_doc_chunks WHERE source_path = 'docs/old-thing.md';
 ```
 
-## Out of scope (deferred)
+## Streaming notes (Part 3)
 
-- Streaming responses + frontend EventSource — PR 3.
+The frontend tries `POST /copilot/chat/stream` first and falls back to
+`POST /copilot/chat` on any failure (network, 5xx, malformed SSE).
+No env var to enable — streaming is automatic when the chat endpoint
+is reachable. SSE wire format is documented in
+`backend/app/services/agents/copilot_llm_stream.py`.
+
+If you front the API with Cloudflare or nginx, ensure proxy buffering
+is disabled for `/copilot/chat/stream` (the endpoint sets
+`X-Accel-Buffering: no` and `Cache-Control: no-cache, no-transform`,
+but some configs override).
 - Auto-reindex on docs/ edits — would need a CI job or git hook.
 - Per-tenant docs (e.g. tenant-uploaded help articles) — current
   scope is platform docs only.

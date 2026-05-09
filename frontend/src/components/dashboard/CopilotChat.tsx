@@ -14,8 +14,8 @@ import {
   BookOpen,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useCopilotChat } from '@/api/copilot';
-import type { CopilotMessage, CopilotDataCard } from '@/api/copilot';
+import { useCopilotChat, streamCopilotMessage } from '@/api/copilot';
+import type { CopilotMessage, CopilotDataCard, CopilotCitation } from '@/api/copilot';
 
 function DataCard({ card }: { card: CopilotDataCard }) {
   const statusColors: Record<string, string> = {
@@ -152,6 +152,7 @@ export function CopilotChat() {
   const [messages, setMessages] = useState<CopilotMessage[]>([]);
   const [input, setInput] = useState('');
   const [sessionId, setSessionId] = useState<string | undefined>();
+  const [isStreaming, setIsStreaming] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -194,7 +195,7 @@ export function CopilotChat() {
   }, [isOpen, messages.length]);
 
   const sendMessage = async (text: string) => {
-    if (!text.trim() || chatMutation.isPending) return;
+    if (!text.trim() || chatMutation.isPending || isStreaming) return;
 
     const userMsg: CopilotMessage = {
       id: `user-${Date.now()}`,
@@ -205,6 +206,58 @@ export function CopilotChat() {
 
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
+
+    // Try the streaming endpoint first. On any failure (network,
+    // 5xx, malformed SSE) we fall back to the buffered /chat call.
+    const assistantId = `asst-${Date.now()}`;
+    setIsStreaming(true);
+
+    let streamedContent = '';
+    const seedAssistant: CopilotMessage = {
+      id: assistantId,
+      role: 'assistant',
+      content: '',
+      timestamp: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, seedAssistant]);
+
+    const updateStreamed = (patch: Partial<CopilotMessage>) => {
+      setMessages((prev) => prev.map((m) => (m.id === assistantId ? { ...m, ...patch } : m)));
+    };
+
+    try {
+      await streamCopilotMessage(
+        { message: text.trim(), session_id: sessionId },
+        {
+          onSession: (sid) => setSessionId(sid),
+          onToken: (chunk) => {
+            streamedContent += chunk;
+            updateStreamed({ content: streamedContent });
+          },
+          onMeta: (meta) => {
+            const finalContent = meta.fallback_message ?? streamedContent.trim() ?? '';
+            updateStreamed({
+              content: finalContent || meta.fallback_message || '',
+              suggestions: meta.suggestions,
+              data_cards: meta.data_cards,
+              intent: meta.intent,
+              citations: meta.citations as CopilotCitation[],
+            });
+          },
+          onDone: () => setIsStreaming(false),
+          onError: () => {
+            // Don't set isStreaming false here — we wait for meta + done
+            // so the dashboard can swap in fallback_message cleanly.
+          },
+        }
+      );
+      return;
+    } catch {
+      // Stream failed before the first byte. Roll back the empty
+      // assistant bubble and fall through to the buffered path.
+      setMessages((prev) => prev.filter((m) => m.id !== assistantId));
+      setIsStreaming(false);
+    }
 
     try {
       const response = await chatMutation.mutateAsync({
@@ -346,11 +399,11 @@ export function CopilotChat() {
                 placeholder="Ask about your campaigns..."
                 aria-label="Ask about your campaigns"
                 className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 outline-none py-1.5"
-                disabled={chatMutation.isPending}
+                disabled={chatMutation.isPending || isStreaming}
               />
               <button
                 type="submit"
-                disabled={!input.trim() || chatMutation.isPending}
+                disabled={!input.trim() || chatMutation.isPending || isStreaming}
                 aria-label="Send message"
                 className={cn(
                   'p-1.5 rounded-lg transition-colors',
