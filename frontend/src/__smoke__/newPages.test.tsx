@@ -45,6 +45,26 @@ const NEW_PAGES: { name: string; loader: () => Promise<{ default: unknown }> }[]
     name: 'console/EMQMeasureWorkflow',
     loader: () => import('@/views/console/EMQMeasureWorkflow'),
   },
+  // audit_services per-domain — offline conversion uploads
+  {
+    name: 'console/OfflineConversions',
+    loader: () => import('@/views/console/OfflineConversions'),
+  },
+  // audit_services per-domain — model A/B experiments lifecycle
+  {
+    name: 'console/Experiments',
+    loader: () => import('@/views/console/Experiments'),
+  },
+  // audit_services per-domain — budget reallocation 4-step flow
+  {
+    name: 'console/BudgetReallocation',
+    loader: () => import('@/views/console/BudgetReallocation'),
+  },
+  // audit_services per-domain — LTV batch predict
+  {
+    name: 'console/LTVBatchPredict',
+    loader: () => import('@/views/console/LTVBatchPredict'),
+  },
   // Phase H — GDPR data-rights page
   {
     name: 'GDPR',
