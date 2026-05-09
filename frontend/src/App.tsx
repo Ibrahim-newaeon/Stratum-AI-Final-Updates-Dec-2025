@@ -90,6 +90,10 @@ const ConsoleCrossTenantAnomalies = lazyWithRetry(
 );
 const ConsoleAuditServices = lazyWithRetry(() => import('./views/console/AuditServices'));
 const ConsoleEMQMeasure = lazyWithRetry(() => import('./views/console/EMQMeasureWorkflow'));
+const ConsoleOfflineConversions = lazyWithRetry(() => import('./views/console/OfflineConversions'));
+const ConsoleExperiments = lazyWithRetry(() => import('./views/console/Experiments'));
+const ConsoleBudgetReallocation = lazyWithRetry(() => import('./views/console/BudgetReallocation'));
+const ConsoleLTVBatch = lazyWithRetry(() => import('./views/console/LTVBatchPredict'));
 const CDPCalculator = lazyWithRetry(() => import('./views/CDPCalculator'));
 
 // CDP (Customer Data Platform) views
@@ -1914,6 +1918,38 @@ function App() {
                           element={
                             <Suspense fallback={<LoadingSpinner />}>
                               <ConsoleEMQMeasure />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="offline-conversions"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <ConsoleOfflineConversions />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="experiments"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <ConsoleExperiments />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="budget-reallocation"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <ConsoleBudgetReallocation />
+                            </Suspense>
+                          }
+                        />
+                        <Route
+                          path="ltv-batch"
+                          element={
+                            <Suspense fallback={<LoadingSpinner />}>
+                              <ConsoleLTVBatch />
                             </Suspense>
                           }
                         />
