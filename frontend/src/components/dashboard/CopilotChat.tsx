@@ -11,6 +11,7 @@ import {
   Bot,
   User,
   Minimize2,
+  BookOpen,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useCopilotChat } from '@/api/copilot';
@@ -105,6 +106,30 @@ function MessageBubble({ msg }: { msg: CopilotMessage }) {
             ))}
           </div>
         )}
+
+        {/* Citations — only on assistant messages, only when RAG returned hits */}
+        {!isUser && msg.citations && msg.citations.length > 0 && (
+          <div className="mt-3 pt-2.5 border-t border-border/50 space-y-1">
+            <div className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+              <BookOpen className="w-3 h-3" />
+              Sources
+            </div>
+            <ul className="space-y-1">
+              {msg.citations.map((c, i) => (
+                <li
+                  key={`${c.source_path}-${i}`}
+                  className="flex items-baseline gap-1.5 text-[11px] text-muted-foreground"
+                >
+                  <span className="font-mono text-muted-foreground/70 tabular-nums">{i + 1}.</span>
+                  <span className="font-medium text-foreground/80 truncate">{c.title}</span>
+                  <span className="font-mono text-muted-foreground/70 truncate ml-auto">
+                    {c.source_path.replace(/^docs\//, '')}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -197,6 +222,7 @@ export function CopilotChat() {
         suggestions: response.suggestions,
         data_cards: response.data_cards,
         intent: response.intent,
+        citations: response.citations,
       };
 
       setMessages((prev) => [...prev, assistantMsg]);

@@ -44,6 +44,14 @@ class CopilotMessageRequest(BaseModel):
     session_id: Optional[str] = Field(None, description="Optional session ID for continuity")
 
 
+class CopilotCitation(BaseModel):
+    """A doc reference returned by the RAG bridge."""
+
+    source_path: str = Field(..., description="Repo-relative path of the cited doc")
+    title: str = Field(..., description="Human-readable title (heading path or filename)")
+    distance: float = Field(..., description="Cosine distance — lower is more relevant")
+
+
 class CopilotMessageResponse(BaseModel):
     """Response from the copilot."""
     session_id: str
@@ -51,6 +59,7 @@ class CopilotMessageResponse(BaseModel):
     suggestions: list[str] = []
     data_cards: list[dict] = []
     intent: str = "unknown"
+    citations: list[CopilotCitation] = []
     timestamp: str
 
 
@@ -200,23 +209,34 @@ async def copilot_chat(
         anomaly_data=anomaly_data,
     )
 
-    llm_text = await generate_llm_message(
+    llm_result = await generate_llm_message(
         message=request.message,
         user_name=first_name,
         metrics=metrics,
         health_data=health_data,
         anomaly_data=anomaly_data,
         intent=response.intent,
+        db=db,
     )
-    if llm_text:
-        response = response.model_copy(update={"message": llm_text})
+    if llm_result.text:
+        response = response.model_copy(update={"message": llm_result.text})
+
+    citations = [
+        CopilotCitation(
+            source_path=c.source_path,
+            title=c.title,
+            distance=c.distance,
+        )
+        for c in llm_result.citations
+    ]
 
     logger.info(
         "copilot_response_generated",
         tenant_id=tenant_id,
         intent=response.intent,
         message_len=len(response.message),
-        llm_used=llm_text is not None,
+        llm_used=llm_result.text is not None,
+        citation_count=len(citations),
     )
 
     return APIResponse(
@@ -227,6 +247,7 @@ async def copilot_chat(
             suggestions=response.suggestions,
             data_cards=response.data_cards,
             intent=response.intent,
+            citations=citations,
             timestamp=datetime.now(UTC).isoformat(),
         ),
         message="Copilot response generated",

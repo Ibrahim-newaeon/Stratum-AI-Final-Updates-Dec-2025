@@ -18,6 +18,12 @@ export interface CopilotDataCard {
   status?: string;
 }
 
+export interface CopilotCitation {
+  source_path: string;
+  title: string;
+  distance: number;
+}
+
 export interface CopilotMessageRequest {
   message: string;
   session_id?: string;
@@ -29,6 +35,7 @@ export interface CopilotMessageResponse {
   suggestions: string[];
   data_cards: CopilotDataCard[];
   intent: string;
+  citations?: CopilotCitation[];
   timestamp: string;
 }
 
@@ -40,6 +47,7 @@ export interface CopilotMessage {
   suggestions?: string[];
   data_cards?: CopilotDataCard[];
   intent?: string;
+  citations?: CopilotCitation[];
 }
 
 // =============================================================================
@@ -50,7 +58,7 @@ export const copilotApi = {
   sendMessage: async (request: CopilotMessageRequest): Promise<CopilotMessageResponse> => {
     const response = await apiClient.post<ApiResponse<CopilotMessageResponse>>(
       '/copilot/chat',
-      request,
+      request
     );
     return response.data.data;
   },
