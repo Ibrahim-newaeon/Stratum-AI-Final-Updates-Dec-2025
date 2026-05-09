@@ -301,6 +301,30 @@ class Settings(BaseSettings):
     )
 
     # -------------------------------------------------------------------------
+    # Copilot RAG (PR1: indexing only — bridge wiring lands in PR2)
+    # -------------------------------------------------------------------------
+    copilot_rag_enabled: bool = Field(
+        default=False,
+        description="Retrieve relevant Stratum docs and inject into the Copilot prompt",
+    )
+    openai_api_key: Optional[str] = Field(
+        default=None,
+        description="OpenAI key — required when copilot_rag_enabled=True (text-embedding-3-small)",
+    )
+    copilot_rag_embedding_model: str = Field(
+        default="text-embedding-3-small",
+        description="OpenAI embedding model. 1536-dim, must match the migration's vector(1536) column",
+    )
+    copilot_rag_top_k: int = Field(
+        default=4,
+        description="How many doc chunks to retrieve per query before sending to Claude",
+    )
+    copilot_rag_chunk_chars: int = Field(
+        default=1200,
+        description="Target characters per chunk during indexing (paragraph-boundary aware)",
+    )
+
+    # -------------------------------------------------------------------------
     # Stripe Payments Configuration
     # -------------------------------------------------------------------------
     stripe_secret_key: Optional[str] = Field(default=None, description="Stripe secret API key")

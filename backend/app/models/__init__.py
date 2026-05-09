@@ -154,6 +154,7 @@ from app.models.launch_readiness import (
     LaunchReadinessItemState,
     LaunchReadinessEvent,
 )
+from app.models.copilot_doc import CopilotDocChunk
 
 __all__ = [
     "APIKey",
@@ -189,6 +190,7 @@ __all__ = [
     "ChannelInteraction",
     "Client",
     "ClientAssignment",
+    "CopilotDocChunk",
     "ClientRequest",
     # Client (Agency → Brand)
     "ClientRequestStatus",
