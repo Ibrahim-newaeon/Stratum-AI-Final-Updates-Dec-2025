@@ -1,8 +1,11 @@
-# Activation Checklist — Copilot RAG (Phase D, foundation)
+# Activation Checklist — Copilot RAG (Phases D-1 + D-2)
 
-The Copilot RAG bridge is being shipped in three pieces. This doc
-covers **Phase D Part 1 — indexing infrastructure** (PR #270 follow-up).
-The bridge stays off until PR 2 wires retrieval into `copilot_llm`.
+The Copilot RAG bridge is shipped in three pieces. This doc covers
+**Phase D Part 1 — indexing infrastructure** and **Phase D Part 2 —
+bridge wiring + citations**. The bridge is now active; toggling
+`COPILOT_RAG_ENABLED=true` will retrieve docs and pass them to Claude.
+
+**Phase D Part 3** (SSE streaming) is a separate PR.
 
 ## What this PR ships
 
@@ -44,7 +47,7 @@ no-op on re-run.
 | Variable                      | Value                         |
 | ----------------------------- | ----------------------------- |
 | `OPENAI_API_KEY`              | the `sk-…` key from Step 2    |
-| `COPILOT_RAG_ENABLED`         | `false` (leave off until PR2) |
+| `COPILOT_RAG_ENABLED`         | `true` once PR2 is merged + corpus indexed |
 | `COPILOT_RAG_EMBEDDING_MODEL` | `text-embedding-3-small`      |
 | `COPILOT_RAG_TOP_K`           | `4` (default)                 |
 | `COPILOT_RAG_CHUNK_CHARS`     | `1200` (default)              |
@@ -136,7 +139,6 @@ DELETE FROM copilot_doc_chunks WHERE source_path = 'docs/old-thing.md';
 
 ## Out of scope (deferred)
 
-- Wiring retrieval into `copilot_llm.generate_llm_message` — PR 2.
 - Streaming responses + frontend EventSource — PR 3.
 - Auto-reindex on docs/ edits — would need a CI job or git hook.
 - Per-tenant docs (e.g. tenant-uploaded help articles) — current
