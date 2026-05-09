@@ -40,6 +40,11 @@ const NEW_PAGES: { name: string; loader: () => Promise<{ default: unknown }> }[]
     name: 'console/AuditServices',
     loader: () => import('@/views/console/AuditServices'),
   },
+  // audit_services per-domain — EMQ measurement workflow
+  {
+    name: 'console/EMQMeasureWorkflow',
+    loader: () => import('@/views/console/EMQMeasureWorkflow'),
+  },
   // Phase H — GDPR data-rights page
   {
     name: 'GDPR',
