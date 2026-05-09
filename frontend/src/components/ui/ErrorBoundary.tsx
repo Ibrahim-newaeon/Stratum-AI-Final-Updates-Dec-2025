@@ -1,61 +1,82 @@
 /**
  * Error Boundary Component
- * Catches JavaScript errors in child components and displays fallback UI
+ * Catches JavaScript errors in child components and displays fallback UI.
+ * Reports caught errors to Sentry by default; opt out with `reportToSentry={false}`.
  */
 
-import { Component, ErrorInfo, ReactNode } from 'react'
-import { AlertTriangle, RefreshCw } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { Component, ErrorInfo, ReactNode } from 'react';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
+import * as Sentry from '@sentry/react';
+import { cn } from '@/lib/utils';
 
 interface Props {
-  children: ReactNode
-  fallback?: ReactNode
-  onError?: (error: Error, errorInfo: ErrorInfo) => void
-  className?: string
+  children: ReactNode;
+  fallback?: ReactNode;
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
+  className?: string;
   /** Optional error message to display in the default fallback UI */
-  message?: string
+  message?: string;
+  /** Tag attached to Sentry events from this boundary (e.g. "lazy-route", "chart"). */
+  boundaryTag?: string;
+  /** Disable automatic Sentry reporting (default: true). */
+  reportToSentry?: boolean;
 }
 
 interface State {
-  hasError: boolean
-  error: Error | null
+  hasError: boolean;
+  error: Error | null;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
   public state: State = {
     hasError: false,
     error: null,
-  }
+  };
 
   public static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error }
+    return { hasError: true, error };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-
-    this.props.onError?.(error, errorInfo)
+    // Sentry by default. Chunk-load errors are noisy in CI/preview deploys
+    // so we tag them but still report — the team can suppress at the
+    // Sentry-rule level rather than swallowing here.
+    if (this.props.reportToSentry !== false) {
+      Sentry.captureException(error, {
+        tags: {
+          boundary: this.props.boundaryTag ?? 'react-error-boundary',
+        },
+        extra: {
+          componentStack: errorInfo.componentStack,
+        },
+      });
+    }
+    this.props.onError?.(error, errorInfo);
   }
 
   private handleRetry = () => {
-    this.setState({ hasError: false, error: null })
-  }
+    this.setState({ hasError: false, error: null });
+  };
 
   public render() {
     if (this.state.hasError) {
       if (this.props.fallback) {
-        return this.props.fallback
+        return this.props.fallback;
       }
 
-      const isChunkError = this.state.error?.message?.includes('Failed to fetch dynamically imported module')
-        || this.state.error?.message?.includes('Loading chunk')
-        || this.state.error?.message?.includes('Loading CSS chunk')
-        || this.state.error?.name === 'ChunkLoadError';
+      const isChunkError =
+        this.state.error?.message?.includes('Failed to fetch dynamically imported module') ||
+        this.state.error?.message?.includes('Loading chunk') ||
+        this.state.error?.message?.includes('Loading CSS chunk') ||
+        this.state.error?.name === 'ChunkLoadError';
 
       return (
-        <div className={cn(
-          'flex flex-col items-center justify-center p-8 rounded-xl border bg-card',
-          this.props.className
-        )}>
+        <div
+          className={cn(
+            'flex flex-col items-center justify-center p-8 rounded-xl border bg-card',
+            this.props.className
+          )}
+        >
           <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
             <AlertTriangle className="w-6 h-6 text-destructive" />
           </div>
@@ -65,7 +86,8 @@ export class ErrorBoundary extends Component<Props, State> {
           <p className="text-sm text-muted-foreground text-center mb-4 max-w-sm">
             {isChunkError
               ? 'A new version of the app has been deployed. Please reload the page.'
-              : this.props.message || 'We encountered an error while rendering this component. Please try again.'}
+              : this.props.message ||
+                'We encountered an error while rendering this component. Please try again.'}
           </p>
           {this.state.error && (
             <p className="text-xs text-muted-foreground/60 text-center mb-4 max-w-md font-mono break-all">
@@ -80,20 +102,20 @@ export class ErrorBoundary extends Component<Props, State> {
             {isChunkError ? 'Reload Page' : 'Try Again'}
           </button>
         </div>
-      )
+      );
     }
 
-    return this.props.children
+    return this.props.children;
   }
 }
 
 // Chart-specific error fallback
 export function ChartErrorFallback({
   onRetry,
-  height = 300
+  height = 300,
 }: {
-  onRetry?: () => void
-  height?: number
+  onRetry?: () => void;
+  height?: number;
 }) {
   return (
     <div
@@ -103,44 +125,27 @@ export function ChartErrorFallback({
       <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center mb-3">
         <AlertTriangle className="w-5 h-5 text-amber-500" />
       </div>
-      <p className="text-sm font-medium text-foreground mb-1">
-        Chart unavailable
-      </p>
-      <p className="text-xs text-muted-foreground mb-3">
-        Failed to render chart data
-      </p>
+      <p className="text-sm font-medium text-foreground mb-1">Chart unavailable</p>
+      <p className="text-xs text-muted-foreground mb-3">Failed to render chart data</p>
       {onRetry && (
-        <button
-          onClick={onRetry}
-          className="text-xs text-primary hover:underline"
-        >
+        <button onClick={onRetry} className="text-xs text-primary hover:underline">
           Retry
         </button>
       )}
     </div>
-  )
+  );
 }
 
 // Widget error fallback
-export function WidgetErrorFallback({
-  title,
-  onRetry
-}: {
-  title?: string
-  onRetry?: () => void
-}) {
+export function WidgetErrorFallback({ title, onRetry }: { title?: string; onRetry?: () => void }) {
   return (
     <div className="rounded-xl border bg-card p-6">
-      {title && (
-        <h3 className="text-lg font-semibold text-foreground mb-4">{title}</h3>
-      )}
+      {title && <h3 className="text-lg font-semibold text-foreground mb-4">{title}</h3>}
       <div className="flex flex-col items-center justify-center py-8">
         <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center mb-3">
           <AlertTriangle className="w-5 h-5 text-destructive" />
         </div>
-        <p className="text-sm text-muted-foreground text-center">
-          Unable to load this widget
-        </p>
+        <p className="text-sm text-muted-foreground text-center">Unable to load this widget</p>
         {onRetry && (
           <button
             onClick={onRetry}
@@ -152,7 +157,7 @@ export function WidgetErrorFallback({
         )}
       </div>
     </div>
-  )
+  );
 }
 
-export default ErrorBoundary
+export default ErrorBoundary;
