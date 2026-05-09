@@ -68,7 +68,6 @@ export default function SQLEditor() {
 
   return (
     <div className="min-h-screen bg-background text-foreground p-6">
-    <div className="min-h-screen bg-background text-white p-6">
       <div className="max-w-7xl mx-auto">
         <header className="mb-8">
           <h1 className="text-3xl font-bold flex items-center gap-3">
@@ -81,7 +80,6 @@ export default function SQLEditor() {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left: Editor */}
           <div className="lg:col-span-2 space-y-4">
             <div className={PANEL_SURFACE}>
               <div className="flex items-center justify-between mb-2">
@@ -97,7 +95,6 @@ export default function SQLEditor() {
                       <option key={n} value={n} className="bg-card">
                         {n}
                       </option>
-                      <option key={n} value={n} className="bg-card">{n}</option>
                     ))}
                   </select>
                 </div>
@@ -157,7 +154,6 @@ export default function SQLEditor() {
                     onClick={() =>
                       navigator.clipboard.writeText(JSON.stringify(result.rows, null, 2))
                     }
-                    onClick={() => navigator.clipboard.writeText(JSON.stringify(result.rows, null, 2))}
                     className="text-xs text-primary hover:underline flex items-center gap-1"
                   >
                     <DocumentDuplicateIcon className="w-3 h-3" /> Copy JSON
@@ -197,7 +193,6 @@ export default function SQLEditor() {
             )}
           </div>
 
-          {/* Right: Sample Queries */}
           <div className="space-y-4">
             <div className={PANEL_SURFACE}>
               <h3 className="text-sm font-medium text-foreground mb-3">Sample Queries</h3>
