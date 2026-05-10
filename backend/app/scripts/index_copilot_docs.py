@@ -39,8 +39,11 @@ from app.services.agents.doc_index import (
 logger = get_logger(__name__)
 
 
-# Repo root, two levels up from this file (backend/app/scripts/this.py -> backend/.. -> repo)
-REPO_ROOT = Path(__file__).resolve().parents[3]
+# Corpus root = backend/. The curated docs corpus lives at `backend/docs/`
+# (it was at repo root before; moved under backend/ so the backend Docker
+# image can ship it without needing a repo-root build context). With this
+# script at backend/app/scripts/index_copilot_docs.py, parents[2] is backend/.
+REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 def _resolve_targets(args: List[str]) -> List[Path]:

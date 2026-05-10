@@ -26,8 +26,8 @@ Interactive documentation including:
 - Complete 60+ screen directory
 - All feature specifications
 - API reference (150+ endpoints)
-- [SQLAlchemy 2.0 Modernization Guide](docs/SQLALCHEMY_MODERNIZATION_GUIDE.md)
-- [API Explorer & Integration Guide](docs/API_EXPLORER.md)
+- [SQLAlchemy 2.0 Modernization Guide](backend/docs/SQLALCHEMY_MODERNIZATION_GUIDE.md)
+- [API Explorer & Integration Guide](backend/docs/API_EXPLORER.md)
 
 ---
 
@@ -213,7 +213,7 @@ stratum-ai/
 │   │   ├── api/                 # API clients
 │   │   └── stores/              # State management
 │   └── public/
-├── docs/                        # Documentation
+├── backend/docs/                # Documentation (moved under backend/ so the Copilot RAG indexer can ship the curated subset inside the backend image)
 ├── infrastructure/              # Docker, monitoring
 └── tests/load/                  # K6 load tests
 ```
@@ -223,7 +223,7 @@ stratum-ai/
 - [Full Documentation](https://ibrahim-newaeon.github.io/Javna-StratumAi/)
 - [Release v1.1.0](https://github.com/Ibrahim-newaeon/Javna-StratumAi/releases/tag/v1.1.0)
 - [API Reference (Live)](https://api.stratumai.app/docs)
-- [SQLAlchemy Modernization Guide](docs/SQLALCHEMY_MODERNIZATION_GUIDE.md)
+- [SQLAlchemy Modernization Guide](backend/docs/SQLALCHEMY_MODERNIZATION_GUIDE.md)
 
 ---
 

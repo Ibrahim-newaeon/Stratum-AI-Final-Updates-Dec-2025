@@ -68,7 +68,7 @@ Signal Health Check → Trust Gate → Automation Decision
 │   ├── package.json
 │   └── vite.config.ts
 ├── docker-compose.yml          # 8 services (db, redis, api, worker, scheduler, frontend, flower)
-├── docs/                       # 60+ documentation files
+├── backend/docs/               # 60+ documentation files (curated subset is shipped in the backend image for the Copilot RAG indexer)
 └── CLAUDE.md
 ```
 
@@ -212,7 +212,7 @@ Marketing agencies managing multiple client accounts across ad platforms. Extend
 - **Reference**: Apple / Porsche Design — premium materials, restrained palette, obsessive detail
 - **Anti-reference**: Enterprise gray (Salesforce/SAP); 2024-default violet/cyan glassmorphism (Linear, Vercel, every YC AI startup).
 - **Theme**: Dual mode — figma dark (default) + designed-coherent figma light. Both first-class.
-- **Palette**: Ink + ember — see `docs/03-frontend/figma-theme.md` for full token table.
+- **Palette**: Ink + ember — see `backend/docs/03-frontend/figma-theme.md` for full token table.
   - Dark: ink `#0B0B0B` bg · surface `#141414` · line `#1F1F1F` · ember `#FF5A1F` accent · cyan `#06B6D4` info.
   - Light: warm off-white `#FAFAF7` bg · `#FFFFFF` surface · `#E8E8E0` line · desaturated ember `#E84F1F` accent.
 - **Typography**: Geist (sans + display) + Geist Mono. No Satoshi, no Clash Display, no Inter.
@@ -245,7 +245,7 @@ Each ships with a vitest. ARIA + keyboard support are first-class, not afterthou
 
 ## Imports
 
-@docs/architecture/trust-engine.md
-@docs/integrations/README.md
-@docs/00-overview/glossary.md
-@docs/03-frontend/figma-theme.md
+@backend/docs/architecture/trust-engine.md
+@backend/docs/integrations/README.md
+@backend/docs/00-overview/glossary.md
+@backend/docs/03-frontend/figma-theme.md
