@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Stratum AI — Competitor Battlecards</title>
+  <style>
+:root{
+  --color-primary:#16A085;
+  --color-secondary:#667eea;
+  --color-accent:#F39C12;
+
+  --color-bg:#0B1220;
+  --color-surface:#101A2E;
+  --color-text:#EAF0FF;
+  --color-muted:#A9B6D3;
+
+  --border: rgba(255,255,255,.12);
+  --shadow: 0 12px 28px rgba(0,0,0,.35);
+  --radius: 16px;
+  --maxw: 1280px;
+}
+
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+  color:var(--color-text);
+  background:
+    radial-gradient(1200px 700px at 12% 15%, rgba(22,160,133,.22), transparent 55%),
+    radial-gradient(900px 520px at 85% 18%, rgba(102,126,234,.20), transparent 50%),
+    radial-gradient(900px 520px at 70% 92%, rgba(243,156,18,.12), transparent 55%),
+    var(--color-bg);
+}
+
+a{ color:#BFD6FF; text-decoration:none; }
+a:hover{ text-decoration:underline; }
+
+.container{ max-width:var(--maxw); margin:0 auto; padding:18px 16px 56px; }
+
+.nav{
+  position:sticky; top:0; z-index:50;
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+  box-shadow:var(--shadow);
+  padding:12px 14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  backdrop-filter: blur(10px);
+}
+
+.brand{
+  display:flex; flex-direction:column; gap:2px; min-width:0;
+}
+.brand .title{ font-weight:900; letter-spacing:-0.02em; }
+.brand .subtitle{ color:var(--color-muted); font-size:12px; }
+
+.nav .links{ display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+.btn{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:10px 12px; border-radius:14px;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(0,0,0,.18);
+  color:var(--color-text);
+  font-weight:800; font-size:13px;
+  transition: transform .05s ease, background .2s ease, border-color .2s ease;
+  user-select:none;
+}
+.btn:hover{ background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.20); text-decoration:none; }
+.btn:active{ transform:translateY(1px); }
+.btn.primary{
+  border-color: rgba(22,160,133,.40);
+  background: linear-gradient(180deg, rgba(22,160,133,.20), rgba(0,0,0,.18));
+}
+.btn.purple{
+  border-color: rgba(102,126,234,.40);
+  background: linear-gradient(180deg, rgba(102,126,234,.20), rgba(0,0,0,.18));
+}
+
+.hero{
+  margin-top:14px;
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  background:rgba(16,26,46,.55);
+  box-shadow:var(--shadow);
+  padding:22px 18px;
+  backdrop-filter: blur(10px);
+}
+
+.kicker{
+  display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+  margin-bottom:10px;
+}
+.pill{
+  font-size:12px;
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.14);
+  color:var(--color-muted);
+  background:rgba(0,0,0,.16);
+  white-space:nowrap;
+}
+.pill.strong{
+  color:var(--color-text);
+  border-color: rgba(22,160,133,.40);
+  background: linear-gradient(180deg, rgba(22,160,133,.18), rgba(0,0,0,.16));
+}
+
+.hero h1{
+  margin:0;
+  font-size:26px;
+  letter-spacing:-0.03em;
+}
+.hero p{
+  margin:8px 0 0;
+  color:var(--color-muted);
+  max-width: 95ch;
+  line-height:1.55;
+  font-size:13px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:14px;
+  margin-top:14px;
+}
+@media (max-width: 1000px){
+  .grid{ grid-template-columns: 1fr; }
+}
+
+.card{
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(0,0,0,.14);
+  border-radius:var(--radius);
+  padding:14px;
+}
+
+.card h2{
+  margin:0 0 10px;
+  font-size:14px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--color-muted);
+}
+ul{ margin:0; padding-left:18px; color:var(--color-muted); line-height:1.6; font-size:13px; }
+ul strong{ color:var(--color-text); }
+
+.metrics{
+  display:grid;
+  grid-template-columns: repeat(4, minmax(170px, 1fr));
+  gap:10px;
+  margin-top:14px;
+}
+@media (max-width: 1100px){
+  .metrics{ grid-template-columns: repeat(2, minmax(170px, 1fr)); }
+}
+@media (max-width: 520px){
+  .metrics{ grid-template-columns: 1fr; }
+}
+.metric{
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(0,0,0,.14);
+  border-radius:var(--radius);
+  padding:12px 12px;
+}
+.metric .k{ margin:0 0 6px; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--color-muted); }
+.metric .v{ margin:0; font-size:16px; font-weight:900; }
+
+.tableWrap{
+  margin-top:14px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:var(--radius);
+  overflow:auto;
+  background:rgba(0,0,0,.10);
+}
+table{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+  min-width: 900px;
+}
+th, td{
+  padding:12px 12px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  font-size:13px;
+  white-space:nowrap;
+}
+th{
+  position:sticky; top:0;
+  background:rgba(0,0,0,.30);
+  text-align:left;
+  font-weight:900;
+}
+td:first-child, th:first-child{
+  position:sticky; left:0;
+  background:rgba(0,0,0,.22);
+  font-weight:900;
+}
+
+.good{ color:#B6F7D2; }
+.mid{ color:#FFE6A6; }
+.bad{ color:#FFB4B4; }
+
+.smallNote{
+  margin-top:12px;
+  color:var(--color-muted);
+  font-size:13px;
+  line-height:1.55;
+  border-top:1px solid rgba(255,255,255,.10);
+  padding-top:12px;
+}
+.footerLinks{
+  display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;
+}
+textarea{
+  width:100%;
+  min-height:110px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(0,0,0,.16);
+  color:var(--color-text);
+  padding:10px 12px;
+  outline:none;
+  resize:vertical;
+  font-size:13px;
+  line-height:1.55;
+}
+label{ display:block; margin:0 0 8px; color:var(--color-muted); font-size:12px; }
+
+.list{
+  margin-top:14px;
+  display:grid;
+  grid-template-columns: repeat(3, minmax(240px, 1fr));
+  gap:12px;
+}
+@media (max-width: 1100px){ .list{ grid-template-columns: repeat(2, minmax(240px, 1fr)); } }
+@media (max-width: 700px){ .list{ grid-template-columns: 1fr; } }
+.item{
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(0,0,0,.14);
+  border-radius:var(--radius);
+  padding:14px;
+  text-decoration:none;
+  transition: transform .06s ease, background .2s ease, border-color .2s ease;
+}
+.item:hover{ transform: translateY(-1px); background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.18); }
+.name{ font-weight:900; }
+.url{ color:var(--color-muted); font-size:12px; margin-top:4px; }
+.tags{ margin-top:10px; display:flex; flex-wrap:wrap; gap:8px; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="nav">
+      <div class="brand">
+        <div class="title">Stratum AI • Competitor Battlecards</div>
+        <div class="subtitle">One HTML per competitor (based on public vendor pages)</div>
+      </div>
+      <div class="links">
+        <a class="btn purple" href="index.html">Documentation</a>
+        <a class="btn primary" target="_blank" rel="noopener" href="https://stratum.ai">Open Stratum</a>
+      </div>
+    </div>
+
+    <section class="hero">
+      <div class="kicker">
+        <span class="pill strong">Stratum AI</span>
+        <span class="pill">Trust‑Gated Autopilot</span>
+        <span class="pill">Inventory protection</span>
+        <span class="pill">Meta + Google + TikTok + Snap</span>
+      </div>
+      <h1>Choose a competitor</h1>
+      <p>
+        Each page includes a comparison matrix populated from public vendor pages (linked under “Sources used”), plus a notes area and JSON export.
+      </p>
+    </section>
+
+    <div class="list">
+      <a class="item" href="competitors/stratum-cdp-battlecard.html" style="border-color: rgba(139,92,246,.40); background: linear-gradient(180deg, rgba(139,92,246,.08), rgba(0,0,0,.14));">
+          <div class="name">CDP Battlecard (Segment, mParticle, Tealium)</div>
+          <div class="url">Customer Data Platform Comparison</div>
+          <div class="tags"><span class="pill" style="border-color: rgba(139,92,246,.40); background: rgba(139,92,246,.18);">CDP</span><span class="pill">Audience Sync</span><span class="pill">Identity Resolution</span><span class="pill">Trust-Gated</span></div>
+        </a>
+      <a class="item" href="competitors/stratum-vs-smartly.html">
+          <div class="name">Smartly (AI Advertising Platform)</div>
+          <div class="url">www.smartly.io/</div>
+          <div class="tags"><span class="pill">Cross‑channel ads</span><span class="pill">Creative workflows</span><span class="pill">Automation</span></div>
+        </a>
+<a class="item" href="competitors/stratum-vs-skai.html">
+          <div class="name">Skai (Omnichannel marketing platform)</div>
+          <div class="url">skai.io/omnichannel-marketing-platform/</div>
+          <div class="tags"><span class="pill">Omnichannel</span><span class="pill">Retail media + search + social</span><span class="pill">Enterprise</span></div>
+        </a>
+<a class="item" href="competitors/stratum-vs-sprinklr.html">
+          <div class="name">Sprinklr (Social Advertising Platform)</div>
+          <div class="url">www.sprinklr.com/products/marketing-and-advertising/social-advertising/</div>
+          <div class="tags"><span class="pill">Approvals</span><span class="pill">Enterprise governance</span><span class="pill">Budget protection</span></div>
+        </a>
+<a class="item" href="competitors/stratum-vs-madgicx.html">
+          <div class="name">Madgicx (Meta ads AI platform)</div>
+          <div class="url">madgicx.com/</div>
+          <div class="tags"><span class="pill">Meta‑first</span><span class="pill">AI bidding</span><span class="pill">Creative insights</span></div>
+        </a>
+<a class="item" href="competitors/stratum-vs-birch.html">
+          <div class="name">Birch (Revealbot) features</div>
+          <div class="url">bir.ch/features</div>
+          <div class="tags"><span class="pill">Rules automation</span><span class="pill">Creative insights</span><span class="pill">Slack alerts</span></div>
+        </a>
+<a class="item" href="competitors/stratum-vs-optmyzr.html">
+          <div class="name">Optmyzr (PPC management software)</div>
+          <div class="url">www.optmyzr.com/</div>
+          <div class="tags"><span class="pill">PPC automation</span><span class="pill">Rule engine</span><span class="pill">Approval-first</span></div>
+        </a>
+<a class="item" href="competitors/stratum-vs-northbeam.html">
+          <div class="name">Northbeam (Marketing measurement/MTA)</div>
+          <div class="url">www.northbeam.io/</div>
+          <div class="tags"><span class="pill">MTA</span><span class="pill">Incrementality</span><span class="pill">MMM</span></div>
+        </a>
+<a class="item" href="competitors/stratum-vs-triplewhale.html">
+          <div class="name">Triple Whale (Pixel & attribution)</div>
+          <div class="url">www.triplewhale.com/pixel</div>
+          <div class="tags"><span class="pill">First‑party data</span><span class="pill">Identity resolution</span><span class="pill">Attribution</span></div>
+        </a>
+<a class="item" href="competitors/stratum-vs-funnel.html">
+          <div class="name">Funnel (Marketing data hub / ETL)</div>
+          <div class="url">funnel.io/</div>
+          <div class="tags"><span class="pill">600+ connectors</span><span class="pill">Data hub</span><span class="pill">Exports to BI/warehouses</span></div>
+        </a>
+    </div>
+
+    <div class="smallNote">
+      Tip: open a page → review matrix → add extra facts into Notes → Print/PDF for sharing.
+    </div>
+  </div>
+</body>
+</html>
