@@ -2,6 +2,12 @@
 # Root .dockerignore — applies to the repo-root build context used by the
 # backend image. Must NOT exclude `docs/` (curated Copilot RAG corpus) or
 # `backend/` source. Frontend is excluded entirely; it has its own image.
+#
+# Cache-bust: 2026-05-10 — forces Railway to invalidate its content-addressed
+# source snapshot. Empty commits do not change the git tree SHA, so Railway
+# keeps replaying the snapshot from before the Root Directory change. Any
+# real file edit (like this comment) flips the tree hash and triggers a
+# fresh archive that includes docs/ at the repo root.
 # =============================================================================
 
 # Git
