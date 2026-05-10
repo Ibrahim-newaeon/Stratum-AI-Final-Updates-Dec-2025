@@ -33,8 +33,8 @@ services:
   # ===========================================================================
   api:
     build:
-      context: .
-      dockerfile: backend/Dockerfile
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: stratum_api
     restart: always
     env_file:
@@ -66,8 +66,8 @@ services:
   # ===========================================================================
   worker:
     build:
-      context: .
-      dockerfile: backend/Dockerfile
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: stratum_worker
     restart: always
     env_file:
@@ -94,8 +94,8 @@ services:
   # ===========================================================================
   beat:
     build:
-      context: .
-      dockerfile: backend/Dockerfile
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: stratum_beat
     restart: always
     env_file:
