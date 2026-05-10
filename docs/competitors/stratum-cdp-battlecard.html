@@ -1,0 +1,709 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Stratum CDP vs Competitors — Battlecard</title>
+  <style>
+:root{
+  --color-primary:#8B5CF6;
+  --color-secondary:#06B6D4;
+  --color-accent:#10B981;
+
+  --color-bg:#0B1220;
+  --color-surface:#101A2E;
+  --color-text:#EAF0FF;
+  --color-muted:#A9B6D3;
+
+  --border: rgba(255,255,255,.12);
+  --shadow: 0 12px 28px rgba(0,0,0,.35);
+  --radius: 16px;
+  --maxw: 1400px;
+}
+
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+  color:var(--color-text);
+  background:
+    radial-gradient(1200px 700px at 12% 15%, rgba(139,92,246,.22), transparent 55%),
+    radial-gradient(900px 520px at 85% 18%, rgba(6,182,212,.20), transparent 50%),
+    radial-gradient(900px 520px at 70% 92%, rgba(16,185,129,.12), transparent 55%),
+    var(--color-bg);
+}
+
+a{ color:#BFD6FF; text-decoration:none; }
+a:hover{ text-decoration:underline; }
+
+.container{ max-width:var(--maxw); margin:0 auto; padding:18px 16px 56px; }
+
+.nav{
+  position:sticky; top:0; z-index:50;
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+  box-shadow:var(--shadow);
+  padding:12px 14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  backdrop-filter: blur(10px);
+}
+
+.brand{
+  display:flex; flex-direction:column; gap:2px; min-width:0;
+}
+.brand .title{ font-weight:900; letter-spacing:-0.02em; }
+.brand .subtitle{ color:var(--color-muted); font-size:12px; }
+
+.nav .links{ display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+.btn{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:10px 12px; border-radius:14px;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(0,0,0,.18);
+  color:var(--color-text);
+  font-weight:800; font-size:13px;
+  transition: transform .05s ease, background .2s ease, border-color .2s ease;
+  user-select:none;
+  cursor:pointer;
+}
+.btn:hover{ background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.20); text-decoration:none; }
+.btn:active{ transform:translateY(1px); }
+.btn.primary{
+  border-color: rgba(139,92,246,.40);
+  background: linear-gradient(180deg, rgba(139,92,246,.20), rgba(0,0,0,.18));
+}
+.btn.green{
+  border-color: rgba(16,185,129,.40);
+  background: linear-gradient(180deg, rgba(16,185,129,.20), rgba(0,0,0,.18));
+}
+
+.hero{
+  margin-top:14px;
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  background:rgba(16,26,46,.55);
+  box-shadow:var(--shadow);
+  padding:22px 18px;
+  backdrop-filter: blur(10px);
+}
+
+.kicker{
+  display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+  margin-bottom:10px;
+}
+.pill{
+  font-size:12px;
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.14);
+  color:var(--color-muted);
+  background:rgba(0,0,0,.16);
+  white-space:nowrap;
+}
+.pill.strong{
+  color:var(--color-text);
+  border-color: rgba(139,92,246,.40);
+  background: linear-gradient(180deg, rgba(139,92,246,.18), rgba(0,0,0,.16));
+}
+.pill.green{
+  color:var(--color-text);
+  border-color: rgba(16,185,129,.40);
+  background: linear-gradient(180deg, rgba(16,185,129,.18), rgba(0,0,0,.16));
+}
+
+.hero h1{
+  margin:0;
+  font-size:26px;
+  letter-spacing:-0.03em;
+}
+.hero p{
+  margin:8px 0 0;
+  color:var(--color-muted);
+  max-width: 95ch;
+  line-height:1.55;
+  font-size:13px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:14px;
+  margin-top:14px;
+}
+@media (max-width: 1000px){
+  .grid{ grid-template-columns: 1fr; }
+}
+
+.card{
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(0,0,0,.14);
+  border-radius:var(--radius);
+  padding:14px;
+}
+
+.card h2{
+  margin:0 0 10px;
+  font-size:14px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--color-muted);
+}
+ul{ margin:0; padding-left:18px; color:var(--color-muted); line-height:1.6; font-size:13px; }
+ul strong{ color:var(--color-text); }
+
+.metrics{
+  display:grid;
+  grid-template-columns: repeat(5, minmax(150px, 1fr));
+  gap:10px;
+  margin-top:14px;
+}
+@media (max-width: 1100px){
+  .metrics{ grid-template-columns: repeat(3, minmax(150px, 1fr)); }
+}
+@media (max-width: 700px){
+  .metrics{ grid-template-columns: repeat(2, minmax(140px, 1fr)); }
+}
+@media (max-width: 520px){
+  .metrics{ grid-template-columns: 1fr; }
+}
+.metric{
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(0,0,0,.14);
+  border-radius:var(--radius);
+  padding:12px 12px;
+}
+.metric .k{ margin:0 0 6px; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--color-muted); }
+.metric .v{ margin:0; font-size:16px; font-weight:900; }
+
+.tableWrap{
+  margin-top:14px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:var(--radius);
+  overflow:auto;
+  background:rgba(0,0,0,.10);
+}
+table{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+  min-width: 1100px;
+}
+th, td{
+  padding:12px 12px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  font-size:13px;
+  white-space:nowrap;
+}
+th{
+  position:sticky; top:0;
+  background:rgba(0,0,0,.30);
+  text-align:left;
+  font-weight:900;
+}
+td:first-child, th:first-child{
+  position:sticky; left:0;
+  background:rgba(0,0,0,.22);
+  font-weight:900;
+}
+
+.good{ color:#B6F7D2; }
+.mid{ color:#FFE6A6; }
+.bad{ color:#FFB4B4; }
+
+.smallNote{
+  margin-top:12px;
+  color:var(--color-muted);
+  font-size:13px;
+  line-height:1.55;
+  border-top:1px solid rgba(255,255,255,.10);
+  padding-top:12px;
+}
+.footerLinks{
+  display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;
+}
+
+.section-title{
+  margin-top:24px;
+  font-size:18px;
+  font-weight:900;
+  color:var(--color-text);
+  letter-spacing:-0.02em;
+}
+
+.competitor-logos{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-top:14px;
+}
+.competitor-logo{
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(0,0,0,.14);
+  border-radius:12px;
+  padding:10px 16px;
+  font-weight:700;
+  font-size:13px;
+  color:var(--color-muted);
+}
+.competitor-logo.stratum{
+  border-color: rgba(139,92,246,.40);
+  background: linear-gradient(180deg, rgba(139,92,246,.15), rgba(0,0,0,.14));
+  color:var(--color-text);
+}
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="nav">
+      <div class="brand">
+        <div class="title">Stratum CDP • Battlecard</div>
+        <div class="subtitle">Customer Data Platform with Trust-Gated Audience Sync</div>
+      </div>
+      <div class="links">
+        <a class="btn" href="../index.html">Documentation</a>
+        <a class="btn" href="../competitors.html">All Competitors</a>
+        <a class="btn" href="index.html">Comparison Hub</a>
+        <a class="btn primary" target="_blank" rel="noopener" href="https://stratum.ai">Open Stratum</a>
+        <button class="btn" id="btnPrint" type="button">Print / PDF</button>
+      </div>
+    </div>
+
+    <section class="hero" aria-label="Hero">
+      <div class="kicker">
+        <span class="pill strong">Stratum CDP</span>
+        <span class="pill">vs</span>
+        <span class="pill">Segment</span>
+        <span class="pill">mParticle</span>
+        <span class="pill">Tealium</span>
+        <span class="pill">Bloomreach</span>
+        <span class="pill green">Trust-Gated</span>
+      </div>
+      <h1>Stratum CDP vs Major CDP Competitors</h1>
+      <p>
+        <strong>Market context:</strong> CDPs collect, unify, and activate customer data. Most CDPs focus on data plumbing—Stratum adds trust-gated automation and native ad platform sync.<br/>
+        <strong>Stratum angle:</strong> Unified profiles + one-click audience sync + trust gates that block actions when signal health degrades.
+      </p>
+    </section>
+
+    <div class="competitor-logos">
+      <div class="competitor-logo stratum">Stratum CDP</div>
+      <div class="competitor-logo">Segment (Twilio)</div>
+      <div class="competitor-logo">mParticle</div>
+      <div class="competitor-logo">Tealium</div>
+      <div class="competitor-logo">Bloomreach</div>
+      <div class="competitor-logo">Treasure Data</div>
+      <div class="competitor-logo">Lytics</div>
+    </div>
+
+    <div class="metrics" aria-label="Key Metrics">
+      <div class="metric">
+        <p class="k">Platforms Synced</p>
+        <p class="v">4 Native</p>
+        <p style="margin:6px 0 0; color:var(--color-muted); font-size:12px; line-height:1.4">Meta, Google, TikTok, Snapchat</p>
+      </div>
+      <div class="metric">
+        <p class="k">Sync Intervals</p>
+        <p class="v">1h - 1 Week</p>
+        <p style="margin:6px 0 0; color:var(--color-muted); font-size:12px; line-height:1.4">Configurable auto-sync</p>
+      </div>
+      <div class="metric">
+        <p class="k">Identity Resolution</p>
+        <p class="v">Visual Graph</p>
+        <p style="margin:6px 0 0; color:var(--color-muted); font-size:12px; line-height:1.4">SVG-based visualization</p>
+      </div>
+      <div class="metric">
+        <p class="k">Trust Gate</p>
+        <p class="v">Signal 70+</p>
+        <p style="margin:6px 0 0; color:var(--color-muted); font-size:12px; line-height:1.4">Blocks when data unhealthy</p>
+      </div>
+      <div class="metric">
+        <p class="k">Export Formats</p>
+        <p class="v">CSV + JSON</p>
+        <p style="margin:6px 0 0; color:var(--color-muted); font-size:12px; line-height:1.4">Manual export anytime</p>
+      </div>
+    </div>
+
+    <div class="grid" aria-label="Core sections">
+      <div class="card">
+        <h2>Stratum CDP Core Differentiators</h2>
+        <ul>
+          <li><strong>Trust-Gated Audience Sync:</strong> Blocks sync when signal health < 70, preventing bad data from corrupting ad audiences</li>
+          <li><strong>Native 4-Platform Sync:</strong> Direct API integration with Meta, Google, TikTok, Snapchat—not through third-party connectors</li>
+          <li><strong>Visual Identity Graph:</strong> SVG-based visualization showing cross-device connections, merge history, audit trail</li>
+          <li><strong>Built-in RFM Analysis:</strong> Recency, Frequency, Monetary scoring without external tools</li>
+          <li><strong>Event Anomaly Detection:</strong> Automatic alerts when event patterns deviate from baseline</li>
+          <li><strong>Privacy-First Architecture:</strong> GDPR/CCPA compliant, hashed PII, consent management per data type</li>
+        </ul>
+        <div class="smallNote"><strong>Fast pitch:</strong> "Other CDPs just move data. Stratum CDP validates data health before syncing audiences—so your ad targeting never gets corrupted by bad signals."</div>
+      </div>
+
+      <div class="card">
+        <h2>When to Position Against CDPs</h2>
+        <ul>
+          <li><strong>Ad-focused teams:</strong> If primary use case is ad audience sync, Stratum's native integrations beat generic connectors</li>
+          <li><strong>Signal quality concerns:</strong> Teams burned by stale/bad data corrupting audiences</li>
+          <li><strong>Visual identity needs:</strong> When stakeholders need to see and understand identity resolution</li>
+          <li><strong>RFM segmentation:</strong> E-commerce teams needing customer value scoring without BI tools</li>
+          <li><strong>Trust/governance requirements:</strong> Regulated industries or risk-averse teams wanting guardrails</li>
+        </ul>
+        <div class="smallNote"><strong>When NOT to lead with CDP:</strong> If prospect needs 300+ integrations or real-time streaming at massive scale—acknowledge Segment/mParticle strength there.</div>
+      </div>
+    </div>
+
+    <h3 class="section-title">Feature Comparison Matrix</h3>
+    <div class="tableWrap" aria-label="Feature comparison">
+      <table>
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Stratum CDP</th>
+            <th>Segment</th>
+            <th>mParticle</th>
+            <th>Tealium</th>
+            <th>Bloomreach</th>
+            <th>Treasure Data</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Unified Customer Profiles</td>
+            <td class="good">Yes</td>
+            <td class="good">Yes</td>
+            <td class="good">Yes</td>
+            <td class="good">Yes</td>
+            <td class="good">Yes</td>
+            <td class="good">Yes</td>
+          </tr>
+          <tr>
+            <td>Identity Resolution</td>
+            <td class="good">Yes + Visual Graph</td>
+            <td class="good">Yes (Personas)</td>
+            <td class="good">Yes (IDSync)</td>
+            <td class="good">Yes</td>
+            <td class="good">Yes</td>
+            <td class="good">Yes</td>
+          </tr>
+          <tr>
+            <td>Identity Graph Visualization</td>
+            <td class="good">Yes (SVG)</td>
+            <td class="bad">No</td>
+            <td class="bad">No</td>
+            <td class="mid">Limited</td>
+            <td class="bad">No</td>
+            <td class="bad">No</td>
+          </tr>
+          <tr>
+            <td>Native Ad Platform Sync</td>
+            <td class="good">4 Platforms</td>
+            <td class="mid">Via Destinations</td>
+            <td class="mid">Via Connections</td>
+            <td class="mid">Via Connectors</td>
+            <td class="mid">Limited</td>
+            <td class="mid">Via Integrations</td>
+          </tr>
+          <tr>
+            <td>Trust-Gated Actions</td>
+            <td class="good">Yes (Unique)</td>
+            <td class="bad">No</td>
+            <td class="bad">No</td>
+            <td class="bad">No</td>
+            <td class="bad">No</td>
+            <td class="bad">No</td>
+          </tr>
+          <tr>
+            <td>Signal Health Monitoring</td>
+            <td class="good">Yes (0-100 Score)</td>
+            <td class="mid">Basic Diagnostics</td>
+            <td class="good">Data Quality Suite</td>
+            <td class="mid">Health Monitor</td>
+            <td class="bad">Limited</td>
+            <td class="mid">Basic</td>
+          </tr>
+          <tr>
+            <td>Built-in RFM Analysis</td>
+            <td class="good">Yes</td>
+            <td class="bad">No (needs SQL)</td>
+            <td class="bad">No</td>
+            <td class="bad">No</td>
+            <td class="good">Yes</td>
+            <td class="mid">Via SQL</td>
+          </tr>
+          <tr>
+            <td>Real-time Segments</td>
+            <td class="good">Yes</td>
+            <td class="good">Yes</td>
+            <td class="good">Yes</td>
+            <td class="good">Yes</td>
+            <td class="good">Yes</td>
+            <td class="mid">Near Real-time</td>
+          </tr>
+          <tr>
+            <td>Event Anomaly Detection</td>
+            <td class="good">Yes</td>
+            <td class="bad">No</td>
+            <td class="good">Yes</td>
+            <td class="mid">Basic</td>
+            <td class="mid">Limited</td>
+            <td class="mid">Via ML</td>
+          </tr>
+          <tr>
+            <td>Manual CSV/JSON Export</td>
+            <td class="good">Yes</td>
+            <td class="good">Yes</td>
+            <td class="good">Yes</td>
+            <td class="good">Yes</td>
+            <td class="good">Yes</td>
+            <td class="good">Yes</td>
+          </tr>
+          <tr>
+            <td>Lifecycle Stage Tracking</td>
+            <td class="good">Built-in</td>
+            <td class="mid">Custom Traits</td>
+            <td class="mid">Custom</td>
+            <td class="mid">Custom</td>
+            <td class="good">Built-in</td>
+            <td class="mid">Custom</td>
+          </tr>
+          <tr>
+            <td>Consent Management</td>
+            <td class="good">Per Data Type</td>
+            <td class="good">Yes</td>
+            <td class="good">Yes</td>
+            <td class="good">Yes</td>
+            <td class="good">Yes</td>
+            <td class="good">Yes</td>
+          </tr>
+          <tr>
+            <td>Integration Count</td>
+            <td class="mid">Focused (Ad Platforms)</td>
+            <td class="good">400+</td>
+            <td class="good">300+</td>
+            <td class="good">1300+</td>
+            <td class="mid">100+</td>
+            <td class="good">200+</td>
+          </tr>
+          <tr>
+            <td>Pricing Model</td>
+            <td class="good">Predictable</td>
+            <td class="mid">MTU-based (can spike)</td>
+            <td class="mid">MTU-based</td>
+            <td class="mid">Event Volume</td>
+            <td class="mid">Contact-based</td>
+            <td class="mid">Query-based</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="grid" style="margin-top:14px;">
+      <div class="card">
+        <h2>Segment Weaknesses to Exploit</h2>
+        <ul>
+          <li><strong>No signal health validation:</strong> Data flows through regardless of quality</li>
+          <li><strong>MTU pricing surprises:</strong> Costs spike with user growth</li>
+          <li><strong>Generic ad connectors:</strong> Not optimized for specific platform APIs</li>
+          <li><strong>No identity visualization:</strong> Hard to debug identity resolution issues</li>
+          <li><strong>No built-in RFM:</strong> Requires SQL or external tools</li>
+        </ul>
+        <div class="smallNote"><strong>Objection handler:</strong> "Segment has more integrations" → "How many do you actually use? Stratum focuses on the 4 ad platforms that matter, with native API access and trust gates."</div>
+      </div>
+
+      <div class="card">
+        <h2>mParticle Weaknesses to Exploit</h2>
+        <ul>
+          <li><strong>No trust-gated automation:</strong> Actions execute regardless of data health</li>
+          <li><strong>Complex setup:</strong> Steeper learning curve than Stratum</li>
+          <li><strong>No visual identity graph:</strong> Identity resolution is a black box</li>
+          <li><strong>Mobile-first heritage:</strong> Less optimized for ad operations</li>
+          <li><strong>Enterprise pricing:</strong> Often overkill for mid-market</li>
+        </ul>
+        <div class="smallNote"><strong>Objection handler:</strong> "mParticle has better data quality" → "Their quality suite monitors data—Stratum actually blocks bad actions. Monitoring without enforcement is just alerts."</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Tealium Weaknesses to Exploit</h2>
+        <ul>
+          <li><strong>Tag management heritage:</strong> CDP bolted onto TMS architecture</li>
+          <li><strong>Connector complexity:</strong> 1300+ connectors means configuration overhead</li>
+          <li><strong>No trust gates:</strong> No automation governance built-in</li>
+          <li><strong>Server-side complexity:</strong> Requires more technical resources</li>
+          <li><strong>No native ad optimization:</strong> Generic approach to ad platforms</li>
+        </ul>
+        <div class="smallNote"><strong>Objection handler:</strong> "Tealium has more connectors" → "More connectors = more to configure and maintain. Stratum gives you the 4 ad platforms you need with zero configuration."</div>
+      </div>
+
+      <div class="card">
+        <h2>Bloomreach Weaknesses to Exploit</h2>
+        <ul>
+          <li><strong>E-commerce focused:</strong> Less flexible for non-retail use cases</li>
+          <li><strong>Email/personalization focus:</strong> Ad sync is secondary feature</li>
+          <li><strong>No trust-gated automation:</strong> Actions execute without validation</li>
+          <li><strong>Contact-based pricing:</strong> Expensive at scale</li>
+          <li><strong>Heavy platform:</strong> Requires significant implementation</li>
+        </ul>
+        <div class="smallNote"><strong>Objection handler:</strong> "Bloomreach has better personalization" → "For email, maybe. For ad audience sync with data governance? Stratum is purpose-built."</div>
+      </div>
+    </div>
+
+    <h3 class="section-title">Audience Sync Platform Comparison</h3>
+    <div class="tableWrap" aria-label="Platform sync comparison">
+      <table>
+        <thead>
+          <tr>
+            <th>Platform</th>
+            <th>Stratum CDP</th>
+            <th>Segment</th>
+            <th>mParticle</th>
+            <th>Tealium</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Meta Custom Audiences</td>
+            <td class="good">Native API + Auto-sync</td>
+            <td class="mid">Via Facebook Destination</td>
+            <td class="mid">Via Connection</td>
+            <td class="mid">Via Connector</td>
+          </tr>
+          <tr>
+            <td>Google Customer Match</td>
+            <td class="good">Native API + Auto-sync</td>
+            <td class="mid">Via Google Destination</td>
+            <td class="mid">Via Connection</td>
+            <td class="mid">Via Connector</td>
+          </tr>
+          <tr>
+            <td>TikTok Audiences</td>
+            <td class="good">Native DMP API</td>
+            <td class="mid">Via Destination</td>
+            <td class="mid">Via Connection</td>
+            <td class="bad">Limited</td>
+          </tr>
+          <tr>
+            <td>Snapchat SAM</td>
+            <td class="good">Native SAM API</td>
+            <td class="mid">Via Destination</td>
+            <td class="mid">Via Connection</td>
+            <td class="bad">Limited</td>
+          </tr>
+          <tr>
+            <td>Sync Frequency</td>
+            <td class="good">1h to 1 Week (configurable)</td>
+            <td class="mid">Depends on destination</td>
+            <td class="mid">Varies</td>
+            <td class="mid">Varies</td>
+          </tr>
+          <tr>
+            <td>Match Rate Tracking</td>
+            <td class="good">Yes (per sync)</td>
+            <td class="bad">Limited</td>
+            <td class="mid">Some platforms</td>
+            <td class="bad">Limited</td>
+          </tr>
+          <tr>
+            <td>Sync History</td>
+            <td class="good">Full audit trail</td>
+            <td class="mid">Event logs</td>
+            <td class="mid">Activity logs</td>
+            <td class="mid">Logs</td>
+          </tr>
+          <tr>
+            <td>Trust Gate on Sync</td>
+            <td class="good">Yes (blocks if unhealthy)</td>
+            <td class="bad">No</td>
+            <td class="bad">No</td>
+            <td class="bad">No</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="grid" style="margin-top:14px;">
+      <div class="card">
+        <h2>Discovery Questions</h2>
+        <ul>
+          <li>"How do you currently validate data quality before syncing to ad platforms?"</li>
+          <li>"Have you ever had bad data corrupt your Custom Audiences?"</li>
+          <li>"How do you visualize your identity resolution today?"</li>
+          <li>"Do you use RFM segmentation? How do you calculate it?"</li>
+          <li>"What happens when your data pipeline has issues—do automations still run?"</li>
+          <li>"How many of your CDP integrations do you actively use?"</li>
+          <li>"What's your current sync frequency to ad platforms? Is it fast enough?"</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>Competitive Landmines</h2>
+        <ul>
+          <li><strong>Ask about trust gates:</strong> "What happens when your data quality degrades—does Segment/mParticle block actions?"</li>
+          <li><strong>Ask about identity visualization:</strong> "Can you show me how you debug identity resolution issues?"</li>
+          <li><strong>Ask about RFM:</strong> "How do you calculate RFM scores—SQL? External tool?"</li>
+          <li><strong>Ask about pricing predictability:</strong> "Have you ever had a surprise bill from MTU spikes?"</li>
+          <li><strong>Ask about ad platform depth:</strong> "Does your CDP track match rates per sync?"</li>
+        </ul>
+        <div class="smallNote"><strong>Key insight:</strong> Most CDPs are infrastructure plays. Stratum is an activation play with governance built in.</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px;">
+      <h2>Pricing Comparison</h2>
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px; margin-top:12px;">
+        <div style="background:rgba(139,92,246,.15); border:1px solid rgba(139,92,246,.30); border-radius:12px; padding:14px;">
+          <div style="font-weight:900; margin-bottom:6px;">Stratum CDP</div>
+          <div style="color:var(--color-muted); font-size:13px;">Included in platform plans</div>
+          <div style="color:var(--color-muted); font-size:12px; margin-top:6px;">Predictable pricing, no MTU surprises</div>
+        </div>
+        <div style="background:rgba(0,0,0,.14); border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:14px;">
+          <div style="font-weight:900; margin-bottom:6px;">Segment</div>
+          <div style="color:var(--color-muted); font-size:13px;">$120/mo (Free) to Custom</div>
+          <div style="color:var(--color-muted); font-size:12px; margin-top:6px;">MTU-based, can spike unexpectedly</div>
+        </div>
+        <div style="background:rgba(0,0,0,.14); border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:14px;">
+          <div style="font-weight:900; margin-bottom:6px;">mParticle</div>
+          <div style="color:var(--color-muted); font-size:13px;">Enterprise pricing</div>
+          <div style="color:var(--color-muted); font-size:12px; margin-top:6px;">MTU-based, typically $50K+/year</div>
+        </div>
+        <div style="background:rgba(0,0,0,.14); border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:14px;">
+          <div style="font-weight:900; margin-bottom:6px;">Tealium</div>
+          <div style="color:var(--color-muted); font-size:13px;">Enterprise pricing</div>
+          <div style="color:var(--color-muted); font-size:12px; margin-top:6px;">Event volume-based, complex tiers</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px;">
+      <h2>Summary: Why Stratum CDP Wins</h2>
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:14px; margin-top:12px;">
+        <div>
+          <div style="font-weight:900; color:var(--color-primary); margin-bottom:8px;">1. Trust-Gated Automation</div>
+          <div style="color:var(--color-muted); font-size:13px;">Only CDP that blocks audience sync when signal health degrades. No more bad data corrupting your Custom Audiences.</div>
+        </div>
+        <div>
+          <div style="font-weight:900; color:var(--color-secondary); margin-bottom:8px;">2. Native Ad Platform Sync</div>
+          <div style="color:var(--color-muted); font-size:13px;">Direct API integration with Meta, Google, TikTok, Snapchat—not generic connectors with limited features.</div>
+        </div>
+        <div>
+          <div style="font-weight:900; color:var(--color-accent); margin-bottom:8px;">3. Visual Identity Graph</div>
+          <div style="color:var(--color-muted); font-size:13px;">See and debug identity resolution with SVG visualization. No more black-box identity matching.</div>
+        </div>
+        <div>
+          <div style="font-weight:900; color:#F59E0B; margin-bottom:8px;">4. Built-in RFM + Lifecycle</div>
+          <div style="color:var(--color-muted); font-size:13px;">Customer value scoring without SQL or external tools. Segment by recency, frequency, and monetary value instantly.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    document.getElementById('btnPrint')?.addEventListener('click', () => window.print());
+  </script>
+</body>
+</html>
