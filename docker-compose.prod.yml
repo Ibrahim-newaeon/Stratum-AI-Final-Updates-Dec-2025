@@ -72,7 +72,7 @@ services:
       - LOG_FORMAT=json
       - SENTRY_DSN=${SENTRY_DSN:-}
     volumes:
-      - ./ml_service/models:/app/ml_service/models:ro
+      - ./backend/ml_service/models:/app/backend/ml_service/models:ro
     depends_on:
       - pgbouncer
     command: >
@@ -105,7 +105,7 @@ services:
       - LOG_LEVEL=WARNING
       - SENTRY_DSN=${SENTRY_DSN:-}
     volumes:
-      - ./ml_service/models:/app/ml_service/models:ro
+      - ./backend/ml_service/models:/app/backend/ml_service/models:ro
     depends_on:
       - pgbouncer
     command: celery -A app.workers.celery_app worker --loglevel=warning --concurrency=2

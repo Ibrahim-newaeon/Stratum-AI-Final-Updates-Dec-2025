@@ -57,8 +57,8 @@ services:
   # ===========================================================================
   api:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: stratum_staging_api
     restart: unless-stopped
     environment:
@@ -100,8 +100,8 @@ services:
   # ===========================================================================
   worker:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: stratum_staging_worker
     restart: unless-stopped
     environment:
@@ -134,8 +134,8 @@ services:
   # ===========================================================================
   scheduler:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: stratum_staging_scheduler
     restart: unless-stopped
     environment:
