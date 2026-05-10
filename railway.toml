@@ -1,0 +1,23 @@
+# =============================================================================
+# Railway build/deploy config — repo-root build context.
+# -----------------------------------------------------------------------------
+# Lives at repo root (not backend/) because the backend Dockerfile copies
+# both `backend/` and `docs/` into the image — see header of
+# `backend/Dockerfile` for the rationale.
+#
+# Railway dashboard requirement: the backend service's "Root Directory"
+# setting must be unset (i.e. repo root). If it's still pinned to `backend`,
+# Railway will look for railway.toml under backend/ and ignore this file.
+# =============================================================================
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "backend/Dockerfile"
+noCache = true
+
+[deploy]
+startCommand = ""
+healthcheckPath = "/health"
+healthcheckTimeout = 600
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3

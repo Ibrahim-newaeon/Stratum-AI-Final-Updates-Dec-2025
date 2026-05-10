@@ -1,3 +1,9 @@
+# =============================================================================
+# Root .dockerignore — applies to the repo-root build context used by the
+# backend image. Must NOT exclude `docs/` (curated Copilot RAG corpus) or
+# `backend/` source. Frontend is excluded entirely; it has its own image.
+# =============================================================================
+
 # Git
 .git
 .gitignore
@@ -20,7 +26,8 @@ venv
 .venv
 env
 
-# Node / Frontend
+# Node / Frontend (entire tree — backend image doesn't need it)
+frontend
 node_modules
 npm-debug.log
 yarn-error.log
@@ -58,25 +65,56 @@ secrets/
 postgres_data
 redis_data
 uploads
+backend/uploads
+backend/temp
 
-# Documentation
-docs
-*.md
-!README.md
+# Backend tests + caches (kept out of prod image)
+backend/tests
+backend/htmlcov
+backend/.pytest_cache
+backend/.mypy_cache
+backend/.ruff_cache
+backend/.coverage
+backend/memory_audit_report.html
+backend/run_memory_audit.py
+
+# Docs we deliberately keep:
+#   docs/                 (Copilot RAG curated corpus — REQUIRED in image)
+# Repo-level markdown docs that bloat the image without being read by the app:
+README.md
+CHANGELOG.md
+SECURITY.md
+ONBOARDING_GUIDE.md
+DEPLOYMENT_PLAN.md
+SERVER_DEPLOYMENT_GUIDE.md
+FOUNDATION_AUDIT.md
+FULL_PROJECT_AUDIT.md
+AUDIT_*.md
+CHECKPOINT_*.md
+STRATUM_AI_*.md
+STRATUM_AI_*.html
+Stratum-*.html
+*.xlsx
+*.zip
+history.md
+
+# Stray screenshots / images at repo root
+*.png
+*.jpg
+*.jpeg
 
 # CI / CD
 .circleci
 .github
 
-# Tests
-tests
-test
-*_test.py
-
-# Misc
+# Docker / Make
 Dockerfile*
 docker-compose*
 .dockerignore
 Makefile
+backend/Makefile
+
+# Misc backend tooling not needed in image
 scripts/seed-data.sql
 scripts/load_datasets.py
+backend/fix_alembic_version.py.bak
