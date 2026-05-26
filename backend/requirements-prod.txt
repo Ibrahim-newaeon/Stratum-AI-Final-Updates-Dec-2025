@@ -4,10 +4,10 @@
 # =============================================================================
 
 # FastAPI Framework
-fastapi==0.136.1
-uvicorn[standard]==0.46.0
-python-multipart==0.0.27
-starlette==1.0.0
+fastapi==0.136.3
+uvicorn[standard]==0.48.0
+python-multipart==0.0.29
+starlette==1.1.0
 
 # Async Support
 anyio==4.13.0
@@ -16,14 +16,14 @@ aiofiles==25.1.0
 aiohttp==3.13.5
 aiosmtplib==5.1.0
 sendgrid==6.12.5
-sse-starlette==3.4.1
+sse-starlette==3.4.4
 
 # Database
-sqlalchemy[asyncio]==2.0.49
+sqlalchemy[asyncio]==2.0.50
 asyncpg==0.31.0
 psycopg2-binary==2.9.12
 alembic==1.18.4
-greenlet==3.5.0
+greenlet==3.5.1
 
 # Redis & Caching
 redis[asyncio]==7.4.0
@@ -34,39 +34,39 @@ flower==2.0.1
 celery-redbeat==2.3.3
 
 # Authentication & Security
-PyJWT==2.12.1
+PyJWT==2.13.0
 passlib[bcrypt]==1.7.4
 bcrypt==3.2.2  # passlib 1.7.4 requires bcrypt <4.0
 cryptography==46.0.7
-pydantic[email]==2.13.3
-pydantic-settings==2.14.0
+pydantic[email]==2.13.4
+pydantic-settings==2.14.1
 pyotp==2.9.0
 qrcode[pil]==8.2
 
 # ML / Data Science
 scikit-learn==1.8.0
-pandas==3.0.2
+pandas==3.0.3
 numpy>=1.26.4,<3.0
 joblib==1.5.3
 xgboost==2.0.3
 
 # Google Cloud (for Vertex AI)
-google-cloud-aiplatform==1.150.0
-google-auth==2.50.0
+google-cloud-aiplatform==1.153.1
+google-auth==2.53.0
 
 # Web Scraping (Module D)
 beautifulsoup4==4.14.3
-lxml==6.1.0
+lxml==6.1.1
 
 # Validation & Serialization
-pydantic==2.13.3
-orjson==3.11.8
+pydantic==2.13.4
+orjson==3.11.9
 email-validator==2.3.0
 
 # Logging & Monitoring
 structlog==25.5.0
 python-json-logger==4.1.0
-sentry-sdk[fastapi]==2.59.0
+sentry-sdk[fastapi]==2.60.0
 prometheus-client==0.25.0
 
 # Ad Platform SDKs
