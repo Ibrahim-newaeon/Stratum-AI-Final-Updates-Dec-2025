@@ -40,7 +40,11 @@ class MetaAudienceConnector(BaseAudienceConnector):
     BASE_URL = "https://graph.facebook.com"
 
     def __init__(
-        self, access_token: str, ad_account_id: str, app_secret: Optional[str] = None, **kwargs
+        self,
+        access_token: str,
+        ad_account_id: str,
+        app_secret: Optional[str] = None,
+        **kwargs,
     ):
         super().__init__(access_token, ad_account_id, **kwargs)
         self.app_secret = app_secret
@@ -66,7 +70,8 @@ class MetaAudienceConnector(BaseAudienceConnector):
                 "name": config.name,
                 "subtype": "CUSTOM",
                 "description": config.description or f"CDP Segment: {config.name}",
-                "customer_file_source": config.customer_file_source or "USER_PROVIDED_ONLY",
+                "customer_file_source": config.customer_file_source
+                or "USER_PROVIDED_ONLY",
                 "access_token": self.access_token,
             }
 
@@ -300,7 +305,9 @@ class MetaAudienceConnector(BaseAudienceConnector):
         try:
             async with httpx.AsyncClient(timeout=120) as client:
                 # Step 1: Create a replace session
-                session_url = f"{self.BASE_URL}/{self.API_VERSION}/{audience_id}/usersreplace"
+                session_url = (
+                    f"{self.BASE_URL}/{self.API_VERSION}/{audience_id}/usersreplace"
+                )
                 session_payload = {
                     "access_token": self.access_token,
                 }
@@ -371,7 +378,9 @@ class MetaAudienceConnector(BaseAudienceConnector):
         try:
             url = f"{self.BASE_URL}/{self.API_VERSION}/{audience_id}"
             async with httpx.AsyncClient(timeout=30) as client:
-                response = await client.delete(url, params={"access_token": self.access_token})
+                response = await client.delete(
+                    url, params={"access_token": self.access_token}
+                )
                 response.raise_for_status()
                 result = response.json()
 

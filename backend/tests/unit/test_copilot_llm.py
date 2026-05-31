@@ -22,7 +22,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any, List
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -32,7 +32,6 @@ from app.services.agents.copilot_llm import (
     _format_doc_excerpts,
     generate_llm_message,
 )
-
 
 # =============================================================================
 # Fixtures
@@ -250,16 +249,25 @@ class TestRAGRetrieval:
     async def test_citations_preserve_retrieval_order(self) -> None:
         chunks = [
             _FakeRetrievedChunk(
-                source_path="a.md", chunk_index=0, content="...",
-                metadata={"title": "A"}, distance=0.10,
+                source_path="a.md",
+                chunk_index=0,
+                content="...",
+                metadata={"title": "A"},
+                distance=0.10,
             ),
             _FakeRetrievedChunk(
-                source_path="b.md", chunk_index=0, content="...",
-                metadata={"title": "B"}, distance=0.25,
+                source_path="b.md",
+                chunk_index=0,
+                content="...",
+                metadata={"title": "B"},
+                distance=0.25,
             ),
             _FakeRetrievedChunk(
-                source_path="c.md", chunk_index=0, content="...",
-                metadata={"title": "C"}, distance=0.40,
+                source_path="c.md",
+                chunk_index=0,
+                content="...",
+                metadata={"title": "C"},
+                distance=0.40,
             ),
         ]
         fake_response = _fake_anthropic_response()
@@ -325,8 +333,11 @@ class TestErrorRecovery:
     async def test_anthropic_error_returns_citations_with_text_none(self) -> None:
         chunks = [
             _FakeRetrievedChunk(
-                source_path="docs/x.md", chunk_index=0, content="Body",
-                metadata={"title": "X"}, distance=0.2,
+                source_path="docs/x.md",
+                chunk_index=0,
+                content="Body",
+                metadata={"title": "X"},
+                distance=0.2,
             ),
         ]
         fake_client = MagicMock()

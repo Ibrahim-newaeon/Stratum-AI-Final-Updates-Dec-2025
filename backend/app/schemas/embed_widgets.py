@@ -94,17 +94,27 @@ class DomainWhitelistResponse(BaseModel):
 class WidgetDataScope(BaseModel):
     """Scope configuration for widget data access."""
 
-    campaigns: Optional[list[str]] = Field(default=None, description="Specific campaign IDs")
-    ad_accounts: Optional[list[str]] = Field(default=None, description="Specific ad account IDs")
-    date_range_days: int = Field(default=30, ge=1, le=365, description="Data lookback period")
+    campaigns: Optional[list[str]] = Field(
+        default=None, description="Specific campaign IDs"
+    )
+    ad_accounts: Optional[list[str]] = Field(
+        default=None, description="Specific ad account IDs"
+    )
+    date_range_days: int = Field(
+        default=30, ge=1, le=365, description="Data lookback period"
+    )
 
 
 class WidgetCustomBranding(BaseModel):
     """Custom branding options (Enterprise only)."""
 
     custom_logo_url: Optional[str] = Field(default=None, max_length=512)
-    custom_accent_color: Optional[str] = Field(default=None, pattern=r"^#[0-9A-Fa-f]{6}$")
-    custom_background_color: Optional[str] = Field(default=None, pattern=r"^#[0-9A-Fa-f]{6}$")
+    custom_accent_color: Optional[str] = Field(
+        default=None, pattern=r"^#[0-9A-Fa-f]{6}$"
+    )
+    custom_background_color: Optional[str] = Field(
+        default=None, pattern=r"^#[0-9A-Fa-f]{6}$"
+    )
     custom_text_color: Optional[str] = Field(default=None, pattern=r"^#[0-9A-Fa-f]{6}$")
 
 
@@ -133,9 +143,13 @@ class WidgetCreate(BaseModel):
     def validate_custom_dimensions(self) -> "WidgetCreate":
         if self.widget_size == WidgetSize.CUSTOM:
             if self.custom_width is None:
-                raise ValueError("Custom dimensions required when widget_size is 'custom'")
+                raise ValueError(
+                    "Custom dimensions required when widget_size is 'custom'"
+                )
             if self.custom_height is None:
-                raise ValueError("Custom dimensions required when widget_size is 'custom'")
+                raise ValueError(
+                    "Custom dimensions required when widget_size is 'custom'"
+                )
         return self
 
 

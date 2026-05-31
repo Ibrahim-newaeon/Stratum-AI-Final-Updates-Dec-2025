@@ -7,11 +7,12 @@ Create Date: 2026-02-07
 This migration creates the Apache AGE graph schema for Stratum's
 Revenue Knowledge Graph with trust-gated automation tracking.
 """
+
 from alembic import op
 import sqlalchemy as sa
 
 # revision identifiers
-revision = 'kg_2026_02_07'
+revision = "kg_2026_02_07"
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -60,18 +61,18 @@ def upgrade() -> None:
 
     # Create vertex labels (node types)
     vertex_labels = [
-        'Profile',
-        'Account',
-        'Event',
-        'Signal',
-        'TrustGate',
-        'Automation',
-        'Segment',
-        'Campaign',
-        'Channel',
-        'Revenue',
-        'Touchpoint',
-        'HealthScore',
+        "Profile",
+        "Account",
+        "Event",
+        "Signal",
+        "TrustGate",
+        "Automation",
+        "Segment",
+        "Campaign",
+        "Channel",
+        "Revenue",
+        "Touchpoint",
+        "HealthScore",
     ]
 
     for label in vertex_labels:
@@ -81,21 +82,21 @@ def upgrade() -> None:
 
     # Create edge labels (relationship types)
     edge_labels = [
-        'BELONGS_TO',
-        'PERFORMED',
-        'GENERATED',
-        'EVALUATED_BY',
-        'TRIGGERED',
-        'BLOCKED',
-        'PRODUCED',
-        'ATTRIBUTED_TO',
-        'DROVE',
-        'RECEIVED',
-        'HAS_HEALTH',
-        'MERGED_INTO',
-        'LINKED_TO',
-        'CONVERTED_FROM',
-        'INFLUENCED',
+        "BELONGS_TO",
+        "PERFORMED",
+        "GENERATED",
+        "EVALUATED_BY",
+        "TRIGGERED",
+        "BLOCKED",
+        "PRODUCED",
+        "ATTRIBUTED_TO",
+        "DROVE",
+        "RECEIVED",
+        "HAS_HEALTH",
+        "MERGED_INTO",
+        "LINKED_TO",
+        "CONVERTED_FROM",
+        "INFLUENCED",
     ]
 
     for label in edge_labels:

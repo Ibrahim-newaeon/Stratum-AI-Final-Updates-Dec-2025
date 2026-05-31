@@ -28,6 +28,7 @@ logger = get_logger(__name__)
 # In-Memory Fallback (used when Redis is unavailable)
 # =============================================================================
 
+
 class TokenBucket:
     """Token bucket implementation for local fallback rate limiting."""
 
@@ -55,6 +56,7 @@ class TokenBucket:
 # =============================================================================
 # Rate Limit Middleware
 # =============================================================================
+
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
     """
@@ -131,7 +133,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
         return self._redis
 
-    async def _check_redis(self, client_id: str, auth_limit: dict | None = None) -> tuple[bool, int]:
+    async def _check_redis(
+        self, client_id: str, auth_limit: dict | None = None
+    ) -> tuple[bool, int]:
         """
         Sliding-window counter in Redis.
 
@@ -157,7 +161,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     # --------------------------------------------------------------------- #
     # In-memory fallback helpers
     # --------------------------------------------------------------------- #
-    def _get_bucket(self, client_id: str, auth_limit: dict | None = None) -> TokenBucket:
+    def _get_bucket(
+        self, client_id: str, auth_limit: dict | None = None
+    ) -> TokenBucket:
         if client_id not in self._buckets:
             # Use aggressive limits in fallback mode (1/4 of normal) since
             # each worker process has its own bucket — N workers = N * limit
@@ -176,8 +182,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         if now - self._last_cleanup > self._bucket_cleanup_interval:
             self._last_cleanup = now
             to_remove = [
-                cid for cid, b in self._buckets.items()
-                if b.tokens >= self.burst_size
+                cid for cid, b in self._buckets.items() if b.tokens >= self.burst_size
             ]
             for cid in to_remove:
                 del self._buckets[cid]
@@ -249,10 +254,28 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         client_ip = request.client.host if request.client else "unknown"
 
         # Only trust proxy headers if the direct connection is from a trusted proxy
-        trusted_prefixes = ("10.", "172.16.", "172.17.", "172.18.", "172.19.",
-                            "172.20.", "172.21.", "172.22.", "172.23.", "172.24.",
-                            "172.25.", "172.26.", "172.27.", "172.28.", "172.29.",
-                            "172.30.", "172.31.", "192.168.", "127.", "::1")
+        trusted_prefixes = (
+            "10.",
+            "172.16.",
+            "172.17.",
+            "172.18.",
+            "172.19.",
+            "172.20.",
+            "172.21.",
+            "172.22.",
+            "172.23.",
+            "172.24.",
+            "172.25.",
+            "172.26.",
+            "172.27.",
+            "172.28.",
+            "172.29.",
+            "172.30.",
+            "172.31.",
+            "192.168.",
+            "127.",
+            "::1",
+        )
         is_trusted_proxy = any(client_ip.startswith(p) for p in trusted_prefixes)
 
         if is_trusted_proxy:
@@ -277,7 +300,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 return limit
         return None
 
-    def _rate_limit_response(self, remaining: int, limit: int | None = None) -> JSONResponse:
+    def _rate_limit_response(
+        self, remaining: int, limit: int | None = None
+    ) -> JSONResponse:
         """Create rate limit exceeded response."""
         retry_after = self.window_seconds
         limit_val = limit if limit is not None else self.requests_per_minute

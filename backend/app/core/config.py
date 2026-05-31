@@ -106,7 +106,8 @@ class Settings(BaseSettings):
     # Ad Platform Configuration
     # -------------------------------------------------------------------------
     use_mock_ad_data: bool = Field(
-        default=False, description="Use mock data instead of real ad platform APIs (dev only)"
+        default=False,
+        description="Use mock data instead of real ad platform APIs (dev only)",
     )
 
     # Meta/Facebook
@@ -135,7 +136,6 @@ class Settings(BaseSettings):
     snapchat_access_token: Optional[str] = Field(default=None)
     snapchat_ad_account_id: Optional[str] = Field(default=None)
 
-
     # -------------------------------------------------------------------------
     # WhatsApp Business API Configuration
     # -------------------------------------------------------------------------
@@ -150,10 +150,11 @@ class Settings(BaseSettings):
     )
     whatsapp_verify_token: str = Field(
         default="",
-        description="Token for webhook verification — must be set via WHATSAPP_VERIFY_TOKEN env var"
+        description="Token for webhook verification — must be set via WHATSAPP_VERIFY_TOKEN env var",
     )
     whatsapp_app_secret: Optional[str] = Field(
-        default=None, description="WhatsApp/Meta App Secret for webhook signature verification"
+        default=None,
+        description="WhatsApp/Meta App Secret for webhook signature verification",
     )
     whatsapp_api_version: str = Field(
         default="v18.0", description="WhatsApp/Meta Graph API version"
@@ -198,9 +199,7 @@ class Settings(BaseSettings):
     # -------------------------------------------------------------------------
     # CORS Configuration
     # -------------------------------------------------------------------------
-    cors_origins: str = Field(
-        default="http://localhost:3000,http://localhost:5173"
-    )
+    cors_origins: str = Field(default="http://localhost:3000,http://localhost:5173")
     cors_allow_credentials: bool = Field(default=True)
 
     @property
@@ -252,7 +251,9 @@ class Settings(BaseSettings):
         default=None,
         description="Secret token for verifying SendGrid inbound webhooks",
     )
-    email_from_name: str = Field(default="Stratum AI", description="Sender display name")
+    email_from_name: str = Field(
+        default="Stratum AI", description="Sender display name"
+    )
     email_from_address: str = Field(
         default="noreply@stratumai.app", description="Sender email address"
     )
@@ -260,7 +261,8 @@ class Settings(BaseSettings):
         default="http://localhost:5173", description="Frontend base URL for email links"
     )
     oauth_redirect_base_url: str = Field(
-        default="http://localhost:8000", description="Base URL for OAuth redirect callbacks"
+        default="http://localhost:8000",
+        description="Base URL for OAuth redirect callbacks",
     )
     email_verification_expire_hours: int = Field(
         default=24, description="Email verification token TTL in hours"
@@ -327,12 +329,24 @@ class Settings(BaseSettings):
     # -------------------------------------------------------------------------
     # Stripe Payments Configuration
     # -------------------------------------------------------------------------
-    stripe_secret_key: Optional[str] = Field(default=None, description="Stripe secret API key")
-    stripe_publishable_key: Optional[str] = Field(default=None, description="Stripe publishable key")
-    stripe_webhook_secret: Optional[str] = Field(default=None, description="Stripe webhook signing secret")
-    stripe_starter_price_id: Optional[str] = Field(default=None, description="Stripe Price ID for Starter tier")
-    stripe_professional_price_id: Optional[str] = Field(default=None, description="Stripe Price ID for Professional tier")
-    stripe_enterprise_price_id: Optional[str] = Field(default=None, description="Stripe Price ID for Enterprise tier")
+    stripe_secret_key: Optional[str] = Field(
+        default=None, description="Stripe secret API key"
+    )
+    stripe_publishable_key: Optional[str] = Field(
+        default=None, description="Stripe publishable key"
+    )
+    stripe_webhook_secret: Optional[str] = Field(
+        default=None, description="Stripe webhook signing secret"
+    )
+    stripe_starter_price_id: Optional[str] = Field(
+        default=None, description="Stripe Price ID for Starter tier"
+    )
+    stripe_professional_price_id: Optional[str] = Field(
+        default=None, description="Stripe Price ID for Professional tier"
+    )
+    stripe_enterprise_price_id: Optional[str] = Field(
+        default=None, description="Stripe Price ID for Enterprise tier"
+    )
 
     # -------------------------------------------------------------------------
     # Rate Limiting
@@ -366,7 +380,9 @@ class Settings(BaseSettings):
             "postgresql+asyncpg://stratum:password@localhost:5432/stratum_ai"
         ):
             # DATABASE_URL was overridden (e.g. by Railway) but DATABASE_URL_SYNC was not
-            sync_url = self.database_url.replace("postgresql+asyncpg://", "postgresql://", 1)
+            sync_url = self.database_url.replace(
+                "postgresql+asyncpg://", "postgresql://", 1
+            )
             object.__setattr__(self, "database_url_sync", sync_url)
         return self
 
@@ -383,7 +399,8 @@ class Settings(BaseSettings):
             if len(value) < 32:
                 warnings.warn(
                     f"SECURITY WARNING: {label} must be set and be at least 32 "
-                    f"characters long (current length: {len(value)})", stacklevel=2
+                    f"characters long (current length: {len(value)})",
+                    stacklevel=2,
                 )
 
         # --- Weak pattern detection in secret_key ---
@@ -392,7 +409,8 @@ class Settings(BaseSettings):
             if pattern in self.secret_key.lower():
                 warnings.warn(
                     f"SECURITY WARNING: SECRET_KEY contains weak pattern '{pattern}'. "
-                    "Use a strong random key in production.", stacklevel=2
+                    "Use a strong random key in production.",
+                    stacklevel=2,
                 )
                 break  # one warning is enough
 
@@ -405,7 +423,8 @@ class Settings(BaseSettings):
             if db_password in insecure_passwords:
                 warnings.warn(
                     f"SECURITY WARNING: database URL contains insecure password '{db_password}'. "
-                    "Use a strong password in production.", stacklevel=2
+                    "Use a strong password in production.",
+                    stacklevel=2,
                 )
 
         return self
@@ -427,11 +446,9 @@ class Settings(BaseSettings):
                 raise ValueError(
                     f"PII_ENCRYPTION_KEY must be explicitly set in {self.app_env} (do not rely on auto-generated dev defaults)"
                 )
-            if (
-                self.whatsapp_phone_number_id
-                and not self.whatsapp_verify_token
-            ):
+            if self.whatsapp_phone_number_id and not self.whatsapp_verify_token:
                 import warnings
+
                 warnings.warn(
                     f"WHATSAPP_VERIFY_TOKEN is empty in {self.app_env} "
                     "when WHATSAPP_PHONE_NUMBER_ID is configured — WhatsApp webhooks will not be verified",
@@ -442,6 +459,7 @@ class Settings(BaseSettings):
                 and self.whatsapp_phone_number_id
             ):
                 import warnings
+
                 warnings.warn(
                     f"whatsapp_verify_token should be changed from default in {self.app_env} "
                     "when WhatsApp is configured — webhooks will not be secure",

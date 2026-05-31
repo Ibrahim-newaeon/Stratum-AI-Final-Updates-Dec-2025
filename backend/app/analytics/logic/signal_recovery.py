@@ -14,17 +14,19 @@ When EMQ drops, event loss spikes, or API health degrades, this module:
 Builds on: signal_health.py, types.py (SignalHealthStatus)
 """
 
-from typing import List, Optional, Dict, Literal
 from datetime import datetime, timezone
+from typing import Dict, List, Literal, Optional
+
 from pydantic import BaseModel, Field
 
 from app.analytics.logic.types import SignalHealthStatus
 
-
 # ── Models ───────────────────────────────────────────────────────────────────
+
 
 class SignalIssue(BaseModel):
     """A specific signal health issue detected."""
+
     id: str
     type: Literal["emq_drop", "event_loss", "api_down", "data_stale", "tracking_gap"]
     severity: Literal["critical", "high", "medium", "low"]
@@ -38,9 +40,17 @@ class SignalIssue(BaseModel):
 
 class RecoveryAction(BaseModel):
     """A recovery action to address a signal issue."""
+
     id: str
     issue_id: str
-    type: Literal["resync", "diagnostics", "check_capi", "check_pixel", "alert_team", "expand_params"]
+    type: Literal[
+        "resync",
+        "diagnostics",
+        "check_capi",
+        "check_pixel",
+        "alert_team",
+        "expand_params",
+    ]
     title: str
     description: str
     status: Literal["pending", "in_progress", "completed", "failed"] = "pending"
@@ -51,6 +61,7 @@ class RecoveryAction(BaseModel):
 
 class RecoveryTimeline(BaseModel):
     """A timeline entry for recovery tracking."""
+
     timestamp: str
     event: str
     type: Literal["detection", "action", "progress", "resolution"]
@@ -59,6 +70,7 @@ class RecoveryTimeline(BaseModel):
 
 class SignalRecoveryResponse(BaseModel):
     """Full response for the signal recovery dashboard card."""
+
     status: Literal["healthy", "recovering", "degraded", "critical"]
     summary: str
     issues: List[SignalIssue] = []
@@ -78,7 +90,7 @@ ISSUE_TEMPLATES: Dict[str, Dict] = {
     "emq_drop": {
         "title": "Event Match Quality Degraded",
         "description_template": "EMQ score dropped to {value:.0f}/100 (threshold: {threshold:.0f}). "
-                                "This reduces ad platform optimization accuracy and may impact ROAS.",
+        "This reduces ad platform optimization accuracy and may impact ROAS.",
         "recovery_actions": [
             {
                 "type": "check_capi",
@@ -106,7 +118,7 @@ ISSUE_TEMPLATES: Dict[str, Dict] = {
     "event_loss": {
         "title": "Event Loss Rate Elevated",
         "description_template": "Event loss rate is {value:.1f}% (threshold: {threshold:.1f}%). "
-                                "Conversion events may not be reaching ad platforms, undermining attribution.",
+        "Conversion events may not be reaching ad platforms, undermining attribution.",
         "recovery_actions": [
             {
                 "type": "check_capi",
@@ -135,7 +147,7 @@ ISSUE_TEMPLATES: Dict[str, Dict] = {
     "api_down": {
         "title": "Platform API Connection Failed",
         "description_template": "API connectivity to {platforms} is down. "
-                                "No data is being synced — automation has been automatically suspended.",
+        "No data is being synced — automation has been automatically suspended.",
         "recovery_actions": [
             {
                 "type": "diagnostics",
@@ -165,7 +177,7 @@ ISSUE_TEMPLATES: Dict[str, Dict] = {
     "data_stale": {
         "title": "Data Sync Stale",
         "description_template": "Campaign data hasn't been refreshed in {value:.0f} hours (threshold: {threshold:.0f}h). "
-                                "Dashboard metrics may not reflect current performance.",
+        "Dashboard metrics may not reflect current performance.",
         "recovery_actions": [
             {
                 "type": "resync",
@@ -187,7 +199,7 @@ ISSUE_TEMPLATES: Dict[str, Dict] = {
     "tracking_gap": {
         "title": "Tracking Gap Detected",
         "description_template": "Significant discrepancy between platform-reported and server-tracked conversions. "
-                                "This may indicate a pixel or CAPI configuration issue.",
+        "This may indicate a pixel or CAPI configuration issue.",
         "recovery_actions": [
             {
                 "type": "check_pixel",
@@ -241,16 +253,24 @@ def detect_signal_issues(
     # 1. API connectivity check
     if not api_health:
         template = ISSUE_TEMPLATES["api_down"]
-        platforms_str = ", ".join(connected_platforms) if connected_platforms else "connected platforms"
-        issues.append(SignalIssue(
-            id="issue_api_down",
-            type="api_down",
-            severity="critical",
-            title=template["title"],
-            description=template["description_template"].format(platforms=platforms_str),
-            affected_platforms=connected_platforms,
-            detected_at=now,
-        ))
+        platforms_str = (
+            ", ".join(connected_platforms)
+            if connected_platforms
+            else "connected platforms"
+        )
+        issues.append(
+            SignalIssue(
+                id="issue_api_down",
+                type="api_down",
+                severity="critical",
+                title=template["title"],
+                description=template["description_template"].format(
+                    platforms=platforms_str
+                ),
+                affected_platforms=connected_platforms,
+                detected_at=now,
+            )
+        )
 
     # 2. EMQ degradation
     if emq_score is not None:
@@ -258,49 +278,69 @@ def detect_signal_issues(
         if emq_pct < 80:
             severity = "critical" if emq_pct < 60 else "high"
             template = ISSUE_TEMPLATES["emq_drop"]
-            issues.append(SignalIssue(
-                id="issue_emq_drop",
-                type="emq_drop",
-                severity=severity,
-                title=template["title"],
-                description=template["description_template"].format(value=emq_pct, threshold=80),
-                metric_value=emq_pct,
-                threshold=80.0,
-                affected_platforms=connected_platforms,
-                detected_at=now,
-            ))
+            issues.append(
+                SignalIssue(
+                    id="issue_emq_drop",
+                    type="emq_drop",
+                    severity=severity,
+                    title=template["title"],
+                    description=template["description_template"].format(
+                        value=emq_pct, threshold=80
+                    ),
+                    metric_value=emq_pct,
+                    threshold=80.0,
+                    affected_platforms=connected_platforms,
+                    detected_at=now,
+                )
+            )
 
     # 3. Event loss spike
     if event_loss_pct is not None and event_loss_pct > 5.0:
-        severity = "critical" if event_loss_pct > 15 else ("high" if event_loss_pct > 10 else "medium")
+        severity = (
+            "critical"
+            if event_loss_pct > 15
+            else ("high" if event_loss_pct > 10 else "medium")
+        )
         template = ISSUE_TEMPLATES["event_loss"]
-        issues.append(SignalIssue(
-            id="issue_event_loss",
-            type="event_loss",
-            severity=severity,
-            title=template["title"],
-            description=template["description_template"].format(value=event_loss_pct, threshold=5.0),
-            metric_value=event_loss_pct,
-            threshold=5.0,
-            affected_platforms=connected_platforms,
-            detected_at=now,
-        ))
+        issues.append(
+            SignalIssue(
+                id="issue_event_loss",
+                type="event_loss",
+                severity=severity,
+                title=template["title"],
+                description=template["description_template"].format(
+                    value=event_loss_pct, threshold=5.0
+                ),
+                metric_value=event_loss_pct,
+                threshold=5.0,
+                affected_platforms=connected_platforms,
+                detected_at=now,
+            )
+        )
 
     # 4. Data staleness
     if data_freshness_hours is not None and data_freshness_hours > 24:
-        severity = "critical" if data_freshness_hours > 72 else ("high" if data_freshness_hours > 48 else "medium")
+        severity = (
+            "critical"
+            if data_freshness_hours > 72
+            else ("high" if data_freshness_hours > 48 else "medium")
+        )
         template = ISSUE_TEMPLATES["data_stale"]
-        issues.append(SignalIssue(
-            id="issue_data_stale",
-            type="data_stale",
-            severity=severity,
-            title=template["title"],
-            description=template["description_template"].format(value=data_freshness_hours, threshold=24),
-            metric_value=data_freshness_hours,
-            threshold=24.0,
-            affected_platforms=connected_platforms,
-            detected_at=now,
-        ))
+        issues.append(
+            SignalIssue(
+                id="issue_data_stale",
+                type="data_stale",
+                severity=severity,
+                title=template["title"],
+                description=template["description_template"].format(
+                    value=data_freshness_hours, threshold=24
+                ),
+                metric_value=data_freshness_hours,
+                threshold=24.0,
+                affected_platforms=connected_platforms,
+                detected_at=now,
+            )
+        )
 
     # Sort by severity (critical > high > medium > low)
     severity_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
@@ -323,24 +363,28 @@ def generate_recovery_actions(issues: List[SignalIssue]) -> List[RecoveryAction]
         for action_template in template.get("recovery_actions", []):
             action_idx += 1
             auto = action_template.get("auto_triggered", False)
-            actions.append(RecoveryAction(
-                id=f"action_{action_idx}",
-                issue_id=issue.id,
-                type=action_template["type"],
-                title=action_template["title"],
-                description=action_template["description"],
-                status="in_progress" if auto else "pending",
-                priority=action_template.get("priority", "normal"),
-                auto_triggered=auto,
-                estimated_minutes=action_template.get("estimated_minutes"),
-            ))
+            actions.append(
+                RecoveryAction(
+                    id=f"action_{action_idx}",
+                    issue_id=issue.id,
+                    type=action_template["type"],
+                    title=action_template["title"],
+                    description=action_template["description"],
+                    status="in_progress" if auto else "pending",
+                    priority=action_template.get("priority", "normal"),
+                    auto_triggered=auto,
+                    estimated_minutes=action_template.get("estimated_minutes"),
+                )
+            )
 
     # Sort: auto-triggered first, then by priority
     priority_order = {"urgent": 0, "high": 1, "normal": 2}
-    actions.sort(key=lambda a: (
-        0 if a.auto_triggered else 1,
-        priority_order.get(a.priority, 2),
-    ))
+    actions.sort(
+        key=lambda a: (
+            0 if a.auto_triggered else 1,
+            priority_order.get(a.priority, 2),
+        )
+    )
 
     return actions
 
@@ -355,32 +399,38 @@ def build_recovery_timeline(
 
     # Detection events
     for issue in issues:
-        timeline.append(RecoveryTimeline(
-            timestamp=issue.detected_at,
-            event=f"Detected: {issue.title}",
-            type="detection",
-            details=f"Severity: {issue.severity}",
-        ))
+        timeline.append(
+            RecoveryTimeline(
+                timestamp=issue.detected_at,
+                event=f"Detected: {issue.title}",
+                type="detection",
+                details=f"Severity: {issue.severity}",
+            )
+        )
 
     # Auto-triggered actions
     for action in actions:
         if action.auto_triggered:
-            timeline.append(RecoveryTimeline(
-                timestamp=now,
-                event=f"Auto-triggered: {action.title}",
-                type="action",
-                details=f"Status: {action.status}",
-            ))
+            timeline.append(
+                RecoveryTimeline(
+                    timestamp=now,
+                    event=f"Auto-triggered: {action.title}",
+                    type="action",
+                    details=f"Status: {action.status}",
+                )
+            )
 
     # Pending manual actions
     manual_count = sum(1 for a in actions if not a.auto_triggered)
     if manual_count > 0:
-        timeline.append(RecoveryTimeline(
-            timestamp=now,
-            event=f"{manual_count} manual action{'s' if manual_count > 1 else ''} recommended",
-            type="progress",
-            details="Review and execute from the recovery panel",
-        ))
+        timeline.append(
+            RecoveryTimeline(
+                timestamp=now,
+                event=f"{manual_count} manual action{'s' if manual_count > 1 else ''} recommended",
+                type="progress",
+                details="Review and execute from the recovery panel",
+            )
+        )
 
     return timeline
 
@@ -441,7 +491,9 @@ def generate_recovery_summary(
         titles = " and ".join(i.title.lower() for i in high[:2])
         parts.append(f"Signal health degraded: {titles}")
     else:
-        parts.append(f"{len(issues)} signal issue{'s' if len(issues) > 1 else ''} detected")
+        parts.append(
+            f"{len(issues)} signal issue{'s' if len(issues) > 1 else ''} detected"
+        )
 
     if auto_actions:
         parts.append(
@@ -451,7 +503,9 @@ def generate_recovery_summary(
 
     manual = [a for a in actions if not a.auto_triggered and a.status == "pending"]
     if manual:
-        parts.append(f"{len(manual)} manual step{'s' if len(manual) > 1 else ''} recommended")
+        parts.append(
+            f"{len(manual)} manual step{'s' if len(manual) > 1 else ''} recommended"
+        )
 
     return ". ".join(parts) + "."
 
@@ -504,7 +558,9 @@ def build_signal_recovery(
     est_minutes = None
     if actions:
         pending_actions = [a for a in actions if a.status != "completed"]
-        estimates = [a.estimated_minutes for a in pending_actions if a.estimated_minutes]
+        estimates = [
+            a.estimated_minutes for a in pending_actions if a.estimated_minutes
+        ]
         if estimates:
             est_minutes = max(estimates)  # Parallel execution, use longest
 

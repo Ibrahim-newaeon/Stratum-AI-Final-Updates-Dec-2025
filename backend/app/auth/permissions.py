@@ -16,7 +16,7 @@ Permissions are granular and can be checked individually or in combination.
 
 from enum import Enum
 from functools import wraps
-from typing import Callable, List, Optional, Set, TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable, List, Optional, Set
 
 from fastapi import HTTPException, Request, status
 
@@ -35,7 +35,14 @@ class PermLevel(int, Enum):
 
 # Minimum roles for each PermLevel
 _PERM_LEVEL_ROLES: dict[PermLevel, set[str]] = {
-    PermLevel.VIEW: {"superadmin", "admin", "manager", "analyst", "account_manager", "viewer"},
+    PermLevel.VIEW: {
+        "superadmin",
+        "admin",
+        "manager",
+        "analyst",
+        "account_manager",
+        "viewer",
+    },
     PermLevel.EDIT: {"superadmin", "admin", "manager"},
     PermLevel.FULL: {"superadmin", "admin"},
 }
@@ -176,7 +183,6 @@ ROLE_PERMISSIONS: dict[str, Set[Permission]] = {
         Permission.CLIENT_DELETE,
         Permission.CLIENT_PORTAL,
     },
-
     # Tenant Admin: Full tenant access
     "admin": {
         Permission.TENANT_READ,
@@ -217,7 +223,6 @@ ROLE_PERMISSIONS: dict[str, Set[Permission]] = {
         Permission.CLIENT_DELETE,
         Permission.CLIENT_PORTAL,
     },
-
     # Manager: Campaign and team management
     "manager": {
         Permission.TENANT_READ,
@@ -244,7 +249,6 @@ ROLE_PERMISSIONS: dict[str, Set[Permission]] = {
         Permission.CLIENT_WRITE,
         Permission.CLIENT_PORTAL,
     },
-
     # Media Buyer: Campaign execution focus
     "media_buyer": {
         Permission.TENANT_READ,
@@ -263,7 +267,6 @@ ROLE_PERMISSIONS: dict[str, Set[Permission]] = {
         Permission.RULE_WRITE,
         Permission.RULE_EXECUTE,
     },
-
     # Analyst: Read-only analytics focus
     "analyst": {
         Permission.TENANT_READ,
@@ -277,7 +280,6 @@ ROLE_PERMISSIONS: dict[str, Set[Permission]] = {
         Permission.RULE_READ,
         Permission.CLIENT_READ,
     },
-
     # Account Manager: Client relationship focus
     "account_manager": {
         Permission.TENANT_READ,
@@ -292,7 +294,6 @@ ROLE_PERMISSIONS: dict[str, Set[Permission]] = {
         Permission.ASSET_READ,
         Permission.RULE_READ,
     },
-
     # Viewer: Minimal read access
     "viewer": {
         Permission.TENANT_READ,
@@ -464,25 +465,57 @@ def get_resource_scope(role: UserRole) -> str:
 
 SIDEBAR_VISIBILITY: dict[UserRole, set[str]] = {
     UserRole.SUPERADMIN: {
-        "dashboard", "campaigns", "analytics", "clients", "users",
-        "settings", "connectors", "billing", "audit", "tenants",
-        "reports", "alerts", "profile",
+        "dashboard",
+        "campaigns",
+        "analytics",
+        "clients",
+        "users",
+        "settings",
+        "connectors",
+        "billing",
+        "audit",
+        "tenants",
+        "reports",
+        "alerts",
+        "profile",
     },
     UserRole.ADMIN: {
-        "dashboard", "campaigns", "analytics", "clients", "users",
-        "settings", "connectors", "billing", "audit", "reports",
-        "alerts", "profile",
+        "dashboard",
+        "campaigns",
+        "analytics",
+        "clients",
+        "users",
+        "settings",
+        "connectors",
+        "billing",
+        "audit",
+        "reports",
+        "alerts",
+        "profile",
     },
     UserRole.MANAGER: {
-        "dashboard", "campaigns", "analytics", "clients",
-        "connectors", "reports", "alerts", "profile",
+        "dashboard",
+        "campaigns",
+        "analytics",
+        "clients",
+        "connectors",
+        "reports",
+        "alerts",
+        "profile",
     },
     UserRole.ANALYST: {
-        "dashboard", "campaigns", "analytics", "reports",
-        "alerts", "profile",
+        "dashboard",
+        "campaigns",
+        "analytics",
+        "reports",
+        "alerts",
+        "profile",
     },
     UserRole.VIEWER: {
-        "dashboard", "campaigns", "analytics", "profile",
+        "dashboard",
+        "campaigns",
+        "analytics",
+        "profile",
     },
 }
 
@@ -490,6 +523,7 @@ SIDEBAR_VISIBILITY: dict[UserRole, set[str]] = {
 # =============================================================================
 # Permission Helper Functions
 # =============================================================================
+
 
 def get_user_permissions(role: str) -> Set[Permission]:
     """
@@ -553,6 +587,7 @@ def has_all_permissions(role: str, permissions: List[Permission]) -> bool:
 # FastAPI Dependency Decorators
 # =============================================================================
 
+
 def require_permissions(
     permissions: List[Permission],
     require_all: bool = True,
@@ -575,6 +610,7 @@ def require_permissions(
         ):
             ...
     """
+
     async def permission_checker(request: Request) -> None:
         # Get user role from request state (set by middleware)
         role = getattr(request.state, "role", None)
@@ -620,6 +656,7 @@ def require_role(roles: List[str]) -> Callable:
         ):
             ...
     """
+
     async def role_checker(request: Request) -> None:
         role = getattr(request.state, "role", None)
         user_id = getattr(request.state, "user_id", None)
@@ -676,6 +713,7 @@ async def require_super_admin(request: Request) -> None:
 # Permission Decorator for Service Functions
 # =============================================================================
 
+
 def check_permission(permission: Permission):
     """
     Decorator for service functions that need permission checking.
@@ -687,12 +725,15 @@ def check_permission(permission: Permission):
         async def create_campaign(data: dict, role: str, tenant_id: int):
             ...
     """
+
     def decorator(func: Callable):
         @wraps(func)
         async def wrapper(*args, **kwargs):
             role = kwargs.get("role")
             if not role:
-                raise ValueError("Role argument required for permission-checked functions")
+                raise ValueError(
+                    "Role argument required for permission-checked functions"
+                )
 
             if not has_permission(role, permission):
                 raise HTTPException(
@@ -701,13 +742,16 @@ def check_permission(permission: Permission):
                 )
 
             return await func(*args, **kwargs)
+
         return wrapper
+
     return decorator
 
 
 # =============================================================================
 # Resource-Level Permission (PermLevel) Dependency
 # =============================================================================
+
 
 def require_permission(resource: str, level: PermLevel) -> Callable:
     """
@@ -720,6 +764,7 @@ def require_permission(resource: str, level: PermLevel) -> Callable:
     Usage:
         @router.post("/clients", dependencies=[Depends(require_permission("clients", PermLevel.FULL))])
     """
+
     async def _checker(request: Request) -> None:
         role = getattr(request.state, "role", None)
         user_id = getattr(request.state, "user_id", None)
@@ -744,6 +789,7 @@ def require_permission(resource: str, level: PermLevel) -> Callable:
 # =============================================================================
 # Client-Scope Access Helpers
 # =============================================================================
+
 
 async def enforce_client_access(
     *,
@@ -818,6 +864,7 @@ async def get_accessible_client_ids(
             return [client_id]
         # Look up the viewer's client_id from User table
         from app.base_models import User as UserModel
+
         result = await db.execute(
             select(UserModel.client_id).where(UserModel.id == user_id)
         )
@@ -836,6 +883,7 @@ async def get_accessible_client_ids(
         return list(result.scalars().all())
     except (ConnectionError, TimeoutError, OSError) as exc:
         import structlog
+
         structlog.get_logger().error(
             "get_accessible_client_ids_db_error",
             user_id=user_id,

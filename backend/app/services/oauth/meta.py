@@ -160,10 +160,14 @@ class MetaOAuthService(OAuthService):
                 "fb_exchange_token": short_lived_token,
             }
 
-            async with session.get(self._get_token_url(), params=long_lived_params) as resp:
+            async with session.get(
+                self._get_token_url(), params=long_lived_params
+            ) as resp:
                 if resp.status != 200:
                     error_data = await resp.json()
-                    self.logger.error("Meta long-lived token exchange failed", error=error_data)
+                    self.logger.error(
+                        "Meta long-lived token exchange failed", error=error_data
+                    )
                     # Fall back to short-lived token
                     return OAuthTokens(
                         access_token=short_lived_token,
@@ -271,7 +275,9 @@ class MetaOAuthService(OAuthService):
                 async with session.get(url, params=params) as resp:
                     if resp.status != 200:
                         error_data = await resp.json()
-                        self.logger.error("Failed to fetch ad accounts", error=error_data)
+                        self.logger.error(
+                            "Failed to fetch ad accounts", error=error_data
+                        )
                         raise Exception(
                             f"Failed to fetch ad accounts: {error_data.get('error', {}).get('message', 'Unknown error')}"
                         )
@@ -292,7 +298,9 @@ class MetaOAuthService(OAuthService):
                         201: "any_active",
                         202: "any_closed",
                     }
-                    account_status = status_map.get(account.get("account_status", 1), "unknown")
+                    account_status = status_map.get(
+                        account.get("account_status", 1), "unknown"
+                    )
 
                     accounts.append(
                         AdAccountInfo(
@@ -302,12 +310,16 @@ class MetaOAuthService(OAuthService):
                             currency=account.get("currency", "USD"),
                             timezone=account.get("timezone_name", "UTC"),
                             status=account_status,
-                            spend_cap=float(account.get("spend_cap", 0)) / 100
-                            if account.get("spend_cap")
-                            else None,
-                            amount_spent=float(account.get("amount_spent", 0)) / 100
-                            if account.get("amount_spent")
-                            else None,
+                            spend_cap=(
+                                float(account.get("spend_cap", 0)) / 100
+                                if account.get("spend_cap")
+                                else None
+                            ),
+                            amount_spent=(
+                                float(account.get("amount_spent", 0)) / 100
+                                if account.get("amount_spent")
+                                else None
+                            ),
                             permissions=account.get("capabilities", []),
                             raw_data=account,
                         )

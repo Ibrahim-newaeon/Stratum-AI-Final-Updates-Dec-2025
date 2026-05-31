@@ -149,7 +149,9 @@ class SignalHealthCalculator:
 
         # Calculate each component
         emq_score = self._calculate_emq_component(emq_scores, issues)
-        freshness_score = self._calculate_freshness_component(last_data_received, issues)
+        freshness_score = self._calculate_freshness_component(
+            last_data_received, issues
+        )
         variance_score = self._calculate_variance_component(
             platform_revenue, ga4_revenue, historical_variance, issues
         )
@@ -196,7 +198,9 @@ class SignalHealthCalculator:
             last_updated=datetime.now(UTC),
         )
 
-        cdp_info = f", CDP:{health.cdp_emq_score}" if health.cdp_emq_score is not None else ""
+        cdp_info = (
+            f", CDP:{health.cdp_emq_score}" if health.cdp_emq_score is not None else ""
+        )
         logger.info(
             f"Signal health calculated: {health.overall_score} ({health.status}) "
             f"[EMQ:{health.emq_score}, Fresh:{health.freshness_score}, "
@@ -276,7 +280,9 @@ class SignalHealthCalculator:
             return 0.0
         else:
             # Linear decay between thresholds
-            range_hours = self.config.stale_data_age_hours - self.config.max_data_age_hours
+            range_hours = (
+                self.config.stale_data_age_hours - self.config.max_data_age_hours
+            )
             decay = (age_hours - self.config.max_data_age_hours) / range_hours
             score = 100.0 * (1.0 - decay)
             issues.append(f"Data freshness degraded ({age_hours:.1f}h old)")
@@ -325,7 +331,9 @@ class SignalHealthCalculator:
             issues.append(f"High attribution variance: {variance*100:.1f}%")
             # Linear decay from warning to max
             excess = variance - self.config.warning_variance
-            max_excess = self.config.max_acceptable_variance - self.config.warning_variance
+            max_excess = (
+                self.config.max_acceptable_variance - self.config.warning_variance
+            )
             if excess >= max_excess * 2:
                 return 0.0
             decay = excess / (max_excess * 2)
@@ -333,7 +341,9 @@ class SignalHealthCalculator:
         else:
             # Linear decay from warning to max_acceptable
             excess = variance - self.config.warning_variance
-            max_excess = self.config.max_acceptable_variance - self.config.warning_variance
+            max_excess = (
+                self.config.max_acceptable_variance - self.config.warning_variance
+            )
             decay = excess / max_excess * 0.3  # Max 30% reduction
             return 100.0 * (1.0 - decay)
 
@@ -360,7 +370,9 @@ class SignalHealthCalculator:
 
             # Get historical values
             historical_values = [
-                m.get(metric_name) for m in historical_metrics if m.get(metric_name) is not None
+                m.get(metric_name)
+                for m in historical_metrics
+                if m.get(metric_name) is not None
             ]
 
             if len(historical_values) < 7:
@@ -371,14 +383,18 @@ class SignalHealthCalculator:
 
             # Calculate z-score
             mean = sum(historical_values) / len(historical_values)
-            variance = sum((x - mean) ** 2 for x in historical_values) / len(historical_values)
+            variance = sum((x - mean) ** 2 for x in historical_values) / len(
+                historical_values
+            )
             std_dev = variance**0.5
 
             if std_dev > 0:
                 z_score = abs(current_value - mean) / std_dev
                 if z_score > self.config.anomaly_zscore_threshold:
                     anomaly_count += 1
-                    issues.append(f"Anomaly detected in {metric_name}: z-score={z_score:.2f}")
+                    issues.append(
+                        f"Anomaly detected in {metric_name}: z-score={z_score:.2f}"
+                    )
 
         if metrics_checked == 0:
             return 90.0
@@ -422,7 +438,11 @@ class SignalHealthCalculator:
 
         # Map drivers to our 4-component model
         # EMQ Score = weighted average of match rate, pixel coverage, latency
-        emq_weights = {"event_match_rate": 0.4, "pixel_coverage": 0.35, "conversion_latency": 0.25}
+        emq_weights = {
+            "event_match_rate": 0.4,
+            "pixel_coverage": 0.35,
+            "conversion_latency": 0.25,
+        }
         emq_component = (
             event_match_rate * emq_weights["event_match_rate"]
             + pixel_coverage * emq_weights["pixel_coverage"]

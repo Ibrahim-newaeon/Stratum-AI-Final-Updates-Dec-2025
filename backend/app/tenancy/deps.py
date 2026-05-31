@@ -18,8 +18,8 @@ from sqlalchemy.sql import Select
 
 from app.core.logging import get_logger
 from app.db.session import get_async_session
-from app.tenancy.context import TenantContext, get_tenant_context
 from app.models import User
+from app.tenancy.context import TenantContext, get_tenant_context
 
 logger = get_logger(__name__)
 
@@ -138,6 +138,7 @@ def require_tenant(tenant_id_param: str = "tenant_id"):
         ):
             ...
     """
+
     async def validator(request: Request) -> TenantContext:
         context = await get_tenant(request)
 

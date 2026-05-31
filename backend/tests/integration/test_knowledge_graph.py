@@ -7,9 +7,10 @@ Tests model creation, Cypher property serialization, node/edge validation,
 and service operations without requiring a live database.
 """
 
-import pytest
 from datetime import datetime, timezone
 from uuid import uuid4
+
+import pytest
 
 from app.services.knowledge_graph.models import (
     AccountNode,
@@ -25,10 +26,10 @@ from app.services.knowledge_graph.models import (
     SignalStatus,
 )
 
-
 # =============================================================================
 # Fixtures
 # =============================================================================
+
 
 @pytest.fixture
 def tenant_id():
@@ -74,6 +75,7 @@ def sample_edge(tenant_id):
 # =============================================================================
 # Node Model Tests
 # =============================================================================
+
 
 class TestProfileNode:
     """Tests for ProfileNode creation and serialization."""
@@ -139,6 +141,7 @@ class TestAccountNode:
 # Edge Model Tests
 # =============================================================================
 
+
 class TestGraphEdge:
     """Tests for GraphEdge creation and serialization."""
 
@@ -167,13 +170,24 @@ class TestGraphEdge:
 # Enum Tests
 # =============================================================================
 
+
 class TestKnowledgeGraphEnums:
     """Tests for Knowledge Graph enums."""
 
     def test_node_labels_complete(self):
         """NodeLabel should have all required labels."""
-        required = {"Profile", "Account", "Event", "Signal", "TrustGate",
-                     "Automation", "Segment", "Campaign", "Channel", "Revenue"}
+        required = {
+            "Profile",
+            "Account",
+            "Event",
+            "Signal",
+            "TrustGate",
+            "Automation",
+            "Segment",
+            "Campaign",
+            "Channel",
+            "Revenue",
+        }
         actual = {nl.value for nl in NodeLabel}
         assert required.issubset(actual), f"Missing labels: {required - actual}"
 
@@ -211,6 +225,7 @@ class TestKnowledgeGraphEnums:
 # =============================================================================
 # Cross-Node Relationship Tests
 # =============================================================================
+
 
 class TestNodeRelationships:
     """Tests for creating valid node-edge-node triples."""

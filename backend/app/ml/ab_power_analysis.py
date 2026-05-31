@@ -12,10 +12,10 @@ Provides:
 - Multiple testing corrections
 """
 
-from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple
-from enum import Enum
 import math
+from dataclasses import dataclass
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 import structlog
@@ -28,6 +28,7 @@ logger = structlog.get_logger(__name__)
 
 class TestType(str, Enum):
     """Type of statistical test."""
+
     TWO_SIDED = "two_sided"  # Test for any difference
     ONE_SIDED_GREATER = "one_sided_greater"  # Test if B > A
     ONE_SIDED_LESS = "one_sided_less"  # Test if B < A
@@ -35,6 +36,7 @@ class TestType(str, Enum):
 
 class MetricType(str, Enum):
     """Type of metric being tested."""
+
     CONTINUOUS = "continuous"  # MAE, RMSE, etc.
     PROPORTION = "proportion"  # Conversion rate, CTR
     COUNT = "count"  # Number of events
@@ -43,6 +45,7 @@ class MetricType(str, Enum):
 @dataclass
 class PowerAnalysisResult:
     """Result of a power analysis calculation."""
+
     sample_size_per_variant: int
     total_sample_size: int
     power: float
@@ -57,6 +60,7 @@ class PowerAnalysisResult:
 @dataclass
 class SequentialTestResult:
     """Result of a sequential test check."""
+
     should_stop: bool
     conclusion: str  # "winner_found", "no_difference", "continue"
     p_value: float
@@ -212,17 +216,19 @@ class ABPowerAnalyzer:
         h = 2 * (math.asin(math.sqrt(p2)) - math.asin(math.sqrt(p1)))
 
         if abs(h) < 1e-10:
-            return float('inf')
+            return float("inf")
 
         # Sample size formula
         n = 2 * ((z_alpha + z_power) / h) ** 2
 
         # Alternative formula (more conservative)
-        numerator = (z_alpha * math.sqrt(2 * p_pooled * (1 - p_pooled)) +
-                     z_power * math.sqrt(p1 * (1 - p1) + p2 * (1 - p2))) ** 2
+        numerator = (
+            z_alpha * math.sqrt(2 * p_pooled * (1 - p_pooled))
+            + z_power * math.sqrt(p1 * (1 - p1) + p2 * (1 - p2))
+        ) ** 2
         denominator = (p2 - p1) ** 2
 
-        n_alt = numerator / denominator if denominator > 0 else float('inf')
+        n_alt = numerator / denominator if denominator > 0 else float("inf")
 
         return max(n, n_alt)
 
@@ -235,7 +241,7 @@ class ABPowerAnalyzer:
     ) -> float:
         """Calculate sample size for continuous metric test."""
         if abs(mean_diff) < 1e-10:
-            return float('inf')
+            return float("inf")
 
         # Cohen's d
         d = mean_diff / std
@@ -254,14 +260,15 @@ class ABPowerAnalyzer:
     ) -> float:
         """Calculate sample size for count data (Poisson)."""
         if abs(lambda2 - lambda1) < 1e-10:
-            return float('inf')
+            return float("inf")
 
         # Sample size for Poisson rates
-        numerator = (z_alpha * math.sqrt(2 * lambda1) +
-                     z_power * math.sqrt(lambda1 + lambda2)) ** 2
+        numerator = (
+            z_alpha * math.sqrt(2 * lambda1) + z_power * math.sqrt(lambda1 + lambda2)
+        ) ** 2
         denominator = (lambda2 - lambda1) ** 2
 
-        return numerator / denominator if denominator > 0 else float('inf')
+        return numerator / denominator if denominator > 0 else float("inf")
 
     def _get_z_score(self, alpha: float, test_type: TestType) -> float:
         """Get z-score for given alpha and test type."""
@@ -439,8 +446,16 @@ class ABPowerAnalyzer:
         p2 = successes_b / trials_b if trials_b > 0 else 0
 
         # Two-proportion z-test
-        p_pooled = (successes_a + successes_b) / (trials_a + trials_b) if (trials_a + trials_b) > 0 else 0
-        se = math.sqrt(p_pooled * (1 - p_pooled) * (1/trials_a + 1/trials_b)) if p_pooled > 0 else 1
+        p_pooled = (
+            (successes_a + successes_b) / (trials_a + trials_b)
+            if (trials_a + trials_b) > 0
+            else 0
+        )
+        se = (
+            math.sqrt(p_pooled * (1 - p_pooled) * (1 / trials_a + 1 / trials_b))
+            if p_pooled > 0
+            else 1
+        )
 
         z_stat = (p2 - p1) / se if se > 0 else 0
         p_value = 2 * (1 - stats.norm.cdf(abs(z_stat)))  # Two-sided
@@ -531,12 +546,14 @@ class ABPowerAnalyzer:
             if not is_significant:
                 rejected = True  # Stop rejecting once we fail
 
-            results.append({
-                "original_index": int(idx),
-                "p_value": p_values[idx],
-                "adjusted_alpha": round(adjusted_alpha, 6),
-                "is_significant": is_significant,
-            })
+            results.append(
+                {
+                    "original_index": int(idx),
+                    "p_value": p_values[idx],
+                    "adjusted_alpha": round(adjusted_alpha, 6),
+                    "is_significant": is_significant,
+                }
+            )
 
         # Sort back to original order
         results.sort(key=lambda x: x["original_index"])
@@ -568,12 +585,14 @@ class ABPowerAnalyzer:
             critical_value = (rank / n) * alpha
             is_significant = rank <= max_significant
 
-            results.append({
-                "original_index": int(idx),
-                "p_value": p_values[idx],
-                "critical_value": round(critical_value, 6),
-                "is_significant": is_significant,
-            })
+            results.append(
+                {
+                    "original_index": int(idx),
+                    "p_value": p_values[idx],
+                    "critical_value": round(critical_value, 6),
+                    "is_significant": is_significant,
+                }
+            )
 
         results.sort(key=lambda x: x["original_index"])
         return results
@@ -586,6 +605,7 @@ power_analyzer = ABPowerAnalyzer()
 # =============================================================================
 # Convenience Functions
 # =============================================================================
+
 
 def calculate_ab_sample_size(
     baseline_conversion_rate: float,
@@ -627,8 +647,8 @@ def calculate_ab_sample_size(
         "recommendation": (
             f"Run test for at least {result.days_to_significance} days "
             f"to detect a {expected_lift_percent}% lift with {power*100}% power"
-            if result.days_to_significance else
-            f"Need {result.total_sample_size:,} total samples"
+            if result.days_to_significance
+            else f"Need {result.total_sample_size:,} total samples"
         ),
     }
 
@@ -670,9 +690,11 @@ def check_test_power(
 # Bayesian A/B Testing
 # =============================================================================
 
+
 @dataclass
 class BayesianTestResult:
     """Result of Bayesian A/B test analysis."""
+
     probability_b_beats_a: float
     probability_a_beats_b: float
     expected_loss_choosing_b: float
@@ -858,9 +880,11 @@ class BayesianABTester:
 # CUPED Variance Reduction
 # =============================================================================
 
+
 @dataclass
 class CUPEDResult:
     """Result of CUPED variance reduction."""
+
     original_variance: float
     adjusted_variance: float
     variance_reduction_percent: float
@@ -927,11 +951,15 @@ class CUPEDAnalyzer:
 
         # Combined variance
         n_a, n_b = len(metric_a), len(metric_b)
-        original_variance = (original_var_a / n_a + original_var_b / n_b)
-        adjusted_variance = (adjusted_var_a / n_a + adjusted_var_b / n_b)
+        original_variance = original_var_a / n_a + original_var_b / n_b
+        adjusted_variance = adjusted_var_a / n_a + adjusted_var_b / n_b
 
         # Variance reduction
-        reduction = (original_variance - adjusted_variance) / original_variance if original_variance > 0 else 0
+        reduction = (
+            (original_variance - adjusted_variance) / original_variance
+            if original_variance > 0
+            else 0
+        )
 
         # Effect estimates
         original_effect = np.mean(metric_b) - np.mean(metric_a)
@@ -961,10 +989,12 @@ class CUPEDAnalyzer:
         Higher correlation = more variance reduction = higher power.
         """
         # Variance reduction is approximately r^2
-        variance_reduction = correlation ** 2
+        variance_reduction = correlation**2
 
         # Effective sample multiplier
-        sample_multiplier = 1 / (1 - variance_reduction) if variance_reduction < 1 else 1
+        sample_multiplier = (
+            1 / (1 - variance_reduction) if variance_reduction < 1 else 1
+        )
 
         return {
             "correlation": correlation,
@@ -981,9 +1011,11 @@ class CUPEDAnalyzer:
 # Multi-Armed Bandit
 # =============================================================================
 
+
 @dataclass
 class BanditArm:
     """State of a bandit arm."""
+
     arm_id: str
     successes: int
     failures: int
@@ -1002,7 +1034,9 @@ class ThompsonSamplingBandit:
     - Naturally handles many variants
     """
 
-    def __init__(self, arm_ids: List[str], prior_alpha: float = 1.0, prior_beta: float = 1.0):
+    def __init__(
+        self, arm_ids: List[str], prior_alpha: float = 1.0, prior_beta: float = 1.0
+    ):
         """
         Initialize bandit with arm IDs.
 

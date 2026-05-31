@@ -18,7 +18,6 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
-
 # ── Response models ──────────────────────────────────────────────────────────
 
 
@@ -217,7 +216,11 @@ def _generate_competitors(
                 name=profile["name"],
                 estimated_spend=round(spend, 0),
                 estimated_sov=round(sov, 1),
-                relative_strength="stronger" if spend_ratio > 1.3 else "similar" if spend_ratio > 0.7 else "weaker",
+                relative_strength=(
+                    "stronger"
+                    if spend_ratio > 1.3
+                    else "similar" if spend_ratio > 0.7 else "weaker"
+                ),
                 primary_platforms=primary,
                 threat_level=_threat_level(spend_ratio),
                 trend=profile["trend"],
@@ -235,7 +238,9 @@ def _find_opportunities(
     opps: list[MarketOpportunity] = []
 
     # Low-competition platforms
-    low_comp = [p for p in platform_competition if p.competition_level in ("low", "medium")]
+    low_comp = [
+        p for p in platform_competition if p.competition_level in ("low", "medium")
+    ]
     for pc in low_comp[:2]:
         opps.append(
             MarketOpportunity(
@@ -268,8 +273,7 @@ def _find_opportunities(
     # Underserved platforms (not yet spending)
     active_platforms = {p.platform for p in platform_competition}
     missing = [
-        p for p in ["Meta", "Google", "TikTok", "LinkedIn"]
-        if p not in active_platforms
+        p for p in ["Meta", "Google", "TikTok", "LinkedIn"] if p not in active_platforms
     ]
     for plat in missing[:2]:
         opps.append(
@@ -312,8 +316,11 @@ def build_competitor_intel(
         plat = str(c.get("platform", "unknown")).lower()
         if plat not in platform_data:
             platform_data[plat] = {
-                "spend": 0.0, "revenue": 0.0, "conversions": 0,
-                "impressions": 0, "clicks": 0,
+                "spend": 0.0,
+                "revenue": 0.0,
+                "conversions": 0,
+                "impressions": 0,
+                "clicks": 0,
             }
         platform_data[plat]["spend"] += float(c.get("spend", 0))
         platform_data[plat]["revenue"] += float(c.get("revenue", 0))
@@ -336,11 +343,21 @@ def build_competitor_intel(
     platform_competition: list[PlatformCompetition] = []
     competition_scores: list[float] = []
 
-    for plat, data in sorted(platform_data.items(), key=lambda x: x[1]["spend"], reverse=True):
+    for plat, data in sorted(
+        platform_data.items(), key=lambda x: x[1]["spend"], reverse=True
+    ):
         your_roas = data["revenue"] / data["spend"] if data["spend"] > 0 else 0
-        your_ctr = (data["clicks"] / data["impressions"] * 100) if data["impressions"] > 0 else 0
+        your_ctr = (
+            (data["clicks"] / data["impressions"] * 100)
+            if data["impressions"] > 0
+            else 0
+        )
         benchmark_cpm = CPM_BENCHMARKS.get(plat, CPM_BENCHMARKS["default"])
-        actual_cpm = (data["spend"] / data["impressions"] * 1000) if data["impressions"] > 0 else benchmark_cpm
+        actual_cpm = (
+            (data["spend"] / data["impressions"] * 1000)
+            if data["impressions"] > 0
+            else benchmark_cpm
+        )
         market_mult = MARKET_MULTIPLIERS.get(plat, MARKET_MULTIPLIERS["default"])
         plat_market = data["spend"] * market_mult
 
@@ -366,15 +383,27 @@ def build_competitor_intel(
                 estimated_market_cpm=round(actual_cpm, 2),
                 competition_level=_competition_level(comp_score),
                 competition_score=round(comp_score, 1),
-                your_position=_market_position(data["spend"] / plat_market * 100 if plat_market > 0 else 0),
+                your_position=_market_position(
+                    data["spend"] / plat_market * 100 if plat_market > 0 else 0
+                ),
                 opportunity_score=round(opp_score, 1),
-                avg_cpc_trend="rising" if comp_score > 60 else "stable" if comp_score > 30 else "falling",
+                avg_cpc_trend=(
+                    "rising"
+                    if comp_score > 60
+                    else "stable" if comp_score > 30 else "falling"
+                ),
             )
         )
 
     # Overall competitive pressure
-    avg_pressure = sum(competition_scores) / len(competition_scores) if competition_scores else 0
-    pressure_trend = "increasing" if avg_pressure > 60 else "stable" if avg_pressure > 35 else "decreasing"
+    avg_pressure = (
+        sum(competition_scores) / len(competition_scores) if competition_scores else 0
+    )
+    pressure_trend = (
+        "increasing"
+        if avg_pressure > 60
+        else "stable" if avg_pressure > 35 else "decreasing"
+    )
 
     # Competitors
     competitors = _generate_competitors(platform_data, total_spend)
@@ -416,7 +445,11 @@ def build_competitor_intel(
             )
         )
 
-    growing = [c for c in competitors if c.trend == "growing" and c.threat_level in ("high", "critical")]
+    growing = [
+        c
+        for c in competitors
+        if c.trend == "growing" and c.threat_level in ("high", "critical")
+    ]
     if growing:
         insights.append(
             CompetitorInsight(

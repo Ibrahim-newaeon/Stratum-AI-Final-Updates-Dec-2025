@@ -234,14 +234,18 @@ async def example_server_side_conversions():
     )
 
     logger.info(f"   Event: {event.event_name.value}")
-    logger.info(f"   Value: {event.custom_data['currency']} {event.custom_data['value']}")
+    logger.info(
+        f"   Value: {event.custom_data['currency']} {event.custom_data['value']}"
+    )
     logger.info(f"   Event ID: {event.event_id} (for deduplication)")
 
     # Send to multiple platforms
     logger.info("\n[SEND] Step 4: Send to All Platforms")
 
     logger.info("\n   [META] META (Facebook/Instagram):")
-    logger.info("   capi = MetaConversionsAPI(pixel_id='123...', access_token='EAA...')")
+    logger.info(
+        "   capi = MetaConversionsAPI(pixel_id='123...', access_token='EAA...')"
+    )
     logger.info("   result = await capi.send_event(event)")
     logger.info("   -> Events received: 1")
     logger.info("   -> EMQ Impact: Email match, Phone match, FBC match")

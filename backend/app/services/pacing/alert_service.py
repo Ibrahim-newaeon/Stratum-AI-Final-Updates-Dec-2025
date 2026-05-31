@@ -16,19 +16,19 @@ from datetime import date, datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from sqlalchemy import select, and_, func, update
+from sqlalchemy import and_, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.models.pacing import (
+    AlertSeverity,
+    AlertStatus,
+    AlertType,
     DailyKPI,
     PacingAlert,
     Target,
     TargetMetric,
-    AlertSeverity,
-    AlertType,
-    AlertStatus,
 )
 from app.models.settings import SlackIntegration
 from app.services.email_service import get_email_service
@@ -36,8 +36,8 @@ from app.services.notifications.slack_service import SlackNotificationService
 from app.services.pacing.pacing_service import PacingService
 from app.services.whatsapp_client import (
     WhatsAppClient,
-    is_whatsapp_configured,
     get_whatsapp_client,
+    is_whatsapp_configured,
 )
 
 logger = get_logger(__name__)
@@ -100,7 +100,7 @@ class PacingAlertService:
                 severity=AlertSeverity.CRITICAL,
                 title=f"Critical: {pacing['target_name']} severely underpacing",
                 message=f"Currently at {pacing_pct:.1f}% of expected pace. "
-                        f"MTD: ${pacing['mtd']['actual']:,.2f} vs expected ${pacing['mtd']['expected']:,.2f}",
+                f"MTD: ${pacing['mtd']['actual']:,.2f} vs expected ${pacing['mtd']['expected']:,.2f}",
                 pacing=pacing,
                 as_of_date=as_of_date,
             )
@@ -115,7 +115,7 @@ class PacingAlertService:
                 severity=AlertSeverity.WARNING,
                 title=f"Warning: {pacing['target_name']} underpacing",
                 message=f"Currently at {pacing_pct:.1f}% of expected pace. "
-                        f"MTD: ${pacing['mtd']['actual']:,.2f} vs expected ${pacing['mtd']['expected']:,.2f}",
+                f"MTD: ${pacing['mtd']['actual']:,.2f} vs expected ${pacing['mtd']['expected']:,.2f}",
                 pacing=pacing,
                 as_of_date=as_of_date,
             )
@@ -130,7 +130,7 @@ class PacingAlertService:
                 severity=AlertSeverity.CRITICAL,
                 title=f"Critical: {pacing['target_name']} severely overpacing",
                 message=f"Currently at {pacing_pct:.1f}% of expected pace. "
-                        f"Risk of budget exhaustion before period end.",
+                f"Risk of budget exhaustion before period end.",
                 pacing=pacing,
                 as_of_date=as_of_date,
             )
@@ -145,7 +145,7 @@ class PacingAlertService:
                 severity=AlertSeverity.WARNING,
                 title=f"Warning: {pacing['target_name']} overpacing",
                 message=f"Currently at {pacing_pct:.1f}% of expected pace. "
-                        f"May exceed budget before period end.",
+                f"May exceed budget before period end.",
                 pacing=pacing,
                 as_of_date=as_of_date,
             )
@@ -163,7 +163,7 @@ class PacingAlertService:
                     severity=AlertSeverity.CRITICAL,
                     title=f"Critical: {pacing['target_name']} projected to miss target",
                     message=f"Projected EOM: ${pacing['projection']['eom']:,.2f} vs target ${target_value:,.2f}. "
-                            f"Gap: {gap_pct:.1f}%",
+                    f"Gap: {gap_pct:.1f}%",
                     pacing=pacing,
                     as_of_date=as_of_date,
                 )
@@ -275,9 +275,7 @@ class PacingAlertService:
             conditions.append(DailyKPI.campaign_id.is_(None))
 
         result = await self.db.execute(
-            select(DailyKPI)
-            .where(and_(*conditions))
-            .order_by(DailyKPI.date)
+            select(DailyKPI).where(and_(*conditions)).order_by(DailyKPI.date)
         )
         records = result.scalars().all()
 
@@ -308,8 +306,12 @@ class PacingAlertService:
                     severity=AlertSeverity.CRITICAL,
                     title=f"Pacing Cliff Detected: {target.name}",
                     message=f"Performance dropped {drop_pct:.1f}% from {lookback_days}-day average. "
-                            f"Today: ${latest_value:,.2f} vs avg ${previous_avg:,.2f}",
-                    pacing={"drop_pct": drop_pct, "latest_value": latest_value, "previous_avg": previous_avg},
+                    f"Today: ${latest_value:,.2f} vs avg ${previous_avg:,.2f}",
+                    pacing={
+                        "drop_pct": drop_pct,
+                        "latest_value": latest_value,
+                        "previous_avg": previous_avg,
+                    },
                     as_of_date=as_of_date,
                 )
 
@@ -509,8 +511,10 @@ class PacingAlertService:
             select(PacingAlert).where(
                 and_(
                     PacingAlert.tenant_id == self.tenant_id,
-                    PacingAlert.created_at >= datetime.combine(start_date, datetime.min.time()),
-                    PacingAlert.created_at <= datetime.combine(end_date, datetime.max.time()),
+                    PacingAlert.created_at
+                    >= datetime.combine(start_date, datetime.min.time()),
+                    PacingAlert.created_at
+                    <= datetime.combine(end_date, datetime.max.time()),
                 )
             )
         )
@@ -552,7 +556,9 @@ class PacingAlertService:
             "by_severity": by_severity,
             "by_type": by_type,
             "resolution": {
-                "avg_hours": round(avg_resolution_hours, 1) if avg_resolution_hours else None,
+                "avg_hours": (
+                    round(avg_resolution_hours, 1) if avg_resolution_hours else None
+                ),
                 "total_resolved": len(resolution_times),
             },
         }
@@ -574,8 +580,11 @@ class PacingAlertService:
                 and_(
                     PacingAlert.target_id == target_id,
                     PacingAlert.alert_type == alert_type,
-                    PacingAlert.status.in_([AlertStatus.ACTIVE, AlertStatus.ACKNOWLEDGED]),
-                    PacingAlert.pacing_date >= as_of_date - timedelta(days=1),  # Within last day
+                    PacingAlert.status.in_(
+                        [AlertStatus.ACTIVE, AlertStatus.ACKNOWLEDGED]
+                    ),
+                    PacingAlert.pacing_date
+                    >= as_of_date - timedelta(days=1),  # Within last day
                 )
             )
         )
@@ -583,7 +592,10 @@ class PacingAlertService:
 
         if existing:
             # Update severity if escalated
-            if severity == AlertSeverity.CRITICAL and existing.severity != AlertSeverity.CRITICAL:
+            if (
+                severity == AlertSeverity.CRITICAL
+                and existing.severity != AlertSeverity.CRITICAL
+            ):
                 existing.severity = AlertSeverity.CRITICAL
                 existing.title = title
                 existing.message = message
@@ -650,11 +662,15 @@ class PacingAlertService:
                 select(PacingAlert).where(
                     and_(
                         PacingAlert.target_id == target_id,
-                        PacingAlert.alert_type.in_([
-                            AlertType.UNDERPACING_SPEND,
-                            AlertType.OVERPACING_SPEND,
-                        ]),
-                        PacingAlert.status.in_([AlertStatus.ACTIVE, AlertStatus.ACKNOWLEDGED]),
+                        PacingAlert.alert_type.in_(
+                            [
+                                AlertType.UNDERPACING_SPEND,
+                                AlertType.OVERPACING_SPEND,
+                            ]
+                        ),
+                        PacingAlert.status.in_(
+                            [AlertStatus.ACTIVE, AlertStatus.ACKNOWLEDGED]
+                        ),
                     )
                 )
             )
@@ -668,7 +684,9 @@ class PacingAlertService:
 
             if alerts_to_resolve:
                 await self.db.commit()
-                logger.info(f"Auto-resolved {len(alerts_to_resolve)} alerts for target {target_id}")
+                logger.info(
+                    f"Auto-resolved {len(alerts_to_resolve)} alerts for target {target_id}"
+                )
 
     def _get_miss_alert_type(self, metric_type: str) -> AlertType:
         """Get appropriate alert type based on metric."""
@@ -680,7 +698,9 @@ class PacingAlertService:
         }
         return metric_to_alert.get(metric_type, AlertType.UNDERPACING_SPEND)
 
-    def _get_metric_value(self, record: DailyKPI, metric: TargetMetric) -> Optional[float]:
+    def _get_metric_value(
+        self, record: DailyKPI, metric: TargetMetric
+    ) -> Optional[float]:
         """Extract metric value from DailyKPI record."""
         if metric == TargetMetric.SPEND:
             return (record.spend_cents or 0) / 100
@@ -703,6 +723,7 @@ class PacingAlertService:
 # Notification Service
 # =============================================================================
 
+
 class AlertNotificationService:
     """
     Service for sending alert notifications.
@@ -715,9 +736,9 @@ class AlertNotificationService:
 
     # Severity-to-color mapping for Slack attachments
     _SEVERITY_COLORS: Dict[str, str] = {
-        "info": "#3b82f6",       # Blue
-        "warning": "#eab308",    # Yellow
-        "critical": "#ef4444",   # Red
+        "info": "#3b82f6",  # Blue
+        "warning": "#eab308",  # Yellow
+        "critical": "#ef4444",  # Red
     }
 
     _SEVERITY_EMOJI: Dict[str, str] = {
@@ -799,7 +820,10 @@ class AlertNotificationService:
                 {"type": "mrkdwn", "text": f"*MTD Actual:*\n${alert.mtd_actual:,.2f}"}
             )
             context_fields.append(
-                {"type": "mrkdwn", "text": f"*MTD Expected:*\n${alert.mtd_expected:,.2f}"}
+                {
+                    "type": "mrkdwn",
+                    "text": f"*MTD Expected:*\n${alert.mtd_expected:,.2f}",
+                }
             )
         if alert.deviation_pct is not None:
             context_fields.append(
@@ -829,7 +853,10 @@ class AlertNotificationService:
             {
                 "type": "context",
                 "elements": [
-                    {"type": "mrkdwn", "text": f":clock1: {timestamp} | Stratum AI Pacing Alerts"}
+                    {
+                        "type": "mrkdwn",
+                        "text": f":clock1: {timestamp} | Stratum AI Pacing Alerts",
+                    }
                 ],
             }
         )
@@ -1002,7 +1029,12 @@ class AlertNotificationService:
                         recipient=recipient[:20] + "...",
                     )
                     all_sent = False
-            except (ConnectionError, TimeoutError, OSError, smtplib.SMTPException) as exc:
+            except (
+                ConnectionError,
+                TimeoutError,
+                OSError,
+                smtplib.SMTPException,
+            ) as exc:
                 logger.error(
                     "Email notification error",
                     alert_id=str(alert.id),
@@ -1146,15 +1178,19 @@ class AlertNotificationService:
             raw_recipients = target.notification_recipients or []
             # Filter to only strings that look like email addresses
             email_recipients = [
-                r for r in raw_recipients
-                if isinstance(r, str) and "@" in r
+                r for r in raw_recipients if isinstance(r, str) and "@" in r
             ]
             if email_recipients:
                 try:
                     results["email"] = await self.send_email_notification(
                         alert, email_recipients
                     )
-                except (ConnectionError, TimeoutError, OSError, smtplib.SMTPException) as exc:
+                except (
+                    ConnectionError,
+                    TimeoutError,
+                    OSError,
+                    smtplib.SMTPException,
+                ) as exc:
                     logger.error(
                         "Email notification dispatch failed",
                         alert_id=str(alert.id),
@@ -1172,7 +1208,8 @@ class AlertNotificationService:
             raw_recipients = target.notification_recipients or []
             # Phone numbers start with '+' and do not contain '@'
             phone_numbers = [
-                r for r in raw_recipients
+                r
+                for r in raw_recipients
                 if isinstance(r, str) and r.startswith("+") and "@" not in r
             ]
             if phone_numbers:

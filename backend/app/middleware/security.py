@@ -31,7 +31,9 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     - Cache-Control: Prevents caching of sensitive data
     """
 
-    async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
+    async def dispatch(
+        self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
         response = await call_next(request)
 
         # Skip security headers for health check endpoints (performance)
@@ -138,7 +140,9 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             # Check if response might contain sensitive data
             sensitive_paths = ["/api/v1/auth/", "/api/v1/users/", "/api/v1/settings/"]
             if any(request.url.path.startswith(path) for path in sensitive_paths):
-                response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, private"
+                response.headers["Cache-Control"] = (
+                    "no-store, no-cache, must-revalidate, private"
+                )
                 response.headers["Pragma"] = "no-cache"
                 response.headers["Expires"] = "0"
 

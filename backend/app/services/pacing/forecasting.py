@@ -11,11 +11,11 @@ Features:
 - Support for spend, revenue, ROAS, conversions forecasting
 """
 
+import math
 from datetime import date, datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple
-import math
 
-from sqlalchemy import select, and_, func
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
@@ -121,14 +121,16 @@ class ForecastingService:
 
             cumulative += point_forecast
 
-            forecasts.append({
-                "date": forecast_date.isoformat(),
-                "day_of_week": dow,
-                "point_forecast": round(point_forecast, 2),
-                "lower_bound": round(lower, 2),
-                "upper_bound": round(upper, 2),
-                "cumulative": round(cumulative, 2),
-            })
+            forecasts.append(
+                {
+                    "date": forecast_date.isoformat(),
+                    "day_of_week": dow,
+                    "point_forecast": round(point_forecast, 2),
+                    "lower_bound": round(lower, 2),
+                    "upper_bound": round(upper, 2),
+                    "cumulative": round(cumulative, 2),
+                }
+            )
 
         # Calculate EOM projection if within current month
         eom_date = self._get_end_of_month(as_of_date)
@@ -138,9 +140,15 @@ class ForecastingService:
         if days_to_eom <= forecast_days:
             eom_projection = {
                 "date": eom_date.isoformat(),
-                "projected": round(sum(f["point_forecast"] for f in forecasts[:days_to_eom]), 2),
-                "lower": round(sum(f["lower_bound"] for f in forecasts[:days_to_eom]), 2),
-                "upper": round(sum(f["upper_bound"] for f in forecasts[:days_to_eom]), 2),
+                "projected": round(
+                    sum(f["point_forecast"] for f in forecasts[:days_to_eom]), 2
+                ),
+                "lower": round(
+                    sum(f["lower_bound"] for f in forecasts[:days_to_eom]), 2
+                ),
+                "upper": round(
+                    sum(f["upper_bound"] for f in forecasts[:days_to_eom]), 2
+                ),
             }
 
         return {
@@ -189,7 +197,9 @@ class ForecastingService:
 
         # Get MTD actual
         eom = self._get_end_of_month(month)
-        mtd_actual = await self._get_mtd_actual(metric, platform, campaign_id, month, today)
+        mtd_actual = await self._get_mtd_actual(
+            metric, platform, campaign_id, month, today
+        )
 
         # Calculate days
         days_elapsed = (today - month).days + 1
@@ -243,10 +253,14 @@ class ForecastingService:
             "projected_eom": round(projected_eom, 2),
             "projected_lower": round(mtd_actual + remaining_lower, 2),
             "projected_upper": round(mtd_actual + remaining_upper, 2),
-            "daily_average": round(mtd_actual / days_elapsed, 2) if days_elapsed > 0 else 0,
-            "daily_needed": round(
-                (projected_eom - mtd_actual) / days_remaining, 2
-            ) if days_remaining > 0 else 0,
+            "daily_average": (
+                round(mtd_actual / days_elapsed, 2) if days_elapsed > 0 else 0
+            ),
+            "daily_needed": (
+                round((projected_eom - mtd_actual) / days_remaining, 2)
+                if days_remaining > 0
+                else 0
+            ),
         }
 
     async def _load_historical_data(
@@ -278,9 +292,7 @@ class ForecastingService:
             conditions.append(DailyKPI.campaign_id.is_(None))  # All campaigns
 
         result = await self.db.execute(
-            select(DailyKPI)
-            .where(and_(*conditions))
-            .order_by(DailyKPI.date)
+            select(DailyKPI).where(and_(*conditions)).order_by(DailyKPI.date)
         )
         records = result.scalars().all()
 
@@ -289,15 +301,19 @@ class ForecastingService:
         for r in records:
             value = self._get_metric_value(r, metric)
             if value is not None:
-                historical.append({
-                    "date": r.date,
-                    "value": value,
-                    "dow": r.day_of_week,
-                })
+                historical.append(
+                    {
+                        "date": r.date,
+                        "value": value,
+                        "dow": r.day_of_week,
+                    }
+                )
 
         return historical
 
-    def _get_metric_value(self, record: DailyKPI, metric: TargetMetric) -> Optional[float]:
+    def _get_metric_value(
+        self, record: DailyKPI, metric: TargetMetric
+    ) -> Optional[float]:
         """Extract metric value from DailyKPI record."""
         if metric == TargetMetric.SPEND:
             return (record.spend_cents or 0) / 100
@@ -330,15 +346,19 @@ class ForecastingService:
 
         return ewma
 
-    def _calculate_dow_factors(self, historical: List[Dict[str, Any]]) -> Dict[int, float]:
+    def _calculate_dow_factors(
+        self, historical: List[Dict[str, Any]]
+    ) -> Dict[int, float]:
         """Calculate day-of-week seasonality factors."""
         # Group by day of week
         dow_sums = {i: [] for i in range(7)}
-        for record in historical[-self.DEFAULT_SEASONALITY_WINDOW:]:
+        for record in historical[-self.DEFAULT_SEASONALITY_WINDOW :]:
             dow_sums[record["dow"]].append(record["value"])
 
         # Calculate average for each day
-        overall_mean = sum(r["value"] for r in historical) / len(historical) if historical else 1
+        overall_mean = (
+            sum(r["value"] for r in historical) / len(historical) if historical else 1
+        )
 
         factors = {}
         for dow in range(7):
@@ -361,10 +381,10 @@ class ForecastingService:
             return ewma * 0.2  # Default to 20% of EWMA
 
         residuals = []
-        for record in historical[-self.DEFAULT_TREND_WINDOW:]:
+        for record in historical[-self.DEFAULT_TREND_WINDOW :]:
             expected = ewma * dow_factors.get(record["dow"], 1.0)
             residual = record["value"] - expected
-            residuals.append(residual ** 2)
+            residuals.append(residual**2)
 
         variance = sum(residuals) / len(residuals)
         return math.sqrt(variance)
@@ -394,9 +414,7 @@ class ForecastingService:
         else:
             conditions.append(DailyKPI.campaign_id.is_(None))
 
-        result = await self.db.execute(
-            select(DailyKPI).where(and_(*conditions))
-        )
+        result = await self.db.execute(select(DailyKPI).where(and_(*conditions)))
         records = result.scalars().all()
 
         total = 0.0

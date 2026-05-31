@@ -28,7 +28,6 @@ All three are NULL-able so backfill / rollout is non-breaking.
 from alembic import op
 import sqlalchemy as sa
 
-
 # Revision identifiers
 revision = "048_autopilot_outcome_columns"
 down_revision = "047_add_missing_indexes"
@@ -40,13 +39,11 @@ def _column_exists(table: str, column: str) -> bool:
     """Defensive check — skip if the column already exists."""
     conn = op.get_bind()
     result = conn.execute(
-        sa.text(
-            """
+        sa.text("""
             SELECT 1
               FROM information_schema.columns
              WHERE table_name = :table AND column_name = :column
-            """
-        ),
+            """),
         {"table": table, "column": column},
     )
     return result.first() is not None
@@ -55,13 +52,11 @@ def _column_exists(table: str, column: str) -> bool:
 def _table_exists(table: str) -> bool:
     conn = op.get_bind()
     result = conn.execute(
-        sa.text(
-            """
+        sa.text("""
             SELECT 1
               FROM information_schema.tables
              WHERE table_name = :table
-            """
-        ),
+            """),
         {"table": table},
     )
     return result.first() is not None

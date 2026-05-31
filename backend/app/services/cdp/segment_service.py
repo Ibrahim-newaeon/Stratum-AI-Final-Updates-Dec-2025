@@ -95,7 +95,9 @@ class SegmentEvaluator:
 
         # Evaluate individual conditions
         for condition in conditions:
-            matches, score = await self._evaluate_condition(profile, condition, profile_events)
+            matches, score = await self._evaluate_condition(
+                profile, condition, profile_events
+            )
             results.append(matches)
             if score is not None:
                 scores.append(score)
@@ -145,7 +147,9 @@ class SegmentEvaluator:
             elif field_type == "identifier":
                 actual_value = await self._get_identifier_value(profile, field_parts[1])
             elif field_type == "event":
-                actual_value = await self._get_event_value(profile, field_parts[1:], profile_events)
+                actual_value = await self._get_event_value(
+                    profile, field_parts[1:], profile_events
+                )
             elif field_type == "data":
                 actual_value = self._get_profile_data_value(profile, field_parts[1:])
             else:
@@ -190,7 +194,9 @@ class SegmentEvaluator:
                 return None
         return data
 
-    async def _get_identifier_value(self, profile: CDPProfile, identifier_type: str) -> Any:
+    async def _get_identifier_value(
+        self, profile: CDPProfile, identifier_type: str
+    ) -> Any:
         """Check if profile has a specific identifier type."""
         if profile.identifiers:
             for ident in profile.identifiers:
@@ -421,7 +427,9 @@ class SegmentService:
 
         # Get total count
         count_result = await self.db.execute(
-            select(func.count(CDPSegment.id)).where(CDPSegment.tenant_id == self.tenant_id)
+            select(func.count(CDPSegment.id)).where(
+                CDPSegment.tenant_id == self.tenant_id
+            )
         )
         total = count_result.scalar() or 0
 
@@ -521,7 +529,9 @@ class SegmentService:
                     break
 
                 for profile in profiles:
-                    matches, score = await self.evaluator.evaluate_profile(profile, segment.rules)
+                    matches, score = await self.evaluator.evaluate_profile(
+                        profile, segment.rules
+                    )
 
                     # Check current membership
                     membership_result = await self.db.execute(
@@ -547,7 +557,9 @@ class SegmentService:
                             # Re-activate membership
                             existing.is_active = True
                             existing.removed_at = None
-                            existing.match_score = Decimal(str(score)) if score else None
+                            existing.match_score = (
+                                Decimal(str(score)) if score else None
+                            )
                             added_count += 1
                     else:
                         if existing and existing.is_active:
@@ -651,7 +663,9 @@ class SegmentService:
 
             # Get total profile count
             count_result = await self.db.execute(
-                select(func.count(CDPProfile.id)).where(CDPProfile.tenant_id == self.tenant_id)
+                select(func.count(CDPProfile.id)).where(
+                    CDPProfile.tenant_id == self.tenant_id
+                )
             )
             total_profiles = count_result.scalar() or 0
             estimated_count = int(total_profiles * match_rate)

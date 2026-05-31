@@ -19,7 +19,6 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
-
 # ── Response models ──────────────────────────────────────────────────────────
 
 
@@ -159,7 +158,9 @@ def _generate_sample_annotations(
     )
 
     # Platform-specific annotations
-    for i, (plat, data) in enumerate(sorted(platform_data.items(), key=lambda x: x[1]["spend"], reverse=True)):
+    for i, (plat, data) in enumerate(
+        sorted(platform_data.items(), key=lambda x: x[1]["spend"], reverse=True)
+    ):
         plat_roas = data["revenue"] / data["spend"] if data["spend"] > 0 else 0
         if plat_roas < 1.5:
             annotations.append(

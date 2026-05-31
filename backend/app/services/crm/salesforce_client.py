@@ -20,8 +20,13 @@ from urllib.parse import urlencode
 
 import aiohttp
 from sqlalchemy import and_, select
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 from sqlalchemy.ext.asyncio import AsyncSession
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
 
 from app.core.config import settings
 from app.core.logging import get_logger
@@ -153,10 +158,9 @@ class SalesforceClient:
             return None
 
         # Check if token is expired (with 5 min buffer)
-        if (
-            connection.token_expires_at
-            and datetime.now(UTC) >= connection.token_expires_at - timedelta(minutes=5)
-        ):
+        if connection.token_expires_at and datetime.now(
+            UTC
+        ) >= connection.token_expires_at - timedelta(minutes=5):
             await self._refresh_token()
             connection = await self._get_connection()
 
@@ -407,7 +411,9 @@ class SalesforceClient:
         # Update connection with new token
         connection.access_token_enc = encrypt_token(token_data["access_token"])
         issued_at = int(token_data.get("issued_at", 0)) / 1000
-        connection.token_expires_at = datetime.fromtimestamp(issued_at, tz=UTC) + timedelta(hours=2)
+        connection.token_expires_at = datetime.fromtimestamp(
+            issued_at, tz=UTC
+        ) + timedelta(hours=2)
 
         # Update instance URL if provided
         if "instance_url" in token_data:
@@ -465,9 +471,9 @@ class SalesforceClient:
             "provider": "salesforce",
             "account_id": connection.provider_account_id,
             "account_name": connection.provider_account_name,
-            "last_sync_at": connection.last_sync_at.isoformat()
-            if connection.last_sync_at
-            else None,
+            "last_sync_at": (
+                connection.last_sync_at.isoformat() if connection.last_sync_at else None
+            ),
             "last_sync_status": connection.last_sync_status,
             "scopes": connection.scopes.split(" ") if connection.scopes else [],
             "is_sandbox": (connection.raw_properties or {}).get("is_sandbox", False),
@@ -550,9 +556,13 @@ class SalesforceClient:
         properties: dict[str, Any],
     ) -> Optional[dict[str, Any]]:
         """Update a contact."""
-        return await self._make_request("PATCH", f"/sobjects/Contact/{contact_id}", data=properties)
+        return await self._make_request(
+            "PATCH", f"/sobjects/Contact/{contact_id}", data=properties
+        )
 
-    async def create_contact(self, properties: dict[str, Any]) -> Optional[dict[str, Any]]:
+    async def create_contact(
+        self, properties: dict[str, Any]
+    ) -> Optional[dict[str, Any]]:
         """Create a new contact."""
         return await self._make_request("POST", "/sobjects/Contact", data=properties)
 
@@ -600,7 +610,9 @@ class SalesforceClient:
 
     async def get_opportunity(self, opportunity_id: str) -> Optional[dict[str, Any]]:
         """Get a single opportunity by ID."""
-        return await self._make_request("GET", f"/sobjects/Opportunity/{opportunity_id}")
+        return await self._make_request(
+            "GET", f"/sobjects/Opportunity/{opportunity_id}"
+        )
 
     async def update_opportunity(
         self,
@@ -612,9 +624,13 @@ class SalesforceClient:
             "PATCH", f"/sobjects/Opportunity/{opportunity_id}", data=properties
         )
 
-    async def create_opportunity(self, properties: dict[str, Any]) -> Optional[dict[str, Any]]:
+    async def create_opportunity(
+        self, properties: dict[str, Any]
+    ) -> Optional[dict[str, Any]]:
         """Create a new opportunity."""
-        return await self._make_request("POST", "/sobjects/Opportunity", data=properties)
+        return await self._make_request(
+            "POST", "/sobjects/Opportunity", data=properties
+        )
 
     async def get_opportunity_contact_roles(
         self,

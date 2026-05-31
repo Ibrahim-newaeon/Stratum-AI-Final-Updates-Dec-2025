@@ -9,15 +9,16 @@ Unit tests for:
 These tests verify critical business rules and security constraints.
 """
 
-import pytest
-from datetime import datetime, timezone, timedelta
-from typing import Dict, Any, Optional
-from unittest.mock import MagicMock, patch, AsyncMock
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, Optional
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 
 # =============================================================================
 # EMQ Mode Gating Rules Tests
 # =============================================================================
+
 
 class TestEmqModeGating:
     """
@@ -43,7 +44,11 @@ class TestEmqModeGating:
         assert "full" not in result["allowed_modes"]
         assert result["max_mode"] == "supervised"
         assert not result["automation_suspended"]
-        assert "EMQ below threshold" in result["restrictions"][0] if result["restrictions"] else True
+        assert (
+            "EMQ below threshold" in result["restrictions"][0]
+            if result["restrictions"]
+            else True
+        )
 
     def test_alert_only_between_70_and_79(self):
         """EMQ 70-79 should restrict to alert-only mode."""
@@ -137,8 +142,7 @@ class TestEmqModeGating:
         """Feature flags should be able to override gating."""
         # With override flag enabled
         result = determine_allowed_mode(
-            emq_score=75,
-            feature_flags={"emq_gating_override": True}
+            emq_score=75, feature_flags={"emq_gating_override": True}
         )
 
         # Should allow full mode despite low EMQ
@@ -150,6 +154,7 @@ class TestEmqModeGating:
 # =============================================================================
 # Tenant Scoping Tests
 # =============================================================================
+
 
 class TestTenantScoping:
     """
@@ -169,8 +174,7 @@ class TestTenantScoping:
 
         # Query with tenant_id should succeed
         result = execute_query(
-            "SELECT * FROM campaigns WHERE tenant_id = :tenant_id",
-            tenant_id=1
+            "SELECT * FROM campaigns WHERE tenant_id = :tenant_id", tenant_id=1
         )
         assert result is not None
 
@@ -191,7 +195,7 @@ class TestTenantScoping:
         result = verify_tenant_access(
             user_tenant_id=None,  # Superadmin has no tenant
             requested_tenant_id=2,
-            user_role="superadmin"
+            user_role="superadmin",
         )
 
         assert result["allowed"] == True
@@ -248,11 +252,7 @@ class TestTenantScoping:
             create_campaign(name="Test", platforms=["meta"])
 
         # Create with tenant_id should succeed
-        result = create_campaign(
-            name="Test",
-            platforms=["meta"],
-            tenant_id=1
-        )
+        result = create_campaign(name="Test", platforms=["meta"], tenant_id=1)
         assert result["tenant_id"] == 1
 
     def test_bulk_operations_scoped(self):
@@ -261,9 +261,7 @@ class TestTenantScoping:
         campaign_ids = ["camp_1", "camp_2", "camp_3"]  # All belong to tenant 1
 
         result = bulk_update_campaigns(
-            campaign_ids=campaign_ids,
-            status="paused",
-            user_tenant_id=1
+            campaign_ids=campaign_ids, status="paused", user_tenant_id=1
         )
 
         assert result["updated_count"] == 3
@@ -279,7 +277,7 @@ class TestTenantScoping:
             user_tenant_id=None,  # AM has no direct tenant
             requested_tenant_id=2,
             user_role="account_manager",
-            assigned_tenants=am_assigned_tenants
+            assigned_tenants=am_assigned_tenants,
         )
         assert result["allowed"] == True
 
@@ -289,17 +287,14 @@ class TestTenantScoping:
                 user_tenant_id=None,
                 requested_tenant_id=4,
                 user_role="account_manager",
-                assigned_tenants=am_assigned_tenants
+                assigned_tenants=am_assigned_tenants,
             )
 
     def test_audit_log_includes_tenant(self):
         """All audit logs include tenant context."""
         # Perform an action
         action_result = perform_audited_action(
-            action="campaign_pause",
-            entity_id="camp_123",
-            user_id=1,
-            tenant_id=1
+            action="campaign_pause", entity_id="camp_123", user_id=1, tenant_id=1
         )
 
         # Check audit log was created with tenant
@@ -313,11 +308,12 @@ class TestTenantScoping:
 # Helper Functions (Mocked implementations for testing)
 # =============================================================================
 
+
 def determine_allowed_mode(
     emq_score: float,
     api_health: bool = True,
     event_loss_pct: float = 0,
-    feature_flags: Dict[str, Any] = None
+    feature_flags: Dict[str, Any] = None,
 ) -> Dict[str, Any]:
     """Determine allowed autopilot modes based on EMQ and health."""
     feature_flags = feature_flags or {}
@@ -331,7 +327,7 @@ def determine_allowed_mode(
             "override_active": True,
             "warnings": ["EMQ gating override is active"],
             "restrictions": [],
-            "alerts": []
+            "alerts": [],
         }
 
     result = {
@@ -341,7 +337,7 @@ def determine_allowed_mode(
         "override_active": False,
         "warnings": [],
         "restrictions": [],
-        "alerts": []
+        "alerts": [],
     }
 
     # API health overrides everything
@@ -354,7 +350,9 @@ def determine_allowed_mode(
 
     # High event loss restricts mode
     if event_loss_pct > 10:
-        result["restrictions"].append(f"High event loss ({event_loss_pct}%) restricts autopilot")
+        result["restrictions"].append(
+            f"High event loss ({event_loss_pct}%) restricts autopilot"
+        )
         emq_score = min(emq_score, 85)  # Cap effective EMQ
 
     # EMQ-based gating
@@ -379,9 +377,7 @@ def determine_allowed_mode(
 
 
 def handle_emq_change(
-    current_mode: str,
-    new_emq: float,
-    previous_emq: float
+    current_mode: str, new_emq: float, previous_emq: float
 ) -> Dict[str, Any]:
     """Handle EMQ score changes and mode adjustments."""
     allowed = determine_allowed_mode(new_emq)
@@ -392,7 +388,7 @@ def handle_emq_change(
         "reason": None,
         "alert_created": False,
         "upgrade_available": False,
-        "message": ""
+        "message": "",
     }
 
     # Check if current mode is still allowed
@@ -403,8 +399,13 @@ def handle_emq_change(
         result["alert_created"] = True
 
     # Check if upgrade is available
-    if allowed["max_mode"] != current_mode and \
-       allowed["allowed_modes"].index(allowed["max_mode"]) < allowed["allowed_modes"].index(current_mode) if current_mode in allowed["allowed_modes"] else True:
+    if (
+        allowed["max_mode"] != current_mode
+        and allowed["allowed_modes"].index(allowed["max_mode"])
+        < allowed["allowed_modes"].index(current_mode)
+        if current_mode in allowed["allowed_modes"]
+        else True
+    ):
         result["upgrade_available"] = True
         result["message"] = "Upgrade available but requires manual approval"
 
@@ -415,24 +416,29 @@ def handle_emq_change(
 # Exception Classes for Testing
 # =============================================================================
 
+
 class TenantScopingError(Exception):
     """Raised when tenant scoping is missing."""
+
     pass
 
 
 class TenantAccessDeniedError(Exception):
     """Raised when cross-tenant access is attempted."""
+
     pass
 
 
 class TenantMismatchError(Exception):
     """Raised when path tenant doesn't match token tenant."""
+
     pass
 
 
 # =============================================================================
 # Mock Functions for Tenant Scoping Tests
 # =============================================================================
+
 
 def execute_query(query: str, tenant_id: int = None):
     """Mock query execution with tenant scoping check."""
@@ -446,7 +452,7 @@ def verify_tenant_access(
     user_tenant_id: Optional[int],
     requested_tenant_id: int,
     user_role: str = "tenant_user",
-    assigned_tenants: list = None
+    assigned_tenants: list = None,
 ) -> Dict[str, Any]:
     """Verify user can access requested tenant."""
     # Superadmin can access all
@@ -494,6 +500,7 @@ _audit_logs = []
 def create_campaign_for_test(tenant_id: int) -> MockCampaign:
     """Create test campaign."""
     import uuid
+
     campaign = MockCampaign(str(uuid.uuid4()), tenant_id)
     _test_campaigns[campaign.id] = campaign
     return campaign
@@ -512,6 +519,7 @@ def get_campaign(campaign_id: str, user_tenant_id: int) -> Dict[str, Any]:
 def create_action_for_test(tenant_id: int) -> MockAction:
     """Create test action."""
     import uuid
+
     action = MockAction(str(uuid.uuid4()), tenant_id)
     _test_actions[action.id] = action
     return action
@@ -527,7 +535,9 @@ def approve_action(action_id: str, user_tenant_id: int) -> Dict[str, bool]:
     return {"success": True}
 
 
-def create_campaign(name: str, platforms: list, tenant_id: int = None) -> Dict[str, Any]:
+def create_campaign(
+    name: str, platforms: list, tenant_id: int = None
+) -> Dict[str, Any]:
     """Create campaign."""
     if tenant_id is None:
         raise TenantScopingError("tenant_id required")
@@ -535,23 +545,18 @@ def create_campaign(name: str, platforms: list, tenant_id: int = None) -> Dict[s
 
 
 def bulk_update_campaigns(
-    campaign_ids: list,
-    status: str,
-    user_tenant_id: int
+    campaign_ids: list, status: str, user_tenant_id: int
 ) -> Dict[str, Any]:
     """Bulk update campaigns."""
     # In real implementation, would verify each campaign belongs to tenant
     return {
         "updated_count": len(campaign_ids),
-        "campaigns": [{"id": cid, "tenant_id": user_tenant_id} for cid in campaign_ids]
+        "campaigns": [{"id": cid, "tenant_id": user_tenant_id} for cid in campaign_ids],
     }
 
 
 def perform_audited_action(
-    action: str,
-    entity_id: str,
-    user_id: int,
-    tenant_id: int
+    action: str, entity_id: str, user_id: int, tenant_id: int
 ) -> Dict[str, Any]:
     """Perform action and create audit log."""
     audit_entry = {
@@ -559,7 +564,7 @@ def perform_audited_action(
         "entity_id": entity_id,
         "user_id": user_id,
         "tenant_id": tenant_id,
-        "timestamp": datetime.now(timezone.utc).isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }
     _audit_logs.append(audit_entry)
     return {"success": True}

@@ -8,9 +8,9 @@ Implements Row-Level Security at the application level.
 
 from typing import Callable, Optional
 
+import jwt
 from fastapi import Request, Response, status
 from fastapi.responses import JSONResponse
-import jwt
 from jwt.exceptions import PyJWTError as JWTError
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
@@ -103,7 +103,7 @@ class TenantMiddleware(BaseHTTPMiddleware):
         request.state.tenant_id = tenant_id
         request.state.user_id = user_id
         request.state.role = role or "analyst"  # Default role if not in token
-        request.state.is_superadmin = (role == "superadmin")
+        request.state.is_superadmin = role == "superadmin"
         request.state.cms_role = cms_role  # CMS role (None if not a CMS user)
 
         # Bind to structured logging context

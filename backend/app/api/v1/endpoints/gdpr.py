@@ -19,12 +19,12 @@ from app.core.logging import get_logger
 from app.core.security import anonymize_pii, decrypt_pii
 from app.db.session import get_async_session
 from app.models import (
+    APIKey,
     AuditAction,
     AuditLog,
     Campaign,
-    User,
     NotificationPreference,
-    APIKey,
+    User,
 )
 from app.schemas import (
     APIResponse,
@@ -94,7 +94,9 @@ async def export_user_data(
             "locale": user.locale,
             "timezone": user.timezone,
             "created_at": user.created_at.isoformat(),
-            "last_login_at": user.last_login_at.isoformat() if user.last_login_at else None,
+            "last_login_at": (
+                user.last_login_at.isoformat() if user.last_login_at else None
+            ),
             "preferences": user.preferences,
             "consent_marketing": user.consent_marketing,
             "consent_analytics": user.consent_analytics,
@@ -103,9 +105,7 @@ async def export_user_data(
 
     # Get notification preferences
     notif_result = await db.execute(
-        select(NotificationPreference).where(
-            NotificationPreference.user_id == user.id
-        )
+        select(NotificationPreference).where(NotificationPreference.user_id == user.id)
     )
     notif_pref = notif_result.scalar_one_or_none()
     if notif_pref:
@@ -119,9 +119,7 @@ async def export_user_data(
         }
 
     # Get API keys (without the actual key)
-    api_keys_result = await db.execute(
-        select(APIKey).where(APIKey.user_id == user.id)
-    )
+    api_keys_result = await db.execute(select(APIKey).where(APIKey.user_id == user.id))
     api_keys = api_keys_result.scalars().all()
     export_data["api_keys"] = [
         {
@@ -263,25 +261,20 @@ async def anonymize_user_data(
 
     # Delete notification preferences
     await db.execute(
-        select(NotificationPreference).where(
-            NotificationPreference.user_id == user.id
-        )
+        select(NotificationPreference).where(NotificationPreference.user_id == user.id)
     )
     # Actually delete
     from sqlalchemy import delete
+
     result = await db.execute(
-        delete(NotificationPreference).where(
-            NotificationPreference.user_id == user.id
-        )
+        delete(NotificationPreference).where(NotificationPreference.user_id == user.id)
     )
     if result.rowcount > 0:
         tables_affected.append("notification_preferences")
         records_modified += result.rowcount
 
     # Delete API keys
-    result = await db.execute(
-        delete(APIKey).where(APIKey.user_id == user.id)
-    )
+    result = await db.execute(delete(APIKey).where(APIKey.user_id == user.id))
     if result.rowcount > 0:
         tables_affected.append("api_keys")
         records_modified += result.rowcount
@@ -335,7 +328,9 @@ async def anonymize_user_data(
     )
 
 
-@router.get("/audit-logs", response_model=APIResponse[PaginatedResponse[AuditLogResponse]])
+@router.get(
+    "/audit-logs", response_model=APIResponse[PaginatedResponse[AuditLogResponse]]
+)
 async def get_audit_logs(
     request: Request,
     db: AsyncSession = Depends(get_async_session),
@@ -369,6 +364,7 @@ async def get_audit_logs(
 
     # Count
     from sqlalchemy import func
+
     count_query = select(func.count()).select_from(query.subquery())
     total_result = await db.execute(count_query)
     total = total_result.scalar()

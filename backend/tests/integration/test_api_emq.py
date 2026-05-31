@@ -14,10 +14,10 @@ Tests cover:
 - Autopilot state management
 """
 
-import pytest
 from datetime import date, timedelta
-from httpx import AsyncClient
 
+import pytest
+from httpx import AsyncClient
 
 pytestmark = pytest.mark.integration
 
@@ -27,7 +27,10 @@ class TestEmqScoreEndpoint:
 
     @pytest.mark.asyncio
     async def test_get_emq_score_success(
-        self, authenticated_client: AsyncClient, test_tenant: dict, test_signal_health: dict
+        self,
+        authenticated_client: AsyncClient,
+        test_tenant: dict,
+        test_signal_health: dict,
     ):
         """Test successful EMQ score retrieval."""
         response = await authenticated_client.get(
@@ -87,9 +90,7 @@ class TestEmqScoreEndpoint:
         self, client: AsyncClient, test_tenant: dict
     ):
         """Test EMQ score without authentication."""
-        response = await client.get(
-            f"/api/v1/tenants/{test_tenant['id']}/emq/score"
-        )
+        response = await client.get(f"/api/v1/tenants/{test_tenant['id']}/emq/score")
 
         # Should return 401 or 403 depending on auth implementation
         assert response.status_code in [401, 403]

@@ -21,10 +21,10 @@ import pytest
 
 from app.middleware.error_handler import ErrorHandlerMiddleware
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_request(
     path: str = "/api/v1/campaigns",
@@ -38,9 +38,11 @@ def _make_request(
     req.url.path = path
     req.method = method
     req.headers = MagicMock()
-    req.headers.get = MagicMock(side_effect=lambda key, default="": {
-        "origin": origin,
-    }.get(key, default))
+    req.headers.get = MagicMock(
+        side_effect=lambda key, default="": {
+            "origin": origin,
+        }.get(key, default)
+    )
 
     state = MagicMock()
     state.request_id = request_id
@@ -57,6 +59,7 @@ def _make_response(status_code: int = 200) -> MagicMock:
 # ---------------------------------------------------------------------------
 # Tests: Passthrough
 # ---------------------------------------------------------------------------
+
 
 class TestPassthrough:
     """Successful requests should pass through unchanged."""
@@ -88,6 +91,7 @@ class TestPassthrough:
 # Tests: Exception handling
 # ---------------------------------------------------------------------------
 
+
 class TestExceptionHandling:
     """Unhandled exceptions should be caught and returned as JSON 500."""
 
@@ -102,6 +106,7 @@ class TestExceptionHandling:
         assert response.status_code == 500
         body = response.body.decode("utf-8")
         import json
+
         data = json.loads(body)
         assert data["error"] == "INTERNAL_ERROR"
         assert data["message"] == "An unexpected error occurred"
@@ -129,6 +134,7 @@ class TestExceptionHandling:
 # ---------------------------------------------------------------------------
 # Tests: CORS headers
 # ---------------------------------------------------------------------------
+
 
 class TestCorsHeaders:
     """CORS headers should NOT be added by the error handler.
@@ -167,6 +173,7 @@ class TestCorsHeaders:
 # Tests: Request ID propagation
 # ---------------------------------------------------------------------------
 
+
 class TestRequestIdPropagation:
     """Error responses should include the original request ID."""
 
@@ -179,6 +186,7 @@ class TestRequestIdPropagation:
         response = await mw.dispatch(req, call_next)
 
         import json
+
         data = json.loads(response.body.decode("utf-8"))
         assert data["request_id"] == "custom-req-id-999"
 
@@ -193,6 +201,7 @@ class TestRequestIdPropagation:
         response = await mw.dispatch(req, call_next)
 
         import json
+
         data = json.loads(response.body.decode("utf-8"))
         assert data["request_id"] == "unknown"
 
@@ -200,6 +209,7 @@ class TestRequestIdPropagation:
 # ---------------------------------------------------------------------------
 # Tests: Logging
 # ---------------------------------------------------------------------------
+
 
 class TestLogging:
     """Exceptions should be logged with appropriate metadata."""
@@ -223,6 +233,7 @@ class TestLogging:
 # ---------------------------------------------------------------------------
 # Tests: Error response content
 # ---------------------------------------------------------------------------
+
 
 class TestErrorResponseContent:
     """The error response should never leak internal details."""
@@ -248,6 +259,7 @@ class TestErrorResponseContent:
         response = await mw.dispatch(req, call_next)
 
         import json
+
         data = json.loads(response.body.decode("utf-8"))
         assert "error" in data
         assert "message" in data

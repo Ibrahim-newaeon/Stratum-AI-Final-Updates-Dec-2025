@@ -64,7 +64,8 @@ class RateLimiter:
 
             # Regenerate tokens
             self.tokens = min(
-                self.burst_size, self.tokens + (time_passed * self.calls_per_minute / 60)
+                self.burst_size,
+                self.tokens + (time_passed * self.calls_per_minute / 60),
             )
             self.last_update = now
 
@@ -179,7 +180,9 @@ class BaseAdapter(ABC):
         pass
 
     @abstractmethod
-    async def get_ads(self, account_id: str, adset_id: Optional[str] = None) -> list[UnifiedAd]:
+    async def get_ads(
+        self, account_id: str, adset_id: Optional[str] = None
+    ) -> list[UnifiedAd]:
         """Get ads, optionally filtered to an ad set."""
         pass
 
@@ -225,12 +228,16 @@ class BaseAdapter(ABC):
     # ========================================================================
 
     @abstractmethod
-    async def upload_image(self, account_id: str, image_data: bytes, filename: str) -> str:
+    async def upload_image(
+        self, account_id: str, image_data: bytes, filename: str
+    ) -> str:
         """Upload an image and return the platform image ID."""
         pass
 
     @abstractmethod
-    async def upload_video(self, account_id: str, video_data: bytes, filename: str) -> str:
+    async def upload_video(
+        self, account_id: str, video_data: bytes, filename: str
+    ) -> str:
         """Upload a video and return the platform video ID."""
         pass
 
@@ -245,7 +252,9 @@ class BaseAdapter(ABC):
 
     async def process_webhook(self, payload: dict[str, Any]) -> WebhookEvent:
         """Process an incoming webhook payload."""
-        return WebhookEvent(platform=self.platform, event_type="unknown", payload=payload)
+        return WebhookEvent(
+            platform=self.platform, event_type="unknown", payload=payload
+        )
 
     # ========================================================================
     # UTILITY METHODS

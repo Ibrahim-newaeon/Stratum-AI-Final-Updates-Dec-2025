@@ -68,9 +68,7 @@ class SnapchatAudienceConnector(BaseAudienceConnector):
 
         try:
             # Step 1: Create the SAM segment
-            create_url = (
-                f"{self.BASE_URL}/{self.API_VERSION}/adaccounts/{self.ad_account_id}/segments"
-            )
+            create_url = f"{self.BASE_URL}/{self.API_VERSION}/adaccounts/{self.ad_account_id}/segments"
 
             # Determine source type based on identifiers available
             source_type = "FIRST_PARTY"  # Customer list
@@ -79,7 +77,8 @@ class SnapchatAudienceConnector(BaseAudienceConnector):
                 "segments": [
                     {
                         "name": config.name,
-                        "description": config.description or f"CDP Segment: {config.name}",
+                        "description": config.description
+                        or f"CDP Segment: {config.name}",
                         "source_type": source_type,
                         "ad_account_id": self.ad_account_id,
                         "retention_in_days": config.retention_days or 180,
@@ -203,7 +202,11 @@ class SnapchatAudienceConnector(BaseAudienceConnector):
                     upload_payload = {
                         "users": [
                             {
-                                "schema": ["EMAIL_SHA256", "PHONE_SHA256", "MOBILE_AD_ID_SHA256"],
+                                "schema": [
+                                    "EMAIL_SHA256",
+                                    "PHONE_SHA256",
+                                    "MOBILE_AD_ID_SHA256",
+                                ],
                                 "data": batch,
                             }
                         ]
@@ -298,12 +301,18 @@ class SnapchatAudienceConnector(BaseAudienceConnector):
                 )
 
             async with httpx.AsyncClient(timeout=300) as client:
-                delete_url = f"{self.BASE_URL}/{self.API_VERSION}/segments/{audience_id}/users"
+                delete_url = (
+                    f"{self.BASE_URL}/{self.API_VERSION}/segments/{audience_id}/users"
+                )
 
                 delete_payload = {
                     "users": [
                         {
-                            "schema": ["EMAIL_SHA256", "PHONE_SHA256", "MOBILE_AD_ID_SHA256"],
+                            "schema": [
+                                "EMAIL_SHA256",
+                                "PHONE_SHA256",
+                                "MOBILE_AD_ID_SHA256",
+                            ],
                             "data": user_data,
                         }
                     ]
@@ -319,7 +328,9 @@ class SnapchatAudienceConnector(BaseAudienceConnector):
                 result = response.json()
 
                 users_result = result.get("users", [{}])[0]
-                total_removed = users_result.get("number_uploaded_users", len(user_data))
+                total_removed = users_result.get(
+                    "number_uploaded_users", len(user_data)
+                )
                 total_sent = len(user_data)
 
             duration_ms = int((time.time() - start_time) * 1000)

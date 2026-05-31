@@ -37,8 +37,8 @@ from app.stratum.conversions import (
     SnapchatConversionsAPI,
     TikTokEventsAPI,
     UnifiedConversionsAPI,
-    UserData as ConversionUserData,
 )
+from app.stratum.conversions import UserData as ConversionUserData
 
 # Core - Autopilot
 from app.stratum.core.autopilot import (
@@ -68,8 +68,8 @@ from app.stratum.events import (
     StandardEvent,
     TikTokEventsSender,
     UnifiedEventsAPI,
-    UserData as EventUserData,
 )
+from app.stratum.events import UserData as EventUserData
 
 # Google Complete Integration
 from app.stratum.integrations import (

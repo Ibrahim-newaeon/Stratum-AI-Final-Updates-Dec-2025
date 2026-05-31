@@ -131,7 +131,9 @@ async def writeback_hubspot_attribution(
         modified_since = None
         if not full_sync:
             result = await db.execute(
-                select(CRMWritebackConfig).where(CRMWritebackConfig.tenant_id == tenant_id)
+                select(CRMWritebackConfig).where(
+                    CRMWritebackConfig.tenant_id == tenant_id
+                )
             )
             config = result.scalar_one_or_none()
             if config and config.last_sync_at:
@@ -283,7 +285,9 @@ async def sync_all_crm_connections() -> dict[str, Any]:
     async with async_session_maker() as db:
         # Get all active CRM connections
         result = await db.execute(
-            select(CRMConnection).where(CRMConnection.status == CRMConnectionStatus.CONNECTED)
+            select(CRMConnection).where(
+                CRMConnection.status == CRMConnectionStatus.CONNECTED
+            )
         )
         connections = result.scalars().all()
 
@@ -356,7 +360,9 @@ async def run_scheduled_writebacks() -> dict[str, Any]:
             try:
                 # Get connection to determine provider
                 conn_result = await db.execute(
-                    select(CRMConnection).where(CRMConnection.id == config.connection_id)
+                    select(CRMConnection).where(
+                        CRMConnection.id == config.connection_id
+                    )
                 )
                 connection = conn_result.scalar_one_or_none()
 

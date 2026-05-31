@@ -87,7 +87,10 @@ async def get_current_user(
         raise
     except (ConnectionError, OSError, TimeoutError) as exc:
         import structlog
-        structlog.get_logger().error("redis_unavailable_blacklist_check_failed", error=str(exc))
+
+        structlog.get_logger().error(
+            "redis_unavailable_blacklist_check_failed", error=str(exc)
+        )
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Authentication service temporarily unavailable",
@@ -133,7 +136,9 @@ async def get_current_user(
     try:
         email = payload.get("email") or decrypt_pii(user.email)
     except (ValueError, TypeError, UnicodeDecodeError) as exc:
-        logger.warning("pii_decryption_fallback", field="email", user_id=user.id, error=str(exc))
+        logger.warning(
+            "pii_decryption_fallback", field="email", user_id=user.id, error=str(exc)
+        )
         # Fallback: prefer the JWT claim; never expose raw ciphertext
         jwt_email = payload.get("email")
         email = jwt_email if jwt_email else f"user-{user.id}@unknown"
@@ -141,14 +146,21 @@ async def get_current_user(
     try:
         full_name = decrypt_pii(user.full_name) if user.full_name else None
     except (ValueError, TypeError, UnicodeDecodeError) as exc:
-        logger.warning("pii_decryption_fallback", field="full_name", user_id=user.id, error=str(exc))
+        logger.warning(
+            "pii_decryption_fallback",
+            field="full_name",
+            user_id=user.id,
+            error=str(exc),
+        )
         full_name = None
 
     # Store user info in request state for middleware/logging
     request.state.user_id = user.id
     request.state.tenant_id = user.tenant_id
     request.state.role = user.role.value
-    request.state.permissions = list(user.permissions.keys()) if user.permissions else []
+    request.state.permissions = (
+        list(user.permissions.keys()) if user.permissions else []
+    )
 
     return CurrentUser(user=user, email=email, full_name=full_name)
 
@@ -274,7 +286,7 @@ def require_cms_permission(*permissions: str) -> Any:
     Returns:
         A dependency function that validates CMS permissions.
     """
-    from app.models.cms import CMSRole, CMS_PERMISSIONS, has_permission
+    from app.models.cms import CMS_PERMISSIONS, CMSRole, has_permission
 
     async def cms_permission_checker(
         request: Request,
@@ -384,9 +396,7 @@ async def check_tier_limit(
     """
     from app.models import Campaign, Tenant, User
 
-    result = await db.execute(
-        select(Tenant).where(Tenant.id == tenant_id)
-    )
+    result = await db.execute(select(Tenant).where(Tenant.id == tenant_id))
     tenant = result.scalar_one_or_none()
     if not tenant:
         raise HTTPException(
@@ -397,10 +407,12 @@ async def check_tier_limit(
     if resource == "users":
         count_result = await db.execute(
             select(func.count()).select_from(
-                select(User.id).where(
+                select(User.id)
+                .where(
                     User.tenant_id == tenant_id,
                     User.is_deleted == False,
-                ).subquery()
+                )
+                .subquery()
             )
         )
         current_count = count_result.scalar() or 0
@@ -413,10 +425,12 @@ async def check_tier_limit(
     elif resource == "campaigns":
         count_result = await db.execute(
             select(func.count()).select_from(
-                select(Campaign.id).where(
+                select(Campaign.id)
+                .where(
                     Campaign.tenant_id == tenant_id,
                     Campaign.is_deleted == False,
-                ).subquery()
+                )
+                .subquery()
             )
         )
         current_count = count_result.scalar() or 0
@@ -433,10 +447,12 @@ async def check_tier_limit(
         max_clients = tenant.settings.get("max_clients", 50) if tenant.settings else 50
         count_result = await db.execute(
             select(func.count()).select_from(
-                select(Client.id).where(
+                select(Client.id)
+                .where(
                     Client.tenant_id == tenant_id,
                     Client.is_deleted == False,
-                ).subquery()
+                )
+                .subquery()
             )
         )
         current_count = count_result.scalar() or 0
@@ -456,4 +472,6 @@ CurrentUserDep = Annotated[CurrentUser, Depends(get_current_user)]
 ActiveUserDep = Annotated[CurrentUser, Depends(get_current_active_user)]
 VerifiedUserDep = Annotated[CurrentUser, Depends(get_current_verified_user)]
 OptionalUserDep = Annotated[Optional[CurrentUser], Depends(get_optional_user)]
-AccessibleClientIdsDep = Annotated[Optional[list[int]], Depends(get_accessible_client_ids)]
+AccessibleClientIdsDep = Annotated[
+    Optional[list[int]], Depends(get_accessible_client_ids)
+]

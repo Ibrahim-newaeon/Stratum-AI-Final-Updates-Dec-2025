@@ -59,6 +59,7 @@ class ClientCreate(BaseModel):
     def validate_timezone(cls, v: str) -> str:
         """Validate timezone is a known IANA timezone or UTC offset."""
         import zoneinfo
+
         try:
             zoneinfo.ZoneInfo(v)
         except (KeyError, zoneinfo.ZoneInfoNotFoundError):
@@ -70,7 +71,9 @@ class ClientUpdate(BaseModel):
     """Schema for updating a client. All fields optional."""
 
     name: Optional[str] = Field(None, min_length=2, max_length=255)
-    slug: Optional[str] = Field(None, min_length=2, max_length=100, pattern=r"^[a-z0-9-]+$")
+    slug: Optional[str] = Field(
+        None, min_length=2, max_length=100, pattern=r"^[a-z0-9-]+$"
+    )
     logo_url: Optional[str] = Field(None, max_length=500)
     industry: Optional[str] = Field(None, max_length=100)
     website: Optional[str] = Field(None, max_length=500)

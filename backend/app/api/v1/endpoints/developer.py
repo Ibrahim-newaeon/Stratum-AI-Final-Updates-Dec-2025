@@ -18,8 +18,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.logging import get_logger
-from app.schemas.response import APIResponse
 from app.db.session import get_async_session
+from app.schemas.response import APIResponse
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/developer", tags=["Developer Portal"])
@@ -29,8 +29,10 @@ router = APIRouter(prefix="/developer", tags=["Developer Portal"])
 # Schemas
 # =============================================================================
 
+
 class DevPortalConfig(BaseModel):
     """Developer portal configuration for a tenant."""
+
     tenant_id: int
     api_keys: list[dict[str, Any]]
     total_requests_24h: int
@@ -44,6 +46,7 @@ class DevPortalConfig(BaseModel):
 
 class WebhookEndpoint(BaseModel):
     """Developer-managed webhook endpoint."""
+
     id: str
     name: str
     url: str = Field(..., pattern=r"^https://")
@@ -59,6 +62,7 @@ class WebhookEndpoint(BaseModel):
 
 class WebhookDeliveryLog(BaseModel):
     """Individual webhook delivery attempt."""
+
     id: str
     webhook_id: str
     event_type: str
@@ -73,6 +77,7 @@ class WebhookDeliveryLog(BaseModel):
 
 class SDKExample(BaseModel):
     """Code example for a specific integration pattern."""
+
     language: str  # python, javascript, php, go, ruby
     title: str
     description: str
@@ -83,6 +88,7 @@ class SDKExample(BaseModel):
 # =============================================================================
 # API Endpoints — Developer Portal
 # =============================================================================
+
 
 @router.get("/portal", response_model=APIResponse[DevPortalConfig])
 async def get_developer_portal(
@@ -97,7 +103,9 @@ async def get_developer_portal(
     """
     tenant_id = getattr(req.state, "tenant_id", None)
     if not tenant_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
+        )
 
     # Count requests in last 24h and 30d
     requests_24h = 0
@@ -217,8 +225,20 @@ func main() {
     config = DevPortalConfig(
         tenant_id=tenant_id,
         api_keys=[
-            {"id": "key_001", "name": "Production", "prefix": "sk_live_...", "created_at": "2026-04-01", "last_used": "2026-04-27"},
-            {"id": "key_002", "name": "Staging", "prefix": "sk_test_...", "created_at": "2026-04-15", "last_used": "2026-04-26"},
+            {
+                "id": "key_001",
+                "name": "Production",
+                "prefix": "sk_live_...",
+                "created_at": "2026-04-01",
+                "last_used": "2026-04-27",
+            },
+            {
+                "id": "key_002",
+                "name": "Staging",
+                "prefix": "sk_test_...",
+                "created_at": "2026-04-15",
+                "last_used": "2026-04-26",
+            },
         ],
         total_requests_24h=requests_24h,
         total_requests_30d=requests_30d,
@@ -245,7 +265,9 @@ async def get_usage_analytics(
     """
     tenant_id = getattr(req.state, "tenant_id", None)
     if not tenant_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
+        )
 
     # Endpoint breakdown
     endpoint_stats = []
@@ -262,7 +284,11 @@ async def get_usage_analytics(
             {"t": tenant_id, "days": days},
         )
         endpoint_stats = [
-            {"endpoint": r["endpoint"], "requests": r["requests"], "avg_latency_ms": round(r["avg_latency"] or 0, 2)}
+            {
+                "endpoint": r["endpoint"],
+                "requests": r["requests"],
+                "avg_latency_ms": round(r["avg_latency"] or 0, 2),
+            }
             for r in result.mappings().all()
         ]
     except Exception:
@@ -297,7 +323,12 @@ async def get_usage_analytics(
             "daily_trend": daily_stats,
             "total_requests": sum(d["requests"] for d in daily_stats),
             "total_errors": sum(d["errors"] for d in daily_stats),
-            "error_rate": round(sum(d["errors"] for d in daily_stats) / max(sum(d["requests"] for d in daily_stats), 1) * 100, 2),
+            "error_rate": round(
+                sum(d["errors"] for d in daily_stats)
+                / max(sum(d["requests"] for d in daily_stats), 1)
+                * 100,
+                2,
+            ),
         },
         message="Usage analytics retrieved",
     )
@@ -306,6 +337,7 @@ async def get_usage_analytics(
 # =============================================================================
 # API Endpoints — Webhook Management
 # =============================================================================
+
 
 @router.get("/webhooks", response_model=APIResponse[list[WebhookEndpoint]])
 async def list_webhook_endpoints(
@@ -319,7 +351,9 @@ async def list_webhook_endpoints(
     """
     tenant_id = getattr(req.state, "tenant_id", None)
     if not tenant_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
+        )
 
     # In production, query webhook_endpoints table
     webhooks = [
@@ -363,9 +397,12 @@ async def create_webhook_endpoint(
     """Register a new developer-managed webhook endpoint."""
     tenant_id = getattr(req.state, "tenant_id", None)
     if not tenant_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
+        )
 
     import secrets as pysecrets
+
     webhook.created_at = datetime.now(UTC).isoformat()
     webhook.secret = f"whsec_{pysecrets.token_urlsafe(32)}"
     webhook.last_delivery_at = None
@@ -373,9 +410,19 @@ async def create_webhook_endpoint(
     webhook.failure_count = 0
     webhook.health_status = "healthy"
 
-    logger.info("webhook_created", tenant_id=tenant_id, webhook_id=webhook.id, url=webhook.url, events=webhook.events)
+    logger.info(
+        "webhook_created",
+        tenant_id=tenant_id,
+        webhook_id=webhook.id,
+        url=webhook.url,
+        events=webhook.events,
+    )
 
-    return APIResponse(success=True, data=webhook, message="Webhook registered. Save the secret — it will not be shown again.")
+    return APIResponse(
+        success=True,
+        data=webhook,
+        message="Webhook registered. Save the secret — it will not be shown again.",
+    )
 
 
 @router.delete("/webhooks/{webhook_id}", response_model=APIResponse[dict])
@@ -387,14 +434,23 @@ async def delete_webhook_endpoint(
     """Delete a webhook endpoint."""
     tenant_id = getattr(req.state, "tenant_id", None)
     if not tenant_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
+        )
 
     logger.info("webhook_deleted", tenant_id=tenant_id, webhook_id=webhook_id)
 
-    return APIResponse(success=True, data={"webhook_id": webhook_id, "deleted": True}, message="Webhook deleted")
+    return APIResponse(
+        success=True,
+        data={"webhook_id": webhook_id, "deleted": True},
+        message="Webhook deleted",
+    )
 
 
-@router.get("/webhooks/{webhook_id}/deliveries", response_model=APIResponse[list[WebhookDeliveryLog]])
+@router.get(
+    "/webhooks/{webhook_id}/deliveries",
+    response_model=APIResponse[list[WebhookDeliveryLog]],
+)
 async def list_webhook_deliveries(
     webhook_id: str,
     req: Request,
@@ -405,7 +461,9 @@ async def list_webhook_deliveries(
     """List delivery logs for a specific webhook."""
     tenant_id = getattr(req.state, "tenant_id", None)
     if not tenant_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
+        )
 
     # In production, query webhook_delivery_logs table
     deliveries = [
@@ -418,7 +476,7 @@ async def list_webhook_deliveries(
             http_status=200,
             response_body="OK",
             latency_ms=145.2,
-            attempted_at=(datetime.now(UTC) - timedelta(minutes=i*5)).isoformat(),
+            attempted_at=(datetime.now(UTC) - timedelta(minutes=i * 5)).isoformat(),
             retry_count=0,
         )
         for i in range(1, min(page_size + 1, 6))
@@ -440,9 +498,12 @@ async def test_webhook_endpoint(
     """
     tenant_id = getattr(req.state, "tenant_id", None)
     if not tenant_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
+        )
 
     import time
+
     import aiohttp
 
     # In production, fetch webhook URL and secret from DB
@@ -459,7 +520,9 @@ async def test_webhook_endpoint(
     start = time.perf_counter()
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.post(webhook_url, json=test_payload, timeout=aiohttp.ClientTimeout(total=10)) as resp:
+            async with session.post(
+                webhook_url, json=test_payload, timeout=aiohttp.ClientTimeout(total=10)
+            ) as resp:
                 latency = (time.perf_counter() - start) * 1000
                 return APIResponse(
                     success=resp.status < 400,
@@ -470,7 +533,11 @@ async def test_webhook_endpoint(
                         "latency_ms": round(latency, 2),
                         "payload_sent": test_payload,
                     },
-                    message="Test event delivered" if resp.status < 400 else "Test delivery failed",
+                    message=(
+                        "Test event delivered"
+                        if resp.status < 400
+                        else "Test delivery failed"
+                    ),
                 )
     except Exception as e:
         return APIResponse(
@@ -478,4 +545,3 @@ async def test_webhook_endpoint(
             data={"webhook_id": webhook_id, "error": str(e)},
             message=f"Test failed: {str(e)}",
         )
-

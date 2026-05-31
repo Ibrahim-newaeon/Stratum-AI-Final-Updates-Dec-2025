@@ -72,21 +72,27 @@ def simulate_workload() -> dict:
     print("  [3/5] Simulating CDP profile data...")
     profiles: list = []
     for i in range(2000):
-        profiles.append({
-            "profile_id": f"prof_{i:06d}",
-            "email_hash": hashlib.sha256(f"user{i}@example.com".encode()).hexdigest(),
-            "traits": {
-                "name": f"User {i}",
-                "lifecycle_stage": ["anonymous", "known", "active", "churned"][i % 4],
-                "ltv": round(i * 15.0, 2),
-                "rfm_score": i % 100,
-                "segments": [f"seg_{j}" for j in range(i % 5)],
-            },
-            "events": [
-                {"type": "page_view", "timestamp": time.time() - j * 3600}
-                for j in range(i % 20)
-            ],
-        })
+        profiles.append(
+            {
+                "profile_id": f"prof_{i:06d}",
+                "email_hash": hashlib.sha256(
+                    f"user{i}@example.com".encode()
+                ).hexdigest(),
+                "traits": {
+                    "name": f"User {i}",
+                    "lifecycle_stage": ["anonymous", "known", "active", "churned"][
+                        i % 4
+                    ],
+                    "ltv": round(i * 15.0, 2),
+                    "rfm_score": i % 100,
+                    "segments": [f"seg_{j}" for j in range(i % 5)],
+                },
+                "events": [
+                    {"type": "page_view", "timestamp": time.time() - j * 3600}
+                    for j in range(i % 20)
+                ],
+            }
+        )
     print(f"    Built {len(profiles)} CDP profiles")
 
     print("  [4/5] Simulating segment computation...")
@@ -97,7 +103,11 @@ def simulate_workload() -> dict:
             "name": f"High Value Segment {s}",
             "conditions": [
                 {"field": "rfm_score", "operator": "gt", "value": s * 2},
-                {"field": "lifecycle_stage", "operator": "in", "value": ["active", "known"]},
+                {
+                    "field": "lifecycle_stage",
+                    "operator": "in",
+                    "value": ["active", "known"],
+                },
             ],
             "profile_count": len(matching),
             "profile_ids": [p["profile_id"] for p in matching[:100]],
@@ -107,17 +117,19 @@ def simulate_workload() -> dict:
     print("  [5/5] Simulating signal health calculations...")
     signals: list = []
     for i in range(200):
-        signals.append({
-            "signal_id": f"sig_{i}",
-            "source": ["meta_api", "google_api", "webhook", "capi"][i % 4],
-            "health_score": 40 + (i % 60),
-            "components": {
-                "freshness": 50 + (i % 50),
-                "completeness": 60 + (i % 40),
-                "consistency": 45 + (i % 55),
-            },
-            "samples": list(range(i * 10)),
-        })
+        signals.append(
+            {
+                "signal_id": f"sig_{i}",
+                "source": ["meta_api", "google_api", "webhook", "capi"][i % 4],
+                "health_score": 40 + (i % 60),
+                "components": {
+                    "freshness": 50 + (i % 50),
+                    "completeness": 60 + (i % 40),
+                    "consistency": 45 + (i % 55),
+                },
+                "samples": list(range(i * 10)),
+            }
+        )
     print(f"    Evaluated {len(signals)} signals")
 
     return {
@@ -164,7 +176,9 @@ def run_audit() -> str:
 
     print("[PHASE 6] Forcing GC and taking final snapshot...")
     gc_result = auditor.force_gc()
-    print(f"    GC collected: {gc_result['collected']['total']} objects, freed {gc_result['rss_freed_kb']:.1f} KB")
+    print(
+        f"    GC collected: {gc_result['collected']['total']} objects, freed {gc_result['rss_freed_kb']:.1f} KB"
+    )
     auditor.take_snapshot(label="post_gc")
     time.sleep(0.2)
 
@@ -200,11 +214,15 @@ def run_audit() -> str:
     print(f"\n  Top 5 Allocations:")
     for a in audit_data["top_allocations"][:5]:
         fname = a["file"].replace("\\", "/").split("/")[-1]
-        print(f"    {fname}:{a['line']:>4d}  {a['size_kb']:>8.1f} KB  ({a['count']:>5d} allocs)")
+        print(
+            f"    {fname}:{a['line']:>4d}  {a['size_kb']:>8.1f} KB  ({a['count']:>5d} allocs)"
+        )
 
     print(f"\n  Top 5 Object Types:")
     for o in audit_data["object_stats"][:5]:
-        print(f"    {o['type']:<20s}  {o['count']:>10,d}  ({o.get('size_kb', 0):>8.1f} KB)")
+        print(
+            f"    {o['type']:<20s}  {o['count']:>10,d}  ({o.get('size_kb', 0):>8.1f} KB)"
+        )
 
     # ---- Generate HTML Report ----
     print("\n[PHASE 8] Generating HTML report with visualizations...")

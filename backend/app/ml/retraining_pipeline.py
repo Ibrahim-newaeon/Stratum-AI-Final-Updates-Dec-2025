@@ -15,11 +15,11 @@ Features:
 import json
 import os
 import shutil
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
+from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
-from dataclasses import dataclass, field
-from enum import Enum
 
 import joblib
 import numpy as np
@@ -34,15 +34,17 @@ logger = structlog.get_logger(__name__)
 
 class RetrainingTrigger(str, Enum):
     """Reasons for triggering model retraining."""
-    SCHEDULED = "scheduled"              # Regular schedule (e.g., weekly)
+
+    SCHEDULED = "scheduled"  # Regular schedule (e.g., weekly)
     PERFORMANCE_DRIFT = "performance_drift"  # Model accuracy degraded
-    DATA_VOLUME = "data_volume"          # Enough new data collected
-    MANUAL = "manual"                    # User-triggered
-    NEW_FEATURES = "new_features"        # New features available
+    DATA_VOLUME = "data_volume"  # Enough new data collected
+    MANUAL = "manual"  # User-triggered
+    NEW_FEATURES = "new_features"  # New features available
 
 
 class ModelStatus(str, Enum):
     """Status of a model version."""
+
     ACTIVE = "active"
     STAGING = "staging"
     RETIRED = "retired"
@@ -52,6 +54,7 @@ class ModelStatus(str, Enum):
 @dataclass
 class ModelVersion:
     """Represents a specific version of a trained model."""
+
     version_id: str
     model_name: str
     created_at: datetime
@@ -66,6 +69,7 @@ class ModelVersion:
 @dataclass
 class RetrainingConfig:
     """Configuration for the retraining pipeline."""
+
     # Scheduling
     retrain_interval_days: int = 7  # Retrain weekly
     min_samples_for_retrain: int = 1000  # Minimum new samples
@@ -133,7 +137,13 @@ class RetrainingPipeline:
                         )
                         for v in versions
                     ]
-            except (OSError, ValueError, TypeError, KeyError, json.JSONDecodeError) as e:
+            except (
+                OSError,
+                ValueError,
+                TypeError,
+                KeyError,
+                json.JSONDecodeError,
+            ) as e:
                 logger.error("model_history_load_error", error=str(e))
 
     def _save_model_history(self):
@@ -191,7 +201,10 @@ class RetrainingPipeline:
 
         # Check performance drift if predictions provided
         if recent_predictions is not None and len(recent_predictions) > 100:
-            if "prediction" in recent_predictions.columns and "actual" in recent_predictions.columns:
+            if (
+                "prediction" in recent_predictions.columns
+                and "actual" in recent_predictions.columns
+            ):
                 # Calculate recent performance
                 y_true = recent_predictions["actual"].values
                 y_pred = recent_predictions["prediction"].values
@@ -206,8 +219,11 @@ class RetrainingPipeline:
 
                 degradation = training_r2 - current_r2
                 if degradation > self.config.max_r2_degradation:
-                    return True, RetrainingTrigger.PERFORMANCE_DRIFT, \
-                        f"R² degraded from {training_r2:.3f} to {current_r2:.3f}"
+                    return (
+                        True,
+                        RetrainingTrigger.PERFORMANCE_DRIFT,
+                        f"R² degraded from {training_r2:.3f} to {current_r2:.3f}",
+                    )
 
         return False, RetrainingTrigger.MANUAL, "No retraining needed"
 
@@ -256,9 +272,14 @@ class RetrainingPipeline:
                 # Platform-specific model
                 platform = model_name.replace("roas_predictor_", "")
                 df = self.trainer._prepare_data(training_data)
-                platform_df = df[df["platform"] == platform] if "platform" in df.columns else df
+                platform_df = (
+                    df[df["platform"] == platform] if "platform" in df.columns else df
+                )
                 if len(platform_df) < 50:
-                    return {"status": "failed", "error": f"Insufficient data for {platform}"}
+                    return {
+                        "status": "failed",
+                        "error": f"Insufficient data for {platform}",
+                    }
                 metrics = self.trainer.train_roas_predictor(platform_df)
             else:
                 return {"status": "failed", "error": f"Unknown model: {model_name}"}
@@ -272,13 +293,21 @@ class RetrainingPipeline:
 
             # Decide whether to promote
             if comparison.get("should_promote", False) or not validate_before_promote:
-                self._promote_model(model_name, version_id, metrics, trigger, training_data)
+                self._promote_model(
+                    model_name, version_id, metrics, trigger, training_data
+                )
                 results["status"] = "promoted"
-                logger.info("model_promoted", model_name=model_name, version_id=version_id)
+                logger.info(
+                    "model_promoted", model_name=model_name, version_id=version_id
+                )
             else:
                 results["status"] = "staged"
-                logger.info("model_staged", model_name=model_name, version_id=version_id)
-                results["reason"] = comparison.get("reason", "Did not meet promotion criteria")
+                logger.info(
+                    "model_staged", model_name=model_name, version_id=version_id
+                )
+                results["reason"] = comparison.get(
+                    "reason", "Did not meet promotion criteria"
+                )
 
         except (OSError, ValueError, TypeError, KeyError, RuntimeError) as e:
             logger.error("retraining_failed", error=str(e))
@@ -415,7 +444,9 @@ class RetrainingPipeline:
         versions = self._model_history[model_name]
         if len(versions) > self.config.max_model_versions:
             # Keep only the most recent versions
-            self._model_history[model_name] = versions[-self.config.max_model_versions:]
+            self._model_history[model_name] = versions[
+                -self.config.max_model_versions :
+            ]
 
     def rollback(self, model_name: str, version_id: Optional[str] = None) -> bool:
         """
@@ -463,7 +494,11 @@ class RetrainingPipeline:
                     for f in archive_dir.iterdir():
                         shutil.copy2(f, self.models_path / f.name)
 
-                    logger.info("model_rolled_back", model_name=model_name, version_id=target.version_id)
+                    logger.info(
+                        "model_rolled_back",
+                        model_name=model_name,
+                        version_id=target.version_id,
+                    )
 
                     # Update status
                     target.status = ModelStatus.ACTIVE
@@ -501,7 +536,9 @@ class RetrainingPipeline:
             if status["created_at"]:
                 created = datetime.fromisoformat(status["created_at"])
                 status["age_days"] = (datetime.now(timezone.utc) - created).days
-                status["needs_retraining"] = status["age_days"] >= self.config.retrain_interval_days
+                status["needs_retraining"] = (
+                    status["age_days"] >= self.config.retrain_interval_days
+                )
 
         if model_name in self._model_history:
             status["version_history"] = [
@@ -570,6 +607,7 @@ class RetrainingPipeline:
 # Celery Tasks for Scheduled Retraining
 # =============================================================================
 
+
 def create_retraining_task(app):
     """
     Create a Celery task for scheduled model retraining.
@@ -587,7 +625,8 @@ def create_retraining_task(app):
             },
         }
     """
-    @app.task(name='ml.retrain_models')
+
+    @app.task(name="ml.retrain_models")
     def retrain_models_task():
         from app.ml.data_loader import TrainingDataLoader
 
@@ -615,8 +654,12 @@ if __name__ == "__main__":
     parser.add_argument("--check", type=str, help="Check if model needs retraining")
     parser.add_argument("--retrain", type=str, help="Retrain specific model")
     parser.add_argument("--status", type=str, help="Get model status")
-    parser.add_argument("--rollback", type=str, help="Rollback model to previous version")
-    parser.add_argument("--run-all", action="store_true", help="Run scheduled retraining for all models")
+    parser.add_argument(
+        "--rollback", type=str, help="Rollback model to previous version"
+    )
+    parser.add_argument(
+        "--run-all", action="store_true", help="Run scheduled retraining for all models"
+    )
 
     args = parser.parse_args()
 
@@ -624,7 +667,13 @@ if __name__ == "__main__":
 
     if args.check:
         needs, trigger, reason = pipeline.check_retraining_needed(args.check)
-        logger.info("retraining_check", model=args.check, needs_retraining=needs, trigger=trigger.value, reason=reason)
+        logger.info(
+            "retraining_check",
+            model=args.check,
+            needs_retraining=needs,
+            trigger=trigger.value,
+            reason=reason,
+        )
 
     elif args.status:
         status = pipeline.get_model_status(args.status)
@@ -642,7 +691,10 @@ if __name__ == "__main__":
             return TrainingDataLoader.generate_sample_data(100, 30)
 
         results = pipeline.run_scheduled_retraining(load_data)
-        logger.info("scheduled_retraining_complete", **{k: v for k, v in results.items() if k != "results"})
+        logger.info(
+            "scheduled_retraining_complete",
+            **{k: v for k, v in results.items() if k != "results"},
+        )
 
     else:
         parser.print_help()

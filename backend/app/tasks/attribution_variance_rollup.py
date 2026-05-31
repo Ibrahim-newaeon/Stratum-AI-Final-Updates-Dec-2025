@@ -6,17 +6,19 @@ Celery task for daily attribution variance rollup.
 Compares platform-reported metrics with GA4 data to identify discrepancies.
 """
 
-from datetime import date, datetime, timedelta, timezone
-from typing import Dict, Any, List, Optional
 import logging
+from datetime import date, datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional
 
 from celery import shared_task
-from sqlalchemy import select, and_, func
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import async_session_factory
-from app.models.trust_layer import FactAttributionVarianceDaily, AttributionVarianceStatus
-
+from app.models.trust_layer import (
+    AttributionVarianceStatus,
+    FactAttributionVarianceDaily,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +41,7 @@ PLATFORMS = ["meta", "google", "tiktok", "snapchat"]
 # =============================================================================
 # Helper Functions
 # =============================================================================
+
 
 def determine_variance_status(delta_pct: float) -> AttributionVarianceStatus:
     """
@@ -108,7 +111,11 @@ def calculate_confidence(
         trend_confidence = 0.5
 
     # Weighted average
-    confidence = (volume_confidence * 0.4) + (conversion_confidence * 0.3) + (trend_confidence * 0.3)
+    confidence = (
+        (volume_confidence * 0.4)
+        + (conversion_confidence * 0.3)
+        + (trend_confidence * 0.3)
+    )
 
     return round(min(confidence, 1.0), 2)
 
@@ -117,13 +124,16 @@ def calculate_confidence(
 # Main Task
 # =============================================================================
 
+
 @shared_task(
     name="tasks.attribution_variance_rollup",
     bind=True,
     max_retries=3,
     default_retry_delay=300,
 )
-def attribution_variance_rollup(self, tenant_id: Optional[int] = None, target_date: Optional[str] = None):
+def attribution_variance_rollup(
+    self, tenant_id: Optional[int] = None, target_date: Optional[str] = None
+):
     """
     Daily attribution variance rollup task.
 
@@ -139,15 +149,22 @@ def attribution_variance_rollup(self, tenant_id: Optional[int] = None, target_da
     async def run_rollup():
         async with async_session_factory() as db:
             try:
-                rollup_date = date.fromisoformat(target_date) if target_date else date.today() - timedelta(days=1)
+                rollup_date = (
+                    date.fromisoformat(target_date)
+                    if target_date
+                    else date.today() - timedelta(days=1)
+                )
 
-                logger.info(f"Starting attribution variance rollup for date={rollup_date}, tenant_id={tenant_id}")
+                logger.info(
+                    f"Starting attribution variance rollup for date={rollup_date}, tenant_id={tenant_id}"
+                )
 
                 # Get list of tenants to process
                 if tenant_id:
                     tenant_ids = [tenant_id]
                 else:
                     from app.models.tenant import Tenant
+
                     result = await db.execute(
                         select(Tenant.id).where(Tenant.is_active == True)
                     )
@@ -158,7 +175,9 @@ def attribution_variance_rollup(self, tenant_id: Optional[int] = None, target_da
                 for tid in tenant_ids:
                     for platform in PLATFORMS:
                         # Fetch GA4 and platform metrics
-                        metrics = await fetch_attribution_metrics(db, tid, platform, rollup_date)
+                        metrics = await fetch_attribution_metrics(
+                            db, tid, platform, rollup_date
+                        )
 
                         if not metrics:
                             continue
@@ -171,19 +190,25 @@ def attribution_variance_rollup(self, tenant_id: Optional[int] = None, target_da
 
                         revenue_delta_abs = platform_revenue - ga4_revenue
                         revenue_delta_pct = (
-                            (revenue_delta_abs / ga4_revenue * 100) if ga4_revenue > 0 else 0
+                            (revenue_delta_abs / ga4_revenue * 100)
+                            if ga4_revenue > 0
+                            else 0
                         )
 
                         conversion_delta_abs = platform_conversions - ga4_conversions
                         conversion_delta_pct = (
-                            (conversion_delta_abs / ga4_conversions * 100) if ga4_conversions > 0 else 0
+                            (conversion_delta_abs / ga4_conversions * 100)
+                            if ga4_conversions > 0
+                            else 0
                         )
 
                         # Determine status and confidence
                         status = determine_variance_status(revenue_delta_pct)
                         confidence = calculate_confidence(
-                            ga4_revenue, platform_revenue,
-                            ga4_conversions, platform_conversions
+                            ga4_revenue,
+                            platform_revenue,
+                            ga4_conversions,
+                            platform_conversions,
                         )
 
                         # Check if record already exists
@@ -233,7 +258,9 @@ def attribution_variance_rollup(self, tenant_id: Optional[int] = None, target_da
 
                 await db.commit()
 
-                logger.info(f"Attribution variance rollup completed: {records_created} records created/updated")
+                logger.info(
+                    f"Attribution variance rollup completed: {records_created} records created/updated"
+                )
 
                 return {
                     "status": "success",
@@ -306,7 +333,7 @@ async def fetch_attribution_metrics(
     # GA4 data typically shows lower numbers due to different attribution windows
     # Apply standard variance adjustment based on platform characteristics
     platform_variance = {
-        "meta": 0.82,    # Meta over-reports by ~18% typically
+        "meta": 0.82,  # Meta over-reports by ~18% typically
         "google": 0.88,  # Google over-reports by ~12%
         "tiktok": 0.78,  # TikTok over-reports by ~22%
         "snapchat": 0.75,  # Snapchat over-reports by ~25%
@@ -335,6 +362,7 @@ async def fetch_attribution_metrics(
 # =============================================================================
 # Scheduled Task Registration
 # =============================================================================
+
 
 @shared_task(name="tasks.schedule_attribution_variance_rollup")
 def schedule_attribution_variance_rollup():

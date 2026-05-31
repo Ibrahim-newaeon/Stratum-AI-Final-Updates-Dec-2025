@@ -18,41 +18,40 @@ Tests cover:
 - Edge cases (empty state, missing data, invalid transitions)
 """
 
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
-from uuid import uuid4, UUID
+from uuid import UUID, uuid4
 
 import pytest
+
+# ---------------------------------------------------------------------------
+# Schema imports
+# ---------------------------------------------------------------------------
+from app.api.v1.endpoints.campaign_builder import (
+    AdAccountResponse,
+    AdAccountUpdateRequest,
+    CampaignDraftCreate,
+    CampaignDraftResponse,
+    CampaignDraftUpdate,
+    ConnectorStatusResponse,
+    PublishLogResponse,
+)
 
 # ---------------------------------------------------------------------------
 # Model / enum imports
 # ---------------------------------------------------------------------------
 from app.models.campaign_builder import (
     AdPlatform,
+    CampaignDraft,
+    CampaignPublishLog,
     ConnectionStatus,
     DraftStatus,
     PublishResult,
-    TenantPlatformConnection,
     TenantAdAccount,
-    CampaignDraft,
-    CampaignPublishLog,
+    TenantPlatformConnection,
 )
-
-# ---------------------------------------------------------------------------
-# Schema imports
-# ---------------------------------------------------------------------------
-from app.api.v1.endpoints.campaign_builder import (
-    ConnectorStatusResponse,
-    AdAccountResponse,
-    AdAccountUpdateRequest,
-    CampaignDraftCreate,
-    CampaignDraftUpdate,
-    CampaignDraftResponse,
-    PublishLogResponse,
-)
-
 
 # =============================================================================
 # Enum Tests
@@ -99,8 +98,13 @@ class TestDraftStatus:
     def test_all_statuses_defined(self):
         statuses = [s.value for s in DraftStatus]
         assert set(statuses) == {
-            "draft", "submitted", "approved", "rejected",
-            "publishing", "published", "failed",
+            "draft",
+            "submitted",
+            "approved",
+            "rejected",
+            "publishing",
+            "published",
+            "failed",
         }
 
     def test_draft_is_initial_state(self):
@@ -315,6 +319,7 @@ class TestPublishLogResponse:
 # Helper: mock async DB session & Request
 # =============================================================================
 
+
 def _make_request(tenant_id=1, user_id=1):
     """Create a mock Request with state attributes."""
     request = MagicMock()
@@ -348,7 +353,9 @@ def _make_db():
     return db
 
 
-def _make_connection(tenant_id=1, platform=AdPlatform.META, status=ConnectionStatus.CONNECTED):
+def _make_connection(
+    tenant_id=1, platform=AdPlatform.META, status=ConnectionStatus.CONNECTED
+):
     """Create a mock TenantPlatformConnection."""
     conn = MagicMock(spec=TenantPlatformConnection)
     conn.id = uuid4()
@@ -365,8 +372,9 @@ def _make_connection(tenant_id=1, platform=AdPlatform.META, status=ConnectionSta
     return conn
 
 
-def _make_ad_account(tenant_id=1, platform=AdPlatform.META, is_enabled=True,
-                     daily_budget_cap=None):
+def _make_ad_account(
+    tenant_id=1, platform=AdPlatform.META, is_enabled=True, daily_budget_cap=None
+):
     """Create a mock TenantAdAccount."""
     acc = MagicMock(spec=TenantAdAccount)
     acc.id = uuid4()
@@ -383,7 +391,9 @@ def _make_ad_account(tenant_id=1, platform=AdPlatform.META, is_enabled=True,
     return acc
 
 
-def _make_draft(tenant_id=1, status=DraftStatus.DRAFT, ad_account=None, draft_json=None):
+def _make_draft(
+    tenant_id=1, status=DraftStatus.DRAFT, ad_account=None, draft_json=None
+):
     """Create a mock CampaignDraft."""
     draft = MagicMock(spec=CampaignDraft)
     draft.id = uuid4()
@@ -423,7 +433,9 @@ def _make_publish_log(tenant_id=1, result_status=PublishResult.SUCCESS, draft_id
     log.request_json = {}
     log.response_json = {}
     log.result_status = result_status
-    log.platform_campaign_id = "camp_abc123" if result_status == PublishResult.SUCCESS else None
+    log.platform_campaign_id = (
+        "camp_abc123" if result_status == PublishResult.SUCCESS else None
+    )
     log.error_code = None
     log.error_message = None
     log.retry_count = 0
@@ -465,8 +477,9 @@ class TestGetConnectorStatus:
 
     @pytest.mark.asyncio
     async def test_tenant_isolation_denied(self):
-        from app.api.v1.endpoints.campaign_builder import get_connector_status
         from fastapi import HTTPException
+
+        from app.api.v1.endpoints.campaign_builder import get_connector_status
 
         db = _make_db()
         # Request from tenant 1, accessing tenant 2
@@ -549,8 +562,9 @@ class TestStartPlatformConnection:
 
     @pytest.mark.asyncio
     async def test_oauth_not_configured(self):
-        from app.api.v1.endpoints.campaign_builder import start_platform_connection
         from fastapi import HTTPException
+
+        from app.api.v1.endpoints.campaign_builder import start_platform_connection
 
         db = _make_db()
         request = _make_request()
@@ -576,8 +590,9 @@ class TestStartPlatformConnection:
 
     @pytest.mark.asyncio
     async def test_tenant_isolation(self):
-        from app.api.v1.endpoints.campaign_builder import start_platform_connection
         from fastapi import HTTPException
+
+        from app.api.v1.endpoints.campaign_builder import start_platform_connection
 
         db = _make_db()
         request = _make_request(tenant_id=1)
@@ -592,8 +607,9 @@ class TestRefreshPlatformToken:
 
     @pytest.mark.asyncio
     async def test_refresh_no_connection(self):
-        from app.api.v1.endpoints.campaign_builder import refresh_platform_token
         from fastapi import HTTPException
+
+        from app.api.v1.endpoints.campaign_builder import refresh_platform_token
 
         db = _make_db()
         db.execute.return_value = _make_scalar_result(None)
@@ -604,8 +620,9 @@ class TestRefreshPlatformToken:
 
     @pytest.mark.asyncio
     async def test_tenant_isolation(self):
-        from app.api.v1.endpoints.campaign_builder import refresh_platform_token
         from fastapi import HTTPException
+
+        from app.api.v1.endpoints.campaign_builder import refresh_platform_token
 
         db = _make_db()
         request = _make_request(tenant_id=1)
@@ -634,8 +651,9 @@ class TestDisconnectPlatform:
 
     @pytest.mark.asyncio
     async def test_disconnect_not_connected(self):
-        from app.api.v1.endpoints.campaign_builder import disconnect_platform
         from fastapi import HTTPException
+
+        from app.api.v1.endpoints.campaign_builder import disconnect_platform
 
         db = _make_db()
         db.execute.return_value = _make_scalar_result(None)
@@ -646,8 +664,9 @@ class TestDisconnectPlatform:
 
     @pytest.mark.asyncio
     async def test_disconnect_tenant_isolation(self):
-        from app.api.v1.endpoints.campaign_builder import disconnect_platform
         from fastapi import HTTPException
+
+        from app.api.v1.endpoints.campaign_builder import disconnect_platform
 
         db = _make_db()
         request = _make_request(tenant_id=1)
@@ -690,12 +709,15 @@ class TestListAdAccounts:
 
     @pytest.mark.asyncio
     async def test_tenant_isolation(self):
-        from app.api.v1.endpoints.campaign_builder import list_ad_accounts
         from fastapi import HTTPException
+
+        from app.api.v1.endpoints.campaign_builder import list_ad_accounts
 
         db = _make_db()
         with pytest.raises(HTTPException) as exc_info:
-            await list_ad_accounts(_make_request(tenant_id=1), 2, AdPlatform.META, False, db)
+            await list_ad_accounts(
+                _make_request(tenant_id=1), 2, AdPlatform.META, False, db
+            )
         assert exc_info.value.status_code == 403
 
 
@@ -717,8 +739,9 @@ class TestSyncAdAccounts:
 
     @pytest.mark.asyncio
     async def test_sync_not_connected(self):
-        from app.api.v1.endpoints.campaign_builder import sync_ad_accounts
         from fastapi import HTTPException
+
+        from app.api.v1.endpoints.campaign_builder import sync_ad_accounts
 
         db = _make_db()
         db.execute.return_value = _make_scalar_result(None)
@@ -730,13 +753,16 @@ class TestSyncAdAccounts:
 
     @pytest.mark.asyncio
     async def test_sync_tenant_isolation(self):
-        from app.api.v1.endpoints.campaign_builder import sync_ad_accounts
         from fastapi import HTTPException
+
+        from app.api.v1.endpoints.campaign_builder import sync_ad_accounts
 
         db = _make_db()
         bg = MagicMock()
         with pytest.raises(HTTPException) as exc_info:
-            await sync_ad_accounts(_make_request(tenant_id=1), 2, AdPlatform.META, bg, db)
+            await sync_ad_accounts(
+                _make_request(tenant_id=1), 2, AdPlatform.META, bg, db
+            )
         assert exc_info.value.status_code == 403
 
 
@@ -752,7 +778,9 @@ class TestUpdateAdAccount:
         db.execute.return_value = _make_scalar_result(acc)
 
         update = AdAccountUpdateRequest(is_enabled=True)
-        resp = await update_ad_account(_make_request(), 1, AdPlatform.META, acc.id, update, db)
+        resp = await update_ad_account(
+            _make_request(), 1, AdPlatform.META, acc.id, update, db
+        )
         assert resp.success is True
         assert acc.is_enabled is True
 
@@ -765,27 +793,33 @@ class TestUpdateAdAccount:
         db.execute.return_value = _make_scalar_result(acc)
 
         update = AdAccountUpdateRequest(daily_budget_cap=5000.0)
-        resp = await update_ad_account(_make_request(), 1, AdPlatform.META, acc.id, update, db)
+        resp = await update_ad_account(
+            _make_request(), 1, AdPlatform.META, acc.id, update, db
+        )
         assert resp.success is True
         assert acc.daily_budget_cap == 5000.0
 
     @pytest.mark.asyncio
     async def test_update_not_found(self):
-        from app.api.v1.endpoints.campaign_builder import update_ad_account
         from fastapi import HTTPException
+
+        from app.api.v1.endpoints.campaign_builder import update_ad_account
 
         db = _make_db()
         db.execute.return_value = _make_scalar_result(None)
         update = AdAccountUpdateRequest(is_enabled=True)
 
         with pytest.raises(HTTPException) as exc_info:
-            await update_ad_account(_make_request(), 1, AdPlatform.META, uuid4(), update, db)
+            await update_ad_account(
+                _make_request(), 1, AdPlatform.META, uuid4(), update, db
+            )
         assert exc_info.value.status_code == 404
 
     @pytest.mark.asyncio
     async def test_update_tenant_isolation(self):
-        from app.api.v1.endpoints.campaign_builder import update_ad_account
         from fastapi import HTTPException
+
+        from app.api.v1.endpoints.campaign_builder import update_ad_account
 
         db = _make_db()
         update = AdAccountUpdateRequest(is_enabled=True)
@@ -834,8 +868,9 @@ class TestCreateCampaignDraft:
 
     @pytest.mark.asyncio
     async def test_create_draft_ad_account_not_enabled(self):
-        from app.api.v1.endpoints.campaign_builder import create_campaign_draft
         from fastapi import HTTPException
+
+        from app.api.v1.endpoints.campaign_builder import create_campaign_draft
 
         db = _make_db()
         db.execute.return_value = _make_scalar_result(None)  # No enabled ad account
@@ -853,8 +888,9 @@ class TestCreateCampaignDraft:
 
     @pytest.mark.asyncio
     async def test_create_draft_tenant_isolation(self):
-        from app.api.v1.endpoints.campaign_builder import create_campaign_draft
         from fastapi import HTTPException
+
+        from app.api.v1.endpoints.campaign_builder import create_campaign_draft
 
         db = _make_db()
         draft_data = CampaignDraftCreate(
@@ -877,9 +913,7 @@ class TestListCampaignDrafts:
         db = _make_db()
         db.execute.return_value = _make_scalars_result(drafts)
 
-        resp = await list_campaign_drafts(
-            _make_request(), 1, limit=50, offset=0, db=db
-        )
+        resp = await list_campaign_drafts(_make_request(), 1, limit=50, offset=0, db=db)
         assert resp.success is True
         assert len(resp.data) == 2
 
@@ -890,16 +924,15 @@ class TestListCampaignDrafts:
         db = _make_db()
         db.execute.return_value = _make_scalars_result([])
 
-        resp = await list_campaign_drafts(
-            _make_request(), 1, limit=50, offset=0, db=db
-        )
+        resp = await list_campaign_drafts(_make_request(), 1, limit=50, offset=0, db=db)
         assert resp.success is True
         assert resp.data == []
 
     @pytest.mark.asyncio
     async def test_list_tenant_isolation(self):
-        from app.api.v1.endpoints.campaign_builder import list_campaign_drafts
         from fastapi import HTTPException
+
+        from app.api.v1.endpoints.campaign_builder import list_campaign_drafts
 
         db = _make_db()
         with pytest.raises(HTTPException) as exc_info:
@@ -925,8 +958,9 @@ class TestGetCampaignDraft:
 
     @pytest.mark.asyncio
     async def test_get_draft_not_found(self):
-        from app.api.v1.endpoints.campaign_builder import get_campaign_draft
         from fastapi import HTTPException
+
+        from app.api.v1.endpoints.campaign_builder import get_campaign_draft
 
         db = _make_db()
         db.execute.return_value = _make_scalar_result(None)
@@ -969,8 +1003,9 @@ class TestUpdateCampaignDraft:
 
     @pytest.mark.asyncio
     async def test_update_submitted_draft_fails(self):
-        from app.api.v1.endpoints.campaign_builder import update_campaign_draft
         from fastapi import HTTPException
+
+        from app.api.v1.endpoints.campaign_builder import update_campaign_draft
 
         draft = _make_draft(status=DraftStatus.SUBMITTED)
         db = _make_db()
@@ -984,8 +1019,9 @@ class TestUpdateCampaignDraft:
 
     @pytest.mark.asyncio
     async def test_update_approved_draft_fails(self):
-        from app.api.v1.endpoints.campaign_builder import update_campaign_draft
         from fastapi import HTTPException
+
+        from app.api.v1.endpoints.campaign_builder import update_campaign_draft
 
         draft = _make_draft(status=DraftStatus.APPROVED)
         db = _make_db()
@@ -998,8 +1034,9 @@ class TestUpdateCampaignDraft:
 
     @pytest.mark.asyncio
     async def test_update_published_draft_fails(self):
-        from app.api.v1.endpoints.campaign_builder import update_campaign_draft
         from fastapi import HTTPException
+
+        from app.api.v1.endpoints.campaign_builder import update_campaign_draft
 
         draft = _make_draft(status=DraftStatus.PUBLISHED)
         db = _make_db()
@@ -1012,8 +1049,9 @@ class TestUpdateCampaignDraft:
 
     @pytest.mark.asyncio
     async def test_update_not_found(self):
-        from app.api.v1.endpoints.campaign_builder import update_campaign_draft
         from fastapi import HTTPException
+
+        from app.api.v1.endpoints.campaign_builder import update_campaign_draft
 
         db = _make_db()
         db.execute.return_value = _make_scalar_result(None)
@@ -1031,7 +1069,9 @@ class TestUpdateCampaignDraft:
         db = _make_db()
         db.execute.return_value = _make_scalar_result(draft)
 
-        new_config = {"campaign": {"objective": "awareness", "budget": {"amount": 3000}}}
+        new_config = {
+            "campaign": {"objective": "awareness", "budget": {"amount": 3000}}
+        }
         update = CampaignDraftUpdate(draft_json=new_config)
         resp = await update_campaign_draft(_make_request(), 1, draft.id, update, db)
         assert resp.success is True
@@ -1062,8 +1102,9 @@ class TestSubmitCampaignDraft:
 
     @pytest.mark.asyncio
     async def test_submit_non_draft_fails(self):
-        from app.api.v1.endpoints.campaign_builder import submit_campaign_draft
         from fastapi import HTTPException
+
+        from app.api.v1.endpoints.campaign_builder import submit_campaign_draft
 
         draft = _make_draft(status=DraftStatus.APPROVED)
         db = _make_db()
@@ -1075,8 +1116,9 @@ class TestSubmitCampaignDraft:
 
     @pytest.mark.asyncio
     async def test_submit_not_found(self):
-        from app.api.v1.endpoints.campaign_builder import submit_campaign_draft
         from fastapi import HTTPException
+
+        from app.api.v1.endpoints.campaign_builder import submit_campaign_draft
 
         db = _make_db()
         db.execute.return_value = _make_scalar_result(None)
@@ -1105,8 +1147,9 @@ class TestApproveCampaignDraft:
 
     @pytest.mark.asyncio
     async def test_approve_non_submitted_fails(self):
-        from app.api.v1.endpoints.campaign_builder import approve_campaign_draft
         from fastapi import HTTPException
+
+        from app.api.v1.endpoints.campaign_builder import approve_campaign_draft
 
         draft = _make_draft(status=DraftStatus.DRAFT)
         db = _make_db()
@@ -1118,8 +1161,9 @@ class TestApproveCampaignDraft:
 
     @pytest.mark.asyncio
     async def test_approve_already_approved_fails(self):
-        from app.api.v1.endpoints.campaign_builder import approve_campaign_draft
         from fastapi import HTTPException
+
+        from app.api.v1.endpoints.campaign_builder import approve_campaign_draft
 
         draft = _make_draft(status=DraftStatus.APPROVED)
         db = _make_db()
@@ -1151,8 +1195,9 @@ class TestRejectCampaignDraft:
 
     @pytest.mark.asyncio
     async def test_reject_non_submitted_fails(self):
-        from app.api.v1.endpoints.campaign_builder import reject_campaign_draft
         from fastapi import HTTPException
+
+        from app.api.v1.endpoints.campaign_builder import reject_campaign_draft
 
         draft = _make_draft(status=DraftStatus.DRAFT)
         db = _make_db()
@@ -1164,8 +1209,9 @@ class TestRejectCampaignDraft:
 
     @pytest.mark.asyncio
     async def test_reject_not_found(self):
-        from app.api.v1.endpoints.campaign_builder import reject_campaign_draft
         from fastapi import HTTPException
+
+        from app.api.v1.endpoints.campaign_builder import reject_campaign_draft
 
         db = _make_db()
         db.execute.return_value = _make_scalar_result(None)
@@ -1200,8 +1246,9 @@ class TestPublishCampaignDraft:
 
     @pytest.mark.asyncio
     async def test_publish_non_approved_fails(self):
-        from app.api.v1.endpoints.campaign_builder import publish_campaign_draft
         from fastapi import HTTPException
+
+        from app.api.v1.endpoints.campaign_builder import publish_campaign_draft
 
         draft = _make_draft(status=DraftStatus.SUBMITTED)
         db = _make_db()
@@ -1215,8 +1262,9 @@ class TestPublishCampaignDraft:
 
     @pytest.mark.asyncio
     async def test_publish_budget_exceeds_cap(self):
-        from app.api.v1.endpoints.campaign_builder import publish_campaign_draft
         from fastapi import HTTPException
+
+        from app.api.v1.endpoints.campaign_builder import publish_campaign_draft
 
         acc = _make_ad_account(daily_budget_cap=5000)
         draft = _make_draft(
@@ -1253,8 +1301,9 @@ class TestPublishCampaignDraft:
 
     @pytest.mark.asyncio
     async def test_publish_not_found(self):
-        from app.api.v1.endpoints.campaign_builder import publish_campaign_draft
         from fastapi import HTTPException
+
+        from app.api.v1.endpoints.campaign_builder import publish_campaign_draft
 
         db = _make_db()
         db.execute.return_value = _make_scalar_result(None)
@@ -1290,8 +1339,8 @@ class TestFullWorkflow:
     @pytest.mark.asyncio
     async def test_draft_to_submitted_to_approved(self):
         from app.api.v1.endpoints.campaign_builder import (
-            submit_campaign_draft,
             approve_campaign_draft,
+            submit_campaign_draft,
         )
 
         draft = _make_draft(status=DraftStatus.DRAFT)
@@ -1310,8 +1359,8 @@ class TestFullWorkflow:
     @pytest.mark.asyncio
     async def test_reject_then_re_edit_and_resubmit(self):
         from app.api.v1.endpoints.campaign_builder import (
-            submit_campaign_draft,
             reject_campaign_draft,
+            submit_campaign_draft,
             update_campaign_draft,
         )
 
@@ -1358,9 +1407,7 @@ class TestListPublishLogs:
         db = _make_db()
         db.execute.return_value = _make_scalars_result(logs)
 
-        resp = await list_publish_logs(
-            _make_request(), 1, limit=50, offset=0, db=db
-        )
+        resp = await list_publish_logs(_make_request(), 1, limit=50, offset=0, db=db)
         assert resp.success is True
         assert len(resp.data) == 2
 
@@ -1371,16 +1418,15 @@ class TestListPublishLogs:
         db = _make_db()
         db.execute.return_value = _make_scalars_result([])
 
-        resp = await list_publish_logs(
-            _make_request(), 1, limit=50, offset=0, db=db
-        )
+        resp = await list_publish_logs(_make_request(), 1, limit=50, offset=0, db=db)
         assert resp.success is True
         assert resp.data == []
 
     @pytest.mark.asyncio
     async def test_list_tenant_isolation(self):
-        from app.api.v1.endpoints.campaign_builder import list_publish_logs
         from fastapi import HTTPException
+
+        from app.api.v1.endpoints.campaign_builder import list_publish_logs
 
         db = _make_db()
         with pytest.raises(HTTPException) as exc_info:
@@ -1410,8 +1456,9 @@ class TestRetryPublish:
 
     @pytest.mark.asyncio
     async def test_retry_success_log_fails(self):
-        from app.api.v1.endpoints.campaign_builder import retry_publish
         from fastapi import HTTPException
+
+        from app.api.v1.endpoints.campaign_builder import retry_publish
 
         log = _make_publish_log(result_status=PublishResult.SUCCESS)
         db = _make_db()
@@ -1425,8 +1472,9 @@ class TestRetryPublish:
 
     @pytest.mark.asyncio
     async def test_retry_not_found(self):
-        from app.api.v1.endpoints.campaign_builder import retry_publish
         from fastapi import HTTPException
+
+        from app.api.v1.endpoints.campaign_builder import retry_publish
 
         db = _make_db()
         db.execute.return_value = _make_scalar_result(None)
@@ -1502,7 +1550,9 @@ class TestSyncAdAccountsTask:
         mock_db = MagicMock()
         # Connection found, then existing accounts found
         mock_db.execute.return_value.scalar_one_or_none.side_effect = [
-            conn, existing_account, existing_account,
+            conn,
+            existing_account,
+            existing_account,
         ]
 
         with patch("app.workers.campaign_builder_tasks.SessionLocal") as mock_session:
@@ -1564,7 +1614,9 @@ class TestPublishCampaignTask:
         with patch("app.workers.campaign_builder_tasks.SessionLocal") as mock_session:
             mock_session.return_value.__enter__ = MagicMock(return_value=mock_db)
             mock_session.return_value.__exit__ = MagicMock(return_value=False)
-            result = publish_campaign(draft_id=str(uuid4()), publish_log_id=str(uuid4()))
+            result = publish_campaign(
+                draft_id=str(uuid4()), publish_log_id=str(uuid4())
+            )
 
         assert result["status"] == "error"
 
@@ -1576,7 +1628,10 @@ class TestPublishCampaignTask:
         publish_log = MagicMock()
 
         mock_db = MagicMock()
-        mock_db.execute.return_value.scalar_one_or_none.side_effect = [draft, publish_log]
+        mock_db.execute.return_value.scalar_one_or_none.side_effect = [
+            draft,
+            publish_log,
+        ]
 
         with patch("app.workers.campaign_builder_tasks.SessionLocal") as mock_session:
             mock_session.return_value.__enter__ = MagicMock(return_value=mock_db)
@@ -1607,7 +1662,10 @@ class TestPublishCampaignTask:
 
         mock_db = MagicMock()
         mock_db.execute.return_value.scalar_one_or_none.side_effect = [
-            draft, publish_log, ad_account, connection,
+            draft,
+            publish_log,
+            ad_account,
+            connection,
         ]
 
         with patch("app.workers.campaign_builder_tasks.SessionLocal") as mock_session:
@@ -1712,9 +1770,15 @@ class TestEdgeCases:
         """Verify all 4 platforms have OAuth configs in start_platform_connection."""
         # This is a static check on the source code
         from app.api.v1.endpoints.campaign_builder import start_platform_connection
+
         # All platforms should be present in the oauth_configs dict
         for platform in AdPlatform:
-            assert platform in [AdPlatform.META, AdPlatform.GOOGLE, AdPlatform.TIKTOK, AdPlatform.SNAPCHAT]
+            assert platform in [
+                AdPlatform.META,
+                AdPlatform.GOOGLE,
+                AdPlatform.TIKTOK,
+                AdPlatform.SNAPCHAT,
+            ]
 
     @pytest.mark.asyncio
     async def test_publish_budget_zero_amount_passes(self):
@@ -1793,6 +1857,14 @@ class TestEdgeCases:
 
     def test_draft_status_workflow_values(self):
         """Verify all workflow states are present for state machine correctness."""
-        expected = {"draft", "submitted", "approved", "rejected", "publishing", "published", "failed"}
+        expected = {
+            "draft",
+            "submitted",
+            "approved",
+            "rejected",
+            "publishing",
+            "published",
+            "failed",
+        }
         actual = {s.value for s in DraftStatus}
         assert actual == expected

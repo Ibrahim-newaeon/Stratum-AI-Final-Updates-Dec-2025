@@ -15,19 +15,19 @@ from datetime import datetime, timedelta
 from typing import List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.tenancy.deps import get_current_user, get_db, get_tenant_id
 from app.core.logging import get_logger
 from app.models import User
 from app.services.attribution import (
     DataDrivenModelType,
-    ModelTrainingService,
     MarkovAttributionService,
+    ModelTrainingService,
     ShapleyAttributionService,
 )
+from app.tenancy.deps import get_current_user, get_db, get_tenant_id
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/attribution/data-driven", tags=["data-driven-attribution"])
@@ -37,35 +37,32 @@ router = APIRouter(prefix="/attribution/data-driven", tags=["data-driven-attribu
 # Pydantic Schemas
 # =============================================================================
 
+
 class TrainModelRequest(BaseModel):
     """Request to train a data-driven model."""
+
     model_type: str = Field(
-        ...,
-        description="Model type: 'markov_chain' or 'shapley_value'"
+        ..., description="Model type: 'markov_chain' or 'shapley_value'"
     )
     start_date: datetime = Field(..., description="Training period start")
     end_date: datetime = Field(..., description="Training period end")
     channel_type: str = Field(
-        default="platform",
-        description="Channel type: 'platform' or 'campaign'"
+        default="platform", description="Channel type: 'platform' or 'campaign'"
     )
     include_non_converting: bool = Field(
-        default=True,
-        description="Include non-converting journeys in training"
+        default=True, description="Include non-converting journeys in training"
     )
     min_journeys: int = Field(
-        default=100,
-        ge=10,
-        description="Minimum journeys required for training"
+        default=100, ge=10, description="Minimum journeys required for training"
     )
     model_name: Optional[str] = Field(
-        default=None,
-        description="Optional name for the trained model"
+        default=None, description="Optional name for the trained model"
     )
 
 
 class TrainAllModelsRequest(BaseModel):
     """Request to train all model types."""
+
     start_date: datetime
     end_date: datetime
     channel_type: str = "platform"
@@ -75,6 +72,7 @@ class TrainAllModelsRequest(BaseModel):
 
 class AttributeWithModelRequest(BaseModel):
     """Request to attribute using a trained model."""
+
     model_type: str
     model_data: dict
     deal_id: UUID
@@ -82,6 +80,7 @@ class AttributeWithModelRequest(BaseModel):
 
 class BatchAttributeRequest(BaseModel):
     """Request to batch attribute multiple deals."""
+
     model_type: str
     model_data: dict
     deal_ids: List[UUID]
@@ -89,6 +88,7 @@ class BatchAttributeRequest(BaseModel):
 
 class CompareWithRuleBasedRequest(BaseModel):
     """Request to compare data-driven with rule-based attribution."""
+
     data_driven_weights: dict
     start_date: datetime
     end_date: datetime
@@ -96,6 +96,7 @@ class CompareWithRuleBasedRequest(BaseModel):
 
 class ValidateModelRequest(BaseModel):
     """Request to validate a trained model."""
+
     model_type: str
     model_data: dict
     validation_start: datetime
@@ -104,6 +105,7 @@ class ValidateModelRequest(BaseModel):
 
 class ModelTrainingResponse(BaseModel):
     """Response from model training."""
+
     success: bool
     model_type: Optional[str] = None
     model_name: Optional[str] = None
@@ -117,6 +119,7 @@ class ModelTrainingResponse(BaseModel):
 
 class ModelComparisonResponse(BaseModel):
     """Response from model comparison."""
+
     success: bool
     training_period: dict
     channel_type: str
@@ -127,6 +130,7 @@ class ModelComparisonResponse(BaseModel):
 
 class ModelRecommendationResponse(BaseModel):
     """Response with model recommendation."""
+
     recommendation: str
     recommended_model: str
     reason: str
@@ -138,6 +142,7 @@ class ModelRecommendationResponse(BaseModel):
 # =============================================================================
 # Model Training Endpoints
 # =============================================================================
+
 
 @router.post("/train", response_model=ModelTrainingResponse)
 async def train_model(
@@ -155,10 +160,13 @@ async def train_model(
 
     Requires sufficient historical journey data for training.
     """
-    if request.model_type not in [DataDrivenModelType.MARKOV_CHAIN, DataDrivenModelType.SHAPLEY_VALUE]:
+    if request.model_type not in [
+        DataDrivenModelType.MARKOV_CHAIN,
+        DataDrivenModelType.SHAPLEY_VALUE,
+    ]:
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid model_type. Must be 'markov_chain' or 'shapley_value'"
+            detail=f"Invalid model_type. Must be 'markov_chain' or 'shapley_value'",
         )
 
     service = ModelTrainingService(db, tenant_id)
@@ -229,6 +237,7 @@ async def get_model_recommendation(
 # Model Attribution Endpoints
 # =============================================================================
 
+
 @router.post("/attribute")
 async def attribute_with_model(
     request: AttributeWithModelRequest,
@@ -292,6 +301,7 @@ async def batch_attribute_with_model(
 # Model Validation Endpoints
 # =============================================================================
 
+
 @router.post("/validate")
 async def validate_model(
     request: ValidateModelRequest,
@@ -342,6 +352,7 @@ async def compare_with_rule_based(
 # Model Information Endpoints
 # =============================================================================
 
+
 @router.get("/model-types")
 async def list_model_types(
     current_user: User = Depends(get_current_user),
@@ -384,8 +395,9 @@ async def get_training_requirements(
 
     Returns data availability and recommendations.
     """
-    from app.models.crm import CRMDeal, CRMContact, Touchpoint
     from sqlalchemy import func
+
+    from app.models.crm import CRMContact, CRMDeal, Touchpoint
 
     # Count won deals
     deal_count = await db.scalar(
@@ -429,9 +441,13 @@ async def get_training_requirements(
 
     recommendations = []
     if deal_count < min_deals:
-        recommendations.append(f"Need at least {min_deals} won deals (currently {deal_count})")
+        recommendations.append(
+            f"Need at least {min_deals} won deals (currently {deal_count})"
+        )
     if unique_channels < 2:
-        recommendations.append("Need at least 2 unique channels for meaningful attribution")
+        recommendations.append(
+            "Need at least 2 unique channels for meaningful attribution"
+        )
     if touchpoint_count < deal_count * 2:
         recommendations.append("Low touchpoint-to-deal ratio may affect model accuracy")
 
@@ -450,5 +466,7 @@ async def get_training_requirements(
             "minimum_channels": 2,
         },
         "is_ready": is_ready,
-        "recommendations": recommendations if recommendations else ["Data sufficient for training"],
+        "recommendations": (
+            recommendations if recommendations else ["Data sufficient for training"]
+        ),
     }

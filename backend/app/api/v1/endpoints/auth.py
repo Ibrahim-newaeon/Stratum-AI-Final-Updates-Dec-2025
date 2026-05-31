@@ -7,20 +7,20 @@ Handles login, registration, token refresh, password reset, and WhatsApp verific
 """
 
 import hmac
-import secrets
 import re
+import secrets
 import string
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Annotated, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status, BackgroundTasks
+import redis.asyncio as redis
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-import redis.asyncio as redis
 
-from app.core.logging import get_logger
 from app.core.config import settings
+from app.core.logging import get_logger
 from app.core.security import (
     blacklist_token,
     check_login_rate_limit,
@@ -46,17 +46,19 @@ from app.schemas import (
 )
 from app.services.email_service import get_email_service
 from app.services.whatsapp_client import (
-    get_whatsapp_client,
-    is_whatsapp_configured,
     WhatsAppAPIError,
     WhatsAppNotConfiguredError,
+    get_whatsapp_client,
+    is_whatsapp_configured,
 )
 
 logger = get_logger(__name__)
 router = APIRouter()
 
 # Redis connection for OTP storage
-OTP_EXPIRY_SECONDS = 600  # 10 minutes — tight 5min window was failing real users on prod
+OTP_EXPIRY_SECONDS = (
+    600  # 10 minutes — tight 5min window was failing real users on prod
+)
 OTP_PREFIX = "whatsapp_otp:"
 PASSWORD_RESET_PREFIX = "password_reset:"
 PASSWORD_RESET_EXPIRY_SECONDS = 3600  # 1 hour
@@ -70,6 +72,7 @@ SIGNUP_VERIFY_EXPIRY_SECONDS = 1800  # 30 minutes
 # Pydantic schemas for forgot-password / reset-password
 class ForgotPasswordRequest(BaseModel):
     """Request to initiate password reset."""
+
     email: str = Field(..., description="Email address associated with the account")
     delivery_method: Optional[str] = Field(
         default="email",
@@ -83,40 +86,49 @@ class ForgotPasswordRequest(BaseModel):
 
 class ForgotPasswordResponse(BaseModel):
     """Response after requesting password reset."""
+
     success: bool
     message: str
 
 
 class ResetPasswordRequest(BaseModel):
     """Request to reset password with token."""
+
     token: str = Field(..., min_length=1, description="Password reset token")
-    password: str = Field(..., min_length=8, description="New password (min 8 characters)")
+    password: str = Field(
+        ..., min_length=8, description="New password (min 8 characters)"
+    )
 
 
 class ResetPasswordResponse(BaseModel):
     """Response after resetting password."""
+
     success: bool
     message: str
 
 
 class VerifyEmailRequest(BaseModel):
     """Request to verify email with token."""
+
     token: str = Field(..., min_length=1, description="Email verification token")
 
 
 class VerifyEmailResponse(BaseModel):
     """Response after verifying email."""
+
     success: bool
     message: str
 
 
 class ResendVerificationRequest(BaseModel):
     """Request to resend verification email."""
+
     email: str = Field(..., description="Email address to resend verification to")
 
 
 class ResendVerificationResponse(BaseModel):
     """Response after resending verification."""
+
     success: bool
     message: str
 
@@ -124,23 +136,31 @@ class ResendVerificationResponse(BaseModel):
 # Pydantic schemas for WhatsApp OTP
 class SendOTPRequest(BaseModel):
     """Request to send WhatsApp OTP."""
-    phone_number: str = Field(..., description="Phone number with country code (e.g., +1234567890)")
+
+    phone_number: str = Field(
+        ..., description="Phone number with country code (e.g., +1234567890)"
+    )
 
 
 class SendOTPResponse(BaseModel):
     """Response after sending OTP."""
+
     message: str
     expires_in: int = OTP_EXPIRY_SECONDS
 
 
 class VerifyOTPRequest(BaseModel):
     """Request to verify WhatsApp OTP."""
+
     phone_number: str = Field(..., description="Phone number that received OTP")
-    otp_code: str = Field(..., min_length=6, max_length=6, description="6-digit OTP code")
+    otp_code: str = Field(
+        ..., min_length=6, max_length=6, description="6-digit OTP code"
+    )
 
 
 class VerifyOTPResponse(BaseModel):
     """Response after verifying OTP."""
+
     verified: bool
     verification_token: Optional[str] = None  # Token to use during registration
 
@@ -148,23 +168,29 @@ class VerifyOTPResponse(BaseModel):
 # Email OTP schemas
 class SendEmailOTPRequest(BaseModel):
     """Request to send email OTP."""
+
     email: str = Field(..., description="Email address to send OTP to")
 
 
 class SendEmailOTPResponse(BaseModel):
     """Response after sending email OTP."""
+
     message: str
     expires_in: int = OTP_EXPIRY_SECONDS
 
 
 class VerifyEmailOTPRequest(BaseModel):
     """Request to verify email OTP."""
+
     email: str = Field(..., description="Email that received OTP")
-    otp_code: str = Field(..., min_length=6, max_length=6, description="6-digit OTP code")
+    otp_code: str = Field(
+        ..., min_length=6, max_length=6, description="6-digit OTP code"
+    )
 
 
 class VerifyEmailOTPResponse(BaseModel):
     """Response after verifying email OTP."""
+
     verified: bool
     verification_token: Optional[str] = None
 
@@ -172,12 +198,15 @@ class VerifyEmailOTPResponse(BaseModel):
 # Public registration schema (auto-creates tenant with free tier)
 class RegisterRequest(BaseModel):
     """Public registration request."""
+
     email: EmailStr
     password: str = Field(..., min_length=8, max_length=128)
     full_name: Optional[str] = Field(None, max_length=255)
     phone: Optional[str] = None
     company_website: Optional[str] = None
-    verification_token: str = Field(..., min_length=1, description="Token from email or WhatsApp verification")
+    verification_token: str = Field(
+        ..., min_length=1, description="Token from email or WhatsApp verification"
+    )
 
     @field_validator("password")
     @classmethod
@@ -194,7 +223,7 @@ class RegisterRequest(BaseModel):
 
 def generate_otp(length: int = 6) -> str:
     """Generate a cryptographically secure random numeric OTP code."""
-    return ''.join(secrets.choice(string.digits) for _ in range(length))
+    return "".join(secrets.choice(string.digits) for _ in range(length))
 
 
 async def get_redis_client() -> redis.Redis:
@@ -214,21 +243,23 @@ async def send_whatsapp_otp(
     """
     # Fail fast if WhatsApp is not configured
     if not is_whatsapp_configured():
-        logger.error("WhatsApp OTP requested but WhatsApp credentials are not configured")
+        logger.error(
+            "WhatsApp OTP requested but WhatsApp credentials are not configured"
+        )
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="WhatsApp messaging is not configured. Please contact your administrator.",
         )
 
     # Normalize phone number: strip spaces, dashes, parentheses, dots
-    phone_number = re.sub(r'[\s\-\(\)\.]+', '', request.phone_number.strip())
+    phone_number = re.sub(r"[\s\-\(\)\.]+", "", request.phone_number.strip())
 
     # Ensure it starts with +
-    if not phone_number.startswith('+'):
-        phone_number = '+' + phone_number
+    if not phone_number.startswith("+"):
+        phone_number = "+" + phone_number
 
     # Validate E.164 phone number format
-    if not re.match(r'^\+[1-9]\d{1,14}$', phone_number):
+    if not re.match(r"^\+[1-9]\d{1,14}$", phone_number):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid phone number format. Use E.164 format (e.g., +1234567890).",
@@ -258,25 +289,21 @@ async def send_whatsapp_otp(
             # Uses the Meta-approved "stratum_verify_code" authentication template
             # which auto-generates: "<code> is your verification code."
             await whatsapp_client.send_template_message(
-                recipient_phone=phone_number.replace('+', ''),  # Remove + for API
+                recipient_phone=phone_number.replace("+", ""),  # Remove + for API
                 template_name="stratum_verify_code",  # Approved auth template
                 language_code="en",
                 components=[
                     {
                         "type": "body",
-                        "parameters": [
-                            {"type": "text", "text": otp_code}
-                        ]
+                        "parameters": [{"type": "text", "text": otp_code}],
                     },
                     {
                         "type": "button",
                         "sub_type": "url",
                         "index": "0",
-                        "parameters": [
-                            {"type": "text", "text": otp_code}
-                        ]
-                    }
-                ]
+                        "parameters": [{"type": "text", "text": otp_code}],
+                    },
+                ],
             )
             logger.info(f"WhatsApp OTP sent to {phone_number[:6]}***")
         except WhatsAppNotConfiguredError:
@@ -315,13 +342,13 @@ async def verify_whatsapp_otp(request: VerifyOTPRequest):
     Returns a verification token that must be included during registration.
     """
     # Normalize phone number: strip spaces, dashes, parentheses, dots
-    phone_number = re.sub(r'[\s\-\(\)\.]+', '', request.phone_number.strip())
+    phone_number = re.sub(r"[\s\-\(\)\.]+", "", request.phone_number.strip())
 
     # Ensure it starts with +
-    if not phone_number.startswith('+'):
-        phone_number = '+' + phone_number
+    if not phone_number.startswith("+"):
+        phone_number = "+" + phone_number
 
-    if not re.match(r'^\+[1-9]\d{1,14}$', phone_number):
+    if not re.match(r"^\+[1-9]\d{1,14}$", phone_number):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid phone number format.",
@@ -361,7 +388,9 @@ async def verify_whatsapp_otp(request: VerifyOTPRequest):
         # Create a verification token (valid for 30 minutes)
         verification_token = secrets.token_urlsafe(32)
         verification_key = f"phone_verified:{phone_number}"
-        await redis_client.setex(verification_key, 1800, verification_token)  # 30 min expiry
+        await redis_client.setex(
+            verification_key, 1800, verification_token
+        )  # 30 min expiry
         # Store for register endpoint validation
         await redis_client.setex(
             f"{SIGNUP_VERIFY_PREFIX}{verification_token}",
@@ -405,7 +434,7 @@ async def send_email_otp(
     email = request.email.lower().strip()
 
     # Basic email format validation
-    if not re.match(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$', email):
+    if not re.match(r"^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$", email):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid email format.",
@@ -554,7 +583,11 @@ async def login(
     try:
         is_allowed, lockout_remaining = await check_login_rate_limit(email_hash)
         if not is_allowed:
-            logger.warning("login_locked_out", email_hash=email_hash[:16], lockout_remaining=lockout_remaining)
+            logger.warning(
+                "login_locked_out",
+                email_hash=email_hash[:16],
+                lockout_remaining=lockout_remaining,
+            )
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                 detail=f"Too many failed login attempts. Try again in {lockout_remaining} seconds.",
@@ -636,7 +669,9 @@ async def login(
     logger.info("user_logged_in", user_id=user.id, tenant_id=user.tenant_id)
 
     # Fetch available tenants for multi-account switcher
-    from app.models import UserTenantMembership, Tenant as TenantModel
+    from app.models import Tenant as TenantModel
+    from app.models import UserTenantMembership
+
     membership_result = await db.execute(
         select(UserTenantMembership, TenantModel)
         .join(TenantModel, UserTenantMembership.tenant_id == TenantModel.id)
@@ -645,7 +680,8 @@ async def login(
             UserTenantMembership.is_active == True,
             TenantModel.is_deleted == False,
         )
-        .order_by(UserTenantMembership.is_default.desc(), TenantModel.name).limit(1000)
+        .order_by(UserTenantMembership.is_default.desc(), TenantModel.name)
+        .limit(1000)
     )
     membership_rows = membership_result.all()
     available_tenants = [
@@ -654,7 +690,7 @@ async def login(
             "tenant_name": t.name,
             "tenant_slug": t.slug,
             "tenant_plan": t.plan,
-            "role": m.role.value if hasattr(m.role, 'value') else str(m.role),
+            "role": m.role.value if hasattr(m.role, "value") else str(m.role),
             "is_default": m.is_default,
             "is_active": m.is_active,
         }
@@ -686,9 +722,9 @@ async def register(
     Requires a verification_token from email or WhatsApp OTP verification.
     Auto-creates a tenant with free tier for new signups.
     """
+    from app.base_models import UserRole
     from app.core.security import encrypt_pii
     from app.models import Tenant, UserTenantMembership
-    from app.base_models import UserRole
 
     # 1. Validate verification token from Redis
     try:
@@ -718,9 +754,7 @@ async def register(
     # 2. Check if email already exists (globally)
     email_lower = request_data.email.lower()
     email_hash = hash_pii_for_lookup(email_lower)
-    result = await db.execute(
-        select(User).where(User.email_hash == email_hash)
-    )
+    result = await db.execute(select(User).where(User.email_hash == email_hash))
     existing = result.scalars().first()
 
     if existing:
@@ -737,9 +771,13 @@ async def register(
     # new signups get full Starter capabilities for 14 days; after that
     # plan_expires_at fires the standard expiry → grace → restricted
     # flow already implemented in core/subscription.py.
-    slug_base = re.sub(r'[^a-z0-9]+', '-', email_lower.split('@')[0]).strip('-')
+    slug_base = re.sub(r"[^a-z0-9]+", "-", email_lower.split("@")[0]).strip("-")
     slug = f"{slug_base}-{secrets.token_hex(4)}"
-    tenant_name = f"{request_data.full_name}'s Workspace" if request_data.full_name else f"{slug_base}'s Workspace"
+    tenant_name = (
+        f"{request_data.full_name}'s Workspace"
+        if request_data.full_name
+        else f"{slug_base}'s Workspace"
+    )
 
     trial_end = datetime.now(timezone.utc) + timedelta(days=14)
 
@@ -761,7 +799,9 @@ async def register(
         email=encrypt_pii(email_lower),
         email_hash=email_hash,
         password_hash=get_password_hash(request_data.password),
-        full_name=encrypt_pii(request_data.full_name) if request_data.full_name else None,
+        full_name=(
+            encrypt_pii(request_data.full_name) if request_data.full_name else None
+        ),
         role=UserRole.ADMIN,
         is_verified=True,
     )
@@ -782,6 +822,7 @@ async def register(
 
     # 6. Send welcome email in background
     user_name = request_data.full_name or ""
+
     async def send_welcome() -> None:
         try:
             email_service = get_email_service()
@@ -844,6 +885,7 @@ async def refresh_token(
 
     # SECURITY: Check if refresh token has already been revoked (rotation)
     from app.core.security import is_token_blacklisted
+
     try:
         if await is_token_blacklisted(payload, token_data.refresh_token):
             raise HTTPException(
@@ -898,7 +940,9 @@ async def refresh_token(
 
 
 class LogoutRequest(BaseModel):
-    refresh_token: Optional[str] = Field(None, description="Optional refresh token to revoke")
+    refresh_token: Optional[str] = Field(
+        None, description="Optional refresh token to revoke"
+    )
 
 
 @router.post("/logout")
@@ -986,21 +1030,28 @@ async def list_my_tenants(
             UserTenantMembership.is_active == True,
             Tenant.is_deleted == False,
         )
-        .order_by(UserTenantMembership.is_default.desc(), Tenant.name).limit(1000)
+        .order_by(UserTenantMembership.is_default.desc(), Tenant.name)
+        .limit(1000)
     )
     rows = result.all()
 
     tenants = []
     for membership, tenant in rows:
-        tenants.append({
-            "tenant_id": tenant.id,
-            "tenant_name": tenant.name,
-            "tenant_slug": tenant.slug,
-            "tenant_plan": tenant.plan,
-            "role": membership.role.value if hasattr(membership.role, 'value') else str(membership.role),
-            "is_default": membership.is_default,
-            "is_active": membership.is_active,
-        })
+        tenants.append(
+            {
+                "tenant_id": tenant.id,
+                "tenant_name": tenant.name,
+                "tenant_slug": tenant.slug,
+                "tenant_plan": tenant.plan,
+                "role": (
+                    membership.role.value
+                    if hasattr(membership.role, "value")
+                    else str(membership.role)
+                ),
+                "is_default": membership.is_default,
+                "is_active": membership.is_active,
+            }
+        )
 
     return APIResponse(
         success=True,
@@ -1011,6 +1062,7 @@ async def list_my_tenants(
 
 class SwitchTenantRequest(BaseModel):
     """Request to switch active tenant context."""
+
     tenant_id: int = Field(..., description="Target tenant ID to switch to")
 
 
@@ -1062,9 +1114,7 @@ async def switch_tenant(
     membership, tenant = row
 
     # Get the user to access cms_role
-    user_result = await db.execute(
-        select(User).where(User.id == user_id)
-    )
+    user_result = await db.execute(select(User).where(User.id == user_id))
     user = user_result.scalar_one_or_none()
     if not user:
         raise HTTPException(
@@ -1073,7 +1123,11 @@ async def switch_tenant(
         )
 
     # Use the role from the membership for the target tenant
-    target_role = membership.role.value if hasattr(membership.role, 'value') else str(membership.role)
+    target_role = (
+        membership.role.value
+        if hasattr(membership.role, "value")
+        else str(membership.role)
+    )
 
     # Issue new tokens scoped to the target tenant
     access_token = create_access_token(
@@ -1154,7 +1208,9 @@ async def forgot_password(
 
     # Always return success even if user not found (prevent email enumeration)
     if not user:
-        logger.info("password_reset_requested_unknown_email", email_hash=email_hash[:16])
+        logger.info(
+            "password_reset_requested_unknown_email", email_hash=email_hash[:16]
+        )
         return APIResponse(
             success=True,
             data=ForgotPasswordResponse(
@@ -1170,6 +1226,7 @@ async def forgot_password(
     # Store hashed token in Redis to prevent token theft if Redis is exposed
     try:
         import hashlib
+
         token_hash = hashlib.sha256(reset_token.encode()).hexdigest()
         redis_client = await get_redis_client()
         token_key = f"{PASSWORD_RESET_PREFIX}{token_hash}"
@@ -1202,12 +1259,16 @@ async def forgot_password(
         async def send_whatsapp_reset() -> None:
             try:
                 if not is_whatsapp_configured():
-                    logger.warning("WhatsApp not configured for password reset delivery")
+                    logger.warning(
+                        "WhatsApp not configured for password reset delivery"
+                    )
                     return
                 whatsapp_client = get_whatsapp_client()
-                reset_url = f"{settings.frontend_url}/reset-password?token={reset_token}"
+                reset_url = (
+                    f"{settings.frontend_url}/reset-password?token={reset_token}"
+                )
                 await whatsapp_client.send_text_message(
-                    recipient_phone=request_data.phone_number.replace('+', ''),
+                    recipient_phone=request_data.phone_number.replace("+", ""),
                     message=f"Your Stratum AI password reset link:\n{reset_url}\n\nThis link expires in 1 hour.",
                 )
                 logger.info("password_reset_whatsapp_sent", user_id=user.id)
@@ -1264,6 +1325,7 @@ async def reset_password(
     # Look up hashed token in Redis
     try:
         import hashlib
+
         token_hash = hashlib.sha256(token.encode()).hexdigest()
         redis_client = await get_redis_client()
         token_key = f"{PASSWORD_RESET_PREFIX}{token_hash}"
@@ -1432,7 +1494,9 @@ async def verify_email(
 # =============================================================================
 
 
-@router.post("/resend-verification", response_model=APIResponse[ResendVerificationResponse])
+@router.post(
+    "/resend-verification", response_model=APIResponse[ResendVerificationResponse]
+)
 async def resend_verification(
     request_data: ResendVerificationRequest,
     background_tasks: BackgroundTasks,

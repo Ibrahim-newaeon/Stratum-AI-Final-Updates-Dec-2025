@@ -11,22 +11,22 @@ Supports:
 - Scheduled retraining
 """
 
+import json
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 from uuid import UUID
-import json
 
-from sqlalchemy import select, and_, func, desc
+from sqlalchemy import and_, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.services.attribution.markov_attribution import (
-    MarkovChainModel,
     MarkovAttributionService,
+    MarkovChainModel,
 )
 from app.services.attribution.shapley_attribution import (
-    ShapleyValueModel,
     ShapleyAttributionService,
+    ShapleyValueModel,
 )
 
 logger = get_logger(__name__)
@@ -34,6 +34,7 @@ logger = get_logger(__name__)
 
 class DataDrivenModelType:
     """Available data-driven model types."""
+
     MARKOV_CHAIN = "markov_chain"
     SHAPLEY_VALUE = "shapley_value"
 
@@ -91,7 +92,9 @@ class ModelTrainingService:
         )
 
         if result.get("success"):
-            result["model_name"] = model_name or f"{model_type}_{channel_type}_{end_date.date()}"
+            result["model_name"] = (
+                model_name or f"{model_type}_{channel_type}_{end_date.date()}"
+            )
 
         return result
 
@@ -123,7 +126,9 @@ class ModelTrainingService:
 
         if markov_result.get("success"):
             models["markov_chain"] = markov_result
-            weights_comparison["markov_chain"] = markov_result.get("attribution_weights", {})
+            weights_comparison["markov_chain"] = markov_result.get(
+                "attribution_weights", {}
+            )
 
         # Train Shapley Value
         shapley_result = await self.train_model(
@@ -137,7 +142,9 @@ class ModelTrainingService:
 
         if shapley_result.get("success"):
             models["shapley_value"] = shapley_result
-            weights_comparison["shapley_value"] = shapley_result.get("attribution_weights", {})
+            weights_comparison["shapley_value"] = shapley_result.get(
+                "attribution_weights", {}
+            )
 
         # Calculate consensus weights (average across models)
         consensus_weights = self._calculate_consensus_weights(weights_comparison)
@@ -173,8 +180,7 @@ class ModelTrainingService:
         consensus = {}
         for channel in all_channels:
             values = [
-                weights.get(channel, 0.0)
-                for weights in weights_by_model.values()
+                weights.get(channel, 0.0) for weights in weights_by_model.values()
             ]
             consensus[channel] = sum(values) / len(values) if values else 0.0
 
@@ -194,11 +200,11 @@ class ModelTrainingService:
         """
         Compare data-driven weights with rule-based attribution models.
         """
-        from app.services.attribution.attribution_service import (
-            AttributionService,
-            AttributionCalculator,
-        )
         from app.models.crm import AttributionModel
+        from app.services.attribution.attribution_service import (
+            AttributionCalculator,
+            AttributionService,
+        )
 
         attribution_service = AttributionService(self.db, self.tenant_id)
 
@@ -232,11 +238,15 @@ class ModelTrainingService:
         # Calculate correlation with data-driven
         correlations = {}
         for model_name, weights in rule_based.items():
-            correlation = self._calculate_weight_correlation(data_driven_weights, weights)
+            correlation = self._calculate_weight_correlation(
+                data_driven_weights, weights
+            )
             correlations[model_name] = correlation
 
         # Find closest rule-based model
-        closest_model = max(correlations.items(), key=lambda x: x[1]) if correlations else None
+        closest_model = (
+            max(correlations.items(), key=lambda x: x[1]) if correlations else None
+        )
 
         return {
             "data_driven_weights": data_driven_weights,
@@ -267,8 +277,8 @@ class ModelTrainingService:
 
         # Cosine similarity
         dot_product = sum(a * b for a, b in zip(vec1, vec2))
-        norm1 = sum(a ** 2 for a in vec1) ** 0.5
-        norm2 = sum(b ** 2 for b in vec2) ** 0.5
+        norm1 = sum(a**2 for a in vec1) ** 0.5
+        norm2 = sum(b**2 for b in vec2) ** 0.5
 
         if norm1 == 0 or norm2 == 0:
             return 0.0
@@ -290,7 +300,7 @@ class ModelTrainingService:
         - Conversion rate
         - Data volume
         """
-        from app.models.crm import CRMDeal, CRMContact
+        from app.models.crm import CRMContact, CRMDeal
 
         # Get journey statistics
         deal_result = await self.db.execute(
@@ -329,7 +339,9 @@ class ModelTrainingService:
             if contact:
                 journey_lengths.append(contact.touch_count or 1)
 
-        avg_journey_length = sum(journey_lengths) / len(journey_lengths) if journey_lengths else 1
+        avg_journey_length = (
+            sum(journey_lengths) / len(journey_lengths) if journey_lengths else 1
+        )
 
         # Recommendations based on data characteristics
         if avg_journey_length < 2:
@@ -428,7 +440,9 @@ class ModelTrainingService:
                     if top_channel == deal.attributed_platform:
                         correct_attributions += 1
 
-        accuracy = correct_attributions / total_attributions if total_attributions > 0 else 0
+        accuracy = (
+            correct_attributions / total_attributions if total_attributions > 0 else 0
+        )
 
         return {
             "success": True,

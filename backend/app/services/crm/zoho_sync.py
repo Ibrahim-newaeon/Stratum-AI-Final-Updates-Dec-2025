@@ -153,7 +153,9 @@ class ZohoSyncService:
 
             # Update connection status
             connection.last_sync_at = datetime.now(UTC)
-            connection.last_sync_status = "success" if not results["errors"] else "partial"
+            connection.last_sync_status = (
+                "success" if not results["errors"] else "partial"
+            )
             connection.last_sync_contacts_count = results["contacts_synced"]
             connection.last_sync_deals_count = results["deals_synced"]
 
@@ -231,7 +233,9 @@ class ZohoSyncService:
                         elif updated:
                             results["updated"] += 1
                     except (ValueError, TypeError, KeyError) as e:
-                        results["errors"].append(f"Contact {contact_data.get('id')}: {e!s}")
+                        results["errors"].append(
+                            f"Contact {contact_data.get('id')}: {e!s}"
+                        )
 
                 # Check for more pages
                 info = response.get("info", {})
@@ -560,7 +564,11 @@ class ZohoSyncService:
             if close_date is None:
                 # Try parsing YYYY-MM-DD format
                 with contextlib.suppress(ValueError, TypeError):
-                    close_date = datetime.strptime(deal_data["Closing_Date"], "%Y-%m-%d").replace(tzinfo=UTC).date()
+                    close_date = (
+                        datetime.strptime(deal_data["Closing_Date"], "%Y-%m-%d")
+                        .replace(tzinfo=UTC)
+                        .date()
+                    )
 
         # Parse dates
         crm_created = None
@@ -676,7 +684,9 @@ class ZohoSyncService:
 
                             # Copy attribution from contact if available
                             if contact.last_touch_campaign_id:
-                                deal.attributed_campaign_id = contact.last_touch_campaign_id
+                                deal.attributed_campaign_id = (
+                                    contact.last_touch_campaign_id
+                                )
                             if contact.utm_source:
                                 # Map utm_source to platform
                                 platform_map = {
@@ -761,9 +771,9 @@ class ZohoSyncService:
             "total_pipeline_value": sum(stage_values.values()),
             "total_won_value": sum(d.amount or 0 for d in won_deals),
             "won_deal_count": len(won_deals),
-            "last_sync_at": connection.last_sync_at.isoformat()
-            if connection.last_sync_at
-            else None,
+            "last_sync_at": (
+                connection.last_sync_at.isoformat() if connection.last_sync_at else None
+            ),
         }
 
     async def sync_single_contact(self, zoho_contact_id: str) -> dict[str, Any]:

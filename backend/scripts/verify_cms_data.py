@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Quick verification of CMS seeded data."""
+
 import asyncio
 import json
 import sys
@@ -9,6 +10,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
+
 from app.core.config import settings
 
 
@@ -19,20 +21,30 @@ async def verify():
     engine = create_async_engine(db_url, echo=False)
 
     async with engine.connect() as conn:
-        r = await conn.execute(text("SELECT name, slug FROM cms_categories ORDER BY display_order"))
+        r = await conn.execute(
+            text("SELECT name, slug FROM cms_categories ORDER BY display_order")
+        )
         cats = r.fetchall()
         print(f"Categories ({len(cats)}):")
         for c in cats:
             print(f"  - {c[0]} ({c[1]})")
 
-        r = await conn.execute(text("SELECT title, slug, status, template FROM cms_pages ORDER BY navigation_order"))
+        r = await conn.execute(
+            text(
+                "SELECT title, slug, status, template FROM cms_pages ORDER BY navigation_order"
+            )
+        )
         pages = r.fetchall()
         print(f"\nPages ({len(pages)}):")
         for p in pages:
             print(f"  - {p[0]} (/{p[1]}) [{p[2]}] template={p[3]}")
 
         # Check content_json is populated
-        r = await conn.execute(text("SELECT slug, content_json FROM cms_pages WHERE slug IN ('features', 'pricing')"))
+        r = await conn.execute(
+            text(
+                "SELECT slug, content_json FROM cms_pages WHERE slug IN ('features', 'pricing')"
+            )
+        )
         for row in r.fetchall():
             cj = row[1]
             if isinstance(cj, str):

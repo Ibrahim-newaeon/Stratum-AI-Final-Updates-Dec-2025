@@ -135,7 +135,9 @@ class TestWeakKeyPatterns:
             pii_encryption_key="y" * 32,
         )
         warning_messages = " ".join(str(warning.message) for warning in w)
-        assert "weak" in warning_messages.lower() or "SECURITY WARNING" in warning_messages
+        assert (
+            "weak" in warning_messages.lower() or "SECURITY WARNING" in warning_messages
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -237,7 +239,10 @@ class TestInsecureDatabasePasswords:
             pii_encryption_key="z" * 32,
         )
         warning_messages = " ".join(str(warning.message) for warning in w)
-        assert "insecure password" in warning_messages.lower() or "SECURITY WARNING" in warning_messages
+        assert (
+            "insecure password" in warning_messages.lower()
+            or "SECURITY WARNING" in warning_messages
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -279,7 +284,11 @@ class TestCORSConfiguration:
             jwt_secret_key="y" * 32,
             pii_encryption_key="z" * 32,
         )
-        assert s.cors_origins_list == ["https://a.com", "https://b.com", "http://localhost:5173"]
+        assert s.cors_origins_list == [
+            "https://a.com",
+            "https://b.com",
+            "http://localhost:5173",
+        ]
 
 
 # ---------------------------------------------------------------------------

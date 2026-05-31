@@ -221,7 +221,9 @@ class MetaAdapter(BaseAdapter):
             # Initialize the SDK with our credentials
             # The init() method sets up a default API instance used by all objects
             FacebookAdsApi.init(
-                app_id=self.app_id, app_secret=self.app_secret, access_token=self.access_token
+                app_id=self.app_id,
+                app_secret=self.app_secret,
+                access_token=self.access_token,
             )
             self.api = FacebookAdsApi.get_default_api()
 
@@ -233,7 +235,9 @@ class MetaAdapter(BaseAdapter):
             if not accounts:
                 logger.warning("No ad accounts accessible with provided credentials")
             else:
-                logger.info(f"Successfully authenticated, found {len(accounts)} ad accounts")
+                logger.info(
+                    f"Successfully authenticated, found {len(accounts)} ad accounts"
+                )
 
             self._initialized = True
 
@@ -285,7 +289,11 @@ class MetaAdapter(BaseAdapter):
                     platform=Platform.META,
                     account_id=raw.get("id", ""),
                     account_name=raw.get("name", "Unknown Account"),
-                    business_id=raw.get("business", {}).get("id") if raw.get("business") else None,
+                    business_id=(
+                        raw.get("business", {}).get("id")
+                        if raw.get("business")
+                        else None
+                    ),
                     timezone=raw.get("timezone_name", "UTC"),
                     currency=raw.get("currency", "USD"),
                     daily_spend_limit=self._cents_to_dollars(raw.get("spend_cap")),
@@ -346,7 +354,11 @@ class MetaAdapter(BaseAdapter):
             if status_filter:
                 meta_statuses = [self.STATUS_TO_META.get(s) for s in status_filter]
                 params["filtering"] = [
-                    {"field": "effective_status", "operator": "IN", "value": meta_statuses}
+                    {
+                        "field": "effective_status",
+                        "operator": "IN",
+                        "value": meta_statuses,
+                    }
                 ]
 
             # Execute the API call
@@ -424,7 +436,9 @@ class MetaAdapter(BaseAdapter):
                 platform_code=str(e.api_error_code()),
             )
 
-    async def get_ads(self, account_id: str, adset_id: Optional[str] = None) -> list[UnifiedAd]:
+    async def get_ads(
+        self, account_id: str, adset_id: Optional[str] = None
+    ) -> list[UnifiedAd]:
         """
         Fetch individual ads, optionally filtered to a specific ad set.
 
@@ -538,7 +552,9 @@ class MetaAdapter(BaseAdapter):
                     "since": date_start.strftime("%Y-%m-%d"),
                     "until": date_end.strftime("%Y-%m-%d"),
                 },
-                "filtering": [{"field": f"{level}.id", "operator": "IN", "value": entity_ids}],
+                "filtering": [
+                    {"field": f"{level}.id", "operator": "IN", "value": entity_ids}
+                ],
             }
 
             if breakdown:
@@ -592,7 +608,13 @@ class MetaAdapter(BaseAdapter):
         try:
             # The server events quality endpoint provides aggregate EMQ data
             # We need to call it for each event type we're tracking
-            event_types = ["Purchase", "AddToCart", "ViewContent", "Lead", "InitiateCheckout"]
+            event_types = [
+                "Purchase",
+                "AddToCart",
+                "ViewContent",
+                "Lead",
+                "InitiateCheckout",
+            ]
 
             emq_scores = []
 
@@ -608,7 +630,9 @@ class MetaAdapter(BaseAdapter):
                 # would handle pagination and more complex responses
                 import requests
 
-                response = requests.get(f"https://graph.facebook.com/v18.0{path}", params=params, timeout=30)
+                response = requests.get(
+                    f"https://graph.facebook.com/v18.0{path}", params=params, timeout=30
+                )
 
                 if response.status_code == 200:
                     data = response.json()
@@ -680,7 +704,9 @@ class MetaAdapter(BaseAdapter):
             action.executed_at = datetime.now(UTC)
             action.result = result
 
-            logger.info(f"Successfully executed {action.action_type} on {action.entity_id}")
+            logger.info(
+                f"Successfully executed {action.action_type} on {action.entity_id}"
+            )
             return action
 
         except FacebookRequestError as e:
@@ -688,7 +714,14 @@ class MetaAdapter(BaseAdapter):
             action.error_message = e.api_error_message()
             logger.error(f"Action failed: {action.error_message}")
             return action
-        except (ConnectionError, TimeoutError, OSError, ValueError, KeyError, TypeError) as e:
+        except (
+            ConnectionError,
+            TimeoutError,
+            OSError,
+            ValueError,
+            KeyError,
+            TypeError,
+        ) as e:
             action.status = "failed"
             action.error_message = str(e)
             logger.error(f"Action failed with unexpected error: {e}")
@@ -851,7 +884,9 @@ class MetaAdapter(BaseAdapter):
     # CREATIVE OPERATIONS
     # ========================================================================
 
-    async def upload_image(self, account_id: str, image_data: bytes, filename: str) -> str:
+    async def upload_image(
+        self, account_id: str, image_data: bytes, filename: str
+    ) -> str:
         """
         Upload an image to Meta's creative library.
 
@@ -883,7 +918,9 @@ class MetaAdapter(BaseAdapter):
 
         return ""
 
-    async def upload_video(self, account_id: str, video_data: bytes, filename: str) -> str:
+    async def upload_video(
+        self, account_id: str, video_data: bytes, filename: str
+    ) -> str:
         """
         Upload a video to Meta's creative library.
 
@@ -903,12 +940,16 @@ class MetaAdapter(BaseAdapter):
         # This is a simplified version; production would handle chunked upload
         import tempfile
 
-        with tempfile.NamedTemporaryFile(delete=False, suffix=Path(filename).suffix) as f:
+        with tempfile.NamedTemporaryFile(
+            delete=False, suffix=Path(filename).suffix
+        ) as f:
             f.write(video_data)
             temp_path = Path(f.name)
 
         try:
-            result = ad_account.create_ad_video(params={"source_file": str(temp_path), "name": filename})
+            result = ad_account.create_ad_video(
+                params={"source_file": str(temp_path), "name": filename}
+            )
             return result.get("id", "")
         finally:
             temp_path.unlink()
@@ -1032,7 +1073,9 @@ class MetaAdapter(BaseAdapter):
 
         return [dict(acc) for acc in accounts]
 
-    def _convert_campaign(self, raw: dict[str, Any], account_id: str) -> UnifiedCampaign:
+    def _convert_campaign(
+        self, raw: dict[str, Any], account_id: str
+    ) -> UnifiedCampaign:
         """Convert Meta's campaign format to unified model."""
         return UnifiedCampaign(
             platform=Platform.META,

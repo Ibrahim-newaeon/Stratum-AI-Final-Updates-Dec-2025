@@ -16,15 +16,17 @@ Architecture:
 Builds on: CDP (cdp.py), Audience Sync (audience_sync/)
 """
 
-from typing import List, Optional, Dict, Literal
 from datetime import datetime, timezone
-from pydantic import BaseModel, Field
+from typing import Dict, List, Literal, Optional
 
+from pydantic import BaseModel, Field
 
 # ── Models ───────────────────────────────────────────────────────────────────
 
+
 class LifecycleStageMetric(BaseModel):
     """Metrics for a single lifecycle stage."""
+
     stage: str  # anonymous, known, customer, churned
     count: int
     pct_of_total: float
@@ -36,6 +38,7 @@ class LifecycleStageMetric(BaseModel):
 
 class LifecycleTransition(BaseModel):
     """A detected lifecycle stage transition."""
+
     from_stage: str
     to_stage: str
     count_7d: int  # transitions in last 7 days
@@ -46,6 +49,7 @@ class LifecycleTransition(BaseModel):
 
 class AudienceRule(BaseModel):
     """An automation rule that maps lifecycle events to audience actions."""
+
     rule_id: str
     name: str
     description: str
@@ -58,11 +62,14 @@ class AudienceRule(BaseModel):
     profiles_matched: int = 0
     last_triggered: Optional[str] = None
     priority: Literal["high", "medium", "low"] = "medium"
-    category: Literal["acquisition", "activation", "retention", "reactivation"] = "activation"
+    category: Literal["acquisition", "activation", "retention", "reactivation"] = (
+        "activation"
+    )
 
 
 class LifecycleRecommendation(BaseModel):
     """A recommendation for lifecycle automation improvement."""
+
     title: str
     description: str
     impact: Literal["high", "medium", "low"]
@@ -73,6 +80,7 @@ class LifecycleRecommendation(BaseModel):
 
 class SyncReadiness(BaseModel):
     """Platform sync readiness status."""
+
     platform: str
     is_connected: bool
     audiences_count: int
@@ -83,6 +91,7 @@ class SyncReadiness(BaseModel):
 
 class AudienceLifecycleResponse(BaseModel):
     """Full audience lifecycle automations response."""
+
     summary: str
     total_profiles: int
     active_rules: int
@@ -132,7 +141,9 @@ def _analyze_stages(profiles: List[Dict]) -> List[LifecycleStageMetric]:
 
     metrics = []
     for stage in STAGE_ORDER:
-        data = stage_counts.get(stage, {"count": 0, "revenue": 0, "events": 0, "recent": 0})
+        data = stage_counts.get(
+            stage, {"count": 0, "revenue": 0, "events": 0, "recent": 0}
+        )
         count = data["count"]
         pct = (count / total * 100) if total > 0 else 0
         avg_rev = data["revenue"] / count if count > 0 else 0
@@ -140,15 +151,17 @@ def _analyze_stages(profiles: List[Dict]) -> List[LifecycleStageMetric]:
         recent = data["recent"]
         change_pct = (recent / count * 100) if count > 0 else 0
 
-        metrics.append(LifecycleStageMetric(
-            stage=stage,
-            count=count,
-            pct_of_total=round(pct, 1),
-            change_7d=recent,
-            change_pct=round(change_pct, 1),
-            avg_revenue=round(avg_rev, 2),
-            avg_events=round(avg_events, 1),
-        ))
+        metrics.append(
+            LifecycleStageMetric(
+                stage=stage,
+                count=count,
+                pct_of_total=round(pct, 1),
+                change_7d=recent,
+                change_pct=round(change_pct, 1),
+                avg_revenue=round(avg_rev, 2),
+                avg_events=round(avg_events, 1),
+            )
+        )
 
     return metrics
 
@@ -205,18 +218,24 @@ def _detect_transitions(profiles: List[Dict]) -> List[LifecycleTransition]:
         weekly_avg = c30 / 4.3 if c30 > 0 else 0
         if weekly_avg > 0:
             ratio = c7 / weekly_avg
-            trend = "increasing" if ratio > 1.15 else "decreasing" if ratio < 0.85 else "stable"
+            trend = (
+                "increasing"
+                if ratio > 1.15
+                else "decreasing" if ratio < 0.85 else "stable"
+            )
         else:
             trend = "stable"
 
-        transitions.append(LifecycleTransition(
-            from_stage=from_s,
-            to_stage=to_s,
-            count_7d=c7,
-            count_30d=c30,
-            trend=trend,
-            is_positive=(from_s, to_s) in POSITIVE_TRANSITIONS,
-        ))
+        transitions.append(
+            LifecycleTransition(
+                from_stage=from_s,
+                to_stage=to_s,
+                count_7d=c7,
+                count_30d=c30,
+                trend=trend,
+                is_positive=(from_s, to_s) in POSITIVE_TRANSITIONS,
+            )
+        )
 
     transitions.sort(key=lambda t: -t.count_7d)
     return transitions
@@ -233,47 +252,59 @@ def _generate_rules(
 
     # Rule: New known profiles → sync to ad platforms for lookalike
     anon_to_known = next(
-        (t for t in transitions if t.from_stage == "anonymous" and t.to_stage == "known"),
+        (
+            t
+            for t in transitions
+            if t.from_stage == "anonymous" and t.to_stage == "known"
+        ),
         None,
     )
     if anon_to_known:
         for platform in connected_platforms[:2]:
             rule_idx += 1
-            rules.append(AudienceRule(
-                rule_id=f"rule_{rule_idx:03d}",
-                name=f"New Known → {platform.title()} Lookalike Seed",
-                description=f"When a profile moves from anonymous to known, add to {platform} lookalike seed audience for prospecting.",
-                trigger_stage="known",
-                trigger_condition="enters_stage",
-                action="sync_to_platform",
-                target_platform=platform,
-                target_audience=f"{platform}_known_profiles",
-                profiles_matched=anon_to_known.count_7d,
-                priority="high",
-                category="acquisition",
-            ))
+            rules.append(
+                AudienceRule(
+                    rule_id=f"rule_{rule_idx:03d}",
+                    name=f"New Known → {platform.title()} Lookalike Seed",
+                    description=f"When a profile moves from anonymous to known, add to {platform} lookalike seed audience for prospecting.",
+                    trigger_stage="known",
+                    trigger_condition="enters_stage",
+                    action="sync_to_platform",
+                    target_platform=platform,
+                    target_audience=f"{platform}_known_profiles",
+                    profiles_matched=anon_to_known.count_7d,
+                    priority="high",
+                    category="acquisition",
+                )
+            )
 
     # Rule: New customers → sync for exclusion/upsell
     known_to_customer = next(
-        (t for t in transitions if t.from_stage == "known" and t.to_stage == "customer"),
+        (
+            t
+            for t in transitions
+            if t.from_stage == "known" and t.to_stage == "customer"
+        ),
         None,
     )
     if known_to_customer:
         for platform in connected_platforms[:2]:
             rule_idx += 1
-            rules.append(AudienceRule(
-                rule_id=f"rule_{rule_idx:03d}",
-                name=f"New Customer → {platform.title()} Exclusion",
-                description=f"Exclude new customers from prospecting campaigns on {platform} to reduce wasted spend.",
-                trigger_stage="customer",
-                trigger_condition="enters_stage",
-                action="sync_to_platform",
-                target_platform=platform,
-                target_audience=f"{platform}_customer_exclusion",
-                profiles_matched=known_to_customer.count_7d,
-                priority="high",
-                category="activation",
-            ))
+            rules.append(
+                AudienceRule(
+                    rule_id=f"rule_{rule_idx:03d}",
+                    name=f"New Customer → {platform.title()} Exclusion",
+                    description=f"Exclude new customers from prospecting campaigns on {platform} to reduce wasted spend.",
+                    trigger_stage="customer",
+                    trigger_condition="enters_stage",
+                    action="sync_to_platform",
+                    target_platform=platform,
+                    target_audience=f"{platform}_customer_exclusion",
+                    profiles_matched=known_to_customer.count_7d,
+                    priority="high",
+                    category="activation",
+                )
+            )
 
     # Rule: Churned profiles → trigger reactivation
     to_churned = next(
@@ -282,69 +313,81 @@ def _generate_rules(
     )
     if to_churned:
         rule_idx += 1
-        rules.append(AudienceRule(
-            rule_id=f"rule_{rule_idx:03d}",
-            name="Churned → Reactivation Campaign",
-            description="When customers churn, trigger a reactivation sequence via email/WhatsApp and add to remarketing audiences.",
-            trigger_stage="churned",
-            trigger_condition="enters_stage",
-            action="trigger_reactivation",
-            profiles_matched=to_churned.count_7d,
-            priority="high",
-            category="reactivation",
-        ))
+        rules.append(
+            AudienceRule(
+                rule_id=f"rule_{rule_idx:03d}",
+                name="Churned → Reactivation Campaign",
+                description="When customers churn, trigger a reactivation sequence via email/WhatsApp and add to remarketing audiences.",
+                trigger_stage="churned",
+                trigger_condition="enters_stage",
+                action="trigger_reactivation",
+                profiles_matched=to_churned.count_7d,
+                priority="high",
+                category="reactivation",
+            )
+        )
 
         for platform in connected_platforms[:1]:
             rule_idx += 1
-            rules.append(AudienceRule(
-                rule_id=f"rule_{rule_idx:03d}",
-                name=f"Churned → {platform.title()} Remarketing",
-                description=f"Add churned profiles to {platform} remarketing audience for win-back campaigns.",
-                trigger_stage="churned",
-                trigger_condition="enters_stage",
-                action="sync_to_platform",
-                target_platform=platform,
-                target_audience=f"{platform}_churned_remarketing",
-                profiles_matched=to_churned.count_7d,
-                priority="medium",
-                category="reactivation",
-            ))
+            rules.append(
+                AudienceRule(
+                    rule_id=f"rule_{rule_idx:03d}",
+                    name=f"Churned → {platform.title()} Remarketing",
+                    description=f"Add churned profiles to {platform} remarketing audience for win-back campaigns.",
+                    trigger_stage="churned",
+                    trigger_condition="enters_stage",
+                    action="sync_to_platform",
+                    target_platform=platform,
+                    target_audience=f"{platform}_churned_remarketing",
+                    profiles_matched=to_churned.count_7d,
+                    priority="medium",
+                    category="reactivation",
+                )
+            )
 
     # Rule: Long-time known but not customer → nurture
     known_stage = next((s for s in stages if s.stage == "known"), None)
     if known_stage and known_stage.count > 0:
         rule_idx += 1
         stale_count = max(1, int(known_stage.count * 0.3))
-        rules.append(AudienceRule(
-            rule_id=f"rule_{rule_idx:03d}",
-            name="Stale Known → Nurture Sequence",
-            description="Profiles that have been 'known' for 14+ days without converting — trigger nurture email sequence.",
-            trigger_stage="known",
-            trigger_condition="in_stage_over_14d",
-            action="trigger_nurture",
-            profiles_matched=stale_count,
-            priority="medium",
-            category="activation",
-        ))
+        rules.append(
+            AudienceRule(
+                rule_id=f"rule_{rule_idx:03d}",
+                name="Stale Known → Nurture Sequence",
+                description="Profiles that have been 'known' for 14+ days without converting — trigger nurture email sequence.",
+                trigger_stage="known",
+                trigger_condition="in_stage_over_14d",
+                action="trigger_nurture",
+                profiles_matched=stale_count,
+                priority="medium",
+                category="activation",
+            )
+        )
 
     # Rule: Reactivated churned → celebrate & upsell
     churned_to_known = next(
-        (t for t in transitions if t.from_stage == "churned" and t.to_stage in ("known", "customer")),
+        (
+            t
+            for t in transitions
+            if t.from_stage == "churned" and t.to_stage in ("known", "customer")
+        ),
         None,
     )
     if churned_to_known:
         rule_idx += 1
-        rules.append(AudienceRule(
-            rule_id=f"rule_{rule_idx:03d}",
-            name="Reactivated → Welcome Back Flow",
-            description="Churned profiles that return — trigger welcome-back sequence with special offer.",
-            trigger_stage=churned_to_known.to_stage,
-            trigger_condition="enters_stage_from_churned",
-            action="trigger_welcome_back",
-            profiles_matched=churned_to_known.count_7d,
-            priority="medium",
-            category="retention",
-        ))
+        rules.append(
+            AudienceRule(
+                rule_id=f"rule_{rule_idx:03d}",
+                name="Reactivated → Welcome Back Flow",
+                description="Churned profiles that return — trigger welcome-back sequence with special offer.",
+                trigger_stage=churned_to_known.to_stage,
+                trigger_condition="enters_stage_from_churned",
+                action="trigger_welcome_back",
+                profiles_matched=churned_to_known.count_7d,
+                priority="medium",
+                category="retention",
+            )
+        )
 
     return rules
 
@@ -362,14 +405,16 @@ def _generate_recommendations(
     anon = next((s for s in stages if s.stage == "anonymous"), None)
     total = sum(s.count for s in stages)
     if anon and total > 0 and anon.pct_of_total > 60:
-        recs.append(LifecycleRecommendation(
-            title="High anonymous traffic — improve identification",
-            description=f"{anon.pct_of_total:.0f}% of profiles are anonymous. Deploy identity capture (login prompts, email gates, progressive profiling) to convert anonymous visitors.",
-            impact="high",
-            category="acquisition",
-            action_label="Review identity capture strategy",
-            profiles_affected=anon.count,
-        ))
+        recs.append(
+            LifecycleRecommendation(
+                title="High anonymous traffic — improve identification",
+                description=f"{anon.pct_of_total:.0f}% of profiles are anonymous. Deploy identity capture (login prompts, email gates, progressive profiling) to convert anonymous visitors.",
+                impact="high",
+                category="acquisition",
+                action_label="Review identity capture strategy",
+                profiles_affected=anon.count,
+            )
+        )
 
     # Check for churn spike
     churn_trans = next(
@@ -377,58 +422,73 @@ def _generate_recommendations(
         None,
     )
     if churn_trans:
-        recs.append(LifecycleRecommendation(
-            title="Churn rate increasing — activate prevention",
-            description=f"{churn_trans.count_7d} profiles churned this week (trend: increasing). Enable churn prevention automations and review win-back campaigns.",
-            impact="high",
-            category="retention",
-            action_label="Activate churn prevention rules",
-            profiles_affected=churn_trans.count_7d,
-        ))
+        recs.append(
+            LifecycleRecommendation(
+                title="Churn rate increasing — activate prevention",
+                description=f"{churn_trans.count_7d} profiles churned this week (trend: increasing). Enable churn prevention automations and review win-back campaigns.",
+                impact="high",
+                category="retention",
+                action_label="Activate churn prevention rules",
+                profiles_affected=churn_trans.count_7d,
+            )
+        )
 
     # Check for platform coverage
     if len(connected_platforms) < 2:
-        recs.append(LifecycleRecommendation(
-            title="Connect more ad platforms for broader reach",
-            description="Only {} platform{} connected. Connecting additional platforms enables cross-platform audience sync and better lifecycle automation coverage.".format(
-                len(connected_platforms), "s" if len(connected_platforms) != 1 else ""
-            ),
-            impact="medium",
-            category="setup",
-            action_label="Connect additional platforms",
-            profiles_affected=total,
-        ))
+        recs.append(
+            LifecycleRecommendation(
+                title="Connect more ad platforms for broader reach",
+                description="Only {} platform{} connected. Connecting additional platforms enables cross-platform audience sync and better lifecycle automation coverage.".format(
+                    len(connected_platforms),
+                    "s" if len(connected_platforms) != 1 else "",
+                ),
+                impact="medium",
+                category="setup",
+                action_label="Connect additional platforms",
+                profiles_affected=total,
+            )
+        )
 
     # Check for stale known profiles
     known = next((s for s in stages if s.stage == "known"), None)
     if known and known.count > 0:
         stale = max(1, int(known.count * 0.3))
         if stale > 10:
-            recs.append(LifecycleRecommendation(
-                title="Nurture stale known profiles",
-                description=f"~{stale} known profiles haven't converted. Deploy automated nurture sequences to move them toward purchase.",
-                impact="medium",
-                category="activation",
-                action_label="Create nurture automation",
-                profiles_affected=stale,
-            ))
+            recs.append(
+                LifecycleRecommendation(
+                    title="Nurture stale known profiles",
+                    description=f"~{stale} known profiles haven't converted. Deploy automated nurture sequences to move them toward purchase.",
+                    impact="medium",
+                    category="activation",
+                    action_label="Create nurture automation",
+                    profiles_affected=stale,
+                )
+            )
 
     # Check conversion rate
     known_to_cust = next(
-        (t for t in transitions if t.from_stage == "known" and t.to_stage == "customer"),
+        (
+            t
+            for t in transitions
+            if t.from_stage == "known" and t.to_stage == "customer"
+        ),
         None,
     )
     if known_to_cust and known:
-        conv_rate = (known_to_cust.count_30d / known.count * 100) if known.count > 0 else 0
+        conv_rate = (
+            (known_to_cust.count_30d / known.count * 100) if known.count > 0 else 0
+        )
         if conv_rate < 5:
-            recs.append(LifecycleRecommendation(
-                title="Low known→customer conversion rate",
-                description=f"Only {conv_rate:.1f}% of known profiles convert to customers per month. Consider improving onboarding flows and targeted offers.",
-                impact="high",
-                category="activation",
-                action_label="Optimize conversion funnel",
-                profiles_affected=known.count,
-            ))
+            recs.append(
+                LifecycleRecommendation(
+                    title="Low known→customer conversion rate",
+                    description=f"Only {conv_rate:.1f}% of known profiles convert to customers per month. Consider improving onboarding flows and targeted offers.",
+                    impact="high",
+                    category="activation",
+                    action_label="Optimize conversion funnel",
+                    profiles_affected=known.count,
+                )
+            )
 
     return recs[:5]
 
@@ -457,11 +517,15 @@ def _assess_health(
         score += 10
 
     # Positive transitions trending up
-    positive_up = sum(1 for t in transitions if t.is_positive and t.trend == "increasing")
+    positive_up = sum(
+        1 for t in transitions if t.is_positive and t.trend == "increasing"
+    )
     score += positive_up * 5
 
     # Negative signals
-    negative_up = sum(1 for t in transitions if not t.is_positive and t.trend == "increasing")
+    negative_up = sum(
+        1 for t in transitions if not t.is_positive and t.trend == "increasing"
+    )
     score -= negative_up * 10
 
     anon_pct = next((s.pct_of_total for s in stages if s.stage == "anonymous"), 0)
@@ -478,6 +542,7 @@ def _assess_health(
 
 
 # ── Main Entry Point ─────────────────────────────────────────────────────────
+
 
 def build_audience_lifecycle(
     profiles: List[Dict],
@@ -521,7 +586,9 @@ def build_audience_lifecycle(
     profiles_in_auto = sum(r.profiles_matched for r in rules if r.is_active)
 
     # Generate recommendations
-    recommendations = _generate_recommendations(stages, transitions, rules, connected_platforms)
+    recommendations = _generate_recommendations(
+        stages, transitions, rules, connected_platforms
+    )
 
     # Build sync readiness
     sync_readiness = []
@@ -529,16 +596,19 @@ def build_audience_lifecycle(
         audience_count = 0
         if existing_audiences:
             audience_count = sum(
-                1 for a in existing_audiences
+                1
+                for a in existing_audiences
                 if a.get("platform", "").lower() == platform.lower()
             )
-        sync_readiness.append(SyncReadiness(
-            platform=platform,
-            is_connected=True,
-            audiences_count=audience_count,
-            auto_sync_enabled=audience_count > 0,
-            match_rate_pct=round(65 + audience_count * 5, 1),  # estimated
-        ))
+        sync_readiness.append(
+            SyncReadiness(
+                platform=platform,
+                is_connected=True,
+                audiences_count=audience_count,
+                auto_sync_enabled=audience_count > 0,
+                match_rate_pct=round(65 + audience_count * 5, 1),  # estimated
+            )
+        )
 
     # Assess health
     health = _assess_health(stages, transitions, rules)
@@ -551,7 +621,9 @@ def build_audience_lifecycle(
             for t in transitions:
                 if t.to_stage == r.trigger_stage:
                     covered_types.add((t.from_stage, t.to_stage))
-    coverage = (len(covered_types) / len(transition_types) * 100) if transition_types else 0
+    coverage = (
+        (len(covered_types) / len(transition_types) * 100) if transition_types else 0
+    )
 
     # Summary
     summary = _build_summary(stages, transitions, rules, health, total_profiles)
@@ -582,7 +654,9 @@ def _build_summary(
     """Build executive summary."""
     parts = []
 
-    parts.append(f"Tracking {total_profiles:,} profiles across {len(stages)} lifecycle stages.")
+    parts.append(
+        f"Tracking {total_profiles:,} profiles across {len(stages)} lifecycle stages."
+    )
 
     customer_count = next((s.count for s in stages if s.stage == "customer"), 0)
     if customer_count > 0:

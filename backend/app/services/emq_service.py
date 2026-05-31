@@ -12,28 +12,29 @@ Handles:
 """
 
 import json
-from datetime import datetime, date, timedelta, timezone
-from typing import Optional, List, Dict, Any, Tuple
-from sqlalchemy import select, func, and_, or_
+from datetime import date, datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional, Tuple
+
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
-from app.models.trust_layer import (
-    FactSignalHealthDaily,
-    FactAttributionVarianceDaily,
-    FactActionsQueue,
-    SignalHealthStatus,
-)
 from app.analytics.logic.emq_calculation import (
-    PlatformMetrics,
-    EmqCalculationResult,
-    EmqDriverResult,
-    calculate_emq_score,
-    calculate_aggregate_emq,
-    determine_autopilot_mode,
-    calculate_event_loss_percentage,
     DriverStatus,
     DriverTrend,
+    EmqCalculationResult,
+    EmqDriverResult,
+    PlatformMetrics,
+    calculate_aggregate_emq,
+    calculate_emq_score,
+    calculate_event_loss_percentage,
+    determine_autopilot_mode,
+)
+from app.models.trust_layer import (
+    FactActionsQueue,
+    FactAttributionVarianceDaily,
+    FactSignalHealthDaily,
+    SignalHealthStatus,
 )
 
 
@@ -66,22 +67,30 @@ class EmqService:
         previous_date = target_date - timedelta(days=1)
 
         # Fetch current day's signal health records
-        current_query = select(FactSignalHealthDaily).where(
-            and_(
-                FactSignalHealthDaily.tenant_id == tenant_id,
-                FactSignalHealthDaily.date == target_date,
+        current_query = (
+            select(FactSignalHealthDaily)
+            .where(
+                and_(
+                    FactSignalHealthDaily.tenant_id == tenant_id,
+                    FactSignalHealthDaily.date == target_date,
+                )
             )
-        ).limit(1000)
+            .limit(1000)
+        )
         current_result = await self.session.execute(current_query)
         current_records = current_result.scalars().all()
 
         # Fetch previous day's records for comparison
-        previous_query = select(FactSignalHealthDaily).where(
-            and_(
-                FactSignalHealthDaily.tenant_id == tenant_id,
-                FactSignalHealthDaily.date == previous_date,
+        previous_query = (
+            select(FactSignalHealthDaily)
+            .where(
+                and_(
+                    FactSignalHealthDaily.tenant_id == tenant_id,
+                    FactSignalHealthDaily.date == previous_date,
+                )
             )
-        ).limit(1000)
+            .limit(1000)
+        )
         previous_result = await self.session.execute(previous_query)
         previous_records = previous_result.scalars().all()
 
@@ -147,7 +156,9 @@ class EmqService:
 
         # Calculate previous score
         prev_scores = [r.emq_score for r in previous_records if r.emq_score]
-        previous_score = sum(prev_scores) / len(prev_scores) if prev_scores else score - 2.0
+        previous_score = (
+            sum(prev_scores) / len(prev_scores) if prev_scores else score - 2.0
+        )
 
         # Build drivers list
         drivers = []
@@ -179,13 +190,15 @@ class EmqService:
                 elif previous_score and score < previous_score - 2:
                     trend = "down"
 
-                drivers.append({
-                    "name": driver_name,
-                    "value": round(avg_value, 1),
-                    "weight": weight,
-                    "status": status,
-                    "trend": trend,
-                })
+                drivers.append(
+                    {
+                        "name": driver_name,
+                        "value": round(avg_value, 1),
+                        "weight": weight,
+                        "status": status,
+                        "trend": trend,
+                    }
+                )
 
         # Determine confidence band
         if score >= 80:
@@ -195,7 +208,11 @@ class EmqService:
         else:
             confidence_band = "unsafe"
 
-        last_updated = max(r.updated_at for r in current_records) if current_records else datetime.now(timezone.utc)
+        last_updated = (
+            max(r.updated_at for r in current_records)
+            if current_records
+            else datetime.now(timezone.utc)
+        )
 
         return {
             "score": round(score, 1),
@@ -213,12 +230,16 @@ class EmqService:
         """Calculate EMQ from attribution variance data when signal health is not available."""
 
         # Fetch attribution variance data
-        query = select(FactAttributionVarianceDaily).where(
-            and_(
-                FactAttributionVarianceDaily.tenant_id == tenant_id,
-                FactAttributionVarianceDaily.date == target_date,
+        query = (
+            select(FactAttributionVarianceDaily)
+            .where(
+                and_(
+                    FactAttributionVarianceDaily.tenant_id == tenant_id,
+                    FactAttributionVarianceDaily.date == target_date,
+                )
             )
-        ).limit(1000)
+            .limit(1000)
+        )
         result = await self.session.execute(query)
         variance_records = result.scalars().all()
 
@@ -234,16 +255,24 @@ class EmqService:
             accuracy = max(0, 100 - (variance_pct * 2))
             accuracy_scores.append(accuracy)
 
-        avg_accuracy = sum(accuracy_scores) / len(accuracy_scores) if accuracy_scores else 75.0
+        avg_accuracy = (
+            sum(accuracy_scores) / len(accuracy_scores) if accuracy_scores else 75.0
+        )
 
         # Build estimated EMQ from limited data
         # Attribution accuracy is 15% of EMQ, so extrapolate
-        estimated_emq = min(100, avg_accuracy * 1.1)  # Slight boost since this is partial data
+        estimated_emq = min(
+            100, avg_accuracy * 1.1
+        )  # Slight boost since this is partial data
 
         return {
             "score": round(estimated_emq, 1),
             "previousScore": round(estimated_emq - 2.0, 1),
-            "confidenceBand": "reliable" if estimated_emq >= 80 else "directional" if estimated_emq >= 60 else "unsafe",
+            "confidenceBand": (
+                "reliable"
+                if estimated_emq >= 80
+                else "directional" if estimated_emq >= 60 else "unsafe"
+            ),
             "drivers": self._get_estimated_drivers(estimated_emq),
             "lastUpdated": datetime.now(timezone.utc).isoformat() + "Z",
         }
@@ -319,11 +348,13 @@ class EmqService:
             else:
                 status = "negative"
 
-            factors.append({
-                "name": driver["name"],
-                "contribution": round(contribution, 1),
-                "status": status,
-            })
+            factors.append(
+                {
+                    "name": driver["name"],
+                    "contribution": round(contribution, 1),
+                    "status": status,
+                }
+            )
 
         return {
             "band": emq_data["confidenceBand"],
@@ -344,14 +375,18 @@ class EmqService:
         """Get EMQ incidents within a date range."""
 
         # Query signal health records with status changes
-        query = select(FactSignalHealthDaily).where(
-            and_(
-                FactSignalHealthDaily.tenant_id == tenant_id,
-                FactSignalHealthDaily.date >= start_date,
-                FactSignalHealthDaily.date <= end_date,
-                FactSignalHealthDaily.status != SignalHealthStatus.OK,
+        query = (
+            select(FactSignalHealthDaily)
+            .where(
+                and_(
+                    FactSignalHealthDaily.tenant_id == tenant_id,
+                    FactSignalHealthDaily.date >= start_date,
+                    FactSignalHealthDaily.date <= end_date,
+                    FactSignalHealthDaily.status != SignalHealthStatus.OK,
+                )
             )
-        ).order_by(FactSignalHealthDaily.date.desc())
+            .order_by(FactSignalHealthDaily.date.desc())
+        )
 
         result = await self.session.execute(query.limit(1000))
         records = result.scalars().all()
@@ -377,17 +412,19 @@ class EmqService:
             # Calculate EMQ impact (difference from baseline 80)
             emq_impact = (record.emq_score - 80) if record.emq_score else -10
 
-            incidents.append({
-                "id": str(record.id),
-                "type": incident_type,
-                "title": title,
-                "description": description,
-                "timestamp": record.created_at.isoformat() + "Z",
-                "platform": record.platform,
-                "severity": severity,
-                "recoveryHours": None,
-                "emqImpact": round(emq_impact, 1),
-            })
+            incidents.append(
+                {
+                    "id": str(record.id),
+                    "type": incident_type,
+                    "title": title,
+                    "description": description,
+                    "timestamp": record.created_at.isoformat() + "Z",
+                    "platform": record.platform,
+                    "severity": severity,
+                    "recoveryHours": None,
+                    "emqImpact": round(emq_impact, 1),
+                }
+            )
 
         return incidents
 
@@ -402,20 +439,23 @@ class EmqService:
         start_date = end_date - timedelta(weeks=weeks)
 
         # Query weekly EMQ scores
-        week_col = func.date_trunc('week', FactSignalHealthDaily.date).label('week')
-        query = select(
-            week_col,
-            func.avg(FactSignalHealthDaily.emq_score).label('avg_score'),
-            func.stddev(FactSignalHealthDaily.emq_score).label('stddev'),
-        ).where(
-            and_(
-                FactSignalHealthDaily.tenant_id == tenant_id,
-                FactSignalHealthDaily.date >= start_date,
-                FactSignalHealthDaily.date <= end_date,
+        week_col = func.date_trunc("week", FactSignalHealthDaily.date).label("week")
+        query = (
+            select(
+                week_col,
+                func.avg(FactSignalHealthDaily.emq_score).label("avg_score"),
+                func.stddev(FactSignalHealthDaily.emq_score).label("stddev"),
             )
-        ).group_by(
-            week_col
-        ).order_by(week_col)
+            .where(
+                and_(
+                    FactSignalHealthDaily.tenant_id == tenant_id,
+                    FactSignalHealthDaily.date >= start_date,
+                    FactSignalHealthDaily.date <= end_date,
+                )
+            )
+            .group_by(week_col)
+            .order_by(week_col)
+        )
 
         result = await self.session.execute(query)
         weekly_data = result.all()
@@ -432,10 +472,12 @@ class EmqService:
         data_points = []
         for row in weekly_data:
             if row.avg_score is not None:
-                data_points.append({
-                    "date": row.week.strftime("%Y-%m-%d"),
-                    "value": round(row.stddev or 0, 1),
-                })
+                data_points.append(
+                    {
+                        "date": row.week.strftime("%Y-%m-%d"),
+                        "value": round(row.stddev or 0, 1),
+                    }
+                )
 
         # Determine trend
         if len(data_points) >= 2:
@@ -463,10 +505,12 @@ class EmqService:
         for i in range(weeks):
             week_date = today - timedelta(weeks=weeks - 1 - i)
             value = 12.5 + (i * 0.8) - (i % 3) * 2.1
-            data_points.append({
-                "date": week_date.strftime("%Y-%m-%d"),
-                "value": round(value, 1),
-            })
+            data_points.append(
+                {
+                    "date": week_date.strftime("%Y-%m-%d"),
+                    "value": round(value, 1),
+                }
+            )
 
         return {
             "svi": 15.3,
@@ -609,18 +653,24 @@ class EmqService:
                 actual_roas = data["platform_revenue"] / max(1, data["ga4_revenue"])
                 # Estimate what ROAS would be with perfect attribution
                 estimated_roas = actual_roas * 1.15  # 15% improvement assumption
-                confidence = data["confidence_sum"] / data["count"] if data["count"] > 0 else 0.5
+                confidence = (
+                    data["confidence_sum"] / data["count"] if data["count"] > 0 else 0.5
+                )
 
-                revenue_impact = (estimated_roas - actual_roas) * data["ga4_revenue"] * 0.1
+                revenue_impact = (
+                    (estimated_roas - actual_roas) * data["ga4_revenue"] * 0.1
+                )
                 total_impact += revenue_impact
 
-                breakdown.append({
-                    "platform": platform.title(),
-                    "actualRoas": round(actual_roas, 2),
-                    "estimatedRoas": round(estimated_roas, 2),
-                    "confidence": round(confidence, 2),
-                    "revenueImpact": round(revenue_impact, 2),
-                })
+                breakdown.append(
+                    {
+                        "platform": platform.title(),
+                        "actualRoas": round(actual_roas, 2),
+                        "estimatedRoas": round(estimated_roas, 2),
+                        "confidence": round(confidence, 2),
+                        "revenueImpact": round(revenue_impact, 2),
+                    }
+                )
 
         return {
             "totalImpact": round(total_impact, 2),
@@ -678,10 +728,16 @@ class EmqAdminService:
         # Query EMQ scores grouped by platform
         query = select(
             FactSignalHealthDaily.platform,
-            func.percentile_cont(0.25).within_group(FactSignalHealthDaily.emq_score).label('p25'),
-            func.percentile_cont(0.50).within_group(FactSignalHealthDaily.emq_score).label('p50'),
-            func.percentile_cont(0.75).within_group(FactSignalHealthDaily.emq_score).label('p75'),
-            func.avg(FactSignalHealthDaily.emq_score).label('avg_score'),
+            func.percentile_cont(0.25)
+            .within_group(FactSignalHealthDaily.emq_score)
+            .label("p25"),
+            func.percentile_cont(0.50)
+            .within_group(FactSignalHealthDaily.emq_score)
+            .label("p50"),
+            func.percentile_cont(0.75)
+            .within_group(FactSignalHealthDaily.emq_score)
+            .label("p75"),
+            func.avg(FactSignalHealthDaily.emq_score).label("avg_score"),
         ).where(
             and_(
                 FactSignalHealthDaily.date == target_date,
@@ -703,28 +759,62 @@ class EmqAdminService:
         benchmarks = []
         for row in rows:
             avg = row.avg_score or 75.0
-            benchmarks.append({
-                "platform": row.platform.title(),
-                "p25": round(row.p25 or 62.5, 1),
-                "p50": round(row.p50 or 74.8, 1),
-                "p75": round(row.p75 or 86.2, 1),
-                "tenantScore": round(avg, 1),
-                "percentile": round((avg / 100) * 100, 1),
-            })
+            benchmarks.append(
+                {
+                    "platform": row.platform.title(),
+                    "p25": round(row.p25 or 62.5, 1),
+                    "p50": round(row.p50 or 74.8, 1),
+                    "p75": round(row.p75 or 86.2, 1),
+                    "tenantScore": round(avg, 1),
+                    "percentile": round((avg / 100) * 100, 1),
+                }
+            )
 
         return benchmarks
 
-    def _get_default_benchmarks(self, platform: Optional[str] = None) -> List[Dict[str, Any]]:
+    def _get_default_benchmarks(
+        self, platform: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
         """Return default benchmarks."""
         all_benchmarks = [
-            {"platform": "Meta", "p25": 62.5, "p50": 74.8, "p75": 86.2, "tenantScore": 78.5, "percentile": 58.3},
-            {"platform": "Google Ads", "p25": 68.2, "p50": 79.5, "p75": 89.1, "tenantScore": 82.3, "percentile": 62.7},
-            {"platform": "TikTok", "p25": 55.8, "p50": 67.2, "p75": 78.9, "tenantScore": 71.2, "percentile": 55.1},
-            {"platform": "LinkedIn", "p25": 71.5, "p50": 81.2, "p75": 90.5, "tenantScore": 84.8, "percentile": 68.9},
+            {
+                "platform": "Meta",
+                "p25": 62.5,
+                "p50": 74.8,
+                "p75": 86.2,
+                "tenantScore": 78.5,
+                "percentile": 58.3,
+            },
+            {
+                "platform": "Google Ads",
+                "p25": 68.2,
+                "p50": 79.5,
+                "p75": 89.1,
+                "tenantScore": 82.3,
+                "percentile": 62.7,
+            },
+            {
+                "platform": "TikTok",
+                "p25": 55.8,
+                "p50": 67.2,
+                "p75": 78.9,
+                "tenantScore": 71.2,
+                "percentile": 55.1,
+            },
+            {
+                "platform": "LinkedIn",
+                "p25": 71.5,
+                "p50": 81.2,
+                "p75": 90.5,
+                "tenantScore": 84.8,
+                "percentile": 68.9,
+            },
         ]
 
         if platform:
-            return [b for b in all_benchmarks if b["platform"].lower() == platform.lower()]
+            return [
+                b for b in all_benchmarks if b["platform"].lower() == platform.lower()
+            ]
         return all_benchmarks
 
     async def get_portfolio(
@@ -738,17 +828,22 @@ class EmqAdminService:
 
         # Count tenants by band
         query = select(
-            func.count(func.distinct(FactSignalHealthDaily.tenant_id)).label('total'),
-            func.count(func.distinct(FactSignalHealthDaily.tenant_id)).filter(
-                FactSignalHealthDaily.emq_score >= 80
-            ).label('reliable'),
-            func.count(func.distinct(FactSignalHealthDaily.tenant_id)).filter(
-                and_(FactSignalHealthDaily.emq_score >= 60, FactSignalHealthDaily.emq_score < 80)
-            ).label('directional'),
-            func.count(func.distinct(FactSignalHealthDaily.tenant_id)).filter(
-                FactSignalHealthDaily.emq_score < 60
-            ).label('unsafe'),
-            func.avg(FactSignalHealthDaily.emq_score).label('avg_score'),
+            func.count(func.distinct(FactSignalHealthDaily.tenant_id)).label("total"),
+            func.count(func.distinct(FactSignalHealthDaily.tenant_id))
+            .filter(FactSignalHealthDaily.emq_score >= 80)
+            .label("reliable"),
+            func.count(func.distinct(FactSignalHealthDaily.tenant_id))
+            .filter(
+                and_(
+                    FactSignalHealthDaily.emq_score >= 60,
+                    FactSignalHealthDaily.emq_score < 80,
+                )
+            )
+            .label("directional"),
+            func.count(func.distinct(FactSignalHealthDaily.tenant_id))
+            .filter(FactSignalHealthDaily.emq_score < 60)
+            .label("unsafe"),
+            func.avg(FactSignalHealthDaily.emq_score).label("avg_score"),
         ).where(
             and_(
                 FactSignalHealthDaily.date == target_date,
@@ -766,7 +861,10 @@ class EmqAdminService:
         # This would require more detailed driver-level storage
         top_issues = [
             {"driver": "iOS Signal Loss", "affectedTenants": int(row.total * 0.5)},
-            {"driver": "Consent Mode v2 Migration", "affectedTenants": int(row.total * 0.3)},
+            {
+                "driver": "Consent Mode v2 Migration",
+                "affectedTenants": int(row.total * 0.3),
+            },
             {"driver": "CAPI Implementation", "affectedTenants": int(row.total * 0.25)},
             {"driver": "Conversion Latency", "affectedTenants": int(row.total * 0.2)},
             {"driver": "Event Deduplication", "affectedTenants": int(row.total * 0.15)},

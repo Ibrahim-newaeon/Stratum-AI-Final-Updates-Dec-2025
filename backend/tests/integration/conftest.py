@@ -15,31 +15,31 @@ Set TEST_DATABASE_URL environment variable or use default test database.
 
 import asyncio
 import os
-from datetime import datetime, date, timezone
+from datetime import date, datetime, timezone
 from typing import AsyncGenerator, Generator
 
 import pytest
 import pytest_asyncio
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy import create_engine, event
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlalchemy.orm import sessionmaker, Session
-
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import Session, sessionmaker
 
 # Set database URLs for tests
 os.environ["DATABASE_URL"] = os.environ.get(
     "TEST_DATABASE_URL",
-    "postgresql+asyncpg://stratum:password@localhost:5432/stratum_ai_test"
+    "postgresql+asyncpg://stratum:password@localhost:5432/stratum_ai_test",
 )
 os.environ["DATABASE_URL_SYNC"] = os.environ.get(
     "TEST_DATABASE_URL_SYNC",
-    "postgresql://stratum:password@localhost:5432/stratum_ai_test"
+    "postgresql://stratum:password@localhost:5432/stratum_ai_test",
 )
 
 
 # =============================================================================
 # Async Event Loop Configuration
 # =============================================================================
+
 
 @pytest.fixture(scope="session")
 def event_loop():
@@ -52,6 +52,7 @@ def event_loop():
 # =============================================================================
 # Database Fixtures
 # =============================================================================
+
 
 @pytest.fixture(scope="session")
 def sync_engine():
@@ -142,6 +143,7 @@ def sync_db_session(sync_engine) -> Generator[Session, None, None]:
 # Application and Client Fixtures
 # =============================================================================
 
+
 @pytest_asyncio.fixture(scope="function")
 async def app():
     """
@@ -220,7 +222,7 @@ async def authenticated_client(client, test_user, test_tenant) -> AsyncClient:
             "email": test_user["email"],
             "tenant_id": test_tenant["id"],
             "role": test_user["role"],
-        }
+        },
     )
 
     client.headers["Authorization"] = f"Bearer {token}"
@@ -232,6 +234,7 @@ async def authenticated_client(client, test_user, test_tenant) -> AsyncClient:
 # =============================================================================
 # Test Data Factories
 # =============================================================================
+
 
 @pytest_asyncio.fixture(scope="function")
 async def test_tenant(db_session) -> dict:
@@ -346,8 +349,9 @@ async def test_signal_health(db_session, test_tenant) -> dict:
 @pytest_asyncio.fixture(scope="function")
 async def test_action(db_session, test_tenant, test_user) -> dict:
     """Create a test action queue item."""
-    from app.models.trust_layer import FactActionsQueue
     import json
+
+    from app.models.trust_layer import FactActionsQueue
 
     action = FactActionsQueue(
         tenant_id=test_tenant["id"],
@@ -378,6 +382,7 @@ async def test_action(db_session, test_tenant, test_user) -> dict:
 # Utility Fixtures
 # =============================================================================
 
+
 @pytest.fixture
 def auth_headers(test_user, test_tenant):
     """Generate authentication headers for API requests."""
@@ -389,7 +394,7 @@ def auth_headers(test_user, test_tenant):
             "email": test_user["email"],
             "tenant_id": test_tenant["id"],
             "role": test_user["role"],
-        }
+        },
     )
 
     return {
@@ -408,7 +413,7 @@ def superadmin_headers():
         additional_claims={
             "email": "admin@stratum.ai",
             "role": "superadmin",
-        }
+        },
     )
 
     return {
@@ -420,6 +425,7 @@ def superadmin_headers():
 # Database Setup/Teardown
 # =============================================================================
 
+
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_database(sync_engine):
     """
@@ -427,28 +433,29 @@ def setup_test_database(sync_engine):
 
     Creates all tables and runs migrations if needed.
     """
-    from app.db.base_class import Base
     # Import ALL models so they register with Base.metadata
     import app.base_models  # noqa: F401
-    import app.models.cdp  # noqa: F401
-    import app.models.cms  # noqa: F401
-    import app.models.campaign_builder  # noqa: F401
-    import app.models.trust_layer  # noqa: F401
-    import app.models.autopilot  # noqa: F401
     import app.models.attribution  # noqa: F401
     import app.models.audience_sync  # noqa: F401
+    import app.models.autopilot  # noqa: F401
+    import app.models.campaign_builder  # noqa: F401
+
     # import app.models.audit_services  # noqa: F401 — excluded: 'metadata' column name conflicts with SQLAlchemy
     import app.models.capi_delivery  # noqa: F401
+    import app.models.cdp  # noqa: F401
     import app.models.client  # noqa: F401
+    import app.models.cms  # noqa: F401
     import app.models.crm  # noqa: F401
     import app.models.embed_widgets  # noqa: F401
+    import app.models.launch_readiness  # noqa: F401
     import app.models.newsletter  # noqa: F401
     import app.models.onboarding  # noqa: F401
     import app.models.pacing  # noqa: F401
     import app.models.profit  # noqa: F401
     import app.models.reporting  # noqa: F401
     import app.models.settings  # noqa: F401
-    import app.models.launch_readiness  # noqa: F401
+    import app.models.trust_layer  # noqa: F401
+    from app.db.base_class import Base
 
     # Drop and recreate all tables for a clean state
     Base.metadata.drop_all(bind=sync_engine)
@@ -463,6 +470,7 @@ def setup_test_database(sync_engine):
 # =============================================================================
 # Sample Data Fixtures
 # =============================================================================
+
 
 @pytest.fixture
 def sample_platform_metrics():

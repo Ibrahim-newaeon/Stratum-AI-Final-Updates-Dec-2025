@@ -42,7 +42,9 @@ from app.schemas.embed_widgets import (
     TokenResponse,
     WidgetCreate,
     WidgetResponse,
-    WidgetType as WidgetTypeEnum,
+)
+from app.schemas.embed_widgets import WidgetType as WidgetTypeEnum
+from app.schemas.embed_widgets import (
     WidgetUpdate,
 )
 from app.services.embed_widgets import (
@@ -92,7 +94,9 @@ def get_tenant_id(request: Request) -> int:
 # =============================================================================
 
 
-@router.post("/widgets", response_model=WidgetResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/widgets", response_model=WidgetResponse, status_code=status.HTTP_201_CREATED
+)
 async def create_widget(
     data: WidgetCreate,
     tenant_id: int = Depends(get_tenant_id),
@@ -111,7 +115,8 @@ async def create_widget(
     # Check feature access
     if not has_feature(tier, Feature.EMBED_WIDGETS_BASIC):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Embed widgets not available in your plan"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Embed widgets not available in your plan",
         )
 
     widget = service.create_widget(tenant_id, data, tier)
@@ -139,7 +144,9 @@ async def get_widget(
     """Get a specific widget by ID."""
     widget = service.get_widget(tenant_id, widget_id)
     if not widget:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Widget not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Widget not found"
+        )
     return widget
 
 
@@ -221,7 +228,8 @@ async def list_tokens(
             EmbedToken.widget_id == widget_id,
             EmbedToken.tenant_id == tenant_id,
         )
-        .order_by(EmbedToken.created_at.desc()).limit(1000)
+        .order_by(EmbedToken.created_at.desc())
+        .limit(1000)
     )
     tokens = result.scalars().all()
 
@@ -239,7 +247,9 @@ async def refresh_token(
 
     This rotates both the main token and refresh token for security.
     """
-    new_token, new_refresh, expires_at = service.refresh_token(token_id, data.refresh_token)
+    new_token, new_refresh, expires_at = service.refresh_token(
+        token_id, data.refresh_token
+    )
 
     return TokenRefreshResponse(
         token=new_token,
@@ -264,7 +274,9 @@ async def revoke_token(
 
 
 @router.post(
-    "/domains", response_model=DomainWhitelistResponse, status_code=status.HTTP_201_CREATED
+    "/domains",
+    response_model=DomainWhitelistResponse,
+    status_code=status.HTTP_201_CREATED,
 )
 async def add_domain(
     data: DomainWhitelistCreate,
@@ -327,7 +339,9 @@ async def get_embed_code(
     """
     widget = service.get_widget(tenant_id, widget_id)
     if not widget:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Widget not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Widget not found"
+        )
 
     # Get token
     result = await db.execute(
@@ -339,7 +353,9 @@ async def get_embed_code(
     token = result.scalar_one_or_none()
 
     if not token:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Token not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Token not found"
+        )
 
     # Note: We use the token prefix for the embed code, not the full token
     # The full token was given at creation and should be stored by the user
@@ -347,7 +363,7 @@ async def get_embed_code(
 
     codes = service.generate_embed_code(
         widget=widget,
-        token=token.token_prefix if hasattr(token, 'token_prefix') else str(token.id),
+        token=token.token_prefix if hasattr(token, "token_prefix") else str(token.id),
         base_url=base_url,
     )
 
@@ -505,9 +521,11 @@ async def _get_widget_data(widget: EmbedWidget, db: AsyncSession) -> dict:
             plat: round(sum(scores) / len(scores), 1)
             for plat, scores in platform_scores.items()
         }
-        overall = round(
-            sum(avg_platforms.values()) / len(avg_platforms), 1
-        ) if avg_platforms else 0
+        overall = (
+            round(sum(avg_platforms.values()) / len(avg_platforms), 1)
+            if avg_platforms
+            else 0
+        )
         status = (
             "healthy" if overall >= 70 else "at_risk" if overall >= 40 else "critical"
         )
@@ -537,21 +555,26 @@ async def _get_widget_data(widget: EmbedWidget, db: AsyncSession) -> dict:
             default=None,
         )
         pending_actions = sum(
-            1 for c in campaigns
-            if c.roas is not None and c.roas < 1.0
+            1 for c in campaigns if c.roas is not None and c.roas < 1.0
         )
         return {
             "status": "pass" if pending_actions == 0 else "review",
             "signal_health": None,
             "automation_mode": "normal",
             "pending_actions": pending_actions,
-            "last_updated": latest_sync.isoformat() if latest_sync else datetime.now(UTC).isoformat(),
+            "last_updated": (
+                latest_sync.isoformat()
+                if latest_sync
+                else datetime.now(UTC).isoformat()
+            ),
         }
 
     elif widget_type == WidgetType.SPEND_TRACKER.value:
         total_spend = sum(c.total_spend_cents or 0 for c in campaigns) / 100
         total_budget = sum(c.daily_budget_cents or 0 for c in campaigns) / 100
-        utilization = round(total_spend / total_budget * 100, 1) if total_budget > 0 else 0
+        utilization = (
+            round(total_spend / total_budget * 100, 1) if total_budget > 0 else 0
+        )
         return {
             "total_spend": total_spend,
             "budget": total_budget,
@@ -571,7 +594,11 @@ async def _get_widget_data(widget: EmbedWidget, db: AsyncSession) -> dict:
         return {
             "has_anomalies": len(anomalies) > 0,
             "anomaly_count": len(anomalies),
-            "severity": "high" if any(c.roas is not None and c.roas < 0.5 for c in campaigns) else "medium" if anomalies else "none",
+            "severity": (
+                "high"
+                if any(c.roas is not None and c.roas < 0.5 for c in campaigns)
+                else "medium" if anomalies else "none"
+            ),
             "most_recent": anomalies[0] if anomalies else None,
             "last_updated": datetime.now(UTC).isoformat(),
         }
@@ -588,7 +615,9 @@ async def _get_widget_data(widget: EmbedWidget, db: AsyncSession) -> dict:
                     "name": c.name,
                     "roas": c.roas or 0,
                     "spend": (c.total_spend_cents or 0) / 100,
-                    "status": c.status.value if hasattr(c.status, "value") else str(c.status),
+                    "status": (
+                        c.status.value if hasattr(c.status, "value") else str(c.status)
+                    ),
                 }
                 for c in top_campaigns
             ],

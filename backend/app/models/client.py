@@ -152,22 +152,21 @@ class ClientAssignment(TimestampMixin, Base):
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
     client_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("clients.id", ondelete="CASCADE"), nullable=False, index=True
+        Integer,
+        ForeignKey("clients.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     assigned_by: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
     )
-    is_primary: Mapped[bool] = mapped_column(
-        Boolean, default=False, nullable=False
-    )
+    is_primary: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     # Relationships
     user: Mapped["User"] = relationship(
         "User", foreign_keys=[user_id], backref="client_assignments"
     )
-    client: Mapped["Client"] = relationship(
-        "Client", back_populates="assignments"
-    )
+    client: Mapped["Client"] = relationship("Client", back_populates="assignments")
     assigned_by_user: Mapped[Optional["User"]] = relationship(
         "User", foreign_keys=[assigned_by]
     )
@@ -196,7 +195,10 @@ class ClientRequest(TimestampMixin, TenantMixin, Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     client_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("clients.id", ondelete="CASCADE"), nullable=False, index=True
+        Integer,
+        ForeignKey("clients.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     requested_by: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
@@ -211,9 +213,7 @@ class ClientRequest(TimestampMixin, TenantMixin, Base):
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     # Target entity (what the request is about)
-    target_entity_type: Mapped[Optional[str]] = mapped_column(
-        String(50), nullable=True
-    )
+    target_entity_type: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     target_entity_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     requested_changes: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=False)
 

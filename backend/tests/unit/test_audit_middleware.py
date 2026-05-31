@@ -25,16 +25,16 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from app.middleware.audit import (
-    AuditMiddleware,
     EXCLUDED_ENDPOINTS,
     STATE_CHANGING_METHODS,
+    AuditMiddleware,
 )
 from app.models import AuditAction
-
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_request(
     method: str = "POST",
@@ -73,6 +73,7 @@ def _make_response(status_code: int = 200) -> MagicMock:
 # ---------------------------------------------------------------------------
 # Tests: Method filtering
 # ---------------------------------------------------------------------------
+
 
 class TestMethodFiltering:
     """Only state-changing methods should trigger audit logging."""
@@ -127,6 +128,7 @@ class TestMethodFiltering:
 # Tests: Endpoint exclusion
 # ---------------------------------------------------------------------------
 
+
 class TestEndpointExclusion:
     """Health, docs, and other excluded endpoints must be skipped."""
 
@@ -155,6 +157,7 @@ class TestEndpointExclusion:
 # ---------------------------------------------------------------------------
 # Tests: Response status filtering
 # ---------------------------------------------------------------------------
+
 
 class TestResponseStatusFiltering:
     """Only 2xx responses should be audit-logged."""
@@ -194,6 +197,7 @@ class TestResponseStatusFiltering:
 # Tests: Resource path parsing
 # ---------------------------------------------------------------------------
 
+
 class TestResourceParsing:
     """_parse_resource_from_path should correctly extract resource type and ID."""
 
@@ -230,6 +234,7 @@ class TestResourceParsing:
 # Tests: Action mapping
 # ---------------------------------------------------------------------------
 
+
 class TestActionMapping:
     """HTTP methods should map to correct AuditAction values."""
 
@@ -256,6 +261,7 @@ class TestActionMapping:
 # Tests: Client IP extraction
 # ---------------------------------------------------------------------------
 
+
 class TestClientIpExtraction:
     """_get_client_ip should prefer forwarded headers over direct connection."""
 
@@ -273,7 +279,9 @@ class TestClientIpExtraction:
         assert ip == "203.0.113.50"
 
     def test_x_forwarded_for_chain(self) -> None:
-        req = _make_request(headers={"X-Forwarded-For": "203.0.113.50, 70.41.3.18, 150.172.238.178"})
+        req = _make_request(
+            headers={"X-Forwarded-For": "203.0.113.50, 70.41.3.18, 150.172.238.178"}
+        )
         ip = self.mw._get_client_ip(req)
         # Secure parsing: walk from right (closest proxy) and return first untrusted IP
         assert ip == "150.172.238.178"
@@ -292,10 +300,12 @@ class TestClientIpExtraction:
         assert ip == "192.168.1.100"
 
     def test_x_forwarded_for_takes_priority_over_x_real_ip(self) -> None:
-        req = _make_request(headers={
-            "X-Forwarded-For": "1.1.1.1",
-            "X-Real-IP": "2.2.2.2",
-        })
+        req = _make_request(
+            headers={
+                "X-Forwarded-For": "1.1.1.1",
+                "X-Real-IP": "2.2.2.2",
+            }
+        )
         ip = self.mw._get_client_ip(req)
         assert ip == "1.1.1.1"
 
@@ -310,6 +320,7 @@ class TestClientIpExtraction:
 # ---------------------------------------------------------------------------
 # Tests: Sensitive data sanitisation
 # ---------------------------------------------------------------------------
+
 
 class TestSanitisation:
     """_sanitize_for_audit must redact sensitive fields."""
@@ -369,6 +380,7 @@ class TestSanitisation:
 # Tests: Error resilience
 # ---------------------------------------------------------------------------
 
+
 class TestErrorResilience:
     """Audit logging failures must not break request handling."""
 
@@ -378,7 +390,12 @@ class TestErrorResilience:
         call_next = AsyncMock(return_value=_make_response(200))
         req = _make_request(method="POST", body={"name": "test"})
 
-        with patch.object(mw, "_log_audit_event", new_callable=AsyncMock, side_effect=Exception("DB down")):
+        with patch.object(
+            mw,
+            "_log_audit_event",
+            new_callable=AsyncMock,
+            side_effect=Exception("DB down"),
+        ):
             # Should not raise — middleware must swallow audit errors
             response = await mw.dispatch(req, call_next)
             assert response.status_code == 200

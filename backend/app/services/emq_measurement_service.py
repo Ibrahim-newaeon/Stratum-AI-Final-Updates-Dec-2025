@@ -12,23 +12,23 @@ Integrates with:
 - Database for persistence
 """
 
+import statistics
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional, Tuple
 from enum import Enum
-import statistics
+from typing import Any, Dict, List, Optional, Tuple
 
-from app.core.logging import get_logger
 from app.analytics.logic.emq_calculation import (
-    PlatformMetrics,
     EmqCalculationResult,
-    calculate_emq_score,
+    PlatformMetrics,
     calculate_aggregate_emq,
+    calculate_emq_score,
     determine_autopilot_mode,
 )
+from app.core.logging import get_logger
 from app.services.capi.platform_connectors import (
-    get_event_delivery_logs,
     EventDeliveryLog,
+    get_event_delivery_logs,
 )
 
 logger = get_logger(__name__)
@@ -37,6 +37,7 @@ logger = get_logger(__name__)
 @dataclass
 class EMQMeasurementResult:
     """Result of an EMQ measurement."""
+
     overall_score: float
     parameter_quality: float
     event_coverage: float
@@ -48,9 +49,11 @@ class EMQMeasurementResult:
 # Data Classes for Real EMQ Measurement
 # =============================================================================
 
+
 @dataclass
 class PixelEvent:
     """Represents a pixel-fired event for EMQ matching."""
+
     event_id: str
     platform: str
     event_name: str
@@ -63,10 +66,11 @@ class PixelEvent:
 @dataclass
 class ConversionEvent:
     """Represents a conversion event for latency tracking."""
+
     event_id: str
     platform: str
     pixel_timestamp: Optional[datetime] = None  # When pixel fired
-    capi_timestamp: Optional[datetime] = None   # When CAPI sent
+    capi_timestamp: Optional[datetime] = None  # When CAPI sent
     platform_timestamp: Optional[datetime] = None  # When platform received
     conversion_value: float = 0.0
 
@@ -74,6 +78,7 @@ class ConversionEvent:
 @dataclass
 class GA4ConversionData:
     """GA4 conversion data for attribution accuracy."""
+
     platform: str
     conversions: int
     revenue: float
@@ -83,6 +88,7 @@ class GA4ConversionData:
 @dataclass
 class RealEMQMetrics:
     """Real EMQ metrics calculated from actual event data."""
+
     platform: str
     period_start: datetime
     period_end: datetime
@@ -141,8 +147,10 @@ def record_conversion(conversion: ConversionEvent):
     # Cleanup old conversions (keep last 7 days)
     cutoff = datetime.now(timezone.utc) - timedelta(days=7)
     _conversion_events = {
-        k: v for k, v in _conversion_events.items()
-        if (v.pixel_timestamp or v.capi_timestamp or datetime.now(timezone.utc)) > cutoff
+        k: v
+        for k, v in _conversion_events.items()
+        if (v.pixel_timestamp or v.capi_timestamp or datetime.now(timezone.utc))
+        > cutoff
     }
 
 
@@ -160,6 +168,7 @@ def record_ga4_data(data: GA4ConversionData):
 # =============================================================================
 # Real EMQ Measurement Functions
 # =============================================================================
+
 
 def calculate_real_emq_metrics(
     platform: str,
@@ -192,10 +201,14 @@ def calculate_real_emq_metrics(
     if capi_logs:
         metrics.capi_events_count = len(capi_logs)
         metrics.capi_success_count = sum(1 for log in capi_logs if log.success)
-        metrics.capi_failure_count = metrics.capi_events_count - metrics.capi_success_count
+        metrics.capi_failure_count = (
+            metrics.capi_events_count - metrics.capi_success_count
+        )
 
         if metrics.capi_events_count > 0:
-            metrics.capi_delivery_rate = (metrics.capi_success_count / metrics.capi_events_count) * 100
+            metrics.capi_delivery_rate = (
+                metrics.capi_success_count / metrics.capi_events_count
+            ) * 100
 
         # Calculate CAPI latencies
         capi_latencies = [log.latency_ms for log in capi_logs if log.success]
@@ -210,8 +223,11 @@ def calculate_real_emq_metrics(
     # =========================================================================
     # Get pixel events for this platform
     # =========================================================================
-    pixel_events = [e for e in _pixel_events
-                    if e.platform == platform and e.timestamp >= period_start]
+    pixel_events = [
+        e
+        for e in _pixel_events
+        if e.platform == platform and e.timestamp >= period_start
+    ]
     metrics.pixel_events_count = len(pixel_events)
 
     if pixel_events:
@@ -238,7 +254,9 @@ def calculate_real_emq_metrics(
         if conv.platform != platform:
             continue
         if conv.pixel_timestamp and conv.capi_timestamp:
-            latency_ms = (conv.capi_timestamp - conv.pixel_timestamp).total_seconds() * 1000
+            latency_ms = (
+                conv.capi_timestamp - conv.pixel_timestamp
+            ).total_seconds() * 1000
             if latency_ms > 0:  # Only positive latencies make sense
                 metrics.latencies_ms.append(latency_ms)
 
@@ -247,7 +265,9 @@ def calculate_real_emq_metrics(
         sorted_latencies = sorted(metrics.latencies_ms)
         metrics.p50_latency_ms = sorted_latencies[len(sorted_latencies) // 2]
         p95_idx = int(len(sorted_latencies) * 0.95)
-        metrics.p95_latency_ms = sorted_latencies[min(p95_idx, len(sorted_latencies) - 1)]
+        metrics.p95_latency_ms = sorted_latencies[
+            min(p95_idx, len(sorted_latencies) - 1)
+        ]
 
     # =========================================================================
     # Get GA4 data for attribution accuracy
@@ -259,8 +279,11 @@ def calculate_real_emq_metrics(
             metrics.ga4_revenue = sum(d.revenue for d in recent_ga4)
 
     # Get platform conversion data from CAPI logs (conversion events)
-    conversion_logs = [log for log in capi_logs
-                       if log.event_name.lower() in ['purchase', 'conversion', 'complete_payment']]
+    conversion_logs = [
+        log
+        for log in capi_logs
+        if log.event_name.lower() in ["purchase", "conversion", "complete_payment"]
+    ]
     metrics.platform_conversions = len(conversion_logs)
     # Revenue would come from event parameters - simplified for now
     metrics.platform_revenue = metrics.platform_conversions * 50  # Estimate
@@ -275,36 +298,42 @@ def convert_real_to_platform_metrics(real_metrics: RealEMQMetrics) -> PlatformMe
     This bridges the gap between actual measurements and the EMQ calculation logic.
     """
     # Convert latency from ms to hours
-    avg_latency_hours = real_metrics.avg_latency_ms / (1000 * 3600) if real_metrics.avg_latency_ms > 0 else 0
+    avg_latency_hours = (
+        real_metrics.avg_latency_ms / (1000 * 3600)
+        if real_metrics.avg_latency_ms > 0
+        else 0
+    )
 
     return PlatformMetrics(
         platform=real_metrics.platform,
-
         # Event matching - now from real data
         pixel_events=real_metrics.pixel_events_count,
         capi_events=real_metrics.capi_events_count,
         matched_events=real_metrics.matched_events_count,
-
         # Coverage - estimated based on CAPI delivery rate
         pages_with_pixel=100,  # Assume good coverage
         total_pages=100,
-        events_configured=int(real_metrics.capi_delivery_rate) if real_metrics.capi_delivery_rate else 90,
+        events_configured=(
+            int(real_metrics.capi_delivery_rate)
+            if real_metrics.capi_delivery_rate
+            else 90
+        ),
         events_expected=100,
-
         # Latency - now from real data
         avg_conversion_latency_hours=avg_latency_hours,
-        max_conversion_latency_hours=real_metrics.p95_latency_ms / (1000 * 3600) if real_metrics.p95_latency_ms > 0 else 0,
-
+        max_conversion_latency_hours=(
+            real_metrics.p95_latency_ms / (1000 * 3600)
+            if real_metrics.p95_latency_ms > 0
+            else 0
+        ),
         # Attribution - now from real data
         platform_conversions=real_metrics.platform_conversions,
         ga4_conversions=real_metrics.ga4_conversions,
         platform_revenue=real_metrics.platform_revenue,
         ga4_revenue=real_metrics.ga4_revenue,
-
         # Freshness - now from real data
         last_event_at=real_metrics.last_capi_event or real_metrics.last_pixel_event,
         last_sync_at=real_metrics.last_capi_event,
-
         # API health - now from real data
         api_error_count=real_metrics.capi_failure_count,
         api_request_count=real_metrics.capi_events_count,
@@ -351,17 +380,26 @@ class RealEMQService:
         # Generate recommendations
         recommendations = []
         if real_metrics.match_rate < 70:
-            recommendations.append(f"Low match rate ({real_metrics.match_rate:.1f}%): Verify pixel and CAPI event_id parameters match")
+            recommendations.append(
+                f"Low match rate ({real_metrics.match_rate:.1f}%): Verify pixel and CAPI event_id parameters match"
+            )
         if real_metrics.capi_delivery_rate < 95:
-            recommendations.append(f"CAPI delivery issues ({real_metrics.capi_delivery_rate:.1f}%): Check API credentials and health")
+            recommendations.append(
+                f"CAPI delivery issues ({real_metrics.capi_delivery_rate:.1f}%): Check API credentials and health"
+            )
         if real_metrics.avg_capi_latency_ms > 5000:
-            recommendations.append(f"High latency ({real_metrics.avg_capi_latency_ms:.0f}ms): Review network connectivity")
+            recommendations.append(
+                f"High latency ({real_metrics.avg_capi_latency_ms:.0f}ms): Review network connectivity"
+            )
         if not recommendations:
-            recommendations.append("Event quality looks good. Continue monitoring for consistency.")
+            recommendations.append(
+                "Event quality looks good. Continue monitoring for consistency."
+            )
 
         return EMQMeasurementResult(
             overall_score=emq_result.score,
-            parameter_quality=emq_result.score * 1.05,  # Slightly higher for parameter quality
+            parameter_quality=emq_result.score
+            * 1.05,  # Slightly higher for parameter quality
             event_coverage=real_metrics.capi_delivery_rate,
             match_rate=real_metrics.match_rate,
             recommendations=recommendations,
@@ -395,13 +433,21 @@ class RealEMQService:
             date = now - timedelta(days=i)
             # Add some variance to make it look realistic
             base_score = 60 + (i % 10) * 2  # Score varies between 60-80
-            history.append({
-                "date": date.strftime("%Y-%m-%d"),
-                "overall_score": round(base_score + (hash(f"{platform}{i}") % 20 - 10), 1),
-                "parameter_quality": round(base_score + 5 + (hash(f"{pixel_id}{i}") % 10 - 5), 1),
-                "event_coverage": round(85 + (hash(f"{tenant_id}{i}") % 15), 1),
-                "match_rate": round(70 + (hash(f"{platform}{pixel_id}{i}") % 25), 1),
-            })
+            history.append(
+                {
+                    "date": date.strftime("%Y-%m-%d"),
+                    "overall_score": round(
+                        base_score + (hash(f"{platform}{i}") % 20 - 10), 1
+                    ),
+                    "parameter_quality": round(
+                        base_score + 5 + (hash(f"{pixel_id}{i}") % 10 - 5), 1
+                    ),
+                    "event_coverage": round(85 + (hash(f"{tenant_id}{i}") % 15), 1),
+                    "match_rate": round(
+                        70 + (hash(f"{platform}{pixel_id}{i}") % 25), 1
+                    ),
+                }
+            )
 
         return history
 
@@ -427,7 +473,9 @@ class RealEMQService:
         # Check cache
         if use_cache and cache_key in self._cache:
             cached_time, cached_result = self._cache[cache_key]
-            if (datetime.now(timezone.utc) - cached_time).total_seconds() < self._cache_ttl_seconds:
+            if (
+                datetime.now(timezone.utc) - cached_time
+            ).total_seconds() < self._cache_ttl_seconds:
                 return cached_result
 
         # Calculate real metrics
@@ -438,7 +486,11 @@ class RealEMQService:
 
         # Get previous period for trends
         prev_metrics = calculate_real_emq_metrics(platform, period_hours * 2)
-        prev_platform_metrics = convert_real_to_platform_metrics(prev_metrics) if prev_metrics.capi_events_count > 0 else None
+        prev_platform_metrics = (
+            convert_real_to_platform_metrics(prev_metrics)
+            if prev_metrics.capi_events_count > 0
+            else None
+        )
 
         # Calculate EMQ score
         result = calculate_emq_score(
@@ -447,13 +499,19 @@ class RealEMQService:
         )
 
         # Add real metrics details
-        result.drivers[0].details = f"Match rate: {real_metrics.match_rate:.1f}% ({real_metrics.matched_events_count}/{real_metrics.pixel_events_count + real_metrics.capi_events_count - real_metrics.matched_events_count} events)"
-        result.drivers[2].details = f"Avg latency: {real_metrics.avg_capi_latency_ms:.0f}ms (P95: {real_metrics.p95_latency_ms:.0f}ms)"
+        result.drivers[0].details = (
+            f"Match rate: {real_metrics.match_rate:.1f}% ({real_metrics.matched_events_count}/{real_metrics.pixel_events_count + real_metrics.capi_events_count - real_metrics.matched_events_count} events)"
+        )
+        result.drivers[2].details = (
+            f"Avg latency: {real_metrics.avg_capi_latency_ms:.0f}ms (P95: {real_metrics.p95_latency_ms:.0f}ms)"
+        )
 
         # Cache result
         self._cache[cache_key] = (datetime.now(timezone.utc), result)
 
-        logger.info(f"Real EMQ calculated for {platform}: score={result.score}, band={result.confidence_band}")
+        logger.info(
+            f"Real EMQ calculated for {platform}: score={result.score}, band={result.confidence_band}"
+        )
 
         return result
 
@@ -551,38 +609,49 @@ class RealEMQService:
         recommendations = []
 
         if real_metrics.match_rate < 70:
-            recommendations.append({
-                "priority": "critical",
-                "issue": "Low event match rate",
-                "action": "Verify pixel and CAPI event_id parameters match",
-                "impact": "Causes duplicate conversion counting",
-            })
+            recommendations.append(
+                {
+                    "priority": "critical",
+                    "issue": "Low event match rate",
+                    "action": "Verify pixel and CAPI event_id parameters match",
+                    "impact": "Causes duplicate conversion counting",
+                }
+            )
 
         if real_metrics.capi_delivery_rate < 95:
-            recommendations.append({
-                "priority": "high",
-                "issue": "CAPI delivery failures",
-                "action": f"Check CAPI credentials and API health ({real_metrics.capi_failure_count} failures)",
-                "impact": "Missing server-side events",
-            })
+            recommendations.append(
+                {
+                    "priority": "high",
+                    "issue": "CAPI delivery failures",
+                    "action": f"Check CAPI credentials and API health ({real_metrics.capi_failure_count} failures)",
+                    "impact": "Missing server-side events",
+                }
+            )
 
         if real_metrics.avg_capi_latency_ms > 5000:
-            recommendations.append({
-                "priority": "medium",
-                "issue": "High CAPI latency",
-                "action": "Review network connectivity and batch sizes",
-                "impact": "Delayed conversion reporting",
-            })
+            recommendations.append(
+                {
+                    "priority": "medium",
+                    "issue": "High CAPI latency",
+                    "action": "Review network connectivity and batch sizes",
+                    "impact": "Delayed conversion reporting",
+                }
+            )
 
         if real_metrics.ga4_conversions > 0 and real_metrics.platform_conversions > 0:
-            variance = abs(real_metrics.platform_conversions - real_metrics.ga4_conversions) / real_metrics.ga4_conversions
+            variance = (
+                abs(real_metrics.platform_conversions - real_metrics.ga4_conversions)
+                / real_metrics.ga4_conversions
+            )
             if variance > 0.2:
-                recommendations.append({
-                    "priority": "high",
-                    "issue": f"Attribution variance: {variance*100:.1f}%",
-                    "action": "Review attribution windows and conversion definitions",
-                    "impact": "Unreliable ROAS calculations",
-                })
+                recommendations.append(
+                    {
+                        "priority": "high",
+                        "issue": f"Attribution variance: {variance*100:.1f}%",
+                        "action": "Review attribution windows and conversion definitions",
+                        "impact": "Unreliable ROAS calculations",
+                    }
+                )
 
         return {
             "platform": platform,
@@ -617,8 +686,16 @@ class RealEMQService:
                     "ga4_revenue": real_metrics.ga4_revenue,
                 },
                 "freshness": {
-                    "last_pixel_event": real_metrics.last_pixel_event.isoformat() if real_metrics.last_pixel_event else None,
-                    "last_capi_event": real_metrics.last_capi_event.isoformat() if real_metrics.last_capi_event else None,
+                    "last_pixel_event": (
+                        real_metrics.last_pixel_event.isoformat()
+                        if real_metrics.last_pixel_event
+                        else None
+                    ),
+                    "last_capi_event": (
+                        real_metrics.last_capi_event.isoformat()
+                        if real_metrics.last_capi_event
+                        else None
+                    ),
                 },
             },
             "recommendations": recommendations,
@@ -644,9 +721,11 @@ real_emq_service = RealEMQService()
 # Advanced EMQ Analytics (P0 Enhancement)
 # =============================================================================
 
+
 @dataclass
 class EMQAnomaly:
     """Detected anomaly in EMQ metrics."""
+
     anomaly_id: str
     platform: str
     metric_name: str
@@ -662,6 +741,7 @@ class EMQAnomaly:
 @dataclass
 class EMQForecast:
     """EMQ score forecast."""
+
     platform: str
     forecast_date: datetime
     predicted_score: float
@@ -723,18 +803,24 @@ class EMQAnomalyDetector:
                 severity = self._determine_severity(z_score)
                 deviation = ((current_value - mean) / mean * 100) if mean != 0 else 0
 
-                anomalies.append(EMQAnomaly(
-                    anomaly_id=f"anomaly_{platform}_{metric_name}_{datetime.now(timezone.utc).timestamp()}",
-                    platform=platform,
-                    metric_name=metric_name,
-                    detected_at=datetime.now(timezone.utc),
-                    severity=severity,
-                    current_value=current_value,
-                    expected_value=mean,
-                    deviation_percent=round(deviation, 1),
-                    description=self._generate_description(metric_name, current_value, mean, z_score),
-                    recommended_action=self._generate_recommendation(metric_name, z_score),
-                ))
+                anomalies.append(
+                    EMQAnomaly(
+                        anomaly_id=f"anomaly_{platform}_{metric_name}_{datetime.now(timezone.utc).timestamp()}",
+                        platform=platform,
+                        metric_name=metric_name,
+                        detected_at=datetime.now(timezone.utc),
+                        severity=severity,
+                        current_value=current_value,
+                        expected_value=mean,
+                        deviation_percent=round(deviation, 1),
+                        description=self._generate_description(
+                            metric_name, current_value, mean, z_score
+                        ),
+                        recommended_action=self._generate_recommendation(
+                            metric_name, z_score
+                        ),
+                    )
+                )
 
         return anomalies
 
@@ -772,7 +858,9 @@ class EMQAnomalyDetector:
             "event_coverage": "Ensure all conversion events are being captured",
         }
 
-        base_rec = recommendations.get(metric_name, f"Investigate {metric_name} changes")
+        base_rec = recommendations.get(
+            metric_name, f"Investigate {metric_name} changes"
+        )
         if z_score < 0:
             return f"{base_rec} - metric is declining"
         return f"{base_rec} - unusual spike detected"
@@ -833,7 +921,9 @@ class EMQForecaster:
 
         # Calculate trend
         recent_scores = scores[-14:]
-        older_scores = scores[-28:-14] if len(scores) >= 28 else scores[:len(scores)//2]
+        older_scores = (
+            scores[-28:-14] if len(scores) >= 28 else scores[: len(scores) // 2]
+        )
 
         recent_avg = statistics.mean(recent_scores)
         older_avg = statistics.mean(older_scores) if older_scores else recent_avg
@@ -860,15 +950,17 @@ class EMQForecaster:
             # Confidence widens with time
             ci_width = std * (1 + d * 0.1)
 
-            forecasts.append(EMQForecast(
-                platform=platform,
-                forecast_date=datetime.now(timezone.utc) + timedelta(days=d),
-                predicted_score=round(predicted, 1),
-                confidence_interval_low=round(max(0, predicted - ci_width), 1),
-                confidence_interval_high=round(min(100, predicted + ci_width), 1),
-                trend=trend_direction,
-                factors=self._identify_factors(platform, trend_direction),
-            ))
+            forecasts.append(
+                EMQForecast(
+                    platform=platform,
+                    forecast_date=datetime.now(timezone.utc) + timedelta(days=d),
+                    predicted_score=round(predicted, 1),
+                    confidence_interval_low=round(max(0, predicted - ci_width), 1),
+                    confidence_interval_high=round(min(100, predicted + ci_width), 1),
+                    trend=trend_direction,
+                    factors=self._identify_factors(platform, trend_direction),
+                )
+            )
 
         return forecasts
 
@@ -934,7 +1026,7 @@ class CrossPlatformEMQAnalyzer:
         # Calculate correlation matrix
         correlations = {}
         for i, p1 in enumerate(platforms):
-            for p2 in platforms[i+1:]:
+            for p2 in platforms[i + 1 :]:
                 h1 = self._platform_scores.get(p1, [])
                 h2 = self._platform_scores.get(p2, [])
 
@@ -952,11 +1044,13 @@ class CrossPlatformEMQAnalyzer:
         systemic_issues = []
         low_platforms = [p for p, s in current_scores.items() if s < 60]
         if len(low_platforms) >= len(platforms) * 0.6:
-            systemic_issues.append({
-                "type": "widespread_quality_issue",
-                "description": f"{len(low_platforms)} of {len(platforms)} platforms have low EMQ",
-                "recommendation": "Check shared infrastructure (pixel implementation, server-side tagging)",
-            })
+            systemic_issues.append(
+                {
+                    "type": "widespread_quality_issue",
+                    "description": f"{len(low_platforms)} of {len(platforms)} platforms have low EMQ",
+                    "recommendation": "Check shared infrastructure (pixel implementation, server-side tagging)",
+                }
+            )
 
         # Identify best and worst performers
         ranked = sorted(current_scores.items(), key=lambda x: x[1], reverse=True)

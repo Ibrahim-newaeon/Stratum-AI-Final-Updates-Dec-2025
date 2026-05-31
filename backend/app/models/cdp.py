@@ -123,7 +123,9 @@ class CDPSource(Base, TimestampMixin):
         Index("ix_cdp_sources_tenant", "tenant_id"),
         Index("ix_cdp_sources_key", "source_key"),
         Index("ix_cdp_sources_type", "tenant_id", "source_type"),
-        UniqueConstraint("tenant_id", "source_key", name="uq_cdp_source_key_per_tenant"),
+        UniqueConstraint(
+            "tenant_id", "source_key", name="uq_cdp_source_key_per_tenant"
+        ),
     )
 
     def __repr__(self) -> str:
@@ -155,15 +157,25 @@ class CDPProfile(Base, TimestampMixin):
     external_id = Column(String(255), nullable=True)
 
     # Activity timestamps
-    first_seen_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
-    last_seen_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    first_seen_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+    last_seen_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
 
     # Flexible profile data
     profile_data = Column(JSONB, nullable=False, default=dict)
     computed_traits = Column(JSONB, nullable=False, default=dict)
 
     # Lifecycle
-    lifecycle_stage = Column(String(50), nullable=False, default=LifecycleStage.ANONYMOUS.value)
+    lifecycle_stage = Column(
+        String(50), nullable=False, default=LifecycleStage.ANONYMOUS.value
+    )
 
     # Aggregated counters (denormalized for performance)
     total_events = Column(Integer, nullable=False, default=0)
@@ -197,7 +209,10 @@ class CDPProfile(Base, TimestampMixin):
     def get_primary_email(self) -> Optional[str]:
         """Get the primary email identifier for this profile."""
         for identifier in self.identifiers:
-            if identifier.identifier_type == IdentifierType.EMAIL.value and identifier.is_primary:
+            if (
+                identifier.identifier_type == IdentifierType.EMAIL.value
+                and identifier.is_primary
+            ):
                 return identifier.identifier_value
         # Fallback to any email
         for identifier in self.identifiers:
@@ -251,9 +266,21 @@ class CDPProfileIdentifier(Base):
 
     # Verification & timestamps
     verified_at = Column(DateTime(timezone=True), nullable=True)
-    first_seen_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
-    last_seen_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
-    created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    first_seen_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+    last_seen_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
 
     # Relationships
     profile = relationship("CDPProfile", back_populates="identifiers")
@@ -261,7 +288,12 @@ class CDPProfileIdentifier(Base):
     __table_args__ = (
         Index("ix_cdp_identifiers_tenant", "tenant_id"),
         Index("ix_cdp_identifiers_profile", "profile_id"),
-        Index("ix_cdp_identifiers_lookup", "tenant_id", "identifier_type", "identifier_hash"),
+        Index(
+            "ix_cdp_identifiers_lookup",
+            "tenant_id",
+            "identifier_type",
+            "identifier_hash",
+        ),
         Index("ix_cdp_identifiers_hash", "identifier_hash"),
         UniqueConstraint(
             "tenant_id",
@@ -311,7 +343,11 @@ class CDPEvent(Base):
     # Event identification
     event_name = Column(String(255), nullable=False)
     event_time = Column(DateTime(timezone=True), nullable=False)
-    received_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    received_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
 
     # Deduplication
     idempotency_key = Column(String(128), nullable=True)
@@ -329,7 +365,11 @@ class CDPEvent(Base):
     emq_score = Column(Numeric(5, 2), nullable=True)
 
     # Timestamp (no updated_at - events are immutable)
-    created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
 
     # Relationships
     profile = relationship("CDPProfile", back_populates="events")
@@ -396,7 +436,10 @@ class CDPConsent(Base, TimestampMixin):
         Index("ix_cdp_consents_profile", "profile_id"),
         Index("ix_cdp_consents_type", "tenant_id", "consent_type", "granted"),
         UniqueConstraint(
-            "tenant_id", "profile_id", "consent_type", name="uq_cdp_consents_tenant_profile_type"
+            "tenant_id",
+            "profile_id",
+            "consent_type",
+            name="uq_cdp_consents_tenant_profile_type",
         ),
     )
 
@@ -461,7 +504,9 @@ class CDPWebhook(Base, TimestampMixin):
     # Webhook configuration
     name = Column(String(255), nullable=False)
     url = Column(String(2048), nullable=False)
-    event_types = Column(JSONB, nullable=False, default=list)  # List of WebhookEventType values
+    event_types = Column(
+        JSONB, nullable=False, default=list
+    )  # List of WebhookEventType values
 
     # Authentication
     secret_key = Column(String(64), nullable=True)  # For HMAC signature
@@ -536,18 +581,26 @@ class CDPIdentityLink(Base):
     )
 
     # Link metadata
-    link_type = Column(String(50), nullable=False, default=IdentityLinkType.SAME_EVENT.value)
+    link_type = Column(
+        String(50), nullable=False, default=IdentityLinkType.SAME_EVENT.value
+    )
     confidence_score = Column(Numeric(3, 2), nullable=False, default=Decimal("1.00"))
 
     # Evidence for the link
-    evidence = Column(JSONB, nullable=False, default=dict)  # {event_id, session_id, etc.}
+    evidence = Column(
+        JSONB, nullable=False, default=dict
+    )  # {event_id, session_id, etc.}
 
     # State
     is_active = Column(Boolean, nullable=False, default=True)
     verified_at = Column(DateTime(timezone=True), nullable=True)
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
 
     # Relationships
     source_identifier = relationship(
@@ -609,7 +662,9 @@ class CDPProfileMerge(Base):
     merged_profile_id = Column(UUID(as_uuid=True), nullable=False, index=True)
 
     # Merge details
-    merge_reason = Column(String(50), nullable=False, default=MergeReason.IDENTITY_MATCH.value)
+    merge_reason = Column(
+        String(50), nullable=False, default=MergeReason.IDENTITY_MATCH.value
+    )
 
     # Snapshot of merged profile before merge (for potential rollback)
     merged_profile_snapshot = Column(JSONB, nullable=False, default=dict)
@@ -631,7 +686,11 @@ class CDPProfileMerge(Base):
     rolled_back_at = Column(DateTime(timezone=True), nullable=True)
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
 
     # Relationships
     surviving_profile = relationship("CDPProfile", foreign_keys=[surviving_profile_id])
@@ -644,7 +703,9 @@ class CDPProfileMerge(Base):
     )
 
     def __repr__(self) -> str:
-        return f"<CDPProfileMerge {self.merged_profile_id} -> {self.surviving_profile_id}>"
+        return (
+            f"<CDPProfileMerge {self.merged_profile_id} -> {self.surviving_profile_id}>"
+        )
 
 
 class CDPCanonicalIdentity(Base):
@@ -692,8 +753,16 @@ class CDPCanonicalIdentity(Base):
     verification_method = Column(String(50), nullable=True)
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
 
     # Relationships
     profile = relationship("CDPProfile", backref="canonical_identity")
@@ -853,7 +922,11 @@ class CDPSegmentMembership(Base):
     )
 
     # Membership metadata
-    added_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    added_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
     removed_at = Column(DateTime(timezone=True), nullable=True)  # For tracking history
     is_active = Column(Boolean, nullable=False, default=True)
 
@@ -874,15 +947,16 @@ class CDPSegmentMembership(Base):
         Index("ix_cdp_memberships_active", "segment_id", "is_active"),
         # One active membership per profile per segment
         UniqueConstraint(
-            "tenant_id", "segment_id", "profile_id", name="uq_cdp_memberships_segment_profile"
+            "tenant_id",
+            "segment_id",
+            "profile_id",
+            name="uq_cdp_memberships_segment_profile",
         ),
     )
 
     def __repr__(self) -> str:
         status = "active" if self.is_active else "inactive"
-        return (
-            f"<CDPSegmentMembership segment={self.segment_id} profile={self.profile_id} ({status})>"
-        )
+        return f"<CDPSegmentMembership segment={self.segment_id} profile={self.profile_id} ({status})>"
 
 
 # =============================================================================
@@ -929,7 +1003,9 @@ class CDPComputedTrait(Base, TimestampMixin):
     description = Column(Text, nullable=True)
 
     # Computation configuration
-    trait_type = Column(String(50), nullable=False, default=ComputedTraitType.COUNT.value)
+    trait_type = Column(
+        String(50), nullable=False, default=ComputedTraitType.COUNT.value
+    )
 
     # Source configuration (what events/properties to compute from)
     # Format: {"event_name": "Purchase", "property": "total", "time_window_days": 365}
@@ -1004,11 +1080,17 @@ class CDPFunnel(Base, TimestampMixin):
     conversion_window_days = Column(
         Integer, nullable=False, default=30
     )  # Max days between first and last step
-    step_timeout_hours = Column(Integer, nullable=True)  # Max hours between steps (null = no limit)
+    step_timeout_hours = Column(
+        Integer, nullable=True
+    )  # Max hours between steps (null = no limit)
 
     # Computed metrics (cached for performance)
-    total_entered = Column(Integer, nullable=False, default=0)  # Users who completed step 1
-    total_converted = Column(Integer, nullable=False, default=0)  # Users who completed all steps
+    total_entered = Column(
+        Integer, nullable=False, default=0
+    )  # Users who completed step 1
+    total_converted = Column(
+        Integer, nullable=False, default=0
+    )  # Users who completed all steps
     overall_conversion_rate = Column(Numeric(5, 2), nullable=True)  # Percentage 0-100
 
     # Step-by-step conversion data (cached)
@@ -1068,8 +1150,14 @@ class CDPFunnelEntry(Base):
     )
 
     # Entry status
-    entered_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
-    converted_at = Column(DateTime(timezone=True), nullable=True)  # When completed all steps
+    entered_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+    converted_at = Column(
+        DateTime(timezone=True), nullable=True
+    )  # When completed all steps
     is_converted = Column(Boolean, nullable=False, default=False)
 
     # Current progress
@@ -1081,11 +1169,21 @@ class CDPFunnelEntry(Base):
     step_timestamps = Column(JSONB, nullable=False, default=dict)
 
     # Time analysis
-    total_duration_seconds = Column(Integer, nullable=True)  # Time from step 1 to final step
+    total_duration_seconds = Column(
+        Integer, nullable=True
+    )  # Time from step 1 to final step
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
 
     # Relationships
     funnel = relationship("CDPFunnel", backref="entries")
@@ -1098,6 +1196,9 @@ class CDPFunnelEntry(Base):
         Index("ix_cdp_funnel_entries_converted", "funnel_id", "is_converted"),
         # One entry per profile per funnel (for now - could support multiple journeys later)
         UniqueConstraint(
-            "tenant_id", "funnel_id", "profile_id", name="uq_cdp_funnel_entries_funnel_profile"
+            "tenant_id",
+            "funnel_id",
+            "profile_id",
+            name="uq_cdp_funnel_entries_funnel_profile",
         ),
     )

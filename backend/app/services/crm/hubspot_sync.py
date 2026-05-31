@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID
 
-from sqlalchemy import select, and_
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
@@ -20,9 +20,9 @@ from app.models.crm import (
     CRMContact,
     CRMDeal,
     CRMProvider,
+    DailyPipelineMetrics,
     DealStage,
     Touchpoint,
-    DailyPipelineMetrics,
 )
 from app.services.crm.hubspot_client import HubSpotClient, hash_email, hash_phone
 from app.services.crm.identity_matching import IdentityMatcher
@@ -105,21 +105,25 @@ class HubSpotSyncService:
         try:
             # Sync contacts
             contact_results = await self._sync_contacts(connection, updated_after)
-            results.update({
-                "contacts_synced": contact_results["synced"],
-                "contacts_created": contact_results["created"],
-                "contacts_updated": contact_results["updated"],
-            })
+            results.update(
+                {
+                    "contacts_synced": contact_results["synced"],
+                    "contacts_created": contact_results["created"],
+                    "contacts_updated": contact_results["updated"],
+                }
+            )
             if contact_results.get("errors"):
                 results["errors"].extend(contact_results["errors"])
 
             # Sync deals
             deal_results = await self._sync_deals(connection, updated_after)
-            results.update({
-                "deals_synced": deal_results["synced"],
-                "deals_created": deal_results["created"],
-                "deals_updated": deal_results["updated"],
-            })
+            results.update(
+                {
+                    "deals_synced": deal_results["synced"],
+                    "deals_created": deal_results["created"],
+                    "deals_updated": deal_results["updated"],
+                }
+            )
             if deal_results.get("errors"):
                 results["errors"].extend(deal_results["errors"])
 
@@ -128,7 +132,9 @@ class HubSpotSyncService:
 
             # Update connection status
             connection.last_sync_at = datetime.now(timezone.utc)
-            connection.last_sync_status = "success" if not results["errors"] else "partial"
+            connection.last_sync_status = (
+                "success" if not results["errors"] else "partial"
+            )
             connection.last_sync_contacts_count = results["contacts_synced"]
             connection.last_sync_deals_count = results["deals_synced"]
 
@@ -161,12 +167,25 @@ class HubSpotSyncService:
         after = None
 
         properties = [
-            "email", "phone", "mobilephone", "firstname", "lastname",
-            "lifecyclestage", "hs_lead_status", "lead_source",
-            "utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term",
-            "hs_analytics_source", "hs_analytics_first_url",
-            "gclid", "hs_google_click_id",
-            "createdate", "lastmodifieddate",
+            "email",
+            "phone",
+            "mobilephone",
+            "firstname",
+            "lastname",
+            "lifecyclestage",
+            "hs_lead_status",
+            "lead_source",
+            "utm_source",
+            "utm_medium",
+            "utm_campaign",
+            "utm_content",
+            "utm_term",
+            "hs_analytics_source",
+            "hs_analytics_first_url",
+            "gclid",
+            "hs_google_click_id",
+            "createdate",
+            "lastmodifieddate",
         ]
 
         async with self.client:
@@ -193,7 +212,9 @@ class HubSpotSyncService:
                         elif updated:
                             results["updated"] += 1
                     except (ValueError, TypeError, KeyError) as e:
-                        results["errors"].append(f"Contact {contact_data.get('id')}: {str(e)}")
+                        results["errors"].append(
+                            f"Contact {contact_data.get('id')}: {str(e)}"
+                        )
 
                 # Check for more pages
                 paging = response.get("paging", {})
@@ -270,7 +291,8 @@ class HubSpotSyncService:
             "utm_term": properties.get("utm_term"),
             "gclid": properties.get("gclid") or properties.get("hs_google_click_id"),
             "lifecycle_stage": properties.get("lifecyclestage"),
-            "lead_source": properties.get("lead_source") or properties.get("hs_analytics_source"),
+            "lead_source": properties.get("lead_source")
+            or properties.get("hs_analytics_source"),
             "raw_properties": properties,
             "crm_created_at": crm_created,
             "crm_updated_at": crm_updated,
@@ -304,10 +326,17 @@ class HubSpotSyncService:
         after = None
 
         properties = [
-            "dealname", "amount", "dealstage", "pipeline",
-            "closedate", "hs_is_closed_won", "hs_is_closed",
-            "hubspot_owner_id", "hs_analytics_source",
-            "createdate", "hs_lastmodifieddate",
+            "dealname",
+            "amount",
+            "dealstage",
+            "pipeline",
+            "closedate",
+            "hs_is_closed_won",
+            "hs_is_closed",
+            "hubspot_owner_id",
+            "hs_analytics_source",
+            "createdate",
+            "hs_lastmodifieddate",
         ]
 
         async with self.client:
@@ -334,7 +363,9 @@ class HubSpotSyncService:
                         elif updated:
                             results["updated"] += 1
                     except (ValueError, TypeError, KeyError) as e:
-                        results["errors"].append(f"Deal {deal_data.get('id')}: {str(e)}")
+                        results["errors"].append(
+                            f"Deal {deal_data.get('id')}: {str(e)}"
+                        )
 
                 # Check for more pages
                 paging = response.get("paging", {})
@@ -391,7 +422,9 @@ class HubSpotSyncService:
 
         # Parse stage
         stage = properties.get("dealstage", "")
-        stage_normalized = HUBSPOT_STAGE_MAPPING.get(stage.lower().replace(" ", "").replace("_", ""))
+        stage_normalized = HUBSPOT_STAGE_MAPPING.get(
+            stage.lower().replace(" ", "").replace("_", "")
+        )
 
         # Parse close date
         close_date = None
@@ -509,7 +542,9 @@ class HubSpotSyncService:
 
                             # Copy attribution from contact if available
                             if contact.last_touch_campaign_id:
-                                deal.attributed_campaign_id = contact.last_touch_campaign_id
+                                deal.attributed_campaign_id = (
+                                    contact.last_touch_campaign_id
+                                )
                             if contact.utm_source:
                                 # Map utm_source to platform
                                 platform_map = {
@@ -534,7 +569,9 @@ class HubSpotSyncService:
 
         await self.db.commit()
 
-    async def process_webhook(self, event_type: str, data: Dict[str, Any]) -> Dict[str, Any]:
+    async def process_webhook(
+        self, event_type: str, data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         Process incoming webhook from HubSpot.
 
@@ -640,5 +677,7 @@ class HubSpotSyncService:
             "total_pipeline_value": sum(stage_values.values()),
             "total_won_value": sum(d.amount or 0 for d in won_deals),
             "won_deal_count": len(won_deals),
-            "last_sync_at": connection.last_sync_at.isoformat() if connection.last_sync_at else None,
+            "last_sync_at": (
+                connection.last_sync_at.isoformat() if connection.last_sync_at else None
+            ),
         }

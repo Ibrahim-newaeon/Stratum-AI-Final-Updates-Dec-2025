@@ -6,7 +6,7 @@ Pydantic models for API request/response validation.
 Implements strict type validation with comprehensive field constraints.
 """
 
-from datetime import datetime, date
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Generic, List, Optional, TypeVar
 
@@ -30,7 +30,6 @@ from app.models import (
     RuleStatus,
     UserRole,
 )
-
 
 # =============================================================================
 # Generic Response Wrapper
@@ -574,7 +573,11 @@ class CompetitorBase(BaseSchema):
     domain: str = Field(..., min_length=3, max_length=255)
     name: Optional[str] = Field(None, max_length=255)
     is_primary: bool = False
-    fb_page_name: Optional[str] = Field(None, max_length=255, description="Facebook page name for direct Ads Library search")
+    fb_page_name: Optional[str] = Field(
+        None,
+        max_length=255,
+        description="Facebook page name for direct Ads Library search",
+    )
 
 
 class CompetitorCreate(CompetitorBase):
@@ -667,7 +670,9 @@ class ROASForecastRequest(BaseSchema):
 class ROASForecastResponse(BaseSchema):
     """ROAS forecasting response."""
 
-    forecasts: List[dict]  # [{date, predicted_roas, confidence_lower, confidence_upper}]
+    forecasts: List[
+        dict
+    ]  # [{date, predicted_roas, confidence_lower, confidence_upper}]
     model_version: str
     generated_at: datetime
 

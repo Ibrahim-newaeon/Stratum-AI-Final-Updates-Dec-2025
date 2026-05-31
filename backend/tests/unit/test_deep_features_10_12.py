@@ -19,12 +19,16 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from tests.unit.conftest import make_auth_headers, make_scalar_result, make_scalars_result
-
+from tests.unit.conftest import (
+    make_auth_headers,
+    make_scalar_result,
+    make_scalars_result,
+)
 
 # =============================================================================
 # Helper: mock ORM objects
 # =============================================================================
+
 
 def _mock_contact(**overrides):
     """Build a mock WhatsApp contact ORM object."""
@@ -169,14 +173,26 @@ class TestWhatsAppContacts:
 
         new_contact = _mock_contact(id=5, phone_number="+15559999999")
         mock_db.refresh = AsyncMock(side_effect=lambda obj: None)
+
         # After refresh, the handler calls model_validate on the contact obj.
         # The 'contact' local var is what was db.add()'d. We mock refresh to
         # set attributes on whatever was passed to db.add().
         def _refresh_side_effect(obj):
-            for attr in ("id", "phone_number", "country_code", "display_name",
-                         "is_verified", "opt_in_status", "wa_id", "profile_name",
-                         "message_count", "last_message_at", "created_at"):
+            for attr in (
+                "id",
+                "phone_number",
+                "country_code",
+                "display_name",
+                "is_verified",
+                "opt_in_status",
+                "wa_id",
+                "profile_name",
+                "message_count",
+                "last_message_at",
+                "created_at",
+            ):
                 setattr(obj, attr, getattr(new_contact, attr))
+
         mock_db.refresh = AsyncMock(side_effect=_refresh_side_effect)
 
         payload = {
@@ -293,11 +309,21 @@ class TestWhatsAppTemplates:
         mock_get_client.return_value = mock_wa
 
         tmpl = _mock_template(id=10, name="promo_launch", status="pending")
-        mock_db.refresh = AsyncMock(side_effect=lambda obj: [
-            setattr(obj, k, getattr(tmpl, k))
-            for k in ("id", "name", "language", "category", "body_text",
-                       "status", "usage_count", "created_at")
-        ])
+        mock_db.refresh = AsyncMock(
+            side_effect=lambda obj: [
+                setattr(obj, k, getattr(tmpl, k))
+                for k in (
+                    "id",
+                    "name",
+                    "language",
+                    "category",
+                    "body_text",
+                    "status",
+                    "usage_count",
+                    "created_at",
+                )
+            ]
+        )
 
         payload = {
             "name": "promo_launch",
@@ -328,15 +354,11 @@ class TestWhatsAppMessages:
     @pytest.mark.asyncio
     async def test_send_message_no_auth(self, api_client):
         """POST /whatsapp/messages/send without auth → 401/403."""
-        resp = await api_client.post(
-            "/api/v1/whatsapp/messages/send", json={}
-        )
+        resp = await api_client.post("/api/v1/whatsapp/messages/send", json={})
         assert resp.status_code in (401, 403, 422)
 
     @pytest.mark.asyncio
-    async def test_send_message_happy(
-        self, api_client, mock_db, admin_headers
-    ):
+    async def test_send_message_happy(self, api_client, mock_db, admin_headers):
         """POST /whatsapp/messages/send queues a message."""
         contact = _mock_contact(opt_in_status="opted_in")
         contact_result = MagicMock()
@@ -344,17 +366,32 @@ class TestWhatsAppMessages:
         mock_db.execute = AsyncMock(return_value=contact_result)
 
         msg = _mock_message(id=42)
-        mock_db.refresh = AsyncMock(side_effect=lambda obj: [
-            setattr(obj, k, getattr(msg, k))
-            for k in ("id", "contact_id", "direction", "message_type",
-                       "status", "content", "template_name",
-                       "sent_at", "delivered_at", "read_at", "created_at")
-        ])
+        mock_db.refresh = AsyncMock(
+            side_effect=lambda obj: [
+                setattr(obj, k, getattr(msg, k))
+                for k in (
+                    "id",
+                    "contact_id",
+                    "direction",
+                    "message_type",
+                    "status",
+                    "content",
+                    "template_name",
+                    "sent_at",
+                    "delivered_at",
+                    "read_at",
+                    "created_at",
+                )
+            ]
+        )
 
         # Mock the celery task that is imported inside the handler
         mock_task = MagicMock()
         mock_task.delay = MagicMock()
-        with patch.dict("sys.modules", {"app.workers.tasks": MagicMock(send_whatsapp_message=mock_task)}):
+        with patch.dict(
+            "sys.modules",
+            {"app.workers.tasks": MagicMock(send_whatsapp_message=mock_task)},
+        ):
             payload = {
                 "contact_id": 1,
                 "message_type": "text",
@@ -387,9 +424,7 @@ class TestWhatsAppMessages:
         assert resp.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_send_message_not_opted_in(
-        self, api_client, mock_db, admin_headers
-    ):
+    async def test_send_message_not_opted_in(self, api_client, mock_db, admin_headers):
         """POST /whatsapp/messages/send to non-opted-in contact → 400."""
         contact = _mock_contact(opt_in_status="pending")
         contact_result = MagicMock()
@@ -476,9 +511,7 @@ class TestPaymentsOverview:
         """GET /payments/overview when Stripe not configured returns defaults."""
         mock_ss.STRIPE_CONFIGURED = False
 
-        resp = await api_client.get(
-            "/api/v1/payments/overview", headers=admin_headers
-        )
+        resp = await api_client.get("/api/v1/payments/overview", headers=admin_headers)
         assert resp.status_code == 200
         body = resp.json()
         assert body["stripe_configured"] is False
@@ -501,9 +534,7 @@ class TestPaymentsOverview:
         mock_ss.get_upcoming_invoice = AsyncMock(return_value=None)
         mock_ss.get_customer_payment_methods = AsyncMock(return_value=[])
 
-        resp = await api_client.get(
-            "/api/v1/payments/overview", headers=admin_headers
-        )
+        resp = await api_client.get("/api/v1/payments/overview", headers=admin_headers)
         assert resp.status_code == 200
         body = resp.json()
         assert body["stripe_configured"] is True
@@ -513,9 +544,7 @@ class TestPaymentsOverview:
     @pytest.mark.asyncio
     async def test_payment_config_public(self, api_client, admin_headers):
         """GET /payments/config returns public Stripe config."""
-        resp = await api_client.get(
-            "/api/v1/payments/config", headers=admin_headers
-        )
+        resp = await api_client.get("/api/v1/payments/config", headers=admin_headers)
         assert resp.status_code == 200
         body = resp.json()
         assert "stripe_configured" in body
@@ -545,9 +574,7 @@ class TestPaymentsCheckout:
 
     @pytest.mark.asyncio
     @patch("app.api.v1.endpoints.payments.stripe_service")
-    async def test_checkout_happy(
-        self, mock_ss, api_client, mock_db, admin_headers
-    ):
+    async def test_checkout_happy(self, mock_ss, api_client, mock_db, admin_headers):
         """POST /payments/checkout creates a checkout session."""
         mock_ss.STRIPE_CONFIGURED = True
 
@@ -658,9 +685,7 @@ class TestPaymentsSubscription:
         tenant_result = make_scalar_result(tenant)
         mock_db.execute = AsyncMock(return_value=tenant_result)
 
-        resp = await api_client.get(
-            "/api/v1/payments/invoices", headers=admin_headers
-        )
+        resp = await api_client.get("/api/v1/payments/invoices", headers=admin_headers)
         assert resp.status_code == 200
         assert resp.json() == []
 
@@ -712,7 +737,11 @@ class TestStripeWebhook:
             mock_event = MagicMock()
             mock_event.type = "customer.created"
             mock_event.id = "evt_test_123"
-            mock_event.data.object = {"id": "cus_new", "email": "test@test.com", "metadata": {}}
+            mock_event.data.object = {
+                "id": "cus_new",
+                "email": "test@test.com",
+                "metadata": {},
+            }
             mock_construct.return_value = mock_event
 
             # Mock the async session context manager
@@ -809,9 +838,7 @@ class TestSubscriptionEndpoints:
             restriction_reason=None,
         )
 
-        resp = await api_client.get(
-            "/api/v1/subscription/check", headers=admin_headers
-        )
+        resp = await api_client.get("/api/v1/subscription/check", headers=admin_headers)
         assert resp.status_code == 200
         body = resp.json()
         assert body["valid"] is True
@@ -918,9 +945,7 @@ class TestTenantsCRUD:
 
     # ── Get specific tenant: admin can access other tenants ────────────
     @pytest.mark.asyncio
-    async def test_get_tenant_admin_access(
-        self, api_client, mock_db, admin_headers
-    ):
+    async def test_get_tenant_admin_access(self, api_client, mock_db, admin_headers):
         """GET /tenants/2 as admin → succeeds."""
         tenant = _mock_tenant(id=2, slug="other-co")
         tenant_result = make_scalar_result(tenant)
@@ -956,12 +981,25 @@ class TestTenantsCRUD:
         mock_db.execute = AsyncMock(return_value=dup_result)
 
         new_tenant = _mock_tenant(id=10, name="New Co", slug="new-co", plan="free")
-        mock_db.refresh = AsyncMock(side_effect=lambda obj: [
-            setattr(obj, k, getattr(new_tenant, k))
-            for k in ("id", "name", "slug", "domain", "plan", "plan_expires_at",
-                       "max_users", "max_campaigns", "settings", "feature_flags",
-                       "created_at", "updated_at")
-        ])
+        mock_db.refresh = AsyncMock(
+            side_effect=lambda obj: [
+                setattr(obj, k, getattr(new_tenant, k))
+                for k in (
+                    "id",
+                    "name",
+                    "slug",
+                    "domain",
+                    "plan",
+                    "plan_expires_at",
+                    "max_users",
+                    "max_campaigns",
+                    "settings",
+                    "feature_flags",
+                    "created_at",
+                    "updated_at",
+                )
+            ]
+        )
 
         payload = {
             "name": "New Co",
@@ -1029,12 +1067,25 @@ class TestTenantsCRUD:
         mock_db.execute = AsyncMock(return_value=tenant_result)
 
         updated = _mock_tenant(id=1, name="Acme Updated")
-        mock_db.refresh = AsyncMock(side_effect=lambda obj: [
-            setattr(obj, k, getattr(updated, k))
-            for k in ("id", "name", "slug", "domain", "plan", "plan_expires_at",
-                       "max_users", "max_campaigns", "settings", "feature_flags",
-                       "created_at", "updated_at")
-        ])
+        mock_db.refresh = AsyncMock(
+            side_effect=lambda obj: [
+                setattr(obj, k, getattr(updated, k))
+                for k in (
+                    "id",
+                    "name",
+                    "slug",
+                    "domain",
+                    "plan",
+                    "plan_expires_at",
+                    "max_users",
+                    "max_campaigns",
+                    "settings",
+                    "feature_flags",
+                    "created_at",
+                    "updated_at",
+                )
+            ]
+        )
 
         payload = {"name": "Acme Updated"}
         resp = await api_client.patch(
@@ -1126,9 +1177,7 @@ class TestTenantDashboard:
         tenant_result = make_scalar_result(tenant)
         mock_db.execute = AsyncMock(return_value=tenant_result)
 
-        resp = await api_client.get(
-            "/api/v1/tenant/1/settings", headers=admin_headers
-        )
+        resp = await api_client.get("/api/v1/tenant/1/settings", headers=admin_headers)
         assert resp.status_code == 200
         body = resp.json()
         assert body["success"] is True
@@ -1164,10 +1213,12 @@ class TestTenantDashboard:
         tenant = _mock_tenant(id=1)
         tenant_result = make_scalar_result(tenant)
         mock_db.execute = AsyncMock(return_value=tenant_result)
-        mock_db.refresh = AsyncMock(side_effect=lambda obj: [
-            setattr(obj, "settings", {**tenant.settings, "currency": "EUR"}),
-            setattr(obj, "feature_flags", tenant.feature_flags),
-        ])
+        mock_db.refresh = AsyncMock(
+            side_effect=lambda obj: [
+                setattr(obj, "settings", {**tenant.settings, "currency": "EUR"}),
+                setattr(obj, "feature_flags", tenant.feature_flags),
+            ]
+        )
 
         payload = {"currency": "EUR"}
         resp = await api_client.put(

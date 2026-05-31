@@ -6,11 +6,17 @@ WhatsApp Business API client for sending messages, managing templates,
 and handling webhook interactions with the Meta Graph API.
 """
 
-from typing import List, Dict, Any, Optional
-import httpx
 import logging
 from datetime import datetime, timezone
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+from typing import Any, Dict, List, Optional
+
+import httpx
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
 
 from app.core.config import settings
 
@@ -78,7 +84,9 @@ class WhatsAppClient:
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=1, max=15),
-        retry=retry_if_exception_type((httpx.ConnectError, httpx.TimeoutException, OSError)),
+        retry=retry_if_exception_type(
+            (httpx.ConnectError, httpx.TimeoutException, OSError)
+        ),
         reraise=True,
     )
     async def _make_request(
@@ -384,9 +392,7 @@ class WhatsAppClient:
     # Webhook Methods
     # -------------------------------------------------------------------------
 
-    def verify_webhook(
-        self, mode: str, token: str, challenge: str
-    ) -> Optional[str]:
+    def verify_webhook(self, mode: str, token: str, challenge: str) -> Optional[str]:
         """
         Verify webhook subscription from Meta.
 
@@ -429,29 +435,41 @@ class WhatsAppClient:
                     for message in value.get("messages", []):
                         contact = value.get("contacts", [{}])[0]
                         msg_ts = int(message.get("timestamp", 0))
-                        events.append({
-                            "type": "message",
-                            "from": message.get("from"),
-                            "wamid": message.get("id"),
-                            "timestamp": datetime.fromtimestamp(msg_ts, tz=timezone.utc) if msg_ts else datetime.now(timezone.utc),
-                            "message_type": message.get("type"),
-                            "content": message.get(message.get("type"), {}),
-                            "contact_name": contact.get("profile", {}).get("name"),
-                        })
+                        events.append(
+                            {
+                                "type": "message",
+                                "from": message.get("from"),
+                                "wamid": message.get("id"),
+                                "timestamp": (
+                                    datetime.fromtimestamp(msg_ts, tz=timezone.utc)
+                                    if msg_ts
+                                    else datetime.now(timezone.utc)
+                                ),
+                                "message_type": message.get("type"),
+                                "content": message.get(message.get("type"), {}),
+                                "contact_name": contact.get("profile", {}).get("name"),
+                            }
+                        )
 
                     # Parse status updates
                     for status in value.get("statuses", []):
                         status_ts = int(status.get("timestamp", 0))
-                        events.append({
-                            "type": "status",
-                            "wamid": status.get("id"),
-                            "status": status.get("status"),
-                            "timestamp": datetime.fromtimestamp(status_ts, tz=timezone.utc) if status_ts else datetime.now(timezone.utc),
-                            "recipient_id": status.get("recipient_id"),
-                            "conversation": status.get("conversation"),
-                            "pricing": status.get("pricing"),
-                            "errors": status.get("errors"),
-                        })
+                        events.append(
+                            {
+                                "type": "status",
+                                "wamid": status.get("id"),
+                                "status": status.get("status"),
+                                "timestamp": (
+                                    datetime.fromtimestamp(status_ts, tz=timezone.utc)
+                                    if status_ts
+                                    else datetime.now(timezone.utc)
+                                ),
+                                "recipient_id": status.get("recipient_id"),
+                                "conversation": status.get("conversation"),
+                                "pricing": status.get("pricing"),
+                                "errors": status.get("errors"),
+                            }
+                        )
 
         except (ValueError, TypeError, KeyError) as e:
             logger.error(f"Error parsing webhook payload: {e}")
@@ -461,6 +479,7 @@ class WhatsAppClient:
 
 class WhatsAppNotConfiguredError(Exception):
     """Raised when WhatsApp credentials are not configured."""
+
     pass
 
 
@@ -481,6 +500,4 @@ def get_whatsapp_client() -> WhatsAppClient:
 
 def is_whatsapp_configured() -> bool:
     """Check if WhatsApp credentials are properly configured."""
-    return bool(
-        settings.whatsapp_phone_number_id and settings.whatsapp_access_token
-    )
+    return bool(settings.whatsapp_phone_number_id and settings.whatsapp_access_token)

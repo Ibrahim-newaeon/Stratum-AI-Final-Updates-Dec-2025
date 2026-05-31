@@ -17,18 +17,18 @@ Routes:
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import select, func, and_
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.db.session import get_async_session
 from app.models.cms import (
-    CMSPost,
-    CMSPage,
     CMSCategory,
-    CMSTag,
-    CMSPostStatus,
+    CMSPage,
     CMSPageStatus,
+    CMSPost,
+    CMSPostStatus,
+    CMSTag,
 )
 from app.schemas.response import APIResponse
 
@@ -60,9 +60,7 @@ async def list_published_pages(
         query = query.where(CMSPage.show_in_navigation == True)
 
     # Get total count
-    count_query = select(func.count()).select_from(
-        query.subquery()
-    )
+    count_query = select(func.count()).select_from(query.subquery())
     total_result = await db.execute(count_query)
     total = total_result.scalar() or 0
 
@@ -75,18 +73,22 @@ async def list_published_pages(
 
     page_list = []
     for page in pages:
-        page_list.append({
-            "id": str(page.id),
-            "title": page.title,
-            "slug": page.slug,
-            "meta_title": getattr(page, "meta_title", None),
-            "meta_description": getattr(page, "meta_description", None),
-            "show_in_navigation": page.show_in_navigation,
-            "navigation_label": getattr(page, "navigation_label", None),
-            "navigation_order": page.navigation_order,
-            "published_at": page.published_at.isoformat() if page.published_at else None,
-            "updated_at": page.updated_at.isoformat() if page.updated_at else None,
-        })
+        page_list.append(
+            {
+                "id": str(page.id),
+                "title": page.title,
+                "slug": page.slug,
+                "meta_title": getattr(page, "meta_title", None),
+                "meta_description": getattr(page, "meta_description", None),
+                "show_in_navigation": page.show_in_navigation,
+                "navigation_label": getattr(page, "navigation_label", None),
+                "navigation_order": page.navigation_order,
+                "published_at": (
+                    page.published_at.isoformat() if page.published_at else None
+                ),
+                "updated_at": page.updated_at.isoformat() if page.updated_at else None,
+            }
+        )
 
     return APIResponse(
         success=True,
@@ -131,7 +133,9 @@ async def get_page_by_slug(
             "content_json": page.content_json,
             "meta_title": getattr(page, "meta_title", None),
             "meta_description": getattr(page, "meta_description", None),
-            "published_at": page.published_at.isoformat() if page.published_at else None,
+            "published_at": (
+                page.published_at.isoformat() if page.published_at else None
+            ),
             "updated_at": page.updated_at.isoformat() if page.updated_at else None,
         },
     )
@@ -186,26 +190,42 @@ async def list_published_posts(
 
     post_list = []
     for post in posts:
-        post_list.append({
-            "id": str(post.id),
-            "title": post.title,
-            "slug": post.slug,
-            "excerpt": post.excerpt,
-            "content_type": post.content_type.value if post.content_type else None,
-            "featured_image_url": getattr(post, "featured_image_url", None),
-            "is_featured": post.is_featured,
-            "author": {
-                "name": post.author.name,
-                "avatar_url": getattr(post.author, "avatar_url", None),
-            } if post.author else None,
-            "category": {
-                "name": post.category.name,
-                "slug": post.category.slug,
-            } if post.category else None,
-            "tags": [{"name": t.name, "slug": t.slug} for t in post.tags] if post.tags else [],
-            "published_at": post.published_at.isoformat() if post.published_at else None,
-            "reading_time_minutes": getattr(post, "reading_time_minutes", None),
-        })
+        post_list.append(
+            {
+                "id": str(post.id),
+                "title": post.title,
+                "slug": post.slug,
+                "excerpt": post.excerpt,
+                "content_type": post.content_type.value if post.content_type else None,
+                "featured_image_url": getattr(post, "featured_image_url", None),
+                "is_featured": post.is_featured,
+                "author": (
+                    {
+                        "name": post.author.name,
+                        "avatar_url": getattr(post.author, "avatar_url", None),
+                    }
+                    if post.author
+                    else None
+                ),
+                "category": (
+                    {
+                        "name": post.category.name,
+                        "slug": post.category.slug,
+                    }
+                    if post.category
+                    else None
+                ),
+                "tags": (
+                    [{"name": t.name, "slug": t.slug} for t in post.tags]
+                    if post.tags
+                    else []
+                ),
+                "published_at": (
+                    post.published_at.isoformat() if post.published_at else None
+                ),
+                "reading_time_minutes": getattr(post, "reading_time_minutes", None),
+            }
+        )
 
     return APIResponse(
         success=True,
@@ -261,17 +281,31 @@ async def get_post_by_slug(
             "is_featured": post.is_featured,
             "meta_title": getattr(post, "meta_title", None),
             "meta_description": getattr(post, "meta_description", None),
-            "author": {
-                "name": post.author.name,
-                "bio": getattr(post.author, "bio", None),
-                "avatar_url": getattr(post.author, "avatar_url", None),
-            } if post.author else None,
-            "category": {
-                "name": post.category.name,
-                "slug": post.category.slug,
-            } if post.category else None,
-            "tags": [{"name": t.name, "slug": t.slug} for t in post.tags] if post.tags else [],
-            "published_at": post.published_at.isoformat() if post.published_at else None,
+            "author": (
+                {
+                    "name": post.author.name,
+                    "bio": getattr(post.author, "bio", None),
+                    "avatar_url": getattr(post.author, "avatar_url", None),
+                }
+                if post.author
+                else None
+            ),
+            "category": (
+                {
+                    "name": post.category.name,
+                    "slug": post.category.slug,
+                }
+                if post.category
+                else None
+            ),
+            "tags": (
+                [{"name": t.name, "slug": t.slug} for t in post.tags]
+                if post.tags
+                else []
+            ),
+            "published_at": (
+                post.published_at.isoformat() if post.published_at else None
+            ),
             "updated_at": post.updated_at.isoformat() if post.updated_at else None,
             "reading_time_minutes": getattr(post, "reading_time_minutes", None),
         },
@@ -289,7 +323,9 @@ async def list_categories(
 ):
     """List all content categories."""
     result = await db.execute(
-        select(CMSCategory).order_by(CMSCategory.display_order.asc(), CMSCategory.name.asc()).limit(1000)
+        select(CMSCategory)
+        .order_by(CMSCategory.display_order.asc(), CMSCategory.name.asc())
+        .limit(1000)
     )
     categories = result.scalars().all()
 
@@ -317,7 +353,9 @@ async def list_tags(
 ):
     """List all content tags."""
     result = await db.execute(
-        select(CMSTag).order_by(CMSTag.usage_count.desc(), CMSTag.name.asc()).limit(1000)
+        select(CMSTag)
+        .order_by(CMSTag.usage_count.desc(), CMSTag.name.asc())
+        .limit(1000)
     )
     tags = result.scalars().all()
 

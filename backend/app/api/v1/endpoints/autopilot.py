@@ -9,18 +9,17 @@ API endpoints for Autopilot features:
 """
 
 from datetime import date
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Query, Body
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, Field
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.autopilot.service import ActionStatus, ActionType, AutopilotService
 from app.db.session import get_async_session
-from app.autopilot.service import AutopilotService, ActionStatus, ActionType
 from app.features.service import can_access_feature, get_tenant_features
 from app.schemas.response import APIResponse
-
 
 router = APIRouter(prefix="/tenant/{tenant_id}/autopilot", tags=["autopilot"])
 
@@ -29,24 +28,34 @@ router = APIRouter(prefix="/tenant/{tenant_id}/autopilot", tags=["autopilot"])
 # Request/Response Models
 # =============================================================================
 
+
 class QueueActionRequest(BaseModel):
     """Request to queue a new action."""
+
     action_type: str = Field(..., description="Type of action")
-    entity_type: str = Field(..., description="Type of entity (campaign, adset, creative)")
+    entity_type: str = Field(
+        ..., description="Type of entity (campaign, adset, creative)"
+    )
     entity_id: str = Field(..., description="Platform entity ID")
     entity_name: str = Field(..., description="Human-readable name")
-    platform: str = Field(..., description="Ad platform (meta, google, tiktok, snapchat)")
+    platform: str = Field(
+        ..., description="Ad platform (meta, google, tiktok, snapchat)"
+    )
     action_json: Dict[str, Any] = Field(..., description="Full action details")
-    before_value: Optional[Dict[str, Any]] = Field(None, description="Current value before change")
+    before_value: Optional[Dict[str, Any]] = Field(
+        None, description="Current value before change"
+    )
 
 
 class ApproveActionsRequest(BaseModel):
     """Request to approve multiple actions."""
+
     action_ids: List[str] = Field(..., description="List of action UUIDs to approve")
 
 
 class ActionResponse(BaseModel):
     """Serialized action for API response."""
+
     id: str
     date: str
     action_type: str
@@ -68,9 +77,11 @@ class ActionResponse(BaseModel):
 # Helper Functions
 # =============================================================================
 
+
 def action_to_response(action) -> ActionResponse:
     """Convert database action to API response."""
     import json
+
     return ActionResponse(
         id=str(action.id),
         date=action.date.isoformat(),
@@ -93,6 +104,7 @@ def action_to_response(action) -> ActionResponse:
 # =============================================================================
 # Endpoints
 # =============================================================================
+
 
 @router.get("/status", response_model=APIResponse[Dict[str, Any]])
 async def get_autopilot_status(
@@ -118,6 +130,7 @@ async def get_autopilot_status(
     summary = await service.get_action_summary(tenant_id, days=1)
 
     from app.features.flags import get_autopilot_caps
+
     caps = get_autopilot_caps()
 
     return APIResponse(
@@ -304,7 +317,9 @@ async def approve_action(
     action = await service.approve_action(uuid_id, tenant_id, user_id)
 
     if not action:
-        raise HTTPException(status_code=404, detail="Action not found or already processed")
+        raise HTTPException(
+            status_code=404, detail="Action not found or already processed"
+        )
 
     return APIResponse(
         success=True,
@@ -374,7 +389,9 @@ async def dismiss_action(
     action = await service.dismiss_action(uuid_id, tenant_id, user_id)
 
     if not action:
-        raise HTTPException(status_code=404, detail="Action not found or already processed")
+        raise HTTPException(
+            status_code=404, detail="Action not found or already processed"
+        )
 
     return APIResponse(
         success=True,

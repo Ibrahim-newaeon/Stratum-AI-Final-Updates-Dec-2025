@@ -52,7 +52,9 @@ class AdapterRegistry:
             adapter_class: The adapter class (not instance)
         """
         cls._adapters[platform] = adapter_class
-        logger.info(f"Registered adapter for {platform.value}: {adapter_class.__name__}")
+        logger.info(
+            f"Registered adapter for {platform.value}: {adapter_class.__name__}"
+        )
 
     @classmethod
     def get_adapter(

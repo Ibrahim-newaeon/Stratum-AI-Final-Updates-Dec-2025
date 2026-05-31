@@ -27,12 +27,10 @@ def _table_exists(table_name: str) -> bool:
     """Check if a table exists in the database."""
     conn = op.get_bind()
     result = conn.execute(
-        sa.text(
-            """
+        sa.text("""
             SELECT 1 FROM information_schema.tables
             WHERE table_schema = 'public' AND table_name = :table_name
-            """
-        ),
+            """),
         {"table_name": table_name},
     )
     return result.scalar() is not None
@@ -42,14 +40,12 @@ def _column_exists(table_name: str, column_name: str) -> bool:
     """Check if a column exists on the given table."""
     conn = op.get_bind()
     result = conn.execute(
-        sa.text(
-            """
+        sa.text("""
             SELECT 1 FROM information_schema.columns
             WHERE table_schema = 'public'
               AND table_name = :table_name
               AND column_name = :column_name
-            """
-        ),
+            """),
         {"table_name": table_name, "column_name": column_name},
     )
     return result.scalar() is not None
@@ -59,22 +55,18 @@ def _index_exists(table_name: str, index_name: str) -> bool:
     """Check if an index already exists on the given table."""
     conn = op.get_bind()
     result = conn.execute(
-        sa.text(
-            """
+        sa.text("""
             SELECT 1 FROM pg_indexes
             WHERE schemaname = 'public'
               AND tablename = :table_name
               AND indexname = :index_name
-            """
-        ),
+            """),
         {"table_name": table_name, "index_name": index_name},
     )
     return result.scalar() is not None
 
 
-def _create_index_safe(
-    index_name: str, table_name: str, columns: list[str]
-) -> None:
+def _create_index_safe(index_name: str, table_name: str, columns: list[str]) -> None:
     """Create an index only if the table, columns, and index all exist/are valid."""
     if not _table_exists(table_name):
         return
@@ -102,12 +94,8 @@ def upgrade() -> None:
     _create_index_safe(
         "ix_campaigns_tenant_updated", "campaigns", ["tenant_id", "updated_at"]
     )
-    _create_index_safe(
-        "ix_campaigns_name_search", "campaigns", ["tenant_id", "name"]
-    )
-    _create_index_safe(
-        "ix_campaigns_external", "campaigns", ["external_id"]
-    )
+    _create_index_safe("ix_campaigns_name_search", "campaigns", ["tenant_id", "name"])
+    _create_index_safe("ix_campaigns_external", "campaigns", ["external_id"])
 
     # -------------------------------------------------------------------------
     # Campaign Metrics — time-series analytics

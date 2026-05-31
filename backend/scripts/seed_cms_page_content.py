@@ -313,11 +313,12 @@ FAQ_ITEMS = [
 def slugify(text: str) -> str:
     """Simple slug generation."""
     import re
+
     slug = text.lower().strip()
-    slug = re.sub(r'[^\w\s-]', '', slug)
-    slug = re.sub(r'[\s_]+', '-', slug)
-    slug = re.sub(r'-+', '-', slug)
-    return slug.strip('-')
+    slug = re.sub(r"[^\w\s-]", "", slug)
+    slug = re.sub(r"[\s_]+", "-", slug)
+    slug = re.sub(r"-+", "-", slug)
+    return slug.strip("-")
 
 
 async def populate_cms():
@@ -344,7 +345,9 @@ async def populate_cms():
             if row:
                 features_json = json.dumps(FEATURES_CONTENT)
                 await conn.execute(
-                    text("UPDATE cms_pages SET content_json = :cj, updated_at = :now WHERE slug = 'features'"),
+                    text(
+                        "UPDATE cms_pages SET content_json = :cj, updated_at = :now WHERE slug = 'features'"
+                    ),
                     {"cj": features_json, "now": now},
                 )
                 print("  + Features page updated with 12 feature cards")
@@ -362,7 +365,9 @@ async def populate_cms():
             if row:
                 pricing_json = json.dumps(PRICING_CONTENT)
                 await conn.execute(
-                    text("UPDATE cms_pages SET content_json = :cj, updated_at = :now WHERE slug = 'pricing'"),
+                    text(
+                        "UPDATE cms_pages SET content_json = :cj, updated_at = :now WHERE slug = 'pricing'"
+                    ),
                     {"cj": pricing_json, "now": now},
                 )
                 print("  + Pricing page updated with 3 tiers and 4 FAQs")
@@ -380,7 +385,9 @@ async def populate_cms():
             )
             cat_row = result.fetchone()
             if not cat_row:
-                print("  ! landing-faq category not found - run seed_cms_content.py first")
+                print(
+                    "  ! landing-faq category not found - run seed_cms_content.py first"
+                )
             else:
                 category_id = cat_row[0]
                 faqs_created = 0
@@ -400,10 +407,12 @@ async def populate_cms():
 
                     post_id = str(uuid4())
                     # Store faq metadata in meta_title as JSON (the convention used by CMS landing editors)
-                    meta_json = json.dumps({
-                        "faqCategory": faq["faq_category"],
-                        "displayOrder": faq["display_order"],
-                    })
+                    meta_json = json.dumps(
+                        {
+                            "faqCategory": faq["faq_category"],
+                            "displayOrder": faq["display_order"],
+                        }
+                    )
 
                     await conn.execute(
                         text("""
@@ -434,7 +443,9 @@ async def populate_cms():
                     )
                     faqs_created += 1
 
-                print(f"  + Created {faqs_created} FAQ posts, {faqs_skipped} already existed")
+                print(
+                    f"  + Created {faqs_created} FAQ posts, {faqs_skipped} already existed"
+                )
 
             # =====================================================
             # Summary

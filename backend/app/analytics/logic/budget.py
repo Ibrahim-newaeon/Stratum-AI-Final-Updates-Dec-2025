@@ -14,15 +14,17 @@ Guardrails:
 """
 
 from typing import List, Optional
+
 from app.analytics.logic.types import (
-    ScalingScoreResult,
     BudgetAction,
     ScalingAction,
+    ScalingScoreResult,
 )
 
 
 class BudgetReallocationParams:
     """Configuration for budget reallocation."""
+
     # Thresholds
     scale_threshold: float = 0.25
     fix_threshold: float = -0.25
@@ -112,29 +114,33 @@ def reallocate_budget(
             )
 
             if increase > 0:
-                actions.append(BudgetAction(
-                    entity_id=score_result.entity_id,
-                    entity_name=score_result.entity_name,
-                    action="increase_budget",
-                    amount=round(increase, 2),
-                    current_spend=spend,
-                    scaling_score=score_result.score,
-                    reason=f"High ROAS ({score_result.roas_delta*100:+.1f}%), scaling candidate",
-                ))
+                actions.append(
+                    BudgetAction(
+                        entity_id=score_result.entity_id,
+                        entity_name=score_result.entity_name,
+                        action="increase_budget",
+                        amount=round(increase, 2),
+                        current_spend=spend,
+                        scaling_score=score_result.score,
+                        reason=f"High ROAS ({score_result.roas_delta*100:+.1f}%), scaling candidate",
+                    )
+                )
 
     # Add loser decreases
     for score_result, spend in losers:
         decrease = loser_decreases.get(score_result.entity_id, 0)
         if decrease > 0:
-            actions.append(BudgetAction(
-                entity_id=score_result.entity_id,
-                entity_name=score_result.entity_name,
-                action="decrease_budget",
-                amount=round(decrease, 2),
-                current_spend=spend,
-                scaling_score=score_result.score,
-                reason=f"Low ROAS ({score_result.roas_delta*100:+.1f}%), needs optimization",
-            ))
+            actions.append(
+                BudgetAction(
+                    entity_id=score_result.entity_id,
+                    entity_name=score_result.entity_name,
+                    action="decrease_budget",
+                    amount=round(decrease, 2),
+                    current_spend=spend,
+                    scaling_score=score_result.score,
+                    reason=f"Low ROAS ({score_result.roas_delta*100:+.1f}%), needs optimization",
+                )
+            )
 
     # Sort by action (increases first, then decreases)
     actions.sort(key=lambda x: (x.action != "increase_budget", -abs(x.amount)))

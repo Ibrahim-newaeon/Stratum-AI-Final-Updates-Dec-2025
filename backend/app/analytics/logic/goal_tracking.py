@@ -16,16 +16,18 @@ Architecture:
 Builds on: Pacing Service (pacing_service.py, forecasting.py)
 """
 
-from typing import List, Optional, Dict, Literal
-from datetime import datetime, timezone, date
-from pydantic import BaseModel, Field
 import calendar
+from datetime import date, datetime, timezone
+from typing import Dict, List, Literal, Optional
 
+from pydantic import BaseModel, Field
 
 # ── Models ───────────────────────────────────────────────────────────────────
 
+
 class GoalProgress(BaseModel):
     """Progress tracking for a single goal/target."""
+
     goal_id: str
     metric: str  # spend, revenue, roas, conversions, cpa
     label: str
@@ -49,6 +51,7 @@ class GoalProgress(BaseModel):
 
 class PacingMilestone(BaseModel):
     """A pacing milestone or checkpoint."""
+
     label: str  # e.g., "25% mark", "50% mark", "Week 2"
     expected_value: float
     actual_value: float
@@ -58,6 +61,7 @@ class PacingMilestone(BaseModel):
 
 class GoalInsight(BaseModel):
     """An AI insight about goal performance."""
+
     title: str
     description: str
     severity: Literal["positive", "info", "warning", "critical"]
@@ -67,6 +71,7 @@ class GoalInsight(BaseModel):
 
 class GoalTrackingResponse(BaseModel):
     """Full goal tracking & pacing response."""
+
     summary: str
     period_label: str
     days_elapsed: int
@@ -76,7 +81,9 @@ class GoalTrackingResponse(BaseModel):
     goals: List[GoalProgress] = []
     milestones: List[PacingMilestone] = []
     insights: List[GoalInsight] = []
-    overall_pacing: Literal["ahead", "on_track", "behind", "at_risk", "critical"] = "on_track"
+    overall_pacing: Literal["ahead", "on_track", "behind", "at_risk", "critical"] = (
+        "on_track"
+    )
     goals_on_track: int = 0
     goals_at_risk: int = 0
     goals_behind: int = 0
@@ -85,11 +92,11 @@ class GoalTrackingResponse(BaseModel):
 # ── Pacing Calculation ────────────────────────────────────────────────────────
 
 PACING_THRESHOLDS = {
-    "ahead": (1.10, 999),      # >110% of expected pace
+    "ahead": (1.10, 999),  # >110% of expected pace
     "on_track": (0.90, 1.10),  # 90-110%
-    "behind": (0.75, 0.90),    # 75-90%
-    "at_risk": (0.50, 0.75),   # 50-75%
-    "critical": (0.0, 0.50),   # <50%
+    "behind": (0.75, 0.90),  # 75-90%
+    "at_risk": (0.50, 0.75),  # 50-75%
+    "critical": (0.0, 0.50),  # <50%
 }
 
 
@@ -214,27 +221,29 @@ def _build_goals(
         pace_ratio = pacing_pct / 100
         trend = _detect_trend(pace_ratio, days_elapsed)
 
-        goals.append(GoalProgress(
-            goal_id=f"goal_{metric}",
-            metric=metric,
-            label=labels.get(metric, metric.title()),
-            target_value=round(target, 2),
-            current_value=round(current, 2),
-            progress_pct=round(progress_pct, 1),
-            pacing_pct=round(pacing_pct, 1),
-            pacing_status=pacing_status,
-            projected_value=round(projected, 2),
-            projected_pct=round(projected_pct, 1),
-            gap=round(gap, 2),
-            daily_needed=round(daily_needed, 2),
-            days_remaining=days_remaining,
-            days_elapsed=days_elapsed,
-            trend=trend,
-            formatted_current=_format_metric(current, metric),
-            formatted_target=_format_metric(target, metric),
-            formatted_projected=_format_metric(projected, metric),
-            is_inverted=is_inverted,
-        ))
+        goals.append(
+            GoalProgress(
+                goal_id=f"goal_{metric}",
+                metric=metric,
+                label=labels.get(metric, metric.title()),
+                target_value=round(target, 2),
+                current_value=round(current, 2),
+                progress_pct=round(progress_pct, 1),
+                pacing_pct=round(pacing_pct, 1),
+                pacing_status=pacing_status,
+                projected_value=round(projected, 2),
+                projected_pct=round(projected_pct, 1),
+                gap=round(gap, 2),
+                daily_needed=round(daily_needed, 2),
+                days_remaining=days_remaining,
+                days_elapsed=days_elapsed,
+                trend=trend,
+                formatted_current=_format_metric(current, metric),
+                formatted_target=_format_metric(target, metric),
+                formatted_projected=_format_metric(projected, metric),
+                is_inverted=is_inverted,
+            )
+        )
 
     return goals
 
@@ -249,11 +258,18 @@ def _build_milestones(
     progress_pct = (days_elapsed / days_total * 100) if days_total > 0 else 0
 
     # Use the primary goal (revenue if available, else first)
-    primary = next((g for g in goals if g.metric == "revenue"), goals[0] if goals else None)
+    primary = next(
+        (g for g in goals if g.metric == "revenue"), goals[0] if goals else None
+    )
     if not primary:
         return milestones
 
-    for pct, label in [(25, "25% Mark"), (50, "Halfway"), (75, "75% Mark"), (100, "Target")]:
+    for pct, label in [
+        (25, "25% Mark"),
+        (50, "Halfway"),
+        (75, "75% Mark"),
+        (100, "Target"),
+    ]:
         expected = primary.target_value * (pct / 100)
         milestone_day = int(days_total * pct / 100)
 
@@ -262,13 +278,17 @@ def _build_milestones(
         else:
             status = "upcoming"
 
-        milestones.append(PacingMilestone(
-            label=label,
-            expected_value=round(expected, 2),
-            actual_value=round(primary.current_value, 2) if status != "upcoming" else 0,
-            status=status,
-            date_label=f"Day {milestone_day}",
-        ))
+        milestones.append(
+            PacingMilestone(
+                label=label,
+                expected_value=round(expected, 2),
+                actual_value=(
+                    round(primary.current_value, 2) if status != "upcoming" else 0
+                ),
+                status=status,
+                date_label=f"Day {milestone_day}",
+            )
+        )
 
     return milestones
 
@@ -279,55 +299,66 @@ def _build_insights(goals: List[GoalProgress]) -> List[GoalInsight]:
 
     for g in goals:
         if g.pacing_status == "critical":
-            insights.append(GoalInsight(
-                title=f"{g.label} critically behind target",
-                description=(
-                    f"{g.label} is at {g.progress_pct:.0f}% of target with {g.days_remaining} days remaining. "
-                    f"Need {g.formatted_current} → {g.formatted_target}. "
-                    f"Daily run-rate must increase significantly to recover."
-                ),
-                severity="critical",
-                metric=g.metric,
-                action_label="Review strategy immediately",
-            ))
+            insights.append(
+                GoalInsight(
+                    title=f"{g.label} critically behind target",
+                    description=(
+                        f"{g.label} is at {g.progress_pct:.0f}% of target with {g.days_remaining} days remaining. "
+                        f"Need {g.formatted_current} → {g.formatted_target}. "
+                        f"Daily run-rate must increase significantly to recover."
+                    ),
+                    severity="critical",
+                    metric=g.metric,
+                    action_label="Review strategy immediately",
+                )
+            )
         elif g.pacing_status == "at_risk":
-            insights.append(GoalInsight(
-                title=f"{g.label} at risk of missing target",
-                description=(
-                    f"{g.label} is pacing at {g.pacing_pct:.0f}% of expected. "
-                    f"Need ~{_format_metric(g.daily_needed, g.metric)}/day to close the gap."
-                ),
-                severity="warning",
-                metric=g.metric,
-                action_label="Increase daily output",
-            ))
+            insights.append(
+                GoalInsight(
+                    title=f"{g.label} at risk of missing target",
+                    description=(
+                        f"{g.label} is pacing at {g.pacing_pct:.0f}% of expected. "
+                        f"Need ~{_format_metric(g.daily_needed, g.metric)}/day to close the gap."
+                    ),
+                    severity="warning",
+                    metric=g.metric,
+                    action_label="Increase daily output",
+                )
+            )
         elif g.pacing_status == "ahead":
-            insights.append(GoalInsight(
-                title=f"{g.label} ahead of schedule",
-                description=(
-                    f"{g.label} is at {g.progress_pct:.0f}% of target, "
-                    f"projected to reach {g.formatted_projected} ({g.projected_pct:.0f}% of target). "
-                    f"Consider raising the target or reallocating excess."
-                ),
-                severity="positive",
-                metric=g.metric,
-            ))
+            insights.append(
+                GoalInsight(
+                    title=f"{g.label} ahead of schedule",
+                    description=(
+                        f"{g.label} is at {g.progress_pct:.0f}% of target, "
+                        f"projected to reach {g.formatted_projected} ({g.projected_pct:.0f}% of target). "
+                        f"Consider raising the target or reallocating excess."
+                    ),
+                    severity="positive",
+                    metric=g.metric,
+                )
+            )
 
     # Cross-goal insights
-    behind_count = sum(1 for g in goals if g.pacing_status in ("behind", "at_risk", "critical"))
+    behind_count = sum(
+        1 for g in goals if g.pacing_status in ("behind", "at_risk", "critical")
+    )
     if behind_count >= 2:
-        insights.append(GoalInsight(
-            title="Multiple goals behind — review overall strategy",
-            description=f"{behind_count} out of {len(goals)} goals are behind pace. A portfolio-level strategy review may be needed.",
-            severity="warning",
-            metric="portfolio",
-            action_label="Review portfolio strategy",
-        ))
+        insights.append(
+            GoalInsight(
+                title="Multiple goals behind — review overall strategy",
+                description=f"{behind_count} out of {len(goals)} goals are behind pace. A portfolio-level strategy review may be needed.",
+                severity="warning",
+                metric="portfolio",
+                action_label="Review portfolio strategy",
+            )
+        )
 
     return insights[:6]
 
 
 # ── Main Entry Point ─────────────────────────────────────────────────────────
+
 
 def build_goal_tracking(
     campaigns: List[Dict],
@@ -362,7 +393,9 @@ def build_goal_tracking(
     days_total = max(1, (period_end - period_start).days)
     progress_pct = round(days_elapsed / days_total * 100, 1)
 
-    period_label = f"{period_start.strftime('%b %d')} – {period_end.strftime('%b %d, %Y')}"
+    period_label = (
+        f"{period_start.strftime('%b %d')} – {period_end.strftime('%b %d, %Y')}"
+    )
 
     if not campaigns:
         return GoalTrackingResponse(
@@ -386,10 +419,14 @@ def build_goal_tracking(
         daily_rate_conv = total_conversions / days_elapsed if days_elapsed > 0 else 0
 
         targets = {
-            "revenue": round(daily_rate_revenue * days_total * 1.2, -2),  # 20% above run-rate
+            "revenue": round(
+                daily_rate_revenue * days_total * 1.2, -2
+            ),  # 20% above run-rate
             "spend": round(daily_rate_spend * days_total, -2),
             "conversions": max(10, int(daily_rate_conv * days_total * 1.15)),
-            "roas": round(total_revenue / total_spend * 1.1, 2) if total_spend > 0 else 3.0,
+            "roas": (
+                round(total_revenue / total_spend * 1.1, 2) if total_spend > 0 else 3.0
+            ),
         }
 
     # Build goals
@@ -411,7 +448,9 @@ def build_goal_tracking(
     goals_behind = sum(1 for g in goals if g.pacing_status in ("behind", "critical"))
 
     # Summary
-    summary = _build_summary(goals, overall_pacing, days_remaining, days_elapsed, days_total)
+    summary = _build_summary(
+        goals, overall_pacing, days_remaining, days_elapsed, days_total
+    )
 
     return GoalTrackingResponse(
         summary=summary,
@@ -447,7 +486,9 @@ def _build_summary(
         "at_risk": "at risk",
         "critical": "critically behind",
     }
-    parts.append(f"Day {days_elapsed} of {days_total} — overall pacing is {status_labels.get(overall, overall)}.")
+    parts.append(
+        f"Day {days_elapsed} of {days_total} — overall pacing is {status_labels.get(overall, overall)}."
+    )
 
     on_track = sum(1 for g in goals if g.pacing_status in ("ahead", "on_track"))
     total = len(goals)

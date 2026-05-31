@@ -17,15 +17,17 @@ Architecture:
 Builds on: notifications model, pacing alerts, signal health, anomalies
 """
 
-from typing import List, Optional, Dict, Literal
-from datetime import datetime, timezone, timedelta
-from pydantic import BaseModel, Field
+from datetime import datetime, timedelta, timezone
+from typing import Dict, List, Literal, Optional
 
+from pydantic import BaseModel, Field
 
 # ── Models ───────────────────────────────────────────────────────────────────
 
+
 class SuggestedAction(BaseModel):
     """A suggested action for a notification."""
+
     action_type: str  # e.g. "navigate", "adjust_budget", "resync", "review"
     label: str
     description: str
@@ -34,10 +36,19 @@ class SuggestedAction(BaseModel):
 
 class PrioritizedNotification(BaseModel):
     """A single notification with AI priority scoring."""
+
     id: str
     title: str
     message: str
-    source: Literal["pacing", "signal_health", "campaign", "anomaly", "system", "trust_gate", "churn"]
+    source: Literal[
+        "pacing",
+        "signal_health",
+        "campaign",
+        "anomaly",
+        "system",
+        "trust_gate",
+        "churn",
+    ]
     notification_type: Literal["info", "warning", "error", "success", "alert"]
     category: str
     priority_score: float  # 0-100 (higher = more urgent)
@@ -53,6 +64,7 @@ class PrioritizedNotification(BaseModel):
 
 class NotificationGroup(BaseModel):
     """A group of related notifications."""
+
     category: str
     label: str
     count: int
@@ -62,6 +74,7 @@ class NotificationGroup(BaseModel):
 
 class UnifiedNotificationsResponse(BaseModel):
     """Full unified notifications response."""
+
     summary: str
     total_count: int
     unread_count: int
@@ -73,6 +86,7 @@ class UnifiedNotificationsResponse(BaseModel):
 
 
 # ── Scoring ──────────────────────────────────────────────────────────────────
+
 
 def _score_urgency(
     severity: str,
@@ -179,6 +193,7 @@ def _priority_label(score: float) -> str:
 
 # ── Notification Builders ────────────────────────────────────────────────────
 
+
 def _build_campaign_notifications(
     campaigns: List[Dict],
     now: datetime,
@@ -201,26 +216,28 @@ def _build_campaign_notifications(
             actionability = _score_actionability(True)
             priority = _compute_priority(urgency, impact, actionability)
 
-            notifications.append(PrioritizedNotification(
-                id=f"camp_roas_{c.get('id', 0)}",
-                title=f"Critical ROAS: {name}",
-                message=f"{name} on {platform} has {roas:.2f}x ROAS with ${spend:,.0f} spend — well below breakeven.",
-                source="campaign",
-                notification_type="error",
-                category="Performance",
-                priority_score=priority,
-                urgency=urgency,
-                impact=impact,
-                actionability=actionability,
-                priority_label=_priority_label(priority),
-                created_at=now.isoformat(),
-                suggested_action=SuggestedAction(
-                    action_type="review",
-                    label="Review Campaign",
-                    description=f"Audit targeting, creative, and budget for {name}.",
-                ),
-                context={"campaign_id": c.get("id"), "roas": roas, "spend": spend},
-            ))
+            notifications.append(
+                PrioritizedNotification(
+                    id=f"camp_roas_{c.get('id', 0)}",
+                    title=f"Critical ROAS: {name}",
+                    message=f"{name} on {platform} has {roas:.2f}x ROAS with ${spend:,.0f} spend — well below breakeven.",
+                    source="campaign",
+                    notification_type="error",
+                    category="Performance",
+                    priority_score=priority,
+                    urgency=urgency,
+                    impact=impact,
+                    actionability=actionability,
+                    priority_label=_priority_label(priority),
+                    created_at=now.isoformat(),
+                    suggested_action=SuggestedAction(
+                        action_type="review",
+                        label="Review Campaign",
+                        description=f"Audit targeting, creative, and budget for {name}.",
+                    ),
+                    context={"campaign_id": c.get("id"), "roas": roas, "spend": spend},
+                )
+            )
 
         # Zero conversions with spend
         elif spend > 200 and conversions == 0:
@@ -229,54 +246,60 @@ def _build_campaign_notifications(
             actionability = _score_actionability(True, can_auto_resolve=False)
             priority = _compute_priority(urgency, impact, actionability)
 
-            notifications.append(PrioritizedNotification(
-                id=f"camp_noconv_{c.get('id', 0)}",
-                title=f"No Conversions: {name}",
-                message=f"{name} has spent ${spend:,.0f} with zero conversions. Check tracking setup.",
-                source="campaign",
-                notification_type="warning",
-                category="Performance",
-                priority_score=priority,
-                urgency=urgency,
-                impact=impact,
-                actionability=actionability,
-                priority_label=_priority_label(priority),
-                created_at=now.isoformat(),
-                suggested_action=SuggestedAction(
-                    action_type="audit",
-                    label="Audit Tracking",
-                    description="Verify pixel/CAPI setup and conversion events.",
-                ),
-                context={"campaign_id": c.get("id"), "spend": spend},
-            ))
+            notifications.append(
+                PrioritizedNotification(
+                    id=f"camp_noconv_{c.get('id', 0)}",
+                    title=f"No Conversions: {name}",
+                    message=f"{name} has spent ${spend:,.0f} with zero conversions. Check tracking setup.",
+                    source="campaign",
+                    notification_type="warning",
+                    category="Performance",
+                    priority_score=priority,
+                    urgency=urgency,
+                    impact=impact,
+                    actionability=actionability,
+                    priority_label=_priority_label(priority),
+                    created_at=now.isoformat(),
+                    suggested_action=SuggestedAction(
+                        action_type="audit",
+                        label="Audit Tracking",
+                        description="Verify pixel/CAPI setup and conversion events.",
+                    ),
+                    context={"campaign_id": c.get("id"), "spend": spend},
+                )
+            )
 
         # High performer opportunity
         elif roas >= 5.0 and spend > 50:
             urgency = _score_urgency("info", 12)
-            impact = _score_impact(spend_at_risk=0, deviation_pct=0, campaigns_affected=1)
+            impact = _score_impact(
+                spend_at_risk=0, deviation_pct=0, campaigns_affected=1
+            )
             actionability = _score_actionability(True)
             priority = _compute_priority(urgency, impact, actionability)
 
-            notifications.append(PrioritizedNotification(
-                id=f"camp_star_{c.get('id', 0)}",
-                title=f"Top Performer: {name}",
-                message=f"{name} is achieving {roas:.2f}x ROAS — consider scaling budget.",
-                source="campaign",
-                notification_type="success",
-                category="Opportunity",
-                priority_score=priority,
-                urgency=urgency,
-                impact=impact,
-                actionability=actionability,
-                priority_label=_priority_label(priority),
-                created_at=now.isoformat(),
-                suggested_action=SuggestedAction(
-                    action_type="adjust_budget",
-                    label="Scale Budget",
-                    description=f"Increase budget for {name} to capture more conversions.",
-                ),
-                context={"campaign_id": c.get("id"), "roas": roas, "spend": spend},
-            ))
+            notifications.append(
+                PrioritizedNotification(
+                    id=f"camp_star_{c.get('id', 0)}",
+                    title=f"Top Performer: {name}",
+                    message=f"{name} is achieving {roas:.2f}x ROAS — consider scaling budget.",
+                    source="campaign",
+                    notification_type="success",
+                    category="Opportunity",
+                    priority_score=priority,
+                    urgency=urgency,
+                    impact=impact,
+                    actionability=actionability,
+                    priority_label=_priority_label(priority),
+                    created_at=now.isoformat(),
+                    suggested_action=SuggestedAction(
+                        action_type="adjust_budget",
+                        label="Scale Budget",
+                        description=f"Increase budget for {name} to capture more conversions.",
+                    ),
+                    context={"campaign_id": c.get("id"), "roas": roas, "spend": spend},
+                )
+            )
 
     return notifications
 
@@ -294,52 +317,56 @@ def _build_signal_notifications(
         actionability = _score_actionability(True, requires_manual=True)
         priority = _compute_priority(urgency, impact, actionability)
 
-        notifications.append(PrioritizedNotification(
-            id="signal_critical",
-            title="Signal Health Critical",
-            message=f"Signal health score is {signal_health_score}/100 — automations are blocked. Immediate investigation needed.",
-            source="signal_health",
-            notification_type="error",
-            category="Signal Health",
-            priority_score=priority,
-            urgency=urgency,
-            impact=impact,
-            actionability=actionability,
-            priority_label=_priority_label(priority),
-            created_at=now.isoformat(),
-            suggested_action=SuggestedAction(
-                action_type="navigate",
-                label="View Signal Recovery",
-                description="Check signal recovery dashboard for active issues.",
-            ),
-            context={"health_score": signal_health_score},
-        ))
+        notifications.append(
+            PrioritizedNotification(
+                id="signal_critical",
+                title="Signal Health Critical",
+                message=f"Signal health score is {signal_health_score}/100 — automations are blocked. Immediate investigation needed.",
+                source="signal_health",
+                notification_type="error",
+                category="Signal Health",
+                priority_score=priority,
+                urgency=urgency,
+                impact=impact,
+                actionability=actionability,
+                priority_label=_priority_label(priority),
+                created_at=now.isoformat(),
+                suggested_action=SuggestedAction(
+                    action_type="navigate",
+                    label="View Signal Recovery",
+                    description="Check signal recovery dashboard for active issues.",
+                ),
+                context={"health_score": signal_health_score},
+            )
+        )
     elif signal_health_score < 70:
         urgency = _score_urgency("warning", 3)
         impact = _score_impact(deviation_pct=30)
         actionability = _score_actionability(True)
         priority = _compute_priority(urgency, impact, actionability)
 
-        notifications.append(PrioritizedNotification(
-            id="signal_degraded",
-            title="Signal Health Degraded",
-            message=f"Signal health at {signal_health_score}/100 — automations on hold. Monitor closely.",
-            source="signal_health",
-            notification_type="warning",
-            category="Signal Health",
-            priority_score=priority,
-            urgency=urgency,
-            impact=impact,
-            actionability=actionability,
-            priority_label=_priority_label(priority),
-            created_at=now.isoformat(),
-            suggested_action=SuggestedAction(
-                action_type="navigate",
-                label="Check Signals",
-                description="Review signal health details for degradation causes.",
-            ),
-            context={"health_score": signal_health_score},
-        ))
+        notifications.append(
+            PrioritizedNotification(
+                id="signal_degraded",
+                title="Signal Health Degraded",
+                message=f"Signal health at {signal_health_score}/100 — automations on hold. Monitor closely.",
+                source="signal_health",
+                notification_type="warning",
+                category="Signal Health",
+                priority_score=priority,
+                urgency=urgency,
+                impact=impact,
+                actionability=actionability,
+                priority_label=_priority_label(priority),
+                created_at=now.isoformat(),
+                suggested_action=SuggestedAction(
+                    action_type="navigate",
+                    label="Check Signals",
+                    description="Review signal health details for degradation causes.",
+                ),
+                context={"health_score": signal_health_score},
+            )
+        )
 
     return notifications
 
@@ -354,25 +381,27 @@ def _build_system_notifications(
     notifications = []
 
     if total_campaigns == 0:
-        notifications.append(PrioritizedNotification(
-            id="sys_no_campaigns",
-            title="No Active Campaigns",
-            message="No campaigns found. Connect your ad platforms to get started.",
-            source="system",
-            notification_type="info",
-            category="System",
-            priority_score=40,
-            urgency=30,
-            impact=50,
-            actionability=60,
-            priority_label="medium",
-            created_at=now.isoformat(),
-            suggested_action=SuggestedAction(
-                action_type="navigate",
-                label="Connect Platforms",
-                description="Set up your ad platform integrations.",
-            ),
-        ))
+        notifications.append(
+            PrioritizedNotification(
+                id="sys_no_campaigns",
+                title="No Active Campaigns",
+                message="No campaigns found. Connect your ad platforms to get started.",
+                source="system",
+                notification_type="info",
+                category="System",
+                priority_score=40,
+                urgency=30,
+                impact=50,
+                actionability=60,
+                priority_label="medium",
+                created_at=now.isoformat(),
+                suggested_action=SuggestedAction(
+                    action_type="navigate",
+                    label="Connect Platforms",
+                    description="Set up your ad platform integrations.",
+                ),
+            )
+        )
 
     if overall_roas > 0 and overall_roas < 1.0 and total_spend > 500:
         urgency = _score_urgency("warning", 6)
@@ -380,31 +409,34 @@ def _build_system_notifications(
         actionability = _score_actionability(True)
         priority = _compute_priority(urgency, impact, actionability)
 
-        notifications.append(PrioritizedNotification(
-            id="sys_portfolio_roas",
-            title="Portfolio Below Breakeven",
-            message=f"Overall ROAS is {overall_roas:.2f}x across {total_campaigns} campaigns — portfolio is losing money.",
-            source="system",
-            notification_type="error",
-            category="Performance",
-            priority_score=priority,
-            urgency=urgency,
-            impact=impact,
-            actionability=actionability,
-            priority_label=_priority_label(priority),
-            created_at=now.isoformat(),
-            suggested_action=SuggestedAction(
-                action_type="review",
-                label="Review Budget Allocation",
-                description="Open Budget Autopilot to see reallocation recommendations.",
-            ),
-            context={"roas": overall_roas, "total_spend": total_spend},
-        ))
+        notifications.append(
+            PrioritizedNotification(
+                id="sys_portfolio_roas",
+                title="Portfolio Below Breakeven",
+                message=f"Overall ROAS is {overall_roas:.2f}x across {total_campaigns} campaigns — portfolio is losing money.",
+                source="system",
+                notification_type="error",
+                category="Performance",
+                priority_score=priority,
+                urgency=urgency,
+                impact=impact,
+                actionability=actionability,
+                priority_label=_priority_label(priority),
+                created_at=now.isoformat(),
+                suggested_action=SuggestedAction(
+                    action_type="review",
+                    label="Review Budget Allocation",
+                    description="Open Budget Autopilot to see reallocation recommendations.",
+                ),
+                context={"roas": overall_roas, "total_spend": total_spend},
+            )
+        )
 
     return notifications
 
 
 # ── Main Entry Point ─────────────────────────────────────────────────────────
+
 
 def build_unified_notifications(
     campaigns: List[Dict],
@@ -463,28 +495,34 @@ def build_unified_notifications(
             actionability = _score_actionability(bool(notif.get("action_url")))
             priority = _compute_priority(urgency, impact, actionability)
 
-            all_notifications.append(PrioritizedNotification(
-                id=str(notif.get("id", "")),
-                title=notif.get("title", "Notification"),
-                message=notif.get("message", ""),
-                source="system",
-                notification_type=severity.lower() if severity else "info",
-                category=notif.get("category", "System"),
-                priority_score=priority,
-                urgency=urgency,
-                impact=impact,
-                actionability=actionability,
-                priority_label=_priority_label(priority),
-                created_at=str(created) if created else now.isoformat(),
-                is_read=bool(notif.get("is_read", False)),
-                suggested_action=SuggestedAction(
-                    action_type="navigate",
-                    label=notif.get("action_label", "View"),
-                    description="",
-                    url=notif.get("action_url"),
-                ) if notif.get("action_url") else None,
-                context=notif.get("extra_data") or {},
-            ))
+            all_notifications.append(
+                PrioritizedNotification(
+                    id=str(notif.get("id", "")),
+                    title=notif.get("title", "Notification"),
+                    message=notif.get("message", ""),
+                    source="system",
+                    notification_type=severity.lower() if severity else "info",
+                    category=notif.get("category", "System"),
+                    priority_score=priority,
+                    urgency=urgency,
+                    impact=impact,
+                    actionability=actionability,
+                    priority_label=_priority_label(priority),
+                    created_at=str(created) if created else now.isoformat(),
+                    is_read=bool(notif.get("is_read", False)),
+                    suggested_action=(
+                        SuggestedAction(
+                            action_type="navigate",
+                            label=notif.get("action_label", "View"),
+                            description="",
+                            url=notif.get("action_url"),
+                        )
+                        if notif.get("action_url")
+                        else None
+                    ),
+                    context=notif.get("extra_data") or {},
+                )
+            )
 
     # Sort by priority score descending
     all_notifications.sort(key=lambda n: -n.priority_score)
@@ -505,7 +543,9 @@ def build_unified_notifications(
             top_priority=max(n.priority_score for n in items),
             notifications=items,
         )
-        for cat, items in sorted(groups_map.items(), key=lambda x: -max(n.priority_score for n in x[1]))
+        for cat, items in sorted(
+            groups_map.items(), key=lambda x: -max(n.priority_score for n in x[1])
+        )
     ]
 
     # Counts
@@ -549,7 +589,9 @@ def _build_summary(
     """Build notification summary."""
     parts = []
     if critical > 0:
-        parts.append(f"{critical} critical alert{'s' if critical > 1 else ''} requiring immediate attention.")
+        parts.append(
+            f"{critical} critical alert{'s' if critical > 1 else ''} requiring immediate attention."
+        )
     if high > 0:
         parts.append(f"{high} high-priority notification{'s' if high > 1 else ''}.")
     if unread > 0:

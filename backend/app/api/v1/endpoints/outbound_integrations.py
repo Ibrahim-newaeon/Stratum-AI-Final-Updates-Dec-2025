@@ -18,8 +18,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.logging import get_logger
-from app.schemas.response import APIResponse
 from app.db.session import get_async_session
+from app.schemas.response import APIResponse
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/integrations/outbound", tags=["Outbound Integrations"])
@@ -29,12 +29,17 @@ router = APIRouter(prefix="/integrations/outbound", tags=["Outbound Integrations
 # Schemas
 # =============================================================================
 
+
 class ZapierWebhookConfig(BaseModel):
     """Zapier/Make.com webhook configuration."""
+
     id: str
     name: str
     webhook_url: str = Field(..., pattern=r"^https://")
-    event_types: list[str] = Field(..., description="Events to forward: campaign_created, roas_alert, trust_gate_blocked, daily_summary")
+    event_types: list[str] = Field(
+        ...,
+        description="Events to forward: campaign_created, roas_alert, trust_gate_blocked, daily_summary",
+    )
     is_active: bool = True
     created_at: str
     last_triggered_at: Optional[str] = None
@@ -43,6 +48,7 @@ class ZapierWebhookConfig(BaseModel):
 
 class ZapierTriggerRequest(BaseModel):
     """Manually trigger a Zapier webhook."""
+
     webhook_id: str
     event_type: str
     payload: dict[str, Any] = Field(default_factory=dict)
@@ -50,6 +56,7 @@ class ZapierTriggerRequest(BaseModel):
 
 class ZapierTriggerResult(BaseModel):
     """Webhook trigger result."""
+
     webhook_id: str
     event_type: str
     status: str  # success, error, queued
@@ -61,12 +68,17 @@ class ZapierTriggerResult(BaseModel):
 
 class WarehouseExportConfig(BaseModel):
     """Data warehouse export configuration."""
+
     id: str
     name: str
     provider: str = Field(..., description="snowflake, bigquery, databricks, redshift")
-    connection_string: str = Field(..., description="Encrypted connection URI or service account JSON")
+    connection_string: str = Field(
+        ..., description="Encrypted connection URI or service account JSON"
+    )
     dataset: str = Field(..., description="Database/schema name")
-    tables: list[str] = Field(..., description="Tables to sync: campaigns, campaign_metrics, cdp_events")
+    tables: list[str] = Field(
+        ..., description="Tables to sync: campaigns, campaign_metrics, cdp_events"
+    )
     sync_frequency: str = Field("hourly", description="realtime, hourly, daily")
     last_sync_at: Optional[str] = None
     last_sync_rows: int = 0
@@ -75,6 +87,7 @@ class WarehouseExportConfig(BaseModel):
 
 class WarehouseSyncResult(BaseModel):
     """Warehouse sync operation result."""
+
     export_id: str
     provider: str
     tables_synced: list[str]
@@ -87,16 +100,21 @@ class WarehouseSyncResult(BaseModel):
 
 class TeamsWebhookConfig(BaseModel):
     """Microsoft Teams incoming webhook configuration."""
+
     id: str
     name: str
     webhook_url: str = Field(..., pattern=r"^https://")
     channel_name: str
-    alert_types: list[str] = Field(..., description="roas_drop, trust_gate_blocked, budget_pacing, anomaly, daily_digest")
+    alert_types: list[str] = Field(
+        ...,
+        description="roas_drop, trust_gate_blocked, budget_pacing, anomaly, daily_digest",
+    )
     is_active: bool = True
 
 
 class TeamsMessageRequest(BaseModel):
     """Send a message to Microsoft Teams."""
+
     webhook_id: str
     title: str
     text: str
@@ -109,6 +127,7 @@ class TeamsMessageRequest(BaseModel):
 # Zapier / Make.com Webhook Management
 # =============================================================================
 
+
 @router.get("/zapier", response_model=APIResponse[list[ZapierWebhookConfig]])
 async def list_zapier_webhooks(
     req: Request,
@@ -117,7 +136,9 @@ async def list_zapier_webhooks(
     """List configured Zapier/Make.com outgoing webhooks."""
     tenant_id = getattr(req.state, "tenant_id", None)
     if not tenant_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
+        )
 
     # In production, query integration_configs table
     # Return sample configs for now
@@ -146,13 +167,20 @@ async def create_zapier_webhook(
     """Register a new Zapier/Make.com outgoing webhook."""
     tenant_id = getattr(req.state, "tenant_id", None)
     if not tenant_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
+        )
 
     config.created_at = datetime.now(UTC).isoformat()
     config.last_triggered_at = None
     config.trigger_count = 0
 
-    logger.info("zapier_webhook_created", tenant_id=tenant_id, webhook_id=config.id, events=config.event_types)
+    logger.info(
+        "zapier_webhook_created",
+        tenant_id=tenant_id,
+        webhook_id=config.id,
+        events=config.event_types,
+    )
 
     return APIResponse(success=True, data=config, message="Zapier webhook registered")
 
@@ -170,9 +198,12 @@ async def trigger_zapier_webhook(
     """
     tenant_id = getattr(req.state, "tenant_id", None)
     if not tenant_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
+        )
 
     import time
+
     import aiohttp
 
     start = time.perf_counter()
@@ -189,7 +220,9 @@ async def trigger_zapier_webhook(
 
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.post(webhook_url, json=payload, timeout=aiohttp.ClientTimeout(total=10)) as resp:
+            async with session.post(
+                webhook_url, json=payload, timeout=aiohttp.ClientTimeout(total=10)
+            ) as resp:
                 latency = (time.perf_counter() - start) * 1000
                 body = await resp.text()
 
@@ -203,7 +236,9 @@ async def trigger_zapier_webhook(
                     retry_count=0,
                 )
 
-                return APIResponse(success=True, data=result, message="Webhook triggered")
+                return APIResponse(
+                    success=True, data=result, message="Webhook triggered"
+                )
     except Exception as e:
         latency = (time.perf_counter() - start) * 1000
         result = ZapierTriggerResult(
@@ -215,12 +250,15 @@ async def trigger_zapier_webhook(
             latency_ms=round(latency, 2),
             retry_count=0,
         )
-        return APIResponse(success=False, data=result, message=f"Webhook trigger failed: {str(e)}")
+        return APIResponse(
+            success=False, data=result, message=f"Webhook trigger failed: {str(e)}"
+        )
 
 
 # =============================================================================
 # Data Warehouse Export
 # =============================================================================
+
 
 @router.get("/warehouse", response_model=APIResponse[list[WarehouseExportConfig]])
 async def list_warehouse_exports(
@@ -230,7 +268,9 @@ async def list_warehouse_exports(
     """List configured data warehouse export destinations."""
     tenant_id = getattr(req.state, "tenant_id", None)
     if not tenant_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
+        )
 
     configs = [
         WarehouseExportConfig(
@@ -264,9 +304,12 @@ async def sync_to_warehouse(
     """
     tenant_id = getattr(req.state, "tenant_id", None)
     if not tenant_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
+        )
 
     import time
+
     start = time.perf_counter()
 
     # In production, this would stream data to the warehouse
@@ -279,7 +322,9 @@ async def sync_to_warehouse(
 
     try:
         result = await db.execute(
-            text("SELECT COUNT(*) as c FROM campaigns WHERE tenant_id = :t AND is_deleted = FALSE"),
+            text(
+                "SELECT COUNT(*) as c FROM campaigns WHERE tenant_id = :t AND is_deleted = FALSE"
+            ),
             {"t": tenant_id},
         )
         campaign_count = result.mappings().first()["c"]
@@ -288,7 +333,9 @@ async def sync_to_warehouse(
 
     try:
         result = await db.execute(
-            text("SELECT COUNT(*) as c FROM campaign_metrics WHERE tenant_id = :t AND date >= CURRENT_DATE - INTERVAL '30 days'"),
+            text(
+                "SELECT COUNT(*) as c FROM campaign_metrics WHERE tenant_id = :t AND date >= CURRENT_DATE - INTERVAL '30 days'"
+            ),
             {"t": tenant_id},
         )
         metric_count = result.mappings().first()["c"]
@@ -309,12 +356,15 @@ async def sync_to_warehouse(
         errors=[],
     )
 
-    return APIResponse(success=True, data=result, message=f"Synced {total_rows} rows to warehouse")
+    return APIResponse(
+        success=True, data=result, message=f"Synced {total_rows} rows to warehouse"
+    )
 
 
 # =============================================================================
 # Microsoft Teams Integration
 # =============================================================================
+
 
 @router.get("/teams", response_model=APIResponse[list[TeamsWebhookConfig]])
 async def list_teams_webhooks(
@@ -324,7 +374,9 @@ async def list_teams_webhooks(
     """List configured Microsoft Teams incoming webhooks."""
     tenant_id = getattr(req.state, "tenant_id", None)
     if not tenant_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
+        )
 
     configs = [
         TeamsWebhookConfig(
@@ -353,9 +405,12 @@ async def send_teams_message(
     """
     tenant_id = getattr(req.state, "tenant_id", None)
     if not tenant_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
+        )
 
     import time
+
     import aiohttp
 
     # In production, fetch webhook URL from DB
@@ -379,7 +434,9 @@ async def send_teams_message(
             {
                 "@type": "OpenUri",
                 "name": action.get("name", "Open"),
-                "targets": [{"os": "default", "uri": action.get("url", "https://stratumai.app")}],
+                "targets": [
+                    {"os": "default", "uri": action.get("url", "https://stratumai.app")}
+                ],
             }
             for action in (request.actions or [])
         ],
@@ -388,7 +445,9 @@ async def send_teams_message(
     start = time.perf_counter()
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.post(webhook_url, json=card, timeout=aiohttp.ClientTimeout(total=10)) as resp:
+            async with session.post(
+                webhook_url, json=card, timeout=aiohttp.ClientTimeout(total=10)
+            ) as resp:
                 latency = (time.perf_counter() - start) * 1000
                 return APIResponse(
                     success=resp.status < 400,
@@ -397,7 +456,11 @@ async def send_teams_message(
                         "latency_ms": round(latency, 2),
                         "webhook_id": request.webhook_id,
                     },
-                    message="Teams message sent" if resp.status < 400 else f"Teams error: {resp.status}",
+                    message=(
+                        "Teams message sent"
+                        if resp.status < 400
+                        else f"Teams error: {resp.status}"
+                    ),
                 )
     except Exception as e:
         return APIResponse(
@@ -405,4 +468,3 @@ async def send_teams_message(
             data={"error": str(e)},
             message=f"Failed to send Teams message: {str(e)}",
         )
-

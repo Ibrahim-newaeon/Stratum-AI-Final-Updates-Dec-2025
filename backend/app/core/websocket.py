@@ -15,14 +15,14 @@ Handles:
 import asyncio
 import json
 import uuid
-from datetime import datetime, timezone
-from typing import Dict, Set, Optional, Any, List
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from enum import Enum
+from typing import Any, Dict, List, Optional, Set
 
+import redis.asyncio as redis
 from fastapi import WebSocket, WebSocketDisconnect
 from starlette.websockets import WebSocketState
-import redis.asyncio as redis
 
 from app.core.config import settings
 from app.core.logging import get_logger
@@ -36,6 +36,7 @@ _instance_id = uuid.uuid4().hex[:8]
 
 class MessageType(str, Enum):
     """WebSocket message types."""
+
     # EMQ updates
     EMQ_UPDATE = "emq_update"
     EMQ_DRIVER_UPDATE = "emq_driver_update"
@@ -62,16 +63,21 @@ class MessageType(str, Enum):
 @dataclass
 class WebSocketMessage:
     """WebSocket message structure."""
+
     type: str
     payload: Any
-    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat() + "Z")
+    timestamp: str = field(
+        default_factory=lambda: datetime.now(timezone.utc).isoformat() + "Z"
+    )
 
     def to_json(self) -> str:
-        return json.dumps({
-            "type": self.type,
-            "payload": self.payload,
-            "timestamp": self.timestamp,
-        })
+        return json.dumps(
+            {
+                "type": self.type,
+                "payload": self.payload,
+                "timestamp": self.timestamp,
+            }
+        )
 
     @classmethod
     def from_json(cls, data: str) -> "WebSocketMessage":
@@ -79,13 +85,16 @@ class WebSocketMessage:
         return cls(
             type=parsed.get("type", "unknown"),
             payload=parsed.get("payload", {}),
-            timestamp=parsed.get("timestamp", datetime.now(timezone.utc).isoformat() + "Z"),
+            timestamp=parsed.get(
+                "timestamp", datetime.now(timezone.utc).isoformat() + "Z"
+            ),
         )
 
 
 @dataclass
 class ConnectedClient:
     """Represents a connected WebSocket client."""
+
     websocket: WebSocket
     tenant_id: Optional[int] = None
     user_id: Optional[int] = None
@@ -333,10 +342,12 @@ class WebSocketManager:
 
         try:
             # Include origin instance_id so the sender can skip re-delivery
-            envelope = json.dumps({
-                "origin": _instance_id,
-                "message": message.to_json(),
-            })
+            envelope = json.dumps(
+                {
+                    "origin": _instance_id,
+                    "message": message.to_json(),
+                }
+            )
             await self._redis.publish(f"ws:{channel}", envelope)
         except (ConnectionError, TimeoutError, OSError) as e:
             logger.warning("redis_publish_failed", error=str(e))
@@ -446,8 +457,7 @@ class WebSocketManager:
             "tenants_connected": len(self._tenant_connections),
             "channels_active": len(self._channel_subscriptions),
             "connections_by_tenant": {
-                tid: len(clients)
-                for tid, clients in self._tenant_connections.items()
+                tid: len(clients) for tid, clients in self._tenant_connections.items()
             },
         }
 
@@ -459,6 +469,7 @@ ws_manager = WebSocketManager()
 # =============================================================================
 # Helper Functions for Publishing Events
 # =============================================================================
+
 
 async def publish_action_status_update(
     tenant_id: int,

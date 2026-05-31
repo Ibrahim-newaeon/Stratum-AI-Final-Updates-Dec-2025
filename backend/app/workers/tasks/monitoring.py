@@ -72,7 +72,9 @@ def check_pipeline_health():
                 {
                     "type": "sync_errors",
                     "count": len(error_campaigns),
-                    "errors": [{"id": c.id, "error": c.sync_error} for c in error_campaigns[:5]],
+                    "errors": [
+                        {"id": c.id, "error": c.sync_error} for c in error_campaigns[:5]
+                    ],
                 }
             )
 
@@ -127,7 +129,9 @@ def check_pipeline_health():
             import redis
 
             redis_client = redis.from_url(settings.redis_url)
-            redis_client.publish("monitoring:pipeline_health", json.dumps(health_status))
+            redis_client.publish(
+                "monitoring:pipeline_health", json.dumps(health_status)
+            )
         except (ConnectionError, TimeoutError, OSError) as e:
             logger.warning("Failed to publish pipeline health to Redis: %s", e)
 
@@ -141,6 +145,7 @@ def check_pipeline_health():
             )
             try:
                 import sentry_sdk
+
                 sentry_sdk.capture_message(
                     f"Pipeline health CRITICAL: {[i['type'] for i in critical_issues]}",
                     level="error",
@@ -154,6 +159,7 @@ def check_pipeline_health():
             try:
                 import json
                 import urllib.request
+
                 req = urllib.request.Request(
                     alert_webhook,
                     data=json.dumps(health_status).encode(),

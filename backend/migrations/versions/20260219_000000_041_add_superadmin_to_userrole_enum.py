@@ -26,16 +26,20 @@ depends_on = None
 def upgrade():
     # Check if superadmin already exists in the enum (e.g. from seed script)
     conn = op.get_bind()
-    result = conn.execute(text(
-        "SELECT 1 FROM pg_enum "
-        "WHERE enumtypid = 'userrole'::regtype "
-        "AND enumlabel = 'superadmin'"
-    ))
+    result = conn.execute(
+        text(
+            "SELECT 1 FROM pg_enum "
+            "WHERE enumtypid = 'userrole'::regtype "
+            "AND enumlabel = 'superadmin'"
+        )
+    )
     if not result.fetchone():
         # ALTER TYPE ... ADD VALUE cannot run inside a transaction in PG < 12.
         # In PG 12+ it can run inside a transaction with IF NOT EXISTS.
         # Railway uses PG 16, so this is safe.
-        op.execute("ALTER TYPE userrole ADD VALUE IF NOT EXISTS 'superadmin' BEFORE 'admin'")
+        op.execute(
+            "ALTER TYPE userrole ADD VALUE IF NOT EXISTS 'superadmin' BEFORE 'admin'"
+        )
 
 
 def downgrade():

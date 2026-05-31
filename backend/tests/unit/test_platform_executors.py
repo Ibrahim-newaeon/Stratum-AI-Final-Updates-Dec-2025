@@ -18,21 +18,26 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from app.autopilot.service import ActionType
 from app.tasks.apply_actions_queue import (
+    PLATFORM_EXECUTORS,
     GoogleExecutor,
     MetaExecutor,
-    PLATFORM_EXECUTORS,
     PlatformExecutor,
     TikTokExecutor,
 )
-from app.autopilot.service import ActionType
-
 
 # =============================================================================
 # Expected Result Keys
 # =============================================================================
 
-EXPECTED_RESULT_KEYS = {"success", "before_value", "after_value", "platform_response", "error"}
+EXPECTED_RESULT_KEYS = {
+    "success",
+    "before_value",
+    "after_value",
+    "platform_response",
+    "error",
+}
 
 
 # =============================================================================
@@ -94,13 +99,29 @@ class TestPlatformExecutorDispatch:
                 self.mock_called = False
                 self.live_called = False
 
-            def _mock_execute(self, action_type, entity_type, entity_id, action_details):
+            def _mock_execute(
+                self, action_type, entity_type, entity_id, action_details
+            ):
                 self.mock_called = True
-                return {"success": True, "before_value": None, "after_value": None, "platform_response": None, "error": None}
+                return {
+                    "success": True,
+                    "before_value": None,
+                    "after_value": None,
+                    "platform_response": None,
+                    "error": None,
+                }
 
-            async def _live_execute(self, action_type, entity_type, entity_id, action_details):
+            async def _live_execute(
+                self, action_type, entity_type, entity_id, action_details
+            ):
                 self.live_called = True
-                return {"success": True, "before_value": None, "after_value": None, "platform_response": None, "error": None}
+                return {
+                    "success": True,
+                    "before_value": None,
+                    "after_value": None,
+                    "platform_response": None,
+                    "error": None,
+                }
 
         executor = SpyExecutor()
 
@@ -257,7 +278,10 @@ class TestMetaExecutorMock:
             action_details={"amount": 0},
         )
 
-        assert result["before_value"]["daily_budget"] == result["after_value"]["daily_budget"]
+        assert (
+            result["before_value"]["daily_budget"]
+            == result["after_value"]["daily_budget"]
+        )
 
 
 # =============================================================================
@@ -473,9 +497,9 @@ class TestPlatformExecutorsRegistry:
     def test_all_executors_are_platform_executor_subclasses(self):
         """All executors in the registry should be PlatformExecutor instances."""
         for platform, executor in PLATFORM_EXECUTORS.items():
-            assert isinstance(executor, PlatformExecutor), (
-                f"Executor for '{platform}' is not a PlatformExecutor instance"
-            )
+            assert isinstance(
+                executor, PlatformExecutor
+            ), f"Executor for '{platform}' is not a PlatformExecutor instance"
 
 
 # =============================================================================
@@ -492,7 +516,9 @@ class TestExecutorErrorHandling:
         executor = MetaExecutor()
 
         # Patch _mock_execute to raise an exception
-        with patch.object(executor, "_mock_execute", side_effect=Exception("Mock failure")):
+        with patch.object(
+            executor, "_mock_execute", side_effect=Exception("Mock failure")
+        ):
             with patch("app.tasks.apply_actions_queue.settings") as mock_settings:
                 mock_settings.use_mock_ad_data = True
 
@@ -509,7 +535,9 @@ class TestExecutorErrorHandling:
         """GoogleExecutor should handle exceptions during mock execution."""
         executor = GoogleExecutor()
 
-        with patch.object(executor, "_mock_execute", side_effect=ValueError("Bad value")):
+        with patch.object(
+            executor, "_mock_execute", side_effect=ValueError("Bad value")
+        ):
             with patch("app.tasks.apply_actions_queue.settings") as mock_settings:
                 mock_settings.use_mock_ad_data = True
 
@@ -526,7 +554,9 @@ class TestExecutorErrorHandling:
         """TikTokExecutor should handle exceptions during mock execution."""
         executor = TikTokExecutor()
 
-        with patch.object(executor, "_mock_execute", side_effect=RuntimeError("Runtime issue")):
+        with patch.object(
+            executor, "_mock_execute", side_effect=RuntimeError("Runtime issue")
+        ):
             with patch("app.tasks.apply_actions_queue.settings") as mock_settings:
                 mock_settings.use_mock_ad_data = True
 
@@ -548,7 +578,10 @@ class TestExecutorErrorHandling:
         )
 
         assert result["success"] is True
-        assert result["after_value"]["daily_budget"] == result["before_value"]["daily_budget"]
+        assert (
+            result["after_value"]["daily_budget"]
+            == result["before_value"]["daily_budget"]
+        )
 
     def test_google_mock_with_missing_amount_defaults_to_zero(self, google_executor):
         """Missing 'amount' in action_details should default to 0."""
@@ -560,7 +593,10 @@ class TestExecutorErrorHandling:
         )
 
         assert result["success"] is True
-        assert result["after_value"]["budget_micros"] == result["before_value"]["budget_micros"]
+        assert (
+            result["after_value"]["budget_micros"]
+            == result["before_value"]["budget_micros"]
+        )
 
     def test_tiktok_mock_with_missing_amount_defaults_to_zero(self, tiktok_executor):
         """Missing 'amount' in action_details should default to 0."""

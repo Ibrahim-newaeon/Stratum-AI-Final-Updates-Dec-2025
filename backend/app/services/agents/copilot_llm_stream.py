@@ -42,8 +42,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.services.agents.copilot_llm import (
-    Citation,
     SYSTEM_PROMPT,
+    Citation,
     _build_user_prompt,
     _retrieve_docs,
 )

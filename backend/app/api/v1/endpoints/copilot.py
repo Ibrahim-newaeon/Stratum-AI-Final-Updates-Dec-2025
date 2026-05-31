@@ -40,22 +40,29 @@ router = APIRouter(prefix="/copilot", tags=["copilot"])
 # Schemas
 # =============================================================================
 
+
 class CopilotMessageRequest(BaseModel):
     """Request to send a message to the copilot."""
+
     message: str = Field(..., min_length=1, max_length=2000)
-    session_id: Optional[str] = Field(None, description="Optional session ID for continuity")
+    session_id: Optional[str] = Field(
+        None, description="Optional session ID for continuity"
+    )
 
 
 class CopilotCitation(BaseModel):
     """A doc reference returned by the RAG bridge."""
 
     source_path: str = Field(..., description="Repo-relative path of the cited doc")
-    title: str = Field(..., description="Human-readable title (heading path or filename)")
+    title: str = Field(
+        ..., description="Human-readable title (heading path or filename)"
+    )
     distance: float = Field(..., description="Cosine distance — lower is more relevant")
 
 
 class CopilotMessageResponse(BaseModel):
     """Response from the copilot."""
+
     session_id: str
     message: str
     suggestions: list[str] = []
@@ -85,11 +92,15 @@ async def _gather_context(
         campaign_result = await db.execute(
             select(
                 func.count(Campaign.id).label("total"),
-                func.count(Campaign.id).filter(
-                    Campaign.status == CampaignStatus.ACTIVE
-                ).label("active"),
-                func.coalesce(func.sum(Campaign.total_spend_cents), 0).label("spend_cents"),
-                func.coalesce(func.sum(Campaign.revenue_cents), 0).label("revenue_cents"),
+                func.count(Campaign.id)
+                .filter(Campaign.status == CampaignStatus.ACTIVE)
+                .label("active"),
+                func.coalesce(func.sum(Campaign.total_spend_cents), 0).label(
+                    "spend_cents"
+                ),
+                func.coalesce(func.sum(Campaign.revenue_cents), 0).label(
+                    "revenue_cents"
+                ),
                 func.coalesce(func.sum(Campaign.conversions), 0).label("conversions"),
             ).where(
                 and_(
@@ -148,7 +159,11 @@ async def _gather_context(
             "status": health_status,
             "emq_score": emq_score,
             "autopilot_enabled": health_status == "healthy",
-            "issues": [] if health_status == "healthy" else [f"{emq_degraded} EMQ degradation alerts active"],
+            "issues": (
+                []
+                if health_status == "healthy"
+                else [f"{emq_degraded} EMQ degradation alerts active"]
+            ),
         }
     except (SQLAlchemyError, TypeError, KeyError) as e:
         logger.debug("copilot_health_fetch_error", error=str(e))
@@ -188,6 +203,7 @@ def _resolve_user_name(user) -> Tuple[Optional[str], Optional[str]]:
 # Endpoints
 # =============================================================================
 
+
 @router.post("/chat", response_model=APIResponse[CopilotMessageResponse])
 async def copilot_chat(
     request: CopilotMessageRequest,
@@ -206,7 +222,9 @@ async def copilot_chat(
     session_id = request.session_id or str(uuid4())
 
     # ── Gather context data for the copilot ──────────────────────
-    metrics, health_data, anomaly_data = await _gather_context(db=db, tenant_id=tenant_id)
+    metrics, health_data, anomaly_data = await _gather_context(
+        db=db, tenant_id=tenant_id
+    )
 
     # ── Process message through copilot agent ────────────────────
     # The keyword classifier always runs first — it produces the intent,
@@ -300,7 +318,9 @@ async def copilot_chat_stream(
     _, first_name = _resolve_user_name(user)
     session_id = request.session_id or str(uuid4())
 
-    metrics, health_data, anomaly_data = await _gather_context(db=db, tenant_id=tenant_id)
+    metrics, health_data, anomaly_data = await _gather_context(
+        db=db, tenant_id=tenant_id
+    )
     base_response = process_message(
         message=request.message,
         user_name=first_name,
@@ -312,9 +332,7 @@ async def copilot_chat_stream(
     async def _event_stream():
         # Emit a session_id event up front so the frontend can pin
         # this stream to a conversation without waiting for meta.
-        yield (
-            f"event: session\ndata: {session_id}\n\n"
-        )
+        yield (f"event: session\ndata: {session_id}\n\n")
         async for chunk in stream_llm_message(
             message=request.message,
             user_name=first_name,

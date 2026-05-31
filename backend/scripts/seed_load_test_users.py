@@ -61,7 +61,9 @@ async def seed_load_test_users(count: int = 25):
             tenant = result.scalar_one_or_none()
 
             if not tenant:
-                result = await db.execute(select(Tenant).where(Tenant.slug == TEST_TENANT_SLUG))
+                result = await db.execute(
+                    select(Tenant).where(Tenant.slug == TEST_TENANT_SLUG)
+                )
                 tenant = result.scalar_one_or_none()
 
             if not tenant:
@@ -87,7 +89,9 @@ async def seed_load_test_users(count: int = 25):
                 email_hash = hash_pii_for_lookup(email.lower())
 
                 # Check if user already exists
-                result = await db.execute(select(User).where(User.email_hash == email_hash))
+                result = await db.execute(
+                    select(User).where(User.email_hash == email_hash)
+                )
                 existing_user = result.scalar_one_or_none()
 
                 if existing_user:

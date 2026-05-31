@@ -135,7 +135,9 @@ def _extract_burn_rate_cents_per_hour(
         if not source:
             continue
         # Direct hourly figure if it's already there.
-        hourly = source.get("hourly_burn_rate_cents") or source.get("hourly_spend_cents")
+        hourly = source.get("hourly_burn_rate_cents") or source.get(
+            "hourly_spend_cents"
+        )
         if isinstance(hourly, (int, float)) and hourly > 0:
             return float(hourly)
         # Otherwise convert daily.
@@ -280,7 +282,9 @@ async def get_outcome_summary(
     # Single aggregate query — much cheaper than fetching rows + summing
     # in Python on a populated tenant.
     stmt = select(
-        func.coalesce(func.sum(EnforcementAuditLog.value_delivered_cents), 0).label("total"),
+        func.coalesce(func.sum(EnforcementAuditLog.value_delivered_cents), 0).label(
+            "total"
+        ),
         func.count(EnforcementAuditLog.id).label("count"),
         func.coalesce(
             func.sum(

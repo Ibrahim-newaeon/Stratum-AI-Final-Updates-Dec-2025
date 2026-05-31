@@ -16,7 +16,6 @@ from app.core.launch_readiness_phases import (
     total_item_count,
 )
 
-
 pytestmark = pytest.mark.unit
 
 

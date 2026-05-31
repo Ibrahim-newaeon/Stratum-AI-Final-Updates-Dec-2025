@@ -88,7 +88,9 @@ def _walk_headings(text_content: str) -> List[Dict[str, Any]]:
     ]
 
 
-def _heading_path_for_offset(headings: Sequence[Dict[str, Any]], offset: int) -> List[str]:
+def _heading_path_for_offset(
+    headings: Sequence[Dict[str, Any]], offset: int
+) -> List[str]:
     """Find the active heading hierarchy at a given character offset."""
     stack: List[Dict[str, Any]] = []
     for h in headings:
@@ -189,7 +191,7 @@ def _split_paragraphs(text_content: str) -> List[tuple[str, int]]:
         if body_pos >= len(text_content):
             break
 
-        if text_content[body_pos:body_pos + 3] == "```":
+        if text_content[body_pos : body_pos + 3] == "```":
             # Find the matching closing fence on its own line.
             close = fence_re.search(text_content, body_pos + 3)
             if close is None:
@@ -307,8 +309,7 @@ async def upsert_chunks(
     written = 0
     for chunk, embedding in zip(chunks, embeddings):
         await db.execute(
-            text(
-                f"""
+            text(f"""
                 INSERT INTO copilot_doc_chunks
                     (source_path, chunk_index, content, embedding, metadata, indexed_at)
                 VALUES
@@ -319,8 +320,7 @@ async def upsert_chunks(
                     embedding  = EXCLUDED.embedding,
                     metadata   = EXCLUDED.metadata,
                     indexed_at = EXCLUDED.indexed_at
-                """
-            ),
+                """),
             {
                 "source_path": chunk.source_path,
                 "chunk_index": chunk.chunk_index,
@@ -344,13 +344,11 @@ async def delete_stale_chunks(
     Returns the number of rows deleted.
     """
     result = await db.execute(
-        text(
-            """
+        text("""
             DELETE FROM copilot_doc_chunks
              WHERE source_path = :source_path
                AND chunk_index >= :keep_max_index
-            """
-        ),
+            """),
         {"source_path": source_path, "keep_max_index": keep_max_index},
     )
     return result.rowcount or 0
@@ -391,16 +389,14 @@ async def retrieve_top_k(
     [vector] = await embed_texts([query])
 
     rows = await db.execute(
-        text(
-            """
+        text("""
             SELECT source_path, chunk_index, content, metadata,
                    embedding <=> :vector AS distance
               FROM copilot_doc_chunks
              WHERE embedding <=> :vector < :min_distance
              ORDER BY distance ASC
              LIMIT :k
-            """
-        ),
+            """),
         {
             "vector": _vector_literal(vector),
             "min_distance": min_distance,

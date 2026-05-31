@@ -16,15 +16,17 @@ Architecture:
 Builds on: scoring.py, signal_health.py, Tenant.churn_risk_score field
 """
 
-from typing import List, Optional, Dict, Literal
 from datetime import datetime, timezone
-from pydantic import BaseModel, Field
+from typing import Dict, List, Literal, Optional
 
+from pydantic import BaseModel, Field
 
 # ── Models ───────────────────────────────────────────────────────────────────
 
+
 class ChurnSignal(BaseModel):
     """Individual churn risk signal."""
+
     signal: str
     description: str
     severity: Literal["low", "medium", "high", "critical"]
@@ -33,6 +35,7 @@ class ChurnSignal(BaseModel):
 
 class Intervention(BaseModel):
     """Recommended intervention for an at-risk entity."""
+
     action: str
     title: str
     description: str
@@ -43,6 +46,7 @@ class Intervention(BaseModel):
 
 class AtRiskCampaign(BaseModel):
     """A campaign identified as at-risk for churn."""
+
     campaign_id: int
     campaign_name: str
     platform: str
@@ -57,6 +61,7 @@ class AtRiskCampaign(BaseModel):
 
 class RetentionMetric(BaseModel):
     """A retention-related metric."""
+
     label: str
     value: str
     trend: Literal["improving", "stable", "declining"]
@@ -65,6 +70,7 @@ class RetentionMetric(BaseModel):
 
 class ChurnPreventionResponse(BaseModel):
     """Full churn prevention analysis response."""
+
     summary: str
     portfolio_risk_level: Literal["healthy", "watch", "warning", "critical"]
     portfolio_risk_score: float  # 0-100
@@ -81,6 +87,7 @@ class ChurnPreventionResponse(BaseModel):
 
 # ── Risk Scoring ─────────────────────────────────────────────────────────────
 
+
 def _score_performance_risk(
     roas: float,
     conversions: int,
@@ -92,45 +99,55 @@ def _score_performance_risk(
 
     if roas < 0.5 and spend > 100:
         risk += 35
-        signals.append(ChurnSignal(
-            signal="critical_roas",
-            description=f"ROAS of {roas:.2f}x is critically low — well below breakeven.",
-            severity="critical",
-            weight=0.35,
-        ))
+        signals.append(
+            ChurnSignal(
+                signal="critical_roas",
+                description=f"ROAS of {roas:.2f}x is critically low — well below breakeven.",
+                severity="critical",
+                weight=0.35,
+            )
+        )
     elif roas < 1.0 and spend > 50:
         risk += 25
-        signals.append(ChurnSignal(
-            signal="low_roas",
-            description=f"ROAS of {roas:.2f}x is below breakeven.",
-            severity="high",
-            weight=0.25,
-        ))
+        signals.append(
+            ChurnSignal(
+                signal="low_roas",
+                description=f"ROAS of {roas:.2f}x is below breakeven.",
+                severity="high",
+                weight=0.25,
+            )
+        )
     elif roas < 2.0:
         risk += 10
-        signals.append(ChurnSignal(
-            signal="underperforming_roas",
-            description=f"ROAS of {roas:.2f}x is below the 3x target.",
-            severity="medium",
-            weight=0.10,
-        ))
+        signals.append(
+            ChurnSignal(
+                signal="underperforming_roas",
+                description=f"ROAS of {roas:.2f}x is below the 3x target.",
+                severity="medium",
+                weight=0.10,
+            )
+        )
 
     if conversions == 0 and spend > 100:
         risk += 20
-        signals.append(ChurnSignal(
-            signal="zero_conversions",
-            description="No conversions despite active spend.",
-            severity="critical",
-            weight=0.20,
-        ))
+        signals.append(
+            ChurnSignal(
+                signal="zero_conversions",
+                description="No conversions despite active spend.",
+                severity="critical",
+                weight=0.20,
+            )
+        )
     elif conversions < 5 and spend > 100:
         risk += 10
-        signals.append(ChurnSignal(
-            signal="low_conversions",
-            description=f"Only {conversions} conversions — insufficient for optimization.",
-            severity="medium",
-            weight=0.10,
-        ))
+        signals.append(
+            ChurnSignal(
+                signal="low_conversions",
+                description=f"Only {conversions} conversions — insufficient for optimization.",
+                severity="medium",
+                weight=0.10,
+            )
+        )
 
     return min(risk, 50), signals
 
@@ -147,29 +164,35 @@ def _score_spend_risk(
         ratio = spend / avg_spend
         if ratio < 0.3:
             risk += 25
-            signals.append(ChurnSignal(
-                signal="spend_collapse",
-                description=f"Spend is {ratio*100:.0f}% of portfolio average — severe decline.",
-                severity="critical",
-                weight=0.25,
-            ))
+            signals.append(
+                ChurnSignal(
+                    signal="spend_collapse",
+                    description=f"Spend is {ratio*100:.0f}% of portfolio average — severe decline.",
+                    severity="critical",
+                    weight=0.25,
+                )
+            )
         elif ratio < 0.6:
             risk += 15
-            signals.append(ChurnSignal(
-                signal="spend_declining",
-                description=f"Spend is {ratio*100:.0f}% of portfolio average — declining.",
-                severity="high",
-                weight=0.15,
-            ))
+            signals.append(
+                ChurnSignal(
+                    signal="spend_declining",
+                    description=f"Spend is {ratio*100:.0f}% of portfolio average — declining.",
+                    severity="high",
+                    weight=0.15,
+                )
+            )
 
     if spend < 10 and spend > 0:
         risk += 10
-        signals.append(ChurnSignal(
-            signal="minimal_spend",
-            description="Spend is near-zero — campaign may be abandoned.",
-            severity="high",
-            weight=0.10,
-        ))
+        signals.append(
+            ChurnSignal(
+                signal="minimal_spend",
+                description="Spend is near-zero — campaign may be abandoned.",
+                severity="high",
+                weight=0.10,
+            )
+        )
 
     return min(risk, 30), signals
 
@@ -184,29 +207,35 @@ def _score_engagement_risk(
 
     if status in ("paused", "Paused", "PAUSED"):
         risk += 15
-        signals.append(ChurnSignal(
-            signal="campaign_paused",
-            description="Campaign is paused — may indicate client disengagement.",
-            severity="medium",
-            weight=0.15,
-        ))
+        signals.append(
+            ChurnSignal(
+                signal="campaign_paused",
+                description="Campaign is paused — may indicate client disengagement.",
+                severity="medium",
+                weight=0.15,
+            )
+        )
     elif status in ("archived", "Archived", "ARCHIVED", "completed", "Completed"):
         risk += 20
-        signals.append(ChurnSignal(
-            signal="campaign_inactive",
-            description="Campaign is no longer active.",
-            severity="high",
-            weight=0.20,
-        ))
+        signals.append(
+            ChurnSignal(
+                signal="campaign_inactive",
+                description="Campaign is no longer active.",
+                severity="high",
+                weight=0.20,
+            )
+        )
 
     if not has_recent_sync:
         risk += 10
-        signals.append(ChurnSignal(
-            signal="stale_data",
-            description="No recent data sync — potential technical disengagement.",
-            severity="medium",
-            weight=0.10,
-        ))
+        signals.append(
+            ChurnSignal(
+                signal="stale_data",
+                description="No recent data sync — potential technical disengagement.",
+                severity="medium",
+                weight=0.10,
+            )
+        )
 
     return min(risk, 25), signals
 
@@ -224,81 +253,98 @@ def _generate_interventions(
     signal_names = {s.signal for s in signals}
 
     if risk_score >= 70:
-        interventions.append(Intervention(
-            action="urgent_review",
-            title="Schedule Urgent Client Review",
-            description="High churn risk detected. Schedule a call to discuss performance and strategy adjustments.",
-            priority="immediate",
-            category="outreach",
-        ))
+        interventions.append(
+            Intervention(
+                action="urgent_review",
+                title="Schedule Urgent Client Review",
+                description="High churn risk detected. Schedule a call to discuss performance and strategy adjustments.",
+                priority="immediate",
+                category="outreach",
+            )
+        )
 
     if "critical_roas" in signal_names or "low_roas" in signal_names:
-        interventions.append(Intervention(
-            action="creative_refresh",
-            title="Refresh Creative Assets",
-            description=f"Current ROAS of {roas:.2f}x suggests ad fatigue or poor targeting. Test new creative variations.",
-            priority="soon",
-            category="creative",
-        ))
-        interventions.append(Intervention(
-            action="targeting_audit",
-            title="Audit Targeting & Audiences",
-            description="Review audience segments, lookalikes, and exclusions for optimization opportunities.",
-            priority="soon",
-            category="optimize",
-        ))
+        interventions.append(
+            Intervention(
+                action="creative_refresh",
+                title="Refresh Creative Assets",
+                description=f"Current ROAS of {roas:.2f}x suggests ad fatigue or poor targeting. Test new creative variations.",
+                priority="soon",
+                category="creative",
+            )
+        )
+        interventions.append(
+            Intervention(
+                action="targeting_audit",
+                title="Audit Targeting & Audiences",
+                description="Review audience segments, lookalikes, and exclusions for optimization opportunities.",
+                priority="soon",
+                category="optimize",
+            )
+        )
 
     if "zero_conversions" in signal_names or "low_conversions" in signal_names:
-        interventions.append(Intervention(
-            action="conversion_audit",
-            title="Audit Conversion Tracking",
-            description="Verify pixel/CAPI setup, conversion events, and attribution windows.",
-            priority="immediate",
-            category="technical",
-            auto_eligible=True,
-        ))
+        interventions.append(
+            Intervention(
+                action="conversion_audit",
+                title="Audit Conversion Tracking",
+                description="Verify pixel/CAPI setup, conversion events, and attribution windows.",
+                priority="immediate",
+                category="technical",
+                auto_eligible=True,
+            )
+        )
 
     if "spend_collapse" in signal_names or "spend_declining" in signal_names:
-        interventions.append(Intervention(
-            action="budget_proposal",
-            title="Propose Revised Budget Strategy",
-            description="Prepare a performance-backed budget proposal showing projected returns at recommended spend levels.",
-            priority="soon",
-            category="budget",
-        ))
+        interventions.append(
+            Intervention(
+                action="budget_proposal",
+                title="Propose Revised Budget Strategy",
+                description="Prepare a performance-backed budget proposal showing projected returns at recommended spend levels.",
+                priority="soon",
+                category="budget",
+            )
+        )
 
     if "campaign_paused" in signal_names:
-        interventions.append(Intervention(
-            action="reactivation_plan",
-            title="Create Reactivation Plan",
-            description="Prepare an optimized reactivation plan with refreshed targeting and creative before resuming.",
-            priority="soon",
-            category="optimize",
-        ))
+        interventions.append(
+            Intervention(
+                action="reactivation_plan",
+                title="Create Reactivation Plan",
+                description="Prepare an optimized reactivation plan with refreshed targeting and creative before resuming.",
+                priority="soon",
+                category="optimize",
+            )
+        )
 
     if "stale_data" in signal_names:
-        interventions.append(Intervention(
-            action="resync_platform",
-            title=f"Re-sync {platform} Data",
-            description="Reconnect and sync latest data to ensure accurate reporting.",
-            priority="immediate",
-            category="technical",
-            auto_eligible=True,
-        ))
+        interventions.append(
+            Intervention(
+                action="resync_platform",
+                title=f"Re-sync {platform} Data",
+                description="Reconnect and sync latest data to ensure accurate reporting.",
+                priority="immediate",
+                category="technical",
+                auto_eligible=True,
+            )
+        )
 
     if risk_score >= 40 and not any(i.category == "outreach" for i in interventions):
-        interventions.append(Intervention(
-            action="proactive_checkup",
-            title="Send Proactive Performance Update",
-            description="Share a performance summary with optimization recommendations to show proactive value.",
-            priority="soon",
-            category="outreach",
-        ))
+        interventions.append(
+            Intervention(
+                action="proactive_checkup",
+                title="Send Proactive Performance Update",
+                description="Share a performance summary with optimization recommendations to show proactive value.",
+                priority="soon",
+                category="outreach",
+            )
+        )
 
     return interventions[:5]
 
 
 # ── Main Entry Point ─────────────────────────────────────────────────────────
+
 
 def build_churn_prevention(
     campaigns: List[Dict],
@@ -376,17 +422,19 @@ def build_churn_prevention(
                 platform=c_platform,
             )
 
-        at_risk_campaigns.append(AtRiskCampaign(
-            campaign_id=c_id,
-            campaign_name=c_name,
-            platform=c_platform,
-            risk_score=round(total_risk, 1),
-            risk_level=risk_level,
-            signals=all_signals,
-            interventions=interventions,
-            current_roas=round(roas, 2),
-            spend=round(c_spend, 2),
-        ))
+        at_risk_campaigns.append(
+            AtRiskCampaign(
+                campaign_id=c_id,
+                campaign_name=c_name,
+                platform=c_platform,
+                risk_score=round(total_risk, 1),
+                risk_level=risk_level,
+                signals=all_signals,
+                interventions=interventions,
+                current_roas=round(roas, 2),
+                spend=round(c_spend, 2),
+            )
+        )
 
     # Sort by risk score descending
     at_risk_campaigns.sort(key=lambda c: -c.risk_score)
@@ -431,39 +479,62 @@ def build_churn_prevention(
     # Retention metrics
     total_revenue = sum(c.get("revenue", 0) for c in campaigns)
     avg_roas = total_revenue / total_spend if total_spend > 0 else 0
-    active_count = sum(1 for c in campaigns if c.get("status", "").lower() in ("active", "enabled"))
+    active_count = sum(
+        1 for c in campaigns if c.get("status", "").lower() in ("active", "enabled")
+    )
 
     metrics = [
         RetentionMetric(
             label="Retention Rate",
             value=f"{retention_rate:.0f}%",
-            trend="improving" if retention_rate >= 80 else ("stable" if retention_rate >= 60 else "declining"),
+            trend=(
+                "improving"
+                if retention_rate >= 80
+                else ("stable" if retention_rate >= 60 else "declining")
+            ),
             is_healthy=retention_rate >= 70,
         ),
         RetentionMetric(
             label="At-Risk Campaigns",
             value=str(at_risk_count),
-            trend="declining" if at_risk_count > n * 0.3 else ("stable" if at_risk_count > 0 else "improving"),
+            trend=(
+                "declining"
+                if at_risk_count > n * 0.3
+                else ("stable" if at_risk_count > 0 else "improving")
+            ),
             is_healthy=at_risk_count <= n * 0.2,
         ),
         RetentionMetric(
             label="Active Campaigns",
             value=f"{active_count}/{n}",
-            trend="improving" if active_count >= n * 0.8 else ("stable" if active_count >= n * 0.5 else "declining"),
+            trend=(
+                "improving"
+                if active_count >= n * 0.8
+                else ("stable" if active_count >= n * 0.5 else "declining")
+            ),
             is_healthy=active_count >= n * 0.7,
         ),
         RetentionMetric(
             label="Avg ROAS",
             value=f"{avg_roas:.2f}x",
-            trend="improving" if avg_roas >= 3.0 else ("stable" if avg_roas >= 2.0 else "declining"),
+            trend=(
+                "improving"
+                if avg_roas >= 3.0
+                else ("stable" if avg_roas >= 2.0 else "declining")
+            ),
             is_healthy=avg_roas >= 2.0,
         ),
     ]
 
     # Build summary
     summary = _build_summary(
-        n, at_risk_count, critical_count, healthy_count,
-        retention_rate, portfolio_level, top_interventions,
+        n,
+        at_risk_count,
+        critical_count,
+        healthy_count,
+        retention_rate,
+        portfolio_level,
+        top_interventions,
     )
 
     # Filter to only show campaigns with risk >= medium
@@ -504,9 +575,7 @@ def _build_summary(
         )
 
     if at_risk > 0:
-        parts.append(
-            f"{at_risk} of {total} campaigns showing churn risk signals."
-        )
+        parts.append(f"{at_risk} of {total} campaigns showing churn risk signals.")
     else:
         parts.append(f"All {total} campaigns are healthy — no churn risks detected.")
 
@@ -517,10 +586,14 @@ def _build_summary(
     elif portfolio_level == "warning":
         parts.append("Warning: Elevated churn risk — proactive action recommended.")
     elif portfolio_level == "watch":
-        parts.append("Monitoring: Some campaigns need attention but overall health is stable.")
+        parts.append(
+            "Monitoring: Some campaigns need attention but overall health is stable."
+        )
 
     immediate = sum(1 for i in top_interventions if i.priority == "immediate")
     if immediate > 0:
-        parts.append(f"{immediate} immediate intervention{'s' if immediate > 1 else ''} recommended.")
+        parts.append(
+            f"{immediate} immediate intervention{'s' if immediate > 1 else ''} recommended."
+        )
 
     return " ".join(parts)

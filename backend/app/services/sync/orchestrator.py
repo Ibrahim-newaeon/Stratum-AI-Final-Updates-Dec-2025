@@ -81,7 +81,9 @@ class PlatformSyncOrchestrator:
         result = SyncResult(platform=platform.value, tenant_id=tenant_id)
 
         if settings.use_mock_ad_data:
-            logger.info("sync_skipped_mock_mode", tenant=tenant_id, platform=platform.value)
+            logger.info(
+                "sync_skipped_mock_mode", tenant=tenant_id, platform=platform.value
+            )
             return result
 
         # 1. Load connection (or fall back to env vars)
@@ -103,9 +105,15 @@ class PlatformSyncOrchestrator:
             # 2b. Fall back to environment variable tokens
             access_token, account_ids = self._get_env_credentials(platform)
             if not access_token:
-                result.errors.append(f"No active connection or env credentials for {platform.value}")
+                result.errors.append(
+                    f"No active connection or env credentials for {platform.value}"
+                )
                 return result
-            logger.info("sync_using_env_credentials", platform=platform.value, accounts=len(account_ids))
+            logger.info(
+                "sync_using_env_credentials",
+                platform=platform.value,
+                accounts=len(account_ids),
+            )
 
         if not account_ids:
             result.errors.append("No ad accounts configured")
@@ -159,7 +167,9 @@ class PlatformSyncOrchestrator:
                     except (ConnectionError, TimeoutError, OSError, ValueError) as e:
                         result.errors.append(f"Account {acct_id}: {e}")
                 else:
-                    result.errors.append(f"Token expired for {acct_id} and no DB connection to refresh")
+                    result.errors.append(
+                        f"Token expired for {acct_id} and no DB connection to refresh"
+                    )
                     break
             except (ConnectionError, TimeoutError, OSError, ValueError) as e:
                 logger.error("sync_account_error", account=acct_id, error=str(e))
@@ -194,16 +204,22 @@ class PlatformSyncOrchestrator:
             accounts_str = os.getenv("META_AD_ACCOUNT_IDS", "")
             account_ids = [a.strip() for a in accounts_str.split(",") if a.strip()]
             # Meta API expects act_ prefix
-            account_ids = [f"act_{a}" if not a.startswith("act_") else a for a in account_ids]
+            account_ids = [
+                f"act_{a}" if not a.startswith("act_") else a for a in account_ids
+            ]
             return token, account_ids
         elif platform == AdPlatform.TIKTOK:
             token = settings.tiktok_access_token or os.getenv("TIKTOK_ACCESS_TOKEN")
-            advertiser_id = settings.tiktok_advertiser_id or os.getenv("TIKTOK_ADVERTISER_ID", "")
+            advertiser_id = settings.tiktok_advertiser_id or os.getenv(
+                "TIKTOK_ADVERTISER_ID", ""
+            )
             account_ids = [advertiser_id] if advertiser_id else []
             return token, account_ids
         elif platform == AdPlatform.SNAPCHAT:
             token = settings.snapchat_access_token or os.getenv("SNAPCHAT_ACCESS_TOKEN")
-            ad_account_id = settings.snapchat_ad_account_id or os.getenv("SNAPCHAT_AD_ACCOUNT_ID", "")
+            ad_account_id = settings.snapchat_ad_account_id or os.getenv(
+                "SNAPCHAT_AD_ACCOUNT_ID", ""
+            )
             account_ids = [ad_account_id] if ad_account_id else []
             return token, account_ids
         return None, []
@@ -292,7 +308,9 @@ class PlatformSyncOrchestrator:
                     )
                     metrics_upserted += 1
             except (ConnectionError, TimeoutError, OSError, ValueError, KeyError) as e:
-                logger.warning("meta_insights_error", campaign=mc.external_id, error=str(e))
+                logger.warning(
+                    "meta_insights_error", campaign=mc.external_id, error=str(e)
+                )
 
             # Recalculate aggregates on the campaign
             await self._recalculate_campaign_aggregates(campaign)
@@ -309,7 +327,9 @@ class PlatformSyncOrchestrator:
         date_end: date,
     ) -> tuple[int, int]:
         # Fetch campaigns
-        raw_campaigns = await self._tiktok_sync.fetch_campaigns(access_token, advertiser_id)
+        raw_campaigns = await self._tiktok_sync.fetch_campaigns(
+            access_token, advertiser_id
+        )
         campaigns_synced = 0
         metrics_upserted = 0
 
@@ -355,7 +375,9 @@ class PlatformSyncOrchestrator:
                     )
                     metrics_upserted += 1
             except (ConnectionError, TimeoutError, OSError, ValueError, KeyError) as e:
-                logger.warning("tiktok_reports_error", advertiser=advertiser_id, error=str(e))
+                logger.warning(
+                    "tiktok_reports_error", advertiser=advertiser_id, error=str(e)
+                )
 
         # Recalculate aggregates
         for campaign in campaign_map.values():
@@ -373,7 +395,9 @@ class PlatformSyncOrchestrator:
         date_end: date,
     ) -> tuple[int, int]:
         # Fetch campaigns
-        raw_campaigns = await self._snapchat_sync.fetch_campaigns(access_token, ad_account_id)
+        raw_campaigns = await self._snapchat_sync.fetch_campaigns(
+            access_token, ad_account_id
+        )
         campaigns_synced = 0
         metrics_upserted = 0
 
@@ -421,7 +445,9 @@ class PlatformSyncOrchestrator:
                     )
                     metrics_upserted += 1
             except (ConnectionError, TimeoutError, OSError, ValueError, KeyError) as e:
-                logger.warning("snapchat_stats_error", account=ad_account_id, error=str(e))
+                logger.warning(
+                    "snapchat_stats_error", account=ad_account_id, error=str(e)
+                )
 
         # Recalculate aggregates
         for campaign in campaign_map.values():
@@ -473,9 +499,15 @@ class PlatformSyncOrchestrator:
             if lifetime_budget_cents is not None:
                 campaign.lifetime_budget_cents = lifetime_budget_cents
             if start_date:
-                campaign.start_date = start_date.date() if isinstance(start_date, datetime) else start_date
+                campaign.start_date = (
+                    start_date.date()
+                    if isinstance(start_date, datetime)
+                    else start_date
+                )
             if end_date:
-                campaign.end_date = end_date.date() if isinstance(end_date, datetime) else end_date
+                campaign.end_date = (
+                    end_date.date() if isinstance(end_date, datetime) else end_date
+                )
             campaign.raw_data = raw_data
             campaign.last_synced_at = now
             campaign.sync_error = None
@@ -490,8 +522,14 @@ class PlatformSyncOrchestrator:
                 objective=objective,
                 daily_budget_cents=daily_budget_cents,
                 lifetime_budget_cents=lifetime_budget_cents,
-                start_date=start_date.date() if isinstance(start_date, datetime) else start_date,
-                end_date=end_date.date() if isinstance(end_date, datetime) else end_date,
+                start_date=(
+                    start_date.date()
+                    if isinstance(start_date, datetime)
+                    else start_date
+                ),
+                end_date=(
+                    end_date.date() if isinstance(end_date, datetime) else end_date
+                ),
                 raw_data=raw_data,
                 last_synced_at=now,
             )
@@ -633,7 +671,9 @@ class PlatformSyncOrchestrator:
 
             conn.access_token_encrypted = oauth.encrypt_token(new_tokens.access_token)
             if new_tokens.refresh_token:
-                conn.refresh_token_encrypted = oauth.encrypt_token(new_tokens.refresh_token)
+                conn.refresh_token_encrypted = oauth.encrypt_token(
+                    new_tokens.refresh_token
+                )
             conn.token_expires_at = new_tokens.expires_at
             conn.last_refreshed_at = datetime.now(UTC)
             conn.status = ConnectionStatus.CONNECTED

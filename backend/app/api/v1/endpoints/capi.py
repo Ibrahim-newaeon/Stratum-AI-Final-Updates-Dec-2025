@@ -6,20 +6,18 @@ API endpoints for server-side Conversion API integration.
 Provides no-code platform connection, event streaming, and data quality analysis.
 """
 
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, ConfigDict
-
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.deps import CurrentUserDep
 from app.core.logging import get_logger
 from app.db.session import get_async_session
-from app.services.capi import CAPIService
 from app.schemas import APIResponse
+from app.services.capi import CAPIService
 
 logger = get_logger(__name__)
 router = APIRouter(tags=["capi"])
@@ -36,7 +34,8 @@ def get_capi_service(tenant_id: int) -> CAPIService:
     now = datetime.now(timezone.utc)
     # Evict expired entries on every access
     expired = [
-        tid for tid, (_, ts) in _capi_services.items()
+        tid
+        for tid, (_, ts) in _capi_services.items()
         if now - ts > timedelta(minutes=_CAPI_SERVICE_TTL_MINUTES)
     ]
     for tid in expired:
@@ -72,8 +71,13 @@ PLATFORM_REQUIRED_KEYS: Dict[str, List[str]] = {
 
 class PlatformCredentials(BaseModel):
     """Credentials for connecting to a platform."""
-    platform: str = Field(..., description="Platform name: meta, google, tiktok, snapchat")
-    credentials: Dict[str, str] = Field(..., description="Platform-specific credentials")
+
+    platform: str = Field(
+        ..., description="Platform name: meta, google, tiktok, snapchat"
+    )
+    credentials: Dict[str, str] = Field(
+        ..., description="Platform-specific credentials"
+    )
 
     @field_validator("platform")
     @classmethod
@@ -90,28 +94,41 @@ class PlatformCredentials(BaseModel):
         required = PLATFORM_REQUIRED_KEYS.get(platform, [])
         missing = [k for k in required if k not in v or not v[k].strip()]
         if missing:
-            raise ValueError(f"Missing required credentials for {platform}: {', '.join(missing)}")
+            raise ValueError(
+                f"Missing required credentials for {platform}: {', '.join(missing)}"
+            )
         return v
 
 
 class ConversionEvent(BaseModel):
     """Conversion event to stream."""
+
     event_name: str = Field(..., description="Event name (e.g., Purchase, Lead)")
     user_data: Dict[str, Any] = Field(..., description="User identification data")
-    parameters: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Event parameters (value, currency, etc.)")
+    parameters: Optional[Dict[str, Any]] = Field(
+        default_factory=dict, description="Event parameters (value, currency, etc.)"
+    )
     event_time: Optional[int] = Field(default=None, description="Unix timestamp")
-    event_source_url: Optional[str] = Field(default=None, description="URL where event occurred")
-    event_id: Optional[str] = Field(default=None, description="Unique event ID for deduplication")
+    event_source_url: Optional[str] = Field(
+        default=None, description="URL where event occurred"
+    )
+    event_id: Optional[str] = Field(
+        default=None, description="Unique event ID for deduplication"
+    )
 
 
 class BatchEventsRequest(BaseModel):
     """Request for streaming batch events."""
+
     events: List[ConversionEvent]
-    platforms: Optional[List[str]] = Field(default=None, description="Platforms to send to")
+    platforms: Optional[List[str]] = Field(
+        default=None, description="Platforms to send to"
+    )
 
 
 class DataQualityRequest(BaseModel):
     """Request for data quality analysis."""
+
     user_data: Dict[str, Any]
     platform: Optional[str] = Field(default=None)
 

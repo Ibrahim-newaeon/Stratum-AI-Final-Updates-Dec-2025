@@ -37,15 +37,17 @@ router = APIRouter(prefix="/mfa", tags=["MFA"])
 class MFAStatusResponse(BaseModel):
     """MFA status response."""
 
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "enabled": True,
-            "verified_at": "2024-01-15T10:30:00Z",
-            "backup_codes_remaining": 8,
-            "is_locked": False,
-            "lockout_until": None,
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "enabled": True,
+                "verified_at": "2024-01-15T10:30:00Z",
+                "backup_codes_remaining": 8,
+                "is_locked": False,
+                "lockout_until": None,
+            }
         }
-    })
+    )
 
     enabled: bool
     verified_at: Optional[str] = None
@@ -57,13 +59,15 @@ class MFAStatusResponse(BaseModel):
 class MFASetupResponse(BaseModel):
     """MFA setup response with QR code."""
 
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "secret": "JBSWY3DPEHPK3PXP",
-            "provisioning_uri": "otpauth://totp/Stratum%20AI:user@example.com?secret=JBSWY3DPEHPK3PXP&issuer=Stratum%20AI",
-            "qr_code_base64": "iVBORw0KGgoAAAANSUhEUgAA...",
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "secret": "JBSWY3DPEHPK3PXP",
+                "provisioning_uri": "otpauth://totp/Stratum%20AI:user@example.com?secret=JBSWY3DPEHPK3PXP&issuer=Stratum%20AI",
+                "qr_code_base64": "iVBORw0KGgoAAAANSUhEUgAA...",
+            }
         }
-    })
+    )
 
     secret: str = Field(..., description="TOTP secret (for manual entry)")
     provisioning_uri: str = Field(..., description="otpauth:// URI")
@@ -81,13 +85,15 @@ class MFAVerifyRequest(BaseModel):
 class MFAVerifyResponse(BaseModel):
     """Response after enabling MFA."""
 
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "success": True,
-            "message": "MFA enabled successfully",
-            "backup_codes": ["ABCD-1234", "EFGH-5678", "IJKL-9012"],
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "success": True,
+                "message": "MFA enabled successfully",
+                "backup_codes": ["ABCD-1234", "EFGH-5678", "IJKL-9012"],
+            }
         }
-    })
+    )
 
     success: bool
     message: str
@@ -107,7 +113,9 @@ class MFADisableRequest(BaseModel):
 class MFAValidateRequest(BaseModel):
     """Request to validate code during login."""
 
-    model_config = ConfigDict(json_schema_extra={"example": {"user_id": 123, "code": "123456"}})
+    model_config = ConfigDict(
+        json_schema_extra={"example": {"user_id": 123, "code": "123456"}}
+    )
 
     user_id: int = Field(..., description="User ID from login step 1")
     code: str = Field(..., description="TOTP code or backup code")
@@ -116,7 +124,9 @@ class MFAValidateRequest(BaseModel):
 class MFAValidateResponse(BaseModel):
     """Response from code validation."""
 
-    model_config = ConfigDict(json_schema_extra={"example": {"valid": True, "message": "Code verified"}})
+    model_config = ConfigDict(
+        json_schema_extra={"example": {"valid": True, "message": "Code verified"}}
+    )
 
     valid: bool
     message: str
@@ -125,13 +135,15 @@ class MFAValidateResponse(BaseModel):
 class BackupCodesResponse(BaseModel):
     """Response with new backup codes."""
 
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "success": True,
-            "message": "Backup codes regenerated",
-            "backup_codes": ["ABCD-1234", "EFGH-5678"],
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "success": True,
+                "message": "Backup codes regenerated",
+                "backup_codes": ["ABCD-1234", "EFGH-5678"],
+            }
         }
-    })
+    )
 
     success: bool
     message: str
@@ -168,10 +180,16 @@ async def get_mfa_status(
 
         return MFAStatusResponse(
             enabled=mfa_status.enabled,
-            verified_at=mfa_status.verified_at.isoformat() if mfa_status.verified_at else None,
+            verified_at=(
+                mfa_status.verified_at.isoformat() if mfa_status.verified_at else None
+            ),
             backup_codes_remaining=mfa_status.backup_codes_remaining,
             is_locked=mfa_status.is_locked,
-            lockout_until=mfa_status.lockout_until.isoformat() if mfa_status.lockout_until else None,
+            lockout_until=(
+                mfa_status.lockout_until.isoformat()
+                if mfa_status.lockout_until
+                else None
+            ),
         )
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
@@ -234,7 +252,9 @@ async def verify_and_enable_mfa(
     service = MFAService(db)
 
     try:
-        success, backup_codes = await service.verify_and_enable(current_user.id, request.code)
+        success, backup_codes = await service.verify_and_enable(
+            current_user.id, request.code
+        )
 
         if success:
             logger.info("mfa_enabled", user_id=current_user.id)
@@ -305,7 +325,9 @@ async def regenerate_backup_codes(
     service = MFAService(db)
 
     try:
-        success, backup_codes = await service.regenerate_backup_codes(current_user.id, request.code)
+        success, backup_codes = await service.regenerate_backup_codes(
+            current_user.id, request.code
+        )
 
         if success:
             logger.info("mfa_backup_codes_regenerated", user_id=current_user.id)
@@ -359,7 +381,9 @@ async def validate_mfa_code(
     if valid:
         logger.info("mfa_validation_success", user_id=request.user_id)
     else:
-        logger.warning("mfa_validation_failed", user_id=request.user_id, message=message)
+        logger.warning(
+            "mfa_validation_failed", user_id=request.user_id, message=message
+        )
 
     return MFAValidateResponse(
         valid=valid,

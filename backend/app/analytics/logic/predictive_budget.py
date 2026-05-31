@@ -16,15 +16,17 @@ Architecture:
 Builds on: scoring.py, budget.py, signal_health.py, trust_gate concepts
 """
 
-from typing import List, Optional, Dict, Literal
 from datetime import datetime, timezone
-from pydantic import BaseModel, Field
+from typing import Dict, List, Literal, Optional
 
+from pydantic import BaseModel, Field
 
 # ── Models ───────────────────────────────────────────────────────────────────
 
+
 class CampaignBudgetInsight(BaseModel):
     """Insight for a single campaign's budget optimization."""
+
     campaign_id: int
     campaign_name: str
     platform: str
@@ -41,6 +43,7 @@ class CampaignBudgetInsight(BaseModel):
 
 class BudgetForecast(BaseModel):
     """Forecasted outcome if recommendations are applied."""
+
     projected_spend: float
     projected_revenue: float
     projected_roas: float
@@ -52,6 +55,7 @@ class BudgetForecast(BaseModel):
 
 class PredictiveBudgetResponse(BaseModel):
     """Full response for the predictive budget autopilot."""
+
     summary: str
     trust_gate_status: Literal["pass", "hold", "block"]
     autopilot_eligible: bool
@@ -68,6 +72,7 @@ class PredictiveBudgetResponse(BaseModel):
 
 
 # ── Scoring & Analysis ───────────────────────────────────────────────────────
+
 
 def _calculate_campaign_score(
     spend: float,
@@ -205,6 +210,7 @@ def _identify_risk_factors(
 
 # ── Main Entry Point ─────────────────────────────────────────────────────────
 
+
 def build_predictive_budget(
     campaigns: List[Dict],
     signal_health_score: int,
@@ -305,25 +311,27 @@ def build_predictive_budget(
             spend=c_spend,
         )
 
-        recommendations.append(CampaignBudgetInsight(
-            campaign_id=c_id,
-            campaign_name=c_name,
-            platform=c_platform,
-            current_spend=c_spend,
-            recommended_spend=recommended_spend,
-            change_amount=round(change_amount, 2),
-            change_percent=round(change_pct, 1),
-            action=action,
-            confidence=score_data["confidence"],
-            reasoning=reasoning,
-            metrics={
-                "roas": score_data["roas"],
-                "cpa": score_data["cpa"],
-                "conversions": c_conversions,
-                "score": score_data["score"],
-            },
-            risk_factors=risk_factors,
-        ))
+        recommendations.append(
+            CampaignBudgetInsight(
+                campaign_id=c_id,
+                campaign_name=c_name,
+                platform=c_platform,
+                current_spend=c_spend,
+                recommended_spend=recommended_spend,
+                change_amount=round(change_amount, 2),
+                change_percent=round(change_pct, 1),
+                action=action,
+                confidence=score_data["confidence"],
+                reasoning=reasoning,
+                metrics={
+                    "roas": score_data["roas"],
+                    "cpa": score_data["cpa"],
+                    "conversions": c_conversions,
+                    "score": score_data["score"],
+                },
+                risk_factors=risk_factors,
+            )
+        )
 
     # Sort: scale first (by confidence), then reduce, then maintain
     action_order = {"scale": 0, "reduce": 1, "pause": 2, "maintain": 3}
@@ -350,33 +358,50 @@ def build_predictive_budget(
         proj_spend = sum(r.recommended_spend for r in recommendations)
         # Estimate revenue based on each campaign's ROAS applied to new spend
         proj_revenue = sum(
-            r.recommended_spend * r.metrics.get("roas", 0)
-            for r in recommendations
+            r.recommended_spend * r.metrics.get("roas", 0) for r in recommendations
         )
-        proj_conversions = int(sum(
-            r.recommended_spend / max(r.metrics.get("cpa", 1), 0.01)
-            for r in recommendations
-            if r.metrics.get("cpa", 0) > 0
-        ))
+        proj_conversions = int(
+            sum(
+                r.recommended_spend / max(r.metrics.get("cpa", 1), 0.01)
+                for r in recommendations
+                if r.metrics.get("cpa", 0) > 0
+            )
+        )
         proj_roas = proj_revenue / proj_spend if proj_spend > 0 else 0
 
-        conf_level = "high" if avg_conf >= 0.75 else ("medium" if avg_conf >= 0.5 else "low")
+        conf_level = (
+            "high" if avg_conf >= 0.75 else ("medium" if avg_conf >= 0.5 else "low")
+        )
 
         forecast = BudgetForecast(
             projected_spend=round(proj_spend, 2),
             projected_revenue=round(proj_revenue, 2),
             projected_roas=round(proj_roas, 2),
             projected_conversions=proj_conversions,
-            spend_change_pct=round((proj_spend - total_spend) / total_spend * 100, 1) if total_spend else 0,
-            revenue_change_pct=round((proj_revenue - total_revenue) / total_revenue * 100, 1) if total_revenue > 0 else 0,
+            spend_change_pct=(
+                round((proj_spend - total_spend) / total_spend * 100, 1)
+                if total_spend
+                else 0
+            ),
+            revenue_change_pct=(
+                round((proj_revenue - total_revenue) / total_revenue * 100, 1)
+                if total_revenue > 0
+                else 0
+            ),
             confidence_level=conf_level,
         )
 
     # Build summary
     summary = _build_summary(
-        scale_count, reduce_count, maintain_count,
-        total_shift, shift_pct, trust_status,
-        autopilot_eligible, avg_conf, forecast,
+        scale_count,
+        reduce_count,
+        maintain_count,
+        total_shift,
+        shift_pct,
+        trust_status,
+        autopilot_eligible,
+        avg_conf,
+        forecast,
     )
 
     return PredictiveBudgetResponse(
@@ -411,14 +436,18 @@ def _build_summary(
     parts = []
 
     if scale_count > 0:
-        parts.append(f"{scale_count} campaign{'s' if scale_count > 1 else ''} recommended for scaling")
+        parts.append(
+            f"{scale_count} campaign{'s' if scale_count > 1 else ''} recommended for scaling"
+        )
     if reduce_count > 0:
         parts.append(f"{reduce_count} for budget reduction")
     if maintain_count > 0:
         parts.append(f"{maintain_count} maintaining current budget")
 
     if total_shift > 0:
-        parts.append(f"Total proposed budget shift: ${total_shift:,.0f} ({shift_pct:.1f}% of total spend)")
+        parts.append(
+            f"Total proposed budget shift: ${total_shift:,.0f} ({shift_pct:.1f}% of total spend)"
+        )
 
     if trust_status == "pass":
         if autopilot_eligible:
@@ -427,7 +456,9 @@ def _build_summary(
                 f"{avg_confidence*100:.0f}% average confidence."
             )
         else:
-            parts.append("Trust gate: PASS. Manual review recommended due to lower confidence.")
+            parts.append(
+                "Trust gate: PASS. Manual review recommended due to lower confidence."
+            )
     elif trust_status == "hold":
         parts.append(
             "Trust gate: HOLD. Signal health is degraded — recommendations are advisory only."

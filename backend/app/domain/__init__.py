@@ -5,20 +5,19 @@
 # Re-export from canonical locations for backwards compatibility.
 # Do NOT define models here to avoid duplicate table registration.
 
-from app.models.trust_layer import (
-    FactSignalHealthDaily,
-    FactAttributionVarianceDaily,
-    FactActionsQueue,
-    SignalHealthStatus,
-    AttributionVarianceStatus,
-)
-
 from app.models.campaign_builder import (
+    CampaignDraft,
+    CampaignPublishLog,
     ConnectionStatus,
     DraftStatus,
     PublishResult,
-    TenantPlatformConnection,
     TenantAdAccount,
-    CampaignDraft,
-    CampaignPublishLog,
+    TenantPlatformConnection,
+)
+from app.models.trust_layer import (
+    AttributionVarianceStatus,
+    FactActionsQueue,
+    FactAttributionVarianceDaily,
+    FactSignalHealthDaily,
+    SignalHealthStatus,
 )

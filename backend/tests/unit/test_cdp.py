@@ -364,7 +364,9 @@ class TestEMQScoreCalculation:
             "user_agent": "Mozilla/5.0",
             "ip": "185.23.45.67",
         }
-        score = calculate_emq_score(identifiers, properties, context, latency_seconds=60)
+        score = calculate_emq_score(
+            identifiers, properties, context, latency_seconds=60
+        )
         assert score == 100.0
 
     def test_max_score_with_phone_and_all_context(self):
@@ -376,7 +378,9 @@ class TestEMQScoreCalculation:
             "user_agent": "Mozilla/5.0",
             "ip": "185.23.45.67",
         }
-        score = calculate_emq_score(identifiers, properties, context, latency_seconds=60)
+        score = calculate_emq_score(
+            identifiers, properties, context, latency_seconds=60
+        )
         assert score == 100.0
 
     def test_identifier_quality_email_or_phone(self):
@@ -453,7 +457,9 @@ class TestEMQScoreCalculation:
         assert score_campaign == 5
 
         # User agent only
-        score_ua = calculate_emq_score([], {}, {"user_agent": "Mozilla/5.0"}, latency_seconds=3700)
+        score_ua = calculate_emq_score(
+            [], {}, {"user_agent": "Mozilla/5.0"}, latency_seconds=3700
+        )
         assert score_ua == 5
 
         # IP only
@@ -464,7 +470,11 @@ class TestEMQScoreCalculation:
         score_all = calculate_emq_score(
             [],
             {},
-            {"campaign": {"source": "google"}, "user_agent": "Mozilla", "ip": "1.2.3.4"},
+            {
+                "campaign": {"source": "google"},
+                "user_agent": "Mozilla",
+                "ip": "1.2.3.4",
+            },
             latency_seconds=3700,
         )
         assert score_all == 15
@@ -473,7 +483,10 @@ class TestEMQScoreCalculation:
         """EMQ score should never exceed 100."""
         # Even with maximum everything
         score = calculate_emq_score(
-            [{"type": "email", "value": "test@test.com"}, {"type": "phone", "value": "+1234"}],
+            [
+                {"type": "email", "value": "test@test.com"},
+                {"type": "phone", "value": "+1234"},
+            ],
             {"lots": "of", "properties": "here", "extra": "data"},
             {"campaign": {}, "user_agent": "test", "ip": "1.2.3.4", "extra": "field"},
             latency_seconds=0,

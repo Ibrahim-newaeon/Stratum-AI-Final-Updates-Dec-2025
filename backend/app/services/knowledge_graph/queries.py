@@ -18,6 +18,7 @@ from .models import EdgeLabel, GateDecision, NodeLabel
 
 class AggregateFunction(str, Enum):
     """Cypher aggregate functions."""
+
     COUNT = "count"
     SUM = "sum"
     AVG = "avg"
@@ -59,24 +60,21 @@ class CypherQueryBuilder:
 
     def __post_init__(self):
         # Initialize mutable defaults
-        if not hasattr(self, '_match_clauses') or self._match_clauses is None:
+        if not hasattr(self, "_match_clauses") or self._match_clauses is None:
             self._match_clauses = []
-        if not hasattr(self, '_where_clauses') or self._where_clauses is None:
+        if not hasattr(self, "_where_clauses") or self._where_clauses is None:
             self._where_clauses = []
-        if not hasattr(self, '_optional_matches') or self._optional_matches is None:
+        if not hasattr(self, "_optional_matches") or self._optional_matches is None:
             self._optional_matches = []
-        if not hasattr(self, '_with_clauses') or self._with_clauses is None:
+        if not hasattr(self, "_with_clauses") or self._with_clauses is None:
             self._with_clauses = []
-        if not hasattr(self, '_return_fields') or self._return_fields is None:
+        if not hasattr(self, "_return_fields") or self._return_fields is None:
             self._return_fields = []
-        if not hasattr(self, '_parameters') or self._parameters is None:
+        if not hasattr(self, "_parameters") or self._parameters is None:
             self._parameters = {}
 
     def match_node(
-        self,
-        alias: str,
-        label: NodeLabel,
-        properties: Optional[dict[str, Any]] = None
+        self, alias: str, label: NodeLabel, properties: Optional[dict[str, Any]] = None
     ) -> CypherQueryBuilder:
         """Add a MATCH clause for a node."""
         props = self._format_properties(properties) if properties else ""
@@ -95,7 +93,11 @@ class CypherQueryBuilder:
         direction: str = "->",  # "->" or "<-" or "--"
     ) -> CypherQueryBuilder:
         """Add a MATCH clause for an edge."""
-        edge_part = f"[{edge_alias or ''}:{edge_label.value}]" if edge_alias else f"[:{edge_label.value}]"
+        edge_part = (
+            f"[{edge_alias or ''}:{edge_label.value}]"
+            if edge_alias
+            else f"[:{edge_label.value}]"
+        )
         end_part = f"({end_alias}:{end_label.value})" if end_label else f"({end_alias})"
 
         if direction == "->":
@@ -123,11 +125,7 @@ class CypherQueryBuilder:
         return self
 
     def where(
-        self,
-        field: str,
-        operator: str,
-        value: Any,
-        param_name: Optional[str] = None
+        self, field: str, operator: str, value: Any, param_name: Optional[str] = None
     ) -> CypherQueryBuilder:
         """Add a WHERE condition."""
         if param_name:
@@ -144,12 +142,7 @@ class CypherQueryBuilder:
         self._where_clauses.append(f"{field} IN [{', '.join(formatted)}]")
         return self
 
-    def where_between(
-        self,
-        field: str,
-        start: Any,
-        end: Any
-    ) -> CypherQueryBuilder:
+    def where_between(self, field: str, start: Any, end: Any) -> CypherQueryBuilder:
         """Add a WHERE BETWEEN condition."""
         start_val = self._format_value(start)
         end_val = self._format_value(end)
@@ -157,17 +150,10 @@ class CypherQueryBuilder:
         return self
 
     def where_date_range(
-        self,
-        field: str,
-        start_date: datetime,
-        end_date: datetime
+        self, field: str, start_date: datetime, end_date: datetime
     ) -> CypherQueryBuilder:
         """Add a date range filter."""
-        return self.where_between(
-            field,
-            start_date.isoformat(),
-            end_date.isoformat()
-        )
+        return self.where_between(field, start_date.isoformat(), end_date.isoformat())
 
     def where_last_n_days(self, field: str, days: int) -> CypherQueryBuilder:
         """Filter to last N days."""
@@ -189,18 +175,16 @@ class CypherQueryBuilder:
         self._return_fields.append(f"count({alias}) AS {as_name}")
         return self
 
-    def return_sum(
-        self,
-        field: str,
-        as_name: str = "total"
-    ) -> CypherQueryBuilder:
+    def return_sum(self, field: str, as_name: str = "total") -> CypherQueryBuilder:
         """Return sum of field."""
         self._return_fields.append(f"sum({field}) AS {as_name}")
         return self
 
     def return_path(self, from_alias: str, to_alias: str) -> CypherQueryBuilder:
         """Return path between nodes."""
-        self._return_fields.append(f"path = shortestPath(({from_alias})-[*]->({to_alias}))")
+        self._return_fields.append(
+            f"path = shortestPath(({from_alias})-[*]->({to_alias}))"
+        )
         return self
 
     def order_by(self, field: str, desc: bool = False) -> CypherQueryBuilder:
@@ -227,19 +211,27 @@ class CypherQueryBuilder:
             Tuple of (SQL query string, parameters dict)
         """
         # Build MATCH clause
-        match_part = "MATCH " + ", ".join(self._match_clauses) if self._match_clauses else ""
+        match_part = (
+            "MATCH " + ", ".join(self._match_clauses) if self._match_clauses else ""
+        )
 
         # Build OPTIONAL MATCH clauses
         optional_parts = [f"OPTIONAL MATCH {om}" for om in self._optional_matches]
 
         # Build WHERE clause
-        where_part = "WHERE " + " AND ".join(self._where_clauses) if self._where_clauses else ""
+        where_part = (
+            "WHERE " + " AND ".join(self._where_clauses) if self._where_clauses else ""
+        )
 
         # Build WITH clauses
         with_parts = [f"WITH {w}" for w in self._with_clauses]
 
         # Build RETURN clause
-        return_part = "RETURN " + ", ".join(self._return_fields) if self._return_fields else "RETURN *"
+        return_part = (
+            "RETURN " + ", ".join(self._return_fields)
+            if self._return_fields
+            else "RETURN *"
+        )
 
         # Build ORDER BY
         order_part = f"ORDER BY {self._order_by}" if self._order_by else ""
@@ -270,7 +262,9 @@ class CypherQueryBuilder:
 
         return sql, self._parameters
 
-    def build_create_node(self, alias: str, node_label: NodeLabel, properties: dict[str, Any]) -> str:
+    def build_create_node(
+        self, alias: str, node_label: NodeLabel, properties: dict[str, Any]
+    ) -> str:
         """Build a CREATE node query."""
         props = self._format_properties(properties)
         cypher = f"CREATE ({alias}:{node_label.value}{props}) RETURN {alias}"
@@ -285,13 +279,16 @@ class CypherQueryBuilder:
         alias: str,
         node_label: NodeLabel,
         match_properties: dict[str, Any],
-        set_properties: Optional[dict[str, Any]] = None
+        set_properties: Optional[dict[str, Any]] = None,
     ) -> str:
         """Build a MERGE node query (create if not exists)."""
         match_props = self._format_properties(match_properties)
         set_clause = ""
         if set_properties:
-            set_parts = [f"{alias}.{k} = {self._format_value(v)}" for k, v in set_properties.items()]
+            set_parts = [
+                f"{alias}.{k} = {self._format_value(v)}"
+                for k, v in set_properties.items()
+            ]
             set_clause = f"ON CREATE SET {', '.join(set_parts)} ON MATCH SET {', '.join(set_parts)}"
 
         cypher = f"MERGE ({alias}:{node_label.value}{match_props}) {set_clause} RETURN {alias}"
@@ -308,7 +305,7 @@ class CypherQueryBuilder:
         edge_label: EdgeLabel,
         end_label: NodeLabel,
         end_match: dict[str, Any],
-        edge_properties: Optional[dict[str, Any]] = None
+        edge_properties: Optional[dict[str, Any]] = None,
     ) -> str:
         """Build a CREATE edge query."""
         start_props = self._format_properties(start_match)
@@ -348,7 +345,9 @@ class CypherQueryBuilder:
             formatted = [CypherQueryBuilder._format_value(v) for v in value]
             return f"[{', '.join(formatted)}]"
         elif isinstance(value, dict):
-            parts = [f"{k}: {CypherQueryBuilder._format_value(v)}" for k, v in value.items()]
+            parts = [
+                f"{k}: {CypherQueryBuilder._format_value(v)}" for k, v in value.items()
+            ]
             return "{" + ", ".join(parts) + "}"
         else:
             return f"'{value!s}'"
@@ -358,13 +357,16 @@ class CypherQueryBuilder:
         """Format properties dict for Cypher."""
         if not properties:
             return ""
-        parts = [f"{k}: {CypherQueryBuilder._format_value(v)}" for k, v in properties.items()]
+        parts = [
+            f"{k}: {CypherQueryBuilder._format_value(v)}" for k, v in properties.items()
+        ]
         return " {" + ", ".join(parts) + "}"
 
 
 # =============================================================================
 # PRE-BUILT REVENUE ANALYTICS QUERIES
 # =============================================================================
+
 
 class RevenueAnalyticsQueries:
     """Pre-built Cypher queries for revenue analytics."""
@@ -375,41 +377,50 @@ class RevenueAnalyticsQueries:
         return (
             CypherQueryBuilder(tenant_id)
             .match_node("r", NodeLabel.REVENUE)
-            .match_edge("r", EdgeLabel.ATTRIBUTED_TO, "ch", NodeLabel.CHANNEL, direction="->")
+            .match_edge(
+                "r", EdgeLabel.ATTRIBUTED_TO, "ch", NodeLabel.CHANNEL, direction="->"
+            )
             .where_last_n_days("r.occurred_at", days)
-            .return_fields([
-                "ch.name AS channel",
-                "ch.channel_type AS channel_type",
-                "count(r) AS transactions",
-                "sum(r.amount_cents) AS revenue_cents",
-                "avg(r.amount_cents) AS avg_order_cents"
-            ])
+            .return_fields(
+                [
+                    "ch.name AS channel",
+                    "ch.channel_type AS channel_type",
+                    "count(r) AS transactions",
+                    "sum(r.amount_cents) AS revenue_cents",
+                    "avg(r.amount_cents) AS avg_order_cents",
+                ]
+            )
             .order_by("revenue_cents", desc=True)
             .build()
         )
 
     @staticmethod
-    def revenue_by_campaign(tenant_id: UUID, platform: Optional[str] = None, days: int = 30) -> tuple[str, dict]:
+    def revenue_by_campaign(
+        tenant_id: UUID, platform: Optional[str] = None, days: int = 30
+    ) -> tuple[str, dict]:
         """Get revenue breakdown by campaign."""
         builder = (
             CypherQueryBuilder(tenant_id)
             .match_node("r", NodeLabel.REVENUE)
-            .match_edge("r", EdgeLabel.ATTRIBUTED_TO, "c", NodeLabel.CAMPAIGN, direction="->")
+            .match_edge(
+                "r", EdgeLabel.ATTRIBUTED_TO, "c", NodeLabel.CAMPAIGN, direction="->"
+            )
             .where_last_n_days("r.occurred_at", days)
         )
         if platform:
             builder.where("c.platform", "=", platform)
 
         return (
-            builder
-            .return_fields([
-                "c.name AS campaign_name",
-                "c.platform AS platform",
-                "c.spend_cents AS spend_cents",
-                "sum(r.amount_cents) AS revenue_cents",
-                "count(r) AS conversions",
-                "CASE WHEN c.spend_cents > 0 THEN sum(r.amount_cents) * 1.0 / c.spend_cents ELSE 0 END AS roas"
-            ])
+            builder.return_fields(
+                [
+                    "c.name AS campaign_name",
+                    "c.platform AS platform",
+                    "c.spend_cents AS spend_cents",
+                    "sum(r.amount_cents) AS revenue_cents",
+                    "count(r) AS conversions",
+                    "CASE WHEN c.spend_cents > 0 THEN sum(r.amount_cents) * 1.0 / c.spend_cents ELSE 0 END AS roas",
+                ]
+            )
             .order_by("revenue_cents", desc=True)
             .limit(50)
             .build()
@@ -423,11 +434,13 @@ class RevenueAnalyticsQueries:
             .match_node("p", NodeLabel.PROFILE, {"external_id": profile_external_id})
             .match_edge("p", EdgeLabel.PERFORMED, "e", NodeLabel.EVENT)
             .optional_match_edge("e", EdgeLabel.GENERATED, "r", NodeLabel.REVENUE)
-            .return_fields([
-                "p.external_id AS profile_id",
-                "p.lifecycle_stage AS lifecycle",
-                "collect({event_type: e.event_type, timestamp: e.event_time, revenue: r.amount_cents}) AS journey"
-            ])
+            .return_fields(
+                [
+                    "p.external_id AS profile_id",
+                    "p.lifecycle_stage AS lifecycle",
+                    "collect({event_type: e.event_type, timestamp: e.event_time, revenue: r.amount_cents}) AS journey",
+                ]
+            )
             .build()
         )
 
@@ -436,16 +449,20 @@ class RevenueAnalyticsQueries:
         """Get automations that were blocked by trust gates."""
         return (
             CypherQueryBuilder(tenant_id)
-            .match_node("tg", NodeLabel.TRUST_GATE, {"decision": GateDecision.BLOCK.value})
+            .match_node(
+                "tg", NodeLabel.TRUST_GATE, {"decision": GateDecision.BLOCK.value}
+            )
             .match_edge("tg", EdgeLabel.BLOCKED, "a", NodeLabel.AUTOMATION)
             .where_last_n_days("tg.evaluated_at", days)
-            .return_fields([
-                "a.action_type AS action_type",
-                "a.platform AS platform",
-                "tg.reason AS block_reason",
-                "tg.signal_health_score AS health_score",
-                "tg.evaluated_at AS blocked_at"
-            ])
+            .return_fields(
+                [
+                    "a.action_type AS action_type",
+                    "a.platform AS platform",
+                    "tg.reason AS block_reason",
+                    "tg.signal_health_score AS health_score",
+                    "tg.evaluated_at AS blocked_at",
+                ]
+            )
             .order_by("tg.evaluated_at", desc=True)
             .limit(100)
             .build()
@@ -461,18 +478,22 @@ class RevenueAnalyticsQueries:
             .match_edge("tg", EdgeLabel.TRIGGERED, "a", NodeLabel.AUTOMATION)
             .match_edge("a", EdgeLabel.PRODUCED, "r", NodeLabel.REVENUE)
             .where_last_n_days("s.measured_at", days)
-            .return_fields([
-                "s.status AS signal_status",
-                "avg(s.score) AS avg_signal_score",
-                "count(a) AS automations_executed",
-                "sum(r.amount_cents) AS revenue_produced_cents"
-            ])
+            .return_fields(
+                [
+                    "s.status AS signal_status",
+                    "avg(s.score) AS avg_signal_score",
+                    "count(a) AS automations_executed",
+                    "sum(r.amount_cents) AS revenue_produced_cents",
+                ]
+            )
             .order_by("avg_signal_score", desc=True)
             .build()
         )
 
     @staticmethod
-    def segment_revenue_performance(tenant_id: UUID, days: int = 30) -> tuple[str, dict]:
+    def segment_revenue_performance(
+        tenant_id: UUID, days: int = 30
+    ) -> tuple[str, dict]:
         """Get revenue performance by customer segment."""
         return (
             CypherQueryBuilder(tenant_id)
@@ -481,23 +502,23 @@ class RevenueAnalyticsQueries:
             .match_edge("p", EdgeLabel.PERFORMED, "e", NodeLabel.EVENT)
             .match_edge("e", EdgeLabel.GENERATED, "r", NodeLabel.REVENUE)
             .where_last_n_days("r.occurred_at", days)
-            .return_fields([
-                "seg.name AS segment_name",
-                "seg.profile_count AS segment_size",
-                "count(DISTINCT p) AS converting_profiles",
-                "count(r) AS transactions",
-                "sum(r.amount_cents) AS total_revenue_cents",
-                "avg(r.amount_cents) AS avg_order_cents"
-            ])
+            .return_fields(
+                [
+                    "seg.name AS segment_name",
+                    "seg.profile_count AS segment_size",
+                    "count(DISTINCT p) AS converting_profiles",
+                    "count(r) AS transactions",
+                    "sum(r.amount_cents) AS total_revenue_cents",
+                    "avg(r.amount_cents) AS avg_order_cents",
+                ]
+            )
             .order_by("total_revenue_cents", desc=True)
             .build()
         )
 
     @staticmethod
     def multi_touch_attribution_paths(
-        tenant_id: UUID,
-        min_touchpoints: int = 2,
-        limit: int = 20
+        tenant_id: UUID, min_touchpoints: int = 2, limit: int = 20
     ) -> tuple[str, dict]:
         """Get multi-touch attribution paths to conversion."""
         # This is a more complex traversal query
@@ -529,13 +550,15 @@ class RevenueAnalyticsQueries:
             CypherQueryBuilder(tenant_id)
             .match_node("p", NodeLabel.PROFILE)
             .where("p.rfm_segment", "IS NOT", None)
-            .return_fields([
-                "p.rfm_segment AS rfm_segment",
-                "count(p) AS profile_count",
-                "sum(p.total_revenue_cents) AS total_revenue_cents",
-                "avg(p.rfm_score) AS avg_rfm_score",
-                "avg(p.total_purchases) AS avg_purchases"
-            ])
+            .return_fields(
+                [
+                    "p.rfm_segment AS rfm_segment",
+                    "count(p) AS profile_count",
+                    "sum(p.total_revenue_cents) AS total_revenue_cents",
+                    "avg(p.rfm_score) AS avg_rfm_score",
+                    "avg(p.total_purchases) AS avg_purchases",
+                ]
+            )
             .order_by("total_revenue_cents", desc=True)
             .build()
         )

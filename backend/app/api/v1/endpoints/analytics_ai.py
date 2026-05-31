@@ -11,31 +11,33 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel
-from sqlalchemy import select, desc
+from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.analytics.logic.anomalies import detect_anomalies
+from app.analytics.logic.attribution import attribution_variance, get_attribution_health
+from app.analytics.logic.budget import reallocate_budget, summarize_reallocation
+from app.analytics.logic.fatigue import batch_creative_fatigue, creative_fatigue
+from app.analytics.logic.recommend import (
+    RecommendationsEngine,
+    generate_recommendations,
+)
+from app.analytics.logic.scoring import batch_scaling_scores, scaling_score
+from app.analytics.logic.signal_health import auto_resolve, signal_health
+from app.analytics.logic.types import (
+    AnomalyParams,
+    BaselineMetrics,
+    EntityLevel,
+    EntityMetrics,
+    FatigueParams,
+    Platform,
+    ScoringParams,
+    SignalHealthParams,
+)
 from app.core.logging import get_logger
 from app.db.session import get_async_session
 from app.models import Campaign, CreativeAsset
 from app.schemas import APIResponse
-
-from app.analytics.logic.types import (
-    EntityMetrics,
-    BaselineMetrics,
-    EntityLevel,
-    Platform,
-    ScoringParams,
-    FatigueParams,
-    AnomalyParams,
-    SignalHealthParams,
-)
-from app.analytics.logic.scoring import scaling_score, batch_scaling_scores
-from app.analytics.logic.fatigue import creative_fatigue, batch_creative_fatigue
-from app.analytics.logic.anomalies import detect_anomalies
-from app.analytics.logic.signal_health import signal_health, auto_resolve
-from app.analytics.logic.attribution import attribution_variance, get_attribution_health
-from app.analytics.logic.budget import reallocate_budget, summarize_reallocation
-from app.analytics.logic.recommend import generate_recommendations, RecommendationsEngine
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -383,8 +385,12 @@ async def get_analytics_kpis(
         )
 
     # Calculate KPIs
-    total_spend = sum(c.total_spend_cents / 100 if c.total_spend_cents else 0 for c in campaigns)
-    total_revenue = sum(c.revenue_cents / 100 if c.revenue_cents else 0 for c in campaigns)
+    total_spend = sum(
+        c.total_spend_cents / 100 if c.total_spend_cents else 0 for c in campaigns
+    )
+    total_revenue = sum(
+        c.revenue_cents / 100 if c.revenue_cents else 0 for c in campaigns
+    )
     total_impressions = sum(c.impressions or 0 for c in campaigns)
     total_clicks = sum(c.clicks or 0 for c in campaigns)
     total_conversions = sum(c.conversions or 0 for c in campaigns)

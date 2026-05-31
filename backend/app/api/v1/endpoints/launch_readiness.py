@@ -139,8 +139,10 @@ async def _build_state(db: AsyncSession) -> LaunchReadinessState:
     # If every phase is complete, there is no "current phase"; keep the
     # active flag off all phases and signal launch via is_launched.
     is_launched = current_phase_number is None
-    effective_current = current_phase_number if current_phase_number is not None else (
-        LAUNCH_READINESS_PHASES[-1]["number"] + 1
+    effective_current = (
+        current_phase_number
+        if current_phase_number is not None
+        else (LAUNCH_READINESS_PHASES[-1]["number"] + 1)
     )
 
     for phase in phases:

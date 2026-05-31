@@ -103,20 +103,26 @@ class TikTokCampaignSyncService:
 
                 if data.get("code") != 0:
                     msg = data.get("message", "Unknown error")
-                    logger.error("tiktok_campaigns_fetch_error", message=msg, adv=advertiser_id)
+                    logger.error(
+                        "tiktok_campaigns_fetch_error", message=msg, adv=advertiser_id
+                    )
                     break
 
                 items = data.get("data", {}).get("list", [])
                 for raw in items:
                     campaigns.append(self._map_campaign(raw))
 
-                total_pages = data.get("data", {}).get("page_info", {}).get("total_page", 1)
+                total_pages = (
+                    data.get("data", {}).get("page_info", {}).get("total_page", 1)
+                )
                 if page >= total_pages:
                     break
                 page += 1
                 await asyncio.sleep(0.1)  # throttle: ~10 req/s
 
-        logger.info("tiktok_campaigns_fetched", advertiser=advertiser_id, count=len(campaigns))
+        logger.info(
+            "tiktok_campaigns_fetched", advertiser=advertiser_id, count=len(campaigns)
+        )
         return campaigns
 
     # ------------------------------------------------------------------
@@ -183,7 +189,9 @@ class TikTokCampaignSyncService:
                 for raw in items:
                     rows.append(self._map_report(raw))
 
-                total_pages = data.get("data", {}).get("page_info", {}).get("total_page", 1)
+                total_pages = (
+                    data.get("data", {}).get("page_info", {}).get("total_page", 1)
+                )
                 if page >= total_pages:
                     break
                 page += 1
@@ -209,8 +217,12 @@ class TikTokCampaignSyncService:
             name=raw.get("campaign_name", "Unnamed"),
             status=status,
             objective=raw.get("objective_type") or raw.get("objective"),
-            daily_budget_cents=round(float(daily_budget) * 100) if daily_budget else None,
-            lifetime_budget_cents=round(float(lifetime_budget) * 100) if lifetime_budget else None,
+            daily_budget_cents=(
+                round(float(daily_budget) * 100) if daily_budget else None
+            ),
+            lifetime_budget_cents=(
+                round(float(lifetime_budget) * 100) if lifetime_budget else None
+            ),
             raw=raw,
         )
 

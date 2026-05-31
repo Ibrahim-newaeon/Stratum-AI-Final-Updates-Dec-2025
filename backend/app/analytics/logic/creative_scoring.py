@@ -18,7 +18,6 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
-
 # ── Response models ──────────────────────────────────────────────────────────
 
 
@@ -139,7 +138,9 @@ def _creative_status(score: float, fatigue: float) -> str:
 
 
 def _score_ctr(ctr: float, platform: str) -> float:
-    benchmark = PLATFORM_CTR_BENCHMARKS.get(platform, PLATFORM_CTR_BENCHMARKS["default"])
+    benchmark = PLATFORM_CTR_BENCHMARKS.get(
+        platform, PLATFORM_CTR_BENCHMARKS["default"]
+    )
     ratio = ctr / benchmark if benchmark > 0 else 0
     if ratio >= 2.0:
         return 100
@@ -208,7 +209,9 @@ def _estimate_fatigue(spend: float, impressions: int, days: int) -> float:
     daily_impressions = impressions / days
     # High frequency + long run = fatigue
     duration_factor = min(days / 30, 1.0) * 40  # up to 40 pts for 30+ days
-    frequency_factor = min(daily_impressions / 50000, 1.0) * 30  # up to 30 pts for high volume
+    frequency_factor = (
+        min(daily_impressions / 50000, 1.0) * 30
+    )  # up to 30 pts for high volume
     spend_factor = min(spend / 10000, 1.0) * 30  # up to 30 pts for high spend
     return min(duration_factor + frequency_factor + spend_factor, 100)
 
@@ -319,7 +322,9 @@ def build_creative_scoring(
         plat_data.setdefault(cr.platform, []).append(cr)
 
     platform_summaries = []
-    for plat, crs in sorted(plat_data.items(), key=lambda x: sum(c.spend for c in x[1]), reverse=True):
+    for plat, crs in sorted(
+        plat_data.items(), key=lambda x: sum(c.spend for c in x[1]), reverse=True
+    ):
         platform_summaries.append(
             PlatformCreativeSummary(
                 platform=plat,

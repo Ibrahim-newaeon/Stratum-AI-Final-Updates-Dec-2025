@@ -12,27 +12,38 @@ Models:
 - ProfitROASReport: Aggregated profit ROAS reports
 """
 
-from datetime import datetime, date, timezone
+import enum
+from datetime import date, datetime, timezone
 from typing import Optional
 from uuid import uuid4
-import enum
 
 from sqlalchemy import (
-    Column, String, Integer, Date, DateTime, Float, Text, ForeignKey,
-    Index, Boolean, BigInteger, UniqueConstraint
+    BigInteger,
+    Boolean,
+    Column,
+    Date,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base, StrEnumType
-
 
 # =============================================================================
 # Enums
 # =============================================================================
 
+
 class MarginType(str, enum.Enum):
     """How margin/COGS is specified."""
+
     FIXED_AMOUNT = "fixed_amount"  # Fixed dollar amount per unit
     PERCENTAGE = "percentage"  # Percentage of revenue
     TIERED = "tiered"  # Different rates at different volumes
@@ -40,6 +51,7 @@ class MarginType(str, enum.Enum):
 
 class ProductStatus(str, enum.Enum):
     """Product status."""
+
     ACTIVE = "active"
     INACTIVE = "inactive"
     DISCONTINUED = "discontinued"
@@ -47,6 +59,7 @@ class ProductStatus(str, enum.Enum):
 
 class COGSSource(str, enum.Enum):
     """Source of COGS data."""
+
     MANUAL = "manual"  # Manually entered
     CSV_UPLOAD = "csv_upload"  # Uploaded via CSV
     API_SYNC = "api_sync"  # Synced from external system
@@ -59,15 +72,22 @@ class COGSSource(str, enum.Enum):
 # Product Catalog Model
 # =============================================================================
 
+
 class ProductCatalog(Base):
     """
     Product catalog with SKU and category information.
     Used for matching conversions to products for profit calculation.
     """
+
     __tablename__ = "product_catalog"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    tenant_id = Column(
+        Integer,
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
 
     # Product identification
     sku = Column(String(100), nullable=False)
@@ -85,21 +105,36 @@ class ProductCatalog(Base):
     currency = Column(String(3), default="USD", nullable=False)
 
     # Status
-    status = Column(StrEnumType(ProductStatus), default=ProductStatus.ACTIVE, nullable=False)
+    status = Column(
+        StrEnumType(ProductStatus), default=ProductStatus.ACTIVE, nullable=False
+    )
 
     # External IDs (for matching with platform data)
-    external_ids = Column(JSONB, nullable=True)  # {"shopify_id": "...", "meta_product_id": "..."}
+    external_ids = Column(
+        JSONB, nullable=True
+    )  # {"shopify_id": "...", "meta_product_id": "..."}
 
     # Metadata
     attributes = Column(JSONB, nullable=True)  # Custom attributes
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
-    margins = relationship("ProductMargin", back_populates="product", cascade="all, delete-orphan")
+    margins = relationship(
+        "ProductMargin", back_populates="product", cascade="all, delete-orphan"
+    )
 
     __table_args__ = (
         Index("ix_product_catalog_tenant_sku", "tenant_id", "sku"),
@@ -112,16 +147,28 @@ class ProductCatalog(Base):
 # Product Margin Model (Time-Series)
 # =============================================================================
 
+
 class ProductMargin(Base):
     """
     COGS and margin data per product.
     Supports time-series for historical margin changes.
     """
+
     __tablename__ = "product_margins"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
-    product_id = Column(UUID(as_uuid=True), ForeignKey("product_catalog.id", ondelete="CASCADE"), nullable=False, index=True)
+    tenant_id = Column(
+        Integer,
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    product_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("product_catalog.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
 
     # Effective period
     effective_date = Column(Date, nullable=False)
@@ -132,7 +179,9 @@ class ProductMargin(Base):
     cogs_percentage = Column(Float, nullable=True)  # COGS as % of revenue (alternative)
 
     # Margin data (derived or specified)
-    margin_type = Column(StrEnumType(MarginType), default=MarginType.FIXED_AMOUNT, nullable=False)
+    margin_type = Column(
+        StrEnumType(MarginType), default=MarginType.FIXED_AMOUNT, nullable=False
+    )
     margin_cents = Column(BigInteger, nullable=True)  # Profit per unit in cents
     margin_percentage = Column(Float, nullable=True)  # Gross margin %
 
@@ -143,16 +192,31 @@ class ProductMargin(Base):
     payment_processing_cents = Column(BigInteger, default=0)
 
     # Total landed cost
-    total_cogs_cents = Column(BigInteger, nullable=True)  # COGS + shipping + handling + fees
+    total_cogs_cents = Column(
+        BigInteger, nullable=True
+    )  # COGS + shipping + handling + fees
 
     # Source tracking
     source = Column(StrEnumType(COGSSource), default=COGSSource.MANUAL, nullable=False)
-    source_reference = Column(String(255), nullable=True)  # File name, API endpoint, etc.
+    source_reference = Column(
+        String(255), nullable=True
+    )  # File name, API endpoint, etc.
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
-    created_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    created_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
+    created_by_user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -169,15 +233,22 @@ class ProductMargin(Base):
 # Margin Rule Model (Default Rules)
 # =============================================================================
 
+
 class MarginRule(Base):
     """
     Default margin rules by category, platform, or campaign.
     Used when specific product margin is not available.
     """
+
     __tablename__ = "margin_rules"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    tenant_id = Column(
+        Integer,
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
 
     # Rule identification
     name = Column(String(255), nullable=False)
@@ -191,7 +262,9 @@ class MarginRule(Base):
     campaign_id = Column(String(255), nullable=True)
 
     # Margin specification
-    margin_type = Column(StrEnumType(MarginType), default=MarginType.PERCENTAGE, nullable=False)
+    margin_type = Column(
+        StrEnumType(MarginType), default=MarginType.PERCENTAGE, nullable=False
+    )
     default_margin_percentage = Column(Float, nullable=True)  # e.g., 30% gross margin
     default_cogs_percentage = Column(Float, nullable=True)  # e.g., 70% COGS
 
@@ -203,8 +276,17 @@ class MarginRule(Base):
     is_active = Column(Boolean, default=True, nullable=False)
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -219,15 +301,22 @@ class MarginRule(Base):
 # Daily Profit Metrics Model
 # =============================================================================
 
+
 class DailyProfitMetrics(Base):
     """
     Daily profit calculations aggregated by campaign/product.
     Materialized table for fast profit ROAS queries.
     """
+
     __tablename__ = "daily_profit_metrics"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    tenant_id = Column(
+        Integer,
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
     date = Column(Date, nullable=False)
 
     # Scope
@@ -235,12 +324,19 @@ class DailyProfitMetrics(Base):
     campaign_id = Column(String(255), nullable=True)
     adset_id = Column(String(255), nullable=True)
     ad_id = Column(String(255), nullable=True)
-    product_id = Column(UUID(as_uuid=True), ForeignKey("product_catalog.id", ondelete="SET NULL"), nullable=True, index=True)
+    product_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("product_catalog.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
 
     # Revenue metrics
     units_sold = Column(Integer, default=0, nullable=False)
     gross_revenue_cents = Column(BigInteger, default=0, nullable=False)
-    net_revenue_cents = Column(BigInteger, default=0, nullable=False)  # After discounts/returns
+    net_revenue_cents = Column(
+        BigInteger, default=0, nullable=False
+    )  # After discounts/returns
     average_order_value_cents = Column(BigInteger, nullable=True)
 
     # Cost metrics
@@ -255,14 +351,18 @@ class DailyProfitMetrics(Base):
 
     # Profit calculations
     gross_profit_cents = Column(BigInteger, default=0, nullable=False)  # Revenue - COGS
-    contribution_margin_cents = Column(BigInteger, default=0, nullable=False)  # Gross profit - variable costs
+    contribution_margin_cents = Column(
+        BigInteger, default=0, nullable=False
+    )  # Gross profit - variable costs
     net_profit_cents = Column(BigInteger, default=0, nullable=False)  # After ad spend
 
     # ROAS metrics
     revenue_roas = Column(Float, nullable=True)  # Traditional: Revenue / Ad Spend
     gross_profit_roas = Column(Float, nullable=True)  # Gross Profit / Ad Spend
     contribution_roas = Column(Float, nullable=True)  # Contribution Margin / Ad Spend
-    net_profit_roas = Column(Float, nullable=True)  # Net Profit / Ad Spend (can be negative)
+    net_profit_roas = Column(
+        Float, nullable=True
+    )  # Net Profit / Ad Spend (can be negative)
 
     # Margin percentages
     gross_margin_pct = Column(Float, nullable=True)  # Gross Profit / Revenue
@@ -271,12 +371,28 @@ class DailyProfitMetrics(Base):
 
     # Data quality
     cogs_source = Column(StrEnumType(COGSSource), nullable=True)
-    margin_rule_id = Column(UUID(as_uuid=True), ForeignKey("margin_rules.id", ondelete="SET NULL"), nullable=True, index=True)
-    is_estimated = Column(Boolean, default=False, nullable=False)  # True if using default margins
+    margin_rule_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("margin_rules.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    is_estimated = Column(
+        Boolean, default=False, nullable=False
+    )  # True if using default margins
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -287,7 +403,14 @@ class DailyProfitMetrics(Base):
         Index("ix_daily_profit_tenant_date", "tenant_id", "date"),
         Index("ix_daily_profit_tenant_campaign", "tenant_id", "campaign_id", "date"),
         Index("ix_daily_profit_tenant_product", "tenant_id", "product_id", "date"),
-        UniqueConstraint("tenant_id", "date", "platform", "campaign_id", "product_id", name="uq_daily_profit_scope"),
+        UniqueConstraint(
+            "tenant_id",
+            "date",
+            "platform",
+            "campaign_id",
+            "product_id",
+            name="uq_daily_profit_scope",
+        ),
     )
 
 
@@ -295,15 +418,22 @@ class DailyProfitMetrics(Base):
 # Profit ROAS Report Model
 # =============================================================================
 
+
 class ProfitROASReport(Base):
     """
     Aggregated profit ROAS reports for dashboard/export.
     Stores pre-calculated summaries for different time periods.
     """
+
     __tablename__ = "profit_roas_reports"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    tenant_id = Column(
+        Integer,
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
 
     # Report period
     report_type = Column(String(50), nullable=False)  # daily, weekly, monthly, custom
@@ -346,15 +476,23 @@ class ProfitROASReport(Base):
     data_completeness_pct = Column(Float, nullable=True)
 
     # Report metadata
-    generated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
-    generated_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    generated_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
+    generated_by_user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
     generated_by = relationship("User", foreign_keys=[generated_by_user_id])
 
     __table_args__ = (
-        Index("ix_profit_reports_tenant_period", "tenant_id", "period_start", "period_end"),
+        Index(
+            "ix_profit_reports_tenant_period", "tenant_id", "period_start", "period_end"
+        ),
         Index("ix_profit_reports_tenant_type", "tenant_id", "report_type"),
     )
 
@@ -363,14 +501,21 @@ class ProfitROASReport(Base):
 # COGS Upload History
 # =============================================================================
 
+
 class COGSUpload(Base):
     """
     History of COGS data uploads for audit trail.
     """
+
     __tablename__ = "cogs_uploads"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    tenant_id = Column(
+        Integer,
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
 
     # Upload metadata
     filename = Column(String(500), nullable=True)
@@ -378,7 +523,9 @@ class COGSUpload(Base):
     source = Column(StrEnumType(COGSSource), nullable=False)
 
     # Processing results
-    status = Column(String(50), nullable=False)  # pending, processing, completed, failed
+    status = Column(
+        String(50), nullable=False
+    )  # pending, processing, completed, failed
     rows_processed = Column(Integer, default=0)
     rows_succeeded = Column(Integer, default=0)
     rows_failed = Column(Integer, default=0)
@@ -389,14 +536,18 @@ class COGSUpload(Base):
     products_updated = Column(Integer, default=0)
 
     # Timestamps
-    uploaded_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    uploaded_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
     processed_at = Column(DateTime(timezone=True), nullable=True)
-    uploaded_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    uploaded_by_user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
     uploaded_by = relationship("User", foreign_keys=[uploaded_by_user_id])
 
-    __table_args__ = (
-        Index("ix_cogs_uploads_tenant_date", "tenant_id", "uploaded_at"),
-    )
+    __table_args__ = (Index("ix_cogs_uploads_tenant_date", "tenant_id", "uploaded_at"),)

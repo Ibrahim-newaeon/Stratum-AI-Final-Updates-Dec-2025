@@ -18,52 +18,51 @@ Tests cover:
 
 import hashlib
 import time
-from datetime import datetime, timezone, timedelta, UTC
+from datetime import UTC, datetime, timedelta, timezone
 from decimal import Decimal
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, MagicMock, patch, PropertyMock
-from uuid import uuid4, UUID
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+from uuid import UUID, uuid4
 
 import pytest
+
+# ---------------------------------------------------------------------------
+# Schema imports
+# ---------------------------------------------------------------------------
+from app.api.v1.endpoints.audience_sync import (
+    ConnectedPlatformResponse,
+    PlatformAudienceCreate,
+    PlatformAudienceListResponse,
+    PlatformAudienceResponse,
+    SyncHistoryResponse,
+    SyncJobResponse,
+    TriggerSyncRequest,
+)
 
 # ---------------------------------------------------------------------------
 # Model / enum imports
 # ---------------------------------------------------------------------------
 from app.models.audience_sync import (
-    SyncPlatform,
-    SyncStatus,
-    SyncOperation,
+    AudienceSyncCredential,
+    AudienceSyncJob,
     AudienceType,
     PlatformAudience,
-    AudienceSyncJob,
-    AudienceSyncCredential,
+    SyncOperation,
+    SyncPlatform,
+    SyncStatus,
 )
 
 # ---------------------------------------------------------------------------
 # Base data class imports
 # ---------------------------------------------------------------------------
 from app.services.cdp.audience_sync.base import (
+    AudienceConfig,
+    AudienceSyncResult,
+    AudienceUser,
+    BaseAudienceConnector,
     IdentifierType,
     UserIdentifier,
-    AudienceUser,
-    AudienceSyncResult,
-    AudienceConfig,
-    BaseAudienceConnector,
 )
-
-# ---------------------------------------------------------------------------
-# Schema imports
-# ---------------------------------------------------------------------------
-from app.api.v1.endpoints.audience_sync import (
-    PlatformAudienceCreate,
-    PlatformAudienceResponse,
-    SyncJobResponse,
-    TriggerSyncRequest,
-    ConnectedPlatformResponse,
-    PlatformAudienceListResponse,
-    SyncHistoryResponse,
-)
-
 
 # =============================================================================
 # Enum Tests
@@ -74,7 +73,12 @@ class TestSyncPlatform:
     """Tests for SyncPlatform enum."""
 
     def test_all_platforms(self):
-        assert set(p.value for p in SyncPlatform) == {"meta", "google", "tiktok", "snapchat"}
+        assert set(p.value for p in SyncPlatform) == {
+            "meta",
+            "google",
+            "tiktok",
+            "snapchat",
+        }
 
     def test_is_str_enum(self):
         assert isinstance(SyncPlatform.META, str)
@@ -94,7 +98,11 @@ class TestSyncStatus:
 
     def test_all_statuses(self):
         assert set(s.value for s in SyncStatus) == {
-            "pending", "processing", "completed", "failed", "partial",
+            "pending",
+            "processing",
+            "completed",
+            "failed",
+            "partial",
         }
 
     def test_pending_is_initial(self):
@@ -109,7 +117,10 @@ class TestSyncOperation:
 
     def test_all_operations(self):
         assert set(o.value for o in SyncOperation) == {
-            "create", "update", "replace", "delete",
+            "create",
+            "update",
+            "replace",
+            "delete",
         }
 
 
@@ -118,7 +129,10 @@ class TestAudienceType:
 
     def test_all_types(self):
         assert set(t.value for t in AudienceType) == {
-            "customer_list", "lookalike", "website", "app",
+            "customer_list",
+            "lookalike",
+            "website",
+            "app",
         }
 
     def test_customer_list_default(self):
@@ -130,7 +144,10 @@ class TestIdentifierType:
 
     def test_all_types(self):
         assert set(t.value for t in IdentifierType) == {
-            "email", "phone", "mobile_id", "external_id",
+            "email",
+            "phone",
+            "mobile_id",
+            "external_id",
         }
 
 
@@ -221,8 +238,12 @@ class TestAudienceUser:
         user = AudienceUser(
             profile_id="prof_456",
             identifiers=[
-                UserIdentifier(identifier_type=IdentifierType.EMAIL, raw_value="a@b.com"),
-                UserIdentifier(identifier_type=IdentifierType.PHONE, raw_value="+966501234567"),
+                UserIdentifier(
+                    identifier_type=IdentifierType.EMAIL, raw_value="a@b.com"
+                ),
+                UserIdentifier(
+                    identifier_type=IdentifierType.PHONE, raw_value="+966501234567"
+                ),
             ],
         )
         assert len(user.identifiers) == 2
@@ -311,6 +332,7 @@ class TestBaseConnectorUtilities:
     def _get_concrete_connector(self):
         """Create a concrete implementation for testing base utilities."""
         from app.services.cdp.audience_sync.meta_connector import MetaAudienceConnector
+
         return MetaAudienceConnector(access_token="test_token", ad_account_id="act_123")
 
     def test_hash_identifier_email(self):
@@ -394,39 +416,51 @@ class TestMetaAudienceConnector:
 
     def test_ad_account_id_prefixed(self):
         from app.services.cdp.audience_sync.meta_connector import MetaAudienceConnector
+
         conn = MetaAudienceConnector(access_token="tok", ad_account_id="12345")
         assert conn.ad_account_id == "act_12345"
 
     def test_ad_account_id_already_prefixed(self):
         from app.services.cdp.audience_sync.meta_connector import MetaAudienceConnector
+
         conn = MetaAudienceConnector(access_token="tok", ad_account_id="act_12345")
         assert conn.ad_account_id == "act_12345"
 
     def test_platform_name(self):
         from app.services.cdp.audience_sync.meta_connector import MetaAudienceConnector
+
         conn = MetaAudienceConnector(access_token="tok", ad_account_id="act_123")
         assert conn.PLATFORM_NAME == "meta"
 
     def test_batch_size(self):
         from app.services.cdp.audience_sync.meta_connector import MetaAudienceConnector
+
         assert MetaAudienceConnector.BATCH_SIZE == 10000
 
     def test_prepare_meta_user_data(self):
         from app.services.cdp.audience_sync.meta_connector import MetaAudienceConnector
+
         conn = MetaAudienceConnector(access_token="tok", ad_account_id="act_123")
 
         users = [
             AudienceUser(
                 profile_id="1",
                 identifiers=[
-                    UserIdentifier(identifier_type=IdentifierType.EMAIL, hashed_value="email_hash"),
-                    UserIdentifier(identifier_type=IdentifierType.PHONE, hashed_value="phone_hash"),
+                    UserIdentifier(
+                        identifier_type=IdentifierType.EMAIL, hashed_value="email_hash"
+                    ),
+                    UserIdentifier(
+                        identifier_type=IdentifierType.PHONE, hashed_value="phone_hash"
+                    ),
                 ],
             ),
             AudienceUser(
                 profile_id="2",
                 identifiers=[
-                    UserIdentifier(identifier_type=IdentifierType.MOBILE_ADVERTISER_ID, hashed_value="madid_hash"),
+                    UserIdentifier(
+                        identifier_type=IdentifierType.MOBILE_ADVERTISER_ID,
+                        hashed_value="madid_hash",
+                    ),
                 ],
             ),
         ]
@@ -437,11 +471,13 @@ class TestMetaAudienceConnector:
 
     def test_prepare_meta_user_data_empty_users(self):
         from app.services.cdp.audience_sync.meta_connector import MetaAudienceConnector
+
         conn = MetaAudienceConnector(access_token="tok", ad_account_id="act_123")
         assert conn._prepare_meta_user_data([]) == []
 
     def test_prepare_meta_user_data_skips_no_identifiers(self):
         from app.services.cdp.audience_sync.meta_connector import MetaAudienceConnector
+
         conn = MetaAudienceConnector(access_token="tok", ad_account_id="act_123")
         users = [AudienceUser(profile_id="1", identifiers=[])]
         assert conn._prepare_meta_user_data(users) == []
@@ -449,6 +485,7 @@ class TestMetaAudienceConnector:
     @pytest.mark.asyncio
     async def test_create_audience_success(self):
         from app.services.cdp.audience_sync.meta_connector import MetaAudienceConnector
+
         conn = MetaAudienceConnector(access_token="tok", ad_account_id="act_123")
 
         config = AudienceConfig(name="Test Audience")
@@ -460,7 +497,9 @@ class TestMetaAudienceConnector:
         with patch("httpx.AsyncClient") as mock_client_cls:
             mock_client = AsyncMock()
             mock_client.post.return_value = mock_response
-            mock_client_cls.return_value.__aenter__ = AsyncMock(return_value=mock_client)
+            mock_client_cls.return_value.__aenter__ = AsyncMock(
+                return_value=mock_client
+            )
             mock_client_cls.return_value.__aexit__ = AsyncMock(return_value=False)
 
             result = await conn.create_audience(config, users=[])
@@ -472,6 +511,7 @@ class TestMetaAudienceConnector:
     @pytest.mark.asyncio
     async def test_create_audience_no_id_returned(self):
         from app.services.cdp.audience_sync.meta_connector import MetaAudienceConnector
+
         conn = MetaAudienceConnector(access_token="tok", ad_account_id="act_123")
 
         config = AudienceConfig(name="Test")
@@ -482,7 +522,9 @@ class TestMetaAudienceConnector:
         with patch("httpx.AsyncClient") as mock_client_cls:
             mock_client = AsyncMock()
             mock_client.post.return_value = mock_response
-            mock_client_cls.return_value.__aenter__ = AsyncMock(return_value=mock_client)
+            mock_client_cls.return_value.__aenter__ = AsyncMock(
+                return_value=mock_client
+            )
             mock_client_cls.return_value.__aexit__ = AsyncMock(return_value=False)
 
             result = await conn.create_audience(config, users=[])
@@ -493,7 +535,9 @@ class TestMetaAudienceConnector:
     @pytest.mark.asyncio
     async def test_create_audience_http_error(self):
         import httpx
+
         from app.services.cdp.audience_sync.meta_connector import MetaAudienceConnector
+
         conn = MetaAudienceConnector(access_token="tok", ad_account_id="act_123")
 
         config = AudienceConfig(name="Test")
@@ -501,13 +545,19 @@ class TestMetaAudienceConnector:
         mock_response = MagicMock()
         mock_response.status_code = 400
         mock_response.content = b'{"error": {"message": "Bad request", "code": 100}}'
-        mock_response.json.return_value = {"error": {"message": "Bad request", "code": 100}}
-        error = httpx.HTTPStatusError("Bad", request=MagicMock(), response=mock_response)
+        mock_response.json.return_value = {
+            "error": {"message": "Bad request", "code": 100}
+        }
+        error = httpx.HTTPStatusError(
+            "Bad", request=MagicMock(), response=mock_response
+        )
 
         with patch("httpx.AsyncClient") as mock_client_cls:
             mock_client = AsyncMock()
             mock_client.post.side_effect = error
-            mock_client_cls.return_value.__aenter__ = AsyncMock(return_value=mock_client)
+            mock_client_cls.return_value.__aenter__ = AsyncMock(
+                return_value=mock_client
+            )
             mock_client_cls.return_value.__aexit__ = AsyncMock(return_value=False)
 
             result = await conn.create_audience(config, users=[])
@@ -518,6 +568,7 @@ class TestMetaAudienceConnector:
     @pytest.mark.asyncio
     async def test_delete_audience_success(self):
         from app.services.cdp.audience_sync.meta_connector import MetaAudienceConnector
+
         conn = MetaAudienceConnector(access_token="tok", ad_account_id="act_123")
 
         mock_response = MagicMock()
@@ -527,7 +578,9 @@ class TestMetaAudienceConnector:
         with patch("httpx.AsyncClient") as mock_client_cls:
             mock_client = AsyncMock()
             mock_client.delete.return_value = mock_response
-            mock_client_cls.return_value.__aenter__ = AsyncMock(return_value=mock_client)
+            mock_client_cls.return_value.__aenter__ = AsyncMock(
+                return_value=mock_client
+            )
             mock_client_cls.return_value.__aexit__ = AsyncMock(return_value=False)
 
             result = await conn.delete_audience("aud_123")
@@ -538,12 +591,15 @@ class TestMetaAudienceConnector:
     @pytest.mark.asyncio
     async def test_delete_audience_network_error(self):
         from app.services.cdp.audience_sync.meta_connector import MetaAudienceConnector
+
         conn = MetaAudienceConnector(access_token="tok", ad_account_id="act_123")
 
         with patch("httpx.AsyncClient") as mock_client_cls:
             mock_client = AsyncMock()
             mock_client.delete.side_effect = ConnectionError("Network down")
-            mock_client_cls.return_value.__aenter__ = AsyncMock(return_value=mock_client)
+            mock_client_cls.return_value.__aenter__ = AsyncMock(
+                return_value=mock_client
+            )
             mock_client_cls.return_value.__aexit__ = AsyncMock(return_value=False)
 
             result = await conn.delete_audience("aud_123")
@@ -663,8 +719,8 @@ class TestAudienceSyncServiceConnectorFactory:
     """Tests for _get_connector factory method."""
 
     def test_get_meta_connector(self):
-        from app.services.cdp.audience_sync.service import AudienceSyncService
         from app.services.cdp.audience_sync.meta_connector import MetaAudienceConnector
+        from app.services.cdp.audience_sync.service import AudienceSyncService
 
         db = _make_async_db()
         service = AudienceSyncService(db, tenant_id=1)
@@ -675,8 +731,10 @@ class TestAudienceSyncServiceConnectorFactory:
         assert isinstance(connector, MetaAudienceConnector)
 
     def test_get_google_connector(self):
+        from app.services.cdp.audience_sync.google_connector import (
+            GoogleAudienceConnector,
+        )
         from app.services.cdp.audience_sync.service import AudienceSyncService
-        from app.services.cdp.audience_sync.google_connector import GoogleAudienceConnector
 
         db = _make_async_db()
         service = AudienceSyncService(db, tenant_id=1)
@@ -702,21 +760,28 @@ class TestAudienceSyncServiceIdentifierMapping:
 
     def test_email_mapping(self):
         from app.services.cdp.audience_sync.service import AudienceSyncService
+
         service = AudienceSyncService(_make_async_db(), 1)
         assert service._map_identifier_type("email") == IdentifierType.EMAIL
 
     def test_phone_mapping(self):
         from app.services.cdp.audience_sync.service import AudienceSyncService
+
         service = AudienceSyncService(_make_async_db(), 1)
         assert service._map_identifier_type("phone") == IdentifierType.PHONE
 
     def test_device_id_mapping(self):
         from app.services.cdp.audience_sync.service import AudienceSyncService
+
         service = AudienceSyncService(_make_async_db(), 1)
-        assert service._map_identifier_type("device_id") == IdentifierType.MOBILE_ADVERTISER_ID
+        assert (
+            service._map_identifier_type("device_id")
+            == IdentifierType.MOBILE_ADVERTISER_ID
+        )
 
     def test_unknown_mapping_returns_none(self):
         from app.services.cdp.audience_sync.service import AudienceSyncService
+
         service = AudienceSyncService(_make_async_db(), 1)
         assert service._map_identifier_type("address") is None
 
@@ -727,6 +792,7 @@ class TestAudienceSyncServiceProfilesToUsers:
     @pytest.mark.asyncio
     async def test_converts_profiles_with_identifiers(self):
         from app.services.cdp.audience_sync.service import AudienceSyncService
+
         service = AudienceSyncService(_make_async_db(), 1)
 
         identifier = MagicMock()
@@ -745,6 +811,7 @@ class TestAudienceSyncServiceProfilesToUsers:
     @pytest.mark.asyncio
     async def test_skips_profiles_without_identifiers(self):
         from app.services.cdp.audience_sync.service import AudienceSyncService
+
         service = AudienceSyncService(_make_async_db(), 1)
 
         profile = MagicMock()
@@ -757,6 +824,7 @@ class TestAudienceSyncServiceProfilesToUsers:
     @pytest.mark.asyncio
     async def test_skips_unknown_identifier_types(self):
         from app.services.cdp.audience_sync.service import AudienceSyncService
+
         service = AudienceSyncService(_make_async_db(), 1)
 
         identifier = MagicMock()
@@ -773,6 +841,7 @@ class TestAudienceSyncServiceProfilesToUsers:
     @pytest.mark.asyncio
     async def test_multiple_identifiers_per_profile(self):
         from app.services.cdp.audience_sync.service import AudienceSyncService
+
         service = AudienceSyncService(_make_async_db(), 1)
 
         id1 = MagicMock()
@@ -859,7 +928,7 @@ class TestAudienceSyncServiceSyncPlatformAudience:
         ]
         service = AudienceSyncService(db, 1)
 
-        with pytest.raises(ValueError, match="Segment.*not found"):
+        with pytest.raises(ValueError, match=r"Segment.*not found"):
             await service.sync_platform_audience(pa.id)
 
     @pytest.mark.asyncio
@@ -903,7 +972,9 @@ class TestAudienceSyncServiceDeletePlatformAudience:
         db.execute.return_value = _make_scalar_result(pa)
         service = AudienceSyncService(db, 1)
 
-        result = await service.delete_platform_audience(pa.id, delete_from_platform=False)
+        result = await service.delete_platform_audience(
+            pa.id, delete_from_platform=False
+        )
         assert result is True
         db.delete.assert_called_once_with(pa)
         db.flush.assert_called()
@@ -1105,8 +1176,12 @@ class TestAudienceSyncServiceExecuteSyncJob:
 
         mock_connector = AsyncMock()
         mock_connector.create_audience.return_value = AudienceSyncResult(
-            success=True, operation="create", platform_audience_id="aud_new",
-            users_sent=0, users_added=0, duration_ms=100,
+            success=True,
+            operation="create",
+            platform_audience_id="aud_new",
+            users_sent=0,
+            users_added=0,
+            duration_ms=100,
         )
         service._get_connector = MagicMock(return_value=mock_connector)
 
@@ -1134,8 +1209,11 @@ class TestAudienceSyncServiceExecuteSyncJob:
 
         mock_connector = AsyncMock()
         mock_connector.create_audience.return_value = AudienceSyncResult(
-            success=False, operation="create",
-            users_sent=100, users_added=80, users_failed=20,
+            success=False,
+            operation="create",
+            users_sent=100,
+            users_added=80,
+            users_failed=20,
             error_message="Some records failed",
         )
         service._get_connector = MagicMock(return_value=mock_connector)
@@ -1162,8 +1240,11 @@ class TestAudienceSyncServiceExecuteSyncJob:
 
         mock_connector = AsyncMock()
         mock_connector.create_audience.return_value = AudienceSyncResult(
-            success=False, operation="create",
-            users_sent=0, users_added=0, users_failed=0,
+            success=False,
+            operation="create",
+            users_sent=0,
+            users_added=0,
+            users_failed=0,
             error_message="Connection refused",
         )
         service._get_connector = MagicMock(return_value=mock_connector)
@@ -1266,6 +1347,7 @@ class TestAudienceSyncCredentialEncryption:
 
     def _make_cred_mock(self, access_enc=None, refresh_enc=None):
         """Create an object that behaves like AudienceSyncCredential for method testing."""
+
         class FakeCred:
             _access_token_encrypted = access_enc
             _refresh_token_encrypted = refresh_enc
@@ -1273,6 +1355,7 @@ class TestAudienceSyncCredentialEncryption:
             get_access_token = AudienceSyncCredential.get_access_token
             set_refresh_token = AudienceSyncCredential.set_refresh_token
             get_refresh_token = AudienceSyncCredential.get_refresh_token
+
         return FakeCred()
 
     def test_set_access_token_none(self):
@@ -1329,6 +1412,7 @@ class TestEdgeCases:
     def test_sync_platform_matches_ad_platform(self):
         """SyncPlatform and AdPlatform should cover the same 4 platforms."""
         from app.models.campaign_builder import AdPlatform
+
         sync_values = {p.value for p in SyncPlatform}
         ad_values = {p.value for p in AdPlatform}
         assert sync_values == ad_values
@@ -1345,6 +1429,7 @@ class TestEdgeCases:
 
     def test_connector_classes_map_all_platforms(self):
         from app.services.cdp.audience_sync.service import AudienceSyncService
+
         for platform in SyncPlatform:
             assert platform.value in AudienceSyncService.CONNECTOR_CLASSES
 
@@ -1366,6 +1451,7 @@ class TestEdgeCases:
 
     def test_empty_audience_user_list_prepared(self):
         from app.services.cdp.audience_sync.meta_connector import MetaAudienceConnector
+
         conn = MetaAudienceConnector(access_token="tok", ad_account_id="act_1")
         assert conn._prepare_meta_user_data([]) == []
 

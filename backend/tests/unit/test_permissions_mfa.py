@@ -37,14 +37,14 @@ import pyotp
 import pytest
 
 from app.auth.permissions import (
+    _PERM_LEVEL_ROLES,
+    _ROLE_SCOPE,
     RBAC_MATRIX,
     ROLE_HIERARCHY,
     ROLE_PERMISSIONS,
     SIDEBAR_VISIBILITY,
     Permission,
     PermLevel,
-    _PERM_LEVEL_ROLES,
-    _ROLE_SCOPE,
     can_manage_role,
     check_permission,
     get_permission_level,
@@ -64,11 +64,11 @@ from app.services.mfa_service import (
     BACKUP_CODE_LENGTH,
     LOCKOUT_DURATION_MINUTES,
     MAX_FAILED_ATTEMPTS,
-    MFAService,
-    MFAStatus,
     TOTP_DIGITS,
     TOTP_INTERVAL,
     TOTP_ISSUER,
+    MFAService,
+    MFAStatus,
     TOTPSetupData,
     check_mfa_required,
     generate_backup_codes,
@@ -81,16 +81,31 @@ from app.services.mfa_service import (
     verify_totp,
 )
 
-
 # =============================================================================
 # Helpers
 # =============================================================================
 
-ALL_ROLES = ["superadmin", "admin", "manager", "media_buyer", "analyst", "account_manager", "viewer"]
-ALL_USER_ROLES = [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.MANAGER, UserRole.ANALYST, UserRole.VIEWER]
+ALL_ROLES = [
+    "superadmin",
+    "admin",
+    "manager",
+    "media_buyer",
+    "analyst",
+    "account_manager",
+    "viewer",
+]
+ALL_USER_ROLES = [
+    UserRole.SUPERADMIN,
+    UserRole.ADMIN,
+    UserRole.MANAGER,
+    UserRole.ANALYST,
+    UserRole.VIEWER,
+]
 
 
-def _make_request(role: Optional[str] = None, user_id: Optional[int] = None) -> MagicMock:
+def _make_request(
+    role: Optional[str] = None, user_id: Optional[int] = None
+) -> MagicMock:
     """Create a mock FastAPI Request with state."""
     req = MagicMock()
     req.state = SimpleNamespace()
@@ -175,8 +190,20 @@ class TestPermissionEnum:
     def test_all_resource_categories_present(self) -> None:
         """Expected resource categories exist."""
         prefixes = {p.value.split(":")[0] for p in Permission}
-        expected = {"tenant", "user", "campaign", "analytics", "billing",
-                    "system", "connector", "audit", "alert", "asset", "rule", "client"}
+        expected = {
+            "tenant",
+            "user",
+            "campaign",
+            "analytics",
+            "billing",
+            "system",
+            "connector",
+            "audit",
+            "alert",
+            "asset",
+            "rule",
+            "client",
+        }
         assert prefixes == expected
 
 
@@ -202,6 +229,7 @@ class TestPermLevelEnum:
 # =============================================================================
 # Role-Permission Mappings
 # =============================================================================
+
 
 @pytest.mark.unit
 class TestRolePermissions:
@@ -263,6 +291,7 @@ class TestRolePermissions:
 # Permission Helper Functions
 # =============================================================================
 
+
 @pytest.mark.unit
 class TestGetUserPermissions:
 
@@ -302,10 +331,20 @@ class TestHasPermission:
 class TestHasAnyPermission:
 
     def test_returns_true_when_one_matches(self) -> None:
-        assert has_any_permission("viewer", [Permission.SYSTEM_ADMIN, Permission.CAMPAIGN_READ]) is True
+        assert (
+            has_any_permission(
+                "viewer", [Permission.SYSTEM_ADMIN, Permission.CAMPAIGN_READ]
+            )
+            is True
+        )
 
     def test_returns_false_when_none_match(self) -> None:
-        assert has_any_permission("viewer", [Permission.SYSTEM_ADMIN, Permission.CAMPAIGN_WRITE]) is False
+        assert (
+            has_any_permission(
+                "viewer", [Permission.SYSTEM_ADMIN, Permission.CAMPAIGN_WRITE]
+            )
+            is False
+        )
 
     def test_empty_list_returns_false(self) -> None:
         assert has_any_permission("superadmin", []) is False
@@ -315,10 +354,20 @@ class TestHasAnyPermission:
 class TestHasAllPermissions:
 
     def test_returns_true_when_all_match(self) -> None:
-        assert has_all_permissions("superadmin", [Permission.SYSTEM_ADMIN, Permission.BILLING_MANAGE]) is True
+        assert (
+            has_all_permissions(
+                "superadmin", [Permission.SYSTEM_ADMIN, Permission.BILLING_MANAGE]
+            )
+            is True
+        )
 
     def test_returns_false_when_one_missing(self) -> None:
-        assert has_all_permissions("viewer", [Permission.CAMPAIGN_READ, Permission.CAMPAIGN_WRITE]) is False
+        assert (
+            has_all_permissions(
+                "viewer", [Permission.CAMPAIGN_READ, Permission.CAMPAIGN_WRITE]
+            )
+            is False
+        )
 
     def test_empty_list_returns_true(self) -> None:
         assert has_all_permissions("viewer", []) is True
@@ -327,6 +376,7 @@ class TestHasAllPermissions:
 # =============================================================================
 # Role Hierarchy & can_manage_role
 # =============================================================================
+
 
 @pytest.mark.unit
 class TestRoleHierarchy:
@@ -372,14 +422,24 @@ class TestCanManageRole:
 # RBAC Matrix & get_permission_level
 # =============================================================================
 
+
 @pytest.mark.unit
 class TestRBACMatrix:
 
     def test_all_expected_resources_present(self) -> None:
         expected = {
-            "campaigns", "campaigns.delete", "clients", "clients.portal_users",
-            "analytics", "reports", "reports.download", "tenants.settings",
-            "users.manage", "connectors", "billing", "audit",
+            "campaigns",
+            "campaigns.delete",
+            "clients",
+            "clients.portal_users",
+            "analytics",
+            "reports",
+            "reports.download",
+            "tenants.settings",
+            "users.manage",
+            "connectors",
+            "billing",
+            "audit",
         }
         assert set(RBAC_MATRIX.keys()) == expected
 
@@ -388,10 +448,14 @@ class TestRBACMatrix:
             assert role_map.get(UserRole.SUPERADMIN) == PermLevel.FULL, f"{resource}"
 
     def test_viewer_cannot_delete_campaigns(self) -> None:
-        assert get_permission_level(UserRole.VIEWER, "campaigns.delete") == PermLevel.NONE
+        assert (
+            get_permission_level(UserRole.VIEWER, "campaigns.delete") == PermLevel.NONE
+        )
 
     def test_unknown_resource_returns_none(self) -> None:
-        assert get_permission_level(UserRole.SUPERADMIN, "nonexistent") == PermLevel.NONE
+        assert (
+            get_permission_level(UserRole.SUPERADMIN, "nonexistent") == PermLevel.NONE
+        )
 
     def test_unknown_role_returns_none(self) -> None:
         # Build a mock UserRole-like value that isn't in the matrix
@@ -412,6 +476,7 @@ class TestRBACMatrix:
 # =============================================================================
 # Resource Scope
 # =============================================================================
+
 
 @pytest.mark.unit
 class TestResourceScope:
@@ -438,6 +503,7 @@ class TestResourceScope:
 # =============================================================================
 # Sidebar Visibility
 # =============================================================================
+
 
 @pytest.mark.unit
 class TestSidebarVisibility:
@@ -477,6 +543,7 @@ class TestSidebarVisibility:
 # FastAPI Dependencies
 # =============================================================================
 
+
 @pytest.mark.unit
 class TestRequirePermissions:
 
@@ -489,6 +556,7 @@ class TestRequirePermissions:
     @pytest.mark.asyncio
     async def test_unauthorized_raises_403(self) -> None:
         from fastapi import HTTPException
+
         checker = require_permissions([Permission.SYSTEM_ADMIN])
         req = _make_request(role="viewer", user_id=1)
         with pytest.raises(HTTPException) as exc:
@@ -498,6 +566,7 @@ class TestRequirePermissions:
     @pytest.mark.asyncio
     async def test_no_auth_raises_401(self) -> None:
         from fastapi import HTTPException
+
         checker = require_permissions([Permission.CAMPAIGN_READ])
         req = _make_request()  # no role/user_id
         with pytest.raises(HTTPException) as exc:
@@ -516,6 +585,7 @@ class TestRequirePermissions:
     @pytest.mark.asyncio
     async def test_require_all_true_missing_one_fails(self) -> None:
         from fastapi import HTTPException
+
         checker = require_permissions(
             [Permission.CAMPAIGN_READ, Permission.CAMPAIGN_WRITE],
             require_all=True,
@@ -538,6 +608,7 @@ class TestRequireRole:
     @pytest.mark.asyncio
     async def test_disallowed_role_raises_403(self) -> None:
         from fastapi import HTTPException
+
         checker = require_role(["admin", "superadmin"])
         req = _make_request(role="viewer", user_id=1)
         with pytest.raises(HTTPException) as exc:
@@ -547,6 +618,7 @@ class TestRequireRole:
     @pytest.mark.asyncio
     async def test_no_auth_raises_401(self) -> None:
         from fastapi import HTTPException
+
         checker = require_role(["admin"])
         req = _make_request()
         with pytest.raises(HTTPException) as exc:
@@ -571,6 +643,7 @@ class TestRequireSuperAdmin:
     @pytest.mark.asyncio
     async def test_admin_raises_403(self) -> None:
         from fastapi import HTTPException
+
         req = _make_request(role="admin", user_id=1)
         with pytest.raises(HTTPException) as exc:
             await require_super_admin(req)
@@ -579,6 +652,7 @@ class TestRequireSuperAdmin:
     @pytest.mark.asyncio
     async def test_no_auth_raises_401(self) -> None:
         from fastapi import HTTPException
+
         req = _make_request()
         with pytest.raises(HTTPException) as exc:
             await require_super_admin(req)
@@ -588,6 +662,7 @@ class TestRequireSuperAdmin:
 # =============================================================================
 # check_permission Decorator
 # =============================================================================
+
 
 @pytest.mark.unit
 class TestCheckPermissionDecorator:
@@ -627,6 +702,7 @@ class TestCheckPermissionDecorator:
 # require_permission (PermLevel-based)
 # =============================================================================
 
+
 @pytest.mark.unit
 class TestRequirePermissionPermLevel:
 
@@ -639,6 +715,7 @@ class TestRequirePermissionPermLevel:
     @pytest.mark.asyncio
     async def test_disallowed_role_raises_403(self) -> None:
         from fastapi import HTTPException
+
         # PermLevel.FULL requires superadmin or admin per _PERM_LEVEL_ROLES
         checker = require_permission("clients", PermLevel.FULL)
         req = _make_request(role="viewer", user_id=1)
@@ -649,6 +726,7 @@ class TestRequirePermissionPermLevel:
     @pytest.mark.asyncio
     async def test_no_auth_raises_401(self) -> None:
         from fastapi import HTTPException
+
         checker = require_permission("clients", PermLevel.VIEW)
         req = _make_request()
         with pytest.raises(HTTPException) as exc:
@@ -660,12 +738,18 @@ class TestRequirePermissionPermLevel:
 # PermLevel Role Mapping
 # =============================================================================
 
+
 @pytest.mark.unit
 class TestPermLevelRoles:
 
     def test_view_includes_all_six_roles(self) -> None:
         assert _PERM_LEVEL_ROLES[PermLevel.VIEW] == {
-            "superadmin", "admin", "manager", "analyst", "account_manager", "viewer",
+            "superadmin",
+            "admin",
+            "manager",
+            "analyst",
+            "account_manager",
+            "viewer",
         }
 
     def test_edit_limited(self) -> None:
@@ -679,50 +763,69 @@ class TestPermLevelRoles:
 # Client-Scope Access Helpers
 # =============================================================================
 
+
 @pytest.mark.unit
 class TestEnforceClientAccess:
 
     @pytest.mark.asyncio
     async def test_superadmin_always_allowed(self) -> None:
         from app.auth.permissions import enforce_client_access
+
         db = _make_db()
         await enforce_client_access(
-            user_id=1, user_role="superadmin", client_id=99,
-            tenant_id=1, db=db,
+            user_id=1,
+            user_role="superadmin",
+            client_id=99,
+            tenant_id=1,
+            db=db,
         )
         # No exception means success
 
     @pytest.mark.asyncio
     async def test_admin_always_allowed(self) -> None:
         from app.auth.permissions import enforce_client_access
+
         db = _make_db()
         await enforce_client_access(
-            user_id=1, user_role="admin", client_id=99,
-            tenant_id=1, db=db,
+            user_id=1,
+            user_role="admin",
+            client_id=99,
+            tenant_id=1,
+            db=db,
         )
 
     @pytest.mark.asyncio
     async def test_user_with_matching_client_id_allowed(self) -> None:
         from app.auth.permissions import enforce_client_access
+
         db = _make_db()
         # user_client_id matches client_id -> allowed
         await enforce_client_access(
-            user_id=1, user_role="viewer", client_id=42,
-            tenant_id=1, db=db, user_client_id=42,
+            user_id=1,
+            user_role="viewer",
+            client_id=42,
+            tenant_id=1,
+            db=db,
+            user_client_id=42,
         )
 
     @pytest.mark.asyncio
     async def test_viewer_without_access_raises_403(self) -> None:
         from fastapi import HTTPException
+
         from app.auth.permissions import enforce_client_access
+
         db = _make_db()
         # get_accessible_client_ids will be called internally
         # For a viewer with no client_id, returns empty list
         db.execute.return_value = _make_scalar_result(None)
         with pytest.raises(HTTPException) as exc:
             await enforce_client_access(
-                user_id=1, user_role="viewer", client_id=99,
-                tenant_id=1, db=db,
+                user_id=1,
+                user_role="viewer",
+                client_id=99,
+                tenant_id=1,
+                db=db,
             )
         assert exc.value.status_code == 403
 
@@ -733,47 +836,68 @@ class TestGetAccessibleClientIds:
     @pytest.mark.asyncio
     async def test_superadmin_returns_none(self) -> None:
         from app.auth.permissions import get_accessible_client_ids
+
         db = _make_db()
         result = await get_accessible_client_ids(
-            user_id=1, user_role="superadmin", tenant_id=1, db=db,
+            user_id=1,
+            user_role="superadmin",
+            tenant_id=1,
+            db=db,
         )
         assert result is None
 
     @pytest.mark.asyncio
     async def test_admin_returns_none(self) -> None:
         from app.auth.permissions import get_accessible_client_ids
+
         db = _make_db()
         result = await get_accessible_client_ids(
-            user_id=1, user_role="admin", tenant_id=1, db=db,
+            user_id=1,
+            user_role="admin",
+            tenant_id=1,
+            db=db,
         )
         assert result is None
 
     @pytest.mark.asyncio
     async def test_viewer_with_client_id(self) -> None:
         from app.auth.permissions import get_accessible_client_ids
+
         db = _make_db()
         result = await get_accessible_client_ids(
-            user_id=1, user_role="viewer", tenant_id=1, db=db, client_id=42,
+            user_id=1,
+            user_role="viewer",
+            tenant_id=1,
+            db=db,
+            client_id=42,
         )
         assert result == [42]
 
     @pytest.mark.asyncio
     async def test_viewer_without_client_id_queries_db(self) -> None:
         from app.auth.permissions import get_accessible_client_ids
+
         db = _make_db()
         db.execute.return_value = _make_scalar_result(77)
         result = await get_accessible_client_ids(
-            user_id=1, user_role="viewer", tenant_id=1, db=db,
+            user_id=1,
+            user_role="viewer",
+            tenant_id=1,
+            db=db,
         )
         assert result == [77]
 
     @pytest.mark.asyncio
     async def test_manager_queries_assignments(self) -> None:
         from app.auth.permissions import get_accessible_client_ids
+
         db = _make_db()
         db.execute.return_value = _make_scalars_result([10, 20, 30])
         result = await get_accessible_client_ids(
-            user_id=1, user_role="manager", tenant_id=1, db=db,
+            user_id=1,
+            user_role="manager",
+            tenant_id=1,
+            db=db,
         )
         assert result == [10, 20, 30]
 
@@ -806,6 +930,7 @@ class TestMFAConstants:
 # TOTP Functions
 # =============================================================================
 
+
 @pytest.mark.unit
 class TestGenerateTOTPSecret:
 
@@ -820,6 +945,7 @@ class TestGenerateTOTPSecret:
 
     def test_secret_is_valid_base32(self) -> None:
         import base64
+
         secret = generate_totp_secret()
         # Should decode without error
         base64.b32decode(secret)
@@ -861,6 +987,7 @@ class TestGenerateQRCode:
 
     def test_is_valid_base64(self) -> None:
         import base64
+
         secret = generate_totp_secret()
         uri = get_totp_uri(secret, "user@test.com")
         qr = generate_qr_code(uri)
@@ -895,8 +1022,8 @@ class TestVerifyTOTP:
 
     def test_wrong_length_code_fails(self) -> None:
         secret = generate_totp_secret()
-        assert verify_totp(secret, "12345") is False    # 5 digits
-        assert verify_totp(secret, "1234567") is False   # 7 digits
+        assert verify_totp(secret, "12345") is False  # 5 digits
+        assert verify_totp(secret, "1234567") is False  # 7 digits
 
     def test_code_with_spaces_is_cleaned(self) -> None:
         secret = generate_totp_secret()
@@ -909,6 +1036,7 @@ class TestVerifyTOTP:
 # =============================================================================
 # Backup Codes
 # =============================================================================
+
 
 @pytest.mark.unit
 class TestGenerateBackupCodes:
@@ -984,7 +1112,7 @@ class TestVerifyBackupCode:
         codes = generate_backup_codes()
         hashed = [hash_backup_code(c) for c in codes]
         hashed[0] = None  # "used" code
-        is_valid, idx = verify_backup_code(codes[0], hashed)
+        is_valid, _idx = verify_backup_code(codes[0], hashed)
         assert is_valid is False
 
     def test_finds_correct_index_with_nones(self) -> None:
@@ -1001,18 +1129,24 @@ class TestVerifyBackupCode:
 # MFA Data Models
 # =============================================================================
 
+
 @pytest.mark.unit
 class TestMFADataModels:
 
     def test_totp_setup_data(self) -> None:
-        data = TOTPSetupData(secret="abc", provisioning_uri="otpauth://...", qr_code_base64="base64...")
+        data = TOTPSetupData(
+            secret="abc", provisioning_uri="otpauth://...", qr_code_base64="base64..."
+        )
         assert data.secret == "abc"
         assert data.provisioning_uri == "otpauth://..."
 
     def test_mfa_status(self) -> None:
         status = MFAStatus(
-            enabled=True, verified_at=datetime.now(UTC),
-            backup_codes_remaining=8, is_locked=False, lockout_until=None,
+            enabled=True,
+            verified_at=datetime.now(UTC),
+            backup_codes_remaining=8,
+            is_locked=False,
+            lockout_until=None,
         )
         assert status.enabled is True
         assert status.backup_codes_remaining == 8
@@ -1021,6 +1155,7 @@ class TestMFADataModels:
 # =============================================================================
 # MFAService Class
 # =============================================================================
+
 
 @pytest.mark.unit
 class TestMFAServiceGetStatus:
@@ -1198,7 +1333,9 @@ class TestMFAServiceDisable:
     async def test_invalid_code_returns_false(self) -> None:
         db = _make_db()
         secret = generate_totp_secret()
-        user = _make_user(totp_enabled=True, totp_secret="enc_secret", backup_codes=None)
+        user = _make_user(
+            totp_enabled=True, totp_secret="enc_secret", backup_codes=None
+        )
         db.execute.return_value = _make_scalar_result(user)
 
         svc = MFAService(db)
@@ -1252,7 +1389,8 @@ class TestMFAServiceVerifyCode:
         valid_code = totp.now()
 
         user = _make_user(
-            totp_enabled=True, totp_secret="enc",
+            totp_enabled=True,
+            totp_secret="enc",
             failed_totp_attempts=3,
         )
         db.execute.return_value = _make_scalar_result(user)
@@ -1270,8 +1408,10 @@ class TestMFAServiceVerifyCode:
         db = _make_db()
         secret = generate_totp_secret()
         user = _make_user(
-            totp_enabled=True, totp_secret="enc",
-            failed_totp_attempts=2, backup_codes=None,
+            totp_enabled=True,
+            totp_secret="enc",
+            failed_totp_attempts=2,
+            backup_codes=None,
         )
         db.execute.return_value = _make_scalar_result(user)
 
@@ -1288,7 +1428,8 @@ class TestMFAServiceVerifyCode:
         db = _make_db()
         secret = generate_totp_secret()
         user = _make_user(
-            totp_enabled=True, totp_secret="enc",
+            totp_enabled=True,
+            totp_secret="enc",
             failed_totp_attempts=MAX_FAILED_ATTEMPTS - 1,
             backup_codes=None,
         )
@@ -1372,7 +1513,8 @@ class TestMFAServiceInternalVerifyCode:
         codes = generate_backup_codes()
         hashed = [hash_backup_code(c) for c in codes]
         user = _make_user(
-            totp_enabled=True, totp_secret="enc",
+            totp_enabled=True,
+            totp_secret="enc",
             backup_codes={"codes": hashed},
         )
 
@@ -1404,7 +1546,9 @@ class TestMFAServiceInternalVerifyCode:
         mock_update = MagicMock()
         mock_update.return_value.where.return_value.values.return_value = "stmt"
         with (
-            patch("app.services.mfa_service.decrypt_pii", return_value="invalid_secret"),
+            patch(
+                "app.services.mfa_service.decrypt_pii", return_value="invalid_secret"
+            ),
             patch("app.services.mfa_service.update", mock_update),
         ):
             result = await svc._verify_code(user, codes[5])
@@ -1428,6 +1572,7 @@ class TestMFAServiceInternalVerifyCode:
 # =============================================================================
 # Convenience Functions
 # =============================================================================
+
 
 @pytest.mark.unit
 class TestCheckMFARequired:

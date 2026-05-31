@@ -112,7 +112,9 @@ class PlatformAudience(Base, TimestampMixin):
     ad_account_id = Column(String(255), nullable=False)  # Platform ad account ID
 
     # Audience configuration
-    audience_type = Column(String(50), nullable=False, default=AudienceType.CUSTOMER_LIST.value)
+    audience_type = Column(
+        String(50), nullable=False, default=AudienceType.CUSTOMER_LIST.value
+    )
     description = Column(Text, nullable=True)
 
     # Sync settings
@@ -214,7 +216,9 @@ class AudienceSyncJob(Base, TimestampMixin):
     platform_response = Column(JSONB, nullable=False, default=dict)
 
     # Triggered by
-    triggered_by = Column(String(50), nullable=True)  # "auto", "manual", "segment_update"
+    triggered_by = Column(
+        String(50), nullable=True
+    )  # "auto", "manual", "segment_update"
     triggered_by_user_id = Column(Integer, nullable=True)
 
     # Relationships
@@ -273,6 +277,7 @@ class AudienceSyncCredential(Base, TimestampMixin):
             self._access_token_encrypted = None
         else:
             from app.core.security import encrypt_pii
+
             self._access_token_encrypted = encrypt_pii(token)
 
     def get_access_token(self) -> str | None:
@@ -280,6 +285,7 @@ class AudienceSyncCredential(Base, TimestampMixin):
         if self._access_token_encrypted is None:
             return None
         from app.core.security import decrypt_pii
+
         return decrypt_pii(self._access_token_encrypted)
 
     def set_refresh_token(self, token: str | None) -> None:
@@ -288,6 +294,7 @@ class AudienceSyncCredential(Base, TimestampMixin):
             self._refresh_token_encrypted = None
         else:
             from app.core.security import encrypt_pii
+
             self._refresh_token_encrypted = encrypt_pii(token)
 
     def get_refresh_token(self) -> str | None:
@@ -295,6 +302,7 @@ class AudienceSyncCredential(Base, TimestampMixin):
         if self._refresh_token_encrypted is None:
             return None
         from app.core.security import decrypt_pii
+
         return decrypt_pii(self._refresh_token_encrypted)
 
     # Properties for backward compatibility

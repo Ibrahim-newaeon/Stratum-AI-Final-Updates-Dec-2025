@@ -9,18 +9,20 @@ API endpoints for Trust Layer features:
 """
 
 from datetime import date
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_async_session
-from app.models.trust_layer import FactSignalHealthDaily, SignalHealthStatus
-from app.quality.trust_layer_service import SignalHealthService, AttributionVarianceService
 from app.features.service import can_access_feature
+from app.models.trust_layer import FactSignalHealthDaily, SignalHealthStatus
+from app.quality.trust_layer_service import (
+    AttributionVarianceService,
+    SignalHealthService,
+)
 from app.schemas.response import APIResponse
-
 
 router = APIRouter(prefix="/tenant/{tenant_id}", tags=["trust-layer"])
 
@@ -28,6 +30,7 @@ router = APIRouter(prefix="/tenant/{tenant_id}", tags=["trust-layer"])
 # =============================================================================
 # Signal Health Endpoints
 # =============================================================================
+
 
 @router.get("/signal-health", response_model=APIResponse[Dict[str, Any]])
 async def get_signal_health(
@@ -54,7 +57,7 @@ async def get_signal_health(
     if not await can_access_feature(db, tenant_id, "signal_health"):
         raise HTTPException(
             status_code=403,
-            detail="Signal health feature is not enabled for this tenant"
+            detail="Signal health feature is not enabled for this tenant",
         ).limit(1000)
 
     service = SignalHealthService(db)
@@ -97,6 +100,7 @@ async def get_signal_health_history(
 # Account-Level Signal Health Endpoints
 # =============================================================================
 
+
 @router.get("/signal-health/by-account", response_model=APIResponse[Dict[str, Any]])
 async def get_signal_health_by_account(
     request: Request,
@@ -115,7 +119,9 @@ async def get_signal_health_by_account(
         raise HTTPException(status_code=403, detail="Access denied to this tenant")
 
     if not await can_access_feature(db, tenant_id, "signal_health"):
-        raise HTTPException(status_code=403, detail="Signal health feature is not enabled")
+        raise HTTPException(
+            status_code=403, detail="Signal health feature is not enabled"
+        )
 
     if target_date is None:
         target_date = date.today()
@@ -130,15 +136,19 @@ async def get_signal_health_by_account(
         conditions.append(FactSignalHealthDaily.platform == platform)
 
     result = await db.execute(
-        select(FactSignalHealthDaily).where(*conditions).order_by(
+        select(FactSignalHealthDaily)
+        .where(*conditions)
+        .order_by(
             FactSignalHealthDaily.platform,
             FactSignalHealthDaily.account_id,
-        ).limit(1000)
+        )
+        .limit(1000)
     )
     records = result.scalars().all()
 
     # Enrich with account names from TenantAdAccount
     from app.models.campaign_builder import TenantAdAccount
+
     account_names_result = await db.execute(
         select(
             TenantAdAccount.platform_account_id,
@@ -160,23 +170,29 @@ async def get_signal_health_by_account(
 
     for record in records:
         account_info = account_lookup.get(record.account_id, {})
-        status_val = record.status.value if hasattr(record.status, 'value') else str(record.status)
+        status_val = (
+            record.status.value
+            if hasattr(record.status, "value")
+            else str(record.status)
+        )
         status_counts[status_val] = status_counts.get(status_val, 0) + 1
 
-        accounts.append({
-            "platform": record.platform,
-            "account_id": record.account_id,
-            "account_name": account_info.get("name", record.account_id),
-            "business_name": account_info.get("business_name"),
-            "status": status_val,
-            "emq_score": record.emq_score,
-            "event_loss_pct": record.event_loss_pct,
-            "freshness_minutes": record.freshness_minutes,
-            "api_error_rate": record.api_error_rate,
-            "issues": record.issues,
-            "actions": record.actions,
-            "notes": record.notes,
-        })
+        accounts.append(
+            {
+                "platform": record.platform,
+                "account_id": record.account_id,
+                "account_name": account_info.get("name", record.account_id),
+                "business_name": account_info.get("business_name"),
+                "status": status_val,
+                "emq_score": record.emq_score,
+                "event_loss_pct": record.event_loss_pct,
+                "freshness_minutes": record.freshness_minutes,
+                "api_error_rate": record.api_error_rate,
+                "issues": record.issues,
+                "actions": record.actions,
+                "notes": record.notes,
+            }
+        )
 
     # Determine overall status
     if status_counts["critical"] > 0:
@@ -204,6 +220,7 @@ async def get_signal_health_by_account(
 # Attribution Variance Endpoints
 # =============================================================================
 
+
 @router.get("/attribution-variance", response_model=APIResponse[Dict[str, Any]])
 async def get_attribution_variance(
     request: Request,
@@ -227,7 +244,7 @@ async def get_attribution_variance(
     if not await can_access_feature(db, tenant_id, "attribution_variance"):
         raise HTTPException(
             status_code=403,
-            detail="Attribution variance feature is not enabled for this tenant"
+            detail="Attribution variance feature is not enabled for this tenant",
         )
 
     service = AttributionVarianceService(db)
@@ -239,6 +256,7 @@ async def get_attribution_variance(
 # =============================================================================
 # Combined Trust Status Endpoint
 # =============================================================================
+
 
 @router.get("/trust-status", response_model=APIResponse[Dict[str, Any]])
 async def get_trust_status(

@@ -11,22 +11,25 @@ Meta Marketing API, Google Ads REST API, and TikTok Business API using
 tokens stored in the application settings.
 """
 
-from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional
-import logging
 import json
+import logging
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
 
 from celery import shared_task
-from sqlalchemy import select, and_, update
+from sqlalchemy import and_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.session import async_session_factory
-from app.models.trust_layer import FactActionsQueue, FactSignalHealthDaily, SignalHealthStatus
-from app.autopilot.service import ActionStatus, ActionType, SAFE_ACTIONS
-from app.features.flags import get_autopilot_caps, AutopilotLevel
-from app.core.websocket import publish_action_status_update
+from app.autopilot.service import SAFE_ACTIONS, ActionStatus, ActionType
 from app.core.config import settings
-
+from app.core.websocket import publish_action_status_update
+from app.db.session import async_session_factory
+from app.features.flags import AutopilotLevel, get_autopilot_caps
+from app.models.trust_layer import (
+    FactActionsQueue,
+    FactSignalHealthDaily,
+    SignalHealthStatus,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +37,7 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 # Platform Executors
 # =============================================================================
+
 
 class PlatformExecutor:
     """Base class for platform-specific action execution."""
@@ -55,9 +59,13 @@ class PlatformExecutor:
             Dict with keys: success, before_value, after_value, platform_response, error
         """
         if settings.use_mock_ad_data:
-            return self._mock_execute(action_type, entity_type, entity_id, action_details)
+            return self._mock_execute(
+                action_type, entity_type, entity_id, action_details
+            )
 
-        return await self._live_execute(action_type, entity_type, entity_id, action_details)
+        return await self._live_execute(
+            action_type, entity_type, entity_id, action_details
+        )
 
     def _mock_execute(
         self,
@@ -104,10 +112,18 @@ class MetaExecutor(PlatformExecutor):
             amount = action_details.get("amount", 0)
             after_value["daily_budget"] = max(0, before_value["daily_budget"] - amount)
 
-        elif action_type in [ActionType.PAUSE_CAMPAIGN.value, ActionType.PAUSE_ADSET.value, ActionType.PAUSE_CREATIVE.value]:
+        elif action_type in [
+            ActionType.PAUSE_CAMPAIGN.value,
+            ActionType.PAUSE_ADSET.value,
+            ActionType.PAUSE_CREATIVE.value,
+        ]:
             after_value["status"] = "PAUSED"
 
-        elif action_type in [ActionType.ENABLE_CAMPAIGN.value, ActionType.ENABLE_ADSET.value, ActionType.ENABLE_CREATIVE.value]:
+        elif action_type in [
+            ActionType.ENABLE_CAMPAIGN.value,
+            ActionType.ENABLE_ADSET.value,
+            ActionType.ENABLE_CREATIVE.value,
+        ]:
             after_value["status"] = "ACTIVE"
 
         return {
@@ -140,6 +156,7 @@ class MetaExecutor(PlatformExecutor):
             Standardised result dict.
         """
         import httpx
+
         from app.core.config import settings
 
         logger.info(f"[META] Live executing {action_type} on {entity_type} {entity_id}")
@@ -173,7 +190,10 @@ class MetaExecutor(PlatformExecutor):
                         "success": False,
                         "before_value": None,
                         "after_value": None,
-                        "platform_response": {"status_code": get_resp.status_code, "body": error_body},
+                        "platform_response": {
+                            "status_code": get_resp.status_code,
+                            "body": error_body,
+                        },
                         "error": f"Failed to fetch entity state: HTTP {get_resp.status_code}",
                     }
 
@@ -182,12 +202,17 @@ class MetaExecutor(PlatformExecutor):
                 # Step 2: Determine the update payload
                 update_payload: Dict[str, Any] = {}
 
-                if action_type in [ActionType.BUDGET_INCREASE.value, ActionType.BUDGET_DECREASE.value]:
+                if action_type in [
+                    ActionType.BUDGET_INCREASE.value,
+                    ActionType.BUDGET_DECREASE.value,
+                ]:
                     amount = action_details.get("amount", 0)
                     current_budget = int(before_value.get("daily_budget", 0))
 
                     if action_type == ActionType.BUDGET_INCREASE.value:
-                        new_budget = current_budget + int(amount * 100)  # amount in dollars -> cents
+                        new_budget = current_budget + int(
+                            amount * 100
+                        )  # amount in dollars -> cents
                     else:
                         new_budget = max(0, current_budget - int(amount * 100))
 
@@ -230,7 +255,10 @@ class MetaExecutor(PlatformExecutor):
                         "success": False,
                         "before_value": before_value,
                         "after_value": None,
-                        "platform_response": {"status_code": post_resp.status_code, "body": error_body},
+                        "platform_response": {
+                            "status_code": post_resp.status_code,
+                            "body": error_body,
+                        },
                         "error": f"Failed to update entity: HTTP {post_resp.status_code}",
                     }
 
@@ -244,7 +272,11 @@ class MetaExecutor(PlatformExecutor):
                         "access_token": access_token,
                     },
                 )
-                after_value = after_resp.json() if after_resp.status_code == 200 else update_payload
+                after_value = (
+                    after_resp.json()
+                    if after_resp.status_code == 200
+                    else update_payload
+                )
 
                 return {
                     "success": True,
@@ -254,7 +286,14 @@ class MetaExecutor(PlatformExecutor):
                     "error": None,
                 }
 
-        except (ConnectionError, TimeoutError, OSError, ValueError, KeyError, RuntimeError) as exc:
+        except (
+            ConnectionError,
+            TimeoutError,
+            OSError,
+            ValueError,
+            KeyError,
+            RuntimeError,
+        ) as exc:
             logger.error(f"[META] Live execution error: {exc}", exc_info=True)
             return {
                 "success": False,
@@ -276,30 +315,45 @@ class GoogleExecutor(PlatformExecutor):
         action_details: Dict[str, Any],
     ) -> Dict[str, Any]:
         """Simulate successful execution for Google Ads platform."""
-        logger.info(f"[GOOGLE] Mock executing {action_type} on {entity_type} {entity_id}")
+        logger.info(
+            f"[GOOGLE] Mock executing {action_type} on {entity_type} {entity_id}"
+        )
 
         before_value: Dict[str, Any] = {"status": "ENABLED", "budget_micros": 10000000}
         after_value = before_value.copy()
 
         if action_type == ActionType.BUDGET_INCREASE.value:
             amount = action_details.get("amount", 0)
-            after_value["budget_micros"] = before_value["budget_micros"] + (amount * 1000000)
+            after_value["budget_micros"] = before_value["budget_micros"] + (
+                amount * 1000000
+            )
 
         elif action_type == ActionType.BUDGET_DECREASE.value:
             amount = action_details.get("amount", 0)
-            after_value["budget_micros"] = max(0, before_value["budget_micros"] - (amount * 1000000))
+            after_value["budget_micros"] = max(
+                0, before_value["budget_micros"] - (amount * 1000000)
+            )
 
-        elif action_type in [ActionType.PAUSE_CAMPAIGN.value, ActionType.PAUSE_ADSET.value]:
+        elif action_type in [
+            ActionType.PAUSE_CAMPAIGN.value,
+            ActionType.PAUSE_ADSET.value,
+        ]:
             after_value["status"] = "PAUSED"
 
-        elif action_type in [ActionType.ENABLE_CAMPAIGN.value, ActionType.ENABLE_ADSET.value]:
+        elif action_type in [
+            ActionType.ENABLE_CAMPAIGN.value,
+            ActionType.ENABLE_ADSET.value,
+        ]:
             after_value["status"] = "ENABLED"
 
         return {
             "success": True,
             "before_value": before_value,
             "after_value": after_value,
-            "platform_response": {"operation_name": "operations/mock_123", "status": "DONE"},
+            "platform_response": {
+                "operation_name": "operations/mock_123",
+                "status": "DONE",
+            },
             "error": None,
         }
 
@@ -313,6 +367,7 @@ class GoogleExecutor(PlatformExecutor):
             Access token string or None if refresh fails.
         """
         import httpx
+
         from app.core.config import settings
 
         if not settings.google_ads_refresh_token:
@@ -338,7 +393,13 @@ class GoogleExecutor(PlatformExecutor):
                 else:
                     logger.error(f"[GOOGLE] Token refresh failed: {resp.text}")
                     return None
-        except (ConnectionError, TimeoutError, OSError, ValueError, RuntimeError) as exc:
+        except (
+            ConnectionError,
+            TimeoutError,
+            OSError,
+            ValueError,
+            RuntimeError,
+        ) as exc:
             logger.error(f"[GOOGLE] Token refresh error: {exc}", exc_info=True)
             return None
 
@@ -371,9 +432,12 @@ class GoogleExecutor(PlatformExecutor):
             Standardised result dict.
         """
         import httpx
+
         from app.core.config import settings
 
-        logger.info(f"[GOOGLE] Live executing {action_type} on {entity_type} {entity_id}")
+        logger.info(
+            f"[GOOGLE] Live executing {action_type} on {entity_type} {entity_id}"
+        )
 
         base_url = "https://googleads.googleapis.com/v18"
         developer_token = settings.google_ads_developer_token
@@ -397,7 +461,9 @@ class GoogleExecutor(PlatformExecutor):
                 "error": "Failed to obtain Google Ads access token",
             }
 
-        customer_id = action_details.get("customer_id") or settings.google_ads_customer_id
+        customer_id = (
+            action_details.get("customer_id") or settings.google_ads_customer_id
+        )
         if not customer_id:
             return {
                 "success": False,
@@ -419,12 +485,19 @@ class GoogleExecutor(PlatformExecutor):
         try:
             async with httpx.AsyncClient(timeout=30.0, headers=headers) as client:
                 # Budget operations
-                if action_type in [ActionType.BUDGET_INCREASE.value, ActionType.BUDGET_DECREASE.value]:
+                if action_type in [
+                    ActionType.BUDGET_INCREASE.value,
+                    ActionType.BUDGET_DECREASE.value,
+                ]:
                     budget_id = action_details.get("budget_id", entity_id)
-                    resource_name = f"customers/{customer_id}/campaignBudgets/{budget_id}"
+                    resource_name = (
+                        f"customers/{customer_id}/campaignBudgets/{budget_id}"
+                    )
 
                     # GET current budget (via searchStream GAQL)
-                    search_url = f"{base_url}/customers/{customer_id}/googleAds:searchStream"
+                    search_url = (
+                        f"{base_url}/customers/{customer_id}/googleAds:searchStream"
+                    )
                     query = (
                         f"SELECT campaign_budget.amount_micros "
                         f"FROM campaign_budget "
@@ -465,7 +538,10 @@ class GoogleExecutor(PlatformExecutor):
                             "success": False,
                             "before_value": before_value,
                             "after_value": None,
-                            "platform_response": {"status_code": patch_resp.status_code, "body": error_body},
+                            "platform_response": {
+                                "status_code": patch_resp.status_code,
+                                "body": error_body,
+                            },
                             "error": f"Budget update failed: HTTP {patch_resp.status_code}",
                         }
 
@@ -474,7 +550,9 @@ class GoogleExecutor(PlatformExecutor):
                         "success": True,
                         "before_value": before_value,
                         "after_value": after_value,
-                        "platform_response": patch_resp.json() if patch_resp.text else {"status": "OK"},
+                        "platform_response": (
+                            patch_resp.json() if patch_resp.text else {"status": "OK"}
+                        ),
                         "error": None,
                     }
 
@@ -489,12 +567,17 @@ class GoogleExecutor(PlatformExecutor):
                     resource_name = f"customers/{customer_id}/campaigns/{campaign_id}"
 
                     # Determine target status
-                    if action_type in [ActionType.PAUSE_CAMPAIGN.value, ActionType.PAUSE_ADSET.value]:
+                    if action_type in [
+                        ActionType.PAUSE_CAMPAIGN.value,
+                        ActionType.PAUSE_ADSET.value,
+                    ]:
                         new_status = "PAUSED"
                     else:
                         new_status = "ENABLED"
 
-                    before_value = {"status": "ENABLED" if new_status == "PAUSED" else "PAUSED"}
+                    before_value = {
+                        "status": "ENABLED" if new_status == "PAUSED" else "PAUSED"
+                    }
 
                     patch_url = f"{base_url}/{resource_name}"
                     patch_resp = await client.patch(
@@ -510,7 +593,10 @@ class GoogleExecutor(PlatformExecutor):
                             "success": False,
                             "before_value": before_value,
                             "after_value": None,
-                            "platform_response": {"status_code": patch_resp.status_code, "body": error_body},
+                            "platform_response": {
+                                "status_code": patch_resp.status_code,
+                                "body": error_body,
+                            },
                             "error": f"Status update failed: HTTP {patch_resp.status_code}",
                         }
 
@@ -519,7 +605,9 @@ class GoogleExecutor(PlatformExecutor):
                         "success": True,
                         "before_value": before_value,
                         "after_value": after_value,
-                        "platform_response": patch_resp.json() if patch_resp.text else {"status": "OK"},
+                        "platform_response": (
+                            patch_resp.json() if patch_resp.text else {"status": "OK"}
+                        ),
                         "error": None,
                     }
 
@@ -532,7 +620,14 @@ class GoogleExecutor(PlatformExecutor):
                         "error": f"Unsupported action type for Google: {action_type}",
                     }
 
-        except (ConnectionError, TimeoutError, OSError, ValueError, KeyError, RuntimeError) as exc:
+        except (
+            ConnectionError,
+            TimeoutError,
+            OSError,
+            ValueError,
+            KeyError,
+            RuntimeError,
+        ) as exc:
             logger.error(f"[GOOGLE] Live execution error: {exc}", exc_info=True)
             return {
                 "success": False,
@@ -554,7 +649,9 @@ class TikTokExecutor(PlatformExecutor):
         action_details: Dict[str, Any],
     ) -> Dict[str, Any]:
         """Simulate successful execution for TikTok platform."""
-        logger.info(f"[TIKTOK] Mock executing {action_type} on {entity_type} {entity_id}")
+        logger.info(
+            f"[TIKTOK] Mock executing {action_type} on {entity_type} {entity_id}"
+        )
 
         before_value: Dict[str, Any] = {"operation_status": "ENABLE", "budget": 100.00}
         after_value = before_value.copy()
@@ -567,7 +664,10 @@ class TikTokExecutor(PlatformExecutor):
             amount = action_details.get("amount", 0)
             after_value["budget"] = max(0, before_value["budget"] - amount)
 
-        elif action_type in [ActionType.PAUSE_CAMPAIGN.value, ActionType.PAUSE_ADSET.value]:
+        elif action_type in [
+            ActionType.PAUSE_CAMPAIGN.value,
+            ActionType.PAUSE_ADSET.value,
+        ]:
             after_value["operation_status"] = "DISABLE"
 
         return {
@@ -604,13 +704,18 @@ class TikTokExecutor(PlatformExecutor):
             Standardised result dict.
         """
         import httpx
+
         from app.core.config import settings
 
-        logger.info(f"[TIKTOK] Live executing {action_type} on {entity_type} {entity_id}")
+        logger.info(
+            f"[TIKTOK] Live executing {action_type} on {entity_type} {entity_id}"
+        )
 
         base_url = "https://business-api.tiktok.com/open_api/v1.3"
         access_token = settings.tiktok_access_token
-        advertiser_id = action_details.get("advertiser_id") or settings.tiktok_advertiser_id
+        advertiser_id = (
+            action_details.get("advertiser_id") or settings.tiktok_advertiser_id
+        )
 
         if not access_token:
             return {
@@ -645,7 +750,10 @@ class TikTokExecutor(PlatformExecutor):
                 }
                 info_resp = await client.get(info_url, params=info_params)
 
-                before_value: Dict[str, Any] = {"operation_status": "ENABLE", "budget": 0}
+                before_value: Dict[str, Any] = {
+                    "operation_status": "ENABLE",
+                    "budget": 0,
+                }
                 if info_resp.status_code == 200:
                     info_data = info_resp.json()
                     if info_data.get("code") == 0:
@@ -653,7 +761,9 @@ class TikTokExecutor(PlatformExecutor):
                         if campaigns:
                             camp = campaigns[0]
                             before_value = {
-                                "operation_status": camp.get("operation_status", "ENABLE"),
+                                "operation_status": camp.get(
+                                    "operation_status", "ENABLE"
+                                ),
                                 "budget": camp.get("budget", 0),
                             }
 
@@ -664,7 +774,10 @@ class TikTokExecutor(PlatformExecutor):
                     "campaign_id": entity_id,
                 }
 
-                if action_type in [ActionType.BUDGET_INCREASE.value, ActionType.BUDGET_DECREASE.value]:
+                if action_type in [
+                    ActionType.BUDGET_INCREASE.value,
+                    ActionType.BUDGET_DECREASE.value,
+                ]:
                     amount = action_details.get("amount", 0)
                     current_budget = float(before_value.get("budget", 0))
 
@@ -675,10 +788,16 @@ class TikTokExecutor(PlatformExecutor):
 
                     update_payload["budget"] = new_budget
 
-                elif action_type in [ActionType.PAUSE_CAMPAIGN.value, ActionType.PAUSE_ADSET.value]:
+                elif action_type in [
+                    ActionType.PAUSE_CAMPAIGN.value,
+                    ActionType.PAUSE_ADSET.value,
+                ]:
                     update_payload["operation_status"] = "DISABLE"
 
-                elif action_type in [ActionType.ENABLE_CAMPAIGN.value, ActionType.ENABLE_ADSET.value]:
+                elif action_type in [
+                    ActionType.ENABLE_CAMPAIGN.value,
+                    ActionType.ENABLE_ADSET.value,
+                ]:
                     update_payload["operation_status"] = "ENABLE"
 
                 else:
@@ -720,7 +839,14 @@ class TikTokExecutor(PlatformExecutor):
                     "error": None,
                 }
 
-        except (ConnectionError, TimeoutError, OSError, ValueError, KeyError, RuntimeError) as exc:
+        except (
+            ConnectionError,
+            TimeoutError,
+            OSError,
+            ValueError,
+            KeyError,
+            RuntimeError,
+        ) as exc:
             logger.error(f"[TIKTOK] Live execution error: {exc}", exc_info=True)
             return {
                 "success": False,
@@ -748,28 +874,44 @@ class SnapchatExecutor(PlatformExecutor):
         """Simulate successful execution for Snapchat platform."""
         logger.info(f"[SNAP] Mock executing {action_type} on {entity_type} {entity_id}")
 
-        before_value: Dict[str, Any] = {"status": "ACTIVE", "daily_budget_micro": 10000000}
+        before_value: Dict[str, Any] = {
+            "status": "ACTIVE",
+            "daily_budget_micro": 10000000,
+        }
         after_value = before_value.copy()
 
         if action_type == ActionType.BUDGET_INCREASE.value:
             amount = action_details.get("amount", 0)
-            after_value["daily_budget_micro"] = before_value["daily_budget_micro"] + int(amount * 1_000_000)
+            after_value["daily_budget_micro"] = before_value[
+                "daily_budget_micro"
+            ] + int(amount * 1_000_000)
 
         elif action_type == ActionType.BUDGET_DECREASE.value:
             amount = action_details.get("amount", 0)
-            after_value["daily_budget_micro"] = max(0, before_value["daily_budget_micro"] - int(amount * 1_000_000))
+            after_value["daily_budget_micro"] = max(
+                0, before_value["daily_budget_micro"] - int(amount * 1_000_000)
+            )
 
-        elif action_type in [ActionType.PAUSE_CAMPAIGN.value, ActionType.PAUSE_ADSET.value]:
+        elif action_type in [
+            ActionType.PAUSE_CAMPAIGN.value,
+            ActionType.PAUSE_ADSET.value,
+        ]:
             after_value["status"] = "PAUSED"
 
-        elif action_type in [ActionType.ENABLE_CAMPAIGN.value, ActionType.ENABLE_ADSET.value]:
+        elif action_type in [
+            ActionType.ENABLE_CAMPAIGN.value,
+            ActionType.ENABLE_ADSET.value,
+        ]:
             after_value["status"] = "ACTIVE"
 
         return {
             "success": True,
             "before_value": before_value,
             "after_value": after_value,
-            "platform_response": {"request_id": "snap_mock_123", "request_status": "SUCCESS"},
+            "platform_response": {
+                "request_id": "snap_mock_123",
+                "request_status": "SUCCESS",
+            },
             "error": None,
         }
 
@@ -796,6 +938,7 @@ class SnapchatExecutor(PlatformExecutor):
             Standardised result dict.
         """
         import httpx
+
         from app.core.config import settings
 
         logger.info(f"[SNAP] Live executing {action_type} on {entity_type} {entity_id}")
@@ -837,7 +980,10 @@ class SnapchatExecutor(PlatformExecutor):
                         "success": False,
                         "before_value": None,
                         "after_value": None,
-                        "platform_response": {"status_code": get_resp.status_code, "body": error_body},
+                        "platform_response": {
+                            "status_code": get_resp.status_code,
+                            "body": error_body,
+                        },
                         "error": f"Failed to fetch entity state: HTTP {get_resp.status_code}",
                     }
 
@@ -853,7 +999,10 @@ class SnapchatExecutor(PlatformExecutor):
                 # Step 2: Build update payload
                 update_payload = dict(entity_data)
 
-                if action_type in [ActionType.BUDGET_INCREASE.value, ActionType.BUDGET_DECREASE.value]:
+                if action_type in [
+                    ActionType.BUDGET_INCREASE.value,
+                    ActionType.BUDGET_DECREASE.value,
+                ]:
                     amount = action_details.get("amount", 0)
                     current_budget = int(entity_data.get("daily_budget_micro", 0))
 
@@ -884,7 +1033,11 @@ class SnapchatExecutor(PlatformExecutor):
                     json=put_body,
                 )
 
-                resp_data = put_resp.json() if put_resp.status_code == 200 else {"body": put_resp.text}
+                resp_data = (
+                    put_resp.json()
+                    if put_resp.status_code == 200
+                    else {"body": put_resp.text}
+                )
 
                 if put_resp.status_code != 200:
                     error_msg = resp_data.get("body", str(put_resp.status_code))
@@ -900,7 +1053,9 @@ class SnapchatExecutor(PlatformExecutor):
                 # Build after_value from update payload
                 after_value = before_value.copy()
                 if "daily_budget_micro" in update_payload:
-                    after_value["daily_budget_micro"] = update_payload["daily_budget_micro"]
+                    after_value["daily_budget_micro"] = update_payload[
+                        "daily_budget_micro"
+                    ]
                 if "status" in update_payload:
                     after_value["status"] = update_payload["status"]
 
@@ -912,7 +1067,14 @@ class SnapchatExecutor(PlatformExecutor):
                     "error": None,
                 }
 
-        except (ConnectionError, TimeoutError, OSError, ValueError, KeyError, RuntimeError) as exc:
+        except (
+            ConnectionError,
+            TimeoutError,
+            OSError,
+            ValueError,
+            KeyError,
+            RuntimeError,
+        ) as exc:
             logger.error(f"[SNAP] Live execution error: {exc}", exc_info=True)
             return {
                 "success": False,
@@ -935,6 +1097,7 @@ PLATFORM_EXECUTORS: Dict[str, PlatformExecutor] = {
 # =============================================================================
 # Helper Functions
 # =============================================================================
+
 
 async def check_signal_health(db: AsyncSession, tenant_id: int) -> bool:
     """
@@ -971,7 +1134,9 @@ async def get_tenant_autopilot_level(db: AsyncSession, tenant_id: int) -> int:
     return features.get("autopilot_level", 0)
 
 
-def validate_action_caps(action_type: str, action_details: Dict[str, Any]) -> tuple[bool, Optional[str]]:
+def validate_action_caps(
+    action_type: str, action_details: Dict[str, Any]
+) -> tuple[bool, Optional[str]]:
     """
     Validate that an action doesn't exceed caps.
 
@@ -980,15 +1145,24 @@ def validate_action_caps(action_type: str, action_details: Dict[str, Any]) -> tu
     """
     caps = get_autopilot_caps()
 
-    if action_type in [ActionType.BUDGET_INCREASE.value, ActionType.BUDGET_DECREASE.value]:
+    if action_type in [
+        ActionType.BUDGET_INCREASE.value,
+        ActionType.BUDGET_DECREASE.value,
+    ]:
         amount = action_details.get("amount", 0)
         percentage = action_details.get("percentage", 0)
 
         if abs(amount) > caps["max_daily_budget_change"]:
-            return False, f"Budget change ${amount} exceeds max ${caps['max_daily_budget_change']}"
+            return (
+                False,
+                f"Budget change ${amount} exceeds max ${caps['max_daily_budget_change']}",
+            )
 
         if abs(percentage) > caps["max_budget_pct_change"]:
-            return False, f"Budget change {percentage}% exceeds max {caps['max_budget_pct_change']}%"
+            return (
+                False,
+                f"Budget change {percentage}% exceeds max {caps['max_budget_pct_change']}%",
+            )
 
     return True, None
 
@@ -996,6 +1170,7 @@ def validate_action_caps(action_type: str, action_details: Dict[str, Any]) -> tu
 # =============================================================================
 # Main Task
 # =============================================================================
+
 
 @shared_task(
     name="tasks.apply_actions_queue",
@@ -1021,7 +1196,9 @@ def apply_actions_queue(self, tenant_id: Optional[int] = None):
     async def run_apply():
         async with async_session_factory() as db:
             try:
-                logger.info(f"Starting action queue processing for tenant_id={tenant_id}")
+                logger.info(
+                    f"Starting action queue processing for tenant_id={tenant_id}"
+                )
 
                 # Build query for approved actions
                 query = select(FactActionsQueue).where(
@@ -1049,17 +1226,25 @@ def apply_actions_queue(self, tenant_id: Optional[int] = None):
                         # Check signal health for this tenant
                         health_ok = await check_signal_health(db, action.tenant_id)
                         if not health_ok:
-                            logger.warning(f"Skipping action {action.id}: Signal health degraded")
+                            logger.warning(
+                                f"Skipping action {action.id}: Signal health degraded"
+                            )
                             action.error = "Signal health degraded - action deferred"
                             continue
 
                         # Parse action details
-                        action_details = json.loads(action.action_json) if action.action_json else {}
+                        action_details = (
+                            json.loads(action.action_json) if action.action_json else {}
+                        )
 
                         # Validate against caps
-                        is_valid, cap_error = validate_action_caps(action.action_type, action_details)
+                        is_valid, cap_error = validate_action_caps(
+                            action.action_type, action_details
+                        )
                         if not is_valid:
-                            logger.warning(f"Action {action.id} exceeds caps: {cap_error}")
+                            logger.warning(
+                                f"Action {action.id} exceeds caps: {cap_error}"
+                            )
                             action.status = ActionStatus.FAILED.value
                             action.error = cap_error
                             failed += 1
@@ -1086,7 +1271,9 @@ def apply_actions_queue(self, tenant_id: Optional[int] = None):
                             action.status = ActionStatus.APPLIED.value
                             action.applied_at = datetime.now(timezone.utc)
                             action.after_value = json.dumps(exec_result["after_value"])
-                            action.platform_response = json.dumps(exec_result["platform_response"])
+                            action.platform_response = json.dumps(
+                                exec_result["platform_response"]
+                            )
                             processed += 1
 
                             logger.info(f"Successfully applied action {action.id}")
@@ -1109,10 +1296,14 @@ def apply_actions_queue(self, tenant_id: Optional[int] = None):
                         else:
                             action.status = ActionStatus.FAILED.value
                             action.error = exec_result.get("error", "Unknown error")
-                            action.platform_response = json.dumps(exec_result.get("platform_response"))
+                            action.platform_response = json.dumps(
+                                exec_result.get("platform_response")
+                            )
                             failed += 1
 
-                            logger.error(f"Failed to apply action {action.id}: {exec_result.get('error')}")
+                            logger.error(
+                                f"Failed to apply action {action.id}: {exec_result.get('error')}"
+                            )
 
                             # Publish WebSocket notification for failure
                             await publish_action_status_update(
@@ -1121,7 +1312,15 @@ def apply_actions_queue(self, tenant_id: Optional[int] = None):
                                 status="failed",
                             )
 
-                    except (ConnectionError, TimeoutError, OSError, ValueError, KeyError, RuntimeError, json.JSONDecodeError) as e:
+                    except (
+                        ConnectionError,
+                        TimeoutError,
+                        OSError,
+                        ValueError,
+                        KeyError,
+                        RuntimeError,
+                        json.JSONDecodeError,
+                    ) as e:
                         logger.error(f"Error processing action {action.id}: {str(e)}")
                         action.status = ActionStatus.FAILED.value
                         action.error = str(e)
@@ -1129,7 +1328,9 @@ def apply_actions_queue(self, tenant_id: Optional[int] = None):
 
                 await db.commit()
 
-                logger.info(f"Action queue processing complete: {processed} applied, {failed} failed")
+                logger.info(
+                    f"Action queue processing complete: {processed} applied, {failed} failed"
+                )
 
                 return {
                     "status": "success",
@@ -1143,10 +1344,13 @@ def apply_actions_queue(self, tenant_id: Optional[int] = None):
                 raise self.retry(exc=e)
 
     import asyncio
+
     return asyncio.run(run_apply())
 
 
-async def log_action_audit(db: AsyncSession, action: FactActionsQueue, result: Dict[str, Any]):
+async def log_action_audit(
+    db: AsyncSession, action: FactActionsQueue, result: Dict[str, Any]
+):
     """
     Log action execution to audit trail.
 
@@ -1175,6 +1379,7 @@ async def log_action_audit(db: AsyncSession, action: FactActionsQueue, result: D
 # Scheduled Task
 # =============================================================================
 
+
 @shared_task(name="tasks.schedule_apply_actions_queue")
 def schedule_apply_actions_queue():
     """
@@ -1187,6 +1392,7 @@ def schedule_apply_actions_queue():
 # =============================================================================
 # Single Action Execution
 # =============================================================================
+
 
 @shared_task(
     name="tasks.apply_single_action",
@@ -1221,7 +1427,10 @@ def apply_single_action(self, action_id: str, user_id: Optional[int] = None):
                     return {"status": "error", "error": "Action not found"}
 
                 if action.status != ActionStatus.APPROVED.value:
-                    return {"status": "error", "error": f"Action status is {action.status}, expected approved"}
+                    return {
+                        "status": "error",
+                        "error": f"Action status is {action.status}, expected approved",
+                    }
 
                 # Check signal health
                 health_ok = await check_signal_health(db, action.tenant_id)
@@ -1229,8 +1438,12 @@ def apply_single_action(self, action_id: str, user_id: Optional[int] = None):
                     return {"status": "error", "error": "Signal health degraded"}
 
                 # Parse and validate
-                action_details = json.loads(action.action_json) if action.action_json else {}
-                is_valid, cap_error = validate_action_caps(action.action_type, action_details)
+                action_details = (
+                    json.loads(action.action_json) if action.action_json else {}
+                )
+                is_valid, cap_error = validate_action_caps(
+                    action.action_type, action_details
+                )
 
                 if not is_valid:
                     action.status = ActionStatus.FAILED.value
@@ -1258,7 +1471,9 @@ def apply_single_action(self, action_id: str, user_id: Optional[int] = None):
                     action.applied_at = datetime.now(timezone.utc)
                     action.applied_by_user_id = user_id
                     action.after_value = json.dumps(exec_result["after_value"])
-                    action.platform_response = json.dumps(exec_result["platform_response"])
+                    action.platform_response = json.dumps(
+                        exec_result["platform_response"]
+                    )
 
                     await log_action_audit(db, action, exec_result)
                     await db.commit()
@@ -1276,7 +1491,9 @@ def apply_single_action(self, action_id: str, user_id: Optional[int] = None):
                 else:
                     action.status = ActionStatus.FAILED.value
                     action.error = exec_result.get("error", "Unknown error")
-                    action.platform_response = json.dumps(exec_result.get("platform_response"))
+                    action.platform_response = json.dumps(
+                        exec_result.get("platform_response")
+                    )
                     await db.commit()
 
                     # Publish WebSocket notification for failure
@@ -1294,4 +1511,5 @@ def apply_single_action(self, action_id: str, user_id: Optional[int] = None):
                 raise self.retry(exc=e)
 
     import asyncio
+
     return asyncio.run(run_single())

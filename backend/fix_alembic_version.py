@@ -1,5 +1,7 @@
 """Fix alembic_version column width before running migrations."""
+
 import os
+
 import psycopg2
 
 url = os.environ.get("DATABASE_URL_SYNC", "")
@@ -16,8 +18,7 @@ try:
         "CONSTRAINT alembic_version_pkc PRIMARY KEY (version_num))"
     )
     cur.execute(
-        "ALTER TABLE alembic_version "
-        "ALTER COLUMN version_num TYPE VARCHAR(128)"
+        "ALTER TABLE alembic_version " "ALTER COLUMN version_num TYPE VARCHAR(128)"
     )
     conn.commit()
     cur.close()

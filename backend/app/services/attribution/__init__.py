@@ -11,24 +11,24 @@ Includes:
 """
 
 from app.services.attribution.attribution_service import (
-    AttributionService,
     AttributionCalculator,
+    AttributionService,
 )
 from app.services.attribution.journey_service import (
-    JourneyService,
     JourneyAggregator,
+    JourneyService,
 )
 from app.services.attribution.markov_attribution import (
-    MarkovChainModel,
     MarkovAttributionService,
-)
-from app.services.attribution.shapley_attribution import (
-    ShapleyValueModel,
-    ShapleyAttributionService,
+    MarkovChainModel,
 )
 from app.services.attribution.model_training import (
     DataDrivenModelType,
     ModelTrainingService,
+)
+from app.services.attribution.shapley_attribution import (
+    ShapleyAttributionService,
+    ShapleyValueModel,
 )
 
 __all__ = [

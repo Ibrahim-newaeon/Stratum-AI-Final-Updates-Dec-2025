@@ -15,18 +15,18 @@ Key properties of Shapley Values:
 4. Additivity: Combined games preserve values
 """
 
+import math
 from collections import defaultdict
 from datetime import datetime
 from itertools import combinations, permutations
 from typing import Any, Dict, List, Optional, Set, Tuple
 from uuid import UUID
-import math
 
-from sqlalchemy import select, and_, func
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
-from app.models.crm import CRMDeal, Touchpoint, CRMContact
+from app.models.crm import CRMContact, CRMDeal, Touchpoint
 
 logger = get_logger(__name__)
 
@@ -79,7 +79,9 @@ class ShapleyValueModel:
         """
         # Direct observation
         if coalition in self.coalition_totals and self.coalition_totals[coalition] > 0:
-            return self.coalition_conversions[coalition] / self.coalition_totals[coalition]
+            return (
+                self.coalition_conversions[coalition] / self.coalition_totals[coalition]
+            )
 
         # Estimate from subsets and supersets
         if not coalition:
@@ -153,7 +155,9 @@ class ShapleyValueModel:
 
                     # Shapley weight
                     s = len(subset)
-                    weight = (math.factorial(s) * math.factorial(n - s - 1)) / math.factorial(n)
+                    weight = (
+                        math.factorial(s) * math.factorial(n - s - 1)
+                    ) / math.factorial(n)
 
                     shapley_values[channel] += weight * marginal
 
@@ -182,7 +186,9 @@ class ShapleyValueModel:
             # Calculate marginal contribution for each position
             current_coalition = set()
             for channel in perm:
-                v_with = self.get_coalition_value(frozenset(current_coalition | {channel}))
+                v_with = self.get_coalition_value(
+                    frozenset(current_coalition | {channel})
+                )
                 v_without = self.get_coalition_value(frozenset(current_coalition))
 
                 marginal_sums[channel] += v_with - v_without
@@ -192,7 +198,9 @@ class ShapleyValueModel:
 
         # Average marginal contributions
         return {
-            channel: marginal_sums[channel] / counts[channel] if counts[channel] > 0 else 0.0
+            channel: (
+                marginal_sums[channel] / counts[channel] if counts[channel] > 0 else 0.0
+            )
             for channel in channels
         }
 
@@ -224,7 +232,8 @@ class ShapleyValueModel:
             "converting_journeys": self.converting_journeys,
             "conversion_rate": (
                 self.converting_journeys / self.journey_count
-                if self.journey_count > 0 else 0
+                if self.journey_count > 0
+                else 0
             ),
             "unique_channels": len(self.channels),
             "channels": list(self.channels),
@@ -235,12 +244,10 @@ class ShapleyValueModel:
         """Serialize model to dictionary."""
         return {
             "coalition_conversions": {
-                ",".join(sorted(k)): v
-                for k, v in self.coalition_conversions.items()
+                ",".join(sorted(k)): v for k, v in self.coalition_conversions.items()
             },
             "coalition_totals": {
-                ",".join(sorted(k)): v
-                for k, v in self.coalition_totals.items()
+                ",".join(sorted(k)): v for k, v in self.coalition_totals.items()
             },
             "channels": list(self.channels),
             "journey_count": self.journey_count,
@@ -401,14 +408,16 @@ class ShapleyAttributionService:
             channel = tp.source or "unknown"
             weight = journey_weights.get(channel, 0.0)
 
-            breakdown.append({
-                "touchpoint_id": str(tp.id),
-                "channel": channel,
-                "campaign_id": tp.campaign_id,
-                "event_ts": tp.event_ts.isoformat(),
-                "weight": round(weight, 4),
-                "attributed_revenue": round(revenue * weight, 2),
-            })
+            breakdown.append(
+                {
+                    "touchpoint_id": str(tp.id),
+                    "channel": channel,
+                    "campaign_id": tp.campaign_id,
+                    "event_ts": tp.event_ts.isoformat(),
+                    "weight": round(weight, 4),
+                    "attributed_revenue": round(revenue * weight, 2),
+                }
+            )
 
         return {
             "success": True,

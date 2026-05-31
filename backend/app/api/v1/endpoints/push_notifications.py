@@ -26,8 +26,10 @@ router = APIRouter(prefix="/push-notifications", tags=["Push Notifications"])
 # Schemas
 # =============================================================================
 
+
 class PushSubscription(BaseModel):
     """Browser push subscription (from PushManager.subscribe())."""
+
     endpoint: str
     keys: dict[str, str]  # { p256dh: "...", auth: "..." }
     user_agent: Optional[str] = None
@@ -36,6 +38,7 @@ class PushSubscription(BaseModel):
 
 class PushNotificationSend(BaseModel):
     """Send a push notification."""
+
     title: str = Field(..., max_length=100)
     body: str = Field(..., max_length=200)
     icon: Optional[str] = "https://stratumai.app/icon-192.png"
@@ -61,6 +64,7 @@ class PushNotificationResponse(BaseModel):
 
 class PushVapidConfig(BaseModel):
     """VAPID public key for browser subscription."""
+
     public_key: str
     subject: str = "mailto:admin@stratumai.app"
 
@@ -84,12 +88,14 @@ _notifications: list[dict] = []
 
 def _generate_id(prefix: str = "push") -> str:
     import secrets
+
     return f"{prefix}_{secrets.token_hex(8)}"
 
 
 # =============================================================================
 # API Endpoints
 # =============================================================================
+
 
 @router.get("/vapid-key", response_model=APIResponse[PushVapidConfig])
 async def get_vapid_public_key(
@@ -106,11 +112,17 @@ async def get_vapid_public_key(
     })
     """
     # In production, load from environment
-    public_key = getattr(settings, 'vapid_public_key', 'BJO_xP9SdCW7Lr0w0y0Z0X0Y0Z0X0Y0Z0X0Y0Z0X0Y0Z0X0Y0Z0X0Y0Z0')
+    public_key = getattr(
+        settings,
+        "vapid_public_key",
+        "BJO_xP9SdCW7Lr0w0y0Z0X0Y0Z0X0Y0Z0X0Y0Z0X0Y0Z0X0Y0Z0X0Y0Z0",
+    )
 
     return APIResponse(
         success=True,
-        data=PushVapidConfig(public_key=public_key, subject="mailto:admin@stratumai.app"),
+        data=PushVapidConfig(
+            public_key=public_key, subject="mailto:admin@stratumai.app"
+        ),
         message="VAPID key retrieved",
     )
 
@@ -129,7 +141,9 @@ async def subscribe_device(
     """
     tenant_id = getattr(req.state, "tenant_id", None)
     if not tenant_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
+        )
 
     sub_id = _generate_id("sub")
     now = datetime.now(UTC).isoformat()
@@ -146,7 +160,9 @@ async def subscribe_device(
         "last_active_at": now,
     }
 
-    logger.info("push_subscription_created", tenant_id=tenant_id, subscription_id=sub_id)
+    logger.info(
+        "push_subscription_created", tenant_id=tenant_id, subscription_id=sub_id
+    )
 
     return APIResponse(
         success=True,
@@ -164,7 +180,9 @@ async def unsubscribe_device(
     """Remove a push subscription."""
     tenant_id = getattr(req.state, "tenant_id", None)
     if not tenant_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
+        )
 
     removed = False
     for sub_id, sub in list(_subscriptions.items()):
@@ -193,23 +211,31 @@ async def send_push_notification(
     """
     tenant_id = getattr(req.state, "tenant_id", None)
     if not tenant_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
+        )
 
     # Get target subscriptions
     targets = []
     if notification.send_to_all:
         targets = [
-            sub for sub in _subscriptions.values()
+            sub
+            for sub in _subscriptions.values()
             if sub.get("tenant_id") == tenant_id and sub.get("is_active")
         ]
     elif notification.subscription_ids:
         targets = [
-            _subscriptions.get(sid) for sid in notification.subscription_ids
-            if _subscriptions.get(sid) and _subscriptions[sid].get("tenant_id") == tenant_id
+            _subscriptions.get(sid)
+            for sid in notification.subscription_ids
+            if _subscriptions.get(sid)
+            and _subscriptions[sid].get("tenant_id") == tenant_id
         ]
 
     if not targets:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No active subscribers found")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No active subscribers found",
+        )
 
     # Simulate send (in production, use pywebpush library)
     sent = len(targets)
@@ -267,7 +293,9 @@ async def list_subscribers(
     """List push notification subscribers."""
     tenant_id = getattr(req.state, "tenant_id", None)
     if not tenant_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
+        )
 
     subs = [
         {
@@ -283,7 +311,9 @@ async def list_subscribers(
         and (not active_only or sub.get("is_active"))
     ]
 
-    return APIResponse(success=True, data=subs, message=f"Found {len(subs)} subscribers")
+    return APIResponse(
+        success=True, data=subs, message=f"Found {len(subs)} subscribers"
+    )
 
 
 @router.get("/history", response_model=APIResponse[list[dict]])
@@ -296,17 +326,22 @@ async def get_notification_history(
     """Get sent notification history."""
     tenant_id = getattr(req.state, "tenant_id", None)
     if not tenant_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
+        )
 
     notifs = [
-        n for n in sorted(_notifications, key=lambda x: x["created_at"], reverse=True)
+        n
+        for n in sorted(_notifications, key=lambda x: x["created_at"], reverse=True)
         if n.get("tenant_id") == tenant_id
     ]
 
     start = (page - 1) * page_size
-    paginated = notifs[start:start + page_size]
+    paginated = notifs[start : start + page_size]
 
-    return APIResponse(success=True, data=paginated, message=f"Found {len(notifs)} notifications")
+    return APIResponse(
+        success=True, data=paginated, message=f"Found {len(notifs)} notifications"
+    )
 
 
 @router.get("/analytics", response_model=APIResponse[PushAnalytics])
@@ -317,9 +352,13 @@ async def get_push_analytics(
     """Get push notification analytics."""
     tenant_id = getattr(req.state, "tenant_id", None)
     if not tenant_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
+        )
 
-    tenant_subs = [s for s in _subscriptions.values() if s.get("tenant_id") == tenant_id]
+    tenant_subs = [
+        s for s in _subscriptions.values() if s.get("tenant_id") == tenant_id
+    ]
     tenant_notifs = [n for n in _notifications if n.get("tenant_id") == tenant_id]
 
     total = len(tenant_subs)
@@ -332,7 +371,13 @@ async def get_push_analytics(
         platforms[p] = platforms.get(p, 0) + 1
 
     # Recent notifications
-    recent_24h = len([n for n in tenant_notifs if n["created_at"] > (datetime.now(UTC) - timedelta(hours=24)).isoformat()])
+    recent_24h = len(
+        [
+            n
+            for n in tenant_notifs
+            if n["created_at"] > (datetime.now(UTC) - timedelta(hours=24)).isoformat()
+        ]
+    )
     recent_30d = len(tenant_notifs)
 
     return APIResponse(
@@ -352,6 +397,7 @@ async def get_push_analytics(
 # =============================================================================
 # Service Worker Content (served to frontend)
 # =============================================================================
+
 
 @router.get("/service-worker.js", response_class=None)
 async def get_service_worker():
@@ -386,4 +432,5 @@ self.addEventListener('notificationclick', function(event) {
 });
 """
     from fastapi.responses import PlainTextResponse
+
     return PlainTextResponse(content=sw_code, media_type="application/javascript")

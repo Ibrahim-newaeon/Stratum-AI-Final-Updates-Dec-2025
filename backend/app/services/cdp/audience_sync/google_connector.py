@@ -77,9 +77,7 @@ class GoogleAudienceConnector(BaseAudienceConnector):
 
         try:
             # Step 1: Create the user list
-            create_url = (
-                f"{self.BASE_URL}/{self.API_VERSION}/customers/{self.customer_id}/userLists:mutate"
-            )
+            create_url = f"{self.BASE_URL}/{self.API_VERSION}/customers/{self.customer_id}/userLists:mutate"
 
             user_list_operation = {
                 "create": {
@@ -221,12 +219,11 @@ class GoogleAudienceConnector(BaseAudienceConnector):
             async with httpx.AsyncClient(timeout=300) as client:
                 for batch in batches:
                     operations = [
-                        {"create": {"userIdentifiers": identifiers}} for identifiers in batch
+                        {"create": {"userIdentifiers": identifiers}}
+                        for identifiers in batch
                     ]
 
-                    add_url = (
-                        f"{self.BASE_URL}/{self.API_VERSION}/{job_resource_name}:addOperations"
-                    )
+                    add_url = f"{self.BASE_URL}/{self.API_VERSION}/{job_resource_name}:addOperations"
                     add_payload = {
                         "operations": operations,
                         "enablePartialFailure": True,
@@ -336,7 +333,8 @@ class GoogleAudienceConnector(BaseAudienceConnector):
             async with httpx.AsyncClient(timeout=300) as client:
                 # Add remove operations
                 operations = [
-                    {"remove": {"userIdentifiers": identifiers}} for identifiers in user_data
+                    {"remove": {"userIdentifiers": identifiers}}
+                    for identifiers in user_data
                 ]
 
                 add_url = f"{self.BASE_URL}/{self.API_VERSION}/{job_resource_name}:addOperations"
@@ -415,9 +413,7 @@ class GoogleAudienceConnector(BaseAudienceConnector):
         start_time = time.time()
 
         try:
-            url = (
-                f"{self.BASE_URL}/{self.API_VERSION}/customers/{self.customer_id}/userLists:mutate"
-            )
+            url = f"{self.BASE_URL}/{self.API_VERSION}/customers/{self.customer_id}/userLists:mutate"
 
             payload = {
                 "operations": [

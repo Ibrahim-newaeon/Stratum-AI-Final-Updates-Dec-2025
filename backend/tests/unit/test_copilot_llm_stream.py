@@ -37,7 +37,6 @@ from app.services.agents.copilot_llm_stream import (
     stream_llm_message,
 )
 
-
 # =============================================================================
 # Helpers
 # =============================================================================
@@ -63,9 +62,14 @@ def _patch_settings(**overrides: Any):
 class _FakeStream:
     """Mimics the Anthropic streaming context manager."""
 
-    def __init__(self, tokens: List[str], stop_reason: str = "end_turn",
-                 input_tokens: int = 100, output_tokens: int = 50,
-                 raise_during: bool = False) -> None:
+    def __init__(
+        self,
+        tokens: List[str],
+        stop_reason: str = "end_turn",
+        input_tokens: int = 100,
+        output_tokens: int = 50,
+        raise_during: bool = False,
+    ) -> None:
         self.tokens = tokens
         self.stop_reason = stop_reason
         self.input_tokens = input_tokens
@@ -284,12 +288,11 @@ class TestStreamHappyPath:
 
         text = "".join(chunks)
         # Pull out the meta JSON body.
-        meta_event = [
-            block for block in text.split("\n\n")
-            if "event: meta" in block
-        ][0]
+        meta_event = [block for block in text.split("\n\n") if "event: meta" in block][
+            0
+        ]
         body_line = [
-            line[len("data: "):]
+            line[len("data: ") :]
             for line in meta_event.split("\n")
             if line.startswith("data: ")
         ][0]

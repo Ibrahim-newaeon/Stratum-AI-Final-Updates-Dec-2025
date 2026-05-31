@@ -55,7 +55,13 @@ class FeatureNotAvailableError(HTTPException):
 class LimitExceededError(HTTPException):
     """Exception raised when a tier limit is exceeded."""
 
-    def __init__(self, limit_name: str, current_value: int, max_value: int, tier: SubscriptionTier):
+    def __init__(
+        self,
+        limit_name: str,
+        current_value: int,
+        max_value: int,
+        tier: SubscriptionTier,
+    ):
         detail = {
             "error": "limit_exceeded",
             "limit": limit_name,
@@ -112,7 +118,9 @@ async def get_tenant_tier(tenant_id: int) -> SubscriptionTier:
 
     async for db in get_async_session():
         result = await db.execute(
-            select(Tenant.plan).where(Tenant.id == tenant_id, Tenant.is_deleted == False)
+            select(Tenant.plan).where(
+                Tenant.id == tenant_id, Tenant.is_deleted == False
+            )
         )
         plan = result.scalar_one_or_none()
 
@@ -193,7 +201,10 @@ class FeatureGate:
         if tenant_id:
             # Check subscription status first (if enabled)
             if self.check_subscription:
-                from app.core.subscription import get_subscription_info, is_access_allowed
+                from app.core.subscription import (
+                    get_subscription_info,
+                    is_access_allowed,
+                )
 
                 sub_info = await get_subscription_info(tenant_id)
                 request.state.subscription_info = sub_info
@@ -204,7 +215,8 @@ class FeatureGate:
                         detail={
                             "error": "subscription_expired",
                             "status": sub_info.status.value,
-                            "message": sub_info.restriction_reason or "Subscription has expired",
+                            "message": sub_info.restriction_reason
+                            or "Subscription has expired",
                             "feature": self.feature.value,
                             "renew_url": "/settings/billing",
                         },
@@ -253,7 +265,10 @@ class TierGate:
         if tenant_id:
             # Check subscription status first (if enabled)
             if self.check_subscription:
-                from app.core.subscription import get_subscription_info, is_access_allowed
+                from app.core.subscription import (
+                    get_subscription_info,
+                    is_access_allowed,
+                )
 
                 sub_info = await get_subscription_info(tenant_id)
                 request.state.subscription_info = sub_info
@@ -264,7 +279,8 @@ class TierGate:
                         detail={
                             "error": "subscription_expired",
                             "status": sub_info.status.value,
-                            "message": sub_info.restriction_reason or "Subscription has expired",
+                            "message": sub_info.restriction_reason
+                            or "Subscription has expired",
                             "renew_url": "/settings/billing",
                         },
                     )
@@ -320,7 +336,9 @@ class LimitChecker:
         current_value = await self.get_current_count(request)
 
         if current_value >= max_value:
-            raise LimitExceededError(self.limit_name, current_value, max_value, current_tier)
+            raise LimitExceededError(
+                self.limit_name, current_value, max_value, current_tier
+            )
 
         return {
             "current": current_value,
@@ -462,7 +480,9 @@ def check_limit(limit_name: str, current_count: int) -> bool:
     return current_count < max_value
 
 
-async def check_limit_for_tenant(tenant_id: int, limit_name: str, current_count: int) -> bool:
+async def check_limit_for_tenant(
+    tenant_id: int, limit_name: str, current_count: int
+) -> bool:
     """Check if current count is within limit for a specific tenant."""
     tier = await get_tenant_tier(tenant_id)
     max_value = get_tier_limit(tier, limit_name)

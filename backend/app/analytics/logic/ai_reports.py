@@ -16,15 +16,17 @@ Architecture:
 Builds on: reporting infrastructure, predictive_budget, anomaly_narratives
 """
 
-from typing import List, Optional, Dict, Literal
 from datetime import datetime, timezone
-from pydantic import BaseModel, Field
+from typing import Dict, List, Literal, Optional
 
+from pydantic import BaseModel, Field
 
 # ── Models ───────────────────────────────────────────────────────────────────
 
+
 class ReportKPI(BaseModel):
     """A single KPI metric for the report."""
+
     label: str
     value: float
     formatted: str
@@ -35,6 +37,7 @@ class ReportKPI(BaseModel):
 
 class PlatformBreakdown(BaseModel):
     """Performance breakdown for a single platform."""
+
     platform: str
     spend: float
     revenue: float
@@ -47,6 +50,7 @@ class PlatformBreakdown(BaseModel):
 
 class CampaignHighlight(BaseModel):
     """A highlighted campaign (top performer or underperformer)."""
+
     campaign_id: int
     campaign_name: str
     platform: str
@@ -59,6 +63,7 @@ class CampaignHighlight(BaseModel):
 
 class ReportInsight(BaseModel):
     """A narrative insight within the report."""
+
     category: Literal["trend", "opportunity", "risk", "milestone"]
     title: str
     narrative: str
@@ -67,10 +72,16 @@ class ReportInsight(BaseModel):
 
 class ReportSection(BaseModel):
     """A section of the generated report."""
+
     title: str
     section_type: Literal[
-        "executive_summary", "kpi_grid", "platform_breakdown",
-        "top_performers", "underperformers", "insights", "recommendations"
+        "executive_summary",
+        "kpi_grid",
+        "platform_breakdown",
+        "top_performers",
+        "underperformers",
+        "insights",
+        "recommendations",
     ]
     content: str = ""
     kpis: List[ReportKPI] = []
@@ -81,6 +92,7 @@ class ReportSection(BaseModel):
 
 class AIReportResponse(BaseModel):
     """Full AI-generated report response."""
+
     report_title: str
     generated_at: str
     period_label: str
@@ -98,6 +110,7 @@ class AIReportResponse(BaseModel):
 
 
 # ── Analysis Helpers ─────────────────────────────────────────────────────────
+
 
 def _format_currency(value: float) -> str:
     """Format number as currency."""
@@ -144,8 +157,12 @@ def _build_executive_summary(
     grade_label: str,
 ) -> str:
     """Build the executive narrative summary."""
-    spend_change = ((total_spend - prev_spend) / prev_spend * 100) if prev_spend > 0 else 0
-    rev_change = ((total_revenue - prev_revenue) / prev_revenue * 100) if prev_revenue > 0 else 0
+    spend_change = (
+        ((total_spend - prev_spend) / prev_spend * 100) if prev_spend > 0 else 0
+    )
+    rev_change = (
+        ((total_revenue - prev_revenue) / prev_revenue * 100) if prev_revenue > 0 else 0
+    )
 
     parts = []
     parts.append(
@@ -173,7 +190,9 @@ def _build_executive_summary(
     return " ".join(parts)
 
 
-def _analyze_platforms(campaigns: List[Dict], total_spend: float) -> List[PlatformBreakdown]:
+def _analyze_platforms(
+    campaigns: List[Dict], total_spend: float
+) -> List[PlatformBreakdown]:
     """Aggregate and analyze per-platform performance."""
     platform_data: Dict[str, Dict] = {}
 
@@ -181,7 +200,10 @@ def _analyze_platforms(campaigns: List[Dict], total_spend: float) -> List[Platfo
         plat = c.get("platform", "Unknown")
         if plat not in platform_data:
             platform_data[plat] = {
-                "spend": 0, "revenue": 0, "conversions": 0, "campaigns": 0
+                "spend": 0,
+                "revenue": 0,
+                "conversions": 0,
+                "campaigns": 0,
             }
         platform_data[plat]["spend"] += c.get("spend", 0)
         platform_data[plat]["revenue"] += c.get("revenue", 0)
@@ -198,26 +220,36 @@ def _analyze_platforms(campaigns: List[Dict], total_spend: float) -> List[Platfo
 
         # Narrative
         if roas >= 4.0:
-            summary = f"Exceptional performance — {roas:.2f}x ROAS is well above target."
+            summary = (
+                f"Exceptional performance — {roas:.2f}x ROAS is well above target."
+            )
         elif roas >= 3.0:
-            summary = f"Strong returns at {roas:.2f}x ROAS. Consider scaling top campaigns."
+            summary = (
+                f"Strong returns at {roas:.2f}x ROAS. Consider scaling top campaigns."
+            )
         elif roas >= 2.0:
-            summary = f"Moderate performance at {roas:.2f}x ROAS. Review underperformers."
+            summary = (
+                f"Moderate performance at {roas:.2f}x ROAS. Review underperformers."
+            )
         elif roas >= 1.0:
             summary = f"Marginal returns at {roas:.2f}x ROAS — approaching breakeven."
         else:
-            summary = f"Below breakeven at {roas:.2f}x ROAS. Immediate attention required."
+            summary = (
+                f"Below breakeven at {roas:.2f}x ROAS. Immediate attention required."
+            )
 
-        breakdowns.append(PlatformBreakdown(
-            platform=plat,
-            spend=round(spend, 2),
-            revenue=round(revenue, 2),
-            roas=round(roas, 2),
-            conversions=convs,
-            campaigns=data["campaigns"],
-            spend_share_pct=round(share, 1),
-            change_summary=summary,
-        ))
+        breakdowns.append(
+            PlatformBreakdown(
+                platform=plat,
+                spend=round(spend, 2),
+                revenue=round(revenue, 2),
+                roas=round(roas, 2),
+                conversions=convs,
+                campaigns=data["campaigns"],
+                spend_share_pct=round(share, 1),
+                change_summary=summary,
+            )
+        )
 
     return breakdowns
 
@@ -254,16 +286,18 @@ def _find_highlights(
                 f"Best relative performer at {roas:.2f}x ROAS with "
                 f"{_format_number(c.get('conversions', 0))} conversions."
             )
-        top.append(CampaignHighlight(
-            campaign_id=c.get("id", 0),
-            campaign_name=c.get("name", "Unknown"),
-            platform=c.get("platform", "Unknown"),
-            metric_label="ROAS",
-            metric_value=f"{roas:.2f}x",
-            roas=round(roas, 2),
-            spend=round(spend, 2),
-            insight=insight,
-        ))
+        top.append(
+            CampaignHighlight(
+                campaign_id=c.get("id", 0),
+                campaign_name=c.get("name", "Unknown"),
+                platform=c.get("platform", "Unknown"),
+                metric_label="ROAS",
+                metric_value=f"{roas:.2f}x",
+                roas=round(roas, 2),
+                spend=round(spend, 2),
+                insight=insight,
+            )
+        )
 
     bottom = []
     for c in scored[-3:]:
@@ -279,16 +313,18 @@ def _find_highlights(
                 f"Underperforming at {roas:.2f}x ROAS. "
                 f"Review targeting and creative for optimization."
             )
-        bottom.append(CampaignHighlight(
-            campaign_id=c.get("id", 0),
-            campaign_name=c.get("name", "Unknown"),
-            platform=c.get("platform", "Unknown"),
-            metric_label="ROAS",
-            metric_value=f"{roas:.2f}x",
-            roas=round(roas, 2),
-            spend=round(spend, 2),
-            insight=insight,
-        ))
+        bottom.append(
+            CampaignHighlight(
+                campaign_id=c.get("id", 0),
+                campaign_name=c.get("name", "Unknown"),
+                platform=c.get("platform", "Unknown"),
+                metric_label="ROAS",
+                metric_value=f"{roas:.2f}x",
+                roas=round(roas, 2),
+                spend=round(spend, 2),
+                insight=insight,
+            )
+        )
 
     return top, bottom
 
@@ -305,90 +341,110 @@ def _generate_insights(
 
     # Concentration risk
     if platforms and platforms[0].spend_share_pct > 70:
-        insights.append(ReportInsight(
-            category="risk",
-            title="High Platform Concentration",
-            narrative=(
-                f"{platforms[0].platform} accounts for {platforms[0].spend_share_pct:.0f}% "
-                f"of total spend. Consider diversifying to reduce platform dependency risk."
-            ),
-            severity="warning",
-        ))
+        insights.append(
+            ReportInsight(
+                category="risk",
+                title="High Platform Concentration",
+                narrative=(
+                    f"{platforms[0].platform} accounts for {platforms[0].spend_share_pct:.0f}% "
+                    f"of total spend. Consider diversifying to reduce platform dependency risk."
+                ),
+                severity="warning",
+            )
+        )
 
     # High ROAS opportunity
-    high_roas = [c for c in campaigns if c.get("spend", 0) > 0 and (c.get("revenue", 0) / c["spend"]) >= 4.0]
+    high_roas = [
+        c
+        for c in campaigns
+        if c.get("spend", 0) > 0 and (c.get("revenue", 0) / c["spend"]) >= 4.0
+    ]
     if high_roas:
-        insights.append(ReportInsight(
-            category="opportunity",
-            title=f"{len(high_roas)} High-ROAS Campaigns",
-            narrative=(
-                f"{len(high_roas)} campaign{'s' if len(high_roas) > 1 else ''} achieving 4x+ ROAS. "
-                f"These are prime candidates for budget scaling to maximize returns."
-            ),
-            severity="positive",
-        ))
+        insights.append(
+            ReportInsight(
+                category="opportunity",
+                title=f"{len(high_roas)} High-ROAS Campaigns",
+                narrative=(
+                    f"{len(high_roas)} campaign{'s' if len(high_roas) > 1 else ''} achieving 4x+ ROAS. "
+                    f"These are prime candidates for budget scaling to maximize returns."
+                ),
+                severity="positive",
+            )
+        )
 
     # Low conversion campaigns
-    low_conv = [c for c in campaigns if c.get("spend", 0) > 100 and c.get("conversions", 0) < 5]
+    low_conv = [
+        c for c in campaigns if c.get("spend", 0) > 100 and c.get("conversions", 0) < 5
+    ]
     if low_conv:
-        insights.append(ReportInsight(
-            category="risk",
-            title=f"{len(low_conv)} Campaigns with Low Conversions",
-            narrative=(
-                f"{len(low_conv)} campaign{'s' if len(low_conv) > 1 else ''} spending over $100 "
-                f"with fewer than 5 conversions. Review creative, targeting, and landing pages."
-            ),
-            severity="warning",
-        ))
+        insights.append(
+            ReportInsight(
+                category="risk",
+                title=f"{len(low_conv)} Campaigns with Low Conversions",
+                narrative=(
+                    f"{len(low_conv)} campaign{'s' if len(low_conv) > 1 else ''} spending over $100 "
+                    f"with fewer than 5 conversions. Review creative, targeting, and landing pages."
+                ),
+                severity="warning",
+            )
+        )
 
     # ROAS milestone
     if roas >= 4.0:
-        insights.append(ReportInsight(
-            category="milestone",
-            title="Portfolio ROAS Exceeds 4x",
-            narrative=(
-                f"Overall portfolio ROAS of {roas:.2f}x significantly exceeds the 3x target. "
-                f"Strong indication that current strategy is effective."
-            ),
-            severity="positive",
-        ))
+        insights.append(
+            ReportInsight(
+                category="milestone",
+                title="Portfolio ROAS Exceeds 4x",
+                narrative=(
+                    f"Overall portfolio ROAS of {roas:.2f}x significantly exceeds the 3x target. "
+                    f"Strong indication that current strategy is effective."
+                ),
+                severity="positive",
+            )
+        )
     elif roas < 1.5:
-        insights.append(ReportInsight(
-            category="risk",
-            title="Portfolio ROAS Below Target",
-            narrative=(
-                f"Overall ROAS of {roas:.2f}x is below the 3x target. "
-                f"Priority: reduce spend on underperformers and reallocate to top campaigns."
-            ),
-            severity="critical",
-        ))
+        insights.append(
+            ReportInsight(
+                category="risk",
+                title="Portfolio ROAS Below Target",
+                narrative=(
+                    f"Overall ROAS of {roas:.2f}x is below the 3x target. "
+                    f"Priority: reduce spend on underperformers and reallocate to top campaigns."
+                ),
+                severity="critical",
+            )
+        )
 
     # Revenue trend
     if total_revenue > 0:
         efficiency = total_revenue / total_spend if total_spend > 0 else 0
         if efficiency > 3:
-            insights.append(ReportInsight(
-                category="trend",
-                title="Strong Revenue Efficiency",
-                narrative=(
-                    f"Generating {_format_currency(efficiency)} revenue per dollar spent. "
-                    f"Portfolio is in a healthy growth position."
-                ),
-                severity="positive",
-            ))
+            insights.append(
+                ReportInsight(
+                    category="trend",
+                    title="Strong Revenue Efficiency",
+                    narrative=(
+                        f"Generating {_format_currency(efficiency)} revenue per dollar spent. "
+                        f"Portfolio is in a healthy growth position."
+                    ),
+                    severity="positive",
+                )
+            )
 
     # Multi-platform insight
     if len(platforms) >= 3:
         best_plat = max(platforms, key=lambda p: p.roas)
-        insights.append(ReportInsight(
-            category="trend",
-            title="Cross-Platform Performance",
-            narrative=(
-                f"Active on {len(platforms)} platforms. {best_plat.platform} leads with "
-                f"{best_plat.roas:.2f}x ROAS across {best_plat.campaigns} campaigns."
-            ),
-            severity="info",
-        ))
+        insights.append(
+            ReportInsight(
+                category="trend",
+                title="Cross-Platform Performance",
+                narrative=(
+                    f"Active on {len(platforms)} platforms. {best_plat.platform} leads with "
+                    f"{best_plat.roas:.2f}x ROAS across {best_plat.campaigns} campaigns."
+                ),
+                severity="info",
+            )
+        )
 
     return insights
 
@@ -406,7 +462,7 @@ def _generate_recommendations(
     # Scale top performers
     if top_campaigns and top_campaigns[0].roas >= 3.0:
         recs.append(
-            f"Scale budget for \"{top_campaigns[0].campaign_name}\" — "
+            f'Scale budget for "{top_campaigns[0].campaign_name}" — '
             f"currently achieving {top_campaigns[0].roas:.2f}x ROAS."
         )
 
@@ -414,7 +470,7 @@ def _generate_recommendations(
     for c in bottom_campaigns:
         if c.roas < 1.0:
             recs.append(
-                f"Reduce or pause \"{c.campaign_name}\" — "
+                f'Reduce or pause "{c.campaign_name}" — '
                 f"{c.roas:.2f}x ROAS is below breakeven."
             )
             break  # only first one
@@ -453,6 +509,7 @@ def _generate_recommendations(
 
 
 # ── Main Entry Point ─────────────────────────────────────────────────────────
+
 
 def build_ai_report(
     campaigns: List[Dict],
@@ -517,120 +574,165 @@ def build_ai_report(
 
     # Executive summary
     executive_summary = _build_executive_summary(
-        total_spend, total_revenue, overall_roas, total_conversions,
-        len(campaigns), unique_platforms,
-        prev_spend, prev_revenue, grade, grade_label,
+        total_spend,
+        total_revenue,
+        overall_roas,
+        total_conversions,
+        len(campaigns),
+        unique_platforms,
+        prev_spend,
+        prev_revenue,
+        grade,
+        grade_label,
     )
 
     # Change calculations
-    spend_change = ((total_spend - prev_spend) / prev_spend * 100) if prev_spend > 0 else 0
-    rev_change = ((total_revenue - prev_revenue) / prev_revenue * 100) if prev_revenue > 0 else 0
-    conv_change = ((total_conversions - prev_conversions) / prev_conversions * 100) if prev_conversions > 0 else 0
+    spend_change = (
+        ((total_spend - prev_spend) / prev_spend * 100) if prev_spend > 0 else 0
+    )
+    rev_change = (
+        ((total_revenue - prev_revenue) / prev_revenue * 100) if prev_revenue > 0 else 0
+    )
+    conv_change = (
+        ((total_conversions - prev_conversions) / prev_conversions * 100)
+        if prev_conversions > 0
+        else 0
+    )
     roas_change = ((overall_roas - prev_roas) / prev_roas * 100) if prev_roas > 0 else 0
 
     # Build sections
     sections = []
 
     # 1. Executive Summary section
-    sections.append(ReportSection(
-        title="Executive Summary",
-        section_type="executive_summary",
-        content=executive_summary,
-    ))
+    sections.append(
+        ReportSection(
+            title="Executive Summary",
+            section_type="executive_summary",
+            content=executive_summary,
+        )
+    )
 
     # 2. KPI Grid
-    sections.append(ReportSection(
-        title="Key Performance Indicators",
-        section_type="kpi_grid",
-        kpis=[
-            ReportKPI(
-                label="Total Spend",
-                value=total_spend,
-                formatted=_format_currency(total_spend),
-                change_pct=round(spend_change, 1),
-                trend="up" if spend_change > 0 else ("down" if spend_change < 0 else "flat"),
-                is_good=spend_change <= 10,
-            ),
-            ReportKPI(
-                label="Revenue",
-                value=total_revenue,
-                formatted=_format_currency(total_revenue),
-                change_pct=round(rev_change, 1),
-                trend="up" if rev_change > 0 else ("down" if rev_change < 0 else "flat"),
-                is_good=rev_change >= 0,
-            ),
-            ReportKPI(
-                label="ROAS",
-                value=overall_roas,
-                formatted=f"{overall_roas:.2f}x",
-                change_pct=round(roas_change, 1),
-                trend="up" if roas_change > 0 else ("down" if roas_change < 0 else "flat"),
-                is_good=overall_roas >= 3.0,
-            ),
-            ReportKPI(
-                label="Conversions",
-                value=total_conversions,
-                formatted=_format_number(total_conversions),
-                change_pct=round(conv_change, 1),
-                trend="up" if conv_change > 0 else ("down" if conv_change < 0 else "flat"),
-                is_good=conv_change >= 0,
-            ),
-            ReportKPI(
-                label="CPA",
-                value=overall_cpa,
-                formatted=_format_currency(overall_cpa),
-                change_pct=0,
-                trend="flat",
-                is_good=overall_cpa < 50,
-            ),
-            ReportKPI(
-                label="Campaigns",
-                value=len(campaigns),
-                formatted=str(len(campaigns)),
-                change_pct=0,
-                trend="flat",
-                is_good=True,
-            ),
-        ],
-    ))
+    sections.append(
+        ReportSection(
+            title="Key Performance Indicators",
+            section_type="kpi_grid",
+            kpis=[
+                ReportKPI(
+                    label="Total Spend",
+                    value=total_spend,
+                    formatted=_format_currency(total_spend),
+                    change_pct=round(spend_change, 1),
+                    trend=(
+                        "up"
+                        if spend_change > 0
+                        else ("down" if spend_change < 0 else "flat")
+                    ),
+                    is_good=spend_change <= 10,
+                ),
+                ReportKPI(
+                    label="Revenue",
+                    value=total_revenue,
+                    formatted=_format_currency(total_revenue),
+                    change_pct=round(rev_change, 1),
+                    trend=(
+                        "up"
+                        if rev_change > 0
+                        else ("down" if rev_change < 0 else "flat")
+                    ),
+                    is_good=rev_change >= 0,
+                ),
+                ReportKPI(
+                    label="ROAS",
+                    value=overall_roas,
+                    formatted=f"{overall_roas:.2f}x",
+                    change_pct=round(roas_change, 1),
+                    trend=(
+                        "up"
+                        if roas_change > 0
+                        else ("down" if roas_change < 0 else "flat")
+                    ),
+                    is_good=overall_roas >= 3.0,
+                ),
+                ReportKPI(
+                    label="Conversions",
+                    value=total_conversions,
+                    formatted=_format_number(total_conversions),
+                    change_pct=round(conv_change, 1),
+                    trend=(
+                        "up"
+                        if conv_change > 0
+                        else ("down" if conv_change < 0 else "flat")
+                    ),
+                    is_good=conv_change >= 0,
+                ),
+                ReportKPI(
+                    label="CPA",
+                    value=overall_cpa,
+                    formatted=_format_currency(overall_cpa),
+                    change_pct=0,
+                    trend="flat",
+                    is_good=overall_cpa < 50,
+                ),
+                ReportKPI(
+                    label="Campaigns",
+                    value=len(campaigns),
+                    formatted=str(len(campaigns)),
+                    change_pct=0,
+                    trend="flat",
+                    is_good=True,
+                ),
+            ],
+        )
+    )
 
     # 3. Platform Breakdown
-    sections.append(ReportSection(
-        title="Platform Performance",
-        section_type="platform_breakdown",
-        platforms=platforms,
-    ))
+    sections.append(
+        ReportSection(
+            title="Platform Performance",
+            section_type="platform_breakdown",
+            platforms=platforms,
+        )
+    )
 
     # 4. Top Performers
     if top_campaigns:
-        sections.append(ReportSection(
-            title="Top Performers",
-            section_type="top_performers",
-            highlights=top_campaigns,
-        ))
+        sections.append(
+            ReportSection(
+                title="Top Performers",
+                section_type="top_performers",
+                highlights=top_campaigns,
+            )
+        )
 
     # 5. Underperformers
     if bottom_campaigns:
-        sections.append(ReportSection(
-            title="Needs Attention",
-            section_type="underperformers",
-            highlights=bottom_campaigns,
-        ))
+        sections.append(
+            ReportSection(
+                title="Needs Attention",
+                section_type="underperformers",
+                highlights=bottom_campaigns,
+            )
+        )
 
     # 6. Insights
     if insights:
-        sections.append(ReportSection(
-            title="AI Insights",
-            section_type="insights",
-            insights=insights,
-        ))
+        sections.append(
+            ReportSection(
+                title="AI Insights",
+                section_type="insights",
+                insights=insights,
+            )
+        )
 
     # 7. Recommendations
-    sections.append(ReportSection(
-        title="Recommendations",
-        section_type="recommendations",
-        content="\n".join(f"• {r}" for r in recommendations),
-    ))
+    sections.append(
+        ReportSection(
+            title="Recommendations",
+            section_type="recommendations",
+            content="\n".join(f"• {r}" for r in recommendations),
+        )
+    )
 
     return AIReportResponse(
         report_title="AI Performance Report",

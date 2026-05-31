@@ -32,7 +32,9 @@ def calculate_daily_scores():
     logger.info("Starting daily score calculations")
 
     with SyncSessionLocal() as db:
-        tenants = db.execute(select(Tenant).where(Tenant.is_deleted == False)).scalars().all()
+        tenants = (
+            db.execute(select(Tenant).where(Tenant.is_deleted == False)).scalars().all()
+        )
 
         total_scored = 0
         for tenant in tenants:
@@ -68,7 +70,9 @@ def calculate_daily_scores():
                     campaign.health_score = health.get("score")
 
                     # Calculate signal health for trust engine
-                    from app.analytics.logic.signal_health import calculate_signal_health
+                    from app.analytics.logic.signal_health import (
+                        calculate_signal_health,
+                    )
 
                     signal = calculate_signal_health(
                         campaign_id=campaign.id,

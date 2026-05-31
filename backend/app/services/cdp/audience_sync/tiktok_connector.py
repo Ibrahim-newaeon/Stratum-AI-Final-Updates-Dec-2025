@@ -68,7 +68,9 @@ class TikTokAudienceConnector(BaseAudienceConnector):
 
         try:
             # Step 1: Create the custom audience
-            create_url = f"{self.BASE_URL}/{self.API_VERSION}/dmp/custom_audience/create/"
+            create_url = (
+                f"{self.BASE_URL}/{self.API_VERSION}/dmp/custom_audience/create/"
+            )
 
             create_payload = {
                 "advertiser_id": self.advertiser_id,
@@ -183,7 +185,10 @@ class TikTokAudienceConnector(BaseAudienceConnector):
                         email_hashes.append(hashed)
                     elif identifier.identifier_type == IdentifierType.PHONE:
                         phone_hashes.append(hashed)
-                    elif identifier.identifier_type == IdentifierType.MOBILE_ADVERTISER_ID:
+                    elif (
+                        identifier.identifier_type
+                        == IdentifierType.MOBILE_ADVERTISER_ID
+                    ):
                         device_ids.append(hashed)
 
             # Upload each identifier type
@@ -202,9 +207,7 @@ class TikTokAudienceConnector(BaseAudienceConnector):
                     batches = self._chunk_list(hashes, self.BATCH_SIZE)
 
                     for batch in batches:
-                        upload_url = (
-                            f"{self.BASE_URL}/{self.API_VERSION}/dmp/custom_audience/update/"
-                        )
+                        upload_url = f"{self.BASE_URL}/{self.API_VERSION}/dmp/custom_audience/update/"
 
                         upload_payload = {
                             "advertiser_id": self.advertiser_id,
@@ -291,7 +294,10 @@ class TikTokAudienceConnector(BaseAudienceConnector):
                         email_hashes.append(hashed)
                     elif identifier.identifier_type == IdentifierType.PHONE:
                         phone_hashes.append(hashed)
-                    elif identifier.identifier_type == IdentifierType.MOBILE_ADVERTISER_ID:
+                    elif (
+                        identifier.identifier_type
+                        == IdentifierType.MOBILE_ADVERTISER_ID
+                    ):
                         device_ids.append(hashed)
 
             async with httpx.AsyncClient(timeout=300) as client:

@@ -11,11 +11,11 @@ Celery tasks for sending newsletter campaigns.
 import base64
 import re
 import time
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 
 from celery import shared_task
 from celery.utils.log import get_task_logger
-from sqlalchemy import select, and_
+from sqlalchemy import and_, select
 
 logger = get_task_logger(__name__)
 
@@ -31,7 +31,9 @@ def _personalize_html(
 ) -> str:
     """Replace template variables in email HTML."""
     html = html.replace("{{email}}", subscriber_email)
-    html = html.replace("{{first_name}}", (subscriber_name or "").split(" ")[0] or "there")
+    html = html.replace(
+        "{{first_name}}", (subscriber_name or "").split(" ")[0] or "there"
+    )
     html = html.replace("{{full_name}}", subscriber_name or "")
     html = html.replace("{{company_name}}", subscriber_company or "")
     return html
@@ -45,8 +47,12 @@ def _inject_tracking(
 ) -> str:
     """Inject open tracking pixel and rewrite links for click tracking."""
     # Open tracking pixel (before </body>)
-    pixel_url = f"{api_base_url}/api/v1/newsletter/track/open/{campaign_id}/{subscriber_id}"
-    pixel_tag = f'<img src="{pixel_url}" width="1" height="1" style="display:none" alt="" />'
+    pixel_url = (
+        f"{api_base_url}/api/v1/newsletter/track/open/{campaign_id}/{subscriber_id}"
+    )
+    pixel_tag = (
+        f'<img src="{pixel_url}" width="1" height="1" style="display:none" alt="" />'
+    )
 
     if "</body>" in html:
         html = html.replace("</body>", f"{pixel_tag}</body>")
@@ -112,9 +118,9 @@ def send_newsletter_campaign(self, campaign_id: int) -> dict:
 
     Idempotent via status checks — safe to retry.
     """
+    from app.base_models import LandingPageSubscriber
     from app.core.config import settings
     from app.db.session import SyncSessionLocal
-    from app.base_models import LandingPageSubscriber
     from app.models.newsletter import (
         CampaignStatus,
         NewsletterCampaign,
@@ -134,8 +140,13 @@ def send_newsletter_campaign(self, campaign_id: int) -> dict:
             logger.error(f"Campaign {campaign_id} not found")
             return {"error": "Campaign not found"}
 
-        if campaign.status not in (CampaignStatus.SENDING.value, CampaignStatus.SCHEDULED.value):
-            logger.warning(f"Campaign {campaign_id} status is {campaign.status}, skipping")
+        if campaign.status not in (
+            CampaignStatus.SENDING.value,
+            CampaignStatus.SCHEDULED.value,
+        ):
+            logger.warning(
+                f"Campaign {campaign_id} status is {campaign.status}, skipping"
+            )
             return {"error": f"Campaign status is {campaign.status}"}
 
         # Set status to sending
@@ -153,7 +164,9 @@ def send_newsletter_campaign(self, campaign_id: int) -> dict:
         if "status" in filters and filters["status"]:
             query = query.filter(LandingPageSubscriber.status.in_(filters["status"]))
         if "min_lead_score" in filters:
-            query = query.filter(LandingPageSubscriber.lead_score >= filters["min_lead_score"])
+            query = query.filter(
+                LandingPageSubscriber.lead_score >= filters["min_lead_score"]
+            )
         if "platforms" in filters and filters["platforms"]:
             query = query.filter(
                 LandingPageSubscriber.attributed_platform.in_(filters["platforms"])
@@ -182,7 +195,9 @@ def send_newsletter_campaign(self, campaign_id: int) -> dict:
             token = base64.urlsafe_b64encode(
                 f"{campaign_id}:{subscriber.id}".encode()
             ).decode()
-            unsubscribe_url = f"{api_base_url}/api/v1/newsletter/unsubscribe?token={token}"
+            unsubscribe_url = (
+                f"{api_base_url}/api/v1/newsletter/unsubscribe?token={token}"
+            )
 
             # Personalize HTML
             html = _personalize_html(
@@ -210,7 +225,11 @@ def send_newsletter_campaign(self, campaign_id: int) -> dict:
             )
 
             # Record event
-            event_type = NewsletterEventType.SENT.value if success else NewsletterEventType.BOUNCED.value
+            event_type = (
+                NewsletterEventType.SENT.value
+                if success
+                else NewsletterEventType.BOUNCED.value
+            )
             event = NewsletterEvent(
                 campaign_id=campaign_id,
                 subscriber_id=subscriber.id,

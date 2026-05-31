@@ -54,7 +54,6 @@ from app.schemas.cms import (
     TagCreate,
 )
 
-
 # =============================================================================
 # Helpers
 # =============================================================================
@@ -103,8 +102,15 @@ class TestCMSPostStatus:
 
     def test_all_statuses_present(self) -> None:
         expected = {
-            "draft", "in_review", "changes_requested", "approved",
-            "scheduled", "published", "unpublished", "archived", "rejected",
+            "draft",
+            "in_review",
+            "changes_requested",
+            "approved",
+            "scheduled",
+            "published",
+            "unpublished",
+            "archived",
+            "rejected",
         }
         assert {s.value for s in CMSPostStatus} == expected
 
@@ -124,8 +130,13 @@ class TestCMSContentType:
 
     def test_all_types_present(self) -> None:
         expected = {
-            "blog_post", "case_study", "guide", "whitepaper",
-            "announcement", "newsletter", "press_release",
+            "blog_post",
+            "case_study",
+            "guide",
+            "whitepaper",
+            "announcement",
+            "newsletter",
+            "press_release",
         }
         assert {t.value for t in CMSContentType} == expected
 
@@ -155,9 +166,18 @@ class TestCMSWorkflowAction:
 
     def test_all_actions(self) -> None:
         expected = {
-            "created", "updated", "submitted_for_review", "approved",
-            "rejected", "changes_requested", "scheduled", "published",
-            "unpublished", "archived", "restored", "deleted",
+            "created",
+            "updated",
+            "submitted_for_review",
+            "approved",
+            "rejected",
+            "changes_requested",
+            "scheduled",
+            "published",
+            "unpublished",
+            "archived",
+            "restored",
+            "deleted",
         }
         assert {a.value for a in CMSWorkflowAction} == expected
 
@@ -610,7 +630,9 @@ class TestPageCreateSchema:
         assert page.navigation_order == 0
 
     def test_meta_fields(self) -> None:
-        page = PageCreate(title="T", meta_title="SEO Title", meta_description="SEO Desc")
+        page = PageCreate(
+            title="T", meta_title="SEO Title", meta_description="SEO Desc"
+        )
         assert page.meta_title == "SEO Title"
 
 
@@ -679,7 +701,8 @@ class TestContactSchemas:
 
     def test_submit_minimal(self) -> None:
         contact = ContactSubmit(
-            name="John", email="john@example.com",
+            name="John",
+            email="john@example.com",
             message="Hello, I'd like to know more about your services.",
         )
         assert contact.name == "John"
@@ -737,23 +760,29 @@ class TestCMSRoleSchemas:
 
     def test_invite_user_valid(self) -> None:
         req = CMSInviteUserRequest(
-            email="new@test.com", full_name="New User",
-            password="SecurePass123", cms_role="contributor",
+            email="new@test.com",
+            full_name="New User",
+            password="SecurePass123",
+            cms_role="contributor",
         )
         assert req.cms_role == "contributor"
 
     def test_invite_user_invalid_role(self) -> None:
         with pytest.raises(ValidationError, match="Invalid CMS role"):
             CMSInviteUserRequest(
-                email="new@test.com", full_name="New",
-                password="SecurePass123", cms_role="invalid",
+                email="new@test.com",
+                full_name="New",
+                password="SecurePass123",
+                cms_role="invalid",
             )
 
     def test_invite_user_password_min_length(self) -> None:
         with pytest.raises(ValidationError):
             CMSInviteUserRequest(
-                email="new@test.com", full_name="New",
-                password="short", cms_role="viewer",
+                email="new@test.com",
+                full_name="New",
+                password="short",
+                cms_role="viewer",
             )
 
     def test_all_valid_cms_roles(self) -> None:
@@ -793,8 +822,9 @@ class TestCDNInvalidation:
         mock_settings = MagicMock()
         mock_settings.cdn_provider = "cloudflare"
 
-        with patch("app.core.config.settings", mock_settings), \
-             patch("app.workers.tasks.cms._purge_cloudflare") as mock_purge:
+        with patch("app.core.config.settings", mock_settings), patch(
+            "app.workers.tasks.cms._purge_cloudflare"
+        ) as mock_purge:
             _invalidate_cdn_cache(post)
             mock_purge.assert_called_once()
             paths = mock_purge.call_args[0][0]
@@ -810,8 +840,9 @@ class TestCDNInvalidation:
         mock_settings = MagicMock()
         mock_settings.cdn_provider = "cloudfront"
 
-        with patch("app.core.config.settings", mock_settings), \
-             patch("app.workers.tasks.cms._purge_cloudfront") as mock_purge:
+        with patch("app.core.config.settings", mock_settings), patch(
+            "app.workers.tasks.cms._purge_cloudfront"
+        ) as mock_purge:
             _invalidate_cdn_cache(post)
             mock_purge.assert_called_once()
 
@@ -824,8 +855,9 @@ class TestCDNInvalidation:
         mock_settings = MagicMock()
         mock_settings.cdn_provider = "fastly"
 
-        with patch("app.core.config.settings", mock_settings), \
-             patch("app.workers.tasks.cms._purge_fastly") as mock_purge:
+        with patch("app.core.config.settings", mock_settings), patch(
+            "app.workers.tasks.cms._purge_fastly"
+        ) as mock_purge:
             _invalidate_cdn_cache(post)
             mock_purge.assert_called_once()
 
@@ -838,8 +870,10 @@ class TestCDNInvalidation:
         mock_settings = MagicMock()
         mock_settings.cdn_provider = "cloudflare"
 
-        with patch("app.core.config.settings", mock_settings), \
-             patch("app.workers.tasks.cms._purge_cloudflare", side_effect=ConnectionError("down")):
+        with patch("app.core.config.settings", mock_settings), patch(
+            "app.workers.tasks.cms._purge_cloudflare",
+            side_effect=ConnectionError("down"),
+        ):
             # Should log warning but not raise
             _invalidate_cdn_cache(post)
 
@@ -852,8 +886,9 @@ class TestCDNInvalidation:
         mock_settings = MagicMock()
         mock_settings.cdn_provider = "cloudflare"
 
-        with patch("app.core.config.settings", mock_settings), \
-             patch("app.workers.tasks.cms._purge_cloudflare") as mock_purge:
+        with patch("app.core.config.settings", mock_settings), patch(
+            "app.workers.tasks.cms._purge_cloudflare"
+        ) as mock_purge:
             _invalidate_cdn_cache(post)
             paths = mock_purge.call_args[0][0]
             assert len(paths) == 4

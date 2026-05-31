@@ -18,19 +18,20 @@ Features:
 
 import json
 import logging
-from datetime import datetime, timezone, timedelta
-from typing import Any, Dict, List, Optional
-from dataclasses import dataclass, field, asdict
-from uuid import uuid4
+from dataclasses import asdict, dataclass, field
+from datetime import datetime, timedelta, timezone
 from enum import Enum
+from typing import Any, Dict, List, Optional
+from uuid import uuid4
 
 try:
     import redis.asyncio as aioredis
+
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False
 
-from sqlalchemy import select, and_, update, delete, func
+from sqlalchemy import and_, delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -40,15 +41,17 @@ logger = logging.getLogger(__name__)
 
 class DLQStatus(str, Enum):
     """Status of a DLQ entry."""
-    PENDING = "pending"          # Waiting for retry
-    RETRYING = "retrying"        # Currently being retried
-    RECOVERED = "recovered"      # Successfully replayed
-    EXPIRED = "expired"          # Past retention period
-    DISCARDED = "discarded"      # Manually discarded
+
+    PENDING = "pending"  # Waiting for retry
+    RETRYING = "retrying"  # Currently being retried
+    RECOVERED = "recovered"  # Successfully replayed
+    EXPIRED = "expired"  # Past retention period
+    DISCARDED = "discarded"  # Manually discarded
 
 
 class FailureReason(str, Enum):
     """Categorized failure reasons."""
+
     NETWORK_ERROR = "network_error"
     RATE_LIMITED = "rate_limited"
     AUTH_ERROR = "auth_error"
@@ -64,6 +67,7 @@ class DLQEntry:
     """
     Dead Letter Queue entry for a failed event.
     """
+
     id: str
     tenant_id: int
     platform: str
@@ -108,6 +112,7 @@ class DLQEntry:
 @dataclass
 class DLQStats:
     """Statistics for the Dead Letter Queue."""
+
     total_entries: int = 0
     pending: int = 0
     retrying: int = 0
@@ -191,7 +196,9 @@ class DeadLetterQueue:
             self._redis = None
             self._connected = False
 
-    def _categorize_failure(self, error_message: str, platform_response: Optional[Dict] = None) -> FailureReason:
+    def _categorize_failure(
+        self, error_message: str, platform_response: Optional[Dict] = None
+    ) -> FailureReason:
         """
         Categorize the failure reason from error message.
 
@@ -207,19 +214,29 @@ class DeadLetterQueue:
         if any(term in error_lower for term in ["timeout", "timed out"]):
             return FailureReason.TIMEOUT
 
-        if any(term in error_lower for term in ["rate limit", "too many requests", "429"]):
+        if any(
+            term in error_lower for term in ["rate limit", "too many requests", "429"]
+        ):
             return FailureReason.RATE_LIMITED
 
-        if any(term in error_lower for term in ["auth", "unauthorized", "forbidden", "401", "403", "token"]):
+        if any(
+            term in error_lower
+            for term in ["auth", "unauthorized", "forbidden", "401", "403", "token"]
+        ):
             return FailureReason.AUTH_ERROR
 
-        if any(term in error_lower for term in ["connection", "network", "dns", "socket"]):
+        if any(
+            term in error_lower for term in ["connection", "network", "dns", "socket"]
+        ):
             return FailureReason.NETWORK_ERROR
 
         if any(term in error_lower for term in ["circuit", "breaker", "open"]):
             return FailureReason.CIRCUIT_OPEN
 
-        if any(term in error_lower for term in ["validation", "invalid", "missing", "required"]):
+        if any(
+            term in error_lower
+            for term in ["validation", "invalid", "missing", "required"]
+        ):
             return FailureReason.VALIDATION_ERROR
 
         if platform_response and platform_response.get("error"):
@@ -315,7 +332,7 @@ class DeadLetterQueue:
 
         # Trim if too large
         if len(self._memory_queue) > self.MAX_MEMORY_ENTRIES:
-            self._memory_queue = self._memory_queue[-self.MAX_MEMORY_ENTRIES:]
+            self._memory_queue = self._memory_queue[-self.MAX_MEMORY_ENTRIES :]
 
     async def get_entry(self, entry_id: str) -> Optional[DLQEntry]:
         """
@@ -388,12 +405,13 @@ class DeadLetterQueue:
 
         # Fallback to memory
         filtered = [
-            e for e in self._memory_queue
+            e
+            for e in self._memory_queue
             if e.status == DLQStatus.PENDING
             and (platform is None or e.platform == platform)
             and (tenant_id is None or e.tenant_id == tenant_id)
         ]
-        return filtered[offset:offset + limit]
+        return filtered[offset : offset + limit]
 
     async def mark_recovered(self, entry_id: str) -> bool:
         """
@@ -503,11 +521,15 @@ class DeadLetterQueue:
                 stats.discarded += 1
 
             # By platform
-            stats.by_platform[entry.platform] = stats.by_platform.get(entry.platform, 0) + 1
+            stats.by_platform[entry.platform] = (
+                stats.by_platform.get(entry.platform, 0) + 1
+            )
 
             # By failure category
             category = entry.failure_category.value
-            stats.by_failure_category[category] = stats.by_failure_category.get(category, 0) + 1
+            stats.by_failure_category[category] = (
+                stats.by_failure_category.get(category, 0) + 1
+            )
 
         # Calculate oldest entry age
         if entries:
@@ -558,8 +580,10 @@ class DeadLetterQueue:
         # Fallback to memory cleanup
         original_len = len(self._memory_queue)
         self._memory_queue = [
-            e for e in self._memory_queue
-            if e.first_failure_at > cutoff or e.status in [DLQStatus.RECOVERED, DLQStatus.DISCARDED]
+            e
+            for e in self._memory_queue
+            if e.first_failure_at > cutoff
+            or e.status in [DLQStatus.RECOVERED, DLQStatus.DISCARDED]
         ]
         removed = original_len - len(self._memory_queue)
 

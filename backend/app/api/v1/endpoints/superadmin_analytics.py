@@ -7,16 +7,15 @@ Provides cross-tenant insights and platform health monitoring.
 """
 
 from datetime import date, timedelta
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from sqlalchemy import and_, case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import case, select, func, and_
 
 from app.db.session import get_async_session
-from app.models.trust_layer import FactSignalHealthDaily, FactActionsQueue
+from app.models.trust_layer import FactActionsQueue, FactSignalHealthDaily
 from app.schemas.response import APIResponse
-
 
 router = APIRouter(prefix="/superadmin", tags=["superadmin-analytics"])
 
@@ -24,6 +23,7 @@ router = APIRouter(prefix="/superadmin", tags=["superadmin-analytics"])
 # =============================================================================
 # Platform Overview
 # =============================================================================
+
 
 @router.get("/platform-overview", response_model=APIResponse[Dict[str, Any]])
 async def get_platform_overview(
@@ -57,18 +57,12 @@ async def get_platform_overview(
     # Actions summary
     actions_query = select(
         func.count(FactActionsQueue.id).label("total"),
-        func.sum(
-            case(
-                (FactActionsQueue.status == "applied", 1),
-                else_=0
-            )
-        ).label("applied"),
-        func.sum(
-            case(
-                (FactActionsQueue.status == "failed", 1),
-                else_=0
-            )
-        ).label("failed"),
+        func.sum(case((FactActionsQueue.status == "applied", 1), else_=0)).label(
+            "applied"
+        ),
+        func.sum(case((FactActionsQueue.status == "failed", 1), else_=0)).label(
+            "failed"
+        ),
     ).where(FactActionsQueue.date >= start_date)
     actions_result = await db.execute(actions_query)
     actions_row = actions_result.first()
@@ -76,26 +70,34 @@ async def get_platform_overview(
     total_actions = actions_row.total or 0
     applied_actions = actions_row.applied or 0
     failed_actions = actions_row.failed or 0
-    success_rate = (applied_actions / (applied_actions + failed_actions) * 100) if (applied_actions + failed_actions) > 0 else 100
+    success_rate = (
+        (applied_actions / (applied_actions + failed_actions) * 100)
+        if (applied_actions + failed_actions) > 0
+        else 100
+    )
 
     # Signal health by status
-    health_query = select(
-        FactSignalHealthDaily.status,
-        func.count(FactSignalHealthDaily.id).label("count"),
-    ).where(
-        FactSignalHealthDaily.date >= start_date
-    ).group_by(FactSignalHealthDaily.status)
+    health_query = (
+        select(
+            FactSignalHealthDaily.status,
+            func.count(FactSignalHealthDaily.id).label("count"),
+        )
+        .where(FactSignalHealthDaily.date >= start_date)
+        .group_by(FactSignalHealthDaily.status)
+    )
     health_result = await db.execute(health_query)
     health_summary = {row.status.value: row.count for row in health_result}
 
     # Platform breakdown
-    platform_query = select(
-        FactSignalHealthDaily.platform,
-        func.count(FactSignalHealthDaily.id).label("count"),
-        func.avg(FactSignalHealthDaily.emq_score).label("avg_emq"),
-    ).where(
-        FactSignalHealthDaily.date >= start_date
-    ).group_by(FactSignalHealthDaily.platform)
+    platform_query = (
+        select(
+            FactSignalHealthDaily.platform,
+            func.count(FactSignalHealthDaily.id).label("count"),
+            func.avg(FactSignalHealthDaily.emq_score).label("avg_emq"),
+        )
+        .where(FactSignalHealthDaily.date >= start_date)
+        .group_by(FactSignalHealthDaily.platform)
+    )
     platform_result = await db.execute(platform_query)
     platform_breakdown = [
         {
@@ -126,6 +128,7 @@ async def get_platform_overview(
 # Tenant Profitability
 # =============================================================================
 
+
 @router.get("/tenant-profitability", response_model=APIResponse[Dict[str, Any]])
 async def get_tenant_profitability(
     request: Request,
@@ -146,47 +149,59 @@ async def get_tenant_profitability(
     start_date = date.today() - timedelta(days=days)
 
     # Tenant activity summary
-    tenant_query = select(
-        FactActionsQueue.tenant_id,
-        func.count(FactActionsQueue.id).label("total_actions"),
-        func.sum(
-            case(
-                (FactActionsQueue.status == "applied", 1),
-                else_=0
-            )
-        ).label("applied_actions"),
-        func.count(func.distinct(FactActionsQueue.date)).label("active_days"),
-    ).where(
-        FactActionsQueue.date >= start_date
-    ).group_by(FactActionsQueue.tenant_id)
+    tenant_query = (
+        select(
+            FactActionsQueue.tenant_id,
+            func.count(FactActionsQueue.id).label("total_actions"),
+            func.sum(case((FactActionsQueue.status == "applied", 1), else_=0)).label(
+                "applied_actions"
+            ),
+            func.count(func.distinct(FactActionsQueue.date)).label("active_days"),
+        )
+        .where(FactActionsQueue.date >= start_date)
+        .group_by(FactActionsQueue.tenant_id)
+    )
     tenant_result = await db.execute(tenant_query)
 
     # Signal health averages per tenant
-    health_query = select(
-        FactSignalHealthDaily.tenant_id,
-        func.avg(FactSignalHealthDaily.emq_score).label("avg_emq"),
-        func.avg(FactSignalHealthDaily.event_loss_pct).label("avg_event_loss"),
-    ).where(
-        FactSignalHealthDaily.date >= start_date
-    ).group_by(FactSignalHealthDaily.tenant_id)
+    health_query = (
+        select(
+            FactSignalHealthDaily.tenant_id,
+            func.avg(FactSignalHealthDaily.emq_score).label("avg_emq"),
+            func.avg(FactSignalHealthDaily.event_loss_pct).label("avg_event_loss"),
+        )
+        .where(FactSignalHealthDaily.date >= start_date)
+        .group_by(FactSignalHealthDaily.tenant_id)
+    )
     health_result = await db.execute(health_query)
-    health_map = {row.tenant_id: {"avg_emq": row.avg_emq, "avg_event_loss": row.avg_event_loss} for row in health_result}
+    health_map = {
+        row.tenant_id: {"avg_emq": row.avg_emq, "avg_event_loss": row.avg_event_loss}
+        for row in health_result
+    }
 
     tenants = []
     for row in tenant_result:
         health = health_map.get(row.tenant_id, {})
-        efficiency = (row.applied_actions / row.total_actions * 100) if row.total_actions > 0 else 0
+        efficiency = (
+            (row.applied_actions / row.total_actions * 100)
+            if row.total_actions > 0
+            else 0
+        )
 
-        tenants.append({
-            "tenant_id": row.tenant_id,
-            "total_actions": row.total_actions,
-            "applied_actions": row.applied_actions,
-            "active_days": row.active_days,
-            "action_efficiency": round(efficiency, 1),
-            "avg_emq_score": round(health.get("avg_emq") or 0, 1),
-            "avg_event_loss": round(health.get("avg_event_loss") or 0, 2),
-            "health_score": calculate_health_score(health.get("avg_emq"), health.get("avg_event_loss")),
-        })
+        tenants.append(
+            {
+                "tenant_id": row.tenant_id,
+                "total_actions": row.total_actions,
+                "applied_actions": row.applied_actions,
+                "active_days": row.active_days,
+                "action_efficiency": round(efficiency, 1),
+                "avg_emq_score": round(health.get("avg_emq") or 0, 1),
+                "avg_event_loss": round(health.get("avg_event_loss") or 0, 2),
+                "health_score": calculate_health_score(
+                    health.get("avg_emq"), health.get("avg_event_loss")
+                ),
+            }
+        )
 
     # Sort by health score descending
     tenants.sort(key=lambda x: x["health_score"], reverse=True)
@@ -202,7 +217,9 @@ async def get_tenant_profitability(
     )
 
 
-def calculate_health_score(avg_emq: Optional[float], avg_event_loss: Optional[float]) -> float:
+def calculate_health_score(
+    avg_emq: Optional[float], avg_event_loss: Optional[float]
+) -> float:
     """Calculate a composite health score from EMQ and event loss."""
     if avg_emq is None and avg_event_loss is None:
         return 0
@@ -219,6 +236,7 @@ def calculate_health_score(avg_emq: Optional[float], avg_event_loss: Optional[fl
 # =============================================================================
 # Signal Health Trends
 # =============================================================================
+
 
 @router.get("/signal-health-trends", response_model=APIResponse[Dict[str, Any]])
 async def get_signal_health_trends(
@@ -237,16 +255,21 @@ async def get_signal_health_trends(
     start_date = date.today() - timedelta(days=days)
 
     # Daily averages
-    daily_query = select(
-        FactSignalHealthDaily.date,
-        func.avg(FactSignalHealthDaily.emq_score).label("avg_emq"),
-        func.avg(FactSignalHealthDaily.event_loss_pct).label("avg_event_loss"),
-        func.avg(FactSignalHealthDaily.freshness_minutes).label("avg_freshness"),
-        func.avg(FactSignalHealthDaily.api_error_rate).label("avg_api_errors"),
-        func.count(FactSignalHealthDaily.id).label("record_count"),
-    ).where(
-        FactSignalHealthDaily.date >= start_date
-    ).group_by(FactSignalHealthDaily.date).order_by(FactSignalHealthDaily.date).limit(1000).limit(1000)
+    daily_query = (
+        select(
+            FactSignalHealthDaily.date,
+            func.avg(FactSignalHealthDaily.emq_score).label("avg_emq"),
+            func.avg(FactSignalHealthDaily.event_loss_pct).label("avg_event_loss"),
+            func.avg(FactSignalHealthDaily.freshness_minutes).label("avg_freshness"),
+            func.avg(FactSignalHealthDaily.api_error_rate).label("avg_api_errors"),
+            func.count(FactSignalHealthDaily.id).label("record_count"),
+        )
+        .where(FactSignalHealthDaily.date >= start_date)
+        .group_by(FactSignalHealthDaily.date)
+        .order_by(FactSignalHealthDaily.date)
+        .limit(1000)
+        .limit(1000)
+    )
 
     daily_result = await db.execute(daily_query)
 
@@ -254,9 +277,15 @@ async def get_signal_health_trends(
         {
             "date": row.date.isoformat(),
             "avg_emq": round(row.avg_emq, 1) if row.avg_emq else None,
-            "avg_event_loss": round(row.avg_event_loss, 2) if row.avg_event_loss else None,
-            "avg_freshness_minutes": round(row.avg_freshness, 0) if row.avg_freshness else None,
-            "avg_api_error_rate": round(row.avg_api_errors, 2) if row.avg_api_errors else None,
+            "avg_event_loss": (
+                round(row.avg_event_loss, 2) if row.avg_event_loss else None
+            ),
+            "avg_freshness_minutes": (
+                round(row.avg_freshness, 0) if row.avg_freshness else None
+            ),
+            "avg_api_error_rate": (
+                round(row.avg_api_errors, 2) if row.avg_api_errors else None
+            ),
             "record_count": row.record_count,
         }
         for row in daily_result
@@ -264,13 +293,25 @@ async def get_signal_health_trends(
 
     # Calculate trend direction
     if len(trends) >= 2:
-        first_half = trends[:len(trends)//2]
-        second_half = trends[len(trends)//2:]
+        first_half = trends[: len(trends) // 2]
+        second_half = trends[len(trends) // 2 :]
 
-        first_avg_emq = sum(t["avg_emq"] for t in first_half if t["avg_emq"]) / len(first_half) if first_half else 0
-        second_avg_emq = sum(t["avg_emq"] for t in second_half if t["avg_emq"]) / len(second_half) if second_half else 0
+        first_avg_emq = (
+            sum(t["avg_emq"] for t in first_half if t["avg_emq"]) / len(first_half)
+            if first_half
+            else 0
+        )
+        second_avg_emq = (
+            sum(t["avg_emq"] for t in second_half if t["avg_emq"]) / len(second_half)
+            if second_half
+            else 0
+        )
 
-        trend_direction = "improving" if second_avg_emq > first_avg_emq else "declining" if second_avg_emq < first_avg_emq else "stable"
+        trend_direction = (
+            "improving"
+            if second_avg_emq > first_avg_emq
+            else "declining" if second_avg_emq < first_avg_emq else "stable"
+        )
     else:
         trend_direction = "insufficient_data"
 
@@ -287,6 +328,7 @@ async def get_signal_health_trends(
 # =============================================================================
 # Actions Analytics
 # =============================================================================
+
 
 @router.get("/actions-analytics", response_model=APIResponse[Dict[str, Any]])
 async def get_actions_analytics(
@@ -305,44 +347,57 @@ async def get_actions_analytics(
     start_date = date.today() - timedelta(days=days)
 
     # Action type breakdown
-    type_query = select(
-        FactActionsQueue.action_type,
-        func.count(FactActionsQueue.id).label("count"),
-    ).where(
-        FactActionsQueue.date >= start_date
-    ).group_by(FactActionsQueue.action_type)
+    type_query = (
+        select(
+            FactActionsQueue.action_type,
+            func.count(FactActionsQueue.id).label("count"),
+        )
+        .where(FactActionsQueue.date >= start_date)
+        .group_by(FactActionsQueue.action_type)
+    )
     type_result = await db.execute(type_query)
     type_breakdown = {row.action_type: row.count for row in type_result}
 
     # Status breakdown
-    status_query = select(
-        FactActionsQueue.status,
-        func.count(FactActionsQueue.id).label("count"),
-    ).where(
-        FactActionsQueue.date >= start_date
-    ).group_by(FactActionsQueue.status)
+    status_query = (
+        select(
+            FactActionsQueue.status,
+            func.count(FactActionsQueue.id).label("count"),
+        )
+        .where(FactActionsQueue.date >= start_date)
+        .group_by(FactActionsQueue.status)
+    )
     status_result = await db.execute(status_query)
     status_breakdown = {row.status: row.count for row in status_result}
 
     # Platform breakdown
-    platform_query = select(
-        FactActionsQueue.platform,
-        func.count(FactActionsQueue.id).label("count"),
-    ).where(
-        FactActionsQueue.date >= start_date
-    ).group_by(FactActionsQueue.platform)
+    platform_query = (
+        select(
+            FactActionsQueue.platform,
+            func.count(FactActionsQueue.id).label("count"),
+        )
+        .where(FactActionsQueue.date >= start_date)
+        .group_by(FactActionsQueue.platform)
+    )
     platform_result = await db.execute(platform_query)
     platform_breakdown = {row.platform: row.count for row in platform_result}
 
     # Daily action counts
-    daily_query = select(
-        FactActionsQueue.date,
-        func.count(FactActionsQueue.id).label("count"),
-    ).where(
-        FactActionsQueue.date >= start_date
-    ).group_by(FactActionsQueue.date).order_by(FactActionsQueue.date).limit(1000).limit(1000)
+    daily_query = (
+        select(
+            FactActionsQueue.date,
+            func.count(FactActionsQueue.id).label("count"),
+        )
+        .where(FactActionsQueue.date >= start_date)
+        .group_by(FactActionsQueue.date)
+        .order_by(FactActionsQueue.date)
+        .limit(1000)
+        .limit(1000)
+    )
     daily_result = await db.execute(daily_query)
-    daily_counts = [{"date": row.date.isoformat(), "count": row.count} for row in daily_result]
+    daily_counts = [
+        {"date": row.date.isoformat(), "count": row.count} for row in daily_result
+    ]
 
     total = sum(status_breakdown.values())
 

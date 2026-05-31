@@ -27,13 +27,14 @@ from starlette.testclient import TestClient
 
 from app.middleware.rate_limit import RateLimitMiddleware, TokenBucket
 
-
 # =============================================================================
 # Helpers
 # =============================================================================
 
 
-def _make_request(path: str = "/api/v1/data", client_host: str = "127.0.0.1") -> MagicMock:
+def _make_request(
+    path: str = "/api/v1/data", client_host: str = "127.0.0.1"
+) -> MagicMock:
     """Create a minimal mock Request for middleware dispatch."""
     request = MagicMock(spec=Request)
     url = MagicMock()
@@ -190,9 +191,9 @@ class TestSecurityHeadersMiddleware:
                 request = _make_request(path)
                 response = await middleware.dispatch(request, _ok_call_next)
 
-                assert "no-store" in response.headers.get("Cache-Control", ""), (
-                    f"Cache-Control missing for sensitive path: {path}"
-                )
+                assert "no-store" in response.headers.get(
+                    "Cache-Control", ""
+                ), f"Cache-Control missing for sensitive path: {path}"
                 assert response.headers.get("Pragma") == "no-cache"
                 assert response.headers.get("Expires") == "0"
 

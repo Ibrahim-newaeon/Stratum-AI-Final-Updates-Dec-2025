@@ -262,7 +262,9 @@ async def update_customer(
         update_params["metadata"] = metadata
 
     try:
-        customer = await asyncio.to_thread(stripe.Customer.modify, customer_id, **update_params)
+        customer = await asyncio.to_thread(
+            stripe.Customer.modify, customer_id, **update_params
+        )
 
         return StripeCustomer(
             id=customer.id,
@@ -341,7 +343,9 @@ async def create_checkout_session(
         session_params["customer_email"] = customer_email
 
     try:
-        session = await asyncio.to_thread(stripe.checkout.Session.create, **session_params)
+        session = await asyncio.to_thread(
+            stripe.checkout.Session.create, **session_params
+        )
 
         logger.info(
             "stripe_checkout_created",
@@ -415,13 +419,19 @@ async def get_subscription(subscription_id: str) -> Optional[StripeSubscription]
             status=SubscriptionState(sub.status),
             tier=tier,
             price_id=price_id,
-            current_period_start=datetime.fromtimestamp(sub.current_period_start, tz=UTC),
+            current_period_start=datetime.fromtimestamp(
+                sub.current_period_start, tz=UTC
+            ),
             current_period_end=datetime.fromtimestamp(sub.current_period_end, tz=UTC),
             cancel_at_period_end=sub.cancel_at_period_end,
-            canceled_at=datetime.fromtimestamp(sub.canceled_at, tz=UTC)
-            if sub.canceled_at
-            else None,
-            trial_end=datetime.fromtimestamp(sub.trial_end, tz=UTC) if sub.trial_end else None,
+            canceled_at=(
+                datetime.fromtimestamp(sub.canceled_at, tz=UTC)
+                if sub.canceled_at
+                else None
+            ),
+            trial_end=(
+                datetime.fromtimestamp(sub.trial_end, tz=UTC) if sub.trial_end else None
+            ),
         )
     except stripe.InvalidRequestError:
         return None
@@ -446,7 +456,11 @@ async def get_customer_subscriptions(customer_id: str) -> list[StripeSubscriptio
         result = []
         for sub in subscriptions.data:
             price_id = sub.items.data[0].price.id if sub.items.data else None
-            tier = get_tier_for_price_id(price_id) if price_id else SubscriptionTier.STARTER
+            tier = (
+                get_tier_for_price_id(price_id)
+                if price_id
+                else SubscriptionTier.STARTER
+            )
 
             result.append(
                 StripeSubscription(
@@ -455,15 +469,23 @@ async def get_customer_subscriptions(customer_id: str) -> list[StripeSubscriptio
                     status=SubscriptionState(sub.status),
                     tier=tier,
                     price_id=price_id,
-                    current_period_start=datetime.fromtimestamp(sub.current_period_start, tz=UTC),
-                    current_period_end=datetime.fromtimestamp(sub.current_period_end, tz=UTC),
+                    current_period_start=datetime.fromtimestamp(
+                        sub.current_period_start, tz=UTC
+                    ),
+                    current_period_end=datetime.fromtimestamp(
+                        sub.current_period_end, tz=UTC
+                    ),
                     cancel_at_period_end=sub.cancel_at_period_end,
-                    canceled_at=datetime.fromtimestamp(sub.canceled_at, tz=UTC)
-                    if sub.canceled_at
-                    else None,
-                    trial_end=datetime.fromtimestamp(sub.trial_end, tz=UTC)
-                    if sub.trial_end
-                    else None,
+                    canceled_at=(
+                        datetime.fromtimestamp(sub.canceled_at, tz=UTC)
+                        if sub.canceled_at
+                        else None
+                    ),
+                    trial_end=(
+                        datetime.fromtimestamp(sub.trial_end, tz=UTC)
+                        if sub.trial_end
+                        else None
+                    ),
                 )
             )
 
@@ -622,7 +644,11 @@ async def get_customer_invoices(
                     amount_paid=inv.amount_paid,
                     currency=inv.currency,
                     created=datetime.fromtimestamp(inv.created, tz=UTC),
-                    due_date=datetime.fromtimestamp(inv.due_date, tz=UTC) if inv.due_date else None,
+                    due_date=(
+                        datetime.fromtimestamp(inv.due_date, tz=UTC)
+                        if inv.due_date
+                        else None
+                    ),
                     hosted_invoice_url=inv.hosted_invoice_url,
                     pdf_url=inv.invoice_pdf,
                 )
@@ -650,9 +676,11 @@ async def get_upcoming_invoice(customer_id: str) -> Optional[Invoice]:
             amount_paid=0,
             currency=inv.currency,
             created=datetime.now(UTC),
-            due_date=datetime.fromtimestamp(inv.next_payment_attempt, tz=UTC)
-            if inv.next_payment_attempt
-            else None,
+            due_date=(
+                datetime.fromtimestamp(inv.next_payment_attempt, tz=UTC)
+                if inv.next_payment_attempt
+                else None
+            ),
             hosted_invoice_url=None,
             pdf_url=None,
         )
@@ -694,8 +722,11 @@ async def get_customer_payment_methods(customer_id: str) -> list[dict[str, Any]]
                     "exp_year": card.exp_year,
                     "is_default": pm.id
                     == (
-                        (await asyncio.to_thread(stripe.Customer.retrieve, customer_id))
-                        .invoice_settings.default_payment_method
+                        (
+                            await asyncio.to_thread(
+                                stripe.Customer.retrieve, customer_id
+                            )
+                        ).invoice_settings.default_payment_method
                     ),
                 }
             )
@@ -739,7 +770,9 @@ async def detach_payment_method(payment_method_id: str) -> None:
     try:
         await asyncio.to_thread(stripe.PaymentMethod.detach, payment_method_id)
 
-        logger.info("stripe_payment_method_detached", payment_method_id=payment_method_id)
+        logger.info(
+            "stripe_payment_method_detached", payment_method_id=payment_method_id
+        )
     except stripe.StripeError as e:
         logger.error("stripe_detach_payment_failed", error=str(e))
         raise
@@ -803,7 +836,9 @@ async def sync_tenant_stripe_customer(
     from app.base_models import Tenant
 
     await db.execute(
-        update(Tenant).where(Tenant.id == tenant_id).values(stripe_customer_id=customer_id)
+        update(Tenant)
+        .where(Tenant.id == tenant_id)
+        .values(stripe_customer_id=customer_id)
     )
     await db.commit()
 

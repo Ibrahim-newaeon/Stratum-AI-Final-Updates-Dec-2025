@@ -104,7 +104,9 @@ class EmbedWidgetService:
             )
 
         # Validate custom branding (Enterprise only)
-        if data.custom_branding and not has_feature(tier, Feature.EMBED_WIDGETS_WHITELABEL):
+        if data.custom_branding and not has_feature(
+            tier, Feature.EMBED_WIDGETS_WHITELABEL
+        ):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Custom branding requires Enterprise tier",
@@ -140,7 +142,9 @@ class EmbedWidgetService:
         if data.custom_branding and branding_level == BrandingLevel.NONE:
             widget.custom_logo_url = data.custom_branding.custom_logo_url
             widget.custom_accent_color = data.custom_branding.custom_accent_color
-            widget.custom_background_color = data.custom_branding.custom_background_color
+            widget.custom_background_color = (
+                data.custom_branding.custom_background_color
+            )
             widget.custom_text_color = data.custom_branding.custom_text_color
 
         self.db.add(widget)
@@ -190,7 +194,9 @@ class EmbedWidgetService:
         widget = self.get_widget(tenant_id, widget_id)
 
         if not widget:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Widget not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Widget not found"
+            )
 
         # Update fields
         if data.name is not None:
@@ -224,7 +230,9 @@ class EmbedWidgetService:
 
             widget.custom_logo_url = data.custom_branding.custom_logo_url
             widget.custom_accent_color = data.custom_branding.custom_accent_color
-            widget.custom_background_color = data.custom_branding.custom_background_color
+            widget.custom_background_color = (
+                data.custom_branding.custom_background_color
+            )
             widget.custom_text_color = data.custom_branding.custom_text_color
 
         self.db.commit()
@@ -237,7 +245,9 @@ class EmbedWidgetService:
         widget = self.get_widget(tenant_id, widget_id)
 
         if not widget:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Widget not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Widget not found"
+            )
 
         self.db.delete(widget)
         self.db.commit()
@@ -284,7 +294,8 @@ class EmbedWidgetService:
         if existing:
             if existing.is_active:
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST, detail="Domain already in whitelist"
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Domain already in whitelist",
                 )
             else:
                 # Reactivate
@@ -335,7 +346,9 @@ class EmbedWidgetService:
         )
 
         if not domain:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Domain not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Domain not found"
+            )
 
         # Soft delete
         domain.is_active = False

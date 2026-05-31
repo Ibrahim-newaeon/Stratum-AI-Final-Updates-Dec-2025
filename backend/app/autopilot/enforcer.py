@@ -11,33 +11,32 @@ Enforcement Modes:
 - hard_block: Prevent action via API, log override attempts
 """
 
-from datetime import datetime, timedelta, timezone
-from typing import Dict, Any, List, Optional, Tuple
-from enum import Enum
-from dataclasses import dataclass, field
 import json
 import logging
 import smtplib
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, insert, func, update
-from sqlalchemy.orm import selectinload
 from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy import func, insert, select, update
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
+from app.core.logging import get_logger
+from app.models.autopilot import EnforcementAuditLog as EnforcementAuditLogDB
+from app.models.autopilot import EnforcementMode as DBEnforcementMode
+from app.models.autopilot import InterventionAction as DBInterventionAction
+from app.models.autopilot import PendingConfirmationToken as PendingConfirmationTokenDB
+from app.models.autopilot import TenantEnforcementRule as TenantEnforcementRuleDB
 from app.models.autopilot import (
     TenantEnforcementSettings as TenantEnforcementSettingsDB,
-    TenantEnforcementRule as TenantEnforcementRuleDB,
-    EnforcementAuditLog as EnforcementAuditLogDB,
-    PendingConfirmationToken as PendingConfirmationTokenDB,
-    EnforcementMode as DBEnforcementMode,
-    ViolationType as DBViolationType,
-    InterventionAction as DBInterventionAction,
 )
+from app.models.autopilot import ViolationType as DBViolationType
 from app.services.email_service import get_email_service
 from app.services.notifications.slack_service import SlackNotificationService
 
-
-from app.core.logging import get_logger
 logger = get_logger(__name__)
 
 
@@ -45,15 +44,18 @@ logger = get_logger(__name__)
 # Enforcement Types
 # =============================================================================
 
+
 class EnforcementMode(str, Enum):
     """Autopilot enforcement modes."""
-    ADVISORY = "advisory"      # Warn only, no blocking
+
+    ADVISORY = "advisory"  # Warn only, no blocking
     SOFT_BLOCK = "soft_block"  # Warn + require confirmation to proceed
     HARD_BLOCK = "hard_block"  # Prevent action via API, log override attempts
 
 
 class ViolationType(str, Enum):
     """Types of enforcement rule violations."""
+
     BUDGET_EXCEEDED = "budget_exceeded"
     ROAS_BELOW_THRESHOLD = "roas_below_threshold"
     DAILY_SPEND_LIMIT = "daily_spend_limit"
@@ -69,6 +71,7 @@ class ViolationType(str, Enum):
 
 class InterventionAction(str, Enum):
     """Actions taken by enforcer."""
+
     WARNED = "warned"
     BLOCKED = "blocked"
     AUTO_PAUSED = "auto_paused"
@@ -80,8 +83,10 @@ class InterventionAction(str, Enum):
 # Enforcement Settings Model
 # =============================================================================
 
+
 class EnforcementRule(BaseModel):
     """Single enforcement rule configuration."""
+
     rule_id: str
     rule_type: ViolationType
     threshold_value: float
@@ -92,6 +97,7 @@ class EnforcementRule(BaseModel):
 
 class EnforcementSettings(BaseModel):
     """Tenant-level enforcement configuration."""
+
     model_config = ConfigDict(use_enum_values=True)
 
     tenant_id: int
@@ -119,9 +125,11 @@ class EnforcementSettings(BaseModel):
 # Enforcement Result
 # =============================================================================
 
+
 @dataclass
 class EnforcementResult:
     """Result of enforcement check."""
+
     allowed: bool
     mode: EnforcementMode
     violations: List[Dict[str, Any]] = field(default_factory=list)
@@ -132,7 +140,9 @@ class EnforcementResult:
     def to_dict(self) -> Dict[str, Any]:
         return {
             "allowed": self.allowed,
-            "mode": self.mode.value if isinstance(self.mode, EnforcementMode) else self.mode,
+            "mode": (
+                self.mode.value if isinstance(self.mode, EnforcementMode) else self.mode
+            ),
             "violations": self.violations,
             "warnings": self.warnings,
             "requires_confirmation": self.requires_confirmation,
@@ -143,6 +153,7 @@ class EnforcementResult:
 @dataclass
 class InterventionLog:
     """Log entry for enforcement intervention."""
+
     tenant_id: int
     timestamp: datetime
     action_type: str
@@ -159,6 +170,7 @@ class InterventionLog:
 # =============================================================================
 # Autopilot Enforcer Service
 # =============================================================================
+
 
 class AutopilotEnforcer:
     """
@@ -202,21 +214,27 @@ class AutopilotEnforcer:
             if db_settings is not None:
                 # Map custom rules from DB rows to Pydantic models
                 rules: List[EnforcementRule] = []
-                for db_rule in (db_settings.rules or []):
-                    rules.append(EnforcementRule(
-                        rule_id=db_rule.rule_id,
-                        rule_type=ViolationType(db_rule.rule_type.value
-                                                if isinstance(db_rule.rule_type, DBViolationType)
-                                                else db_rule.rule_type),
-                        threshold_value=db_rule.threshold_value,
-                        enforcement_mode=EnforcementMode(
-                            db_rule.enforcement_mode.value
-                            if isinstance(db_rule.enforcement_mode, DBEnforcementMode)
-                            else db_rule.enforcement_mode
-                        ),
-                        enabled=db_rule.enabled,
-                        description=db_rule.description,
-                    ))
+                for db_rule in db_settings.rules or []:
+                    rules.append(
+                        EnforcementRule(
+                            rule_id=db_rule.rule_id,
+                            rule_type=ViolationType(
+                                db_rule.rule_type.value
+                                if isinstance(db_rule.rule_type, DBViolationType)
+                                else db_rule.rule_type
+                            ),
+                            threshold_value=db_rule.threshold_value,
+                            enforcement_mode=EnforcementMode(
+                                db_rule.enforcement_mode.value
+                                if isinstance(
+                                    db_rule.enforcement_mode, DBEnforcementMode
+                                )
+                                else db_rule.enforcement_mode
+                            ),
+                            enabled=db_rule.enabled,
+                            description=db_rule.description,
+                        )
+                    )
 
                 settings = EnforcementSettings(
                     tenant_id=tenant_id,
@@ -298,7 +316,11 @@ class AutopilotEnforcer:
             for key, value in updates.items():
                 if key in db_field_map:
                     if key == "default_mode":
-                        db_updates[key] = DBEnforcementMode(value) if isinstance(value, str) else value
+                        db_updates[key] = (
+                            DBEnforcementMode(value)
+                            if isinstance(value, str)
+                            else value
+                        )
                     else:
                         db_updates[key] = value
 
@@ -334,7 +356,11 @@ class AutopilotEnforcer:
 
                 # Add new rules from the Pydantic models
                 for rule in updates["rules"]:
-                    rule_dict = rule.model_dump() if hasattr(rule, 'model_dump') else (rule.dict() if hasattr(rule, 'dict') else rule)
+                    rule_dict = (
+                        rule.model_dump()
+                        if hasattr(rule, "model_dump")
+                        else (rule.dict() if hasattr(rule, "dict") else rule)
+                    )
                     db_rule = TenantEnforcementRuleDB(
                         settings_id=db_settings.id,
                         tenant_id=tenant_id,
@@ -475,6 +501,7 @@ class AutopilotEnforcer:
         elif strictest_mode == EnforcementMode.SOFT_BLOCK:
             # Generate confirmation token
             import secrets as _secrets
+
             token = _secrets.token_hex(32)
             now = datetime.now(timezone.utc)
             expires = now + timedelta(seconds=3600)
@@ -751,6 +778,7 @@ class AutopilotEnforcer:
             return []
 
         from datetime import timedelta
+
         cutoff = datetime.now(timezone.utc) - timedelta(days=days)
 
         result = await self.db.execute(
@@ -784,26 +812,33 @@ class AutopilotEnforcer:
         current_budget = (current_value or {}).get("budget", 0)
 
         # Check max campaign budget
-        if settings.max_campaign_budget and proposed_budget > settings.max_campaign_budget:
-            violations.append({
-                "type": ViolationType.BUDGET_EXCEEDED.value,
-                "message": f"Budget ${proposed_budget:.2f} exceeds max ${settings.max_campaign_budget:.2f}",
-                "threshold": settings.max_campaign_budget,
-                "actual": proposed_budget,
-                "mode": settings.default_mode,
-            })
+        if (
+            settings.max_campaign_budget
+            and proposed_budget > settings.max_campaign_budget
+        ):
+            violations.append(
+                {
+                    "type": ViolationType.BUDGET_EXCEEDED.value,
+                    "message": f"Budget ${proposed_budget:.2f} exceeds max ${settings.max_campaign_budget:.2f}",
+                    "threshold": settings.max_campaign_budget,
+                    "actual": proposed_budget,
+                    "mode": settings.default_mode,
+                }
+            )
 
         # Check budget increase limit
         if action_type == "budget_increase" and current_budget > 0:
             increase_pct = ((proposed_budget - current_budget) / current_budget) * 100
             if increase_pct > settings.budget_increase_limit_pct:
-                violations.append({
-                    "type": ViolationType.BUDGET_EXCEEDED.value,
-                    "message": f"Budget increase {increase_pct:.1f}% exceeds limit {settings.budget_increase_limit_pct}%",
-                    "threshold": settings.budget_increase_limit_pct,
-                    "actual": increase_pct,
-                    "mode": settings.default_mode,
-                })
+                violations.append(
+                    {
+                        "type": ViolationType.BUDGET_EXCEEDED.value,
+                        "message": f"Budget increase {increase_pct:.1f}% exceeds limit {settings.budget_increase_limit_pct}%",
+                        "threshold": settings.budget_increase_limit_pct,
+                        "actual": increase_pct,
+                        "mode": settings.default_mode,
+                    }
+                )
 
         return violations
 
@@ -818,15 +853,17 @@ class AutopilotEnforcer:
         violations = []
 
         if current_roas < settings.min_roas_threshold:
-            violations.append({
-                "type": ViolationType.ROAS_BELOW_THRESHOLD.value,
-                "message": f"ROAS {current_roas:.2f} is below minimum threshold {settings.min_roas_threshold:.2f}",
-                "threshold": settings.min_roas_threshold,
-                "actual": current_roas,
-                "mode": settings.default_mode,
-                "entity_type": entity_type,
-                "entity_id": entity_id,
-            })
+            violations.append(
+                {
+                    "type": ViolationType.ROAS_BELOW_THRESHOLD.value,
+                    "message": f"ROAS {current_roas:.2f} is below minimum threshold {settings.min_roas_threshold:.2f}",
+                    "threshold": settings.min_roas_threshold,
+                    "actual": current_roas,
+                    "mode": settings.default_mode,
+                    "entity_type": entity_type,
+                    "entity_id": entity_id,
+                }
+            )
 
         return violations
 
@@ -863,29 +900,34 @@ class AutopilotEnforcer:
         day_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
         count_result = await self.db.execute(
-            select(func.count(EnforcementAuditLogDB.id))
-            .where(
+            select(func.count(EnforcementAuditLogDB.id)).where(
                 EnforcementAuditLogDB.tenant_id == tenant_id,
                 EnforcementAuditLogDB.entity_id == entity_id,
                 EnforcementAuditLogDB.timestamp >= day_start,
-                EnforcementAuditLogDB.action_type.in_([
-                    "budget_increase", "budget_decrease", "set_budget",
-                ]),
+                EnforcementAuditLogDB.action_type.in_(
+                    [
+                        "budget_increase",
+                        "budget_decrease",
+                        "set_budget",
+                    ]
+                ),
             )
         )
         daily_count: int = count_result.scalar_one()
 
         if daily_count >= settings.max_budget_changes_per_day:
-            violations.append({
-                "type": ViolationType.FREQUENCY_CAP_EXCEEDED.value,
-                "message": (
-                    f"Entity {entity_id} has reached the daily budget change limit "
-                    f"({daily_count}/{settings.max_budget_changes_per_day})"
-                ),
-                "threshold": settings.max_budget_changes_per_day,
-                "actual": daily_count,
-                "mode": settings.default_mode,
-            })
+            violations.append(
+                {
+                    "type": ViolationType.FREQUENCY_CAP_EXCEEDED.value,
+                    "message": (
+                        f"Entity {entity_id} has reached the daily budget change limit "
+                        f"({daily_count}/{settings.max_budget_changes_per_day})"
+                    ),
+                    "threshold": settings.max_budget_changes_per_day,
+                    "actual": daily_count,
+                    "mode": settings.default_mode,
+                }
+            )
 
         # --- Check minimum hours between changes ---
         min_gap_cutoff = now - timedelta(hours=settings.min_hours_between_changes)
@@ -896,9 +938,13 @@ class AutopilotEnforcer:
                 EnforcementAuditLogDB.tenant_id == tenant_id,
                 EnforcementAuditLogDB.entity_id == entity_id,
                 EnforcementAuditLogDB.timestamp >= min_gap_cutoff,
-                EnforcementAuditLogDB.action_type.in_([
-                    "budget_increase", "budget_decrease", "set_budget",
-                ]),
+                EnforcementAuditLogDB.action_type.in_(
+                    [
+                        "budget_increase",
+                        "budget_decrease",
+                        "set_budget",
+                    ]
+                ),
             )
             .order_by(EnforcementAuditLogDB.timestamp.desc())
             .limit(1)
@@ -907,16 +953,18 @@ class AutopilotEnforcer:
 
         if last_change_row is not None:
             hours_since = (now - last_change_row).total_seconds() / 3600
-            violations.append({
-                "type": ViolationType.FREQUENCY_CAP_EXCEEDED.value,
-                "message": (
-                    f"Last budget change for entity {entity_id} was {hours_since:.1f}h ago; "
-                    f"minimum gap is {settings.min_hours_between_changes}h"
-                ),
-                "threshold": settings.min_hours_between_changes,
-                "actual": round(hours_since, 2),
-                "mode": settings.default_mode,
-            })
+            violations.append(
+                {
+                    "type": ViolationType.FREQUENCY_CAP_EXCEEDED.value,
+                    "message": (
+                        f"Last budget change for entity {entity_id} was {hours_since:.1f}h ago; "
+                        f"minimum gap is {settings.min_hours_between_changes}h"
+                    ),
+                    "threshold": settings.min_hours_between_changes,
+                    "actual": round(hours_since, 2),
+                    "mode": settings.default_mode,
+                }
+            )
 
         return violations
 
@@ -935,26 +983,32 @@ class AutopilotEnforcer:
         if rule.rule_type == ViolationType.BUDGET_EXCEEDED:
             budget = proposed_value.get("budget", 0)
             if budget > rule.threshold_value:
-                violations.append({
-                    "type": rule.rule_type.value,
-                    "message": rule.description or f"Custom rule violation: {rule.rule_id}",
-                    "threshold": rule.threshold_value,
-                    "actual": budget,
-                    "mode": rule.enforcement_mode.value,
-                    "rule_id": rule.rule_id,
-                })
+                violations.append(
+                    {
+                        "type": rule.rule_type.value,
+                        "message": rule.description
+                        or f"Custom rule violation: {rule.rule_id}",
+                        "threshold": rule.threshold_value,
+                        "actual": budget,
+                        "mode": rule.enforcement_mode.value,
+                        "rule_id": rule.rule_id,
+                    }
+                )
 
         elif rule.rule_type == ViolationType.ROAS_BELOW_THRESHOLD:
             roas = (metrics or {}).get("roas", 0)
             if roas < rule.threshold_value:
-                violations.append({
-                    "type": rule.rule_type.value,
-                    "message": rule.description or f"ROAS below threshold for rule {rule.rule_id}",
-                    "threshold": rule.threshold_value,
-                    "actual": roas,
-                    "mode": rule.enforcement_mode.value,
-                    "rule_id": rule.rule_id,
-                })
+                violations.append(
+                    {
+                        "type": rule.rule_type.value,
+                        "message": rule.description
+                        or f"ROAS below threshold for rule {rule.rule_id}",
+                        "threshold": rule.threshold_value,
+                        "actual": roas,
+                        "mode": rule.enforcement_mode.value,
+                        "rule_id": rule.rule_id,
+                    }
+                )
 
         return violations
 
@@ -964,7 +1018,9 @@ class AutopilotEnforcer:
         default_mode,
     ) -> EnforcementMode:
         """Get the strictest enforcement mode from violations."""
-        default_val = default_mode.value if hasattr(default_mode, 'value') else default_mode
+        default_val = (
+            default_mode.value if hasattr(default_mode, "value") else default_mode
+        )
         modes = [v.get("mode", default_val) for v in violations]
 
         if EnforcementMode.HARD_BLOCK.value in modes:
@@ -1021,8 +1077,16 @@ class AutopilotEnforcer:
             override_reason=override_reason,
         )
 
-        _action_val = intervention_action.value if hasattr(intervention_action, 'value') else intervention_action
-        _mode_val = enforcement_mode.value if hasattr(enforcement_mode, 'value') else enforcement_mode
+        _action_val = (
+            intervention_action.value
+            if hasattr(intervention_action, "value")
+            else intervention_action
+        )
+        _mode_val = (
+            enforcement_mode.value
+            if hasattr(enforcement_mode, "value")
+            else enforcement_mode
+        )
         logger.info(
             f"Enforcement intervention: tenant={tenant_id} action={_action_val} "
             f"entity={entity_type}/{entity_id} mode={_mode_val}"
@@ -1042,14 +1106,26 @@ class AutopilotEnforcer:
 
                 outcome = estimate_outcome(
                     action_type=action_type,
-                    proposed_value=details.get("proposed_value", {}) if isinstance(details, dict) else {},
-                    current_value=details.get("current_value") if isinstance(details, dict) else None,
-                    metrics=details.get("metrics") if isinstance(details, dict) else None,
+                    proposed_value=(
+                        details.get("proposed_value", {})
+                        if isinstance(details, dict)
+                        else {}
+                    ),
+                    current_value=(
+                        details.get("current_value")
+                        if isinstance(details, dict)
+                        else None
+                    ),
+                    metrics=(
+                        details.get("metrics") if isinstance(details, dict) else None
+                    ),
                 )
                 value_cents = outcome.value_cents
                 outcome_type = outcome.outcome_type
                 outcome_confidence = outcome.confidence
-            except Exception as exc:  # noqa: BLE001 — outcome estimation must never block the audit log
+            except (
+                Exception
+            ) as exc:  # noqa: BLE001 — outcome estimation must never block the audit log
                 logger.warning(
                     "outcome_estimation_failed",
                     error=str(exc)[:200],
@@ -1065,15 +1141,21 @@ class AutopilotEnforcer:
                 action_type=action_type,
                 entity_type=entity_type,
                 entity_id=entity_id,
-                violation_type=DBViolationType(violation_type.value)
+                violation_type=(
+                    DBViolationType(violation_type.value)
                     if isinstance(violation_type, ViolationType)
-                    else DBViolationType(violation_type),
-                intervention_action=DBInterventionAction(intervention_action.value)
+                    else DBViolationType(violation_type)
+                ),
+                intervention_action=(
+                    DBInterventionAction(intervention_action.value)
                     if isinstance(intervention_action, InterventionAction)
-                    else DBInterventionAction(intervention_action),
-                enforcement_mode=DBEnforcementMode(enforcement_mode.value)
+                    else DBInterventionAction(intervention_action)
+                ),
+                enforcement_mode=(
+                    DBEnforcementMode(enforcement_mode.value)
                     if isinstance(enforcement_mode, EnforcementMode)
-                    else DBEnforcementMode(enforcement_mode),
+                    else DBEnforcementMode(enforcement_mode)
+                ),
                 details=safe_details,
                 user_id=user_id,
                 override_reason=override_reason,
@@ -1106,6 +1188,7 @@ class AutopilotEnforcer:
 # =============================================================================
 # Notification Service Integration
 # =============================================================================
+
 
 async def send_enforcement_notification(
     tenant_id: int,
@@ -1152,18 +1235,19 @@ async def send_enforcement_notification(
     # ---- Email Channel ----
     if "email" in channels and db is not None:
         try:
-            from app.base_models import User, UserRole, Tenant
+            from app.base_models import Tenant, User, UserRole
 
             # Get tenant name
             tenant_result = await db.execute(
                 select(Tenant.name).where(Tenant.id == tenant_id)
             )
-            tenant_name: str = tenant_result.scalar_one_or_none() or f"Tenant {tenant_id}"
+            tenant_name: str = (
+                tenant_result.scalar_one_or_none() or f"Tenant {tenant_id}"
+            )
 
             # Find admin/manager users for this tenant
             admin_result = await db.execute(
-                select(User.email, User.full_name)
-                .where(
+                select(User.email, User.full_name).where(
                     User.tenant_id == tenant_id,
                     User.is_active.is_(True),
                     User.role.in_([UserRole.ADMIN, UserRole.MANAGER]),
@@ -1238,17 +1322,26 @@ async def send_enforcement_notification(
                         loop = asyncio.get_running_loop()
                         sent = await loop.run_in_executor(
                             None,
-                            functools.partial(email_service._send_email, email_addr, message),
+                            functools.partial(
+                                email_service._send_email, email_addr, message
+                            ),
                         )
                         if sent:
                             any_sent = True
-                    except (ConnectionError, TimeoutError, OSError, smtplib.SMTPException) as email_exc:
+                    except (
+                        ConnectionError,
+                        TimeoutError,
+                        OSError,
+                        smtplib.SMTPException,
+                    ) as email_exc:
                         logger.error(
                             f"Failed to send enforcement email to {email_addr[:20]}...: {email_exc}"
                         )
 
         except (ConnectionError, TimeoutError, OSError) as exc:
-            logger.error(f"Error sending enforcement email notifications: {exc}", exc_info=True)
+            logger.error(
+                f"Error sending enforcement email notifications: {exc}", exc_info=True
+            )
 
     # ---- Slack Channel ----
     if "slack" in channels:

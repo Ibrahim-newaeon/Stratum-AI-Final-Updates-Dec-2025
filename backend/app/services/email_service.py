@@ -113,9 +113,11 @@ class EmailService:
                 from_email=f"{self.from_name} <{self.from_address}>",
                 to_emails=to_email,
                 subject=message["Subject"],
-                html_content=message.get_payload(1).get_payload()
-                if len(message.get_payload()) > 1
-                else message.get_payload(0).get_payload(),
+                html_content=(
+                    message.get_payload(1).get_payload()
+                    if len(message.get_payload()) > 1
+                    else message.get_payload(0).get_payload()
+                ),
             )
             # Attach plain text if available
             if len(message.get_payload()) > 1:
@@ -165,7 +167,9 @@ class EmailService:
             logger.error("Unexpected error sending email", error=str(e))
             return False
 
-    def send_verification_email(self, to_email: str, token: str, user_name: str) -> bool:
+    def send_verification_email(
+        self, to_email: str, token: str, user_name: str
+    ) -> bool:
         """Send email verification link to new user."""
         verification_url = f"{self.frontend_url}/verify-email?token={token}"
 
@@ -234,7 +238,9 @@ If you didn't create an account with Stratum AI, you can safely ignore this emai
         message = self._create_message(to_email, subject, html_content, text_content)
         return self._send_email(to_email, message)
 
-    def send_password_reset_email(self, to_email: str, token: str, user_name: str) -> bool:
+    def send_password_reset_email(
+        self, to_email: str, token: str, user_name: str
+    ) -> bool:
         """Send password reset link to user."""
         reset_url = f"{self.frontend_url}/reset-password?token={token}"
 
@@ -456,7 +462,9 @@ If you didn't request this code, you can safely ignore this email.
         # Adjust messaging based on attempt count
         if attempt_count == 1:
             urgency = "We were unable to process your payment"
-            action_text = "Please update your payment method to ensure uninterrupted service."
+            action_text = (
+                "Please update your payment method to ensure uninterrupted service."
+            )
         elif attempt_count == 2:
             urgency = "Second payment attempt failed"
             action_text = "Your subscription may be suspended soon. Please update your payment method immediately."
@@ -468,9 +476,7 @@ If you didn't request this code, you can safely ignore this email.
 
         amount_section = ""
         if amount_due:
-            amount_section = (
-                f'<p style="font-size: 18px; font-weight: 600;">Amount Due: {amount_due}</p>'
-            )
+            amount_section = f'<p style="font-size: 18px; font-weight: 600;">Amount Due: {amount_due}</p>'
 
         html_content = f"""
 <!DOCTYPE html>
@@ -658,7 +664,9 @@ If you didn't expect this invitation, you can safely ignore this email.
 
         message = MIMEMultipart("alternative")
         message["Subject"] = subject
-        message["From"] = f"{from_name or self.from_name} <{from_email or self.from_address}>"
+        message["From"] = (
+            f"{from_name or self.from_name} <{from_email or self.from_address}>"
+        )
         message["To"] = to_email
 
         if reply_to:

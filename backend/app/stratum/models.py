@@ -185,7 +185,12 @@ class PerformanceMetrics(BaseModel):
             self.cpc = self.spend / self.clicks
         if self.impressions > 0 and self.spend > 0 and self.cpm is None:
             self.cpm = (self.spend / self.impressions) * 1000
-        if self.conversions and self.conversions > 0 and self.spend > 0 and self.cpa is None:
+        if (
+            self.conversions
+            and self.conversions > 0
+            and self.spend > 0
+            and self.cpa is None
+        ):
             self.cpa = self.spend / self.conversions
         if (
             self.conversion_value
@@ -227,7 +232,9 @@ class SignalHealth(BaseModel):
     freshness_score: float = Field(ge=0, le=100)
     variance_score: float = Field(ge=0, le=100)
     anomaly_score: float = Field(ge=0, le=100)
-    cdp_emq_score: Optional[float] = Field(default=None, ge=0, le=100)  # CDP EMQ integration
+    cdp_emq_score: Optional[float] = Field(
+        default=None, ge=0, le=100
+    )  # CDP EMQ integration
     status: str = "healthy"  # healthy, degraded, critical
     issues: list[str] = Field(default_factory=list)
     last_updated: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

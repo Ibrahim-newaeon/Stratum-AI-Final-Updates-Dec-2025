@@ -13,16 +13,15 @@ import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional, Union
 
+import jwt
+import redis.asyncio as aioredis
 from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-import jwt
 from jwt.exceptions import PyJWTError as JWTError
 from passlib.context import CryptContext
 
 from app.core.config import settings
-
-import redis.asyncio as aioredis
 
 # Shared Redis connection pool — avoids creating a new connection per call
 _redis_pool: aioredis.Redis | None = None
@@ -52,6 +51,7 @@ async def get_redis_pool() -> aioredis.Redis:
                 max_connections=20,
             )
     return _redis_pool
+
 
 # Password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -167,6 +167,7 @@ def decode_token(token: str) -> Optional[dict[str, Any]]:
 # PII Encryption (GDPR Compliance)
 # =============================================================================
 
+
 def _get_pii_salt(tenant_id: int | None = None) -> bytes:
     """Return the salt used for PII key derivation.
 
@@ -196,9 +197,7 @@ def _get_fernet_key(tenant_id: int | None = None) -> bytes:
         iterations=100000,
     )
 
-    key = base64.urlsafe_b64encode(
-        kdf.derive(settings.pii_encryption_key.encode())
-    )
+    key = base64.urlsafe_b64encode(kdf.derive(settings.pii_encryption_key.encode()))
     return key
 
 
@@ -284,12 +283,15 @@ def anonymize_pii(value: str) -> str:
 
 def generate_api_key() -> str:
     """Generate a secure API key."""
-    return f"sk_{'live' if settings.is_production else 'test'}_{secrets.token_urlsafe(32)}"
+    return (
+        f"sk_{'live' if settings.is_production else 'test'}_{secrets.token_urlsafe(32)}"
+    )
 
 
 def verify_api_key(api_key: str, stored_hash: str) -> bool:
     """Verify an API key against its stored hash using constant-time comparison."""
     import hmac
+
     computed_hash = hashlib.sha256(api_key.encode()).hexdigest()
     return hmac.compare_digest(computed_hash, stored_hash)
 
@@ -414,6 +416,7 @@ async def clear_login_attempts(email_hash: str) -> None:
 # Permission Decorator
 # =============================================================================
 
+
 def require_permission(permission: str) -> Any:
     """
     Dependency factory that checks if the current user has the required permission.
@@ -438,8 +441,7 @@ def require_permission(permission: str) -> Any:
         # Check if user has the required permission
         if permission not in user_permissions:
             raise HTTPException(
-                status_code=403,
-                detail=f"Permission denied: {permission} required"
+                status_code=403, detail=f"Permission denied: {permission} required"
             )
 
         return True

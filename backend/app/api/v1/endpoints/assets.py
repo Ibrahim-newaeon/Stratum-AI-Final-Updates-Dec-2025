@@ -11,7 +11,17 @@ import uuid
 from pathlib import Path
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, UploadFile, File, Form, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    Request,
+    UploadFile,
+    status,
+)
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -35,8 +45,14 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 # Allowed MIME types and max size (20MB)
 ALLOWED_MIME_TYPES = {
-    "image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml",
-    "video/mp4", "video/webm", "video/quicktime",
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+    "image/svg+xml",
+    "video/mp4",
+    "video/webm",
+    "video/quicktime",
     "text/html",
 }
 MAX_FILE_SIZE = 20 * 1024 * 1024  # 20MB
@@ -92,7 +108,11 @@ def _validate_file_extension(filename: str | None, content_type: str) -> None:
         )
 
 
-@router.post("/upload", response_model=APIResponse[CreativeAssetResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/upload",
+    response_model=APIResponse[CreativeAssetResponse],
+    status_code=status.HTTP_201_CREATED,
+)
 async def upload_asset(
     request: Request,
     file: UploadFile = File(...),
@@ -184,7 +204,9 @@ async def upload_asset(
     await db.commit()
     await db.refresh(asset)
 
-    logger.info("asset_uploaded", asset_id=asset.id, tenant_id=tenant_id, size=len(contents))
+    logger.info(
+        "asset_uploaded", asset_id=asset.id, tenant_id=tenant_id, size=len(contents)
+    )
 
     return APIResponse(
         success=True,
@@ -241,7 +263,9 @@ async def list_assets(
 
     # Pagination
     offset = (page - 1) * page_size
-    query = query.order_by(CreativeAsset.created_at.desc()).offset(offset).limit(page_size)
+    query = (
+        query.order_by(CreativeAsset.created_at.desc()).offset(offset).limit(page_size)
+    )
 
     result = await db.execute(query)
     assets = result.scalars().all()
@@ -341,7 +365,11 @@ async def get_asset(
     )
 
 
-@router.post("", response_model=APIResponse[CreativeAssetResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=APIResponse[CreativeAssetResponse],
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_asset(
     request: Request,
     asset_data: CreativeAssetCreate,
@@ -468,7 +496,7 @@ async def calculate_fatigue_score(
         )
 
     # Calculate fatigue score
-    from datetime import datetime, timezone, timedelta
+    from datetime import datetime, timedelta, timezone
 
     base_score = 0.0
 

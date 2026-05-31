@@ -80,7 +80,7 @@ class KnowledgeGraphSyncService:
         self,
         tenant_id: UUID,
         since: Optional[datetime] = None,
-        batch_size: int = SYNC_BATCH_SIZE
+        batch_size: int = SYNC_BATCH_SIZE,
     ) -> int:
         """
         Sync CDP profiles to the knowledge graph.
@@ -104,7 +104,7 @@ class KnowledgeGraphSyncService:
 
         synced = 0
         for i in range(0, len(profiles), batch_size):
-            batch = profiles[i:i + batch_size]
+            batch = profiles[i : i + batch_size]
 
             for profile in batch:
                 node = ProfileNode(
@@ -120,7 +120,7 @@ class KnowledgeGraphSyncService:
                     computed_traits=profile.computed_traits or {},
                     properties={
                         "profile_data": profile.profile_data or {},
-                    }
+                    },
                 )
 
                 # Extract RFM if present
@@ -131,7 +131,9 @@ class KnowledgeGraphSyncService:
                 await self.kg.merge_node(node)
                 synced += 1
 
-            logger.info(f"Synced {synced}/{len(profiles)} profiles for tenant {tenant_id}")
+            logger.info(
+                f"Synced {synced}/{len(profiles)} profiles for tenant {tenant_id}"
+            )
 
         return synced
 
@@ -139,7 +141,7 @@ class KnowledgeGraphSyncService:
         self,
         tenant_id: UUID,
         since: Optional[datetime] = None,
-        batch_size: int = SYNC_BATCH_SIZE
+        batch_size: int = SYNC_BATCH_SIZE,
     ) -> int:
         """
         Sync CDP events to the knowledge graph.
@@ -164,7 +166,7 @@ class KnowledgeGraphSyncService:
 
         synced = 0
         for i in range(0, len(events), batch_size):
-            batch = events[i:i + batch_size]
+            batch = events[i : i + batch_size]
 
             for event in batch:
                 # Create event node
@@ -190,14 +192,16 @@ class KnowledgeGraphSyncService:
                         start_node_id="",  # Will be matched by external_id
                         end_node_id="",
                         tenant_id=tenant_id,
-                        session_id=event.context.get("session_id") if event.context else None,
+                        session_id=(
+                            event.context.get("session_id") if event.context else None
+                        ),
                     )
                     await self.kg.create_edge(
                         edge,
                         start_label=NodeLabel.PROFILE,
                         start_external_id=str(event.profile_id),
                         end_label=NodeLabel.EVENT,
-                        end_external_id=str(event.id)
+                        end_external_id=str(event.id),
                     )
 
                     # If revenue event, create Revenue node and GENERATED edge
@@ -221,7 +225,7 @@ class KnowledgeGraphSyncService:
                             start_label=NodeLabel.EVENT,
                             start_external_id=str(event.id),
                             end_label=NodeLabel.REVENUE,
-                            end_external_id=f"rev_{event.id}"
+                            end_external_id=f"rev_{event.id}",
                         )
 
                 synced += 1
@@ -231,9 +235,7 @@ class KnowledgeGraphSyncService:
         return synced
 
     async def sync_cdp_segments(
-        self,
-        tenant_id: UUID,
-        since: Optional[datetime] = None
+        self, tenant_id: UUID, since: Optional[datetime] = None
     ) -> int:
         """
         Sync CDP segments and memberships to the knowledge graph.
@@ -260,7 +262,9 @@ class KnowledgeGraphSyncService:
                 tenant_id=tenant_id,
                 external_id=str(segment.id),
                 name=segment.name,
-                segment_type=segment.segment_type.value if segment.segment_type else "dynamic",
+                segment_type=(
+                    segment.segment_type.value if segment.segment_type else "dynamic"
+                ),
                 profile_count=segment.profile_count or 0,
                 conditions=segment.rules or {},
                 last_computed_at=segment.last_computed_at,
@@ -268,10 +272,14 @@ class KnowledgeGraphSyncService:
             await self.kg.merge_node(node)
 
             # Sync memberships
-            membership_query = select(CDPSegmentMembership).where(
-                CDPSegmentMembership.segment_id == segment.id,
-                CDPSegmentMembership.is_active == True
-            ).limit(1000)
+            membership_query = (
+                select(CDPSegmentMembership)
+                .where(
+                    CDPSegmentMembership.segment_id == segment.id,
+                    CDPSegmentMembership.is_active == True,
+                )
+                .limit(1000)
+            )
             membership_result = await self.session.execute(membership_query)
             memberships = membership_result.scalars().all()
 
@@ -288,7 +296,7 @@ class KnowledgeGraphSyncService:
                     start_label=NodeLabel.PROFILE,
                     start_external_id=str(membership.profile_id),
                     end_label=NodeLabel.SEGMENT,
-                    end_external_id=str(segment.id)
+                    end_external_id=str(segment.id),
                 )
 
             synced += 1
@@ -301,9 +309,7 @@ class KnowledgeGraphSyncService:
     # =========================================================================
 
     async def sync_signal_health(
-        self,
-        tenant_id: UUID,
-        since: Optional[datetime] = None
+        self, tenant_id: UUID, since: Optional[datetime] = None
     ) -> int:
         """
         Sync signal health records to the knowledge graph.
@@ -341,7 +347,11 @@ class KnowledgeGraphSyncService:
                 external_id=f"signal_{signal.platform}_{signal.date}",
                 signal_type="composite",
                 source=signal.platform,
-                platform=Platform(signal.platform.lower()) if signal.platform.lower() in [p.value for p in Platform] else None,
+                platform=(
+                    Platform(signal.platform.lower())
+                    if signal.platform.lower() in [p.value for p in Platform]
+                    else None
+                ),
                 score=signal.emq_score or 0,
                 status=status_map.get(signal.status, SignalStatus.DEGRADED),
                 issues=signal.issues or [],
@@ -354,9 +364,7 @@ class KnowledgeGraphSyncService:
         return synced
 
     async def sync_trust_gate_decisions(
-        self,
-        tenant_id: UUID,
-        since: Optional[datetime] = None
+        self, tenant_id: UUID, since: Optional[datetime] = None
     ) -> int:
         """
         Sync trust gate audit log to the knowledge graph.
@@ -407,9 +415,7 @@ class KnowledgeGraphSyncService:
         return synced
 
     async def sync_automation_actions(
-        self,
-        tenant_id: UUID,
-        since: Optional[datetime] = None
+        self, tenant_id: UUID, since: Optional[datetime] = None
     ) -> int:
         """
         Sync automation actions to the knowledge graph.
@@ -423,9 +429,7 @@ class KnowledgeGraphSyncService:
         """
         from app.models.trust_layer import FactActionsQueue
 
-        query = select(FactActionsQueue).where(
-            FactActionsQueue.tenant_id == tenant_id
-        )
+        query = select(FactActionsQueue).where(FactActionsQueue.tenant_id == tenant_id)
         if since:
             query = query.where(FactActionsQueue.created_at > since)
 
@@ -449,7 +453,12 @@ class KnowledgeGraphSyncService:
                 action_type=action.action_type or "unknown",
                 entity_type=action.entity_type or "campaign",
                 entity_id=action.entity_id or "",
-                platform=Platform(action.platform.lower()) if action.platform and action.platform.lower() in [p.value for p in Platform] else Platform.META,
+                platform=(
+                    Platform(action.platform.lower())
+                    if action.platform
+                    and action.platform.lower() in [p.value for p in Platform]
+                    else Platform.META
+                ),
                 status=status_map.get(action.status, AutomationStatus.PENDING),
                 parameters={
                     "before_value": action.before_value,
@@ -469,9 +478,7 @@ class KnowledgeGraphSyncService:
     # =========================================================================
 
     async def sync_campaigns(
-        self,
-        tenant_id: UUID,
-        since: Optional[datetime] = None
+        self, tenant_id: UUID, since: Optional[datetime] = None
     ) -> int:
         """
         Sync campaigns to the knowledge graph.
@@ -505,7 +512,11 @@ class KnowledgeGraphSyncService:
                 tenant_id=tenant_id,
                 external_id=str(campaign.id),
                 name=campaign.name,
-                platform=platform_map.get(campaign.platform.value, Platform.META) if campaign.platform else Platform.META,
+                platform=(
+                    platform_map.get(campaign.platform.value, Platform.META)
+                    if campaign.platform
+                    else Platform.META
+                ),
                 platform_campaign_id=campaign.platform_campaign_id or str(campaign.id),
                 status=campaign.status.value if campaign.status else "active",
                 objective=campaign.objective,
@@ -550,14 +561,14 @@ class KnowledgeGraphSyncService:
         }
 
         total = sum(results.values())
-        logger.info(f"Full sync completed for tenant {tenant_id}: {total} total entities")
+        logger.info(
+            f"Full sync completed for tenant {tenant_id}: {total} total entities"
+        )
 
         return results
 
     async def incremental_sync(
-        self,
-        tenant_id: UUID,
-        since: datetime
+        self, tenant_id: UUID, since: datetime
     ) -> dict[str, int]:
         """
         Perform incremental sync of data changed since last sync.
@@ -582,7 +593,9 @@ class KnowledgeGraphSyncService:
         }
 
         total = sum(results.values())
-        logger.info(f"Incremental sync completed for tenant {tenant_id}: {total} entities updated")
+        logger.info(
+            f"Incremental sync completed for tenant {tenant_id}: {total} entities updated"
+        )
 
         return results
 
@@ -597,7 +610,7 @@ class KnowledgeGraphSyncService:
         event_name: str,
         profile_id: Optional[UUID],
         properties: dict[str, Any],
-        event_time: datetime
+        event_time: datetime,
     ) -> None:
         """
         Real-time hook called when a CDP event is ingested.
@@ -634,7 +647,7 @@ class KnowledgeGraphSyncService:
                 start_label=NodeLabel.PROFILE,
                 start_external_id=str(profile_id),
                 end_label=NodeLabel.EVENT,
-                end_external_id=str(event_id)
+                end_external_id=str(event_id),
             )
 
     async def on_trust_gate_evaluated(
@@ -645,7 +658,7 @@ class KnowledgeGraphSyncService:
         signal_health: float,
         action_type: str,
         reason: str,
-        automation_id: Optional[UUID] = None
+        automation_id: Optional[UUID] = None,
     ) -> None:
         """
         Real-time hook called when a trust gate is evaluated.
@@ -696,14 +709,11 @@ class KnowledgeGraphSyncService:
                 start_label=NodeLabel.TRUST_GATE,
                 start_external_id=str(gate_id),
                 end_label=NodeLabel.AUTOMATION,
-                end_external_id=str(automation_id)
+                end_external_id=str(automation_id),
             )
 
     async def on_profile_merged(
-        self,
-        tenant_id: UUID,
-        surviving_profile_id: UUID,
-        merged_profile_id: UUID
+        self, tenant_id: UUID, surviving_profile_id: UUID, merged_profile_id: UUID
     ) -> None:
         """
         Real-time hook called when profiles are merged.
@@ -724,5 +734,5 @@ class KnowledgeGraphSyncService:
             start_label=NodeLabel.PROFILE,
             start_external_id=str(merged_profile_id),
             end_label=NodeLabel.PROFILE,
-            end_external_id=str(surviving_profile_id)
+            end_external_id=str(surviving_profile_id),
         )

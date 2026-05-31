@@ -20,14 +20,15 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
-
 # ── Response models ──────────────────────────────────────────────────────────
 
 
 class ParsedFilter(BaseModel):
     """A structured filter extracted from natural language."""
 
-    filter_type: str = ""  # platform / metric / date_range / threshold / campaign_type / region
+    filter_type: str = (
+        ""  # platform / metric / date_range / threshold / campaign_type / region
+    )
     field: str = ""
     operator: str = "eq"  # eq / gt / lt / gte / lte / contains / in / between
     value: str = ""
@@ -75,46 +76,101 @@ class NLFilterResponse(BaseModel):
 # ── Constants ────────────────────────────────────────────────────────────────
 
 PLATFORM_ALIASES: dict[str, str] = {
-    "meta": "meta", "facebook": "meta", "fb": "meta", "instagram": "meta", "ig": "meta",
-    "google": "google", "adwords": "google", "gads": "google",
-    "tiktok": "tiktok", "tt": "tiktok",
-    "snapchat": "snapchat", "snap": "snapchat",
-    "linkedin": "linkedin", "li": "linkedin",
-    "twitter": "twitter", "x": "twitter",
+    "meta": "meta",
+    "facebook": "meta",
+    "fb": "meta",
+    "instagram": "meta",
+    "ig": "meta",
+    "google": "google",
+    "adwords": "google",
+    "gads": "google",
+    "tiktok": "tiktok",
+    "tt": "tiktok",
+    "snapchat": "snapchat",
+    "snap": "snapchat",
+    "linkedin": "linkedin",
+    "li": "linkedin",
+    "twitter": "twitter",
+    "x": "twitter",
     "pinterest": "pinterest",
 }
 
 METRIC_ALIASES: dict[str, str] = {
-    "roas": "roas", "return on ad spend": "roas", "roi": "roas",
-    "spend": "spend", "cost": "spend", "budget": "spend",
-    "revenue": "revenue", "income": "revenue", "sales": "revenue",
-    "conversions": "conversions", "conv": "conversions", "converts": "conversions",
-    "ctr": "ctr", "click through rate": "ctr", "click-through": "ctr",
-    "cpa": "cpa", "cost per acquisition": "cpa", "cost per conversion": "cpa",
-    "cpm": "cpm", "cost per mille": "cpm", "cost per thousand": "cpm",
-    "impressions": "impressions", "imps": "impressions",
+    "roas": "roas",
+    "return on ad spend": "roas",
+    "roi": "roas",
+    "spend": "spend",
+    "cost": "spend",
+    "budget": "spend",
+    "revenue": "revenue",
+    "income": "revenue",
+    "sales": "revenue",
+    "conversions": "conversions",
+    "conv": "conversions",
+    "converts": "conversions",
+    "ctr": "ctr",
+    "click through rate": "ctr",
+    "click-through": "ctr",
+    "cpa": "cpa",
+    "cost per acquisition": "cpa",
+    "cost per conversion": "cpa",
+    "cpm": "cpm",
+    "cost per mille": "cpm",
+    "cost per thousand": "cpm",
+    "impressions": "impressions",
+    "imps": "impressions",
     "clicks": "clicks",
 }
 
 INTENT_KEYWORDS: dict[str, list[str]] = {
-    "filter": ["show", "filter", "only", "where", "with", "having", "include", "exclude"],
+    "filter": [
+        "show",
+        "filter",
+        "only",
+        "where",
+        "with",
+        "having",
+        "include",
+        "exclude",
+    ],
     "compare": ["compare", "versus", "vs", "against", "difference", "between"],
     "analyze": ["analyze", "analyse", "breakdown", "deep dive", "detail", "why"],
     "summarize": ["summary", "summarize", "overview", "total", "overall", "aggregate"],
-    "question": ["what", "how", "which", "when", "why", "is", "are", "does", "do", "can"],
+    "question": [
+        "what",
+        "how",
+        "which",
+        "when",
+        "why",
+        "is",
+        "are",
+        "does",
+        "do",
+        "can",
+    ],
 }
 
 TIME_PATTERNS: dict[str, int] = {
-    "today": 0, "yesterday": 1, "last week": 7, "this week": 7,
-    "last month": 30, "this month": 30, "last 7 days": 7, "last 14 days": 14,
-    "last 30 days": 30, "last 90 days": 90, "last quarter": 90,
-    "this quarter": 90, "this year": 365, "last year": 365,
+    "today": 0,
+    "yesterday": 1,
+    "last week": 7,
+    "this week": 7,
+    "last month": 30,
+    "this month": 30,
+    "last 7 days": 7,
+    "last 14 days": 14,
+    "last 30 days": 30,
+    "last 90 days": 90,
+    "last quarter": 90,
+    "this quarter": 90,
+    "this year": 365,
+    "last year": 365,
 }
 
 THRESHOLD_PATTERN = re.compile(
-    r'(roas|spend|revenue|cpa|ctr|cpm|conversions|clicks|impressions)\s*'
-    r'(above|below|over|under|greater than|less than|more than|>=|<=|>|<|=)\s*'
-    r'(\$?\d+\.?\d*%?x?)',
+    r"(roas|spend|revenue|cpa|ctr|cpm|conversions|clicks|impressions)\s*"
+    r"(above|below|over|under|greater than|less than|more than|>=|<=|>|<|=)\s*"
+    r"(\$?\d+\.?\d*%?x?)",
     re.IGNORECASE,
 )
 
@@ -150,13 +206,15 @@ def _extract_platforms(query: str) -> list[ParsedFilter]:
 
     for alias, canonical in PLATFORM_ALIASES.items():
         if alias in q.split() or alias in q:
-            filters.append(ParsedFilter(
-                filter_type="platform",
-                field="platform",
-                operator="eq",
-                value=canonical,
-                display_label=f"Platform: {canonical.title()}",
-            ))
+            filters.append(
+                ParsedFilter(
+                    filter_type="platform",
+                    field="platform",
+                    operator="eq",
+                    value=canonical,
+                    display_label=f"Platform: {canonical.title()}",
+                )
+            )
             break  # take first match
 
     return filters
@@ -172,19 +230,30 @@ def _extract_metrics(query: str) -> list[ParsedFilter]:
         val = match.group(3).replace("$", "").replace("%", "").replace("x", "")
 
         op_map = {
-            "above": "gt", "over": "gt", "greater than": "gt", "more than": "gt", ">": "gt", ">=": "gte",
-            "below": "lt", "under": "lt", "less than": "lt", "<": "lt", "<=": "lte",
+            "above": "gt",
+            "over": "gt",
+            "greater than": "gt",
+            "more than": "gt",
+            ">": "gt",
+            ">=": "gte",
+            "below": "lt",
+            "under": "lt",
+            "less than": "lt",
+            "<": "lt",
+            "<=": "lte",
             "=": "eq",
         }
         op = op_map.get(op_text, "gt")
 
-        filters.append(ParsedFilter(
-            filter_type="threshold",
-            field=metric,
-            operator=op,
-            value=val,
-            display_label=f"{metric.upper()} {op_text} {match.group(3)}",
-        ))
+        filters.append(
+            ParsedFilter(
+                filter_type="threshold",
+                field=metric,
+                operator=op,
+                value=val,
+                display_label=f"{metric.upper()} {op_text} {match.group(3)}",
+            )
+        )
 
     return filters
 
@@ -200,13 +269,15 @@ def _extract_time_range(query: str) -> list[ParsedFilter]:
             start = (now - timedelta(days=days)).strftime("%Y-%m-%d")
             end = now.strftime("%Y-%m-%d")
 
-            filters.append(ParsedFilter(
-                filter_type="date_range",
-                field="date",
-                operator="between",
-                value=f"{start},{end}",
-                display_label=pattern.title(),
-            ))
+            filters.append(
+                ParsedFilter(
+                    filter_type="date_range",
+                    field="date",
+                    operator="between",
+                    value=f"{start},{end}",
+                    display_label=pattern.title(),
+                )
+            )
             break
 
     return filters
@@ -217,20 +288,42 @@ def _generate_suggestions(query: str, platforms: list[str]) -> list[QuerySuggest
     suggestions: list[QuerySuggestion] = []
 
     base_suggestions = [
-        QuerySuggestion(query="Show Meta campaigns with ROAS above 3x", description="Filter high-performing Meta campaigns", category="filter"),
-        QuerySuggestion(query="Compare Google vs Meta last 30 days", description="Side-by-side platform performance", category="comparison"),
-        QuerySuggestion(query="Which campaigns have CPA below $20?", description="Find cost-efficient campaigns", category="filter"),
-        QuerySuggestion(query="Show me underperforming campaigns this week", description="Campaigns needing attention", category="insight"),
-        QuerySuggestion(query="Top 5 campaigns by revenue last month", description="Best revenue generators", category="insight"),
+        QuerySuggestion(
+            query="Show Meta campaigns with ROAS above 3x",
+            description="Filter high-performing Meta campaigns",
+            category="filter",
+        ),
+        QuerySuggestion(
+            query="Compare Google vs Meta last 30 days",
+            description="Side-by-side platform performance",
+            category="comparison",
+        ),
+        QuerySuggestion(
+            query="Which campaigns have CPA below $20?",
+            description="Find cost-efficient campaigns",
+            category="filter",
+        ),
+        QuerySuggestion(
+            query="Show me underperforming campaigns this week",
+            description="Campaigns needing attention",
+            category="insight",
+        ),
+        QuerySuggestion(
+            query="Top 5 campaigns by revenue last month",
+            description="Best revenue generators",
+            category="insight",
+        ),
     ]
 
     # Add platform-specific suggestions
     for plat in platforms[:2]:
-        suggestions.append(QuerySuggestion(
-            query=f"Show {plat.title()} campaigns with ROAS above 2x",
-            description=f"High-performing {plat.title()} campaigns",
-            category="filter",
-        ))
+        suggestions.append(
+            QuerySuggestion(
+                query=f"Show {plat.title()} campaigns with ROAS above 2x",
+                description=f"High-performing {plat.title()} campaigns",
+                category="filter",
+            )
+        )
 
     suggestions.extend(base_suggestions[:3])
     return suggestions[:6]
@@ -245,7 +338,9 @@ def build_nl_filter(
 ) -> NLFilterResponse:
     """Parse a natural language query into structured filters."""
     if not query.strip():
-        platforms = list({str(c.get("platform", "")).lower() for c in campaigns if c.get("platform")})
+        platforms = list(
+            {str(c.get("platform", "")).lower() for c in campaigns if c.get("platform")}
+        )
         return NLFilterResponse(
             interpretation=FilterInterpretation(
                 original_query="",
@@ -254,7 +349,17 @@ def build_nl_filter(
                 explanation="Enter a natural language query to filter your dashboard.",
             ),
             suggestions=_generate_suggestions("", platforms),
-            available_fields=["platform", "spend", "revenue", "roas", "cpa", "ctr", "conversions", "impressions", "date"],
+            available_fields=[
+                "platform",
+                "spend",
+                "revenue",
+                "roas",
+                "cpa",
+                "ctr",
+                "conversions",
+                "impressions",
+                "date",
+            ],
             example_queries=[
                 "Show Meta campaigns with ROAS above 3x",
                 "Compare Google vs TikTok last 30 days",
@@ -301,12 +406,20 @@ def build_nl_filter(
     results_count = len(campaigns)
     for f in all_filters:
         if f.filter_type == "platform":
-            results_count = sum(1 for c in campaigns if f.value in str(c.get("platform", "")).lower())
-        elif f.filter_type == "threshold" and f.field in ("roas", "spend", "revenue", "cpa"):
+            results_count = sum(
+                1 for c in campaigns if f.value in str(c.get("platform", "")).lower()
+            )
+        elif f.filter_type == "threshold" and f.field in (
+            "roas",
+            "spend",
+            "revenue",
+            "cpa",
+        ):
             try:
                 threshold = float(f.value)
                 results_count = sum(
-                    1 for c in campaigns
+                    1
+                    for c in campaigns
                     if (f.operator == "gt" and float(c.get(f.field, 0)) > threshold)
                     or (f.operator == "lt" and float(c.get(f.field, 0)) < threshold)
                     or (f.operator == "gte" and float(c.get(f.field, 0)) >= threshold)
@@ -315,7 +428,9 @@ def build_nl_filter(
             except (ValueError, TypeError):
                 pass
 
-    platforms = list({str(c.get("platform", "")).lower() for c in campaigns if c.get("platform")})
+    platforms = list(
+        {str(c.get("platform", "")).lower() for c in campaigns if c.get("platform")}
+    )
 
     interpretation = FilterInterpretation(
         original_query=query,
@@ -329,16 +444,41 @@ def build_nl_filter(
     # Recent queries (simulated)
     now = datetime.now(timezone.utc)
     recent = [
-        RecentQuery(query="Show Meta ROAS above 3x", timestamp=now.isoformat(), filters_count=2, results_count=5),
-        RecentQuery(query="Google campaigns last 7 days", timestamp=(now - timedelta(hours=2)).isoformat(), filters_count=2, results_count=8),
-        RecentQuery(query="Top performers this month", timestamp=(now - timedelta(hours=5)).isoformat(), filters_count=1, results_count=10),
+        RecentQuery(
+            query="Show Meta ROAS above 3x",
+            timestamp=now.isoformat(),
+            filters_count=2,
+            results_count=5,
+        ),
+        RecentQuery(
+            query="Google campaigns last 7 days",
+            timestamp=(now - timedelta(hours=2)).isoformat(),
+            filters_count=2,
+            results_count=8,
+        ),
+        RecentQuery(
+            query="Top performers this month",
+            timestamp=(now - timedelta(hours=5)).isoformat(),
+            filters_count=1,
+            results_count=10,
+        ),
     ]
 
     return NLFilterResponse(
         interpretation=interpretation,
         suggestions=_generate_suggestions(query, platforms),
         recent_queries=recent,
-        available_fields=["platform", "spend", "revenue", "roas", "cpa", "ctr", "conversions", "impressions", "date"],
+        available_fields=[
+            "platform",
+            "spend",
+            "revenue",
+            "roas",
+            "cpa",
+            "ctr",
+            "conversions",
+            "impressions",
+            "date",
+        ],
         example_queries=[
             "Show Meta campaigns with ROAS above 3x",
             "Compare Google vs TikTok last 30 days",

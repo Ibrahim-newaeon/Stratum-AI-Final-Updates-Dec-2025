@@ -95,7 +95,9 @@ class AuditMiddleware(BaseHTTPMiddleware):
             tenant_id = getattr(request.state, "tenant_id", None)
 
             # Parse resource type and ID from path
-            resource_type, resource_id = self._parse_resource_from_path(request.url.path)
+            resource_type, resource_id = self._parse_resource_from_path(
+                request.url.path
+            )
 
             # Determine action type
             action = self._determine_action(request.method)
@@ -168,10 +170,26 @@ class AuditMiddleware(BaseHTTPMiddleware):
         client_ip = request.client.host if request.client else "unknown"
 
         trusted_prefixes = (
-            "10.", "172.16.", "172.17.", "172.18.", "172.19.",
-            "172.20.", "172.21.", "172.22.", "172.23.", "172.24.",
-            "172.25.", "172.26.", "172.27.", "172.28.", "172.29.",
-            "172.30.", "172.31.", "192.168.", "127.", "::1"
+            "10.",
+            "172.16.",
+            "172.17.",
+            "172.18.",
+            "172.19.",
+            "172.20.",
+            "172.21.",
+            "172.22.",
+            "172.23.",
+            "172.24.",
+            "172.25.",
+            "172.26.",
+            "172.27.",
+            "172.28.",
+            "172.29.",
+            "172.30.",
+            "172.31.",
+            "192.168.",
+            "127.",
+            "::1",
         )
         is_trusted_proxy = any(client_ip.startswith(p) for p in trusted_prefixes)
 
@@ -232,6 +250,7 @@ class AuditMiddleware(BaseHTTPMiddleware):
         """
         try:
             import redis.asyncio as redis
+
             from app.core.config import settings
 
             client = redis.from_url(settings.redis_url)

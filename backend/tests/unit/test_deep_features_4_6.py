@@ -22,7 +22,11 @@ import pytest
 import pytest_asyncio
 
 # Re-usable helpers from conftest
-from tests.unit.conftest import make_auth_headers, make_scalar_result, make_scalars_result
+from tests.unit.conftest import (
+    make_auth_headers,
+    make_scalar_result,
+    make_scalars_result,
+)
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -41,6 +45,7 @@ NOW = datetime.now(timezone.utc)
 # ---------------------------------------------------------------------------
 # Helpers for building mock ORM objects
 # ---------------------------------------------------------------------------
+
 
 def _mock_connection(*, platform="meta", status="connected", tenant_id=1):
     """Build a mock TenantPlatformConnection row."""
@@ -77,6 +82,7 @@ def _mock_ad_account(*, platform="meta", is_enabled=True, tenant_id=1):
 def _mock_campaign_draft(*, status="draft", tenant_id=1):
     """Build a mock CampaignDraft row."""
     from app.models.campaign_builder import DraftStatus
+
     draft = MagicMock()
     draft.id = uuid.UUID(FAKE_UUID)
     draft.tenant_id = tenant_id
@@ -101,6 +107,7 @@ def _mock_campaign_draft(*, status="draft", tenant_id=1):
 def _mock_publish_log(*, result_status="failure"):
     """Build a mock CampaignPublishLog row."""
     from app.models.campaign_builder import PublishResult
+
     log = MagicMock()
     log.id = uuid.UUID(FAKE_UUID2)
     log.draft_id = uuid.UUID(FAKE_UUID)
@@ -145,6 +152,7 @@ def _mock_user(*, user_id=1, tenant_id=1, role_value="admin"):
 # FEATURE 4: CAMPAIGN BUILDER
 # ============================================================================
 
+
 class TestCampaignBuilderConnectors:
     """Tests for campaign builder connector (OAuth) endpoints."""
 
@@ -170,7 +178,9 @@ class TestCampaignBuilderConnectors:
     # ---- Happy path: status (no connection) ----
 
     @pytest.mark.asyncio
-    async def test_get_connector_status_disconnected(self, api_client, admin_headers, mock_db):
+    async def test_get_connector_status_disconnected(
+        self, api_client, admin_headers, mock_db
+    ):
         """GET connector status returns disconnected when no connection exists."""
         # Default mock_db.execute returns None for scalar_one_or_none
         r = await api_client.get(
@@ -186,7 +196,9 @@ class TestCampaignBuilderConnectors:
     # ---- Happy path: status (connected) ----
 
     @pytest.mark.asyncio
-    async def test_get_connector_status_connected(self, api_client, admin_headers, mock_db):
+    async def test_get_connector_status_connected(
+        self, api_client, admin_headers, mock_db
+    ):
         """GET connector status returns connection details when connected."""
         conn = _mock_connection()
         mock_db.execute.return_value = make_scalar_result(conn)
@@ -202,7 +214,9 @@ class TestCampaignBuilderConnectors:
     # ---- Disconnect: not found ----
 
     @pytest.mark.asyncio
-    async def test_disconnect_platform_not_found(self, api_client, admin_headers, mock_db):
+    async def test_disconnect_platform_not_found(
+        self, api_client, admin_headers, mock_db
+    ):
         """DELETE disconnect returns 404 when platform is not connected."""
         r = await api_client.delete(
             f"{CAMPAIGN_BUILDER_PREFIX}/1/connect/meta",
@@ -213,7 +227,9 @@ class TestCampaignBuilderConnectors:
     # ---- Disconnect: happy path ----
 
     @pytest.mark.asyncio
-    async def test_disconnect_platform_success(self, api_client, admin_headers, mock_db):
+    async def test_disconnect_platform_success(
+        self, api_client, admin_headers, mock_db
+    ):
         """DELETE disconnect succeeds when connection exists."""
         conn = _mock_connection()
         mock_db.execute.return_value = make_scalar_result(conn)
@@ -227,7 +243,9 @@ class TestCampaignBuilderConnectors:
     # ---- Invalid platform -> 422 ----
 
     @pytest.mark.asyncio
-    async def test_get_connector_status_invalid_platform(self, api_client, admin_headers):
+    async def test_get_connector_status_invalid_platform(
+        self, api_client, admin_headers
+    ):
         """GET connector status with invalid platform returns 422."""
         r = await api_client.get(
             f"{CAMPAIGN_BUILDER_PREFIX}/1/connect/invalid_platform/status",
@@ -267,7 +285,9 @@ class TestCampaignBuilderAdAccounts:
         assert body["data"] == []
 
     @pytest.mark.asyncio
-    async def test_sync_ad_accounts_not_connected(self, api_client, admin_headers, mock_db):
+    async def test_sync_ad_accounts_not_connected(
+        self, api_client, admin_headers, mock_db
+    ):
         """POST sync returns 400 when platform not connected."""
         r = await api_client.post(
             f"{CAMPAIGN_BUILDER_PREFIX}/1/ad-accounts/meta/sync",
@@ -288,7 +308,9 @@ class TestCampaignBuilderAdAccounts:
         assert "Sync started" in r.json()["data"]["message"]
 
     @pytest.mark.asyncio
-    async def test_update_ad_account_not_found(self, api_client, admin_headers, mock_db):
+    async def test_update_ad_account_not_found(
+        self, api_client, admin_headers, mock_db
+    ):
         """PUT update returns 404 when ad account not found."""
         r = await api_client.put(
             f"{CAMPAIGN_BUILDER_PREFIX}/1/ad-accounts/meta/{FAKE_UUID}",
@@ -327,7 +349,9 @@ class TestCampaignBuilderDrafts:
         assert r.json()["data"] == []
 
     @pytest.mark.asyncio
-    async def test_create_draft_ad_account_not_found(self, api_client, admin_headers, mock_db):
+    async def test_create_draft_ad_account_not_found(
+        self, api_client, admin_headers, mock_db
+    ):
         """POST create draft returns 400 when ad account not found/enabled."""
         r = await api_client.post(
             f"{CAMPAIGN_BUILDER_PREFIX}/1/campaign-drafts",
@@ -381,7 +405,9 @@ class TestCampaignBuilderDrafts:
         assert r.status_code == 400
 
     @pytest.mark.asyncio
-    async def test_approve_draft_not_submitted(self, api_client, admin_headers, mock_db):
+    async def test_approve_draft_not_submitted(
+        self, api_client, admin_headers, mock_db
+    ):
         """POST approve draft returns 400 when draft is not in submitted status."""
         draft = _mock_campaign_draft(status="draft")
         mock_db.execute.return_value = make_scalar_result(draft)
@@ -392,7 +418,9 @@ class TestCampaignBuilderDrafts:
         assert r.status_code == 400
 
     @pytest.mark.asyncio
-    async def test_reject_draft_requires_reason(self, api_client, admin_headers, mock_db):
+    async def test_reject_draft_requires_reason(
+        self, api_client, admin_headers, mock_db
+    ):
         """POST reject draft requires a reason query parameter."""
         draft = _mock_campaign_draft(status="submitted")
         mock_db.execute.return_value = make_scalar_result(draft)
@@ -460,6 +488,7 @@ class TestCampaignBuilderPublishLogs:
 # FEATURE 5: AUDIENCE SYNC
 # ============================================================================
 
+
 class TestAudienceSyncPlatforms:
     """Tests for audience sync platform listing."""
 
@@ -476,9 +505,11 @@ class TestAudienceSyncPlatforms:
     ):
         """GET connected platforms returns list from service."""
         mock_svc = MagicMock()
-        mock_svc.get_connected_platforms = AsyncMock(return_value=[
-            {"platform": "meta", "ad_accounts": [{"id": "act_1", "name": "Main"}]},
-        ])
+        mock_svc.get_connected_platforms = AsyncMock(
+            return_value=[
+                {"platform": "meta", "ad_accounts": [{"id": "act_1", "name": "Main"}]},
+            ]
+        )
         MockService.return_value = mock_svc
 
         r = await api_client.get(
@@ -530,6 +561,7 @@ class TestAudienceSyncAudiences:
 
         mock_user = _mock_user()
         from app.auth.deps import CurrentUser
+
         cu = MagicMock(spec=CurrentUser)
         cu.id = 1
         cu.user = mock_user
@@ -554,7 +586,9 @@ class TestAudienceSyncAudiences:
         test_app.dependency_overrides.pop(auth_get_current_user, None)
 
     @pytest.mark.asyncio
-    @patch("app.auth.deps.is_token_blacklisted", new_callable=AsyncMock, return_value=False)
+    @patch(
+        "app.auth.deps.is_token_blacklisted", new_callable=AsyncMock, return_value=False
+    )
     async def test_create_audience_validation_error(
         self, _mock_bl, api_client, admin_headers, mock_db
     ):
@@ -617,6 +651,7 @@ class TestAudienceSyncAudiences:
 
         mock_user = _mock_user()
         from app.auth.deps import CurrentUser
+
         cu = MagicMock(spec=CurrentUser)
         cu.id = 1
         cu.user = mock_user
@@ -672,6 +707,7 @@ class TestAudienceSyncSegments:
 # ============================================================================
 # FEATURE 6: AUTHENTICATION
 # ============================================================================
+
 
 class TestAuthLogin:
     """Tests for login endpoint."""
@@ -892,7 +928,9 @@ class TestAuthPasswordReset:
 
     @pytest.mark.asyncio
     @patch("app.api.v1.endpoints.auth.get_redis_client", new_callable=AsyncMock)
-    async def test_reset_password_invalid_token(self, mock_redis_factory, api_client, mock_db):
+    async def test_reset_password_invalid_token(
+        self, mock_redis_factory, api_client, mock_db
+    ):
         """POST /reset-password with expired/invalid token returns 400."""
         mock_redis = AsyncMock()
         mock_redis.get = AsyncMock(return_value=None)
@@ -954,6 +992,7 @@ class TestAuthTenants:
 # FEATURE 6: MFA ENDPOINTS
 # ============================================================================
 
+
 class TestMFAStatus:
     """Tests for MFA status endpoint."""
 
@@ -967,13 +1006,20 @@ class TestMFAStatus:
     @patch("app.api.v1.endpoints.mfa.MFAService")
     @patch("app.api.v1.endpoints.mfa.is_token_blacklisted", create=True)
     async def test_mfa_status_with_auth(
-        self, _mock_blacklist, MockMFAService, api_client, admin_headers, mock_db, test_app
+        self,
+        _mock_blacklist,
+        MockMFAService,
+        api_client,
+        admin_headers,
+        mock_db,
+        test_app,
     ):
         """GET /mfa/status with valid JWT returns MFA status."""
         from app.auth.deps import get_current_user as auth_get_current_user
 
         mock_user = _mock_user()
         from app.auth.deps import CurrentUser
+
         cu = MagicMock(spec=CurrentUser)
         cu.id = 1
         cu.user = mock_user
@@ -983,14 +1029,17 @@ class TestMFAStatus:
         test_app.dependency_overrides[auth_get_current_user] = lambda: cu
 
         from app.services.mfa_service import MFAStatus
+
         mock_svc = MagicMock()
-        mock_svc.get_mfa_status = AsyncMock(return_value=MFAStatus(
-            enabled=False,
-            verified_at=None,
-            backup_codes_remaining=0,
-            is_locked=False,
-            lockout_until=None,
-        ))
+        mock_svc.get_mfa_status = AsyncMock(
+            return_value=MFAStatus(
+                enabled=False,
+                verified_at=None,
+                backup_codes_remaining=0,
+                is_locked=False,
+                lockout_until=None,
+            )
+        )
         MockMFAService.return_value = mock_svc
 
         r = await api_client.get(
@@ -1027,7 +1076,9 @@ class TestMFAVerify:
         assert r.status_code == 401
 
     @pytest.mark.asyncio
-    @patch("app.auth.deps.is_token_blacklisted", new_callable=AsyncMock, return_value=False)
+    @patch(
+        "app.auth.deps.is_token_blacklisted", new_callable=AsyncMock, return_value=False
+    )
     async def test_mfa_verify_validation_error(
         self, _mock_bl, api_client, admin_headers, mock_db
     ):

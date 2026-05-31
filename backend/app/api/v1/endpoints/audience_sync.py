@@ -15,11 +15,11 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
+import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
-
-import structlog
 
 from app.auth.deps import get_current_user
 from app.db.session import get_async_session
@@ -27,7 +27,6 @@ from app.models import User
 from app.models.audience_sync import SyncOperation, SyncPlatform
 from app.services.cdp.audience_sync import AudienceSyncService
 from app.tenancy.deps import get_tenant_id
-from sqlalchemy.exc import SQLAlchemyError
 
 logger = structlog.get_logger(__name__)
 
@@ -48,7 +47,9 @@ class PlatformAudienceCreate(BaseModel):
     audience_name: str = Field(..., description="Name for the audience on the platform")
     description: Optional[str] = Field(None, description="Audience description")
     auto_sync: bool = Field(True, description="Enable automatic sync")
-    sync_interval_hours: int = Field(24, ge=1, le=168, description="Auto-sync interval in hours")
+    sync_interval_hours: int = Field(
+        24, ge=1, le=168, description="Auto-sync interval in hours"
+    )
 
 
 class PlatformAudienceResponse(BaseModel):
@@ -353,7 +354,9 @@ async def get_sync_history(
 )
 async def delete_platform_audience(
     audience_id: UUID,
-    delete_from_platform: bool = Query(True, description="Also delete from ad platform"),
+    delete_from_platform: bool = Query(
+        True, description="Also delete from ad platform"
+    ),
     db: AsyncSession = Depends(get_async_session),
     tenant_id: int = Depends(get_tenant_id),
     current_user: User = Depends(get_current_user),
@@ -456,8 +459,16 @@ async def sync_segment_to_all_platforms(
                 triggered_by_user_id=current_user.id,
             )
             jobs.append(job)
-        except (SQLAlchemyError, ConnectionError, TimeoutError, OSError, ValueError) as e:
-            logger.error("sync_segment_platform_failed", platform=audience.platform, error=str(e))
+        except (
+            SQLAlchemyError,
+            ConnectionError,
+            TimeoutError,
+            OSError,
+            ValueError,
+        ) as e:
+            logger.error(
+                "sync_segment_platform_failed", platform=audience.platform, error=str(e)
+            )
             errors.append(
                 {
                     "platform": audience.platform,

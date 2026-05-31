@@ -183,7 +183,9 @@ class TrainingDataLoader:
             # Estimate revenue from conversions if not available
             if "conversions" in df.columns:
                 avg_conversion_value = 50  # $50 default
-                df["revenue_cents"] = (df["conversions"] * avg_conversion_value * 100).astype(int)
+                df["revenue_cents"] = (
+                    df["conversions"] * avg_conversion_value * 100
+                ).astype(int)
             else:
                 df["revenue_cents"] = 0
 
@@ -194,14 +196,18 @@ class TrainingDataLoader:
 
         # Calculate CTR
         df["ctr"] = df.apply(
-            lambda r: (r["clicks"] / r["impressions"] * 100) if r["impressions"] > 0 else 0,
-            axis=1
+            lambda r: (
+                (r["clicks"] / r["impressions"] * 100) if r["impressions"] > 0 else 0
+            ),
+            axis=1,
         )
 
         # Calculate ROAS
         df["roas"] = df.apply(
-            lambda r: (r["revenue_cents"] / r["spend_cents"]) if r["spend_cents"] > 0 else 0,
-            axis=1
+            lambda r: (
+                (r["revenue_cents"] / r["spend_cents"]) if r["spend_cents"] > 0 else 0
+            ),
+            axis=1,
         )
 
         # Generate campaign IDs if not present
@@ -253,7 +259,11 @@ class TrainingDataLoader:
                 "platform": platform,
                 "external_id": str(external_id),
                 "account_id": f"training_account_{tenant_id}",
-                "name": group["name"].iloc[0] if "name" in group.columns else f"Campaign {external_id}",
+                "name": (
+                    group["name"].iloc[0]
+                    if "name" in group.columns
+                    else f"Campaign {external_id}"
+                ),
                 "status": CampaignStatus.COMPLETED,
                 "total_spend_cents": int(group["spend_cents"].sum()),
                 "impressions": int(group["impressions"].sum()),
@@ -264,15 +274,27 @@ class TrainingDataLoader:
 
             # Calculate aggregate metrics
             if campaign_data["impressions"] > 0:
-                campaign_data["ctr"] = campaign_data["clicks"] / campaign_data["impressions"] * 100
+                campaign_data["ctr"] = (
+                    campaign_data["clicks"] / campaign_data["impressions"] * 100
+                )
             if campaign_data["clicks"] > 0:
-                campaign_data["cpc_cents"] = int(campaign_data["total_spend_cents"] / campaign_data["clicks"])
+                campaign_data["cpc_cents"] = int(
+                    campaign_data["total_spend_cents"] / campaign_data["clicks"]
+                )
             if campaign_data["impressions"] > 0:
-                campaign_data["cpm_cents"] = int(campaign_data["total_spend_cents"] / campaign_data["impressions"] * 1000)
+                campaign_data["cpm_cents"] = int(
+                    campaign_data["total_spend_cents"]
+                    / campaign_data["impressions"]
+                    * 1000
+                )
             if campaign_data["conversions"] > 0:
-                campaign_data["cpa_cents"] = int(campaign_data["total_spend_cents"] / campaign_data["conversions"])
+                campaign_data["cpa_cents"] = int(
+                    campaign_data["total_spend_cents"] / campaign_data["conversions"]
+                )
             if campaign_data["total_spend_cents"] > 0:
-                campaign_data["roas"] = campaign_data["revenue_cents"] / campaign_data["total_spend_cents"]
+                campaign_data["roas"] = (
+                    campaign_data["revenue_cents"] / campaign_data["total_spend_cents"]
+                )
 
             # Check if campaign exists
             result = await self.db.execute(
@@ -325,7 +347,9 @@ class TrainingDataLoader:
             "metrics_created": metrics_created,
         }
 
-    def load_csv_to_dataframe(self, file_path: str, dataset_format: str = "generic") -> pd.DataFrame:
+    def load_csv_to_dataframe(
+        self, file_path: str, dataset_format: str = "generic"
+    ) -> pd.DataFrame:
         """
         Load and transform CSV to DataFrame without database.
         Useful for training directly from files.
@@ -383,24 +407,28 @@ class TrainingDataLoader:
 
                 spend = daily_budget * day_factor * weekend_factor
                 impressions = int(spend / base["cpm"] * 1000 * day_factor)
-                clicks = int(impressions * base["ctr"] / 100 * (1 + np.random.normal(0, 0.2)))
+                clicks = int(
+                    impressions * base["ctr"] / 100 * (1 + np.random.normal(0, 0.2))
+                )
                 conversions = int(clicks * base["cvr"] * (1 + np.random.normal(0, 0.3)))
 
                 # Revenue with variance
                 avg_order_value = np.random.uniform(30, 150)
                 revenue = conversions * avg_order_value * (1 + np.random.normal(0, 0.1))
 
-                data.append({
-                    "date": current_date,
-                    "campaign_id": f"campaign_{campaign_idx}",
-                    "campaign_name": f"{platform.title()} Campaign {campaign_idx}",
-                    "platform": platform,
-                    "spend": round(spend, 2),
-                    "impressions": max(0, impressions),
-                    "clicks": max(0, clicks),
-                    "conversions": max(0, conversions),
-                    "revenue": round(max(0, revenue), 2),
-                })
+                data.append(
+                    {
+                        "date": current_date,
+                        "campaign_id": f"campaign_{campaign_idx}",
+                        "campaign_name": f"{platform.title()} Campaign {campaign_idx}",
+                        "platform": platform,
+                        "spend": round(spend, 2),
+                        "impressions": max(0, impressions),
+                        "clicks": max(0, clicks),
+                        "conversions": max(0, conversions),
+                        "revenue": round(max(0, revenue), 2),
+                    }
+                )
 
         return pd.DataFrame(data)
 
@@ -412,7 +440,9 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Load training data")
     parser.add_argument("--generate", action="store_true", help="Generate sample data")
-    parser.add_argument("--output", type=str, default="sample_training_data.csv", help="Output file")
+    parser.add_argument(
+        "--output", type=str, default="sample_training_data.csv", help="Output file"
+    )
     parser.add_argument("--campaigns", type=int, default=50, help="Number of campaigns")
     parser.add_argument("--days", type=int, default=30, help="Days per campaign")
 
@@ -425,4 +455,9 @@ if __name__ == "__main__":
             days_per_campaign=args.days,
         )
         df.to_csv(args.output, index=False)
-        logger.info("sample_data_saved", output=args.output, total_rows=len(df), columns=list(df.columns))
+        logger.info(
+            "sample_data_saved",
+            output=args.output,
+            total_rows=len(df),
+            columns=list(df.columns),
+        )

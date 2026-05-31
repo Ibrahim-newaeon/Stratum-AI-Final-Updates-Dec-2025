@@ -59,9 +59,11 @@ def process_audit_log_queue():
                     new_values=entry.get("new_values"),
                     ip_address=entry.get("ip_address"),
                     user_agent=entry.get("user_agent"),
-                    created_at=datetime.fromisoformat(entry.get("timestamp"))
-                    if entry.get("timestamp")
-                    else datetime.now(UTC),
+                    created_at=(
+                        datetime.fromisoformat(entry.get("timestamp"))
+                        if entry.get("timestamp")
+                        else datetime.now(UTC)
+                    ),
                 )
                 db.add(log)
 

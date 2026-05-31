@@ -92,7 +92,9 @@ class PlatformSelectionRequest(BaseModel):
     """Step 2: Ad platforms to use."""
 
     platforms: list[str] = Field(
-        ..., min_length=1, description="List of platforms: meta, google, tiktok, snapchat"
+        ...,
+        min_length=1,
+        description="List of platforms: meta, google, tiktok, snapchat",
     )
 
     @field_validator("platforms")
@@ -121,7 +123,9 @@ class GoalsSetupRequest(BaseModel):
         None, ge=0.1, le=100, description="Target ROAS (e.g., 3.0 for 3x)"
     )
     target_cpa: Optional[float] = Field(None, ge=0, description="Target CPA in dollars")
-    monthly_budget: Optional[float] = Field(None, ge=0, description="Monthly budget in dollars")
+    monthly_budget: Optional[float] = Field(
+        None, ge=0, description="Monthly budget in dollars"
+    )
     currency: str = Field(default="USD", max_length=3)
     timezone: str = Field(default="UTC", max_length=100)
 
@@ -129,7 +133,18 @@ class GoalsSetupRequest(BaseModel):
     @classmethod
     def validate_currency(cls, v):
         """Validate currency code."""
-        valid_currencies = {"USD", "EUR", "GBP", "CAD", "AUD", "JPY", "CNY", "INR", "BRL", "MXN"}
+        valid_currencies = {
+            "USD",
+            "EUR",
+            "GBP",
+            "CAD",
+            "AUD",
+            "JPY",
+            "CNY",
+            "INR",
+            "BRL",
+            "MXN",
+        }
         if v.upper() not in valid_currencies and (len(v) != 3 or not v.isalpha()):
             # Allow any 3-letter code
             raise ValueError("Currency must be a valid 3-letter code")
@@ -190,7 +205,9 @@ class TrustGateConfigRequest(BaseModel):
         default=40, ge=20, le=70, description="Signal health score that triggers alerts"
     )
     require_approval_above: Optional[float] = Field(
-        None, ge=0, description="Spend changes above this amount require approval (in dollars)"
+        None,
+        ge=0,
+        description="Spend changes above this amount require approval (in dollars)",
     )
     max_daily_actions: int = Field(
         default=10, ge=1, le=100, description="Maximum automatic actions per day"
@@ -338,10 +355,16 @@ async def get_onboarding_status(
         goals_setup = GoalsSetupResponse(
             primary_kpi=onboarding.primary_kpi,
             target_roas=onboarding.target_roas,
-            target_cpa=onboarding.target_cpa_cents / 100 if onboarding.target_cpa_cents else None,
-            monthly_budget=onboarding.monthly_budget_cents / 100
-            if onboarding.monthly_budget_cents
-            else None,
+            target_cpa=(
+                onboarding.target_cpa_cents / 100
+                if onboarding.target_cpa_cents
+                else None
+            ),
+            monthly_budget=(
+                onboarding.monthly_budget_cents / 100
+                if onboarding.monthly_budget_cents
+                else None
+            ),
             currency=onboarding.currency,
             timezone=onboarding.timezone,
         )
@@ -360,9 +383,11 @@ async def get_onboarding_status(
     trust_gate_config = TrustGateConfigResponse(
         trust_threshold_autopilot=onboarding.trust_threshold_autopilot,
         trust_threshold_alert=onboarding.trust_threshold_alert,
-        require_approval_above=onboarding.require_approval_above / 100
-        if onboarding.require_approval_above
-        else None,
+        require_approval_above=(
+            onboarding.require_approval_above / 100
+            if onboarding.require_approval_above
+            else None
+        ),
         max_daily_actions=onboarding.max_daily_actions,
     )
 
@@ -487,7 +512,9 @@ async def save_goals_setup(
     # Save data (convert dollars to cents for storage)
     onboarding.primary_kpi = data.primary_kpi.value
     onboarding.target_roas = data.target_roas
-    onboarding.target_cpa_cents = int(data.target_cpa * 100) if data.target_cpa else None
+    onboarding.target_cpa_cents = (
+        int(data.target_cpa * 100) if data.target_cpa else None
+    )
     onboarding.monthly_budget_cents = (
         int(data.monthly_budget * 100) if data.monthly_budget else None
     )
@@ -519,7 +546,9 @@ async def save_goals_setup(
     )
 
 
-@router.post("/automation-preferences", response_model=APIResponse[StepCompletionResponse])
+@router.post(
+    "/automation-preferences", response_model=APIResponse[StepCompletionResponse]
+)
 async def save_automation_preferences(
     data: AutomationPreferencesRequest,
     current_user: VerifiedUserDep,
@@ -670,7 +699,9 @@ async def skip_onboarding(
 
     return APIResponse(
         success=True,
-        data={"message": "Onboarding skipped. You can complete setup later in Settings."},
+        data={
+            "message": "Onboarding skipped. You can complete setup later in Settings."
+        },
     )
 
 
@@ -685,7 +716,9 @@ async def reset_onboarding(
     Clears all saved preferences and resets to step 1.
     """
     result = await db.execute(
-        select(TenantOnboarding).where(TenantOnboarding.tenant_id == current_user.tenant_id)
+        select(TenantOnboarding).where(
+            TenantOnboarding.tenant_id == current_user.tenant_id
+        )
     )
     onboarding = result.scalar_one_or_none()
 

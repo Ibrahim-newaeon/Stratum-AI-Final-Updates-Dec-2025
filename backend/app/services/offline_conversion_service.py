@@ -17,15 +17,16 @@ Supports:
 - TikTok Events API (offline mode)
 """
 
+import asyncio
 import csv
 import hashlib
 import io
 import json
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional, Tuple
 from enum import Enum
-import asyncio
+from typing import Any, Dict, List, Optional, Tuple
+
 import httpx
 
 from app.core.logging import get_logger
@@ -38,8 +39,10 @@ logger = get_logger(__name__)
 # Data Models
 # =============================================================================
 
+
 class OfflineConversionStatus(str, Enum):
     """Status of an offline conversion upload."""
+
     PENDING = "pending"
     PROCESSING = "processing"
     UPLOADED = "uploaded"
@@ -49,6 +52,7 @@ class OfflineConversionStatus(str, Enum):
 
 class OfflineConversionSource(str, Enum):
     """Source of offline conversion data."""
+
     CRM = "crm"
     POS = "pos"  # Point of Sale
     CALL_CENTER = "call_center"
@@ -60,6 +64,7 @@ class OfflineConversionSource(str, Enum):
 @dataclass
 class OfflineConversion:
     """Single offline conversion record."""
+
     # Identifiers
     conversion_id: str
     platform: str
@@ -92,6 +97,7 @@ class OfflineConversion:
 @dataclass
 class OfflineConversionBatch:
     """Batch of offline conversions for upload."""
+
     batch_id: str
     platform: str
     conversions: List[OfflineConversion]
@@ -106,6 +112,7 @@ class OfflineConversionBatch:
 @dataclass
 class UploadResult:
     """Result of an offline conversion upload."""
+
     batch_id: str
     platform: str
     success: bool
@@ -119,6 +126,7 @@ class UploadResult:
 # =============================================================================
 # Platform-Specific Uploaders
 # =============================================================================
+
 
 class BaseOfflineUploader:
     """Base class for platform-specific offline uploaders."""
@@ -188,19 +196,24 @@ class MetaOfflineUploader(BaseOfflineUploader):
 
         try:
             async with httpx.AsyncClient() as client:
-                url = f"{self.BASE_URL}/{self.API_VERSION}/{offline_event_set_id}/events"
+                url = (
+                    f"{self.BASE_URL}/{self.API_VERSION}/{offline_event_set_id}/events"
+                )
 
                 # Meta accepts up to 1000 events per request
                 batch_size = 1000
                 all_results = []
 
                 for i in range(0, len(formatted_events), batch_size):
-                    batch = formatted_events[i:i + batch_size]
+                    batch = formatted_events[i : i + batch_size]
 
                     response = await client.post(
                         url,
                         params={"access_token": access_token},
-                        json={"data": batch, "upload_tag": f"stratum_offline_{datetime.now().strftime('%Y%m%d')}"},
+                        json={
+                            "data": batch,
+                            "upload_tag": f"stratum_offline_{datetime.now().strftime('%Y%m%d')}",
+                        },
                         timeout=60.0,
                     )
 
@@ -208,7 +221,11 @@ class MetaOfflineUploader(BaseOfflineUploader):
                     all_results.append(result)
 
                 # Aggregate results
-                total_received = sum(r.get("num_processed_entries", 0) for r in all_results if "error" not in r)
+                total_received = sum(
+                    r.get("num_processed_entries", 0)
+                    for r in all_results
+                    if "error" not in r
+                )
                 errors = [r.get("error", {}) for r in all_results if "error" in r]
 
                 return UploadResult(
@@ -222,7 +239,13 @@ class MetaOfflineUploader(BaseOfflineUploader):
                     platform_response=all_results[0] if all_results else None,
                 )
 
-        except (ConnectionError, TimeoutError, OSError, ValueError, httpx.HTTPError) as e:
+        except (
+            ConnectionError,
+            TimeoutError,
+            OSError,
+            ValueError,
+            httpx.HTTPError,
+        ) as e:
             logger.error(f"Meta offline upload error: {e}")
             return UploadResult(
                 batch_id="",
@@ -243,9 +266,13 @@ class MetaOfflineUploader(BaseOfflineUploader):
         if conv.phone:
             match_keys["ph"] = [self._hash_phone(conv.phone)]
         if conv.first_name:
-            match_keys["fn"] = [hashlib.sha256(conv.first_name.lower().encode()).hexdigest()]
+            match_keys["fn"] = [
+                hashlib.sha256(conv.first_name.lower().encode()).hexdigest()
+            ]
         if conv.last_name:
-            match_keys["ln"] = [hashlib.sha256(conv.last_name.lower().encode()).hexdigest()]
+            match_keys["ln"] = [
+                hashlib.sha256(conv.last_name.lower().encode()).hexdigest()
+            ]
         if conv.external_id:
             match_keys["external_id"] = [conv.external_id]
 
@@ -333,7 +360,9 @@ class GoogleOfflineUploader(BaseOfflineUploader):
                     "partialFailure": True,
                 }
 
-                response = await client.post(url, json=payload, headers=headers, timeout=60.0)
+                response = await client.post(
+                    url, json=payload, headers=headers, timeout=60.0
+                )
                 result = response.json()
 
                 if response.status_code == 200:
@@ -347,7 +376,8 @@ class GoogleOfflineUploader(BaseOfflineUploader):
                         success=failed_count == 0,
                         total_records=len(conversions),
                         successful_records=len(formatted_conversions) - failed_count,
-                        failed_records=failed_count + (len(conversions) - len(formatted_conversions)),
+                        failed_records=failed_count
+                        + (len(conversions) - len(formatted_conversions)),
                         errors=[partial_errors] if partial_errors else [],
                         platform_response=result,
                     )
@@ -362,7 +392,13 @@ class GoogleOfflineUploader(BaseOfflineUploader):
                         errors=[result.get("error", {"message": "Upload failed"})],
                     )
 
-        except (ConnectionError, TimeoutError, OSError, ValueError, httpx.HTTPError) as e:
+        except (
+            ConnectionError,
+            TimeoutError,
+            OSError,
+            ValueError,
+            httpx.HTTPError,
+        ) as e:
             logger.error(f"Google offline upload error: {e}")
             return UploadResult(
                 batch_id="",
@@ -396,7 +432,9 @@ class GoogleOfflineUploader(BaseOfflineUploader):
         if isinstance(event_time, datetime):
             conversion_datetime = event_time.strftime("%Y-%m-%d %H:%M:%S%z")
         else:
-            conversion_datetime = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S%z")
+            conversion_datetime = datetime.now(timezone.utc).strftime(
+                "%Y-%m-%d %H:%M:%S%z"
+            )
 
         formatted = {
             "conversionAction": f"customers/{customer_id}/conversionActions/{conversion_action_id}",
@@ -450,7 +488,9 @@ class TikTokOfflineUploader(BaseOfflineUploader):
                     "event_source": "offline",
                 }
 
-                response = await client.post(url, json=payload, headers=headers, timeout=60.0)
+                response = await client.post(
+                    url, json=payload, headers=headers, timeout=60.0
+                )
                 result = response.json()
 
                 if result.get("code") == 0:
@@ -472,10 +512,21 @@ class TikTokOfflineUploader(BaseOfflineUploader):
                         total_records=len(conversions),
                         successful_records=0,
                         failed_records=len(conversions),
-                        errors=[{"message": result.get("message", "Upload failed"), "code": result.get("code")}],
+                        errors=[
+                            {
+                                "message": result.get("message", "Upload failed"),
+                                "code": result.get("code"),
+                            }
+                        ],
                     )
 
-        except (ConnectionError, TimeoutError, OSError, ValueError, httpx.HTTPError) as e:
+        except (
+            ConnectionError,
+            TimeoutError,
+            OSError,
+            ValueError,
+            httpx.HTTPError,
+        ) as e:
             logger.error(f"TikTok offline upload error: {e}")
             return UploadResult(
                 batch_id="",
@@ -509,10 +560,10 @@ class TikTokOfflineUploader(BaseOfflineUploader):
         }
 
 
-
 # =============================================================================
 # Offline Conversion Service
 # =============================================================================
+
 
 class OfflineConversionService:
     """
@@ -561,7 +612,13 @@ class OfflineConversionService:
             "phone": ["phone", "phone_number", "mobile"],
             "first_name": ["first_name", "firstname", "fname"],
             "last_name": ["last_name", "lastname", "lname"],
-            "conversion_value": ["value", "amount", "revenue", "conversion_value", "order_value"],
+            "conversion_value": [
+                "value",
+                "amount",
+                "revenue",
+                "conversion_value",
+                "order_value",
+            ],
             "currency": ["currency", "currency_code"],
             "event_time": ["event_time", "timestamp", "date", "conversion_time"],
             "order_id": ["order_id", "transaction_id", "reference"],
@@ -618,7 +675,9 @@ class OfflineConversionService:
         if event_time_str:
             for fmt in ["%Y-%m-%d %H:%M:%S", "%Y-%m-%d", "%m/%d/%Y", "%d/%m/%Y"]:
                 try:
-                    event_time = datetime.strptime(event_time_str, fmt).replace(tzinfo=timezone.utc)
+                    event_time = datetime.strptime(event_time_str, fmt).replace(
+                        tzinfo=timezone.utc
+                    )
                     break
                 except ValueError:
                     continue
@@ -696,14 +755,22 @@ class OfflineConversionService:
         batch.successful_records = result.successful_records
         batch.failed_records = result.failed_records
         batch.status = (
-            OfflineConversionStatus.UPLOADED if result.success
-            else OfflineConversionStatus.PARTIAL if result.successful_records > 0
-            else OfflineConversionStatus.FAILED
+            OfflineConversionStatus.UPLOADED
+            if result.success
+            else (
+                OfflineConversionStatus.PARTIAL
+                if result.successful_records > 0
+                else OfflineConversionStatus.FAILED
+            )
         )
         if result.errors:
-            batch.error_summary = "; ".join(str(e.get("message", "")) for e in result.errors[:3])
+            batch.error_summary = "; ".join(
+                str(e.get("message", "")) for e in result.errors[:3]
+            )
 
-        logger.info(f"Offline upload {batch_id}: {result.successful_records}/{result.total_records} succeeded")
+        logger.info(
+            f"Offline upload {batch_id}: {result.successful_records}/{result.total_records} succeeded"
+        )
 
         return result
 
@@ -843,9 +910,11 @@ offline_conversion_service = OfflineConversionService()
 # Advanced Offline Conversion Features (P0 Enhancement)
 # =============================================================================
 
+
 @dataclass
 class MatchRatePrediction:
     """Prediction of match rate before upload."""
+
     predicted_match_rate: float
     confidence: float
     risk_level: str  # low, medium, high
@@ -856,6 +925,7 @@ class MatchRatePrediction:
 @dataclass
 class DataQualityScore:
     """Quality score for offline conversion data."""
+
     overall_score: float  # 0-100
     completeness_score: float
     format_score: float
@@ -868,6 +938,7 @@ class DataQualityScore:
 @dataclass
 class ReconciliationResult:
     """Result of reconciliation with platform reports."""
+
     platform: str
     batch_id: str
     our_count: int
@@ -887,7 +958,9 @@ class MatchRatePredictor:
     """
 
     def __init__(self):
-        self._historical_rates: Dict[str, List[Tuple[datetime, float, Dict[str, Any]]]] = {}
+        self._historical_rates: Dict[
+            str, List[Tuple[datetime, float, Dict[str, Any]]]
+        ] = {}
 
     def record_match_rate(
         self,
@@ -899,11 +972,13 @@ class MatchRatePredictor:
         if platform not in self._historical_rates:
             self._historical_rates[platform] = []
 
-        self._historical_rates[platform].append((
-            datetime.now(timezone.utc),
-            match_rate,
-            data_characteristics,
-        ))
+        self._historical_rates[platform].append(
+            (
+                datetime.now(timezone.utc),
+                match_rate,
+                data_characteristics,
+            )
+        )
 
         # Keep last 100 records
         if len(self._historical_rates[platform]) > 100:
@@ -932,47 +1007,63 @@ class MatchRatePredictor:
         # Check for email presence
         email_count = sum(1 for c in conversions if c.get("user_data", {}).get("email"))
         email_rate = email_count / total * 100
-        factors.append({
-            "factor": "email_presence",
-            "value": f"{email_rate:.1f}%",
-            "impact": email_rate * 0.4,  # Email is 40% of match potential
-        })
+        factors.append(
+            {
+                "factor": "email_presence",
+                "value": f"{email_rate:.1f}%",
+                "impact": email_rate * 0.4,  # Email is 40% of match potential
+            }
+        )
 
         if email_rate < 50:
-            recommendations.append("Include email for more conversions - improves match rate significantly")
+            recommendations.append(
+                "Include email for more conversions - improves match rate significantly"
+            )
 
         # Check for phone presence
         phone_count = sum(1 for c in conversions if c.get("user_data", {}).get("phone"))
         phone_rate = phone_count / total * 100
-        factors.append({
-            "factor": "phone_presence",
-            "value": f"{phone_rate:.1f}%",
-            "impact": phone_rate * 0.3,  # Phone is 30% of match potential
-        })
+        factors.append(
+            {
+                "factor": "phone_presence",
+                "value": f"{phone_rate:.1f}%",
+                "impact": phone_rate * 0.3,  # Phone is 30% of match potential
+            }
+        )
 
         if phone_rate < 30:
-            recommendations.append("Add phone numbers where available for better matching")
+            recommendations.append(
+                "Add phone numbers where available for better matching"
+            )
 
         # Check for address completeness
-        address_count = sum(1 for c in conversions if self._has_complete_address(c.get("user_data", {})))
+        address_count = sum(
+            1 for c in conversions if self._has_complete_address(c.get("user_data", {}))
+        )
         address_rate = address_count / total * 100
-        factors.append({
-            "factor": "address_completeness",
-            "value": f"{address_rate:.1f}%",
-            "impact": address_rate * 0.2,
-        })
+        factors.append(
+            {
+                "factor": "address_completeness",
+                "value": f"{address_rate:.1f}%",
+                "impact": address_rate * 0.2,
+            }
+        )
 
         # Check data freshness
         stale_count = sum(1 for c in conversions if self._is_stale(c))
         freshness_rate = (total - stale_count) / total * 100
-        factors.append({
-            "factor": "data_freshness",
-            "value": f"{freshness_rate:.1f}% fresh",
-            "impact": freshness_rate * 0.1,
-        })
+        factors.append(
+            {
+                "factor": "data_freshness",
+                "value": f"{freshness_rate:.1f}% fresh",
+                "impact": freshness_rate * 0.1,
+            }
+        )
 
         if stale_count > total * 0.2:
-            recommendations.append(f"{stale_count} conversions are >7 days old - may have lower match rates")
+            recommendations.append(
+                f"{stale_count} conversions are >7 days old - may have lower match rates"
+            )
 
         # Calculate predicted rate
         base_rate = sum(f["impact"] for f in factors)
@@ -1072,10 +1163,12 @@ class DataQualityScorer:
         completeness_score = complete_count / total * 100
 
         if completeness_score < 90:
-            issues.append({
-                "severity": "warning",
-                "message": f"{total - complete_count} conversions missing required fields",
-            })
+            issues.append(
+                {
+                    "severity": "warning",
+                    "message": f"{total - complete_count} conversions missing required fields",
+                }
+            )
 
         # Format score
         format_issues = 0
@@ -1086,10 +1179,12 @@ class DataQualityScorer:
         format_score = (total - format_issues) / total * 100
 
         if format_issues > 0:
-            issues.append({
-                "severity": "warning",
-                "message": f"{format_issues} conversions have format issues",
-            })
+            issues.append(
+                {
+                    "severity": "warning",
+                    "message": f"{format_issues} conversions have format issues",
+                }
+            )
 
         # Freshness score
         stale_count = 0
@@ -1114,33 +1209,39 @@ class DataQualityScorer:
         freshness_score = max(0, freshness_score)
 
         if very_stale_count > 0:
-            issues.append({
-                "severity": "error",
-                "message": f"{very_stale_count} conversions are >30 days old - may not be accepted",
-            })
+            issues.append(
+                {
+                    "severity": "error",
+                    "message": f"{very_stale_count} conversions are >30 days old - may not be accepted",
+                }
+            )
 
         # Identifier quality
         identifier_score = 0
         for conv in conversions:
             user_data = conv.get("user_data", {})
-            has_identifier = any(user_data.get(ident) for ident in self.RECOMMENDED_IDENTIFIERS)
+            has_identifier = any(
+                user_data.get(ident) for ident in self.RECOMMENDED_IDENTIFIERS
+            )
             if has_identifier:
                 identifier_score += 1
 
         identifier_quality = identifier_score / total * 100
 
         if identifier_quality < 80:
-            issues.append({
-                "severity": "warning",
-                "message": f"{total - identifier_score} conversions lack email/phone/external_id",
-            })
+            issues.append(
+                {
+                    "severity": "warning",
+                    "message": f"{total - identifier_score} conversions lack email/phone/external_id",
+                }
+            )
 
         # Overall score (weighted average)
         overall_score = (
-            completeness_score * 0.3 +
-            format_score * 0.2 +
-            freshness_score * 0.2 +
-            identifier_quality * 0.3
+            completeness_score * 0.3
+            + format_score * 0.2
+            + freshness_score * 0.2
+            + identifier_quality * 0.3
         )
 
         passed_validation = overall_score >= 60 and completeness_score >= 80
@@ -1206,24 +1307,28 @@ class PlatformReconciler:
 
         # Check for count discrepancy
         if our_count != platform_count:
-            discrepancies.append({
-                "type": "count_mismatch",
-                "our_value": our_count,
-                "platform_value": platform_count,
-                "difference": our_count - platform_count,
-            })
+            discrepancies.append(
+                {
+                    "type": "count_mismatch",
+                    "our_value": our_count,
+                    "platform_value": platform_count,
+                    "difference": our_count - platform_count,
+                }
+            )
 
         # Check match rate
         expected_match_rate = 0.7  # 70% expected
         actual_match_rate = matched_count / our_count if our_count > 0 else 0
 
         if actual_match_rate < expected_match_rate - 0.1:
-            discrepancies.append({
-                "type": "low_match_rate",
-                "expected": f"{expected_match_rate * 100:.0f}%",
-                "actual": f"{actual_match_rate * 100:.1f}%",
-                "message": "Match rate below expectations",
-            })
+            discrepancies.append(
+                {
+                    "type": "low_match_rate",
+                    "expected": f"{expected_match_rate * 100:.0f}%",
+                    "actual": f"{actual_match_rate * 100:.1f}%",
+                    "message": "Match rate below expectations",
+                }
+            )
 
         # Calculate discrepancy rate
         discrepancy_rate = len(discrepancies) / 3 * 100  # Normalized
@@ -1280,7 +1385,9 @@ class PlatformReconciler:
 
         total_conversions = sum(r.our_count for r in results)
         total_matched = sum(r.matched_count for r in results)
-        avg_match_rate = total_matched / total_conversions * 100 if total_conversions > 0 else 0
+        avg_match_rate = (
+            total_matched / total_conversions * 100 if total_conversions > 0 else 0
+        )
 
         return {
             "total_batches": len(results),

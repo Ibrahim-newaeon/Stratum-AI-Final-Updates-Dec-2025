@@ -80,7 +80,9 @@ class WhatIfSimulator:
 
         # Get conversion prediction
         conversion_features = {**features, "predicted_spend": new_spend}
-        conversion_prediction = await self.registry.predict("conversion_predictor", conversion_features)
+        conversion_prediction = await self.registry.predict(
+            "conversion_predictor", conversion_features
+        )
 
         # Calculate predicted metrics
         predicted_roas = roas_prediction.get("value", current_metrics.get("roas", 1.5))
@@ -105,19 +107,34 @@ class WhatIfSimulator:
             "spend": round(new_spend, 2),
             "revenue": round(predicted_revenue, 2),
             "roas": round(predicted_roas, 2),
-            "impressions": int(current_metrics.get("impressions", 0) * impression_scale),
+            "impressions": int(
+                current_metrics.get("impressions", 0) * impression_scale
+            ),
             "clicks": int(current_metrics.get("clicks", 0) * click_scale),
-            "conversions": int(current_metrics.get("conversions", 0) * conversion_scale),
+            "conversions": int(
+                current_metrics.get("conversions", 0) * conversion_scale
+            ),
             "ctr": current_metrics.get("ctr", 0),  # CTR typically stays similar
         }
 
         # Calculate changes
         changes = {}
-        for metric in ["spend", "revenue", "roas", "impressions", "clicks", "conversions"]:
-            current_val = current_metrics.get(metric if metric != "spend" else "current_spend", 0)
+        for metric in [
+            "spend",
+            "revenue",
+            "roas",
+            "impressions",
+            "clicks",
+            "conversions",
+        ]:
+            current_val = current_metrics.get(
+                metric if metric != "spend" else "current_spend", 0
+            )
             predicted_val = predicted_metrics.get(metric, 0)
             if current_val > 0:
-                changes[metric] = round((predicted_val - current_val) / current_val * 100, 1)
+                changes[metric] = round(
+                    (predicted_val - current_val) / current_val * 100, 1
+                )
             else:
                 changes[metric] = 0
 
@@ -160,8 +177,8 @@ class WhatIfSimulator:
         # Diminishing returns for increases
         # factor = 1 + log(ratio) * coefficient
         coefficients = {
-            "impressions": 0.9,   # Impressions scale well
-            "clicks": 0.85,       # Clicks slightly less
+            "impressions": 0.9,  # Impressions scale well
+            "clicks": 0.85,  # Clicks slightly less
             "conversions": 0.75,  # Conversions have more diminishing returns
         }
 
@@ -239,18 +256,26 @@ class ScenarioAnalyzer:
                 include_confidence=True,
             )
 
-            results.append({
-                "budget_change_percent": change_pct,
-                "predicted_spend": prediction["predicted_metrics"]["spend"],
-                "predicted_revenue": prediction["predicted_metrics"]["revenue"],
-                "predicted_roas": prediction["predicted_metrics"]["roas"],
-                "predicted_conversions": prediction["predicted_metrics"]["conversions"],
-                "confidence": prediction.get("confidence_interval", {}).get("roas", {}).get("confidence", 0.8),
-            })
+            results.append(
+                {
+                    "budget_change_percent": change_pct,
+                    "predicted_spend": prediction["predicted_metrics"]["spend"],
+                    "predicted_revenue": prediction["predicted_metrics"]["revenue"],
+                    "predicted_roas": prediction["predicted_metrics"]["roas"],
+                    "predicted_conversions": prediction["predicted_metrics"][
+                        "conversions"
+                    ],
+                    "confidence": prediction.get("confidence_interval", {})
+                    .get("roas", {})
+                    .get("confidence", 0.8),
+                }
+            )
 
         # Find optimal scenario (highest ROAS above minimum threshold)
         min_roas_threshold = 1.5
-        viable_scenarios = [r for r in results if r["predicted_roas"] >= min_roas_threshold]
+        viable_scenarios = [
+            r for r in results if r["predicted_roas"] >= min_roas_threshold
+        ]
 
         if viable_scenarios:
             # Sort by revenue potential

@@ -41,7 +41,9 @@ logger = get_logger(__name__)
 # TikTok OAuth endpoints
 TIKTOK_AUTH_URL = "https://business-api.tiktok.com/portal/auth"
 TIKTOK_TOKEN_URL = "https://business-api.tiktok.com/open_api/v1.3/oauth2/access_token/"
-TIKTOK_REFRESH_URL = "https://business-api.tiktok.com/open_api/v1.3/oauth2/refresh_token/"
+TIKTOK_REFRESH_URL = (
+    "https://business-api.tiktok.com/open_api/v1.3/oauth2/refresh_token/"
+)
 
 # TikTok Marketing API
 TIKTOK_API_URL = "https://business-api.tiktok.com/open_api/v1.3"
@@ -128,7 +130,9 @@ class TikTokOAuthService(OAuthService):
 
                 if response_data.get("code") != 0:
                     error_msg = response_data.get("message", "Unknown error")
-                    self.logger.error("TikTok token exchange failed", error=response_data)
+                    self.logger.error(
+                        "TikTok token exchange failed", error=response_data
+                    )
                     raise Exception(f"Token exchange failed: {error_msg}")
 
                 token_data = response_data.get("data", {})
@@ -180,7 +184,9 @@ class TikTokOAuthService(OAuthService):
 
                 if response_data.get("code") != 0:
                     error_msg = response_data.get("message", "Unknown error")
-                    self.logger.error("TikTok token refresh failed", error=response_data)
+                    self.logger.error(
+                        "TikTok token refresh failed", error=response_data
+                    )
                     raise Exception(f"Token refresh failed: {error_msg}")
 
                 token_data = response_data.get("data", {})
@@ -254,7 +260,9 @@ class TikTokOAuthService(OAuthService):
                 }
 
                 try:
-                    async with session.get(info_url, headers=headers, params=info_params) as resp:
+                    async with session.get(
+                        info_url, headers=headers, params=info_params
+                    ) as resp:
                         info_data = await resp.json()
 
                         if info_data.get("code") == 0:
@@ -269,12 +277,16 @@ class TikTokOAuthService(OAuthService):
 
                                 accounts.append(
                                     AdAccountInfo(
-                                        account_id=str(info.get("advertiser_id", adv_id)),
+                                        account_id=str(
+                                            info.get("advertiser_id", adv_id)
+                                        ),
                                         name=info.get("name", f"Advertiser {adv_id}"),
                                         business_name=info.get("company"),
                                         currency=info.get("currency", "USD"),
                                         timezone=info.get("timezone", "UTC"),
-                                        status=status_map.get(info.get("status"), "unknown"),
+                                        status=status_map.get(
+                                            info.get("status"), "unknown"
+                                        ),
                                         raw_data=info,
                                     )
                                 )
@@ -283,13 +295,23 @@ class TikTokOAuthService(OAuthService):
                             accounts.append(
                                 AdAccountInfo(
                                     account_id=str(adv_id),
-                                    name=adv.get("advertiser_name", f"Advertiser {adv_id}"),
+                                    name=adv.get(
+                                        "advertiser_name", f"Advertiser {adv_id}"
+                                    ),
                                     status="active",
                                 )
                             )
 
-                except (ConnectionError, TimeoutError, OSError, ValueError, KeyError) as e:
-                    self.logger.warning(f"Failed to get advertiser info for {adv_id}", error=str(e))
+                except (
+                    ConnectionError,
+                    TimeoutError,
+                    OSError,
+                    ValueError,
+                    KeyError,
+                ) as e:
+                    self.logger.warning(
+                        f"Failed to get advertiser info for {adv_id}", error=str(e)
+                    )
                     accounts.append(
                         AdAccountInfo(
                             account_id=str(adv_id),
@@ -318,7 +340,9 @@ class TikTokOAuthService(OAuthService):
         """
         # TikTok doesn't have a token revocation endpoint
         # Best practice is to delete stored tokens on our side
-        self.logger.info("TikTok token revocation requested - tokens will expire naturally")
+        self.logger.info(
+            "TikTok token revocation requested - tokens will expire naturally"
+        )
         return True
 
     def _calculate_expiry(self, expires_in: Optional[int]) -> Optional[datetime]:

@@ -42,7 +42,9 @@ router = APIRouter(prefix="/payments", tags=["payments"])
 class CreateCheckoutRequest(BaseModel):
     """Request to create a checkout session."""
 
-    tier: str = Field(..., description="Subscription tier: starter, professional, or enterprise")
+    tier: str = Field(
+        ..., description="Subscription tier: starter, professional, or enterprise"
+    )
     success_url: str = Field(..., description="URL to redirect on successful payment")
     cancel_url: str = Field(..., description="URL to redirect on canceled payment")
     trial_days: int = Field(default=14, ge=0, le=30, description="Trial period in days")
@@ -205,7 +207,12 @@ async def get_billing_overview(
         # Get subscription
         subscriptions = await stripe_service.get_customer_subscriptions(customer_id)
         active_sub = next(
-            (s for s in subscriptions if s.status.value in ["active", "trialing", "past_due"]), None
+            (
+                s
+                for s in subscriptions
+                if s.status.value in ["active", "trialing", "past_due"]
+            ),
+            None,
         )
 
         if active_sub:
@@ -217,7 +224,9 @@ async def get_billing_overview(
                 current_period_start=active_sub.current_period_start.isoformat(),
                 current_period_end=active_sub.current_period_end.isoformat(),
                 cancel_at_period_end=active_sub.cancel_at_period_end,
-                trial_end=active_sub.trial_end.isoformat() if active_sub.trial_end else None,
+                trial_end=(
+                    active_sub.trial_end.isoformat() if active_sub.trial_end else None
+                ),
             )
 
         # Get upcoming invoice
@@ -247,7 +256,9 @@ async def get_billing_overview(
         subscription=subscription or SubscriptionResponse(has_subscription=False),
         upcoming_invoice=upcoming_invoice,
         payment_methods=payment_methods,
-        available_tiers=[{"tier": tier.value, **pricing} for tier, pricing in TIER_PRICING.items()],
+        available_tiers=[
+            {"tier": tier.value, **pricing} for tier, pricing in TIER_PRICING.items()
+        ],
     )
 
 
@@ -373,9 +384,16 @@ async def get_subscription(
     if not tenant.stripe_customer_id:
         return SubscriptionResponse(has_subscription=False)
 
-    subscriptions = await stripe_service.get_customer_subscriptions(tenant.stripe_customer_id)
+    subscriptions = await stripe_service.get_customer_subscriptions(
+        tenant.stripe_customer_id
+    )
     active_sub = next(
-        (s for s in subscriptions if s.status.value in ["active", "trialing", "past_due"]), None
+        (
+            s
+            for s in subscriptions
+            if s.status.value in ["active", "trialing", "past_due"]
+        ),
+        None,
     )
 
     if not active_sub:
@@ -420,8 +438,12 @@ async def upgrade_subscription(
         )
 
     # Get current subscription
-    subscriptions = await stripe_service.get_customer_subscriptions(tenant.stripe_customer_id)
-    active_sub = next((s for s in subscriptions if s.status.value in ["active", "trialing"]), None)
+    subscriptions = await stripe_service.get_customer_subscriptions(
+        tenant.stripe_customer_id
+    )
+    active_sub = next(
+        (s for s in subscriptions if s.status.value in ["active", "trialing"]), None
+    )
 
     if not active_sub:
         raise HTTPException(
@@ -478,8 +500,12 @@ async def cancel_subscription(
         )
 
     # Get current subscription
-    subscriptions = await stripe_service.get_customer_subscriptions(tenant.stripe_customer_id)
-    active_sub = next((s for s in subscriptions if s.status.value in ["active", "trialing"]), None)
+    subscriptions = await stripe_service.get_customer_subscriptions(
+        tenant.stripe_customer_id
+    )
+    active_sub = next(
+        (s for s in subscriptions if s.status.value in ["active", "trialing"]), None
+    )
 
     if not active_sub:
         raise HTTPException(
@@ -504,7 +530,9 @@ async def cancel_subscription(
         current_period_start=canceled_sub.current_period_start.isoformat(),
         current_period_end=canceled_sub.current_period_end.isoformat(),
         cancel_at_period_end=canceled_sub.cancel_at_period_end,
-        trial_end=canceled_sub.trial_end.isoformat() if canceled_sub.trial_end else None,
+        trial_end=(
+            canceled_sub.trial_end.isoformat() if canceled_sub.trial_end else None
+        ),
     )
 
 
@@ -531,9 +559,16 @@ async def reactivate_subscription(
         )
 
     # Get subscription scheduled for cancellation
-    subscriptions = await stripe_service.get_customer_subscriptions(tenant.stripe_customer_id)
+    subscriptions = await stripe_service.get_customer_subscriptions(
+        tenant.stripe_customer_id
+    )
     sub_to_reactivate = next(
-        (s for s in subscriptions if s.status.value == "active" and s.cancel_at_period_end), None
+        (
+            s
+            for s in subscriptions
+            if s.status.value == "active" and s.cancel_at_period_end
+        ),
+        None,
     )
 
     if not sub_to_reactivate:
@@ -556,7 +591,9 @@ async def reactivate_subscription(
         current_period_start=reactivated_sub.current_period_start.isoformat(),
         current_period_end=reactivated_sub.current_period_end.isoformat(),
         cancel_at_period_end=reactivated_sub.cancel_at_period_end,
-        trial_end=reactivated_sub.trial_end.isoformat() if reactivated_sub.trial_end else None,
+        trial_end=(
+            reactivated_sub.trial_end.isoformat() if reactivated_sub.trial_end else None
+        ),
     )
 
 
@@ -621,7 +658,9 @@ async def get_payment_methods(
     if not tenant.stripe_customer_id:
         return []
 
-    methods = await stripe_service.get_customer_payment_methods(tenant.stripe_customer_id)
+    methods = await stripe_service.get_customer_payment_methods(
+        tenant.stripe_customer_id
+    )
 
     return [PaymentMethodResponse(**m) for m in methods]
 
@@ -636,5 +675,7 @@ async def get_payment_config():
     return {
         "stripe_configured": stripe_service.STRIPE_CONFIGURED,
         "publishable_key": settings.stripe_publishable_key,
-        "tiers": [{"tier": tier.value, **pricing} for tier, pricing in TIER_PRICING.items()],
+        "tiers": [
+            {"tier": tier.value, **pricing} for tier, pricing in TIER_PRICING.items()
+        ],
     }

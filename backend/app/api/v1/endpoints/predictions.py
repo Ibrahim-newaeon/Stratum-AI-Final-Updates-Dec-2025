@@ -12,17 +12,16 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel
-from sqlalchemy import select, desc
-from sqlalchemy.ext.asyncio import AsyncSession
-
+from sqlalchemy import desc, select
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.db.session import get_async_session
-from app.ml.roas_optimizer import ROASOptimizer, LivePredictionEngine
+from app.ml.roas_optimizer import LivePredictionEngine, ROASOptimizer
 from app.models import Campaign, MLPrediction
 from app.schemas import APIResponse
-from app.workers.tasks import run_live_predictions, generate_roas_alerts
+from app.workers.tasks import generate_roas_alerts, run_live_predictions
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -56,7 +55,8 @@ def _calculate_prediction_confidence(
 
     # Data completeness score
     complete_count = sum(
-        1 for c in campaign_data
+        1
+        for c in campaign_data
         if c.get("spend", 0) > 0 and c.get("revenue", 0) > 0 and c.get("roas", 0) > 0
     )
     completeness_ratio = complete_count / n_campaigns if n_campaigns > 0 else 0
@@ -74,7 +74,9 @@ def _calculate_prediction_confidence(
         variance_confidence = 0.1  # Low confidence if not enough data points
 
     # Total confidence (capped at 0.95 - never claim 100% confidence)
-    total_confidence = min(0.95, sample_confidence + completeness_confidence + variance_confidence)
+    total_confidence = min(
+        0.95, sample_confidence + completeness_confidence + variance_confidence
+    )
 
     return round(total_confidence, 2)
 
@@ -145,7 +147,8 @@ async def get_live_predictions(
             .where(
                 MLPrediction.tenant_id == tenant_id,
                 MLPrediction.prediction_type == "portfolio_analysis",
-                MLPrediction.created_at >= datetime.now(timezone.utc) - timedelta(minutes=30),
+                MLPrediction.created_at
+                >= datetime.now(timezone.utc) - timedelta(minutes=30),
             )
             .order_by(desc(MLPrediction.created_at))
             .limit(1)
@@ -183,19 +186,23 @@ async def get_live_predictions(
     # Convert to dict format
     campaign_data = []
     for c in campaigns:
-        campaign_data.append({
-            "id": c.id,
-            "name": c.name,
-            "platform": c.platform.value if c.platform else "meta",
-            "spend": c.total_spend_cents / 100 if c.total_spend_cents else 0,
-            "revenue": c.revenue_cents / 100 if c.revenue_cents else 0,
-            "roas": c.roas or 0,
-            "impressions": c.impressions or 0,
-            "clicks": c.clicks or 0,
-            "conversions": c.conversions or 0,
-            "ctr": c.ctr or 0,
-            "daily_budget": c.daily_budget_cents / 100 if c.daily_budget_cents else 0,
-        })
+        campaign_data.append(
+            {
+                "id": c.id,
+                "name": c.name,
+                "platform": c.platform.value if c.platform else "meta",
+                "spend": c.total_spend_cents / 100 if c.total_spend_cents else 0,
+                "revenue": c.revenue_cents / 100 if c.revenue_cents else 0,
+                "roas": c.roas or 0,
+                "impressions": c.impressions or 0,
+                "clicks": c.clicks or 0,
+                "conversions": c.conversions or 0,
+                "ctr": c.ctr or 0,
+                "daily_budget": (
+                    c.daily_budget_cents / 100 if c.daily_budget_cents else 0
+                ),
+            }
+        )
 
     # Run analysis
     optimizer = ROASOptimizer()
@@ -205,14 +212,16 @@ async def get_live_predictions(
     alerts = []
     for camp in analysis.get("campaign_analyses", []):
         if camp["health_score"] < 40:
-            alerts.append({
-                "campaign_id": camp["campaign_id"],
-                "campaign_name": camp["campaign_name"],
-                "type": "low_health",
-                "severity": "critical" if camp["health_score"] < 20 else "high",
-                "message": f"Campaign health score is {camp['health_score']}%",
-                "recommendation": "Review recommendations and take action",
-            })
+            alerts.append(
+                {
+                    "campaign_id": camp["campaign_id"],
+                    "campaign_name": camp["campaign_name"],
+                    "type": "low_health",
+                    "severity": "critical" if camp["health_score"] < 20 else "high",
+                    "message": f"Campaign health score is {camp['health_score']}%",
+                    "recommendation": "Review recommendations and take action",
+                }
+            )
 
     # Store prediction (non-blocking — don't fail the response if caching fails)
     try:
@@ -285,7 +294,9 @@ async def get_campaign_prediction(
         "clicks": campaign.clicks or 0,
         "conversions": campaign.conversions or 0,
         "ctr": campaign.ctr or 0,
-        "daily_budget": campaign.daily_budget_cents / 100 if campaign.daily_budget_cents else 0,
+        "daily_budget": (
+            campaign.daily_budget_cents / 100 if campaign.daily_budget_cents else 0
+        ),
     }
 
     # Run analysis
@@ -302,7 +313,9 @@ async def get_campaign_prediction(
 async def get_prediction_alerts(
     request: Request,
     db: AsyncSession = Depends(get_async_session),
-    severity: Optional[str] = Query(None, description="Filter by severity: critical, high, medium, low"),
+    severity: Optional[str] = Query(
+        None, description="Filter by severity: critical, high, medium, low"
+    ),
     limit: int = Query(50, le=100),
 ):
     """
@@ -336,27 +349,34 @@ async def get_prediction_alerts(
         for campaign in campaigns:
             # Check for ROAS below threshold
             if campaign.roas and campaign.roas < 1.0:
-                alerts.append({
-                    "campaign_id": campaign.id,
-                    "campaign_name": campaign.name,
-                    "type": "low_roas",
-                    "severity": "critical" if campaign.roas < 0.5 else "high",
-                    "message": f"ROAS is {campaign.roas:.2f}x - below break-even",
-                    "recommendation": "Consider pausing or reducing budget",
-                })
+                alerts.append(
+                    {
+                        "campaign_id": campaign.id,
+                        "campaign_name": campaign.name,
+                        "type": "low_roas",
+                        "severity": "critical" if campaign.roas < 0.5 else "high",
+                        "message": f"ROAS is {campaign.roas:.2f}x - below break-even",
+                        "recommendation": "Consider pausing or reducing budget",
+                    }
+                )
 
             # Check for high ROAS - scaling opportunity
             if campaign.roas and campaign.roas > 3.0:
-                alerts.append({
-                    "campaign_id": campaign.id,
-                    "campaign_name": campaign.name,
-                    "type": "scaling_opportunity",
-                    "severity": "info",
-                    "message": f"ROAS is {campaign.roas:.2f}x - excellent performance",
-                    "recommendation": "Consider increasing budget by 20-30%",
-                })
+                alerts.append(
+                    {
+                        "campaign_id": campaign.id,
+                        "campaign_name": campaign.name,
+                        "type": "scaling_opportunity",
+                        "severity": "info",
+                        "message": f"ROAS is {campaign.roas:.2f}x - excellent performance",
+                        "recommendation": "Consider increasing budget by 20-30%",
+                    }
+                )
 
-        alert_data = {"alerts": alerts, "generated_at": datetime.now(timezone.utc).isoformat()}
+        alert_data = {
+            "alerts": alerts,
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+        }
     else:
         alert_data = alert_record.prediction_result
         alert_data["generated_at"] = alert_record.created_at.isoformat()
@@ -364,8 +384,7 @@ async def get_prediction_alerts(
     # Filter by severity if specified
     if severity and "alerts" in alert_data:
         alert_data["alerts"] = [
-            a for a in alert_data["alerts"]
-            if a.get("severity") == severity
+            a for a in alert_data["alerts"] if a.get("severity") == severity
         ]
 
     return APIResponse(
@@ -426,14 +445,16 @@ async def get_budget_optimization(
     # Prepare data
     campaign_data = []
     for c in campaigns:
-        campaign_data.append({
-            "id": c.id,
-            "name": c.name,
-            "platform": c.platform.value if c.platform else "meta",
-            "spend": c.total_spend_cents / 100 if c.total_spend_cents else 0,
-            "revenue": c.revenue_cents / 100 if c.revenue_cents else 0,
-            "roas": c.roas or 0,
-        })
+        campaign_data.append(
+            {
+                "id": c.id,
+                "name": c.name,
+                "platform": c.platform.value if c.platform else "meta",
+                "spend": c.total_spend_cents / 100 if c.total_spend_cents else 0,
+                "revenue": c.revenue_cents / 100 if c.revenue_cents else 0,
+                "roas": c.roas or 0,
+            }
+        )
 
     # Run analysis
     optimizer = ROASOptimizer()

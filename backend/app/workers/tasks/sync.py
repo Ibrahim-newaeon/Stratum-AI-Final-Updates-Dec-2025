@@ -203,21 +203,27 @@ def sync_all_campaigns():
     logger.info("Starting sync for all campaigns")
 
     with SyncSessionLocal() as db:
-        tenant_ids = db.execute(
-            select(Tenant.id).where(Tenant.is_deleted == False)
-        ).scalars().all()
+        tenant_ids = (
+            db.execute(select(Tenant.id).where(Tenant.is_deleted == False))
+            .scalars()
+            .all()
+        )
 
         task_count = 0
 
         if settings.use_mock_ad_data:
             # Mock mode: sync individual campaigns with generated data
             for tid in tenant_ids:
-                campaign_ids = db.execute(
-                    select(Campaign.id).where(
-                        Campaign.tenant_id == tid,
-                        Campaign.is_deleted == False,
+                campaign_ids = (
+                    db.execute(
+                        select(Campaign.id).where(
+                            Campaign.tenant_id == tid,
+                            Campaign.is_deleted == False,
+                        )
                     )
-                ).scalars().all()
+                    .scalars()
+                    .all()
+                )
 
                 for cid in campaign_ids:
                     sync_campaign_data.delay(tid, cid)

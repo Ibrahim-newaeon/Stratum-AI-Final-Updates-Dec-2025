@@ -203,7 +203,9 @@ async def seed_cms_content():
                 print(f"  + Created category: {cat['name']} ({cat['slug']})")
                 categories_created += 1
 
-            print(f"\n  Categories: {categories_created} created, {categories_skipped} already existed")
+            print(
+                f"\n  Categories: {categories_created} created, {categories_skipped} already existed"
+            )
 
             # --- Seed Pages ---
             print("\n[2/2] Seeding CMS pages...")
@@ -259,7 +261,9 @@ async def seed_cms_content():
                 print(f"  + Created page: {page['title']} (/{page['slug']})")
                 pages_created += 1
 
-            print(f"\n  Pages: {pages_created} created, {pages_skipped} already existed")
+            print(
+                f"\n  Pages: {pages_created} created, {pages_skipped} already existed"
+            )
 
             print("\n" + "=" * 60)
             print("  CMS Content Seeded Successfully!")
@@ -269,7 +273,9 @@ async def seed_cms_content():
             print("       to add feature items for the landing page")
             print("    2. Go to Landing Content > FAQ to add FAQ items")
             print("    3. Go to Landing Content > Pricing to add pricing tiers")
-            print("    4. Go to Pages to edit the page templates (Features, Pricing, etc.)")
+            print(
+                "    4. Go to Pages to edit the page templates (Features, Pricing, etc.)"
+            )
             print("    5. Go to Posts to create blog posts in the Blog category")
             print("=" * 60 + "\n")
 

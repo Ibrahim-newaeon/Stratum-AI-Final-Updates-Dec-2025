@@ -19,7 +19,6 @@ from httpx import AsyncClient
 
 from app.core.launch_readiness_phases import LAUNCH_READINESS_PHASES
 
-
 pytestmark = pytest.mark.integration
 
 BASE = "/api/v1/superadmin/launch-readiness"
@@ -271,9 +270,7 @@ class TestAuditTrail:
             headers=superadmin_headers,
         )
 
-        response = await client.get(
-            f"{BASE}/events", headers=superadmin_headers
-        )
+        response = await client.get(f"{BASE}/events", headers=superadmin_headers)
         assert response.status_code == 200
 
         events = response.json()["data"]

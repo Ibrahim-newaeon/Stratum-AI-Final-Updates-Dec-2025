@@ -26,7 +26,9 @@ logger = get_logger(__name__)
 class ErrorHandlerMiddleware(BaseHTTPMiddleware):
     """Catch unhandled exceptions and return a structured JSON 500 response."""
 
-    async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
+    async def dispatch(
+        self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
         try:
             return await call_next(request)
         except HTTPException:

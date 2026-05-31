@@ -14,14 +14,15 @@ Interpretation:
 """
 
 from typing import Optional
+
+from app.analytics.logic.scoring import clamp01
 from app.analytics.logic.types import (
-    EntityMetrics,
     BaselineMetrics,
+    EntityMetrics,
     FatigueParams,
     FatigueResult,
     FatigueState,
 )
-from app.analytics.logic.scoring import clamp01
 
 
 def ema(current: float, prev: float, alpha: float = 0.4) -> float:
@@ -80,10 +81,10 @@ def creative_fatigue(
 
     # Calculate raw fatigue score
     fatigue = (
-        params.ctr_weight * ctr_drop +
-        params.roas_weight * roas_drop +
-        params.cpa_weight * cpa_rise +
-        params.exposure_weight * exposure_factor
+        params.ctr_weight * ctr_drop
+        + params.roas_weight * roas_drop
+        + params.cpa_weight * cpa_rise
+        + params.exposure_weight * exposure_factor
     )
 
     # Smooth with EMA to avoid noise
@@ -105,11 +106,17 @@ def creative_fatigue(
     if state == FatigueState.REFRESH:
         recommendations.append("Refresh creative immediately - create new hook/visual")
         if ctr_drop > 0.3:
-            recommendations.append(f"CTR dropped {ctr_drop*100:.0f}% - test new headlines")
+            recommendations.append(
+                f"CTR dropped {ctr_drop*100:.0f}% - test new headlines"
+            )
         if roas_drop > 0.3:
-            recommendations.append(f"ROAS dropped {roas_drop*100:.0f}% - review offer/CTA")
+            recommendations.append(
+                f"ROAS dropped {roas_drop*100:.0f}% - review offer/CTA"
+            )
         if exposure_factor > 0.5:
-            recommendations.append(f"High frequency ({today.frequency:.1f}) - expand audience")
+            recommendations.append(
+                f"High frequency ({today.frequency:.1f}) - expand audience"
+            )
     elif state == FatigueState.WATCH:
         recommendations.append("Monitor closely - prepare backup creatives")
         recommendations.append("Consider A/B testing new variants")

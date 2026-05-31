@@ -28,7 +28,9 @@ def calculate_cost_allocation():
     logger.info("Starting cost allocation calculation")
 
     with SyncSessionLocal() as db:
-        tenants = db.execute(select(Tenant).where(Tenant.is_deleted == False)).scalars().all()
+        tenants = (
+            db.execute(select(Tenant).where(Tenant.is_deleted == False)).scalars().all()
+        )
 
         allocations = []
         for tenant in tenants:
@@ -61,9 +63,15 @@ def calculate_cost_allocation():
                                 "revenue_cents": 0,
                                 "conversions": 0,
                             }
-                        platform_totals[platform]["spend_cents"] += metric.spend_cents or 0
-                        platform_totals[platform]["revenue_cents"] += metric.revenue_cents or 0
-                        platform_totals[platform]["conversions"] += metric.conversions or 0
+                        platform_totals[platform]["spend_cents"] += (
+                            metric.spend_cents or 0
+                        )
+                        platform_totals[platform]["revenue_cents"] += (
+                            metric.revenue_cents or 0
+                        )
+                        platform_totals[platform]["conversions"] += (
+                            metric.conversions or 0
+                        )
 
                 allocations.append(
                     {
@@ -90,7 +98,9 @@ def calculate_usage_rollup():
     logger.info("Starting usage rollup calculation")
 
     with SyncSessionLocal() as db:
-        tenants = db.execute(select(Tenant).where(Tenant.is_deleted == False)).scalars().all()
+        tenants = (
+            db.execute(select(Tenant).where(Tenant.is_deleted == False)).scalars().all()
+        )
 
         rollups = []
         for tenant in tenants:

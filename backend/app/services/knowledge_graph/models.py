@@ -19,8 +19,10 @@ from pydantic import BaseModel, Field, computed_field
 # ENUMS
 # =============================================================================
 
+
 class NodeLabel(str, Enum):
     """Vertex labels in the knowledge graph."""
+
     PROFILE = "Profile"
     ACCOUNT = "Account"
     EVENT = "Event"
@@ -37,6 +39,7 @@ class NodeLabel(str, Enum):
 
 class EdgeLabel(str, Enum):
     """Edge labels in the knowledge graph."""
+
     BELONGS_TO = "BELONGS_TO"
     PERFORMED = "PERFORMED"
     GENERATED = "GENERATED"
@@ -56,6 +59,7 @@ class EdgeLabel(str, Enum):
 
 class LifecycleStage(str, Enum):
     """CDP profile lifecycle stages."""
+
     ANONYMOUS = "anonymous"
     KNOWN = "known"
     CUSTOMER = "customer"
@@ -64,6 +68,7 @@ class LifecycleStage(str, Enum):
 
 class SignalStatus(str, Enum):
     """Signal health status."""
+
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     CRITICAL = "critical"
@@ -71,6 +76,7 @@ class SignalStatus(str, Enum):
 
 class GateDecision(str, Enum):
     """Trust gate decision outcomes."""
+
     PASS = "pass"
     HOLD = "hold"
     BLOCK = "block"
@@ -78,6 +84,7 @@ class GateDecision(str, Enum):
 
 class AutomationStatus(str, Enum):
     """Automation execution status."""
+
     PENDING = "pending"
     EXECUTING = "executing"
     COMPLETED = "completed"
@@ -87,6 +94,7 @@ class AutomationStatus(str, Enum):
 
 class Platform(str, Enum):
     """Advertising platforms."""
+
     META = "meta"
     GOOGLE = "google"
     TIKTOK = "tiktok"
@@ -100,8 +108,10 @@ class Platform(str, Enum):
 # BASE MODELS
 # =============================================================================
 
+
 class GraphNode(BaseModel):
     """Base class for all graph nodes."""
+
     id: Optional[str] = Field(default=None, description="AGE vertex ID")
     tenant_id: UUID = Field(..., description="Tenant isolation")
     external_id: str = Field(..., description="External system ID")
@@ -126,7 +136,14 @@ class GraphNode(BaseModel):
         }
         # Add class-specific fields
         for field_name, field_info in self.model_fields.items():
-            if field_name not in ("id", "tenant_id", "external_id", "created_at", "updated_at", "properties"):
+            if field_name not in (
+                "id",
+                "tenant_id",
+                "external_id",
+                "created_at",
+                "updated_at",
+                "properties",
+            ):
                 value = getattr(self, field_name)
                 if value is not None:
                     if isinstance(value, Enum):
@@ -144,6 +161,7 @@ class GraphNode(BaseModel):
 
 class GraphEdge(BaseModel):
     """Base class for all graph edges."""
+
     id: Optional[str] = Field(default=None, description="AGE edge ID")
     start_node_id: str = Field(..., description="Source vertex ID")
     end_node_id: str = Field(..., description="Target vertex ID")
@@ -165,6 +183,7 @@ class GraphEdge(BaseModel):
 # ACTOR NODES (Who)
 # =============================================================================
 
+
 class ProfileNode(GraphNode):
     """
     CDP customer profile vertex.
@@ -172,6 +191,7 @@ class ProfileNode(GraphNode):
     Represents a unified customer identity with lifecycle tracking.
     Maps to: CDPProfile in the relational model.
     """
+
     lifecycle_stage: LifecycleStage = Field(default=LifecycleStage.ANONYMOUS)
     email_hash: Optional[str] = Field(default=None, description="SHA256 of email")
     phone_hash: Optional[str] = Field(default=None, description="SHA256 of phone")
@@ -192,9 +212,12 @@ class AccountNode(GraphNode):
 
     Represents a B2B account that profiles belong to.
     """
+
     name: str
     industry: Optional[str] = None
-    arr_cents: Optional[int] = Field(default=None, description="Annual recurring revenue")
+    arr_cents: Optional[int] = Field(
+        default=None, description="Annual recurring revenue"
+    )
     health_score: Optional[float] = Field(default=None, ge=0, le=100)
     employee_count: Optional[int] = None
 
@@ -206,16 +229,20 @@ class SegmentNode(GraphNode):
     Represents a dynamic or static segment from CDP.
     Maps to: CDPSegment in the relational model.
     """
+
     name: str
     segment_type: str = Field(default="dynamic", description="static|dynamic|computed")
     profile_count: int = Field(default=0)
-    conditions: dict[str, Any] = Field(default_factory=dict, description="Segment rules")
+    conditions: dict[str, Any] = Field(
+        default_factory=dict, description="Segment rules"
+    )
     last_computed_at: Optional[datetime] = None
 
 
 # =============================================================================
 # ACTION NODES (What)
 # =============================================================================
+
 
 class EventNode(GraphNode):
     """
@@ -224,11 +251,20 @@ class EventNode(GraphNode):
     Represents an action taken by a profile (page_view, purchase, etc.).
     Maps to: CDPEvent in the relational model.
     """
-    event_type: str = Field(..., description="Event name (e.g., 'purchase', 'page_view')")
+
+    event_type: str = Field(
+        ..., description="Event name (e.g., 'purchase', 'page_view')"
+    )
     event_time: datetime
-    source: Optional[str] = Field(default=None, description="Event source (website, app, etc.)")
-    emq_score: Optional[float] = Field(default=None, ge=0, le=100, description="Event Match Quality")
-    revenue_cents: Optional[int] = Field(default=None, description="Revenue if applicable")
+    source: Optional[str] = Field(
+        default=None, description="Event source (website, app, etc.)"
+    )
+    emq_score: Optional[float] = Field(
+        default=None, ge=0, le=100, description="Event Match Quality"
+    )
+    revenue_cents: Optional[int] = Field(
+        default=None, description="Revenue if applicable"
+    )
     event_properties: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -238,6 +274,7 @@ class TouchpointNode(GraphNode):
 
     Represents a customer interaction (email, ad impression, etc.).
     """
+
     touchpoint_type: str = Field(..., description="email|ad|social|organic|direct")
     channel: str
     campaign_id: Optional[str] = None
@@ -251,6 +288,7 @@ class AutomationNode(GraphNode):
 
     Represents an automated action from the Autopilot engine.
     """
+
     action_type: str = Field(..., description="update_budget|pause|scale|etc.")
     entity_type: str = Field(default="campaign", description="campaign|adset|ad")
     entity_id: str
@@ -266,12 +304,14 @@ class AutomationNode(GraphNode):
 # CONTROL NODES (How/Why)
 # =============================================================================
 
+
 class SignalNode(GraphNode):
     """
     Data quality signal vertex.
 
     Represents a signal health measurement from the Trust Engine.
     """
+
     signal_type: str = Field(..., description="emq|freshness|variance|anomaly|cdp")
     source: str = Field(..., description="Data source (platform, CDP, etc.)")
     platform: Optional[Platform] = None
@@ -287,11 +327,14 @@ class TrustGateNode(GraphNode):
 
     Represents a decision checkpoint from the Trust Engine.
     """
+
     decision: GateDecision
     signal_health_score: float = Field(..., ge=0, le=100)
     threshold_used: float
     action_type: str = Field(..., description="Action being evaluated")
-    action_risk_level: str = Field(default="standard", description="high|standard|conservative")
+    action_risk_level: str = Field(
+        default="standard", description="high|standard|conservative"
+    )
     reason: str = Field(..., description="Human-readable decision reason")
     recommendations: list[str] = Field(default_factory=list)
     evaluated_at: datetime
@@ -304,6 +347,7 @@ class HealthScoreNode(GraphNode):
 
     Aggregates multiple signals into overall health.
     """
+
     overall_score: float = Field(..., ge=0, le=100)
     emq_score: Optional[float] = None
     freshness_score: Optional[float] = None
@@ -318,19 +362,25 @@ class HealthScoreNode(GraphNode):
 # OUTCOME NODES (Results)
 # =============================================================================
 
+
 class RevenueNode(GraphNode):
     """
     Revenue event vertex.
 
     Represents a revenue-generating outcome.
     """
+
     amount_cents: int
     currency: str = Field(default="USD")
-    revenue_type: str = Field(default="purchase", description="purchase|subscription|renewal|upsell")
+    revenue_type: str = Field(
+        default="purchase", description="purchase|subscription|renewal|upsell"
+    )
     occurred_at: datetime
     attributed_campaign_id: Optional[str] = None
     attributed_channel: Optional[str] = None
-    attribution_model: Optional[str] = Field(default=None, description="first_touch|last_touch|linear|data_driven")
+    attribution_model: Optional[str] = Field(
+        default=None, description="first_touch|last_touch|linear|data_driven"
+    )
 
 
 class CampaignNode(GraphNode):
@@ -340,6 +390,7 @@ class CampaignNode(GraphNode):
     Represents an advertising campaign.
     Maps to: Campaign in the relational model.
     """
+
     name: str
     platform: Platform
     platform_campaign_id: str
@@ -360,8 +411,11 @@ class ChannelNode(GraphNode):
 
     Represents a traffic/acquisition source.
     """
+
     name: str
-    channel_type: str = Field(..., description="paid|organic|direct|referral|social|email")
+    channel_type: str = Field(
+        ..., description="paid|organic|direct|referral|social|email"
+    )
     platform: Optional[Platform] = None
     total_profiles: int = Field(default=0)
     total_revenue_cents: int = Field(default=0)
@@ -372,8 +426,10 @@ class ChannelNode(GraphNode):
 # EDGE PROPERTY MODELS
 # =============================================================================
 
+
 class BelongsToEdge(GraphEdge):
     """Profile belongs to Segment or Account."""
+
     label: EdgeLabel = EdgeLabel.BELONGS_TO
     added_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     match_score: Optional[float] = Field(default=None, ge=0, le=1)
@@ -381,30 +437,35 @@ class BelongsToEdge(GraphEdge):
 
 class PerformedEdge(GraphEdge):
     """Profile performed Event."""
+
     label: EdgeLabel = EdgeLabel.PERFORMED
     session_id: Optional[str] = None
 
 
 class GeneratedEdge(GraphEdge):
     """Event generated Signal or Revenue."""
+
     label: EdgeLabel = EdgeLabel.GENERATED
     confidence: float = Field(default=1.0, ge=0, le=1)
 
 
 class EvaluatedByEdge(GraphEdge):
     """Signal evaluated by TrustGate."""
+
     label: EdgeLabel = EdgeLabel.EVALUATED_BY
     weight: float = Field(default=1.0, description="Signal weight in evaluation")
 
 
 class TriggeredEdge(GraphEdge):
     """Signal or TrustGate triggered Automation."""
+
     label: EdgeLabel = EdgeLabel.TRIGGERED
     trigger_type: str = Field(default="rule", description="rule|threshold|manual")
 
 
 class BlockedEdge(GraphEdge):
     """TrustGate blocked Automation."""
+
     label: EdgeLabel = EdgeLabel.BLOCKED
     reason: str
     signal_health_at_block: float
@@ -412,26 +473,32 @@ class BlockedEdge(GraphEdge):
 
 class ProducedEdge(GraphEdge):
     """Automation produced Revenue outcome."""
+
     label: EdgeLabel = EdgeLabel.PRODUCED
     attribution_weight: float = Field(default=1.0, ge=0, le=1)
 
 
 class AttributedToEdge(GraphEdge):
     """Revenue attributed to Campaign or Channel."""
+
     label: EdgeLabel = EdgeLabel.ATTRIBUTED_TO
     attribution_model: str = Field(default="last_touch")
     attribution_weight: float = Field(default=1.0, ge=0, le=1)
-    touchpoint_position: Optional[int] = Field(default=None, description="Position in journey")
+    touchpoint_position: Optional[int] = Field(
+        default=None, description="Position in journey"
+    )
 
 
 class DroveEdge(GraphEdge):
     """Campaign drove Revenue."""
+
     label: EdgeLabel = EdgeLabel.DROVE
     contribution_cents: int = Field(default=0)
 
 
 class InfluencedEdge(GraphEdge):
     """Touchpoint influenced conversion (multi-touch)."""
+
     label: EdgeLabel = EdgeLabel.INFLUENCED
     influence_score: float = Field(default=0.5, ge=0, le=1)
     days_before_conversion: Optional[int] = None

@@ -112,7 +112,9 @@ class TestEnforcementSettings:
         settings1 = await enforcer.get_settings(tenant_id=1)
 
         # Update settings
-        await enforcer.update_settings(tenant_id=1, updates={"max_campaign_budget": 7500.0})
+        await enforcer.update_settings(
+            tenant_id=1, updates={"max_campaign_budget": 7500.0}
+        )
 
         # Second call should return cached (updated) settings
         settings2 = await enforcer.get_settings(tenant_id=1)
@@ -244,7 +246,9 @@ class TestROASEnforcement:
 
         # No ROAS violation
         roas_violations = [
-            v for v in result.violations if v["type"] == ViolationType.ROAS_BELOW_THRESHOLD.value
+            v
+            for v in result.violations
+            if v["type"] == ViolationType.ROAS_BELOW_THRESHOLD.value
         ]
         assert len(roas_violations) == 0
 
@@ -269,7 +273,9 @@ class TestROASEnforcement:
         )
 
         roas_violations = [
-            v for v in result.violations if v["type"] == ViolationType.ROAS_BELOW_THRESHOLD.value
+            v
+            for v in result.violations
+            if v["type"] == ViolationType.ROAS_BELOW_THRESHOLD.value
         ]
         assert len(roas_violations) == 1
         assert "1.50" in roas_violations[0]["message"]
@@ -591,7 +597,9 @@ class TestCustomRules:
         # Custom rule should trigger soft_block
         assert result.allowed is False
         assert result.mode == EnforcementMode.SOFT_BLOCK
-        assert any(v.get("rule_id") == "premium_budget_limit" for v in result.violations)
+        assert any(
+            v.get("rule_id") == "premium_budget_limit" for v in result.violations
+        )
 
     @pytest.mark.asyncio
     async def test_custom_roas_rule(self, enforcer):
@@ -846,7 +854,9 @@ class TestEdgeCases:
         # Should not crash, no ROAS violation
         assert result is not None
         roas_violations = [
-            v for v in result.violations if v["type"] == ViolationType.ROAS_BELOW_THRESHOLD.value
+            v
+            for v in result.violations
+            if v["type"] == ViolationType.ROAS_BELOW_THRESHOLD.value
         ]
         assert len(roas_violations) == 0
 

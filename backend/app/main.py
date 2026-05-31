@@ -13,27 +13,40 @@ from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Optional
 
 import sentry_sdk
-from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, Query, status, HTTPException
-from fastapi.responses import HTMLResponse
+import structlog
+from fastapi import (
+    FastAPI,
+    HTTPException,
+    Query,
+    Request,
+    WebSocket,
+    WebSocketDisconnect,
+    status,
+)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import JSONResponse
-from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST
+from fastapi.responses import HTMLResponse, JSONResponse
+from prometheus_client import (
+    CONTENT_TYPE_LATEST,
+    Counter,
+    Gauge,
+    Histogram,
+    generate_latest,
+)
 from sse_starlette.sse import EventSourceResponse
 from starlette.responses import Response
-import structlog
 
+from app.api.v1 import api_router
 from app.core.config import settings
 from app.core.exceptions import StratumError
 from app.core.logging import get_logger, setup_logging
 from app.core.websocket import ws_manager
 from app.db.session import async_engine, check_database_health
 from app.middleware.audit import AuditMiddleware
+from app.middleware.csrf import CSRFMiddleware
+from app.middleware.rate_limit import RateLimitMiddleware
 from app.middleware.security import SecurityHeadersMiddleware
 from app.middleware.tenant import TenantMiddleware
-from app.middleware.rate_limit import RateLimitMiddleware
-from app.middleware.csrf import CSRFMiddleware
-from app.api.v1 import api_router
 
 # Prometheus Metrics
 REQUEST_COUNT = Counter(
@@ -96,11 +109,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
 
     # Initialize Sentry (production and staging)
     if settings.sentry_dsn and settings.app_env in ("production", "staging"):
-        from sentry_sdk.integrations.fastapi import FastApiIntegration
-        from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
         from sentry_sdk.integrations.celery import CeleryIntegration
-        from sentry_sdk.integrations.redis import RedisIntegration
+        from sentry_sdk.integrations.fastapi import FastApiIntegration
         from sentry_sdk.integrations.logging import LoggingIntegration
+        from sentry_sdk.integrations.redis import RedisIntegration
+        from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 
         def _before_send(event: dict, hint: dict) -> dict | None:
             """Strip PII from Sentry events before transmission."""
@@ -110,7 +123,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
                     for key in list(data.keys()):
                         if any(
                             s in key.lower()
-                            for s in ("password", "token", "secret", "ssn", "credit_card")
+                            for s in (
+                                "password",
+                                "token",
+                                "secret",
+                                "ssn",
+                                "credit_card",
+                            )
                         ):
                             data[key] = "[REDACTED]"
             return event
@@ -164,21 +183,37 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     # Auto-train ML models if none exist (e.g., fresh Railway deploy)
     try:
         from pathlib import Path
+
         models_path = Path(settings.ml_models_path)
         if not models_path.exists() or not list(models_path.glob("*.pkl")):
-            logger.info("ml_models_not_found", path=str(models_path), detail="Training from sample data")
-            from app.ml.train import ModelTrainer
+            logger.info(
+                "ml_models_not_found",
+                path=str(models_path),
+                detail="Training from sample data",
+            )
             from app.ml.data_loader import TrainingDataLoader
-            df = TrainingDataLoader.generate_sample_data(num_campaigns=100, days_per_campaign=30)
+            from app.ml.train import ModelTrainer
+
+            df = TrainingDataLoader.generate_sample_data(
+                num_campaigns=100, days_per_campaign=30
+            )
             trainer = ModelTrainer(str(models_path))
             trainer.train_all(df, include_platform_models=False)
-            logger.info("ml_models_auto_trained", models=list(str(p.name) for p in models_path.glob("*.pkl")))
+            logger.info(
+                "ml_models_auto_trained",
+                models=list(str(p.name) for p in models_path.glob("*.pkl")),
+            )
     except (OSError, ValueError, ImportError, RuntimeError) as e:
-        logger.warning("ml_auto_train_failed", error=str(e), detail="ML predictions will be unavailable")
+        logger.warning(
+            "ml_auto_train_failed",
+            error=str(e),
+            detail="ML predictions will be unavailable",
+        )
 
     # Auto-seed superadmin if not exists or update password
     try:
         from scripts.seed_superadmin import create_superadmin
+
         await create_superadmin()
         logger.info("superadmin_seed_completed")
     except Exception as e:
@@ -221,14 +256,20 @@ def create_application() -> FastAPI:
     # OpenAPI docs are enabled in all environments but protected in production
     # with a simple API key gate to prevent unauthorized scanning.
     if settings.is_production:
-        from fastapi import HTTPException, status as http_status
+        from fastapi import HTTPException
+        from fastapi import status as http_status
 
         DOCS_API_KEY = os.environ.get("DOCS_API_KEY", "")
 
         async def verify_docs_access(request: Request) -> None:
             """Require DOCS_API_KEY query parameter for docs access in production."""
             # Allow internal health checks without key
-            if request.url.path in ("/health", "/health/ready", "/health/live", "/metrics"):
+            if request.url.path in (
+                "/health",
+                "/health/ready",
+                "/health/live",
+                "/metrics",
+            ):
                 return
             # Skip if DOCS_API_KEY not configured (fallback to open)
             if not DOCS_API_KEY:
@@ -241,7 +282,7 @@ def create_application() -> FastAPI:
                 )
 
         # Mount docs behind the access gate
-        from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
+        from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 
         @app.get("/docs", include_in_schema=False)
         async def custom_docs(request: Request):
@@ -362,7 +403,14 @@ def create_application() -> FastAPI:
         allow_origins=settings.cors_origins_list,
         allow_credentials=settings.cors_allow_credentials,
         allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-        allow_headers=["Authorization", "Content-Type", "X-Request-ID", "X-Tenant-ID", "Accept", "Origin"],
+        allow_headers=[
+            "Authorization",
+            "Content-Type",
+            "X-Request-ID",
+            "X-Tenant-ID",
+            "Accept",
+            "Origin",
+        ],
         expose_headers=["X-Request-ID", "X-Rate-Limit-Remaining"],
     )
 
@@ -434,35 +482,58 @@ def create_application() -> FastAPI:
     # Static Files - Frontend SPA + uploaded assets
     # -------------------------------------------------------------------------
     from pathlib import Path as _Path
+
     from starlette.staticfiles import StaticFiles
 
     # Uploads
     uploads_dir = _Path(os.environ.get("ASSET_UPLOAD_DIR", "uploads/assets"))
     uploads_dir.mkdir(parents=True, exist_ok=True)
-    app.mount("/uploads/assets", StaticFiles(directory=str(uploads_dir)), name="uploaded-assets")
+    app.mount(
+        "/uploads/assets",
+        StaticFiles(directory=str(uploads_dir)),
+        name="uploaded-assets",
+    )
 
     # Frontend SPA — serve built React app from /app/frontend/dist when present.
     # On Railway, frontend ships as a separate nginx service so this directory
     # legitimately won't exist on the backend container; that's not an error.
     frontend_dist = _Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
     if frontend_dist.exists():
-        app.mount("/assets", StaticFiles(directory=str(frontend_dist / "assets")), name="frontend-assets")
-        app.mount("/images", StaticFiles(directory=str(frontend_dist / "images")), name="frontend-images")
-        app.mount("/icons", StaticFiles(directory=str(frontend_dist / "icons")), name="frontend-icons")
+        app.mount(
+            "/assets",
+            StaticFiles(directory=str(frontend_dist / "assets")),
+            name="frontend-assets",
+        )
+        app.mount(
+            "/images",
+            StaticFiles(directory=str(frontend_dist / "images")),
+            name="frontend-images",
+        )
+        app.mount(
+            "/icons",
+            StaticFiles(directory=str(frontend_dist / "icons")),
+            name="frontend-icons",
+        )
 
         @app.get("/{full_path:path}", response_class=HTMLResponse)
         async def serve_spa(full_path: str, request: Request):
             """Serve index.html for all non-API routes (React Router support)."""
             # Don't intercept API or docs routes
-            if full_path.startswith(("api", "docs", "openapi.json", "uploads", "health")):
+            if full_path.startswith(
+                ("api", "docs", "openapi.json", "uploads", "health")
+            ):
                 raise HTTPException(status_code=404, detail="Not Found")
             index_html = frontend_dist / "index.html"
             if index_html.exists():
                 return HTMLResponse(content=index_html.read_text(encoding="utf-8"))
             raise HTTPException(status_code=404, detail="Frontend not built")
+
     else:
-        logger.info("frontend_dist_not_present", path=str(frontend_dist),
-                    detail="backend-only deployment; frontend served by separate service")
+        logger.info(
+            "frontend_dist_not_present",
+            path=str(frontend_dist),
+            detail="backend-only deployment; frontend served by separate service",
+        )
 
     # -------------------------------------------------------------------------
     # Health Check Endpoints
@@ -491,10 +562,15 @@ def create_application() -> FastAPI:
         if settings.sendgrid_api_key:
             try:
                 from sendgrid import SendGridAPIClient
+
                 sg = SendGridAPIClient(api_key=settings.sendgrid_api_key)
                 # Lightweight API call to validate key
                 response = sg.client.user.profile.get()
-                sendgrid_status = "healthy" if response.status_code == 200 else f"unhealthy: status {response.status_code}"
+                sendgrid_status = (
+                    "healthy"
+                    if response.status_code == 200
+                    else f"unhealthy: status {response.status_code}"
+                )
             except Exception as e:
                 sendgrid_status = f"unhealthy: {str(e)}"
 
@@ -535,9 +611,10 @@ def create_application() -> FastAPI:
         Public endpoint returning aggregate platform health metrics for the landing page.
         No authentication required. Data is anonymized and cached for 60 seconds.
         """
-        import redis.asyncio as redis
         import json
         from datetime import datetime, timezone
+
+        import redis.asyncio as redis
 
         cache_key = "public:demo-metrics"
         try:
@@ -552,13 +629,19 @@ def create_application() -> FastAPI:
         # Aggregate metrics from database (anonymized)
         try:
             from sqlalchemy import func, select
-            from app.models import Campaign, CampaignMetric, TrustGateEvaluation
+
             from app.db.session import async_session_maker
+            from app.models import Campaign, CampaignMetric, TrustGateEvaluation
 
             async with async_session_maker() as db:
                 # Trust score: average of recent evaluations
-                trust_query = select(func.avg(TrustGateEvaluation.composite_score)).where(
-                    TrustGateEvaluation.created_at >= datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+                trust_query = select(
+                    func.avg(TrustGateEvaluation.composite_score)
+                ).where(
+                    TrustGateEvaluation.created_at
+                    >= datetime.now(timezone.utc).replace(
+                        hour=0, minute=0, second=0, microsecond=0
+                    )
                 )
                 trust_result = await db.execute(trust_query)
                 trust_score = round(trust_result.scalar() or 97.4, 1)
@@ -573,7 +656,7 @@ def create_application() -> FastAPI:
                 # Active campaigns count
                 campaigns_query = select(func.count(Campaign.id)).where(
                     Campaign.is_deleted == False,
-                    Campaign.status.in_(["ACTIVE", "RUNNING"])
+                    Campaign.status.in_(["ACTIVE", "RUNNING"]),
                 )
                 campaigns_result = await db.execute(campaigns_query)
                 active_campaigns = campaigns_result.scalar() or 0
@@ -666,6 +749,7 @@ def create_application() -> FastAPI:
         browser history.
         """
         import asyncio
+
         import redis.asyncio as redis
 
         async def event_generator():
@@ -734,6 +818,7 @@ def create_application() -> FastAPI:
         if token:
             try:
                 import jwt as pyjwt
+
                 payload = pyjwt.decode(
                     token,
                     settings.jwt_secret_key,
@@ -742,7 +827,12 @@ def create_application() -> FastAPI:
                 user_id = payload.get("sub")
                 if not tenant_id:
                     tenant_id = payload.get("tenant_id")
-            except (pyjwt.InvalidTokenError, ValueError, TypeError, KeyError) as _jwt_err:
+            except (
+                pyjwt.InvalidTokenError,
+                ValueError,
+                TypeError,
+                KeyError,
+            ) as _jwt_err:
                 # Invalid/expired token — reject the connection
                 await websocket.close(code=4001, reason="Invalid or expired token")
                 return

@@ -7,9 +7,9 @@ Automatically maps custom events to standard platform events.
 """
 
 import re
-from typing import Any, Dict, List, Optional, Tuple
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
 from app.core.logging import get_logger
 
@@ -18,6 +18,7 @@ logger = get_logger(__name__)
 
 class StandardEvent(str, Enum):
     """Standard conversion events across platforms."""
+
     # Purchase/Revenue
     PURCHASE = "Purchase"
     ADD_TO_CART = "AddToCart"
@@ -48,6 +49,7 @@ class StandardEvent(str, Enum):
 @dataclass
 class EventMapping:
     """Result of event mapping."""
+
     original_event: str
     standard_event: StandardEvent
     confidence: float
@@ -71,52 +73,90 @@ class AIEventMapper:
     # Event name patterns and their standard mappings
     EVENT_PATTERNS = {
         StandardEvent.PURCHASE: [
-            r"purchase", r"order", r"buy", r"bought", r"transaction",
-            r"sale", r"checkout[-_]?complete", r"order[-_]?complete",
-            r"payment[-_]?complete", r"conversion"
+            r"purchase",
+            r"order",
+            r"buy",
+            r"bought",
+            r"transaction",
+            r"sale",
+            r"checkout[-_]?complete",
+            r"order[-_]?complete",
+            r"payment[-_]?complete",
+            r"conversion",
         ],
         StandardEvent.ADD_TO_CART: [
-            r"add[-_]?to[-_]?cart", r"cart[-_]?add", r"basket[-_]?add",
-            r"add[-_]?item", r"add[-_]?product"
+            r"add[-_]?to[-_]?cart",
+            r"cart[-_]?add",
+            r"basket[-_]?add",
+            r"add[-_]?item",
+            r"add[-_]?product",
         ],
         StandardEvent.INITIATE_CHECKOUT: [
-            r"initiate[-_]?checkout", r"begin[-_]?checkout", r"start[-_]?checkout",
-            r"checkout[-_]?start", r"checkout[-_]?begin"
+            r"initiate[-_]?checkout",
+            r"begin[-_]?checkout",
+            r"start[-_]?checkout",
+            r"checkout[-_]?start",
+            r"checkout[-_]?begin",
         ],
         StandardEvent.ADD_PAYMENT_INFO: [
-            r"add[-_]?payment", r"payment[-_]?info", r"billing[-_]?info",
-            r"card[-_]?added", r"payment[-_]?method"
+            r"add[-_]?payment",
+            r"payment[-_]?info",
+            r"billing[-_]?info",
+            r"card[-_]?added",
+            r"payment[-_]?method",
         ],
         StandardEvent.LEAD: [
-            r"lead", r"inquiry", r"enquiry", r"contact[-_]?form",
-            r"form[-_]?submit", r"request[-_]?quote", r"get[-_]?quote"
+            r"lead",
+            r"inquiry",
+            r"enquiry",
+            r"contact[-_]?form",
+            r"form[-_]?submit",
+            r"request[-_]?quote",
+            r"get[-_]?quote",
         ],
         StandardEvent.COMPLETE_REGISTRATION: [
-            r"register", r"sign[-_]?up", r"signup", r"create[-_]?account",
-            r"registration", r"new[-_]?user", r"join"
+            r"register",
+            r"sign[-_]?up",
+            r"signup",
+            r"create[-_]?account",
+            r"registration",
+            r"new[-_]?user",
+            r"join",
         ],
         StandardEvent.SUBSCRIBE: [
-            r"subscribe", r"newsletter", r"opt[-_]?in", r"email[-_]?signup",
-            r"subscription"
+            r"subscribe",
+            r"newsletter",
+            r"opt[-_]?in",
+            r"email[-_]?signup",
+            r"subscription",
         ],
         StandardEvent.VIEW_CONTENT: [
-            r"view", r"page[-_]?view", r"content[-_]?view", r"product[-_]?view",
-            r"detail[-_]?view", r"item[-_]?view"
+            r"view",
+            r"page[-_]?view",
+            r"content[-_]?view",
+            r"product[-_]?view",
+            r"detail[-_]?view",
+            r"item[-_]?view",
         ],
-        StandardEvent.SEARCH: [
-            r"search", r"query", r"find", r"lookup"
-        ],
+        StandardEvent.SEARCH: [r"search", r"query", r"find", r"lookup"],
         StandardEvent.ADD_TO_WISHLIST: [
-            r"wishlist", r"save[-_]?for[-_]?later", r"favorite", r"bookmark"
+            r"wishlist",
+            r"save[-_]?for[-_]?later",
+            r"favorite",
+            r"bookmark",
         ],
-        StandardEvent.CONTACT: [
-            r"contact", r"call", r"phone", r"chat", r"message"
-        ],
+        StandardEvent.CONTACT: [r"contact", r"call", r"phone", r"chat", r"message"],
         StandardEvent.APP_INSTALL: [
-            r"install", r"app[-_]?install", r"download", r"app[-_]?download"
+            r"install",
+            r"app[-_]?install",
+            r"download",
+            r"app[-_]?download",
         ],
         StandardEvent.START_TRIAL: [
-            r"trial", r"free[-_]?trial", r"start[-_]?trial", r"demo"
+            r"trial",
+            r"free[-_]?trial",
+            r"start[-_]?trial",
+            r"demo",
         ],
     }
 
@@ -212,7 +252,13 @@ class AIEventMapper:
         },
         StandardEvent.VIEW_CONTENT: {
             "required": [],
-            "optional": ["content_ids", "content_type", "content_name", "value", "currency"],
+            "optional": [
+                "content_ids",
+                "content_type",
+                "content_name",
+                "value",
+                "currency",
+            ],
         },
         StandardEvent.SEARCH: {
             "required": [],
@@ -335,7 +381,9 @@ class AIEventMapper:
     ) -> List[str]:
         """Generate suggestions for improving event data."""
         suggestions = []
-        event_params = self.EVENT_PARAMETERS.get(event, {"required": [], "optional": []})
+        event_params = self.EVENT_PARAMETERS.get(
+            event, {"required": [], "optional": []}
+        )
 
         # Check for missing required parameters
         for param in event_params["required"]:
@@ -350,16 +398,24 @@ class AIEventMapper:
         # Event-specific suggestions
         if event == StandardEvent.PURCHASE:
             if "value" in params and params["value"] == 0:
-                suggestions.append("Purchase value is 0 - ensure you're sending actual revenue")
+                suggestions.append(
+                    "Purchase value is 0 - ensure you're sending actual revenue"
+                )
             if "currency" not in params:
-                suggestions.append("Add currency code (e.g., 'USD') for accurate revenue reporting")
+                suggestions.append(
+                    "Add currency code (e.g., 'USD') for accurate revenue reporting"
+                )
 
         return suggestions[:3]  # Limit to top 3 suggestions
 
     def get_platform_event(self, standard_event: StandardEvent, platform: str) -> str:
         """Get the platform-specific event name for a standard event."""
-        platform_events = self.PLATFORM_EVENTS.get(platform, self.PLATFORM_EVENTS["meta"])
-        return platform_events.get(standard_event, platform_events[StandardEvent.CUSTOM])
+        platform_events = self.PLATFORM_EVENTS.get(
+            platform, self.PLATFORM_EVENTS["meta"]
+        )
+        return platform_events.get(
+            standard_event, platform_events[StandardEvent.CUSTOM]
+        )
 
     def validate_event_data(
         self, event_name: str, parameters: Dict[str, Any]
@@ -377,35 +433,46 @@ class AIEventMapper:
 
         # Check confidence
         if mapping.confidence < 0.5:
-            warnings.append({
-                "type": "low_confidence",
-                "message": f"Event '{event_name}' may not be recognized by all platforms",
-                "suggestion": "Consider using a standard event name",
-            })
+            warnings.append(
+                {
+                    "type": "low_confidence",
+                    "message": f"Event '{event_name}' may not be recognized by all platforms",
+                    "suggestion": "Consider using a standard event name",
+                }
+            )
 
         # Check required parameters
         event_params = self.EVENT_PARAMETERS.get(mapping.standard_event, {})
         for param in event_params.get("required", []):
             if param not in mapping.parameters:
-                issues.append({
-                    "type": "missing_required",
-                    "parameter": param,
-                    "message": f"Required parameter '{param}' is missing",
-                })
+                issues.append(
+                    {
+                        "type": "missing_required",
+                        "parameter": param,
+                        "message": f"Required parameter '{param}' is missing",
+                    }
+                )
 
         # Check value/currency for revenue events
-        if mapping.standard_event in [StandardEvent.PURCHASE, StandardEvent.ADD_TO_CART]:
+        if mapping.standard_event in [
+            StandardEvent.PURCHASE,
+            StandardEvent.ADD_TO_CART,
+        ]:
             if "value" not in mapping.parameters:
-                issues.append({
-                    "type": "missing_value",
-                    "message": "Revenue events should include 'value' parameter",
-                })
+                issues.append(
+                    {
+                        "type": "missing_value",
+                        "message": "Revenue events should include 'value' parameter",
+                    }
+                )
             elif mapping.parameters.get("value", 0) <= 0:
-                warnings.append({
-                    "type": "zero_value",
-                    "message": "Event value is 0 or negative",
-                    "suggestion": "Ensure you're passing the actual transaction value",
-                })
+                warnings.append(
+                    {
+                        "type": "zero_value",
+                        "message": "Event value is 0 or negative",
+                        "suggestion": "Ensure you're passing the actual transaction value",
+                    }
+                )
 
         return {
             "valid": len(issues) == 0,
@@ -420,9 +487,7 @@ class AIEventMapper:
             "suggestions": mapping.suggestions,
         }
 
-    def bulk_map_events(
-        self, events: List[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+    def bulk_map_events(self, events: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
         Map multiple events at once.
 
@@ -439,9 +504,11 @@ class AIEventMapper:
             parameters = event.get("parameters", event.get("data", {}))
 
             validation = self.validate_event_data(event_name, parameters)
-            results.append({
-                **validation,
-                "original_event": event,
-            })
+            results.append(
+                {
+                    **validation,
+                    "original_event": event,
+                }
+            )
 
         return results

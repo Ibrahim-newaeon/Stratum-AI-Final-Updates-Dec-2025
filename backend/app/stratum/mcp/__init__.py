@@ -134,7 +134,10 @@ MCP_TOOLS = [
         "inputSchema": {
             "type": "object",
             "properties": {
-                "platform": {"type": "string", "enum": ["meta", "google", "tiktok", "snapchat"]},
+                "platform": {
+                    "type": "string",
+                    "enum": ["meta", "google", "tiktok", "snapchat"],
+                },
                 "account_id": {"type": "string"},
                 "campaign_ids": {
                     "type": "array",
@@ -143,7 +146,13 @@ MCP_TOOLS = [
                 },
                 "date_range": {
                     "type": "string",
-                    "enum": ["today", "yesterday", "last_7_days", "last_30_days", "this_month"],
+                    "enum": [
+                        "today",
+                        "yesterday",
+                        "last_7_days",
+                        "last_30_days",
+                        "this_month",
+                    ],
                     "description": "Date range for metrics",
                 },
             },
@@ -156,9 +165,15 @@ MCP_TOOLS = [
         "inputSchema": {
             "type": "object",
             "properties": {
-                "platform": {"type": "string", "enum": ["meta", "google", "tiktok", "snapchat"]},
+                "platform": {
+                    "type": "string",
+                    "enum": ["meta", "google", "tiktok", "snapchat"],
+                },
                 "account_id": {"type": "string"},
-                "campaign_id": {"type": "string", "description": "Optional: specific campaign"},
+                "campaign_id": {
+                    "type": "string",
+                    "description": "Optional: specific campaign",
+                },
             },
             "required": ["platform", "account_id"],
         },
@@ -169,7 +184,10 @@ MCP_TOOLS = [
         "inputSchema": {
             "type": "object",
             "properties": {
-                "platform": {"type": "string", "enum": ["meta", "google", "tiktok", "snapchat"]},
+                "platform": {
+                    "type": "string",
+                    "enum": ["meta", "google", "tiktok", "snapchat"],
+                },
                 "account_id": {"type": "string"},
             },
             "required": ["platform", "account_id"],
@@ -185,7 +203,10 @@ MCP_TOOLS = [
                     "type": "string",
                     "enum": ["meta", "google", "tiktok", "snapchat", "all"],
                 },
-                "account_id": {"type": "string", "description": "Optional: specific account"},
+                "account_id": {
+                    "type": "string",
+                    "description": "Optional: specific account",
+                },
                 "suggestion_types": {
                     "type": "array",
                     "items": {
@@ -203,10 +224,18 @@ MCP_TOOLS = [
         "inputSchema": {
             "type": "object",
             "properties": {
-                "platform": {"type": "string", "enum": ["meta", "google", "tiktok", "snapchat"]},
+                "platform": {
+                    "type": "string",
+                    "enum": ["meta", "google", "tiktok", "snapchat"],
+                },
                 "action_type": {
                     "type": "string",
-                    "enum": ["update_budget", "update_bid", "update_status", "create_campaign"],
+                    "enum": [
+                        "update_budget",
+                        "update_bid",
+                        "update_status",
+                        "create_campaign",
+                    ],
                 },
                 "entity_id": {"type": "string", "description": "Campaign or ad set ID"},
                 "parameters": {
@@ -223,7 +252,10 @@ MCP_TOOLS = [
         "inputSchema": {
             "type": "object",
             "properties": {
-                "platform": {"type": "string", "enum": ["meta", "google", "tiktok", "snapchat"]},
+                "platform": {
+                    "type": "string",
+                    "enum": ["meta", "google", "tiktok", "snapchat"],
+                },
                 "action_type": {
                     "type": "string",
                     "enum": ["update_budget", "update_bid", "update_status"],
@@ -236,7 +268,13 @@ MCP_TOOLS = [
                     "description": "Reason for the action (for audit trail)",
                 },
             },
-            "required": ["platform", "action_type", "entity_type", "entity_id", "parameters"],
+            "required": [
+                "platform",
+                "action_type",
+                "entity_type",
+                "entity_id",
+                "parameters",
+            ],
         },
     },
     {
@@ -256,10 +294,19 @@ MCP_TOOLS = [
                     ],
                 },
                 "value": {"type": "number", "description": "Conversion value"},
-                "currency": {"type": "string", "description": "Currency code (USD, SAR, etc.)"},
+                "currency": {
+                    "type": "string",
+                    "description": "Currency code (USD, SAR, etc.)",
+                },
                 "order_id": {"type": "string", "description": "Order/transaction ID"},
-                "user_email": {"type": "string", "description": "Customer email (for matching)"},
-                "user_phone": {"type": "string", "description": "Customer phone (for matching)"},
+                "user_email": {
+                    "type": "string",
+                    "description": "Customer email (for matching)",
+                },
+                "user_phone": {
+                    "type": "string",
+                    "description": "Customer phone (for matching)",
+                },
                 "platforms": {
                     "type": "array",
                     "items": {"type": "string"},
@@ -275,9 +322,18 @@ MCP_TOOLS = [
         "inputSchema": {
             "type": "object",
             "properties": {
-                "to": {"type": "string", "description": "Recipient phone number (E.164 format)"},
-                "message_type": {"type": "string", "enum": ["text", "template", "interactive"]},
-                "content": {"type": "string", "description": "Message content or template name"},
+                "to": {
+                    "type": "string",
+                    "description": "Recipient phone number (E.164 format)",
+                },
+                "message_type": {
+                    "type": "string",
+                    "enum": ["text", "template", "interactive"],
+                },
+                "content": {
+                    "type": "string",
+                    "description": "Message content or template name",
+                },
                 "template_params": {
                     "type": "object",
                     "description": "Template parameters if using template",
@@ -292,7 +348,10 @@ MCP_TOOLS = [
         "inputSchema": {
             "type": "object",
             "properties": {
-                "limit": {"type": "integer", "description": "Number of conversations to return"},
+                "limit": {
+                    "type": "integer",
+                    "description": "Number of conversations to return",
+                },
                 "status": {"type": "string", "enum": ["active", "converted", "all"]},
             },
         },
@@ -377,13 +436,17 @@ class StratumMCPServer:
         self._trust_gate = TrustGate()
 
         self._initialized = True
-        logger.info(f"Stratum MCP Server initialized with {len(self._adapters)} adapters")
+        logger.info(
+            f"Stratum MCP Server initialized with {len(self._adapters)} adapters"
+        )
 
     def get_tools(self) -> list[dict[str, Any]]:
         """Get MCP tool definitions."""
         return MCP_TOOLS
 
-    async def handle_tool_call(self, tool_name: str, arguments: dict[str, Any]) -> dict[str, Any]:
+    async def handle_tool_call(
+        self, tool_name: str, arguments: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Handle an MCP tool call.
 
@@ -543,7 +606,12 @@ class StratumMCPServer:
             "platform": platform,
             "account_id": account_id,
             "emq_scores": emq_scores,
-            "targets": {"Purchase": 8.5, "AddToCart": 6.0, "ViewContent": 4.0, "Lead": 7.0},
+            "targets": {
+                "Purchase": 8.5,
+                "AddToCart": 6.0,
+                "ViewContent": 4.0,
+                "Lead": 7.0,
+            },
         }
 
     async def _handle_get_suggestions(self, args: dict[str, Any]) -> dict[str, Any]:
@@ -655,7 +723,9 @@ class StratumMCPServer:
 
         event = ServerEvent(
             event_name=event_type_map.get(args["event_type"], StandardEvent.PURCHASE),
-            user_data=UserData(email=args.get("user_email"), phone=args.get("user_phone")),
+            user_data=UserData(
+                email=args.get("user_email"), phone=args.get("user_phone")
+            ),
             value=args["value"],
             currency=args["currency"],
             order_id=args.get("order_id"),
@@ -665,7 +735,9 @@ class StratumMCPServer:
         return {
             "event_id": event.event_id,
             "event_type": args["event_type"],
-            "platforms_sent": args.get("platforms", ["meta", "google", "tiktok", "snapchat"]),
+            "platforms_sent": args.get(
+                "platforms", ["meta", "google", "tiktok", "snapchat"]
+            ),
             "status": "sent",
         }
 
@@ -690,9 +762,15 @@ class StratumMCPServer:
         else:
             return {"error": f"Unsupported message type: {message_type}"}
 
-        return {"message_id": result.message_id, "status": result.status.value, "to": to}
+        return {
+            "message_id": result.message_id,
+            "status": result.status.value,
+            "to": to,
+        }
 
-    async def _handle_get_whatsapp_conversations(self, args: dict[str, Any]) -> dict[str, Any]:
+    async def _handle_get_whatsapp_conversations(
+        self, args: dict[str, Any]
+    ) -> dict[str, Any]:
         """Handle get_whatsapp_conversations tool call."""
         if "whatsapp" not in self._adapters:
             return {"error": "WhatsApp not configured"}

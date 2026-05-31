@@ -27,7 +27,9 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), autoincrement=True, primary_key=True),
         sa.Column("phase_number", sa.Integer(), nullable=False),
         sa.Column("item_key", sa.String(length=100), nullable=False),
-        sa.Column("is_checked", sa.Boolean(), nullable=False, server_default=sa.false()),
+        sa.Column(
+            "is_checked", sa.Boolean(), nullable=False, server_default=sa.false()
+        ),
         sa.Column(
             "checked_by_user_id",
             sa.Integer(),

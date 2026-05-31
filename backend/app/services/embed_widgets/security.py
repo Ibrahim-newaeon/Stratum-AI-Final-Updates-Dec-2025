@@ -210,10 +210,26 @@ class EmbedSecurityService:
             return None
 
         trusted_prefixes = (
-            "10.", "172.16.", "172.17.", "172.18.", "172.19.",
-            "172.20.", "172.21.", "172.22.", "172.23.", "172.24.",
-            "172.25.", "172.26.", "172.27.", "172.28.", "172.29.",
-            "172.30.", "172.31.", "192.168.", "127.", "::1"
+            "10.",
+            "172.16.",
+            "172.17.",
+            "172.18.",
+            "172.19.",
+            "172.20.",
+            "172.21.",
+            "172.22.",
+            "172.23.",
+            "172.24.",
+            "172.25.",
+            "172.26.",
+            "172.27.",
+            "172.28.",
+            "172.29.",
+            "172.30.",
+            "172.31.",
+            "192.168.",
+            "127.",
+            "::1",
         )
         is_trusted_proxy = any(client_ip.startswith(p) for p in trusted_prefixes)
 
@@ -320,10 +336,14 @@ class EmbedSecurityService:
     def _sanitize_string(self, value: str) -> str:
         """Sanitize a string value."""
         # Remove script tags
-        value = re.sub(r"<script[^>]*>.*?</script>", "", value, flags=re.IGNORECASE | re.DOTALL)
+        value = re.sub(
+            r"<script[^>]*>.*?</script>", "", value, flags=re.IGNORECASE | re.DOTALL
+        )
 
         # Remove event handlers
-        value = re.sub(r'\s*on\w+\s*=\s*["\'][^"\']*["\']', "", value, flags=re.IGNORECASE)
+        value = re.sub(
+            r'\s*on\w+\s*=\s*["\'][^"\']*["\']', "", value, flags=re.IGNORECASE
+        )
 
         # Remove javascript: URLs
         value = re.sub(r"javascript:", "", value, flags=re.IGNORECASE)
@@ -362,7 +382,9 @@ class EmbedSecurityService:
         cors_headers = self.get_cors_headers(origin, allowed_domains)
 
         if cors_headers is None:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Origin not allowed")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Origin not allowed"
+            )
 
         # Combine headers
         headers = {**csp_headers, **cors_headers}

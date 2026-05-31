@@ -23,12 +23,16 @@ import joblib
 import numpy as np
 import pandas as pd
 import structlog
-from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor, HistGradientBoostingRegressor
-from sklearn.linear_model import Ridge, ElasticNet
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-from sklearn.model_selection import cross_val_score, train_test_split, GridSearchCV
-from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.ensemble import (
+    GradientBoostingRegressor,
+    HistGradientBoostingRegressor,
+    RandomForestRegressor,
+)
 from sklearn.impute import SimpleImputer
+from sklearn.linear_model import ElasticNet, Ridge
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.model_selection import GridSearchCV, cross_val_score, train_test_split
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 from app.core.logging import get_logger
 
@@ -39,10 +43,34 @@ logger = structlog.get_logger(__name__)
 # Feature Engineering Constants
 # =============================================================================
 
-CREATIVE_TYPES = ["image", "video", "carousel", "collection", "stories", "reels", "unknown"]
+CREATIVE_TYPES = [
+    "image",
+    "video",
+    "carousel",
+    "collection",
+    "stories",
+    "reels",
+    "unknown",
+]
 AUDIENCE_TYPES = ["broad", "lookalike", "custom", "interest", "retargeting", "unknown"]
-OBJECTIVES = ["conversions", "traffic", "awareness", "engagement", "leads", "sales", "app_installs", "unknown"]
-BID_STRATEGIES = ["lowest_cost", "cost_cap", "bid_cap", "target_roas", "manual", "unknown"]
+OBJECTIVES = [
+    "conversions",
+    "traffic",
+    "awareness",
+    "engagement",
+    "leads",
+    "sales",
+    "app_installs",
+    "unknown",
+]
+BID_STRATEGIES = [
+    "lowest_cost",
+    "cost_cap",
+    "bid_cap",
+    "target_roas",
+    "manual",
+    "unknown",
+]
 PLATFORMS = ["meta", "google", "tiktok", "snapchat", "linkedin"]
 
 
@@ -63,7 +91,9 @@ class ModelTrainer:
         self.scalers: Dict[str, StandardScaler] = {}
         self.feature_names: Dict[str, List[str]] = {}
 
-    def train_all(self, df: pd.DataFrame, include_platform_models: bool = True) -> Dict[str, Any]:
+    def train_all(
+        self, df: pd.DataFrame, include_platform_models: bool = True
+    ) -> Dict[str, Any]:
         """
         Train all models from a dataset.
 
@@ -127,39 +157,19 @@ class ModelTrainer:
         # Core Performance Metrics
         # =====================================================================
         df["ctr"] = np.where(
-            df["impressions"] > 0,
-            df["clicks"] / df["impressions"] * 100,
-            0
+            df["impressions"] > 0, df["clicks"] / df["impressions"] * 100, 0
         )
         df["cvr"] = np.where(
-            df["clicks"] > 0,
-            df["conversions"] / df["clicks"] * 100,
-            0
+            df["clicks"] > 0, df["conversions"] / df["clicks"] * 100, 0
         )
-        df["roas"] = np.where(
-            df["spend"] > 0,
-            df["revenue"] / df["spend"],
-            0
-        )
-        df["cpc"] = np.where(
-            df["clicks"] > 0,
-            df["spend"] / df["clicks"],
-            0
-        )
+        df["roas"] = np.where(df["spend"] > 0, df["revenue"] / df["spend"], 0)
+        df["cpc"] = np.where(df["clicks"] > 0, df["spend"] / df["clicks"], 0)
         df["cpm"] = np.where(
-            df["impressions"] > 0,
-            df["spend"] / df["impressions"] * 1000,
-            0
+            df["impressions"] > 0, df["spend"] / df["impressions"] * 1000, 0
         )
-        df["cpa"] = np.where(
-            df["conversions"] > 0,
-            df["spend"] / df["conversions"],
-            0
-        )
+        df["cpa"] = np.where(df["conversions"] > 0, df["spend"] / df["conversions"], 0)
         df["revenue_per_conversion"] = np.where(
-            df["conversions"] > 0,
-            df["revenue"] / df["conversions"],
-            0
+            df["conversions"] > 0, df["revenue"] / df["conversions"], 0
         )
 
         # Log transforms for skewed features
@@ -185,8 +195,12 @@ class ModelTrainer:
         # Video-specific features
         if "video_length_seconds" in df.columns:
             df["video_length_seconds"] = df["video_length_seconds"].fillna(0)
-            df["is_short_video"] = (df["video_length_seconds"] > 0) & (df["video_length_seconds"] <= 15)
-            df["is_medium_video"] = (df["video_length_seconds"] > 15) & (df["video_length_seconds"] <= 60)
+            df["is_short_video"] = (df["video_length_seconds"] > 0) & (
+                df["video_length_seconds"] <= 15
+            )
+            df["is_medium_video"] = (df["video_length_seconds"] > 15) & (
+                df["video_length_seconds"] <= 60
+            )
             df["is_long_video"] = df["video_length_seconds"] > 60
         else:
             df["video_length_seconds"] = 0
@@ -252,9 +266,13 @@ class ModelTrainer:
 
         # Campaign age (days since launch)
         if "campaign_start_date" in df.columns and "date" in df.columns:
-            df["campaign_start_date"] = pd.to_datetime(df["campaign_start_date"], errors="coerce")
+            df["campaign_start_date"] = pd.to_datetime(
+                df["campaign_start_date"], errors="coerce"
+            )
             df["date"] = pd.to_datetime(df["date"], errors="coerce")
-            df["campaign_age_days"] = (df["date"] - df["campaign_start_date"]).dt.days.fillna(0)
+            df["campaign_age_days"] = (
+                df["date"] - df["campaign_start_date"]
+            ).dt.days.fillna(0)
             df["log_campaign_age"] = np.log1p(df["campaign_age_days"].clip(lower=0))
         else:
             df["campaign_age_days"] = 0
@@ -287,9 +305,11 @@ class ModelTrainer:
                     df[f"{col}_7d_avg"] = df.groupby("campaign_id")[col].transform(
                         lambda x: x.rolling(7, min_periods=1).mean()
                     )
-                    df[f"{col}_7d_std"] = df.groupby("campaign_id")[col].transform(
-                        lambda x: x.rolling(7, min_periods=1).std()
-                    ).fillna(0)
+                    df[f"{col}_7d_std"] = (
+                        df.groupby("campaign_id")[col]
+                        .transform(lambda x: x.rolling(7, min_periods=1).std())
+                        .fillna(0)
+                    )
 
             # Trend direction (positive if improving)
             df["roas_trend"] = df.groupby("campaign_id")["roas"].transform(
@@ -325,8 +345,13 @@ class ModelTrainer:
             df["video_on_tiktok"] = 0
 
         # Audience x Objective interactions
-        if "audience_retargeting" in df.columns and "objective_conversions" in df.columns:
-            df["retargeting_conversions"] = df["audience_retargeting"] * df["objective_conversions"]
+        if (
+            "audience_retargeting" in df.columns
+            and "objective_conversions" in df.columns
+        ):
+            df["retargeting_conversions"] = (
+                df["audience_retargeting"] * df["objective_conversions"]
+            )
         else:
             df["retargeting_conversions"] = 0
 
@@ -364,16 +389,29 @@ class ModelTrainer:
 
         # Core performance metrics
         core_metrics = [
-            "log_spend", "log_impressions", "log_clicks", "log_conversions",
-            "ctr", "cvr", "cpm", "cpc", "cpa", "revenue_per_conversion",
-            "ctr_cvr_product"
+            "log_spend",
+            "log_impressions",
+            "log_clicks",
+            "log_conversions",
+            "ctr",
+            "cvr",
+            "cpm",
+            "cpc",
+            "cpa",
+            "revenue_per_conversion",
+            "ctr_cvr_product",
         ]
         feature_cols.extend([c for c in core_metrics if c in df.columns])
 
         # Creative features
         creative_cols = [c for c in df.columns if c.startswith("creative_")]
         feature_cols.extend(creative_cols)
-        video_features = ["video_length_seconds", "is_short_video", "is_medium_video", "is_long_video"]
+        video_features = [
+            "video_length_seconds",
+            "is_short_video",
+            "is_medium_video",
+            "is_long_video",
+        ]
         feature_cols.extend([c for c in video_features if c in df.columns])
         if "has_cta" in df.columns:
             feature_cols.append("has_cta")
@@ -402,8 +440,14 @@ class ModelTrainer:
 
         # Historical features
         historical_features = [
-            "roas_7d_avg", "roas_7d_std", "ctr_7d_avg", "ctr_7d_std",
-            "cvr_7d_avg", "cvr_7d_std", "roas_trend", "is_improving"
+            "roas_7d_avg",
+            "roas_7d_std",
+            "ctr_7d_avg",
+            "ctr_7d_std",
+            "cvr_7d_avg",
+            "cvr_7d_std",
+            "roas_trend",
+            "is_improving",
         ]
         feature_cols.extend([c for c in historical_features if c in df.columns])
 
@@ -420,7 +464,9 @@ class ModelTrainer:
         feature_cols = [c for c in feature_cols if c in df.columns]
 
         # Ensure only numeric columns are used
-        numeric_cols = df[feature_cols].select_dtypes(include=[np.number]).columns.tolist()
+        numeric_cols = (
+            df[feature_cols].select_dtypes(include=[np.number]).columns.tolist()
+        )
         feature_cols = numeric_cols
 
         logger.info("roas_predictor_features", num_features=len(feature_cols))
@@ -592,21 +638,25 @@ class ModelTrainer:
         """
         # Aggregate by campaign if there are multiple rows
         if "campaign_id" in df.columns:
-            agg_df = df.groupby("campaign_id").agg({
-                "spend": "sum",
-                "revenue": "sum",
-                "impressions": "sum",
-                "clicks": "sum",
-                "conversions": "sum",
-            }).reset_index()
+            agg_df = (
+                df.groupby("campaign_id")
+                .agg(
+                    {
+                        "spend": "sum",
+                        "revenue": "sum",
+                        "impressions": "sum",
+                        "clicks": "sum",
+                        "conversions": "sum",
+                    }
+                )
+                .reset_index()
+            )
         else:
             agg_df = df.copy()
 
         # Calculate efficiency metrics
         agg_df["roas"] = np.where(
-            agg_df["spend"] > 0,
-            agg_df["revenue"] / agg_df["spend"],
-            0
+            agg_df["spend"] > 0, agg_df["revenue"] / agg_df["spend"], 0
         )
         agg_df["log_spend"] = np.log1p(agg_df["spend"])
         agg_df["log_revenue"] = np.log1p(agg_df["revenue"])
@@ -650,7 +700,9 @@ class ModelTrainer:
 
         return metrics
 
-    def _evaluate_model(self, y_true: np.ndarray, y_pred: np.ndarray) -> Dict[str, float]:
+    def _evaluate_model(
+        self, y_true: np.ndarray, y_pred: np.ndarray
+    ) -> Dict[str, float]:
         """Calculate evaluation metrics."""
         return {
             "r2": float(r2_score(y_true, y_pred)),
@@ -688,7 +740,11 @@ class ModelTrainer:
         for key, value in metrics.items():
             if isinstance(value, dict):
                 serializable_metrics[key] = {
-                    k: int(v) if isinstance(v, (np.integer, np.int64)) else float(v) if isinstance(v, (np.floating, np.float64)) else v
+                    k: (
+                        int(v)
+                        if isinstance(v, (np.integer, np.int64))
+                        else float(v) if isinstance(v, (np.floating, np.float64)) else v
+                    )
                     for k, v in value.items()
                 }
             elif isinstance(value, (np.integer, np.int64)):
@@ -714,8 +770,12 @@ class ModelTrainer:
         with open(metadata_path, "w") as f:
             json.dump(metadata, f, indent=2)
 
-        logger.info("model_saved", path=str(model_path), r2_score=round(metrics.get("r2", 0), 4), num_features=len(features))
-
+        logger.info(
+            "model_saved",
+            path=str(model_path),
+            r2_score=round(metrics.get("r2", 0), 4),
+            num_features=len(features),
+        )
 
     def train_platform_specific_models(self, df: pd.DataFrame) -> Dict[str, Any]:
         """
@@ -725,7 +785,9 @@ class ModelTrainer:
         results = {}
 
         if "platform" not in df.columns:
-            logger.warning("No platform column found, skipping platform-specific models")
+            logger.warning(
+                "No platform column found, skipping platform-specific models"
+            )
             return results
 
         platforms = df["platform"].dropna().unique()
@@ -735,24 +797,41 @@ class ModelTrainer:
             platform_df = df[df["platform"] == platform].copy()
 
             if len(platform_df) < 50:
-                logger.warning("insufficient_platform_data", platform=platform, rows=len(platform_df))
+                logger.warning(
+                    "insufficient_platform_data",
+                    platform=platform,
+                    rows=len(platform_df),
+                )
                 continue
 
-            logger.info("training_platform_model", platform=platform, num_samples=len(platform_df))
+            logger.info(
+                "training_platform_model",
+                platform=platform,
+                num_samples=len(platform_df),
+            )
 
             try:
                 # Use simplified feature set for platform-specific models
                 feature_cols = [
-                    "log_spend", "log_impressions", "log_clicks",
-                    "ctr", "cvr", "cpm", "cpc"
+                    "log_spend",
+                    "log_impressions",
+                    "log_clicks",
+                    "ctr",
+                    "cvr",
+                    "cpm",
+                    "cpc",
                 ]
 
                 # Add creative features if available
-                creative_cols = [c for c in platform_df.columns if c.startswith("creative_")]
+                creative_cols = [
+                    c for c in platform_df.columns if c.startswith("creative_")
+                ]
                 feature_cols.extend(creative_cols[:5])  # Limit to avoid overfitting
 
                 # Add audience features if available
-                audience_cols = [c for c in platform_df.columns if c.startswith("audience_")]
+                audience_cols = [
+                    c for c in platform_df.columns if c.startswith("audience_")
+                ]
                 feature_cols.extend(audience_cols[:3])
 
                 # Add historical features
@@ -769,7 +848,9 @@ class ModelTrainer:
                 X, y = X[mask], y[mask]
 
                 if len(X) < 30:
-                    logger.warning("insufficient_valid_platform_data", platform=platform)
+                    logger.warning(
+                        "insufficient_valid_platform_data", platform=platform
+                    )
                     continue
 
                 # Train-test split
@@ -814,10 +895,16 @@ class ModelTrainer:
                 )
 
                 results[platform] = metrics
-                logger.info("platform_model_trained", platform=platform, r2=round(metrics["r2"], 4))
+                logger.info(
+                    "platform_model_trained",
+                    platform=platform,
+                    r2=round(metrics["r2"], 4),
+                )
 
             except (ValueError, TypeError, RuntimeError, KeyError, OSError) as e:
-                logger.error("platform_model_training_error", platform=platform, error=str(e))
+                logger.error(
+                    "platform_model_training_error", platform=platform, error=str(e)
+                )
                 results[platform] = {"error": str(e)}
 
         return results
@@ -888,7 +975,9 @@ if __name__ == "__main__":
     parser.add_argument("--sample", action="store_true", help="Use sample data")
     parser.add_argument("--campaigns", type=int, default=100, help="Sample campaigns")
     parser.add_argument("--days", type=int, default=30, help="Days per campaign")
-    parser.add_argument("--output", type=str, default="./models", help="Models output path")
+    parser.add_argument(
+        "--output", type=str, default="./models", help="Models output path"
+    )
 
     args = parser.parse_args()
 
@@ -905,5 +994,7 @@ if __name__ == "__main__":
     logger.info("training_complete")
     for model_name, metrics in results.items():
         if isinstance(metrics, dict):
-            safe_metrics = {k: v for k, v in metrics.items() if k != "feature_importances"}
+            safe_metrics = {
+                k: v for k, v in metrics.items() if k != "feature_importances"
+            }
             logger.info("model_results", model=model_name, **safe_metrics)

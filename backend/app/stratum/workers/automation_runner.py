@@ -182,20 +182,28 @@ async def execute_action(
         current_health = action_data.get("current_signal_health")
         if current_health is None:
             result["status"] = "blocked"
-            result["reason"] = "Signal health data missing - cannot execute without health verification"
+            result["reason"] = (
+                "Signal health data missing - cannot execute without health verification"
+            )
             logger.warning(f"Action {execution_id} blocked: missing signal health data")
             return result
 
         if current_health < 40:
             result["status"] = "blocked"
-            result["reason"] = f"Signal health critical ({current_health}), action blocked"
-            logger.warning(f"Action {execution_id} blocked due to critical signal health")
+            result["reason"] = (
+                f"Signal health critical ({current_health}), action blocked"
+            )
+            logger.warning(
+                f"Action {execution_id} blocked due to critical signal health"
+            )
             return result
 
         # Initialize adapter and execute
         adapter = await get_adapter(platform, credentials)
 
-        logger.info(f"Executing action {execution_id}: {action.action_type} on {action.entity_id}")
+        logger.info(
+            f"Executing action {execution_id}: {action.action_type} on {action.entity_id}"
+        )
 
         executed_action = await adapter.execute_action(action)
 
@@ -205,13 +213,17 @@ async def execute_action(
         result["status"] = executed_action.status
         result["result"] = executed_action.result
         result["executed_at"] = (
-            executed_action.executed_at.isoformat() if executed_action.executed_at else None
+            executed_action.executed_at.isoformat()
+            if executed_action.executed_at
+            else None
         )
         result["completed_at"] = datetime.now(UTC).isoformat()
 
         if executed_action.status == "failed":
             result["error"] = executed_action.error_message
-            logger.error(f"Action {execution_id} failed: {executed_action.error_message}")
+            logger.error(
+                f"Action {execution_id} failed: {executed_action.error_message}"
+            )
         else:
             logger.info(f"Action {execution_id} completed successfully")
 
@@ -287,7 +299,15 @@ async def execute_action_batch(
                     action_result["status"] = "failed"
                     action_result["error"] = executed.error_message
 
-            except (ConnectionError, TimeoutError, OSError, ValueError, KeyError, TypeError, RuntimeError) as e:
+            except (
+                ConnectionError,
+                TimeoutError,
+                OSError,
+                ValueError,
+                KeyError,
+                TypeError,
+                RuntimeError,
+            ) as e:
                 results["failed"] += 1
                 action_result["status"] = "error"
                 action_result["error"] = str(e)
@@ -313,7 +333,11 @@ async def execute_action_batch(
 @shared_task(bind=True)
 @async_task
 async def run_autopilot_for_account(
-    self, platform: str, account_id: str, credentials: dict[str, Any], targets: dict[str, float]
+    self,
+    platform: str,
+    account_id: str,
+    credentials: dict[str, Any],
+    targets: dict[str, float],
 ) -> dict[str, Any]:
     """
     Run the autopilot engine for a single account.
@@ -482,7 +506,15 @@ async def run_autopilot_all() -> dict[str, Any]:
                 platform_results.append(account_result)
                 result["accounts_processed"] += 1
                 result["total_actions"] += account_result.get("actions_approved", 0)
-            except (ConnectionError, TimeoutError, OSError, ValueError, KeyError, TypeError, RuntimeError) as e:
+            except (
+                ConnectionError,
+                TimeoutError,
+                OSError,
+                ValueError,
+                KeyError,
+                TypeError,
+                RuntimeError,
+            ) as e:
                 platform_results.append({"account_id": account_id, "error": str(e)})
                 logger.error(f"Autopilot error for {platform}/{account_id}: {e}")
 
@@ -557,7 +589,9 @@ def approve_queued_action(action_id: str, approved_by: str) -> dict[str, Any]:
 
 
 @shared_task
-def reject_queued_action(action_id: str, rejected_by: str, reason: str) -> dict[str, Any]:
+def reject_queued_action(
+    action_id: str, rejected_by: str, reason: str
+) -> dict[str, Any]:
     """
     Reject a queued action.
     """
@@ -668,7 +702,13 @@ def get_automation_stats() -> dict[str, Any]:
 
     return {
         "timestamp": datetime.now(UTC).isoformat(),
-        "last_24h": {"total_actions": 0, "succeeded": 0, "failed": 0, "blocked": 0, "queued": 0},
+        "last_24h": {
+            "total_actions": 0,
+            "succeeded": 0,
+            "failed": 0,
+            "blocked": 0,
+            "queued": 0,
+        },
         "by_platform": {},
         "by_action_type": {},
     }

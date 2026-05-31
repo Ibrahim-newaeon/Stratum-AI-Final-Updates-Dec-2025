@@ -199,7 +199,9 @@ async def sync_platform_data(
 
                 # Sync ad sets for each campaign
                 for campaign in campaigns:
-                    adsets = await adapter.get_adsets(account_id, campaign_id=campaign.campaign_id)
+                    adsets = await adapter.get_adsets(
+                        account_id, campaign_id=campaign.campaign_id
+                    )
                     results["adsets_synced"] += len(adsets)
 
                     # Sync ads for each ad set
@@ -269,7 +271,9 @@ async def sync_all_platforms(self) -> dict[str, Any]:
 
         # Dispatch sync task
         try:
-            task_result = await sync_platform_data(platform, account_ids, platform_config)
+            task_result = await sync_platform_data(
+                platform, account_ids, platform_config
+            )
             results["platforms"][platform] = task_result
         except (ConnectionError, TimeoutError, OSError) as e:
             results["platforms"][platform] = {"status": "error", "error": str(e)}
@@ -376,16 +380,21 @@ async def update_metrics_all() -> dict[str, Any]:
     }
 
     try:
-        from app.db.session import sync_session_factory
-        from app.models.campaign_builder import TenantPlatformConnection
         from sqlalchemy import select
 
+        from app.db.session import sync_session_factory
+        from app.models.campaign_builder import TenantPlatformConnection
+
         with sync_session_factory() as db:
-            connections = db.execute(
-                select(TenantPlatformConnection).where(
-                    TenantPlatformConnection.is_connected == True
+            connections = (
+                db.execute(
+                    select(TenantPlatformConnection).where(
+                        TenantPlatformConnection.is_connected == True
+                    )
                 )
-            ).scalars().all()
+                .scalars()
+                .all()
+            )
 
             for conn in connections:
                 logger.info(
@@ -433,14 +442,18 @@ async def refresh_emq(
             {
                 "event_name": emq.event_name,
                 "score": emq.score,
-                "last_updated": emq.last_updated.isoformat() if emq.last_updated else None,
+                "last_updated": (
+                    emq.last_updated.isoformat() if emq.last_updated else None
+                ),
             }
             for emq in emq_scores
         ]
 
         await adapter.cleanup()
 
-        logger.info(f"Refreshed {len(emq_scores)} EMQ scores for {platform} {account_id}")
+        logger.info(
+            f"Refreshed {len(emq_scores)} EMQ scores for {platform} {account_id}"
+        )
 
     except (ConnectionError, TimeoutError, OSError) as e:
         logger.error(f"Network error refreshing EMQ: {e}")
@@ -489,7 +502,9 @@ def calculate_signal_health(
 
     # Convert dicts back to models
     emq_list = [
-        EMQScore(platform=Platform(platform), event_name=e["event_name"], score=e["score"])
+        EMQScore(
+            platform=Platform(platform), event_name=e["event_name"], score=e["score"]
+        )
         for e in emq_scores
     ]
 
@@ -500,8 +515,12 @@ def calculate_signal_health(
             spend=m.get("spend"),
             conversions=m.get("conversions"),
             cpa=m.get("cpa"),
-            date_start=datetime.fromisoformat(m["date_start"]) if m.get("date_start") else None,
-            date_end=datetime.fromisoformat(m["date_end"]) if m.get("date_end") else None,
+            date_start=(
+                datetime.fromisoformat(m["date_start"]) if m.get("date_start") else None
+            ),
+            date_end=(
+                datetime.fromisoformat(m["date_end"]) if m.get("date_end") else None
+            ),
         )
         for m in recent_metrics
     ]
@@ -551,10 +570,11 @@ async def calculate_all_signal_health() -> dict[str, Any]:
 
     # Query all active connections and calculate signal health
     try:
+        from sqlalchemy import select
+
+        from app.analytics.logic.signal_health import calculate_signal_health
         from app.db.session import async_session_factory
         from app.models.campaign_builder import TenantPlatformConnection
-        from app.analytics.logic.signal_health import calculate_signal_health
-        from sqlalchemy import select
 
         async with async_session_factory() as db:
             conn_result = await db.execute(

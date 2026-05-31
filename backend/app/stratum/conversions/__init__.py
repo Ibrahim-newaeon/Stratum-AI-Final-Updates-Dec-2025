@@ -194,7 +194,11 @@ class ConversionEvent:
         if not self.event_id:
             # Create deterministic ID for deduplication (MD5 for consistency, not security)
             id_string = f"{self.event_name.value}_{self.event_time.isoformat()}_{self.user_data.external_id or ''}"
-            self.event_id = hashlib.md5(id_string.encode(), usedforsecurity=False).hexdigest()[:16]  # noqa: S324
+            self.event_id = hashlib.md5(
+                id_string.encode(), usedforsecurity=False
+            ).hexdigest()[
+                :16
+            ]  # noqa: S324
 
 
 class MetaConversionsAPI:
@@ -222,7 +226,9 @@ class MetaConversionsAPI:
 
     BASE_URL = "https://graph.facebook.com/v19.0"
 
-    def __init__(self, pixel_id: str, access_token: str, test_event_code: Optional[str] = None):
+    def __init__(
+        self, pixel_id: str, access_token: str, test_event_code: Optional[str] = None
+    ):
         """
         Initialize Meta CAPI client.
 
@@ -261,7 +267,9 @@ class MetaConversionsAPI:
             response.raise_for_status()
             result = response.json()
 
-            logger.info(f"Meta CAPI: {result.get('events_received', 0)} events received")
+            logger.info(
+                f"Meta CAPI: {result.get('events_received', 0)} events received"
+            )
             return result
 
         except requests.RequestException as e:
@@ -393,12 +401,12 @@ class GoogleEnhancedConversions:
         click_conversion = self.client.get_type("ClickConversion")
 
         # Set conversion action resource name
-        click_conversion.conversion_action = (
-            f"customers/{self.customer_id}/conversionActions/{self.conversion_action_id}"
-        )
+        click_conversion.conversion_action = f"customers/{self.customer_id}/conversionActions/{self.conversion_action_id}"
 
         # Set conversion time
-        click_conversion.conversion_date_time = event.event_time.strftime("%Y-%m-%d %H:%M:%S+00:00")
+        click_conversion.conversion_date_time = event.event_time.strftime(
+            "%Y-%m-%d %H:%M:%S+00:00"
+        )
 
         # Set conversion value if provided
         if "value" in event.custom_data:
@@ -459,7 +467,9 @@ class TikTokEventsAPI:
 
     BASE_URL = "https://business-api.tiktok.com/open_api/v1.3/event/track"
 
-    def __init__(self, pixel_code: str, access_token: str, test_event_code: Optional[str] = None):
+    def __init__(
+        self, pixel_code: str, access_token: str, test_event_code: Optional[str] = None
+    ):
         """
         Initialize TikTok Events API client.
 
@@ -514,10 +524,15 @@ class TikTokEventsAPI:
 
             payload["data"].append(tiktok_event)
 
-        headers = {"Access-Token": self.access_token, "Content-Type": "application/json"}
+        headers = {
+            "Access-Token": self.access_token,
+            "Content-Type": "application/json",
+        }
 
         try:
-            response = requests.post(self.BASE_URL, json=payload, headers=headers, timeout=30)
+            response = requests.post(
+                self.BASE_URL, json=payload, headers=headers, timeout=30
+            )
             response.raise_for_status()
             result = response.json()
 
@@ -623,7 +638,9 @@ class SnapchatConversionsAPI:
         }
 
         try:
-            response = requests.post(self.BASE_URL, json=payload, headers=headers, timeout=30)
+            response = requests.post(
+                self.BASE_URL, json=payload, headers=headers, timeout=30
+            )
             response.raise_for_status()
 
             logger.info("Snapchat CAPI: Event sent successfully")
@@ -684,7 +701,12 @@ class UnifiedConversionsAPI:
                 client = self.platforms[platform_name]
                 result = await client.send_event(event)
                 results[platform_name] = result
-            except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
+            except (
+                requests.RequestException,
+                ConnectionError,
+                TimeoutError,
+                OSError,
+            ) as e:
                 results[platform_name] = {"error": str(e)}
                 logger.error(f"Network error sending to {platform_name}: {e}")
             except (ValueError, KeyError, TypeError) as e:
@@ -716,11 +738,24 @@ class UnifiedConversionsAPI:
                         try:
                             await client.send_event(event)
                             result["sent"] += 1
-                        except (requests.RequestException, ConnectionError, TimeoutError, OSError, ValueError, KeyError, TypeError) as e:
+                        except (
+                            requests.RequestException,
+                            ConnectionError,
+                            TimeoutError,
+                            OSError,
+                            ValueError,
+                            KeyError,
+                            TypeError,
+                        ) as e:
                             result["errors"].append(str(e))
 
                 results[platform_name] = result
-            except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
+            except (
+                requests.RequestException,
+                ConnectionError,
+                TimeoutError,
+                OSError,
+            ) as e:
                 results[platform_name] = {"error": str(e)}
                 logger.error(f"Network error sending batch to {platform_name}: {e}")
             except (ValueError, KeyError, TypeError) as e:

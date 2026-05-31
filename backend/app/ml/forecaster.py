@@ -195,7 +195,9 @@ class ROASForecaster:
 
         # Calculate slope
         n = len(x)
-        slope = (n * np.sum(x * y) - np.sum(x) * np.sum(y)) / (n * np.sum(x**2) - np.sum(x)**2)
+        slope = (n * np.sum(x * y) - np.sum(x) * np.sum(y)) / (
+            n * np.sum(x**2) - np.sum(x) ** 2
+        )
 
         return float(slope)
 
@@ -239,7 +241,7 @@ class ROASForecaster:
         # Add some variance
         np.random.seed(int(forecast_date.toordinal()))
         noise = np.random.normal(0, 0.1)
-        predicted_roas *= (1 + noise)
+        predicted_roas *= 1 + noise
 
         # Bound predictions
         predicted_roas = max(0.5, min(5.0, predicted_roas))
@@ -330,15 +332,17 @@ class ROASForecaster:
                 roas = base_roas * np.random.uniform(0.9, 1.1)
                 spend = base_spend * np.random.uniform(0.8, 1.2)
 
-                predictions.append({
-                    "date": forecast_date.isoformat(),
-                    "predicted_roas": round(roas, 3),
-                    "predicted_spend": round(spend, 2),
-                    "predicted_revenue": round(spend * roas, 2),
-                    "confidence_lower": round(roas * 0.85, 3),
-                    "confidence_upper": round(roas * 1.15, 3),
-                    "confidence": 0.75,
-                })
+                predictions.append(
+                    {
+                        "date": forecast_date.isoformat(),
+                        "predicted_roas": round(roas, 3),
+                        "predicted_spend": round(spend, 2),
+                        "predicted_revenue": round(spend * roas, 2),
+                        "confidence_lower": round(roas * 0.85, 3),
+                        "confidence_upper": round(roas * 1.15, 3),
+                        "confidence": 0.75,
+                    }
+                )
 
         return {
             "predictions": predictions,

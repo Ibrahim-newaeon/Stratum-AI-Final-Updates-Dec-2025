@@ -126,9 +126,11 @@ class TenantEnforcementSettings(Base, TimestampMixin):
             "id": str(self.id),
             "tenant_id": self.tenant_id,
             "enforcement_enabled": self.enforcement_enabled,
-            "default_mode": self.default_mode.value
-            if isinstance(self.default_mode, EnforcementMode)
-            else self.default_mode,
+            "default_mode": (
+                self.default_mode.value
+                if isinstance(self.default_mode, EnforcementMode)
+                else self.default_mode
+            ),
             "max_daily_budget": self.max_daily_budget,
             "max_campaign_budget": self.max_campaign_budget,
             "budget_increase_limit_pct": self.budget_increase_limit_pct,
@@ -195,13 +197,17 @@ class TenantEnforcementRule(Base, TimestampMixin):
         return {
             "id": str(self.id),
             "rule_id": self.rule_id,
-            "rule_type": self.rule_type.value
-            if isinstance(self.rule_type, ViolationType)
-            else self.rule_type,
+            "rule_type": (
+                self.rule_type.value
+                if isinstance(self.rule_type, ViolationType)
+                else self.rule_type
+            ),
             "threshold_value": self.threshold_value,
-            "enforcement_mode": self.enforcement_mode.value
-            if isinstance(self.enforcement_mode, EnforcementMode)
-            else self.enforcement_mode,
+            "enforcement_mode": (
+                self.enforcement_mode.value
+                if isinstance(self.enforcement_mode, EnforcementMode)
+                else self.enforcement_mode
+            ),
             "enabled": self.enabled,
             "description": self.description,
         }
@@ -253,7 +259,9 @@ class EnforcementAuditLog(Base):
 
     # Additional context
     details = Column(JSONB, nullable=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     override_reason = Column(Text, nullable=True)
 
     # Outcome tracking — populated by services.autopilot.outcomes after
@@ -279,15 +287,21 @@ class EnforcementAuditLog(Base):
             "action_type": self.action_type,
             "entity_type": self.entity_type,
             "entity_id": self.entity_id,
-            "violation_type": self.violation_type.value
-            if isinstance(self.violation_type, ViolationType)
-            else self.violation_type,
-            "intervention_action": self.intervention_action.value
-            if isinstance(self.intervention_action, InterventionAction)
-            else self.intervention_action,
-            "enforcement_mode": self.enforcement_mode.value
-            if isinstance(self.enforcement_mode, EnforcementMode)
-            else self.enforcement_mode,
+            "violation_type": (
+                self.violation_type.value
+                if isinstance(self.violation_type, ViolationType)
+                else self.violation_type
+            ),
+            "intervention_action": (
+                self.intervention_action.value
+                if isinstance(self.intervention_action, InterventionAction)
+                else self.intervention_action
+            ),
+            "enforcement_mode": (
+                self.enforcement_mode.value
+                if isinstance(self.enforcement_mode, EnforcementMode)
+                else self.enforcement_mode
+            ),
             "details": self.details,
             "user_id": self.user_id,
             "override_reason": self.override_reason,

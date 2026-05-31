@@ -12,27 +12,27 @@ Features:
 - Automatic retry on failure
 """
 
-from datetime import datetime, timedelta, date, time, timezone
-from typing import List, Dict, Any, Optional, Tuple
-from uuid import UUID
-import logging
 import asyncio
+import logging
+from datetime import date, datetime, time, timedelta, timezone
+from typing import Any, Dict, List, Optional, Tuple
+from uuid import UUID
 from zoneinfo import ZoneInfo
 
-from sqlalchemy import select, and_, or_, update
+from sqlalchemy import and_, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.reporting import (
-    ScheduledReport,
-    ReportExecution,
-    ReportTemplate,
-    ScheduleFrequency,
     ExecutionStatus,
+    ReportExecution,
     ReportFormat,
+    ReportTemplate,
+    ScheduledReport,
+    ScheduleFrequency,
 )
-from app.services.reporting.report_generator import ReportGenerator
 from app.services.reporting.delivery import DeliveryService
+from app.services.reporting.report_generator import ReportGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +40,7 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 # Cron Parser (Simple Implementation)
 # =============================================================================
+
 
 class CronParser:
     """
@@ -111,11 +112,13 @@ class CronParser:
         max_iterations = 525600  # minutes in a year
 
         for _ in range(max_iterations):
-            if (current.month in parsed["month"] and
-                current.day in parsed["day"] and
-                current.weekday() in [d % 7 for d in parsed["weekday"]] and
-                current.hour in parsed["hour"] and
-                current.minute in parsed["minute"]):
+            if (
+                current.month in parsed["month"]
+                and current.day in parsed["day"]
+                and current.weekday() in [d % 7 for d in parsed["weekday"]]
+                and current.hour in parsed["hour"]
+                and current.minute in parsed["minute"]
+            ):
                 return current
             current += timedelta(minutes=1)
 
@@ -125,6 +128,7 @@ class CronParser:
 # =============================================================================
 # Report Scheduler
 # =============================================================================
+
 
 class ReportScheduler:
     """
@@ -205,15 +209,13 @@ class ReportScheduler:
         await self.db.commit()
         await self.db.refresh(schedule)
 
-        logger.info(f"Created schedule {schedule.id} for template {template_id}, next run: {schedule.next_run_at}")
+        logger.info(
+            f"Created schedule {schedule.id} for template {template_id}, next run: {schedule.next_run_at}"
+        )
 
         return schedule
 
-    async def update_schedule(
-        self,
-        schedule_id: UUID,
-        **updates
-    ) -> ScheduledReport:
+    async def update_schedule(self, schedule_id: UUID, **updates) -> ScheduledReport:
         """Update an existing schedule."""
         schedule = await self.db.get(ScheduledReport, schedule_id)
         if not schedule or schedule.tenant_id != self.tenant_id:
@@ -225,7 +227,15 @@ class ReportScheduler:
                 setattr(schedule, key, value)
 
         # Recalculate next run if schedule timing changed
-        timing_fields = {"frequency", "day_of_week", "day_of_month", "hour", "minute", "cron_expression", "timezone"}
+        timing_fields = {
+            "frequency",
+            "day_of_week",
+            "day_of_month",
+            "hour",
+            "minute",
+            "cron_expression",
+            "timezone",
+        }
         if timing_fields & set(updates.keys()):
             schedule.next_run_at = self.calculate_next_run(schedule)
 
@@ -312,8 +322,7 @@ class ReportScheduler:
             if days_ahead < 0 or (days_ahead == 0 and local_now >= today_run):
                 days_ahead += 7
             return datetime.combine(
-                local_now.date() + timedelta(days=days_ahead),
-                target_time
+                local_now.date() + timedelta(days=days_ahead), target_time
             ).replace(tzinfo=tz)
 
         elif schedule.frequency == ScheduleFrequency.BIWEEKLY:
@@ -324,8 +333,7 @@ class ReportScheduler:
             elif days_ahead >= 7:
                 days_ahead -= 7
             return datetime.combine(
-                local_now.date() + timedelta(days=days_ahead),
-                target_time
+                local_now.date() + timedelta(days=days_ahead), target_time
             ).replace(tzinfo=tz)
 
         elif schedule.frequency == ScheduleFrequency.MONTHLY:
@@ -334,7 +342,7 @@ class ReportScheduler:
             # Handle last day of month (-1)
             if target_day == -1:
                 next_month = local_now.replace(day=28) + timedelta(days=4)
-                target_date = (next_month - timedelta(days=next_month.day))
+                target_date = next_month - timedelta(days=next_month.day)
             else:
                 # Try this month first
                 try:
@@ -344,7 +352,9 @@ class ReportScheduler:
                     next_month = local_now.replace(day=28) + timedelta(days=4)
                     target_date = next_month.replace(day=1) - timedelta(days=1)
 
-            target_datetime = datetime.combine(target_date.date(), target_time).replace(tzinfo=tz)
+            target_datetime = datetime.combine(target_date.date(), target_time).replace(
+                tzinfo=tz
+            )
 
             if local_now >= target_datetime:
                 # Move to next month
@@ -356,8 +366,12 @@ class ReportScheduler:
                     try:
                         target_date = next_month.replace(day=target_day)
                     except ValueError:
-                        target_date = (next_month.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
-                target_datetime = datetime.combine(target_date.date(), target_time).replace(tzinfo=tz)
+                        target_date = (
+                            next_month.replace(day=28) + timedelta(days=4)
+                        ).replace(day=1) - timedelta(days=1)
+                target_datetime = datetime.combine(
+                    target_date.date(), target_time
+                ).replace(tzinfo=tz)
 
             return target_datetime
 
@@ -368,7 +382,9 @@ class ReportScheduler:
             # First day of next quarter
             next_quarter = (current_quarter + 1) % 4
             next_quarter_month = quarter_start_months[next_quarter]
-            next_quarter_year = local_now.year if next_quarter > current_quarter else local_now.year + 1
+            next_quarter_year = (
+                local_now.year if next_quarter > current_quarter else local_now.year + 1
+            )
 
             target_day = schedule.day_of_month or 1
             try:
@@ -421,9 +437,9 @@ class ReportScheduler:
 
         # Determine date range
         from app.services.reporting.report_generator import ReportGenerator
+
         start_date, end_date = ReportGenerator.parse_date_range(
-            schedule.date_range_type,
-            datetime.now(timezone.utc).date()
+            schedule.date_range_type, datetime.now(timezone.utc).date()
         )
 
         # Determine format
@@ -493,7 +509,7 @@ class ReportScheduler:
         schedule = await self.db.get(
             ScheduledReport,
             schedule_id,
-            options=[selectinload(ScheduledReport.template)]
+            options=[selectinload(ScheduledReport.template)],
         )
         if not schedule or schedule.tenant_id != self.tenant_id:
             raise ValueError(f"Schedule not found: {schedule_id}")
@@ -520,13 +536,19 @@ class ReportScheduler:
                 await self.execute_schedule(schedule)
                 results["succeeded"] += 1
             except (ConnectionError, TimeoutError, OSError, ValueError, KeyError) as e:
-                logger.error("schedule_execution_failed", schedule_id=str(schedule.id), error=str(e))
+                logger.error(
+                    "schedule_execution_failed",
+                    schedule_id=str(schedule.id),
+                    error=str(e),
+                )
                 results["failed"] += 1
-                results["errors"].append({
-                    "schedule_id": str(schedule.id),
-                    "name": schedule.name,
-                    "error": str(e),
-                })
+                results["errors"].append(
+                    {
+                        "schedule_id": str(schedule.id),
+                        "name": schedule.name,
+                        "error": str(e),
+                    }
+                )
             results["processed"] += 1
 
         return results
@@ -540,7 +562,7 @@ class ReportScheduler:
         schedule = await self.db.get(
             ScheduledReport,
             schedule_id,
-            options=[selectinload(ScheduledReport.template)]
+            options=[selectinload(ScheduledReport.template)],
         )
         if schedule and schedule.tenant_id == self.tenant_id:
             return schedule
@@ -607,6 +629,7 @@ class ReportScheduler:
 # =============================================================================
 # Scheduler Worker (Background Task)
 # =============================================================================
+
 
 class SchedulerWorker:
     """

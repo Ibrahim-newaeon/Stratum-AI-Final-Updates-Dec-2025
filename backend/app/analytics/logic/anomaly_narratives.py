@@ -9,14 +9,16 @@ with likely causes and recommended actions. Uses template-based narrative
 generation with cross-metric correlation analysis.
 """
 
-from typing import List, Optional, Dict, Literal
+from typing import Dict, List, Literal, Optional
+
 from pydantic import BaseModel, Field
 
-from app.analytics.logic.types import AnomalyResult, AlertSeverity
+from app.analytics.logic.types import AlertSeverity, AnomalyResult
 
 
 class AnomalyNarrative(BaseModel):
     """A human-readable narrative for a detected anomaly."""
+
     metric: str
     title: str
     summary: str
@@ -33,6 +35,7 @@ class AnomalyNarrative(BaseModel):
 
 class CorrelationInsight(BaseModel):
     """Cross-metric correlation insight."""
+
     title: str
     description: str
     severity: str
@@ -42,6 +45,7 @@ class CorrelationInsight(BaseModel):
 
 class AnomalyNarrativesResponse(BaseModel):
     """Full response for the anomaly narratives endpoint."""
+
     executive_summary: str
     total_anomalies: int = 0
     critical_count: int = 0
@@ -331,11 +335,19 @@ def generate_narrative(anomaly: AnomalyResult) -> AnomalyNarrative:
 
     # Select causes and actions
     if is_up:
-        causes = config.get("up_causes", [f"{label} is higher than the 14-day baseline"])
-        actions = config.get("up_actions", [f"Investigate what caused the {label.lower()} increase"])
+        causes = config.get(
+            "up_causes", [f"{label} is higher than the 14-day baseline"]
+        )
+        actions = config.get(
+            "up_actions", [f"Investigate what caused the {label.lower()} increase"]
+        )
     else:
-        causes = config.get("down_causes", [f"{label} is lower than the 14-day baseline"])
-        actions = config.get("down_actions", [f"Investigate what caused the {label.lower()} decrease"])
+        causes = config.get(
+            "down_causes", [f"{label} is lower than the 14-day baseline"]
+        )
+        actions = config.get(
+            "down_actions", [f"Investigate what caused the {label.lower()} decrease"]
+        )
 
     # Limit to top 3 most relevant
     causes = causes[:3]
@@ -347,7 +359,11 @@ def generate_narrative(anomaly: AnomalyResult) -> AnomalyNarrative:
         summary=summary,
         likely_causes=causes,
         recommended_actions=actions,
-        severity=anomaly.severity.value if hasattr(anomaly.severity, "value") else str(anomaly.severity),
+        severity=(
+            anomaly.severity.value
+            if hasattr(anomaly.severity, "value")
+            else str(anomaly.severity)
+        ),
         direction="up" if is_up else "down",
         change_percent=round(change_pct, 1),
         current_value=anomaly.current_value,
@@ -368,87 +384,114 @@ def detect_correlations(anomalies: List[AnomalyResult]) -> List[CorrelationInsig
     """
     insights: List[CorrelationInsight] = []
 
-    anomaly_map: Dict[str, AnomalyResult] = {a.metric: a for a in anomalies if a.is_anomaly}
+    anomaly_map: Dict[str, AnomalyResult] = {
+        a.metric: a for a in anomalies if a.is_anomaly
+    }
 
     # Pattern: Spend up + ROAS down → scaling inefficiency
-    if ("spend" in anomaly_map and "roas" in anomaly_map
-            and anomaly_map["spend"].direction == "high"
-            and anomaly_map["roas"].direction == "low"):
-        insights.append(CorrelationInsight(
-            title="Scaling Inefficiency Detected",
-            description=(
-                "Spend is increasing but ROAS is declining — you may be scaling into "
-                "less efficient audiences or hitting diminishing returns. Consider "
-                "tightening targeting or capping budgets on underperformers."
-            ),
-            severity="high",
-            related_metrics=["spend", "roas"],
-            pattern="spend_up_roas_down",
-        ))
+    if (
+        "spend" in anomaly_map
+        and "roas" in anomaly_map
+        and anomaly_map["spend"].direction == "high"
+        and anomaly_map["roas"].direction == "low"
+    ):
+        insights.append(
+            CorrelationInsight(
+                title="Scaling Inefficiency Detected",
+                description=(
+                    "Spend is increasing but ROAS is declining — you may be scaling into "
+                    "less efficient audiences or hitting diminishing returns. Consider "
+                    "tightening targeting or capping budgets on underperformers."
+                ),
+                severity="high",
+                related_metrics=["spend", "roas"],
+                pattern="spend_up_roas_down",
+            )
+        )
 
     # Pattern: Revenue down + event_loss up → tracking issue
-    if ("revenue" in anomaly_map and "event_loss_pct" in anomaly_map
-            and anomaly_map["revenue"].direction == "low"
-            and anomaly_map["event_loss_pct"].direction == "high"):
-        insights.append(CorrelationInsight(
-            title="Possible Tracking Issue",
-            description=(
-                "Revenue is declining while event loss is increasing — this suggests "
-                "conversion events may not be reaching the platform. Check your "
-                "pixel/CAPI implementation before making campaign changes."
-            ),
-            severity="critical",
-            related_metrics=["revenue", "event_loss_pct"],
-            pattern="tracking_degradation",
-        ))
+    if (
+        "revenue" in anomaly_map
+        and "event_loss_pct" in anomaly_map
+        and anomaly_map["revenue"].direction == "low"
+        and anomaly_map["event_loss_pct"].direction == "high"
+    ):
+        insights.append(
+            CorrelationInsight(
+                title="Possible Tracking Issue",
+                description=(
+                    "Revenue is declining while event loss is increasing — this suggests "
+                    "conversion events may not be reaching the platform. Check your "
+                    "pixel/CAPI implementation before making campaign changes."
+                ),
+                severity="critical",
+                related_metrics=["revenue", "event_loss_pct"],
+                pattern="tracking_degradation",
+            )
+        )
 
     # Pattern: CPA up + conversions down → funnel problem
-    if ("cpa" in anomaly_map and "conversions" in anomaly_map
-            and anomaly_map["cpa"].direction == "high"
-            and anomaly_map["conversions"].direction == "low"):
-        insights.append(CorrelationInsight(
-            title="Conversion Funnel Under Pressure",
-            description=(
-                "Acquisition costs are rising while conversion volume is dropping. "
-                "This typically indicates a funnel issue — check landing page performance, "
-                "checkout flow, and creative relevance."
-            ),
-            severity="high",
-            related_metrics=["cpa", "conversions"],
-            pattern="funnel_pressure",
-        ))
+    if (
+        "cpa" in anomaly_map
+        and "conversions" in anomaly_map
+        and anomaly_map["cpa"].direction == "high"
+        and anomaly_map["conversions"].direction == "low"
+    ):
+        insights.append(
+            CorrelationInsight(
+                title="Conversion Funnel Under Pressure",
+                description=(
+                    "Acquisition costs are rising while conversion volume is dropping. "
+                    "This typically indicates a funnel issue — check landing page performance, "
+                    "checkout flow, and creative relevance."
+                ),
+                severity="high",
+                related_metrics=["cpa", "conversions"],
+                pattern="funnel_pressure",
+            )
+        )
 
     # Pattern: EMQ down + revenue down → data quality impact
-    if ("emq_score" in anomaly_map and "revenue" in anomaly_map
-            and anomaly_map["emq_score"].direction == "low"
-            and anomaly_map["revenue"].direction == "low"):
-        insights.append(CorrelationInsight(
-            title="Data Quality Impacting Performance",
-            description=(
-                "EMQ score and revenue are both declining. Lower event match quality "
-                "reduces the platform's ability to optimize delivery. Fix signal "
-                "health before adjusting campaign strategies."
-            ),
-            severity="critical",
-            related_metrics=["emq_score", "revenue"],
-            pattern="quality_degradation",
-        ))
+    if (
+        "emq_score" in anomaly_map
+        and "revenue" in anomaly_map
+        and anomaly_map["emq_score"].direction == "low"
+        and anomaly_map["revenue"].direction == "low"
+    ):
+        insights.append(
+            CorrelationInsight(
+                title="Data Quality Impacting Performance",
+                description=(
+                    "EMQ score and revenue are both declining. Lower event match quality "
+                    "reduces the platform's ability to optimize delivery. Fix signal "
+                    "health before adjusting campaign strategies."
+                ),
+                severity="critical",
+                related_metrics=["emq_score", "revenue"],
+                pattern="quality_degradation",
+            )
+        )
 
     # Pattern: Spend down + conversions down → delivery issue
-    if ("spend" in anomaly_map and "conversions" in anomaly_map
-            and anomaly_map["spend"].direction == "low"
-            and anomaly_map["conversions"].direction == "low"):
-        insights.append(CorrelationInsight(
-            title="Delivery Volume Constrained",
-            description=(
-                "Both spend and conversions dropped together — campaigns may be "
-                "under-delivering. Check for paused ads, budget exhaustion, or "
-                "audience targeting that's too narrow."
-            ),
-            severity="medium",
-            related_metrics=["spend", "conversions"],
-            pattern="delivery_constrained",
-        ))
+    if (
+        "spend" in anomaly_map
+        and "conversions" in anomaly_map
+        and anomaly_map["spend"].direction == "low"
+        and anomaly_map["conversions"].direction == "low"
+    ):
+        insights.append(
+            CorrelationInsight(
+                title="Delivery Volume Constrained",
+                description=(
+                    "Both spend and conversions dropped together — campaigns may be "
+                    "under-delivering. Check for paused ads, budget exhaustion, or "
+                    "audience targeting that's too narrow."
+                ),
+                severity="medium",
+                related_metrics=["spend", "conversions"],
+                pattern="delivery_constrained",
+            )
+        )
 
     return insights
 

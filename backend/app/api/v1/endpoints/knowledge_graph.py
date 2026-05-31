@@ -27,8 +27,10 @@ router = APIRouter()
 # SCHEMAS
 # =============================================================================
 
+
 class SolutionResponse(BaseModel):
     """Solution suggestion for a detected problem."""
+
     title: str
     description: str
     action_type: str
@@ -41,6 +43,7 @@ class SolutionResponse(BaseModel):
 
 class ProblemResponse(BaseModel):
     """Detected problem with context and solutions."""
+
     id: str
     category: str
     severity: str
@@ -55,6 +58,7 @@ class ProblemResponse(BaseModel):
 
 class HealthSummaryResponse(BaseModel):
     """Overall health summary from Knowledge Graph analysis."""
+
     health_score: float = Field(..., ge=0, le=100)
     status: str  # healthy, degraded, critical
     problem_counts: dict[str, int]
@@ -64,6 +68,7 @@ class HealthSummaryResponse(BaseModel):
 
 class ProblemsListResponse(BaseModel):
     """List of detected problems."""
+
     problems: list[ProblemResponse]
     total: int
     by_severity: dict[str, int]
@@ -71,6 +76,7 @@ class ProblemsListResponse(BaseModel):
 
 class RevenueByChannelResponse(BaseModel):
     """Revenue breakdown by channel."""
+
     channel: str
     transaction_count: int = 0
     revenue: float = 0.0
@@ -79,6 +85,7 @@ class RevenueByChannelResponse(BaseModel):
 
 class RevenueBySegmentResponse(BaseModel):
     """Revenue breakdown by segment."""
+
     segment_id: str = ""
     segment_name: str
     profile_count: int = 0
@@ -88,6 +95,7 @@ class RevenueBySegmentResponse(BaseModel):
 
 class CustomerJourneyResponse(BaseModel):
     """Customer journey data."""
+
     profile_id: str
     lifecycle_stage: Optional[str] = "unknown"
     first_seen_at: Optional[str] = None
@@ -101,6 +109,7 @@ class CustomerJourneyResponse(BaseModel):
 
 class GraphStatsResponse(BaseModel):
     """Knowledge Graph statistics."""
+
     node_counts: dict[str, int]
     edge_counts: dict[str, int]
     total_nodes: int
@@ -110,6 +119,7 @@ class GraphStatsResponse(BaseModel):
 # =============================================================================
 # INSIGHTS ENDPOINTS
 # =============================================================================
+
 
 @router.get("/insights/health", response_model=HealthSummaryResponse)
 async def get_health_summary(
@@ -167,7 +177,9 @@ async def get_detected_problems(
 
     # Count by severity
     by_severity = {
-        "critical": len([p for p in problems if p.severity == ProblemSeverity.CRITICAL]),
+        "critical": len(
+            [p for p in problems if p.severity == ProblemSeverity.CRITICAL]
+        ),
         "high": len([p for p in problems if p.severity == ProblemSeverity.HIGH]),
         "medium": len([p for p in problems if p.severity == ProblemSeverity.MEDIUM]),
         "low": len([p for p in problems if p.severity == ProblemSeverity.LOW]),
@@ -204,7 +216,10 @@ async def get_problem_details(
 # ANALYTICS ENDPOINTS
 # =============================================================================
 
-@router.get("/analytics/revenue/by-channel", response_model=list[RevenueByChannelResponse])
+
+@router.get(
+    "/analytics/revenue/by-channel", response_model=list[RevenueByChannelResponse]
+)
 async def get_revenue_by_channel(
     days: int = Query(default=30, ge=1, le=365, description="Lookback period in days"),
     db: AsyncSession = Depends(get_db),
@@ -229,7 +244,9 @@ async def get_revenue_by_channel(
     ]
 
 
-@router.get("/analytics/revenue/by-segment", response_model=list[RevenueBySegmentResponse])
+@router.get(
+    "/analytics/revenue/by-segment", response_model=list[RevenueBySegmentResponse]
+)
 async def get_revenue_by_segment(
     days: int = Query(default=30, ge=1, le=365, description="Lookback period in days"),
     db: AsyncSession = Depends(get_db),
@@ -241,7 +258,9 @@ async def get_revenue_by_segment(
     Shows which CDP segments are driving the most revenue.
     """
     kg = KnowledgeGraphService(db)
-    results = await kg.get_segment_revenue_performance(current_user.tenant_id, days=days)
+    results = await kg.get_segment_revenue_performance(
+        current_user.tenant_id, days=days
+    )
 
     return [
         RevenueBySegmentResponse(
@@ -324,6 +343,7 @@ async def trace_automation_decision(
 # GRAPH STATS ENDPOINTS
 # =============================================================================
 
+
 @router.get("/stats", response_model=GraphStatsResponse)
 async def get_graph_stats(
     db: AsyncSession = Depends(get_db),
@@ -338,7 +358,11 @@ async def get_graph_stats(
     stats = await kg.get_graph_stats(current_user.tenant_id)
 
     # Separate node and edge counts
-    node_counts = {k: v for k, v in stats.items() if k.endswith("_count") and not k.endswith("_edges")}
+    node_counts = {
+        k: v
+        for k, v in stats.items()
+        if k.endswith("_count") and not k.endswith("_edges")
+    }
     edge_counts = {k: v for k, v in stats.items() if k.endswith("_edges")}
 
     return GraphStatsResponse(

@@ -36,21 +36,23 @@ router = APIRouter(prefix="/subscription", tags=["subscription"])
 class SubscriptionStatusResponse(BaseModel):
     """Response model for subscription status."""
 
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "tenant_id": 1,
-            "plan": "professional",
-            "tier": "professional",
-            "status": "expiring_soon",
-            "expires_at": "2024-02-01T00:00:00Z",
-            "days_until_expiry": 7,
-            "days_in_grace": None,
-            "is_access_restricted": False,
-            "restriction_reason": None,
-            "warning_message": "Your subscription expires in 7 days. Renew now to avoid interruption.",
-            "pricing": {"name": "Professional", "price": 999, "currency": "USD"},
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "tenant_id": 1,
+                "plan": "professional",
+                "tier": "professional",
+                "status": "expiring_soon",
+                "expires_at": "2024-02-01T00:00:00Z",
+                "days_until_expiry": 7,
+                "days_in_grace": None,
+                "is_access_restricted": False,
+                "restriction_reason": None,
+                "warning_message": "Your subscription expires in 7 days. Renew now to avoid interruption.",
+                "pricing": {"name": "Professional", "price": 999, "currency": "USD"},
+            }
         }
-    })
+    )
 
     tenant_id: int
     plan: str
@@ -186,9 +188,11 @@ async def check_subscription_valid(request: Request):
     return {
         "valid": not info.is_access_restricted,
         "status": info.status.value,
-        "message": info.restriction_reason
-        if info.is_access_restricted
-        else "Subscription is active",
+        "message": (
+            info.restriction_reason
+            if info.is_access_restricted
+            else "Subscription is active"
+        ),
         "tier": info.tier.value,
     }
 
@@ -288,7 +292,9 @@ async def get_subscription_usage_summary(request: Request):
         try:
             usage = await limit_service.get_usage_summary(tenant_id)
         except (ConnectionError, TimeoutError, OSError, ValueError) as exc:
-            logger.warning(f"Failed to fetch usage summary for tenant {tenant_id}: {exc}")
+            logger.warning(
+                f"Failed to fetch usage summary for tenant {tenant_id}: {exc}"
+            )
             usage = {}
         break
 

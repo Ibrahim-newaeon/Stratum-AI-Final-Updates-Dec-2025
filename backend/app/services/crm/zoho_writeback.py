@@ -298,7 +298,9 @@ class ZohoWritebackService:
                     )
                     if response and "fields" in response:
                         results["contact_fields"]["created"] += 1
-                        logger.info(f"Created Zoho contact field: {field['field_label']}")
+                        logger.info(
+                            f"Created Zoho contact field: {field['field_label']}"
+                        )
                     else:
                         results["contact_fields"]["failed"] += 1
                         results["contact_fields"]["errors"].append(
@@ -334,7 +336,10 @@ class ZohoWritebackService:
                     )
 
             # If all failed, provide manual instructions
-            if results["contact_fields"]["created"] == 0 and results["deal_fields"]["created"] == 0:
+            if (
+                results["contact_fields"]["created"] == 0
+                and results["deal_fields"]["created"] == 0
+            ):
                 results["manual_setup_required"] = True
                 results["instructions"] = await self.get_required_fields_info()
 
@@ -405,7 +410,9 @@ class ZohoWritebackService:
                     "Stratum_Attribution_Confidence": attribution.get("confidence"),
                     "Stratum_Total_Ad_Spend": attribution.get("total_spend"),
                     "Stratum_Touchpoints_Count": attribution.get("touchpoints_count"),
-                    "Stratum_Last_Sync": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S+00:00"),
+                    "Stratum_Last_Sync": datetime.now(UTC).strftime(
+                        "%Y-%m-%dT%H:%M:%S+00:00"
+                    ),
                 }
 
                 # Remove None values
@@ -503,7 +510,9 @@ class ZohoWritebackService:
                 "Stratum_Net_Profit": attribution.get("net_profit"),
                 "Stratum_Days_to_Close": attribution.get("days_to_close"),
                 "Stratum_Touchpoints_Count": attribution.get("touchpoints_count"),
-                "Stratum_Last_Sync": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S+00:00"),
+                "Stratum_Last_Sync": datetime.now(UTC).strftime(
+                    "%Y-%m-%dT%H:%M:%S+00:00"
+                ),
             }
 
             # Remove None values
@@ -565,12 +574,16 @@ class ZohoWritebackService:
         }
 
         if sync_contacts:
-            results["contacts"] = await self.sync_contact_attribution(modified_since=modified_since)
+            results["contacts"] = await self.sync_contact_attribution(
+                modified_since=modified_since
+            )
             if results["contacts"]["status"] == "failed":
                 results["status"] = "partial"
 
         if sync_deals:
-            results["deals"] = await self.sync_deal_attribution(modified_since=modified_since)
+            results["deals"] = await self.sync_deal_attribution(
+                modified_since=modified_since
+            )
             if results["deals"]["status"] == "failed":
                 results["status"] = "partial"
 
@@ -620,12 +633,16 @@ class ZohoWritebackService:
             "campaign_name": last_touch.campaign_name,
             "adset_id": last_touch.adset_id,
             "ad_id": last_touch.ad_id,
-            "first_touch_source": f"{first_touch.source}:{first_touch.campaign_name}"
-            if first_touch.campaign_name
-            else first_touch.source,
-            "last_touch_source": f"{last_touch.source}:{last_touch.campaign_name}"
-            if last_touch.campaign_name
-            else last_touch.source,
+            "first_touch_source": (
+                f"{first_touch.source}:{first_touch.campaign_name}"
+                if first_touch.campaign_name
+                else first_touch.source
+            ),
+            "last_touch_source": (
+                f"{last_touch.source}:{last_touch.campaign_name}"
+                if last_touch.campaign_name
+                else last_touch.source
+            ),
             "confidence": 85,  # Default confidence
             "total_spend": round(total_spend, 2) if total_spend > 0 else None,
             "touchpoints_count": len(touchpoints),
@@ -682,11 +699,13 @@ class ZohoWritebackService:
 
         return {
             "platform": primary_tp.source if primary_tp else deal.attributed_platform,
-            "campaign_id": primary_tp.campaign_id if primary_tp else deal.attributed_campaign_id,
+            "campaign_id": (
+                primary_tp.campaign_id if primary_tp else deal.attributed_campaign_id
+            ),
             "campaign_name": primary_tp.campaign_name if primary_tp else None,
-            "attribution_model": deal.attribution_model.value
-            if deal.attribution_model
-            else "last_touch",
+            "attribution_model": (
+                deal.attribution_model.value if deal.attribution_model else "last_touch"
+            ),
             "attributed_spend": round(total_spend, 2) if total_spend > 0 else None,
             "revenue_roas": round(revenue_roas, 2) if revenue_roas else None,
             "profit_roas": round(profit_roas, 2) if profit_roas else None,
@@ -725,7 +744,9 @@ class ZohoWritebackService:
             .where(CRMContact.tenant_id == self.tenant_id)
         )
         deals_count = await self.db.execute(
-            select(func.count()).select_from(CRMDeal).where(CRMDeal.tenant_id == self.tenant_id)
+            select(func.count())
+            .select_from(CRMDeal)
+            .where(CRMDeal.tenant_id == self.tenant_id)
         )
 
         return {
@@ -734,9 +755,9 @@ class ZohoWritebackService:
             "provider": "zoho",
             "provider_account_id": connection.provider_account_id,
             "provider_account_name": connection.provider_account_name,
-            "last_sync_at": connection.last_sync_at.isoformat()
-            if connection.last_sync_at
-            else None,
+            "last_sync_at": (
+                connection.last_sync_at.isoformat() if connection.last_sync_at else None
+            ),
             "last_sync_status": connection.last_sync_status,
             "contacts_count": contacts_count.scalar(),
             "deals_count": deals_count.scalar(),
@@ -764,7 +785,9 @@ class ZohoWritebackService:
         async with ZohoClient(self.db, self.tenant_id, self.region) as client:
             update_data = {
                 "Stratum_Segments": ", ".join(segments[:10]),  # Limit to 10 segments
-                "Stratum_Last_Sync": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S+00:00"),
+                "Stratum_Last_Sync": datetime.now(UTC).strftime(
+                    "%Y-%m-%dT%H:%M:%S+00:00"
+                ),
             }
 
             response = await client.update_contact(contact_id, update_data)
@@ -772,4 +795,8 @@ class ZohoWritebackService:
             if response and "data" in response:
                 return {"status": "success", "contact_id": contact_id}
             else:
-                return {"status": "failed", "contact_id": contact_id, "error": "Update failed"}
+                return {
+                    "status": "failed",
+                    "contact_id": contact_id,
+                    "error": "Update failed",
+                }

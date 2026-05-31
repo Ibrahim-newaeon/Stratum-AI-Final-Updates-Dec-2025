@@ -25,6 +25,7 @@ logger = logging.getLogger("stratum.monitoring.celery")
 @dataclass
 class TaskMemoryStats:
     """Aggregated memory stats for a single Celery task type."""
+
     task_name: str
     execution_count: int = 0
     total_rss_delta_kb: float = 0.0
@@ -62,9 +63,7 @@ class TaskMemoryStats:
         if peak_rss_mb > self.peak_rss_mb:
             self.peak_rss_mb = peak_rss_mb
 
-        self.avg_rss_delta_kb = round(
-            self.total_rss_delta_kb / self.execution_count, 2
-        )
+        self.avg_rss_delta_kb = round(self.total_rss_delta_kb / self.execution_count, 2)
 
         self.recent_deltas.append(rss_delta_kb)
         if len(self.recent_deltas) > 50:
@@ -78,15 +77,17 @@ class TaskMemoryStats:
             "execution_count": self.execution_count,
             "avg_rss_delta_kb": self.avg_rss_delta_kb,
             "max_rss_delta_kb": round(self.max_rss_delta_kb, 2),
-            "min_rss_delta_kb": round(self.min_rss_delta_kb, 2)
-            if self.min_rss_delta_kb != float("inf")
-            else 0.0,
+            "min_rss_delta_kb": (
+                round(self.min_rss_delta_kb, 2)
+                if self.min_rss_delta_kb != float("inf")
+                else 0.0
+            ),
             "total_rss_delta_kb": round(self.total_rss_delta_kb, 2),
-            "avg_duration_ms": round(
-                self.total_duration_ms / self.execution_count, 2
-            )
-            if self.execution_count > 0
-            else 0.0,
+            "avg_duration_ms": (
+                round(self.total_duration_ms / self.execution_count, 2)
+                if self.execution_count > 0
+                else 0.0
+            ),
             "max_duration_ms": round(self.max_duration_ms, 2),
             "peak_rss_mb": round(self.peak_rss_mb, 2),
             "failure_count": self.failure_count,
@@ -211,9 +212,7 @@ class CeleryMemoryHooks:
 
     def get_summary(self) -> dict[str, Any]:
         """Get a summary of task profiling data."""
-        total_executions = sum(
-            s.execution_count for s in self._task_stats.values()
-        )
+        total_executions = sum(s.execution_count for s in self._task_stats.values())
         total_tasks = len(self._task_stats)
         leak_risks = self.get_leak_risks()
 
@@ -221,12 +220,8 @@ class CeleryMemoryHooks:
             "total_executions_profiled": total_executions,
             "total_task_types_tracked": total_tasks,
             "leak_risk_tasks": len(leak_risks),
-            "worker_start_rss_mb": round(
-                self._worker_start_rss / (1024 * 1024), 2
-            ),
-            "current_rss_mb": round(
-                self._process.memory_info().rss / (1024 * 1024), 2
-            ),
+            "worker_start_rss_mb": round(self._worker_start_rss / (1024 * 1024), 2),
+            "current_rss_mb": round(self._process.memory_info().rss / (1024 * 1024), 2),
             "worker_growth_mb": round(
                 (self._process.memory_info().rss - self._worker_start_rss)
                 / (1024 * 1024),

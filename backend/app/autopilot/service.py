@@ -6,21 +6,22 @@ Service for managing autopilot actions and execution.
 Handles action queuing, approval workflow, and platform execution.
 """
 
-from datetime import datetime, date, timezone, timedelta
-from typing import Dict, Any, List, Optional, Tuple
-from enum import Enum
 import json
-
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, or_, func, update
+from datetime import date, datetime, timedelta, timezone
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID
 
-from app.models.trust_layer import FactActionsQueue
+from sqlalchemy import and_, func, or_, select, update
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.features.flags import AutopilotLevel, get_autopilot_caps
+from app.models.trust_layer import FactActionsQueue
 
 
 class ActionStatus(str, Enum):
     """Action lifecycle statuses."""
+
     QUEUED = "queued"
     PENDING_APPROVAL = "pending_approval"
     APPROVED = "approved"
@@ -31,6 +32,7 @@ class ActionStatus(str, Enum):
 
 class ActionType(str, Enum):
     """Types of autopilot actions."""
+
     BUDGET_INCREASE = "budget_increase"
     BUDGET_DECREASE = "budget_decrease"
     PAUSE_CAMPAIGN = "pause_campaign"
@@ -99,6 +101,7 @@ class AutopilotService:
             # Block — require manual approval
             action_status = ActionStatus.FAILED.value
             from app.core.logging import get_logger
+
             get_logger(__name__).warning(
                 "trust_gate_blocked_action",
                 tenant_id=tenant_id,
@@ -142,9 +145,7 @@ class AutopilotService:
         limit: int = 100,
     ) -> List[FactActionsQueue]:
         """Get queued actions for a tenant."""
-        query = select(FactActionsQueue).where(
-            FactActionsQueue.tenant_id == tenant_id
-        )
+        query = select(FactActionsQueue).where(FactActionsQueue.tenant_id == tenant_id)
 
         if target_date:
             query = query.where(FactActionsQueue.date == target_date)
@@ -367,7 +368,8 @@ class AutopilotService:
                     + status_counts.get(ActionStatus.FAILED.value, 0),
                     1,
                 )
-            ) * 100,
+            )
+            * 100,
         }
 
     def can_auto_execute(
@@ -401,15 +403,24 @@ class AutopilotService:
                 return False, f"Unknown action type: {action_type}"
 
             # Check budget caps for budget actions
-            if action_type in [ActionType.BUDGET_INCREASE.value, ActionType.BUDGET_DECREASE.value]:
+            if action_type in [
+                ActionType.BUDGET_INCREASE.value,
+                ActionType.BUDGET_DECREASE.value,
+            ]:
                 amount = action_details.get("amount", 0)
                 percentage = action_details.get("percentage", 0)
 
                 if abs(amount) > caps["max_daily_budget_change"]:
-                    return False, f"Budget change exceeds ${caps['max_daily_budget_change']} cap"
+                    return (
+                        False,
+                        f"Budget change exceeds ${caps['max_daily_budget_change']} cap",
+                    )
 
                 if abs(percentage) > caps["max_budget_pct_change"]:
-                    return False, f"Budget change exceeds {caps['max_budget_pct_change']}% cap"
+                    return (
+                        False,
+                        f"Budget change exceeds {caps['max_budget_pct_change']}% cap",
+                    )
 
             return True, None
 
@@ -436,48 +447,63 @@ def process_recommendations_to_actions(
     for action in recommendations.get("actions", []):
         action_type = action.get("type")
         if action_type in ["increase", "decrease"]:
-            actions.append({
-                "action_type": f"budget_{action_type}",
-                "entity_type": "campaign",
-                "entity_id": action.get("entity_id"),
-                "entity_name": action.get("entity_name"),
-                "action_json": {
-                    "amount": action.get("amount"),
-                    "reason": action.get("reason"),
-                },
-                "requires_approval": autopilot_level >= AutopilotLevel.APPROVAL_REQUIRED,
-            })
+            actions.append(
+                {
+                    "action_type": f"budget_{action_type}",
+                    "entity_type": "campaign",
+                    "entity_id": action.get("entity_id"),
+                    "entity_name": action.get("entity_name"),
+                    "action_json": {
+                        "amount": action.get("amount"),
+                        "reason": action.get("reason"),
+                    },
+                    "requires_approval": autopilot_level
+                    >= AutopilotLevel.APPROVAL_REQUIRED,
+                }
+            )
 
     # Process recommendations
     for rec in recommendations.get("recommendations", []):
         rec_type = rec.get("type")
 
         if rec_type == "creative_refresh":
-            actions.append({
-                "action_type": ActionType.PAUSE_CREATIVE.value,
-                "entity_type": "creative",
-                "entity_id": rec.get("entity_id"),
-                "entity_name": rec.get("entity_name"),
-                "action_json": {
-                    "reason": rec.get("description"),
-                    "fatigue_score": rec.get("expected_impact", {}).get("fatigue_score"),
-                },
-                "requires_approval": autopilot_level >= AutopilotLevel.APPROVAL_REQUIRED,
-            })
+            actions.append(
+                {
+                    "action_type": ActionType.PAUSE_CREATIVE.value,
+                    "entity_type": "creative",
+                    "entity_id": rec.get("entity_id"),
+                    "entity_name": rec.get("entity_name"),
+                    "action_json": {
+                        "reason": rec.get("description"),
+                        "fatigue_score": rec.get("expected_impact", {}).get(
+                            "fatigue_score"
+                        ),
+                    },
+                    "requires_approval": autopilot_level
+                    >= AutopilotLevel.APPROVAL_REQUIRED,
+                }
+            )
 
         elif rec_type == "fix_campaign":
             # Underperforming campaigns may need budget reduction or pause
-            actions.append({
-                "action_type": ActionType.BUDGET_DECREASE.value,
-                "entity_type": "campaign",
-                "entity_id": rec.get("entity_id"),
-                "entity_name": rec.get("entity_name"),
-                "action_json": {
-                    "reason": rec.get("description"),
-                    "scaling_score": rec.get("expected_impact", {}).get("scaling_score"),
-                    "recommendations": rec.get("action_params", {}).get("recommendations", []),
-                },
-                "requires_approval": autopilot_level >= AutopilotLevel.APPROVAL_REQUIRED,
-            })
+            actions.append(
+                {
+                    "action_type": ActionType.BUDGET_DECREASE.value,
+                    "entity_type": "campaign",
+                    "entity_id": rec.get("entity_id"),
+                    "entity_name": rec.get("entity_name"),
+                    "action_json": {
+                        "reason": rec.get("description"),
+                        "scaling_score": rec.get("expected_impact", {}).get(
+                            "scaling_score"
+                        ),
+                        "recommendations": rec.get("action_params", {}).get(
+                            "recommendations", []
+                        ),
+                    },
+                    "requires_approval": autopilot_level
+                    >= AutopilotLevel.APPROVAL_REQUIRED,
+                }
+            )
 
     return actions

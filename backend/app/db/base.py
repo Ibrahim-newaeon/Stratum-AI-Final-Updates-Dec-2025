@@ -6,16 +6,18 @@ Base model configuration with common mixins and utilities.
 All models inherit from this base for consistent behavior.
 """
 
+import enum as _enum
+import re as _re
 from datetime import datetime, timezone
 from typing import Any
 
-import enum as _enum
-import re as _re
-
-from sqlalchemy import DateTime, Integer, MetaData, String, event, func, cast as sa_cast
+from sqlalchemy import DateTime
+from sqlalchemy import Enum as _SAEnum
+from sqlalchemy import Integer, MetaData, String, TypeDecorator
+from sqlalchemy import cast as sa_cast
+from sqlalchemy import event, func
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import Enum as _SAEnum, TypeDecorator
 
 # Naming convention for constraints (important for Alembic)
 convention = {
@@ -37,6 +39,7 @@ class StrEnumType(TypeDecorator):
     2. Adds CAST(... AS pg_enum_type) so PostgreSQL can compare
     3. Converts DB string -> Python enum on result
     """
+
     impl = String(50)
     cache_ok = True
 
@@ -48,8 +51,8 @@ class StrEnumType(TypeDecorator):
             # Derive PG enum type name: CamelCase -> snake_case
             # Two-step regex handles acronyms: CRMProvider -> crm_provider
             name = enum_class.__name__
-            s1 = _re.sub(r'(.)([A-Z][a-z]+)', r'\1_\2', name)
-            self._pg_enum_name = _re.sub(r'([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+            s1 = _re.sub(r"(.)([A-Z][a-z]+)", r"\1_\2", name)
+            self._pg_enum_name = _re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
         super().__init__()
 
     def process_bind_param(self, value, dialect):
@@ -141,6 +144,7 @@ class TenantMixin:
     @declared_attr
     def tenant_id(cls) -> Mapped[int]:
         from sqlalchemy import ForeignKey
+
         return mapped_column(
             Integer,
             ForeignKey("tenants.id", ondelete="CASCADE"),
@@ -151,6 +155,7 @@ class TenantMixin:
     @declared_attr
     def tenant(cls):
         from sqlalchemy.orm import relationship
+
         return relationship("Tenant", foreign_keys=[cls.tenant_id])
 
 

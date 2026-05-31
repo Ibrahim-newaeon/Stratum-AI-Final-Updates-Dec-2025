@@ -64,18 +64,27 @@ class CSRFMiddleware(BaseHTTPMiddleware):
 
         if origin:
             if origin.rstrip("/") not in self.allowed_origins:
-                logger.warning("csrf_origin_rejected", origin=origin, path=request.url.path)
+                logger.warning(
+                    "csrf_origin_rejected", origin=origin, path=request.url.path
+                )
                 from fastapi.responses import JSONResponse
+
                 return JSONResponse(
                     status_code=403,
                     content={"detail": "CSRF validation failed: origin not allowed"},
                 )
         elif referer:
             from urllib.parse import urlparse
+
             referer_origin = f"{urlparse(referer).scheme}://{urlparse(referer).netloc}"
             if referer_origin.rstrip("/") not in self.allowed_origins:
-                logger.warning("csrf_referer_rejected", referer=referer_origin, path=request.url.path)
+                logger.warning(
+                    "csrf_referer_rejected",
+                    referer=referer_origin,
+                    path=request.url.path,
+                )
                 from fastapi.responses import JSONResponse
+
                 return JSONResponse(
                     status_code=403,
                     content={"detail": "CSRF validation failed: referer not allowed"},

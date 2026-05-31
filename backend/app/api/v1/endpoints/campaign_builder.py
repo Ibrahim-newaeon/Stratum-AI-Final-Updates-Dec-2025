@@ -15,18 +15,24 @@ from datetime import datetime, timezone
 from typing import List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Query, BackgroundTasks
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, or_
-from sqlalchemy.orm import selectinload
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy import and_, or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
+from app.core.security import require_permission
 from app.db.session import get_async_session
 from app.models.campaign_builder import (
-    TenantPlatformConnection, TenantAdAccount, CampaignDraft, CampaignPublishLog,
-    AdPlatform, ConnectionStatus, DraftStatus, PublishResult
+    AdPlatform,
+    CampaignDraft,
+    CampaignPublishLog,
+    ConnectionStatus,
+    DraftStatus,
+    PublishResult,
+    TenantAdAccount,
+    TenantPlatformConnection,
 )
-from app.core.security import require_permission
 from app.schemas.response import APIResponse, PaginatedResponse
 
 router = APIRouter(prefix="/tenant/{tenant_id}", tags=["campaign-builder"])
@@ -35,6 +41,7 @@ router = APIRouter(prefix="/tenant/{tenant_id}", tags=["campaign-builder"])
 # =============================================================================
 # Pydantic Schemas
 # =============================================================================
+
 
 class ConnectorStatusResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -121,7 +128,10 @@ class PublishLogResponse(BaseModel):
 # Connectors Endpoints
 # =============================================================================
 
-@router.get("/connect/{platform}/status", response_model=APIResponse[ConnectorStatusResponse])
+
+@router.get(
+    "/connect/{platform}/status", response_model=APIResponse[ConnectorStatusResponse]
+)
 async def get_connector_status(
     request: Request,
     tenant_id: int,
@@ -212,7 +222,9 @@ async def start_platform_connection(
 
     config = oauth_configs.get(platform)
     if not config:
-        raise HTTPException(status_code=400, detail=f"Unsupported platform: {platform.value}")
+        raise HTTPException(
+            status_code=400, detail=f"Unsupported platform: {platform.value}"
+        )
 
     client_id = os.environ.get(config["client_id_env"], "")
     if not client_id:
@@ -356,7 +368,10 @@ async def disconnect_platform(
 # Ad Accounts Endpoints
 # =============================================================================
 
-@router.get("/ad-accounts/{platform}", response_model=APIResponse[List[AdAccountResponse]])
+
+@router.get(
+    "/ad-accounts/{platform}", response_model=APIResponse[List[AdAccountResponse]]
+)
 async def list_ad_accounts(
     request: Request,
     tenant_id: int,
@@ -413,8 +428,7 @@ async def sync_ad_accounts(
 
     if not connection:
         raise HTTPException(
-            status_code=400,
-            detail=f"Platform {platform.value} is not connected"
+            status_code=400, detail=f"Platform {platform.value} is not connected"
         )
 
     # In production, trigger Celery task
@@ -426,7 +440,10 @@ async def sync_ad_accounts(
     )
 
 
-@router.put("/ad-accounts/{platform}/{ad_account_id}", response_model=APIResponse[AdAccountResponse])
+@router.put(
+    "/ad-accounts/{platform}/{ad_account_id}",
+    response_model=APIResponse[AdAccountResponse],
+)
 async def update_ad_account(
     request: Request,
     tenant_id: int,
@@ -470,6 +487,7 @@ async def update_ad_account(
 # Campaign Drafts Endpoints
 # =============================================================================
 
+
 @router.post("/campaign-drafts", response_model=APIResponse[CampaignDraftResponse])
 async def create_campaign_draft(
     request: Request,
@@ -497,8 +515,7 @@ async def create_campaign_draft(
 
     if not ad_account:
         raise HTTPException(
-            status_code=400,
-            detail="Ad account not found or not enabled"
+            status_code=400, detail="Ad account not found or not enabled"
         )
 
     draft = CampaignDraft(
@@ -557,7 +574,9 @@ async def list_campaign_drafts(
     )
 
 
-@router.get("/campaign-drafts/{draft_id}", response_model=APIResponse[CampaignDraftResponse])
+@router.get(
+    "/campaign-drafts/{draft_id}", response_model=APIResponse[CampaignDraftResponse]
+)
 async def get_campaign_draft(
     request: Request,
     tenant_id: int,
@@ -587,7 +606,9 @@ async def get_campaign_draft(
     )
 
 
-@router.put("/campaign-drafts/{draft_id}", response_model=APIResponse[CampaignDraftResponse])
+@router.put(
+    "/campaign-drafts/{draft_id}", response_model=APIResponse[CampaignDraftResponse]
+)
 async def update_campaign_draft(
     request: Request,
     tenant_id: int,
@@ -615,7 +636,7 @@ async def update_campaign_draft(
     if draft.status not in [DraftStatus.DRAFT, DraftStatus.REJECTED]:
         raise HTTPException(
             status_code=400,
-            detail=f"Cannot update draft in {draft.status.value} status"
+            detail=f"Cannot update draft in {draft.status.value} status",
         )
 
     if update_data.name is not None:
@@ -639,7 +660,10 @@ async def update_campaign_draft(
     )
 
 
-@router.post("/campaign-drafts/{draft_id}/submit", response_model=APIResponse[CampaignDraftResponse])
+@router.post(
+    "/campaign-drafts/{draft_id}/submit",
+    response_model=APIResponse[CampaignDraftResponse],
+)
 async def submit_campaign_draft(
     request: Request,
     tenant_id: int,
@@ -668,7 +692,7 @@ async def submit_campaign_draft(
     if draft.status != DraftStatus.DRAFT:
         raise HTTPException(
             status_code=400,
-            detail=f"Cannot submit draft in {draft.status.value} status"
+            detail=f"Cannot submit draft in {draft.status.value} status",
         )
 
     draft.status = DraftStatus.SUBMITTED
@@ -684,7 +708,10 @@ async def submit_campaign_draft(
     )
 
 
-@router.post("/campaign-drafts/{draft_id}/approve", response_model=APIResponse[CampaignDraftResponse])
+@router.post(
+    "/campaign-drafts/{draft_id}/approve",
+    response_model=APIResponse[CampaignDraftResponse],
+)
 async def approve_campaign_draft(
     request: Request,
     tenant_id: int,
@@ -713,7 +740,7 @@ async def approve_campaign_draft(
     if draft.status != DraftStatus.SUBMITTED:
         raise HTTPException(
             status_code=400,
-            detail=f"Cannot approve draft in {draft.status.value} status"
+            detail=f"Cannot approve draft in {draft.status.value} status",
         )
 
     draft.status = DraftStatus.APPROVED
@@ -729,7 +756,10 @@ async def approve_campaign_draft(
     )
 
 
-@router.post("/campaign-drafts/{draft_id}/reject", response_model=APIResponse[CampaignDraftResponse])
+@router.post(
+    "/campaign-drafts/{draft_id}/reject",
+    response_model=APIResponse[CampaignDraftResponse],
+)
 async def reject_campaign_draft(
     request: Request,
     tenant_id: int,
@@ -759,7 +789,7 @@ async def reject_campaign_draft(
     if draft.status != DraftStatus.SUBMITTED:
         raise HTTPException(
             status_code=400,
-            detail=f"Cannot reject draft in {draft.status.value} status"
+            detail=f"Cannot reject draft in {draft.status.value} status",
         )
 
     draft.status = DraftStatus.REJECTED
@@ -776,7 +806,10 @@ async def reject_campaign_draft(
     )
 
 
-@router.post("/campaign-drafts/{draft_id}/publish", response_model=APIResponse[CampaignDraftResponse])
+@router.post(
+    "/campaign-drafts/{draft_id}/publish",
+    response_model=APIResponse[CampaignDraftResponse],
+)
 async def publish_campaign_draft(
     request: Request,
     tenant_id: int,
@@ -808,7 +841,7 @@ async def publish_campaign_draft(
     if draft.status != DraftStatus.APPROVED:
         raise HTTPException(
             status_code=400,
-            detail=f"Cannot publish draft in {draft.status.value} status. Must be approved first."
+            detail=f"Cannot publish draft in {draft.status.value} status. Must be approved first.",
         )
 
     # Check budget guardrails
@@ -819,7 +852,7 @@ async def publish_campaign_draft(
         if budget_amount > float(draft.ad_account.daily_budget_cap):
             raise HTTPException(
                 status_code=400,
-                detail=f"Budget {budget_amount} exceeds account cap {draft.ad_account.daily_budget_cap}"
+                detail=f"Budget {budget_amount} exceeds account cap {draft.ad_account.daily_budget_cap}",
             )
 
     # Update status to publishing
@@ -831,7 +864,9 @@ async def publish_campaign_draft(
         tenant_id=tenant_id,
         draft_id=draft_id,
         platform=draft.platform,
-        platform_account_id=draft.ad_account.platform_account_id if draft.ad_account else "",
+        platform_account_id=(
+            draft.ad_account.platform_account_id if draft.ad_account else ""
+        ),
         published_by_user_id=user_id,
         request_json=draft.draft_json,
         result_status=PublishResult.SUCCESS,  # Will be updated by background task
@@ -859,7 +894,10 @@ async def publish_campaign_draft(
 # Publish Logs Endpoints
 # =============================================================================
 
-@router.get("/campaign-publish-logs", response_model=APIResponse[List[PublishLogResponse]])
+
+@router.get(
+    "/campaign-publish-logs", response_model=APIResponse[List[PublishLogResponse]]
+)
 async def list_publish_logs(
     request: Request,
     tenant_id: int,
@@ -883,7 +921,9 @@ async def list_publish_logs(
     if result_status:
         query = query.where(CampaignPublishLog.result_status == result_status)
 
-    query = query.order_by(CampaignPublishLog.event_time.desc()).limit(limit).offset(offset)
+    query = (
+        query.order_by(CampaignPublishLog.event_time.desc()).limit(limit).offset(offset)
+    )
 
     result = await db.execute(query)
     logs = result.scalars().all()
@@ -921,8 +961,7 @@ async def retry_publish(
 
     if log.result_status != PublishResult.FAILURE:
         raise HTTPException(
-            status_code=400,
-            detail="Can only retry failed publish attempts"
+            status_code=400, detail="Can only retry failed publish attempts"
         )
 
     # Update retry count

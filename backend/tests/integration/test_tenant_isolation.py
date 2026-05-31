@@ -14,7 +14,6 @@ Ensures that:
 import pytest
 from httpx import AsyncClient
 
-
 pytestmark = pytest.mark.integration
 
 
@@ -135,9 +134,10 @@ class TestTenantDataIsolation:
         db_session,
     ):
         """Test that signal health queries are scoped to tenant."""
+        from datetime import date
+
         from app.base_models import Tenant
         from app.models.trust_layer import FactSignalHealthDaily, SignalHealthStatus
-        from datetime import date
 
         # Create signal health for another tenant
         other_tenant = Tenant(
@@ -248,9 +248,7 @@ class TestPathTenantValidation:
         authenticated_client: AsyncClient,
     ):
         """Test handling of invalid tenant ID format."""
-        response = await authenticated_client.get(
-            "/api/v1/tenants/invalid/emq/score"
-        )
+        response = await authenticated_client.get("/api/v1/tenants/invalid/emq/score")
 
         assert response.status_code == 422  # Validation error
 
@@ -260,8 +258,6 @@ class TestPathTenantValidation:
         authenticated_client: AsyncClient,
     ):
         """Test handling of non-existent tenant ID."""
-        response = await authenticated_client.get(
-            "/api/v1/tenants/99999/emq/score"
-        )
+        response = await authenticated_client.get("/api/v1/tenants/99999/emq/score")
 
         assert response.status_code in [403, 404]
