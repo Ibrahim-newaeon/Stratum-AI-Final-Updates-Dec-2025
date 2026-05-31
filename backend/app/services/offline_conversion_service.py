@@ -27,6 +27,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from enum import Enum
 import asyncio
 import httpx
+import statistics
 
 from app.core.logging import get_logger
 from app.services.capi.pii_hasher import PIIHasher

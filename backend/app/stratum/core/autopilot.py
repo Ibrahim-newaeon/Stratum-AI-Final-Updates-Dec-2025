@@ -694,7 +694,7 @@ class AutopilotEngine:
                 gate_results = []
                 if rule_result.triggered and rule_result.actions:
                     for action in rule_result.actions:
-                        gate_result = self.trust_gate.evaluate(action, signal_health)
+                        gate_result = self.trust_gate.evaluate(signal_health, action)
                         gate_results.append(gate_result)
 
                         # Execute if auto_execute is on and approved
@@ -787,7 +787,7 @@ class TrustGatedAutopilot:
         )
 
         # Evaluate through trust gate
-        result = self.trust_gate.evaluate(action, signal_health)
+        result = self.trust_gate.evaluate(signal_health, action)
 
         # PASS means the trust gate approved execution based on signal health
         can_proceed = result.decision == GateDecision.PASS

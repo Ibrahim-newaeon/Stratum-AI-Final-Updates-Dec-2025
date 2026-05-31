@@ -240,7 +240,7 @@ async def scrape_website(domain: str) -> CompetitorScanResult:
             follow_redirects=True,
             timeout=REQUEST_TIMEOUT,
             headers={"User-Agent": USER_AGENT},
-            verify=True, - Some sites have cert issues
+            verify=True,  # Some sites have cert issues
         ) as client:
             response = await client.get(url)
             response.raise_for_status()
