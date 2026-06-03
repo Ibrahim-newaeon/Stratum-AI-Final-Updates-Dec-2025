@@ -118,7 +118,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                     decode_responses=True,
                     socket_connect_timeout=1,
                 )
-                await self._redis.ping()
+                await self._redis.ping()  # type: ignore[misc]
                 self._redis_available = True
                 logger.info("rate_limiter_redis_connected")
             except (ConnectionError, TimeoutError, OSError) as exc:

@@ -235,7 +235,7 @@ class UserResponse(UserBase, TimestampMixin):
     id: int
     tenant_id: int
     # Override EmailStr → str so decrypted-or-raw values pass validation
-    email: str  # type: ignore[assignment]
+    email: str
     is_active: bool
     is_verified: bool
     last_login_at: Optional[datetime]

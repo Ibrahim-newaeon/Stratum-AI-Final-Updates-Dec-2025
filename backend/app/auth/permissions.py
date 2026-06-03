@@ -714,7 +714,7 @@ async def require_super_admin(request: Request) -> None:
 # =============================================================================
 
 
-def check_permission(permission: Permission):
+def check_permission(permission: Permission) -> Callable:
     """
     Decorator for service functions that need permission checking.
 
@@ -726,7 +726,7 @@ def check_permission(permission: Permission):
             ...
     """
 
-    def decorator(func: Callable):
+    def decorator(func: Callable) -> Callable:
         @wraps(func)
         async def wrapper(*args, **kwargs):
             role = kwargs.get("role")
@@ -880,7 +880,7 @@ async def get_accessible_client_ids(
                 ClientAssignment.user_id == user_id,
             )
         )
-        return list(result.scalars().all())
+        return [cid for cid in result.scalars().all() if cid is not None]
     except (ConnectionError, TimeoutError, OSError) as exc:
         import structlog
 

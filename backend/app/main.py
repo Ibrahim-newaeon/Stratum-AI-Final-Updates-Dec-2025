@@ -7,7 +7,9 @@ Configures routers, middleware, and application lifecycle events.
 """
 
 import asyncio
+import logging
 import os
+import secrets
 import time
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Optional
@@ -141,13 +143,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
             traces_sample_rate=settings.sentry_traces_sample_rate,
             profiles_sample_rate=settings.sentry_profiles_sample_rate,
             send_default_pii=False,
-            before_send=_before_send,
+            before_send=_before_send,  # type: ignore[arg-type]
             integrations=[
                 FastApiIntegration(transaction_style="endpoint"),
                 SqlalchemyIntegration(),
                 CeleryIntegration(monitor_beat_tasks=True),
                 RedisIntegration(),
-                LoggingIntegration(level=None, event_level="ERROR"),
+                LoggingIntegration(level=None, event_level=logging.ERROR),
             ],
         )
         logger.info(

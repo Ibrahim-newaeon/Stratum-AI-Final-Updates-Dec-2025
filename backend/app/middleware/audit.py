@@ -8,7 +8,7 @@ Implements Module F: Security & Governance requirements.
 
 import json
 from datetime import datetime, timezone
-from typing import Callable, Optional
+from typing import Any, Callable, Optional
 
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -232,7 +232,7 @@ class AuditMiddleware(BaseHTTPMiddleware):
             "social_security",
         }
 
-        sanitized = {}
+        sanitized: dict[str, Any] = {}
         for key, value in data.items():
             if any(field in key.lower() for field in sensitive_fields):
                 sanitized[key] = "[REDACTED]"
@@ -255,7 +255,7 @@ class AuditMiddleware(BaseHTTPMiddleware):
 
             client = redis.from_url(settings.redis_url)
             try:
-                await client.lpush("audit_log_queue", json.dumps(audit_entry))
+                await client.lpush("audit_log_queue", json.dumps(audit_entry))  # type: ignore[misc]
             finally:
                 await client.close()
         except (ConnectionError, TimeoutError, OSError) as e:
