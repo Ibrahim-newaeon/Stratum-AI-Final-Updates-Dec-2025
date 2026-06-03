@@ -48,6 +48,26 @@ def require_admin(request: Request) -> int:
     return user_id
 
 
+def require_superadmin(request: Request) -> int:
+    """Verify user has platform superadmin role (cross-tenant operations)."""
+    user_role = getattr(request.state, "role", None)
+    user_id = getattr(request.state, "user_id", None)
+
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+        )
+
+    if user_role != UserRole.SUPERADMIN.value:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Superadmin access required",
+        )
+
+    return user_id
+
+
 @router.get("", response_model=APIResponse[List[TenantResponse]])
 async def list_tenants(
     request: Request,
@@ -157,7 +177,7 @@ async def get_tenant(
     user_tenant_id = getattr(request.state, "tenant_id", None)
 
     # Non-admin can only view their own tenant
-    if user_role not in (UserRole.ADMIN.value, UserRole.SUPERADMIN.value) and tenant_id != user_tenant_id:
+    if user_role != UserRole.SUPERADMIN.value and tenant_id != user_tenant_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied",
@@ -201,9 +221,9 @@ async def create_tenant(
 ):
     """
     Create a new tenant.
-    Requires admin role.
+    Requires superadmin role (platform-level cross-tenant operation).
     """
-    require_admin(request)
+    require_superadmin(request)
 
     # Check for duplicate slug
     result = await db.execute(
@@ -287,7 +307,7 @@ async def update_tenant(
         )
 
     # Non-admin can only update their own tenant
-    if user_role not in (UserRole.ADMIN.value, UserRole.SUPERADMIN.value) and tenant_id != user_tenant_id:
+    if user_role != UserRole.SUPERADMIN.value and tenant_id != user_tenant_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied",
@@ -347,9 +367,9 @@ async def delete_tenant(
 ):
     """
     Soft delete a tenant.
-    Requires admin role.
+    Requires superadmin role (platform-level cross-tenant operation).
     """
-    require_admin(request)
+    require_superadmin(request)
 
     user_tenant_id = getattr(request.state, "tenant_id", None)
 
@@ -396,7 +416,7 @@ async def get_tenant_users(
     user_tenant_id = getattr(request.state, "tenant_id", None)
 
     # Non-admin can only view their own tenant
-    if user_role not in (UserRole.ADMIN.value, UserRole.SUPERADMIN.value) and tenant_id != user_tenant_id:
+    if user_role != UserRole.SUPERADMIN.value and tenant_id != user_tenant_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied",
@@ -443,9 +463,9 @@ async def update_tenant_plan(
 ):
     """
     Update tenant subscription plan.
-    Requires admin role.
+    Requires superadmin role (platform-level cross-tenant operation).
     """
-    require_admin(request)
+    require_superadmin(request)
 
     result = await db.execute(
         select(Tenant).where(Tenant.id == tenant_id, Tenant.is_deleted == False)
@@ -508,9 +528,9 @@ async def update_tenant_features(
 ):
     """
     Update tenant feature flags.
-    Requires admin role.
+    Requires superadmin role (platform-level cross-tenant operation).
     """
-    require_admin(request)
+    require_superadmin(request)
 
     result = await db.execute(
         select(Tenant).where(Tenant.id == tenant_id, Tenant.is_deleted == False)

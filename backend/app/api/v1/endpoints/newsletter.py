@@ -230,7 +230,10 @@ async def list_templates(
     is_active: bool = True,
 ) -> list[TemplateResponse]:
     """List newsletter templates."""
-    query = select(NewsletterTemplate).where(NewsletterTemplate.is_active == is_active)
+    query = select(NewsletterTemplate).where(
+        NewsletterTemplate.is_active == is_active,
+        NewsletterTemplate.tenant_id == current_user.tenant_id,
+    )
     if category:
         query = query.where(NewsletterTemplate.category == category)
     query = query.order_by(NewsletterTemplate.updated_at.desc()).limit(1000)
@@ -254,6 +257,7 @@ async def create_template(
         content_html=data.content_html,
         content_json=data.content_json,
         category=data.category,
+        tenant_id=current_user.tenant_id,
         created_by_user_id=current_user.id,
     )
     db.add(template)
@@ -271,7 +275,10 @@ async def update_template(
 ) -> TemplateResponse:
     """Update an existing template."""
     result = await db.execute(
-        select(NewsletterTemplate).where(NewsletterTemplate.id == template_id)
+        select(NewsletterTemplate).where(
+            NewsletterTemplate.id == template_id,
+            NewsletterTemplate.tenant_id == current_user.tenant_id,
+        )
     )
     template = result.scalar_one_or_none()
     if not template:
@@ -293,7 +300,10 @@ async def delete_template(
 ) -> dict:
     """Delete a template (soft-delete by setting is_active=False)."""
     result = await db.execute(
-        select(NewsletterTemplate).where(NewsletterTemplate.id == template_id)
+        select(NewsletterTemplate).where(
+            NewsletterTemplate.id == template_id,
+            NewsletterTemplate.tenant_id == current_user.tenant_id,
+        )
     )
     template = result.scalar_one_or_none()
     if not template:
@@ -316,8 +326,12 @@ async def list_campaigns(
     offset: int = Query(default=0, ge=0),
 ) -> CampaignListResponse:
     """List newsletter campaigns with optional status filter."""
-    query = select(NewsletterCampaign)
-    count_query = select(func.count(NewsletterCampaign.id))
+    query = select(NewsletterCampaign).where(
+        NewsletterCampaign.tenant_id == current_user.tenant_id
+    )
+    count_query = select(func.count(NewsletterCampaign.id)).where(
+        NewsletterCampaign.tenant_id == current_user.tenant_id
+    )
 
     if status:
         query = query.where(NewsletterCampaign.status == status)
@@ -356,6 +370,7 @@ async def create_campaign(
         reply_to_email=data.reply_to_email,
         audience_filters=data.audience_filters,
         status=CampaignStatus.DRAFT.value,
+        tenant_id=current_user.tenant_id,
         created_by_user_id=current_user.id,
     )
 
@@ -376,7 +391,10 @@ async def get_campaign(
 ) -> CampaignResponse:
     """Get campaign details."""
     result = await db.execute(
-        select(NewsletterCampaign).where(NewsletterCampaign.id == campaign_id)
+        select(NewsletterCampaign).where(
+            NewsletterCampaign.id == campaign_id,
+            NewsletterCampaign.tenant_id == current_user.tenant_id,
+        )
     )
     campaign = result.scalar_one_or_none()
     if not campaign:
@@ -393,7 +411,10 @@ async def update_campaign(
 ) -> CampaignResponse:
     """Update a draft campaign."""
     result = await db.execute(
-        select(NewsletterCampaign).where(NewsletterCampaign.id == campaign_id)
+        select(NewsletterCampaign).where(
+            NewsletterCampaign.id == campaign_id,
+            NewsletterCampaign.tenant_id == current_user.tenant_id,
+        )
     )
     campaign = result.scalar_one_or_none()
     if not campaign:
@@ -421,7 +442,10 @@ async def delete_campaign(
 ) -> dict:
     """Delete a draft campaign."""
     result = await db.execute(
-        select(NewsletterCampaign).where(NewsletterCampaign.id == campaign_id)
+        select(NewsletterCampaign).where(
+            NewsletterCampaign.id == campaign_id,
+            NewsletterCampaign.tenant_id == current_user.tenant_id,
+        )
     )
     campaign = result.scalar_one_or_none()
     if not campaign:
@@ -442,7 +466,10 @@ async def duplicate_campaign(
 ) -> CampaignResponse:
     """Clone an existing campaign as a new draft."""
     result = await db.execute(
-        select(NewsletterCampaign).where(NewsletterCampaign.id == campaign_id)
+        select(NewsletterCampaign).where(
+            NewsletterCampaign.id == campaign_id,
+            NewsletterCampaign.tenant_id == current_user.tenant_id,
+        )
     )
     original = result.scalar_one_or_none()
     if not original:
@@ -461,6 +488,7 @@ async def duplicate_campaign(
         audience_filters=original.audience_filters,
         status=CampaignStatus.DRAFT.value,
         total_recipients=original.total_recipients,
+        tenant_id=current_user.tenant_id,
         created_by_user_id=current_user.id,
     )
     db.add(clone)
@@ -477,7 +505,10 @@ async def send_campaign(
 ) -> dict:
     """Queue campaign for immediate send."""
     result = await db.execute(
-        select(NewsletterCampaign).where(NewsletterCampaign.id == campaign_id)
+        select(NewsletterCampaign).where(
+            NewsletterCampaign.id == campaign_id,
+            NewsletterCampaign.tenant_id == current_user.tenant_id,
+        )
     )
     campaign = result.scalar_one_or_none()
     if not campaign:
@@ -520,7 +551,10 @@ async def schedule_campaign(
 ) -> dict:
     """Schedule campaign for future send."""
     result = await db.execute(
-        select(NewsletterCampaign).where(NewsletterCampaign.id == campaign_id)
+        select(NewsletterCampaign).where(
+            NewsletterCampaign.id == campaign_id,
+            NewsletterCampaign.tenant_id == current_user.tenant_id,
+        )
     )
     campaign = result.scalar_one_or_none()
     if not campaign:
@@ -550,7 +584,10 @@ async def cancel_campaign(
 ) -> dict:
     """Cancel a scheduled or sending campaign."""
     result = await db.execute(
-        select(NewsletterCampaign).where(NewsletterCampaign.id == campaign_id)
+        select(NewsletterCampaign).where(
+            NewsletterCampaign.id == campaign_id,
+            NewsletterCampaign.tenant_id == current_user.tenant_id,
+        )
     )
     campaign = result.scalar_one_or_none()
     if not campaign:
@@ -572,7 +609,10 @@ async def send_test_email(
 ) -> dict:
     """Send test email to specified addresses."""
     result = await db.execute(
-        select(NewsletterCampaign).where(NewsletterCampaign.id == campaign_id)
+        select(NewsletterCampaign).where(
+            NewsletterCampaign.id == campaign_id,
+            NewsletterCampaign.tenant_id == current_user.tenant_id,
+        )
     )
     campaign = result.scalar_one_or_none()
     if not campaign:
@@ -607,7 +647,10 @@ async def campaign_analytics(
 ) -> AnalyticsResponse:
     """Get detailed analytics for a campaign."""
     result = await db.execute(
-        select(NewsletterCampaign).where(NewsletterCampaign.id == campaign_id)
+        select(NewsletterCampaign).where(
+            NewsletterCampaign.id == campaign_id,
+            NewsletterCampaign.tenant_id == current_user.tenant_id,
+        )
     )
     campaign = result.scalar_one_or_none()
     if not campaign:

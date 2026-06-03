@@ -200,7 +200,12 @@ async def copilot_chat(
     The copilot analyzes the user's query, fetches relevant dashboard data,
     and generates a contextual response with suggestions and data cards.
     """
-    tenant_id = getattr(user, "tenant_id", None) or 1
+    tenant_id = getattr(user, "tenant_id", None)
+    if tenant_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Tenant context required",
+        )
     _, first_name = _resolve_user_name(user)
 
     session_id = request.session_id or str(uuid4())
@@ -296,7 +301,12 @@ async def copilot_chat_stream(
     tokens), and renders citations + suggestions + data_cards from the
     `meta` payload once the stream completes.
     """
-    tenant_id = getattr(user, "tenant_id", None) or 1
+    tenant_id = getattr(user, "tenant_id", None)
+    if tenant_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Tenant context required",
+        )
     _, first_name = _resolve_user_name(user)
     session_id = request.session_id or str(uuid4())
 

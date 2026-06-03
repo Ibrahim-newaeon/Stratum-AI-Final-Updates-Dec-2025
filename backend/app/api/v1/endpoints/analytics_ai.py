@@ -269,7 +269,12 @@ async def get_ai_recommendations(
     - Alerts (anomalies and issues)
     - Insights (opportunities)
     """
-    tenant_id = getattr(request.state, "tenant_id", 1)
+    tenant_id = getattr(request.state, "tenant_id", None)
+    if tenant_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Tenant context required",
+        )
 
     # Get campaigns
     result = await db.execute(
@@ -360,7 +365,12 @@ async def get_analytics_kpis(
     """
     Get analytics KPIs summary for the dashboard.
     """
-    tenant_id = getattr(request.state, "tenant_id", 1)
+    tenant_id = getattr(request.state, "tenant_id", None)
+    if tenant_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Tenant context required",
+        )
 
     # Get campaigns
     result = await db.execute(
