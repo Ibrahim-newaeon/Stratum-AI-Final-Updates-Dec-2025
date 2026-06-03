@@ -85,7 +85,7 @@ psutil>=7.2.2
 
 # PDF & Reporting
 weasyprint>=68.1
-PyYAML>=6.0
+PyYAML>=6.0.3
 
 # AWS (S3 for CMS assets & report delivery)
 boto3>=1.34.0
