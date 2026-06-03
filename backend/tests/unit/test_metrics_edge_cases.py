@@ -11,27 +11,28 @@ Tests for edge cases in analytics logic:
 """
 
 import math
-import pytest
 from datetime import datetime, timezone
 
+import pytest
+
+from app.analytics.logic.anomalies import anomaly_zscore, get_severity
+from app.analytics.logic.fatigue import creative_fatigue
+from app.analytics.logic.scoring import batch_scaling_scores, scaling_score
+from app.analytics.logic.signal_health import signal_health
 from app.analytics.logic.types import (
-    EntityMetrics,
     BaselineMetrics,
-    Platform,
     EntityLevel,
-    ScalingAction,
+    EntityMetrics,
     FatigueState,
+    Platform,
+    ScalingAction,
     SignalHealthStatus,
 )
-from app.analytics.logic.scoring import scaling_score, batch_scaling_scores
-from app.analytics.logic.fatigue import creative_fatigue
-from app.analytics.logic.anomalies import anomaly_zscore, get_severity
-from app.analytics.logic.signal_health import signal_health
-
 
 # =============================================================================
 # Fixtures
 # =============================================================================
+
 
 @pytest.fixture
 def zero_metrics() -> EntityMetrics:
@@ -71,7 +72,7 @@ def negative_metrics() -> EntityMetrics:
         conversions=5,
         revenue=-200.0,  # Refund scenario
         cpa=100.0,
-        roas=-0.4,       # Negative ROAS
+        roas=-0.4,  # Negative ROAS
         cvr=0.05,
         ctr=0.01,
         cpm=50.0,
@@ -142,6 +143,7 @@ def normal_baseline() -> BaselineMetrics:
 # Zero Metric Tests
 # =============================================================================
 
+
 class TestZeroMetrics:
     """Ensure the system handles zero metric values gracefully."""
 
@@ -151,7 +153,11 @@ class TestZeroMetrics:
         assert result is not None
         assert isinstance(result.score, (int, float))
         assert not math.isnan(result.score)
-        assert result.action in (ScalingAction.SCALE, ScalingAction.FIX, ScalingAction.WATCH)
+        assert result.action in (
+            ScalingAction.SCALE,
+            ScalingAction.FIX,
+            ScalingAction.WATCH,
+        )
 
     def test_scaling_score_zero_baseline(self, zero_metrics, zero_baseline):
         """Zero baseline should not cause division by zero."""
@@ -175,6 +181,7 @@ class TestZeroMetrics:
 # =============================================================================
 # Negative Metric Tests
 # =============================================================================
+
 
 class TestNegativeMetrics:
     """Ensure negative values (refunds, adjustments) are handled safely."""
@@ -203,6 +210,7 @@ class TestNegativeMetrics:
 # Extreme Value Tests
 # =============================================================================
 
+
 class TestExtremeMetrics:
     """Ensure very large values don't cause overflow or NaN."""
 
@@ -213,7 +221,9 @@ class TestExtremeMetrics:
         assert not math.isnan(result.score)
         assert not math.isinf(result.score)
 
-    def test_batch_scaling_handles_mixed(self, zero_metrics, negative_metrics, extreme_metrics, normal_baseline):
+    def test_batch_scaling_handles_mixed(
+        self, zero_metrics, negative_metrics, extreme_metrics, normal_baseline
+    ):
         """Batch scoring with mixed edge cases should complete without errors."""
         results = batch_scaling_scores(
             [zero_metrics, negative_metrics, extreme_metrics],
@@ -227,6 +237,7 @@ class TestExtremeMetrics:
 # =============================================================================
 # Signal Health Edge Cases
 # =============================================================================
+
 
 class TestSignalHealthEdgeCases:
     """Signal health should handle edge inputs gracefully."""

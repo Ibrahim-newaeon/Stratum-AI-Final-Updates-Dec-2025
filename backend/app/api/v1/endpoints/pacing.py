@@ -19,22 +19,22 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.tenancy.deps import get_current_user, get_db
 from app.core.logging import get_logger
 from app.models import User
 from app.models.pacing import (
-    TargetPeriod,
-    TargetMetric,
     AlertSeverity,
-    AlertType,
     AlertStatus,
+    AlertType,
+    TargetMetric,
+    TargetPeriod,
 )
 from app.services.pacing import (
     ForecastingService,
+    PacingAlertService,
     PacingService,
     TargetService,
-    PacingAlertService,
 )
+from app.tenancy.deps import get_current_user, get_db
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -44,8 +44,10 @@ router = APIRouter()
 # Pydantic Schemas
 # =============================================================================
 
+
 class TargetCreate(BaseModel):
     """Schema for creating a new target."""
+
     name: str = Field(..., min_length=1, max_length=255)
     description: Optional[str] = None
     metric_type: TargetMetric
@@ -54,7 +56,9 @@ class TargetCreate(BaseModel):
     period_start: date
     period_end: date
     platform: Optional[str] = None
-    account_id: Optional[str] = Field(None, description="Ad account ID for account-level targets")
+    account_id: Optional[str] = Field(
+        None, description="Ad account ID for account-level targets"
+    )
     campaign_id: Optional[str] = None
     min_value: Optional[float] = None
     max_value: Optional[float] = None
@@ -68,6 +72,7 @@ class TargetCreate(BaseModel):
 
 class TargetUpdate(BaseModel):
     """Schema for updating a target."""
+
     name: Optional[str] = Field(None, min_length=1, max_length=255)
     description: Optional[str] = None
     target_value: Optional[float] = Field(None, gt=0)
@@ -84,6 +89,7 @@ class TargetUpdate(BaseModel):
 
 class TargetResponse(BaseModel):
     """Response schema for a target."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
@@ -107,32 +113,39 @@ class TargetResponse(BaseModel):
 
 class ForecastRequest(BaseModel):
     """Request schema for forecasting."""
+
     metric_type: TargetMetric
     forecast_days: int = Field(default=30, ge=1, le=90)
     platform: Optional[str] = None
-    account_id: Optional[str] = Field(None, description="Ad account ID for account-level forecasting")
+    account_id: Optional[str] = Field(
+        None, description="Ad account ID for account-level forecasting"
+    )
     campaign_id: Optional[str] = None
     as_of_date: Optional[date] = None
 
 
 class AlertAcknowledge(BaseModel):
     """Schema for acknowledging an alert."""
+
     pass
 
 
 class AlertResolve(BaseModel):
     """Schema for resolving an alert."""
+
     resolution_notes: Optional[str] = None
 
 
 class AlertDismiss(BaseModel):
     """Schema for dismissing an alert."""
+
     reason: Optional[str] = None
 
 
 # =============================================================================
 # Target Endpoints
 # =============================================================================
+
 
 @router.post("/targets", response_model=Dict[str, Any])
 async def create_target(
@@ -183,10 +196,14 @@ async def create_target(
 @router.get("/targets", response_model=Dict[str, Any])
 async def list_targets(
     active_only: bool = Query(True, description="Only show active targets"),
-    metric_type: Optional[TargetMetric] = Query(None, description="Filter by metric type"),
+    metric_type: Optional[TargetMetric] = Query(
+        None, description="Filter by metric type"
+    ),
     platform: Optional[str] = Query(None, description="Filter by platform"),
     account_id: Optional[str] = Query(None, description="Filter by ad account ID"),
-    period_type: Optional[TargetPeriod] = Query(None, description="Filter by period type"),
+    period_type: Optional[TargetPeriod] = Query(
+        None, description="Filter by period type"
+    ),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> Dict[str, Any]:
@@ -319,10 +336,13 @@ async def delete_target(
 # Pacing Endpoints
 # =============================================================================
 
+
 @router.get("/pacing/target/{target_id}", response_model=Dict[str, Any])
 async def get_target_pacing(
     target_id: UUID,
-    as_of_date: Optional[date] = Query(None, description="Date to calculate pacing for"),
+    as_of_date: Optional[date] = Query(
+        None, description="Date to calculate pacing for"
+    ),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> Dict[str, Any]:
@@ -343,8 +363,12 @@ async def get_target_pacing(
 
 @router.get("/pacing/all", response_model=Dict[str, Any])
 async def get_all_pacing(
-    as_of_date: Optional[date] = Query(None, description="Date to calculate pacing for"),
-    metric_type: Optional[TargetMetric] = Query(None, description="Filter by metric type"),
+    as_of_date: Optional[date] = Query(
+        None, description="Date to calculate pacing for"
+    ),
+    metric_type: Optional[TargetMetric] = Query(
+        None, description="Filter by metric type"
+    ),
     platform: Optional[str] = Query(None, description="Filter by platform"),
     account_id: Optional[str] = Query(None, description="Filter by ad account ID"),
     db: AsyncSession = Depends(get_db),
@@ -408,6 +432,7 @@ async def create_pacing_snapshots(
 # Forecast Endpoints
 # =============================================================================
 
+
 @router.post("/forecast", response_model=Dict[str, Any])
 async def create_forecast(
     request: ForecastRequest,
@@ -439,7 +464,9 @@ async def get_eom_forecast(
     metric_type: TargetMetric = Query(..., description="Metric to forecast"),
     platform: Optional[str] = Query(None, description="Platform filter"),
     campaign_id: Optional[str] = Query(None, description="Campaign filter"),
-    month: Optional[date] = Query(None, description="Month to forecast (default: current)"),
+    month: Optional[date] = Query(
+        None, description="Month to forecast (default: current)"
+    ),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> Dict[str, Any]:
@@ -462,6 +489,7 @@ async def get_eom_forecast(
 # =============================================================================
 # Alert Endpoints
 # =============================================================================
+
 
 @router.get("/alerts", response_model=Dict[str, Any])
 async def get_alerts(
@@ -509,7 +537,7 @@ async def get_alerts(
                 "deviation_pct": a.deviation_pct,
                 "days_remaining": a.days_remaining,
                 "platform": a.platform,
-                "account_id": getattr(a, 'account_id', None),
+                "account_id": getattr(a, "account_id", None),
                 "campaign_id": a.campaign_id,
                 "created_at": a.created_at.isoformat(),
             }
@@ -620,7 +648,9 @@ async def dismiss_alert(
 async def check_pacing_cliff(
     target_id: UUID,
     lookback_days: int = Query(7, ge=3, le=30, description="Days to look back"),
-    drop_threshold_pct: float = Query(30.0, ge=10, le=90, description="Drop threshold %"),
+    drop_threshold_pct: float = Query(
+        30.0, ge=10, le=90, description="Drop threshold %"
+    ),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> Dict[str, Any]:

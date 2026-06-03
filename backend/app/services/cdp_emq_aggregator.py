@@ -132,7 +132,9 @@ class CDPEMQAggregator:
                 issues.append(f"Low-quality events detected: min EMQ {min_emq:.1f}")
 
             if std_emq > 20:
-                issues.append(f"High EMQ variance: {std_emq:.1f} - inconsistent data quality")
+                issues.append(
+                    f"High EMQ variance: {std_emq:.1f} - inconsistent data quality"
+                )
 
             if recent_event_count == 0:
                 issues.append("No CDP events in last 24 hours - data may be stale")
@@ -294,12 +296,16 @@ class CDPEMQAggregator:
             consent_by_type[row.consent_type] = {
                 "total": row.count,
                 "granted": row.granted_count or 0,
-                "rate": round((row.granted_count or 0) / row.count * 100, 1)
-                if row.count > 0
-                else 0,
+                "rate": (
+                    round((row.granted_count or 0) / row.count * 100, 1)
+                    if row.count > 0
+                    else 0
+                ),
             }
 
-        consent_rate = (profiles_with_consent / total_profiles * 100) if total_profiles > 0 else 0
+        consent_rate = (
+            (profiles_with_consent / total_profiles * 100) if total_profiles > 0 else 0
+        )
 
         return {
             "consent_rate": round(consent_rate, 1),
@@ -371,12 +377,16 @@ class CDPEMQAggregator:
         else:
             consent_score = consent_rate * (50 / 30)
             if consent_rate < 20:
-                issues.append(f"Low consent rate: {consent_rate:.1f}% - may limit data activation")
+                issues.append(
+                    f"Low consent rate: {consent_rate:.1f}% - may limit data activation"
+                )
 
         consent_component = consent_score * 0.10
 
         # Calculate total CDP score
-        cdp_score = emq_component + resolution_component + recency_component + consent_component
+        cdp_score = (
+            emq_component + resolution_component + recency_component + consent_component
+        )
 
         return round(cdp_score, 1), issues
 

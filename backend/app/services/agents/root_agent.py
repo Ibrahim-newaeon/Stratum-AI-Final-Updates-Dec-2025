@@ -367,7 +367,8 @@ class RootAgent:
         message_lower = message.lower()
 
         if any(
-            word in message_lower for word in ["start", "begin", "get started", "set up", "setup"]
+            word in message_lower
+            for word in ["start", "begin", "get started", "set up", "setup"]
         ):
             context.state = ConversationState.COLLECTING_COMPANY_INFO
 
@@ -516,7 +517,9 @@ class RootAgent:
                 )
 
             context.state = ConversationState.CONNECTING_ACCOUNTS
-            platforms_text = ", ".join([self.PLATFORMS[p]["name"] for p in data.selected_platforms])
+            platforms_text = ", ".join(
+                [self.PLATFORMS[p]["name"] for p in data.selected_platforms]
+            )
 
             return AgentResponse(
                 message=(
@@ -534,7 +537,10 @@ class RootAgent:
 
         # Add platform to selection
         for platform_key in self.PLATFORMS:
-            if platform_key in message_lower and platform_key not in data.selected_platforms:
+            if (
+                platform_key in message_lower
+                and platform_key not in data.selected_platforms
+            ):
                 data.selected_platforms.append(platform_key)
 
         selected_names = [self.PLATFORMS[p]["name"] for p in data.selected_platforms]
@@ -545,7 +551,9 @@ class RootAgent:
                 "Select more platforms or click Done to continue."
             ),
             state=ConversationState.SELECTING_PLATFORMS,
-            quick_replies=[p for p in self.PLATFORMS if p not in data.selected_platforms]
+            quick_replies=[
+                p for p in self.PLATFORMS if p not in data.selected_platforms
+            ]
             + ["Done"],
             data_collected={"selected_platforms": data.selected_platforms},
             progress_percent=40,
@@ -827,7 +835,10 @@ class RootAgent:
         """Handle final review."""
         message_lower = message.lower()
 
-        if any(word in message_lower for word in ["launch", "complete", "finish", "done", "yes"]):
+        if any(
+            word in message_lower
+            for word in ["launch", "complete", "finish", "done", "yes"]
+        ):
             context.state = ConversationState.COMPLETED
             context.user_context.onboarding_completed = True
 
@@ -861,12 +872,22 @@ class RootAgent:
         data = context.onboarding_data
 
         platforms_text = (
-            ", ".join([self.PLATFORMS.get(p, {}).get("name", p) for p in data.selected_platforms])
+            ", ".join(
+                [
+                    self.PLATFORMS.get(p, {}).get("name", p)
+                    for p in data.selected_platforms
+                ]
+            )
             or "None selected"
         )
 
         connected_text = (
-            ", ".join([self.PLATFORMS.get(p, {}).get("name", p) for p in data.connected_accounts])
+            ", ".join(
+                [
+                    self.PLATFORMS.get(p, {}).get("name", p)
+                    for p in data.connected_accounts
+                ]
+            )
             or "None connected yet"
         )
 

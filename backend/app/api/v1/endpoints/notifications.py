@@ -66,7 +66,9 @@ class NotificationCreateRequest(BaseModel):
     message: str = Field(..., min_length=1)
     type: str = Field(default="info")
     category: str = Field(default="system")
-    user_id: Optional[int] = Field(default=None, description="Specific user, or null for broadcast")
+    user_id: Optional[int] = Field(
+        default=None, description="Specific user, or null for broadcast"
+    )
     action_url: Optional[str] = None
     action_label: Optional[str] = None
     metadata: Optional[dict] = None
@@ -124,7 +126,8 @@ async def list_notifications(
 
     # Filter out expired notifications
     conditions.append(
-        (Notification.expires_at.is_(None)) | (Notification.expires_at > datetime.now(UTC))
+        (Notification.expires_at.is_(None))
+        | (Notification.expires_at > datetime.now(UTC))
     )
 
     result = await db.execute(
@@ -177,7 +180,8 @@ async def get_notification_count(
     base_conditions = [
         Notification.tenant_id == tenant_id,
         ((Notification.user_id == user_id) | (Notification.user_id.is_(None))),
-        (Notification.expires_at.is_(None)) | (Notification.expires_at > datetime.now(UTC)),
+        (Notification.expires_at.is_(None))
+        | (Notification.expires_at > datetime.now(UTC)),
     ]
 
     # Total count
@@ -288,7 +292,9 @@ async def delete_notification(
 
 
 @router.post(
-    "", response_model=APIResponse[NotificationResponse], status_code=status.HTTP_201_CREATED
+    "",
+    response_model=APIResponse[NotificationResponse],
+    status_code=status.HTTP_201_CREATED,
 )
 async def create_notification(
     request: Request,

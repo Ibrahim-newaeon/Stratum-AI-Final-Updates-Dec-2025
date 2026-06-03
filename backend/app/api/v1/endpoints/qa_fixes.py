@@ -18,7 +18,7 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
-from sqlalchemy import select, and_
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
@@ -37,6 +37,7 @@ router = APIRouter(prefix="/qa-fixes")
 
 class FixApplication(BaseModel):
     """Request to apply a fix."""
+
     confirm: bool = Field(True, description="Confirm fix application")
     notes: Optional[str] = Field(None, description="Optional notes about the fix")
 
@@ -62,7 +63,9 @@ async def get_quality_issues(
     request: Request,
     tenant_id: int,
     platform: Optional[str] = Query(None, description="Filter by platform"),
-    severity: Optional[str] = Query(None, description="Filter by severity: critical, high, medium, low"),
+    severity: Optional[str] = Query(
+        None, description="Filter by severity: critical, high, medium, low"
+    ),
     db: AsyncSession = Depends(get_async_session),
 ):
     """
@@ -74,8 +77,8 @@ async def get_quality_issues(
         raise HTTPException(status_code=403, detail="Access denied to this tenant")
 
     from app.analytics.logic.emq_calculation import (
-        calculate_emq_score,
         PlatformMetrics,
+        calculate_emq_score,
         determine_autopilot_mode,
     )
 
@@ -117,7 +120,10 @@ async def get_quality_issues(
             total_pages=getattr(conn, "total_pages", 1) or 1,
             events_configured=getattr(conn, "events_configured", 0) or 0,
             events_expected=getattr(conn, "events_expected", 1) or 1,
-            avg_conversion_latency_hours=getattr(conn, "avg_conversion_latency_hours", 24.0) or 24.0,
+            avg_conversion_latency_hours=getattr(
+                conn, "avg_conversion_latency_hours", 24.0
+            )
+            or 24.0,
             platform_conversions=getattr(conn, "platform_conversions", 0) or 0,
             ga4_conversions=getattr(conn, "ga4_conversions", 0) or 0,
             last_event_at=getattr(conn, "last_sync_at", None),
@@ -125,15 +131,23 @@ async def get_quality_issues(
         )
 
         try:
-            emq_result = calculate_emq_score(metrics, previous_metrics=None, now=datetime.now(timezone.utc))
+            emq_result = calculate_emq_score(
+                metrics, previous_metrics=None, now=datetime.now(timezone.utc)
+            )
             if overall_emq is None or emq_result.score < overall_emq:
                 overall_emq = emq_result.score
 
             # Convert EMQ drivers into issues
             for driver in emq_result.drivers:
                 if driver.status in ("warning", "critical"):
-                    issue_severity = "critical" if driver.status == "critical" else "high" if driver.value < 50 else "medium"
-                    fix_id = f"fix_{conn.platform}_{driver.name.lower().replace(' ', '_')}"
+                    issue_severity = (
+                        "critical"
+                        if driver.status == "critical"
+                        else "high" if driver.value < 50 else "medium"
+                    )
+                    fix_id = (
+                        f"fix_{conn.platform}_{driver.name.lower().replace(' ', '_')}"
+                    )
 
                     issue = {
                         "id": fix_id,
@@ -145,8 +159,12 @@ async def get_quality_issues(
                         "trend": driver.trend,
                         "details": driver.details,
                         "fix_available": True,
-                        "fix_description": _get_fix_description(driver.name, conn.platform),
-                        "estimated_impact": round(driver.weight * (100 - driver.value) / 100 * 10, 1),
+                        "fix_description": _get_fix_description(
+                            driver.name, conn.platform
+                        ),
+                        "estimated_impact": round(
+                            driver.weight * (100 - driver.value) / 100 * 10, 1
+                        ),
                     }
                     all_issues.append(issue)
         except Exception as e:
@@ -219,58 +237,64 @@ async def get_fix_playbook(
 
         if not is_healthy:
             item_id += 1
-            playbook_items.append({
-                "id": f"playbook_{item_id}",
-                "title": f"Reconnect {platform} integration",
-                "description": f"The {platform} connection is unhealthy. Re-authenticate to restore data flow.",
-                "priority": "critical",
-                "estimated_impact": 15.0,
-                "platform": platform,
-                "status": "pending",
-                "steps": [
-                    f"Go to Settings > Integrations > {platform}",
-                    "Click 'Reconnect' and re-authorize",
-                    "Verify data is flowing by checking recent events",
-                ],
-            })
+            playbook_items.append(
+                {
+                    "id": f"playbook_{item_id}",
+                    "title": f"Reconnect {platform} integration",
+                    "description": f"The {platform} connection is unhealthy. Re-authenticate to restore data flow.",
+                    "priority": "critical",
+                    "estimated_impact": 15.0,
+                    "platform": platform,
+                    "status": "pending",
+                    "steps": [
+                        f"Go to Settings > Integrations > {platform}",
+                        "Click 'Reconnect' and re-authorize",
+                        "Verify data is flowing by checking recent events",
+                    ],
+                }
+            )
 
         # Check if CAPI is set up
         has_capi = getattr(conn, "capi_events", 0) or 0
         if not has_capi:
             item_id += 1
-            playbook_items.append({
-                "id": f"playbook_{item_id}",
-                "title": f"Enable Conversions API for {platform}",
-                "description": "Server-side event tracking improves match rates by 20-30% vs pixel-only.",
-                "priority": "high",
-                "estimated_impact": 12.0,
-                "platform": platform,
-                "status": "pending",
-                "steps": [
-                    f"Configure CAPI credentials in {platform} settings",
-                    "Map conversion events (Purchase, Lead, AddToCart)",
-                    "Verify deduplication is configured correctly",
-                    "Monitor EMQ score improvement over 48 hours",
-                ],
-            })
+            playbook_items.append(
+                {
+                    "id": f"playbook_{item_id}",
+                    "title": f"Enable Conversions API for {platform}",
+                    "description": "Server-side event tracking improves match rates by 20-30% vs pixel-only.",
+                    "priority": "high",
+                    "estimated_impact": 12.0,
+                    "platform": platform,
+                    "status": "pending",
+                    "steps": [
+                        f"Configure CAPI credentials in {platform} settings",
+                        "Map conversion events (Purchase, Lead, AddToCart)",
+                        "Verify deduplication is configured correctly",
+                        "Monitor EMQ score improvement over 48 hours",
+                    ],
+                }
+            )
 
     # Add generic playbook items
     item_id += 1
-    playbook_items.append({
-        "id": f"playbook_{item_id}",
-        "title": "Implement enhanced user data matching",
-        "description": "Send hashed email and phone with all events to improve match quality.",
-        "priority": "medium",
-        "estimated_impact": 8.0,
-        "platform": None,
-        "status": "pending",
-        "steps": [
-            "Ensure user consent is collected for data sharing",
-            "Hash PII using SHA-256 before sending",
-            "Include em (email), ph (phone), fn (first name), ln (last name)",
-            "Test with platform's event testing tools",
-        ],
-    })
+    playbook_items.append(
+        {
+            "id": f"playbook_{item_id}",
+            "title": "Implement enhanced user data matching",
+            "description": "Send hashed email and phone with all events to improve match quality.",
+            "priority": "medium",
+            "estimated_impact": 8.0,
+            "platform": None,
+            "status": "pending",
+            "steps": [
+                "Ensure user consent is collected for data sharing",
+                "Hash PII using SHA-256 before sending",
+                "Include em (email), ph (phone), fn (first name), ln (last name)",
+                "Test with platform's event testing tools",
+            ],
+        }
+    )
 
     playbook_items.sort(key=lambda x: x["estimated_impact"], reverse=True)
 
@@ -279,7 +303,9 @@ async def get_fix_playbook(
         data={
             "items": playbook_items,
             "total": len(playbook_items),
-            "estimated_total_impact": round(sum(i["estimated_impact"] for i in playbook_items), 1),
+            "estimated_total_impact": round(
+                sum(i["estimated_impact"] for i in playbook_items), 1
+            ),
         },
     )
 
@@ -396,7 +422,9 @@ async def get_fix_history(
             for row in rows
         ]
     except (ConnectionError, TimeoutError, OSError) as exc:
-        logger.warning("qa_fix_history_query_failed", error=str(exc), tenant_id=tenant_id)
+        logger.warning(
+            "qa_fix_history_query_failed", error=str(exc), tenant_id=tenant_id
+        )
         history = []
 
     return APIResponse(

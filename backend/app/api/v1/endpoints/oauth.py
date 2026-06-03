@@ -22,9 +22,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import and_, select
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.deps import CurrentUserDep, VerifiedUserDep, require_admin
 from app.core.config import settings
@@ -61,7 +60,8 @@ class OAuthStartRequest(BaseModel):
     """Request to start OAuth flow."""
 
     scopes: Optional[list[str]] = Field(
-        None, description="Optional list of scopes to request (uses defaults if not provided)"
+        None,
+        description="Optional list of scopes to request (uses defaults if not provided)",
     )
     frontend_callback_url: Optional[str] = Field(
         None, description="Frontend URL to redirect to after OAuth completes"
@@ -141,7 +141,11 @@ class RefreshTokenResponse(BaseModel):
 # =============================================================================
 
 
-@router.post("/{platform}/authorize", response_model=APIResponse[OAuthStartResponse], dependencies=_admin_deps)
+@router.post(
+    "/{platform}/authorize",
+    response_model=APIResponse[OAuthStartResponse],
+    dependencies=_admin_deps,
+)
 async def start_oauth(
     platform: AdPlatform,
     request_data: OAuthStartRequest,
@@ -297,7 +301,9 @@ async def oauth_callback(
         if connection:
             # Update existing connection
             connection.status = ConnectionStatus.CONNECTED
-            connection.access_token_encrypted = oauth_service.encrypt_token(tokens.access_token)
+            connection.access_token_encrypted = oauth_service.encrypt_token(
+                tokens.access_token
+            )
             if tokens.refresh_token:
                 connection.refresh_token_encrypted = oauth_service.encrypt_token(
                     tokens.refresh_token
@@ -316,9 +322,11 @@ async def oauth_callback(
                 platform=platform,
                 status=ConnectionStatus.CONNECTED,
                 access_token_encrypted=oauth_service.encrypt_token(tokens.access_token),
-                refresh_token_encrypted=oauth_service.encrypt_token(tokens.refresh_token)
-                if tokens.refresh_token
-                else None,
+                refresh_token_encrypted=(
+                    oauth_service.encrypt_token(tokens.refresh_token)
+                    if tokens.refresh_token
+                    else None
+                ),
                 token_expires_at=tokens.expires_at,
                 scopes=tokens.scopes,
                 connected_at=now,
@@ -340,9 +348,7 @@ async def oauth_callback(
         try:
             import asyncio
 
-            asyncio.create_task(
-                _auto_sync_after_oauth(oauth_state.tenant_id, platform)
-            )
+            asyncio.create_task(_auto_sync_after_oauth(oauth_state.tenant_id, platform))
             logger.info(
                 "auto_sync_triggered",
                 platform=platform.value,
@@ -364,7 +370,9 @@ async def oauth_callback(
 
     # Redirect to frontend with success
     redirect_url = oauth_state.redirect_uri or frontend_url
-    return RedirectResponse(f"{redirect_url}/connect?platform={platform.value}&status=success")
+    return RedirectResponse(
+        f"{redirect_url}/connect?platform={platform.value}&status=success"
+    )
 
 
 # =============================================================================
@@ -372,7 +380,11 @@ async def oauth_callback(
 # =============================================================================
 
 
-@router.get("/{platform}/status", response_model=APIResponse[ConnectionStatusResponse], dependencies=_admin_deps)
+@router.get(
+    "/{platform}/status",
+    response_model=APIResponse[ConnectionStatusResponse],
+    dependencies=_admin_deps,
+)
 async def get_connection_status(
     platform: AdPlatform,
     current_user: CurrentUserDep,
@@ -428,7 +440,11 @@ async def get_connection_status(
     )
 
 
-@router.get("/status", response_model=APIResponse[list[ConnectionStatusResponse]], dependencies=_admin_deps)
+@router.get(
+    "/status",
+    response_model=APIResponse[list[ConnectionStatusResponse]],
+    dependencies=_admin_deps,
+)
 async def get_all_connection_statuses(
     current_user: CurrentUserDep,
     db: AsyncSession = Depends(get_async_session),
@@ -491,7 +507,11 @@ async def get_all_connection_statuses(
 # =============================================================================
 
 
-@router.get("/{platform}/accounts", response_model=APIResponse[list[AdAccountResponse]], dependencies=_admin_deps)
+@router.get(
+    "/{platform}/accounts",
+    response_model=APIResponse[list[AdAccountResponse]],
+    dependencies=_admin_deps,
+)
 async def list_ad_accounts(
     platform: AdPlatform,
     current_user: VerifiedUserDep,
@@ -535,7 +555,9 @@ async def list_ad_accounts(
     if connection.token_expires_at and connection.token_expires_at <= datetime.now(UTC):
         if connection.refresh_token_encrypted:
             try:
-                refresh_token = oauth_service.decrypt_token(connection.refresh_token_encrypted)
+                refresh_token = oauth_service.decrypt_token(
+                    connection.refresh_token_encrypted
+                )
                 new_tokens = await oauth_service.refresh_access_token(refresh_token)
 
                 # Update stored tokens
@@ -564,7 +586,8 @@ async def list_ad_accounts(
             connection.status = ConnectionStatus.EXPIRED
             await db.commit()
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired. Please reconnect."
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token expired. Please reconnect.",
             )
 
     # Fetch accounts from platform
@@ -608,7 +631,11 @@ async def list_ad_accounts(
     )
 
 
-@router.post("/{platform}/accounts/connect", response_model=APIResponse[ConnectAccountsResponse], dependencies=_admin_deps)
+@router.post(
+    "/{platform}/accounts/connect",
+    response_model=APIResponse[ConnectAccountsResponse],
+    dependencies=_admin_deps,
+)
 async def connect_ad_accounts(
     platform: AdPlatform,
     request_data: ConnectAccountsRequest,
@@ -645,7 +672,8 @@ async def connect_ad_accounts(
     except (ConnectionError, TimeoutError, OSError, ValueError) as e:
         logger.error("Failed to fetch ad accounts for validation", error=str(e))
         raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY, detail="Failed to validate accounts"
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Failed to validate accounts",
         )
 
     platform_accounts_map = {a.account_id: a for a in platform_accounts}
@@ -756,7 +784,11 @@ async def connect_ad_accounts(
 # =============================================================================
 
 
-@router.post("/{platform}/refresh", response_model=APIResponse[RefreshTokenResponse], dependencies=_admin_deps)
+@router.post(
+    "/{platform}/refresh",
+    response_model=APIResponse[RefreshTokenResponse],
+    dependencies=_admin_deps,
+)
 async def refresh_token(
     platform: AdPlatform,
     current_user: VerifiedUserDep,
@@ -793,7 +825,9 @@ async def refresh_token(
         new_tokens = await oauth_service.refresh_access_token(refresh_token)
 
         # Update stored tokens
-        connection.access_token_encrypted = oauth_service.encrypt_token(new_tokens.access_token)
+        connection.access_token_encrypted = oauth_service.encrypt_token(
+            new_tokens.access_token
+        )
         if new_tokens.refresh_token:
             connection.refresh_token_encrypted = oauth_service.encrypt_token(
                 new_tokens.refresh_token
@@ -829,11 +863,14 @@ async def refresh_token(
         await db.commit()
 
         raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Token refresh failed: {e!s}"
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Token refresh failed: {e!s}",
         )
 
 
-@router.delete("/{platform}/disconnect", response_model=APIResponse[dict], dependencies=_admin_deps)
+@router.delete(
+    "/{platform}/disconnect", response_model=APIResponse[dict], dependencies=_admin_deps
+)
 async def disconnect_platform(
     platform: AdPlatform,
     current_user: VerifiedUserDep,
@@ -868,14 +905,18 @@ async def disconnect_platform(
     if connection.access_token_encrypted:
         try:
             oauth_service = get_oauth_service(platform.value)
-            access_token = oauth_service.decrypt_token(connection.access_token_encrypted)
+            access_token = oauth_service.decrypt_token(
+                connection.access_token_encrypted
+            )
             await oauth_service.revoke_access(access_token)
         except (ConnectionError, TimeoutError, OSError, ValueError) as e:
             logger.warning("Failed to revoke access with platform", error=str(e))
             # Continue with local disconnect anyway
 
     # Disable all ad accounts
-    await db.execute(select(TenantAdAccount).where(TenantAdAccount.connection_id == connection.id))
+    await db.execute(
+        select(TenantAdAccount).where(TenantAdAccount.connection_id == connection.id)
+    )
     # Update all related ad accounts
     accounts_result = await db.execute(
         select(TenantAdAccount).where(TenantAdAccount.connection_id == connection.id)

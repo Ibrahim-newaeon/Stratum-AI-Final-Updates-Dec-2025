@@ -214,10 +214,12 @@ class PipedriveWritebackService:
 
             # Build lookup by name
             person_field_names = {
-                f.get("name", "").lower(): f for f in (existing_person_fields.get("data") or [])
+                f.get("name", "").lower(): f
+                for f in (existing_person_fields.get("data") or [])
             }
             deal_field_names = {
-                f.get("name", "").lower(): f for f in (existing_deal_fields.get("data") or [])
+                f.get("name", "").lower(): f
+                for f in (existing_deal_fields.get("data") or [])
             }
 
             # Create person custom fields
@@ -238,9 +240,9 @@ class PipedriveWritebackService:
                     )
                     if response and response.get("success"):
                         results["person_fields"]["created"] += 1
-                        self._field_key_cache[field_def["name"]] = response.get("data", {}).get(
-                            "key"
-                        )
+                        self._field_key_cache[field_def["name"]] = response.get(
+                            "data", {}
+                        ).get("key")
                         logger.info(f"Created person custom field: {field_name}")
                     else:
                         results["person_fields"]["failed"] += 1
@@ -253,9 +255,9 @@ class PipedriveWritebackService:
                 if field_name.lower() in deal_field_names:
                     results["deal_fields"]["existing"] += 1
                     # Cache the field key
-                    self._field_key_cache[f"deal_{field_def['name']}"] = deal_field_names[
-                        field_name.lower()
-                    ].get("key")
+                    self._field_key_cache[f"deal_{field_def['name']}"] = (
+                        deal_field_names[field_name.lower()].get("key")
+                    )
                 else:
                     response = await self.client.create_custom_field(
                         "deal",
@@ -264,9 +266,9 @@ class PipedriveWritebackService:
                     )
                     if response and response.get("success"):
                         results["deal_fields"]["created"] += 1
-                        self._field_key_cache[f"deal_{field_def['name']}"] = response.get(
-                            "data", {}
-                        ).get("key")
+                        self._field_key_cache[f"deal_{field_def['name']}"] = (
+                            response.get("data", {}).get("key")
+                        )
                         logger.info(f"Created deal custom field: {field_name}")
                     else:
                         results["deal_fields"]["failed"] += 1
@@ -362,11 +364,17 @@ class PipedriveWritebackService:
                         "stratum_campaign_name": attribution.get("campaign_name"),
                         "stratum_adset_id": attribution.get("adset_id"),
                         "stratum_ad_id": attribution.get("ad_id"),
-                        "stratum_first_touch_source": attribution.get("first_touch_source"),
-                        "stratum_last_touch_source": attribution.get("last_touch_source"),
+                        "stratum_first_touch_source": attribution.get(
+                            "first_touch_source"
+                        ),
+                        "stratum_last_touch_source": attribution.get(
+                            "last_touch_source"
+                        ),
                         "stratum_attribution_confidence": attribution.get("confidence"),
                         "stratum_total_ad_spend": attribution.get("total_spend"),
-                        "stratum_touchpoints_count": attribution.get("touchpoints_count"),
+                        "stratum_touchpoints_count": attribution.get(
+                            "touchpoints_count"
+                        ),
                         "stratum_last_sync": datetime.now(UTC).strftime("%Y-%m-%d"),
                     }
 
@@ -391,11 +399,21 @@ class PipedriveWritebackService:
                         errors.append(
                             {
                                 "contact_id": str(contact.id),
-                                "error": response.get("error") if response else "Unknown error",
+                                "error": (
+                                    response.get("error")
+                                    if response
+                                    else "Unknown error"
+                                ),
                             }
                         )
 
-                except (ConnectionError, TimeoutError, OSError, ValueError, TypeError) as e:
+                except (
+                    ConnectionError,
+                    TimeoutError,
+                    OSError,
+                    ValueError,
+                    TypeError,
+                ) as e:
                     failed += 1
                     errors.append(
                         {
@@ -484,8 +502,12 @@ class PipedriveWritebackService:
                     field_mappings = {
                         "stratum_attributed_platform": attribution.get("platform"),
                         "stratum_attributed_campaign": attribution.get("campaign_name"),
-                        "stratum_attributed_campaign_id": attribution.get("campaign_id"),
-                        "stratum_attribution_model": attribution.get("attribution_model"),
+                        "stratum_attributed_campaign_id": attribution.get(
+                            "campaign_id"
+                        ),
+                        "stratum_attribution_model": attribution.get(
+                            "attribution_model"
+                        ),
                         "stratum_attributed_spend": attribution.get("attributed_spend"),
                         "stratum_revenue_roas": attribution.get("revenue_roas"),
                         "stratum_profit_roas": attribution.get("profit_roas"),
@@ -493,7 +515,9 @@ class PipedriveWritebackService:
                         "stratum_gross_profit": attribution.get("gross_profit"),
                         "stratum_net_profit": attribution.get("net_profit"),
                         "stratum_days_to_close": attribution.get("days_to_close"),
-                        "stratum_touchpoints_count": attribution.get("touchpoints_count"),
+                        "stratum_touchpoints_count": attribution.get(
+                            "touchpoints_count"
+                        ),
                         "stratum_last_sync": datetime.now(UTC).strftime("%Y-%m-%d"),
                     }
 
@@ -519,11 +543,21 @@ class PipedriveWritebackService:
                         errors.append(
                             {
                                 "deal_id": str(deal.id),
-                                "error": response.get("error") if response else "Unknown error",
+                                "error": (
+                                    response.get("error")
+                                    if response
+                                    else "Unknown error"
+                                ),
                             }
                         )
 
-                except (ConnectionError, TimeoutError, OSError, ValueError, TypeError) as e:
+                except (
+                    ConnectionError,
+                    TimeoutError,
+                    OSError,
+                    ValueError,
+                    TypeError,
+                ) as e:
                     failed += 1
                     errors.append(
                         {
@@ -578,12 +612,16 @@ class PipedriveWritebackService:
         }
 
         if sync_persons:
-            results["persons"] = await self.sync_person_attribution(modified_since=modified_since)
+            results["persons"] = await self.sync_person_attribution(
+                modified_since=modified_since
+            )
             if results["persons"]["status"] == "failed":
                 results["status"] = "partial"
 
         if sync_deals:
-            results["deals"] = await self.sync_deal_attribution(modified_since=modified_since)
+            results["deals"] = await self.sync_deal_attribution(
+                modified_since=modified_since
+            )
             if results["deals"]["status"] == "failed":
                 results["status"] = "partial"
 
@@ -633,12 +671,16 @@ class PipedriveWritebackService:
             "campaign_name": last_touch.campaign_name,
             "adset_id": last_touch.adset_id,
             "ad_id": last_touch.ad_id,
-            "first_touch_source": f"{first_touch.platform}:{first_touch.campaign_name}"
-            if first_touch.campaign_name
-            else first_touch.platform,
-            "last_touch_source": f"{last_touch.platform}:{last_touch.campaign_name}"
-            if last_touch.campaign_name
-            else last_touch.platform,
+            "first_touch_source": (
+                f"{first_touch.platform}:{first_touch.campaign_name}"
+                if first_touch.campaign_name
+                else first_touch.platform
+            ),
+            "last_touch_source": (
+                f"{last_touch.platform}:{last_touch.campaign_name}"
+                if last_touch.campaign_name
+                else last_touch.platform
+            ),
             "confidence": max((tp.match_confidence or 0) * 100 for tp in touchpoints),
             "total_spend": round(total_spend, 2) if total_spend > 0 else None,
             "touchpoints_count": len(touchpoints),
@@ -697,9 +739,9 @@ class PipedriveWritebackService:
             "platform": primary_tp.platform if primary_tp else None,
             "campaign_id": primary_tp.campaign_id if primary_tp else None,
             "campaign_name": primary_tp.campaign_name if primary_tp else None,
-            "attribution_model": deal.attribution_model.value
-            if deal.attribution_model
-            else "last_touch",
+            "attribution_model": (
+                deal.attribution_model.value if deal.attribution_model else "last_touch"
+            ),
             "attributed_spend": round(total_spend, 2) if total_spend > 0 else None,
             "revenue_roas": round(revenue_roas, 2) if revenue_roas else None,
             "profit_roas": round(profit_roas, 2) if profit_roas else None,
@@ -735,7 +777,9 @@ class PipedriveWritebackService:
             .where(CRMContact.tenant_id == self.tenant_id)
         )
         deals_count = await self.db.execute(
-            select(func.count()).select_from(CRMDeal).where(CRMDeal.tenant_id == self.tenant_id)
+            select(func.count())
+            .select_from(CRMDeal)
+            .where(CRMDeal.tenant_id == self.tenant_id)
         )
 
         return {
@@ -744,9 +788,9 @@ class PipedriveWritebackService:
             "provider": "pipedrive",
             "provider_account_id": connection.provider_account_id,
             "provider_account_name": connection.provider_account_name,
-            "last_sync_at": connection.last_sync_at.isoformat()
-            if connection.last_sync_at
-            else None,
+            "last_sync_at": (
+                connection.last_sync_at.isoformat() if connection.last_sync_at else None
+            ),
             "last_sync_status": connection.last_sync_status,
             "persons_count": contacts_count.scalar(),
             "deals_count": deals_count.scalar(),

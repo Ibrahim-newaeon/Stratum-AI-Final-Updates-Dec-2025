@@ -6,21 +6,21 @@ Service layer for managing tenant feature flags.
 Handles fetching, updating, and caching of feature configurations.
 """
 
-from typing import Dict, Any, Optional
 from datetime import datetime, timezone
+from typing import Any, Dict, Optional
 
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Tenant
 from app.features.flags import (
-    get_default_features,
-    merge_features,
-    FeatureFlags,
-    FeatureFlagsUpdate,
     FEATURE_CATEGORIES,
     FEATURE_DESCRIPTIONS,
+    FeatureFlags,
+    FeatureFlagsUpdate,
+    get_default_features,
+    merge_features,
 )
+from app.models import Tenant
 
 
 class FeatureFlagsService:

@@ -13,6 +13,7 @@ Use:
 """
 
 from typing import Optional
+
 from app.analytics.logic.types import AttributionVarianceResult
 
 
@@ -56,8 +57,8 @@ def attribution_variance(
 
     # Check for significant variance
     has_significant_variance = (
-        abs(rev_var_pct) > variance_threshold_pct or
-        abs(conv_var_pct) > variance_threshold_pct
+        abs(rev_var_pct) > variance_threshold_pct
+        or abs(conv_var_pct) > variance_threshold_pct
     )
 
     # Generate warning message
@@ -140,7 +141,9 @@ def get_attribution_health(results: list[AttributionVarianceResult]) -> dict:
 
     significant_count = sum(1 for r in results if r.has_significant_variance)
     avg_rev_variance = sum(abs(r.revenue_variance_pct) for r in results) / len(results)
-    avg_conv_variance = sum(abs(r.conversion_variance_pct) for r in results) / len(results)
+    avg_conv_variance = sum(abs(r.conversion_variance_pct) for r in results) / len(
+        results
+    )
 
     # Determine status
     if significant_count == 0:

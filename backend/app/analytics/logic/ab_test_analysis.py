@@ -19,7 +19,6 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
-
 # ── Response models ──────────────────────────────────────────────────────────
 
 
@@ -91,8 +90,10 @@ Z_SCORES = {0.90: 1.645, 0.95: 1.960, 0.99: 2.576}
 
 
 def _z_test_proportions(
-    conversions_a: int, trials_a: int,
-    conversions_b: int, trials_b: int,
+    conversions_a: int,
+    trials_a: int,
+    conversions_b: int,
+    trials_b: int,
 ) -> tuple[float, float]:
     """Two-proportion Z-test. Returns (z_score, confidence)."""
     if trials_a == 0 or trials_b == 0:
@@ -166,7 +167,9 @@ def _detect_test_pairs(campaigns: list[dict]) -> list[tuple[dict, dict]]:
 
         for plat, clist in by_plat_sorted.items():
             if len(clist) >= 2:
-                sorted_c = sorted(clist, key=lambda x: float(x.get("spend", 0)), reverse=True)
+                sorted_c = sorted(
+                    clist, key=lambda x: float(x.get("spend", 0)), reverse=True
+                )
                 pairs.append((sorted_c[0], sorted_c[1]))
                 if len(pairs) >= 3:
                     break
@@ -177,9 +180,15 @@ def _detect_test_pairs(campaigns: list[dict]) -> list[tuple[dict, dict]]:
 def _names_match(a: str, b: str) -> bool:
     """Check if two campaign names suggest an A/B test relationship."""
     # Explicit markers
-    markers = [(" a ", " b "), ("_a_", "_b_"), ("-a-", "-b-"),
-               ("variant a", "variant b"), ("control", "test"),
-               ("_v1", "_v2"), (" v1", " v2")]
+    markers = [
+        (" a ", " b "),
+        ("_a_", "_b_"),
+        ("-a-", "-b-"),
+        ("variant a", "variant b"),
+        ("control", "test"),
+        ("_v1", "_v2"),
+        (" v1", " v2"),
+    ]
     for ma, mb in markers:
         if (ma in f" {a} " and mb in f" {b} ") or (mb in f" {a} " and ma in f" {b} "):
             return True
@@ -256,12 +265,17 @@ def build_ab_test_analysis(campaigns: list[dict]) -> ABTestAnalysisResponse:
         plat = ca.get("platform", "unknown")
 
         # Statistical test on conversion rates
-        z_score, confidence = _z_test_proportions(
-            var_a.conversions, var_a.clicks,
-            var_b.conversions, var_b.clicks,
+        _z_score, confidence = _z_test_proportions(
+            var_a.conversions,
+            var_a.clicks,
+            var_b.conversions,
+            var_b.clicks,
         )
 
-        min_sample = var_a.conversions >= MIN_SAMPLE_SIZE and var_b.conversions >= MIN_SAMPLE_SIZE
+        min_sample = (
+            var_a.conversions >= MIN_SAMPLE_SIZE
+            and var_b.conversions >= MIN_SAMPLE_SIZE
+        )
 
         # Determine winner
         winning_variant = None
@@ -271,10 +285,14 @@ def build_ab_test_analysis(campaigns: list[dict]) -> ABTestAnalysisResponse:
         if confidence >= 95 and min_sample:
             if var_a.cvr > var_b.cvr:
                 winning_variant = "A"
-                lift = ((var_a.cvr - var_b.cvr) / var_b.cvr * 100) if var_b.cvr > 0 else 0
+                lift = (
+                    ((var_a.cvr - var_b.cvr) / var_b.cvr * 100) if var_b.cvr > 0 else 0
+                )
             else:
                 winning_variant = "B"
-                lift = ((var_b.cvr - var_a.cvr) / var_a.cvr * 100) if var_a.cvr > 0 else 0
+                lift = (
+                    ((var_b.cvr - var_a.cvr) / var_a.cvr * 100) if var_a.cvr > 0 else 0
+                )
             status = "winner_found"
             # Savings = spend on losing variant
             loser_spend = var_b.spend if winning_variant == "A" else var_a.spend

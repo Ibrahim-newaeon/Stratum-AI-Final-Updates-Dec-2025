@@ -10,8 +10,8 @@ by considering customer behavior patterns.
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 
@@ -27,22 +27,24 @@ class RFMSegment(str, Enum):
     Based on Recency (R), Frequency (F), and Monetary (M) scoring.
     Each dimension is scored 1-5 (5 being best).
     """
-    CHAMPIONS = "champions"           # R=5, F=5, M=5 - Best customers
-    LOYAL_CUSTOMERS = "loyal"         # R=4-5, F=3-5, M=4-5
-    POTENTIAL_LOYALISTS = "potential" # R=4-5, F=1-3, M=1-3
-    NEW_CUSTOMERS = "new"             # R=5, F=1, M=1-3
-    PROMISING = "promising"           # R=4, F=1, M=1-2
-    NEED_ATTENTION = "need_attention" # R=3, F=2-3, M=2-3
-    ABOUT_TO_SLEEP = "about_to_sleep" # R=2-3, F=1-2, M=1-2
-    AT_RISK = "at_risk"               # R=1-2, F=3-5, M=3-5
-    CANT_LOSE = "cant_lose"           # R=1, F=4-5, M=4-5
-    HIBERNATING = "hibernating"       # R=1-2, F=1-2, M=1-2
-    LOST = "lost"                     # R=1, F=1, M=1
+
+    CHAMPIONS = "champions"  # R=5, F=5, M=5 - Best customers
+    LOYAL_CUSTOMERS = "loyal"  # R=4-5, F=3-5, M=4-5
+    POTENTIAL_LOYALISTS = "potential"  # R=4-5, F=1-3, M=1-3
+    NEW_CUSTOMERS = "new"  # R=5, F=1, M=1-3
+    PROMISING = "promising"  # R=4, F=1, M=1-2
+    NEED_ATTENTION = "need_attention"  # R=3, F=2-3, M=2-3
+    ABOUT_TO_SLEEP = "about_to_sleep"  # R=2-3, F=1-2, M=1-2
+    AT_RISK = "at_risk"  # R=1-2, F=3-5, M=3-5
+    CANT_LOSE = "cant_lose"  # R=1, F=4-5, M=4-5
+    HIBERNATING = "hibernating"  # R=1-2, F=1-2, M=1-2
+    LOST = "lost"  # R=1, F=1, M=1
 
 
 @dataclass
 class RFMScore:
     """RFM scoring result for a customer."""
+
     customer_id: str
     recency_days: int
     frequency: int
@@ -63,6 +65,7 @@ class RFMScore:
 @dataclass
 class CustomerRFMData:
     """Customer data for RFM analysis."""
+
     customer_id: str
     days_since_last_order: int
     total_orders: int
@@ -92,7 +95,6 @@ class RFMSegmenter:
         (5, 5, 4): RFMSegment.CHAMPIONS,
         (5, 4, 5): RFMSegment.CHAMPIONS,
         (4, 5, 5): RFMSegment.CHAMPIONS,
-
         # Loyal Customers: Good across all dimensions
         (5, 4, 4): RFMSegment.LOYAL_CUSTOMERS,
         (4, 4, 5): RFMSegment.LOYAL_CUSTOMERS,
@@ -100,37 +102,31 @@ class RFMSegmenter:
         (4, 5, 4): RFMSegment.LOYAL_CUSTOMERS,
         (5, 3, 5): RFMSegment.LOYAL_CUSTOMERS,
         (4, 3, 5): RFMSegment.LOYAL_CUSTOMERS,
-
         # Potential Loyalists: Recent but lower frequency/monetary
         (5, 3, 3): RFMSegment.POTENTIAL_LOYALISTS,
         (5, 2, 3): RFMSegment.POTENTIAL_LOYALISTS,
         (5, 3, 2): RFMSegment.POTENTIAL_LOYALISTS,
         (4, 3, 3): RFMSegment.POTENTIAL_LOYALISTS,
         (5, 2, 2): RFMSegment.POTENTIAL_LOYALISTS,
-
         # New Customers: Very recent, first purchase
         (5, 1, 3): RFMSegment.NEW_CUSTOMERS,
         (5, 1, 2): RFMSegment.NEW_CUSTOMERS,
         (5, 1, 1): RFMSegment.NEW_CUSTOMERS,
-
         # Promising: Fairly recent, low engagement
         (4, 1, 2): RFMSegment.PROMISING,
         (4, 1, 1): RFMSegment.PROMISING,
         (4, 2, 1): RFMSegment.PROMISING,
-
         # Need Attention: Average across dimensions
         (3, 3, 3): RFMSegment.NEED_ATTENTION,
         (3, 2, 3): RFMSegment.NEED_ATTENTION,
         (3, 3, 2): RFMSegment.NEED_ATTENTION,
         (3, 2, 2): RFMSegment.NEED_ATTENTION,
-
         # About to Sleep: Declining engagement
         (2, 2, 2): RFMSegment.ABOUT_TO_SLEEP,
         (2, 2, 1): RFMSegment.ABOUT_TO_SLEEP,
         (2, 1, 2): RFMSegment.ABOUT_TO_SLEEP,
         (3, 1, 2): RFMSegment.ABOUT_TO_SLEEP,
         (3, 1, 1): RFMSegment.ABOUT_TO_SLEEP,
-
         # At Risk: Were good customers, now inactive
         (2, 4, 4): RFMSegment.AT_RISK,
         (2, 4, 3): RFMSegment.AT_RISK,
@@ -138,7 +134,6 @@ class RFMSegmenter:
         (2, 3, 3): RFMSegment.AT_RISK,
         (1, 3, 4): RFMSegment.AT_RISK,
         (1, 4, 3): RFMSegment.AT_RISK,
-
         # Can't Lose: High value but churning
         (1, 5, 5): RFMSegment.CANT_LOSE,
         (1, 5, 4): RFMSegment.CANT_LOSE,
@@ -146,13 +141,11 @@ class RFMSegmenter:
         (1, 4, 4): RFMSegment.CANT_LOSE,
         (2, 5, 5): RFMSegment.CANT_LOSE,
         (2, 5, 4): RFMSegment.CANT_LOSE,
-
         # Hibernating: Inactive, low value
         (2, 1, 1): RFMSegment.HIBERNATING,
         (1, 2, 2): RFMSegment.HIBERNATING,
         (1, 2, 1): RFMSegment.HIBERNATING,
         (1, 1, 2): RFMSegment.HIBERNATING,
-
         # Lost: Completely inactive
         (1, 1, 1): RFMSegment.LOST,
     }
@@ -276,7 +269,7 @@ class RFMSegmenter:
         r_score = self._score_value(
             customer.days_since_last_order,
             self.recency_quintiles,
-            reverse=True  # Lower recency (more recent) = better
+            reverse=True,  # Lower recency (more recent) = better
         )
         f_score = self._score_value(
             customer.total_orders,
@@ -295,9 +288,9 @@ class RFMSegmenter:
 
         # Calculate composite score (weighted average)
         composite = (
-            r_score * self.recency_weight +
-            f_score * self.frequency_weight +
-            m_score * self.monetary_weight
+            r_score * self.recency_weight
+            + f_score * self.frequency_weight
+            + m_score * self.monetary_weight
         )
 
         # Percentile rank (0-100)
@@ -382,8 +375,12 @@ class RFMSegmenter:
         segment_insights = {}
         for segment, segment_scores in segments.items():
             avg_monetary = sum(s.monetary for s in segment_scores) / len(segment_scores)
-            avg_frequency = sum(s.frequency for s in segment_scores) / len(segment_scores)
-            avg_recency = sum(s.recency_days for s in segment_scores) / len(segment_scores)
+            avg_frequency = sum(s.frequency for s in segment_scores) / len(
+                segment_scores
+            )
+            avg_recency = sum(s.recency_days for s in segment_scores) / len(
+                segment_scores
+            )
             total_value = sum(s.monetary for s in segment_scores)
 
             segment_insights[segment.value] = {
@@ -393,17 +390,30 @@ class RFMSegmenter:
                 "avg_frequency": round(avg_frequency, 1),
                 "avg_recency_days": round(avg_recency, 0),
                 "total_value": round(total_value, 2),
-                "value_share_percent": round(total_value / sum(c.total_revenue for c in customers) * 100, 1) if sum(c.total_revenue for c in customers) > 0 else 0,
-                "avg_rfm_composite": round(sum(s.rfm_composite for s in segment_scores) / len(segment_scores), 2),
-                "recommended_action": self.SEGMENT_ACTIONS.get(segment, "Analyze further"),
+                "value_share_percent": (
+                    round(
+                        total_value / sum(c.total_revenue for c in customers) * 100, 1
+                    )
+                    if sum(c.total_revenue for c in customers) > 0
+                    else 0
+                ),
+                "avg_rfm_composite": round(
+                    sum(s.rfm_composite for s in segment_scores) / len(segment_scores),
+                    2,
+                ),
+                "recommended_action": self.SEGMENT_ACTIONS.get(
+                    segment, "Analyze further"
+                ),
             }
 
         # Sort segments by value share
-        sorted_segments = dict(sorted(
-            segment_insights.items(),
-            key=lambda x: x[1]["total_value"],
-            reverse=True,
-        ))
+        sorted_segments = dict(
+            sorted(
+                segment_insights.items(),
+                key=lambda x: x[1]["total_value"],
+                reverse=True,
+            )
+        )
 
         return {
             "total_customers": len(customers),
@@ -468,6 +478,7 @@ rfm_segmenter = RFMSegmenter()
 # =============================================================================
 # Convenience Functions
 # =============================================================================
+
 
 def segment_customers_rfm(
     customers: List[Dict[str, Any]],
@@ -541,9 +552,11 @@ def get_customer_rfm_score(
 # Segment Transition Tracking
 # =============================================================================
 
+
 @dataclass
 class SegmentTransition:
     """A customer's transition between segments."""
+
     customer_id: str
     from_segment: RFMSegment
     to_segment: RFMSegment
@@ -575,7 +588,6 @@ class SegmentTransitionTracker:
         (RFMSegment.LOYAL_CUSTOMERS, RFMSegment.CHAMPIONS): "positive",
         (RFMSegment.AT_RISK, RFMSegment.NEED_ATTENTION): "positive",
         (RFMSegment.CANT_LOSE, RFMSegment.LOYAL_CUSTOMERS): "positive",
-
         # Negative transitions
         (RFMSegment.CHAMPIONS, RFMSegment.LOYAL_CUSTOMERS): "negative",
         (RFMSegment.LOYAL_CUSTOMERS, RFMSegment.AT_RISK): "negative",
@@ -627,7 +639,9 @@ class SegmentTransitionTracker:
             # Update history
             if customer_id not in self.customer_segment_history:
                 self.customer_segment_history[customer_id] = []
-            self.customer_segment_history[customer_id].append((snapshot_date, current_segment))
+            self.customer_segment_history[customer_id].append(
+                (snapshot_date, current_segment)
+            )
 
         return transitions
 
@@ -657,7 +671,9 @@ class SegmentTransitionTracker:
         for from_seg, to_counts in counts.items():
             total = sum(to_counts.values())
             if total > 0:
-                probs[from_seg] = {to_seg: count / total for to_seg, count in to_counts.items()}
+                probs[from_seg] = {
+                    to_seg: count / total for to_seg, count in to_counts.items()
+                }
             else:
                 probs[from_seg] = {to_seg: 0 for to_seg in to_counts}
 
@@ -690,15 +706,17 @@ class SegmentTransitionTracker:
                     negative_prob += prob
 
             if negative_prob > 0.3:  # >30% chance of negative transition
-                at_risk.append({
-                    "customer_id": score.customer_id,
-                    "current_segment": segment,
-                    "churn_risk": round(negative_prob, 2),
-                    "rfm_score": score.rfm_score,
-                    "recommended_action": RFMSegmenter.SEGMENT_ACTIONS.get(
-                        score.rfm_segment, "Engage proactively"
-                    ),
-                })
+                at_risk.append(
+                    {
+                        "customer_id": score.customer_id,
+                        "current_segment": segment,
+                        "churn_risk": round(negative_prob, 2),
+                        "rfm_score": score.rfm_score,
+                        "recommended_action": RFMSegmenter.SEGMENT_ACTIONS.get(
+                            score.rfm_segment, "Engage proactively"
+                        ),
+                    }
+                )
 
         return sorted(at_risk, key=lambda x: x["churn_risk"], reverse=True)
 
@@ -714,18 +732,23 @@ class SegmentTransitionTracker:
         Returns metrics on segment movement during campaign period.
         """
         relevant_transitions = [
-            t for t in self.transition_history
+            t
+            for t in self.transition_history
             if campaign_start <= t.transition_date <= campaign_end
             and t.from_segment == target_segment
         ]
 
         positive = sum(
-            1 for t in relevant_transitions
-            if self.TRANSITION_SENTIMENT.get((t.from_segment, t.to_segment)) == "positive"
+            1
+            for t in relevant_transitions
+            if self.TRANSITION_SENTIMENT.get((t.from_segment, t.to_segment))
+            == "positive"
         )
         negative = sum(
-            1 for t in relevant_transitions
-            if self.TRANSITION_SENTIMENT.get((t.from_segment, t.to_segment)) == "negative"
+            1
+            for t in relevant_transitions
+            if self.TRANSITION_SENTIMENT.get((t.from_segment, t.to_segment))
+            == "negative"
         )
         neutral = len(relevant_transitions) - positive - negative
 
@@ -739,7 +762,11 @@ class SegmentTransitionTracker:
             "positive_transitions": positive,
             "negative_transitions": negative,
             "neutral_transitions": neutral,
-            "net_positive_rate": (positive - negative) / len(relevant_transitions) if relevant_transitions else 0,
+            "net_positive_rate": (
+                (positive - negative) / len(relevant_transitions)
+                if relevant_transitions
+                else 0
+            ),
         }
 
 
@@ -747,9 +774,11 @@ class SegmentTransitionTracker:
 # Customer Lifetime Value Integration
 # =============================================================================
 
+
 @dataclass
 class CustomerCLV:
     """Customer Lifetime Value calculation result."""
+
     customer_id: str
     rfm_segment: RFMSegment
     historical_value: float
@@ -806,7 +835,7 @@ class CLVPredictor:
     ):
         self.discount_rate = discount_rate
         self.prediction_horizon_months = prediction_horizon_months
-        self.monthly_discount = (1 + discount_rate) ** (1/12) - 1
+        self.monthly_discount = (1 + discount_rate) ** (1 / 12) - 1
 
     def predict_clv(
         self,
@@ -825,7 +854,11 @@ class CLVPredictor:
         order_multiplier = self.SEGMENT_ORDER_MULTIPLIERS.get(segment, 1.0)
 
         # Calculate historical metrics
-        months_as_customer = max(1, customer.days_since_last_order / 30) if customer.first_order_date else 12
+        months_as_customer = (
+            max(1, customer.days_since_last_order / 30)
+            if customer.first_order_date
+            else 12
+        )
         avg_monthly_value = customer.total_revenue / months_as_customer
         avg_order_value = customer.total_revenue / max(1, customer.total_orders)
 
@@ -833,7 +866,7 @@ class CLVPredictor:
         # CLV = Σ (retention^t * monthly_value) / (1 + discount)^t
         predicted_clv = 0
         for month in range(1, self.prediction_horizon_months + 1):
-            survival_prob = retention_rate ** month
+            survival_prob = retention_rate**month
             expected_value = avg_monthly_value * order_multiplier * survival_prob
             discounted_value = expected_value / ((1 + self.monthly_discount) ** month)
             predicted_clv += discounted_value
@@ -880,7 +913,9 @@ class CLVPredictor:
 
         # Longer history = higher confidence
         if customer.first_order_date:
-            days_as_customer = (datetime.now(timezone.utc) - customer.first_order_date).days
+            days_as_customer = (
+                datetime.now(timezone.utc) - customer.first_order_date
+            ).days
             if days_as_customer >= 365:
                 confidence += 0.15
             elif days_as_customer >= 180:
@@ -915,7 +950,9 @@ class CLVPredictor:
             total_historical = sum(c.historical_value for c in clvs)
             total_predicted = sum(c.predicted_clv for c in clvs)
             avg_clv = total_predicted / len(clvs) if clvs else 0
-            avg_lifetime = sum(c.expected_lifetime_months for c in clvs) / len(clvs) if clvs else 0
+            avg_lifetime = (
+                sum(c.expected_lifetime_months for c in clvs) / len(clvs) if clvs else 0
+            )
 
             summary[segment.value] = {
                 "customer_count": len(clvs),

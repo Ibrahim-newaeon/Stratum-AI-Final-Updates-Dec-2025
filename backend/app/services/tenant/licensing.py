@@ -66,7 +66,9 @@ class LicenseValidationService:
     """
 
     # License server URL (configure in production)
-    LICENSE_SERVER_URL = os.getenv("LICENSE_SERVER_URL", "https://license.stratum.ai/api/v1")
+    LICENSE_SERVER_URL = os.getenv(
+        "LICENSE_SERVER_URL", "https://license.stratum.ai/api/v1"
+    )
 
     # Public key for offline JWT validation
     LICENSE_PUBLIC_KEY = os.getenv("LICENSE_PUBLIC_KEY", "")
@@ -144,9 +146,11 @@ class LicenseValidationService:
                     "license_key": license_key,
                     "domain": current_domain,
                     "product": "stratum-ai",
-                    "version": settings.app_version
-                    if hasattr(settings, "app_version")
-                    else "1.0.0",
+                    "version": (
+                        settings.app_version
+                        if hasattr(settings, "app_version")
+                        else "1.0.0"
+                    ),
                 },
                 headers={
                     "X-Product-ID": "stratum-ai",
@@ -224,7 +228,9 @@ class LicenseValidationService:
         if expires_at:
             now = datetime.now(UTC)
             if now > expires_at:
-                grace_period_ends_at = expires_at + timedelta(days=self.GRACE_PERIOD_DAYS)
+                grace_period_ends_at = expires_at + timedelta(
+                    days=self.GRACE_PERIOD_DAYS
+                )
                 if now > grace_period_ends_at:
                     status = LicenseStatus.EXPIRED
                 else:
@@ -267,7 +273,9 @@ class LicenseValidationService:
         # Verify signature
         import base64
 
-        expected_sig = hmac.new(secret.encode(), data_b64.encode(), hashlib.sha256).hexdigest()
+        expected_sig = hmac.new(
+            secret.encode(), data_b64.encode(), hashlib.sha256
+        ).hexdigest()
 
         if not hmac.compare_digest(signature, expected_sig):
             raise ValueError("Invalid signature")
@@ -298,7 +306,9 @@ class LicenseValidationService:
 
         expires_at = None
         if data.get("expires_at"):
-            expires_at = datetime.fromisoformat(data["expires_at"].replace("Z", "+00:00"))
+            expires_at = datetime.fromisoformat(
+                data["expires_at"].replace("Z", "+00:00")
+            )
 
         grace_period_ends_at = None
         if data.get("grace_period_ends_at"):

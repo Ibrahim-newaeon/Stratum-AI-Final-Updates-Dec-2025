@@ -198,7 +198,12 @@ DEMO_REPORT_TEMPLATES = [
         "report_type": ReportType.EXECUTIVE_SUMMARY,
         "default_format": ReportFormat.PDF,
         "config": {
-            "metrics": ["total_spend", "total_revenue", "overall_roas", "top_campaigns"],
+            "metrics": [
+                "total_spend",
+                "total_revenue",
+                "overall_roas",
+                "top_campaigns",
+            ],
             "sections": ["kpi_summary", "trend_charts", "highlights"],
             "date_range": {"type": "last_30_days"},
         },
@@ -209,7 +214,11 @@ DEMO_REPORT_TEMPLATES = [
         "report_type": ReportType.ATTRIBUTION_SUMMARY,
         "default_format": ReportFormat.PDF,
         "config": {
-            "metrics": ["attributed_conversions", "attributed_revenue", "channel_contribution"],
+            "metrics": [
+                "attributed_conversions",
+                "attributed_revenue",
+                "channel_contribution",
+            ],
             "sections": ["funnel_analysis", "channel_comparison", "path_analysis"],
             "attribution_model": "data_driven",
         },
@@ -220,7 +229,14 @@ DEMO_REPORT_TEMPLATES = [
         "report_type": ReportType.PROFIT_ROAS,
         "default_format": ReportFormat.CSV,
         "config": {
-            "metrics": ["spend", "revenue", "cogs", "profit", "profit_roas", "margin_percent"],
+            "metrics": [
+                "spend",
+                "revenue",
+                "cogs",
+                "profit",
+                "profit_roas",
+                "margin_percent",
+            ],
             "sections": ["profitability_table", "margin_trends"],
             "include_forecasts": True,
         },
@@ -241,7 +257,9 @@ async def seed_demo_data():
     async with async_session() as db:
         try:
             # Check if demo data already exists
-            existing = await db.execute(select(User).where(User.email == "demo@stratum.ai"))
+            existing = await db.execute(
+                select(User).where(User.email == "demo@stratum.ai")
+            )
             if existing.scalar_one_or_none():
                 print("\n[!] Demo data already exists. Skipping seed.")
                 print("    To re-seed, delete the demo user first.")
@@ -357,7 +375,8 @@ async def seed_demo_data():
                     impressions=campaign_data["impressions"],
                     clicks=campaign_data["clicks"],
                     is_deleted=False,
-                    created_at=datetime.now(UTC) - timedelta(days=random.randint(7, 60)),
+                    created_at=datetime.now(UTC)
+                    - timedelta(days=random.randint(7, 60)),
                 )
                 db.add(campaign)
 

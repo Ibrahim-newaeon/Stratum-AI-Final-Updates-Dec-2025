@@ -7,21 +7,21 @@ Service for generating reports from templates.
 Collects data from various sources and formats it according to the template.
 """
 
-from datetime import datetime, date, timedelta, timezone
+import json
+from datetime import date, datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID
-import json
 
-from sqlalchemy import select, and_, func
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.models.reporting import (
-    ReportTemplate,
-    ReportExecution,
-    ReportType,
-    ReportFormat,
     ExecutionStatus,
+    ReportExecution,
+    ReportFormat,
+    ReportTemplate,
+    ReportType,
 )
 
 logger = get_logger(__name__)
@@ -90,7 +90,8 @@ class ReportDataCollector:
                 "conversions": campaign.total_conversions or 0,
                 "roas": (
                     float(campaign.total_revenue or 0) / float(campaign.total_spend)
-                    if campaign.total_spend and campaign.total_spend > 0 else 0
+                    if campaign.total_spend and campaign.total_spend > 0
+                    else 0
                 ),
             }
             data["campaigns"].append(campaign_data)
@@ -131,14 +132,22 @@ class ReportDataCollector:
 
         # Get won deals in period
         deal_result = await self.db.execute(
-            select(CRMDeal).where(
+            select(CRMDeal)
+            .where(
                 and_(
                     CRMDeal.tenant_id == self.tenant_id,
                     CRMDeal.is_won == True,
-                    CRMDeal.won_at >= datetime.combine(start_date, datetime.min.time(), tzinfo=timezone.utc),
-                    CRMDeal.won_at <= datetime.combine(end_date, datetime.max.time(), tzinfo=timezone.utc),
+                    CRMDeal.won_at
+                    >= datetime.combine(
+                        start_date, datetime.min.time(), tzinfo=timezone.utc
+                    ),
+                    CRMDeal.won_at
+                    <= datetime.combine(
+                        end_date, datetime.max.time(), tzinfo=timezone.utc
+                    ),
                 )
-            ).limit(1000)
+            )
+            .limit(1000)
         )
         deals = list(deal_result.scalars().all())
 
@@ -158,7 +167,9 @@ class ReportDataCollector:
         }
 
         if deals:
-            data["summary"]["avg_deal_size"] = data["summary"]["total_revenue"] / len(deals)
+            data["summary"]["avg_deal_size"] = data["summary"]["total_revenue"] / len(
+                deals
+            )
 
         for deal in deals:
             platform = deal.attributed_platform or "unattributed"
@@ -183,7 +194,7 @@ class ReportDataCollector:
         config: Dict[str, Any],
     ) -> Dict[str, Any]:
         """Collect pacing and forecasting data."""
-        from app.models.pacing import Target, PacingSummary, PacingAlert
+        from app.models.pacing import PacingAlert, PacingSummary, Target
 
         # Get active targets
         target_result = await self.db.execute(
@@ -198,12 +209,16 @@ class ReportDataCollector:
 
         # Get recent alerts
         alert_result = await self.db.execute(
-            select(PacingAlert).where(
+            select(PacingAlert)
+            .where(
                 and_(
                     PacingAlert.tenant_id == self.tenant_id,
-                    PacingAlert.created_at >= datetime.combine(start_date, datetime.min.time()),
+                    PacingAlert.created_at
+                    >= datetime.combine(start_date, datetime.min.time()),
                 )
-            ).order_by(PacingAlert.created_at.desc()).limit(10)
+            )
+            .order_by(PacingAlert.created_at.desc())
+            .limit(10)
         )
         alerts = list(alert_result.scalars().all())
 
@@ -231,18 +246,21 @@ class ReportDataCollector:
                 "current_value": target.current_value,
                 "progress_pct": (
                     (target.current_value / target.target_value * 100)
-                    if target.target_value else 0
+                    if target.target_value
+                    else 0
                 ),
             }
             data["targets"].append(target_data)
 
         for alert in alerts:
-            data["recent_alerts"].append({
-                "type": alert.alert_type.value if alert.alert_type else "unknown",
-                "severity": alert.severity.value if alert.severity else "unknown",
-                "message": alert.message,
-                "created_at": alert.created_at.isoformat(),
-            })
+            data["recent_alerts"].append(
+                {
+                    "type": alert.alert_type.value if alert.alert_type else "unknown",
+                    "severity": alert.severity.value if alert.severity else "unknown",
+                    "message": alert.message,
+                    "created_at": alert.created_at.isoformat(),
+                }
+            )
 
         return data
 
@@ -257,13 +275,15 @@ class ReportDataCollector:
 
         # Get profit metrics
         result = await self.db.execute(
-            select(DailyProfitMetrics).where(
+            select(DailyProfitMetrics)
+            .where(
                 and_(
                     DailyProfitMetrics.tenant_id == self.tenant_id,
                     DailyProfitMetrics.date >= start_date,
                     DailyProfitMetrics.date <= end_date,
                 )
-            ).order_by(DailyProfitMetrics.date)
+            )
+            .order_by(DailyProfitMetrics.date)
         )
         metrics = list(result.scalars().all())
 
@@ -295,14 +315,16 @@ class ReportDataCollector:
             spend_cents = m.spend_cents or 0
             gross_profit_cents = m.gross_profit_cents or 0
 
-            data["daily"].append({
-                "date": m.date.isoformat(),
-                "revenue": round(revenue_cents / 100, 2),
-                "cogs": round(cogs_cents / 100, 2),
-                "gross_profit": round(gross_profit_cents / 100, 2),
-                "spend": round(spend_cents / 100, 2),
-                "profit_roas": m.profit_roas,
-            })
+            data["daily"].append(
+                {
+                    "date": m.date.isoformat(),
+                    "revenue": round(revenue_cents / 100, 2),
+                    "cogs": round(cogs_cents / 100, 2),
+                    "gross_profit": round(gross_profit_cents / 100, 2),
+                    "spend": round(spend_cents / 100, 2),
+                    "profit_roas": m.profit_roas,
+                }
+            )
 
             total_revenue_cents += revenue_cents
             total_cogs_cents += cogs_cents
@@ -337,13 +359,15 @@ class ReportDataCollector:
         from app.models.crm import DailyPipelineMetrics
 
         result = await self.db.execute(
-            select(DailyPipelineMetrics).where(
+            select(DailyPipelineMetrics)
+            .where(
                 and_(
                     DailyPipelineMetrics.tenant_id == self.tenant_id,
                     DailyPipelineMetrics.date >= start_date,
                     DailyPipelineMetrics.date <= end_date,
                 )
-            ).order_by(DailyPipelineMetrics.date)
+            )
+            .order_by(DailyPipelineMetrics.date)
         )
         metrics = list(result.scalars().all())
 
@@ -376,15 +400,17 @@ class ReportDataCollector:
             pipeline_cents = m.pipeline_value_cents or 0
             won_cents = m.won_revenue_cents or 0
 
-            data["daily"].append({
-                "date": m.date.isoformat(),
-                "leads": m.leads_created,
-                "mqls": m.mqls_created,
-                "sqls": m.sqls_created,
-                "won": m.deals_won,
-                "pipeline_value": round(pipeline_cents / 100, 2),
-                "won_revenue": round(won_cents / 100, 2),
-            })
+            data["daily"].append(
+                {
+                    "date": m.date.isoformat(),
+                    "leads": m.leads_created,
+                    "mqls": m.mqls_created,
+                    "sqls": m.sqls_created,
+                    "won": m.deals_won,
+                    "pipeline_value": round(pipeline_cents / 100, 2),
+                    "won_revenue": round(won_cents / 100, 2),
+                }
+            )
 
             data["summary"]["total_leads"] += m.leads_created or 0
             data["summary"]["total_mqls"] += m.mqls_created or 0
@@ -420,9 +446,15 @@ class ReportDataCollector:
         config: Dict[str, Any],
     ) -> Dict[str, Any]:
         """Collect executive summary combining multiple data sources."""
-        campaign_data = await self.collect_campaign_performance(start_date, end_date, config)
-        attribution_data = await self.collect_attribution_summary(start_date, end_date, config)
-        pipeline_data = await self.collect_pipeline_metrics(start_date, end_date, config)
+        campaign_data = await self.collect_campaign_performance(
+            start_date, end_date, config
+        )
+        attribution_data = await self.collect_attribution_summary(
+            start_date, end_date, config
+        )
+        pipeline_data = await self.collect_pipeline_metrics(
+            start_date, end_date, config
+        )
 
         return {
             "period": {
@@ -502,11 +534,14 @@ class ReportGenerator:
         try:
             # Collect data based on report type
             config = {**template.config, **(config_override or {})}
-            data = await self._collect_data(template.report_type, start_date, end_date, config)
+            data = await self._collect_data(
+                template.report_type, start_date, end_date, config
+            )
 
             # Generate output
             if format == ReportFormat.PDF:
                 from app.services.reporting.pdf_generator import PDFGenerator
+
                 pdf_gen = PDFGenerator(self.tenant_id)
                 file_path, file_size = await pdf_gen.generate(
                     template=template,
@@ -514,16 +549,24 @@ class ReportGenerator:
                     execution_id=execution.id,
                 )
             elif format == ReportFormat.CSV:
-                file_path, file_size = await self._generate_csv(template, data, execution.id)
+                file_path, file_size = await self._generate_csv(
+                    template, data, execution.id
+                )
             elif format == ReportFormat.JSON:
-                file_path, file_size = await self._generate_json(template, data, execution.id)
+                file_path, file_size = await self._generate_json(
+                    template, data, execution.id
+                )
             else:
-                file_path, file_size = await self._generate_json(template, data, execution.id)
+                file_path, file_size = await self._generate_json(
+                    template, data, execution.id
+                )
 
             # Update execution
             execution.status = ExecutionStatus.COMPLETED
             execution.completed_at = datetime.now(timezone.utc)
-            execution.duration_seconds = (execution.completed_at - execution.started_at).total_seconds()
+            execution.duration_seconds = (
+                execution.completed_at - execution.started_at
+            ).total_seconds()
             execution.file_path = file_path
             execution.file_size_bytes = file_size
             execution.metrics_summary = data.get("summary")
@@ -539,7 +582,9 @@ class ReportGenerator:
             }
 
         except (OSError, ValueError, TypeError, KeyError, RuntimeError) as e:
-            logger.error("report_generation_failed", error=str(e), execution_id=str(execution.id))
+            logger.error(
+                "report_generation_failed", error=str(e), execution_id=str(execution.id)
+            )
             execution.status = ExecutionStatus.FAILED
             execution.completed_at = datetime.now(timezone.utc)
             execution.error_message = str(e)
@@ -560,17 +605,29 @@ class ReportGenerator:
     ) -> Dict[str, Any]:
         """Collect data based on report type."""
         if report_type == ReportType.CAMPAIGN_PERFORMANCE:
-            return await self.collector.collect_campaign_performance(start_date, end_date, config)
+            return await self.collector.collect_campaign_performance(
+                start_date, end_date, config
+            )
         elif report_type == ReportType.ATTRIBUTION_SUMMARY:
-            return await self.collector.collect_attribution_summary(start_date, end_date, config)
+            return await self.collector.collect_attribution_summary(
+                start_date, end_date, config
+            )
         elif report_type == ReportType.PACING_STATUS:
-            return await self.collector.collect_pacing_status(start_date, end_date, config)
+            return await self.collector.collect_pacing_status(
+                start_date, end_date, config
+            )
         elif report_type == ReportType.PROFIT_ROAS:
-            return await self.collector.collect_profit_roas(start_date, end_date, config)
+            return await self.collector.collect_profit_roas(
+                start_date, end_date, config
+            )
         elif report_type == ReportType.PIPELINE_METRICS:
-            return await self.collector.collect_pipeline_metrics(start_date, end_date, config)
+            return await self.collector.collect_pipeline_metrics(
+                start_date, end_date, config
+            )
         elif report_type == ReportType.EXECUTIVE_SUMMARY:
-            return await self.collector.collect_executive_summary(start_date, end_date, config)
+            return await self.collector.collect_executive_summary(
+                start_date, end_date, config
+            )
         else:
             return {"error": "unsupported_report_type"}
 
@@ -590,9 +647,20 @@ class ReportGenerator:
 
         # Write based on data structure
         if "campaigns" in data:
-            writer.writerow(["Campaign", "Platform", "Spend", "Revenue", "ROAS", "Conversions"])
+            writer.writerow(
+                ["Campaign", "Platform", "Spend", "Revenue", "ROAS", "Conversions"]
+            )
             for c in data["campaigns"]:
-                writer.writerow([c["name"], c["platform"], c["spend"], c["revenue"], c["roas"], c["conversions"]])
+                writer.writerow(
+                    [
+                        c["name"],
+                        c["platform"],
+                        c["spend"],
+                        c["revenue"],
+                        c["roas"],
+                        c["conversions"],
+                    ]
+                )
         elif "daily" in data:
             if data["daily"]:
                 writer.writerow(data["daily"][0].keys())

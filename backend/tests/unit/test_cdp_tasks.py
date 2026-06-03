@@ -134,7 +134,9 @@ def _evaluate_segment_rules(profile, rules: dict[str, Any]) -> dict[str, Any]:
         return {"matched": False, "score": 0.0}
 
 
-def _calculate_rfm_score(value: float, thresholds: list[float], reverse: bool = False) -> int:
+def _calculate_rfm_score(
+    value: float, thresholds: list[float], reverse: bool = False
+) -> int:
     """Calculate RFM score (1-5) based on value and thresholds."""
     score = 1
     for i, threshold in enumerate(thresholds, start=2):
@@ -190,21 +192,24 @@ def _check_step_conditions(event, conditions) -> bool:
         field_value = props.get(field)
 
         if (
-            (operator == "equals"
-            and field_value != value)
-            or (operator == "not_equals"
-            and field_value == value)
+            (operator == "equals" and field_value != value)
+            or (operator == "not_equals" and field_value == value)
             or (
-                (operator == "greater_than"
-                and not (field_value and float(field_value) > float(value)))
-                or (operator == "less_than"
-                and not (field_value and float(field_value) < float(value)))
+                (
+                    operator == "greater_than"
+                    and not (field_value and float(field_value) > float(value))
+                )
+                or (
+                    operator == "less_than"
+                    and not (field_value and float(field_value) < float(value))
+                )
             )
             or (
-                (operator == "contains"
-                and not (field_value and str(value) in str(field_value)))
-                or (operator == "exists"
-                and field_value is None)
+                (
+                    operator == "contains"
+                    and not (field_value and str(value) in str(field_value))
+                )
+                or (operator == "exists" and field_value is None)
             )
         ):
             return False
@@ -262,19 +267,31 @@ class TestConditionOperators:
     def test_equals_operator_match(self):
         """Test equals operator when values match."""
         profile = MockProfile(lifecycle_stage="customer")
-        condition = {"field": "lifecycle_stage", "operator": "equals", "value": "customer"}
+        condition = {
+            "field": "lifecycle_stage",
+            "operator": "equals",
+            "value": "customer",
+        }
         assert _evaluate_condition_single(profile, condition) is True
 
     def test_equals_operator_no_match(self):
         """Test equals operator when values don't match."""
         profile = MockProfile(lifecycle_stage="known")
-        condition = {"field": "lifecycle_stage", "operator": "equals", "value": "customer"}
+        condition = {
+            "field": "lifecycle_stage",
+            "operator": "equals",
+            "value": "customer",
+        }
         assert _evaluate_condition_single(profile, condition) is False
 
     def test_not_equals_operator(self):
         """Test not_equals operator."""
         profile = MockProfile(lifecycle_stage="known")
-        condition = {"field": "lifecycle_stage", "operator": "not_equals", "value": "customer"}
+        condition = {
+            "field": "lifecycle_stage",
+            "operator": "not_equals",
+            "value": "customer",
+        }
         assert _evaluate_condition_single(profile, condition) is True
 
     def test_greater_than_operator(self):
@@ -283,7 +300,11 @@ class TestConditionOperators:
         condition = {"field": "total_events", "operator": "greater_than", "value": 25}
         assert _evaluate_condition_single(profile, condition) is True
 
-        condition_fail = {"field": "total_events", "operator": "greater_than", "value": 100}
+        condition_fail = {
+            "field": "total_events",
+            "operator": "greater_than",
+            "value": 100,
+        }
         assert _evaluate_condition_single(profile, condition_fail) is False
 
     def test_less_than_operator(self):
@@ -307,31 +328,51 @@ class TestConditionOperators:
     def test_contains_operator(self):
         """Test contains operator."""
         profile = MockProfile(profile_data={"name": "John Smith"})
-        condition = {"field": "profile_data.name", "operator": "contains", "value": "john"}
+        condition = {
+            "field": "profile_data.name",
+            "operator": "contains",
+            "value": "john",
+        }
         assert _evaluate_condition_single(profile, condition) is True
 
     def test_not_contains_operator(self):
         """Test not_contains operator."""
         profile = MockProfile(profile_data={"name": "John Smith"})
-        condition = {"field": "profile_data.name", "operator": "not_contains", "value": "jane"}
+        condition = {
+            "field": "profile_data.name",
+            "operator": "not_contains",
+            "value": "jane",
+        }
         assert _evaluate_condition_single(profile, condition) is True
 
     def test_starts_with_operator(self):
         """Test starts_with operator."""
         profile = MockProfile(profile_data={"email": "john@example.com"})
-        condition = {"field": "profile_data.email", "operator": "starts_with", "value": "john"}
+        condition = {
+            "field": "profile_data.email",
+            "operator": "starts_with",
+            "value": "john",
+        }
         assert _evaluate_condition_single(profile, condition) is True
 
     def test_ends_with_operator(self):
         """Test ends_with operator."""
         profile = MockProfile(profile_data={"email": "john@example.com"})
-        condition = {"field": "profile_data.email", "operator": "ends_with", "value": "example.com"}
+        condition = {
+            "field": "profile_data.email",
+            "operator": "ends_with",
+            "value": "example.com",
+        }
         assert _evaluate_condition_single(profile, condition) is True
 
     def test_in_operator(self):
         """Test in operator with list."""
         profile = MockProfile(lifecycle_stage="customer")
-        condition = {"field": "lifecycle_stage", "operator": "in", "value": ["customer", "known"]}
+        condition = {
+            "field": "lifecycle_stage",
+            "operator": "in",
+            "value": ["customer", "known"],
+        }
         assert _evaluate_condition_single(profile, condition) is True
 
     def test_not_in_operator(self):
@@ -347,19 +388,31 @@ class TestConditionOperators:
     def test_is_null_operator(self):
         """Test is_null operator."""
         profile = MockProfile(profile_data={})
-        condition = {"field": "profile_data.missing_field", "operator": "is_null", "value": None}
+        condition = {
+            "field": "profile_data.missing_field",
+            "operator": "is_null",
+            "value": None,
+        }
         assert _evaluate_condition_single(profile, condition) is True
 
     def test_is_not_null_operator(self):
         """Test is_not_null operator."""
         profile = MockProfile(profile_data={"name": "John"})
-        condition = {"field": "profile_data.name", "operator": "is_not_null", "value": None}
+        condition = {
+            "field": "profile_data.name",
+            "operator": "is_not_null",
+            "value": None,
+        }
         assert _evaluate_condition_single(profile, condition) is True
 
     def test_between_operator(self):
         """Test between operator."""
         profile = MockProfile(total_revenue=750.0)
-        condition = {"field": "total_revenue", "operator": "between", "value": [500, 1000]}
+        condition = {
+            "field": "total_revenue",
+            "operator": "between",
+            "value": [500, 1000],
+        }
         assert _evaluate_condition_single(profile, condition) is True
 
     def test_within_last_operator(self):
@@ -440,7 +493,9 @@ class TestSegmentRulesEvaluation:
 
     def test_nested_groups(self):
         """Test nested rule groups."""
-        profile = MockProfile(lifecycle_stage="customer", total_events=100, total_revenue=2000)
+        profile = MockProfile(
+            lifecycle_stage="customer", total_events=100, total_revenue=2000
+        )
         rules = {
             "logic": "and",
             "conditions": [
@@ -612,13 +667,17 @@ class TestFunnelStepConditions:
     def test_equals_condition_match(self):
         """Test equals condition matches."""
         event = MockEvent("Purchase", properties={"category": "electronics"})
-        conditions = [{"field": "category", "operator": "equals", "value": "electronics"}]
+        conditions = [
+            {"field": "category", "operator": "equals", "value": "electronics"}
+        ]
         assert _check_step_conditions(event, conditions) is True
 
     def test_equals_condition_no_match(self):
         """Test equals condition doesn't match."""
         event = MockEvent("Purchase", properties={"category": "clothing"})
-        conditions = [{"field": "category", "operator": "equals", "value": "electronics"}]
+        conditions = [
+            {"field": "category", "operator": "equals", "value": "electronics"}
+        ]
         assert _check_step_conditions(event, conditions) is False
 
     def test_greater_than_condition(self):
@@ -635,8 +694,12 @@ class TestFunnelStepConditions:
 
     def test_contains_condition(self):
         """Test contains condition for string values."""
-        event = MockEvent("PageView", properties={"page_url": "/products/electronics/laptop"})
-        conditions = [{"field": "page_url", "operator": "contains", "value": "electronics"}]
+        event = MockEvent(
+            "PageView", properties={"page_url": "/products/electronics/laptop"}
+        )
+        conditions = [
+            {"field": "page_url", "operator": "contains", "value": "electronics"}
+        ]
         assert _check_step_conditions(event, conditions) is True
 
     def test_exists_condition(self):
@@ -654,7 +717,8 @@ class TestFunnelStepConditions:
     def test_multiple_conditions_all_match(self):
         """Test multiple conditions all matching."""
         event = MockEvent(
-            "Purchase", properties={"category": "electronics", "amount": 200, "currency": "USD"}
+            "Purchase",
+            properties={"category": "electronics", "amount": 200, "currency": "USD"},
         )
         conditions = [
             {"field": "category", "operator": "equals", "value": "electronics"},

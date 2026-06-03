@@ -95,7 +95,9 @@ class MetaCampaignSyncService:
         ad_account_id: str,
     ) -> list[MetaCampaignData]:
         """Fetch all campaigns for an ad account."""
-        breaker = get_circuit_breaker("meta_api", failure_threshold=5, cooldown_seconds=120)
+        breaker = get_circuit_breaker(
+            "meta_api", failure_threshold=5, cooldown_seconds=120
+        )
         if not breaker.allow_request():
             logger.warning("meta_api_circuit_open", account=ad_account_id)
             return []
@@ -117,7 +119,11 @@ class MetaCampaignSyncService:
                         raise TokenExpiredError("Meta access token expired")
                     if resp.status != 200:
                         body = await resp.text()
-                        logger.error("meta_campaigns_fetch_error", status=resp.status, body=body[:500])
+                        logger.error(
+                            "meta_campaigns_fetch_error",
+                            status=resp.status,
+                            body=body[:500],
+                        )
                         break
                     data = await resp.json()
 
@@ -129,7 +135,9 @@ class MetaCampaignSyncService:
                 params = {}  # next URL includes all params
 
         breaker.record_success()
-        logger.info("meta_campaigns_fetched", account=ad_account_id, count=len(campaigns))
+        logger.info(
+            "meta_campaigns_fetched", account=ad_account_id, count=len(campaigns)
+        )
         return campaigns
 
     # ------------------------------------------------------------------
@@ -231,7 +239,9 @@ class MetaCampaignSyncService:
             ):
                 revenue_cents += round(float(av.get("value", "0")) * 100)
 
-        row_date = date.fromisoformat(raw.get("date_start", raw.get("date_stop", "2024-01-01")))
+        row_date = date.fromisoformat(
+            raw.get("date_start", raw.get("date_stop", "2024-01-01"))
+        )
 
         return MetaInsightRow(
             date=row_date,
@@ -262,6 +272,7 @@ class TokenExpiredError(Exception):
 # ------------------------------------------------------------------
 # Utility
 # ------------------------------------------------------------------
+
 
 def _parse_iso(value: Optional[str]) -> Optional[datetime]:
     if not value:

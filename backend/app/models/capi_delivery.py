@@ -14,18 +14,26 @@ from datetime import datetime, timezone
 from uuid import uuid4
 
 from sqlalchemy import (
-    Column, String, Integer, DateTime, Float, Text, ForeignKey,
-    Index, Boolean, BigInteger
+    BigInteger,
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
 )
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
 
-
 # =============================================================================
 # CAPI Delivery Log
 # =============================================================================
+
 
 class CAPIDeliveryLog(Base):
     """
@@ -37,10 +45,16 @@ class CAPIDeliveryLog(Base):
     - EMQ calculation from real delivery data
     - Performance monitoring
     """
+
     __tablename__ = "capi_delivery_logs"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    tenant_id = Column(
+        Integer,
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
 
     # Event identification
     platform = Column(String(50), nullable=False)  # meta, google, tiktok, etc.
@@ -48,11 +62,15 @@ class CAPIDeliveryLog(Base):
     event_name = Column(String(100), nullable=False)  # Purchase, Lead, etc.
 
     # Timing
-    event_time = Column(DateTime(timezone=True), nullable=False)  # Original event timestamp
+    event_time = Column(
+        DateTime(timezone=True), nullable=False
+    )  # Original event timestamp
     delivery_time = Column(DateTime(timezone=True), nullable=False)  # When we sent it
 
     # Delivery status
-    status = Column(String(20), nullable=False)  # success, failed, retrying, rate_limited
+    status = Column(
+        String(20), nullable=False
+    )  # success, failed, retrying, rate_limited
     latency_ms = Column(Float, nullable=False)  # Delivery latency in milliseconds
     retry_count = Column(Integer, default=0, nullable=False)
 
@@ -69,7 +87,11 @@ class CAPIDeliveryLog(Base):
     currency = Column(String(3), nullable=True)  # Currency code
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -90,6 +112,7 @@ class CAPIDeliveryLog(Base):
 # Dead Letter Queue Entry
 # =============================================================================
 
+
 class CAPIDeadLetterEntry(Base):
     """
     Dead Letter Queue entries for failed CAPI events.
@@ -99,10 +122,16 @@ class CAPIDeadLetterEntry(Base):
     - Automated replay when issues are resolved
     - Root cause analysis
     """
+
     __tablename__ = "capi_dead_letter_queue"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    tenant_id = Column(
+        Integer,
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
 
     # Event identification
     platform = Column(String(50), nullable=False)
@@ -114,13 +143,17 @@ class CAPIDeadLetterEntry(Base):
 
     # Failure information
     failure_reason = Column(Text, nullable=False)
-    failure_category = Column(String(50), nullable=False)  # network_error, rate_limited, auth_error, etc.
+    failure_category = Column(
+        String(50), nullable=False
+    )  # network_error, rate_limited, auth_error, etc.
     error_message = Column(Text, nullable=False)
     retry_count = Column(Integer, nullable=False)
     max_retries = Column(Integer, nullable=False)
 
     # Status
-    status = Column(String(20), nullable=False)  # pending, retrying, recovered, expired, discarded
+    status = Column(
+        String(20), nullable=False
+    )  # pending, retrying, recovered, expired, discarded
 
     # Platform response at failure
     platform_response = Column(JSONB, nullable=True)
@@ -132,8 +165,17 @@ class CAPIDeadLetterEntry(Base):
     first_failure_at = Column(DateTime(timezone=True), nullable=False)
     last_failure_at = Column(DateTime(timezone=True), nullable=False)
     recovered_at = Column(DateTime(timezone=True), nullable=True)
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
@@ -152,6 +194,7 @@ class CAPIDeadLetterEntry(Base):
 # Deduplication Persistence (Optional)
 # =============================================================================
 
+
 class CAPIEventDedupeRecord(Base):
     """
     Optional persistent deduplication records.
@@ -161,13 +204,21 @@ class CAPIEventDedupeRecord(Base):
     - Long-term deduplication (beyond Redis TTL)
     - Audit trail of processed events
     """
+
     __tablename__ = "capi_event_dedupe"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    tenant_id = Column(
+        Integer,
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
 
     # Deduplication key
-    dedupe_key = Column(String(255), nullable=False)  # {platform}:{event_id} or MD5 hash
+    dedupe_key = Column(
+        String(255), nullable=False
+    )  # {platform}:{event_id} or MD5 hash
     platform = Column(String(50), nullable=False)
     event_id = Column(String(255), nullable=True)
 
@@ -193,6 +244,7 @@ class CAPIEventDedupeRecord(Base):
 # CAPI Delivery Aggregates (for dashboards)
 # =============================================================================
 
+
 class CAPIDeliveryDailyStats(Base):
     """
     Pre-aggregated daily delivery statistics.
@@ -200,10 +252,16 @@ class CAPIDeliveryDailyStats(Base):
     Reduces query load for dashboards and reporting.
     Populated by scheduled job.
     """
+
     __tablename__ = "capi_delivery_daily_stats"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    tenant_id = Column(
+        Integer,
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
 
     # Aggregation period
     date = Column(DateTime(timezone=True), nullable=False)
@@ -234,8 +292,17 @@ class CAPIDeliveryDailyStats(Base):
     error_counts = Column(JSONB, nullable=True)  # {error_category: count}
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
 
     # Relationships
     tenant = relationship("Tenant", foreign_keys=[tenant_id])

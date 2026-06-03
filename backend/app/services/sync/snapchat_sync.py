@@ -128,7 +128,9 @@ class SnapchatCampaignSyncService:
                     break
                 await asyncio.sleep(0.1)  # throttle
 
-        logger.info("snapchat_campaigns_fetched", account=ad_account_id, count=len(campaigns))
+        logger.info(
+            "snapchat_campaigns_fetched", account=ad_account_id, count=len(campaigns)
+        )
         return campaigns
 
     # ------------------------------------------------------------------
@@ -199,8 +201,16 @@ class SnapchatCampaignSyncService:
 
                 except TokenExpiredError:
                     raise
-                except (ConnectionError, TimeoutError, OSError, ValueError, KeyError) as e:
-                    logger.warning("snapchat_stats_error", campaign=campaign_id, error=str(e))
+                except (
+                    ConnectionError,
+                    TimeoutError,
+                    OSError,
+                    ValueError,
+                    KeyError,
+                ) as e:
+                    logger.warning(
+                        "snapchat_stats_error", campaign=campaign_id, error=str(e)
+                    )
 
                 await asyncio.sleep(0.1)
 

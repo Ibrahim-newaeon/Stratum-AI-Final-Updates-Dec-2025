@@ -13,8 +13,8 @@ import math
 import random
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 from app.core.logging import get_logger
 from app.models import AdPlatform, CampaignStatus
@@ -55,18 +55,56 @@ LOCATION_COORDINATES = {
 CAMPAIGN_TEMPLATES = {
     AdPlatform.META: {
         "prefixes": ["FB", "IG", "Meta"],
-        "objectives": ["Conversions", "Traffic", "Engagement", "Lead Gen", "Brand Awareness", "App Install"],
-        "audiences": ["Lookalike 1%", "Lookalike 3%", "Interest - Tech", "Interest - Fashion", "Retargeting", "Broad"],
+        "objectives": [
+            "Conversions",
+            "Traffic",
+            "Engagement",
+            "Lead Gen",
+            "Brand Awareness",
+            "App Install",
+        ],
+        "audiences": [
+            "Lookalike 1%",
+            "Lookalike 3%",
+            "Interest - Tech",
+            "Interest - Fashion",
+            "Retargeting",
+            "Broad",
+        ],
     },
     AdPlatform.GOOGLE: {
         "prefixes": ["GGL", "Search", "Display", "YT", "PMax"],
-        "objectives": ["Search - Brand", "Search - NonBrand", "Display - Prospecting", "YouTube - Awareness", "PMax - Sales"],
-        "audiences": ["Keywords - Exact", "Keywords - Phrase", "In-Market", "Custom Intent", "Remarketing"],
+        "objectives": [
+            "Search - Brand",
+            "Search - NonBrand",
+            "Display - Prospecting",
+            "YouTube - Awareness",
+            "PMax - Sales",
+        ],
+        "audiences": [
+            "Keywords - Exact",
+            "Keywords - Phrase",
+            "In-Market",
+            "Custom Intent",
+            "Remarketing",
+        ],
     },
     AdPlatform.TIKTOK: {
         "prefixes": ["TT", "TikTok"],
-        "objectives": ["Video Views", "Conversions", "Traffic", "App Install", "Lead Gen"],
-        "audiences": ["GenZ Interest", "Trend Followers", "Lookalike", "Custom Audience", "Broad"],
+        "objectives": [
+            "Video Views",
+            "Conversions",
+            "Traffic",
+            "App Install",
+            "Lead Gen",
+        ],
+        "audiences": [
+            "GenZ Interest",
+            "Trend Followers",
+            "Lookalike",
+            "Custom Audience",
+            "Broad",
+        ],
     },
     AdPlatform.SNAPCHAT: {
         "prefixes": ["SNAP", "Snapchat"],
@@ -77,12 +115,24 @@ CAMPAIGN_TEMPLATES = {
 
 AGE_RANGES = ["18-24", "25-34", "35-44", "45-54", "55-64", "65+"]
 GENDERS = ["male", "female", "unknown"]
-LOCATIONS = ["US-CA", "US-TX", "US-NY", "US-FL", "US-IL", "UK-London", "CA-ON", "DE", "AU", "FR"]
+LOCATIONS = [
+    "US-CA",
+    "US-TX",
+    "US-NY",
+    "US-FL",
+    "US-IL",
+    "UK-London",
+    "CA-ON",
+    "DE",
+    "AU",
+    "FR",
+]
 
 
 @dataclass
 class MockCampaignData:
     """Generated mock campaign data."""
+
     external_id: str
     account_id: str
     name: str
@@ -124,7 +174,12 @@ class MockAdNetwork:
 
     def _seeded_random(self, identifier: str) -> random.Random:
         """Get a seeded random generator based on identifier."""
-        hash_val = int(hashlib.md5(f"{self.seed}:{identifier}".encode(), usedforsecurity=False).hexdigest()[:8], 16)
+        hash_val = int(
+            hashlib.md5(
+                f"{self.seed}:{identifier}".encode(), usedforsecurity=False
+            ).hexdigest()[:8],
+            16,
+        )
         return random.Random(hash_val)
 
     def generate_campaigns(
@@ -175,7 +230,12 @@ class MockAdNetwork:
         # Status distribution: 60% active, 20% paused, 15% completed, 5% draft
         status_weights = [0.6, 0.2, 0.15, 0.05]
         status = rng.choices(
-            [CampaignStatus.ACTIVE, CampaignStatus.PAUSED, CampaignStatus.COMPLETED, CampaignStatus.DRAFT],
+            [
+                CampaignStatus.ACTIVE,
+                CampaignStatus.PAUSED,
+                CampaignStatus.COMPLETED,
+                CampaignStatus.DRAFT,
+            ],
             weights=status_weights,
         )[0]
 
@@ -212,12 +272,13 @@ class MockAdNetwork:
 
         locations = rng.sample(LOCATIONS, k=rng.randint(1, 5))
         targeting_locations = [
-            {"code": loc, "name": loc.replace("-", " - ")}
-            for loc in locations
+            {"code": loc, "name": loc.replace("-", " - ")} for loc in locations
         ]
 
         # Generate performance metrics
-        metrics = self._generate_metrics(tenant_id, index, platform, daily_budget, start_date, end_date, rng)
+        metrics = self._generate_metrics(
+            tenant_id, index, platform, daily_budget, start_date, end_date, rng
+        )
 
         # Generate demographics
         demographics = self._generate_demographics(metrics["impressions"], rng)
@@ -255,10 +316,34 @@ class MockAdNetwork:
 
         # Platform-specific performance characteristics
         platform_params = {
-            AdPlatform.META: {"cpm_base": 800, "ctr_base": 1.2, "cvr_base": 2.5, "cpm_var": 200, "performance_var": 0.3},
-            AdPlatform.GOOGLE: {"cpm_base": 1200, "ctr_base": 3.5, "cvr_base": 4.0, "cpm_var": 400, "performance_var": 0.25},
-            AdPlatform.TIKTOK: {"cpm_base": 600, "ctr_base": 0.8, "cvr_base": 1.5, "cpm_var": 150, "performance_var": 0.4},
-            AdPlatform.SNAPCHAT: {"cpm_base": 500, "ctr_base": 0.6, "cvr_base": 1.2, "cpm_var": 100, "performance_var": 0.35},
+            AdPlatform.META: {
+                "cpm_base": 800,
+                "ctr_base": 1.2,
+                "cvr_base": 2.5,
+                "cpm_var": 200,
+                "performance_var": 0.3,
+            },
+            AdPlatform.GOOGLE: {
+                "cpm_base": 1200,
+                "ctr_base": 3.5,
+                "cvr_base": 4.0,
+                "cpm_var": 400,
+                "performance_var": 0.25,
+            },
+            AdPlatform.TIKTOK: {
+                "cpm_base": 600,
+                "ctr_base": 0.8,
+                "cvr_base": 1.5,
+                "cpm_var": 150,
+                "performance_var": 0.4,
+            },
+            AdPlatform.SNAPCHAT: {
+                "cpm_base": 500,
+                "ctr_base": 0.6,
+                "cvr_base": 1.2,
+                "cpm_var": 100,
+                "performance_var": 0.35,
+            },
         }
 
         params = platform_params[platform]
@@ -276,7 +361,9 @@ class MockAdNetwork:
         total_spend_cents = int(daily_budget * days_active * rng.uniform(0.7, 1.0))
 
         # CPM determines impressions
-        cpm_cents = int(params["cpm_base"] * campaign_modifier + rng.gauss(0, params["cpm_var"]))
+        cpm_cents = int(
+            params["cpm_base"] * campaign_modifier + rng.gauss(0, params["cpm_var"])
+        )
         cpm_cents = max(100, cpm_cents)
         impressions = int((total_spend_cents / cpm_cents) * 1000)
 
@@ -444,15 +531,24 @@ class MockAdNetwork:
                 "date": current_date,
                 "impressions": max(0, int(daily_avg["impressions"] * modifier)),
                 "clicks": max(0, int(daily_avg["clicks"] * modifier)),
-                "conversions": max(0, int(daily_avg["conversions"] * modifier * rng.uniform(0.7, 1.3))),
+                "conversions": max(
+                    0, int(daily_avg["conversions"] * modifier * rng.uniform(0.7, 1.3))
+                ),
                 "spend_cents": max(0, int(daily_avg["spend_cents"] * modifier)),
-                "revenue_cents": max(0, int(daily_avg["revenue_cents"] * modifier * rng.uniform(0.8, 1.2))),
+                "revenue_cents": max(
+                    0,
+                    int(daily_avg["revenue_cents"] * modifier * rng.uniform(0.8, 1.2)),
+                ),
             }
 
             # Add video metrics if present
             if base_metrics.get("video_views"):
-                day_data["video_views"] = int(day_data["impressions"] * rng.uniform(0.3, 0.6))
-                day_data["video_completions"] = int(day_data["video_views"] * rng.uniform(0.2, 0.4))
+                day_data["video_views"] = int(
+                    day_data["impressions"] * rng.uniform(0.3, 0.6)
+                )
+                day_data["video_completions"] = int(
+                    day_data["video_views"] * rng.uniform(0.2, 0.4)
+                )
 
             daily_metrics.append(day_data)
 
@@ -486,12 +582,12 @@ class MockAdNetworkManager:
         return {
             "campaigns": campaigns,
             "synced_at": datetime.now(timezone.utc),
-            "platform_status": {
-                platform.value: "success" for platform in AdPlatform
-            },
+            "platform_status": {platform.value: "success" for platform in AdPlatform},
         }
 
-    async def get_campaign_details(self, external_id: str) -> Optional[MockCampaignData]:
+    async def get_campaign_details(
+        self, external_id: str
+    ) -> Optional[MockCampaignData]:
         """Get details for a specific campaign."""
         # In a real implementation, this would call the actual API
         # For mock, we regenerate based on the ID

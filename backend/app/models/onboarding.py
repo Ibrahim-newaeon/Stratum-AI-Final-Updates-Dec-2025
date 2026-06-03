@@ -169,11 +169,21 @@ class TenantOnboarding(Base):
 
     # Step 4: Automation Preferences
     automation_mode: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
-    auto_pause_enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    auto_scale_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    notification_email: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    notification_slack: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    notification_whatsapp: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    auto_pause_enabled: Mapped[bool] = mapped_column(
+        Boolean, default=True, nullable=False
+    )
+    auto_scale_enabled: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False
+    )
+    notification_email: Mapped[bool] = mapped_column(
+        Boolean, default=True, nullable=False
+    )
+    notification_slack: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False
+    )
+    notification_whatsapp: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False
+    )
 
     # Step 5: Trust Gate Configuration
     trust_threshold_autopilot: Mapped[int] = mapped_column(
@@ -190,16 +200,27 @@ class TenantOnboarding(Base):
     )  # Max auto actions per day
 
     # Additional preferences (flexible JSON)
-    additional_preferences: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=False)
+    additional_preferences: Mapped[dict] = mapped_column(
+        JSONB, default=dict, nullable=False
+    )
 
     # Timestamps
-    started_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    started_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    completed_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        nullable=False,
     )
 
     # User who completed onboarding

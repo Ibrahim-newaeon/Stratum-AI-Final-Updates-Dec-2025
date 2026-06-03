@@ -27,7 +27,7 @@ from app.core.logging import get_logger
 from app.db.session import get_async_session
 from app.models import Campaign, CreativeAsset, Tenant
 from app.schemas import APIResponse
-from app.tenancy import get_tenant, require_tenant, TenantContext, tenant_query
+from app.tenancy import TenantContext, get_tenant, require_tenant, tenant_query
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -38,6 +38,7 @@ router = APIRouter()
 # =============================================================================
 class DashboardOverviewResponse(BaseModel):
     """Dashboard overview response with all KPIs."""
+
     # Spend & Revenue
     total_spend: float = 0
     total_revenue: float = 0
@@ -78,6 +79,7 @@ class DashboardOverviewResponse(BaseModel):
 
 class RecommendationItem(BaseModel):
     """Single recommendation item."""
+
     id: str
     type: str  # scale, watch, fix, pause, creative_refresh, budget_shift
     priority: int  # 1-5 (1 = highest)
@@ -95,6 +97,7 @@ class RecommendationItem(BaseModel):
 
 class AlertItem(BaseModel):
     """Single alert item."""
+
     id: int
     type: str  # anomaly, fatigue, budget, signal, system
     severity: str  # low, medium, high, critical
@@ -117,6 +120,7 @@ class AlertItem(BaseModel):
 
 class TenantSettingsResponse(BaseModel):
     """Tenant settings response."""
+
     # General settings
     currency: str = "USD"
     timezone: str = "UTC"
@@ -144,6 +148,7 @@ class TenantSettingsResponse(BaseModel):
 
 class TenantSettingsUpdate(BaseModel):
     """Tenant settings update request."""
+
     currency: Optional[str] = None
     timezone: Optional[str] = None
     date_format: Optional[str] = None
@@ -200,8 +205,12 @@ async def get_dashboard_overview(
         )
 
     # Calculate metrics
-    total_spend = sum(c.total_spend_cents / 100 if c.total_spend_cents else 0 for c in campaigns)
-    total_revenue = sum(c.revenue_cents / 100 if c.revenue_cents else 0 for c in campaigns)
+    total_spend = sum(
+        c.total_spend_cents / 100 if c.total_spend_cents else 0 for c in campaigns
+    )
+    total_revenue = sum(
+        c.revenue_cents / 100 if c.revenue_cents else 0 for c in campaigns
+    )
     total_impressions = sum(c.impressions or 0 for c in campaigns)
     total_clicks = sum(c.clicks or 0 for c in campaigns)
     total_conversions = sum(c.conversions or 0 for c in campaigns)
@@ -211,8 +220,12 @@ async def get_dashboard_overview(
     avg_cpa = total_spend / total_conversions if total_conversions > 0 else 0
 
     # Campaign status breakdown
-    active_campaigns = sum(1 for c in campaigns if c.status and c.status.value == "active")
-    paused_campaigns = sum(1 for c in campaigns if c.status and c.status.value == "paused")
+    active_campaigns = sum(
+        1 for c in campaigns if c.status and c.status.value == "active"
+    )
+    paused_campaigns = sum(
+        1 for c in campaigns if c.status and c.status.value == "paused"
+    )
 
     # Platform breakdown
     platform_breakdown = {}
@@ -221,8 +234,12 @@ async def get_dashboard_overview(
         if platform not in platform_breakdown:
             platform_breakdown[platform] = {"campaigns": 0, "spend": 0, "revenue": 0}
         platform_breakdown[platform]["campaigns"] += 1
-        platform_breakdown[platform]["spend"] += c.total_spend_cents / 100 if c.total_spend_cents else 0
-        platform_breakdown[platform]["revenue"] += c.revenue_cents / 100 if c.revenue_cents else 0
+        platform_breakdown[platform]["spend"] += (
+            c.total_spend_cents / 100 if c.total_spend_cents else 0
+        )
+        platform_breakdown[platform]["revenue"] += (
+            c.revenue_cents / 100 if c.revenue_cents else 0
+        )
 
     # Calculate period deltas by comparing current totals to previous period
     period_days = {"1d": 1, "7d": 7, "30d": 30}.get(period, 7)
@@ -250,7 +267,9 @@ async def get_dashboard_overview(
         prev_revenue = total_revenue * 0.92  # Estimate 8% growth
 
     prev_roas = prev_revenue / prev_spend if prev_spend > 0 else 0
-    prev_conversions = sum(getattr(c, "previous_conversions", 0) or 0 for c in campaigns)
+    prev_conversions = sum(
+        getattr(c, "previous_conversions", 0) or 0 for c in campaigns
+    )
     prev_cpa = prev_spend / prev_conversions if prev_conversions > 0 else 0
 
     def _pct_change(current: float, previous: float) -> float:
@@ -318,8 +337,13 @@ async def get_tenant_recommendations(
 
     Returns prioritized list of actions: scale, watch, fix, pause, creative_refresh.
     """
-    from app.analytics.logic.types import EntityMetrics, BaselineMetrics, EntityLevel, Platform
     from app.analytics.logic.recommend import RecommendationsEngine
+    from app.analytics.logic.types import (
+        BaselineMetrics,
+        EntityLevel,
+        EntityMetrics,
+        Platform,
+    )
 
     # Get campaigns
     campaigns_query = tenant_query(db, Campaign, tenant_id)
@@ -426,7 +450,9 @@ async def get_tenant_alerts(
     ctx: TenantContext = Depends(require_tenant("tenant_id")),
     date_str: Optional[str] = Query(None, alias="date"),
     severity: Optional[str] = Query(None, description="Filter by severity"),
-    type_filter: Optional[str] = Query(None, alias="type", description="Filter by type"),
+    type_filter: Optional[str] = Query(
+        None, alias="type", description="Filter by type"
+    ),
     include_resolved: bool = Query(False),
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
@@ -506,7 +532,7 @@ async def get_tenant_alerts(
 
     return APIResponse(
         success=True,
-        data=alerts[skip:skip + limit],
+        data=alerts[skip : skip + limit],
         meta={"total": len(alerts), "skip": skip, "limit": limit},
     )
 
@@ -529,7 +555,9 @@ async def acknowledge_alert(
     Marks the alert as seen by the user without resolving the underlying issue.
     """
     # Alert persistence not yet implemented — requires fact_alerts table
-    logger.info(f"Alert {alert_id} acknowledged by user {ctx.user_id} for tenant {tenant_id}")
+    logger.info(
+        f"Alert {alert_id} acknowledged by user {ctx.user_id} for tenant {tenant_id}"
+    )
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
         detail="Alert acknowledgement persistence is not yet implemented.",
@@ -554,7 +582,9 @@ async def resolve_alert(
 
     Marks the alert as resolved with optional resolution notes.
     """
-    logger.info(f"Alert {alert_id} resolved by user {ctx.user_id} for tenant {tenant_id}")
+    logger.info(
+        f"Alert {alert_id} resolved by user {ctx.user_id} for tenant {tenant_id}"
+    )
 
     return APIResponse(
         success=True,
@@ -608,7 +638,9 @@ async def get_tenant_settings(
             fiscal_year_start=settings.get("fiscal_year_start", 1),
             alert_roas_drop_pct=settings.get("alert_roas_drop_pct", 20.0),
             alert_cpa_increase_pct=settings.get("alert_cpa_increase_pct", 25.0),
-            alert_spend_anomaly_threshold=settings.get("alert_spend_anomaly_threshold", 2.5),
+            alert_spend_anomaly_threshold=settings.get(
+                "alert_spend_anomaly_threshold", 2.5
+            ),
             alert_emq_min_score=settings.get("alert_emq_min_score", 7.0),
             email_notifications=settings.get("email_notifications", True),
             whatsapp_notifications=settings.get("whatsapp_notifications", False),
@@ -670,7 +702,9 @@ async def update_tenant_settings(
             fiscal_year_start=settings.get("fiscal_year_start", 1),
             alert_roas_drop_pct=settings.get("alert_roas_drop_pct", 20.0),
             alert_cpa_increase_pct=settings.get("alert_cpa_increase_pct", 25.0),
-            alert_spend_anomaly_threshold=settings.get("alert_spend_anomaly_threshold", 2.5),
+            alert_spend_anomaly_threshold=settings.get(
+                "alert_spend_anomaly_threshold", 2.5
+            ),
             alert_emq_min_score=settings.get("alert_emq_min_score", 7.0),
             email_notifications=settings.get("email_notifications", True),
             whatsapp_notifications=settings.get("whatsapp_notifications", False),
@@ -704,8 +738,13 @@ async def get_command_center(
 
     Returns campaigns grouped by recommended action (scale, watch, fix, pause).
     """
-    from app.analytics.logic.types import EntityMetrics, BaselineMetrics, EntityLevel, Platform as PlatformEnum
     from app.analytics.logic.scoring import scaling_score
+    from app.analytics.logic.types import (
+        BaselineMetrics,
+        EntityLevel,
+        EntityMetrics,
+    )
+    from app.analytics.logic.types import Platform as PlatformEnum
 
     # Get campaigns
     campaigns_query = tenant_query(db, Campaign, tenant_id)
@@ -768,26 +807,30 @@ async def get_command_center(
         if action_filter and action != action_filter:
             continue
 
-        command_center_data.append({
-            "campaign_id": c.id,
-            "campaign_name": c.name,
-            "platform": c.platform.value if c.platform else "unknown",
-            "status": c.status.value if c.status else "unknown",
-            "spend": round(spend, 2),
-            "revenue": round(revenue, 2),
-            "roas": round(c.roas or 0, 2),
-            "cpa": round((spend / max(conversions, 1)) if conversions > 0 else 0, 2),
-            "ctr": round(c.ctr or 0, 2),
-            "conversions": conversions,
-            "scaling_score": round(score_result.final_score, 2),
-            "action": action,
-            "signals": {
-                "roas_momentum": score_result.signals.get("roas_momentum", 0),
-                "spend_efficiency": score_result.signals.get("spend_efficiency", 0),
-                "conversion_trend": score_result.signals.get("conversion_trend", 0),
-            },
-            "recommendation": score_result.recommendation,
-        })
+        command_center_data.append(
+            {
+                "campaign_id": c.id,
+                "campaign_name": c.name,
+                "platform": c.platform.value if c.platform else "unknown",
+                "status": c.status.value if c.status else "unknown",
+                "spend": round(spend, 2),
+                "revenue": round(revenue, 2),
+                "roas": round(c.roas or 0, 2),
+                "cpa": round(
+                    (spend / max(conversions, 1)) if conversions > 0 else 0, 2
+                ),
+                "ctr": round(c.ctr or 0, 2),
+                "conversions": conversions,
+                "scaling_score": round(score_result.final_score, 2),
+                "action": action,
+                "signals": {
+                    "roas_momentum": score_result.signals.get("roas_momentum", 0),
+                    "spend_efficiency": score_result.signals.get("spend_efficiency", 0),
+                    "conversion_trend": score_result.signals.get("conversion_trend", 0),
+                },
+                "recommendation": score_result.recommendation,
+            }
+        )
 
     # Sort by scaling_score (descending for scale, ascending for fix)
     command_center_data.sort(key=lambda x: abs(x["scaling_score"]), reverse=True)

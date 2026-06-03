@@ -96,6 +96,7 @@ def send_whatsapp_message(
         try:
             # Send via WhatsApp Business API
             import asyncio
+
             from app.services.whatsapp_client import get_whatsapp_client
 
             client = get_whatsapp_client()
@@ -104,7 +105,9 @@ def send_whatsapp_message(
                     recipient_phone=to_number,
                     template_name=template_name,
                     language_code=template.language,
-                    components=_build_template_components(template, variables, media_url),
+                    components=_build_template_components(
+                        template, variables, media_url
+                    ),
                 )
             )
 

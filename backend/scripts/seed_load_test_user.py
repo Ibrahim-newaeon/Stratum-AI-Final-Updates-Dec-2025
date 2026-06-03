@@ -83,7 +83,9 @@ async def seed_load_test_user():
 
             if not tenant:
                 # Check for tenant by slug
-                result = await db.execute(select(Tenant).where(Tenant.slug == TEST_TENANT_SLUG))
+                result = await db.execute(
+                    select(Tenant).where(Tenant.slug == TEST_TENANT_SLUG)
+                )
                 tenant = result.scalar_one_or_none()
 
             if not tenant:

@@ -112,9 +112,11 @@ class AudienceSyncService:
             description=description,
             auto_sync=auto_sync,
             sync_interval_hours=sync_interval_hours,
-            next_sync_at=datetime.now(UTC) + timedelta(hours=sync_interval_hours)
-            if auto_sync
-            else None,
+            next_sync_at=(
+                datetime.now(UTC) + timedelta(hours=sync_interval_hours)
+                if auto_sync
+                else None
+            ),
         )
         self.db.add(platform_audience)
         await self.db.flush()
@@ -255,7 +257,9 @@ class AudienceSyncService:
                         platform_audience.platform,
                         credentials,
                     )
-                    await connector.delete_audience(platform_audience.platform_audience_id)
+                    await connector.delete_audience(
+                        platform_audience.platform_audience_id
+                    )
             except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
                 self.logger.warning(
                     "platform_audience_delete_failed",
@@ -309,17 +313,23 @@ class AudienceSyncService:
         elif operation == SyncOperation.UPDATE:
             if not platform_audience.platform_audience_id:
                 raise ValueError("No platform audience ID for update operation")
-            result = await connector.add_users(platform_audience.platform_audience_id, users)
+            result = await connector.add_users(
+                platform_audience.platform_audience_id, users
+            )
 
         elif operation == SyncOperation.REPLACE:
             if not platform_audience.platform_audience_id:
                 raise ValueError("No platform audience ID for replace operation")
-            result = await connector.replace_audience(platform_audience.platform_audience_id, users)
+            result = await connector.replace_audience(
+                platform_audience.platform_audience_id, users
+            )
 
         elif operation == SyncOperation.DELETE:
             if not platform_audience.platform_audience_id:
                 raise ValueError("No platform audience ID for delete operation")
-            result = await connector.delete_audience(platform_audience.platform_audience_id)
+            result = await connector.delete_audience(
+                platform_audience.platform_audience_id
+            )
 
         else:
             raise ValueError(f"Unknown operation: {operation}")
@@ -371,7 +381,9 @@ class AudienceSyncService:
         """
         List platform audiences with optional filtering.
         """
-        query = select(PlatformAudience).where(PlatformAudience.tenant_id == self.tenant_id)
+        query = select(PlatformAudience).where(
+            PlatformAudience.tenant_id == self.tenant_id
+        )
 
         if segment_id:
             query = query.where(PlatformAudience.segment_id == segment_id)
@@ -389,7 +401,9 @@ class AudienceSyncService:
 
         # Get results
         result = await self.db.execute(
-            query.order_by(PlatformAudience.created_at.desc()).offset(offset).limit(limit)
+            query.order_by(PlatformAudience.created_at.desc())
+            .offset(offset)
+            .limit(limit)
         )
         audiences = list(result.scalars().all())
 
@@ -458,7 +472,9 @@ class AudienceSyncService:
         )
         return result.scalar_one_or_none()
 
-    async def _get_platform_audience(self, audience_id: UUID) -> Optional[PlatformAudience]:
+    async def _get_platform_audience(
+        self, audience_id: UUID
+    ) -> Optional[PlatformAudience]:
         """Get a platform audience by ID."""
         result = await self.db.execute(
             select(PlatformAudience).where(
@@ -580,5 +596,7 @@ class AudienceSyncService:
             kwargs["app_secret"] = credentials.config.get("app_secret")
 
         return connector_class(
-            access_token=credentials.access_token, ad_account_id=credentials.ad_account_id, **kwargs
+            access_token=credentials.access_token,
+            ad_account_id=credentials.ad_account_id,
+            **kwargs,
         )

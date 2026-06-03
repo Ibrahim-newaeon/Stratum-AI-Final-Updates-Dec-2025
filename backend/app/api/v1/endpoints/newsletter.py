@@ -12,19 +12,19 @@ import base64
 import hashlib
 import logging
 import secrets
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from typing import Optional
 
 logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel, Field
-from sqlalchemy import func, select, and_
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.deps import get_current_user, CurrentUserDep
-from app.db.session import get_async_session
+from app.auth.deps import CurrentUserDep, get_current_user
 from app.base_models import LandingPageSubscriber, SubscriberStatus
+from app.db.session import get_async_session
 from app.models.newsletter import (
     CampaignStatus,
     NewsletterCampaign,
@@ -209,7 +209,9 @@ async def _count_audience(db: AsyncSession, filters: Optional[dict]) -> int:
         if "status" in filters and filters["status"]:
             query = query.where(LandingPageSubscriber.status.in_(filters["status"]))
         if "min_lead_score" in filters:
-            query = query.where(LandingPageSubscriber.lead_score >= filters["min_lead_score"])
+            query = query.where(
+                LandingPageSubscriber.lead_score >= filters["min_lead_score"]
+            )
         if "platforms" in filters and filters["platforms"]:
             query = query.where(
                 LandingPageSubscriber.attributed_platform.in_(filters["platforms"])
@@ -266,7 +268,9 @@ async def create_template(
     return TemplateResponse.model_validate(template)
 
 
-@router.put("/templates/{template_id}", response_model=TemplateResponse, tags=["Newsletter"])
+@router.put(
+    "/templates/{template_id}", response_model=TemplateResponse, tags=["Newsletter"]
+)
 async def update_template(
     template_id: int,
     data: TemplateUpdate,
@@ -337,7 +341,9 @@ async def list_campaigns(
         query = query.where(NewsletterCampaign.status == status)
         count_query = count_query.where(NewsletterCampaign.status == status)
 
-    query = query.order_by(NewsletterCampaign.updated_at.desc()).limit(limit).offset(offset)
+    query = (
+        query.order_by(NewsletterCampaign.updated_at.desc()).limit(limit).offset(offset)
+    )
 
     result = await db.execute(query)
     campaigns = result.scalars().all()
@@ -383,7 +389,9 @@ async def create_campaign(
     return CampaignResponse.model_validate(campaign)
 
 
-@router.get("/campaigns/{campaign_id}", response_model=CampaignResponse, tags=["Newsletter"])
+@router.get(
+    "/campaigns/{campaign_id}", response_model=CampaignResponse, tags=["Newsletter"]
+)
 async def get_campaign(
     campaign_id: int,
     current_user: CurrentUserDep,
@@ -402,7 +410,9 @@ async def get_campaign(
     return CampaignResponse.model_validate(campaign)
 
 
-@router.put("/campaigns/{campaign_id}", response_model=CampaignResponse, tags=["Newsletter"])
+@router.put(
+    "/campaigns/{campaign_id}", response_model=CampaignResponse, tags=["Newsletter"]
+)
 async def update_campaign(
     campaign_id: int,
     data: CampaignUpdate,
@@ -420,7 +430,9 @@ async def update_campaign(
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign not found")
     if campaign.status != CampaignStatus.DRAFT.value:
-        raise HTTPException(status_code=400, detail="Only draft campaigns can be edited")
+        raise HTTPException(
+            status_code=400, detail="Only draft campaigns can be edited"
+        )
 
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(campaign, field, value)
@@ -450,15 +462,24 @@ async def delete_campaign(
     campaign = result.scalar_one_or_none()
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign not found")
-    if campaign.status not in (CampaignStatus.DRAFT.value, CampaignStatus.CANCELLED.value):
-        raise HTTPException(status_code=400, detail="Only draft or cancelled campaigns can be deleted")
+    if campaign.status not in (
+        CampaignStatus.DRAFT.value,
+        CampaignStatus.CANCELLED.value,
+    ):
+        raise HTTPException(
+            status_code=400, detail="Only draft or cancelled campaigns can be deleted"
+        )
 
     await db.delete(campaign)
     await db.commit()
     return {"success": True, "message": "Campaign deleted"}
 
 
-@router.post("/campaigns/{campaign_id}/duplicate", response_model=CampaignResponse, tags=["Newsletter"])
+@router.post(
+    "/campaigns/{campaign_id}/duplicate",
+    response_model=CampaignResponse,
+    tags=["Newsletter"],
+)
 async def duplicate_campaign(
     campaign_id: int,
     current_user: CurrentUserDep,
@@ -521,7 +542,9 @@ async def send_campaign(
     # Update audience count
     campaign.total_recipients = await _count_audience(db, campaign.audience_filters)
     if campaign.total_recipients == 0:
-        raise HTTPException(status_code=400, detail="No subscribers match the audience filters")
+        raise HTTPException(
+            status_code=400, detail="No subscribers match the audience filters"
+        )
 
     campaign.status = CampaignStatus.SENDING.value
     campaign.sent_at = datetime.now(UTC)
@@ -560,10 +583,14 @@ async def schedule_campaign(
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign not found")
     if campaign.status != CampaignStatus.DRAFT.value:
-        raise HTTPException(status_code=400, detail="Only draft campaigns can be scheduled")
+        raise HTTPException(
+            status_code=400, detail="Only draft campaigns can be scheduled"
+        )
 
     if data.scheduled_at <= datetime.now(UTC):
-        raise HTTPException(status_code=400, detail="Scheduled time must be in the future")
+        raise HTTPException(
+            status_code=400, detail="Scheduled time must be in the future"
+        )
 
     campaign.status = CampaignStatus.SCHEDULED.value
     campaign.scheduled_at = data.scheduled_at
@@ -592,8 +619,13 @@ async def cancel_campaign(
     campaign = result.scalar_one_or_none()
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign not found")
-    if campaign.status not in (CampaignStatus.SCHEDULED.value, CampaignStatus.SENDING.value):
-        raise HTTPException(status_code=400, detail="Can only cancel scheduled or sending campaigns")
+    if campaign.status not in (
+        CampaignStatus.SCHEDULED.value,
+        CampaignStatus.SENDING.value,
+    ):
+        raise HTTPException(
+            status_code=400, detail="Can only cancel scheduled or sending campaigns"
+        )
 
     campaign.status = CampaignStatus.CANCELLED.value
     await db.commit()
@@ -636,10 +668,17 @@ async def send_test_email(
         if success:
             sent_count += 1
 
-    return {"success": True, "message": f"Test email sent to {sent_count}/{len(data.emails)} addresses"}
+    return {
+        "success": True,
+        "message": f"Test email sent to {sent_count}/{len(data.emails)} addresses",
+    }
 
 
-@router.get("/campaigns/{campaign_id}/analytics", response_model=AnalyticsResponse, tags=["Newsletter"])
+@router.get(
+    "/campaigns/{campaign_id}/analytics",
+    response_model=AnalyticsResponse,
+    tags=["Newsletter"],
+)
 async def campaign_analytics(
     campaign_id: int,
     current_user: CurrentUserDep,
@@ -688,7 +727,9 @@ async def campaign_analytics(
 # ===================================================================
 # SUBSCRIBER ENDPOINTS (newsletter-specific)
 # ===================================================================
-@router.get("/subscribers", response_model=list[SubscriberResponse], tags=["Newsletter"])
+@router.get(
+    "/subscribers", response_model=list[SubscriberResponse], tags=["Newsletter"]
+)
 async def list_subscribers(
     current_user: CurrentUserDep,
     db: AsyncSession = Depends(get_async_session),
@@ -702,19 +743,27 @@ async def list_subscribers(
     query = select(LandingPageSubscriber)
 
     if subscribed is not None:
-        query = query.where(LandingPageSubscriber.subscribed_to_newsletter == subscribed)
+        query = query.where(
+            LandingPageSubscriber.subscribed_to_newsletter == subscribed
+        )
     if platform:
         query = query.where(LandingPageSubscriber.attributed_platform == platform)
     if min_score is not None:
         query = query.where(LandingPageSubscriber.lead_score >= min_score)
 
-    query = query.order_by(LandingPageSubscriber.created_at.desc()).limit(limit).offset(offset)
+    query = (
+        query.order_by(LandingPageSubscriber.created_at.desc())
+        .limit(limit)
+        .offset(offset)
+    )
     result = await db.execute(query)
     subscribers = result.scalars().all()
     return [SubscriberResponse.model_validate(s) for s in subscribers]
 
 
-@router.get("/subscribers/stats", response_model=SubscriberStatsResponse, tags=["Newsletter"])
+@router.get(
+    "/subscribers/stats", response_model=SubscriberStatsResponse, tags=["Newsletter"]
+)
 async def subscriber_stats(
     current_user: CurrentUserDep,
     db: AsyncSession = Depends(get_async_session),
@@ -824,19 +873,24 @@ async def track_open(
 
         # Update campaign stats
         await db.execute(
-            select(NewsletterCampaign)
-            .where(NewsletterCampaign.id == campaign_id)
-        )
-        campaign = (await db.execute(
             select(NewsletterCampaign).where(NewsletterCampaign.id == campaign_id)
-        )).scalar_one_or_none()
+        )
+        campaign = (
+            await db.execute(
+                select(NewsletterCampaign).where(NewsletterCampaign.id == campaign_id)
+            )
+        ).scalar_one_or_none()
         if campaign:
             campaign.total_opened += 1
 
         # Update subscriber stats
-        subscriber = (await db.execute(
-            select(LandingPageSubscriber).where(LandingPageSubscriber.id == subscriber_id)
-        )).scalar_one_or_none()
+        subscriber = (
+            await db.execute(
+                select(LandingPageSubscriber).where(
+                    LandingPageSubscriber.id == subscriber_id
+                )
+            )
+        ).scalar_one_or_none()
         if subscriber:
             subscriber.last_email_opened_at = datetime.now(UTC)
             subscriber.email_open_count += 1
@@ -872,9 +926,11 @@ async def track_click(
         db.add(event)
 
         # Update campaign stats
-        campaign = (await db.execute(
-            select(NewsletterCampaign).where(NewsletterCampaign.id == campaign_id)
-        )).scalar_one_or_none()
+        campaign = (
+            await db.execute(
+                select(NewsletterCampaign).where(NewsletterCampaign.id == campaign_id)
+            )
+        ).scalar_one_or_none()
         if campaign:
             campaign.total_clicked += 1
 
@@ -915,9 +971,11 @@ async def public_unsubscribe(
         db.add(event)
 
         # Update campaign stats
-        campaign = (await db.execute(
-            select(NewsletterCampaign).where(NewsletterCampaign.id == campaign_id)
-        )).scalar_one_or_none()
+        campaign = (
+            await db.execute(
+                select(NewsletterCampaign).where(NewsletterCampaign.id == campaign_id)
+            )
+        ).scalar_one_or_none()
         if campaign:
             campaign.total_unsubscribed += 1
 

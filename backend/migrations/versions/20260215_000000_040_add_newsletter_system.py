@@ -33,10 +33,16 @@ def upgrade() -> None:
         sa.Column("subject", sa.String(500), nullable=False, server_default=""),
         sa.Column("preheader_text", sa.String(500), nullable=True),
         sa.Column("content_html", sa.Text(), nullable=True),
-        sa.Column("content_json", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+        sa.Column(
+            "content_json", postgresql.JSONB(astext_type=sa.Text()), nullable=True
+        ),
         sa.Column("thumbnail_url", sa.String(1000), nullable=True),
-        sa.Column("category", sa.String(20), nullable=False, server_default="promotional"),
-        sa.Column("is_active", sa.Boolean(), nullable=False, server_default=sa.text("true")),
+        sa.Column(
+            "category", sa.String(20), nullable=False, server_default="promotional"
+        ),
+        sa.Column(
+            "is_active", sa.Boolean(), nullable=False, server_default=sa.text("true")
+        ),
         sa.Column("created_by_user_id", sa.Integer(), nullable=True),
         sa.Column(
             "created_at",
@@ -52,7 +58,9 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id"),
         sa.ForeignKeyConstraint(["tenant_id"], ["tenants.id"], ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(["created_by_user_id"], ["users.id"], ondelete="SET NULL"),
+        sa.ForeignKeyConstraint(
+            ["created_by_user_id"], ["users.id"], ondelete="SET NULL"
+        ),
     )
     op.create_index("ix_nl_template_tenant", "newsletter_templates", ["tenant_id"])
     op.create_index("ix_nl_template_category", "newsletter_templates", ["category"])
@@ -68,7 +76,9 @@ def upgrade() -> None:
         sa.Column("subject", sa.String(500), nullable=False),
         sa.Column("preheader_text", sa.String(500), nullable=True),
         sa.Column("content_html", sa.Text(), nullable=True),
-        sa.Column("content_json", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+        sa.Column(
+            "content_json", postgresql.JSONB(astext_type=sa.Text()), nullable=True
+        ),
         sa.Column("template_id", sa.Integer(), nullable=True),
         sa.Column("status", sa.String(20), nullable=False, server_default="draft"),
         sa.Column("scheduled_at", sa.DateTime(timezone=True), nullable=True),
@@ -88,7 +98,9 @@ def upgrade() -> None:
         sa.Column("total_opened", sa.Integer(), nullable=False, server_default="0"),
         sa.Column("total_clicked", sa.Integer(), nullable=False, server_default="0"),
         sa.Column("total_bounced", sa.Integer(), nullable=False, server_default="0"),
-        sa.Column("total_unsubscribed", sa.Integer(), nullable=False, server_default="0"),
+        sa.Column(
+            "total_unsubscribed", sa.Integer(), nullable=False, server_default="0"
+        ),
         sa.Column("created_by_user_id", sa.Integer(), nullable=True),
         sa.Column(
             "created_at",
@@ -107,7 +119,9 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(
             ["template_id"], ["newsletter_templates.id"], ondelete="SET NULL"
         ),
-        sa.ForeignKeyConstraint(["created_by_user_id"], ["users.id"], ondelete="SET NULL"),
+        sa.ForeignKeyConstraint(
+            ["created_by_user_id"], ["users.id"], ondelete="SET NULL"
+        ),
     )
     op.create_index("ix_nl_campaign_tenant", "newsletter_campaigns", ["tenant_id"])
     op.create_index("ix_nl_campaign_status", "newsletter_campaigns", ["status"])

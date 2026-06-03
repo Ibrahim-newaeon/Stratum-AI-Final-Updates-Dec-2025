@@ -21,8 +21,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from app.models.cms import CMSRole, CMS_PERMISSIONS, has_permission
-
+from app.models.cms import CMS_PERMISSIONS, CMSRole, has_permission
 
 # =============================================================================
 # Fixtures
@@ -38,10 +37,12 @@ def all_cms_roles():
 @pytest.fixture
 def mock_request_with_cms_role():
     """Create a mock request with a cms_role in state."""
+
     def _factory(role_value):
         request = MagicMock()
         request.state.cms_role = role_value
         return request
+
     return _factory
 
 
@@ -90,18 +91,32 @@ class TestCMSPermissionsStructure:
             all_keys.update(role_perms.keys())
 
         # Verify we have a reasonable number of permissions
-        assert len(all_keys) >= 15, f"Expected at least 15 permission keys, got {len(all_keys)}"
+        assert (
+            len(all_keys) >= 15
+        ), f"Expected at least 15 permission keys, got {len(all_keys)}"
 
     def test_super_admin_has_all_standard_permissions(self):
         """Super admin permission dict should have all the standard keys."""
         super_admin_perms = CMS_PERMISSIONS[CMSRole.SUPER_ADMIN]
         standard_keys = [
-            "create_post", "edit_any_post", "delete_any_post",
-            "publish_post", "schedule_post", "submit_for_review",
-            "approve_post", "reject_post", "request_changes",
-            "view_all_posts", "manage_categories", "manage_tags",
-            "manage_authors", "manage_pages", "manage_users",
-            "view_analytics", "export_content", "bulk_operations",
+            "create_post",
+            "edit_any_post",
+            "delete_any_post",
+            "publish_post",
+            "schedule_post",
+            "submit_for_review",
+            "approve_post",
+            "reject_post",
+            "request_changes",
+            "view_all_posts",
+            "manage_categories",
+            "manage_tags",
+            "manage_authors",
+            "manage_pages",
+            "manage_users",
+            "view_analytics",
+            "export_content",
+            "bulk_operations",
             "access_settings",
         ]
         for key in standard_keys:
@@ -130,9 +145,9 @@ class TestHasPermission:
         super_admin_perms = CMS_PERMISSIONS[CMSRole.SUPER_ADMIN]
         for perm_name, expected in super_admin_perms.items():
             result = has_permission(CMSRole.SUPER_ADMIN, perm_name)
-            assert result is True, (
-                f"Super admin should have '{perm_name}' but has_permission returned False"
-            )
+            assert (
+                result is True
+            ), f"Super admin should have '{perm_name}' but has_permission returned False"
 
     def test_viewer_cannot_create_post(self):
         """Viewer should not have create_post permission."""
@@ -228,9 +243,9 @@ class TestFullPermissionMatrix:
         """Super admin should have ALL permissions set to True."""
         perms = CMS_PERMISSIONS[CMSRole.SUPER_ADMIN]
         for perm_name, expected_value in perms.items():
-            assert expected_value is True, (
-                f"Super admin should have '{perm_name}' = True, got False"
-            )
+            assert (
+                expected_value is True
+            ), f"Super admin should have '{perm_name}' = True, got False"
 
     def test_admin_permissions(self):
         """Admin should have all permissions except manage_users and access_settings."""
@@ -409,8 +424,14 @@ class TestCMSRoleEnum:
     def test_all_role_values(self):
         """CMSRole should have exactly 8 members with expected string values."""
         expected = {
-            "super_admin", "admin", "editor_in_chief", "editor",
-            "author", "contributor", "reviewer", "viewer",
+            "super_admin",
+            "admin",
+            "editor_in_chief",
+            "editor",
+            "author",
+            "contributor",
+            "reviewer",
+            "viewer",
         }
         actual = {role.value for role in CMSRole}
         assert actual == expected
@@ -557,9 +578,9 @@ class TestRoleHierarchy:
 
         for perm, value in admin_perms.items():
             if value is True:
-                assert super_perms.get(perm, False) is True, (
-                    f"Super admin should have '{perm}' since admin has it"
-                )
+                assert (
+                    super_perms.get(perm, False) is True
+                ), f"Super admin should have '{perm}' since admin has it"
 
     def test_admin_has_more_permissions_than_editor_in_chief(self):
         """Admin should have at least all permissions that editor-in-chief has."""
@@ -568,9 +589,9 @@ class TestRoleHierarchy:
 
         for perm, value in eic_perms.items():
             if value is True:
-                assert admin_perms.get(perm, False) is True, (
-                    f"Admin should have '{perm}' since editor-in-chief has it"
-                )
+                assert (
+                    admin_perms.get(perm, False) is True
+                ), f"Admin should have '{perm}' since editor-in-chief has it"
 
     def test_editor_in_chief_has_more_permissions_than_editor(self):
         """Editor-in-chief should have at least all permissions that editor has."""
@@ -579,9 +600,9 @@ class TestRoleHierarchy:
 
         for perm, value in editor_perms.items():
             if value is True:
-                assert eic_perms.get(perm, False) is True, (
-                    f"Editor-in-chief should have '{perm}' since editor has it"
-                )
+                assert (
+                    eic_perms.get(perm, False) is True
+                ), f"Editor-in-chief should have '{perm}' since editor has it"
 
     def test_viewer_has_fewest_permissions(self):
         """Viewer should have the fewest True permissions of any role."""

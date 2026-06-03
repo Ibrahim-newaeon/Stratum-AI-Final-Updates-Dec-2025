@@ -17,15 +17,15 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID
 
-from sqlalchemy import select, and_, or_, func
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.models.crm import (
+    AttributionModel,
     CRMContact,
     CRMDeal,
     Touchpoint,
-    AttributionModel,
 )
 
 logger = get_logger(__name__)
@@ -101,12 +101,14 @@ class IdentityMatcher:
     async def _get_unattributed_contacts(self) -> List[CRMContact]:
         """Get contacts that haven't been matched to touchpoints."""
         result = await self.db.execute(
-            select(CRMContact).where(
+            select(CRMContact)
+            .where(
                 and_(
                     CRMContact.tenant_id == self.tenant_id,
                     CRMContact.first_touch_campaign_id.is_(None),
                 )
-            ).limit(1000)  # Process in batches
+            )
+            .limit(1000)  # Process in batches
         )
         return result.scalars().all()
 
@@ -128,22 +130,30 @@ class IdentityMatcher:
 
         # Priority 1: Click IDs
         if contact.gclid:
-            touchpoints = await self._find_touchpoints_by_click_id("gclid", contact.gclid)
+            touchpoints = await self._find_touchpoints_by_click_id(
+                "gclid", contact.gclid
+            )
             if touchpoints:
                 match_signal = "gclid"
 
         if not touchpoints and contact.fbclid:
-            touchpoints = await self._find_touchpoints_by_click_id("fbclid", contact.fbclid)
+            touchpoints = await self._find_touchpoints_by_click_id(
+                "fbclid", contact.fbclid
+            )
             if touchpoints:
                 match_signal = "fbclid"
 
         if not touchpoints and contact.ttclid:
-            touchpoints = await self._find_touchpoints_by_click_id("ttclid", contact.ttclid)
+            touchpoints = await self._find_touchpoints_by_click_id(
+                "ttclid", contact.ttclid
+            )
             if touchpoints:
                 match_signal = "ttclid"
 
         if not touchpoints and contact.sclid:
-            touchpoints = await self._find_touchpoints_by_click_id("sclid", contact.sclid)
+            touchpoints = await self._find_touchpoints_by_click_id(
+                "sclid", contact.sclid
+            )
             if touchpoints:
                 match_signal = "sclid"
 
@@ -209,10 +219,14 @@ class IdentityMatcher:
             tp.contact_id = contact.id
             tp.touch_position = i + 1
             tp.total_touches = len(touchpoints)
-            tp.is_first_touch = (i == 0)
-            tp.is_last_touch = (i == len(touchpoints) - 1)
+            tp.is_first_touch = i == 0
+            tp.is_last_touch = i == len(touchpoints) - 1
 
-        return {"matched": True, "signal": match_signal, "touch_count": len(touchpoints)}
+        return {
+            "matched": True,
+            "signal": match_signal,
+            "touch_count": len(touchpoints),
+        }
 
     async def _find_touchpoints_by_click_id(
         self,
@@ -222,12 +236,15 @@ class IdentityMatcher:
         """Find touchpoints by platform click ID."""
         column = getattr(Touchpoint, click_id_field)
         result = await self.db.execute(
-            select(Touchpoint).where(
+            select(Touchpoint)
+            .where(
                 and_(
                     Touchpoint.tenant_id == self.tenant_id,
                     column == click_id_value,
                 )
-            ).order_by(Touchpoint.event_ts).limit(1000)
+            )
+            .order_by(Touchpoint.event_ts)
+            .limit(1000)
         )
         return list(result.scalars().all())
 
@@ -244,17 +261,23 @@ class IdentityMatcher:
         if conversion_time:
             lookback_start = conversion_time - timedelta(days=self.lookback_days)
         else:
-            lookback_start = datetime.now(timezone.utc) - timedelta(days=self.lookback_days)
+            lookback_start = datetime.now(timezone.utc) - timedelta(
+                days=self.lookback_days
+            )
 
         result = await self.db.execute(
-            select(Touchpoint).where(
+            select(Touchpoint)
+            .where(
                 and_(
                     Touchpoint.tenant_id == self.tenant_id,
                     column == identity_value,
                     Touchpoint.event_ts >= lookback_start,
-                    Touchpoint.event_ts <= (conversion_time or datetime.now(timezone.utc)),
+                    Touchpoint.event_ts
+                    <= (conversion_time or datetime.now(timezone.utc)),
                 )
-            ).order_by(Touchpoint.event_ts).limit(1000)
+            )
+            .order_by(Touchpoint.event_ts)
+            .limit(1000)
         )
         return list(result.scalars().all())
 
@@ -294,7 +317,10 @@ class IdentityMatcher:
             conditions.append(Touchpoint.utm_medium == utm_medium)
 
         result = await self.db.execute(
-            select(Touchpoint).where(and_(*conditions)).order_by(Touchpoint.event_ts).limit(1000)
+            select(Touchpoint)
+            .where(and_(*conditions))
+            .order_by(Touchpoint.event_ts)
+            .limit(1000)
         )
         return list(result.scalars().all())
 
@@ -318,12 +344,15 @@ class IdentityMatcher:
 
         # Get contact's touchpoints
         result = await self.db.execute(
-            select(Touchpoint).where(
+            select(Touchpoint)
+            .where(
                 and_(
                     Touchpoint.contact_id == deal.contact_id,
                     Touchpoint.event_ts <= (deal.won_at or datetime.now(timezone.utc)),
                 )
-            ).order_by(Touchpoint.event_ts).limit(1000)
+            )
+            .order_by(Touchpoint.event_ts)
+            .limit(1000)
         )
         touchpoints = list(result.scalars().all())
 
@@ -363,10 +392,10 @@ class IdentityMatcher:
 
         elif model == AttributionModel.TIME_DECAY:
             # More recent touchpoints get more credit
-            total_weight = sum(2 ** i for i in range(len(touchpoints)))
+            total_weight = sum(2**i for i in range(len(touchpoints)))
             for i, tp in enumerate(touchpoints):
                 tp.is_converting_touch = True
-                tp.attribution_weight = (2 ** i) / total_weight
+                tp.attribution_weight = (2**i) / total_weight
             attributed_tp = touchpoints[-1]
 
         else:
@@ -447,7 +476,8 @@ class IdentityMatcher:
         """
         # Get attributed won deals in date range
         result = await self.db.execute(
-            select(CRMDeal).where(
+            select(CRMDeal)
+            .where(
                 and_(
                     CRMDeal.tenant_id == self.tenant_id,
                     CRMDeal.is_won == True,
@@ -455,7 +485,8 @@ class IdentityMatcher:
                     CRMDeal.won_at <= end_date,
                     CRMDeal.attributed_campaign_id.isnot(None),
                 )
-            ).limit(1000)
+            )
+            .limit(1000)
         )
         deals = list(result.scalars().all())
 
@@ -495,6 +526,7 @@ class IdentityMatcher:
 # =============================================================================
 # Utility Functions
 # =============================================================================
+
 
 async def create_touchpoint_from_click(
     db: AsyncSession,

@@ -11,14 +11,15 @@ Provides:
 - User-friendly explanations for non-technical users
 """
 
+import json
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple, Union
 from pathlib import Path
-import json
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import joblib
 import numpy as np
 import pandas as pd
-import joblib
 
 from app.core.logging import get_logger
 
@@ -27,15 +28,19 @@ logger = get_logger(__name__)
 # Try to import SHAP - it's optional
 try:
     import shap
+
     SHAP_AVAILABLE = True
 except ImportError:
     SHAP_AVAILABLE = False
-    logger.warning("SHAP not installed. Explainability features will use fallback methods.")
+    logger.warning(
+        "SHAP not installed. Explainability features will use fallback methods."
+    )
 
 
 @dataclass
 class FeatureContribution:
     """Contribution of a single feature to a prediction."""
+
     feature_name: str
     feature_value: Any
     contribution: float  # SHAP value (positive = increases prediction)
@@ -47,6 +52,7 @@ class FeatureContribution:
 @dataclass
 class PredictionExplanation:
     """Complete explanation for a single prediction."""
+
     prediction_id: str
     model_name: str
     predicted_value: float
@@ -69,6 +75,7 @@ class PredictionExplanation:
 @dataclass
 class GlobalExplanation:
     """Global explanation across many predictions."""
+
     model_name: str
     num_samples: int
 
@@ -139,7 +146,9 @@ class ModelExplainer:
                     metadata = json.load(f)
                     self.feature_names = metadata.get("features", [])
 
-            logger.info(f"Loaded model {self.model_name} with {len(self.feature_names)} features")
+            logger.info(
+                f"Loaded model {self.model_name} with {len(self.feature_names)} features"
+            )
 
         except (OSError, ValueError, TypeError, KeyError, RuntimeError) as e:
             logger.error(f"Error loading model {self.model_name}: {e}")
@@ -153,15 +162,21 @@ class ModelExplainer:
             # Use TreeExplainer for tree-based models, KernelExplainer otherwise
             model_type = type(self.model).__name__
 
-            if "Gradient" in model_type or "Forest" in model_type or "Tree" in model_type:
+            if (
+                "Gradient" in model_type
+                or "Forest" in model_type
+                or "Tree" in model_type
+            ):
                 self.shap_explainer = shap.TreeExplainer(self.model)
             else:
                 # Use a sample of background data for KernelExplainer
                 background = shap.sample(X_background, min(100, len(X_background)))
-                self.shap_explainer = shap.KernelExplainer(self.model.predict, background)
+                self.shap_explainer = shap.KernelExplainer(
+                    self.model.predict, background
+                )
 
             # Calculate base value
-            if hasattr(self.shap_explainer, 'expected_value'):
+            if hasattr(self.shap_explainer, "expected_value"):
                 ev = self.shap_explainer.expected_value
                 self.base_value = float(ev) if np.isscalar(ev) else float(ev[0])
 
@@ -204,7 +219,9 @@ class ModelExplainer:
         contributions = self._calculate_contributions(X, features)
 
         # Sort by absolute contribution
-        sorted_contribs = sorted(contributions, key=lambda x: abs(x.contribution), reverse=True)
+        sorted_contribs = sorted(
+            contributions, key=lambda x: abs(x.contribution), reverse=True
+        )
 
         # Split into positive and negative
         positive = [c for c in sorted_contribs if c.contribution > 0][:top_k]
@@ -272,14 +289,22 @@ class ModelExplainer:
                     contrib = float(shap_values[i])
                     pct = (abs(contrib) / total_impact * 100) if total_impact > 0 else 0
 
-                    contributions.append(FeatureContribution(
-                        feature_name=name,
-                        feature_value=value,
-                        contribution=contrib,
-                        contribution_percent=round(pct, 1),
-                        direction="positive" if contrib > 0.01 else "negative" if contrib < -0.01 else "neutral",
-                        human_explanation=self._explain_feature(name, value, contrib),
-                    ))
+                    contributions.append(
+                        FeatureContribution(
+                            feature_name=name,
+                            feature_value=value,
+                            contribution=contrib,
+                            contribution_percent=round(pct, 1),
+                            direction=(
+                                "positive"
+                                if contrib > 0.01
+                                else "negative" if contrib < -0.01 else "neutral"
+                            ),
+                            human_explanation=self._explain_feature(
+                                name, value, contrib
+                            ),
+                        )
+                    )
 
             except (ValueError, TypeError, RuntimeError) as e:
                 logger.warning(f"SHAP calculation failed, using fallback: {e}")
@@ -289,13 +314,15 @@ class ModelExplainer:
 
         return contributions
 
-    def _fallback_contributions(self, features: Dict[str, Any]) -> List[FeatureContribution]:
+    def _fallback_contributions(
+        self, features: Dict[str, Any]
+    ) -> List[FeatureContribution]:
         """Fallback contribution calculation when SHAP is unavailable."""
         contributions = []
 
         # Use feature importance from model if available
         importances = {}
-        if hasattr(self.model, 'feature_importances_'):
+        if hasattr(self.model, "feature_importances_"):
             for i, name in enumerate(self.feature_names):
                 if i < len(self.model.feature_importances_):
                     importances[name] = self.model.feature_importances_[i]
@@ -320,14 +347,16 @@ class ModelExplainer:
 
             pct = (importance / total_importance * 100) if total_importance > 0 else 0
 
-            contributions.append(FeatureContribution(
-                feature_name=name,
-                feature_value=value,
-                contribution=contrib,
-                contribution_percent=round(pct, 1),
-                direction=direction,
-                human_explanation=self._explain_feature(name, value, contrib),
-            ))
+            contributions.append(
+                FeatureContribution(
+                    feature_name=name,
+                    feature_value=value,
+                    contribution=contrib,
+                    contribution_percent=round(pct, 1),
+                    direction=direction,
+                    human_explanation=self._explain_feature(name, value, contrib),
+                )
+            )
 
         return contributions
 
@@ -344,11 +373,27 @@ class ModelExplainer:
             "cpm": f"CPM of ${value:.2f} {impact} {direction} predicted ROAS",
             "log_spend": f"Spend level {impact} {direction} predicted ROAS",
             "roas_7d_avg": f"7-day average ROAS of {value:.2f} {impact} {direction} prediction",
-            "creative_video": f"Video creative {impact} {direction} predicted ROAS" if value else "Non-video creative",
-            "audience_retargeting": f"Retargeting audience {impact} {direction} predicted ROAS" if value else "Non-retargeting audience",
-            "platform_meta": f"Meta platform {impact} {direction} predicted ROAS" if value else "",
-            "platform_google": f"Google platform {impact} {direction} predicted ROAS" if value else "",
-            "is_weekend": f"Weekend timing {impact} {direction} predicted ROAS" if value else "Weekday timing",
+            "creative_video": (
+                f"Video creative {impact} {direction} predicted ROAS"
+                if value
+                else "Non-video creative"
+            ),
+            "audience_retargeting": (
+                f"Retargeting audience {impact} {direction} predicted ROAS"
+                if value
+                else "Non-retargeting audience"
+            ),
+            "platform_meta": (
+                f"Meta platform {impact} {direction} predicted ROAS" if value else ""
+            ),
+            "platform_google": (
+                f"Google platform {impact} {direction} predicted ROAS" if value else ""
+            ),
+            "is_weekend": (
+                f"Weekend timing {impact} {direction} predicted ROAS"
+                if value
+                else "Weekday timing"
+            ),
         }
 
         # Check for partial matches
@@ -362,7 +407,11 @@ class ModelExplainer:
     def _calculate_confidence(self, features: Dict[str, Any]) -> float:
         """Calculate confidence score based on feature coverage and values."""
         # Check how many expected features are present
-        present = sum(1 for name in self.feature_names if name in features and features[name] is not None)
+        present = sum(
+            1
+            for name in self.feature_names
+            if name in features and features[name] is not None
+        )
         coverage = present / len(self.feature_names) if self.feature_names else 0
 
         # Check for extreme values
@@ -410,11 +459,15 @@ class ModelExplainer:
 
         if positive:
             factors = [c.feature_name for c in positive[:3]]
-            lines.append(f"Key factors driving this prediction higher: {', '.join(self._friendly_name(f) for f in factors)}.")
+            lines.append(
+                f"Key factors driving this prediction higher: {', '.join(self._friendly_name(f) for f in factors)}."
+            )
 
         if negative:
             factors = [c.feature_name for c in negative[:3]]
-            lines.append(f"Factors limiting the prediction: {', '.join(self._friendly_name(f) for f in factors)}.")
+            lines.append(
+                f"Factors limiting the prediction: {', '.join(self._friendly_name(f) for f in factors)}."
+            )
 
         # Add specific insights
         for c in contributions[:5]:
@@ -520,7 +573,7 @@ class ModelExplainer:
         """Fallback feature importance from model."""
         importance = {}
 
-        if hasattr(self.model, 'feature_importances_'):
+        if hasattr(self.model, "feature_importances_"):
             for i, name in enumerate(self.feature_names):
                 if i < len(self.model.feature_importances_):
                     importance[name] = float(self.model.feature_importances_[i])
@@ -541,7 +594,7 @@ class ModelExplainer:
 
         interactions = []
         for i, (name1, imp1) in enumerate(ranked):
-            for name2, imp2 in ranked[i+1:i+3]:
+            for name2, imp2 in ranked[i + 1 : i + 3]:
                 # Estimate interaction as product of importances
                 strength = (imp1 * imp2) ** 0.5
                 interactions.append((name1, name2, round(strength, 4)))
@@ -569,6 +622,7 @@ class ModelExplainer:
 # =============================================================================
 # Convenience Functions
 # =============================================================================
+
 
 def explain_roas_prediction(
     features: Dict[str, Any],
@@ -633,9 +687,11 @@ def get_model_feature_importance(
 # Advanced Explainability Features (P2 Enhancement)
 # =============================================================================
 
+
 @dataclass
 class CounterfactualExplanation:
     """What-if scenario explanation."""
+
     original_prediction: float
     counterfactual_prediction: float
     changed_features: Dict[str, Tuple[Any, Any]]  # feature -> (original, new)
@@ -647,6 +703,7 @@ class CounterfactualExplanation:
 @dataclass
 class ModelDriftAlert:
     """Alert for model drift detection."""
+
     alert_id: str
     model_name: str
     drift_type: str  # data_drift, concept_drift, performance_drift
@@ -660,6 +717,7 @@ class ModelDriftAlert:
 @dataclass
 class FeatureInteraction:
     """Interaction between two features."""
+
     feature_1: str
     feature_2: str
     interaction_strength: float
@@ -707,8 +765,13 @@ class CounterfactualExplainer:
 
         # Priority features for marketing optimization
         feature_priority = [
-            "spend", "ctr", "conversion_rate", "avg_order_value",
-            "impressions", "clicks", "audience_size"
+            "spend",
+            "ctr",
+            "conversion_rate",
+            "avg_order_value",
+            "impressions",
+            "clicks",
+            "audience_size",
         ]
 
         for feature in feature_priority:
@@ -716,7 +779,9 @@ class CounterfactualExplainer:
                 continue
 
             original_value = original_features[feature]
-            min_val, max_val = self._feature_ranges.get(feature, (0, original_value * 2))
+            min_val, max_val = self._feature_ranges.get(
+                feature, (0, original_value * 2)
+            )
 
             # Calculate potential change
             if direction > 0:
@@ -728,11 +793,18 @@ class CounterfactualExplainer:
                 changed_features[feature] = (original_value, new_value)
 
             # Check if we've reached target (simplified)
-            estimated_impact = abs(new_value - original_value) / max(original_value, 0.01) * 0.1
-            current_prediction += direction * estimated_impact * abs(target_prediction - original_prediction)
+            estimated_impact = (
+                abs(new_value - original_value) / max(original_value, 0.01) * 0.1
+            )
+            current_prediction += (
+                direction
+                * estimated_impact
+                * abs(target_prediction - original_prediction)
+            )
 
-            if (direction > 0 and current_prediction >= target_prediction) or \
-               (direction < 0 and current_prediction <= target_prediction):
+            if (direction > 0 and current_prediction >= target_prediction) or (
+                direction < 0 and current_prediction <= target_prediction
+            ):
                 break
 
         # Calculate feasibility
@@ -859,34 +931,40 @@ class ModelDriftDetector:
 
         if drifted_features:
             severity = "high" if len(drifted_features) > 3 else "medium"
-            alerts.append(ModelDriftAlert(
-                alert_id=f"data_drift_{model_name}_{now.timestamp()}",
-                model_name=model_name,
-                drift_type="data_drift",
-                severity=severity,
-                detected_at=now,
-                affected_features=drifted_features,
-                drift_magnitude=len(drifted_features) / len(current_features),
-                recommended_action="Review feature pipelines and retrain model if drift persists",
-            ))
+            alerts.append(
+                ModelDriftAlert(
+                    alert_id=f"data_drift_{model_name}_{now.timestamp()}",
+                    model_name=model_name,
+                    drift_type="data_drift",
+                    severity=severity,
+                    detected_at=now,
+                    affected_features=drifted_features,
+                    drift_magnitude=len(drifted_features) / len(current_features),
+                    recommended_action="Review feature pipelines and retrain model if drift persists",
+                )
+            )
 
         # Check performance drift
         if current_performance is not None and self._performance_history:
-            baseline_perf = statistics.mean([p for _, p in self._performance_history[-100:]])
+            baseline_perf = statistics.mean(
+                [p for _, p in self._performance_history[-100:]]
+            )
             perf_drop = baseline_perf - current_performance
 
             if perf_drop > 0.1:  # 10% drop
                 severity = "critical" if perf_drop > 0.2 else "high"
-                alerts.append(ModelDriftAlert(
-                    alert_id=f"perf_drift_{model_name}_{now.timestamp()}",
-                    model_name=model_name,
-                    drift_type="performance_drift",
-                    severity=severity,
-                    detected_at=now,
-                    affected_features=[],
-                    drift_magnitude=perf_drop,
-                    recommended_action="Immediate model retraining recommended",
-                ))
+                alerts.append(
+                    ModelDriftAlert(
+                        alert_id=f"perf_drift_{model_name}_{now.timestamp()}",
+                        model_name=model_name,
+                        drift_type="performance_drift",
+                        severity=severity,
+                        detected_at=now,
+                        affected_features=[],
+                        drift_magnitude=perf_drop,
+                        recommended_action="Immediate model retraining recommended",
+                    )
+                )
 
         self._alerts.extend(alerts)
         return alerts
@@ -895,7 +973,8 @@ class ModelDriftDetector:
         """Get drift summary for a model."""
         cutoff = datetime.now(timezone.utc) - timedelta(days=days)
         recent_alerts = [
-            a for a in self._alerts
+            a
+            for a in self._alerts
             if a.model_name == model_name and a.detected_at > cutoff
         ]
 
@@ -903,8 +982,12 @@ class ModelDriftDetector:
             "model_name": model_name,
             "period_days": days,
             "total_alerts": len(recent_alerts),
-            "data_drift_alerts": sum(1 for a in recent_alerts if a.drift_type == "data_drift"),
-            "performance_drift_alerts": sum(1 for a in recent_alerts if a.drift_type == "performance_drift"),
+            "data_drift_alerts": sum(
+                1 for a in recent_alerts if a.drift_type == "data_drift"
+            ),
+            "performance_drift_alerts": sum(
+                1 for a in recent_alerts if a.drift_type == "performance_drift"
+            ),
             "most_affected_features": self._get_most_affected_features(recent_alerts),
             "status": "healthy" if not recent_alerts else "needs_attention",
         }
@@ -1014,7 +1097,9 @@ class FeatureInteractionAnalyzer:
             return f"When {f1} increases, {f2} tends to increase as well. Optimizing both together may yield better results."
         elif interaction_type == "antagonistic":
             return f"{f1} and {f2} tend to move in opposite directions. Focus on one at a time for optimization."
-        return f"{f1} and {f2} appear to be independent. They can be optimized separately."
+        return (
+            f"{f1} and {f2} appear to be independent. They can be optimized separately."
+        )
 
     def get_top_interactions(
         self,
@@ -1026,7 +1111,7 @@ class FeatureInteractionAnalyzer:
         interactions = []
 
         for i, f1 in enumerate(features):
-            for f2 in features[i+1:]:
+            for f2 in features[i + 1 :]:
                 interaction = self.analyze_interaction(f1, f2, data)
                 interactions.append(interaction)
 

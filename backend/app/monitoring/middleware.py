@@ -23,6 +23,7 @@ from starlette.responses import Response
 @dataclass
 class EndpointMemoryStats:
     """Aggregated memory stats for a single endpoint."""
+
     path: str
     method: str
     call_count: int = 0
@@ -50,9 +51,7 @@ class EndpointMemoryStats:
         if duration_ms > self.max_duration_ms:
             self.max_duration_ms = duration_ms
 
-        self.avg_rss_delta_kb = round(
-            self.total_rss_delta_kb / self.call_count, 2
-        )
+        self.avg_rss_delta_kb = round(self.total_rss_delta_kb / self.call_count, 2)
 
         # Keep last 50 deltas for trend
         self.recent_deltas.append(rss_delta_kb)
@@ -66,15 +65,17 @@ class EndpointMemoryStats:
             "call_count": self.call_count,
             "avg_rss_delta_kb": self.avg_rss_delta_kb,
             "max_rss_delta_kb": self.max_rss_delta_kb,
-            "min_rss_delta_kb": round(self.min_rss_delta_kb, 2)
-            if self.min_rss_delta_kb != float("inf")
-            else 0.0,
+            "min_rss_delta_kb": (
+                round(self.min_rss_delta_kb, 2)
+                if self.min_rss_delta_kb != float("inf")
+                else 0.0
+            ),
             "total_rss_delta_kb": round(self.total_rss_delta_kb, 2),
-            "avg_duration_ms": round(
-                self.total_duration_ms / self.call_count, 2
-            )
-            if self.call_count > 0
-            else 0.0,
+            "avg_duration_ms": (
+                round(self.total_duration_ms / self.call_count, 2)
+                if self.call_count > 0
+                else 0.0
+            ),
             "max_duration_ms": round(self.max_duration_ms, 2),
             "last_rss_delta_kb": self.last_rss_delta_kb,
             "trend": self._calculate_trend(),
@@ -148,13 +149,15 @@ class MemoryProfilingMiddleware(BaseHTTPMiddleware):
         self._endpoint_stats[key].record(rss_delta_kb, duration_ms)
 
         # Add to recent request log
-        self._request_log.append({
-            "path": normalized,
-            "method": method,
-            "status": response.status_code,
-            "rss_delta_kb": rss_delta_kb,
-            "duration_ms": round(duration_ms, 2),
-        })
+        self._request_log.append(
+            {
+                "path": normalized,
+                "method": method,
+                "status": response.status_code,
+                "rss_delta_kb": rss_delta_kb,
+                "duration_ms": round(duration_ms, 2),
+            }
+        )
         if len(self._request_log) > self._max_log_size:
             self._request_log.pop(0)
 
@@ -205,9 +208,7 @@ class MemoryProfilingMiddleware(BaseHTTPMiddleware):
 
     def get_summary(self) -> dict[str, Any]:
         """Get a summary of endpoint profiling data."""
-        total_requests = sum(
-            s.call_count for s in self._endpoint_stats.values()
-        )
+        total_requests = sum(s.call_count for s in self._endpoint_stats.values())
         total_endpoints = len(self._endpoint_stats)
         growing = self.get_growing_endpoints()
 

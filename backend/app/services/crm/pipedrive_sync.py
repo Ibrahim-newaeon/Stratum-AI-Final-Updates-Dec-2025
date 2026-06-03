@@ -344,16 +344,21 @@ class PipedriveSyncService:
         # Update profile revenue if deal is won
         if deal.get("status") == "won" and deal.get("value"):
             profile.total_purchases = (profile.total_purchases or 0) + 1
-            profile.total_revenue = (profile.total_revenue or 0) + float(deal.get("value", 0))
+            profile.total_revenue = (profile.total_revenue or 0) + float(
+                deal.get("value", 0)
+            )
             profile.lifecycle_stage = LifecycleStage.CUSTOMER.value
 
-    async def _find_profile_by_pipedrive_id(self, person_id: int) -> Optional[CDPProfile]:
+    async def _find_profile_by_pipedrive_id(
+        self, person_id: int
+    ) -> Optional[CDPProfile]:
         """Find CDP profile by Pipedrive person ID."""
         # Look for external ID identifier
         result = await self.db.execute(
             select(CDPProfileIdentifier).where(
                 CDPProfileIdentifier.tenant_id == self.tenant_id,
-                CDPProfileIdentifier.identifier_type == IdentifierType.EXTERNAL_ID.value,
+                CDPProfileIdentifier.identifier_type
+                == IdentifierType.EXTERNAL_ID.value,
                 CDPProfileIdentifier.identifier_hash == f"pipedrive:{person_id}",
             )
         )
@@ -385,8 +390,10 @@ class PipedriveSyncService:
             started_at=start_time,
             completed_at=datetime.now(UTC),
             duration_ms=duration_ms,
-            records_processed=results.get("persons_synced", 0) + results.get("deals_synced", 0),
-            records_created=results.get("persons_created", 0) + results.get("deals_created", 0),
+            records_processed=results.get("persons_synced", 0)
+            + results.get("deals_synced", 0),
+            records_created=results.get("persons_created", 0)
+            + results.get("deals_created", 0),
             records_updated=results.get("persons_updated", 0),
             records_failed=len(results.get("errors", [])),
             error_message=error,

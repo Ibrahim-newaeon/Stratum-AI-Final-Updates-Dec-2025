@@ -36,7 +36,11 @@ from app.core.config import settings
 
 # Memory debug endpoints are superadmin-only and disabled in production
 # unless explicitly enabled via ENABLE_MEMORY_DEBUG environment variable.
-_enable_in_prod = os.environ.get("ENABLE_MEMORY_DEBUG", "").lower() in ("true", "1", "yes")
+_enable_in_prod = os.environ.get("ENABLE_MEMORY_DEBUG", "").lower() in (
+    "true",
+    "1",
+    "yes",
+)
 if settings.is_production and not _enable_in_prod:
     router = APIRouter(
         prefix="/debug/memory",
@@ -62,6 +66,7 @@ if settings.is_production and not _enable_in_prod:
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Memory debug endpoints are disabled in production.",
         )
+
 else:
     router = APIRouter(
         prefix="/debug/memory",
@@ -100,6 +105,7 @@ def _require_auditor() -> Any:
 # Overview
 # -------------------------------------------------------------------------
 
+
 @router.get("")
 async def memory_overview() -> dict[str, Any]:
     """Get current memory overview with key metrics."""
@@ -134,6 +140,7 @@ async def memory_overview() -> dict[str, Any]:
 # Process Info
 # -------------------------------------------------------------------------
 
+
 @router.get("/process")
 async def process_info() -> dict[str, Any]:
     """Get detailed process and system memory info."""
@@ -162,6 +169,7 @@ async def process_info() -> dict[str, Any]:
 # -------------------------------------------------------------------------
 # Allocations
 # -------------------------------------------------------------------------
+
 
 @router.get("/allocations")
 async def top_allocations(
@@ -193,6 +201,7 @@ async def top_allocations(
 # Object Stats
 # -------------------------------------------------------------------------
 
+
 @router.get("/objects")
 async def object_stats(
     limit: int = Query(default=30, le=100),
@@ -204,8 +213,7 @@ async def object_stats(
 
     return {
         "object_types": [
-            {"type": s.type_name, "count": s.count, "size_kb": s.size_kb}
-            for s in stats
+            {"type": s.type_name, "count": s.count, "size_kb": s.size_kb} for s in stats
         ],
         "reference_cycles": cycles,
         "total_tracked_objects": sum(s.count for s in stats),
@@ -216,6 +224,7 @@ async def object_stats(
 # Endpoint Profiling
 # -------------------------------------------------------------------------
 
+
 @router.get("/endpoints")
 async def endpoint_memory_stats(
     sort_by: str = Query(default="avg_rss_delta_kb"),
@@ -223,7 +232,9 @@ async def endpoint_memory_stats(
 ) -> dict[str, Any]:
     """Get per-endpoint memory consumption stats."""
     if not _middleware:
-        raise HTTPException(status_code=503, detail="Endpoint profiling middleware not active.")
+        raise HTTPException(
+            status_code=503, detail="Endpoint profiling middleware not active."
+        )
 
     return {
         "summary": _middleware.get_summary(),
@@ -236,6 +247,7 @@ async def endpoint_memory_stats(
 # -------------------------------------------------------------------------
 # Celery Task Profiling
 # -------------------------------------------------------------------------
+
 
 @router.get("/tasks")
 async def task_memory_stats(
@@ -256,6 +268,7 @@ async def task_memory_stats(
 # -------------------------------------------------------------------------
 # GC Stats
 # -------------------------------------------------------------------------
+
 
 @router.get("/gc")
 async def gc_stats() -> dict[str, Any]:
@@ -280,6 +293,7 @@ async def force_gc() -> dict[str, Any]:
 # Timeline
 # -------------------------------------------------------------------------
 
+
 @router.get("/timeline")
 async def memory_timeline() -> dict[str, Any]:
     """Get memory timeline data for charting."""
@@ -293,6 +307,7 @@ async def memory_timeline() -> dict[str, Any]:
 # -------------------------------------------------------------------------
 # Snapshots & Diff
 # -------------------------------------------------------------------------
+
 
 @router.post("/snapshot")
 async def take_snapshot(
@@ -322,7 +337,7 @@ async def snapshot_diff() -> dict[str, Any]:
         raise HTTPException(
             status_code=400,
             detail=f"Need at least 2 snapshots. Currently have {len(auditor.snapshots)}. "
-                   "Use POST /debug/memory/snapshot to capture.",
+            "Use POST /debug/memory/snapshot to capture.",
         )
 
     return {
@@ -377,6 +392,7 @@ def _assess_diff(rss_delta_mb: float, duration_s: float) -> dict[str, Any]:
 # Full HTML Report
 # -------------------------------------------------------------------------
 
+
 @router.get("/report", response_class=HTMLResponse)
 async def memory_report() -> HTMLResponse:
     """Generate and serve the full HTML memory audit report with charts."""
@@ -396,6 +412,7 @@ async def memory_report() -> HTMLResponse:
         task_stats = _celery_hooks.get_task_stats(limit=20)
 
     from app.monitoring.visualizations import generate_html_report
+
     html = generate_html_report(
         audit_data=audit_data,
         endpoint_stats=endpoint_stats,
@@ -408,6 +425,7 @@ async def memory_report() -> HTMLResponse:
 # -------------------------------------------------------------------------
 # Full JSON Audit
 # -------------------------------------------------------------------------
+
 
 @router.get("/audit")
 async def full_audit() -> dict[str, Any]:
@@ -436,6 +454,7 @@ async def full_audit() -> dict[str, Any]:
 # -------------------------------------------------------------------------
 # Reset
 # -------------------------------------------------------------------------
+
 
 @router.post("/reset")
 async def reset_profiling() -> dict[str, str]:

@@ -100,7 +100,10 @@ def sample_event_data():
                 "event_name": "PageView",
                 "event_time": datetime.now(UTC).isoformat(),
                 "identifiers": [{"type": "anonymous_id", "value": "anon_test_123"}],
-                "properties": {"page_url": "/products/sofa", "page_title": "Milano Sofa"},
+                "properties": {
+                    "page_url": "/products/sofa",
+                    "page_title": "Milano Sofa",
+                },
             }
         ]
     }
@@ -119,7 +122,11 @@ def sample_purchase_event_data():
                     {"type": "email", "value": "customer@example.com"},
                     {"type": "anonymous_id", "value": "anon_purchase_456"},
                 ],
-                "properties": {"order_id": "ORD-12345", "total": 2499.00, "currency": "AED"},
+                "properties": {
+                    "order_id": "ORD-12345",
+                    "total": 2499.00,
+                    "currency": "AED",
+                },
                 "context": {
                     "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)",
                     "ip": "185.23.45.67",
@@ -183,7 +190,9 @@ class TestEventIngestion:
         sample_purchase_event_data: dict,
     ):
         """Test ingesting event with email identifier (PII)."""
-        response = await cdp_client.post("/api/v1/cdp/events", json=sample_purchase_event_data)
+        response = await cdp_client.post(
+            "/api/v1/cdp/events", json=sample_purchase_event_data
+        )
 
         assert response.status_code == 201
         data = response.json()
@@ -290,7 +299,9 @@ class TestEventIngestion:
                 {
                     "event_name": "SignUp",
                     "event_time": datetime.now(UTC).isoformat(),
-                    "identifiers": [{"type": "email", "value": f"newuser_{unique_id}@example.com"}],
+                    "identifiers": [
+                        {"type": "email", "value": f"newuser_{unique_id}@example.com"}
+                    ],
                 }
             ]
         }
@@ -327,7 +338,10 @@ class TestProfileLookup:
                     "event_name": "PageView",
                     "event_time": datetime.now(UTC).isoformat(),
                     "identifiers": [
-                        {"type": "anonymous_id", "value": f"anon_lookup_{uuid4().hex[:8]}"}
+                        {
+                            "type": "anonymous_id",
+                            "value": f"anon_lookup_{uuid4().hex[:8]}",
+                        }
                     ],
                 }
             ]
@@ -367,7 +381,8 @@ class TestProfileLookup:
 
         # Look up by email
         response = await cdp_client.get(
-            "/api/v1/cdp/profiles", params={"identifier_type": "email", "identifier_value": email}
+            "/api/v1/cdp/profiles",
+            params={"identifier_type": "email", "identifier_value": email},
         )
 
         assert response.status_code == 200
@@ -394,7 +409,10 @@ class TestProfileLookup:
         """Test looking up profile with unknown identifier value."""
         response = await cdp_client.get(
             "/api/v1/cdp/profiles",
-            params={"identifier_type": "email", "identifier_value": "nonexistent@nowhere.com"},
+            params={
+                "identifier_type": "email",
+                "identifier_value": "nonexistent@nowhere.com",
+            },
         )
 
         assert response.status_code == 404
@@ -577,7 +595,10 @@ class TestEMQScoreIntegration:
                     "event_name": "Purchase",
                     "event_time": datetime.now(UTC).isoformat(),
                     "identifiers": [
-                        {"type": "email", "value": f"emq_test_{uuid4().hex[:8]}@example.com"}
+                        {
+                            "type": "email",
+                            "value": f"emq_test_{uuid4().hex[:8]}@example.com",
+                        }
                     ],
                     "properties": {"order_id": "ORD-EMQ-TEST"},
                     "context": {
@@ -595,7 +616,9 @@ class TestEMQScoreIntegration:
         event_id = response.json()["results"][0]["event_id"]
 
         # Query the event to check EMQ score
-        result = await db_session.execute(select(CDPEvent).where(CDPEvent.id == event_id))
+        result = await db_session.execute(
+            select(CDPEvent).where(CDPEvent.id == event_id)
+        )
         event = result.scalar_one_or_none()
 
         # With email + properties + context, EMQ should be high (>= 80)
@@ -631,7 +654,9 @@ class TestEMQScoreIntegration:
         event_id = response.json()["results"][0]["event_id"]
 
         # Query the event to check EMQ score
-        result = await db_session.execute(select(CDPEvent).where(CDPEvent.id == event_id))
+        result = await db_session.execute(
+            select(CDPEvent).where(CDPEvent.id == event_id)
+        )
         event = result.scalar_one_or_none()
 
         # With only anonymous_id and no properties/context, EMQ should be lower
@@ -659,7 +684,10 @@ class TestProfileLifecycle:
                     "event_name": "PageView",
                     "event_time": datetime.now(UTC).isoformat(),
                     "identifiers": [
-                        {"type": "anonymous_id", "value": f"anon_lifecycle_{uuid4().hex[:8]}"}
+                        {
+                            "type": "anonymous_id",
+                            "value": f"anon_lifecycle_{uuid4().hex[:8]}",
+                        }
                     ],
                 }
             ]

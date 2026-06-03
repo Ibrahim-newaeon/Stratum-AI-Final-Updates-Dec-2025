@@ -79,9 +79,9 @@ def compute_cdp_segment(self, tenant_id: int, segment_id: str):
                 )
                 break
 
-            chunk = db.execute(
-                base_query.offset(offset).limit(CHUNK_SIZE)
-            ).scalars().all()
+            chunk = (
+                db.execute(base_query.offset(offset).limit(CHUNK_SIZE)).scalars().all()
+            )
 
             if not chunk:
                 break
@@ -193,10 +193,16 @@ def compute_all_cdp_segments(tenant_id: Optional[int] = None):
     with SyncSessionLocal() as db:
         if tenant_id:
             tenants = [
-                db.execute(select(Tenant).where(Tenant.id == tenant_id)).scalar_one_or_none()
+                db.execute(
+                    select(Tenant).where(Tenant.id == tenant_id)
+                ).scalar_one_or_none()
             ]
         else:
-            tenants = db.execute(select(Tenant).where(Tenant.is_deleted == False)).scalars().all()
+            tenants = (
+                db.execute(select(Tenant).where(Tenant.is_deleted == False))
+                .scalars()
+                .all()
+            )
 
         task_count = 0
         for tenant in tenants:
@@ -258,9 +264,9 @@ def compute_cdp_rfm(self, tenant_id: int, config: Optional[dict] = None):
         max_iterations = 10_000
 
         for _iter in range(max_iterations):
-            chunk = db.execute(
-                base_query.offset(offset).limit(CHUNK_SIZE)
-            ).scalars().all()
+            chunk = (
+                db.execute(base_query.offset(offset).limit(CHUNK_SIZE)).scalars().all()
+            )
 
             if not chunk:
                 break
@@ -345,9 +351,9 @@ def compute_cdp_traits(self, tenant_id: int, trait_id: Optional[str] = None):
         max_iterations = 10_000
 
         for _iter in range(max_iterations):
-            chunk = db.execute(
-                base_query.offset(offset).limit(CHUNK_SIZE)
-            ).scalars().all()
+            chunk = (
+                db.execute(base_query.offset(offset).limit(CHUNK_SIZE)).scalars().all()
+            )
 
             if not chunk:
                 break
@@ -360,7 +366,9 @@ def compute_cdp_traits(self, tenant_id: int, trait_id: Optional[str] = None):
                         profile.computed_traits[trait.name] = value
                         computed_count += 1
                     except (ValueError, TypeError, KeyError, AttributeError) as e:
-                        logger.error(f"Trait {trait.name} failed for profile {profile.id}: {e}")
+                        logger.error(
+                            f"Trait {trait.name} failed for profile {profile.id}: {e}"
+                        )
 
             offset += CHUNK_SIZE
             db.commit()
@@ -442,13 +450,17 @@ def compute_cdp_funnel(self, tenant_id: int, funnel_id: str):
             event_name = step.get("event_name") or step.get("name")
             if event_name:
                 from app.models.cdp import CDPEvent
-                count_result = db.execute(
-                    select(func.count(func.distinct(CDPEvent.profile_id))).where(
-                        CDPEvent.tenant_id == tenant_id,
-                        CDPEvent.event_name == event_name,
-                        CDPEvent.profile_id.isnot(None),
-                    )
-                ).scalar() or 0
+
+                count_result = (
+                    db.execute(
+                        select(func.count(func.distinct(CDPEvent.profile_id))).where(
+                            CDPEvent.tenant_id == tenant_id,
+                            CDPEvent.event_name == event_name,
+                            CDPEvent.profile_id.isnot(None),
+                        )
+                    ).scalar()
+                    or 0
+                )
                 count = count_result
             else:
                 count = 0
@@ -500,10 +512,16 @@ def compute_all_cdp_funnels(tenant_id: Optional[int] = None):
     with SyncSessionLocal() as db:
         if tenant_id:
             tenants = [
-                db.execute(select(Tenant).where(Tenant.id == tenant_id)).scalar_one_or_none()
+                db.execute(
+                    select(Tenant).where(Tenant.id == tenant_id)
+                ).scalar_one_or_none()
             ]
         else:
-            tenants = db.execute(select(Tenant).where(Tenant.is_deleted == False)).scalars().all()
+            tenants = (
+                db.execute(select(Tenant).where(Tenant.is_deleted == False))
+                .scalars()
+                .all()
+            )
 
         task_count = 0
         for tenant in tenants:

@@ -13,7 +13,14 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
-from app.models import Campaign, Rule, RuleExecution, RuleStatus, RuleOperator, RuleAction
+from app.models import (
+    Campaign,
+    Rule,
+    RuleAction,
+    RuleExecution,
+    RuleOperator,
+    RuleStatus,
+)
 
 logger = get_logger(__name__)
 
@@ -195,10 +202,22 @@ class RulesEngine:
         computed_fields = {
             "spend": lambda c: c.total_spend_cents / 100,
             "revenue": lambda c: c.revenue_cents / 100,
-            "cpc": lambda c: (c.total_spend_cents / c.clicks / 100) if c.clicks > 0 else None,
-            "cpm": lambda c: (c.total_spend_cents / c.impressions * 1000 / 100) if c.impressions > 0 else None,
-            "cpa": lambda c: (c.total_spend_cents / c.conversions / 100) if c.conversions > 0 else None,
-            "conversion_rate": lambda c: (c.conversions / c.clicks * 100) if c.clicks > 0 else None,
+            "cpc": lambda c: (
+                (c.total_spend_cents / c.clicks / 100) if c.clicks > 0 else None
+            ),
+            "cpm": lambda c: (
+                (c.total_spend_cents / c.impressions * 1000 / 100)
+                if c.impressions > 0
+                else None
+            ),
+            "cpa": lambda c: (
+                (c.total_spend_cents / c.conversions / 100)
+                if c.conversions > 0
+                else None
+            ),
+            "conversion_rate": lambda c: (
+                (c.conversions / c.clicks * 100) if c.clicks > 0 else None
+            ),
         }
 
         if field in computed_fields:
@@ -216,6 +235,7 @@ class RulesEngine:
             return value.lower() in ("true", "1", "yes")
         elif target_type == list:
             import json
+
             return json.loads(value) if value.startswith("[") else [value]
         return value
 
@@ -277,6 +297,7 @@ class RulesEngine:
 
         elif action == RuleAction.PAUSE_CAMPAIGN:
             from app.models import CampaignStatus
+
             campaign.status = CampaignStatus.PAUSED
             return {
                 "action": "pause_campaign",
@@ -339,7 +360,7 @@ class RulesEngine:
             - message: Custom message text (for text messages within 24hr window)
         """
         from app.models import WhatsAppContact, WhatsAppMessage, WhatsAppMessageStatus
-        from app.services.whatsapp_client import WhatsAppClient, WhatsAppAPIError
+        from app.services.whatsapp_client import WhatsAppAPIError, WhatsAppClient
 
         contact_ids = config.get("contact_ids", [])
         template_name = config.get("template_name", "rule_alert")
@@ -354,6 +375,7 @@ class RulesEngine:
 
         # Get opted-in contacts
         from sqlalchemy import select
+
         result = await self.db.execute(
             select(WhatsAppContact).where(
                 WhatsAppContact.id.in_(contact_ids),
@@ -409,7 +431,10 @@ class RulesEngine:
                                 "parameters": [
                                     {"type": "text", "text": rule.name},
                                     {"type": "text", "text": campaign.name},
-                                    {"type": "text", "text": f"{rule.condition_field} {rule.condition_operator.value} {rule.condition_value}"},
+                                    {
+                                        "type": "text",
+                                        "text": f"{rule.condition_field} {rule.condition_operator.value} {rule.condition_value}",
+                                    },
                                 ],
                             }
                         ],
@@ -428,11 +453,13 @@ class RulesEngine:
                     message.sent_at = datetime.now(timezone.utc)
 
                 sent_count += 1
-                results.append({
-                    "contact_id": contact.id,
-                    "phone": contact.phone_number,
-                    "status": "sent",
-                })
+                results.append(
+                    {
+                        "contact_id": contact.id,
+                        "phone": contact.phone_number,
+                        "status": "sent",
+                    }
+                )
 
                 logger.info(
                     "whatsapp_notification_sent",
@@ -446,12 +473,14 @@ class RulesEngine:
                 message.error_code = e.error_code
                 message.error_message = e.message
                 failed_count += 1
-                results.append({
-                    "contact_id": contact.id,
-                    "phone": contact.phone_number,
-                    "status": "failed",
-                    "error": e.message,
-                })
+                results.append(
+                    {
+                        "contact_id": contact.id,
+                        "phone": contact.phone_number,
+                        "status": "failed",
+                        "error": e.message,
+                    }
+                )
 
                 logger.warning(
                     "whatsapp_notification_failed",
@@ -468,12 +497,14 @@ class RulesEngine:
                     error=str(e),
                 )
                 failed_count += 1
-                results.append({
-                    "contact_id": contact.id,
-                    "phone": contact.phone_number,
-                    "status": "failed",
-                    "error": str(e),
-                })
+                results.append(
+                    {
+                        "contact_id": contact.id,
+                        "phone": contact.phone_number,
+                        "status": "failed",
+                        "error": str(e),
+                    }
+                )
 
         await self.db.commit()
 

@@ -13,13 +13,13 @@ This provides a mathematically sound way to attribute credit
 based on actual customer behavior patterns.
 """
 
+import math
 from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Set, Tuple
 from uuid import UUID
-import math
 
-from sqlalchemy import select, and_, func
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
@@ -44,7 +44,9 @@ class MarkovChainModel:
 
     def __init__(self):
         # Transition counts: {from_state: {to_state: count}}
-        self.transition_counts: Dict[str, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
+        self.transition_counts: Dict[str, Dict[str, int]] = defaultdict(
+            lambda: defaultdict(int)
+        )
         # Total transitions from each state
         self.state_totals: Dict[str, int] = defaultdict(int)
         # All observed channels
@@ -102,7 +104,9 @@ class MarkovChainModel:
         for from_state in all_states:
             matrix[from_state] = {}
             for to_state in all_states:
-                matrix[from_state][to_state] = self.get_transition_probability(from_state, to_state)
+                matrix[from_state][to_state] = self.get_transition_probability(
+                    from_state, to_state
+                )
 
         return matrix
 
@@ -119,7 +123,9 @@ class MarkovChainModel:
         Uses iterative method to solve the system of equations.
         """
         # Build list of transient states (channels + start)
-        transient_states = [STATE_START] + [c for c in self.channels if c != excluded_channel]
+        transient_states = [STATE_START] + [
+            c for c in self.channels if c != excluded_channel
+        ]
 
         # Initialize conversion probabilities
         conv_prob = {state: 0.0 for state in transient_states}
@@ -165,7 +171,9 @@ class MarkovChainModel:
         removal_effects = {}
         for channel in self.channels:
             # Conversion probability without this channel
-            prob_without = self.calculate_conversion_probability(excluded_channel=channel)
+            prob_without = self.calculate_conversion_probability(
+                excluded_channel=channel
+            )
             # Removal effect
             effect = (baseline - prob_without) / baseline
             removal_effects[channel] = max(0.0, effect)  # Ensure non-negative
@@ -199,7 +207,8 @@ class MarkovChainModel:
             "non_converting_journeys": self.non_converting_journeys,
             "conversion_rate": (
                 self.converting_journeys / self.journey_count
-                if self.journey_count > 0 else 0
+                if self.journey_count > 0
+                else 0
             ),
             "unique_channels": len(self.channels),
             "channels": list(self.channels),
@@ -224,7 +233,10 @@ class MarkovChainModel:
         model = cls()
         model.transition_counts = defaultdict(
             lambda: defaultdict(int),
-            {k: defaultdict(int, v) for k, v in data.get("transition_counts", {}).items()}
+            {
+                k: defaultdict(int, v)
+                for k, v in data.get("transition_counts", {}).items()
+            },
         )
         model.state_totals = defaultdict(int, data.get("state_totals", {}))
         model.channels = set(data.get("channels", []))
@@ -381,14 +393,16 @@ class MarkovAttributionService:
             channel = tp.source or "unknown"
             weight = weights.get(channel, 0.0)
 
-            breakdown.append({
-                "touchpoint_id": str(tp.id),
-                "channel": channel,
-                "campaign_id": tp.campaign_id,
-                "event_ts": tp.event_ts.isoformat(),
-                "weight": round(weight, 4),
-                "attributed_revenue": round(revenue * weight, 2),
-            })
+            breakdown.append(
+                {
+                    "touchpoint_id": str(tp.id),
+                    "channel": channel,
+                    "campaign_id": tp.campaign_id,
+                    "event_ts": tp.event_ts.isoformat(),
+                    "weight": round(weight, 4),
+                    "attributed_revenue": round(revenue * weight, 2),
+                }
+            )
 
         return {
             "success": True,

@@ -18,7 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.logging import get_logger
-from app.core.security import encrypt_pii, decrypt_pii
+from app.core.security import decrypt_pii, encrypt_pii
 from app.models.crm import (
     CRMConnection,
     CRMConnectionStatus,
@@ -76,7 +76,9 @@ class HubSpotClient:
     # OAuth Flow
     # =========================================================================
 
-    def get_authorization_url(self, redirect_uri: str, state: Optional[str] = None) -> str:
+    def get_authorization_url(
+        self, redirect_uri: str, state: Optional[str] = None
+    ) -> str:
         """
         Generate HubSpot OAuth authorization URL.
 
@@ -268,7 +270,11 @@ class HubSpotClient:
                     return None
                 await self.db.refresh(connection)
 
-        return decrypt_pii(connection.access_token_enc) if connection.access_token_enc else None
+        return (
+            decrypt_pii(connection.access_token_enc)
+            if connection.access_token_enc
+            else None
+        )
 
     async def api_request(
         self,
@@ -362,11 +368,21 @@ class HubSpotClient:
         """
         if properties is None:
             properties = [
-                "email", "phone", "firstname", "lastname",
-                "lifecyclestage", "hs_lead_status",
-                "utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term",
-                "hs_analytics_source", "hs_analytics_first_url",
-                "gclid", "hs_google_click_id",
+                "email",
+                "phone",
+                "firstname",
+                "lastname",
+                "lifecyclestage",
+                "hs_lead_status",
+                "utm_source",
+                "utm_medium",
+                "utm_campaign",
+                "utm_content",
+                "utm_term",
+                "hs_analytics_source",
+                "hs_analytics_first_url",
+                "gclid",
+                "hs_google_click_id",
             ]
 
         params = {
@@ -380,11 +396,13 @@ class HubSpotClient:
         # Use search API for filtering by updated date
         if updated_after:
             return await self.search_contacts(
-                filters=[{
-                    "propertyName": "lastmodifieddate",
-                    "operator": "GTE",
-                    "value": int(updated_after.timestamp() * 1000),
-                }],
+                filters=[
+                    {
+                        "propertyName": "lastmodifieddate",
+                        "operator": "GTE",
+                        "value": int(updated_after.timestamp() * 1000),
+                    }
+                ],
                 properties=properties,
                 limit=limit,
                 after=after,
@@ -414,17 +432,25 @@ class HubSpotClient:
         if after:
             body["after"] = after
 
-        return await self.api_request("POST", "/crm/v3/objects/contacts/search", json_data=body)
+        return await self.api_request(
+            "POST", "/crm/v3/objects/contacts/search", json_data=body
+        )
 
-    async def get_contact(self, contact_id: str, properties: Optional[List[str]] = None) -> Optional[Dict[str, Any]]:
+    async def get_contact(
+        self, contact_id: str, properties: Optional[List[str]] = None
+    ) -> Optional[Dict[str, Any]]:
         """Get a single contact by ID."""
         params = {}
         if properties:
             params["properties"] = ",".join(properties)
 
-        return await self.api_request("GET", f"/crm/v3/objects/contacts/{contact_id}", params=params)
+        return await self.api_request(
+            "GET", f"/crm/v3/objects/contacts/{contact_id}", params=params
+        )
 
-    async def update_contact(self, contact_id: str, properties: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    async def update_contact(
+        self, contact_id: str, properties: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
         """Update contact properties (for writeback)."""
         return await self.api_request(
             "PATCH",
@@ -448,9 +474,15 @@ class HubSpotClient:
         """
         if properties is None:
             properties = [
-                "dealname", "amount", "dealstage", "pipeline",
-                "closedate", "hs_is_closed_won", "hs_is_closed",
-                "hubspot_owner_id", "hs_analytics_source",
+                "dealname",
+                "amount",
+                "dealstage",
+                "pipeline",
+                "closedate",
+                "hs_is_closed_won",
+                "hs_is_closed",
+                "hubspot_owner_id",
+                "hs_analytics_source",
             ]
 
         params = {
@@ -463,11 +495,13 @@ class HubSpotClient:
 
         if updated_after:
             return await self.search_deals(
-                filters=[{
-                    "propertyName": "hs_lastmodifieddate",
-                    "operator": "GTE",
-                    "value": int(updated_after.timestamp() * 1000),
-                }],
+                filters=[
+                    {
+                        "propertyName": "hs_lastmodifieddate",
+                        "operator": "GTE",
+                        "value": int(updated_after.timestamp() * 1000),
+                    }
+                ],
                 properties=properties,
                 limit=limit,
                 after=after,
@@ -495,24 +529,34 @@ class HubSpotClient:
         if after:
             body["after"] = after
 
-        return await self.api_request("POST", "/crm/v3/objects/deals/search", json_data=body)
+        return await self.api_request(
+            "POST", "/crm/v3/objects/deals/search", json_data=body
+        )
 
-    async def get_deal(self, deal_id: str, properties: Optional[List[str]] = None) -> Optional[Dict[str, Any]]:
+    async def get_deal(
+        self, deal_id: str, properties: Optional[List[str]] = None
+    ) -> Optional[Dict[str, Any]]:
         """Get a single deal by ID."""
         params = {}
         if properties:
             params["properties"] = ",".join(properties)
 
-        return await self.api_request("GET", f"/crm/v3/objects/deals/{deal_id}", params=params)
+        return await self.api_request(
+            "GET", f"/crm/v3/objects/deals/{deal_id}", params=params
+        )
 
-    async def get_deal_associations(self, deal_id: str, to_object_type: str = "contacts") -> Optional[Dict[str, Any]]:
+    async def get_deal_associations(
+        self, deal_id: str, to_object_type: str = "contacts"
+    ) -> Optional[Dict[str, Any]]:
         """Get deal associations (e.g., linked contacts)."""
         return await self.api_request(
             "GET",
             f"/crm/v3/objects/deals/{deal_id}/associations/{to_object_type}",
         )
 
-    async def update_deal(self, deal_id: str, properties: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    async def update_deal(
+        self, deal_id: str, properties: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
         """Update deal properties (for writeback)."""
         return await self.api_request(
             "PATCH",
@@ -545,7 +589,7 @@ class HubSpotClient:
         errors = []
 
         for i in range(0, len(updates), 100):
-            batch = updates[i:i + 100]
+            batch = updates[i : i + 100]
             response = await self.api_request(
                 "POST",
                 "/crm/v3/objects/contacts/batch/update",
@@ -580,7 +624,7 @@ class HubSpotClient:
         errors = []
 
         for i in range(0, len(updates), 100):
-            batch = updates[i:i + 100]
+            batch = updates[i : i + 100]
             response = await self.api_request(
                 "POST",
                 "/crm/v3/objects/deals/batch/update",
@@ -801,7 +845,9 @@ class HubSpotClient:
             "provider": "hubspot",
             "account_id": connection.provider_account_id,
             "account_name": connection.provider_account_name,
-            "last_sync_at": connection.last_sync_at.isoformat() if connection.last_sync_at else None,
+            "last_sync_at": (
+                connection.last_sync_at.isoformat() if connection.last_sync_at else None
+            ),
             "last_sync_status": connection.last_sync_status,
             "scopes": connection.scopes.split() if connection.scopes else [],
         }
@@ -810,6 +856,7 @@ class HubSpotClient:
 # =============================================================================
 # Helper Functions
 # =============================================================================
+
 
 def hash_email(email: str) -> str:
     """Hash email for privacy-safe identity matching."""

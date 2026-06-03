@@ -14,12 +14,13 @@ Interpretation:
 """
 
 from typing import Optional
+
 from app.analytics.logic.types import (
-    EntityMetrics,
     BaselineMetrics,
-    ScoringParams,
-    ScalingScoreResult,
+    EntityMetrics,
     ScalingAction,
+    ScalingScoreResult,
+    ScoringParams,
 )
 
 
@@ -119,11 +120,15 @@ def scaling_score(
         recommendations.append(f"ROAS improved {d_roas*100:.1f}% vs baseline")
     elif action == ScalingAction.FIX:
         if d_roas < -0.2:
-            recommendations.append(f"ROAS dropped {abs(d_roas)*100:.1f}% - review targeting")
+            recommendations.append(
+                f"ROAS dropped {abs(d_roas)*100:.1f}% - review targeting"
+            )
         if d_cpa > 0.2:
             recommendations.append(f"CPA increased {d_cpa*100:.1f}% - optimize bidding")
         if emq_penalty > 0.3:
-            recommendations.append(f"EMQ score low ({today.emq_score}) - check event tracking")
+            recommendations.append(
+                f"EMQ score low ({today.emq_score}) - check event tracking"
+            )
     else:
         recommendations.append("Performance stable - continue monitoring")
 

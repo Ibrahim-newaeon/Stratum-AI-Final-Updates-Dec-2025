@@ -15,14 +15,14 @@ Handles:
 import asyncio
 import json
 import uuid
-from datetime import datetime, timezone
-from typing import Dict, Set, Optional, Any, List
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from enum import Enum
+from typing import Any, Dict, List, Optional, Set
 
+import redis.asyncio as redis
 from fastapi import WebSocket, WebSocketDisconnect
 from starlette.websockets import WebSocketState
-import redis.asyncio as redis
 
 from app.core.config import settings
 from app.core.logging import get_logger
@@ -36,6 +36,7 @@ _instance_id = uuid.uuid4().hex[:8]
 
 class MessageType(str, Enum):
     """WebSocket message types."""
+
     # EMQ updates
     EMQ_UPDATE = "emq_update"
     EMQ_DRIVER_UPDATE = "emq_driver_update"
@@ -62,16 +63,21 @@ class MessageType(str, Enum):
 @dataclass
 class WebSocketMessage:
     """WebSocket message structure."""
+
     type: str
     payload: Any
-    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat() + "Z")
+    timestamp: str = field(
+        default_factory=lambda: datetime.now(timezone.utc).isoformat() + "Z"
+    )
 
     def to_json(self) -> str:
-        return json.dumps({
-            "type": self.type,
-            "payload": self.payload,
-            "timestamp": self.timestamp,
-        })
+        return json.dumps(
+            {
+                "type": self.type,
+                "payload": self.payload,
+                "timestamp": self.timestamp,
+            }
+        )
 
     @classmethod
     def from_json(cls, data: str) -> "WebSocketMessage":
@@ -79,13 +85,16 @@ class WebSocketMessage:
         return cls(
             type=parsed.get("type", "unknown"),
             payload=parsed.get("payload", {}),
-            timestamp=parsed.get("timestamp", datetime.now(timezone.utc).isoformat() + "Z"),
+            timestamp=parsed.get(
+                "timestamp", datetime.now(timezone.utc).isoformat() + "Z"
+            ),
         )
 
 
 @dataclass
 class ConnectedClient:
     """Represents a connected WebSocket client."""
+
     websocket: WebSocket
     tenant_id: Optional[int] = None
     user_id: Optional[int] = None
@@ -128,7 +137,7 @@ class WebSocketManager:
                 socket_connect_timeout=5,
                 socket_timeout=5,
             )
-            await asyncio.wait_for(self._redis.ping(), timeout=5.0)
+            await asyncio.wait_for(self._redis.ping(), timeout=5.0)  # type: ignore[arg-type]
             self._pubsub_task = asyncio.create_task(self._redis_listener())
             logger.info("websocket_redis_connected")
         except (ConnectionError, TimeoutError, OSError) as e:
@@ -212,7 +221,7 @@ class WebSocketManager:
 
         return client_id
 
-    async def disconnect(self, client_id: str):
+    async def disconnect(self, client_id: str) -> None:
         """Disconnect and cleanup a WebSocket client."""
         client = self._connections.pop(client_id, None)
         if not client:
@@ -242,7 +251,7 @@ class WebSocketManager:
             tenant_id=client.tenant_id,
         )
 
-    async def subscribe(self, client_id: str, channel: str):
+    async def subscribe(self, client_id: str, channel: str) -> None:
         """Subscribe a client to a channel."""
         client = self._connections.get(client_id)
         if not client:
@@ -260,7 +269,7 @@ class WebSocketManager:
             channel=channel,
         )
 
-    async def unsubscribe(self, client_id: str, channel: str):
+    async def unsubscribe(self, client_id: str, channel: str) -> None:
         """Unsubscribe a client from a channel."""
         client = self._connections.get(client_id)
         if not client:
@@ -271,7 +280,7 @@ class WebSocketManager:
         if channel in self._channel_subscriptions:
             self._channel_subscriptions[channel].discard(client_id)
 
-    async def send_to_client(self, client_id: str, message: WebSocketMessage):
+    async def send_to_client(self, client_id: str, message: WebSocketMessage) -> None:
         """Send a message to a specific client."""
         client = self._connections.get(client_id)
         if not client:
@@ -292,7 +301,7 @@ class WebSocketManager:
         tenant_id: int,
         message_type: str,
         payload: Any,
-    ):
+    ) -> None:
         """Broadcast a message to all clients of a specific tenant."""
         message = WebSocketMessage(type=message_type, payload=payload)
 
@@ -308,7 +317,7 @@ class WebSocketManager:
         channel: str,
         message_type: str,
         payload: Any,
-    ):
+    ) -> None:
         """Broadcast a message to all clients subscribed to a channel."""
         message = WebSocketMessage(type=message_type, payload=payload)
 
@@ -319,24 +328,26 @@ class WebSocketManager:
         # Also publish to Redis
         await self._publish_to_redis(f"channel:{channel}", message)
 
-    async def broadcast_all(self, message_type: str, payload: Any):
+    async def broadcast_all(self, message_type: str, payload: Any) -> None:
         """Broadcast a message to all connected clients."""
         message = WebSocketMessage(type=message_type, payload=payload)
 
         for client_id in list(self._connections.keys()):
             await self.send_to_client(client_id, message)
 
-    async def _publish_to_redis(self, channel: str, message: WebSocketMessage):
+    async def _publish_to_redis(self, channel: str, message: WebSocketMessage) -> None:
         """Publish a message to Redis for multi-instance support."""
         if not self._redis:
             return
 
         try:
             # Include origin instance_id so the sender can skip re-delivery
-            envelope = json.dumps({
-                "origin": _instance_id,
-                "message": message.to_json(),
-            })
+            envelope = json.dumps(
+                {
+                    "origin": _instance_id,
+                    "message": message.to_json(),
+                }
+            )
             await self._redis.publish(f"ws:{channel}", envelope)
         except (ConnectionError, TimeoutError, OSError) as e:
             logger.warning("redis_publish_failed", error=str(e))
@@ -364,7 +375,7 @@ class WebSocketManager:
             await pubsub.punsubscribe("ws:*")
             await pubsub.close()
 
-    async def _handle_redis_message(self, message: Dict):
+    async def _handle_redis_message(self, message: Dict) -> None:
         """Handle a message received from Redis."""
         try:
             channel = message["channel"].decode("utf-8")
@@ -410,7 +421,7 @@ class WebSocketManager:
         except asyncio.CancelledError:
             logger.debug("websocket_heartbeat_loop_cancelled")
 
-    async def handle_client_message(self, client_id: str, data: str):
+    async def handle_client_message(self, client_id: str, data: str) -> None:
         """Handle an incoming message from a client."""
         try:
             message = WebSocketMessage.from_json(data)
@@ -446,8 +457,7 @@ class WebSocketManager:
             "tenants_connected": len(self._tenant_connections),
             "channels_active": len(self._channel_subscriptions),
             "connections_by_tenant": {
-                tid: len(clients)
-                for tid, clients in self._tenant_connections.items()
+                tid: len(clients) for tid, clients in self._tenant_connections.items()
             },
         }
 
@@ -460,13 +470,14 @@ ws_manager = WebSocketManager()
 # Helper Functions for Publishing Events
 # =============================================================================
 
+
 async def publish_action_status_update(
     tenant_id: int,
     action_id: str,
     status: str,
     before_value: Optional[Any] = None,
     after_value: Optional[Any] = None,
-):
+) -> None:
     """Publish an action status update to relevant clients."""
     await ws_manager.broadcast_to_tenant(
         tenant_id=tenant_id,
@@ -486,7 +497,7 @@ async def publish_emq_update(
     score: float,
     previous_score: Optional[float] = None,
     confidence_band: Optional[str] = None,
-):
+) -> None:
     """Publish an EMQ score update to relevant clients."""
     await ws_manager.broadcast_to_tenant(
         tenant_id=tenant_id,
@@ -507,7 +518,7 @@ async def publish_incident(
     title: str,
     severity: str,
     platform: Optional[str] = None,
-):
+) -> None:
     """Publish an incident notification to relevant clients."""
     message_type = (
         MessageType.INCIDENT_OPENED.value
@@ -532,7 +543,7 @@ async def publish_autopilot_mode_change(
     tenant_id: int,
     mode: str,
     reason: str,
-):
+) -> None:
     """Publish an autopilot mode change notification."""
     await ws_manager.broadcast_to_tenant(
         tenant_id=tenant_id,

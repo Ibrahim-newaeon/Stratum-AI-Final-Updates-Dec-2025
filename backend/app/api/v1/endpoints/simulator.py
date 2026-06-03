@@ -94,7 +94,9 @@ async def simulate_budget_change(
             "clicks": total_clicks,
             "conversions": total_conversions,
             "revenue": total_revenue,
-            "ctr": (total_clicks / total_impressions * 100) if total_impressions > 0 else 0,
+            "ctr": (
+                (total_clicks / total_impressions * 100) if total_impressions > 0 else 0
+            ),
             "roas": (total_revenue / total_spend) if total_spend > 0 else 0,
         }
 
@@ -178,7 +180,9 @@ async def forecast_roas(
     )
 
 
-@router.post("/predict/conversions", response_model=APIResponse[ConversionPredictionResponse])
+@router.post(
+    "/predict/conversions", response_model=APIResponse[ConversionPredictionResponse]
+)
 async def predict_conversions(
     request: Request,
     prediction_request: ConversionPredictionRequest,

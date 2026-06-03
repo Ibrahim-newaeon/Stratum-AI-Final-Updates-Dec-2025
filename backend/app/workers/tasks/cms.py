@@ -75,7 +75,9 @@ def publish_cms_post(self, post_id: str, published_by_id: Optional[int] = None):
     from app.models.cms import CMSPost, CMSPostStatus, CMSPostVersion
 
     with SyncSessionLocal() as db:
-        post = db.execute(select(CMSPost).where(CMSPost.id == post_id)).scalar_one_or_none()
+        post = db.execute(
+            select(CMSPost).where(CMSPost.id == post_id)
+        ).scalar_one_or_none()
 
         if not post:
             logger.warning(f"Post {post_id} not found")
@@ -148,7 +150,9 @@ def create_cms_post_version(
     from app.models.cms import CMSPost, CMSPostVersion
 
     with SyncSessionLocal() as db:
-        post = db.execute(select(CMSPost).where(CMSPost.id == post_id)).scalar_one_or_none()
+        post = db.execute(
+            select(CMSPost).where(CMSPost.id == post_id)
+        ).scalar_one_or_none()
 
         if not post:
             logger.warning(f"Post {post_id} not found")
@@ -236,7 +240,9 @@ def _purge_cloudflare(paths: list[str], settings) -> None:
     base = (settings.cdn_base_url or "").rstrip("/")
     files = [f"{base}{path}" for path in paths] if base else paths
 
-    url = f"https://api.cloudflare.com/client/v4/zones/{settings.cdn_zone_id}/purge_cache"
+    url = (
+        f"https://api.cloudflare.com/client/v4/zones/{settings.cdn_zone_id}/purge_cache"
+    )
     with httpx.Client(timeout=10.0) as client:
         resp = client.post(
             url,
@@ -262,7 +268,9 @@ def _purge_cloudfront(paths: list[str], settings) -> None:
     import boto3
 
     if not settings.cdn_zone_id:
-        logger.warning("CloudFront purge skipped: CDN_ZONE_ID (distribution ID) required")
+        logger.warning(
+            "CloudFront purge skipped: CDN_ZONE_ID (distribution ID) required"
+        )
         return
 
     client = boto3.client("cloudfront")
@@ -295,7 +303,9 @@ def _purge_fastly(paths: list[str], settings) -> None:
 
     base = (settings.cdn_base_url or "").rstrip("/")
     if not base:
-        logger.warning("Fastly purge skipped: CDN_BASE_URL required for full purge URLs")
+        logger.warning(
+            "Fastly purge skipped: CDN_BASE_URL required for full purge URLs"
+        )
         return
 
     headers = {

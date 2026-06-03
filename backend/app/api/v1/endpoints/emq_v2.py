@@ -16,16 +16,15 @@ Provides endpoints for:
 - Portfolio overview (super admin)
 """
 
+import uuid
 from datetime import date, datetime, timedelta
 from typing import List, Optional
-import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.deps import get_current_user, require_superadmin
 from app.db.session import get_async_session
-from app.schemas.response import APIResponse
 from app.schemas.emq_v2 import (
     AutopilotModeUpdate,
     AutopilotStateResponse,
@@ -46,8 +45,8 @@ from app.schemas.emq_v2 import (
     TopIssue,
     VolatilityDataPoint,
 )
-from app.services.emq_service import EmqService, EmqAdminService
-
+from app.schemas.response import APIResponse
+from app.services.emq_service import EmqAdminService, EmqService
 
 router = APIRouter(
     tags=["EMQ v2"],
@@ -73,7 +72,9 @@ def parse_date(date_str: Optional[str]) -> Optional[date]:
     try:
         return datetime.strptime(date_str, "%Y-%m-%d").date()
     except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD.")
+        raise HTTPException(
+            status_code=400, detail="Invalid date format. Use YYYY-MM-DD."
+        )
 
 
 # =============================================================================
@@ -199,76 +200,86 @@ async def get_playbook(
 
     # Check Event Match Rate
     if drivers.get("Event Match Rate", {}).get("value", 100) < 85:
-        playbook_items.append(PlaybookItemResponse(
-            id=str(uuid.uuid4()),
-            title="Enable Enhanced Conversions",
-            description="Implement Google Enhanced Conversions to improve match rates by 15-25%",
-            priority="critical",
-            owner=None,
-            estimatedImpact=8.5,
-            estimatedTime="2-4 hours",
-            platform="Google Ads",
-            status="pending",
-            actionUrl="https://ads.google.com/settings/conversions",
-        ))
+        playbook_items.append(
+            PlaybookItemResponse(
+                id=str(uuid.uuid4()),
+                title="Enable Enhanced Conversions",
+                description="Implement Google Enhanced Conversions to improve match rates by 15-25%",
+                priority="critical",
+                owner=None,
+                estimatedImpact=8.5,
+                estimatedTime="2-4 hours",
+                platform="Google Ads",
+                status="pending",
+                actionUrl="https://ads.google.com/settings/conversions",
+            )
+        )
 
-        playbook_items.append(PlaybookItemResponse(
-            id=str(uuid.uuid4()),
-            title="Fix Meta CAPI Event Deduplication",
-            description="Configure event_id parameter to prevent duplicate conversions",
-            priority="high",
-            owner=None,
-            estimatedImpact=5.2,
-            estimatedTime="1-2 hours",
-            platform="Meta",
-            status="pending",
-            actionUrl=None,
-        ))
+        playbook_items.append(
+            PlaybookItemResponse(
+                id=str(uuid.uuid4()),
+                title="Fix Meta CAPI Event Deduplication",
+                description="Configure event_id parameter to prevent duplicate conversions",
+                priority="high",
+                owner=None,
+                estimatedImpact=5.2,
+                estimatedTime="1-2 hours",
+                platform="Meta",
+                status="pending",
+                actionUrl=None,
+            )
+        )
 
     # Check Pixel Coverage
     if drivers.get("Pixel Coverage", {}).get("value", 100) < 90:
-        playbook_items.append(PlaybookItemResponse(
-            id=str(uuid.uuid4()),
-            title="Update Consent Mode v2",
-            description="Migrate to Consent Mode v2 for improved EU data quality",
-            priority="high",
-            owner=None,
-            estimatedImpact=4.8,
-            estimatedTime="4-6 hours",
-            platform=None,
-            status="pending",
-            actionUrl=None,
-        ))
+        playbook_items.append(
+            PlaybookItemResponse(
+                id=str(uuid.uuid4()),
+                title="Update Consent Mode v2",
+                description="Migrate to Consent Mode v2 for improved EU data quality",
+                priority="high",
+                owner=None,
+                estimatedImpact=4.8,
+                estimatedTime="4-6 hours",
+                platform=None,
+                status="pending",
+                actionUrl=None,
+            )
+        )
 
     # Check Conversion Latency
     if drivers.get("Conversion Latency", {}).get("value", 100) < 70:
-        playbook_items.append(PlaybookItemResponse(
-            id=str(uuid.uuid4()),
-            title="Reduce Conversion Latency",
-            description="Optimize server-side event processing to reduce latency below 1 hour",
-            priority="medium",
-            owner=None,
-            estimatedImpact=3.1,
-            estimatedTime="1-2 days",
-            platform=None,
-            status="pending",
-            actionUrl=None,
-        ))
+        playbook_items.append(
+            PlaybookItemResponse(
+                id=str(uuid.uuid4()),
+                title="Reduce Conversion Latency",
+                description="Optimize server-side event processing to reduce latency below 1 hour",
+                priority="medium",
+                owner=None,
+                estimatedImpact=3.1,
+                estimatedTime="1-2 days",
+                platform=None,
+                status="pending",
+                actionUrl=None,
+            )
+        )
 
     # Always suggest TikTok if not at perfect score
     if emq_data["score"] < 95:
-        playbook_items.append(PlaybookItemResponse(
-            id=str(uuid.uuid4()),
-            title="Add TikTok Events API",
-            description="Implement server-side tracking for TikTok campaigns",
-            priority="low",
-            owner=None,
-            estimatedImpact=2.0,
-            estimatedTime="3-4 hours",
-            platform="TikTok",
-            status="pending",
-            actionUrl=None,
-        ))
+        playbook_items.append(
+            PlaybookItemResponse(
+                id=str(uuid.uuid4()),
+                title="Add TikTok Events API",
+                description="Implement server-side tracking for TikTok campaigns",
+                priority="low",
+                owner=None,
+                estimatedImpact=2.0,
+                estimatedTime="3-4 hours",
+                platform="TikTok",
+                status="pending",
+                actionUrl=None,
+            )
+        )
 
     # Sort by priority
     priority_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
@@ -332,7 +343,9 @@ async def get_incidents(
     end = parse_date(end_date)
 
     if not start or not end:
-        raise HTTPException(status_code=400, detail="Both start_date and end_date are required")
+        raise HTTPException(
+            status_code=400, detail="Both start_date and end_date are required"
+        )
 
     service = EmqService(db)
     incidents_data = await service.get_incidents(tenant_id, start, end)
@@ -367,7 +380,9 @@ async def get_impact(
     end = parse_date(end_date)
 
     if not start or not end:
-        raise HTTPException(status_code=400, detail="Both start_date and end_date are required")
+        raise HTTPException(
+            status_code=400, detail="Both start_date and end_date are required"
+        )
 
     service = EmqService(db)
     impact_data = await service.get_impact(tenant_id, start, end)
@@ -529,6 +544,7 @@ async def update_autopilot_mode(
 
     # Query actual tenant spend for budget-at-risk calculation
     from sqlalchemy import func
+
     from app.models import Campaign
 
     spend_result = await db.execute(
@@ -565,7 +581,7 @@ async def get_benchmarks(
     date: Optional[str] = Query(default=None, description="Target date"),
     platform: Optional[str] = Query(default=None, description="Filter by platform"),
     db: AsyncSession = Depends(get_async_session),
-    _superadmin = Depends(require_superadmin()),
+    _superadmin=Depends(require_superadmin()),
 ):
     """
     Get EMQ benchmarks across all tenants.
@@ -592,7 +608,7 @@ async def get_portfolio(
     request: Request,
     date: Optional[str] = Query(default=None, description="Target date"),
     db: AsyncSession = Depends(get_async_session),
-    _superadmin = Depends(require_superadmin()),
+    _superadmin=Depends(require_superadmin()),
 ):
     """
     Get portfolio overview for super admin.

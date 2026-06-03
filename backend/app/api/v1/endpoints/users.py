@@ -6,8 +6,8 @@ User profile and management endpoints.
 """
 
 import secrets
-from typing import List, Optional
 from datetime import datetime, timezone
+from typing import List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from pydantic import BaseModel, EmailStr, Field
@@ -15,15 +15,21 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
-from app.core.security import decrypt_pii, encrypt_pii, get_password_hash, hash_pii_for_lookup
+from app.core.security import (
+    decrypt_pii,
+    encrypt_pii,
+    get_password_hash,
+    hash_pii_for_lookup,
+)
 from app.db.session import get_async_session
-from app.models import User, UserRole, Tenant
+from app.models import Tenant, User, UserRole
 from app.schemas import APIResponse, UserProfileResponse, UserResponse, UserUpdate
 from app.services.email_service import get_email_service
 
 
 class InviteUserRequest(BaseModel):
     """Request schema for inviting a new user."""
+
     email: EmailStr
     full_name: Optional[str] = None
     role: str = Field(default="user", description="User role: admin, manager, user")
@@ -42,9 +48,11 @@ def _safe_decrypt(value: Optional[str]) -> Optional[str]:
 
 class UpdateUserRequest(BaseModel):
     """Request schema for admin updating a user."""
+
     full_name: Optional[str] = None
     role: Optional[str] = None
     is_active: Optional[bool] = None
+
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -335,7 +343,9 @@ async def invite_user(
             )
             logger.info(f"Invite email sent to {invite_data.email}")
         except (ConnectionError, TimeoutError, OSError, ValueError) as e:
-            logger.error("send_invite_email_failed", email=invite_data.email, error=str(e))
+            logger.error(
+                "send_invite_email_failed", email=invite_data.email, error=str(e)
+            )
 
     background_tasks.add_task(send_invite_email)
 
@@ -400,7 +410,9 @@ async def update_user(
 
     # Update fields
     if update_data.full_name is not None:
-        user.full_name = encrypt_pii(update_data.full_name) if update_data.full_name else None
+        user.full_name = (
+            encrypt_pii(update_data.full_name) if update_data.full_name else None
+        )
 
     if update_data.role is not None:
         role_map = {

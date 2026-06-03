@@ -246,9 +246,7 @@ class GoogleOAuthService(OAuthService):
 
                 try:
                     # Use Google Ads Query Language to get customer details
-                    query_url = (
-                        f"{GOOGLE_ADS_API_URL}/customers/{customer_id}/googleAds:searchStream"
-                    )
+                    query_url = f"{GOOGLE_ADS_API_URL}/customers/{customer_id}/googleAds:searchStream"
                     query = """
                         SELECT
                             customer.id,
@@ -286,18 +284,34 @@ class GoogleOAuthService(OAuthService):
                             accounts.append(
                                 AdAccountInfo(
                                     account_id=str(customer.get("id", customer_id)),
-                                    name=customer.get("descriptiveName", f"Account {customer_id}"),
-                                    business_name="Manager Account" if is_manager else None,
+                                    name=customer.get(
+                                        "descriptiveName", f"Account {customer_id}"
+                                    ),
+                                    business_name=(
+                                        "Manager Account" if is_manager else None
+                                    ),
                                     currency=customer.get("currencyCode", "USD"),
                                     timezone=customer.get("timeZone", "UTC"),
-                                    status=status_map.get(customer.get("status"), "unknown"),
-                                    permissions=["STANDARD"] if not is_manager else ["MANAGER"],
+                                    status=status_map.get(
+                                        customer.get("status"), "unknown"
+                                    ),
+                                    permissions=(
+                                        ["STANDARD"] if not is_manager else ["MANAGER"]
+                                    ),
                                     raw_data=customer,
                                 )
                             )
 
-                except (ConnectionError, TimeoutError, OSError, ValueError, KeyError) as e:
-                    self.logger.warning(f"Failed to fetch customer {customer_id}", error=str(e))
+                except (
+                    ConnectionError,
+                    TimeoutError,
+                    OSError,
+                    ValueError,
+                    KeyError,
+                ) as e:
+                    self.logger.warning(
+                        f"Failed to fetch customer {customer_id}", error=str(e)
+                    )
                     # Add basic info from resource name
                     accounts.append(
                         AdAccountInfo(

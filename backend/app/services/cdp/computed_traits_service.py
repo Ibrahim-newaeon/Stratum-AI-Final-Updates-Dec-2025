@@ -102,7 +102,9 @@ class ComputedTraitsService:
         offset: int = 0,
     ) -> tuple[list[CDPComputedTrait], int]:
         """List computed traits."""
-        query = select(CDPComputedTrait).where(CDPComputedTrait.tenant_id == self.tenant_id)
+        query = select(CDPComputedTrait).where(
+            CDPComputedTrait.tenant_id == self.tenant_id
+        )
 
         if active_only:
             query = query.where(CDPComputedTrait.is_active == True)
@@ -172,7 +174,9 @@ class ComputedTraitsService:
             cutoff = datetime.now(UTC) - timedelta(days=time_window_days)
             query = query.where(CDPEvent.event_time >= cutoff)
 
-        result = await self.db.execute(query.order_by(CDPEvent.event_time.desc()).limit(1000))
+        result = await self.db.execute(
+            query.order_by(CDPEvent.event_time.desc()).limit(1000)
+        )
         events = result.scalars().all()
 
         # Compute based on trait type
@@ -420,7 +424,9 @@ class RFMAnalysisService:
         rfm_score = round((recency_score + frequency_score + monetary_score) / 3)
 
         # Determine segment
-        rfm_segment = self._determine_segment(recency_score, frequency_score, monetary_score)
+        rfm_segment = self._determine_segment(
+            recency_score, frequency_score, monetary_score
+        )
 
         return {
             "recency_days": recency_days,
@@ -627,7 +633,9 @@ class RFMAnalysisService:
             "total_profiles": total_profiles,
             "profiles_with_rfm": profiles_with_rfm,
             "segment_distribution": segment_counts,
-            "coverage_pct": round(profiles_with_rfm / total_profiles * 100, 1)
-            if total_profiles > 0
-            else 0,
+            "coverage_pct": (
+                round(profiles_with_rfm / total_profiles * 100, 1)
+                if total_profiles > 0
+                else 0
+            ),
         }

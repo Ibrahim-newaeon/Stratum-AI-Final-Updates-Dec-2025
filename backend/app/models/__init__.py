@@ -4,157 +4,157 @@
 # Re-exports all models for backwards compatibility
 
 # Base models (formerly models.py)
-from app.base_models import (
-    # Enums
-    UserRole,
+from app.base_models import (  # Enums; Models
     AdPlatform,
-    CampaignStatus,
+    APIKey,
     AssetType,
-    RuleStatus,
-    RuleOperator,
-    RuleAction,
     AuditAction,
-    WhatsAppOptInStatus,
-    WhatsAppMessageDirection,
-    WhatsAppMessageStatus,
-    WhatsAppTemplateStatus,
-    WhatsAppTemplateCategory,
-    # Models
-    Tenant,
-    User,
+    AuditLog,
     Campaign,
     CampaignMetric,
-    CreativeAsset,
-    Rule,
-    RuleExecution,
+    CampaignStatus,
     CompetitorBenchmark,
-    AuditLog,
+    CreativeAsset,
     MLPrediction,
     NotificationPreference,
-    APIKey,
-    WhatsAppContact,
-    WhatsAppTemplate,
-    WhatsAppMessage,
-    WhatsAppConversation,
+    Rule,
+    RuleAction,
+    RuleExecution,
+    RuleOperator,
+    RuleStatus,
+    Tenant,
+    User,
+    UserRole,
     UserTenantMembership,
-)
-
-# Trust Layer models
-from app.models.trust_layer import (
-    SignalHealthStatus,
-    AttributionVarianceStatus,
-    FactSignalHealthDaily,
-    FactAttributionVarianceDaily,
-    FactActionsQueue,
-)
-
-# Campaign Builder models
-from app.models.campaign_builder import (
-    ConnectionStatus,
-    DraftStatus,
-    PublishResult,
-    TenantPlatformConnection,
-    TenantAdAccount,
-    CampaignDraft,
-    CampaignPublishLog,
-)
-
-# CRM Integration models
-from app.models.crm import (
-    CRMProvider,
-    CRMConnectionStatus,
-    DealStage,
-    AttributionModel,
-    WritebackStatus,
-    CRMConnection,
-    CRMContact,
-    CRMDeal,
-    Touchpoint,
-    DailyPipelineMetrics,
-    CRMWritebackConfig,
-    CRMWritebackSync,
-)
-
-# Pacing & Forecasting models
-from app.models.pacing import (
-    TargetPeriod,
-    TargetMetric,
-    AlertSeverity,
-    AlertType,
-    AlertStatus,
-    Target,
-    DailyKPI,
-    PacingAlert,
-    Forecast,
-    PacingSummary,
-)
-
-# Profit ROAS models
-from app.models.profit import (
-    MarginType,
-    ProductStatus,
-    COGSSource,
-    ProductCatalog,
-    ProductMargin,
-    MarginRule,
-    DailyProfitMetrics,
-    ProfitROASReport,
-    COGSUpload,
+    WhatsAppContact,
+    WhatsAppConversation,
+    WhatsAppMessage,
+    WhatsAppMessageDirection,
+    WhatsAppMessageStatus,
+    WhatsAppOptInStatus,
+    WhatsAppTemplate,
+    WhatsAppTemplateCategory,
+    WhatsAppTemplateStatus,
 )
 
 # Multi-Touch Attribution models
 from app.models.attribution import (
-    DailyAttributedRevenue,
-    ConversionPath,
     AttributionSnapshot,
     ChannelInteraction,
+    ConversionPath,
+    DailyAttributedRevenue,
     DataDrivenModelType,
     ModelStatus,
-    TrainedAttributionModel,
     ModelTrainingRun,
-)
-
-# Client (Agency → Brand) models
-from app.models.client import (
-    ClientRequestStatus,
-    ClientRequestType,
-    Client,
-    ClientAssignment,
-    ClientRequest,
+    TrainedAttributionModel,
 )
 
 # Autopilot Enforcement models
 from app.models.autopilot import (
-    EnforcementMode as AutopilotEnforcementMode,
-    ViolationType as AutopilotViolationType,
-    InterventionAction as AutopilotInterventionAction,
-    TenantEnforcementSettings,
-    TenantEnforcementRule,
     EnforcementAuditLog,
+)
+from app.models.autopilot import EnforcementMode as AutopilotEnforcementMode
+from app.models.autopilot import InterventionAction as AutopilotInterventionAction
+from app.models.autopilot import (
     PendingConfirmationToken,
+    TenantEnforcementRule,
+    TenantEnforcementSettings,
+)
+from app.models.autopilot import ViolationType as AutopilotViolationType
+
+# Campaign Builder models
+from app.models.campaign_builder import (
+    CampaignDraft,
+    CampaignPublishLog,
+    ConnectionStatus,
+    DraftStatus,
+    PublishResult,
+    TenantAdAccount,
+    TenantPlatformConnection,
 )
 
-# Automated Reporting models
-from app.models.reporting import (
-    ReportType,
-    ReportFormat,
-    ScheduleFrequency,
-    DeliveryChannel,
-    ExecutionStatus,
-    DeliveryStatus,
-    ReportTemplate,
-    ScheduledReport,
-    ReportExecution,
-    ReportDelivery,
-    DeliveryChannelConfig,
+# Client (Agency → Brand) models
+from app.models.client import (
+    Client,
+    ClientAssignment,
+    ClientRequest,
+    ClientRequestStatus,
+    ClientRequestType,
+)
+from app.models.copilot_doc import CopilotDocChunk
+
+# CRM Integration models
+from app.models.crm import (
+    AttributionModel,
+    CRMConnection,
+    CRMConnectionStatus,
+    CRMContact,
+    CRMDeal,
+    CRMProvider,
+    CRMWritebackConfig,
+    CRMWritebackSync,
+    DailyPipelineMetrics,
+    DealStage,
+    Touchpoint,
+    WritebackStatus,
 )
 
 # Launch Readiness (Go-Live wizard)
 from app.models.launch_readiness import (
-    LaunchReadinessItemState,
     LaunchReadinessEvent,
+    LaunchReadinessItemState,
 )
-from app.models.copilot_doc import CopilotDocChunk
+
+# Pacing & Forecasting models
+from app.models.pacing import (
+    AlertSeverity,
+    AlertStatus,
+    AlertType,
+    DailyKPI,
+    Forecast,
+    PacingAlert,
+    PacingSummary,
+    Target,
+    TargetMetric,
+    TargetPeriod,
+)
+
+# Profit ROAS models
+from app.models.profit import (
+    COGSSource,
+    COGSUpload,
+    DailyProfitMetrics,
+    MarginRule,
+    MarginType,
+    ProductCatalog,
+    ProductMargin,
+    ProductStatus,
+    ProfitROASReport,
+)
+
+# Automated Reporting models
+from app.models.reporting import (
+    DeliveryChannel,
+    DeliveryChannelConfig,
+    DeliveryStatus,
+    ExecutionStatus,
+    ReportDelivery,
+    ReportExecution,
+    ReportFormat,
+    ReportTemplate,
+    ReportType,
+    ScheduledReport,
+    ScheduleFrequency,
+)
+
+# Trust Layer models
+from app.models.trust_layer import (
+    AttributionVarianceStatus,
+    FactActionsQueue,
+    FactAttributionVarianceDaily,
+    FactSignalHealthDaily,
+    SignalHealthStatus,
+)
 
 __all__ = [
     "APIKey",
@@ -190,7 +190,6 @@ __all__ = [
     "ChannelInteraction",
     "Client",
     "ClientAssignment",
-    "CopilotDocChunk",
     "ClientRequest",
     # Client (Agency → Brand)
     "ClientRequestStatus",
@@ -198,6 +197,7 @@ __all__ = [
     "CompetitorBenchmark",
     "ConnectionStatus",
     "ConversionPath",
+    "CopilotDocChunk",
     "CreativeAsset",
     # Multi-Touch Attribution
     "DailyAttributedRevenue",

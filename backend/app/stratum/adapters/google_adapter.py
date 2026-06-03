@@ -265,7 +265,9 @@ class GoogleAdsAdapter(BaseAdapter):
             if not accounts:
                 logger.warning("No ad accounts accessible with provided credentials")
             else:
-                logger.info(f"Successfully authenticated, found {len(accounts)} accounts")
+                logger.info(
+                    f"Successfully authenticated, found {len(accounts)} accounts"
+                )
 
             self._initialized = True
 
@@ -310,7 +312,9 @@ class GoogleAdsAdapter(BaseAdapter):
                 return await self._get_single_account()
 
         except GoogleAdsException as e:
-            raise PlatformError(f"Failed to fetch accounts: {self._parse_google_error(e)}")
+            raise PlatformError(
+                f"Failed to fetch accounts: {self._parse_google_error(e)}"
+            )
 
     async def _get_mcc_accounts(self) -> list[UnifiedAccount]:
         """Fetch client accounts from a Manager Account."""
@@ -332,7 +336,9 @@ class GoogleAdsAdapter(BaseAdapter):
         """
 
         await self.rate_limiter.acquire()
-        response = ga_service.search(customer_id=str(self.login_customer_id), query=query)
+        response = ga_service.search(
+            customer_id=str(self.login_customer_id), query=query
+        )
 
         accounts = []
         for row in response:
@@ -379,7 +385,9 @@ class GoogleAdsAdapter(BaseAdapter):
             LIMIT 1
         """
 
-        response = ga_service.search(customer_id=str(self.login_customer_id), query=query)
+        response = ga_service.search(
+            customer_id=str(self.login_customer_id), query=query
+        )
 
         accounts = []
         for row in response:
@@ -435,11 +443,15 @@ class GoogleAdsAdapter(BaseAdapter):
 
             # Add status filter if specified
             if status_filter:
-                google_statuses = [self.STATUS_TO_GOOGLE.get(s, "ENABLED") for s in status_filter]
+                google_statuses = [
+                    self.STATUS_TO_GOOGLE.get(s, "ENABLED") for s in status_filter
+                ]
                 status_str = ", ".join(f"'{s}'" for s in google_statuses)
                 query += f" WHERE campaign.status IN ({status_str})"
 
-            response = ga_service.search(customer_id=str(account_id).replace("-", ""), query=query)
+            response = ga_service.search(
+                customer_id=str(account_id).replace("-", ""), query=query
+            )
 
             campaigns = []
             for row in response:
@@ -450,7 +462,9 @@ class GoogleAdsAdapter(BaseAdapter):
             return campaigns
 
         except GoogleAdsException as e:
-            raise PlatformError(f"Failed to fetch campaigns: {self._parse_google_error(e)}")
+            raise PlatformError(
+                f"Failed to fetch campaigns: {self._parse_google_error(e)}"
+            )
 
     async def get_adsets(
         self, account_id: str, campaign_id: Optional[str] = None
@@ -481,11 +495,11 @@ class GoogleAdsAdapter(BaseAdapter):
             """
 
             if campaign_id:
-                query += (
-                    f" WHERE ad_group.campaign = 'customers/{account_id}/campaigns/{campaign_id}'"
-                )
+                query += f" WHERE ad_group.campaign = 'customers/{account_id}/campaigns/{campaign_id}'"
 
-            response = ga_service.search(customer_id=str(account_id).replace("-", ""), query=query)
+            response = ga_service.search(
+                customer_id=str(account_id).replace("-", ""), query=query
+            )
 
             adsets = []
             for row in response:
@@ -495,9 +509,13 @@ class GoogleAdsAdapter(BaseAdapter):
             return adsets
 
         except GoogleAdsException as e:
-            raise PlatformError(f"Failed to fetch ad groups: {self._parse_google_error(e)}")
+            raise PlatformError(
+                f"Failed to fetch ad groups: {self._parse_google_error(e)}"
+            )
 
-    async def get_ads(self, account_id: str, adset_id: Optional[str] = None) -> list[UnifiedAd]:
+    async def get_ads(
+        self, account_id: str, adset_id: Optional[str] = None
+    ) -> list[UnifiedAd]:
         """
         Fetch ads for the specified account.
 
@@ -525,11 +543,11 @@ class GoogleAdsAdapter(BaseAdapter):
             """
 
             if adset_id:
-                query += (
-                    f" WHERE ad_group_ad.ad_group = 'customers/{account_id}/adGroups/{adset_id}'"
-                )
+                query += f" WHERE ad_group_ad.ad_group = 'customers/{account_id}/adGroups/{adset_id}'"
 
-            response = ga_service.search(customer_id=str(account_id).replace("-", ""), query=query)
+            response = ga_service.search(
+                customer_id=str(account_id).replace("-", ""), query=query
+            )
 
             ads = []
             for row in response:
@@ -564,7 +582,11 @@ class GoogleAdsAdapter(BaseAdapter):
             ga_service = self.client.get_service("GoogleAdsService")
 
             # Build resource name based on entity type
-            resource_map = {"campaign": "campaign", "adset": "ad_group", "ad": "ad_group_ad"}
+            resource_map = {
+                "campaign": "campaign",
+                "adset": "ad_group",
+                "ad": "ad_group_ad",
+            }
             resource = resource_map.get(entity_type, "campaign")
 
             # Build ID field based on entity type
@@ -601,7 +623,9 @@ class GoogleAdsAdapter(BaseAdapter):
                 ids_str = ", ".join(str(id) for id in entity_ids)
                 query += f" AND {id_field} IN ({ids_str})"
 
-            response = ga_service.search(customer_id=str(account_id).replace("-", ""), query=query)
+            response = ga_service.search(
+                customer_id=str(account_id).replace("-", ""), query=query
+            )
 
             metrics_map = {}
             for row in response:
@@ -619,7 +643,9 @@ class GoogleAdsAdapter(BaseAdapter):
             return metrics_map
 
         except GoogleAdsException as e:
-            raise PlatformError(f"Failed to fetch metrics: {self._parse_google_error(e)}")
+            raise PlatformError(
+                f"Failed to fetch metrics: {self._parse_google_error(e)}"
+            )
 
     async def get_emq_scores(self, account_id: str) -> list[EMQScore]:
         """
@@ -646,7 +672,9 @@ class GoogleAdsAdapter(BaseAdapter):
                 WHERE conversion_action.status = 'ENABLED'
             """
 
-            response = ga_service.search(customer_id=str(account_id).replace("-", ""), query=query)
+            response = ga_service.search(
+                customer_id=str(account_id).replace("-", ""), query=query
+            )
 
             emq_scores = []
             for row in response:
@@ -672,7 +700,9 @@ class GoogleAdsAdapter(BaseAdapter):
             return emq_scores
 
         except GoogleAdsException as e:
-            logger.warning(f"Failed to fetch conversion diagnostics: {self._parse_google_error(e)}")
+            logger.warning(
+                f"Failed to fetch conversion diagnostics: {self._parse_google_error(e)}"
+            )
             return []
 
     # ========================================================================
@@ -708,7 +738,9 @@ class GoogleAdsAdapter(BaseAdapter):
             action.executed_at = datetime.now(UTC)
             action.result = result
 
-            logger.info(f"Successfully executed {action.action_type} on {action.entity_id}")
+            logger.info(
+                f"Successfully executed {action.action_type} on {action.entity_id}"
+            )
             return action
 
         except GoogleAdsException as e:
@@ -716,7 +748,14 @@ class GoogleAdsAdapter(BaseAdapter):
             action.error_message = self._parse_google_error(e)
             logger.error(f"Action failed: {action.error_message}")
             return action
-        except (ConnectionError, TimeoutError, OSError, ValueError, KeyError, TypeError) as e:
+        except (
+            ConnectionError,
+            TimeoutError,
+            OSError,
+            ValueError,
+            KeyError,
+            TypeError,
+        ) as e:
             action.status = "failed"
             action.error_message = str(e)
             logger.error(f"Action failed with unexpected error: {e}")
@@ -788,11 +827,15 @@ class GoogleAdsAdapter(BaseAdapter):
             campaign_operation = self.client.get_type("CampaignOperation")
 
             campaign = campaign_operation.update
-            campaign.resource_name = f"customers/{account_id}/campaigns/{action.entity_id}"
+            campaign.resource_name = (
+                f"customers/{account_id}/campaigns/{action.entity_id}"
+            )
 
             # Set target CPA if specified
             if "target_cpa" in params:
-                campaign.target_cpa.target_cpa_micros = int(params["target_cpa"] * 1_000_000)
+                campaign.target_cpa.target_cpa_micros = int(
+                    params["target_cpa"] * 1_000_000
+                )
 
             # Set target ROAS if specified
             if "target_roas" in params:
@@ -814,7 +857,9 @@ class GoogleAdsAdapter(BaseAdapter):
             ad_group_operation = self.client.get_type("AdGroupOperation")
 
             ad_group = ad_group_operation.update
-            ad_group.resource_name = f"customers/{account_id}/adGroups/{action.entity_id}"
+            ad_group.resource_name = (
+                f"customers/{account_id}/adGroups/{action.entity_id}"
+            )
 
             if "bid_amount" in params:
                 ad_group.cpc_bid_micros = int(params["bid_amount"] * 1_000_000)
@@ -841,7 +886,9 @@ class GoogleAdsAdapter(BaseAdapter):
             campaign_operation = self.client.get_type("CampaignOperation")
 
             campaign = campaign_operation.update
-            campaign.resource_name = f"customers/{account_id}/campaigns/{action.entity_id}"
+            campaign.resource_name = (
+                f"customers/{account_id}/campaigns/{action.entity_id}"
+            )
             campaign.status = self.client.enums.CampaignStatusEnum[google_status].value
 
             field_mask = field_mask_pb2.FieldMask()
@@ -857,7 +904,9 @@ class GoogleAdsAdapter(BaseAdapter):
             ad_group_operation = self.client.get_type("AdGroupOperation")
 
             ad_group = ad_group_operation.update
-            ad_group.resource_name = f"customers/{account_id}/adGroups/{action.entity_id}"
+            ad_group.resource_name = (
+                f"customers/{account_id}/adGroups/{action.entity_id}"
+            )
             ad_group.status = self.client.enums.AdGroupStatusEnum[google_status].value
 
             field_mask = field_mask_pb2.FieldMask()
@@ -886,7 +935,9 @@ class GoogleAdsAdapter(BaseAdapter):
 
         campaign_budget = campaign_budget_operation.create
         campaign_budget.name = f"{params['name']} Budget"
-        campaign_budget.delivery_method = self.client.enums.BudgetDeliveryMethodEnum.STANDARD
+        campaign_budget.delivery_method = (
+            self.client.enums.BudgetDeliveryMethodEnum.STANDARD
+        )
 
         if "daily_budget" in params:
             campaign_budget.amount_micros = int(params["daily_budget"] * 1_000_000)
@@ -907,9 +958,9 @@ class GoogleAdsAdapter(BaseAdapter):
 
         # Set advertising channel type
         channel_type = params.get("channel_type", "SEARCH")
-        campaign.advertising_channel_type = self.client.enums.AdvertisingChannelTypeEnum[
-            channel_type
-        ].value
+        campaign.advertising_channel_type = (
+            self.client.enums.AdvertisingChannelTypeEnum[channel_type].value
+        )
 
         # Set bidding strategy
         if "bidding_strategy" in params:
@@ -931,7 +982,9 @@ class GoogleAdsAdapter(BaseAdapter):
     # CREATIVE OPERATIONS
     # ========================================================================
 
-    async def upload_image(self, account_id: str, image_data: bytes, filename: str) -> str:
+    async def upload_image(
+        self, account_id: str, image_data: bytes, filename: str
+    ) -> str:
         """
         Upload an image to Google Ads asset library.
 
@@ -951,11 +1004,15 @@ class GoogleAdsAdapter(BaseAdapter):
         asset.type_ = self.client.enums.AssetTypeEnum.IMAGE
         asset.image_asset.data = image_data
 
-        response = asset_service.mutate_assets(customer_id=account_id, operations=[asset_operation])
+        response = asset_service.mutate_assets(
+            customer_id=account_id, operations=[asset_operation]
+        )
 
         return response.results[0].resource_name
 
-    async def upload_video(self, account_id: str, video_data: bytes, filename: str) -> str:
+    async def upload_video(
+        self, account_id: str, video_data: bytes, filename: str
+    ) -> str:
         """
         Upload a video reference to Google Ads.
 
@@ -1038,9 +1095,11 @@ class GoogleAdsAdapter(BaseAdapter):
                 "campaign_id": c.id,
                 "name": c.name,
                 "status": c.status.name,
-                "channel_type": c.advertising_channel_type.name
-                if c.advertising_channel_type
-                else None,
+                "channel_type": (
+                    c.advertising_channel_type.name
+                    if c.advertising_channel_type
+                    else None
+                ),
                 "budget_id": b.id if b.id else None,
             },
         )

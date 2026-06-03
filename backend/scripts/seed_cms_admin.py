@@ -59,7 +59,9 @@ async def seed_cms_admin(email: str, password: str, name: str):
             existing_protected = result.scalar_one_or_none()
 
             if existing_protected:
-                print(f"\n[!] Protected admin already exists (ID: {existing_protected.id})")
+                print(
+                    f"\n[!] Protected admin already exists (ID: {existing_protected.id})"
+                )
                 print("    This account cannot be recreated.")
                 print("\n    To reset, you must manually update the database.")
                 return
@@ -70,7 +72,9 @@ async def seed_cms_admin(email: str, password: str, name: str):
             existing_user = result.scalar_one_or_none()
 
             if existing_user:
-                print(f"\n[!] User with email {email} already exists (ID: {existing_user.id})")
+                print(
+                    f"\n[!] User with email {email} already exists (ID: {existing_user.id})"
+                )
                 print("    Making this user the protected root admin...")
                 existing_user.role = UserRole.SUPERADMIN
                 existing_user.is_protected = True
@@ -81,7 +85,9 @@ async def seed_cms_admin(email: str, password: str, name: str):
                 return
 
             # Check for existing platform tenant or create one
-            result = await db.execute(select(Tenant).where(Tenant.slug == DEFAULT_TENANT_SLUG))
+            result = await db.execute(
+                select(Tenant).where(Tenant.slug == DEFAULT_TENANT_SLUG)
+            )
             tenant = result.scalar_one_or_none()
 
             if not tenant:
@@ -152,7 +158,9 @@ async def seed_cms_admin(email: str, password: str, name: str):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Create protected CMS root admin account")
+    parser = argparse.ArgumentParser(
+        description="Create protected CMS root admin account"
+    )
     parser.add_argument(
         "--email", default=DEFAULT_EMAIL, help=f"Admin email (default: {DEFAULT_EMAIL})"
     )
@@ -160,7 +168,9 @@ def main():
         "--password", default=DEFAULT_PASSWORD, help="Admin password (default: hidden)"
     )
     parser.add_argument(
-        "--name", default=DEFAULT_NAME, help=f"Admin display name (default: {DEFAULT_NAME})"
+        "--name",
+        default=DEFAULT_NAME,
+        help=f"Admin display name (default: {DEFAULT_NAME})",
     )
 
     args = parser.parse_args()

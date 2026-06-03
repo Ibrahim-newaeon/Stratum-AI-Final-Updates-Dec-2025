@@ -16,13 +16,13 @@ Features:
 """
 
 import logging
-from datetime import datetime, timezone, timedelta
-from typing import Any, Dict, List, Optional
 from dataclasses import dataclass
-from uuid import uuid4
+from datetime import datetime, timedelta, timezone
 from enum import Enum
+from typing import Any, Dict, List, Optional
+from uuid import uuid4
 
-from sqlalchemy import select, and_, func, desc
+from sqlalchemy import and_, desc, func, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -33,6 +33,7 @@ logger = logging.getLogger(__name__)
 
 class DeliveryStatus(str, Enum):
     """CAPI delivery status."""
+
     SUCCESS = "success"
     FAILED = "failed"
     RETRYING = "retrying"
@@ -45,6 +46,7 @@ class DeliveryLogEntry:
     """
     Represents a CAPI delivery log entry.
     """
+
     id: str
     tenant_id: int
     platform: str
@@ -85,6 +87,7 @@ class DeliveryLogEntry:
 @dataclass
 class DeliveryMetrics:
     """Aggregated delivery metrics."""
+
     total_events: int = 0
     successful: int = 0
     failed: int = 0
@@ -199,12 +202,14 @@ class DeliveryLogger:
             await self.flush()
 
         # Log for immediate visibility
-        log_level = logging.INFO if status == DeliveryStatus.SUCCESS else logging.WARNING
+        log_level = (
+            logging.INFO if status == DeliveryStatus.SUCCESS else logging.WARNING
+        )
         logger.log(
             log_level,
             f"CAPI Delivery: platform={platform} event={event_name} "
             f"status={status.value} latency={latency_ms:.0f}ms "
-            f"event_id={event_id or 'N/A'}"
+            f"event_id={event_id or 'N/A'}",
         )
 
         return entry
@@ -239,13 +244,17 @@ class DeliveryLogger:
                         request_id=entry.request_id,
                         platform_response=entry.platform_response,
                         user_data_hash=entry.user_data_hash,
-                        event_value_cents=int(entry.event_value * 100) if entry.event_value else None,
+                        event_value_cents=(
+                            int(entry.event_value * 100) if entry.event_value else None
+                        ),
                         currency=entry.currency,
                     )
                     db.add(db_entry)
 
                 await db.commit()
-                logger.debug(f"Flushed {len(entries_to_flush)} delivery log entries to database")
+                logger.debug(
+                    f"Flushed {len(entries_to_flush)} delivery log entries to database"
+                )
 
         except (SQLAlchemyError, ValueError, OSError) as e:
             logger.error(f"Failed to flush delivery logs to database: {e}")
@@ -320,7 +329,11 @@ class DeliveryLogger:
                         request_id=row.request_id,
                         platform_response=row.platform_response,
                         user_data_hash=row.user_data_hash,
-                        event_value=row.event_value_cents / 100 if row.event_value_cents else None,
+                        event_value=(
+                            row.event_value_cents / 100
+                            if row.event_value_cents
+                            else None
+                        ),
                         currency=row.currency,
                     )
                     for row in rows
@@ -372,12 +385,12 @@ class DeliveryLogger:
                 result = await db.execute(
                     select(
                         func.count(CAPIDeliveryLog.id).label("total"),
-                        func.count(CAPIDeliveryLog.id).filter(
-                            CAPIDeliveryLog.status == "success"
-                        ).label("successful"),
-                        func.count(CAPIDeliveryLog.id).filter(
-                            CAPIDeliveryLog.status == "failed"
-                        ).label("failed"),
+                        func.count(CAPIDeliveryLog.id)
+                        .filter(CAPIDeliveryLog.status == "success")
+                        .label("successful"),
+                        func.count(CAPIDeliveryLog.id)
+                        .filter(CAPIDeliveryLog.status == "failed")
+                        .label("failed"),
                         func.avg(CAPIDeliveryLog.latency_ms).label("avg_latency"),
                     ).where(base_filter)
                 )
@@ -389,7 +402,9 @@ class DeliveryLogger:
                 metrics.avg_latency_ms = float(row.avg_latency or 0)
 
                 if metrics.total_events > 0:
-                    metrics.success_rate_pct = (metrics.successful / metrics.total_events) * 100
+                    metrics.success_rate_pct = (
+                        metrics.successful / metrics.total_events
+                    ) * 100
 
                 # Latency percentiles
                 latency_result = await db.execute(
@@ -403,8 +418,12 @@ class DeliveryLogger:
                 if latencies:
                     n = len(latencies)
                     metrics.p50_latency_ms = latencies[int(n * 0.50)]
-                    metrics.p95_latency_ms = latencies[int(n * 0.95)] if n > 20 else latencies[-1]
-                    metrics.p99_latency_ms = latencies[int(n * 0.99)] if n > 100 else latencies[-1]
+                    metrics.p95_latency_ms = (
+                        latencies[int(n * 0.95)] if n > 20 else latencies[-1]
+                    )
+                    metrics.p99_latency_ms = (
+                        latencies[int(n * 0.99)] if n > 100 else latencies[-1]
+                    )
 
                 # By platform
                 platform_result = await db.execute(
@@ -435,7 +454,10 @@ class DeliveryLogger:
 
                 for row in event_result.all():
                     if row.event_name not in metrics.by_event_type:
-                        metrics.by_event_type[row.event_name] = {"success": 0, "failed": 0}
+                        metrics.by_event_type[row.event_name] = {
+                            "success": 0,
+                            "failed": 0,
+                        }
                     metrics.by_event_type[row.event_name][row.status] = row.count
 
         except (SQLAlchemyError, ValueError, OSError) as e:
@@ -456,8 +478,9 @@ class DeliveryLogger:
         cutoff = datetime.now(timezone.utc) - timedelta(days=retention_days)
 
         try:
-            from app.models.capi_delivery import CAPIDeliveryLog
             from sqlalchemy import delete
+
+            from app.models.capi_delivery import CAPIDeliveryLog
 
             async with async_session_factory() as db:
                 result = await db.execute(
@@ -468,7 +491,9 @@ class DeliveryLogger:
                 await db.commit()
 
                 deleted = result.rowcount
-                logger.info(f"Cleaned up {deleted} delivery logs older than {retention_days} days")
+                logger.info(
+                    f"Cleaned up {deleted} delivery logs older than {retention_days} days"
+                )
                 return deleted
 
         except (SQLAlchemyError, OSError) as e:

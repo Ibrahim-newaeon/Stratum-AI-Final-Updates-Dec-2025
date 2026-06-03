@@ -7,10 +7,10 @@ Based on Data_Schema_Events_and_Tables.md requirements.
 """
 
 from datetime import date, datetime, timedelta
-from typing import Optional, List
+from typing import List, Optional
+
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
-
 
 # =============================================================================
 # Blended ROAS Query
@@ -223,7 +223,7 @@ async def get_blended_roas(
     """Get blended ROAS by day."""
     result = await db.execute(
         text(BLENDED_ROAS_BY_DAY),
-        {"tenant_id": tenant_id, "start_date": start_date, "end_date": end_date}
+        {"tenant_id": tenant_id, "start_date": start_date, "end_date": end_date},
     )
     return [dict(row._mapping) for row in result.fetchall()]
 
@@ -237,7 +237,7 @@ async def get_campaign_performance(
     """Get campaign performance table."""
     result = await db.execute(
         text(CAMPAIGN_PERFORMANCE),
-        {"tenant_id": tenant_id, "start_date": start_date, "end_date": end_date}
+        {"tenant_id": tenant_id, "start_date": start_date, "end_date": end_date},
     )
     return [dict(row._mapping) for row in result.fetchall()]
 
@@ -251,7 +251,7 @@ async def get_creative_fatigue(
     """Get creative fatigue dashboard data."""
     result = await db.execute(
         text(CREATIVE_FATIGUE_DASHBOARD),
-        {"tenant_id": tenant_id, "start_date": start_date, "end_date": end_date}
+        {"tenant_id": tenant_id, "start_date": start_date, "end_date": end_date},
     )
     return [dict(row._mapping) for row in result.fetchall()]
 
@@ -265,7 +265,7 @@ async def get_anomaly_history(
     """Get anomaly detection history."""
     result = await db.execute(
         text(ANOMALY_HISTORY),
-        {"tenant_id": tenant_id, "start_date": start_date, "end_date": end_date}
+        {"tenant_id": tenant_id, "start_date": start_date, "end_date": end_date},
     )
     return [dict(row._mapping) for row in result.fetchall()]
 
@@ -279,6 +279,6 @@ async def get_budget_actions(
     """Get budget actions summary."""
     result = await db.execute(
         text(BUDGET_ACTIONS_SUMMARY),
-        {"tenant_id": tenant_id, "start_date": start_date, "end_date": end_date}
+        {"tenant_id": tenant_id, "start_date": start_date, "end_date": end_date},
     )
     return [dict(row._mapping) for row in result.fetchall()]

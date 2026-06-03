@@ -15,9 +15,8 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import and_, func, select
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.logging import get_logger
@@ -33,7 +32,11 @@ from app.models import (
     WhatsAppTemplateStatus,
 )
 from app.schemas import APIResponse, PaginatedResponse
-from app.services.whatsapp_client import WhatsAppClient, WhatsAppAPIError, get_whatsapp_client
+from app.services.whatsapp_client import (
+    WhatsAppAPIError,
+    WhatsAppClient,
+    get_whatsapp_client,
+)
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -49,13 +52,13 @@ def verify_webhook_signature(payload: bytes, signature: str) -> bool:
     Meta sends X-Hub-Signature-256 header with HMAC SHA256 signature.
     """
     if not settings.whatsapp_app_secret:
-        logger.error("WhatsApp app secret not configured — rejecting webhook for security")
+        logger.error(
+            "WhatsApp app secret not configured — rejecting webhook for security"
+        )
         return False  # Reject webhooks when secret is not configured
 
     expected_signature = hmac.new(
-        settings.whatsapp_app_secret.encode("utf-8"),
-        payload,
-        hashlib.sha256
+        settings.whatsapp_app_secret.encode("utf-8"), payload, hashlib.sha256
     ).hexdigest()
 
     # Meta sends signature as "sha256=<hash>"
@@ -130,7 +133,9 @@ class WhatsAppMessageSend(BaseModel):
 class WhatsAppBroadcastRequest(BaseModel):
     contact_ids: List[int] = Field(..., description="List of contact IDs to send to")
     template_name: str = Field(..., description="Template name to use")
-    template_variables: dict = Field(default={}, description="Variables for the template")
+    template_variables: dict = Field(
+        default={}, description="Variables for the template"
+    )
 
 
 class WhatsAppBroadcastResponse(BaseModel):
@@ -173,7 +178,9 @@ class WhatsAppConversationResponse(BaseModel):
 # =============================================================================
 # Contact Endpoints
 # =============================================================================
-@router.get("/contacts", response_model=APIResponse[PaginatedResponse[WhatsAppContactResponse]])
+@router.get(
+    "/contacts", response_model=APIResponse[PaginatedResponse[WhatsAppContactResponse]]
+)
 async def list_contacts(
     request: Request,
     db: AsyncSession = Depends(get_async_session),
@@ -194,8 +201,8 @@ async def list_contacts(
         query = query.where(WhatsAppContact.opt_in_status == opt_in_status)
     if search:
         query = query.where(
-            (WhatsAppContact.phone_number.ilike(f"%{search}%")) |
-            (WhatsAppContact.display_name.ilike(f"%{search}%"))
+            (WhatsAppContact.phone_number.ilike(f"%{search}%"))
+            | (WhatsAppContact.display_name.ilike(f"%{search}%"))
         )
 
     # Count total
@@ -205,7 +212,11 @@ async def list_contacts(
 
     # Paginate
     offset = (page - 1) * page_size
-    query = query.offset(offset).limit(page_size).order_by(WhatsAppContact.created_at.desc())
+    query = (
+        query.offset(offset)
+        .limit(page_size)
+        .order_by(WhatsAppContact.created_at.desc())
+    )
 
     result = await db.execute(query)
     contacts = result.scalars().all()
@@ -269,11 +280,13 @@ async def create_contact(
 
 class BulkContactCreate(BaseModel):
     """Schema for bulk contact import."""
+
     contacts: List[WhatsAppContactCreate]
 
 
 class BulkImportResult(BaseModel):
     """Result of bulk import operation."""
+
     total: int
     success: int
     failed: int
@@ -311,11 +324,13 @@ async def bulk_import_contacts(
                 )
             )
             if existing.scalar_one_or_none():
-                errors.append({
-                    "index": idx,
-                    "phone": contact_data.phone_number,
-                    "error": "Duplicate phone number"
-                })
+                errors.append(
+                    {
+                        "index": idx,
+                        "phone": contact_data.phone_number,
+                        "error": "Duplicate phone number",
+                    }
+                )
                 failed_count += 1
                 continue
 
@@ -335,17 +350,17 @@ async def bulk_import_contacts(
 
         except (SQLAlchemyError, ValueError) as e:
             logger.warning("bulk_import_contact_failed", index=idx, error=str(e))
-            errors.append({
-                "index": idx,
-                "phone": contact_data.phone_number,
-                "error": str(e)
-            })
+            errors.append(
+                {"index": idx, "phone": contact_data.phone_number, "error": str(e)}
+            )
             failed_count += 1
 
     # Commit all successful inserts
     await db.commit()
 
-    logger.info(f"Bulk imported {success_count} contacts for tenant {tenant_id}, {failed_count} failed")
+    logger.info(
+        f"Bulk imported {success_count} contacts for tenant {tenant_id}, {failed_count} failed"
+    )
 
     return APIResponse(
         success=True,
@@ -362,11 +377,14 @@ async def bulk_import_contacts(
 
 class WhatsAppContactUpdate(BaseModel):
     """Schema for updating a contact."""
+
     display_name: Optional[str] = None
     country_code: Optional[str] = None
 
 
-@router.patch("/contacts/{contact_id}", response_model=APIResponse[WhatsAppContactResponse])
+@router.patch(
+    "/contacts/{contact_id}", response_model=APIResponse[WhatsAppContactResponse]
+)
 async def update_contact(
     request: Request,
     contact_id: int,
@@ -459,6 +477,7 @@ async def verify_contact(
 
     # Generate 6-digit verification code
     import secrets
+
     verification_code = str(secrets.randbelow(900000) + 100000)
 
     contact.verification_code = verification_code
@@ -479,19 +498,15 @@ async def verify_contact(
             components=[
                 {
                     "type": "body",
-                    "parameters": [
-                        {"type": "text", "text": verification_code}
-                    ]
+                    "parameters": [{"type": "text", "text": verification_code}],
                 },
                 {
                     "type": "button",
                     "sub_type": "url",
                     "index": "0",
-                    "parameters": [
-                        {"type": "text", "text": verification_code}
-                    ]
-                }
-            ]
+                    "parameters": [{"type": "text", "text": verification_code}],
+                },
+            ],
         )
         logger.info(f"Verification code sent to contact {contact_id}")
     except WhatsAppAPIError as e:
@@ -506,7 +521,9 @@ async def verify_contact(
     )
 
 
-@router.post("/contacts/{contact_id}/opt-in", response_model=APIResponse[WhatsAppContactResponse])
+@router.post(
+    "/contacts/{contact_id}/opt-in", response_model=APIResponse[WhatsAppContactResponse]
+)
 async def opt_in_contact(
     request: Request,
     contact_id: int,
@@ -575,7 +592,10 @@ async def opt_out_contact(
 # =============================================================================
 # Template Endpoints
 # =============================================================================
-@router.get("/templates", response_model=APIResponse[PaginatedResponse[WhatsAppTemplateResponse]])
+@router.get(
+    "/templates",
+    response_model=APIResponse[PaginatedResponse[WhatsAppTemplateResponse]],
+)
 async def list_templates(
     request: Request,
     db: AsyncSession = Depends(get_async_session),
@@ -601,7 +621,11 @@ async def list_templates(
 
     # Paginate
     offset = (page - 1) * page_size
-    query = query.offset(offset).limit(page_size).order_by(WhatsAppTemplate.created_at.desc())
+    query = (
+        query.offset(offset)
+        .limit(page_size)
+        .order_by(WhatsAppTemplate.created_at.desc())
+    )
 
     result = await db.execute(query)
     templates = result.scalars().all()
@@ -672,24 +696,26 @@ async def create_template(
             "text": template_data.body_text,
         }
         if template_data.body_variables:
-            body_component["example"] = {
-                "body_text": [template_data.body_variables]
-            }
+            body_component["example"] = {"body_text": [template_data.body_variables]}
         components.append(body_component)
 
         # Add footer if present
         if template_data.footer_text:
-            components.append({
-                "type": "FOOTER",
-                "text": template_data.footer_text,
-            })
+            components.append(
+                {
+                    "type": "FOOTER",
+                    "text": template_data.footer_text,
+                }
+            )
 
         # Add buttons if present
         if template_data.buttons:
-            components.append({
-                "type": "BUTTONS",
-                "buttons": template_data.buttons,
-            })
+            components.append(
+                {
+                    "type": "BUTTONS",
+                    "buttons": template_data.buttons,
+                }
+            )
 
         # Submit to Meta
         response = await whatsapp_client.create_template(
@@ -703,7 +729,9 @@ async def create_template(
         template.meta_template_id = response.get("id")
         await db.commit()
 
-        logger.info(f"Template {template.id} submitted to Meta, ID: {template.meta_template_id}")
+        logger.info(
+            f"Template {template.id} submitted to Meta, ID: {template.meta_template_id}"
+        )
 
     except WhatsAppAPIError as e:
         # Template created locally but failed to submit to Meta
@@ -725,7 +753,9 @@ async def create_template(
     )
 
 
-@router.get("/templates/{template_id}", response_model=APIResponse[WhatsAppTemplateResponse])
+@router.get(
+    "/templates/{template_id}", response_model=APIResponse[WhatsAppTemplateResponse]
+)
 async def get_template(
     request: Request,
     template_id: int,
@@ -837,6 +867,7 @@ async def send_message(
 
     # Queue for async sending via Celery worker
     from app.workers.tasks import send_whatsapp_message
+
     send_whatsapp_message.delay(
         tenant_id=tenant_id,
         message_id=message.id,
@@ -857,7 +888,9 @@ async def send_message(
     )
 
 
-@router.post("/messages/broadcast", response_model=APIResponse[WhatsAppBroadcastResponse])
+@router.post(
+    "/messages/broadcast", response_model=APIResponse[WhatsAppBroadcastResponse]
+)
 async def send_broadcast(
     request: Request,
     broadcast_data: WhatsAppBroadcastRequest,
@@ -922,18 +955,25 @@ async def send_broadcast(
     # Queue messages for async sending
     if messages_queued > 0:
         from app.workers.tasks import send_whatsapp_broadcast
+
         send_whatsapp_broadcast.delay(
             tenant_id=tenant_id,
             template_name=broadcast_data.template_name,
             template_variables=broadcast_data.template_variables,
-            contact_ids=[c.id for c in contacts if c.opt_in_status == WhatsAppOptInStatus.OPTED_IN],
+            contact_ids=[
+                c.id
+                for c in contacts
+                if c.opt_in_status == WhatsAppOptInStatus.OPTED_IN
+            ],
         )
 
     # Update template usage count
     template.usage_count += messages_queued
     await db.commit()
 
-    logger.info(f"Broadcast queued: {messages_queued} messages to {len(broadcast_data.contact_ids)} contacts")
+    logger.info(
+        f"Broadcast queued: {messages_queued} messages to {len(broadcast_data.contact_ids)} contacts"
+    )
 
     return APIResponse(
         success=True,
@@ -948,7 +988,9 @@ async def send_broadcast(
     )
 
 
-@router.get("/messages", response_model=APIResponse[PaginatedResponse[WhatsAppMessageResponse]])
+@router.get(
+    "/messages", response_model=APIResponse[PaginatedResponse[WhatsAppMessageResponse]]
+)
 async def list_messages(
     request: Request,
     db: AsyncSession = Depends(get_async_session),
@@ -974,7 +1016,11 @@ async def list_messages(
 
     # Paginate
     offset = (page - 1) * page_size
-    query = query.offset(offset).limit(page_size).order_by(WhatsAppMessage.created_at.desc())
+    query = (
+        query.offset(offset)
+        .limit(page_size)
+        .order_by(WhatsAppMessage.created_at.desc())
+    )
 
     result = await db.execute(query)
     messages = result.scalars().all()
@@ -991,7 +1037,9 @@ async def list_messages(
     )
 
 
-@router.get("/messages/{message_id}", response_model=APIResponse[WhatsAppMessageResponse])
+@router.get(
+    "/messages/{message_id}", response_model=APIResponse[WhatsAppMessageResponse]
+)
 async def get_message(
     request: Request,
     message_id: int,
@@ -1043,13 +1091,12 @@ async def whatsapp_webhook(
         logger.warning("webhook_missing_signature", path=request.url.path)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Missing webhook signature header"
+            detail="Missing webhook signature header",
         )
     if not verify_webhook_signature(raw_body, x_hub_signature_256):
         logger.warning("webhook_invalid_signature", path=request.url.path)
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid webhook signature"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid webhook signature"
         )
 
     body = await request.json()
@@ -1067,7 +1114,9 @@ async def whatsapp_webhook(
 
                         # Update message status
                         result = await db.execute(
-                            select(WhatsAppMessage).where(WhatsAppMessage.wamid == wamid)
+                            select(WhatsAppMessage).where(
+                                WhatsAppMessage.wamid == wamid
+                            )
                         )
                         message = result.scalar_one_or_none()
 
@@ -1084,11 +1133,15 @@ async def whatsapp_webhook(
 
                             # Update status history
                             history = message.status_history or []
-                            history.append({"status": new_status, "timestamp": ts.isoformat()})
+                            history.append(
+                                {"status": new_status, "timestamp": ts.isoformat()}
+                            )
                             message.status_history = history
 
                             await db.commit()
-                            logger.info(f"Updated message {wamid} status to {new_status}")
+                            logger.info(
+                                f"Updated message {wamid} status to {new_status}"
+                            )
 
     return {"status": "received"}
 
@@ -1112,7 +1165,10 @@ async def verify_webhook(
 # =============================================================================
 # Conversation Endpoints
 # =============================================================================
-@router.get("/conversations", response_model=APIResponse[PaginatedResponse[WhatsAppConversationResponse]])
+@router.get(
+    "/conversations",
+    response_model=APIResponse[PaginatedResponse[WhatsAppConversationResponse]],
+)
 async def list_conversations(
     request: Request,
     db: AsyncSession = Depends(get_async_session),
@@ -1124,7 +1180,9 @@ async def list_conversations(
     """List WhatsApp conversations (24-hour windows)."""
     tenant_id = getattr(request.state, "tenant_id", None)
 
-    query = select(WhatsAppConversation).where(WhatsAppConversation.tenant_id == tenant_id)
+    query = select(WhatsAppConversation).where(
+        WhatsAppConversation.tenant_id == tenant_id
+    )
 
     if contact_id:
         query = query.where(WhatsAppConversation.contact_id == contact_id)
@@ -1141,7 +1199,11 @@ async def list_conversations(
 
     # Paginate
     offset = (page - 1) * page_size
-    query = query.offset(offset).limit(page_size).order_by(WhatsAppConversation.started_at.desc())
+    query = (
+        query.offset(offset)
+        .limit(page_size)
+        .order_by(WhatsAppConversation.started_at.desc())
+    )
 
     result = await db.execute(query)
     conversations = result.scalars().all()
@@ -1149,7 +1211,9 @@ async def list_conversations(
     return APIResponse(
         success=True,
         data=PaginatedResponse(
-            items=[WhatsAppConversationResponse.model_validate(c) for c in conversations],
+            items=[
+                WhatsAppConversationResponse.model_validate(c) for c in conversations
+            ],
             total=total,
             page=page,
             page_size=page_size,

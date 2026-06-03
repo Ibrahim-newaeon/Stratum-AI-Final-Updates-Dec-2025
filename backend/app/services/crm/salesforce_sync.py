@@ -106,7 +106,9 @@ class SalesforceSyncService:
             # Sync opportunities
             opp_results = await self._sync_opportunities(since)
             results["opportunities_synced"] = opp_results.get("opportunities_synced", 0)
-            results["opportunities_created"] = opp_results.get("opportunities_created", 0)
+            results["opportunities_created"] = opp_results.get(
+                "opportunities_created", 0
+            )
 
             # Update sync timestamp
             connection = await self.client._get_connection()
@@ -381,7 +383,9 @@ class SalesforceSyncService:
 
         return created
 
-    async def _sync_opportunities(self, since: Optional[datetime] = None) -> dict[str, Any]:
+    async def _sync_opportunities(
+        self, since: Optional[datetime] = None
+    ) -> dict[str, Any]:
         """Sync opportunities from Salesforce."""
         results = {
             "opportunities_synced": 0,
@@ -484,7 +488,9 @@ class SalesforceSyncService:
         # Update profile revenue if opportunity is won
         if opp.get("IsWon") and opp.get("Amount"):
             profile.total_purchases = (profile.total_purchases or 0) + 1
-            profile.total_revenue = (profile.total_revenue or 0) + float(opp.get("Amount", 0))
+            profile.total_revenue = (profile.total_revenue or 0) + float(
+                opp.get("Amount", 0)
+            )
             profile.lifecycle_stage = LifecycleStage.CUSTOMER.value
 
         # Update lifecycle stage based on opportunity stage
@@ -493,12 +499,15 @@ class SalesforceSyncService:
         if mapped_stage:
             profile.lifecycle_stage = mapped_stage.value
 
-    async def _find_profile_by_salesforce_id(self, external_id: str) -> Optional[CDPProfile]:
+    async def _find_profile_by_salesforce_id(
+        self, external_id: str
+    ) -> Optional[CDPProfile]:
         """Find CDP profile by Salesforce external ID."""
         result = await self.db.execute(
             select(CDPProfileIdentifier).where(
                 CDPProfileIdentifier.tenant_id == self.tenant_id,
-                CDPProfileIdentifier.identifier_type == IdentifierType.EXTERNAL_ID.value,
+                CDPProfileIdentifier.identifier_type
+                == IdentifierType.EXTERNAL_ID.value,
                 CDPProfileIdentifier.identifier_hash == external_id,
             )
         )
@@ -512,7 +521,9 @@ class SalesforceSyncService:
 
         return None
 
-    async def _find_profile_by_salesforce_account(self, account_id: str) -> Optional[CDPProfile]:
+    async def _find_profile_by_salesforce_account(
+        self, account_id: str
+    ) -> Optional[CDPProfile]:
         """Find CDP profile by Salesforce account ID."""
         # Search for any profile with this account_id in profile_data
         result = await self.db.execute(
@@ -551,7 +562,9 @@ class SalesforceSyncService:
                 + results.get("leads_created", 0)
                 + results.get("opportunities_created", 0)
             ),
-            records_updated=(results.get("contacts_updated", 0) + results.get("leads_updated", 0)),
+            records_updated=(
+                results.get("contacts_updated", 0) + results.get("leads_updated", 0)
+            ),
             records_failed=len(results.get("errors", [])),
             error_message=error,
             sync_metadata=results,
@@ -605,7 +618,9 @@ class SalesforceSyncService:
             "total_pipeline_value": total_pipeline_value,
             "total_won_value": total_won_value,
             "won_deal_count": won_deal_count,
-            "last_sync_at": connection.last_sync_at.isoformat()
-            if connection and connection.last_sync_at
-            else None,
+            "last_sync_at": (
+                connection.last_sync_at.isoformat()
+                if connection and connection.last_sync_at
+                else None
+            ),
         }

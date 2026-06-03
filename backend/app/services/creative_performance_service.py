@@ -12,13 +12,13 @@ Provides:
 - Cross-platform creative performance comparison
 """
 
+import hashlib
+import statistics
+from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional, Tuple
 from enum import Enum
-from collections import defaultdict
-import statistics
-import hashlib
+from typing import Any, Dict, List, Optional, Tuple
 
 from app.core.logging import get_logger
 
@@ -27,6 +27,7 @@ logger = get_logger(__name__)
 
 class CreativeType(str, Enum):
     """Types of creative assets."""
+
     IMAGE = "image"
     VIDEO = "video"
     CAROUSEL = "carousel"
@@ -39,6 +40,7 @@ class CreativeType(str, Enum):
 
 class CreativeStatus(str, Enum):
     """Status of a creative."""
+
     ACTIVE = "active"
     PAUSED = "paused"
     ARCHIVED = "archived"
@@ -49,6 +51,7 @@ class CreativeStatus(str, Enum):
 
 class FatigueLevel(str, Enum):
     """Level of creative fatigue."""
+
     NONE = "none"
     LOW = "low"
     MEDIUM = "medium"
@@ -59,6 +62,7 @@ class FatigueLevel(str, Enum):
 @dataclass
 class CreativeMetrics:
     """Performance metrics for a creative."""
+
     impressions: int = 0
     clicks: int = 0
     conversions: int = 0
@@ -98,12 +102,15 @@ class CreativeMetrics:
         if self.conversions > 0:
             self.cpa = self.spend / self.conversions
         if self.video_views > 0:
-            self.video_completion_rate = (self.video_completions / self.video_views) * 100
+            self.video_completion_rate = (
+                self.video_completions / self.video_views
+            ) * 100
 
 
 @dataclass
 class DailyCreativeMetrics:
     """Daily snapshot of creative metrics."""
+
     date: datetime
     metrics: CreativeMetrics
 
@@ -111,6 +118,7 @@ class DailyCreativeMetrics:
 @dataclass
 class Creative:
     """Represents a creative asset."""
+
     creative_id: str
     tenant_id: str
     platform: str
@@ -135,7 +143,9 @@ class Creative:
     # Tracking
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     first_impression_at: Optional[datetime] = None
-    last_updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    last_updated_at: datetime = field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
 
     # Performance
     lifetime_metrics: CreativeMetrics = field(default_factory=CreativeMetrics)
@@ -153,6 +163,7 @@ class Creative:
 @dataclass
 class CreativeFatigueAnalysis:
     """Analysis of creative fatigue."""
+
     creative_id: str
     fatigue_level: FatigueLevel
     fatigue_score: float
@@ -164,6 +175,7 @@ class CreativeFatigueAnalysis:
 @dataclass
 class CreativeComparison:
     """Comparison between creatives."""
+
     creative_ids: List[str]
     winner_id: Optional[str]
     metrics_comparison: Dict[str, Dict[str, float]]
@@ -299,10 +311,12 @@ class CreativePerformanceService:
 
         # Record daily metrics
         metric_date = date or datetime.now(timezone.utc)
-        creative.daily_metrics.append(DailyCreativeMetrics(
-            date=metric_date,
-            metrics=metrics,
-        ))
+        creative.daily_metrics.append(
+            DailyCreativeMetrics(
+                date=metric_date,
+                metrics=metrics,
+            )
+        )
 
         # Update tracking dates
         if creative.first_impression_at is None and metrics.impressions > 0:
@@ -325,7 +339,11 @@ class CreativePerformanceService:
             return
 
         # Get last 14 days of data, split into two weeks
-        recent = creative.daily_metrics[-14:] if len(creative.daily_metrics) >= 14 else creative.daily_metrics
+        recent = (
+            creative.daily_metrics[-14:]
+            if len(creative.daily_metrics) >= 14
+            else creative.daily_metrics
+        )
         mid = len(recent) // 2
 
         first_half = recent[:mid]
@@ -357,7 +375,9 @@ class CreativePerformanceService:
             avg_first_roas = statistics.mean(first_roas)
             avg_second_roas = statistics.mean(second_roas)
             if avg_first_roas > 0:
-                roas_decline = ((avg_first_roas - avg_second_roas) / avg_first_roas) * 100
+                roas_decline = (
+                    (avg_first_roas - avg_second_roas) / avg_first_roas
+                ) * 100
                 if roas_decline > 10:
                     fatigue_indicators.append(f"ROAS declined {roas_decline:.1f}%")
                     fatigue_score += min(roas_decline, 40)
@@ -418,19 +438,27 @@ class CreativePerformanceService:
             if len(creative.daily_metrics) >= 7:
                 recent_ctrs = [d.metrics.ctr for d in creative.daily_metrics[-7:]]
                 if recent_ctrs and max(recent_ctrs) > 0:
-                    ctr_variance = statistics.variance(recent_ctrs) if len(recent_ctrs) > 1 else 0
+                    ctr_variance = (
+                        statistics.variance(recent_ctrs) if len(recent_ctrs) > 1 else 0
+                    )
                     if ctr_variance > statistics.mean(recent_ctrs) * 0.5:
-                        indicators.append("High CTR variance indicates audience saturation")
+                        indicators.append(
+                            "High CTR variance indicates audience saturation"
+                        )
 
             if creative.days_active > 60:
-                indicators.append(f"Creative has been running for {creative.days_active} days")
+                indicators.append(
+                    f"Creative has been running for {creative.days_active} days"
+                )
 
             if creative.lifetime_metrics.cpm > 0:
                 indicators.append(f"Current CPM: ${creative.lifetime_metrics.cpm:.2f}")
 
         # Generate recommendation
         if creative.fatigue_level == FatigueLevel.CRITICAL:
-            recommendation = "Pause creative immediately and replace with fresh creative"
+            recommendation = (
+                "Pause creative immediately and replace with fresh creative"
+            )
         elif creative.fatigue_level == FatigueLevel.HIGH:
             recommendation = "Plan creative refresh within 1 week"
         elif creative.fatigue_level == FatigueLevel.MEDIUM:
@@ -479,18 +507,33 @@ class CreativePerformanceService:
         for creative in creatives:
             # Get recent daily metrics
             recent_metrics = [
-                d.metrics for d in creative.daily_metrics
-                if d.date >= cutoff
+                d.metrics for d in creative.daily_metrics if d.date >= cutoff
             ]
 
             if not recent_metrics:
                 continue
 
             # Calculate averages
-            avg_roas = statistics.mean([m.roas for m in recent_metrics]) if recent_metrics else 0
-            avg_ctr = statistics.mean([m.ctr for m in recent_metrics]) if recent_metrics else 0
-            avg_cvr = statistics.mean([m.cvr for m in recent_metrics]) if recent_metrics else 0
-            avg_cpa = statistics.mean([m.cpa for m in recent_metrics if m.cpa > 0]) if recent_metrics else 0
+            avg_roas = (
+                statistics.mean([m.roas for m in recent_metrics])
+                if recent_metrics
+                else 0
+            )
+            avg_ctr = (
+                statistics.mean([m.ctr for m in recent_metrics])
+                if recent_metrics
+                else 0
+            )
+            avg_cvr = (
+                statistics.mean([m.cvr for m in recent_metrics])
+                if recent_metrics
+                else 0
+            )
+            avg_cpa = (
+                statistics.mean([m.cpa for m in recent_metrics if m.cpa > 0])
+                if recent_metrics
+                else 0
+            )
             total_spend = sum(m.spend for m in recent_metrics)
             total_conversions = sum(m.conversions for m in recent_metrics)
 
@@ -512,11 +555,15 @@ class CreativePerformanceService:
         winner_id = None
         if metrics_comparison:
             if metric in ["roas", "ctr", "cvr"]:  # Higher is better
-                winner_id = max(metrics_comparison.keys(),
-                               key=lambda k: metrics_comparison[k].get(metric, 0))
+                winner_id = max(
+                    metrics_comparison.keys(),
+                    key=lambda k: metrics_comparison[k].get(metric, 0),
+                )
             else:  # Lower is better (cpa)
-                winner_id = min(metrics_comparison.keys(),
-                               key=lambda k: metrics_comparison[k].get(metric, float('inf')))
+                winner_id = min(
+                    metrics_comparison.keys(),
+                    key=lambda k: metrics_comparison[k].get(metric, float("inf")),
+                )
 
         # Statistical significance (simple t-test between top 2)
         significance = False
@@ -525,8 +572,10 @@ class CreativePerformanceService:
         if len(metric_values) >= 2:
             sorted_ids = sorted(
                 metric_values.keys(),
-                key=lambda k: statistics.mean(metric_values[k]) if metric_values[k] else 0,
-                reverse=True
+                key=lambda k: (
+                    statistics.mean(metric_values[k]) if metric_values[k] else 0
+                ),
+                reverse=True,
             )
 
             if len(sorted_ids) >= 2:
@@ -535,6 +584,7 @@ class CreativePerformanceService:
 
                 if len(vals1) >= 5 and len(vals2) >= 5:
                     from scipy import stats
+
                     try:
                         _, p_value = stats.ttest_ind(vals1, vals2)
                         significance = p_value < 0.05
@@ -601,36 +651,39 @@ class CreativePerformanceService:
             total_conversions = sum(d.metrics.conversions for d in recent)
 
             period_roas = total_revenue / total_spend if total_spend > 0 else 0
-            period_ctr = (total_clicks / total_impressions * 100) if total_impressions > 0 else 0
-            period_cvr = (total_conversions / total_clicks * 100) if total_clicks > 0 else 0
+            period_ctr = (
+                (total_clicks / total_impressions * 100) if total_impressions > 0 else 0
+            )
+            period_cvr = (
+                (total_conversions / total_clicks * 100) if total_clicks > 0 else 0
+            )
 
-            results.append({
-                "creative_id": creative.creative_id,
-                "name": creative.name,
-                "platform": creative.platform,
-                "campaign_id": creative.campaign_id,
-                "creative_type": creative.creative_type.value,
-                "status": creative.status.value,
-                "fatigue_level": creative.fatigue_level.value,
-                "days_active": creative.days_active,
-                "metrics": {
-                    "roas": round(period_roas, 2),
-                    "ctr": round(period_ctr, 2),
-                    "cvr": round(period_cvr, 2),
-                    "spend": round(total_spend, 2),
-                    "revenue": round(total_revenue, 2),
-                    "impressions": total_impressions,
-                    "clicks": total_clicks,
-                    "conversions": total_conversions,
-                },
-            })
+            results.append(
+                {
+                    "creative_id": creative.creative_id,
+                    "name": creative.name,
+                    "platform": creative.platform,
+                    "campaign_id": creative.campaign_id,
+                    "creative_type": creative.creative_type.value,
+                    "status": creative.status.value,
+                    "fatigue_level": creative.fatigue_level.value,
+                    "days_active": creative.days_active,
+                    "metrics": {
+                        "roas": round(period_roas, 2),
+                        "ctr": round(period_ctr, 2),
+                        "cvr": round(period_cvr, 2),
+                        "spend": round(total_spend, 2),
+                        "revenue": round(total_revenue, 2),
+                        "impressions": total_impressions,
+                        "clicks": total_clicks,
+                        "conversions": total_conversions,
+                    },
+                }
+            )
 
         # Sort by metric
         reverse = metric in ["roas", "ctr", "cvr", "conversions", "revenue"]
-        results.sort(
-            key=lambda x: x["metrics"].get(metric, 0),
-            reverse=reverse
-        )
+        results.sort(key=lambda x: x["metrics"].get(metric, 0), reverse=reverse)
 
         return results[:limit]
 
@@ -649,8 +702,13 @@ class CreativePerformanceService:
         min_fatigue_level: FatigueLevel = FatigueLevel.MEDIUM,
     ) -> List[Dict[str, Any]]:
         """Get creatives that need attention due to fatigue."""
-        fatigue_order = [FatigueLevel.NONE, FatigueLevel.LOW, FatigueLevel.MEDIUM,
-                        FatigueLevel.HIGH, FatigueLevel.CRITICAL]
+        fatigue_order = [
+            FatigueLevel.NONE,
+            FatigueLevel.LOW,
+            FatigueLevel.MEDIUM,
+            FatigueLevel.HIGH,
+            FatigueLevel.CRITICAL,
+        ]
         min_index = fatigue_order.index(min_fatigue_level)
 
         creatives = list(self._creatives.values())
@@ -661,17 +719,19 @@ class CreativePerformanceService:
         for creative in creatives:
             if fatigue_order.index(creative.fatigue_level) >= min_index:
                 analysis = self.analyze_fatigue(creative.creative_id)
-                fatigued.append({
-                    "creative_id": creative.creative_id,
-                    "name": creative.name,
-                    "platform": creative.platform,
-                    "campaign_id": creative.campaign_id,
-                    "fatigue_level": creative.fatigue_level.value,
-                    "fatigue_score": creative.fatigue_score,
-                    "days_active": creative.days_active,
-                    "recommendation": analysis.recommendation if analysis else "",
-                    "lifetime_roas": round(creative.lifetime_metrics.roas, 2),
-                })
+                fatigued.append(
+                    {
+                        "creative_id": creative.creative_id,
+                        "name": creative.name,
+                        "platform": creative.platform,
+                        "campaign_id": creative.campaign_id,
+                        "fatigue_level": creative.fatigue_level.value,
+                        "fatigue_score": creative.fatigue_score,
+                        "days_active": creative.days_active,
+                        "recommendation": analysis.recommendation if analysis else "",
+                        "lifetime_roas": round(creative.lifetime_metrics.roas, 2),
+                    }
+                )
 
         # Sort by fatigue score descending
         fatigued.sort(key=lambda x: x["fatigue_score"], reverse=True)
@@ -723,8 +783,16 @@ class CreativePerformanceService:
             by_type[creative_type.value] = {
                 "creative_count": len(type_creatives),
                 "roas": round(total_revenue / total_spend, 2) if total_spend > 0 else 0,
-                "ctr": round((total_clicks / total_impressions * 100), 2) if total_impressions > 0 else 0,
-                "cvr": round((total_conversions / total_clicks * 100), 2) if total_clicks > 0 else 0,
+                "ctr": (
+                    round((total_clicks / total_impressions * 100), 2)
+                    if total_impressions > 0
+                    else 0
+                ),
+                "cvr": (
+                    round((total_conversions / total_clicks * 100), 2)
+                    if total_clicks > 0
+                    else 0
+                ),
                 "total_spend": round(total_spend, 2),
                 "total_revenue": round(total_revenue, 2),
             }
@@ -754,8 +822,13 @@ class CreativePerformanceService:
             "by_status": dict(by_status),
             "by_fatigue_level": dict(by_fatigue),
             "by_platform": dict(by_platform),
-            "needs_attention": len([c for c in creatives
-                                   if c.fatigue_level in [FatigueLevel.HIGH, FatigueLevel.CRITICAL]]),
+            "needs_attention": len(
+                [
+                    c
+                    for c in creatives
+                    if c.fatigue_level in [FatigueLevel.HIGH, FatigueLevel.CRITICAL]
+                ]
+            ),
         }
 
 
@@ -766,6 +839,7 @@ creative_service = CreativePerformanceService()
 # =============================================================================
 # Convenience Functions
 # =============================================================================
+
 
 def record_creative_metrics(
     creative_id: str,
@@ -835,9 +909,11 @@ def get_top_performing_creatives(
 # Advanced Creative Performance Analytics (P0 Enhancement)
 # =============================================================================
 
+
 @dataclass
 class CreativeElement:
     """Individual element of a creative."""
+
     element_type: str  # headline, body, cta, image, video
     content: str
     position: Optional[str] = None
@@ -846,6 +922,7 @@ class CreativeElement:
 @dataclass
 class CreativeElementAnalysis:
     """Analysis of creative element performance."""
+
     element_type: str
     top_performers: List[Dict[str, Any]]
     worst_performers: List[Dict[str, Any]]
@@ -855,6 +932,7 @@ class CreativeElementAnalysis:
 @dataclass
 class CreativeLifecyclePrediction:
     """Prediction of creative lifecycle."""
+
     creative_id: str
     current_phase: str  # learning, growth, maturity, decline, fatigue
     days_in_phase: int
@@ -867,6 +945,7 @@ class CreativeLifecyclePrediction:
 @dataclass
 class CrossPlatformCreativeInsight:
     """Insight from cross-platform creative analysis."""
+
     insight_type: str
     platforms: List[str]
     description: str
@@ -902,13 +981,15 @@ class CreativeElementAnalyzer:
         if key not in self._element_performance[element.element_type]:
             self._element_performance[element.element_type][key] = []
 
-        self._element_performance[element.element_type][key].append({
-            "creative_id": creative_id,
-            "ctr": metrics.ctr,
-            "conversion_rate": metrics.conversion_rate,
-            "roas": metrics.roas,
-            "impressions": metrics.impressions,
-        })
+        self._element_performance[element.element_type][key].append(
+            {
+                "creative_id": creative_id,
+                "ctr": metrics.ctr,
+                "conversion_rate": metrics.conversion_rate,
+                "roas": metrics.roas,
+                "impressions": metrics.impressions,
+            }
+        )
 
     def analyze_element_type(
         self,
@@ -935,19 +1016,27 @@ class CreativeElementAnalyzer:
 
             avg_ctr = statistics.mean([p["ctr"] for p in performances])
             avg_cvr = statistics.mean([p["conversion_rate"] for p in performances])
-            avg_roas = statistics.mean([p["roas"] for p in performances if p["roas"] > 0])
+            avg_roas = statistics.mean(
+                [p["roas"] for p in performances if p["roas"] > 0]
+            )
 
             # Composite score
             score = avg_ctr * 0.3 + avg_cvr * 0.4 + min(avg_roas / 10, 3) * 0.3
 
-            element_scores.append({
-                "element": element_key.split(":", 1)[1] if ":" in element_key else element_key,
-                "avg_ctr": round(avg_ctr, 2),
-                "avg_conversion_rate": round(avg_cvr, 2),
-                "avg_roas": round(avg_roas, 2),
-                "impressions": total_impressions,
-                "score": round(score, 3),
-            })
+            element_scores.append(
+                {
+                    "element": (
+                        element_key.split(":", 1)[1]
+                        if ":" in element_key
+                        else element_key
+                    ),
+                    "avg_ctr": round(avg_ctr, 2),
+                    "avg_conversion_rate": round(avg_cvr, 2),
+                    "avg_roas": round(avg_roas, 2),
+                    "impressions": total_impressions,
+                    "score": round(score, 3),
+                }
+            )
 
         # Sort by score
         element_scores.sort(key=lambda x: x["score"], reverse=True)
@@ -983,7 +1072,9 @@ class CreativeElementAnalyzer:
             # Analyze headline patterns
             top_lengths = [len(e["element"]) for e in top]
             avg_top_length = statistics.mean(top_lengths) if top_lengths else 0
-            recommendations.append(f"Optimal headline length appears to be ~{int(avg_top_length)} characters")
+            recommendations.append(
+                f"Optimal headline length appears to be ~{int(avg_top_length)} characters"
+            )
 
             # Check for patterns in top performers
             if any("?" in e["element"] for e in top):
@@ -993,7 +1084,9 @@ class CreativeElementAnalyzer:
             # Analyze CTA patterns
             top_ctas = [e["element"].lower() for e in top]
             if any("now" in cta for cta in top_ctas):
-                recommendations.append("Urgency words like 'Now' improve CTA performance")
+                recommendations.append(
+                    "Urgency words like 'Now' improve CTA performance"
+                )
             if any("free" in cta for cta in top_ctas):
                 recommendations.append("'Free' in CTAs drives higher engagement")
 
@@ -1039,10 +1132,12 @@ class CreativeLifecyclePredictor:
         if creative_id not in self._creative_history:
             self._creative_history[creative_id] = []
 
-        self._creative_history[creative_id].append((
-            datetime.now(timezone.utc),
-            metrics,
-        ))
+        self._creative_history[creative_id].append(
+            (
+                datetime.now(timezone.utc),
+                metrics,
+            )
+        )
 
         # Keep last 90 days
         cutoff = datetime.now(timezone.utc) - timedelta(days=90)
@@ -1073,8 +1168,14 @@ class CreativeLifecyclePredictor:
         recent_metrics = [m for t, m in history[-7:]]
         older_metrics = [m for t, m in history[:-7]] if len(history) > 7 else []
 
-        current_ctr = statistics.mean([m.ctr for m in recent_metrics]) if recent_metrics else 0
-        historical_ctr = statistics.mean([m.ctr for m in older_metrics]) if older_metrics else current_ctr
+        current_ctr = (
+            statistics.mean([m.ctr for m in recent_metrics]) if recent_metrics else 0
+        )
+        historical_ctr = (
+            statistics.mean([m.ctr for m in older_metrics])
+            if older_metrics
+            else current_ctr
+        )
 
         # Determine current phase
         current_phase, factors = self._determine_phase(
@@ -1113,7 +1214,11 @@ class CreativeLifecyclePredictor:
             return "learning", ["Creative is new, in learning phase"]
 
         # Calculate CTR change
-        ctr_change_pct = ((current_ctr - historical_ctr) / historical_ctr * 100) if historical_ctr > 0 else 0
+        ctr_change_pct = (
+            ((current_ctr - historical_ctr) / historical_ctr * 100)
+            if historical_ctr > 0
+            else 0
+        )
 
         if ctr_change_pct <= -30:
             factors.append(f"CTR dropped {abs(ctr_change_pct):.1f}% - severe fatigue")
@@ -1218,13 +1323,15 @@ class CrossPlatformCreativeAnalyzer:
                     }
 
         if len(platform_performance) < 2:
-            return [CrossPlatformCreativeInsight(
-                insight_type="insufficient_data",
-                platforms=list(platform_performance.keys()),
-                description="Creative only found on one platform",
-                actionable_recommendation="Consider expanding to more platforms",
-                potential_impact="Medium - diversification reduces risk",
-            )]
+            return [
+                CrossPlatformCreativeInsight(
+                    insight_type="insufficient_data",
+                    platforms=list(platform_performance.keys()),
+                    description="Creative only found on one platform",
+                    actionable_recommendation="Consider expanding to more platforms",
+                    potential_impact="Medium - diversification reduces risk",
+                )
+            ]
 
         # Compare performance across platforms
         platforms = list(platform_performance.keys())
@@ -1235,44 +1342,52 @@ class CrossPlatformCreativeAnalyzer:
         worst_platform = min(platform_performance.items(), key=lambda x: x[1]["roas"])
 
         if best_platform[1]["roas"] > worst_platform[1]["roas"] * 2:
-            insights.append(CrossPlatformCreativeInsight(
-                insight_type="performance_gap",
-                platforms=[best_platform[0], worst_platform[0]],
-                description=f"{best_platform[0]} outperforms {worst_platform[0]} by {best_platform[1]['roas']/worst_platform[1]['roas']:.1f}x ROAS",
-                actionable_recommendation=f"Consider reallocating budget from {worst_platform[0]} to {best_platform[0]}",
-                potential_impact="High - significant ROAS improvement potential",
-            ))
+            insights.append(
+                CrossPlatformCreativeInsight(
+                    insight_type="performance_gap",
+                    platforms=[best_platform[0], worst_platform[0]],
+                    description=f"{best_platform[0]} outperforms {worst_platform[0]} by {best_platform[1]['roas']/worst_platform[1]['roas']:.1f}x ROAS",
+                    actionable_recommendation=f"Consider reallocating budget from {worst_platform[0]} to {best_platform[0]}",
+                    potential_impact="High - significant ROAS improvement potential",
+                )
+            )
 
         # Check for universal performers
         avg_roas = statistics.mean([p["roas"] for p in performances if p["roas"] > 0])
         if all(p["roas"] >= avg_roas * 0.8 for p in performances if p["roas"] > 0):
-            insights.append(CrossPlatformCreativeInsight(
-                insight_type="universal_performer",
-                platforms=platforms,
-                description="This creative performs consistently across all platforms",
-                actionable_recommendation="Scale budget across all platforms",
-                potential_impact="High - proven cross-platform effectiveness",
-            ))
+            insights.append(
+                CrossPlatformCreativeInsight(
+                    insight_type="universal_performer",
+                    platforms=platforms,
+                    description="This creative performs consistently across all platforms",
+                    actionable_recommendation="Scale budget across all platforms",
+                    potential_impact="High - proven cross-platform effectiveness",
+                )
+            )
 
         # Check for platform-specific optimization
         for platform, perf in platform_performance.items():
             if perf["ctr"] > 0 and perf["conversion_rate"] < avg_roas * 0.5:
-                insights.append(CrossPlatformCreativeInsight(
-                    insight_type="conversion_opportunity",
-                    platforms=[platform],
-                    description=f"High CTR but low conversion on {platform}",
-                    actionable_recommendation=f"Optimize landing page or targeting for {platform}",
-                    potential_impact="Medium - improve conversion rate to match engagement",
-                ))
+                insights.append(
+                    CrossPlatformCreativeInsight(
+                        insight_type="conversion_opportunity",
+                        platforms=[platform],
+                        description=f"High CTR but low conversion on {platform}",
+                        actionable_recommendation=f"Optimize landing page or targeting for {platform}",
+                        potential_impact="Medium - improve conversion rate to match engagement",
+                    )
+                )
 
         if not insights:
-            insights.append(CrossPlatformCreativeInsight(
-                insight_type="balanced_performance",
-                platforms=platforms,
-                description="Creative performs similarly across platforms",
-                actionable_recommendation="Maintain current allocation, test new variations",
-                potential_impact="Low - already optimized",
-            ))
+            insights.append(
+                CrossPlatformCreativeInsight(
+                    insight_type="balanced_performance",
+                    platforms=platforms,
+                    description="Creative performs similarly across platforms",
+                    actionable_recommendation="Maintain current allocation, test new variations",
+                    potential_impact="Low - already optimized",
+                )
+            )
 
         return insights
 
@@ -1310,18 +1425,26 @@ class CrossPlatformCreativeAnalyzer:
                     if avg_ctr < 1.0:
                         platform_recs.append("Test more engaging headlines and images")
                     if avg_roas < 2.0:
-                        platform_recs.append("Review audience targeting for better quality")
+                        platform_recs.append(
+                            "Review audience targeting for better quality"
+                        )
 
                 elif platform == "google":
                     if avg_ctr < 3.0:
-                        platform_recs.append("Improve ad relevance and keyword alignment")
+                        platform_recs.append(
+                            "Improve ad relevance and keyword alignment"
+                        )
 
                 elif platform == "tiktok":
                     if avg_ctr < 2.0:
-                        platform_recs.append("Try more native, authentic creative styles")
+                        platform_recs.append(
+                            "Try more native, authentic creative styles"
+                        )
 
                 if not platform_recs:
-                    platform_recs.append("Performance is strong - continue current strategy")
+                    platform_recs.append(
+                        "Performance is strong - continue current strategy"
+                    )
 
             recommendations[platform] = platform_recs
 

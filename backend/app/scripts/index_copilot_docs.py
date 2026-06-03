@@ -75,7 +75,9 @@ async def _run_dry(files: List[Path]) -> None:
         )
         total_chunks += len(chunks)
         print(f"  {path.relative_to(REPO_ROOT)}  →  {len(chunks)} chunks")
-    print(f"\nTotal: {len(files)} files, {total_chunks} chunks (no embeddings written).")
+    print(
+        f"\nTotal: {len(files)} files, {total_chunks} chunks (no embeddings written)."
+    )
 
 
 async def _run_index(files: List[Path]) -> None:

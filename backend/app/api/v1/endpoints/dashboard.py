@@ -441,8 +441,12 @@ def format_percentage(value: float) -> str:
 async def get_dashboard_overview(
     current_user: CurrentUserDep,
     period: TimePeriod = Query(default=TimePeriod.LAST_7_DAYS),
-    custom_start: Optional[date] = Query(default=None, alias="start_date", description="Custom range start (YYYY-MM-DD)"),
-    custom_end: Optional[date] = Query(default=None, alias="end_date", description="Custom range end (YYYY-MM-DD)"),
+    custom_start: Optional[date] = Query(
+        default=None, alias="start_date", description="Custom range start (YYYY-MM-DD)"
+    ),
+    custom_end: Optional[date] = Query(
+        default=None, alias="end_date", description="Custom range end (YYYY-MM-DD)"
+    ),
     db: AsyncSession = Depends(get_async_session),
 ):
     """
@@ -458,11 +462,24 @@ async def get_dashboard_overview(
         return await _build_dashboard_overview(
             tenant_id, period, custom_start, custom_end, db
         )
-    except (SQLAlchemyError, ValueError, TypeError, KeyError, ZeroDivisionError, OSError) as e:
+    except (
+        SQLAlchemyError,
+        ValueError,
+        TypeError,
+        KeyError,
+        ZeroDivisionError,
+        OSError,
+    ) as e:
         logger.error("dashboard_overview_error", error=str(e), tenant_id=tenant_id)
         # Return safe empty dashboard so the frontend can still render
         start_date, end_date = get_date_range(period, custom_start, custom_end)
-        zero_metric = MetricValue(value=0, previous_value=0, change_percent=0, trend="stable", formatted="$0.00")
+        zero_metric = MetricValue(
+            value=0,
+            previous_value=0,
+            change_percent=0,
+            trend="stable",
+            formatted="$0.00",
+        )
         return APIResponse(
             success=True,
             data=DashboardOverviewResponse(
@@ -471,15 +488,27 @@ async def get_dashboard_overview(
                 has_campaigns=False,
                 period=period.value,
                 period_label="Last 7 Days",
-                date_range={"start": start_date.isoformat(), "end": end_date.isoformat()},
+                date_range={
+                    "start": start_date.isoformat(),
+                    "end": end_date.isoformat(),
+                },
                 metrics=OverviewMetrics(
-                    spend=zero_metric, revenue=zero_metric, roas=zero_metric,
-                    conversions=zero_metric, cpa=zero_metric, impressions=zero_metric,
-                    clicks=zero_metric, ctr=zero_metric,
+                    spend=zero_metric,
+                    revenue=zero_metric,
+                    roas=zero_metric,
+                    conversions=zero_metric,
+                    cpa=zero_metric,
+                    impressions=zero_metric,
+                    clicks=zero_metric,
+                    ctr=zero_metric,
                 ),
                 signal_health=SignalHealthSummary(
-                    overall_score=0, status="unknown", emq_score=None,
-                    data_freshness_minutes=None, api_health=False, issues=["Dashboard data temporarily unavailable"],
+                    overall_score=0,
+                    status="unknown",
+                    emq_score=None,
+                    data_freshness_minutes=None,
+                    api_health=False,
+                    issues=["Dashboard data temporarily unavailable"],
                     autopilot_enabled=False,
                 ),
                 platforms=[],
@@ -508,7 +537,9 @@ async def _build_dashboard_overview(
         select(TenantOnboarding).where(TenantOnboarding.tenant_id == tenant_id)
     )
     onboarding = onboarding_result.scalar_one_or_none()
-    onboarding_complete = bool(onboarding and onboarding.status == OnboardingStatus.COMPLETED)
+    onboarding_complete = bool(
+        onboarding and onboarding.status == OnboardingStatus.COMPLETED
+    )
 
     # Get connected platforms
     platforms_result = await db.execute(
@@ -521,7 +552,9 @@ async def _build_dashboard_overview(
     )
     connected_platforms = platforms_result.scalars().all()
     # Also check env-var credentials as fallback
-    has_env_creds = bool(os.getenv("META_ACCESS_TOKEN") or os.getenv("TIKTOK_ACCESS_TOKEN"))
+    has_env_creds = bool(
+        os.getenv("META_ACCESS_TOKEN") or os.getenv("TIKTOK_ACCESS_TOKEN")
+    )
     has_connected_platforms = len(connected_platforms) > 0 or has_env_creds
 
     # Get campaigns and aggregate metrics
@@ -566,7 +599,9 @@ async def _build_dashboard_overview(
     # Calculate derived metrics
     current_roas = current_revenue / current_spend if current_spend > 0 else 0
     current_cpa = current_spend / current_conversions if current_conversions > 0 else 0
-    current_ctr = (current_clicks / current_impressions * 100) if current_impressions > 0 else 0
+    current_ctr = (
+        (current_clicks / current_impressions * 100) if current_impressions > 0 else 0
+    )
 
     # Query previous period from fact_platform_daily for real comparisons
     try:
@@ -610,7 +645,9 @@ async def _build_dashboard_overview(
     prev_ctr = (prev_clicks / prev_impressions * 100) if prev_impressions > 0 else 0
 
     # Build metrics with changes
-    def build_metric(current: float, previous: float, formatter=format_currency) -> MetricValue:
+    def build_metric(
+        current: float, previous: float, formatter=format_currency
+    ) -> MetricValue:
         change, trend = calculate_change(current, previous)
         return MetricValue(
             value=current,
@@ -637,11 +674,15 @@ async def _build_dashboard_overview(
         ctr_score = min(30, current_ctr * 10)
         platform_count = len(connected_platforms)
         total_platforms = len(list(AdPlatform))
-        connectivity_score = (platform_count / total_platforms * 20) if total_platforms > 0 else 0
+        connectivity_score = (
+            (platform_count / total_platforms * 20) if total_platforms > 0 else 0
+        )
         overall_score = int(roas_score + ctr_score + connectivity_score)
 
         # EMQ proxy from conversion rate (clicks → conversions)
-        conversion_rate = current_conversions / current_clicks if current_clicks > 0 else 0
+        conversion_rate = (
+            current_conversions / current_clicks if current_clicks > 0 else 0
+        )
         emq_score = round(min(0.99, max(0.5, 0.5 + conversion_rate * 5)), 2)
 
         # Determine status
@@ -667,7 +708,9 @@ async def _build_dashboard_overview(
             data_freshness_minutes=5,
             api_health=platform_count > 0,
             issues=issues,
-            autopilot_enabled=onboarding.automation_mode == "autopilot" if onboarding else False,
+            autopilot_enabled=(
+                onboarding.automation_mode == "autopilot" if onboarding else False
+            ),
         )
     else:
         signal_health = SignalHealthSummary(
@@ -677,13 +720,17 @@ async def _build_dashboard_overview(
             data_freshness_minutes=None,
             api_health=False,
             issues=["No campaign data available"],
-            autopilot_enabled=onboarding.automation_mode == "autopilot" if onboarding else False,
+            autopilot_enabled=(
+                onboarding.automation_mode == "autopilot" if onboarding else False
+            ),
         )
 
     # Platform breakdown
     platforms_summary = []
     for platform in AdPlatform:
-        connection = next((c for c in connected_platforms if c.platform == platform), None)
+        connection = next(
+            (c for c in connected_platforms if c.platform == platform), None
+        )
 
         platform_campaigns = [c for c in campaigns if c.platform == platform]
         platform_spend = sum(c.total_spend_cents or 0 for c in platform_campaigns) / 100
@@ -906,9 +953,7 @@ async def get_recommendations(
         if roas >= 3:
             rec_type = RecommendationType.SCALE
             title = f"Scale {c.name}"
-            description = (
-                f"ROAS of {roas:.2f}x exceeds target. Consider increasing budget by 20-30%."
-            )
+            description = f"ROAS of {roas:.2f}x exceeds target. Consider increasing budget by 20-30%."
             confidence = 0.85
             impact = f"+${spend * 0.25:.0f} potential revenue"
         elif roas < 1:
@@ -1009,11 +1054,13 @@ async def approve_recommendation(
                 "tenant_id": current_user.tenant_id,
                 "action_type": f"recommendation_{rec_type}_approved",
                 "entity_id": campaign_id or recommendation_id,
-                "details": json.dumps({
-                    "recommendation_id": recommendation_id,
-                    "type": rec_type,
-                    "approved_by": current_user.id,
-                }),
+                "details": json.dumps(
+                    {
+                        "recommendation_id": recommendation_id,
+                        "type": rec_type,
+                        "approved_by": current_user.id,
+                    }
+                ),
                 "user_id": current_user.id,
             },
         )
@@ -1083,10 +1130,12 @@ async def reject_recommendation(
             {
                 "tenant_id": current_user.tenant_id,
                 "entity_id": recommendation_id,
-                "details": json.dumps({
-                    "recommendation_id": recommendation_id,
-                    "rejected_by": current_user.id,
-                }),
+                "details": json.dumps(
+                    {
+                        "recommendation_id": recommendation_id,
+                        "rejected_by": current_user.id,
+                    }
+                ),
                 "user_id": current_user.id,
             },
         )
@@ -1139,7 +1188,11 @@ async def get_activity_feed(
         if log.action in [AuditAction.LOGIN, AuditAction.LOGOUT]:
             activity_type = "auth"
             severity = "info"
-            title = "User logged in" if log.action == AuditAction.LOGIN else "User logged out"
+            title = (
+                "User logged in"
+                if log.action == AuditAction.LOGIN
+                else "User logged out"
+            )
         elif log.action == AuditAction.CREATE:
             activity_type = "action"
             severity = "success"
@@ -1171,7 +1224,9 @@ async def get_activity_feed(
         )
 
     # Get total count
-    count_result = await db.execute(select(func.count()).where(AuditLog.tenant_id == tenant_id))
+    count_result = await db.execute(
+        select(func.count()).where(AuditLog.tenant_id == tenant_id)
+    )
     total = count_result.scalar() or 0
 
     return APIResponse(
@@ -1225,7 +1280,9 @@ async def get_quick_actions(
     )
     connected = platforms_result.scalars().all()
 
-    has_env_platform = bool(os.getenv("META_ACCESS_TOKEN") or os.getenv("TIKTOK_ACCESS_TOKEN"))
+    has_env_platform = bool(
+        os.getenv("META_ACCESS_TOKEN") or os.getenv("TIKTOK_ACCESS_TOKEN")
+    )
     if len(connected) == 0 and not has_env_platform:
         actions.append(
             QuickAction(
@@ -1302,7 +1359,14 @@ async def get_signal_health(
 
     try:
         return await _build_signal_health(tenant_id, db)
-    except (SQLAlchemyError, ValueError, TypeError, KeyError, ZeroDivisionError, OSError) as e:
+    except (
+        SQLAlchemyError,
+        ValueError,
+        TypeError,
+        KeyError,
+        ZeroDivisionError,
+        OSError,
+    ) as e:
         logger.error("signal_health_error", error=str(e), tenant_id=tenant_id)
         return APIResponse(
             success=True,
@@ -1338,7 +1402,9 @@ async def _build_signal_health(tenant_id: int, db: AsyncSession):
     connected_count = platforms_result.scalar() or 0
 
     # Check if platforms are available via env vars (fallback)
-    has_env_credentials = bool(os.getenv("META_ACCESS_TOKEN") or os.getenv("TIKTOK_ACCESS_TOKEN"))
+    has_env_credentials = bool(
+        os.getenv("META_ACCESS_TOKEN") or os.getenv("TIKTOK_ACCESS_TOKEN")
+    )
 
     # Also check if campaigns exist (synced via env credentials)
     campaign_count_result = await db.execute(
@@ -1505,13 +1571,15 @@ async def export_dashboard(
             func.sum(CampaignMetric.conversions).label("conversions"),
             func.sum(CampaignMetric.impressions).label("impressions"),
             func.sum(CampaignMetric.clicks).label("clicks"),
-        ).where(
+        )
+        .where(
             and_(
                 CampaignMetric.tenant_id == tenant_id,
                 CampaignMetric.date >= start_date,
                 CampaignMetric.date <= end_date,
             )
-        ).group_by(CampaignMetric.campaign_id)
+        )
+        .group_by(CampaignMetric.campaign_id)
     )
     period_metrics_by_campaign = {
         row.campaign_id: row for row in period_metrics_result.mappings().all()
@@ -1554,10 +1622,18 @@ async def export_dashboard(
             "total_revenue": round(total_revenue, 2),
             "roas": round(total_revenue / total_spend, 2) if total_spend > 0 else 0,
             "conversions": total_conversions,
-            "cpa": round(total_spend / total_conversions, 2) if total_conversions > 0 else 0,
+            "cpa": (
+                round(total_spend / total_conversions, 2)
+                if total_conversions > 0
+                else 0
+            ),
             "impressions": total_impressions,
             "clicks": total_clicks,
-            "ctr": round((total_clicks / total_impressions * 100), 2) if total_impressions > 0 else 0,
+            "ctr": (
+                round((total_clicks / total_impressions * 100), 2)
+                if total_impressions > 0
+                else 0
+            ),
         }
 
     # Add campaigns — use period-filtered metrics, not all-time totals
@@ -1570,18 +1646,20 @@ async def export_dashboard(
             c_spend = c_spend_cents / 100
             c_revenue = c_revenue_cents / 100
 
-            export_data["campaigns"].append({
-                "id": c.id,
-                "name": c.name,
-                "platform": c.platform.value,
-                "status": c.status.value,
-                "spend": round(c_spend, 2),
-                "revenue": round(c_revenue, 2),
-                "conversions": (pm.get("conversions") or 0) if pm else 0,
-                "impressions": (pm.get("impressions") or 0) if pm else 0,
-                "clicks": (pm.get("clicks") or 0) if pm else 0,
-                "roas": round(c_revenue / c_spend, 2) if c_spend > 0 else 0,
-            })
+            export_data["campaigns"].append(
+                {
+                    "id": c.id,
+                    "name": c.name,
+                    "platform": c.platform.value,
+                    "status": c.status.value,
+                    "spend": round(c_spend, 2),
+                    "revenue": round(c_revenue, 2),
+                    "conversions": (pm.get("conversions") or 0) if pm else 0,
+                    "impressions": (pm.get("impressions") or 0) if pm else 0,
+                    "clicks": (pm.get("clicks") or 0) if pm else 0,
+                    "roas": round(c_revenue / c_spend, 2) if c_spend > 0 else 0,
+                }
+            )
 
     # Add recommendations (mock for demo)
     if request.include_recommendations:
@@ -1668,7 +1746,9 @@ async def export_dashboard(
                 writer.writerow([rec["campaign"], rec["type"], rec["description"]])
 
         output.seek(0)
-        filename = f"stratum-dashboard-export-{datetime.now(UTC).date().isoformat()}.csv"
+        filename = (
+            f"stratum-dashboard-export-{datetime.now(UTC).date().isoformat()}.csv"
+        )
 
         return StreamingResponse(
             iter([output.getvalue()]),
@@ -1678,7 +1758,9 @@ async def export_dashboard(
 
     else:
         # JSON format
-        filename = f"stratum-dashboard-export-{datetime.now(UTC).date().isoformat()}.json"
+        filename = (
+            f"stratum-dashboard-export-{datetime.now(UTC).date().isoformat()}.json"
+        )
 
         return StreamingResponse(
             iter([json.dumps(export_data, indent=2, default=str)]),
@@ -1723,7 +1805,9 @@ AVAILABLE_METRICS = [
 ]
 
 
-@router.get("/settings/metric-visibility", response_model=APIResponse[MetricVisibilityResponse])
+@router.get(
+    "/settings/metric-visibility", response_model=APIResponse[MetricVisibilityResponse]
+)
 async def get_metric_visibility(
     current_user: CurrentUserDep,
     db: AsyncSession = Depends(get_async_session),
@@ -1745,7 +1829,9 @@ async def get_metric_visibility(
     )
 
 
-@router.patch("/settings/metric-visibility", response_model=APIResponse[MetricVisibilityResponse])
+@router.patch(
+    "/settings/metric-visibility", response_model=APIResponse[MetricVisibilityResponse]
+)
 async def update_metric_visibility(
     request_data: MetricVisibilityRequest,
     current_user: VerifiedUserDep,
@@ -1762,7 +1848,9 @@ async def update_metric_visibility(
     )
     tenant = tenant_result.scalar_one_or_none()
     if not tenant:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found"
+        )
 
     # Validate metric keys
     valid_keys = {m["key"] for m in AVAILABLE_METRICS}
@@ -2026,7 +2114,9 @@ async def get_morning_briefing(
         pending_recommendations = 0
 
     # Active alerts count
-    active_alerts = len([c for c in top_changes if c.severity in ("warning", "critical")])
+    active_alerts = len(
+        [c for c in top_changes if c.severity in ("warning", "critical")]
+    )
 
     briefing = MorningBriefingResponse(
         date=today.isoformat(),
@@ -2065,15 +2155,17 @@ async def get_morning_briefing(
 # Smart Anomaly Narratives (Feature #2)
 # =============================================================================
 
+from app.analytics.logic.anomalies import detect_anomalies
 from app.analytics.logic.anomaly_narratives import (
     AnomalyNarrativesResponse,
     build_anomaly_narratives,
 )
-from app.analytics.logic.anomalies import detect_anomalies
 from app.analytics.logic.types import AnomalyParams
 
 
-@router.get("/anomaly-narratives", response_model=APIResponse[AnomalyNarrativesResponse])
+@router.get(
+    "/anomaly-narratives", response_model=APIResponse[AnomalyNarrativesResponse]
+)
 async def get_anomaly_narratives(
     user: CurrentUserDep,
     db: AsyncSession = Depends(get_async_session),
@@ -2092,8 +2184,11 @@ async def get_anomaly_narratives(
     try:
         # Fetch daily aggregate metrics for the last 14 days
         metrics_by_day: dict[str, list[float]] = {
-            "spend": [], "revenue": [], "roas": [],
-            "cpa": [], "conversions": [],
+            "spend": [],
+            "revenue": [],
+            "roas": [],
+            "cpa": [],
+            "conversions": [],
         }
         current_values: dict[str, float] = {}
 
@@ -2101,9 +2196,13 @@ async def get_anomaly_narratives(
             target_date = today - timedelta(days=day_offset)
             result = await db.execute(
                 select(
-                    func.coalesce(func.sum(Campaign.total_spend_cents), 0).label("spend"),
+                    func.coalesce(func.sum(Campaign.total_spend_cents), 0).label(
+                        "spend"
+                    ),
                     func.coalesce(func.sum(Campaign.revenue_cents), 0).label("revenue"),
-                    func.coalesce(func.sum(Campaign.conversions), 0).label("conversions"),
+                    func.coalesce(func.sum(Campaign.conversions), 0).label(
+                        "conversions"
+                    ),
                 ).where(
                     and_(
                         Campaign.tenant_id == tenant_id,
@@ -2219,6 +2318,7 @@ async def get_signal_recovery(
         # Fallback: check env vars for platform credentials
         if not connected_platforms:
             import os as _os
+
             if _os.getenv("META_ACCESS_TOKEN"):
                 connected_platforms.append("meta")
             if _os.getenv("TIKTOK_ACCESS_TOKEN"):
@@ -2298,7 +2398,9 @@ async def get_signal_recovery(
             score_components = []
             # Freshness component
             if data_freshness_hours is not None:
-                freshness_score = max(0, 100 - int(data_freshness_hours * 0.625))  # -15 per day
+                freshness_score = max(
+                    0, 100 - int(data_freshness_hours * 0.625)
+                )  # -15 per day
                 score_components.append(freshness_score)
             # EMQ component
             if emq_score is not None:
@@ -2406,15 +2508,17 @@ async def get_predictive_budget(
             if spend <= 0:
                 continue
 
-            campaigns.append({
-                "id": row.id,
-                "name": row.name,
-                "platform": str(row.platform) if row.platform else "unknown",
-                "status": str(row.status) if row.status else "unknown",
-                "spend": spend,
-                "revenue": revenue,
-                "conversions": conversions,
-            })
+            campaigns.append(
+                {
+                    "id": row.id,
+                    "name": row.name,
+                    "platform": str(row.platform) if row.platform else "unknown",
+                    "status": str(row.status) if row.status else "unknown",
+                    "spend": spend,
+                    "revenue": revenue,
+                    "conversions": conversions,
+                }
+            )
 
         # ── Get signal health score ──────────────────────────────
         signal_health_score = 80  # Default healthy
@@ -2524,14 +2628,16 @@ async def get_ai_report(
             revenue = float(row.revenue_cents or 0) / 100
             conversions = int(row.conversions or 0)
 
-            campaigns.append({
-                "id": row.id,
-                "name": row.name,
-                "platform": str(row.platform) if row.platform else "Unknown",
-                "spend": spend,
-                "revenue": revenue,
-                "conversions": conversions,
-            })
+            campaigns.append(
+                {
+                    "id": row.id,
+                    "name": row.name,
+                    "platform": str(row.platform) if row.platform else "Unknown",
+                    "spend": spend,
+                    "revenue": revenue,
+                    "conversions": conversions,
+                }
+            )
 
     except (SQLAlchemyError, ValueError, TypeError) as e:
         logger.warning("ai_report_db_error", error=str(e))
@@ -2615,6 +2721,7 @@ async def get_churn_prevention(
         rows = result.fetchall()
 
         from datetime import timedelta
+
         now = datetime.now(timezone.utc)
         sync_cutoff = now - timedelta(days=7)
 
@@ -2626,16 +2733,18 @@ async def get_churn_prevention(
             last_synced = row.last_synced_at
             has_recent_sync = bool(last_synced and last_synced >= sync_cutoff)
 
-            campaigns.append({
-                "id": row.id,
-                "name": row.name,
-                "platform": str(row.platform) if row.platform else "Unknown",
-                "status": str(row.status) if row.status else "active",
-                "spend": spend,
-                "revenue": revenue,
-                "conversions": conversions,
-                "has_recent_sync": has_recent_sync,
-            })
+            campaigns.append(
+                {
+                    "id": row.id,
+                    "name": row.name,
+                    "platform": str(row.platform) if row.platform else "Unknown",
+                    "status": str(row.status) if row.status else "active",
+                    "spend": spend,
+                    "revenue": revenue,
+                    "conversions": conversions,
+                    "has_recent_sync": has_recent_sync,
+                }
+            )
 
     except (SQLAlchemyError, ValueError, TypeError) as e:
         logger.warning("churn_prevention_db_error", error=str(e))
@@ -2683,7 +2792,10 @@ from app.analytics.logic.unified_notifications import (
 )
 
 
-@router.get("/notifications-prioritized", response_model=APIResponse[UnifiedNotificationsResponse])
+@router.get(
+    "/notifications-prioritized",
+    response_model=APIResponse[UnifiedNotificationsResponse],
+)
 async def get_notifications_prioritized(
     user: CurrentUserDep,
     db: AsyncSession = Depends(get_async_session),
@@ -2721,15 +2833,17 @@ async def get_notifications_prioritized(
             spend = float(row.total_spend_cents or 0) / 100
             revenue = float(row.revenue_cents or 0) / 100
             conversions = int(row.conversions or 0)
-            campaigns.append({
-                "id": row.id,
-                "name": row.name,
-                "platform": str(row.platform) if row.platform else "Unknown",
-                "status": str(row.status) if row.status else "active",
-                "spend": spend,
-                "revenue": revenue,
-                "conversions": conversions,
-            })
+            campaigns.append(
+                {
+                    "id": row.id,
+                    "name": row.name,
+                    "platform": str(row.platform) if row.platform else "Unknown",
+                    "status": str(row.status) if row.status else "active",
+                    "spend": spend,
+                    "revenue": revenue,
+                    "conversions": conversions,
+                }
+            )
 
         # ── Get signal health ────────────────────────────────────────
         signal_health_score = 80
@@ -2791,7 +2905,9 @@ async def get_notifications_prioritized(
     response = build_unified_notifications(
         campaigns=campaigns,
         signal_health_score=signal_health_score,
-        existing_notifications=existing_notifications if existing_notifications else None,
+        existing_notifications=(
+            existing_notifications if existing_notifications else None
+        ),
     )
 
     logger.info(
@@ -2814,15 +2930,21 @@ async def get_notifications_prioritized(
 # =============================================================================
 
 from app.analytics.logic.cross_platform_optimizer import (
-    build_cross_platform_optimizer,
     CrossPlatformOptimizerResponse,
+    build_cross_platform_optimizer,
 )
 
 
-@router.get("/cross-platform-optimizer", response_model=APIResponse[CrossPlatformOptimizerResponse])
+@router.get(
+    "/cross-platform-optimizer",
+    response_model=APIResponse[CrossPlatformOptimizerResponse],
+)
 async def get_cross_platform_optimizer(
     user: CurrentUserDep,
-    strategy: str = Query(default="balanced", description="Optimization strategy: roas_max, balanced, volume_max"),
+    strategy: str = Query(
+        default="balanced",
+        description="Optimization strategy: roas_max, balanced, volume_max",
+    ),
     db: AsyncSession = Depends(get_async_session),
 ):
     """
@@ -2862,15 +2984,17 @@ async def get_cross_platform_optimizer(
             spend = float(row.total_spend_cents or 0) / 100
             revenue = float(row.revenue_cents or 0) / 100
             conversions = int(row.conversions or 0)
-            campaigns.append({
-                "id": row.id,
-                "name": row.name,
-                "platform": str(row.platform) if row.platform else "Unknown",
-                "status": str(row.status) if row.status else "active",
-                "spend": spend,
-                "revenue": revenue,
-                "conversions": conversions,
-            })
+            campaigns.append(
+                {
+                    "id": row.id,
+                    "name": row.name,
+                    "platform": str(row.platform) if row.platform else "Unknown",
+                    "status": str(row.status) if row.status else "active",
+                    "spend": spend,
+                    "revenue": revenue,
+                    "conversions": conversions,
+                }
+            )
 
     except (SQLAlchemyError, ValueError, TypeError) as e:
         logger.warning("cross_platform_optimizer_db_error", error=str(e))
@@ -2914,12 +3038,14 @@ async def get_cross_platform_optimizer(
 # =============================================================================
 
 from app.analytics.logic.audience_lifecycle import (
-    build_audience_lifecycle,
     AudienceLifecycleResponse,
+    build_audience_lifecycle,
 )
 
 
-@router.get("/audience-lifecycle", response_model=APIResponse[AudienceLifecycleResponse])
+@router.get(
+    "/audience-lifecycle", response_model=APIResponse[AudienceLifecycleResponse]
+)
 async def get_audience_lifecycle(
     user: CurrentUserDep,
     db: AsyncSession = Depends(get_async_session),
@@ -2951,8 +3077,9 @@ async def get_audience_lifecycle(
                 last_seen = row.get("last_seen_at")
                 if last_seen:
                     try:
-                        if hasattr(last_seen, 'timestamp'):
+                        if hasattr(last_seen, "timestamp"):
                             from datetime import timezone as tz
+
                             is_recent = (datetime.now(tz.utc) - last_seen).days <= 7
                     except (TypeError, ValueError):
                         pass
@@ -2963,15 +3090,17 @@ async def get_audience_lifecycle(
                 if isinstance(traits, dict):
                     previous_stage = traits.get("previous_lifecycle_stage")
 
-                profiles.append({
-                    "id": str(row["id"]),
-                    "lifecycle_stage": row.get("lifecycle_stage") or "anonymous",
-                    "total_revenue": float(row.get("total_revenue") or 0),
-                    "total_events": int(row.get("total_events") or 0),
-                    "total_purchases": int(row.get("total_purchases") or 0),
-                    "is_recent": is_recent,
-                    "previous_stage": previous_stage,
-                })
+                profiles.append(
+                    {
+                        "id": str(row["id"]),
+                        "lifecycle_stage": row.get("lifecycle_stage") or "anonymous",
+                        "total_revenue": float(row.get("total_revenue") or 0),
+                        "total_events": int(row.get("total_events") or 0),
+                        "total_purchases": int(row.get("total_purchases") or 0),
+                        "is_recent": is_recent,
+                        "previous_stage": previous_stage,
+                    }
+                )
         except (SQLAlchemyError, TypeError, KeyError) as _profile_err:
             logger.debug("audience_lifecycle_cdp_unavailable", error=str(_profile_err))
             # Generate sample data if CDP table not available
@@ -2989,12 +3118,15 @@ async def get_audience_lifecycle(
                 )
             )
             for row in plat_result.scalars():
-                connected_platforms.append(str(row.value) if hasattr(row, 'value') else str(row))
+                connected_platforms.append(
+                    str(row.value) if hasattr(row, "value") else str(row)
+                )
         except (SQLAlchemyError, TypeError, AttributeError):
             pass
 
         # Fallback: check env credentials
         import os
+
         if not connected_platforms:
             if os.getenv("META_ACCESS_TOKEN"):
                 connected_platforms.append("meta")
@@ -3058,6 +3190,7 @@ async def get_audience_lifecycle(
 def _generate_sample_profiles():
     """Generate sample profiles when CDP table is not available."""
     import random
+
     profiles = []
     stages = ["anonymous", "known", "customer", "churned"]
     weights = [0.40, 0.30, 0.20, 0.10]
@@ -3072,15 +3205,17 @@ def _generate_sample_profiles():
         elif stage == "churned":
             prev = random.choice(["known", "customer"])
 
-        profiles.append({
-            "id": str(i),
-            "lifecycle_stage": stage,
-            "total_revenue": random.uniform(0, 500) if stage == "customer" else 0,
-            "total_events": random.randint(1, 100),
-            "total_purchases": random.randint(1, 10) if stage == "customer" else 0,
-            "is_recent": random.random() < 0.3,
-            "previous_stage": prev,
-        })
+        profiles.append(
+            {
+                "id": str(i),
+                "lifecycle_stage": stage,
+                "total_revenue": random.uniform(0, 500) if stage == "customer" else 0,
+                "total_events": random.randint(1, 100),
+                "total_purchases": random.randint(1, 10) if stage == "customer" else 0,
+                "is_recent": random.random() < 0.3,
+                "previous_stage": prev,
+            }
+        )
     return profiles
 
 
@@ -3089,8 +3224,8 @@ def _generate_sample_profiles():
 # =============================================================================
 
 from app.analytics.logic.goal_tracking import (
-    build_goal_tracking,
     GoalTrackingResponse,
+    build_goal_tracking,
 )
 
 
@@ -3131,14 +3266,16 @@ async def get_goal_tracking(
             spend = float(row.total_spend_cents or 0) / 100
             revenue = float(row.revenue_cents or 0) / 100
             conversions = int(row.conversions or 0)
-            campaigns.append({
-                "id": row.id,
-                "name": row.name,
-                "platform": str(row.platform) if row.platform else "Unknown",
-                "spend": spend,
-                "revenue": revenue,
-                "conversions": conversions,
-            })
+            campaigns.append(
+                {
+                    "id": row.id,
+                    "name": row.name,
+                    "platform": str(row.platform) if row.platform else "Unknown",
+                    "spend": spend,
+                    "revenue": revenue,
+                    "conversions": conversions,
+                }
+            )
 
         # ── Fetch targets from tenant settings ──────────────────────
         targets = None
@@ -3246,16 +3383,20 @@ async def get_attribution_confidence(
 
         for c in rows:
             spend = float(c.total_spend_cents or 0) / 100
-            revenue = float(c.revenue_cents or 0) / 100 if hasattr(c, "revenue_cents") else 0
+            revenue = (
+                float(c.revenue_cents or 0) / 100 if hasattr(c, "revenue_cents") else 0
+            )
             conversions = int(c.conversions or 0) if hasattr(c, "conversions") else 0
             platform = str(c.platform.value) if c.platform else "unknown"
 
-            campaigns.append({
-                "platform": platform,
-                "spend": spend,
-                "revenue": revenue,
-                "conversions": conversions,
-            })
+            campaigns.append(
+                {
+                    "platform": platform,
+                    "spend": spend,
+                    "revenue": revenue,
+                    "conversions": conversions,
+                }
+            )
 
     except (SQLAlchemyError, ValueError, TypeError) as e:
         logger.warning("attribution_confidence_db_error", error=str(e))
@@ -3322,16 +3463,20 @@ async def get_ltv_forecast(
 
         for c in rows:
             spend = float(c.total_spend_cents or 0) / 100
-            revenue = float(c.revenue_cents or 0) / 100 if hasattr(c, "revenue_cents") else 0
+            revenue = (
+                float(c.revenue_cents or 0) / 100 if hasattr(c, "revenue_cents") else 0
+            )
             conversions = int(c.conversions or 0) if hasattr(c, "conversions") else 0
             platform = str(c.platform.value) if c.platform else "unknown"
 
-            campaigns.append({
-                "platform": platform,
-                "spend": spend,
-                "revenue": revenue,
-                "conversions": conversions,
-            })
+            campaigns.append(
+                {
+                    "platform": platform,
+                    "spend": spend,
+                    "revenue": revenue,
+                    "conversions": conversions,
+                }
+            )
 
     except (SQLAlchemyError, ValueError, TypeError) as e:
         logger.warning("ltv_forecast_db_error", error=str(e))
@@ -3399,23 +3544,27 @@ async def get_creative_scoring(
 
         for c in rows:
             spend = float(c.total_spend_cents or 0) / 100
-            revenue = float(c.revenue_cents or 0) / 100 if hasattr(c, "revenue_cents") else 0
+            revenue = (
+                float(c.revenue_cents or 0) / 100 if hasattr(c, "revenue_cents") else 0
+            )
             conversions = int(c.conversions or 0) if hasattr(c, "conversions") else 0
             impressions = int(c.impressions or 0) if hasattr(c, "impressions") else 0
             clicks = int(c.clicks or 0) if hasattr(c, "clicks") else 0
             platform = str(c.platform.value) if c.platform else "unknown"
             name = c.name or f"Campaign {c.id}"
 
-            campaigns.append({
-                "name": name,
-                "platform": platform,
-                "spend": spend,
-                "revenue": revenue,
-                "conversions": conversions,
-                "impressions": impressions,
-                "clicks": clicks,
-                "days_running": 14,
-            })
+            campaigns.append(
+                {
+                    "name": name,
+                    "platform": platform,
+                    "spend": spend,
+                    "revenue": revenue,
+                    "conversions": conversions,
+                    "impressions": impressions,
+                    "clicks": clicks,
+                    "days_running": 14,
+                }
+            )
 
     except (SQLAlchemyError, ValueError, TypeError) as e:
         logger.warning("creative_scoring_db_error", error=str(e))
@@ -3482,20 +3631,24 @@ async def get_competitor_intel(
 
         for c in rows:
             spend = float(c.total_spend_cents or 0) / 100
-            revenue = float(c.revenue_cents or 0) / 100 if hasattr(c, "revenue_cents") else 0
+            revenue = (
+                float(c.revenue_cents or 0) / 100 if hasattr(c, "revenue_cents") else 0
+            )
             conversions = int(c.conversions or 0) if hasattr(c, "conversions") else 0
             impressions = int(c.impressions or 0) if hasattr(c, "impressions") else 0
             clicks = int(c.clicks or 0) if hasattr(c, "clicks") else 0
             platform = str(c.platform.value) if c.platform else "unknown"
 
-            campaigns.append({
-                "platform": platform,
-                "spend": spend,
-                "revenue": revenue,
-                "conversions": conversions,
-                "impressions": impressions,
-                "clicks": clicks,
-            })
+            campaigns.append(
+                {
+                    "platform": platform,
+                    "spend": spend,
+                    "revenue": revenue,
+                    "conversions": conversions,
+                    "impressions": impressions,
+                    "clicks": clicks,
+                }
+            )
 
     except (SQLAlchemyError, ValueError, TypeError) as e:
         logger.warning("competitor_intel_db_error", error=str(e))
@@ -3556,22 +3709,26 @@ async def get_ab_test_analysis(
 
         for c in rows:
             spend = float(c.total_spend_cents or 0) / 100
-            revenue = float(c.revenue_cents or 0) / 100 if hasattr(c, "revenue_cents") else 0
+            revenue = (
+                float(c.revenue_cents or 0) / 100 if hasattr(c, "revenue_cents") else 0
+            )
             conversions = int(c.conversions or 0) if hasattr(c, "conversions") else 0
             impressions = int(c.impressions or 0) if hasattr(c, "impressions") else 0
             clicks = int(c.clicks or 0) if hasattr(c, "clicks") else 0
             platform = str(c.platform.value) if c.platform else "unknown"
 
-            campaigns.append({
-                "name": c.name or "",
-                "platform": platform,
-                "spend": spend,
-                "revenue": revenue,
-                "conversions": conversions,
-                "impressions": impressions,
-                "clicks": clicks,
-                "days_running": 14,
-            })
+            campaigns.append(
+                {
+                    "name": c.name or "",
+                    "platform": platform,
+                    "spend": spend,
+                    "revenue": revenue,
+                    "conversions": conversions,
+                    "impressions": impressions,
+                    "clicks": clicks,
+                    "days_running": 14,
+                }
+            )
 
     except (SQLAlchemyError, ValueError, TypeError) as e:
         logger.warning("ab_test_analysis_db_error", error=str(e))
@@ -3620,31 +3777,45 @@ async def get_collaborative_annotations(
     user_id = current_user.id
 
     try:
-        user_name = f"{current_user.first_name or ''} {current_user.last_name or ''}".strip()
+        user_name = (
+            f"{current_user.first_name or ''} {current_user.last_name or ''}".strip()
+        )
         if not user_name:
-            user_name = current_user.email.split("@")[0] if current_user.email else "Team Member"
+            user_name = (
+                current_user.email.split("@")[0]
+                if current_user.email
+                else "Team Member"
+            )
 
         result = await db.execute(
-            select(Campaign).where(
+            select(Campaign)
+            .where(
                 and_(
                     Campaign.tenant_id == tenant_id,
                     Campaign.is_deleted == False,
                 )
-            ).limit(50)
+            )
+            .limit(50)
         )
         rows = result.scalars().all()
 
         for c in rows:
             spend = float(c.total_spend_cents or 0) / 100
-            revenue = float(c.revenue_cents or 0) / 100 if hasattr(c, "revenue_cents") else 0
+            revenue = (
+                float(c.revenue_cents or 0) / 100 if hasattr(c, "revenue_cents") else 0
+            )
             platform = str(c.platform.value) if c.platform else "unknown"
 
-            campaigns.append({
-                "platform": platform,
-                "spend": spend,
-                "revenue": revenue,
-                "conversions": int(c.conversions or 0) if hasattr(c, "conversions") else 0,
-            })
+            campaigns.append(
+                {
+                    "platform": platform,
+                    "spend": spend,
+                    "revenue": revenue,
+                    "conversions": (
+                        int(c.conversions or 0) if hasattr(c, "conversions") else 0
+                    ),
+                }
+            )
 
     except (SQLAlchemyError, ValueError, TypeError) as e:
         logger.warning("annotations_db_error", error=str(e))
@@ -3707,20 +3878,24 @@ async def get_knowledge_graph(
 
         for c in rows:
             spend = float(c.total_spend_cents or 0) / 100
-            revenue = float(c.revenue_cents or 0) / 100 if hasattr(c, "revenue_cents") else 0
+            revenue = (
+                float(c.revenue_cents or 0) / 100 if hasattr(c, "revenue_cents") else 0
+            )
             conversions = int(c.conversions or 0) if hasattr(c, "conversions") else 0
             impressions = int(c.impressions or 0) if hasattr(c, "impressions") else 0
             clicks = int(c.clicks or 0) if hasattr(c, "clicks") else 0
             platform = str(c.platform.value) if c.platform else "unknown"
 
-            campaigns.append({
-                "platform": platform,
-                "spend": spend,
-                "revenue": revenue,
-                "conversions": conversions,
-                "impressions": impressions,
-                "clicks": clicks,
-            })
+            campaigns.append(
+                {
+                    "platform": platform,
+                    "spend": spend,
+                    "revenue": revenue,
+                    "conversions": conversions,
+                    "impressions": impressions,
+                    "clicks": clicks,
+                }
+            )
 
     except (SQLAlchemyError, ValueError, TypeError) as e:
         logger.warning("knowledge_graph_db_error", error=str(e))
@@ -3779,20 +3954,24 @@ async def get_journey_map(
 
         for c in rows:
             spend = float(c.total_spend_cents or 0) / 100
-            revenue = float(c.revenue_cents or 0) / 100 if hasattr(c, "revenue_cents") else 0
+            revenue = (
+                float(c.revenue_cents or 0) / 100 if hasattr(c, "revenue_cents") else 0
+            )
             conversions = int(c.conversions or 0) if hasattr(c, "conversions") else 0
             impressions = int(c.impressions or 0) if hasattr(c, "impressions") else 0
             clicks = int(c.clicks or 0) if hasattr(c, "clicks") else 0
             platform = str(c.platform.value) if c.platform else "unknown"
 
-            campaigns.append({
-                "platform": platform,
-                "spend": spend,
-                "revenue": revenue,
-                "conversions": conversions,
-                "impressions": impressions,
-                "clicks": clicks,
-            })
+            campaigns.append(
+                {
+                    "platform": platform,
+                    "spend": spend,
+                    "revenue": revenue,
+                    "conversions": conversions,
+                    "impressions": impressions,
+                    "clicks": clicks,
+                }
+            )
 
     except (SQLAlchemyError, ValueError, TypeError) as e:
         logger.warning("journey_map_db_error", error=str(e))
@@ -3841,33 +4020,47 @@ async def get_nl_filter(
 
     try:
         result = await db.execute(
-            select(Campaign).where(
+            select(Campaign)
+            .where(
                 and_(
                     Campaign.tenant_id == tenant_id,
                     Campaign.is_deleted == False,
                 )
-            ).limit(100)
+            )
+            .limit(100)
         )
         rows = result.scalars().all()
 
         for c in rows:
             spend = float(c.total_spend_cents or 0) / 100
-            revenue = float(c.revenue_cents or 0) / 100 if hasattr(c, "revenue_cents") else 0
+            revenue = (
+                float(c.revenue_cents or 0) / 100 if hasattr(c, "revenue_cents") else 0
+            )
             platform = str(c.platform.value) if c.platform else "unknown"
             roas = revenue / spend if spend > 0 else 0
-            cpa_val = spend / max(int(c.conversions or 0), 1) if hasattr(c, "conversions") else 0
+            cpa_val = (
+                spend / max(int(c.conversions or 0), 1)
+                if hasattr(c, "conversions")
+                else 0
+            )
 
-            campaigns.append({
-                "name": c.name or "",
-                "platform": platform,
-                "spend": spend,
-                "revenue": revenue,
-                "roas": round(roas, 2),
-                "cpa": round(cpa_val, 2),
-                "conversions": int(c.conversions or 0) if hasattr(c, "conversions") else 0,
-                "impressions": int(c.impressions or 0) if hasattr(c, "impressions") else 0,
-                "clicks": int(c.clicks or 0) if hasattr(c, "clicks") else 0,
-            })
+            campaigns.append(
+                {
+                    "name": c.name or "",
+                    "platform": platform,
+                    "spend": spend,
+                    "revenue": revenue,
+                    "roas": round(roas, 2),
+                    "cpa": round(cpa_val, 2),
+                    "conversions": (
+                        int(c.conversions or 0) if hasattr(c, "conversions") else 0
+                    ),
+                    "impressions": (
+                        int(c.impressions or 0) if hasattr(c, "impressions") else 0
+                    ),
+                    "clicks": int(c.clicks or 0) if hasattr(c, "clicks") else 0,
+                }
+            )
 
     except (SQLAlchemyError, ValueError, TypeError) as e:
         logger.warning("nl_filter_db_error", error=str(e))

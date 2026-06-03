@@ -41,18 +41,18 @@ from app.analytics.logic.budget import (
     validate_reallocation,
 )
 from app.analytics.logic.emq_calculation import (
+    DriverStatus,
+    DriverTrend,
     PlatformMetrics,
+    calculate_aggregate_emq,
     calculate_attribution_accuracy,
     calculate_conversion_latency,
     calculate_data_freshness,
     calculate_emq_score,
-    calculate_aggregate_emq,
-    calculate_event_match_rate,
     calculate_event_loss_percentage,
+    calculate_event_match_rate,
     calculate_pixel_coverage,
     determine_autopilot_mode,
-    DriverStatus,
-    DriverTrend,
 )
 from app.analytics.logic.fatigue import ema, get_refresh_candidates
 from app.analytics.logic.scoring import clamp, clamp01, pct_change
@@ -71,7 +71,6 @@ from app.analytics.logic.types import (
     ScalingScoreResult,
     SignalHealthStatus,
 )
-
 
 # =============================================================================
 # Helpers
@@ -124,7 +123,9 @@ def _baseline(**kw) -> BaselineMetrics:
     return BaselineMetrics(**defaults)
 
 
-def _scaling_result(eid: str, score: float, action: ScalingAction, **kw) -> ScalingScoreResult:
+def _scaling_result(
+    eid: str, score: float, action: ScalingAction, **kw
+) -> ScalingScoreResult:
     defaults = dict(
         entity_id=eid,
         entity_name=f"Camp {eid}",
@@ -223,12 +224,26 @@ class TestGetRefreshCandidates:
 
     def test_returns_above_threshold(self) -> None:
         results = [
-            FatigueResult(creative_id="a", creative_name="A", fatigue_score=0.8,
-                          state=FatigueState.REFRESH, ctr_drop=0.3, roas_drop=0.3,
-                          cpa_rise=0.2, exposure_factor=0.5),
-            FatigueResult(creative_id="b", creative_name="B", fatigue_score=0.3,
-                          state=FatigueState.HEALTHY, ctr_drop=0.1, roas_drop=0.1,
-                          cpa_rise=0.05, exposure_factor=0.1),
+            FatigueResult(
+                creative_id="a",
+                creative_name="A",
+                fatigue_score=0.8,
+                state=FatigueState.REFRESH,
+                ctr_drop=0.3,
+                roas_drop=0.3,
+                cpa_rise=0.2,
+                exposure_factor=0.5,
+            ),
+            FatigueResult(
+                creative_id="b",
+                creative_name="B",
+                fatigue_score=0.3,
+                state=FatigueState.HEALTHY,
+                ctr_drop=0.1,
+                roas_drop=0.1,
+                cpa_rise=0.05,
+                exposure_factor=0.1,
+            ),
         ]
         candidates = get_refresh_candidates(results)
         assert len(candidates) == 1
@@ -236,9 +251,16 @@ class TestGetRefreshCandidates:
 
     def test_custom_threshold(self) -> None:
         results = [
-            FatigueResult(creative_id="a", creative_name="A", fatigue_score=0.5,
-                          state=FatigueState.WATCH, ctr_drop=0.2, roas_drop=0.2,
-                          cpa_rise=0.1, exposure_factor=0.3),
+            FatigueResult(
+                creative_id="a",
+                creative_name="A",
+                fatigue_score=0.5,
+                state=FatigueState.WATCH,
+                ctr_drop=0.2,
+                roas_drop=0.2,
+                cpa_rise=0.1,
+                exposure_factor=0.3,
+            ),
         ]
         assert len(get_refresh_candidates(results, threshold=0.4)) == 1
         assert len(get_refresh_candidates(results, threshold=0.6)) == 0
@@ -277,7 +299,9 @@ class TestDetectEntityAnomalies:
         result = detect_entity_anomalies("camp1", history, current)
         # With constant series stdev is ~0, so zscore will be 0 (div by zero guard)
         # Use varied series instead
-        history2 = {"spend": [100.0, 102.0, 98.0, 101.0, 99.0, 100.0, 103.0, 97.0, 101.0, 100.0]}
+        history2 = {
+            "spend": [100.0, 102.0, 98.0, 101.0, 99.0, 100.0, 103.0, 97.0, 101.0, 100.0]
+        }
         result2 = detect_entity_anomalies("camp1", history2, {"spend": 500.0})
         if result2["anomaly_count"] > 0:
             assert result2["has_critical"] or result2["has_high"]
@@ -288,9 +312,14 @@ class TestGenerateAnomalyMessage:
 
     def test_high_direction(self) -> None:
         anomaly = AnomalyResult(
-            metric="spend", zscore=3.5, severity=AlertSeverity.HIGH,
-            current_value=200.0, baseline_mean=100.0, baseline_std=10.0,
-            is_anomaly=True, direction="high",
+            metric="spend",
+            zscore=3.5,
+            severity=AlertSeverity.HIGH,
+            current_value=200.0,
+            baseline_mean=100.0,
+            baseline_std=10.0,
+            is_anomaly=True,
+            direction="high",
         )
         msg = generate_anomaly_message(anomaly)
         assert "increased" in msg
@@ -299,9 +328,14 @@ class TestGenerateAnomalyMessage:
 
     def test_low_direction(self) -> None:
         anomaly = AnomalyResult(
-            metric="roas", zscore=-3.0, severity=AlertSeverity.HIGH,
-            current_value=1.0, baseline_mean=4.0, baseline_std=0.2,
-            is_anomaly=True, direction="low",
+            metric="roas",
+            zscore=-3.0,
+            severity=AlertSeverity.HIGH,
+            current_value=1.0,
+            baseline_mean=4.0,
+            baseline_std=0.2,
+            is_anomaly=True,
+            direction="low",
         )
         msg = generate_anomaly_message(anomaly)
         assert "decreased" in msg
@@ -371,20 +405,26 @@ class TestCalculateEventMatchRate:
 class TestCalculatePixelCoverage:
 
     def test_full_coverage(self) -> None:
-        m = _metrics(pages_with_pixel=50, total_pages=50, events_configured=8, events_expected=8)
+        m = _metrics(
+            pages_with_pixel=50, total_pages=50, events_configured=8, events_expected=8
+        )
         result = calculate_pixel_coverage(m)
         assert result.value == 100.0
         assert result.status == DriverStatus.GOOD
 
     def test_partial_coverage(self) -> None:
-        m = _metrics(pages_with_pixel=30, total_pages=50, events_configured=5, events_expected=8)
+        m = _metrics(
+            pages_with_pixel=30, total_pages=50, events_configured=5, events_expected=8
+        )
         result = calculate_pixel_coverage(m)
         # (60 + 62.5) / 2 = 61.25
         assert result.value < 75
         assert result.status == DriverStatus.CRITICAL
 
     def test_no_data_defaults_good(self) -> None:
-        m = _metrics(pages_with_pixel=0, total_pages=0, events_configured=0, events_expected=0)
+        m = _metrics(
+            pages_with_pixel=0, total_pages=0, events_configured=0, events_expected=0
+        )
         result = calculate_pixel_coverage(m)
         assert result.value == 90.0  # default when no data
 
@@ -424,22 +464,31 @@ class TestCalculateConversionLatency:
 class TestCalculateAttributionAccuracy:
 
     def test_perfect_alignment(self) -> None:
-        m = _metrics(platform_conversions=100, ga4_conversions=100,
-                     platform_revenue=5000, ga4_revenue=5000)
+        m = _metrics(
+            platform_conversions=100,
+            ga4_conversions=100,
+            platform_revenue=5000,
+            ga4_revenue=5000,
+        )
         result = calculate_attribution_accuracy(m)
         assert result.value == 100.0
         assert result.status == DriverStatus.GOOD
 
     def test_high_variance(self) -> None:
-        m = _metrics(platform_conversions=100, ga4_conversions=50,
-                     platform_revenue=5000, ga4_revenue=2000)
+        m = _metrics(
+            platform_conversions=100,
+            ga4_conversions=50,
+            platform_revenue=5000,
+            ga4_revenue=2000,
+        )
         result = calculate_attribution_accuracy(m)
         assert result.value < 60
         assert result.status == DriverStatus.CRITICAL
 
     def test_both_zero(self) -> None:
-        m = _metrics(platform_conversions=0, ga4_conversions=0,
-                     platform_revenue=0, ga4_revenue=0)
+        m = _metrics(
+            platform_conversions=0, ga4_conversions=0, platform_revenue=0, ga4_revenue=0
+        )
         result = calculate_attribution_accuracy(m)
         assert result.value == 100.0
 
@@ -488,10 +537,14 @@ class TestCalculateEmqScore:
 
     def test_degraded_metrics_low_score(self) -> None:
         m = _metrics(
-            pixel_events=100, capi_events=10, matched_events=5,
-            pages_with_pixel=10, total_pages=50,
+            pixel_events=100,
+            capi_events=10,
+            matched_events=5,
+            pages_with_pixel=10,
+            total_pages=50,
             avg_conversion_latency_hours=30,
-            platform_conversions=100, ga4_conversions=20,
+            platform_conversions=100,
+            ga4_conversions=20,
             last_event_at=NOW - timedelta(hours=48),
         )
         result = calculate_emq_score(m, now=NOW)
@@ -526,9 +579,13 @@ class TestCalculateAggregateEmq:
     def test_multiple_platforms(self) -> None:
         good = calculate_emq_score(_metrics(), now=NOW)
         bad = calculate_emq_score(
-            _metrics(pixel_events=10, capi_events=5, matched_events=2,
-                     avg_conversion_latency_hours=20,
-                     last_event_at=NOW - timedelta(hours=30)),
+            _metrics(
+                pixel_events=10,
+                capi_events=5,
+                matched_events=2,
+                avg_conversion_latency_hours=20,
+                last_event_at=NOW - timedelta(hours=30),
+            ),
             now=NOW,
         )
         agg = calculate_aggregate_emq([good, bad])
@@ -545,7 +602,8 @@ class TestCalculateAggregateEmq:
         """If one platform has a critical driver, aggregate should reflect it."""
         good = calculate_emq_score(_metrics(), now=NOW)
         bad = calculate_emq_score(
-            _metrics(pixel_events=0, capi_events=0, matched_events=0), now=NOW,
+            _metrics(pixel_events=0, capi_events=0, matched_events=0),
+            now=NOW,
         )
         agg = calculate_aggregate_emq([good, bad])
         # At least one driver should be CRITICAL
@@ -557,19 +615,19 @@ class TestCalculateAggregateEmq:
 class TestDetermineAutopilotMode:
 
     def test_normal_mode(self) -> None:
-        mode, reason = determine_autopilot_mode(85.0)
+        mode, _reason = determine_autopilot_mode(85.0)
         assert mode == "normal"
 
     def test_limited_mode(self) -> None:
-        mode, reason = determine_autopilot_mode(70.0)
+        mode, _reason = determine_autopilot_mode(70.0)
         assert mode == "limited"
 
     def test_cuts_only_mode(self) -> None:
-        mode, reason = determine_autopilot_mode(50.0)
+        mode, _reason = determine_autopilot_mode(50.0)
         assert mode == "cuts_only"
 
     def test_frozen_mode(self) -> None:
-        mode, reason = determine_autopilot_mode(30.0)
+        mode, _reason = determine_autopilot_mode(30.0)
         assert mode == "frozen"
 
     def test_boundary_80(self) -> None:
@@ -589,13 +647,17 @@ class TestDetermineAutopilotMode:
 class TestCalculateEventLossPercentage:
 
     def test_no_loss(self) -> None:
-        m = _metrics(pixel_events=100, capi_events=100, matched_events=50, events_expected=100)
+        m = _metrics(
+            pixel_events=100, capi_events=100, matched_events=50, events_expected=100
+        )
         loss = calculate_event_loss_percentage(m)
         # received = 100 + 100 - 50 = 150, >= expected -> 0%
         assert loss == 0.0
 
     def test_some_loss(self) -> None:
-        m = _metrics(pixel_events=30, capi_events=20, matched_events=10, events_expected=100)
+        m = _metrics(
+            pixel_events=30, capi_events=20, matched_events=10, events_expected=100
+        )
         loss = calculate_event_loss_percentage(m)
         # received = 30 + 20 - 10 = 40 -> loss = (100-40)/100*100 = 60%
         assert loss == pytest.approx(60.0)
@@ -605,7 +667,9 @@ class TestCalculateEventLossPercentage:
         assert calculate_event_loss_percentage(m) == 0.0
 
     def test_clamped_to_100(self) -> None:
-        m = _metrics(pixel_events=0, capi_events=0, matched_events=0, events_expected=100)
+        m = _metrics(
+            pixel_events=0, capi_events=0, matched_events=0, events_expected=100
+        )
         loss = calculate_event_loss_percentage(m)
         assert loss <= 100.0
 
@@ -662,7 +726,9 @@ class TestAttributionVariance:
         assert "conversion variance" in result.warning_message.lower()
 
     def test_custom_threshold(self) -> None:
-        result = attribution_variance("e1", 6000, 100, 5000, 100, variance_threshold_pct=50.0)
+        result = attribution_variance(
+            "e1", 6000, 100, 5000, 100, variance_threshold_pct=50.0
+        )
         assert result.revenue_variance_pct == 20.0
         assert result.has_significant_variance is False  # 20 < 50
 
@@ -672,15 +738,27 @@ class TestBatchAttributionVariance:
 
     def test_multiple_entities(self) -> None:
         entities = [
-            {"entity_id": "e1", "platform_revenue": 5000, "platform_conversions": 100,
-             "ga4_revenue": 5000, "ga4_conversions": 100},
-            {"entity_id": "e2", "platform_revenue": 8000, "platform_conversions": 100,
-             "ga4_revenue": 5000, "ga4_conversions": 100},
+            {
+                "entity_id": "e1",
+                "platform_revenue": 5000,
+                "platform_conversions": 100,
+                "ga4_revenue": 5000,
+                "ga4_conversions": 100,
+            },
+            {
+                "entity_id": "e2",
+                "platform_revenue": 8000,
+                "platform_conversions": 100,
+                "ga4_revenue": 5000,
+                "ga4_conversions": 100,
+            },
         ]
         results = batch_attribution_variance(entities)
         assert len(results) == 2
         # Sorted by abs revenue variance descending
-        assert abs(results[0].revenue_variance_pct) >= abs(results[1].revenue_variance_pct)
+        assert abs(results[0].revenue_variance_pct) >= abs(
+            results[1].revenue_variance_pct
+        )
 
     def test_empty_list(self) -> None:
         assert batch_attribution_variance([]) == []
@@ -720,7 +798,9 @@ class TestGetAttributionHealth:
 
     def test_minor_variance(self) -> None:
         # 1 out of 6 has significant variance = 16.7% < 20%
-        results = [attribution_variance(f"e{i}", 5000, 100, 5000, 100) for i in range(5)]
+        results = [
+            attribution_variance(f"e{i}", 5000, 100, 5000, 100) for i in range(5)
+        ]
         results.append(attribution_variance("e5", 8000, 100, 5000, 100))
         health = get_attribution_health(results)
         assert health["status"] == "minor_variance"
@@ -814,10 +894,24 @@ class TestSummarizeReallocation:
 
     def test_basic_summary(self) -> None:
         actions = [
-            BudgetAction(entity_id="w1", entity_name="W1", action="increase_budget",
-                         amount=200, current_spend=1000, scaling_score=0.5, reason="good"),
-            BudgetAction(entity_id="l1", entity_name="L1", action="decrease_budget",
-                         amount=200, current_spend=1000, scaling_score=-0.5, reason="bad"),
+            BudgetAction(
+                entity_id="w1",
+                entity_name="W1",
+                action="increase_budget",
+                amount=200,
+                current_spend=1000,
+                scaling_score=0.5,
+                reason="good",
+            ),
+            BudgetAction(
+                entity_id="l1",
+                entity_name="L1",
+                action="decrease_budget",
+                amount=200,
+                current_spend=1000,
+                scaling_score=-0.5,
+                reason="bad",
+            ),
         ]
         summary = summarize_reallocation(actions)
         assert summary["total_increase"] == 200
@@ -839,10 +933,24 @@ class TestValidateReallocation:
 
     def test_filters_learning_phase(self) -> None:
         actions = [
-            BudgetAction(entity_id="w1", entity_name="W1", action="increase_budget",
-                         amount=200, current_spend=1000, scaling_score=0.5, reason="good"),
-            BudgetAction(entity_id="l1", entity_name="L1", action="decrease_budget",
-                         amount=100, current_spend=1000, scaling_score=-0.5, reason="bad"),
+            BudgetAction(
+                entity_id="w1",
+                entity_name="W1",
+                action="increase_budget",
+                amount=200,
+                current_spend=1000,
+                scaling_score=0.5,
+                reason="good",
+            ),
+            BudgetAction(
+                entity_id="l1",
+                entity_name="L1",
+                action="decrease_budget",
+                amount=100,
+                current_spend=1000,
+                scaling_score=-0.5,
+                reason="bad",
+            ),
         ]
         learning = {"l1"}
         valid = validate_reallocation(actions, learning)
@@ -851,16 +959,30 @@ class TestValidateReallocation:
 
     def test_no_learning_phase_all_pass(self) -> None:
         actions = [
-            BudgetAction(entity_id="w1", entity_name="W1", action="increase_budget",
-                         amount=200, current_spend=1000, scaling_score=0.5, reason="good"),
+            BudgetAction(
+                entity_id="w1",
+                entity_name="W1",
+                action="increase_budget",
+                amount=200,
+                current_spend=1000,
+                scaling_score=0.5,
+                reason="good",
+            ),
         ]
         valid = validate_reallocation(actions, set())
         assert len(valid) == 1
 
     def test_all_in_learning_phase(self) -> None:
         actions = [
-            BudgetAction(entity_id="a", entity_name="A", action="increase_budget",
-                         amount=200, current_spend=1000, scaling_score=0.5, reason="good"),
+            BudgetAction(
+                entity_id="a",
+                entity_name="A",
+                action="increase_budget",
+                amount=200,
+                current_spend=1000,
+                scaling_score=0.5,
+                reason="good",
+            ),
         ]
         valid = validate_reallocation(actions, {"a"})
         assert len(valid) == 0

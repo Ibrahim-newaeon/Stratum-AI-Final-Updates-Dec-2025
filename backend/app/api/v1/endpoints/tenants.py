@@ -92,8 +92,7 @@ async def list_tenants(
     # Search filter
     if search:
         query = query.where(
-            (Tenant.name.ilike(f"%{search}%")) |
-            (Tenant.slug.ilike(f"%{search}%"))
+            (Tenant.name.ilike(f"%{search}%")) | (Tenant.slug.ilike(f"%{search}%"))
         )
 
     query = query.offset(skip).limit(limit)
@@ -213,7 +212,9 @@ async def get_tenant(
     )
 
 
-@router.post("", response_model=APIResponse[TenantResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "", response_model=APIResponse[TenantResponse], status_code=status.HTTP_201_CREATED
+)
 async def create_tenant(
     request: Request,
     tenant_data: TenantCreate,
@@ -226,9 +227,7 @@ async def create_tenant(
     require_superadmin(request)
 
     # Check for duplicate slug
-    result = await db.execute(
-        select(Tenant).where(Tenant.slug == tenant_data.slug)
-    )
+    result = await db.execute(select(Tenant).where(Tenant.slug == tenant_data.slug))
     existing = result.scalar_one_or_none()
 
     if existing:
@@ -300,7 +299,11 @@ async def update_tenant(
     user_tenant_id = getattr(request.state, "tenant_id", None)
 
     # Check permissions
-    if user_role not in [UserRole.ADMIN.value, UserRole.SUPERADMIN.value, UserRole.MANAGER.value]:
+    if user_role not in [
+        UserRole.ADMIN.value,
+        UserRole.SUPERADMIN.value,
+        UserRole.MANAGER.value,
+    ]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin or manager access required",
@@ -326,8 +329,15 @@ async def update_tenant(
 
     # Update fields — whitelist allowed fields to prevent mass assignment
     ALLOWED_FIELDS = {
-        "name", "slug", "domain", "plan", "plan_expires_at",
-        "max_users", "max_campaigns", "settings", "logo_url",
+        "name",
+        "slug",
+        "domain",
+        "plan",
+        "plan_expires_at",
+        "max_users",
+        "max_campaigns",
+        "settings",
+        "logo_url",
     }
     update_dict = update_data.model_dump(exclude_unset=True)
 
@@ -437,8 +447,7 @@ async def get_tenant_users(
     # Get user count
     count_result = await db.execute(
         select(func.count(User.id)).where(
-            User.tenant_id == tenant_id,
-            User.is_deleted == False
+            User.tenant_id == tenant_id, User.is_deleted == False
         )
     )
     user_count = count_result.scalar()

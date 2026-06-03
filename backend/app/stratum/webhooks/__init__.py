@@ -193,7 +193,9 @@ def verify_internal_signature(payload: bytes, signature: str) -> bool:
     if not config.WEBHOOK_SECRET:
         return True
 
-    expected = hmac.new(config.WEBHOOK_SECRET.encode("utf-8"), payload, hashlib.sha256).hexdigest()
+    expected = hmac.new(
+        config.WEBHOOK_SECRET.encode("utf-8"), payload, hashlib.sha256
+    ).hexdigest()
 
     return hmac.compare_digest(expected, signature)
 
@@ -628,7 +630,9 @@ async def process_tiktok_webhook(payload: dict[str, Any]):
 
     else:
         logger.info(f"TikTok event: {event_type}")
-        await dispatch_event("tiktok_report", {"event_type": event_type, "payload": payload})
+        await dispatch_event(
+            "tiktok_report", {"event_type": event_type, "payload": payload}
+        )
 
 
 # =============================================================================
@@ -817,7 +821,9 @@ async def process_ecommerce_event(event_data: dict[str, Any]):
     api = UnifiedEventsAPI()
 
     if config.META_PIXEL_ID and config.META_ACCESS_TOKEN:
-        api.add_sender("meta", MetaEventsSender(config.META_PIXEL_ID, config.META_ACCESS_TOKEN))
+        api.add_sender(
+            "meta", MetaEventsSender(config.META_PIXEL_ID, config.META_ACCESS_TOKEN)
+        )
 
     # Add other platforms as configured...
 
@@ -827,7 +833,9 @@ async def process_ecommerce_event(event_data: dict[str, Any]):
         logger.info(f"Event forwarded to platforms: {results}")
 
         # Dispatch for additional processing
-        await dispatch_event("ecommerce_event", {"event": event_data, "results": results})
+        await dispatch_event(
+            "ecommerce_event", {"event": event_data, "results": results}
+        )
     except (ConnectionError, TimeoutError, OSError) as e:
         logger.error(f"Network error forwarding event: {e}")
     except (ValueError, KeyError, TypeError) as e:
@@ -861,7 +869,8 @@ async def webhook_status():
         "tiktok": {"configured": bool(config.TIKTOK_APP_SECRET)},
         "ecommerce": {"signature_verification": bool(config.WEBHOOK_SECRET)},
         "handlers_registered": {
-            event_type: len(handlers) for event_type, handlers in _event_handlers.items()
+            event_type: len(handlers)
+            for event_type, handlers in _event_handlers.items()
         },
     }
 
@@ -926,8 +935,12 @@ async def startup_event():
     """Initialize on server startup."""
     logger.info("Stratum Webhook Server starting...")
     logger.info(f"Meta webhooks: {'enabled' if config.META_APP_SECRET else 'disabled'}")
-    logger.info(f"WhatsApp webhooks: {'enabled' if config.WHATSAPP_APP_SECRET else 'disabled'}")
-    logger.info(f"TikTok webhooks: {'enabled' if config.TIKTOK_APP_SECRET else 'disabled'}")
+    logger.info(
+        f"WhatsApp webhooks: {'enabled' if config.WHATSAPP_APP_SECRET else 'disabled'}"
+    )
+    logger.info(
+        f"TikTok webhooks: {'enabled' if config.TIKTOK_APP_SECRET else 'disabled'}"
+    )
 
 
 @app.on_event("shutdown")

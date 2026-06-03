@@ -160,7 +160,9 @@ class LandingPageSubscriber(Base, TimestampMixin):
     phone: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
 
     # Source & Tracking
-    source_page: Mapped[str] = mapped_column(String(50), default="landing", nullable=False)
+    source_page: Mapped[str] = mapped_column(
+        String(50), default="landing", nullable=False
+    )
     language: Mapped[str] = mapped_column(String(10), default="en", nullable=False)
     utm_source: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     utm_medium: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
@@ -179,7 +181,9 @@ class LandingPageSubscriber(Base, TimestampMixin):
     fbp: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 
     # Attribution
-    attributed_platform: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    attributed_platform: Mapped[Optional[str]] = mapped_column(
+        String(20), nullable=True
+    )
     lead_score: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
     # CAPI (Conversion API)
@@ -212,7 +216,9 @@ class LandingPageSubscriber(Base, TimestampMixin):
     user_agent: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
 
     # Newsletter Fields
-    subscribed_to_newsletter: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    subscribed_to_newsletter: Mapped[bool] = mapped_column(
+        Boolean, default=True, nullable=False
+    )
     unsubscribed_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
@@ -251,26 +257,44 @@ class Tenant(Base, TimestampMixin, SoftDeleteMixin):
     domain: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 
     # Status & Health (added by migration 009 — SuperAdmin system)
-    status: Mapped[str] = mapped_column(String(20), default="active", server_default="active", nullable=False)
+    status: Mapped[str] = mapped_column(
+        String(20), default="active", server_default="active", nullable=False
+    )
     health_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     churn_risk_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    last_activity_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    last_admin_login_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    onboarding_completed: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    last_activity_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    last_admin_login_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    onboarding_completed: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false"
+    )
 
     # Subscription & Billing
     plan: Mapped[str] = mapped_column(String(50), default="free", nullable=False)
     plan_expires_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-    stripe_customer_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    mrr_cents: Mapped[int] = mapped_column(Integer, default=0, server_default="0", nullable=False)
-    trial_ends_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    stripe_customer_id: Mapped[Optional[str]] = mapped_column(
+        String(255), nullable=True
+    )
+    mrr_cents: Mapped[int] = mapped_column(
+        Integer, default=0, server_default="0", nullable=False
+    )
+    trial_ends_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     billing_email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     billing_address: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
     vat_number: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
-    timezone: Mapped[str] = mapped_column(String(50), default="UTC", server_default="UTC")
-    currency: Mapped[str] = mapped_column(String(3), default="USD", server_default="USD")
+    timezone: Mapped[str] = mapped_column(
+        String(50), default="UTC", server_default="UTC"
+    )
+    currency: Mapped[str] = mapped_column(
+        String(3), default="USD", server_default="USD"
+    )
 
     # Settings
     settings: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=False)
@@ -280,7 +304,9 @@ class Tenant(Base, TimestampMixin, SoftDeleteMixin):
     max_users: Mapped[int] = mapped_column(Integer, default=5, nullable=False)
     max_campaigns: Mapped[int] = mapped_column(Integer, default=50, nullable=False)
     max_connectors: Mapped[int] = mapped_column(Integer, default=3, server_default="3")
-    max_refresh_frequency_mins: Mapped[int] = mapped_column(Integer, default=60, server_default="60")
+    max_refresh_frequency_mins: Mapped[int] = mapped_column(
+        Integer, default=60, server_default="60"
+    )
 
     # Relationships
     users: Mapped[List["User"]] = relationship(
@@ -290,43 +316,65 @@ class Tenant(Base, TimestampMixin, SoftDeleteMixin):
         "Campaign", back_populates="tenant", foreign_keys="[Campaign.tenant_id]"
     )
     assets: Mapped[List["CreativeAsset"]] = relationship(
-        "CreativeAsset", back_populates="tenant", foreign_keys="[CreativeAsset.tenant_id]"
+        "CreativeAsset",
+        back_populates="tenant",
+        foreign_keys="[CreativeAsset.tenant_id]",
     )
     rules: Mapped[List["Rule"]] = relationship(
         "Rule", back_populates="tenant", foreign_keys="[Rule.tenant_id]"
     )
     competitors: Mapped[List["CompetitorBenchmark"]] = relationship(
-        "CompetitorBenchmark", back_populates="tenant", foreign_keys="[CompetitorBenchmark.tenant_id]"
+        "CompetitorBenchmark",
+        back_populates="tenant",
+        foreign_keys="[CompetitorBenchmark.tenant_id]",
     )
 
     # Trust Layer relationships (lazy import to avoid circular imports)
     signal_health_records: Mapped[List["FactSignalHealthDaily"]] = relationship(
-        "FactSignalHealthDaily", back_populates="tenant", foreign_keys="[FactSignalHealthDaily.tenant_id]"
+        "FactSignalHealthDaily",
+        back_populates="tenant",
+        foreign_keys="[FactSignalHealthDaily.tenant_id]",
     )
-    attribution_variance_records: Mapped[List["FactAttributionVarianceDaily"]] = relationship(
-        "FactAttributionVarianceDaily", back_populates="tenant", foreign_keys="[FactAttributionVarianceDaily.tenant_id]"
+    attribution_variance_records: Mapped[List["FactAttributionVarianceDaily"]] = (
+        relationship(
+            "FactAttributionVarianceDaily",
+            back_populates="tenant",
+            foreign_keys="[FactAttributionVarianceDaily.tenant_id]",
+        )
     )
     actions_queue: Mapped[List["FactActionsQueue"]] = relationship(
-        "FactActionsQueue", back_populates="tenant", foreign_keys="[FactActionsQueue.tenant_id]"
+        "FactActionsQueue",
+        back_populates="tenant",
+        foreign_keys="[FactActionsQueue.tenant_id]",
     )
 
     # Multi-tenant memberships
     tenant_memberships: Mapped[List["UserTenantMembership"]] = relationship(
-        "UserTenantMembership", back_populates="tenant", foreign_keys="[UserTenantMembership.tenant_id]"
+        "UserTenantMembership",
+        back_populates="tenant",
+        foreign_keys="[UserTenantMembership.tenant_id]",
     )
 
     # Campaign Builder relationships
     platform_connections: Mapped[List["TenantPlatformConnection"]] = relationship(
-        "TenantPlatformConnection", back_populates="tenant", foreign_keys="[TenantPlatformConnection.tenant_id]"
+        "TenantPlatformConnection",
+        back_populates="tenant",
+        foreign_keys="[TenantPlatformConnection.tenant_id]",
     )
     ad_accounts: Mapped[List["TenantAdAccount"]] = relationship(
-        "TenantAdAccount", back_populates="tenant", foreign_keys="[TenantAdAccount.tenant_id]"
+        "TenantAdAccount",
+        back_populates="tenant",
+        foreign_keys="[TenantAdAccount.tenant_id]",
     )
     campaign_drafts: Mapped[List["CampaignDraft"]] = relationship(
-        "CampaignDraft", back_populates="tenant", foreign_keys="[CampaignDraft.tenant_id]"
+        "CampaignDraft",
+        back_populates="tenant",
+        foreign_keys="[CampaignDraft.tenant_id]",
     )
     publish_logs: Mapped[List["CampaignPublishLog"]] = relationship(
-        "CampaignPublishLog", back_populates="tenant", foreign_keys="[CampaignPublishLog.tenant_id]"
+        "CampaignPublishLog",
+        back_populates="tenant",
+        foreign_keys="[CampaignPublishLog.tenant_id]",
     )
 
     __table_args__ = (
@@ -350,9 +398,7 @@ class User(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
 
     # Authentication
     email: Mapped[str] = mapped_column(String(255), nullable=False)  # Encrypted
-    email_hash: Mapped[str] = mapped_column(
-        String(64), nullable=False
-    )  # For lookups
+    email_hash: Mapped[str] = mapped_column(String(64), nullable=False)  # For lookups
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
 
     # Profile (PII - encrypted)
@@ -364,10 +410,12 @@ class User(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
     role: Mapped[UserRole] = mapped_column(
         Enum(UserRole, values_callable=lambda x: [e.value for e in x]),
         default=UserRole.ANALYST,
-        nullable=False
+        nullable=False,
     )
     permissions: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=False)
-    cms_role: Mapped[Optional[str]] = mapped_column(String(30), nullable=True, default=None)
+    cms_role: Mapped[Optional[str]] = mapped_column(
+        String(30), nullable=True, default=None
+    )
 
     # Status
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
@@ -396,7 +444,9 @@ class User(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
         DateTime(timezone=True), nullable=True
     )
     backup_codes: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
-    failed_totp_attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    failed_totp_attempts: Mapped[int] = mapped_column(
+        Integer, default=0, nullable=False
+    )
     totp_lockout_until: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
@@ -405,9 +455,7 @@ class User(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
     client_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("clients.id", ondelete="SET NULL"), nullable=True
     )
-    user_type: Mapped[str] = mapped_column(
-        String(20), default="agency", nullable=False
-    )
+    user_type: Mapped[str] = mapped_column(String(20), default="agency", nullable=False)
 
     # Relationships
     tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="users")
@@ -420,7 +468,9 @@ class User(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
 
     # Multi-tenant memberships (user can belong to multiple tenants)
     tenant_memberships: Mapped[List["UserTenantMembership"]] = relationship(
-        "UserTenantMembership", back_populates="user", foreign_keys="[UserTenantMembership.user_id]"
+        "UserTenantMembership",
+        back_populates="user",
+        foreign_keys="[UserTenantMembership.user_id]",
     )
 
     __table_args__ = (
@@ -459,8 +509,12 @@ class UserTenantMembership(Base, TimestampMixin):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     # Relationships
-    user: Mapped["User"] = relationship("User", back_populates="tenant_memberships", foreign_keys=[user_id])
-    tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="tenant_memberships", foreign_keys=[tenant_id])
+    user: Mapped["User"] = relationship(
+        "User", back_populates="tenant_memberships", foreign_keys=[user_id]
+    )
+    tenant: Mapped["Tenant"] = relationship(
+        "Tenant", back_populates="tenant_memberships", foreign_keys=[tenant_id]
+    )
 
     __table_args__ = (
         UniqueConstraint("user_id", "tenant_id", name="uq_user_tenant_membership"),
@@ -485,8 +539,7 @@ class Campaign(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
 
     # Platform Reference
     platform: Mapped[AdPlatform] = mapped_column(
-        Enum(AdPlatform, values_callable=lambda x: [e.value for e in x]),
-        nullable=False
+        Enum(AdPlatform, values_callable=lambda x: [e.value for e in x]), nullable=False
     )
     external_id: Mapped[str] = mapped_column(
         String(255), nullable=False
@@ -502,7 +555,8 @@ class Campaign(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
     name: Mapped[str] = mapped_column(String(500), nullable=False)
     status: Mapped[CampaignStatus] = mapped_column(
         Enum(CampaignStatus, values_callable=lambda x: [e.value for e in x]),
-        default=CampaignStatus.DRAFT, nullable=False
+        default=CampaignStatus.DRAFT,
+        nullable=False,
     )
     objective: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
 
@@ -519,11 +573,21 @@ class Campaign(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
     revenue_cents: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
     # Computed Metrics (stored for query performance)
-    ctr: Mapped[Optional[float]] = mapped_column(Float, nullable=True)  # Click-through rate
-    cpc_cents: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # Cost per click
-    cpm_cents: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # Cost per mille
-    cpa_cents: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # Cost per acquisition
-    roas: Mapped[Optional[float]] = mapped_column(Float, nullable=True)  # Return on ad spend
+    ctr: Mapped[Optional[float]] = mapped_column(
+        Float, nullable=True
+    )  # Click-through rate
+    cpc_cents: Mapped[Optional[int]] = mapped_column(
+        Integer, nullable=True
+    )  # Cost per click
+    cpm_cents: Mapped[Optional[int]] = mapped_column(
+        Integer, nullable=True
+    )  # Cost per mille
+    cpa_cents: Mapped[Optional[int]] = mapped_column(
+        Integer, nullable=True
+    )  # Cost per acquisition
+    roas: Mapped[Optional[float]] = mapped_column(
+        Float, nullable=True
+    )  # Return on ad spend
 
     # Targeting (Denormalized for analytics)
     targeting_age_min: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
@@ -634,9 +698,7 @@ class CampaignMetric(Base, TenantMixin):
     campaign: Mapped["Campaign"] = relationship("Campaign", back_populates="metrics")
 
     __table_args__ = (
-        UniqueConstraint(
-            "campaign_id", "date", name="uq_campaign_metric_date"
-        ),
+        UniqueConstraint("campaign_id", "date", name="uq_campaign_metric_date"),
         Index("ix_campaign_metrics_date", "tenant_id", "date"),
         Index("ix_campaign_metrics_campaign_date", "campaign_id", "date"),
     )
@@ -661,8 +723,7 @@ class CreativeAsset(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
     # Asset Info
     name: Mapped[str] = mapped_column(String(500), nullable=False)
     asset_type: Mapped[AssetType] = mapped_column(
-        Enum(AssetType, values_callable=lambda x: [e.value for e in x]),
-        nullable=False
+        Enum(AssetType, values_callable=lambda x: [e.value for e in x]), nullable=False
     )
     file_url: Mapped[str] = mapped_column(String(1000), nullable=False)
     thumbnail_url: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
@@ -729,7 +790,7 @@ class Rule(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
     status: Mapped[RuleStatus] = mapped_column(
         Enum(RuleStatus, values_callable=lambda x: [e.value for e in x]),
         default=RuleStatus.DRAFT,
-        nullable=False
+        nullable=False,
     )
 
     # Condition (IF)
@@ -738,7 +799,7 @@ class Rule(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
     )  # e.g., 'roas', 'ctr', 'spend'
     condition_operator: Mapped[RuleOperator] = mapped_column(
         Enum(RuleOperator, values_callable=lambda x: [e.value for e in x]),
-        nullable=False
+        nullable=False,
     )
     condition_value: Mapped[str] = mapped_column(
         String(255), nullable=False
@@ -749,8 +810,7 @@ class Rule(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
 
     # Action (THEN)
     action_type: Mapped[RuleAction] = mapped_column(
-        Enum(RuleAction, values_callable=lambda x: [e.value for e in x]),
-        nullable=False
+        Enum(RuleAction, values_callable=lambda x: [e.value for e in x]), nullable=False
     )
     action_config: Mapped[dict] = mapped_column(
         JSONB, default=dict, nullable=False
@@ -858,14 +918,18 @@ class CompetitorBenchmark(Base, TimestampMixin, TenantMixin):
     )  # 'up', 'down', 'stable'
     top_keywords: Mapped[Optional[list]] = mapped_column(JSONB, nullable=True)
     paid_keywords_count: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    organic_keywords_count: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    organic_keywords_count: Mapped[Optional[int]] = mapped_column(
+        Integer, nullable=True
+    )
 
     # Share of Voice (calculated)
     share_of_voice: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     category_rank: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
 
     # Ad Intelligence
-    estimated_ad_spend_cents: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    estimated_ad_spend_cents: Mapped[Optional[int]] = mapped_column(
+        Integer, nullable=True
+    )
     detected_ad_platforms: Mapped[Optional[list]] = mapped_column(JSONB, nullable=True)
     ad_creatives_count: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
 
@@ -913,7 +977,7 @@ class AuditLog(Base):
     # Action Details
     action: Mapped[AuditAction] = mapped_column(
         Enum(AuditAction, values_callable=lambda x: [e.value for e in x]),
-        nullable=False
+        nullable=False,
     )
     resource_type: Mapped[str] = mapped_column(String(100), nullable=False)
     resource_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
@@ -996,7 +1060,9 @@ class MLPrediction(Base, TenantMixin):
         DateTime(timezone=True),
         nullable=True,
     )
-    expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    expires_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     __table_args__ = (
         Index("ix_predictions_cache", "model_type", "input_hash"),
@@ -1058,7 +1124,9 @@ class APIKey(Base, TimestampMixin, TenantMixin):
     key_hash: Mapped[str] = mapped_column(
         String(64), nullable=False, unique=True
     )  # SHA256 hash
-    key_prefix: Mapped[str] = mapped_column(String(10), nullable=False)  # For identification
+    key_prefix: Mapped[str] = mapped_column(
+        String(10), nullable=False
+    )  # For identification
 
     # Permissions
     scopes: Mapped[list] = mapped_column(JSONB, default=list, nullable=False)
@@ -1080,6 +1148,7 @@ class APIKey(Base, TimestampMixin, TenantMixin):
 # =============================================================================
 class WhatsAppOptInStatus(str, PyEnum):
     """WhatsApp contact opt-in status."""
+
     PENDING = "pending"
     OPTED_IN = "opted_in"
     OPTED_OUT = "opted_out"
@@ -1087,12 +1156,14 @@ class WhatsAppOptInStatus(str, PyEnum):
 
 class WhatsAppMessageDirection(str, PyEnum):
     """WhatsApp message direction."""
+
     OUTBOUND = "outbound"
     INBOUND = "inbound"
 
 
 class WhatsAppMessageStatus(str, PyEnum):
     """WhatsApp message delivery status."""
+
     PENDING = "pending"
     SENT = "sent"
     DELIVERED = "delivered"
@@ -1102,6 +1173,7 @@ class WhatsAppMessageStatus(str, PyEnum):
 
 class WhatsAppTemplateStatus(str, PyEnum):
     """WhatsApp template approval status."""
+
     PENDING = "pending"
     APPROVED = "approved"
     REJECTED = "rejected"
@@ -1110,6 +1182,7 @@ class WhatsAppTemplateStatus(str, PyEnum):
 
 class WhatsAppTemplateCategory(str, PyEnum):
     """WhatsApp template categories."""
+
     MARKETING = "MARKETING"
     UTILITY = "UTILITY"
     AUTHENTICATION = "AUTHENTICATION"
@@ -1146,7 +1219,8 @@ class WhatsAppContact(Base, TimestampMixin, TenantMixin):
     # Opt-in Status (REQUIRED for WhatsApp Business)
     opt_in_status: Mapped[WhatsAppOptInStatus] = mapped_column(
         Enum(WhatsAppOptInStatus, values_callable=lambda x: [e.value for e in x]),
-        default=WhatsAppOptInStatus.PENDING, nullable=False
+        default=WhatsAppOptInStatus.PENDING,
+        nullable=False,
     )
     opt_in_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
@@ -1161,14 +1235,18 @@ class WhatsAppContact(Base, TimestampMixin, TenantMixin):
     # WhatsApp Profile (from API)
     wa_id: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     profile_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    profile_picture_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    profile_picture_url: Mapped[Optional[str]] = mapped_column(
+        String(500), nullable=True
+    )
 
     # Preferences
     notification_types: Mapped[list] = mapped_column(
         JSONB, default=["alerts", "reports", "digests"], nullable=False
     )
     quiet_hours: Mapped[dict] = mapped_column(
-        JSONB, default={"enabled": False, "start": "22:00", "end": "08:00"}, nullable=False
+        JSONB,
+        default={"enabled": False, "start": "22:00", "end": "08:00"},
+        nullable=False,
     )
     timezone: Mapped[str] = mapped_column(String(50), default="UTC", nullable=False)
     language: Mapped[str] = mapped_column(String(10), default="en", nullable=False)
@@ -1209,7 +1287,8 @@ class WhatsAppTemplate(Base, TimestampMixin, TenantMixin):
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     language: Mapped[str] = mapped_column(String(10), default="en", nullable=False)
     category: Mapped[WhatsAppTemplateCategory] = mapped_column(
-        Enum(WhatsAppTemplateCategory, values_callable=lambda x: [e.value for e in x]), nullable=False
+        Enum(WhatsAppTemplateCategory, values_callable=lambda x: [e.value for e in x]),
+        nullable=False,
     )
 
     # Template Content
@@ -1230,7 +1309,9 @@ class WhatsAppTemplate(Base, TimestampMixin, TenantMixin):
     # Meta Approval Status
     meta_template_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     status: Mapped[WhatsAppTemplateStatus] = mapped_column(
-        Enum(WhatsAppTemplateStatus, values_callable=lambda x: [e.value for e in x]), default=WhatsAppTemplateStatus.PENDING, nullable=False
+        Enum(WhatsAppTemplateStatus, values_callable=lambda x: [e.value for e in x]),
+        default=WhatsAppTemplateStatus.PENDING,
+        nullable=False,
     )
     rejection_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
@@ -1268,7 +1349,9 @@ class WhatsAppMessage(Base, TenantMixin):
 
     # Message Details
     direction: Mapped[WhatsAppMessageDirection] = mapped_column(
-        Enum(WhatsAppMessageDirection, values_callable=lambda x: [e.value for e in x]), default=WhatsAppMessageDirection.OUTBOUND, nullable=False
+        Enum(WhatsAppMessageDirection, values_callable=lambda x: [e.value for e in x]),
+        default=WhatsAppMessageDirection.OUTBOUND,
+        nullable=False,
     )
     message_type: Mapped[str] = mapped_column(
         String(20), nullable=False
@@ -1276,7 +1359,9 @@ class WhatsAppMessage(Base, TenantMixin):
 
     # Content
     template_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    template_variables: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=False)
+    template_variables: Mapped[dict] = mapped_column(
+        JSONB, default=dict, nullable=False
+    )
     content: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     media_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     media_type: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
@@ -1287,7 +1372,9 @@ class WhatsAppMessage(Base, TenantMixin):
 
     # Status Tracking
     status: Mapped[WhatsAppMessageStatus] = mapped_column(
-        Enum(WhatsAppMessageStatus, values_callable=lambda x: [e.value for e in x]), default=WhatsAppMessageStatus.PENDING, nullable=False
+        Enum(WhatsAppMessageStatus, values_callable=lambda x: [e.value for e in x]),
+        default=WhatsAppMessageStatus.PENDING,
+        nullable=False,
     )
     status_history: Mapped[list] = mapped_column(JSONB, default=list, nullable=False)
 

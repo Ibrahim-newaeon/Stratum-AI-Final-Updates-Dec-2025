@@ -38,7 +38,9 @@ _processed_events: set[str] = set()
 _MAX_PROCESSED_EVENTS = 10000
 
 
-async def get_tenant_by_customer_id(db: AsyncSession, customer_id: str) -> Tenant | None:
+async def get_tenant_by_customer_id(
+    db: AsyncSession, customer_id: str
+) -> Tenant | None:
     """Get tenant by Stripe customer ID."""
     result = await db.execute(
         select(Tenant).where(
@@ -218,7 +220,9 @@ async def handle_checkout_completed(db: AsyncSession, session: dict):
     # Update tenant with Stripe customer ID
     if customer_id:
         await db.execute(
-            update(Tenant).where(Tenant.id == tenant_id).values(stripe_customer_id=customer_id)
+            update(Tenant)
+            .where(Tenant.id == tenant_id)
+            .values(stripe_customer_id=customer_id)
         )
 
     # Sync subscription if present
@@ -314,7 +318,9 @@ async def handle_subscription_deleted(db: AsyncSession, subscription: dict):
 
     # Get the ended date from subscription
     ended_at = subscription.get("ended_at")
-    ended_datetime = datetime.fromtimestamp(ended_at, tz=UTC) if ended_at else datetime.now(UTC)
+    ended_datetime = (
+        datetime.fromtimestamp(ended_at, tz=UTC) if ended_at else datetime.now(UTC)
+    )
 
     # Update tenant to free plan with expiry
     await db.execute(
@@ -463,5 +469,7 @@ async def handle_customer_created(db: AsyncSession, customer: dict):
     if tenant_id:
         tenant_id = int(tenant_id)
         await db.execute(
-            update(Tenant).where(Tenant.id == tenant_id).values(stripe_customer_id=customer_id)
+            update(Tenant)
+            .where(Tenant.id == tenant_id)
+            .values(stripe_customer_id=customer_id)
         )

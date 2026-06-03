@@ -377,7 +377,10 @@ class TestCRMSyncTasks:
 
     def test_task_exists(self):
         """Sync tasks should exist."""
-        from app.workers.crm_sync_tasks import sync_zoho_data, writeback_zoho_attribution
+        from app.workers.crm_sync_tasks import (
+            sync_zoho_data,
+            writeback_zoho_attribution,
+        )
 
         assert sync_zoho_data is not None
         assert writeback_zoho_attribution is not None
@@ -477,7 +480,10 @@ class TestZohoErrorHandling:
             or rate_limit_response.get("code") == "RATE_LIMIT_EXCEEDED"
         )
 
-        assert is_rate_limited or "exceeded" in rate_limit_response.get("message", "").lower()
+        assert (
+            is_rate_limited
+            or "exceeded" in rate_limit_response.get("message", "").lower()
+        )
 
     def test_invalid_token_detection(self):
         """Should detect invalid/expired token responses."""

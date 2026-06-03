@@ -37,23 +37,38 @@ router = APIRouter(prefix="/meta-capi")
 
 class CAPIEventData(BaseModel):
     """Single CAPI conversion event."""
-    event_name: str = Field(..., description="Event name (e.g. Purchase, Lead, AddToCart)")
+
+    event_name: str = Field(
+        ..., description="Event name (e.g. Purchase, Lead, AddToCart)"
+    )
     event_time: int = Field(..., description="Unix timestamp of the event")
-    user_data: Dict[str, Any] = Field(default_factory=dict, description="Hashed user data")
-    custom_data: Optional[Dict[str, Any]] = Field(None, description="Custom event properties")
-    event_source_url: Optional[str] = Field(None, description="URL where event occurred")
-    action_source: str = Field("website", description="Event source: website, app, email, etc.")
+    user_data: Dict[str, Any] = Field(
+        default_factory=dict, description="Hashed user data"
+    )
+    custom_data: Optional[Dict[str, Any]] = Field(
+        None, description="Custom event properties"
+    )
+    event_source_url: Optional[str] = Field(
+        None, description="URL where event occurred"
+    )
+    action_source: str = Field(
+        "website", description="Event source: website, app, email, etc."
+    )
 
 
 class CAPIEventBatch(BaseModel):
     """Batch of CAPI events."""
+
     events: List[CAPIEventData] = Field(..., min_length=1, max_length=1000)
     pixel_id: Optional[str] = Field(None, description="Meta Pixel ID")
-    test_event_code: Optional[str] = Field(None, description="Test event code for debugging")
+    test_event_code: Optional[str] = Field(
+        None, description="Test event code for debugging"
+    )
 
 
 class CAPIValidationRequest(BaseModel):
     """Request to validate event payloads."""
+
     events: List[CAPIEventData] = Field(..., min_length=1, max_length=100)
 
 
@@ -78,7 +93,7 @@ async def send_capi_events(
     request: Request,
     batch: CAPIEventBatch,
     db: AsyncSession = Depends(get_async_session),
-    current_user = Depends(get_current_user),
+    current_user=Depends(get_current_user),
 ):
     """
     Send conversion events via CAPI.
@@ -102,19 +117,23 @@ async def send_capi_events(
         event_quality = _assess_event_quality(event)
 
         if event_quality["score"] < 30:
-            quality_issues.append({
-                "event_name": event.event_name,
-                "issues": event_quality["issues"],
-                "score": event_quality["score"],
-            })
+            quality_issues.append(
+                {
+                    "event_name": event.event_name,
+                    "issues": event_quality["issues"],
+                    "score": event_quality["score"],
+                }
+            )
 
-        results.append({
-            "event_name": event.event_name,
-            "event_time": event.event_time,
-            "quality_score": event_quality["score"],
-            "issues": event_quality["issues"],
-            "status": "accepted",
-        })
+        results.append(
+            {
+                "event_name": event.event_name,
+                "event_time": event.event_time,
+                "quality_score": event_quality["score"],
+                "issues": event_quality["issues"],
+                "status": "accepted",
+            }
+        )
 
     # Stream events through CAPI service
     try:
@@ -147,7 +166,9 @@ async def send_capi_events(
         for r in results:
             r["status"] = "send_failed"
 
-    avg_quality = sum(r["quality_score"] for r in results) / len(results) if results else 0
+    avg_quality = (
+        sum(r["quality_score"] for r in results) / len(results) if results else 0
+    )
 
     return APIResponse(
         success=True,
@@ -170,7 +191,7 @@ async def send_capi_events(
 @router.post("/events/validate", response_model=APIResponse[Dict[str, Any]])
 async def validate_capi_events(
     payload: CAPIValidationRequest,
-    current_user = Depends(get_current_user),
+    current_user=Depends(get_current_user),
 ):
     """
     Validate CAPI event payloads without sending them.
@@ -181,16 +202,22 @@ async def validate_capi_events(
 
     for event in payload.events:
         quality = _assess_event_quality(event)
-        validations.append({
-            "event_name": event.event_name,
-            "valid": quality["score"] >= 30,
-            "quality_score": quality["score"],
-            "issues": quality["issues"],
-            "suggestions": quality["suggestions"],
-        })
+        validations.append(
+            {
+                "event_name": event.event_name,
+                "valid": quality["score"] >= 30,
+                "quality_score": quality["score"],
+                "issues": quality["issues"],
+                "suggestions": quality["suggestions"],
+            }
+        )
 
     all_valid = all(v["valid"] for v in validations)
-    avg_score = sum(v["quality_score"] for v in validations) / len(validations) if validations else 0
+    avg_score = (
+        sum(v["quality_score"] for v in validations) / len(validations)
+        if validations
+        else 0
+    )
 
     return APIResponse(
         success=True,
@@ -312,7 +339,9 @@ def _assess_event_quality(event: CAPIEventData) -> Dict[str, Any]:
     if not user_data:
         score -= 40
         issues.append("No user data provided")
-        suggestions.append("Include hashed email (em) or phone (ph) for better match rates")
+        suggestions.append(
+            "Include hashed email (em) or phone (ph) for better match rates"
+        )
     else:
         # Check for key identifiers
         has_email = "em" in user_data or "email" in user_data
@@ -324,7 +353,9 @@ def _assess_event_quality(event: CAPIEventData) -> Dict[str, Any]:
         if not has_email and not has_phone:
             score -= 25
             issues.append("Missing email or phone identifiers")
-            suggestions.append("Include hashed email (em) and/or phone (ph) for higher match rates")
+            suggestions.append(
+                "Include hashed email (em) and/or phone (ph) for higher match rates"
+            )
 
         if not has_fbp:
             score -= 10
@@ -347,10 +378,15 @@ def _assess_event_quality(event: CAPIEventData) -> Dict[str, Any]:
         issues.append("Missing event_source_url")
         suggestions.append("Include the page URL where the event occurred")
 
-    if event.event_name in ("Purchase", "CompleteRegistration") and not event.custom_data:
+    if (
+        event.event_name in ("Purchase", "CompleteRegistration")
+        and not event.custom_data
+    ):
         score -= 10
         issues.append(f"Missing custom_data for {event.event_name}")
-        suggestions.append(f"Include value and currency in custom_data for {event.event_name}")
+        suggestions.append(
+            f"Include value and currency in custom_data for {event.event_name}"
+        )
 
     if event.custom_data and event.event_name == "Purchase":
         if "value" not in event.custom_data:
@@ -360,7 +396,9 @@ def _assess_event_quality(event: CAPIEventData) -> Dict[str, Any]:
         if "currency" not in event.custom_data:
             score -= 5
             issues.append("Purchase event missing currency")
-            suggestions.append("Include currency code in custom_data.currency (e.g. USD)")
+            suggestions.append(
+                "Include currency code in custom_data.currency (e.g. USD)"
+            )
 
     return {
         "score": max(0, score),

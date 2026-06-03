@@ -47,7 +47,7 @@ class EmbedTokenService:
         if not settings.embed_signing_key or len(settings.embed_signing_key) < 32:
             raise ValueError(
                 "EMBED_SIGNING_KEY must be set via environment variable (min 32 chars). "
-                "Generate one with: python -c \"import secrets; print(secrets.token_hex(32))\""
+                'Generate one with: python -c "import secrets; print(secrets.token_hex(32))"'
             )
         self._signing_key = settings.embed_signing_key
 
@@ -91,7 +91,9 @@ class EmbedTokenService:
         )
 
         if not widget:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Widget not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Widget not found"
+            )
 
         # Check token limit per widget
         existing_tokens = (
@@ -118,7 +120,9 @@ class EmbedTokenService:
 
         # Calculate expiration
         expires_at = datetime.now(UTC) + timedelta(days=expires_in_days)
-        refresh_expires_at = datetime.now(UTC) + timedelta(days=self.DEFAULT_REFRESH_EXPIRY_DAYS)
+        refresh_expires_at = datetime.now(UTC) + timedelta(
+            days=self.DEFAULT_REFRESH_EXPIRY_DAYS
+        )
 
         # Determine rate limit based on tier
         rate_limit = self._get_rate_limit_for_tier(tier)
@@ -170,7 +174,9 @@ class EmbedTokenService:
         )
 
         if not token:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Token not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Token not found"
+            )
 
         # Verify refresh token
         refresh_hash = EmbedToken.hash_token(refresh_token)
@@ -196,7 +202,9 @@ class EmbedTokenService:
         token.token_prefix = new_prefix
         token.token_hash = new_hash
         token.refresh_token_hash = new_refresh_hash
-        token.expires_at = datetime.now(UTC) + timedelta(days=self.DEFAULT_TOKEN_EXPIRY_DAYS)
+        token.expires_at = datetime.now(UTC) + timedelta(
+            days=self.DEFAULT_TOKEN_EXPIRY_DAYS
+        )
         token.refresh_expires_at = datetime.now(UTC) + timedelta(
             days=self.DEFAULT_REFRESH_EXPIRY_DAYS
         )
@@ -240,19 +248,24 @@ class EmbedTokenService:
         )
 
         if not db_token:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
+            )
 
         # Check token status
         if db_token.status != TokenStatus.ACTIVE.value:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Token is {db_token.status}"
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=f"Token is {db_token.status}",
             )
 
         # Check expiration
         if db_token.expires_at < datetime.now(UTC):
             db_token.status = TokenStatus.EXPIRED.value
             self.db.commit()
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired"
+            )
 
         # Validate origin against allowed domains
         if not self._validate_origin(origin, db_token.allowed_domains):
@@ -260,13 +273,15 @@ class EmbedTokenService:
             db_token.total_errors += 1
             self.db.commit()
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Origin not allowed for this token"
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Origin not allowed for this token",
             )
 
         # Check rate limit
         if not self._check_rate_limit(db_token):
             raise HTTPException(
-                status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Rate limit exceeded"
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail="Rate limit exceeded",
             )
 
         # Update usage stats
@@ -286,7 +301,8 @@ class EmbedTokenService:
 
         if not widget:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Widget not found or inactive"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Widget not found or inactive",
             )
 
         # Update widget stats
@@ -309,7 +325,9 @@ class EmbedTokenService:
         )
 
         if not token:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Token not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Token not found"
+            )
 
         token.status = TokenStatus.REVOKED.value
         self.db.commit()
@@ -385,7 +403,10 @@ class EmbedTokenService:
             return False
 
         # Check against allowed domains
-        return any(self._domain_matches_pattern(hostname, pattern) for pattern in allowed_domains)
+        return any(
+            self._domain_matches_pattern(hostname, pattern)
+            for pattern in allowed_domains
+        )
 
     def _domain_matches_pattern(self, domain: str, pattern: str) -> bool:
         """Check if domain matches a pattern (supports wildcards)."""
@@ -460,7 +481,9 @@ class EmbedTokenService:
         message = f"{token_id}:{canonical}".encode()
 
         # Create HMAC signature
-        signature = hmac.new(self._signing_key.encode(), message, hashlib.sha256).hexdigest()
+        signature = hmac.new(
+            self._signing_key.encode(), message, hashlib.sha256
+        ).hexdigest()
 
         return signature
 

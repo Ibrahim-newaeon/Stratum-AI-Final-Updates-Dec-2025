@@ -46,23 +46,45 @@ def upgrade() -> None:
         sa.Column("target_roas", sa.Float(), nullable=True),
         sa.Column("target_cpa_cents", sa.Integer(), nullable=True),
         sa.Column("target_ctr", sa.Float(), nullable=True),
-        sa.Column("budget_alert_threshold", sa.Float(), server_default="0.9", nullable=False),
+        sa.Column(
+            "budget_alert_threshold", sa.Float(), server_default="0.9", nullable=False
+        ),
         sa.Column("roas_alert_threshold", sa.Float(), nullable=True),
         sa.Column("contact_name", sa.String(255), nullable=True),
         sa.Column("contact_email", sa.String(255), nullable=True),
         sa.Column("contact_phone", sa.String(100), nullable=True),
         sa.Column("notes", sa.Text(), nullable=True),
-        sa.Column("settings", postgresql.JSONB(astext_type=sa.Text()), server_default="{}", nullable=False),
+        sa.Column(
+            "settings",
+            postgresql.JSONB(astext_type=sa.Text()),
+            server_default="{}",
+            nullable=False,
+        ),
         sa.Column("is_active", sa.Boolean(), server_default="true", nullable=False),
         # TimestampMixin
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         # SoftDeleteMixin
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("is_deleted", sa.Boolean(), server_default="false", nullable=False),
         # Constraints
         sa.PrimaryKeyConstraint("id", name="pk_clients"),
-        sa.ForeignKeyConstraint(["tenant_id"], ["tenants.id"], name="fk_clients_tenant_id_tenants", ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(
+            ["tenant_id"],
+            ["tenants.id"],
+            name="fk_clients_tenant_id_tenants",
+            ondelete="CASCADE",
+        ),
         sa.UniqueConstraint("tenant_id", "slug", name="uq_client_tenant_slug"),
     )
     op.create_index("ix_clients_tenant_active", "clients", ["tenant_id", "is_active"])
@@ -78,13 +100,38 @@ def upgrade() -> None:
         sa.Column("assigned_by", sa.Integer(), nullable=True),
         sa.Column("is_primary", sa.Boolean(), server_default="false", nullable=False),
         # TimestampMixin
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         # Constraints
         sa.PrimaryKeyConstraint("id", name="pk_client_assignments"),
-        sa.ForeignKeyConstraint(["user_id"], ["users.id"], name="fk_client_assignments_user_id_users", ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(["client_id"], ["clients.id"], name="fk_client_assignments_client_id_clients", ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(["assigned_by"], ["users.id"], name="fk_client_assignments_assigned_by_users", ondelete="SET NULL"),
+        sa.ForeignKeyConstraint(
+            ["user_id"],
+            ["users.id"],
+            name="fk_client_assignments_user_id_users",
+            ondelete="CASCADE",
+        ),
+        sa.ForeignKeyConstraint(
+            ["client_id"],
+            ["clients.id"],
+            name="fk_client_assignments_client_id_clients",
+            ondelete="CASCADE",
+        ),
+        sa.ForeignKeyConstraint(
+            ["assigned_by"],
+            ["users.id"],
+            name="fk_client_assignments_assigned_by_users",
+            ondelete="SET NULL",
+        ),
         sa.UniqueConstraint("user_id", "client_id", name="uq_user_client_assignment"),
     )
     op.create_index("ix_client_assignments_user", "client_assignments", ["user_id"])
@@ -100,8 +147,12 @@ def upgrade() -> None:
         sa.Column(
             "request_type",
             sa.Enum(
-                "pause_campaign", "resume_campaign", "adjust_budget",
-                "change_targeting", "new_campaign", "other",
+                "pause_campaign",
+                "resume_campaign",
+                "adjust_budget",
+                "change_targeting",
+                "new_campaign",
+                "other",
                 name="clientrequesttype",
             ),
             nullable=False,
@@ -110,11 +161,20 @@ def upgrade() -> None:
         sa.Column("description", sa.Text(), nullable=True),
         sa.Column("target_entity_type", sa.String(50), nullable=True),
         sa.Column("target_entity_id", sa.Integer(), nullable=True),
-        sa.Column("requested_changes", postgresql.JSONB(astext_type=sa.Text()), server_default="{}", nullable=False),
+        sa.Column(
+            "requested_changes",
+            postgresql.JSONB(astext_type=sa.Text()),
+            server_default="{}",
+            nullable=False,
+        ),
         sa.Column(
             "status",
             sa.Enum(
-                "pending", "approved", "rejected", "executed", "cancelled",
+                "pending",
+                "approved",
+                "rejected",
+                "executed",
+                "cancelled",
                 name="clientrequeststatus",
             ),
             server_default="pending",
@@ -125,17 +185,51 @@ def upgrade() -> None:
         sa.Column("review_notes", sa.Text(), nullable=True),
         sa.Column("executed_at", sa.DateTime(timezone=True), nullable=True),
         # TimestampMixin
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         # Constraints
         sa.PrimaryKeyConstraint("id", name="pk_client_requests"),
-        sa.ForeignKeyConstraint(["tenant_id"], ["tenants.id"], name="fk_client_requests_tenant_id_tenants", ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(["client_id"], ["clients.id"], name="fk_client_requests_client_id_clients", ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(["requested_by"], ["users.id"], name="fk_client_requests_requested_by_users", ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(["reviewed_by"], ["users.id"], name="fk_client_requests_reviewed_by_users", ondelete="SET NULL"),
+        sa.ForeignKeyConstraint(
+            ["tenant_id"],
+            ["tenants.id"],
+            name="fk_client_requests_tenant_id_tenants",
+            ondelete="CASCADE",
+        ),
+        sa.ForeignKeyConstraint(
+            ["client_id"],
+            ["clients.id"],
+            name="fk_client_requests_client_id_clients",
+            ondelete="CASCADE",
+        ),
+        sa.ForeignKeyConstraint(
+            ["requested_by"],
+            ["users.id"],
+            name="fk_client_requests_requested_by_users",
+            ondelete="CASCADE",
+        ),
+        sa.ForeignKeyConstraint(
+            ["reviewed_by"],
+            ["users.id"],
+            name="fk_client_requests_reviewed_by_users",
+            ondelete="SET NULL",
+        ),
     )
-    op.create_index("ix_client_requests_client_status", "client_requests", ["client_id", "status"])
-    op.create_index("ix_client_requests_status", "client_requests", ["status", "created_at"])
+    op.create_index(
+        "ix_client_requests_client_status", "client_requests", ["client_id", "status"]
+    )
+    op.create_index(
+        "ix_client_requests_status", "client_requests", ["status", "created_at"]
+    )
     op.create_index("ix_client_requests_tenant", "client_requests", ["tenant_id"])
 
     # 4. Add client_id + user_type columns to users table
@@ -172,7 +266,9 @@ def downgrade() -> None:
 
     # 5. Remove client_id from campaigns
     op.drop_index("ix_campaigns_client", table_name="campaigns")
-    op.drop_constraint("fk_campaigns_client_id_clients", "campaigns", type_="foreignkey")
+    op.drop_constraint(
+        "fk_campaigns_client_id_clients", "campaigns", type_="foreignkey"
+    )
     op.drop_column("campaigns", "client_id")
 
     # 4. Remove client_id + user_type from users

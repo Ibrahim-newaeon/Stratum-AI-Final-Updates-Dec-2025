@@ -27,6 +27,7 @@ router = APIRouter(prefix="/drip-campaigns", tags=["Drip Campaigns"])
 # Enums
 # =============================================================================
 
+
 class TriggerType(str, Enum):
     USER_SUBSCRIBED = "user_subscribed"
     CART_ABANDONED = "cart_abandoned"
@@ -57,8 +58,10 @@ class DripStatus(str, Enum):
 # Schemas — Flow Nodes (for drag-and-drop builder)
 # =============================================================================
 
+
 class FlowNode(BaseModel):
     """A single node in the drip sequence flow graph."""
+
     id: str
     type: NodeType
     position: dict[str, float] = Field(default_factory=dict)  # {x, y} for canvas
@@ -67,6 +70,7 @@ class FlowNode(BaseModel):
 
 class FlowEdge(BaseModel):
     """Connection between two nodes."""
+
     id: str
     source: str  # source node id
     target: str  # target node id
@@ -77,8 +81,10 @@ class FlowEdge(BaseModel):
 # Schemas — Drip Sequence
 # =============================================================================
 
+
 class DripStep(BaseModel):
     """A step in a drip sequence (execution model)."""
+
     step_order: int
     node_type: NodeType
     config: dict[str, Any]  # email_id, delay_hours, condition, etc.
@@ -149,12 +155,14 @@ _execution_logs: list[dict] = []
 
 def _generate_id() -> str:
     import secrets
+
     return f"drip_{secrets.token_hex(8)}"
 
 
 # =============================================================================
 # API Endpoints
 # =============================================================================
+
 
 @router.get("", response_model=APIResponse[list[DripSequenceResponse]])
 async def list_drip_sequences(
@@ -165,14 +173,19 @@ async def list_drip_sequences(
     """List all drip sequences for the tenant."""
     tenant_id = getattr(req.state, "tenant_id", None)
     if not tenant_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
+        )
 
     sequences = [
-        _serialize_sequence(s) for s in _drip_store.values()
+        _serialize_sequence(s)
+        for s in _drip_store.values()
         if s.get("tenant_id") == tenant_id
         and (not status_filter or s.get("status") == status_filter)
     ]
-    return APIResponse(success=True, data=sequences, message=f"Found {len(sequences)} sequences")
+    return APIResponse(
+        success=True, data=sequences, message=f"Found {len(sequences)} sequences"
+    )
 
 
 @router.post("", response_model=APIResponse[DripSequenceResponse])
@@ -190,7 +203,9 @@ async def create_drip_sequence(
     """
     tenant_id = getattr(req.state, "tenant_id", None)
     if not tenant_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
+        )
 
     sequence_id = _generate_id()
     now = datetime.now(UTC).isoformat()
@@ -215,9 +230,16 @@ async def create_drip_sequence(
 
     _drip_store[sequence_id] = sequence
 
-    logger.info("drip_sequence_created", tenant_id=tenant_id, sequence_id=sequence_id, name=request.name)
+    logger.info(
+        "drip_sequence_created",
+        tenant_id=tenant_id,
+        sequence_id=sequence_id,
+        name=request.name,
+    )
 
-    return APIResponse(success=True, data=_serialize_sequence(sequence), message="Sequence created")
+    return APIResponse(
+        success=True, data=_serialize_sequence(sequence), message="Sequence created"
+    )
 
 
 @router.get("/{sequence_id}", response_model=APIResponse[DripSequenceResponse])
@@ -229,13 +251,19 @@ async def get_drip_sequence(
     """Get a single drip sequence with its full flow graph."""
     tenant_id = getattr(req.state, "tenant_id", None)
     if not tenant_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
+        )
 
     sequence = _drip_store.get(sequence_id)
     if not sequence or sequence.get("tenant_id") != tenant_id:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sequence not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Sequence not found"
+        )
 
-    return APIResponse(success=True, data=_serialize_sequence(sequence), message="Sequence retrieved")
+    return APIResponse(
+        success=True, data=_serialize_sequence(sequence), message="Sequence retrieved"
+    )
 
 
 @router.put("/{sequence_id}", response_model=APIResponse[DripSequenceResponse])
@@ -248,11 +276,15 @@ async def update_drip_sequence(
     """Update a drip sequence — save changes from the flow builder."""
     tenant_id = getattr(req.state, "tenant_id", None)
     if not tenant_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
+        )
 
     sequence = _drip_store.get(sequence_id)
     if not sequence or sequence.get("tenant_id") != tenant_id:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sequence not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Sequence not found"
+        )
 
     sequence["name"] = request.name
     sequence["description"] = request.description or ""
@@ -264,7 +296,9 @@ async def update_drip_sequence(
 
     logger.info("drip_sequence_updated", tenant_id=tenant_id, sequence_id=sequence_id)
 
-    return APIResponse(success=True, data=_serialize_sequence(sequence), message="Sequence updated")
+    return APIResponse(
+        success=True, data=_serialize_sequence(sequence), message="Sequence updated"
+    )
 
 
 @router.post("/{sequence_id}/activate", response_model=APIResponse[dict])
@@ -276,16 +310,24 @@ async def activate_sequence(
     """Activate a sequence — start watching for triggers."""
     tenant_id = getattr(req.state, "tenant_id", None)
     if not tenant_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
+        )
 
     sequence = _drip_store.get(sequence_id)
     if not sequence or sequence.get("tenant_id") != tenant_id:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sequence not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Sequence not found"
+        )
 
     sequence["status"] = DripStatus.ACTIVE.value
     sequence["updated_at"] = datetime.now(UTC).isoformat()
 
-    return APIResponse(success=True, data={"id": sequence_id, "status": "active"}, message="Sequence activated")
+    return APIResponse(
+        success=True,
+        data={"id": sequence_id, "status": "active"},
+        message="Sequence activated",
+    )
 
 
 @router.post("/{sequence_id}/pause", response_model=APIResponse[dict])
@@ -297,16 +339,24 @@ async def pause_sequence(
     """Pause a sequence — no new entries, existing continue."""
     tenant_id = getattr(req.state, "tenant_id", None)
     if not tenant_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
+        )
 
     sequence = _drip_store.get(sequence_id)
     if not sequence or sequence.get("tenant_id") != tenant_id:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sequence not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Sequence not found"
+        )
 
     sequence["status"] = DripStatus.PAUSED.value
     sequence["updated_at"] = datetime.now(UTC).isoformat()
 
-    return APIResponse(success=True, data={"id": sequence_id, "status": "paused"}, message="Sequence paused")
+    return APIResponse(
+        success=True,
+        data={"id": sequence_id, "status": "paused"},
+        message="Sequence paused",
+    )
 
 
 @router.delete("/{sequence_id}", response_model=APIResponse[dict])
@@ -318,16 +368,24 @@ async def delete_sequence(
     """Archive a sequence (soft delete)."""
     tenant_id = getattr(req.state, "tenant_id", None)
     if not tenant_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
+        )
 
     sequence = _drip_store.get(sequence_id)
     if not sequence or sequence.get("tenant_id") != tenant_id:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sequence not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Sequence not found"
+        )
 
     sequence["status"] = DripStatus.ARCHIVED.value
     sequence["updated_at"] = datetime.now(UTC).isoformat()
 
-    return APIResponse(success=True, data={"id": sequence_id, "deleted": True}, message="Sequence archived")
+    return APIResponse(
+        success=True,
+        data={"id": sequence_id, "deleted": True},
+        message="Sequence archived",
+    )
 
 
 @router.post("/{sequence_id}/trigger", response_model=APIResponse[dict])
@@ -340,11 +398,15 @@ async def manual_trigger(
     """Manually trigger a sequence for a specific recipient (testing)."""
     tenant_id = getattr(req.state, "tenant_id", None)
     if not tenant_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
+        )
 
     sequence = _drip_store.get(sequence_id)
     if not sequence or sequence.get("tenant_id") != tenant_id:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sequence not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Sequence not found"
+        )
 
     # Simulate execution
     log_entry = {
@@ -364,7 +426,11 @@ async def manual_trigger(
 
     return APIResponse(
         success=True,
-        data={"sequence_id": sequence_id, "recipient": recipient_email, "status": "triggered"},
+        data={
+            "sequence_id": sequence_id,
+            "recipient": recipient_email,
+            "status": "triggered",
+        },
         message=f"Sequence triggered for {recipient_email}",
     )
 
@@ -380,7 +446,9 @@ async def get_execution_logs(
     """Get execution logs for a sequence."""
     tenant_id = getattr(req.state, "tenant_id", None)
     if not tenant_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
+        )
 
     logs = [
         DripExecutionLog(**log)
@@ -390,9 +458,11 @@ async def get_execution_logs(
     logs.sort(key=lambda x: x.sent_at or "", reverse=True)
 
     start = (page - 1) * page_size
-    paginated = logs[start:start + page_size]
+    paginated = logs[start : start + page_size]
 
-    return APIResponse(success=True, data=paginated, message=f"Found {len(logs)} log entries")
+    return APIResponse(
+        success=True, data=paginated, message=f"Found {len(logs)} log entries"
+    )
 
 
 @router.get("/{sequence_id}/analytics", response_model=APIResponse[DripAnalytics])
@@ -404,11 +474,15 @@ async def get_drip_analytics(
     """Get aggregated analytics for a drip sequence."""
     tenant_id = getattr(req.state, "tenant_id", None)
     if not tenant_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
+        )
 
     sequence = _drip_store.get(sequence_id)
     if not sequence or sequence.get("tenant_id") != tenant_id:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sequence not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Sequence not found"
+        )
 
     logs = [log for log in _execution_logs if log["sequence_id"] == sequence_id]
 
@@ -437,7 +511,11 @@ async def get_drip_analytics(
             "sent": stats["sent"],
             "opened": stats["opened"],
             "clicked": stats["clicked"],
-            "open_rate": round(stats["opened"] / stats["sent"] * 100, 1) if stats["sent"] > 0 else 0,
+            "open_rate": (
+                round(stats["opened"] / stats["sent"] * 100, 1)
+                if stats["sent"] > 0
+                else 0
+            ),
         }
         for step, stats in sorted(step_stats.items())
     ]
@@ -466,7 +544,9 @@ async def get_prebuilt_templates(
     """Get pre-built drip sequence templates users can clone."""
     tenant_id = getattr(req.state, "tenant_id", None)
     if not tenant_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
+        )
 
     templates = [
         {
@@ -522,6 +602,7 @@ async def get_prebuilt_templates(
 # =============================================================================
 # Helpers
 # =============================================================================
+
 
 def _serialize_sequence(sequence: dict) -> DripSequenceResponse:
     return DripSequenceResponse(

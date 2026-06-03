@@ -29,7 +29,11 @@ from app.auth.permissions import require_super_admin
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.db.session import get_async_session
-from app.models.newsletter import NewsletterCampaign, NewsletterEvent, NewsletterEventType
+from app.models.newsletter import (
+    NewsletterCampaign,
+    NewsletterEvent,
+    NewsletterEventType,
+)
 from app.services.email_service import get_email_service
 
 router = APIRouter(tags=["SendGrid Webhooks"])
@@ -68,6 +72,7 @@ class SendGridEvent(BaseModel):
 # =============================================================================
 # Helpers
 # =============================================================================
+
 
 def _verify_token(request: Request) -> bool:
     """Verify the webhook URL token matches the configured secret."""
@@ -116,6 +121,7 @@ def _is_duplicate_event(sg_event_id: Optional[str]) -> bool:
 # =============================================================================
 # Webhook Endpoint
 # =============================================================================
+
 
 @router.post("/webhooks/sendgrid")
 async def receive_sendgrid_events(request: Request) -> dict:
@@ -276,6 +282,7 @@ async def _upsert_newsletter_event(
 # Health / Test Endpoint
 # =============================================================================
 
+
 @router.post("/webhooks/sendgrid/test")
 async def sendgrid_test_webhook(request: Request) -> dict:
     """
@@ -311,6 +318,7 @@ async def sendgrid_test_webhook(request: Request) -> dict:
 # =============================================================================
 # Superadmin Test Email Endpoint
 # =============================================================================
+
 
 class TestEmailRequest(BaseModel):
     """Request to send a test email via SendGrid."""

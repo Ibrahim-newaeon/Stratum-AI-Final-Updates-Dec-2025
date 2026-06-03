@@ -336,7 +336,9 @@ class SnapchatAdapter(BaseAdapter):
                     campaign_name=c.get("name", ""),
                     status=status,
                     daily_budget=self._micros_to_dollars(c.get("daily_budget_micro")),
-                    lifetime_budget=self._micros_to_dollars(c.get("lifetime_spend_cap_micro")),
+                    lifetime_budget=self._micros_to_dollars(
+                        c.get("lifetime_spend_cap_micro")
+                    ),
                     created_at=self._parse_datetime(c.get("created_at")),
                     updated_at=self._parse_datetime(c.get("updated_at")),
                     last_synced=datetime.now(UTC),
@@ -344,7 +346,9 @@ class SnapchatAdapter(BaseAdapter):
                 )
                 campaigns.append(campaign)
 
-            logger.info(f"Fetched {len(campaigns)} campaigns from Snapchat account {account_id}")
+            logger.info(
+                f"Fetched {len(campaigns)} campaigns from Snapchat account {account_id}"
+            )
             return campaigns
 
         except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
@@ -368,7 +372,9 @@ class SnapchatAdapter(BaseAdapter):
             # If campaign_id provided, fetch directly
             if campaign_id:
                 await self.rate_limiter.acquire()
-                response = self._make_request("GET", f"/campaigns/{campaign_id}/adsquads")
+                response = self._make_request(
+                    "GET", f"/campaigns/{campaign_id}/adsquads"
+                )
                 return self._parse_adsquads(response, account_id, campaign_id)
 
             # Otherwise, get all campaigns first and fetch ad squads for each
@@ -377,8 +383,12 @@ class SnapchatAdapter(BaseAdapter):
 
             for campaign in campaigns:
                 await self.rate_limiter.acquire()
-                response = self._make_request("GET", f"/campaigns/{campaign.campaign_id}/adsquads")
-                adsets = self._parse_adsquads(response, account_id, campaign.campaign_id)
+                response = self._make_request(
+                    "GET", f"/campaigns/{campaign.campaign_id}/adsquads"
+                )
+                adsets = self._parse_adsquads(
+                    response, account_id, campaign.campaign_id
+                )
                 all_adsets.extend(adsets)
 
             return all_adsets
@@ -405,7 +415,9 @@ class SnapchatAdapter(BaseAdapter):
                     sq.get("status", "ACTIVE"), EntityStatus.ACTIVE
                 ),
                 daily_budget=self._micros_to_dollars(sq.get("daily_budget_micro")),
-                lifetime_budget=self._micros_to_dollars(sq.get("lifetime_budget_micro")),
+                lifetime_budget=self._micros_to_dollars(
+                    sq.get("lifetime_budget_micro")
+                ),
                 bid_amount=self._micros_to_dollars(sq.get("bid_micro")),
                 start_time=self._parse_datetime(sq.get("start_time")),
                 end_time=self._parse_datetime(sq.get("end_time")),
@@ -415,7 +427,9 @@ class SnapchatAdapter(BaseAdapter):
             adsets.append(adset)
         return adsets
 
-    async def get_ads(self, account_id: str, adset_id: Optional[str] = None) -> list[UnifiedAd]:
+    async def get_ads(
+        self, account_id: str, adset_id: Optional[str] = None
+    ) -> list[UnifiedAd]:
         """
         Fetch ads for the specified account.
 
@@ -437,7 +451,9 @@ class SnapchatAdapter(BaseAdapter):
             for adset in adsets:
                 await self.rate_limiter.acquire()
                 response = self._make_request("GET", f"/adsquads/{adset.adset_id}/ads")
-                ads = self._parse_ads(response, account_id, adset.campaign_id, adset.adset_id)
+                ads = self._parse_ads(
+                    response, account_id, adset.campaign_id, adset.adset_id
+                )
                 all_ads.extend(ads)
 
             return all_ads
@@ -552,26 +568,40 @@ class SnapchatAdapter(BaseAdapter):
 
                 metrics = PerformanceMetrics(
                     impressions=int(total_stats.get("impressions", 0)),
-                    clicks=int(total_stats.get("swipes", 0)),  # Snapchat calls clicks "swipes"
+                    clicks=int(
+                        total_stats.get("swipes", 0)
+                    ),  # Snapchat calls clicks "swipes"
                     spend=self._micros_to_dollars(total_stats.get("spend", 0)) or 0,
-                    video_views=int(total_stats.get("video_views", 0))
-                    if total_stats.get("video_views")
-                    else None,
-                    video_p25=int(total_stats.get("quartile_1", 0))
-                    if total_stats.get("quartile_1")
-                    else None,
-                    video_p50=int(total_stats.get("quartile_2", 0))
-                    if total_stats.get("quartile_2")
-                    else None,
-                    video_p75=int(total_stats.get("quartile_3", 0))
-                    if total_stats.get("quartile_3")
-                    else None,
-                    video_p100=int(total_stats.get("view_completion", 0))
-                    if total_stats.get("view_completion")
-                    else None,
-                    conversions=int(total_stats.get("conversion_purchases", 0))
-                    if total_stats.get("conversion_purchases")
-                    else None,
+                    video_views=(
+                        int(total_stats.get("video_views", 0))
+                        if total_stats.get("video_views")
+                        else None
+                    ),
+                    video_p25=(
+                        int(total_stats.get("quartile_1", 0))
+                        if total_stats.get("quartile_1")
+                        else None
+                    ),
+                    video_p50=(
+                        int(total_stats.get("quartile_2", 0))
+                        if total_stats.get("quartile_2")
+                        else None
+                    ),
+                    video_p75=(
+                        int(total_stats.get("quartile_3", 0))
+                        if total_stats.get("quartile_3")
+                        else None
+                    ),
+                    video_p100=(
+                        int(total_stats.get("view_completion", 0))
+                        if total_stats.get("view_completion")
+                        else None
+                    ),
+                    conversions=(
+                        int(total_stats.get("conversion_purchases", 0))
+                        if total_stats.get("conversion_purchases")
+                        else None
+                    ),
                     conversion_value=self._micros_to_dollars(
                         total_stats.get("conversion_purchases_value", 0)
                     ),
@@ -684,16 +714,22 @@ class SnapchatAdapter(BaseAdapter):
             "adset": f"/adsquads/{action.entity_id}",
         }
 
-        endpoint = endpoint_map.get(action.entity_type, f"/campaigns/{action.entity_id}")
+        endpoint = endpoint_map.get(
+            action.entity_type, f"/campaigns/{action.entity_id}"
+        )
 
         data = {}
         if "daily_budget" in params:
             data["daily_budget_micro"] = int(params["daily_budget"] * 1_000_000)
         if "lifetime_budget" in params:
             if action.entity_type == "campaign":
-                data["lifetime_spend_cap_micro"] = int(params["lifetime_budget"] * 1_000_000)
+                data["lifetime_spend_cap_micro"] = int(
+                    params["lifetime_budget"] * 1_000_000
+                )
             else:
-                data["lifetime_budget_micro"] = int(params["lifetime_budget"] * 1_000_000)
+                data["lifetime_budget_micro"] = int(
+                    params["lifetime_budget"] * 1_000_000
+                )
 
         # Snapchat uses PUT for updates
         wrapper_key = "campaigns" if action.entity_type == "campaign" else "adsquads"
@@ -715,7 +751,9 @@ class SnapchatAdapter(BaseAdapter):
             "ad": f"/ads/{action.entity_id}",
         }
 
-        endpoint = endpoint_map.get(action.entity_type, f"/campaigns/{action.entity_id}")
+        endpoint = endpoint_map.get(
+            action.entity_type, f"/campaigns/{action.entity_id}"
+        )
 
         wrapper_map = {"campaign": "campaigns", "adset": "adsquads", "ad": "ads"}
         wrapper_key = wrapper_map.get(action.entity_type, "campaigns")
@@ -741,7 +779,9 @@ class SnapchatAdapter(BaseAdapter):
             data["daily_budget_micro"] = int(params["daily_budget"] * 1_000_000)
 
         if "lifetime_budget" in params:
-            data["lifetime_spend_cap_micro"] = int(params["lifetime_budget"] * 1_000_000)
+            data["lifetime_spend_cap_micro"] = int(
+                params["lifetime_budget"] * 1_000_000
+            )
 
         body = {"campaigns": [data]}
 
@@ -758,7 +798,9 @@ class SnapchatAdapter(BaseAdapter):
     # CREATIVE OPERATIONS
     # ========================================================================
 
-    async def upload_image(self, account_id: str, image_data: bytes, filename: str) -> str:
+    async def upload_image(
+        self, account_id: str, image_data: bytes, filename: str
+    ) -> str:
         """
         Upload an image to Snapchat's media library.
 
@@ -781,14 +823,18 @@ class SnapchatAdapter(BaseAdapter):
             ]
         }
 
-        response = self._make_request("POST", f"/adaccounts/{account_id}/media", data=data)
+        response = self._make_request(
+            "POST", f"/adaccounts/{account_id}/media", data=data
+        )
 
         media_list = response.get("media", [])
         if media_list:
             return media_list[0].get("media", {}).get("id", "")
         return ""
 
-    async def upload_video(self, account_id: str, video_data: bytes, filename: str) -> str:
+    async def upload_video(
+        self, account_id: str, video_data: bytes, filename: str
+    ) -> str:
         """
         Upload a video to Snapchat's media library.
 
@@ -812,7 +858,9 @@ class SnapchatAdapter(BaseAdapter):
             ]
         }
 
-        response = self._make_request("POST", f"/adaccounts/{account_id}/media", data=data)
+        response = self._make_request(
+            "POST", f"/adaccounts/{account_id}/media", data=data
+        )
 
         media_list = response.get("media", [])
         if media_list:
@@ -829,7 +877,11 @@ class SnapchatAdapter(BaseAdapter):
             raise AdapterError("Adapter not initialized. Call initialize() first.")
 
     def _make_request(
-        self, method: str, endpoint: str, params: Optional[dict] = None, data: Optional[dict] = None
+        self,
+        method: str,
+        endpoint: str,
+        params: Optional[dict] = None,
+        data: Optional[dict] = None,
     ) -> dict[str, Any]:
         """
         Make an HTTP request to Snapchat's API.

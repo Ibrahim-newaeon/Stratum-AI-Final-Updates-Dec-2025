@@ -416,7 +416,9 @@ class ServerEvent:
     referrer_url: Optional[str] = None
 
     # Action source
-    action_source: str = "website"  # website, app, email, phone_call, chat, system, other
+    action_source: str = (
+        "website"  # website, app, email, phone_call, chat, system, other
+    )
 
     # Deduplication
     event_id: Optional[str] = None  # For browser/server dedup
@@ -432,7 +434,11 @@ class ServerEvent:
         if not self.event_id:
             # Deterministic ID for deduplication (MD5 for consistency, not security)
             unique_string = f"{self.event_name.value}_{self.event_time.isoformat()}_{self.user_data.external_id or uuid.uuid4()}"
-            self.event_id = hashlib.md5(unique_string.encode(), usedforsecurity=False).hexdigest()[:16]  # noqa: S324
+            self.event_id = hashlib.md5(
+                unique_string.encode(), usedforsecurity=False
+            ).hexdigest()[
+                :16
+            ]  # noqa: S324
 
     def get_content_ids(self) -> list[str]:
         """Extract content IDs for platform formatting."""
@@ -457,7 +463,9 @@ class MetaEventsSender:
 
     BASE_URL = "https://graph.facebook.com/v19.0"
 
-    def __init__(self, pixel_id: str, access_token: str, test_event_code: Optional[str] = None):
+    def __init__(
+        self, pixel_id: str, access_token: str, test_event_code: Optional[str] = None
+    ):
         self.pixel_id = pixel_id
         self.access_token = access_token
         self.test_event_code = test_event_code
@@ -608,7 +616,9 @@ class GoogleEventsSender:
 
     def _format_event(self, event: ServerEvent) -> dict[str, Any]:
         """Format event for GA4 Measurement Protocol."""
-        event_name = EVENT_MAPPING["google"].get(event.event_name, event.event_name.value.lower())
+        event_name = EVENT_MAPPING["google"].get(
+            event.event_name, event.event_name.value.lower()
+        )
 
         params = {}
 
@@ -644,7 +654,10 @@ class GoogleEventsSender:
         if event.user_data.phone:
             user_properties["phone"] = {"value": event.user_data.get_hashed("phone")}
 
-        payload = {"client_id": client_id, "events": [{"name": event_name, "params": params}]}
+        payload = {
+            "client_id": client_id,
+            "events": [{"name": event_name, "params": params}],
+        }
 
         if user_id:
             payload["user_id"] = user_id
@@ -661,7 +674,9 @@ class TikTokEventsSender:
 
     BASE_URL = "https://business-api.tiktok.com/open_api/v1.3/event/track"
 
-    def __init__(self, pixel_code: str, access_token: str, test_event_code: Optional[str] = None):
+    def __init__(
+        self, pixel_code: str, access_token: str, test_event_code: Optional[str] = None
+    ):
         self.pixel_code = pixel_code
         self.access_token = access_token
         self.test_event_code = test_event_code
@@ -678,9 +693,14 @@ class TikTokEventsSender:
         if self.test_event_code:
             payload["test_event_code"] = self.test_event_code
 
-        headers = {"Access-Token": self.access_token, "Content-Type": "application/json"}
+        headers = {
+            "Access-Token": self.access_token,
+            "Content-Type": "application/json",
+        }
 
-        response = requests.post(self.BASE_URL, json=payload, headers=headers, timeout=30)
+        response = requests.post(
+            self.BASE_URL, json=payload, headers=headers, timeout=30
+        )
         response.raise_for_status()
         result = response.json()
 
@@ -689,7 +709,9 @@ class TikTokEventsSender:
 
     def _format_event(self, event: ServerEvent) -> dict[str, Any]:
         """Format event for TikTok."""
-        event_name = EVENT_MAPPING["tiktok"].get(event.event_name, event.event_name.value)
+        event_name = EVENT_MAPPING["tiktok"].get(
+            event.event_name, event.event_name.value
+        )
 
         data = {
             "event": event_name,
@@ -763,7 +785,9 @@ class SnapchatEventsSender:
                 "Content-Type": "application/json",
             }
 
-            response = requests.post(self.BASE_URL, json=payload, headers=headers, timeout=30)
+            response = requests.post(
+                self.BASE_URL, json=payload, headers=headers, timeout=30
+            )
             response.raise_for_status()
             results.append(response.json())
 
@@ -857,7 +881,9 @@ class UnifiedEventsAPI:
         logger.info(f"Added {platform} to UnifiedEventsAPI")
 
     async def send(
-        self, event: Union[ServerEvent, list[ServerEvent]], platforms: Optional[list[str]] = None
+        self,
+        event: Union[ServerEvent, list[ServerEvent]],
+        platforms: Optional[list[str]] = None,
     ) -> dict[str, Any]:
         """
         Send event(s) to specified platforms (or all configured).
@@ -883,7 +909,12 @@ class UnifiedEventsAPI:
                 sender = self.senders[platform]
                 result = await sender.send(events)
                 results[platform] = result
-            except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
+            except (
+                requests.RequestException,
+                ConnectionError,
+                TimeoutError,
+                OSError,
+            ) as e:
                 logger.error(f"Network error sending to {platform}: {e}")
                 results[platform] = {"error": str(e)}
             except (ValueError, KeyError, TypeError) as e:
@@ -990,16 +1021,24 @@ class UnifiedEventsAPI:
     ) -> dict[str, Any]:
         """Convenience method for Lead events."""
         event = ServerEvent(
-            event_name=StandardEvent.LEAD, user_data=user_data, lead_type=lead_type, value=value
+            event_name=StandardEvent.LEAD,
+            user_data=user_data,
+            lead_type=lead_type,
+            value=value,
         )
         return await self.send(event, platforms)
 
     async def track_search(
-        self, user_data: UserData, search_string: str, platforms: Optional[list[str]] = None
+        self,
+        user_data: UserData,
+        search_string: str,
+        platforms: Optional[list[str]] = None,
     ) -> dict[str, Any]:
         """Convenience method for Search events."""
         event = ServerEvent(
-            event_name=StandardEvent.SEARCH, user_data=user_data, search_string=search_string
+            event_name=StandardEvent.SEARCH,
+            user_data=user_data,
+            search_string=search_string,
         )
         return await self.send(event, platforms)
 
@@ -1062,7 +1101,9 @@ class EcommerceTracker:
         self.api = UnifiedEventsAPI()
 
         if meta_pixel_id and meta_access_token:
-            self.api.add_sender("meta", MetaEventsSender(meta_pixel_id, meta_access_token))
+            self.api.add_sender(
+                "meta", MetaEventsSender(meta_pixel_id, meta_access_token)
+            )
 
         if google_measurement_id and google_api_secret:
             self.api.add_sender(
@@ -1076,7 +1117,8 @@ class EcommerceTracker:
 
         if snapchat_pixel_id and snapchat_access_token:
             self.api.add_sender(
-                "snapchat", SnapchatEventsSender(snapchat_pixel_id, snapchat_access_token)
+                "snapchat",
+                SnapchatEventsSender(snapchat_pixel_id, snapchat_access_token),
             )
 
     def _make_user_data(self, user: dict[str, Any]) -> UserData:
@@ -1110,29 +1152,44 @@ class EcommerceTracker:
         self, user: dict[str, Any], page_url: str, page_title: Optional[str] = None
     ) -> dict[str, Any]:
         """Track page view."""
-        return await self.api.track_page_view(self._make_user_data(user), page_url, page_title)
+        return await self.api.track_page_view(
+            self._make_user_data(user), page_url, page_title
+        )
 
     async def product_viewed(
-        self, user: dict[str, Any], product: dict[str, Any], page_url: Optional[str] = None
+        self,
+        user: dict[str, Any],
+        product: dict[str, Any],
+        page_url: Optional[str] = None,
     ) -> dict[str, Any]:
         """Track product view."""
         return await self.api.track_view_content(
             self._make_user_data(user), self._make_content_item(product), page_url
         )
 
-    async def products_searched(self, user: dict[str, Any], search_query: str) -> dict[str, Any]:
+    async def products_searched(
+        self, user: dict[str, Any], search_query: str
+    ) -> dict[str, Any]:
         """Track search."""
         return await self.api.track_search(self._make_user_data(user), search_query)
 
     async def added_to_cart(
-        self, user: dict[str, Any], products: list[dict[str, Any]], currency: str = "USD"
+        self,
+        user: dict[str, Any],
+        products: list[dict[str, Any]],
+        currency: str = "USD",
     ) -> dict[str, Any]:
         """Track add to cart."""
         contents = [self._make_content_item(p) for p in products]
-        return await self.api.track_add_to_cart(self._make_user_data(user), contents, currency)
+        return await self.api.track_add_to_cart(
+            self._make_user_data(user), contents, currency
+        )
 
     async def checkout_started(
-        self, user: dict[str, Any], products: list[dict[str, Any]], currency: str = "USD"
+        self,
+        user: dict[str, Any],
+        products: list[dict[str, Any]],
+        currency: str = "USD",
     ) -> dict[str, Any]:
         """Track checkout initiation."""
         contents = [self._make_content_item(p) for p in products]
@@ -1155,7 +1212,10 @@ class EcommerceTracker:
         )
 
     async def lead_submitted(
-        self, user: dict[str, Any], lead_type: str = "form", value: Optional[float] = None
+        self,
+        user: dict[str, Any],
+        lead_type: str = "form",
+        value: Optional[float] = None,
     ) -> dict[str, Any]:
         """Track lead submission."""
         return await self.api.track_lead(self._make_user_data(user), lead_type, value)

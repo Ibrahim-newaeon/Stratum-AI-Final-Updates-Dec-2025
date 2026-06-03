@@ -34,11 +34,11 @@ _SKIP_PATHS: set[str] = {
 class RequestLoggingMiddleware(BaseHTTPMiddleware):
     """Add request ID, timing headers, and structured access logs."""
 
-    async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
+    async def dispatch(
+        self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
         # Prefer a client-supplied request ID; fall back to a short UUID4
-        request_id = request.headers.get(
-            "X-Request-ID", uuid.uuid4().hex[:12]
-        )
+        request_id = request.headers.get("X-Request-ID", uuid.uuid4().hex[:12])
         request.state.request_id = request_id
 
         # Bind request_id into structlog context for downstream loggers

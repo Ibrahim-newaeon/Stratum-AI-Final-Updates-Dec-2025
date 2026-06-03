@@ -16,18 +16,21 @@ from typing import Any, Dict, List, Optional, BinaryIO
 from uuid import UUID
 import csv
 import io
+from datetime import date, datetime, timezone
+from typing import Any, BinaryIO, Dict, List, Optional
+from uuid import UUID
 
-from sqlalchemy import select, and_, or_, update, delete
+from sqlalchemy import and_, delete, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.models.profit import (
+    COGSSource,
+    COGSUpload,
+    MarginRule,
+    MarginType,
     ProductCatalog,
     ProductMargin,
-    MarginRule,
-    COGSUpload,
-    MarginType,
-    COGSSource,
     ProductStatus,
 )
 
@@ -98,10 +101,18 @@ class COGSService:
         )
 
         # Calculate total COGS
-        total_cogs = (cogs_cents or 0) + shipping_cost_cents + handling_cost_cents + platform_fee_cents + payment_processing_cents
+        total_cogs = (
+            (cogs_cents or 0)
+            + shipping_cost_cents
+            + handling_cost_cents
+            + platform_fee_cents
+            + payment_processing_cents
+        )
 
         # Determine margin type
-        margin_type = MarginType.PERCENTAGE if cogs_percentage else MarginType.FIXED_AMOUNT
+        margin_type = (
+            MarginType.PERCENTAGE if cogs_percentage else MarginType.FIXED_AMOUNT
+        )
 
         margin = ProductMargin(
             tenant_id=self.tenant_id,
@@ -123,7 +134,9 @@ class COGSService:
         await self.db.commit()
         await self.db.refresh(margin)
 
-        logger.info(f"Set COGS for product {product_id}: {cogs_cents} cents or {cogs_percentage}%")
+        logger.info(
+            f"Set COGS for product {product_id}: {cogs_cents} cents or {cogs_percentage}%"
+        )
         return margin
 
     async def get_product_cogs(
@@ -220,7 +233,9 @@ class COGSService:
                     shipping_cost_cents=update_data.get("shipping_cost_cents", 0),
                     handling_cost_cents=update_data.get("handling_cost_cents", 0),
                     platform_fee_cents=update_data.get("platform_fee_cents", 0),
-                    payment_processing_cents=update_data.get("payment_processing_cents", 0),
+                    payment_processing_cents=update_data.get(
+                        "payment_processing_cents", 0
+                    ),
                     source=source,
                     user_id=user_id,
                 )
@@ -288,9 +303,7 @@ class COGSService:
             conditions.append(MarginRule.is_active == True)
 
         result = await self.db.execute(
-            select(MarginRule)
-            .where(and_(*conditions))
-            .order_by(MarginRule.priority)
+            select(MarginRule).where(and_(*conditions)).order_by(MarginRule.priority)
         )
         return list(result.scalars().all())
 
@@ -314,9 +327,17 @@ class COGSService:
             return None
 
         allowed_fields = [
-            "name", "description", "priority", "category", "subcategory",
-            "platform", "campaign_id", "margin_type", "default_margin_percentage",
-            "default_cogs_percentage", "is_active",
+            "name",
+            "description",
+            "priority",
+            "category",
+            "subcategory",
+            "platform",
+            "campaign_id",
+            "margin_type",
+            "default_margin_percentage",
+            "default_cogs_percentage",
+            "is_active",
         ]
 
         for field, value in kwargs.items():
@@ -441,7 +462,9 @@ class COGSIngestionService:
         await self.db.commit()
         await self.db.refresh(upload)
 
-        logger.info(f"COGS CSV upload {upload.id}: {upload.rows_succeeded} succeeded, {upload.rows_failed} failed")
+        logger.info(
+            f"COGS CSV upload {upload.id}: {upload.rows_succeeded} succeeded, {upload.rows_failed} failed"
+        )
         return upload
 
     def _parse_csv_row(self, row: Dict[str, str]) -> Optional[Dict[str, Any]]:
@@ -482,9 +505,13 @@ class COGSIngestionService:
             data["platform_fee_cents"] = int(float(row["platform_fee_cents"]))
 
         if "payment_processing" in row and row["payment_processing"]:
-            data["payment_processing_cents"] = int(float(row["payment_processing"]) * 100)
+            data["payment_processing_cents"] = int(
+                float(row["payment_processing"]) * 100
+            )
         if "payment_processing_cents" in row and row["payment_processing_cents"]:
-            data["payment_processing_cents"] = int(float(row["payment_processing_cents"]))
+            data["payment_processing_cents"] = int(
+                float(row["payment_processing_cents"])
+            )
 
         return data
 

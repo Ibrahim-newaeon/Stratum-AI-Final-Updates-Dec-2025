@@ -176,7 +176,9 @@ class IdentityResolutionService:
             return profile_a, profile_b
         return profile_b, profile_a
 
-    async def _get_canonical_identity(self, profile_id: UUID) -> Optional[CDPCanonicalIdentity]:
+    async def _get_canonical_identity(
+        self, profile_id: UUID
+    ) -> Optional[CDPCanonicalIdentity]:
         """Get canonical identity for a profile."""
         result = await self.db.execute(
             select(CDPCanonicalIdentity).where(
@@ -356,15 +358,19 @@ class IdentityResolutionService:
             "total_revenue": float(merged_profile.total_revenue),
             "profile_data": merged_profile.profile_data,
             "computed_traits": merged_profile.computed_traits,
-            "first_seen_at": merged_profile.first_seen_at.isoformat()
-            if merged_profile.first_seen_at
-            else None,
-            "last_seen_at": merged_profile.last_seen_at.isoformat()
-            if merged_profile.last_seen_at
-            else None,
-            "identifier_count": len(merged_profile.identifiers)
-            if merged_profile.identifiers
-            else 0,
+            "first_seen_at": (
+                merged_profile.first_seen_at.isoformat()
+                if merged_profile.first_seen_at
+                else None
+            ),
+            "last_seen_at": (
+                merged_profile.last_seen_at.isoformat()
+                if merged_profile.last_seen_at
+                else None
+            ),
+            "identifier_count": (
+                len(merged_profile.identifiers) if merged_profile.identifiers else 0
+            ),
         }
 
         # 2. Move identifiers to surviving profile
@@ -453,12 +459,12 @@ class IdentityResolutionService:
             merged_profile_id=merged_profile.id,
             merge_reason=merge_reason.value,
             merged_profile_snapshot=snapshot,
-            triggering_identifier_type=triggering_identifier.identifier_type
-            if triggering_identifier
-            else None,
-            triggering_identifier_hash=triggering_identifier.identifier_hash
-            if triggering_identifier
-            else None,
+            triggering_identifier_type=(
+                triggering_identifier.identifier_type if triggering_identifier else None
+            ),
+            triggering_identifier_hash=(
+                triggering_identifier.identifier_hash if triggering_identifier else None
+            ),
             merged_event_count=merged_profile.total_events,
             merged_identifier_count=snapshot.get("identifier_count", 0),
             merged_by_user_id=merged_by_user_id,
@@ -504,7 +510,9 @@ class IdentityResolutionService:
             profiles,
             key=lambda p: (
                 -self.get_identifier_priority(
-                    p.identifiers[0].identifier_type if p.identifiers else "anonymous_id"
+                    p.identifiers[0].identifier_type
+                    if p.identifiers
+                    else "anonymous_id"
                 ),
                 -p.total_events,
                 p.created_at or datetime.min.replace(tzinfo=timezone.utc),
@@ -534,10 +542,12 @@ class IdentityResolutionService:
         """
         # Get all identifiers for the profile
         result = await self.db.execute(
-            select(CDPProfileIdentifier).where(
+            select(CDPProfileIdentifier)
+            .where(
                 CDPProfileIdentifier.tenant_id == self.tenant_id,
                 CDPProfileIdentifier.profile_id == profile_id,
-            ).limit(1000)
+            )
+            .limit(1000)
         )
         identifiers = result.scalars().all()
 
@@ -611,14 +621,16 @@ class IdentityResolutionService:
             for current_id in current_batch:
                 # Find all linked identifiers
                 result = await self.db.execute(
-                    select(CDPIdentityLink).where(
+                    select(CDPIdentityLink)
+                    .where(
                         CDPIdentityLink.tenant_id == self.tenant_id,
                         CDPIdentityLink.is_active == True,
                         or_(
                             CDPIdentityLink.source_identifier_id == current_id,
                             CDPIdentityLink.target_identifier_id == current_id,
                         ),
-                    ).limit(1000)
+                    )
+                    .limit(1000)
                 )
                 links = result.scalars().all()
 
@@ -641,7 +653,9 @@ class IdentityResolutionService:
             return []
 
         result = await self.db.execute(
-            select(CDPProfileIdentifier).where(CDPProfileIdentifier.id.in_(list(visited))).limit(1000)
+            select(CDPProfileIdentifier)
+            .where(CDPProfileIdentifier.id.in_(list(visited)))
+            .limit(1000)
         )
         return list(result.scalars().all())
 
@@ -656,10 +670,12 @@ class IdentityResolutionService:
         """
         # Get all identifiers for the profile
         result = await self.db.execute(
-            select(CDPProfileIdentifier).where(
+            select(CDPProfileIdentifier)
+            .where(
                 CDPProfileIdentifier.tenant_id == self.tenant_id,
                 CDPProfileIdentifier.profile_id == profile_id,
-            ).limit(1000)
+            )
+            .limit(1000)
         )
         identifiers = result.scalars().all()
 
@@ -670,13 +686,15 @@ class IdentityResolutionService:
 
         # Get all links involving these identifiers
         result = await self.db.execute(
-            select(CDPIdentityLink).where(
+            select(CDPIdentityLink)
+            .where(
                 CDPIdentityLink.tenant_id == self.tenant_id,
                 or_(
                     CDPIdentityLink.source_identifier_id.in_(identifier_ids),
                     CDPIdentityLink.target_identifier_id.in_(identifier_ids),
                 ),
-            ).limit(1000)
+            )
+            .limit(1000)
         )
         links = result.scalars().all()
 

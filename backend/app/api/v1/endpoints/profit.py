@@ -15,24 +15,24 @@ from datetime import date, datetime
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.tenancy.deps import get_current_user, get_db
 from app.core.logging import get_logger
 from app.models import User
 from app.models.profit import (
+    COGSSource,
     MarginType,
     ProductStatus,
-    COGSSource,
 )
 from app.services.profit import (
-    ProfitCalculationService,
-    COGSService,
     COGSIngestionService,
+    COGSService,
     ProductCatalogService,
+    ProfitCalculationService,
 )
+from app.tenancy.deps import get_current_user, get_db
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -42,8 +42,10 @@ router = APIRouter()
 # Pydantic Schemas
 # =============================================================================
 
+
 class ProductCreate(BaseModel):
     """Schema for creating a product."""
+
     sku: str = Field(..., min_length=1, max_length=100)
     name: str = Field(..., min_length=1, max_length=500)
     description: Optional[str] = None
@@ -59,6 +61,7 @@ class ProductCreate(BaseModel):
 
 class ProductUpdate(BaseModel):
     """Schema for updating a product."""
+
     name: Optional[str] = Field(None, min_length=1, max_length=500)
     description: Optional[str] = None
     category: Optional[str] = None
@@ -71,8 +74,11 @@ class ProductUpdate(BaseModel):
 
 class COGSSet(BaseModel):
     """Schema for setting product COGS."""
+
     cogs: Optional[float] = Field(None, ge=0, description="COGS per unit in dollars")
-    cogs_percentage: Optional[float] = Field(None, ge=0, le=100, description="COGS as % of revenue")
+    cogs_percentage: Optional[float] = Field(
+        None, ge=0, le=100, description="COGS as % of revenue"
+    )
     effective_date: Optional[date] = None
     shipping_cost: float = Field(default=0, ge=0)
     handling_cost: float = Field(default=0, ge=0)
@@ -82,6 +88,7 @@ class COGSSet(BaseModel):
 
 class MarginRuleCreate(BaseModel):
     """Schema for creating a margin rule."""
+
     name: str = Field(..., min_length=1, max_length=255)
     description: Optional[str] = None
     margin_type: MarginType = MarginType.PERCENTAGE
@@ -96,6 +103,7 @@ class MarginRuleCreate(BaseModel):
 
 class MarginRuleUpdate(BaseModel):
     """Schema for updating a margin rule."""
+
     name: Optional[str] = Field(None, min_length=1, max_length=255)
     description: Optional[str] = None
     default_margin_percentage: Optional[float] = Field(None, ge=0, le=100)
@@ -107,6 +115,7 @@ class MarginRuleUpdate(BaseModel):
 # =============================================================================
 # Product Endpoints
 # =============================================================================
+
 
 @router.post("/products", response_model=Dict[str, Any])
 async def create_product(
@@ -125,7 +134,9 @@ async def create_product(
         subcategory=product_data.subcategory,
         brand=product_data.brand,
         product_type=product_data.product_type,
-        base_price_cents=int(product_data.base_price * 100) if product_data.base_price else None,
+        base_price_cents=(
+            int(product_data.base_price * 100) if product_data.base_price else None
+        ),
         currency=product_data.currency,
         external_ids=product_data.external_ids,
         attributes=product_data.attributes,
@@ -271,7 +282,11 @@ async def update_product(
 
     update_dict = product_data.model_dump(exclude_unset=True)
     if "base_price" in update_dict:
-        update_dict["base_price_cents"] = int(update_dict.pop("base_price") * 100) if update_dict["base_price"] else None
+        update_dict["base_price_cents"] = (
+            int(update_dict.pop("base_price") * 100)
+            if update_dict["base_price"]
+            else None
+        )
 
     product = await service.update_product(product_id, **update_dict)
 
@@ -333,6 +348,7 @@ async def import_products(
 # COGS Endpoints
 # =============================================================================
 
+
 @router.post("/products/{product_id}/cogs", response_model=Dict[str, Any])
 async def set_product_cogs(
     product_id: UUID,
@@ -342,7 +358,9 @@ async def set_product_cogs(
 ) -> Dict[str, Any]:
     """Set COGS for a product."""
     if not cogs_data.cogs and not cogs_data.cogs_percentage:
-        raise HTTPException(status_code=400, detail="Must provide either cogs or cogs_percentage")
+        raise HTTPException(
+            status_code=400, detail="Must provide either cogs or cogs_percentage"
+        )
 
     service = COGSService(db, current_user.tenant_id)
 
@@ -471,6 +489,7 @@ async def get_cogs_uploads(
 # Margin Rules Endpoints
 # =============================================================================
 
+
 @router.post("/margin-rules", response_model=Dict[str, Any])
 async def create_margin_rule(
     rule_data: MarginRuleCreate,
@@ -478,10 +497,13 @@ async def create_margin_rule(
     current_user: User = Depends(get_current_user),
 ) -> Dict[str, Any]:
     """Create a margin rule."""
-    if not rule_data.default_margin_percentage and not rule_data.default_cogs_percentage:
+    if (
+        not rule_data.default_margin_percentage
+        and not rule_data.default_cogs_percentage
+    ):
         raise HTTPException(
             status_code=400,
-            detail="Must provide either default_margin_percentage or default_cogs_percentage"
+            detail="Must provide either default_margin_percentage or default_cogs_percentage",
         )
 
     service = COGSService(db, current_user.tenant_id)
@@ -584,6 +606,7 @@ async def delete_margin_rule(
 # Profit ROAS Endpoints
 # =============================================================================
 
+
 @router.get("/profit/roas", response_model=Dict[str, Any])
 async def get_profit_roas(
     start_date: date = Query(..., description="Start date"),
@@ -642,7 +665,9 @@ async def get_product_profitability(
     end_date: date = Query(..., description="End date"),
     platform: Optional[str] = Query(None),
     limit: int = Query(20, ge=1, le=100),
-    sort_by: str = Query("gross_profit", pattern="^(gross_profit|net_profit|gross_profit_roas)$"),
+    sort_by: str = Query(
+        "gross_profit", pattern="^(gross_profit|net_profit|gross_profit_roas)$"
+    ),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> Dict[str, Any]:
@@ -708,10 +733,20 @@ async def generate_profit_report(
             "end": report.period_end.isoformat(),
         },
         "summary": {
-            "total_revenue": report.total_revenue_cents / 100 if report.total_revenue_cents else 0,
-            "total_cogs": report.total_cogs_cents / 100 if report.total_cogs_cents else 0,
-            "total_gross_profit": report.total_gross_profit_cents / 100 if report.total_gross_profit_cents else 0,
-            "total_ad_spend": report.total_ad_spend_cents / 100 if report.total_ad_spend_cents else 0,
+            "total_revenue": (
+                report.total_revenue_cents / 100 if report.total_revenue_cents else 0
+            ),
+            "total_cogs": (
+                report.total_cogs_cents / 100 if report.total_cogs_cents else 0
+            ),
+            "total_gross_profit": (
+                report.total_gross_profit_cents / 100
+                if report.total_gross_profit_cents
+                else 0
+            ),
+            "total_ad_spend": (
+                report.total_ad_spend_cents / 100 if report.total_ad_spend_cents else 0
+            ),
             "revenue_roas": report.revenue_roas,
             "gross_profit_roas": report.gross_profit_roas,
             "net_profit_roas": report.net_profit_roas,

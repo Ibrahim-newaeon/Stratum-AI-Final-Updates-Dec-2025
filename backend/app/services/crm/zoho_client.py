@@ -132,7 +132,9 @@ class ZohoClient:
     # OAuth Flow
     # =========================================================================
 
-    def get_authorization_url(self, redirect_uri: str, state: Optional[str] = None) -> str:
+    def get_authorization_url(
+        self, redirect_uri: str, state: Optional[str] = None
+    ) -> str:
         """
         Generate Zoho OAuth authorization URL.
 
@@ -342,7 +344,11 @@ class ZohoClient:
                     return None
                 await self.db.refresh(connection)
 
-        return decrypt_pii(connection.access_token_enc) if connection.access_token_enc else None
+        return (
+            decrypt_pii(connection.access_token_enc)
+            if connection.access_token_enc
+            else None
+        )
 
     async def api_request(
         self,
@@ -708,7 +714,9 @@ class ZohoClient:
         }
 
         if modified_since:
-            params["modified_since"] = modified_since.strftime("%Y-%m-%dT%H:%M:%S+00:00")
+            params["modified_since"] = modified_since.strftime(
+                "%Y-%m-%dT%H:%M:%S+00:00"
+            )
 
         return await self.api_request("GET", "/Leads", params=params)
 
@@ -794,7 +802,9 @@ class ZohoClient:
         module: str = "Contacts",
     ) -> Optional[dict[str, Any]]:
         """Get all fields for a module (schema)."""
-        return await self.api_request("GET", "/settings/fields", params={"module": module})
+        return await self.api_request(
+            "GET", "/settings/fields", params={"module": module}
+        )
 
     async def create_custom_field(
         self,
@@ -909,9 +919,9 @@ class ZohoClient:
             "provider": "zoho",
             "account_id": connection.provider_account_id,
             "account_name": connection.provider_account_name,
-            "last_sync_at": connection.last_sync_at.isoformat()
-            if connection.last_sync_at
-            else None,
+            "last_sync_at": (
+                connection.last_sync_at.isoformat() if connection.last_sync_at else None
+            ),
             "last_sync_status": connection.last_sync_status,
             "scopes": connection.scopes.split(",") if connection.scopes else [],
         }

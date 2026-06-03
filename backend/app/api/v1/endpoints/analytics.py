@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.db.session import get_async_session
-from app.models import Campaign, CampaignMetric, CampaignStatus, AdPlatform
+from app.models import AdPlatform, Campaign, CampaignMetric, CampaignStatus
 from app.schemas import (
     APIResponse,
     DemographicsResponse,
@@ -65,34 +65,28 @@ async def get_kpi_tiles(
         prev_end = today - timedelta(days=91)
 
     # Build base queries with optional account_id filter
-    current_query = (
-        select(
-            func.sum(CampaignMetric.spend_cents).label("spend"),
-            func.sum(CampaignMetric.revenue_cents).label("revenue"),
-            func.sum(CampaignMetric.impressions).label("impressions"),
-            func.sum(CampaignMetric.clicks).label("clicks"),
-            func.sum(CampaignMetric.conversions).label("conversions"),
-        )
-        .where(
-            CampaignMetric.tenant_id == tenant_id,
-            CampaignMetric.date >= start_date,
-            CampaignMetric.date <= today,
-        )
+    current_query = select(
+        func.sum(CampaignMetric.spend_cents).label("spend"),
+        func.sum(CampaignMetric.revenue_cents).label("revenue"),
+        func.sum(CampaignMetric.impressions).label("impressions"),
+        func.sum(CampaignMetric.clicks).label("clicks"),
+        func.sum(CampaignMetric.conversions).label("conversions"),
+    ).where(
+        CampaignMetric.tenant_id == tenant_id,
+        CampaignMetric.date >= start_date,
+        CampaignMetric.date <= today,
     )
 
-    prev_query = (
-        select(
-            func.sum(CampaignMetric.spend_cents).label("spend"),
-            func.sum(CampaignMetric.revenue_cents).label("revenue"),
-            func.sum(CampaignMetric.impressions).label("impressions"),
-            func.sum(CampaignMetric.clicks).label("clicks"),
-            func.sum(CampaignMetric.conversions).label("conversions"),
-        )
-        .where(
-            CampaignMetric.tenant_id == tenant_id,
-            CampaignMetric.date >= prev_start,
-            CampaignMetric.date <= prev_end,
-        )
+    prev_query = select(
+        func.sum(CampaignMetric.spend_cents).label("spend"),
+        func.sum(CampaignMetric.revenue_cents).label("revenue"),
+        func.sum(CampaignMetric.impressions).label("impressions"),
+        func.sum(CampaignMetric.clicks).label("clicks"),
+        func.sum(CampaignMetric.conversions).label("conversions"),
+    ).where(
+        CampaignMetric.tenant_id == tenant_id,
+        CampaignMetric.date >= prev_start,
+        CampaignMetric.date <= prev_end,
     )
 
     if account_id:
@@ -232,38 +226,56 @@ async def get_demographics(
         if campaign.demographics_age:
             for age_range, metrics in campaign.demographics_age.items():
                 if age_range not in age_data:
-                    age_data[age_range] = {"impressions": 0, "clicks": 0, "conversions": 0, "spend_cents": 0}
+                    age_data[age_range] = {
+                        "impressions": 0,
+                        "clicks": 0,
+                        "conversions": 0,
+                        "spend_cents": 0,
+                    }
                 for metric, value in metrics.items():
-                    age_data[age_range][metric] = age_data[age_range].get(metric, 0) + value
+                    age_data[age_range][metric] = (
+                        age_data[age_range].get(metric, 0) + value
+                    )
 
         if campaign.demographics_gender:
             for gender, metrics in campaign.demographics_gender.items():
                 if gender not in gender_data:
-                    gender_data[gender] = {"impressions": 0, "clicks": 0, "conversions": 0, "spend_cents": 0}
+                    gender_data[gender] = {
+                        "impressions": 0,
+                        "clicks": 0,
+                        "conversions": 0,
+                        "spend_cents": 0,
+                    }
                 for metric, value in metrics.items():
-                    gender_data[gender][metric] = gender_data[gender].get(metric, 0) + value
+                    gender_data[gender][metric] = (
+                        gender_data[gender].get(metric, 0) + value
+                    )
 
         if campaign.demographics_location:
             for location, metrics in campaign.demographics_location.items():
                 if location not in location_data:
-                    location_data[location] = {"impressions": 0, "clicks": 0, "conversions": 0}
+                    location_data[location] = {
+                        "impressions": 0,
+                        "clicks": 0,
+                        "conversions": 0,
+                    }
                 for metric, value in metrics.items():
-                    location_data[location][metric] = location_data[location].get(metric, 0) + value
+                    location_data[location][metric] = (
+                        location_data[location].get(metric, 0) + value
+                    )
 
     # Format for response
-    age_breakdown = [
-        {"range": k, **v}
-        for k, v in sorted(age_data.items())
-    ]
+    age_breakdown = [{"range": k, **v} for k, v in sorted(age_data.items())]
 
-    gender_breakdown = [
-        {"gender": k, **v}
-        for k, v in gender_data.items()
-    ]
+    gender_breakdown = [{"gender": k, **v} for k, v in gender_data.items()]
 
     location_breakdown = [
         {"location": k, **v}
-        for k, v in sorted(location_data.items(), key=lambda x: x[1].get("impressions", 0), reverse=True)[:20]
+        for k, v in sorted(
+            location_data.items(),
+            key=lambda x: x[1].get("impressions", 0),
+            reverse=True,
+        )[:20]
     ]
 
     return APIResponse(
@@ -281,7 +293,9 @@ async def get_location_heatmap(
     request: Request,
     db: AsyncSession = Depends(get_async_session),
     aggregation: str = Query("country", pattern="^(country|state|city)$"),
-    metric: str = Query("impressions", pattern="^(impressions|clicks|conversions|spend)$"),
+    metric: str = Query(
+        "impressions", pattern="^(impressions|clicks|conversions|spend)$"
+    ),
 ):
     """
     Get location-based heatmap data.
@@ -311,9 +325,13 @@ async def get_location_heatmap(
                         "conversions": 0,
                         "spend": 0,
                     }
-                location_metrics[location_key]["impressions"] += metrics.get("impressions", 0)
+                location_metrics[location_key]["impressions"] += metrics.get(
+                    "impressions", 0
+                )
                 location_metrics[location_key]["clicks"] += metrics.get("clicks", 0)
-                location_metrics[location_key]["conversions"] += metrics.get("conversions", 0)
+                location_metrics[location_key]["conversions"] += metrics.get(
+                    "conversions", 0
+                )
                 location_metrics[location_key]["spend"] += metrics.get("spend_cents", 0)
 
     # Convert to heatmap points — only include locations with known coordinates
@@ -393,17 +411,19 @@ async def get_platform_breakdown(
         roas = revenue / spend if spend > 0 else 0
         ctr = ((row.clicks or 0) / (row.impressions or 1)) * 100
 
-        breakdown.append({
-            "platform": row.platform.value,
-            "spend": spend,
-            "revenue": revenue,
-            "roas": round(roas, 2),
-            "impressions": row.impressions or 0,
-            "clicks": row.clicks or 0,
-            "conversions": row.conversions or 0,
-            "ctr": round(ctr, 2),
-            "campaign_count": row.campaign_count,
-        })
+        breakdown.append(
+            {
+                "platform": row.platform.value,
+                "spend": spend,
+                "revenue": revenue,
+                "roas": round(roas, 2),
+                "impressions": row.impressions or 0,
+                "clicks": row.clicks or 0,
+                "conversions": row.conversions or 0,
+                "ctr": round(ctr, 2),
+                "campaign_count": row.campaign_count,
+            }
+        )
 
     return APIResponse(success=True, data=breakdown)
 
@@ -442,12 +462,14 @@ async def get_account_breakdown(
         )
         .where(*conditions)
         .group_by(Campaign.platform, Campaign.account_id)
-        .order_by(func.sum(Campaign.total_spend_cents).desc()).limit(1000)
+        .order_by(func.sum(Campaign.total_spend_cents).desc())
+        .limit(1000)
     )
     rows = result.all()
 
     # Try to enrich with account names from TenantAdAccount
     from app.models.campaign_builder import TenantAdAccount
+
     account_names_result = await db.execute(
         select(
             TenantAdAccount.platform_account_id,
@@ -476,22 +498,28 @@ async def get_account_breakdown(
 
         account_info = account_lookup.get(row.account_id, {})
 
-        breakdown.append({
-            "platform": row.platform.value if hasattr(row.platform, 'value') else str(row.platform),
-            "account_id": row.account_id,
-            "account_name": account_info.get("name", row.account_id),
-            "business_name": account_info.get("business_name"),
-            "currency": account_info.get("currency", "USD"),
-            "is_enabled": account_info.get("is_enabled", True),
-            "spend": spend,
-            "revenue": revenue,
-            "roas": round(roas, 2),
-            "impressions": row.impressions or 0,
-            "clicks": row.clicks or 0,
-            "conversions": row.conversions or 0,
-            "ctr": round(ctr, 2),
-            "campaign_count": row.campaign_count,
-        })
+        breakdown.append(
+            {
+                "platform": (
+                    row.platform.value
+                    if hasattr(row.platform, "value")
+                    else str(row.platform)
+                ),
+                "account_id": row.account_id,
+                "account_name": account_info.get("name", row.account_id),
+                "business_name": account_info.get("business_name"),
+                "currency": account_info.get("currency", "USD"),
+                "is_enabled": account_info.get("is_enabled", True),
+                "spend": spend,
+                "revenue": revenue,
+                "roas": round(roas, 2),
+                "impressions": row.impressions or 0,
+                "clicks": row.clicks or 0,
+                "conversions": row.conversions or 0,
+                "ctr": round(ctr, 2),
+                "campaign_count": row.campaign_count,
+            }
+        )
 
     return APIResponse(success=True, data=breakdown)
 
@@ -501,7 +529,9 @@ async def get_performance_trends(
     request: Request,
     db: AsyncSession = Depends(get_async_session),
     days: int = Query(30, ge=7, le=90),
-    metric: str = Query("spend", pattern="^(spend|revenue|impressions|clicks|conversions|roas)$"),
+    metric: str = Query(
+        "spend", pattern="^(spend|revenue|impressions|clicks|conversions|roas)$"
+    ),
     account_id: Optional[str] = Query(None, description="Filter by ad account ID"),
 ):
     """
@@ -511,19 +541,16 @@ async def get_performance_trends(
     tenant_id = getattr(request.state, "tenant_id", None)
     start_date = date.today() - timedelta(days=days)
 
-    query = (
-        select(
-            CampaignMetric.date,
-            func.sum(CampaignMetric.spend_cents).label("spend"),
-            func.sum(CampaignMetric.revenue_cents).label("revenue"),
-            func.sum(CampaignMetric.impressions).label("impressions"),
-            func.sum(CampaignMetric.clicks).label("clicks"),
-            func.sum(CampaignMetric.conversions).label("conversions"),
-        )
-        .where(
-            CampaignMetric.tenant_id == tenant_id,
-            CampaignMetric.date >= start_date,
-        )
+    query = select(
+        CampaignMetric.date,
+        func.sum(CampaignMetric.spend_cents).label("spend"),
+        func.sum(CampaignMetric.revenue_cents).label("revenue"),
+        func.sum(CampaignMetric.impressions).label("impressions"),
+        func.sum(CampaignMetric.clicks).label("clicks"),
+        func.sum(CampaignMetric.conversions).label("conversions"),
+    ).where(
+        CampaignMetric.tenant_id == tenant_id,
+        CampaignMetric.date >= start_date,
     )
 
     if account_id:
@@ -531,7 +558,9 @@ async def get_performance_trends(
             Campaign.account_id == account_id
         )
 
-    query = query.group_by(CampaignMetric.date).order_by(CampaignMetric.date).limit(1000)
+    query = (
+        query.group_by(CampaignMetric.date).order_by(CampaignMetric.date).limit(1000)
+    )
 
     result = await db.execute(query)
     rows = result.all()
@@ -551,10 +580,12 @@ async def get_performance_trends(
             "roas": round(roas, 2),
         }.get(metric, 0)
 
-        trends.append({
-            "date": row.date.isoformat(),
-            "value": value,
-        })
+        trends.append(
+            {
+                "date": row.date.isoformat(),
+                "value": value,
+            }
+        )
 
     return APIResponse(success=True, data={"metric": metric, "trends": trends})
 
@@ -575,15 +606,14 @@ async def get_tenant_overview(
     # Only admin or superadmin can see all tenants
     if user_role not in (UserRole.ADMIN.value, "superadmin"):
         from fastapi import HTTPException, status
+
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin access required",
         )
 
     # Get all active tenants
-    tenant_result = await db.execute(
-        select(Tenant).where(Tenant.is_deleted == False)
-    )
+    tenant_result = await db.execute(select(Tenant).where(Tenant.is_deleted == False))
     tenants = tenant_result.scalars().all()
 
     tenant_analytics = []
@@ -597,8 +627,7 @@ async def get_tenant_overview(
                 func.sum(CampaignMetric.conversions).label("conversions"),
                 func.sum(CampaignMetric.clicks).label("clicks"),
                 func.sum(CampaignMetric.impressions).label("impressions"),
-            )
-            .where(
+            ).where(
                 CampaignMetric.tenant_id == tenant.id,
                 CampaignMetric.date >= date.today() - timedelta(days=30),
             )
@@ -614,7 +643,11 @@ async def get_tenant_overview(
         # In production, this would come from platform CAPI data
         conversions = metrics.conversions or 0
         clicks = metrics.clicks or 0
-        emq = min(95, max(50, int(70 + (conversions / max(clicks, 1)) * 100))) if clicks > 0 else 75
+        emq = (
+            min(95, max(50, int(70 + (conversions / max(clicks, 1)) * 100)))
+            if clicks > 0
+            else 75
+        )
 
         # Determine status based on ROAS trend
         if roas >= 4.0:
@@ -624,19 +657,21 @@ async def get_tenant_overview(
         else:
             status = "at_risk"
 
-        tenant_analytics.append({
-            "id": tenant.id,
-            "name": tenant.name,
-            "slug": tenant.slug,
-            "plan": tenant.plan,
-            "roas": roas,
-            "emq": emq,
-            "status": status,
-            "spend": spend,
-            "revenue": revenue,
-            "conversions": conversions,
-            "impressions": metrics.impressions or 0,
-        })
+        tenant_analytics.append(
+            {
+                "id": tenant.id,
+                "name": tenant.name,
+                "slug": tenant.slug,
+                "plan": tenant.plan,
+                "roas": roas,
+                "emq": emq,
+                "status": status,
+                "spend": spend,
+                "revenue": revenue,
+                "conversions": conversions,
+                "impressions": metrics.impressions or 0,
+            }
+        )
 
     # Sort by revenue descending
     tenant_analytics.sort(key=lambda x: x["revenue"], reverse=True)
@@ -660,6 +695,7 @@ async def get_executive_summary(
     # Only admin or superadmin can see executive summary
     if user_role not in (UserRole.ADMIN.value, "superadmin"):
         from fastapi import HTTPException, status
+
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin access required",
@@ -678,8 +714,7 @@ async def get_executive_summary(
             func.sum(CampaignMetric.conversions).label("conversions"),
             func.sum(CampaignMetric.impressions).label("impressions"),
             func.sum(CampaignMetric.clicks).label("clicks"),
-        )
-        .where(
+        ).where(
             CampaignMetric.date >= start_30d,
             CampaignMetric.date <= today,
         )
@@ -692,8 +727,7 @@ async def get_executive_summary(
             func.sum(CampaignMetric.spend_cents).label("spend"),
             func.sum(CampaignMetric.revenue_cents).label("revenue"),
             func.sum(CampaignMetric.conversions).label("conversions"),
-        )
-        .where(
+        ).where(
             CampaignMetric.date >= prev_start,
             CampaignMetric.date <= prev_end,
         )
@@ -729,17 +763,22 @@ async def get_executive_summary(
             return 0
         return round(((curr - previous) / previous) * 100, 1)
 
-    return APIResponse(success=True, data={
-        "total_revenue": current_revenue,
-        "revenue_change": calc_change(current_revenue, prev_revenue),
-        "total_spend": current_spend,
-        "spend_change": calc_change(current_spend, prev_spend),
-        "platform_roas": round(current_roas, 2),
-        "roas_change": calc_change(current_roas, prev_roas),
-        "total_tenants": total_tenants,
-        "active_campaigns": active_campaigns,
-        "total_conversions": current.conversions or 0,
-        "conversions_change": calc_change(current.conversions or 0, prev.conversions or 0),
-        "total_impressions": current.impressions or 0,
-        "period": "30d",
-    })
+    return APIResponse(
+        success=True,
+        data={
+            "total_revenue": current_revenue,
+            "revenue_change": calc_change(current_revenue, prev_revenue),
+            "total_spend": current_spend,
+            "spend_change": calc_change(current_spend, prev_spend),
+            "platform_roas": round(current_roas, 2),
+            "roas_change": calc_change(current_roas, prev_roas),
+            "total_tenants": total_tenants,
+            "active_campaigns": active_campaigns,
+            "total_conversions": current.conversions or 0,
+            "conversions_change": calc_change(
+                current.conversions or 0, prev.conversions or 0
+            ),
+            "total_impressions": current.impressions or 0,
+            "period": "30d",
+        },
+    )

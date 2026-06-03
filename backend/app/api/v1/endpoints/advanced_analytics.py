@@ -29,8 +29,10 @@ router = APIRouter(prefix="/analytics/advanced", tags=["Advanced Analytics"])
 # Schemas
 # =============================================================================
 
+
 class FunnelStep(BaseModel):
     """A single step in a conversion funnel."""
+
     step_name: str
     step_order: int
     event_type: str  # impression, click, landing, add_to_cart, purchase, etc.
@@ -43,15 +45,23 @@ class FunnelStep(BaseModel):
 
 class FunnelRequest(BaseModel):
     """Request to analyze a conversion funnel."""
+
     name: str = Field(..., description="Funnel name")
-    steps: list[str] = Field(..., min_length=2, description="Event types in order: e.g. ['impression','click','landing','purchase']")
-    campaign_ids: Optional[list[int]] = Field(None, description="Filter by specific campaigns")
+    steps: list[str] = Field(
+        ...,
+        min_length=2,
+        description="Event types in order: e.g. ['impression','click','landing','purchase']",
+    )
+    campaign_ids: Optional[list[int]] = Field(
+        None, description="Filter by specific campaigns"
+    )
     date_from: str = Field(..., description="Start date YYYY-MM-DD")
     date_to: str = Field(..., description="End date YYYY-MM-DD")
 
 
 class FunnelResult(BaseModel):
     """Funnel analysis result."""
+
     name: str
     total_entries: int
     total_conversions: int
@@ -62,8 +72,13 @@ class FunnelResult(BaseModel):
 
 class CohortRequest(BaseModel):
     """Request cohort analysis."""
-    cohort_by: str = Field("first_purchase_date", description="Field to group cohorts by")
-    metric: str = Field("retention", description="Metric to track: retention, revenue, conversions")
+
+    cohort_by: str = Field(
+        "first_purchase_date", description="Field to group cohorts by"
+    )
+    metric: str = Field(
+        "retention", description="Metric to track: retention, revenue, conversions"
+    )
     period: str = Field("weekly", description="Period: daily, weekly, monthly")
     date_from: str = Field(..., description="Start date YYYY-MM-DD")
     date_to: str = Field(..., description="End date YYYY-MM-DD")
@@ -72,6 +87,7 @@ class CohortRequest(BaseModel):
 
 class CohortCell(BaseModel):
     """Single cohort cell (period N for a given cohort)."""
+
     period: int  # 0, 1, 2, ...
     value: float
     percentage: Optional[float] = None
@@ -79,6 +95,7 @@ class CohortCell(BaseModel):
 
 class CohortRow(BaseModel):
     """A single cohort (row in the cohort table)."""
+
     cohort_label: str
     cohort_size: int
     cells: list[CohortCell]
@@ -86,6 +103,7 @@ class CohortRow(BaseModel):
 
 class CohortResult(BaseModel):
     """Cohort analysis result."""
+
     metric: str
     period: str
     rows: list[CohortRow]
@@ -95,13 +113,17 @@ class CohortResult(BaseModel):
 
 class SQLQueryRequest(BaseModel):
     """SQL query request with validation."""
-    query: str = Field(..., min_length=10, max_length=2000, description="SELECT-only SQL query")
+
+    query: str = Field(
+        ..., min_length=10, max_length=2000, description="SELECT-only SQL query"
+    )
     params: Optional[dict[str, Any]] = Field(default_factory=dict)
     limit: int = Field(100, ge=1, le=1000)
 
 
 class SQLQueryResult(BaseModel):
     """SQL query execution result."""
+
     columns: list[str]
     rows: list[list[Any]]
     row_count: int
@@ -112,6 +134,7 @@ class SQLQueryResult(BaseModel):
 # =============================================================================
 # Funnel Analysis Engine
 # =============================================================================
+
 
 async def _build_funnel(
     db: AsyncSession,
@@ -159,7 +182,7 @@ async def _build_funnel(
                 "tenant_id": tenant_id,
                 "date_from": date_from,
                 "date_to": date_to,
-            }
+            },
         )
         row = result.mappings().first()
         count = int(row["total"]) if row else 0
@@ -173,15 +196,19 @@ async def _build_funnel(
             drop_off = prev_count - count
             drop_rate = (drop_off / prev_count) * 100
 
-        funnel_steps.append(FunnelStep(
-            step_name=step_name,
-            step_order=i + 1,
-            event_type=step_name,
-            count=count,
-            conversion_rate_from_previous=round(conversion_rate, 2) if conversion_rate else None,
-            drop_off_count=drop_off,
-            drop_off_rate=round(drop_rate, 2),
-        ))
+        funnel_steps.append(
+            FunnelStep(
+                step_name=step_name,
+                step_order=i + 1,
+                event_type=step_name,
+                count=count,
+                conversion_rate_from_previous=(
+                    round(conversion_rate, 2) if conversion_rate else None
+                ),
+                drop_off_count=drop_off,
+                drop_off_rate=round(drop_rate, 2),
+            )
+        )
 
         prev_count = count
 
@@ -191,6 +218,7 @@ async def _build_funnel(
 # =============================================================================
 # Cohort Analysis Engine
 # =============================================================================
+
 
 async def _build_cohorts(
     db: AsyncSession,
@@ -207,12 +235,14 @@ async def _build_cohorts(
 
     # Get campaigns active in date range
     result = await db.execute(
-        select(Campaign).where(
+        select(Campaign)
+        .where(
             Campaign.tenant_id == tenant_id,
             Campaign.is_deleted == False,
             Campaign.start_date >= datetime.strptime(date_from, "%Y-%m-%d").date(),
             Campaign.start_date <= datetime.strptime(date_to, "%Y-%m-%d").date(),
-        ).order_by(Campaign.start_date)
+        )
+        .order_by(Campaign.start_date)
     )
     campaigns = result.scalars().all()
 
@@ -221,6 +251,7 @@ async def _build_cohorts(
 
     # Group by week
     from collections import defaultdict
+
     cohorts = defaultdict(list)
     for c in campaigns:
         if c.start_date:
@@ -243,7 +274,11 @@ async def _build_cohorts(
 
             if metric == "retention":
                 # Retention = % of campaigns still active
-                active_count = sum(1 for c in cohort_campaigns if c.status and c.status.value == "ACTIVE")
+                active_count = sum(
+                    1
+                    for c in cohort_campaigns
+                    if c.status and c.status.value == "ACTIVE"
+                )
                 value = active_count
                 pct = (active_count / cohort_size * 100) if cohort_size > 0 else 0
             else:
@@ -259,17 +294,31 @@ async def _build_cohorts(
                     text(sql),
                     {
                         "tenant_id": tenant_id,
-                        "period_start": (datetime.strptime(date_from, "%Y-%m-%d") + timedelta(weeks=period)).date(),
-                        "period_end": (datetime.strptime(date_from, "%Y-%m-%d") + timedelta(weeks=period+1)).date(),
-                    }
+                        "period_start": (
+                            datetime.strptime(date_from, "%Y-%m-%d")
+                            + timedelta(weeks=period)
+                        ).date(),
+                        "period_end": (
+                            datetime.strptime(date_from, "%Y-%m-%d")
+                            + timedelta(weeks=period + 1)
+                        ).date(),
+                    },
                 )
                 row = result.mappings().first()
                 value = int(row["total"]) if row else 0
                 pct = None
 
-            cells.append(CohortCell(period=period, value=value, percentage=round(pct, 1) if pct is not None else None))
+            cells.append(
+                CohortCell(
+                    period=period,
+                    value=value,
+                    percentage=round(pct, 1) if pct is not None else None,
+                )
+            )
 
-        rows.append(CohortRow(cohort_label=week_label, cohort_size=cohort_size, cells=cells))
+        rows.append(
+            CohortRow(cohort_label=week_label, cohort_size=cohort_size, cells=cells)
+        )
 
     return rows
 
@@ -279,10 +328,26 @@ async def _build_cohorts(
 # =============================================================================
 
 FORBIDDEN_KEYWORDS = [
-    "insert", "update", "delete", "drop", "create", "alter", "truncate",
-    "grant", "revoke", "execute", "copy", "\copy", "load", "into",
-    "pg_read", "pg_write", "information_schema", "pg_catalog",
+    "insert",
+    "update",
+    "delete",
+    "drop",
+    "create",
+    "alter",
+    "truncate",
+    "grant",
+    "revoke",
+    "execute",
+    "copy",
+    "\copy",
+    "load",
+    "into",
+    "pg_read",
+    "pg_write",
+    "information_schema",
+    "pg_catalog",
 ]
+
 
 def _validate_sql(query: str) -> tuple[bool, str]:
     """Validate SQL is read-only and safe."""
@@ -308,6 +373,7 @@ def _validate_sql(query: str) -> tuple[bool, str]:
 # API Endpoints
 # =============================================================================
 
+
 @router.post("/funnel", response_model=APIResponse[FunnelResult])
 async def analyze_funnel(
     request: FunnelRequest,
@@ -322,29 +388,48 @@ async def analyze_funnel(
     """
     tenant_id = getattr(req.state, "tenant_id", None)
     if not tenant_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
+        )
 
     steps = await _build_funnel(
-        db, tenant_id, request.steps,
-        request.campaign_ids, request.date_from, request.date_to,
+        db,
+        tenant_id,
+        request.steps,
+        request.campaign_ids,
+        request.date_from,
+        request.date_to,
     )
 
     total_entries = steps[0].count if steps else 0
     total_conversions = steps[-1].count if steps else 0
-    overall_rate = (total_conversions / total_entries * 100) if total_entries > 0 else 0.0
+    overall_rate = (
+        (total_conversions / total_entries * 100) if total_entries > 0 else 0.0
+    )
 
     # Generate insights
     insights = []
     for i, step in enumerate(steps[1:], 1):
         if step.drop_off_rate > 50:
-            insights.append(f"⚠️ Major drop-off at '{step.step_name}': {step.drop_off_rate:.1f}% of users left")
+            insights.append(
+                f"⚠️ Major drop-off at '{step.step_name}': {step.drop_off_rate:.1f}% of users left"
+            )
         elif step.drop_off_rate > 20:
-            insights.append(f"📉 Moderate drop-off at '{step.step_name}': {step.drop_off_rate:.1f}%")
-        elif step.conversion_rate_from_previous and step.conversion_rate_from_previous > 80:
-            insights.append(f"✅ Excellent conversion at '{step.step_name}': {step.conversion_rate_from_previous:.1f}%")
+            insights.append(
+                f"📉 Moderate drop-off at '{step.step_name}': {step.drop_off_rate:.1f}%"
+            )
+        elif (
+            step.conversion_rate_from_previous
+            and step.conversion_rate_from_previous > 80
+        ):
+            insights.append(
+                f"✅ Excellent conversion at '{step.step_name}': {step.conversion_rate_from_previous:.1f}%"
+            )
 
     if overall_rate < 1:
-        insights.append("🚨 Overall conversion rate below 1% — investigate audience-creative fit")
+        insights.append(
+            "🚨 Overall conversion rate below 1% — investigate audience-creative fit"
+        )
     elif overall_rate > 5:
         insights.append("🌟 Strong overall funnel — consider increasing budget")
 
@@ -376,11 +461,17 @@ async def analyze_cohorts(
     """
     tenant_id = getattr(req.state, "tenant_id", None)
     if not tenant_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
+        )
 
     rows = await _build_cohorts(
-        db, tenant_id, request.metric, request.period,
-        request.date_from, request.date_to,
+        db,
+        tenant_id,
+        request.metric,
+        request.period,
+        request.date_from,
+        request.date_to,
     )
 
     # Calculate average retention per period
@@ -400,13 +491,19 @@ async def analyze_cohorts(
                 latest_retention = latest.cells[0].percentage or 0
                 prev_retention = previous.cells[0].percentage or 0
                 if latest_retention > prev_retention:
-                    insights.append(f"📈 Latest cohort ({latest.cohort_label}) has higher retention than previous")
+                    insights.append(
+                        f"📈 Latest cohort ({latest.cohort_label}) has higher retention than previous"
+                    )
                 elif latest_retention < prev_retention:
-                    insights.append(f"📉 Latest cohort ({latest.cohort_label}) shows declining retention — investigate onboarding")
+                    insights.append(
+                        f"📉 Latest cohort ({latest.cohort_label}) shows declining retention — investigate onboarding"
+                    )
 
         if avg_retention and len(avg_retention) > 1:
             if avg_retention[1] < avg_retention[0] * 0.5:
-                insights.append("🚨 Sharp retention drop in Period 1 — critical onboarding issue")
+                insights.append(
+                    "🚨 Sharp retention drop in Period 1 — critical onboarding issue"
+                )
 
     if not insights:
         insights.append("Cohort patterns are stable")
@@ -450,7 +547,9 @@ async def execute_sql_query(
     """
     tenant_id = getattr(req.state, "tenant_id", None)
     if not tenant_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
+        )
 
     # Validate query
     is_valid, error_msg = _validate_sql(request.query)
@@ -462,9 +561,14 @@ async def execute_sql_query(
     if "tenant_id" not in query.lower():
         # Auto-inject tenant filter on campaigns/campaign_metrics tables
         if "campaigns" in query.lower() or "campaign_metrics" in query.lower():
-            query = query.replace("WHERE", f"WHERE tenant_id = {tenant_id} AND", 1) if "WHERE" in query.upper() else query + f" WHERE tenant_id = {tenant_id}"
+            query = (
+                query.replace("WHERE", f"WHERE tenant_id = {tenant_id} AND", 1)
+                if "WHERE" in query.upper()
+                else query + f" WHERE tenant_id = {tenant_id}"
+            )
 
     import time
+
     start = time.perf_counter()
 
     try:
@@ -475,14 +579,23 @@ async def execute_sql_query(
         columns = []
         if result.cursor:
             try:
-                columns = [desc[0] for desc in result.cursor.description] if result.cursor.description else []
+                columns = (
+                    [desc[0] for desc in result.cursor.description]
+                    if result.cursor.description
+                    else []
+                )
             except Exception:
                 pass
 
         # Convert rows to lists
         data_rows = []
         for row in rows:
-            data_rows.append([getattr(row, col, None) if hasattr(row, col) else row[i] for i, col in enumerate(columns)])
+            data_rows.append(
+                [
+                    getattr(row, col, None) if hasattr(row, col) else row[i]
+                    for i, col in enumerate(columns)
+                ]
+            )
 
     except Exception as e:
         logger.error("sql_query_error", error=str(e), query=query)

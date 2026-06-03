@@ -16,8 +16,8 @@ The script uses AST parsing for safe, deterministic code transformation.
 
 import argparse
 import ast
-import sys
 import re
+import sys
 from pathlib import Path
 from typing import List, Tuple
 
@@ -54,7 +54,9 @@ def find_model_files() -> List[Path]:
     return sorted(files)
 
 
-def count_column_declarations(files: List[Path]) -> Tuple[int, List[Tuple[Path, int, str]]]:
+def count_column_declarations(
+    files: List[Path],
+) -> Tuple[int, List[Tuple[Path, int, str]]]:
     """Count all Column(...) declarations in model files."""
     total = 0
     occurrences = []
@@ -116,8 +118,12 @@ def generate_migration_guide(occurrences: List[Tuple[Path, int, str]]) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="SQLAlchemy 2.0 Model Modernization")
-    parser.add_argument("--dry-run", action="store_true", help="Preview changes without applying")
-    parser.add_argument("--apply", action="store_true", help="Apply modernization to model files")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Preview changes without applying"
+    )
+    parser.add_argument(
+        "--apply", action="store_true", help="Apply modernization to model files"
+    )
     args = parser.parse_args()
 
     files = find_model_files()
@@ -134,7 +140,9 @@ def main() -> int:
 
     if args.dry_run or not args.apply:
         guide = generate_migration_guide(occurrences)
-        output_path = Path("/mnt/agents/output/stratum-fixes/docs/SQLALCHEMY_MODERNIZATION_GUIDE.md")
+        output_path = Path(
+            "/mnt/agents/output/stratum-fixes/docs/SQLALCHEMY_MODERNIZATION_GUIDE.md"
+        )
         output_path.write_text(guide)
         print(f"\nMigration guide written to: {output_path}")
         print("Run with --apply to execute (requires manual review first)")
@@ -146,7 +154,9 @@ def main() -> int:
         print("1. Review the migration guide")
         print("2. Update files incrementally using the pattern shown")
         print("3. Run `make test` after each file to verify")
-        print("4. Create a new Alembic migration with `make migration msg='sqlalchemy_20'`")
+        print(
+            "4. Create a new Alembic migration with `make migration msg='sqlalchemy_20'`"
+        )
         return 0
 
     return 0

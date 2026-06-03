@@ -290,7 +290,9 @@ class TierLimits:
             max_users=limits_dict.get("max_users", 0),
             max_segments=limits_dict.get("max_segments", 0),
             max_automations=limits_dict.get("max_automations", 0),
-            max_audience_sync_platforms=limits_dict.get("max_audience_sync_platforms", 0),
+            max_audience_sync_platforms=limits_dict.get(
+                "max_audience_sync_platforms", 0
+            ),
             api_rate_limit_per_minute=limits_dict.get("api_rate_limit_per_minute", 0),
             data_retention_days=limits_dict.get("data_retention_days", 0),
             max_embed_widgets=limits_dict.get("max_embed_widgets", 0),

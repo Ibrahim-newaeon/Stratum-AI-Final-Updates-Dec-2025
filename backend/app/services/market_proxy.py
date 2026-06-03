@@ -32,6 +32,7 @@ logger = get_logger(__name__)
 @dataclass
 class CompetitorData:
     """Standardized competitor data format."""
+
     domain: str
     meta_title: Optional[str] = None
     meta_description: Optional[str] = None
@@ -91,7 +92,9 @@ class MetadataScraper(MarketDataProvider):
         headers = {"User-Agent": self.user_agent}
 
         try:
-            async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
+            async with httpx.AsyncClient(
+                timeout=self.timeout, follow_redirects=True
+            ) as client:
                 response = await client.get(url, headers=headers)
                 response.raise_for_status()
 
@@ -110,7 +113,9 @@ class MetadataScraper(MarketDataProvider):
             meta_keywords = None
             if keywords_tag:
                 keywords_content = keywords_tag.get("content", "")
-                meta_keywords = [k.strip() for k in keywords_content.split(",") if k.strip()]
+                meta_keywords = [
+                    k.strip() for k in keywords_content.split(",") if k.strip()
+                ]
 
             # Extract social links
             social_links = self._extract_social_links(soup, domain)
@@ -226,13 +231,14 @@ class SerpApiProvider(MarketDataProvider):
                 ads_data = ads_response.json()
 
             # Parse results
-            organic_count = organic_data.get("search_information", {}).get("total_results", 0)
+            organic_count = organic_data.get("search_information", {}).get(
+                "total_results", 0
+            )
 
             # Extract top keywords from related searches
             related = organic_data.get("related_searches", [])
             top_keywords = [
-                {"keyword": r.get("query"), "type": "organic"}
-                for r in related[:10]
+                {"keyword": r.get("query"), "type": "organic"} for r in related[:10]
             ]
 
             # Check for ads presence
@@ -293,14 +299,23 @@ class DataForSEOProvider(MarketDataProvider):
                 # Domain overview
                 overview_response = await client.post(
                     f"{self.base_url}/dataforseo_labs/google/domain_metrics_by_categories/live",
-                    json=[{"target": domain, "language_code": "en", "location_code": 2840}],
+                    json=[
+                        {"target": domain, "language_code": "en", "location_code": 2840}
+                    ],
                 )
                 overview_data = overview_response.json()
 
                 # Get keywords
                 keywords_response = await client.post(
                     f"{self.base_url}/dataforseo_labs/google/ranked_keywords/live",
-                    json=[{"target": domain, "language_code": "en", "location_code": 2840, "limit": 20}],
+                    json=[
+                        {
+                            "target": domain,
+                            "language_code": "en",
+                            "location_code": 2840,
+                            "limit": 20,
+                        }
+                    ],
                 )
                 keywords_data = keywords_response.json()
 
@@ -320,18 +335,35 @@ class DataForSEOProvider(MarketDataProvider):
                     top_keywords = [
                         {
                             "keyword": item.get("keyword_data", {}).get("keyword"),
-                            "position": item.get("ranked_serp_element", {}).get("serp_item", {}).get("rank_absolute"),
-                            "type": "organic" if item.get("ranked_serp_element", {}).get("serp_item", {}).get("type") == "organic" else "paid",
-                            "volume": item.get("keyword_data", {}).get("keyword_info", {}).get("search_volume"),
+                            "position": item.get("ranked_serp_element", {})
+                            .get("serp_item", {})
+                            .get("rank_absolute"),
+                            "type": (
+                                "organic"
+                                if item.get("ranked_serp_element", {})
+                                .get("serp_item", {})
+                                .get("type")
+                                == "organic"
+                                else "paid"
+                            ),
+                            "volume": item.get("keyword_data", {})
+                            .get("keyword_info", {})
+                            .get("search_volume"),
                         }
                         for item in items[:20]
                     ]
 
             return CompetitorData(
                 domain=domain,
-                estimated_traffic=metrics.get("metrics", {}).get("organic", {}).get("etv"),
-                organic_keywords_count=metrics.get("metrics", {}).get("organic", {}).get("count"),
-                paid_keywords_count=metrics.get("metrics", {}).get("paid", {}).get("count"),
+                estimated_traffic=metrics.get("metrics", {})
+                .get("organic", {})
+                .get("etv"),
+                organic_keywords_count=metrics.get("metrics", {})
+                .get("organic", {})
+                .get("count"),
+                paid_keywords_count=metrics.get("metrics", {})
+                .get("paid", {})
+                .get("count"),
                 top_keywords=top_keywords,
                 data_source=self.get_provider_name(),
                 fetched_at=datetime.now(timezone.utc),
@@ -363,7 +395,9 @@ class MockMarketService(MarketDataProvider):
         """Generate mock competitor data."""
 
         # Use domain as seed for consistent data
-        seed = int(hashlib.md5(domain.encode(), usedforsecurity=False).hexdigest()[:8], 16)
+        seed = int(
+            hashlib.md5(domain.encode(), usedforsecurity=False).hexdigest()[:8], 16
+        )
         rng = random.Random(seed)
 
         # Generate realistic company name from domain
@@ -373,16 +407,33 @@ class MockMarketService(MarketDataProvider):
         meta_title = f"{company_name} | {rng.choice(['Leading', 'Premier', 'Top', 'Best'])} {rng.choice(['Marketing', 'Technology', 'Solutions', 'Services', 'Platform'])}"
         meta_description = f"{company_name} provides {rng.choice(['innovative', 'cutting-edge', 'enterprise-grade', 'AI-powered'])} solutions for {rng.choice(['businesses', 'enterprises', 'teams', 'organizations'])}."
 
-        meta_keywords = rng.sample([
-            "marketing", "analytics", "AI", "automation", "growth",
-            "digital", "platform", "software", "SaaS", "enterprise",
-            "solutions", "advertising", "data", "insights", "ROI",
-        ], k=rng.randint(5, 10))
+        meta_keywords = rng.sample(
+            [
+                "marketing",
+                "analytics",
+                "AI",
+                "automation",
+                "growth",
+                "digital",
+                "platform",
+                "software",
+                "SaaS",
+                "enterprise",
+                "solutions",
+                "advertising",
+                "data",
+                "insights",
+                "ROI",
+            ],
+            k=rng.randint(5, 10),
+        )
 
         # Mock social links
         social_links = {}
         if rng.random() < 0.9:
-            social_links["linkedin"] = f"https://linkedin.com/company/{domain.split('.')[0]}"
+            social_links["linkedin"] = (
+                f"https://linkedin.com/company/{domain.split('.')[0]}"
+            )
         if rng.random() < 0.8:
             social_links["twitter"] = f"https://twitter.com/{domain.split('.')[0]}"
         if rng.random() < 0.6:
@@ -413,20 +464,24 @@ class MockMarketService(MarketDataProvider):
 
         top_keywords = []
         for i, kw in enumerate(keyword_templates[:10]):
-            top_keywords.append({
-                "keyword": kw,
-                "position": rng.randint(1, 50),
-                "type": rng.choice(["organic", "paid"]),
-                "volume": rng.randint(100, 50000),
-                "cpc_cents": rng.randint(50, 2000),
-            })
+            top_keywords.append(
+                {
+                    "keyword": kw,
+                    "position": rng.randint(1, 50),
+                    "type": rng.choice(["organic", "paid"]),
+                    "volume": rng.randint(100, 50000),
+                    "cpc_cents": rng.randint(50, 2000),
+                }
+            )
 
         # Mock paid keyword counts
         paid_keywords = rng.randint(50, 5000) if rng.random() < 0.7 else 0
         organic_keywords = rng.randint(500, 50000)
 
         # Mock ad spend
-        estimated_ad_spend = paid_keywords * rng.randint(100, 500) if paid_keywords > 0 else 0
+        estimated_ad_spend = (
+            paid_keywords * rng.randint(100, 500) if paid_keywords > 0 else 0
+        )
 
         # Mock detected platforms
         platforms = []
@@ -484,12 +539,22 @@ class MarketIntelligenceService:
         Falls back to scraper + mock if primary provider fails.
         """
         # Normalize domain
-        domain = domain.lower().replace("https://", "").replace("http://", "").replace("www.", "").rstrip("/")
+        domain = (
+            domain.lower()
+            .replace("https://", "")
+            .replace("http://", "")
+            .replace("www.", "")
+            .rstrip("/")
+        )
 
         # Try primary provider
         provider = self.providers.get(self.primary_provider, self.providers["mock"])
 
-        logger.info("fetching_competitor_data", domain=domain, provider=provider.get_provider_name())
+        logger.info(
+            "fetching_competitor_data",
+            domain=domain,
+            provider=provider.get_provider_name(),
+        )
 
         data = await provider.get_competitor_data(domain)
 
@@ -512,7 +577,9 @@ class MarketIntelligenceService:
             if self.primary_provider not in ["mock", "scraper"]:
                 mock = self.providers["mock"]
                 mock_data = await mock.get_competitor_data(domain)
-                data.estimated_traffic = data.estimated_traffic or mock_data.estimated_traffic
+                data.estimated_traffic = (
+                    data.estimated_traffic or mock_data.estimated_traffic
+                )
                 data.top_keywords = data.top_keywords or mock_data.top_keywords
 
             data.error = None  # Clear error since we have fallback data

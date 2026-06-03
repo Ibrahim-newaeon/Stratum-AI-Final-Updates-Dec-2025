@@ -11,12 +11,12 @@ Provides:
 - Recommendations based on competitive position
 """
 
+import random
+import statistics
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional, Tuple
 from enum import Enum
-import statistics
-import random
+from typing import Any, Dict, List, Optional, Tuple
 
 from app.core.logging import get_logger
 
@@ -25,6 +25,7 @@ logger = get_logger(__name__)
 
 class Industry(str, Enum):
     """Industry verticals for benchmarking."""
+
     ECOMMERCE = "ecommerce"
     SAAS = "saas"
     FINANCE = "finance"
@@ -44,6 +45,7 @@ class Industry(str, Enum):
 
 class Region(str, Enum):
     """Geographic regions for benchmarking."""
+
     NORTH_AMERICA = "north_america"
     EUROPE = "europe"
     ASIA_PACIFIC = "asia_pacific"
@@ -55,6 +57,7 @@ class Region(str, Enum):
 
 class PerformanceLevel(str, Enum):
     """Performance level relative to benchmark."""
+
     EXCELLENT = "excellent"  # Top 10%
     ABOVE_AVERAGE = "above_average"  # Top 25%
     AVERAGE = "average"  # 25-75%
@@ -65,6 +68,7 @@ class PerformanceLevel(str, Enum):
 @dataclass
 class BenchmarkMetric:
     """A single benchmark metric with percentile data."""
+
     metric_name: str
     your_value: float
     benchmark_p25: float  # 25th percentile
@@ -81,6 +85,7 @@ class BenchmarkMetric:
 @dataclass
 class CompetitorBenchmark:
     """Complete benchmark comparison."""
+
     tenant_id: str
     industry: Industry
     region: Region
@@ -106,6 +111,7 @@ class CompetitorBenchmark:
 @dataclass
 class IndustryBenchmarkData:
     """Industry benchmark data structure."""
+
     industry: Industry
     region: Region
     platform: str
@@ -158,65 +164,100 @@ class CompetitorBenchmarkingService:
         # Define benchmark data for key industry/platform combinations
         benchmark_configs = [
             # E-commerce benchmarks
-            (Industry.ECOMMERCE, Region.GLOBAL, "meta", {
-                "ctr": (0.8, 1.2, 1.8, 2.5, 3.5, 1.9),
-                "cvr": (1.0, 1.8, 2.5, 3.5, 5.0, 2.7),
-                "cpc": (0.30, 0.50, 0.80, 1.20, 2.00, 0.90),
-                "cpm": (5.0, 8.0, 12.0, 18.0, 30.0, 13.5),
-                "cpa": (10.0, 18.0, 30.0, 50.0, 100.0, 35.0),
-                "roas": (1.5, 2.0, 3.0, 4.5, 7.0, 3.2),
-            }),
-            (Industry.ECOMMERCE, Region.GLOBAL, "google", {
-                "ctr": (1.5, 2.5, 3.5, 5.0, 7.0, 3.8),
-                "cvr": (1.5, 2.5, 3.5, 5.0, 7.0, 3.7),
-                "cpc": (0.50, 0.80, 1.20, 1.80, 3.00, 1.35),
-                "cpm": (8.0, 12.0, 18.0, 28.0, 45.0, 20.0),
-                "cpa": (8.0, 15.0, 25.0, 45.0, 80.0, 30.0),
-                "roas": (2.0, 2.5, 3.5, 5.0, 8.0, 3.8),
-            }),
-            (Industry.ECOMMERCE, Region.GLOBAL, "tiktok", {
-                "ctr": (0.5, 0.8, 1.2, 1.8, 2.5, 1.3),
-                "cvr": (0.8, 1.2, 2.0, 3.0, 4.5, 2.1),
-                "cpc": (0.20, 0.35, 0.55, 0.85, 1.50, 0.60),
-                "cpm": (3.0, 5.0, 8.0, 12.0, 20.0, 8.5),
-                "cpa": (12.0, 20.0, 35.0, 60.0, 120.0, 42.0),
-                "roas": (1.2, 1.8, 2.5, 3.8, 6.0, 2.7),
-            }),
+            (
+                Industry.ECOMMERCE,
+                Region.GLOBAL,
+                "meta",
+                {
+                    "ctr": (0.8, 1.2, 1.8, 2.5, 3.5, 1.9),
+                    "cvr": (1.0, 1.8, 2.5, 3.5, 5.0, 2.7),
+                    "cpc": (0.30, 0.50, 0.80, 1.20, 2.00, 0.90),
+                    "cpm": (5.0, 8.0, 12.0, 18.0, 30.0, 13.5),
+                    "cpa": (10.0, 18.0, 30.0, 50.0, 100.0, 35.0),
+                    "roas": (1.5, 2.0, 3.0, 4.5, 7.0, 3.2),
+                },
+            ),
+            (
+                Industry.ECOMMERCE,
+                Region.GLOBAL,
+                "google",
+                {
+                    "ctr": (1.5, 2.5, 3.5, 5.0, 7.0, 3.8),
+                    "cvr": (1.5, 2.5, 3.5, 5.0, 7.0, 3.7),
+                    "cpc": (0.50, 0.80, 1.20, 1.80, 3.00, 1.35),
+                    "cpm": (8.0, 12.0, 18.0, 28.0, 45.0, 20.0),
+                    "cpa": (8.0, 15.0, 25.0, 45.0, 80.0, 30.0),
+                    "roas": (2.0, 2.5, 3.5, 5.0, 8.0, 3.8),
+                },
+            ),
+            (
+                Industry.ECOMMERCE,
+                Region.GLOBAL,
+                "tiktok",
+                {
+                    "ctr": (0.5, 0.8, 1.2, 1.8, 2.5, 1.3),
+                    "cvr": (0.8, 1.2, 2.0, 3.0, 4.5, 2.1),
+                    "cpc": (0.20, 0.35, 0.55, 0.85, 1.50, 0.60),
+                    "cpm": (3.0, 5.0, 8.0, 12.0, 20.0, 8.5),
+                    "cpa": (12.0, 20.0, 35.0, 60.0, 120.0, 42.0),
+                    "roas": (1.2, 1.8, 2.5, 3.8, 6.0, 2.7),
+                },
+            ),
             # SaaS benchmarks
-            (Industry.SAAS, Region.GLOBAL, "meta", {
-                "ctr": (0.5, 0.8, 1.2, 1.8, 2.5, 1.3),
-                "cvr": (2.0, 3.5, 5.0, 7.5, 12.0, 5.5),
-                "cpc": (1.00, 1.80, 3.00, 5.00, 10.00, 3.50),
-                "cpm": (15.0, 25.0, 40.0, 65.0, 100.0, 45.0),
-                "cpa": (50.0, 100.0, 180.0, 300.0, 600.0, 210.0),
-                "roas": (1.0, 1.5, 2.5, 4.0, 7.0, 2.8),
-            }),
-            (Industry.SAAS, Region.GLOBAL, "google", {
-                "ctr": (2.0, 3.0, 4.5, 6.5, 9.0, 4.8),
-                "cvr": (2.5, 4.0, 6.0, 9.0, 14.0, 6.5),
-                "cpc": (2.00, 3.50, 5.50, 9.00, 15.00, 6.20),
-                "cpm": (25.0, 40.0, 60.0, 100.0, 160.0, 70.0),
-                "cpa": (40.0, 80.0, 150.0, 280.0, 500.0, 180.0),
-                "roas": (1.2, 1.8, 3.0, 5.0, 9.0, 3.5),
-            }),
+            (
+                Industry.SAAS,
+                Region.GLOBAL,
+                "meta",
+                {
+                    "ctr": (0.5, 0.8, 1.2, 1.8, 2.5, 1.3),
+                    "cvr": (2.0, 3.5, 5.0, 7.5, 12.0, 5.5),
+                    "cpc": (1.00, 1.80, 3.00, 5.00, 10.00, 3.50),
+                    "cpm": (15.0, 25.0, 40.0, 65.0, 100.0, 45.0),
+                    "cpa": (50.0, 100.0, 180.0, 300.0, 600.0, 210.0),
+                    "roas": (1.0, 1.5, 2.5, 4.0, 7.0, 2.8),
+                },
+            ),
+            (
+                Industry.SAAS,
+                Region.GLOBAL,
+                "google",
+                {
+                    "ctr": (2.0, 3.0, 4.5, 6.5, 9.0, 4.8),
+                    "cvr": (2.5, 4.0, 6.0, 9.0, 14.0, 6.5),
+                    "cpc": (2.00, 3.50, 5.50, 9.00, 15.00, 6.20),
+                    "cpm": (25.0, 40.0, 60.0, 100.0, 160.0, 70.0),
+                    "cpa": (40.0, 80.0, 150.0, 280.0, 500.0, 180.0),
+                    "roas": (1.2, 1.8, 3.0, 5.0, 9.0, 3.5),
+                },
+            ),
             # Finance benchmarks
-            (Industry.FINANCE, Region.GLOBAL, "meta", {
-                "ctr": (0.4, 0.6, 1.0, 1.5, 2.2, 1.1),
-                "cvr": (1.5, 2.5, 4.0, 6.0, 10.0, 4.3),
-                "cpc": (2.00, 3.50, 6.00, 10.00, 20.00, 7.00),
-                "cpm": (20.0, 35.0, 55.0, 90.0, 150.0, 62.0),
-                "cpa": (80.0, 150.0, 280.0, 500.0, 1000.0, 340.0),
-                "roas": (0.8, 1.2, 2.0, 3.5, 6.0, 2.3),
-            }),
+            (
+                Industry.FINANCE,
+                Region.GLOBAL,
+                "meta",
+                {
+                    "ctr": (0.4, 0.6, 1.0, 1.5, 2.2, 1.1),
+                    "cvr": (1.5, 2.5, 4.0, 6.0, 10.0, 4.3),
+                    "cpc": (2.00, 3.50, 6.00, 10.00, 20.00, 7.00),
+                    "cpm": (20.0, 35.0, 55.0, 90.0, 150.0, 62.0),
+                    "cpa": (80.0, 150.0, 280.0, 500.0, 1000.0, 340.0),
+                    "roas": (0.8, 1.2, 2.0, 3.5, 6.0, 2.3),
+                },
+            ),
             # Gaming benchmarks
-            (Industry.GAMING, Region.GLOBAL, "meta", {
-                "ctr": (1.0, 1.5, 2.2, 3.2, 4.5, 2.4),
-                "cvr": (5.0, 8.0, 12.0, 18.0, 28.0, 13.0),
-                "cpc": (0.15, 0.25, 0.40, 0.65, 1.20, 0.45),
-                "cpm": (2.0, 4.0, 6.5, 10.0, 18.0, 7.2),
-                "cpa": (1.50, 2.50, 4.50, 8.00, 15.00, 5.20),
-                "roas": (0.5, 0.8, 1.2, 2.0, 3.5, 1.4),
-            }),
+            (
+                Industry.GAMING,
+                Region.GLOBAL,
+                "meta",
+                {
+                    "ctr": (1.0, 1.5, 2.2, 3.2, 4.5, 2.4),
+                    "cvr": (5.0, 8.0, 12.0, 18.0, 28.0, 13.0),
+                    "cpc": (0.15, 0.25, 0.40, 0.65, 1.20, 0.45),
+                    "cpm": (2.0, 4.0, 6.5, 10.0, 18.0, 7.2),
+                    "cpa": (1.50, 2.50, 4.50, 8.00, 15.00, 5.20),
+                    "roas": (0.5, 0.8, 1.2, 2.0, 3.5, 1.4),
+                },
+            ),
         ]
 
         for industry, region, platform, metrics in benchmark_configs:
@@ -234,7 +275,8 @@ class CompetitorBenchmarkingService:
                     p90=p90,
                     mean=mean,
                     sample_size=random.randint(500, 2000),
-                    last_updated=datetime.now(timezone.utc) - timedelta(days=random.randint(1, 7)),
+                    last_updated=datetime.now(timezone.utc)
+                    - timedelta(days=random.randint(1, 7)),
                 )
 
         return benchmarks
@@ -294,7 +336,9 @@ class CompetitorBenchmarkingService:
                 continue
 
             # Calculate percentile
-            is_higher_better = metric_definitions.get(metric_name, (metric_name, True))[1]
+            is_higher_better = metric_definitions.get(metric_name, (metric_name, True))[
+                1
+            ]
             your_percentile = self._calculate_percentile(
                 your_value,
                 benchmark_data,
@@ -302,7 +346,9 @@ class CompetitorBenchmarkingService:
             )
 
             # Determine performance level
-            performance_level = self._get_performance_level(your_percentile, is_higher_better)
+            performance_level = self._get_performance_level(
+                your_percentile, is_higher_better
+            )
 
             # Determine trend (simplified - would use historical data in production)
             trend = "stable"
@@ -331,13 +377,20 @@ class CompetitorBenchmarkingService:
         strengths, weaknesses = self._identify_strengths_weaknesses(benchmark_metrics)
 
         # Generate recommendations
-        recommendations = self._generate_recommendations(benchmark_metrics, industry, platform)
+        recommendations = self._generate_recommendations(
+            benchmark_metrics, industry, platform
+        )
 
         # Get sample size
-        sample_size = min(
-            bd.sample_size for bd in self._benchmark_data.values()
-            if bd.industry == industry and bd.platform == platform
-        ) if self._benchmark_data else 0
+        sample_size = (
+            min(
+                bd.sample_size
+                for bd in self._benchmark_data.values()
+                if bd.industry == industry and bd.platform == platform
+            )
+            if self._benchmark_data
+            else 0
+        )
 
         return CompetitorBenchmark(
             tenant_id=tenant_id,
@@ -379,10 +432,18 @@ class CompetitorBenchmarkingService:
 
         # Find where value falls
         if value <= percentile_points[0][0]:
-            return percentile_points[0][1] if is_higher_better else 100 - percentile_points[0][1]
+            return (
+                percentile_points[0][1]
+                if is_higher_better
+                else 100 - percentile_points[0][1]
+            )
 
         if value >= percentile_points[-1][0]:
-            return percentile_points[-1][1] if is_higher_better else 100 - percentile_points[-1][1]
+            return (
+                percentile_points[-1][1]
+                if is_higher_better
+                else 100 - percentile_points[-1][1]
+            )
 
         # Linear interpolation
         for i in range(len(percentile_points) - 1):
@@ -436,10 +497,16 @@ class CompetitorBenchmarkingService:
         for name, metric in metrics.items():
             friendly_name = self._friendly_metric_name(name)
 
-            if metric.performance_level in [PerformanceLevel.EXCELLENT, PerformanceLevel.ABOVE_AVERAGE]:
+            if metric.performance_level in [
+                PerformanceLevel.EXCELLENT,
+                PerformanceLevel.ABOVE_AVERAGE,
+            ]:
                 pct = round(metric.your_percentile)
                 strengths.append(f"{friendly_name} (top {100-pct}% of industry)")
-            elif metric.performance_level in [PerformanceLevel.BELOW_AVERAGE, PerformanceLevel.POOR]:
+            elif metric.performance_level in [
+                PerformanceLevel.BELOW_AVERAGE,
+                PerformanceLevel.POOR,
+            ]:
                 pct = round(metric.your_percentile)
                 weaknesses.append(f"{friendly_name} (bottom {pct}% of industry)")
 
@@ -455,16 +522,23 @@ class CompetitorBenchmarkingService:
         recommendations = []
 
         for name, metric in metrics.items():
-            if metric.performance_level in [PerformanceLevel.BELOW_AVERAGE, PerformanceLevel.POOR]:
+            if metric.performance_level in [
+                PerformanceLevel.BELOW_AVERAGE,
+                PerformanceLevel.POOR,
+            ]:
                 rec = self._get_metric_recommendation(name, metric, industry, platform)
                 if rec:
                     recommendations.append(rec)
 
         # Add general recommendations
         if not recommendations:
-            recommendations.append("Maintain current strategy - performance is at or above industry benchmarks")
+            recommendations.append(
+                "Maintain current strategy - performance is at or above industry benchmarks"
+            )
         else:
-            recommendations.append("Consider A/B testing to improve underperforming metrics")
+            recommendations.append(
+                "Consider A/B testing to improve underperforming metrics"
+            )
 
         return recommendations[:5]  # Limit to top 5 recommendations
 
@@ -607,8 +681,7 @@ class CompetitorBenchmarkingService:
 
         # Find best performing platform
         best_platform = max(
-            comparisons.keys(),
-            key=lambda p: comparisons[p]["overall_percentile"]
+            comparisons.keys(), key=lambda p: comparisons[p]["overall_percentile"]
         )
 
         return {
@@ -627,6 +700,7 @@ benchmarking_service = CompetitorBenchmarkingService()
 # =============================================================================
 # Convenience Functions
 # =============================================================================
+
 
 def get_benchmark_comparison(
     tenant_id: str,
@@ -675,9 +749,11 @@ def get_benchmark_comparison(
 # Advanced Competitor Benchmarking Features (P2 Enhancement)
 # =============================================================================
 
+
 @dataclass
 class SeasonalBenchmark:
     """Benchmark adjusted for seasonality."""
+
     metric: str
     base_benchmark: float
     seasonal_adjustment: float
@@ -689,6 +765,7 @@ class SeasonalBenchmark:
 @dataclass
 class BenchmarkTrend:
     """Trend in benchmark metrics over time."""
+
     metric: str
     direction: str  # improving, declining, stable
     change_rate: float  # % change per month
@@ -700,6 +777,7 @@ class BenchmarkTrend:
 @dataclass
 class CompetitivePositionForecast:
     """Forecast of competitive position."""
+
     current_percentile: float
     forecast_1m_percentile: float
     forecast_3m_percentile: float
@@ -721,16 +799,28 @@ class SeasonalBenchmarkAdjuster:
     # Seasonal multipliers by industry and quarter
     SEASONAL_PATTERNS = {
         Industry.ECOMMERCE: {
-            "Q1": 0.85, "Q2": 0.95, "Q3": 1.05, "Q4": 1.35,
+            "Q1": 0.85,
+            "Q2": 0.95,
+            "Q3": 1.05,
+            "Q4": 1.35,
         },
         Industry.SAAS: {
-            "Q1": 1.15, "Q2": 1.05, "Q3": 0.90, "Q4": 0.95,
+            "Q1": 1.15,
+            "Q2": 1.05,
+            "Q3": 0.90,
+            "Q4": 0.95,
         },
         Industry.FINANCE: {
-            "Q1": 1.10, "Q2": 0.95, "Q3": 0.90, "Q4": 1.05,
+            "Q1": 1.10,
+            "Q2": 0.95,
+            "Q3": 0.90,
+            "Q4": 1.05,
         },
         Industry.GAMING: {
-            "Q1": 0.90, "Q2": 0.85, "Q3": 0.95, "Q4": 1.30,
+            "Q1": 0.90,
+            "Q2": 0.85,
+            "Q3": 0.95,
+            "Q4": 1.30,
         },
     }
 
@@ -826,10 +916,12 @@ class BenchmarkTrendAnalyzer:
         if key not in self._historical_benchmarks:
             self._historical_benchmarks[key] = []
 
-        self._historical_benchmarks[key].append((
-            datetime.now(timezone.utc),
-            value,
-        ))
+        self._historical_benchmarks[key].append(
+            (
+                datetime.now(timezone.utc),
+                value,
+            )
+        )
 
         # Keep last 365 days
         cutoff = datetime.now(timezone.utc) - timedelta(days=365)
@@ -900,11 +992,23 @@ class BenchmarkTrendAnalyzer:
     ) -> str:
         """Generate context for trend."""
         contexts = {
-            ("ctr", "improving"): f"Click-through rates rising in {industry} - competition may be decreasing",
-            ("ctr", "declining"): f"CTR declining in {industry} - ad fatigue or competition increasing",
-            ("roas", "improving"): f"ROAS improving across {industry} - optimize for scale",
+            (
+                "ctr",
+                "improving",
+            ): f"Click-through rates rising in {industry} - competition may be decreasing",
+            (
+                "ctr",
+                "declining",
+            ): f"CTR declining in {industry} - ad fatigue or competition increasing",
+            (
+                "roas",
+                "improving",
+            ): f"ROAS improving across {industry} - optimize for scale",
             ("roas", "declining"): f"ROAS pressure in {industry} - focus on efficiency",
-            ("cpc", "improving"): f"CPCs falling in {industry} - opportunity to increase volume",
+            (
+                "cpc",
+                "improving",
+            ): f"CPCs falling in {industry} - opportunity to increase volume",
             ("cpc", "declining"): f"CPCs rising in {industry} - expect margin pressure",
         }
 
@@ -930,10 +1034,12 @@ class CompetitivePositionForecaster:
         if tenant_id not in self._position_history:
             self._position_history[tenant_id] = []
 
-        self._position_history[tenant_id].append((
-            datetime.now(timezone.utc),
-            percentile,
-        ))
+        self._position_history[tenant_id].append(
+            (
+                datetime.now(timezone.utc),
+                percentile,
+            )
+        )
 
         # Keep last 180 days
         cutoff = datetime.now(timezone.utc) - timedelta(days=180)
@@ -958,8 +1064,12 @@ class CompetitivePositionForecaster:
             momentum = 0
 
         # Combine momentum with metric trends
-        avg_improvement = statistics.mean(metric_trends.values()) if metric_trends else 0
-        combined_rate = (momentum + avg_improvement * 2) / 3  # Weight recent trends more
+        avg_improvement = (
+            statistics.mean(metric_trends.values()) if metric_trends else 0
+        )
+        combined_rate = (
+            momentum + avg_improvement * 2
+        ) / 3  # Weight recent trends more
 
         # Forecast future positions
         forecast_1m = min(99, max(1, current_percentile + combined_rate * 30))
@@ -976,7 +1086,9 @@ class CompetitivePositionForecaster:
 
         # Identify key drivers
         key_drivers = []
-        for metric, trend in sorted(metric_trends.items(), key=lambda x: abs(x[1]), reverse=True)[:3]:
+        for metric, trend in sorted(
+            metric_trends.items(), key=lambda x: abs(x[1]), reverse=True
+        )[:3]:
             if trend > 0:
                 key_drivers.append(f"Improving {metric}")
             elif trend < 0:
@@ -1014,15 +1126,17 @@ class CompetitivePositionForecaster:
                 # Estimate impact of closing gap
                 potential_gain = min(gap * 0.5, 30)  # Can close ~50% of gap
 
-                opportunities.append({
-                    "metric": metric,
-                    "your_value": round(your_value, 3),
-                    "benchmark": round(benchmark, 3),
-                    "gap_percent": round(gap, 1),
-                    "potential_percentile_gain": round(potential_gain, 1),
-                    "priority": "high" if gap > 30 else "medium",
-                    "recommendation": f"Focus on improving {metric} - {gap:.0f}% below benchmark",
-                })
+                opportunities.append(
+                    {
+                        "metric": metric,
+                        "your_value": round(your_value, 3),
+                        "benchmark": round(benchmark, 3),
+                        "gap_percent": round(gap, 1),
+                        "potential_percentile_gain": round(potential_gain, 1),
+                        "priority": "high" if gap > 30 else "medium",
+                        "recommendation": f"Focus on improving {metric} - {gap:.0f}% below benchmark",
+                    }
+                )
 
         # Sort by potential gain
         opportunities.sort(key=lambda x: x["potential_percentile_gain"], reverse=True)

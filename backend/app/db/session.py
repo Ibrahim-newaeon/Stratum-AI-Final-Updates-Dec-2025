@@ -210,7 +210,9 @@ async def check_database_health() -> dict:
             return {"status": "healthy", "database": "connected"}
     except (ConnectionError, TimeoutError, OSError, Exception) as e:
         # Catch SQLAlchemy OperationalError, InterfaceError, and other DB errors
-        logger.error("database_health_check_failed", error=str(e), error_type=type(e).__name__)
+        logger.error(
+            "database_health_check_failed", error=str(e), error_type=type(e).__name__
+        )
         return {"status": "unhealthy", "database": "disconnected", "error": str(e)}
 
 

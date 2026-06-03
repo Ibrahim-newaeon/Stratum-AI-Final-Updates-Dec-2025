@@ -12,12 +12,13 @@ Provides:
 - Budget optimization based on predicted LTV
 """
 
+import json
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional, Tuple
 from enum import Enum
 from pathlib import Path
-import json
+from typing import Any, Dict, List, Optional, Tuple
+
 import numpy as np
 import pandas as pd
 
@@ -27,18 +28,22 @@ logger = get_logger(__name__)
 
 # Try to import ML libraries
 try:
-    from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
-    from sklearn.preprocessing import StandardScaler
-    from sklearn.model_selection import train_test_split
     import joblib
+    from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
+    from sklearn.model_selection import train_test_split
+    from sklearn.preprocessing import StandardScaler
+
     ML_AVAILABLE = True
 except ImportError:
     ML_AVAILABLE = False
-    logger.warning("scikit-learn not available. LTV prediction will use heuristic model.")
+    logger.warning(
+        "scikit-learn not available. LTV prediction will use heuristic model."
+    )
 
 
 class CustomerSegment(str, Enum):
     """Customer value segments."""
+
     VIP = "vip"  # Top 5%
     HIGH_VALUE = "high_value"  # Top 25%
     MEDIUM_VALUE = "medium_value"  # 25-75%
@@ -48,6 +53,7 @@ class CustomerSegment(str, Enum):
 
 class LTVTimeframe(str, Enum):
     """LTV prediction timeframes."""
+
     DAYS_30 = "30_day"
     DAYS_90 = "90_day"
     DAYS_180 = "180_day"
@@ -58,6 +64,7 @@ class LTVTimeframe(str, Enum):
 @dataclass
 class CustomerBehavior:
     """Early customer behavior for LTV prediction."""
+
     customer_id: str
     acquisition_date: datetime
     acquisition_channel: str
@@ -90,6 +97,7 @@ class CustomerBehavior:
 @dataclass
 class LTVPrediction:
     """LTV prediction result."""
+
     customer_id: str
     predicted_ltv_30d: float
     predicted_ltv_90d: float
@@ -112,6 +120,7 @@ class LTVPrediction:
 @dataclass
 class CohortAnalysis:
     """LTV analysis by cohort."""
+
     cohort_month: str
     customers: int
     total_revenue: float
@@ -339,9 +348,9 @@ class LTVPredictor:
 
         # Engagement factor
         engagement = (
-            behavior.sessions_first_week * 0.1 +
-            behavior.email_opens_first_week * 0.15 +
-            behavior.email_clicks_first_week * 0.2
+            behavior.sessions_first_week * 0.1
+            + behavior.email_opens_first_week * 0.15
+            + behavior.email_clicks_first_week * 0.2
         )
 
         # Quick conversion bonus
@@ -353,9 +362,9 @@ class LTVPredictor:
 
         # Predict annual orders
         predicted_annual = (
-            current_orders +
-            (engagement * conversion_factor * 2) +
-            (current_orders * 0.5)  # Repeat rate estimate
+            current_orders
+            + (engagement * conversion_factor * 2)
+            + (current_orders * 0.5)  # Repeat rate estimate
         )
 
         return min(predicted_annual, 24)  # Cap at 2 orders/month
@@ -530,23 +539,34 @@ class LTVPredictor:
             for seg in CustomerSegment:
                 segment_dist[seg.value] = sum(1 for s in segments if s == seg)
 
-            analyses.append(CohortAnalysis(
-                cohort_month=cohort_month,
-                customers=len(cohort_customers),
-                total_revenue=sum(c.total_revenue for c in cohort_customers),
-                avg_ltv=round(sum(ltv_values) / len(ltv_values), 2),
-                median_ltv=round(sorted(ltv_values)[len(ltv_values) // 2], 2),
-                ltv_p90=round(sorted(ltv_values)[int(len(ltv_values) * 0.9)], 2) if len(ltv_values) > 1 else ltv_values[0],
-                avg_orders=round(sum(c.total_orders for c in cohort_customers) / len(cohort_customers), 1),
-                avg_retention_days=round(
-                    sum(
-                        (datetime.now(timezone.utc) - c.acquisition_date).days
-                        for c in cohort_customers
-                    ) / len(cohort_customers),
-                    0
-                ),
-                segment_distribution=segment_dist,
-            ))
+            analyses.append(
+                CohortAnalysis(
+                    cohort_month=cohort_month,
+                    customers=len(cohort_customers),
+                    total_revenue=sum(c.total_revenue for c in cohort_customers),
+                    avg_ltv=round(sum(ltv_values) / len(ltv_values), 2),
+                    median_ltv=round(sorted(ltv_values)[len(ltv_values) // 2], 2),
+                    ltv_p90=(
+                        round(sorted(ltv_values)[int(len(ltv_values) * 0.9)], 2)
+                        if len(ltv_values) > 1
+                        else ltv_values[0]
+                    ),
+                    avg_orders=round(
+                        sum(c.total_orders for c in cohort_customers)
+                        / len(cohort_customers),
+                        1,
+                    ),
+                    avg_retention_days=round(
+                        sum(
+                            (datetime.now(timezone.utc) - c.acquisition_date).days
+                            for c in cohort_customers
+                        )
+                        / len(cohort_customers),
+                        0,
+                    ),
+                    segment_distribution=segment_dist,
+                )
+            )
 
         return analyses
 
@@ -620,7 +640,9 @@ class LTVPredictor:
         joblib.dump(self.model, self.models_path / "ltv_predictor.pkl")
         joblib.dump(self.scaler, self.models_path / "ltv_predictor_scaler.pkl")
 
-        logger.info(f"Trained LTV model: R²={metrics['r2']:.3f}, MAE=${metrics['mae']:.2f}")
+        logger.info(
+            f"Trained LTV model: R²={metrics['r2']:.3f}, MAE=${metrics['mae']:.2f}"
+        )
 
         return metrics
 
@@ -632,6 +654,7 @@ ltv_predictor = LTVPredictor()
 # =============================================================================
 # Convenience Functions
 # =============================================================================
+
 
 def predict_customer_ltv(
     customer_id: str,
@@ -696,9 +719,11 @@ def get_ltv_based_max_cac(
 # Advanced LTV Features (P2 Enhancement)
 # =============================================================================
 
+
 @dataclass
 class SurvivalPrediction:
     """Customer survival (retention) prediction."""
+
     customer_id: str
     survival_probability_30d: float
     survival_probability_90d: float
@@ -712,6 +737,7 @@ class SurvivalPrediction:
 @dataclass
 class LTVConfidenceInterval:
     """LTV prediction with uncertainty quantification."""
+
     point_estimate: float
     lower_bound_90: float
     upper_bound_90: float
@@ -724,6 +750,7 @@ class LTVConfidenceInterval:
 @dataclass
 class CohortLTVTrajectory:
     """LTV trajectory for a customer cohort."""
+
     cohort_id: str
     acquisition_period: str
     customer_count: int
@@ -767,9 +794,15 @@ class ParetoNBDModel:
             customer_stats[cid]["count"] += 1
             date = t.get("date")
             if date:
-                if customer_stats[cid]["first"] is None or date < customer_stats[cid]["first"]:
+                if (
+                    customer_stats[cid]["first"] is None
+                    or date < customer_stats[cid]["first"]
+                ):
                     customer_stats[cid]["first"] = date
-                if customer_stats[cid]["last"] is None or date > customer_stats[cid]["last"]:
+                if (
+                    customer_stats[cid]["last"] is None
+                    or date > customer_stats[cid]["last"]
+                ):
                     customer_stats[cid]["last"] = date
 
         # Adjust parameters based on observed patterns
@@ -810,7 +843,9 @@ class ParetoNBDModel:
 
         return max(0, expected)
 
-    def _probability_alive(self, frequency: int, recency_days: int, tenure_days: int) -> float:
+    def _probability_alive(
+        self, frequency: int, recency_days: int, tenure_days: int
+    ) -> float:
         """Calculate probability that customer has churned."""
         if tenure_days <= 0:
             return 0
@@ -895,7 +930,7 @@ class SurvivalAnalyzer:
                 if day >= days_from_now:
                     if i == 0:
                         return prob
-                    prev_day, prev_prob = curve[i-1]
+                    prev_day, prev_prob = curve[i - 1]
                     # Linear interpolation
                     ratio = (days_from_now - prev_day) / max(1, day - prev_day)
                     return prev_prob - ratio * (prev_prob - prob)
@@ -993,7 +1028,9 @@ class LTVUncertaintyQuantifier:
         upper_95 = point_estimate + z_95 * adjusted_std
 
         # Confidence level based on data quality
-        confidence = min(0.95, 0.5 + data_points / 200 * 0.3 + feature_completeness * 0.15)
+        confidence = min(
+            0.95, 0.5 + data_points / 200 * 0.3 + feature_completeness * 0.15
+        )
 
         # Identify uncertainty factors
         factors = []
@@ -1072,7 +1109,7 @@ class CohortLTVTracker:
             months = sorted(ltv_by_month.keys())
             recent_growth = []
             for i in range(1, min(4, len(months))):
-                m1, m2 = months[i-1], months[i]
+                m1, m2 = months[i - 1], months[i]
                 if ltv_by_month[m1] > 0:
                     growth = (ltv_by_month[m2] - ltv_by_month[m1]) / ltv_by_month[m1]
                     recent_growth.append(growth)
@@ -1108,7 +1145,9 @@ class CohortLTVTracker:
                 comparison[cohort_id] = {
                     "avg_ltv": round(statistics.mean(values), 2) if values else 0,
                     "customer_count": len(values),
-                    "ltv_std": round(statistics.stdev(values), 2) if len(values) > 1 else 0,
+                    "ltv_std": (
+                        round(statistics.stdev(values), 2) if len(values) > 1 else 0
+                    ),
                 }
 
         if comparison:
@@ -1120,7 +1159,8 @@ class CohortLTVTracker:
                 "cohorts": comparison,
                 "best_performer": best_cohort,
                 "worst_performer": worst_cohort,
-                "ltv_range": comparison[best_cohort]["avg_ltv"] - comparison[worst_cohort]["avg_ltv"],
+                "ltv_range": comparison[best_cohort]["avg_ltv"]
+                - comparison[worst_cohort]["avg_ltv"],
             }
 
         return {"month": at_month, "cohorts": {}, "message": "No data available"}

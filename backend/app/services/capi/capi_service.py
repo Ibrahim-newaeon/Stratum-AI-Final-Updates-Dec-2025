@@ -7,27 +7,33 @@ event streaming, and data quality analysis.
 """
 
 import asyncio
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Type
-from dataclasses import dataclass
 
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
 
 from app.core.logging import get_logger
+
+from .data_quality import DataQualityAnalyzer, QualityReport
+from .event_mapper import AIEventMapper
+from .pii_hasher import PIIHasher
 from .platform_connectors import (
     BaseCAPIConnector,
-    MetaCAPIConnector,
-    GoogleCAPIConnector,
-    TikTokCAPIConnector,
-    SnapchatCAPIConnector,
-    WhatsAppCAPIConnector,
-    ConnectionStatus,
     CAPIResponse,
     ConnectionResult,
+    ConnectionStatus,
+    GoogleCAPIConnector,
+    MetaCAPIConnector,
+    SnapchatCAPIConnector,
+    TikTokCAPIConnector,
+    WhatsAppCAPIConnector,
 )
-from .pii_hasher import PIIHasher
-from .event_mapper import AIEventMapper
-from .data_quality import DataQualityAnalyzer, QualityReport
 
 logger = get_logger(__name__)
 
@@ -35,6 +41,7 @@ logger = get_logger(__name__)
 @dataclass
 class StreamResult:
     """Result of streaming events to platforms."""
+
     total_events: int
     platforms_sent: int
     platform_results: Dict[str, CAPIResponse]
@@ -341,7 +348,9 @@ class CAPIService:
         """
         return self.analyzer.get_live_insights(self._event_buffer[-100:], platform)
 
-    def map_event(self, event_name: str, parameters: Dict[str, Any] = None) -> Dict[str, Any]:
+    def map_event(
+        self, event_name: str, parameters: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
         """
         Map a custom event to standard platform events.
 
@@ -404,39 +413,91 @@ class CAPIService:
             "meta": {
                 "name": "Meta (Facebook) Conversion API",
                 "credentials_needed": [
-                    {"field": "pixel_id", "label": "Pixel ID", "help": "Found in Events Manager > Data Sources"},
-                    {"field": "access_token", "label": "Access Token", "help": "System User Token from Business Settings"},
+                    {
+                        "field": "pixel_id",
+                        "label": "Pixel ID",
+                        "help": "Found in Events Manager > Data Sources",
+                    },
+                    {
+                        "field": "access_token",
+                        "label": "Access Token",
+                        "help": "System User Token from Business Settings",
+                    },
                 ],
                 "documentation": "https://developers.facebook.com/docs/marketing-api/conversions-api",
                 "key_fields": ["email", "phone", "external_id", "fbc", "fbp"],
-                "events_supported": ["Purchase", "Lead", "AddToCart", "InitiateCheckout", "ViewContent"],
+                "events_supported": [
+                    "Purchase",
+                    "Lead",
+                    "AddToCart",
+                    "InitiateCheckout",
+                    "ViewContent",
+                ],
             },
             "google": {
                 "name": "Google Ads Enhanced Conversions",
                 "credentials_needed": [
-                    {"field": "customer_id", "label": "Customer ID", "help": "Google Ads Customer ID (without dashes)"},
-                    {"field": "conversion_action_id", "label": "Conversion Action ID", "help": "From Tools > Conversions"},
-                    {"field": "api_key", "label": "API Key", "help": "OAuth token or Developer token"},
+                    {
+                        "field": "customer_id",
+                        "label": "Customer ID",
+                        "help": "Google Ads Customer ID (without dashes)",
+                    },
+                    {
+                        "field": "conversion_action_id",
+                        "label": "Conversion Action ID",
+                        "help": "From Tools > Conversions",
+                    },
+                    {
+                        "field": "api_key",
+                        "label": "API Key",
+                        "help": "OAuth token or Developer token",
+                    },
                 ],
                 "documentation": "https://developers.google.com/google-ads/api/docs/conversions/upload-offline",
                 "key_fields": ["email", "phone", "gclid", "first_name", "last_name"],
-                "events_supported": ["purchase", "sign_up", "generate_lead", "add_to_cart"],
+                "events_supported": [
+                    "purchase",
+                    "sign_up",
+                    "generate_lead",
+                    "add_to_cart",
+                ],
             },
             "tiktok": {
                 "name": "TikTok Events API",
                 "credentials_needed": [
-                    {"field": "pixel_code", "label": "Pixel Code", "help": "Found in TikTok Ads Manager > Events"},
-                    {"field": "access_token", "label": "Access Token", "help": "Long-lived access token from TikTok Marketing API"},
+                    {
+                        "field": "pixel_code",
+                        "label": "Pixel Code",
+                        "help": "Found in TikTok Ads Manager > Events",
+                    },
+                    {
+                        "field": "access_token",
+                        "label": "Access Token",
+                        "help": "Long-lived access token from TikTok Marketing API",
+                    },
                 ],
                 "documentation": "https://ads.tiktok.com/marketing_api/docs?id=1701890973258754",
                 "key_fields": ["email", "phone", "ttclid", "external_id"],
-                "events_supported": ["CompletePayment", "AddToCart", "SubmitForm", "ViewContent"],
+                "events_supported": [
+                    "CompletePayment",
+                    "AddToCart",
+                    "SubmitForm",
+                    "ViewContent",
+                ],
             },
             "snapchat": {
                 "name": "Snapchat Conversion API",
                 "credentials_needed": [
-                    {"field": "pixel_id", "label": "Pixel ID", "help": "Found in Snap Pixel setup"},
-                    {"field": "access_token", "label": "Access Token", "help": "From Snapchat Business Manager"},
+                    {
+                        "field": "pixel_id",
+                        "label": "Pixel ID",
+                        "help": "Found in Snap Pixel setup",
+                    },
+                    {
+                        "field": "access_token",
+                        "label": "Access Token",
+                        "help": "From Snapchat Business Manager",
+                    },
                 ],
                 "documentation": "https://marketingapi.snapchat.com/docs/conversion.html",
                 "key_fields": ["email", "phone", "external_id", "ip_address"],
@@ -445,21 +506,44 @@ class CAPIService:
             "whatsapp": {
                 "name": "WhatsApp Business Cloud API",
                 "credentials_needed": [
-                    {"field": "phone_number_id", "label": "Phone Number ID", "help": "From WhatsApp Business Manager > Phone Numbers"},
-                    {"field": "business_account_id", "label": "Business Account ID", "help": "WhatsApp Business Account ID from Meta Business Suite"},
-                    {"field": "access_token", "label": "Access Token", "help": "Permanent token from System User in Business Settings"},
-                    {"field": "webhook_verify_token", "label": "Webhook Verify Token", "help": "Custom token for webhook verification"},
+                    {
+                        "field": "phone_number_id",
+                        "label": "Phone Number ID",
+                        "help": "From WhatsApp Business Manager > Phone Numbers",
+                    },
+                    {
+                        "field": "business_account_id",
+                        "label": "Business Account ID",
+                        "help": "WhatsApp Business Account ID from Meta Business Suite",
+                    },
+                    {
+                        "field": "access_token",
+                        "label": "Access Token",
+                        "help": "Permanent token from System User in Business Settings",
+                    },
+                    {
+                        "field": "webhook_verify_token",
+                        "label": "Webhook Verify Token",
+                        "help": "Custom token for webhook verification",
+                    },
                 ],
                 "documentation": "https://developers.facebook.com/docs/whatsapp/cloud-api",
                 "key_fields": ["phone"],
-                "events_supported": ["template_message", "text_message", "media_message"],
+                "events_supported": [
+                    "template_message",
+                    "text_message",
+                    "media_message",
+                ],
             },
         }
 
-        return requirements.get(platform.lower(), {
-            "error": f"Unknown platform: {platform}",
-            "supported_platforms": list(requirements.keys()),
-        })
+        return requirements.get(
+            platform.lower(),
+            {
+                "error": f"Unknown platform: {platform}",
+                "supported_platforms": list(requirements.keys()),
+            },
+        )
 
     def get_setup_status(self) -> Dict[str, Any]:
         """Get overall CAPI setup status."""
@@ -471,5 +555,8 @@ class CAPIService:
             "available_platforms": available,
             "setup_complete": len(connected) > 0,
             "events_processed": len(self._event_buffer),
-            "data_quality_score": (self._event_buffer and self.get_data_quality_report().overall_score) or 0,
+            "data_quality_score": (
+                self._event_buffer and self.get_data_quality_report().overall_score
+            )
+            or 0,
         }

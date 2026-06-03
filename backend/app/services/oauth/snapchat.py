@@ -112,7 +112,9 @@ class SnapchatOAuthService(OAuthService):
             raise ValueError("Snapchat OAuth credentials not configured")
 
         # Snapchat requires Basic auth with client credentials
-        credentials = base64.b64encode(f"{self.client_id}:{self.client_secret}".encode()).decode()
+        credentials = base64.b64encode(
+            f"{self.client_id}:{self.client_secret}".encode()
+        ).decode()
 
         async with aiohttp.ClientSession() as session:
             headers = {
@@ -126,10 +128,14 @@ class SnapchatOAuthService(OAuthService):
                 "redirect_uri": redirect_uri,
             }
 
-            async with session.post(SNAPCHAT_TOKEN_URL, headers=headers, data=data) as resp:
+            async with session.post(
+                SNAPCHAT_TOKEN_URL, headers=headers, data=data
+            ) as resp:
                 if resp.status != 200:
                     error_data = await resp.json()
-                    self.logger.error("Snapchat token exchange failed", error=error_data)
+                    self.logger.error(
+                        "Snapchat token exchange failed", error=error_data
+                    )
                     raise Exception(
                         f"Token exchange failed: {error_data.get('error_description', error_data.get('error', 'Unknown error'))}"
                     )
@@ -149,7 +155,11 @@ class SnapchatOAuthService(OAuthService):
             expires_in=expires_in,
             expires_at=self._calculate_expiry(expires_in),
             token_type=token_data.get("token_type", "Bearer"),
-            scopes=token_data.get("scope", "").split(" ") if token_data.get("scope") else [],
+            scopes=(
+                token_data.get("scope", "").split(" ")
+                if token_data.get("scope")
+                else []
+            ),
             raw_response=token_data,
         )
 
@@ -169,7 +179,9 @@ class SnapchatOAuthService(OAuthService):
         if not self.client_id or not self.client_secret:
             raise ValueError("Snapchat OAuth credentials not configured")
 
-        credentials = base64.b64encode(f"{self.client_id}:{self.client_secret}".encode()).decode()
+        credentials = base64.b64encode(
+            f"{self.client_id}:{self.client_secret}".encode()
+        ).decode()
 
         async with aiohttp.ClientSession() as session:
             headers = {
@@ -182,7 +194,9 @@ class SnapchatOAuthService(OAuthService):
                 "refresh_token": refresh_token,
             }
 
-            async with session.post(SNAPCHAT_TOKEN_URL, headers=headers, data=data) as resp:
+            async with session.post(
+                SNAPCHAT_TOKEN_URL, headers=headers, data=data
+            ) as resp:
                 if resp.status != 200:
                     error_data = await resp.json()
                     self.logger.error("Snapchat token refresh failed", error=error_data)
@@ -200,7 +214,11 @@ class SnapchatOAuthService(OAuthService):
             expires_in=expires_in,
             expires_at=self._calculate_expiry(expires_in),
             token_type=token_data.get("token_type", "Bearer"),
-            scopes=token_data.get("scope", "").split(" ") if token_data.get("scope") else [],
+            scopes=(
+                token_data.get("scope", "").split(" ")
+                if token_data.get("scope")
+                else []
+            ),
             raw_response=token_data,
         )
 
@@ -271,17 +289,31 @@ class SnapchatOAuthService(OAuthService):
                                 business_name=account_info.get("organization_id"),
                                 currency=account_info.get("currency", "USD"),
                                 timezone=account_info.get("timezone", "UTC"),
-                                status=status_map.get(account_info.get("status"), "unknown"),
-                                spend_cap=float(account_info.get("lifetime_spend_cap_micro", 0))
-                                / 1000000
-                                if account_info.get("lifetime_spend_cap_micro")
-                                else None,
+                                status=status_map.get(
+                                    account_info.get("status"), "unknown"
+                                ),
+                                spend_cap=(
+                                    float(
+                                        account_info.get("lifetime_spend_cap_micro", 0)
+                                    )
+                                    / 1000000
+                                    if account_info.get("lifetime_spend_cap_micro")
+                                    else None
+                                ),
                                 raw_data=account_info,
                             )
                         )
 
-                except (ConnectionError, TimeoutError, OSError, ValueError, KeyError) as e:
-                    self.logger.warning(f"Failed to get ad accounts for org {org_id}", error=str(e))
+                except (
+                    ConnectionError,
+                    TimeoutError,
+                    OSError,
+                    ValueError,
+                    KeyError,
+                ) as e:
+                    self.logger.warning(
+                        f"Failed to get ad accounts for org {org_id}", error=str(e)
+                    )
 
         return accounts
 

@@ -44,7 +44,9 @@ class CategoryCreate(BaseModel):
 
     name: str = Field(..., min_length=1, max_length=100, description="Category name")
     slug: Optional[str] = Field(
-        None, max_length=100, description="URL-friendly slug (auto-generated if not provided)"
+        None,
+        max_length=100,
+        description="URL-friendly slug (auto-generated if not provided)",
     )
     description: Optional[str] = Field(None, description="Category description")
     color: Optional[str] = Field(
@@ -144,15 +146,23 @@ class AuthorCreate(BaseModel):
     slug: Optional[str] = Field(None, max_length=100, description="URL-friendly slug")
     email: Optional[str] = Field(None, max_length=255, description="Author email")
     bio: Optional[str] = Field(None, description="Author biography")
-    avatar_url: Optional[str] = Field(None, max_length=500, description="Avatar image URL")
+    avatar_url: Optional[str] = Field(
+        None, max_length=500, description="Avatar image URL"
+    )
     job_title: Optional[str] = Field(None, max_length=100, description="Job title")
     company: Optional[str] = Field(None, max_length=100, description="Company name")
     twitter_handle: Optional[str] = Field(
         None, max_length=50, description="Twitter handle without @"
     )
-    linkedin_url: Optional[str] = Field(None, max_length=255, description="LinkedIn profile URL")
-    github_handle: Optional[str] = Field(None, max_length=50, description="GitHub username")
-    website_url: Optional[str] = Field(None, max_length=255, description="Personal website URL")
+    linkedin_url: Optional[str] = Field(
+        None, max_length=255, description="LinkedIn profile URL"
+    )
+    github_handle: Optional[str] = Field(
+        None, max_length=50, description="GitHub username"
+    )
+    website_url: Optional[str] = Field(
+        None, max_length=255, description="Personal website URL"
+    )
     user_id: Optional[int] = Field(None, description="Link to user account")
     is_active: bool = Field(True, description="Whether author is active")
 
@@ -215,28 +225,44 @@ class PostCreate(BaseModel):
     slug: Optional[str] = Field(None, max_length=255, description="URL-friendly slug")
     excerpt: Optional[str] = Field(None, description="Short description/excerpt")
     content: Optional[str] = Field(None, description="HTML content")
-    content_json: Optional[dict[str, Any]] = Field(None, description="TipTap JSON content")
-    status: str = Field("draft", description="Post status: draft, scheduled, published, archived")
+    content_json: Optional[dict[str, Any]] = Field(
+        None, description="TipTap JSON content"
+    )
+    status: str = Field(
+        "draft", description="Post status: draft, scheduled, published, archived"
+    )
     content_type: str = Field(
         "blog_post",
         description="Content type: blog_post, case_study, guide, whitepaper, announcement",
     )
     category_id: Optional[UUID] = Field(None, description="Category ID")
     author_id: Optional[UUID] = Field(None, description="Author ID")
-    tag_ids: Optional[list[UUID]] = Field(default_factory=list, description="List of tag IDs")
+    tag_ids: Optional[list[UUID]] = Field(
+        default_factory=list, description="List of tag IDs"
+    )
     published_at: Optional[datetime] = Field(None, description="Publish date")
-    scheduled_at: Optional[datetime] = Field(None, description="Schedule date for publishing")
+    scheduled_at: Optional[datetime] = Field(
+        None, description="Schedule date for publishing"
+    )
     meta_title: Optional[str] = Field(None, max_length=70, description="SEO title")
-    meta_description: Optional[str] = Field(None, max_length=160, description="SEO description")
-    canonical_url: Optional[str] = Field(None, max_length=500, description="Canonical URL")
-    og_image_url: Optional[str] = Field(None, max_length=500, description="Open Graph image URL")
+    meta_description: Optional[str] = Field(
+        None, max_length=160, description="SEO description"
+    )
+    canonical_url: Optional[str] = Field(
+        None, max_length=500, description="Canonical URL"
+    )
+    og_image_url: Optional[str] = Field(
+        None, max_length=500, description="Open Graph image URL"
+    )
     featured_image_url: Optional[str] = Field(
         None, max_length=500, description="Featured image URL"
     )
     featured_image_alt: Optional[str] = Field(
         None, max_length=255, description="Featured image alt text"
     )
-    reading_time_minutes: Optional[int] = Field(None, ge=1, description="Estimated reading time")
+    reading_time_minutes: Optional[int] = Field(
+        None, ge=1, description="Estimated reading time"
+    )
     is_featured: bool = Field(False, description="Whether post is featured")
     allow_comments: bool = Field(True, description="Whether comments are allowed")
 
@@ -386,10 +412,14 @@ class PageCreate(BaseModel):
     title: str = Field(..., min_length=1, max_length=255, description="Page title")
     slug: Optional[str] = Field(None, max_length=255, description="URL-friendly slug")
     content: Optional[str] = Field(None, description="HTML content")
-    content_json: Optional[dict[str, Any]] = Field(None, description="TipTap JSON content")
+    content_json: Optional[dict[str, Any]] = Field(
+        None, description="TipTap JSON content"
+    )
     status: str = Field("draft", description="Page status: draft, published, archived")
     meta_title: Optional[str] = Field(None, max_length=70, description="SEO title")
-    meta_description: Optional[str] = Field(None, max_length=160, description="SEO description")
+    meta_description: Optional[str] = Field(
+        None, max_length=160, description="SEO description"
+    )
     show_in_navigation: bool = Field(False, description="Show in navigation menu")
     navigation_label: Optional[str] = Field(
         None, max_length=50, description="Navigation menu label"
@@ -485,8 +515,12 @@ class ContactSubmit(BaseModel):
     company: Optional[str] = Field(None, max_length=255, description="Company name")
     phone: Optional[str] = Field(None, max_length=50, description="Phone number")
     subject: Optional[str] = Field(None, max_length=255, description="Message subject")
-    message: str = Field(..., min_length=10, max_length=5000, description="Message content")
-    source_page: Optional[str] = Field(None, max_length=255, description="Source page URL")
+    message: str = Field(
+        ..., min_length=10, max_length=5000, description="Message content"
+    )
+    source_page: Optional[str] = Field(
+        None, max_length=255, description="Source page URL"
+    )
 
 
 class ContactResponse(CMSBaseSchema):

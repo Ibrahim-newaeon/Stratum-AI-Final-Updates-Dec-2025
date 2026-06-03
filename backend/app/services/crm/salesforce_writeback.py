@@ -268,7 +268,10 @@ class SalesforceWritebackService:
                     results["opportunity_fields"]["missing"].append(field["api_name"])
 
         # Provide instructions for missing fields
-        if results["contact_fields"]["missing"] or results["opportunity_fields"]["missing"]:
+        if (
+            results["contact_fields"]["missing"]
+            or results["opportunity_fields"]["missing"]
+        ):
             results["instructions"] = [
                 "Some custom fields need to be created in Salesforce Setup.",
                 "Go to Setup > Object Manager > [Contact/Opportunity] > Fields & Relationships > New",
@@ -362,11 +365,19 @@ class SalesforceWritebackService:
                         "Stratum_Ad_Platform__c": attribution.get("platform"),
                         "Stratum_Campaign_ID__c": attribution.get("campaign_id"),
                         "Stratum_Campaign_Name__c": attribution.get("campaign_name"),
-                        "Stratum_First_Touch_Source__c": attribution.get("first_touch_source"),
-                        "Stratum_Last_Touch_Source__c": attribution.get("last_touch_source"),
-                        "Stratum_Attribution_Confidence__c": attribution.get("confidence"),
+                        "Stratum_First_Touch_Source__c": attribution.get(
+                            "first_touch_source"
+                        ),
+                        "Stratum_Last_Touch_Source__c": attribution.get(
+                            "last_touch_source"
+                        ),
+                        "Stratum_Attribution_Confidence__c": attribution.get(
+                            "confidence"
+                        ),
                         "Stratum_Total_Ad_Spend__c": attribution.get("total_spend"),
-                        "Stratum_Touchpoints_Count__c": attribution.get("touchpoints_count"),
+                        "Stratum_Touchpoints_Count__c": attribution.get(
+                            "touchpoints_count"
+                        ),
                         "Stratum_Last_Sync__c": datetime.now(UTC).isoformat(),
                     }
 
@@ -394,7 +405,13 @@ class SalesforceWritebackService:
                             }
                         )
 
-                except (ConnectionError, TimeoutError, OSError, ValueError, TypeError) as e:
+                except (
+                    ConnectionError,
+                    TimeoutError,
+                    OSError,
+                    ValueError,
+                    TypeError,
+                ) as e:
                     failed += 1
                     errors.append(
                         {
@@ -479,15 +496,23 @@ class SalesforceWritebackService:
                     # Build properties dict
                     properties = {
                         "Stratum_Attributed_Platform__c": attribution.get("platform"),
-                        "Stratum_Attributed_Campaign__c": attribution.get("campaign_name"),
-                        "Stratum_Attribution_Model__c": attribution.get("attribution_model"),
-                        "Stratum_Attributed_Spend__c": attribution.get("attributed_spend"),
+                        "Stratum_Attributed_Campaign__c": attribution.get(
+                            "campaign_name"
+                        ),
+                        "Stratum_Attribution_Model__c": attribution.get(
+                            "attribution_model"
+                        ),
+                        "Stratum_Attributed_Spend__c": attribution.get(
+                            "attributed_spend"
+                        ),
                         "Stratum_Revenue_ROAS__c": attribution.get("revenue_roas"),
                         "Stratum_Profit_ROAS__c": attribution.get("profit_roas"),
                         "Stratum_Gross_Profit__c": attribution.get("gross_profit"),
                         "Stratum_Net_Profit__c": attribution.get("net_profit"),
                         "Stratum_Days_to_Close__c": attribution.get("days_to_close"),
-                        "Stratum_Touchpoints_Count__c": attribution.get("touchpoints_count"),
+                        "Stratum_Touchpoints_Count__c": attribution.get(
+                            "touchpoints_count"
+                        ),
                         "Stratum_Last_Sync__c": datetime.now(UTC).isoformat(),
                     }
 
@@ -515,7 +540,13 @@ class SalesforceWritebackService:
                             }
                         )
 
-                except (ConnectionError, TimeoutError, OSError, ValueError, TypeError) as e:
+                except (
+                    ConnectionError,
+                    TimeoutError,
+                    OSError,
+                    ValueError,
+                    TypeError,
+                ) as e:
                     failed += 1
                     errors.append(
                         {
@@ -570,7 +601,9 @@ class SalesforceWritebackService:
         }
 
         if sync_contacts:
-            results["contacts"] = await self.sync_contact_attribution(modified_since=modified_since)
+            results["contacts"] = await self.sync_contact_attribution(
+                modified_since=modified_since
+            )
             if results["contacts"]["status"] == "failed":
                 results["status"] = "partial"
 
@@ -622,12 +655,16 @@ class SalesforceWritebackService:
             "platform": last_touch.platform,
             "campaign_id": last_touch.campaign_id,
             "campaign_name": last_touch.campaign_name,
-            "first_touch_source": f"{first_touch.platform}:{first_touch.campaign_name}"
-            if first_touch.campaign_name
-            else first_touch.platform,
-            "last_touch_source": f"{last_touch.platform}:{last_touch.campaign_name}"
-            if last_touch.campaign_name
-            else last_touch.platform,
+            "first_touch_source": (
+                f"{first_touch.platform}:{first_touch.campaign_name}"
+                if first_touch.campaign_name
+                else first_touch.platform
+            ),
+            "last_touch_source": (
+                f"{last_touch.platform}:{last_touch.campaign_name}"
+                if last_touch.campaign_name
+                else last_touch.platform
+            ),
             "confidence": max((tp.match_confidence or 0) * 100 for tp in touchpoints),
             "total_spend": round(total_spend, 2) if total_spend > 0 else None,
             "touchpoints_count": len(touchpoints),
@@ -675,9 +712,9 @@ class SalesforceWritebackService:
         return {
             "platform": primary_tp.platform if primary_tp else None,
             "campaign_name": primary_tp.campaign_name if primary_tp else None,
-            "attribution_model": deal.attribution_model.value
-            if deal.attribution_model
-            else "last_touch",
+            "attribution_model": (
+                deal.attribution_model.value if deal.attribution_model else "last_touch"
+            ),
             "attributed_spend": round(total_spend, 2) if total_spend > 0 else None,
             "revenue_roas": round(revenue_roas, 2) if revenue_roas else None,
             "profit_roas": round(profit_roas, 2) if profit_roas else None,
@@ -710,7 +747,9 @@ class SalesforceWritebackService:
             .where(CRMContact.tenant_id == self.tenant_id)
         )
         deals_count = await self.db.execute(
-            select(func.count()).select_from(CRMDeal).where(CRMDeal.tenant_id == self.tenant_id)
+            select(func.count())
+            .select_from(CRMDeal)
+            .where(CRMDeal.tenant_id == self.tenant_id)
         )
 
         return {
@@ -720,9 +759,9 @@ class SalesforceWritebackService:
             "provider_account_id": connection.provider_account_id,
             "provider_account_name": connection.provider_account_name,
             "is_sandbox": (connection.raw_properties or {}).get("is_sandbox", False),
-            "last_sync_at": connection.last_sync_at.isoformat()
-            if connection.last_sync_at
-            else None,
+            "last_sync_at": (
+                connection.last_sync_at.isoformat() if connection.last_sync_at else None
+            ),
             "last_sync_status": connection.last_sync_status,
             "contacts_count": contacts_count.scalar(),
             "deals_count": deals_count.scalar(),

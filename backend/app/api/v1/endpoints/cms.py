@@ -123,6 +123,7 @@ async def check_cms_permission(request: Request, permission: str) -> bool:
         return False
     try:
         from app.models.cms import CMSRole, has_permission
+
         role = CMSRole(cms_role_str)
         return has_permission(role, permission)
     except (ValueError, KeyError):
@@ -200,7 +201,9 @@ async def list_published_posts(
     # Fetch with pagination
     query = (
         query.options(
-            selectinload(CMSPost.category), selectinload(CMSPost.author), selectinload(CMSPost.tags)
+            selectinload(CMSPost.category),
+            selectinload(CMSPost.author),
+            selectinload(CMSPost.tags),
         )
         .order_by(desc(CMSPost.published_at), desc(CMSPost.created_at))
         .offset((page - 1) * page_size)
@@ -230,40 +233,44 @@ async def list_published_posts(
                     view_count=p.view_count,
                     is_featured=p.is_featured,
                     content_type=p.content_type,
-                    category=CategoryResponse(
-                        id=p.category.id,
-                        name=p.category.name,
-                        slug=p.category.slug,
-                        description=p.category.description,
-                        color=p.category.color,
-                        icon=p.category.icon,
-                        display_order=p.category.display_order,
-                        is_active=p.category.is_active,
-                        created_at=p.category.created_at,
-                        updated_at=p.category.updated_at,
-                    )
-                    if p.category
-                    else None,
-                    author=AuthorResponse(
-                        id=p.author.id,
-                        user_id=p.author.user_id,
-                        name=p.author.name,
-                        slug=p.author.slug,
-                        email=p.author.email,
-                        bio=p.author.bio,
-                        avatar_url=p.author.avatar_url,
-                        job_title=p.author.job_title,
-                        company=p.author.company,
-                        twitter_handle=p.author.twitter_handle,
-                        linkedin_url=p.author.linkedin_url,
-                        github_handle=p.author.github_handle,
-                        website_url=p.author.website_url,
-                        is_active=p.author.is_active,
-                        created_at=p.author.created_at,
-                        updated_at=p.author.updated_at,
-                    )
-                    if p.author
-                    else None,
+                    category=(
+                        CategoryResponse(
+                            id=p.category.id,
+                            name=p.category.name,
+                            slug=p.category.slug,
+                            description=p.category.description,
+                            color=p.category.color,
+                            icon=p.category.icon,
+                            display_order=p.category.display_order,
+                            is_active=p.category.is_active,
+                            created_at=p.category.created_at,
+                            updated_at=p.category.updated_at,
+                        )
+                        if p.category
+                        else None
+                    ),
+                    author=(
+                        AuthorResponse(
+                            id=p.author.id,
+                            user_id=p.author.user_id,
+                            name=p.author.name,
+                            slug=p.author.slug,
+                            email=p.author.email,
+                            bio=p.author.bio,
+                            avatar_url=p.author.avatar_url,
+                            job_title=p.author.job_title,
+                            company=p.author.company,
+                            twitter_handle=p.author.twitter_handle,
+                            linkedin_url=p.author.linkedin_url,
+                            github_handle=p.author.github_handle,
+                            website_url=p.author.website_url,
+                            is_active=p.author.is_active,
+                            created_at=p.author.created_at,
+                            updated_at=p.author.updated_at,
+                        )
+                        if p.author
+                        else None
+                    ),
                     tags=[
                         TagResponse(
                             id=t.id,
@@ -299,7 +306,9 @@ async def get_post_by_slug(
     result = await db.execute(
         select(CMSPost)
         .options(
-            selectinload(CMSPost.category), selectinload(CMSPost.author), selectinload(CMSPost.tags)
+            selectinload(CMSPost.category),
+            selectinload(CMSPost.author),
+            selectinload(CMSPost.tags),
         )
         .where(
             and_(
@@ -339,40 +348,44 @@ async def get_post_by_slug(
             view_count=post.view_count,
             is_featured=post.is_featured,
             content_type=post.content_type,
-            category=CategoryResponse(
-                id=post.category.id,
-                name=post.category.name,
-                slug=post.category.slug,
-                description=post.category.description,
-                color=post.category.color,
-                icon=post.category.icon,
-                display_order=post.category.display_order,
-                is_active=post.category.is_active,
-                created_at=post.category.created_at,
-                updated_at=post.category.updated_at,
-            )
-            if post.category
-            else None,
-            author=AuthorResponse(
-                id=post.author.id,
-                user_id=post.author.user_id,
-                name=post.author.name,
-                slug=post.author.slug,
-                email=post.author.email,
-                bio=post.author.bio,
-                avatar_url=post.author.avatar_url,
-                job_title=post.author.job_title,
-                company=post.author.company,
-                twitter_handle=post.author.twitter_handle,
-                linkedin_url=post.author.linkedin_url,
-                github_handle=post.author.github_handle,
-                website_url=post.author.website_url,
-                is_active=post.author.is_active,
-                created_at=post.author.created_at,
-                updated_at=post.author.updated_at,
-            )
-            if post.author
-            else None,
+            category=(
+                CategoryResponse(
+                    id=post.category.id,
+                    name=post.category.name,
+                    slug=post.category.slug,
+                    description=post.category.description,
+                    color=post.category.color,
+                    icon=post.category.icon,
+                    display_order=post.category.display_order,
+                    is_active=post.category.is_active,
+                    created_at=post.category.created_at,
+                    updated_at=post.category.updated_at,
+                )
+                if post.category
+                else None
+            ),
+            author=(
+                AuthorResponse(
+                    id=post.author.id,
+                    user_id=post.author.user_id,
+                    name=post.author.name,
+                    slug=post.author.slug,
+                    email=post.author.email,
+                    bio=post.author.bio,
+                    avatar_url=post.author.avatar_url,
+                    job_title=post.author.job_title,
+                    company=post.author.company,
+                    twitter_handle=post.author.twitter_handle,
+                    linkedin_url=post.author.linkedin_url,
+                    github_handle=post.author.github_handle,
+                    website_url=post.author.website_url,
+                    is_active=post.author.is_active,
+                    created_at=post.author.created_at,
+                    updated_at=post.author.updated_at,
+                )
+                if post.author
+                else None
+            ),
             tags=[
                 TagResponse(
                     id=t.id,
@@ -436,7 +449,9 @@ async def list_tags(
     db: AsyncSession = Depends(get_async_session),
 ) -> APIResponse[TagListResponse]:
     """List all tags (public endpoint)."""
-    result = await db.execute(select(CMSTag).order_by(desc(CMSTag.usage_count), CMSTag.name).limit(1000))
+    result = await db.execute(
+        select(CMSTag).order_by(desc(CMSTag.usage_count), CMSTag.name).limit(1000)
+    )
     tags = result.scalars().all()
 
     return APIResponse(
@@ -460,7 +475,9 @@ async def list_tags(
     )
 
 
-@router.post("/contact", response_model=APIResponse[dict], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/contact", response_model=APIResponse[dict], status_code=status.HTTP_201_CREATED
+)
 async def submit_contact_form(
     request: Request,
     body: ContactSubmit,
@@ -585,7 +602,9 @@ async def admin_list_posts(
     query = (
         select(CMSPost)
         .options(
-            selectinload(CMSPost.category), selectinload(CMSPost.author), selectinload(CMSPost.tags)
+            selectinload(CMSPost.category),
+            selectinload(CMSPost.author),
+            selectinload(CMSPost.tags),
         )
         .where(and_(*conditions))
         .order_by(desc(CMSPost.created_at))
@@ -622,40 +641,44 @@ async def admin_list_posts(
                     view_count=p.view_count,
                     is_featured=p.is_featured,
                     allow_comments=p.allow_comments,
-                    category=CategoryResponse(
-                        id=p.category.id,
-                        name=p.category.name,
-                        slug=p.category.slug,
-                        description=p.category.description,
-                        color=p.category.color,
-                        icon=p.category.icon,
-                        display_order=p.category.display_order,
-                        is_active=p.category.is_active,
-                        created_at=p.category.created_at,
-                        updated_at=p.category.updated_at,
-                    )
-                    if p.category
-                    else None,
-                    author=AuthorResponse(
-                        id=p.author.id,
-                        user_id=p.author.user_id,
-                        name=p.author.name,
-                        slug=p.author.slug,
-                        email=p.author.email,
-                        bio=p.author.bio,
-                        avatar_url=p.author.avatar_url,
-                        job_title=p.author.job_title,
-                        company=p.author.company,
-                        twitter_handle=p.author.twitter_handle,
-                        linkedin_url=p.author.linkedin_url,
-                        github_handle=p.author.github_handle,
-                        website_url=p.author.website_url,
-                        is_active=p.author.is_active,
-                        created_at=p.author.created_at,
-                        updated_at=p.author.updated_at,
-                    )
-                    if p.author
-                    else None,
+                    category=(
+                        CategoryResponse(
+                            id=p.category.id,
+                            name=p.category.name,
+                            slug=p.category.slug,
+                            description=p.category.description,
+                            color=p.category.color,
+                            icon=p.category.icon,
+                            display_order=p.category.display_order,
+                            is_active=p.category.is_active,
+                            created_at=p.category.created_at,
+                            updated_at=p.category.updated_at,
+                        )
+                        if p.category
+                        else None
+                    ),
+                    author=(
+                        AuthorResponse(
+                            id=p.author.id,
+                            user_id=p.author.user_id,
+                            name=p.author.name,
+                            slug=p.author.slug,
+                            email=p.author.email,
+                            bio=p.author.bio,
+                            avatar_url=p.author.avatar_url,
+                            job_title=p.author.job_title,
+                            company=p.author.company,
+                            twitter_handle=p.author.twitter_handle,
+                            linkedin_url=p.author.linkedin_url,
+                            github_handle=p.author.github_handle,
+                            website_url=p.author.website_url,
+                            is_active=p.author.is_active,
+                            created_at=p.author.created_at,
+                            updated_at=p.author.updated_at,
+                        )
+                        if p.author
+                        else None
+                    ),
                     tags=[
                         TagResponse(
                             id=t.id,
@@ -696,14 +719,18 @@ async def admin_get_post(
     result = await db.execute(
         select(CMSPost)
         .options(
-            selectinload(CMSPost.category), selectinload(CMSPost.author), selectinload(CMSPost.tags)
+            selectinload(CMSPost.category),
+            selectinload(CMSPost.author),
+            selectinload(CMSPost.tags),
         )
         .where(and_(CMSPost.id == post_id, CMSPost.is_deleted == False))
     )
     post = result.scalar_one_or_none()
 
     if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Post not found"
+        )
 
     return APIResponse(
         success=True,
@@ -729,40 +756,44 @@ async def admin_get_post(
             view_count=post.view_count,
             is_featured=post.is_featured,
             allow_comments=post.allow_comments,
-            category=CategoryResponse(
-                id=post.category.id,
-                name=post.category.name,
-                slug=post.category.slug,
-                description=post.category.description,
-                color=post.category.color,
-                icon=post.category.icon,
-                display_order=post.category.display_order,
-                is_active=post.category.is_active,
-                created_at=post.category.created_at,
-                updated_at=post.category.updated_at,
-            )
-            if post.category
-            else None,
-            author=AuthorResponse(
-                id=post.author.id,
-                user_id=post.author.user_id,
-                name=post.author.name,
-                slug=post.author.slug,
-                email=post.author.email,
-                bio=post.author.bio,
-                avatar_url=post.author.avatar_url,
-                job_title=post.author.job_title,
-                company=post.author.company,
-                twitter_handle=post.author.twitter_handle,
-                linkedin_url=post.author.linkedin_url,
-                github_handle=post.author.github_handle,
-                website_url=post.author.website_url,
-                is_active=post.author.is_active,
-                created_at=post.author.created_at,
-                updated_at=post.author.updated_at,
-            )
-            if post.author
-            else None,
+            category=(
+                CategoryResponse(
+                    id=post.category.id,
+                    name=post.category.name,
+                    slug=post.category.slug,
+                    description=post.category.description,
+                    color=post.category.color,
+                    icon=post.category.icon,
+                    display_order=post.category.display_order,
+                    is_active=post.category.is_active,
+                    created_at=post.category.created_at,
+                    updated_at=post.category.updated_at,
+                )
+                if post.category
+                else None
+            ),
+            author=(
+                AuthorResponse(
+                    id=post.author.id,
+                    user_id=post.author.user_id,
+                    name=post.author.name,
+                    slug=post.author.slug,
+                    email=post.author.email,
+                    bio=post.author.bio,
+                    avatar_url=post.author.avatar_url,
+                    job_title=post.author.job_title,
+                    company=post.author.company,
+                    twitter_handle=post.author.twitter_handle,
+                    linkedin_url=post.author.linkedin_url,
+                    github_handle=post.author.github_handle,
+                    website_url=post.author.website_url,
+                    is_active=post.author.is_active,
+                    created_at=post.author.created_at,
+                    updated_at=post.author.updated_at,
+                )
+                if post.author
+                else None
+            ),
             tags=[
                 TagResponse(
                     id=t.id,
@@ -783,7 +814,9 @@ async def admin_get_post(
 
 
 @router.post(
-    "/admin/posts", response_model=APIResponse[PostResponse], status_code=status.HTTP_201_CREATED
+    "/admin/posts",
+    response_model=APIResponse[PostResponse],
+    status_code=status.HTTP_201_CREATED,
 )
 async def admin_create_post(
     request: Request,
@@ -851,7 +884,9 @@ async def admin_create_post(
     result = await db.execute(
         select(CMSPost)
         .options(
-            selectinload(CMSPost.category), selectinload(CMSPost.author), selectinload(CMSPost.tags)
+            selectinload(CMSPost.category),
+            selectinload(CMSPost.author),
+            selectinload(CMSPost.tags),
         )
         .where(CMSPost.id == post.id)
     )
@@ -883,40 +918,44 @@ async def admin_create_post(
             view_count=post.view_count,
             is_featured=post.is_featured,
             allow_comments=post.allow_comments,
-            category=CategoryResponse(
-                id=post.category.id,
-                name=post.category.name,
-                slug=post.category.slug,
-                description=post.category.description,
-                color=post.category.color,
-                icon=post.category.icon,
-                display_order=post.category.display_order,
-                is_active=post.category.is_active,
-                created_at=post.category.created_at,
-                updated_at=post.category.updated_at,
-            )
-            if post.category
-            else None,
-            author=AuthorResponse(
-                id=post.author.id,
-                user_id=post.author.user_id,
-                name=post.author.name,
-                slug=post.author.slug,
-                email=post.author.email,
-                bio=post.author.bio,
-                avatar_url=post.author.avatar_url,
-                job_title=post.author.job_title,
-                company=post.author.company,
-                twitter_handle=post.author.twitter_handle,
-                linkedin_url=post.author.linkedin_url,
-                github_handle=post.author.github_handle,
-                website_url=post.author.website_url,
-                is_active=post.author.is_active,
-                created_at=post.author.created_at,
-                updated_at=post.author.updated_at,
-            )
-            if post.author
-            else None,
+            category=(
+                CategoryResponse(
+                    id=post.category.id,
+                    name=post.category.name,
+                    slug=post.category.slug,
+                    description=post.category.description,
+                    color=post.category.color,
+                    icon=post.category.icon,
+                    display_order=post.category.display_order,
+                    is_active=post.category.is_active,
+                    created_at=post.category.created_at,
+                    updated_at=post.category.updated_at,
+                )
+                if post.category
+                else None
+            ),
+            author=(
+                AuthorResponse(
+                    id=post.author.id,
+                    user_id=post.author.user_id,
+                    name=post.author.name,
+                    slug=post.author.slug,
+                    email=post.author.email,
+                    bio=post.author.bio,
+                    avatar_url=post.author.avatar_url,
+                    job_title=post.author.job_title,
+                    company=post.author.company,
+                    twitter_handle=post.author.twitter_handle,
+                    linkedin_url=post.author.linkedin_url,
+                    github_handle=post.author.github_handle,
+                    website_url=post.author.website_url,
+                    is_active=post.author.is_active,
+                    created_at=post.author.created_at,
+                    updated_at=post.author.updated_at,
+                )
+                if post.author
+                else None
+            ),
             tags=[
                 TagResponse(
                     id=t.id,
@@ -957,7 +996,9 @@ async def admin_update_post(
     post = result.scalar_one_or_none()
 
     if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Post not found"
+        )
 
     # Update fields
     if body.title is not None:
@@ -1027,7 +1068,9 @@ async def admin_update_post(
     result = await db.execute(
         select(CMSPost)
         .options(
-            selectinload(CMSPost.category), selectinload(CMSPost.author), selectinload(CMSPost.tags)
+            selectinload(CMSPost.category),
+            selectinload(CMSPost.author),
+            selectinload(CMSPost.tags),
         )
         .where(CMSPost.id == post.id)
     )
@@ -1057,40 +1100,44 @@ async def admin_update_post(
             view_count=post.view_count,
             is_featured=post.is_featured,
             allow_comments=post.allow_comments,
-            category=CategoryResponse(
-                id=post.category.id,
-                name=post.category.name,
-                slug=post.category.slug,
-                description=post.category.description,
-                color=post.category.color,
-                icon=post.category.icon,
-                display_order=post.category.display_order,
-                is_active=post.category.is_active,
-                created_at=post.category.created_at,
-                updated_at=post.category.updated_at,
-            )
-            if post.category
-            else None,
-            author=AuthorResponse(
-                id=post.author.id,
-                user_id=post.author.user_id,
-                name=post.author.name,
-                slug=post.author.slug,
-                email=post.author.email,
-                bio=post.author.bio,
-                avatar_url=post.author.avatar_url,
-                job_title=post.author.job_title,
-                company=post.author.company,
-                twitter_handle=post.author.twitter_handle,
-                linkedin_url=post.author.linkedin_url,
-                github_handle=post.author.github_handle,
-                website_url=post.author.website_url,
-                is_active=post.author.is_active,
-                created_at=post.author.created_at,
-                updated_at=post.author.updated_at,
-            )
-            if post.author
-            else None,
+            category=(
+                CategoryResponse(
+                    id=post.category.id,
+                    name=post.category.name,
+                    slug=post.category.slug,
+                    description=post.category.description,
+                    color=post.category.color,
+                    icon=post.category.icon,
+                    display_order=post.category.display_order,
+                    is_active=post.category.is_active,
+                    created_at=post.category.created_at,
+                    updated_at=post.category.updated_at,
+                )
+                if post.category
+                else None
+            ),
+            author=(
+                AuthorResponse(
+                    id=post.author.id,
+                    user_id=post.author.user_id,
+                    name=post.author.name,
+                    slug=post.author.slug,
+                    email=post.author.email,
+                    bio=post.author.bio,
+                    avatar_url=post.author.avatar_url,
+                    job_title=post.author.job_title,
+                    company=post.author.company,
+                    twitter_handle=post.author.twitter_handle,
+                    linkedin_url=post.author.linkedin_url,
+                    github_handle=post.author.github_handle,
+                    website_url=post.author.website_url,
+                    is_active=post.author.is_active,
+                    created_at=post.author.created_at,
+                    updated_at=post.author.updated_at,
+                )
+                if post.author
+                else None
+            ),
             tags=[
                 TagResponse(
                     id=t.id,
@@ -1128,7 +1175,9 @@ async def admin_delete_post(
     post = result.scalar_one_or_none()
 
     if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Post not found"
+        )
 
     post.soft_delete()
     await db.commit()
@@ -1153,7 +1202,9 @@ async def admin_list_categories(
         )
 
     result = await db.execute(
-        select(CMSCategory).order_by(CMSCategory.display_order, CMSCategory.name).limit(1000)
+        select(CMSCategory)
+        .order_by(CMSCategory.display_order, CMSCategory.name)
+        .limit(1000)
     )
     categories = result.scalars().all()
 
@@ -1228,7 +1279,9 @@ async def admin_create_category(
     )
 
 
-@router.patch("/admin/categories/{category_id}", response_model=APIResponse[CategoryResponse])
+@router.patch(
+    "/admin/categories/{category_id}", response_model=APIResponse[CategoryResponse]
+)
 async def admin_update_category(
     request: Request,
     category_id: UUID,
@@ -1245,7 +1298,9 @@ async def admin_update_category(
     category = result.scalar_one_or_none()
 
     if not category:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Category not found"
+        )
 
     if body.name is not None:
         category.name = body.name
@@ -1281,7 +1336,9 @@ async def admin_update_category(
     )
 
 
-@router.delete("/admin/categories/{category_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/admin/categories/{category_id}", status_code=status.HTTP_204_NO_CONTENT
+)
 async def admin_delete_category(
     request: Request,
     category_id: UUID,
@@ -1297,7 +1354,9 @@ async def admin_delete_category(
     category = result.scalar_one_or_none()
 
     if not category:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Category not found"
+        )
 
     await db.delete(category)
     await db.commit()
@@ -1319,7 +1378,9 @@ async def admin_list_tags(
             status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
         )
 
-    result = await db.execute(select(CMSTag).order_by(desc(CMSTag.usage_count), CMSTag.name).limit(1000))
+    result = await db.execute(
+        select(CMSTag).order_by(desc(CMSTag.usage_count), CMSTag.name).limit(1000)
+    )
     tags = result.scalars().all()
 
     return APIResponse(
@@ -1344,7 +1405,9 @@ async def admin_list_tags(
 
 
 @router.post(
-    "/admin/tags", response_model=APIResponse[TagResponse], status_code=status.HTTP_201_CREATED
+    "/admin/tags",
+    response_model=APIResponse[TagResponse],
+    status_code=status.HTTP_201_CREATED,
 )
 async def admin_create_tag(
     request: Request,
@@ -1401,7 +1464,9 @@ async def admin_update_tag(
     tag = result.scalar_one_or_none()
 
     if not tag:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tag not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Tag not found"
+        )
 
     if body.name is not None:
         tag.name = body.name
@@ -1445,7 +1510,9 @@ async def admin_delete_tag(
     tag = result.scalar_one_or_none()
 
     if not tag:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tag not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Tag not found"
+        )
 
     await db.delete(tag)
     await db.commit()
@@ -1589,7 +1656,9 @@ async def admin_update_author(
     author = result.scalar_one_or_none()
 
     if not author:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Author not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Author not found"
+        )
 
     if body.name is not None:
         author.name = body.name
@@ -1659,7 +1728,9 @@ async def admin_delete_author(
     author = result.scalar_one_or_none()
 
     if not author:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Author not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Author not found"
+        )
 
     await db.delete(author)
     await db.commit()
@@ -1684,7 +1755,8 @@ async def admin_list_pages(
     result = await db.execute(
         select(CMSPage)
         .where(CMSPage.is_deleted == False)
-        .order_by(CMSPage.navigation_order, CMSPage.title).limit(1000)
+        .order_by(CMSPage.navigation_order, CMSPage.title)
+        .limit(1000)
     )
     pages = result.scalars().all()
 
@@ -1717,7 +1789,9 @@ async def admin_list_pages(
 
 
 @router.post(
-    "/admin/pages", response_model=APIResponse[PageResponse], status_code=status.HTTP_201_CREATED
+    "/admin/pages",
+    response_model=APIResponse[PageResponse],
+    status_code=status.HTTP_201_CREATED,
 )
 async def admin_create_page(
     request: Request,
@@ -1791,7 +1865,9 @@ async def admin_update_page(
     page = result.scalar_one_or_none()
 
     if not page:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Page not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Page not found"
+        )
 
     if body.title is not None:
         page.title = body.title
@@ -1861,7 +1937,9 @@ async def admin_delete_page(
     page = result.scalar_one_or_none()
 
     if not page:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Page not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Page not found"
+        )
 
     page.soft_delete()
     await db.commit()
@@ -1945,7 +2023,9 @@ async def admin_list_contacts(
     )
 
 
-@router.patch("/admin/contacts/{contact_id}/read", response_model=APIResponse[ContactResponse])
+@router.patch(
+    "/admin/contacts/{contact_id}/read", response_model=APIResponse[ContactResponse]
+)
 async def admin_mark_contact_read(
     request: Request,
     contact_id: UUID,
@@ -1966,7 +2046,9 @@ async def admin_mark_contact_read(
     contact = result.scalar_one_or_none()
 
     if not contact:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Contact not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Contact not found"
+        )
 
     contact.is_read = body.is_read
     if body.is_read:
@@ -2000,7 +2082,10 @@ async def admin_mark_contact_read(
     )
 
 
-@router.patch("/admin/contacts/{contact_id}/responded", response_model=APIResponse[ContactResponse])
+@router.patch(
+    "/admin/contacts/{contact_id}/responded",
+    response_model=APIResponse[ContactResponse],
+)
 async def admin_mark_contact_responded(
     request: Request,
     contact_id: UUID,
@@ -2019,7 +2104,9 @@ async def admin_mark_contact_responded(
     contact = result.scalar_one_or_none()
 
     if not contact:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Contact not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Contact not found"
+        )
 
     contact.is_responded = body.is_responded
     if body.is_responded:
@@ -2054,7 +2141,9 @@ async def admin_mark_contact_responded(
     )
 
 
-@router.patch("/admin/contacts/{contact_id}/spam", response_model=APIResponse[ContactResponse])
+@router.patch(
+    "/admin/contacts/{contact_id}/spam", response_model=APIResponse[ContactResponse]
+)
 async def admin_mark_contact_spam(
     request: Request,
     contact_id: UUID,
@@ -2073,7 +2162,9 @@ async def admin_mark_contact_spam(
     contact = result.scalar_one_or_none()
 
     if not contact:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Contact not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Contact not found"
+        )
 
     contact.is_spam = body.is_spam
 
@@ -2106,7 +2197,9 @@ async def admin_mark_contact_spam(
 # =============================================================================
 
 
-@router.post("/admin/posts/{post_id}/submit-for-review", response_model=APIResponse[dict])
+@router.post(
+    "/admin/posts/{post_id}/submit-for-review", response_model=APIResponse[dict]
+)
 async def submit_post_for_review(
     request: Request,
     post_id: UUID,
@@ -2120,7 +2213,9 @@ async def submit_post_for_review(
     Allowed roles: Author, Contributor (with Author+ upgrade), Editor, Editor-in-Chief, Admin, Super Admin
     """
     if not await check_cms_permission(request, "submit_for_review"):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
+        )
 
     user_id = getattr(request.state, "user_id", None)
 
@@ -2130,7 +2225,9 @@ async def submit_post_for_review(
     post = result.scalar_one_or_none()
 
     if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Post not found"
+        )
 
     # Check if post can be submitted (must be DRAFT or CHANGES_REQUESTED)
     allowed_states = [CMSPostStatus.DRAFT.value, CMSPostStatus.CHANGES_REQUESTED.value]
@@ -2193,7 +2290,9 @@ async def approve_post(
     Allowed roles: Reviewer, Editor-in-Chief, Admin, Super Admin
     """
     if not await check_cms_permission(request, "approve_post"):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
+        )
 
     user_id = getattr(request.state, "user_id", None)
 
@@ -2203,7 +2302,9 @@ async def approve_post(
     post = result.scalar_one_or_none()
 
     if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Post not found"
+        )
 
     # Check if post can be approved
     if post.status != CMSPostStatus.IN_REVIEW.value:
@@ -2265,7 +2366,9 @@ async def reject_post(
     Allowed roles: Reviewer, Editor-in-Chief, Admin, Super Admin
     """
     if not await check_cms_permission(request, "reject_post"):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
+        )
 
     user_id = getattr(request.state, "user_id", None)
 
@@ -2275,7 +2378,9 @@ async def reject_post(
     post = result.scalar_one_or_none()
 
     if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Post not found"
+        )
 
     if post.status != CMSPostStatus.IN_REVIEW.value:
         raise HTTPException(
@@ -2325,7 +2430,9 @@ async def reject_post(
 async def request_post_changes(
     request: Request,
     post_id: UUID,
-    notes: str = Query(..., min_length=10, description="Change request notes (required)"),
+    notes: str = Query(
+        ..., min_length=10, description="Change request notes (required)"
+    ),
     db: AsyncSession = Depends(get_async_session),
 ) -> APIResponse[dict]:
     """
@@ -2335,7 +2442,9 @@ async def request_post_changes(
     Allowed roles: Reviewer, Editor, Editor-in-Chief, Admin, Super Admin
     """
     if not await check_cms_permission(request, "request_changes"):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
+        )
 
     user_id = getattr(request.state, "user_id", None)
 
@@ -2345,7 +2454,9 @@ async def request_post_changes(
     post = result.scalar_one_or_none()
 
     if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Post not found"
+        )
 
     if post.status != CMSPostStatus.IN_REVIEW.value:
         raise HTTPException(
@@ -2402,7 +2513,9 @@ async def schedule_post(
     Allowed roles: Editor, Editor-in-Chief, Admin, Super Admin
     """
     if not await check_cms_permission(request, "schedule_post"):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
+        )
 
     user_id = getattr(request.state, "user_id", None)
 
@@ -2412,7 +2525,8 @@ async def schedule_post(
         scheduled_at = scheduled_at.replace(tzinfo=UTC)
     if scheduled_at <= now:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Scheduled time must be in the future"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Scheduled time must be in the future",
         )
 
     result = await db.execute(
@@ -2421,7 +2535,9 @@ async def schedule_post(
     post = result.scalar_one_or_none()
 
     if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Post not found"
+        )
 
     # Can schedule from APPROVED or DRAFT (for quick workflow)
     allowed_states = [CMSPostStatus.APPROVED.value, CMSPostStatus.DRAFT.value]
@@ -2478,7 +2594,9 @@ async def publish_post_immediately(
     Allowed roles: Editor-in-Chief, Admin, Super Admin
     """
     if not await check_cms_permission(request, "publish_post"):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
+        )
 
     user_id = getattr(request.state, "user_id", None)
 
@@ -2488,7 +2606,9 @@ async def publish_post_immediately(
     post = result.scalar_one_or_none()
 
     if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Post not found"
+        )
 
     # Can publish from APPROVED, SCHEDULED, or DRAFT (for quick workflow)
     allowed_states = [
@@ -2549,7 +2669,9 @@ async def unpublish_post(
     Allowed roles: Editor-in-Chief, Admin, Super Admin
     """
     if not await check_cms_permission(request, "publish_post"):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
+        )
 
     user_id = getattr(request.state, "user_id", None)
 
@@ -2559,7 +2681,9 @@ async def unpublish_post(
     post = result.scalar_one_or_none()
 
     if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Post not found"
+        )
 
     if post.status != CMSPostStatus.PUBLISHED.value:
         raise HTTPException(
@@ -2611,7 +2735,9 @@ async def archive_post(
     Allowed roles: Editor-in-Chief, Admin, Super Admin
     """
     if not await check_cms_permission(request, "publish_post"):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
+        )
 
     user_id = getattr(request.state, "user_id", None)
 
@@ -2621,7 +2747,9 @@ async def archive_post(
     post = result.scalar_one_or_none()
 
     if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Post not found"
+        )
 
     previous_status = post.status
 
@@ -2667,14 +2795,18 @@ async def get_post_workflow_history(
     Returns audit trail of all status changes and actions.
     """
     if not await check_cms_permission(request, "view_all_posts"):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
+        )
 
     # Verify post exists
     result = await db.execute(select(CMSPost).where(CMSPost.id == post_id))
     post = result.scalar_one_or_none()
 
     if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Post not found"
+        )
 
     # Count total
     count_result = await db.execute(
@@ -2706,7 +2838,9 @@ async def get_post_workflow_history(
                     "comment": log.comment,
                     "version_number": log.version_number,
                     "extra_data": log.extra_data,
-                    "created_at": log.created_at.isoformat() if log.created_at else None,
+                    "created_at": (
+                        log.created_at.isoformat() if log.created_at else None
+                    ),
                 }
                 for log in logs
             ],
@@ -2730,14 +2864,18 @@ async def get_post_versions(
     Returns all content snapshots for rollback and audit.
     """
     if not await check_cms_permission(request, "view_all_posts"):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
+        )
 
     # Verify post exists
     result = await db.execute(select(CMSPost).where(CMSPost.id == post_id))
     post = result.scalar_one_or_none()
 
     if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Post not found"
+        )
 
     # Count total
     count_result = await db.execute(
@@ -2783,7 +2921,9 @@ async def get_post_versions(
     )
 
 
-@router.post("/admin/posts/{post_id}/restore-version/{version}", response_model=APIResponse[dict])
+@router.post(
+    "/admin/posts/{post_id}/restore-version/{version}", response_model=APIResponse[dict]
+)
 async def restore_post_version(
     request: Request,
     post_id: UUID,
@@ -2795,7 +2935,9 @@ async def restore_post_version(
     Creates a new version with the restored content.
     """
     if not await check_cms_permission(request, "edit_any_post"):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="CMS permission denied"
+        )
 
     user_id = getattr(request.state, "user_id", None)
 
@@ -2806,7 +2948,9 @@ async def restore_post_version(
     post = result.scalar_one_or_none()
 
     if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Post not found"
+        )
 
     # Get the version to restore
     result = await db.execute(
@@ -2907,7 +3051,8 @@ async def list_cms_users(
             User.cms_role.isnot(None),
             User.is_deleted == False,
         )
-        .order_by(User.cms_role, User.full_name).limit(1000)
+        .order_by(User.cms_role, User.full_name)
+        .limit(1000)
     )
 
     result = await db.execute(query)
@@ -2922,7 +3067,9 @@ async def list_cms_users(
                 "full_name": u.full_name or "",
                 "cms_role": u.cms_role,
                 "is_active": u.is_active,
-                "last_login_at": u.last_login_at.isoformat() if u.last_login_at else None,
+                "last_login_at": (
+                    u.last_login_at.isoformat() if u.last_login_at else None
+                ),
                 "avatar_url": u.avatar_url if hasattr(u, "avatar_url") else None,
             }
         )
@@ -2946,7 +3093,7 @@ async def get_my_cms_permissions(
         )
 
     try:
-        from app.models.cms import CMSRole, CMS_PERMISSIONS
+        from app.models.cms import CMS_PERMISSIONS, CMSRole
 
         role = CMSRole(cms_role_str)
         permissions = CMS_PERMISSIONS.get(role, {})
@@ -2980,7 +3127,9 @@ async def assign_cms_role(
     result = await db.execute(query)
     user = result.scalar_one_or_none()
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
 
     user.cms_role = body.cms_role
     await db.commit()
@@ -3018,7 +3167,9 @@ async def update_cms_role(
     result = await db.execute(query)
     user = result.scalar_one_or_none()
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
     if not user.cms_role:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -3059,7 +3210,9 @@ async def revoke_cms_role(
     result = await db.execute(query)
     user = result.scalar_one_or_none()
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
 
     user.cms_role = None
     await db.commit()

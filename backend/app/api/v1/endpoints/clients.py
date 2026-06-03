@@ -17,14 +17,22 @@ from app.auth.deps import VerifiedUserDep
 from app.auth.permissions import (
     PermLevel,
     enforce_client_access,
-    get_accessible_client_ids as perm_get_accessible,
+)
+from app.auth.permissions import get_accessible_client_ids as perm_get_accessible
+from app.auth.permissions import (
     require_permission,
 )
 from app.base_schemas import APIResponse, PaginatedResponse
 from app.core.logging import get_logger
 from app.db.session import get_async_session
 from app.models import Campaign, CampaignStatus, User, UserRole
-from app.models.client import Client, ClientAssignment, ClientRequest, ClientRequestStatus, ClientRequestType
+from app.models.client import (
+    Client,
+    ClientAssignment,
+    ClientRequest,
+    ClientRequestStatus,
+    ClientRequestType,
+)
 from app.schemas.client import (
     ClientAssignmentCreate,
     ClientAssignmentResponse,
@@ -249,10 +257,12 @@ async def get_client(
 
         camp_count = await db.execute(
             select(func.count()).select_from(
-                select(Campaign.id).where(
+                select(Campaign.id)
+                .where(
                     Campaign.client_id == client_id,
                     Campaign.is_deleted == False,
-                ).subquery()
+                )
+                .subquery()
             )
         )
         response.total_campaigns = camp_count.scalar() or 0
@@ -461,9 +471,9 @@ async def get_client_summary(
         )
         active_count = await db.execute(
             select(func.count()).select_from(
-                select(Campaign.id).where(
-                    *base_filter, Campaign.status == CampaignStatus.ACTIVE
-                ).subquery()
+                select(Campaign.id)
+                .where(*base_filter, Campaign.status == CampaignStatus.ACTIVE)
+                .subquery()
             )
         )
 
@@ -485,8 +495,12 @@ async def get_client_summary(
         total_conversions = agg[4]
 
         avg_roas = (total_revenue / total_spend) if total_spend > 0 else None
-        avg_ctr = (total_clicks / total_impressions * 100) if total_impressions > 0 else None
-        avg_cpa = int(total_spend / total_conversions) if total_conversions > 0 else None
+        avg_ctr = (
+            (total_clicks / total_impressions * 100) if total_impressions > 0 else None
+        )
+        avg_cpa = (
+            int(total_spend / total_conversions) if total_conversions > 0 else None
+        )
 
         budget_util = None
         if client.monthly_budget_cents and client.monthly_budget_cents > 0:
@@ -595,7 +609,11 @@ async def list_assignments(
             assigned_user = user_map.get(a.user_id)
             if assigned_user:
                 item.user_email = decrypt_pii(assigned_user.email)
-                item.user_name = decrypt_pii(assigned_user.full_name) if assigned_user.full_name else None
+                item.user_name = (
+                    decrypt_pii(assigned_user.full_name)
+                    if assigned_user.full_name
+                    else None
+                )
                 item.user_role = assigned_user.role.value
             items.append(item)
 
@@ -875,14 +893,19 @@ async def invite_portal_user(
 # Portal Requests (Client Request Workflow)
 # =============================================================================
 
-from datetime import datetime, timezone as tz
+from datetime import datetime
+from datetime import timezone as tz
+
 from pydantic import BaseModel, Field
 
 
 class PortalRequestCreate(BaseModel):
     """Create a portal request."""
+
     type: str = Field(..., description="Request type")
-    campaign_name: Optional[str] = Field(None, description="Campaign name if applicable")
+    campaign_name: Optional[str] = Field(
+        None, description="Campaign name if applicable"
+    )
     description: str = Field("", description="Request description")
     target_entity_type: Optional[str] = None
     target_entity_id: Optional[int] = None
@@ -891,6 +914,7 @@ class PortalRequestCreate(BaseModel):
 
 class PortalRequestReview(BaseModel):
     """Review a portal request."""
+
     action: str = Field(..., description="approve or reject")
     notes: Optional[str] = None
 

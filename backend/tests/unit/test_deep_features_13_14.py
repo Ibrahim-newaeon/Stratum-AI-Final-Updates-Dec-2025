@@ -44,7 +44,10 @@ _UUID3 = uuid.uuid4()
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _fake_user(*, user_id: int = 1, tenant_id: int = 1, role: str = "admin") -> MagicMock:
+
+def _fake_user(
+    *, user_id: int = 1, tenant_id: int = 1, role: str = "admin"
+) -> MagicMock:
     u = MagicMock()
     u.id = user_id
     u.tenant_id = tenant_id
@@ -75,14 +78,22 @@ def _fake_template(
     tpl.is_system = is_system
     tpl.created_at = _NOW
     tpl.updated_at = _NOW
-    tpl.__dict__.update({
-        "id": tpl.id, "tenant_id": tpl.tenant_id, "name": tpl.name,
-        "description": tpl.description, "report_type": tpl.report_type,
-        "config": tpl.config, "default_format": tpl.default_format,
-        "available_formats": tpl.available_formats, "is_active": tpl.is_active,
-        "is_system": tpl.is_system, "created_at": tpl.created_at,
-        "updated_at": tpl.updated_at,
-    })
+    tpl.__dict__.update(
+        {
+            "id": tpl.id,
+            "tenant_id": tpl.tenant_id,
+            "name": tpl.name,
+            "description": tpl.description,
+            "report_type": tpl.report_type,
+            "config": tpl.config,
+            "default_format": tpl.default_format,
+            "available_formats": tpl.available_formats,
+            "is_active": tpl.is_active,
+            "is_system": tpl.is_system,
+            "created_at": tpl.created_at,
+            "updated_at": tpl.updated_at,
+        }
+    )
     return tpl
 
 
@@ -116,18 +127,32 @@ def _fake_schedule(
     s.run_count = 0
     s.failure_count = 0
     s.created_at = _NOW
-    s.__dict__.update({
-        "id": s.id, "template_id": s.template_id, "name": s.name,
-        "description": s.description, "frequency": s.frequency,
-        "timezone": s.timezone, "day_of_week": s.day_of_week,
-        "day_of_month": s.day_of_month, "hour": s.hour, "minute": s.minute,
-        "cron_expression": s.cron_expression, "format_override": s.format_override,
-        "date_range_type": s.date_range_type, "delivery_channels": s.delivery_channels,
-        "is_active": s.is_active, "is_paused": s.is_paused,
-        "last_run_at": s.last_run_at, "last_run_status": s.last_run_status,
-        "next_run_at": s.next_run_at, "run_count": s.run_count,
-        "failure_count": s.failure_count, "created_at": s.created_at,
-    })
+    s.__dict__.update(
+        {
+            "id": s.id,
+            "template_id": s.template_id,
+            "name": s.name,
+            "description": s.description,
+            "frequency": s.frequency,
+            "timezone": s.timezone,
+            "day_of_week": s.day_of_week,
+            "day_of_month": s.day_of_month,
+            "hour": s.hour,
+            "minute": s.minute,
+            "cron_expression": s.cron_expression,
+            "format_override": s.format_override,
+            "date_range_type": s.date_range_type,
+            "delivery_channels": s.delivery_channels,
+            "is_active": s.is_active,
+            "is_paused": s.is_paused,
+            "last_run_at": s.last_run_at,
+            "last_run_status": s.last_run_status,
+            "next_run_at": s.next_run_at,
+            "run_count": s.run_count,
+            "failure_count": s.failure_count,
+            "created_at": s.created_at,
+        }
+    )
     return s
 
 
@@ -156,17 +181,28 @@ def _fake_execution(
     e.row_count = 50
     e.metrics_summary = {"total_spend": 5000}
     e.error_message = None
-    e.__dict__.update({
-        "id": e.id, "tenant_id": e.tenant_id, "template_id": e.template_id,
-        "schedule_id": e.schedule_id, "execution_type": e.execution_type,
-        "status": e.status, "started_at": e.started_at,
-        "completed_at": e.completed_at, "duration_seconds": e.duration_seconds,
-        "report_type": e.report_type, "format": e.format,
-        "date_range_start": e.date_range_start, "date_range_end": e.date_range_end,
-        "file_url": e.file_url, "file_size_bytes": e.file_size_bytes,
-        "row_count": e.row_count, "metrics_summary": e.metrics_summary,
-        "error_message": e.error_message,
-    })
+    e.__dict__.update(
+        {
+            "id": e.id,
+            "tenant_id": e.tenant_id,
+            "template_id": e.template_id,
+            "schedule_id": e.schedule_id,
+            "execution_type": e.execution_type,
+            "status": e.status,
+            "started_at": e.started_at,
+            "completed_at": e.completed_at,
+            "duration_seconds": e.duration_seconds,
+            "report_type": e.report_type,
+            "format": e.format,
+            "date_range_start": e.date_range_start,
+            "date_range_end": e.date_range_end,
+            "file_url": e.file_url,
+            "file_size_bytes": e.file_size_bytes,
+            "row_count": e.row_count,
+            "metrics_summary": e.metrics_summary,
+            "error_message": e.error_message,
+        }
+    )
     return e
 
 
@@ -199,14 +235,17 @@ def _fake_tenant(
 # Fixtures: reporting endpoints need overrides for tenancy.deps functions
 # ---------------------------------------------------------------------------
 
+
 @pytest_asyncio.fixture
 async def reporting_client(test_app, mock_db):
     """
     httpx.AsyncClient with overrides for BOTH app.db.session AND
     app.tenancy.deps dependency functions used by reporting endpoints.
     """
-    from app.db.session import get_async_session, get_db as db_session_get_db
-    from app.tenancy.deps import get_db as tenancy_get_db, get_current_user
+    from app.db.session import get_async_session
+    from app.db.session import get_db as db_session_get_db
+    from app.tenancy.deps import get_current_user
+    from app.tenancy.deps import get_db as tenancy_get_db
 
     fake_user = _fake_user()
 
@@ -236,8 +275,10 @@ async def reporting_client_factory(test_app, mock_db):
     Factory that lets each test supply its own fake_user to the
     get_current_user override.
     """
-    from app.db.session import get_async_session, get_db as db_session_get_db
-    from app.tenancy.deps import get_db as tenancy_get_db, get_current_user
+    from app.db.session import get_async_session
+    from app.db.session import get_db as db_session_get_db
+    from app.tenancy.deps import get_current_user
+    from app.tenancy.deps import get_db as tenancy_get_db
 
     class _Factory:
         def __init__(self):
@@ -275,6 +316,7 @@ async def reporting_client_factory(test_app, mock_db):
 # FEATURE 13 -- REPORTING
 # ============================================================================
 
+
 class TestReportingTemplatesNoAuth:
     """Reporting endpoints must reject unauthenticated requests."""
 
@@ -283,9 +325,13 @@ class TestReportingTemplatesNoAuth:
         assert r.status_code == 401
 
     async def test_create_template_no_auth(self, api_client):
-        r = await api_client.post("/api/v1/reporting/templates", json={
-            "name": "X", "report_type": "campaign_performance",
-        })
+        r = await api_client.post(
+            "/api/v1/reporting/templates",
+            json={
+                "name": "X",
+                "report_type": "campaign_performance",
+            },
+        )
         assert r.status_code == 401
 
     async def test_get_template_no_auth(self, api_client):
@@ -294,7 +340,8 @@ class TestReportingTemplatesNoAuth:
 
     async def test_patch_template_no_auth(self, api_client):
         r = await api_client.patch(
-            f"/api/v1/reporting/templates/{_UUID1}", json={"name": "X"},
+            f"/api/v1/reporting/templates/{_UUID1}",
+            json={"name": "X"},
         )
         assert r.status_code == 401
 
@@ -307,7 +354,10 @@ class TestReportingTemplatesCRUD:
     """CRUD operations on report templates (authenticated)."""
 
     async def test_create_template_happy(
-        self, reporting_client, mock_db, admin_headers,
+        self,
+        reporting_client,
+        mock_db,
+        admin_headers,
     ):
         tpl = _fake_template()
 
@@ -334,13 +384,17 @@ class TestReportingTemplatesCRUD:
         assert body["is_active"] is True
 
     async def test_list_templates_happy(
-        self, reporting_client, mock_db, admin_headers,
+        self,
+        reporting_client,
+        mock_db,
+        admin_headers,
     ):
         tpl = _fake_template()
         mock_db.execute = AsyncMock(return_value=make_scalars_result([tpl]))
 
         r = await reporting_client.get(
-            "/api/v1/reporting/templates", headers=admin_headers,
+            "/api/v1/reporting/templates",
+            headers=admin_headers,
         )
         assert r.status_code == 200
         body = r.json()
@@ -349,17 +403,24 @@ class TestReportingTemplatesCRUD:
         assert body[0]["name"] == "Monthly Perf"
 
     async def test_list_templates_empty(
-        self, reporting_client, mock_db, admin_headers,
+        self,
+        reporting_client,
+        mock_db,
+        admin_headers,
     ):
         mock_db.execute = AsyncMock(return_value=make_scalars_result([]))
         r = await reporting_client.get(
-            "/api/v1/reporting/templates", headers=admin_headers,
+            "/api/v1/reporting/templates",
+            headers=admin_headers,
         )
         assert r.status_code == 200
         assert r.json() == []
 
     async def test_list_templates_with_report_type_filter(
-        self, reporting_client, mock_db, admin_headers,
+        self,
+        reporting_client,
+        mock_db,
+        admin_headers,
     ):
         mock_db.execute = AsyncMock(return_value=make_scalars_result([]))
         r = await reporting_client.get(
@@ -369,28 +430,39 @@ class TestReportingTemplatesCRUD:
         assert r.status_code == 200
 
     async def test_get_template_happy(
-        self, reporting_client, mock_db, admin_headers,
+        self,
+        reporting_client,
+        mock_db,
+        admin_headers,
     ):
         tpl = _fake_template()
         mock_db.get = AsyncMock(return_value=tpl)
 
         r = await reporting_client.get(
-            f"/api/v1/reporting/templates/{_UUID1}", headers=admin_headers,
+            f"/api/v1/reporting/templates/{_UUID1}",
+            headers=admin_headers,
         )
         assert r.status_code == 200
         assert r.json()["name"] == "Monthly Perf"
 
     async def test_get_template_not_found(
-        self, reporting_client, mock_db, admin_headers,
+        self,
+        reporting_client,
+        mock_db,
+        admin_headers,
     ):
         mock_db.get = AsyncMock(return_value=None)
         r = await reporting_client.get(
-            f"/api/v1/reporting/templates/{uuid.uuid4()}", headers=admin_headers,
+            f"/api/v1/reporting/templates/{uuid.uuid4()}",
+            headers=admin_headers,
         )
         assert r.status_code == 404
 
     async def test_get_template_wrong_tenant(
-        self, reporting_client_factory, mock_db, admin_headers,
+        self,
+        reporting_client_factory,
+        mock_db,
+        admin_headers,
     ):
         user = _fake_user(tenant_id=1)
         client = await reporting_client_factory.build(fake_user=user)
@@ -398,18 +470,23 @@ class TestReportingTemplatesCRUD:
         mock_db.get = AsyncMock(return_value=tpl)
 
         r = await client.get(
-            f"/api/v1/reporting/templates/{_UUID1}", headers=admin_headers,
+            f"/api/v1/reporting/templates/{_UUID1}",
+            headers=admin_headers,
         )
         assert r.status_code == 404
 
     async def test_update_template_happy(
-        self, reporting_client, mock_db, admin_headers,
+        self,
+        reporting_client,
+        mock_db,
+        admin_headers,
     ):
         tpl = _fake_template()
         mock_db.get = AsyncMock(return_value=tpl)
 
         async def _refresh(obj, *a, **kw):
             obj.name = "Updated Name"
+
         mock_db.refresh = AsyncMock(side_effect=_refresh)
 
         r = await reporting_client.patch(
@@ -421,7 +498,10 @@ class TestReportingTemplatesCRUD:
         assert r.json()["name"] == "Updated Name"
 
     async def test_update_system_template_blocked(
-        self, reporting_client, mock_db, admin_headers,
+        self,
+        reporting_client,
+        mock_db,
+        admin_headers,
     ):
         tpl = _fake_template(is_system=True)
         mock_db.get = AsyncMock(return_value=tpl)
@@ -435,7 +515,10 @@ class TestReportingTemplatesCRUD:
         assert "system" in r.json()["detail"].lower()
 
     async def test_update_template_not_found(
-        self, reporting_client, mock_db, admin_headers,
+        self,
+        reporting_client,
+        mock_db,
+        admin_headers,
     ):
         mock_db.get = AsyncMock(return_value=None)
         r = await reporting_client.patch(
@@ -446,25 +529,33 @@ class TestReportingTemplatesCRUD:
         assert r.status_code == 404
 
     async def test_delete_template_happy(
-        self, reporting_client, mock_db, admin_headers,
+        self,
+        reporting_client,
+        mock_db,
+        admin_headers,
     ):
         tpl = _fake_template()
         mock_db.get = AsyncMock(return_value=tpl)
 
         r = await reporting_client.delete(
-            f"/api/v1/reporting/templates/{_UUID1}", headers=admin_headers,
+            f"/api/v1/reporting/templates/{_UUID1}",
+            headers=admin_headers,
         )
         assert r.status_code == 200
         assert r.json()["status"] == "deleted"
 
     async def test_delete_system_template_blocked(
-        self, reporting_client, mock_db, admin_headers,
+        self,
+        reporting_client,
+        mock_db,
+        admin_headers,
     ):
         tpl = _fake_template(is_system=True)
         mock_db.get = AsyncMock(return_value=tpl)
 
         r = await reporting_client.delete(
-            f"/api/v1/reporting/templates/{_UUID1}", headers=admin_headers,
+            f"/api/v1/reporting/templates/{_UUID1}",
+            headers=admin_headers,
         )
         assert r.status_code == 400
 
@@ -473,14 +564,23 @@ class TestReportingSchedules:
     """Scheduled report CRUD tests."""
 
     async def test_create_schedule_no_auth(self, api_client):
-        r = await api_client.post("/api/v1/reporting/schedules", json={
-            "template_id": str(_UUID1), "name": "Weekly", "frequency": "weekly",
-        })
+        r = await api_client.post(
+            "/api/v1/reporting/schedules",
+            json={
+                "template_id": str(_UUID1),
+                "name": "Weekly",
+                "frequency": "weekly",
+            },
+        )
         assert r.status_code == 401
 
     @patch("app.api.v1.endpoints.reporting.ReportScheduler")
     async def test_create_schedule_happy(
-        self, MockScheduler, reporting_client, mock_db, admin_headers,
+        self,
+        MockScheduler,
+        reporting_client,
+        mock_db,
+        admin_headers,
     ):
         sched = _fake_schedule()
         instance = MockScheduler.return_value
@@ -503,10 +603,16 @@ class TestReportingSchedules:
 
     @patch("app.api.v1.endpoints.reporting.ReportScheduler")
     async def test_create_schedule_invalid_template(
-        self, MockScheduler, reporting_client, mock_db, admin_headers,
+        self,
+        MockScheduler,
+        reporting_client,
+        mock_db,
+        admin_headers,
     ):
         instance = MockScheduler.return_value
-        instance.create_schedule = AsyncMock(side_effect=ValueError("Template not found"))
+        instance.create_schedule = AsyncMock(
+            side_effect=ValueError("Template not found")
+        )
 
         r = await reporting_client.post(
             "/api/v1/reporting/schedules",
@@ -521,14 +627,19 @@ class TestReportingSchedules:
 
     @patch("app.api.v1.endpoints.reporting.ReportScheduler")
     async def test_list_schedules_happy(
-        self, MockScheduler, reporting_client, mock_db, admin_headers,
+        self,
+        MockScheduler,
+        reporting_client,
+        mock_db,
+        admin_headers,
     ):
         sched = _fake_schedule()
         instance = MockScheduler.return_value
         instance.list_schedules = AsyncMock(return_value=([sched], 1))
 
         r = await reporting_client.get(
-            "/api/v1/reporting/schedules", headers=admin_headers,
+            "/api/v1/reporting/schedules",
+            headers=admin_headers,
         )
         assert r.status_code == 200
         body = r.json()
@@ -537,33 +648,47 @@ class TestReportingSchedules:
 
     @patch("app.api.v1.endpoints.reporting.ReportScheduler")
     async def test_get_schedule_happy(
-        self, MockScheduler, reporting_client, mock_db, admin_headers,
+        self,
+        MockScheduler,
+        reporting_client,
+        mock_db,
+        admin_headers,
     ):
         sched = _fake_schedule()
         instance = MockScheduler.return_value
         instance.get_schedule = AsyncMock(return_value=sched)
 
         r = await reporting_client.get(
-            f"/api/v1/reporting/schedules/{_UUID2}", headers=admin_headers,
+            f"/api/v1/reporting/schedules/{_UUID2}",
+            headers=admin_headers,
         )
         assert r.status_code == 200
         assert r.json()["frequency"] == "weekly"
 
     @patch("app.api.v1.endpoints.reporting.ReportScheduler")
     async def test_get_schedule_not_found(
-        self, MockScheduler, reporting_client, mock_db, admin_headers,
+        self,
+        MockScheduler,
+        reporting_client,
+        mock_db,
+        admin_headers,
     ):
         instance = MockScheduler.return_value
         instance.get_schedule = AsyncMock(return_value=None)
 
         r = await reporting_client.get(
-            f"/api/v1/reporting/schedules/{uuid.uuid4()}", headers=admin_headers,
+            f"/api/v1/reporting/schedules/{uuid.uuid4()}",
+            headers=admin_headers,
         )
         assert r.status_code == 404
 
     @patch("app.api.v1.endpoints.reporting.ReportScheduler")
     async def test_update_schedule_happy(
-        self, MockScheduler, reporting_client, mock_db, admin_headers,
+        self,
+        MockScheduler,
+        reporting_client,
+        mock_db,
+        admin_headers,
     ):
         sched = _fake_schedule()
         sched.name = "Renamed"
@@ -581,7 +706,11 @@ class TestReportingSchedules:
 
     @patch("app.api.v1.endpoints.reporting.ReportScheduler")
     async def test_update_schedule_not_found(
-        self, MockScheduler, reporting_client, mock_db, admin_headers,
+        self,
+        MockScheduler,
+        reporting_client,
+        mock_db,
+        admin_headers,
     ):
         instance = MockScheduler.return_value
         instance.update_schedule = AsyncMock(
@@ -597,21 +726,30 @@ class TestReportingSchedules:
 
     @patch("app.api.v1.endpoints.reporting.ReportScheduler")
     async def test_run_schedule_now_happy(
-        self, MockScheduler, reporting_client, mock_db, admin_headers,
+        self,
+        MockScheduler,
+        reporting_client,
+        mock_db,
+        admin_headers,
     ):
         exe = _fake_execution()
         instance = MockScheduler.return_value
         instance.run_now = AsyncMock(return_value=exe)
 
         r = await reporting_client.post(
-            f"/api/v1/reporting/schedules/{_UUID2}/run-now", headers=admin_headers,
+            f"/api/v1/reporting/schedules/{_UUID2}/run-now",
+            headers=admin_headers,
         )
         assert r.status_code == 200
         assert r.json()["status"] == "completed"
 
     @patch("app.api.v1.endpoints.reporting.ReportScheduler")
     async def test_run_schedule_now_not_found(
-        self, MockScheduler, reporting_client, mock_db, admin_headers,
+        self,
+        MockScheduler,
+        reporting_client,
+        mock_db,
+        admin_headers,
     ):
         instance = MockScheduler.return_value
         instance.run_now = AsyncMock(side_effect=ValueError("Schedule not found"))
@@ -624,26 +762,36 @@ class TestReportingSchedules:
 
     @patch("app.api.v1.endpoints.reporting.ReportScheduler")
     async def test_delete_schedule_happy(
-        self, MockScheduler, reporting_client, mock_db, admin_headers,
+        self,
+        MockScheduler,
+        reporting_client,
+        mock_db,
+        admin_headers,
     ):
         instance = MockScheduler.return_value
         instance.delete_schedule = AsyncMock(return_value=True)
 
         r = await reporting_client.delete(
-            f"/api/v1/reporting/schedules/{_UUID2}", headers=admin_headers,
+            f"/api/v1/reporting/schedules/{_UUID2}",
+            headers=admin_headers,
         )
         assert r.status_code == 200
         assert r.json()["status"] == "deleted"
 
     @patch("app.api.v1.endpoints.reporting.ReportScheduler")
     async def test_delete_schedule_not_found(
-        self, MockScheduler, reporting_client, mock_db, admin_headers,
+        self,
+        MockScheduler,
+        reporting_client,
+        mock_db,
+        admin_headers,
     ):
         instance = MockScheduler.return_value
         instance.delete_schedule = AsyncMock(return_value=False)
 
         r = await reporting_client.delete(
-            f"/api/v1/reporting/schedules/{uuid.uuid4()}", headers=admin_headers,
+            f"/api/v1/reporting/schedules/{uuid.uuid4()}",
+            headers=admin_headers,
         )
         assert r.status_code == 404
 
@@ -656,13 +804,17 @@ class TestReportingExecutions:
         assert r.status_code == 401
 
     async def test_list_executions_happy(
-        self, reporting_client, mock_db, admin_headers,
+        self,
+        reporting_client,
+        mock_db,
+        admin_headers,
     ):
         exe = _fake_execution()
         mock_db.execute = AsyncMock(return_value=make_scalars_result([exe]))
 
         r = await reporting_client.get(
-            "/api/v1/reporting/executions", headers=admin_headers,
+            "/api/v1/reporting/executions",
+            headers=admin_headers,
         )
         assert r.status_code == 200
         body = r.json()
@@ -670,53 +822,73 @@ class TestReportingExecutions:
         assert len(body) == 1
 
     async def test_list_executions_empty(
-        self, reporting_client, mock_db, admin_headers,
+        self,
+        reporting_client,
+        mock_db,
+        admin_headers,
     ):
         mock_db.execute = AsyncMock(return_value=make_scalars_result([]))
         r = await reporting_client.get(
-            "/api/v1/reporting/executions", headers=admin_headers,
+            "/api/v1/reporting/executions",
+            headers=admin_headers,
         )
         assert r.status_code == 200
         assert r.json() == []
 
     async def test_list_executions_with_status_filter(
-        self, reporting_client, mock_db, admin_headers,
+        self,
+        reporting_client,
+        mock_db,
+        admin_headers,
     ):
         mock_db.execute = AsyncMock(return_value=make_scalars_result([]))
         r = await reporting_client.get(
-            "/api/v1/reporting/executions?status=completed", headers=admin_headers,
+            "/api/v1/reporting/executions?status=completed",
+            headers=admin_headers,
         )
         assert r.status_code == 200
 
     async def test_get_execution_happy(
-        self, reporting_client, mock_db, admin_headers,
+        self,
+        reporting_client,
+        mock_db,
+        admin_headers,
     ):
         exe = _fake_execution()
         mock_db.get = AsyncMock(return_value=exe)
 
         r = await reporting_client.get(
-            f"/api/v1/reporting/executions/{_UUID3}", headers=admin_headers,
+            f"/api/v1/reporting/executions/{_UUID3}",
+            headers=admin_headers,
         )
         assert r.status_code == 200
         assert r.json()["execution_type"] == "manual"
 
     async def test_get_execution_not_found(
-        self, reporting_client, mock_db, admin_headers,
+        self,
+        reporting_client,
+        mock_db,
+        admin_headers,
     ):
         mock_db.get = AsyncMock(return_value=None)
         r = await reporting_client.get(
-            f"/api/v1/reporting/executions/{uuid.uuid4()}", headers=admin_headers,
+            f"/api/v1/reporting/executions/{uuid.uuid4()}",
+            headers=admin_headers,
         )
         assert r.status_code == 404
 
     async def test_get_execution_wrong_tenant(
-        self, reporting_client, mock_db, admin_headers,
+        self,
+        reporting_client,
+        mock_db,
+        admin_headers,
     ):
         exe = _fake_execution(tenant_id=999)
         mock_db.get = AsyncMock(return_value=exe)
 
         r = await reporting_client.get(
-            f"/api/v1/reporting/executions/{_UUID3}", headers=admin_headers,
+            f"/api/v1/reporting/executions/{_UUID3}",
+            headers=admin_headers,
         )
         assert r.status_code == 404
 
@@ -729,10 +901,13 @@ class TestReportingReportTypes:
         assert r.status_code == 401
 
     async def test_report_types_happy(
-        self, reporting_client, admin_headers,
+        self,
+        reporting_client,
+        admin_headers,
     ):
         r = await reporting_client.get(
-            "/api/v1/reporting/report-types", headers=admin_headers,
+            "/api/v1/reporting/report-types",
+            headers=admin_headers,
         )
         assert r.status_code == 200
         body = r.json()
@@ -746,6 +921,7 @@ class TestReportingReportTypes:
 # ============================================================================
 # FEATURE 14 -- SUPER ADMIN DASHBOARD
 # ============================================================================
+
 
 class TestSuperAdminRevenue:
     """GET /api/v1/superadmin/revenue and /revenue/breakdown."""
@@ -763,7 +939,8 @@ class TestSuperAdminRevenue:
         mock_db.execute = AsyncMock(return_value=make_scalars_result([tenant]))
 
         r = await api_client.get(
-            "/api/v1/superadmin/revenue", headers=superadmin_headers,
+            "/api/v1/superadmin/revenue",
+            headers=superadmin_headers,
         )
         assert r.status_code == 200
         data = r.json()["data"]
@@ -771,14 +948,17 @@ class TestSuperAdminRevenue:
         assert "arr" in data
         assert data["total_tenants"] == 1
 
-    async def test_revenue_multiple_tenants(self, api_client, mock_db, superadmin_headers):
+    async def test_revenue_multiple_tenants(
+        self, api_client, mock_db, superadmin_headers
+    ):
         t1 = _fake_tenant(tid=1, plan="professional")
         t2 = _fake_tenant(tid=2, plan="starter", name="Beta Co")
         t2.mrr_cents = 4900
         mock_db.execute = AsyncMock(return_value=make_scalars_result([t1, t2]))
 
         r = await api_client.get(
-            "/api/v1/superadmin/revenue", headers=superadmin_headers,
+            "/api/v1/superadmin/revenue",
+            headers=superadmin_headers,
         )
         assert r.status_code == 200
         data = r.json()["data"]
@@ -791,17 +971,21 @@ class TestSuperAdminRevenue:
 
     async def test_revenue_breakdown_non_superadmin(self, api_client, admin_headers):
         r = await api_client.get(
-            "/api/v1/superadmin/revenue/breakdown", headers=admin_headers,
+            "/api/v1/superadmin/revenue/breakdown",
+            headers=admin_headers,
         )
         assert r.status_code == 403
 
-    async def test_revenue_breakdown_happy(self, api_client, mock_db, superadmin_headers):
+    async def test_revenue_breakdown_happy(
+        self, api_client, mock_db, superadmin_headers
+    ):
         t1 = _fake_tenant(tid=1, plan="professional")
         t2 = _fake_tenant(tid=2, plan="starter", name="Beta Co")
         mock_db.execute = AsyncMock(return_value=make_scalars_result([t1, t2]))
 
         r = await api_client.get(
-            "/api/v1/superadmin/revenue/breakdown", headers=superadmin_headers,
+            "/api/v1/superadmin/revenue/breakdown",
+            headers=superadmin_headers,
         )
         assert r.status_code == 200
         data = r.json()["data"]
@@ -818,7 +1002,8 @@ class TestSuperAdminTenantPortfolio:
 
     async def test_portfolio_non_superadmin(self, api_client, admin_headers):
         r = await api_client.get(
-            "/api/v1/superadmin/tenants/portfolio", headers=admin_headers,
+            "/api/v1/superadmin/tenants/portfolio",
+            headers=admin_headers,
         )
         assert r.status_code == 403
 
@@ -835,7 +1020,8 @@ class TestSuperAdminTenantPortfolio:
         )
 
         r = await api_client.get(
-            "/api/v1/superadmin/tenants/portfolio", headers=superadmin_headers,
+            "/api/v1/superadmin/tenants/portfolio",
+            headers=superadmin_headers,
         )
         assert r.status_code == 200
         data = r.json()["data"]
@@ -847,14 +1033,17 @@ class TestSuperAdminTenantPortfolio:
     async def test_portfolio_empty(self, api_client, mock_db, superadmin_headers):
         mock_db.execute = AsyncMock(return_value=make_scalars_result([]))
         r = await api_client.get(
-            "/api/v1/superadmin/tenants/portfolio", headers=superadmin_headers,
+            "/api/v1/superadmin/tenants/portfolio",
+            headers=superadmin_headers,
         )
         assert r.status_code == 200
         data = r.json()["data"]
         assert data["tenants"] == []
         assert data["total"] == 0
 
-    async def test_portfolio_pagination_params(self, api_client, mock_db, superadmin_headers):
+    async def test_portfolio_pagination_params(
+        self, api_client, mock_db, superadmin_headers
+    ):
         mock_db.execute = AsyncMock(return_value=make_scalars_result([]))
         r = await api_client.get(
             "/api/v1/superadmin/tenants/portfolio?skip=0&limit=10",
@@ -862,7 +1051,9 @@ class TestSuperAdminTenantPortfolio:
         )
         assert r.status_code == 200
 
-    async def test_portfolio_sort_by_name(self, api_client, mock_db, superadmin_headers):
+    async def test_portfolio_sort_by_name(
+        self, api_client, mock_db, superadmin_headers
+    ):
         mock_db.execute = AsyncMock(return_value=make_scalars_result([]))
         r = await api_client.get(
             "/api/v1/superadmin/tenants/portfolio?sort_by=name&sort_order=asc",
@@ -880,7 +1071,8 @@ class TestSuperAdminSystemHealth:
 
     async def test_health_non_superadmin(self, api_client, admin_headers):
         r = await api_client.get(
-            "/api/v1/superadmin/system/health", headers=admin_headers,
+            "/api/v1/superadmin/system/health",
+            headers=admin_headers,
         )
         assert r.status_code == 403
 
@@ -892,7 +1084,8 @@ class TestSuperAdminSystemHealth:
 
         with patch("redis.asyncio.from_url", return_value=mock_redis):
             r = await api_client.get(
-                "/api/v1/superadmin/system/health", headers=superadmin_headers,
+                "/api/v1/superadmin/system/health",
+                headers=superadmin_headers,
             )
         assert r.status_code == 200
         data = r.json()["data"]
@@ -910,11 +1103,14 @@ class TestSuperAdminChurnRisks:
 
     async def test_churn_non_superadmin(self, api_client, admin_headers):
         r = await api_client.get(
-            "/api/v1/superadmin/churn/risks", headers=admin_headers,
+            "/api/v1/superadmin/churn/risks",
+            headers=admin_headers,
         )
         assert r.status_code == 403
 
-    async def test_churn_happy_with_risky_tenant(self, api_client, mock_db, superadmin_headers):
+    async def test_churn_happy_with_risky_tenant(
+        self, api_client, mock_db, superadmin_headers
+    ):
         tenant = _fake_tenant()
         tenant.last_activity_at = None
         tenant.onboarding_completed = False
@@ -930,7 +1126,9 @@ class TestSuperAdminChurnRisks:
         assert "total_mrr_at_risk" in data
         assert data["total_count"] >= 1
 
-    async def test_churn_empty_with_high_threshold(self, api_client, mock_db, superadmin_headers):
+    async def test_churn_empty_with_high_threshold(
+        self, api_client, mock_db, superadmin_headers
+    ):
         tenant = _fake_tenant()
         tenant.last_activity_at = _NOW
         tenant.health_score = 95
@@ -960,6 +1158,7 @@ class TestSuperAdminChurnRisks:
 # is_superadmin is never set. We test auth-rejection behavior and also
 # test with a patched is_superadmin flag.
 
+
 class TestSuperAdminAnalyticsPlatformOverview:
     """GET /api/v1/superadmin/analytics/superadmin/platform-overview."""
 
@@ -974,7 +1173,10 @@ class TestSuperAdminAnalyticsPlatformOverview:
         assert r.status_code == 403
 
     async def test_superadmin_access_allowed(
-        self, api_client, superadmin_headers, mock_db,
+        self,
+        api_client,
+        superadmin_headers,
+        mock_db,
     ):
         """
         Middleware now sets is_superadmin=True for role=superadmin,
@@ -983,9 +1185,12 @@ class TestSuperAdminAnalyticsPlatformOverview:
         from unittest.mock import MagicMock
 
         row = MagicMock(total=0, applied=0, failed=0)
-        scalar_r = MagicMock(); scalar_r.scalar.return_value = 0
-        first_r = MagicMock(); first_r.first.return_value = row
-        empty_iter = MagicMock(); empty_iter.__iter__ = lambda s: iter([])
+        scalar_r = MagicMock()
+        scalar_r.scalar.return_value = 0
+        first_r = MagicMock()
+        first_r.first.return_value = row
+        empty_iter = MagicMock()
+        empty_iter.__iter__ = lambda s: iter([])
         mock_db.execute.side_effect = [scalar_r, first_r, empty_iter, empty_iter]
 
         r = await api_client.get(self._URL, headers=superadmin_headers)
@@ -1007,11 +1212,16 @@ class TestSuperAdminAnalyticsTenantProfitability:
         assert r.status_code == 403
 
     async def test_superadmin_access_allowed(
-        self, api_client, superadmin_headers, mock_db,
+        self,
+        api_client,
+        superadmin_headers,
+        mock_db,
     ):
         """Superadmin can access tenant profitability."""
         from unittest.mock import MagicMock
-        empty_iter = MagicMock(); empty_iter.__iter__ = lambda s: iter([])
+
+        empty_iter = MagicMock()
+        empty_iter.__iter__ = lambda s: iter([])
         mock_db.execute.side_effect = [empty_iter, empty_iter]
 
         r = await api_client.get(self._URL, headers=superadmin_headers)
@@ -1035,11 +1245,16 @@ class TestSuperAdminAnalyticsSignalHealthTrends:
         assert r.status_code == 403
 
     async def test_superadmin_access_allowed(
-        self, api_client, superadmin_headers, mock_db,
+        self,
+        api_client,
+        superadmin_headers,
+        mock_db,
     ):
         """Superadmin can access signal health trends."""
         from unittest.mock import MagicMock
-        empty_iter = MagicMock(); empty_iter.__iter__ = lambda s: iter([])
+
+        empty_iter = MagicMock()
+        empty_iter.__iter__ = lambda s: iter([])
         mock_db.execute.return_value = empty_iter
 
         r = await api_client.get(self._URL, headers=superadmin_headers)
@@ -1062,11 +1277,16 @@ class TestSuperAdminAnalyticsActionsAnalytics:
         assert r.status_code == 403
 
     async def test_superadmin_access_allowed(
-        self, api_client, superadmin_headers, mock_db,
+        self,
+        api_client,
+        superadmin_headers,
+        mock_db,
     ):
         """Superadmin can access actions analytics."""
         from unittest.mock import MagicMock
-        empty_iter = MagicMock(); empty_iter.__iter__ = lambda s: iter([])
+
+        empty_iter = MagicMock()
+        empty_iter.__iter__ = lambda s: iter([])
         mock_db.execute.return_value = empty_iter
 
         r = await api_client.get(self._URL, headers=superadmin_headers)
@@ -1079,31 +1299,37 @@ class TestSuperAdminAnalyticsActionsAnalytics:
 # Unit tests for helper functions (Feature 14)
 # ============================================================================
 
+
 class TestCalculateHealthScore:
     """Unit tests for superadmin_analytics.calculate_health_score."""
 
     def test_both_none(self):
         from app.api.v1.endpoints.superadmin_analytics import calculate_health_score
+
         assert calculate_health_score(None, None) == 0
 
     def test_only_emq(self):
         from app.api.v1.endpoints.superadmin_analytics import calculate_health_score
+
         score = calculate_health_score(80.0, None)
         assert score == round(80.0 * 0.7, 1)
 
     def test_only_event_loss(self):
         from app.api.v1.endpoints.superadmin_analytics import calculate_health_score
+
         score = calculate_health_score(None, 10.0)
         assert score == round((100 - 10.0) * 0.3, 1)
 
     def test_both_present(self):
         from app.api.v1.endpoints.superadmin_analytics import calculate_health_score
+
         score = calculate_health_score(90.0, 5.0)
         expected = round(90.0 * 0.7 + (100 - 5.0) * 0.3, 1)
         assert score == expected
 
     def test_zero_values(self):
         from app.api.v1.endpoints.superadmin_analytics import calculate_health_score
+
         score = calculate_health_score(0.0, 0.0)
         expected = round(0.0 * 0.7 + (100 - 0.0) * 0.3, 1)
         assert score == expected
@@ -1114,6 +1340,7 @@ class TestCalculateChurnRisk:
 
     def test_healthy_tenant(self):
         from app.api.v1.endpoints.superadmin import calculate_churn_risk
+
         t = _fake_tenant()
         t.last_activity_at = _NOW
         t.health_score = 95
@@ -1124,6 +1351,7 @@ class TestCalculateChurnRisk:
 
     def test_inactive_tenant(self):
         from app.api.v1.endpoints.superadmin import calculate_churn_risk
+
         t = _fake_tenant()
         t.last_activity_at = None
         t.health_score = 60
@@ -1134,6 +1362,7 @@ class TestCalculateChurnRisk:
 
     def test_past_due_tenant(self):
         from app.api.v1.endpoints.superadmin import calculate_churn_risk
+
         t = _fake_tenant()
         t.status = "past_due"
         t.last_activity_at = _NOW
@@ -1145,6 +1374,7 @@ class TestCalculateChurnRisk:
 
     def test_cancelled_tenant(self):
         from app.api.v1.endpoints.superadmin import calculate_churn_risk
+
         t = _fake_tenant()
         t.status = "cancelled"
         t.last_activity_at = _NOW
@@ -1156,6 +1386,7 @@ class TestCalculateChurnRisk:
 
     def test_risk_clamped_to_1(self):
         from app.api.v1.endpoints.superadmin import calculate_churn_risk
+
         t = _fake_tenant()
         t.status = "cancelled"
         t.last_activity_at = None
@@ -1170,30 +1401,38 @@ class TestGetChurnActions:
 
     def test_activity_factor(self):
         from app.api.v1.endpoints.superadmin import get_churn_actions
+
         actions = get_churn_actions(["Low activity (20 days since last login)"])
-        assert any("check-in" in a.lower() or "engagement" in a.lower() for a in actions)
+        assert any(
+            "check-in" in a.lower() or "engagement" in a.lower() for a in actions
+        )
 
     def test_data_quality_factor(self):
         from app.api.v1.endpoints.superadmin import get_churn_actions
+
         actions = get_churn_actions(["Data quality issues (health score: 55)"])
         assert any("pipeline" in a.lower() or "support" in a.lower() for a in actions)
 
     def test_onboarding_factor(self):
         from app.api.v1.endpoints.superadmin import get_churn_actions
+
         actions = get_churn_actions(["Onboarding not completed"])
         assert any("onboarding" in a.lower() for a in actions)
 
     def test_trial_factor(self):
         from app.api.v1.endpoints.superadmin import get_churn_actions
+
         actions = get_churn_actions(["Trial ending in 3 days"])
         assert any("trial" in a.lower() for a in actions)
 
     def test_payment_factor(self):
         from app.api.v1.endpoints.superadmin import get_churn_actions
+
         actions = get_churn_actions(["Payment past due"])
         assert any("dunning" in a.lower() or "payment" in a.lower() for a in actions)
 
     def test_no_matching_factors(self):
         from app.api.v1.endpoints.superadmin import get_churn_actions
+
         actions = get_churn_actions(["Some unknown factor"])
         assert actions == ["Monitor and gather more data"]

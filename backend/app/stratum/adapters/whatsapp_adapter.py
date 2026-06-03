@@ -314,7 +314,8 @@ class WhatsAppAdapter(BaseAdapter):
             quality = response.get("quality_rating", "Unknown")
 
             logger.info(
-                f"Connected to WhatsApp: {verified_name} ({phone_number}), " f"Quality: {quality}"
+                f"Connected to WhatsApp: {verified_name} ({phone_number}), "
+                f"Quality: {quality}"
             )
 
             self._initialized = True
@@ -335,7 +336,11 @@ class WhatsAppAdapter(BaseAdapter):
     # ========================================================================
 
     async def send_text_message(
-        self, to: str, text: str, preview_url: bool = False, reply_to: Optional[str] = None
+        self,
+        to: str,
+        text: str,
+        preview_url: bool = False,
+        reply_to: Optional[str] = None,
     ) -> Message:
         """
         Send a text message (session message - requires 24hr window).
@@ -363,7 +368,9 @@ class WhatsAppAdapter(BaseAdapter):
             payload["context"] = {"message_id": reply_to}
 
         await self.rate_limiter.acquire()
-        response = self._make_request("POST", f"/{self.phone_number_id}/messages", data=payload)
+        response = self._make_request(
+            "POST", f"/{self.phone_number_id}/messages", data=payload
+        )
 
         message_id = response.get("messages", [{}])[0].get("id", "")
 
@@ -423,7 +430,9 @@ class WhatsAppAdapter(BaseAdapter):
             payload["template"]["components"] = components
 
         await self.rate_limiter.acquire()
-        response = self._make_request("POST", f"/{self.phone_number_id}/messages", data=payload)
+        response = self._make_request(
+            "POST", f"/{self.phone_number_id}/messages", data=payload
+        )
 
         message_id = response.get("messages", [{}])[0].get("id", "")
 
@@ -470,7 +479,11 @@ class WhatsAppAdapter(BaseAdapter):
         """
         self._ensure_initialized()
 
-        interactive = {"type": interactive_type, "body": {"text": body_text}, "action": action}
+        interactive = {
+            "type": interactive_type,
+            "body": {"text": body_text},
+            "action": action,
+        }
 
         if header:
             interactive["header"] = header
@@ -486,7 +499,9 @@ class WhatsAppAdapter(BaseAdapter):
         }
 
         await self.rate_limiter.acquire()
-        response = self._make_request("POST", f"/{self.phone_number_id}/messages", data=payload)
+        response = self._make_request(
+            "POST", f"/{self.phone_number_id}/messages", data=payload
+        )
 
         message_id = response.get("messages", [{}])[0].get("id", "")
 
@@ -548,7 +563,9 @@ class WhatsAppAdapter(BaseAdapter):
         }
 
         await self.rate_limiter.acquire()
-        response = self._make_request("POST", f"/{self.phone_number_id}/messages", data=payload)
+        response = self._make_request(
+            "POST", f"/{self.phone_number_id}/messages", data=payload
+        )
 
         message_id = response.get("messages", [{}])[0].get("id", "")
 
@@ -593,13 +610,21 @@ class WhatsAppAdapter(BaseAdapter):
 
         path = Path(file_path)
         with path.open("rb") as f:
-            files = {"file": (str(path), f, mime_types.get(media_type, "application/octet-stream"))}
+            files = {
+                "file": (
+                    str(path),
+                    f,
+                    mime_types.get(media_type, "application/octet-stream"),
+                )
+            }
             data = {"messaging_product": "whatsapp", "type": mime_types.get(media_type)}
 
             url = f"{self.BASE_URL}/{self.phone_number_id}/media"
             headers = {"Authorization": f"Bearer {self.access_token}"}
 
-            response = requests.post(url, data=data, files=files, headers=headers, timeout=60)
+            response = requests.post(
+                url, data=data, files=files, headers=headers, timeout=60
+            )
             response.raise_for_status()
 
             return response.json().get("id", "")
@@ -614,7 +639,9 @@ class WhatsAppAdapter(BaseAdapter):
 
         await self.rate_limiter.acquire()
         response = self._make_request(
-            "GET", f"/{self.business_account_id}/message_templates", params={"limit": 100}
+            "GET",
+            f"/{self.business_account_id}/message_templates",
+            params={"limit": 100},
         )
 
         templates = []
@@ -709,7 +736,9 @@ class WhatsAppAdapter(BaseAdapter):
             logger.warning("No app_secret configured, skipping signature verification")
             return True
 
-        expected = hmac.new(self.app_secret.encode(), payload, hashlib.sha256).hexdigest()
+        expected = hmac.new(
+            self.app_secret.encode(), payload, hashlib.sha256
+        ).hexdigest()
 
         return hmac.compare_digest(f"sha256={expected}", signature)
 
@@ -761,9 +790,11 @@ class WhatsAppAdapter(BaseAdapter):
         message = Message(
             message_id=msg_data.get("id", ""),
             wa_id=msg_data.get("from", ""),
-            message_type=MessageType(msg_type.upper())
-            if msg_type in [m.value for m in MessageType]
-            else MessageType.TEXT,
+            message_type=(
+                MessageType(msg_type.upper())
+                if msg_type in [m.value for m in MessageType]
+                else MessageType.TEXT
+            ),
             timestamp=datetime.fromtimestamp(int(msg_data.get("timestamp", 0)), tz=UTC),
             status=MessageStatus.DELIVERED,
             is_outbound=False,
@@ -857,7 +888,11 @@ class WhatsAppAdapter(BaseAdapter):
         return self._conversations.get(wa_id)
 
     async def mark_conversion(
-        self, wa_id: str, value: float, currency: str = "USD", event_name: str = "Purchase"
+        self,
+        wa_id: str,
+        value: float,
+        currency: str = "USD",
+        event_name: str = "Purchase",
     ) -> dict[str, Any]:
         """
         Mark a WhatsApp conversation as converted.
@@ -896,7 +931,9 @@ class WhatsAppAdapter(BaseAdapter):
                     "action_source": "chat",  # Special source for WhatsApp
                     "messaging_channel": "whatsapp",
                     "user_data": {
-                        "ph": hashlib.sha256(self._normalize_phone(wa_id).encode()).hexdigest()
+                        "ph": hashlib.sha256(
+                            self._normalize_phone(wa_id).encode()
+                        ).hexdigest()
                     },
                     "custom_data": {"value": value, "currency": currency},
                 }
@@ -1004,7 +1041,11 @@ class WhatsAppAdapter(BaseAdapter):
         return digits
 
     def _make_request(
-        self, method: str, endpoint: str, params: Optional[dict] = None, data: Optional[dict] = None
+        self,
+        method: str,
+        endpoint: str,
+        params: Optional[dict] = None,
+        data: Optional[dict] = None,
     ) -> dict[str, Any]:
         """Make HTTP request to WhatsApp API."""
         url = f"{self.BASE_URL}{endpoint}"
@@ -1017,11 +1058,17 @@ class WhatsAppAdapter(BaseAdapter):
             if method == "GET":
                 response = requests.get(url, headers=headers, params=params, timeout=30)
             elif method == "POST":
-                response = requests.post(url, headers=headers, json=data, params=params, timeout=30)
+                response = requests.post(
+                    url, headers=headers, json=data, params=params, timeout=30
+                )
             elif method == "DELETE":
-                response = requests.delete(url, headers=headers, params=params, timeout=30)
+                response = requests.delete(
+                    url, headers=headers, params=params, timeout=30
+                )
             else:
-                response = requests.request(method, url, headers=headers, json=data, timeout=30)
+                response = requests.request(
+                    method, url, headers=headers, json=data, timeout=30
+                )
 
             response.raise_for_status()
             return response.json()

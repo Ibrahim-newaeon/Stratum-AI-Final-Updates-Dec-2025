@@ -12,13 +12,14 @@ Features:
 - Detailed experiment tracking
 """
 
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional, Tuple
-from enum import Enum
 import hashlib
 import json
 import random
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
+
 import numpy as np
 from scipy import stats
 
@@ -29,6 +30,7 @@ logger = get_logger(__name__)
 
 class ExperimentStatus(str, Enum):
     """Status of an A/B test experiment."""
+
     DRAFT = "draft"
     RUNNING = "running"
     PAUSED = "paused"
@@ -39,6 +41,7 @@ class ExperimentStatus(str, Enum):
 
 class ModelVariant(str, Enum):
     """Model variant in an experiment."""
+
     CHAMPION = "champion"
     CHALLENGER = "challenger"
 
@@ -46,6 +49,7 @@ class ModelVariant(str, Enum):
 @dataclass
 class ExperimentMetrics:
     """Metrics collected during an experiment."""
+
     variant: ModelVariant
     predictions_count: int = 0
     total_error: float = 0.0
@@ -77,7 +81,7 @@ class ExperimentMetrics:
 
             self.errors.append(error)
             self.total_error += error
-            self.total_squared_error += error ** 2
+            self.total_squared_error += error**2
             self.total_absolute_error += abs_error
 
             # Update computed metrics
@@ -91,15 +95,19 @@ class ExperimentMetrics:
 
             # MAPE with safeguard
             mape_sum = sum(
-                abs(e / a) if a != 0 else 0
-                for e, a in zip(self.errors, self.actuals)
+                abs(e / a) if a != 0 else 0 for e, a in zip(self.errors, self.actuals)
             )
-            self.mape = (mape_sum / self.actuals_collected) * 100 if self.actuals_collected > 0 else 0
+            self.mape = (
+                (mape_sum / self.actuals_collected) * 100
+                if self.actuals_collected > 0
+                else 0
+            )
 
 
 @dataclass
 class ModelExperiment:
     """Represents an A/B test experiment between two models."""
+
     experiment_id: str
     name: str
     model_name: str  # e.g., "roas_predictor"
@@ -198,7 +206,9 @@ class ModelABTestingService:
         Returns:
             Created experiment
         """
-        experiment_id = f"exp_{model_name}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
+        experiment_id = (
+            f"exp_{model_name}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
+        )
 
         experiment = ModelExperiment(
             experiment_id=experiment_id,
@@ -231,7 +241,9 @@ class ModelABTestingService:
         # Check for existing active experiment on same model
         if experiment.model_name in self._active_experiments:
             existing_id = self._active_experiments[experiment.model_name]
-            logger.warning(f"Stopping existing experiment {existing_id} for {experiment.model_name}")
+            logger.warning(
+                f"Stopping existing experiment {existing_id} for {experiment.model_name}"
+            )
             self.stop_experiment(existing_id)
 
         experiment.status = ExperimentStatus.RUNNING
@@ -241,7 +253,9 @@ class ModelABTestingService:
         logger.info(f"Started experiment: {experiment_id}")
         return True
 
-    def stop_experiment(self, experiment_id: str, status: ExperimentStatus = ExperimentStatus.PAUSED) -> bool:
+    def stop_experiment(
+        self, experiment_id: str, status: ExperimentStatus = ExperimentStatus.PAUSED
+    ) -> bool:
         """Stop an experiment."""
         experiment = self._experiments.get(experiment_id)
         if not experiment:
@@ -276,14 +290,18 @@ class ModelABTestingService:
 
         # Deterministic hash-based assignment
         hash_input = f"{experiment_id}:{entity_id}"
-        hash_value = int(hashlib.md5(hash_input.encode(), usedforsecurity=False).hexdigest(), 16)
+        hash_value = int(
+            hashlib.md5(hash_input.encode(), usedforsecurity=False).hexdigest(), 16
+        )
         bucket = (hash_value % 1000) / 1000.0
 
         if bucket < experiment.traffic_split:
             return ModelVariant.CHALLENGER
         return ModelVariant.CHAMPION
 
-    def get_active_variant(self, model_name: str, entity_id: str) -> Tuple[ModelVariant, Optional[str]]:
+    def get_active_variant(
+        self, model_name: str, entity_id: str
+    ) -> Tuple[ModelVariant, Optional[str]]:
         """
         Get the active variant for a model if there's a running experiment.
 
@@ -342,8 +360,11 @@ class ModelABTestingService:
         if not experiment:
             return
 
-        metrics = (experiment.champion_metrics if variant == ModelVariant.CHAMPION
-                   else experiment.challenger_metrics)
+        metrics = (
+            experiment.champion_metrics
+            if variant == ModelVariant.CHAMPION
+            else experiment.challenger_metrics
+        )
 
         if prediction_index < len(metrics.predictions):
             predicted = metrics.predictions[prediction_index]
@@ -355,7 +376,7 @@ class ModelABTestingService:
             error = predicted - actual
             metrics.errors.append(error)
             metrics.total_error += error
-            metrics.total_squared_error += error ** 2
+            metrics.total_squared_error += error**2
             metrics.total_absolute_error += abs(error)
             metrics._update_metrics()
 
@@ -460,7 +481,9 @@ class ModelABTestingService:
             return False
 
         if experiment.winner != ModelVariant.CHALLENGER:
-            logger.warning(f"Cannot promote: challenger is not the winner for {experiment_id}")
+            logger.warning(
+                f"Cannot promote: challenger is not the winner for {experiment_id}"
+            )
             return False
 
         experiment.status = ExperimentStatus.PROMOTED
@@ -518,7 +541,9 @@ class ModelABTestingService:
 
         by_status = {}
         for status in ExperimentStatus:
-            by_status[status.value] = len([e for e in experiments if e.status == status])
+            by_status[status.value] = len(
+                [e for e in experiments if e.status == status]
+            )
 
         active = [
             {
@@ -528,7 +553,8 @@ class ModelABTestingService:
                 "champion": e.champion_version,
                 "challenger": e.challenger_version,
                 "traffic_split": e.traffic_split,
-                "samples": e.champion_metrics.actuals_collected + e.challenger_metrics.actuals_collected,
+                "samples": e.champion_metrics.actuals_collected
+                + e.challenger_metrics.actuals_collected,
             }
             for e in experiments
             if e.status == ExperimentStatus.RUNNING
@@ -549,6 +575,7 @@ ab_testing_service = ModelABTestingService()
 # Convenience Functions
 # =============================================================================
 
+
 def get_model_variant(model_name: str, entity_id: str) -> Tuple[str, Optional[str]]:
     """
     Get which model version to use for a prediction.
@@ -567,7 +594,9 @@ def get_model_variant(model_name: str, entity_id: str) -> Tuple[str, Optional[st
         else:
             model_path = f"models/roas_predictor.pkl"
     """
-    variant, experiment_id = ab_testing_service.get_active_variant(model_name, entity_id)
+    variant, experiment_id = ab_testing_service.get_active_variant(
+        model_name, entity_id
+    )
 
     if experiment_id and variant == ModelVariant.CHALLENGER:
         return "challenger", experiment_id
@@ -589,7 +618,9 @@ def record_model_prediction(
         predicted: The predicted value
         actual: The actual value (if known)
     """
-    variant, experiment_id = ab_testing_service.get_active_variant(model_name, entity_id)
+    variant, experiment_id = ab_testing_service.get_active_variant(
+        model_name, entity_id
+    )
 
     if experiment_id:
         ab_testing_service.record_prediction(experiment_id, variant, predicted, actual)

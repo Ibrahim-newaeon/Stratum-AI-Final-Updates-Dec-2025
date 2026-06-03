@@ -156,6 +156,7 @@ class StratumError(Exception):
 
 # === Authentication & Authorization ===
 
+
 class AuthenticationError(StratumError):
     error_code = "AUTH_FAILED"
     status_code = 401
@@ -185,6 +186,7 @@ class CMSPermissionError(AuthorizationError):
 
 # === Validation ===
 
+
 class StratumValidationError(StratumError):
     error_code = "VALIDATION_ERROR"
     status_code = 422
@@ -198,6 +200,7 @@ class ConfigurationError(StratumError):
 
 
 # === Resources ===
+
 
 class ResourceNotFoundError(StratumError):
     error_code = "NOT_FOUND"
@@ -219,6 +222,7 @@ class ResourceExhaustedError(StratumError):
 
 # === Trust Engine ===
 
+
 class TrustGateError(StratumError):
     error_code = "TRUST_GATE_BLOCKED"
     status_code = 403
@@ -236,6 +240,7 @@ class SignalUnhealthyError(TrustGateError):
 
 
 # === Platform Integration ===
+
 
 class PlatformError(StratumError):
     error_code = "PLATFORM_ERROR"
@@ -262,6 +267,7 @@ class PlatformTimeoutError(PlatformError):
 
 # === Data ===
 
+
 class DataIntegrityError(StratumError):
     error_code = "DATA_INTEGRITY"
     status_code = 500
@@ -283,11 +289,25 @@ ERROR_CODES: dict[str, dict[str, Any]] = {
         "exception_class": cls.__name__,
     }
     for cls in [
-        StratumError, AuthenticationError, TokenExpiredError, InvalidTokenError,
-        AuthorizationError, CMSPermissionError, StratumValidationError, ConfigurationError,
-        ResourceNotFoundError, ResourceConflictError, ResourceExhaustedError,
-        TrustGateError, SignalDegradedError, SignalUnhealthyError,
-        PlatformError, PlatformAuthError, PlatformRateLimitError, PlatformTimeoutError,
-        DataIntegrityError, TenantIsolationError,
+        StratumError,
+        AuthenticationError,
+        TokenExpiredError,
+        InvalidTokenError,
+        AuthorizationError,
+        CMSPermissionError,
+        StratumValidationError,
+        ConfigurationError,
+        ResourceNotFoundError,
+        ResourceConflictError,
+        ResourceExhaustedError,
+        TrustGateError,
+        SignalDegradedError,
+        SignalUnhealthyError,
+        PlatformError,
+        PlatformAuthError,
+        PlatformRateLimitError,
+        PlatformTimeoutError,
+        DataIntegrityError,
+        TenantIsolationError,
     ]
 }

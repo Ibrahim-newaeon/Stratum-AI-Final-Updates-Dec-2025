@@ -99,7 +99,9 @@ async def get_rule(
     return APIResponse(success=True, data=RuleResponse.model_validate(rule))
 
 
-@router.post("", response_model=APIResponse[RuleResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "", response_model=APIResponse[RuleResponse], status_code=status.HTTP_201_CREATED
+)
 async def create_rule(
     request: Request,
     rule_data: RuleCreate,
@@ -309,7 +311,11 @@ async def toggle_rule(
     )
 
 
-@router.post("/{rule_id}/duplicate", response_model=APIResponse[RuleResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{rule_id}/duplicate",
+    response_model=APIResponse[RuleResponse],
+    status_code=status.HTTP_201_CREATED,
+)
 async def duplicate_rule(
     request: Request,
     rule_id: int,
@@ -345,8 +351,16 @@ async def duplicate_rule(
         condition_duration_hours=original.condition_duration_hours,
         action_type=original.action_type,
         action_config=original.action_config.copy() if original.action_config else {},
-        applies_to_campaigns=original.applies_to_campaigns.copy() if original.applies_to_campaigns else None,
-        applies_to_platforms=original.applies_to_platforms.copy() if original.applies_to_platforms else None,
+        applies_to_campaigns=(
+            original.applies_to_campaigns.copy()
+            if original.applies_to_campaigns
+            else None
+        ),
+        applies_to_platforms=(
+            original.applies_to_platforms.copy()
+            if original.applies_to_platforms
+            else None
+        ),
         cooldown_hours=original.cooldown_hours,
         trigger_count=0,
         last_evaluated_at=None,
@@ -404,7 +418,9 @@ async def test_rule(
     )
 
 
-@router.get("/{rule_id}/executions", response_model=APIResponse[List[RuleExecutionResponse]])
+@router.get(
+    "/{rule_id}/executions", response_model=APIResponse[List[RuleExecutionResponse]]
+)
 async def get_rule_executions(
     request: Request,
     rule_id: int,

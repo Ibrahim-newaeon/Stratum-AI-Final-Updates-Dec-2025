@@ -31,8 +31,10 @@ logger = get_logger(__name__)
 # Intent Classification
 # =============================================================================
 
+
 class CopilotIntent(str, Enum):
     """Recognized user intents."""
+
     GREETING = "greeting"
     PERFORMANCE_OVERVIEW = "performance_overview"
     SIGNAL_HEALTH = "signal_health"
@@ -48,48 +50,124 @@ class CopilotIntent(str, Enum):
 # Keyword patterns for intent classification
 INTENT_PATTERNS: Dict[CopilotIntent, List[str]] = {
     CopilotIntent.GREETING: [
-        "hello", "hi", "hey", "good morning", "good afternoon",
-        "good evening", "what's up", "howdy", "greetings",
+        "hello",
+        "hi",
+        "hey",
+        "good morning",
+        "good afternoon",
+        "good evening",
+        "what's up",
+        "howdy",
+        "greetings",
     ],
     CopilotIntent.PERFORMANCE_OVERVIEW: [
-        "how are things", "how is everything", "overview", "summary",
-        "how are my campaigns doing", "overall performance", "dashboard",
-        "what's happening", "status", "how's it going", "performance",
-        "give me a summary", "brief me", "update me", "what's new",
+        "how are things",
+        "how is everything",
+        "overview",
+        "summary",
+        "how are my campaigns doing",
+        "overall performance",
+        "dashboard",
+        "what's happening",
+        "status",
+        "how's it going",
+        "performance",
+        "give me a summary",
+        "brief me",
+        "update me",
+        "what's new",
     ],
     CopilotIntent.SIGNAL_HEALTH: [
-        "signal", "health", "emq", "event match", "tracking",
-        "data quality", "trust", "autopilot", "signal health",
-        "is my data healthy", "trust gate", "event loss",
+        "signal",
+        "health",
+        "emq",
+        "event match",
+        "tracking",
+        "data quality",
+        "trust",
+        "autopilot",
+        "signal health",
+        "is my data healthy",
+        "trust gate",
+        "event loss",
     ],
     CopilotIntent.ANOMALIES: [
-        "anomal", "unusual", "weird", "strange", "abnormal",
-        "something wrong", "issue", "problem", "alert", "warning",
-        "spike", "drop", "surge", "crash",
+        "anomal",
+        "unusual",
+        "weird",
+        "strange",
+        "abnormal",
+        "something wrong",
+        "issue",
+        "problem",
+        "alert",
+        "warning",
+        "spike",
+        "drop",
+        "surge",
+        "crash",
     ],
     CopilotIntent.SPEND_ANALYSIS: [
-        "spend", "budget", "cost", "how much", "spending",
-        "money", "expense", "investment", "burn", "cpa",
-        "cost per", "acquisition cost",
+        "spend",
+        "budget",
+        "cost",
+        "how much",
+        "spending",
+        "money",
+        "expense",
+        "investment",
+        "burn",
+        "cpa",
+        "cost per",
+        "acquisition cost",
     ],
     CopilotIntent.ROAS_ANALYSIS: [
-        "roas", "return", "roi", "efficiency", "profitable",
-        "return on ad spend", "revenue vs spend", "margin",
+        "roas",
+        "return",
+        "roi",
+        "efficiency",
+        "profitable",
+        "return on ad spend",
+        "revenue vs spend",
+        "margin",
     ],
     CopilotIntent.RECOMMENDATIONS: [
-        "recommend", "suggest", "what should", "advice",
-        "action", "next step", "what can i do", "improve",
-        "optimize", "tip", "fix", "help me",
+        "recommend",
+        "suggest",
+        "what should",
+        "advice",
+        "action",
+        "next step",
+        "what can i do",
+        "improve",
+        "optimize",
+        "tip",
+        "fix",
+        "help me",
     ],
     CopilotIntent.CAMPAIGNS: [
-        "campaign", "ad set", "ad group", "creative",
-        "which campaign", "best campaign", "worst campaign",
-        "top campaign", "bottom campaign", "active campaign",
+        "campaign",
+        "ad set",
+        "ad group",
+        "creative",
+        "which campaign",
+        "best campaign",
+        "worst campaign",
+        "top campaign",
+        "bottom campaign",
+        "active campaign",
     ],
     CopilotIntent.HELP: [
-        "help", "what can you do", "capabilities", "features",
-        "how do i", "teach me", "explain", "tutorial",
-        "what do you know", "guide",
+        "help",
+        "what can you do",
+        "capabilities",
+        "features",
+        "how do i",
+        "teach me",
+        "explain",
+        "tutorial",
+        "what do you know",
+        "guide",
     ],
 }
 
@@ -119,8 +197,10 @@ def classify_intent(message: str) -> CopilotIntent:
 # Response Models
 # =============================================================================
 
+
 class CopilotMessage(BaseModel):
     """A single message in the copilot conversation."""
+
     id: str = Field(default_factory=lambda: str(uuid4())[:8])
     role: str  # "user" or "assistant"
     content: str
@@ -132,6 +212,7 @@ class CopilotMessage(BaseModel):
 
 class CopilotSession(BaseModel):
     """Session state for a copilot conversation."""
+
     session_id: str
     user_id: int
     tenant_id: int
@@ -142,6 +223,7 @@ class CopilotSession(BaseModel):
 
 class CopilotResponse(BaseModel):
     """Response from the copilot agent."""
+
     message: str
     suggestions: List[str] = []
     data_cards: List[Dict[str, Any]] = []
@@ -151,6 +233,7 @@ class CopilotResponse(BaseModel):
 # =============================================================================
 # Response Generation
 # =============================================================================
+
 
 def generate_greeting_response(user_name: Optional[str] = None) -> CopilotResponse:
     """Generate a greeting response."""
@@ -209,21 +292,35 @@ def generate_performance_response(
     parts = [f"Here's your performance snapshot:"]
 
     if revenue > 0:
-        roas_quality = "strong" if roas >= 3 else ("healthy" if roas >= 2 else ("below target" if roas >= 1 else "needs attention"))
+        roas_quality = (
+            "strong"
+            if roas >= 3
+            else (
+                "healthy"
+                if roas >= 2
+                else ("below target" if roas >= 1 else "needs attention")
+            )
+        )
         parts.append(
             f"You're generating **${revenue:,.0f}** in revenue from **${spend:,.0f}** in spend, "
             f"for a ROAS of **{roas:.2f}x** — that's {roas_quality}."
         )
     elif spend > 0:
-        parts.append(f"You're spending **${spend:,.0f}** across your campaigns but I don't see revenue data yet.")
+        parts.append(
+            f"You're spending **${spend:,.0f}** across your campaigns but I don't see revenue data yet."
+        )
 
     if conversions > 0:
         cpa = spend / conversions if conversions > 0 else 0
-        parts.append(f"You've driven **{conversions:,}** conversions at **${cpa:,.2f}** CPA.")
+        parts.append(
+            f"You've driven **{conversions:,}** conversions at **${cpa:,.2f}** CPA."
+        )
 
     if spend_change is not None:
         direction = "up" if spend_change > 0 else "down"
-        parts.append(f"Spend is {direction} **{abs(spend_change):.1f}%** vs. the prior period.")
+        parts.append(
+            f"Spend is {direction} **{abs(spend_change):.1f}%** vs. the prior period."
+        )
 
     if revenue_change is not None:
         direction = "up" if revenue_change > 0 else "down"
@@ -354,7 +451,9 @@ def generate_anomaly_response(
             intent="anomalies",
         )
 
-    parts = [f"I detected **{total}** anomal{'y' if total == 1 else 'ies'} in your data."]
+    parts = [
+        f"I detected **{total}** anomal{'y' if total == 1 else 'ies'} in your data."
+    ]
 
     if critical > 0:
         parts.append(f"**{critical} critical** — needs immediate attention.")
@@ -365,7 +464,9 @@ def generate_anomaly_response(
 
     if correlations:
         top_corr = correlations[0]
-        parts.append(f"Key pattern: **{top_corr.get('title', '')}** — {top_corr.get('description', '')[:120]}.")
+        parts.append(
+            f"Key pattern: **{top_corr.get('title', '')}** — {top_corr.get('description', '')[:120]}."
+        )
 
     if narratives:
         top = narratives[0]
@@ -379,7 +480,9 @@ def generate_anomaly_response(
         {"label": "Portfolio Risk", "value": risk.title(), "status": risk},
     ]
     if critical > 0:
-        data_cards.append({"label": "Critical", "value": str(critical), "status": "critical"})
+        data_cards.append(
+            {"label": "Critical", "value": str(critical), "status": "critical"}
+        )
 
     return CopilotResponse(
         message=" ".join(parts),
@@ -415,10 +518,14 @@ def generate_spend_response(
 
     if spend_change is not None:
         direction = "increased" if spend_change > 0 else "decreased"
-        parts.append(f"Spend has {direction} **{abs(spend_change):.1f}%** vs. prior period.")
+        parts.append(
+            f"Spend has {direction} **{abs(spend_change):.1f}%** vs. prior period."
+        )
 
     if conversions > 0:
-        parts.append(f"Cost per acquisition: **${cpa:,.2f}** across **{conversions:,}** conversions.")
+        parts.append(
+            f"Cost per acquisition: **${cpa:,.2f}** across **{conversions:,}** conversions."
+        )
 
     if revenue > 0:
         efficiency = revenue / spend if spend > 0 else 0
@@ -480,7 +587,11 @@ def generate_roas_response(
     )
 
     data_cards = [
-        {"label": "ROAS", "value": f"{roas:.2f}x", "status": "healthy" if roas >= 2 else "degraded"},
+        {
+            "label": "ROAS",
+            "value": f"{roas:.2f}x",
+            "status": "healthy" if roas >= 2 else "degraded",
+        },
         {"label": "Revenue", "value": f"${revenue:,.0f}"},
         {"label": "Spend", "value": f"${spend:,.0f}"},
     ]
@@ -530,7 +641,9 @@ def generate_recommendations_response(
             )
         for corr in correlations[:2]:
             if corr.get("severity") in ("critical", "high"):
-                recommendations.append(f"**{corr.get('title', '')}** — {corr.get('description', '')[:100]}.")
+                recommendations.append(
+                    f"**{corr.get('title', '')}** — {corr.get('description', '')[:100]}."
+                )
 
     # Performance-based recommendations
     if metrics:
@@ -580,9 +693,7 @@ def generate_campaigns_response(
             intent="campaigns",
         )
 
-    message = (
-        f"You have **{active}** active campaigns out of **{total}** total. "
-    )
+    message = f"You have **{active}** active campaigns out of **{total}** total. "
 
     if metrics and metrics.get("spend", 0) > 0:
         message += (
@@ -590,9 +701,7 @@ def generate_campaigns_response(
             f"**{metrics.get('conversions', 0):,}** conversions. "
         )
 
-    message += (
-        "For detailed performance by campaign, check the Campaigns table on your dashboard."
-    )
+    message += "For detailed performance by campaign, check the Campaigns table on your dashboard."
 
     return CopilotResponse(
         message=message,
@@ -614,12 +723,12 @@ def generate_help_response() -> CopilotResponse:
     return CopilotResponse(
         message=(
             "I'm your Stratum AI Copilot! Here's what I can help with:\n\n"
-            "**Performance** — \"How are my campaigns doing?\" or \"Show me an overview\"\n\n"
-            "**Signal Health** — \"Is my signal healthy?\" or \"Check EMQ\"\n\n"
-            "**Anomalies** — \"Any anomalies?\" or \"Is anything unusual?\"\n\n"
-            "**Spend & ROAS** — \"How much am I spending?\" or \"What's my ROAS?\"\n\n"
-            "**Recommendations** — \"What should I do?\" or \"Give me advice\"\n\n"
-            "**Campaigns** — \"How many campaigns are active?\" or \"Show me campaigns\"\n\n"
+            '**Performance** — "How are my campaigns doing?" or "Show me an overview"\n\n'
+            '**Signal Health** — "Is my signal healthy?" or "Check EMQ"\n\n'
+            '**Anomalies** — "Any anomalies?" or "Is anything unusual?"\n\n'
+            '**Spend & ROAS** — "How much am I spending?" or "What\'s my ROAS?"\n\n'
+            '**Recommendations** — "What should I do?" or "Give me advice"\n\n'
+            '**Campaigns** — "How many campaigns are active?" or "Show me campaigns"\n\n'
             "Just ask in plain English and I'll fetch the latest data for you!"
         ),
         suggestions=[
@@ -654,6 +763,7 @@ def generate_unknown_response(message: str) -> CopilotResponse:
 # Main Agent Entry Point
 # =============================================================================
 
+
 def process_message(
     message: str,
     user_name: Optional[str] = None,
@@ -676,7 +786,9 @@ def process_message(
     """
     intent = classify_intent(message)
 
-    logger.info("copilot_intent_classified", intent=intent.value, message_preview=message[:50])
+    logger.info(
+        "copilot_intent_classified", intent=intent.value, message_preview=message[:50]
+    )
 
     if intent == CopilotIntent.GREETING:
         return generate_greeting_response(user_name)

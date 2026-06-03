@@ -16,15 +16,17 @@ Architecture:
 Builds on: budget.py, scoring.py, predictive_budget.py, pacing
 """
 
-from typing import List, Optional, Dict, Literal
 from datetime import datetime, timezone
-from pydantic import BaseModel, Field
+from typing import Dict, List, Literal, Optional
 
+from pydantic import BaseModel, Field
 
 # ── Models ───────────────────────────────────────────────────────────────────
 
+
 class PlatformEfficiency(BaseModel):
     """Efficiency metrics for a single platform."""
+
     platform: str
     campaigns: int
     current_spend: float
@@ -39,6 +41,7 @@ class PlatformEfficiency(BaseModel):
 
 class AllocationShift(BaseModel):
     """A recommended budget shift between platforms."""
+
     from_platform: str
     to_platform: str
     shift_amount: float
@@ -48,6 +51,7 @@ class AllocationShift(BaseModel):
 
 class PlatformRecommendation(BaseModel):
     """Budget recommendation for a single platform."""
+
     platform: str
     current_spend: float
     recommended_spend: float
@@ -62,6 +66,7 @@ class PlatformRecommendation(BaseModel):
 
 class OptimizationScenario(BaseModel):
     """A what-if scenario for budget distribution."""
+
     name: str
     description: str
     allocations: Dict[str, float]  # platform -> spend
@@ -73,6 +78,7 @@ class OptimizationScenario(BaseModel):
 
 class CrossPlatformOptimizerResponse(BaseModel):
     """Full cross-platform optimizer response."""
+
     summary: str
     strategy: Literal["roas_max", "balanced", "volume_max"]
     total_budget: float
@@ -90,6 +96,7 @@ class CrossPlatformOptimizerResponse(BaseModel):
 
 
 # ── Scoring ──────────────────────────────────────────────────────────────────
+
 
 def _compute_efficiency_score(
     roas: float,
@@ -149,8 +156,7 @@ def _compute_optimal_allocation(
 
     total_weight = sum(weights.values())
     allocation = {
-        plat: round(total_budget * (w / total_weight), 2)
-        for plat, w in weights.items()
+        plat: round(total_budget * (w / total_weight), 2) for plat, w in weights.items()
     }
     return allocation
 
@@ -177,16 +183,40 @@ def _generate_shifts(
             scalers.append((plat, diff))
 
     # Sort: reduce from least efficient, scale to most efficient
-    reducers.sort(key=lambda x: eff_map.get(x[0], PlatformEfficiency(
-        platform="", campaigns=0, current_spend=0, current_revenue=0,
-        roas=0, cpa=0, conversions=0, spend_share_pct=0,
-        efficiency_score=0, efficiency_rank=0,
-    )).efficiency_score)
-    scalers.sort(key=lambda x: -eff_map.get(x[0], PlatformEfficiency(
-        platform="", campaigns=0, current_spend=0, current_revenue=0,
-        roas=0, cpa=0, conversions=0, spend_share_pct=0,
-        efficiency_score=0, efficiency_rank=0,
-    )).efficiency_score)
+    reducers.sort(
+        key=lambda x: eff_map.get(
+            x[0],
+            PlatformEfficiency(
+                platform="",
+                campaigns=0,
+                current_spend=0,
+                current_revenue=0,
+                roas=0,
+                cpa=0,
+                conversions=0,
+                spend_share_pct=0,
+                efficiency_score=0,
+                efficiency_rank=0,
+            ),
+        ).efficiency_score
+    )
+    scalers.sort(
+        key=lambda x: -eff_map.get(
+            x[0],
+            PlatformEfficiency(
+                platform="",
+                campaigns=0,
+                current_spend=0,
+                current_revenue=0,
+                roas=0,
+                cpa=0,
+                conversions=0,
+                spend_share_pct=0,
+                efficiency_score=0,
+                efficiency_rank=0,
+            ),
+        ).efficiency_score
+    )
 
     for from_plat, from_amt in reducers:
         for to_plat, to_amt in scalers:
@@ -198,16 +228,20 @@ def _generate_shifts(
             if not from_eff or not to_eff:
                 continue
 
-            shifts.append(AllocationShift(
-                from_platform=from_plat,
-                to_platform=to_plat,
-                shift_amount=round(shift, 2),
-                shift_pct=round(shift / total_budget * 100, 1) if total_budget > 0 else 0,
-                reasoning=(
-                    f"Shift ${shift:,.0f} from {from_plat} ({from_eff.roas:.2f}x ROAS) "
-                    f"to {to_plat} ({to_eff.roas:.2f}x ROAS) for better returns."
-                ),
-            ))
+            shifts.append(
+                AllocationShift(
+                    from_platform=from_plat,
+                    to_platform=to_plat,
+                    shift_amount=round(shift, 2),
+                    shift_pct=(
+                        round(shift / total_budget * 100, 1) if total_budget > 0 else 0
+                    ),
+                    reasoning=(
+                        f"Shift ${shift:,.0f} from {from_plat} ({from_eff.roas:.2f}x ROAS) "
+                        f"to {to_plat} ({to_eff.roas:.2f}x ROAS) for better returns."
+                    ),
+                )
+            )
             break  # one shift per reducer
 
     return shifts[:5]
@@ -224,65 +258,75 @@ def _build_scenarios(
     eff_map = {p.platform: p for p in platforms}
 
     def project(alloc: Dict[str, float]) -> tuple:
-        rev = sum(
-            alloc.get(p.platform, 0) * p.roas
-            for p in platforms
-        )
+        rev = sum(alloc.get(p.platform, 0) * p.roas for p in platforms)
         spend = sum(alloc.values())
         roas = rev / spend if spend > 0 else 0
-        convs = int(sum(
-            alloc.get(p.platform, 0) / max(p.cpa, 0.01)
-            for p in platforms
-            if p.cpa > 0
-        ))
-        improvement = ((rev - current_revenue) / current_revenue * 100) if current_revenue > 0 else 0
+        convs = int(
+            sum(
+                alloc.get(p.platform, 0) / max(p.cpa, 0.01)
+                for p in platforms
+                if p.cpa > 0
+            )
+        )
+        improvement = (
+            ((rev - current_revenue) / current_revenue * 100)
+            if current_revenue > 0
+            else 0
+        )
         return round(rev, 2), round(roas, 2), convs, round(improvement, 1)
 
     # Scenario 1: ROAS-optimized
     roas_alloc = _compute_optimal_allocation(platforms, total_budget, "roas_max")
     rev, roas, convs, imp = project(roas_alloc)
-    scenarios.append(OptimizationScenario(
-        name="ROAS Maximized",
-        description="Allocate more to highest-ROAS platforms.",
-        allocations=roas_alloc,
-        projected_revenue=rev,
-        projected_roas=roas,
-        projected_conversions=convs,
-        improvement_pct=imp,
-    ))
+    scenarios.append(
+        OptimizationScenario(
+            name="ROAS Maximized",
+            description="Allocate more to highest-ROAS platforms.",
+            allocations=roas_alloc,
+            projected_revenue=rev,
+            projected_roas=roas,
+            projected_conversions=convs,
+            improvement_pct=imp,
+        )
+    )
 
     # Scenario 2: Volume-optimized
     vol_alloc = _compute_optimal_allocation(platforms, total_budget, "volume_max")
     rev, roas, convs, imp = project(vol_alloc)
-    scenarios.append(OptimizationScenario(
-        name="Volume Maximized",
-        description="Prioritize platforms with highest conversion volume.",
-        allocations=vol_alloc,
-        projected_revenue=rev,
-        projected_roas=roas,
-        projected_conversions=convs,
-        improvement_pct=imp,
-    ))
+    scenarios.append(
+        OptimizationScenario(
+            name="Volume Maximized",
+            description="Prioritize platforms with highest conversion volume.",
+            allocations=vol_alloc,
+            projected_revenue=rev,
+            projected_roas=roas,
+            projected_conversions=convs,
+            improvement_pct=imp,
+        )
+    )
 
     # Scenario 3: Equal distribution
     n = len(platforms)
     if n > 0:
         equal_alloc = {p.platform: round(total_budget / n, 2) for p in platforms}
         rev, roas, convs, imp = project(equal_alloc)
-        scenarios.append(OptimizationScenario(
-            name="Equal Distribution",
-            description="Split budget equally across all platforms.",
-            allocations=equal_alloc,
-            projected_revenue=rev,
-            projected_roas=roas,
-            projected_conversions=convs,
-            improvement_pct=imp,
-        ))
+        scenarios.append(
+            OptimizationScenario(
+                name="Equal Distribution",
+                description="Split budget equally across all platforms.",
+                allocations=equal_alloc,
+                projected_revenue=rev,
+                projected_roas=roas,
+                projected_conversions=convs,
+                improvement_pct=imp,
+            )
+        )
 
     return scenarios
 
 
 # ── Main Entry Point ─────────────────────────────────────────────────────────
+
 
 def build_cross_platform_optimizer(
     campaigns: List[Dict],
@@ -315,7 +359,12 @@ def build_cross_platform_optimizer(
     for c in campaigns:
         plat = c.get("platform", "Unknown")
         if plat not in plat_data:
-            plat_data[plat] = {"spend": 0, "revenue": 0, "conversions": 0, "campaigns": 0}
+            plat_data[plat] = {
+                "spend": 0,
+                "revenue": 0,
+                "conversions": 0,
+                "campaigns": 0,
+            }
         plat_data[plat]["spend"] += c.get("spend", 0)
         plat_data[plat]["revenue"] += c.get("revenue", 0)
         plat_data[plat]["conversions"] += c.get("conversions", 0)
@@ -343,18 +392,20 @@ def build_cross_platform_optimizer(
 
         eff_score = _compute_efficiency_score(roas, cpa, conversions, avg_roas, avg_cpa)
 
-        platforms.append(PlatformEfficiency(
-            platform=plat,
-            campaigns=data["campaigns"],
-            current_spend=round(spend, 2),
-            current_revenue=round(revenue, 2),
-            roas=round(roas, 2),
-            cpa=round(cpa, 2),
-            conversions=conversions,
-            spend_share_pct=round(share, 1),
-            efficiency_score=eff_score,
-            efficiency_rank=0,
-        ))
+        platforms.append(
+            PlatformEfficiency(
+                platform=plat,
+                campaigns=data["campaigns"],
+                current_spend=round(spend, 2),
+                current_revenue=round(revenue, 2),
+                roas=round(roas, 2),
+                cpa=round(cpa, 2),
+                conversions=conversions,
+                spend_share_pct=round(share, 1),
+                efficiency_score=eff_score,
+                efficiency_rank=0,
+            )
+        )
 
     # Rank by efficiency
     platforms.sort(key=lambda p: -p.efficiency_score)
@@ -395,7 +446,11 @@ def build_cross_platform_optimizer(
         proj_revenue = opt_spend * proj_roas
 
         # Confidence based on data volume
-        conf = min(1.0, p.conversions / 30) * 0.5 + min(1.0, p.current_spend / 500) * 0.3 + 0.2
+        conf = (
+            min(1.0, p.conversions / 30) * 0.5
+            + min(1.0, p.current_spend / 500) * 0.3
+            + 0.2
+        )
 
         # Reasoning
         if action == "scale":
@@ -416,18 +471,20 @@ def build_cross_platform_optimizer(
                 f"Maintain current allocation."
             )
 
-        recommendations.append(PlatformRecommendation(
-            platform=p.platform,
-            current_spend=p.current_spend,
-            recommended_spend=round(opt_spend, 2),
-            change_amount=round(change, 2),
-            change_pct=round(change_pct, 1),
-            action=action,
-            reasoning=reasoning,
-            projected_roas=round(proj_roas, 2),
-            projected_revenue=round(proj_revenue, 2),
-            confidence=round(conf, 2),
-        ))
+        recommendations.append(
+            PlatformRecommendation(
+                platform=p.platform,
+                current_spend=p.current_spend,
+                recommended_spend=round(opt_spend, 2),
+                change_amount=round(change, 2),
+                change_pct=round(change_pct, 1),
+                action=action,
+                reasoning=reasoning,
+                projected_roas=round(proj_roas, 2),
+                projected_revenue=round(proj_revenue, 2),
+                confidence=round(conf, 2),
+            )
+        )
 
     recommendations.sort(key=lambda r: -abs(r.change_pct))
 
@@ -439,19 +496,29 @@ def build_cross_platform_optimizer(
 
     # Calculate optimized ROAS (from balanced scenario)
     optimized_revenue = sum(
-        optimal.get(p.platform, p.current_spend) * p.roas
-        for p in platforms
+        optimal.get(p.platform, p.current_spend) * p.roas for p in platforms
     )
     optimized_roas = optimized_revenue / total_spend if total_spend > 0 else 0
-    roas_improvement = ((optimized_roas - current_roas) / current_roas * 100) if current_roas > 0 else 0
+    roas_improvement = (
+        ((optimized_roas - current_roas) / current_roas * 100)
+        if current_roas > 0
+        else 0
+    )
 
-    realloc_amount = sum(abs(r.change_amount) for r in recommendations) / 2  # divide by 2 since shifts are paired
+    realloc_amount = (
+        sum(abs(r.change_amount) for r in recommendations) / 2
+    )  # divide by 2 since shifts are paired
     realloc_pct = (realloc_amount / total_spend * 100) if total_spend > 0 else 0
 
     # Summary
     summary = _build_summary(
-        platforms, recommendations, current_roas, optimized_roas,
-        roas_improvement, realloc_amount, strategy,
+        platforms,
+        recommendations,
+        current_roas,
+        optimized_roas,
+        roas_improvement,
+        realloc_amount,
+        strategy,
     )
 
     return CrossPlatformOptimizerResponse(
@@ -484,7 +551,11 @@ def _build_summary(
     """Build executive summary."""
     parts = []
 
-    strategy_labels = {"roas_max": "ROAS maximization", "balanced": "balanced", "volume_max": "volume maximization"}
+    strategy_labels = {
+        "roas_max": "ROAS maximization",
+        "balanced": "balanced",
+        "volume_max": "volume maximization",
+    }
     parts.append(
         f"Analyzing {len(platforms)} platform{'s' if len(platforms) > 1 else ''} "
         f"using {strategy_labels.get(strategy, strategy)} strategy."
@@ -494,9 +565,13 @@ def _build_summary(
     reduce_count = sum(1 for r in recommendations if r.action == "reduce")
 
     if scale_count > 0:
-        parts.append(f"{scale_count} platform{'s' if scale_count > 1 else ''} recommended for scaling.")
+        parts.append(
+            f"{scale_count} platform{'s' if scale_count > 1 else ''} recommended for scaling."
+        )
     if reduce_count > 0:
-        parts.append(f"{reduce_count} platform{'s' if reduce_count > 1 else ''} recommended for reduction.")
+        parts.append(
+            f"{reduce_count} platform{'s' if reduce_count > 1 else ''} recommended for reduction."
+        )
 
     if improvement > 0:
         parts.append(
@@ -504,6 +579,8 @@ def _build_summary(
             f"(+{improvement:.1f}%) with ${realloc_amount:,.0f} reallocation."
         )
     elif improvement == 0:
-        parts.append("Current allocation is near optimal — no significant changes needed.")
+        parts.append(
+            "Current allocation is near optimal — no significant changes needed."
+        )
 
     return " ".join(parts)

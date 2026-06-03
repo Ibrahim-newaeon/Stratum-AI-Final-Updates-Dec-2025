@@ -16,11 +16,24 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Query, BackgroundTasks, Header
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import func as sa_func, select, and_
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    Header,
+    HTTPException,
+    Query,
+    Request,
+)
 from pydantic import BaseModel, Field
+from sqlalchemy import and_
+from sqlalchemy import func as sa_func
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.permissions import require_super_admin
+from app.core.config import settings
+from app.core.logging import get_logger
 from app.db.session import get_async_session
 from app.models.crm import (
     CRMConnection,
@@ -28,20 +41,17 @@ from app.models.crm import (
     CRMContact,
     CRMDeal,
     CRMProvider,
-    DealStage,
-    DailyPipelineMetrics,
     CRMWritebackConfig,
     CRMWritebackSync,
+    DailyPipelineMetrics,
+    DealStage,
     WritebackStatus,
 )
+from app.schemas.response import APIResponse
 from app.services.crm.hubspot_client import HubSpotClient
 from app.services.crm.hubspot_sync import HubSpotSyncService
-from app.services.crm.identity_matching import IdentityMatcher
 from app.services.crm.hubspot_writeback import HubSpotWritebackService
-from app.auth.permissions import require_super_admin
-from app.core.config import settings
-from app.core.logging import get_logger
-from app.schemas.response import APIResponse
+from app.services.crm.identity_matching import IdentityMatcher
 
 router = APIRouter(prefix="/integrations", tags=["integrations"])
 
@@ -63,19 +73,23 @@ def _verify_tenant_access(request: Request, tenant_id: int) -> None:
 # Pydantic Schemas
 # =============================================================================
 
+
 class HubSpotConnectRequest(BaseModel):
     """Request to initiate HubSpot OAuth."""
+
     redirect_uri: str = Field(..., description="OAuth callback URL")
 
 
 class HubSpotConnectResponse(BaseModel):
     """Response with OAuth authorization URL."""
+
     authorization_url: str
     state: str
 
 
 class HubSpotCallbackRequest(BaseModel):
     """OAuth callback parameters."""
+
     code: str
     state: str
     redirect_uri: str
@@ -83,6 +97,7 @@ class HubSpotCallbackRequest(BaseModel):
 
 class HubSpotStatusResponse(BaseModel):
     """HubSpot connection status."""
+
     connected: bool
     status: str
     provider: str = "hubspot"
@@ -95,11 +110,15 @@ class HubSpotStatusResponse(BaseModel):
 
 class SyncRequest(BaseModel):
     """Manual sync request."""
-    full_sync: bool = Field(default=False, description="Perform full sync vs incremental")
+
+    full_sync: bool = Field(
+        default=False, description="Perform full sync vs incremental"
+    )
 
 
 class SyncResponse(BaseModel):
     """Sync operation response."""
+
     status: str
     contacts_synced: int = 0
     contacts_created: int = 0
@@ -112,6 +131,7 @@ class SyncResponse(BaseModel):
 
 class PipelineSummaryResponse(BaseModel):
     """Pipeline metrics summary."""
+
     status: str
     stage_counts: Dict[str, int] = {}
     stage_values: Dict[str, float] = {}
@@ -123,6 +143,7 @@ class PipelineSummaryResponse(BaseModel):
 
 class PipelineROASResponse(BaseModel):
     """Pipeline ROAS metrics."""
+
     date_range: Dict[str, str]
     spend: float
     platform_revenue: float
@@ -136,6 +157,7 @@ class PipelineROASResponse(BaseModel):
 
 class AttributionReportResponse(BaseModel):
     """Attribution report by dimension."""
+
     dimension: str
     date_range: Dict[str, str]
     data: List[Dict[str, Any]]
@@ -143,6 +165,7 @@ class AttributionReportResponse(BaseModel):
 
 class WebhookPayload(BaseModel):
     """HubSpot webhook payload."""
+
     subscriptionType: str
     objectId: int
     propertyName: Optional[str] = None
@@ -159,6 +182,7 @@ class WebhookPayload(BaseModel):
 # =============================================================================
 # HubSpot OAuth Endpoints
 # =============================================================================
+
 
 @router.post(
     "/hubspot/connect",
@@ -181,6 +205,7 @@ async def hubspot_connect(
 
     # Generate state token for CSRF protection
     import secrets
+
     state = secrets.token_urlsafe(32)
 
     # Store state in session/cache (simplified - in production use Redis)
@@ -292,6 +317,7 @@ async def hubspot_disconnect(
 # Sync Endpoints
 # =============================================================================
 
+
 @router.post(
     "/hubspot/sync",
     response_model=APIResponse[SyncResponse],
@@ -326,6 +352,7 @@ async def hubspot_sync(
 # Webhook Endpoint
 # =============================================================================
 
+
 @router.post(
     "/hubspot/webhook",
     summary="HubSpot webhook receiver",
@@ -334,7 +361,9 @@ async def hubspot_webhook(
     request: Request,
     background_tasks: BackgroundTasks,
     x_hubspot_signature: Optional[str] = Header(None, alias="X-HubSpot-Signature"),
-    x_hubspot_signature_v3: Optional[str] = Header(None, alias="X-HubSpot-Signature-v3"),
+    x_hubspot_signature_v3: Optional[str] = Header(
+        None, alias="X-HubSpot-Signature-v3"
+    ),
     db: AsyncSession = Depends(get_async_session),
 ):
     """
@@ -393,6 +422,7 @@ async def hubspot_webhook(
 # =============================================================================
 # Pipeline & Attribution Endpoints
 # =============================================================================
+
 
 @router.get(
     "/pipeline/summary",
@@ -459,9 +489,7 @@ async def pipeline_roas(
     if campaign_id:
         conditions.append(DailyPipelineMetrics.campaign_id == campaign_id)
 
-    result = await db.execute(
-        select(DailyPipelineMetrics).where(and_(*conditions))
-    )
+    result = await db.execute(select(DailyPipelineMetrics).where(and_(*conditions)))
     metrics = result.scalars().all()
 
     # Aggregate
@@ -542,6 +570,7 @@ async def attribution_report(
 # Contact & Deal Endpoints
 # =============================================================================
 
+
 @router.get(
     "/contacts",
     response_model=APIResponse[Dict[str, Any]],
@@ -551,8 +580,12 @@ async def attribution_report(
 async def list_contacts(
     request: Request,
     tenant_id: int = Query(..., description="Tenant ID"),
-    lifecycle_stage: Optional[str] = Query(None, description="Filter by lifecycle stage"),
-    has_attribution: Optional[bool] = Query(None, description="Filter by attribution status"),
+    lifecycle_stage: Optional[str] = Query(
+        None, description="Filter by lifecycle stage"
+    ),
+    has_attribution: Optional[bool] = Query(
+        None, description="Filter by attribution status"
+    ),
     limit: int = Query(50, ge=1, le=100),
     offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_async_session),
@@ -623,7 +656,9 @@ async def list_deals(
     tenant_id: int = Query(..., description="Tenant ID"),
     stage: Optional[str] = Query(None, description="Filter by stage"),
     is_won: Optional[bool] = Query(None, description="Filter by won status"),
-    has_attribution: Optional[bool] = Query(None, description="Filter by attribution status"),
+    has_attribution: Optional[bool] = Query(
+        None, description="Filter by attribution status"
+    ),
     limit: int = Query(50, ge=1, le=100),
     offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_async_session),
@@ -670,7 +705,9 @@ async def list_deals(
                     "crm_deal_id": d.crm_deal_id,
                     "deal_name": d.deal_name,
                     "stage": d.stage,
-                    "stage_normalized": d.stage_normalized.value if d.stage_normalized else None,
+                    "stage_normalized": (
+                        d.stage_normalized.value if d.stage_normalized else None
+                    ),
                     "amount": d.amount,
                     "currency": d.currency,
                     "is_won": d.is_won,
@@ -693,6 +730,7 @@ async def list_deals(
 # =============================================================================
 # Identity Matching Endpoints
 # =============================================================================
+
 
 @router.post(
     "/identity/match",
@@ -723,6 +761,7 @@ async def run_identity_matching(
 # =============================================================================
 # HubSpot Writeback Endpoints
 # =============================================================================
+
 
 @router.get(
     "/hubspot/writeback/status",
@@ -852,9 +891,7 @@ async def run_writeback_sync(
     modified_since = None
     if not full_sync:
         result = await db.execute(
-            select(CRMWritebackConfig).where(
-                CRMWritebackConfig.tenant_id == tenant_id
-            )
+            select(CRMWritebackConfig).where(CRMWritebackConfig.tenant_id == tenant_id)
         )
         config = result.scalar_one_or_none()
         if config and config.last_sync_at:
@@ -895,7 +932,11 @@ async def run_writeback_sync(
         )
 
         # Update sync record
-        sync_record.status = WritebackStatus.COMPLETED if results["status"] == "completed" else WritebackStatus.PARTIAL
+        sync_record.status = (
+            WritebackStatus.COMPLETED
+            if results["status"] == "completed"
+            else WritebackStatus.PARTIAL
+        )
         sync_record.completed_at = datetime.now(timezone.utc)
         sync_record.duration_seconds = (
             sync_record.completed_at - sync_record.started_at
@@ -961,7 +1002,9 @@ async def get_writeback_history(
                     "sync_type": s.sync_type,
                     "status": s.status.value,
                     "started_at": s.started_at.isoformat(),
-                    "completed_at": s.completed_at.isoformat() if s.completed_at else None,
+                    "completed_at": (
+                        s.completed_at.isoformat() if s.completed_at else None
+                    ),
                     "duration_seconds": s.duration_seconds,
                     "contacts_synced": s.contacts_synced,
                     "contacts_failed": s.contacts_failed,
@@ -988,7 +1031,9 @@ async def update_writeback_config(
     sync_contacts: Optional[bool] = Query(None, description="Sync contacts"),
     sync_deals: Optional[bool] = Query(None, description="Sync deals"),
     auto_sync_enabled: Optional[bool] = Query(None, description="Enable auto-sync"),
-    sync_interval_hours: Optional[int] = Query(None, ge=1, le=168, description="Sync interval in hours"),
+    sync_interval_hours: Optional[int] = Query(
+        None, ge=1, le=168, description="Sync interval in hours"
+    ),
     db: AsyncSession = Depends(get_async_session),
 ):
     """Update writeback configuration settings."""

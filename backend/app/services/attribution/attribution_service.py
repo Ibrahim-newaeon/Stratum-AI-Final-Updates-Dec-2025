@@ -14,23 +14,23 @@ Supported models:
 - Custom: User-defined weights
 """
 
+import math
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID
-import math
 
-from sqlalchemy import select, and_, or_, func, case
+from sqlalchemy import and_, case, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.logging import get_logger
 from app.models.crm import (
+    AttributionModel,
     CRMContact,
     CRMDeal,
-    Touchpoint,
-    AttributionModel,
     DailyPipelineMetrics,
+    Touchpoint,
 )
 
 logger = get_logger(__name__)
@@ -42,31 +42,31 @@ logger = get_logger(__name__)
 # and typical customer journey lengths for each advertising platform.
 PLATFORM_ATTRIBUTION_WINDOWS = {
     "meta": {
-        "click_window": 7,       # Meta default: 7-day click
-        "view_window": 1,        # Meta default: 1-day view
-        "half_life_days": 3.5,   # Half-life for time decay
-        "max_lookback": 28,      # Maximum lookback period
+        "click_window": 7,  # Meta default: 7-day click
+        "view_window": 1,  # Meta default: 1-day view
+        "half_life_days": 3.5,  # Half-life for time decay
+        "max_lookback": 28,  # Maximum lookback period
     },
     "google": {
-        "click_window": 30,      # Google default: 30-day click
-        "view_window": 0,        # Google doesn't use view-through by default
-        "half_life_days": 7.0,   # Longer half-life for search intent
-        "max_lookback": 90,      # Google supports up to 90 days
+        "click_window": 30,  # Google default: 30-day click
+        "view_window": 0,  # Google doesn't use view-through by default
+        "half_life_days": 7.0,  # Longer half-life for search intent
+        "max_lookback": 90,  # Google supports up to 90 days
     },
     "tiktok": {
-        "click_window": 7,       # TikTok default: 7-day click
-        "view_window": 1,        # TikTok default: 1-day view
-        "half_life_days": 2.0,   # Shorter - impulse purchases
+        "click_window": 7,  # TikTok default: 7-day click
+        "view_window": 1,  # TikTok default: 1-day view
+        "half_life_days": 2.0,  # Shorter - impulse purchases
         "max_lookback": 28,
     },
     "snapchat": {
-        "click_window": 28,      # Snapchat default: 28-day click
-        "view_window": 1,        # Snapchat default: 1-day view
+        "click_window": 28,  # Snapchat default: 28-day click
+        "view_window": 1,  # Snapchat default: 1-day view
         "half_life_days": 3.0,
         "max_lookback": 28,
     },
     "pinterest": {
-        "click_window": 30,      # Pinterest supports longer consideration
+        "click_window": 30,  # Pinterest supports longer consideration
         "view_window": 1,
         "half_life_days": 7.0,
         "max_lookback": 60,
@@ -92,13 +92,14 @@ def get_platform_attribution_config(platform: str) -> Dict[str, Any]:
     """
     platform_lower = (platform or "default").lower()
     return PLATFORM_ATTRIBUTION_WINDOWS.get(
-        platform_lower,
-        PLATFORM_ATTRIBUTION_WINDOWS["default"]
+        platform_lower, PLATFORM_ATTRIBUTION_WINDOWS["default"]
     )
+
 
 # =============================================================================
 # Attribution Weight Calculators
 # =============================================================================
+
 
 class AttributionCalculator:
     """
@@ -182,7 +183,7 @@ class AttributionCalculator:
         # If no timestamps provided, use geometric decay
         if touchpoint_times is None or conversion_time is None:
             # Simple geometric decay: each touchpoint is 2x the previous
-            raw_weights = [2 ** i for i in range(touchpoint_count)]
+            raw_weights = [2**i for i in range(touchpoint_count)]
             total = sum(raw_weights)
             return [w / total for w in raw_weights]
 
@@ -237,7 +238,9 @@ class AttributionCalculator:
         weights[lead_creation_index] = 0.3
 
         # Distribute remaining 10% among other middle touchpoints
-        middle_indices = [i for i in range(1, touchpoint_count - 1) if i != lead_creation_index]
+        middle_indices = [
+            i for i in range(1, touchpoint_count - 1) if i != lead_creation_index
+        ]
         if middle_indices:
             middle_weight = 0.1 / len(middle_indices)
             for i in middle_indices:
@@ -292,6 +295,7 @@ class AttributionCalculator:
 # Attribution Service
 # =============================================================================
 
+
 class AttributionService:
     """
     Service for calculating and storing multi-touch attribution.
@@ -314,8 +318,9 @@ class AttributionService:
         """
         # Get deal with contact
         deal_result = await self.db.execute(
-            select(CRMDeal)
-            .where(and_(CRMDeal.id == deal_id, CRMDeal.tenant_id == self.tenant_id))
+            select(CRMDeal).where(
+                and_(CRMDeal.id == deal_id, CRMDeal.tenant_id == self.tenant_id)
+            )
         )
         deal = deal_result.scalar_one_or_none()
 
@@ -328,7 +333,9 @@ class AttributionService:
         # Get touchpoints for the contact
         touchpoints = await self._get_contact_touchpoints(
             deal.contact_id,
-            before_time=deal.won_at or deal.crm_updated_at or datetime.now(timezone.utc),
+            before_time=deal.won_at
+            or deal.crm_updated_at
+            or datetime.now(timezone.utc),
         )
 
         if not touchpoints:
@@ -354,16 +361,18 @@ class AttributionService:
             tp.attribution_weight = weight
             tp.is_converting_touch = True
 
-            attribution_breakdown.append({
-                "touchpoint_id": str(tp.id),
-                "position": i + 1,
-                "event_ts": tp.event_ts.isoformat(),
-                "source": tp.source,
-                "campaign_id": tp.campaign_id,
-                "campaign_name": tp.campaign_name,
-                "weight": round(weight, 4),
-                "attributed_revenue": round(attributed_revenue * weight, 2),
-            })
+            attribution_breakdown.append(
+                {
+                    "touchpoint_id": str(tp.id),
+                    "position": i + 1,
+                    "event_ts": tp.event_ts.isoformat(),
+                    "source": tp.source,
+                    "campaign_id": tp.campaign_id,
+                    "campaign_name": tp.campaign_name,
+                    "weight": round(weight, 4),
+                    "attributed_revenue": round(attributed_revenue * weight, 2),
+                }
+            )
 
         # Update deal with primary attribution (based on model)
         if model == AttributionModel.FIRST_TOUCH:
@@ -392,8 +401,6 @@ class AttributionService:
             "breakdown": attribution_breakdown,
         }
 
-
-
     async def attribute_deal_with_platform_windows(
         self,
         deal_id: UUID,
@@ -417,8 +424,9 @@ class AttributionService:
         """
         # Get deal
         deal_result = await self.db.execute(
-            select(CRMDeal)
-            .where(and_(CRMDeal.id == deal_id, CRMDeal.tenant_id == self.tenant_id))
+            select(CRMDeal).where(
+                and_(CRMDeal.id == deal_id, CRMDeal.tenant_id == self.tenant_id)
+            )
         )
         deal = deal_result.scalar_one_or_none()
 
@@ -428,7 +436,9 @@ class AttributionService:
         if not deal.contact_id:
             return {"success": False, "error": "no_contact_linked"}
 
-        conversion_time = deal.won_at or deal.crm_updated_at or datetime.now(timezone.utc)
+        conversion_time = (
+            deal.won_at or deal.crm_updated_at or datetime.now(timezone.utc)
+        )
 
         # Get all touchpoints first to determine primary platform
         all_touchpoints = await self._get_contact_touchpoints(
@@ -510,18 +520,20 @@ class AttributionService:
             days_before = (conversion_time - tp.event_ts).total_seconds() / 86400
             is_click = tp.gclid or tp.fbclid or tp.ttclid or tp.sclid or tp.click_id
 
-            attribution_breakdown.append({
-                "touchpoint_id": str(tp.id),
-                "position": i + 1,
-                "event_ts": tp.event_ts.isoformat(),
-                "source": tp.source,
-                "campaign_id": tp.campaign_id,
-                "campaign_name": tp.campaign_name,
-                "weight": round(weight, 4),
-                "attributed_revenue": round(attributed_revenue * weight, 2),
-                "days_before_conversion": round(days_before, 1),
-                "touchpoint_type": "click" if is_click else "view",
-            })
+            attribution_breakdown.append(
+                {
+                    "touchpoint_id": str(tp.id),
+                    "position": i + 1,
+                    "event_ts": tp.event_ts.isoformat(),
+                    "source": tp.source,
+                    "campaign_id": tp.campaign_id,
+                    "campaign_name": tp.campaign_name,
+                    "weight": round(weight, 4),
+                    "attributed_revenue": round(attributed_revenue * weight, 2),
+                    "days_before_conversion": round(days_before, 1),
+                    "touchpoint_type": "click" if is_click else "view",
+                }
+            )
 
         # Update deal attribution
         if model == AttributionModel.FIRST_TOUCH:
@@ -606,17 +618,23 @@ class AttributionService:
                     results["attributed"] += 1
                 else:
                     results["failed"] += 1
-                    results["errors"].append({
-                        "deal_id": str(deal.id),
-                        "error": attr_result.get("error"),
-                    })
+                    results["errors"].append(
+                        {
+                            "deal_id": str(deal.id),
+                            "error": attr_result.get("error"),
+                        }
+                    )
             except (ValueError, TypeError, KeyError, ZeroDivisionError) as e:
-                logger.warning("attribution_deal_failed", deal_id=str(deal.id), error=str(e))
+                logger.warning(
+                    "attribution_deal_failed", deal_id=str(deal.id), error=str(e)
+                )
                 results["failed"] += 1
-                results["errors"].append({
-                    "deal_id": str(deal.id),
-                    "error": str(e),
-                })
+                results["errors"].append(
+                    {
+                        "deal_id": str(deal.id),
+                        "error": str(e),
+                    }
+                )
 
         logger.info(
             "batch_attribution_complete",
@@ -699,7 +717,9 @@ class AttributionService:
                             "attributed_deals": 0,
                             "touchpoints": 0,
                         }
-                    campaign_attribution[campaign_key]["attributed_revenue"] += revenue * weight
+                    campaign_attribution[campaign_key]["attributed_revenue"] += (
+                        revenue * weight
+                    )
                     campaign_attribution[campaign_key]["attributed_deals"] += weight
                     campaign_attribution[campaign_key]["touchpoints"] += 1
 
@@ -712,7 +732,9 @@ class AttributionService:
                             "attributed_deals": 0,
                             "touchpoints": 0,
                         }
-                    platform_attribution[platform_key]["attributed_revenue"] += revenue * weight
+                    platform_attribution[platform_key]["attributed_revenue"] += (
+                        revenue * weight
+                    )
                     platform_attribution[platform_key]["attributed_deals"] += weight
                     platform_attribution[platform_key]["touchpoints"] += 1
 
@@ -801,7 +823,8 @@ class AttributionService:
 
             # Find campaign's position in journey
             campaign_indices = [
-                i for i, tp in enumerate(deal_touchpoints)
+                i
+                for i, tp in enumerate(deal_touchpoints)
                 if tp.campaign_id == campaign_id
             ]
 
@@ -914,14 +937,16 @@ class AttributionService:
         # Convert to list and clean up
         result = []
         for group in groups.values():
-            result.append({
-                "key": group["key"],
-                "name": group["name"],
-                "attributed_revenue": round(group["attributed_revenue"], 2),
-                "attributed_deals": round(group["attributed_deals"], 2),
-                "touchpoint_count": group["touchpoint_count"],
-                "unique_contacts": len(group["unique_contacts"]),
-            })
+            result.append(
+                {
+                    "key": group["key"],
+                    "name": group["name"],
+                    "attributed_revenue": round(group["attributed_revenue"], 2),
+                    "attributed_deals": round(group["attributed_deals"], 2),
+                    "touchpoint_count": group["touchpoint_count"],
+                    "unique_contacts": len(group["unique_contacts"]),
+                }
+            )
 
         return sorted(result, key=lambda x: x["attributed_revenue"], reverse=True)
 
@@ -973,6 +998,7 @@ class AttributionService:
 # Data-Driven Attribution (Markov Chain Model)
 # =============================================================================
 
+
 class MarkovAttributionModel:
     """
     Data-Driven Attribution using Markov Chain modeling.
@@ -988,7 +1014,9 @@ class MarkovAttributionModel:
         self.removal_effects: Dict[str, float] = {}
         self._is_fitted = False
 
-    def fit(self, journeys: List[List[str]], converted: List[bool]) -> "MarkovAttributionModel":
+    def fit(
+        self, journeys: List[List[str]], converted: List[bool]
+    ) -> "MarkovAttributionModel":
         """
         Fit the Markov chain model on customer journey data.
 
@@ -1009,14 +1037,15 @@ class MarkovAttributionModel:
 
                 if from_state not in transitions:
                     transitions[from_state] = {}
-                transitions[from_state][to_state] = transitions[from_state].get(to_state, 0) + 1
+                transitions[from_state][to_state] = (
+                    transitions[from_state].get(to_state, 0) + 1
+                )
 
         # Convert to probabilities
         for from_state, to_states in transitions.items():
             total = sum(to_states.values())
             self.transition_matrix[from_state] = {
-                to_state: count / total
-                for to_state, count in to_states.items()
+                to_state: count / total for to_state, count in to_states.items()
             }
 
         # Calculate baseline conversion probability
@@ -1033,7 +1062,9 @@ class MarkovAttributionModel:
         self._is_fitted = True
         return self
 
-    def _calculate_conversion_prob(self, removed_channel: Optional[str] = None) -> float:
+    def _calculate_conversion_prob(
+        self, removed_channel: Optional[str] = None
+    ) -> float:
         """Calculate overall conversion probability (optionally with channel removed)."""
         if not self.transition_matrix:
             return 0.0
@@ -1068,7 +1099,7 @@ class MarkovAttributionModel:
                     # Renormalize
                     total = sum(next_states.values())
                     if total > 0:
-                        next_states = {k: v/total for k, v in next_states.items()}
+                        next_states = {k: v / total for k, v in next_states.items()}
                     else:
                         break
 
@@ -1078,7 +1109,14 @@ class MarkovAttributionModel:
                 # Sample next state
                 states = list(next_states.keys())
                 probs = list(next_states.values())
-                state = states[int(sum(p < sum(probs[:i+1]) for i, p in enumerate([hash(str(_)) % 1000 / 1000])))]
+                state = states[
+                    int(
+                        sum(
+                            p < sum(probs[: i + 1])
+                            for i, p in enumerate([hash(str(_)) % 1000 / 1000])
+                        )
+                    )
+                ]
 
         return conversions / num_simulations
 
@@ -1163,16 +1201,22 @@ class ShapleyAttributionModel:
                     with_channel = frozenset(subset + [channel])
 
                     # Get conversion probabilities
-                    conv_without = self._get_cached_conversion(subset_set, conversion_function)
-                    conv_with = self._get_cached_conversion(with_channel, conversion_function)
+                    conv_without = self._get_cached_conversion(
+                        subset_set, conversion_function
+                    )
+                    conv_with = self._get_cached_conversion(
+                        with_channel, conversion_function
+                    )
 
                     # Marginal contribution
                     marginal = conv_with - conv_without
 
                     # Shapley weight
-                    weight = (math.factorial(subset_size) *
-                             math.factorial(n - subset_size - 1) /
-                             math.factorial(n))
+                    weight = (
+                        math.factorial(subset_size)
+                        * math.factorial(n - subset_size - 1)
+                        / math.factorial(n)
+                    )
 
                     shapley_values[channel] += weight * marginal
 
@@ -1192,7 +1236,7 @@ class ShapleyAttributionModel:
 
         result = []
         for i, item in enumerate(items):
-            for subset in self._get_subsets(items[i+1:], size - 1):
+            for subset in self._get_subsets(items[i + 1 :], size - 1):
                 result.append([item] + subset)
         return result
 
@@ -1210,6 +1254,7 @@ class ShapleyAttributionModel:
 # =============================================================================
 # Cross-Platform Attribution Aggregator
 # =============================================================================
+
 
 class CrossPlatformAttributor:
     """
@@ -1290,8 +1335,7 @@ class CrossPlatformAttributor:
         """Get actual conversions from source of truth."""
         # Query CRM deals or GA4 conversions
         result = await self.db.execute(
-            select(func.count(CRMDeal.id), func.sum(CRMDeal.amount))
-            .where(
+            select(func.count(CRMDeal.id), func.sum(CRMDeal.amount)).where(
                 and_(
                     CRMDeal.tenant_id == self.tenant_id,
                     CRMDeal.is_won == True,
@@ -1316,8 +1360,9 @@ class CrossPlatformAttributor:
         total_claimed = sum(p["conversions"] for p in platform_claims.values())
 
         if total_claimed == 0:
-            return {p: {"conversions": 0, "revenue": 0, "share": 0}
-                   for p in platform_claims}
+            return {
+                p: {"conversions": 0, "revenue": 0, "share": 0} for p in platform_claims
+            }
 
         result = {}
         for platform, claims in platform_claims.items():

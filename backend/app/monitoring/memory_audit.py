@@ -31,9 +31,11 @@ import psutil
 # Data Classes
 # =============================================================================
 
+
 @dataclass
 class ProcessMemory:
     """Process-level memory information."""
+
     pid: int
     rss_mb: float
     vms_mb: float
@@ -49,6 +51,7 @@ class ProcessMemory:
 @dataclass
 class AllocationRecord:
     """A single memory allocation record from tracemalloc."""
+
     file: str
     line: int
     size_kb: float
@@ -59,6 +62,7 @@ class AllocationRecord:
 @dataclass
 class ObjectTypeStats:
     """Statistics for a Python object type."""
+
     type_name: str
     count: int
     size_kb: float
@@ -67,6 +71,7 @@ class ObjectTypeStats:
 @dataclass
 class SnapshotDiff:
     """Difference between two memory snapshots."""
+
     timestamp_start: str
     timestamp_end: str
     duration_seconds: float
@@ -80,6 +85,7 @@ class SnapshotDiff:
 @dataclass
 class MemorySnapshot:
     """A point-in-time memory snapshot."""
+
     timestamp: str
     rss_mb: float
     vms_mb: float
@@ -94,6 +100,7 @@ class MemorySnapshot:
 # =============================================================================
 # Memory Auditor
 # =============================================================================
+
 
 class MemoryAuditor:
     """
@@ -185,16 +192,18 @@ class MemoryAuditor:
         for child in self._process.children(recursive=True):
             try:
                 mem = child.memory_info()
-                children.append({
-                    "pid": child.pid,
-                    "name": child.name(),
-                    "status": child.status(),
-                    "rss_mb": round(mem.rss / (1024 * 1024), 2),
-                    "vms_mb": round(mem.vms / (1024 * 1024), 2),
-                    "cpu_percent": child.cpu_percent(interval=0.1),
-                    "num_threads": child.num_threads(),
-                    "cmdline": " ".join(child.cmdline()[:3]),
-                })
+                children.append(
+                    {
+                        "pid": child.pid,
+                        "name": child.name(),
+                        "status": child.status(),
+                        "rss_mb": round(mem.rss / (1024 * 1024), 2),
+                        "vms_mb": round(mem.vms / (1024 * 1024), 2),
+                        "cpu_percent": child.cpu_percent(interval=0.1),
+                        "num_threads": child.num_threads(),
+                        "cmdline": " ".join(child.cmdline()[:3]),
+                    }
+                )
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 continue
         return children
@@ -212,12 +221,14 @@ class MemoryAuditor:
 
         snapshot = tracemalloc.take_snapshot()
         # Filter out importlib and tracemalloc internals
-        snapshot = snapshot.filter_traces([
-            tracemalloc.Filter(False, "<frozen importlib._bootstrap>"),
-            tracemalloc.Filter(False, "<frozen importlib._bootstrap_external>"),
-            tracemalloc.Filter(False, tracemalloc.__file__),
-            tracemalloc.Filter(False, "<unknown>"),
-        ])
+        snapshot = snapshot.filter_traces(
+            [
+                tracemalloc.Filter(False, "<frozen importlib._bootstrap>"),
+                tracemalloc.Filter(False, "<frozen importlib._bootstrap_external>"),
+                tracemalloc.Filter(False, tracemalloc.__file__),
+                tracemalloc.Filter(False, "<unknown>"),
+            ]
+        )
 
         stats = snapshot.statistics(key_type)
         records = []
@@ -225,13 +236,15 @@ class MemoryAuditor:
         for stat in stats[:limit]:
             frame = stat.traceback[0]
             code_line = linecache.getline(frame.filename, frame.lineno).strip()
-            records.append(AllocationRecord(
-                file=frame.filename,
-                line=frame.lineno,
-                size_kb=round(stat.size / 1024, 2),
-                count=stat.count,
-                code_line=code_line,
-            ))
+            records.append(
+                AllocationRecord(
+                    file=frame.filename,
+                    line=frame.lineno,
+                    size_kb=round(stat.size / 1024, 2),
+                    count=stat.count,
+                    code_line=code_line,
+                )
+            )
 
         return records
 
@@ -241,11 +254,13 @@ class MemoryAuditor:
             return []
 
         snapshot = tracemalloc.take_snapshot()
-        snapshot = snapshot.filter_traces([
-            tracemalloc.Filter(False, "<frozen importlib._bootstrap>"),
-            tracemalloc.Filter(False, "<frozen importlib._bootstrap_external>"),
-            tracemalloc.Filter(False, "<unknown>"),
-        ])
+        snapshot = snapshot.filter_traces(
+            [
+                tracemalloc.Filter(False, "<frozen importlib._bootstrap>"),
+                tracemalloc.Filter(False, "<frozen importlib._bootstrap_external>"),
+                tracemalloc.Filter(False, "<unknown>"),
+            ]
+        )
 
         stats = snapshot.statistics("filename")
         return [
@@ -275,7 +290,9 @@ class MemoryAuditor:
     # Object-Level Analysis (gc + inspection)
     # -------------------------------------------------------------------------
 
-    def get_object_stats(self, limit: int = 30, max_objects: int = 200_000) -> list[ObjectTypeStats]:
+    def get_object_stats(
+        self, limit: int = 30, max_objects: int = 200_000
+    ) -> list[ObjectTypeStats]:
         """Get object counts by type, sorted by count.
 
         Uses a capped iteration to avoid stalling on huge heaps.
@@ -298,9 +315,7 @@ class MemoryAuditor:
             if i >= max_objects:
                 break
 
-        sorted_types = sorted(
-            type_counts.items(), key=lambda x: x[1], reverse=True
-        )
+        sorted_types = sorted(type_counts.items(), key=lambda x: x[1], reverse=True)
 
         results = []
         for name, count in sorted_types[:limit]:
@@ -308,11 +323,13 @@ class MemoryAuditor:
             sampled = size_samples.get(name, 0)
             raw_size = type_sizes.get(name, 0)
             estimated_size = (raw_size / sampled * count) if sampled > 0 else 0
-            results.append(ObjectTypeStats(
-                type_name=name,
-                count=count,
-                size_kb=round(estimated_size / 1024, 2),
-            ))
+            results.append(
+                ObjectTypeStats(
+                    type_name=name,
+                    count=count,
+                    size_kb=round(estimated_size / 1024, 2),
+                )
+            )
 
         return results
 
@@ -320,12 +337,14 @@ class MemoryAuditor:
         """Get garbage collector generation statistics."""
         stats = []
         for i, gen_stat in enumerate(gc.get_stats()):
-            stats.append({
-                "generation": i,
-                "collections": gen_stat.get("collections", 0),
-                "collected": gen_stat.get("collected", 0),
-                "uncollectable": gen_stat.get("uncollectable", 0),
-            })
+            stats.append(
+                {
+                    "generation": i,
+                    "collections": gen_stat.get("collections", 0),
+                    "collected": gen_stat.get("collected", 0),
+                    "uncollectable": gen_stat.get("uncollectable", 0),
+                }
+            )
 
         thresholds = gc.get_threshold()
         for i, threshold in enumerate(thresholds):
@@ -345,12 +364,14 @@ class MemoryAuditor:
         garbage = gc.garbage[:limit]
         cycles = []
         for obj in garbage:
-            cycles.append({
-                "type": type(obj).__name__,
-                "size_bytes": sys.getsizeof(obj),
-                "referrers_count": len(gc.get_referrers(obj)),
-                "repr": repr(obj)[:200],
-            })
+            cycles.append(
+                {
+                    "type": type(obj).__name__,
+                    "size_bytes": sys.getsizeof(obj),
+                    "referrers_count": len(gc.get_referrers(obj)),
+                    "repr": repr(obj)[:200],
+                }
+            )
         return cycles
 
     def force_gc(self) -> dict[str, Any]:
@@ -374,9 +395,7 @@ class MemoryAuditor:
             },
             "counts_before": list(before_counts),
             "counts_after": list(after_counts),
-            "rss_freed_kb": round(
-                (process_mem_before - process_mem_after) / 1024, 2
-            ),
+            "rss_freed_kb": round((process_mem_before - process_mem_after) / 1024, 2),
             "garbage_remaining": len(gc.garbage),
         }
 
@@ -398,19 +417,25 @@ class MemoryAuditor:
         top_allocs: list[AllocationRecord] = []
         if self._tracking:
             raw_snapshot = tracemalloc.take_snapshot()
-            filtered = raw_snapshot.filter_traces([
-                tracemalloc.Filter(False, "<frozen importlib._bootstrap>"),
-                tracemalloc.Filter(False, "<frozen importlib._bootstrap_external>"),
-                tracemalloc.Filter(False, "<unknown>"),
-            ])
+            filtered = raw_snapshot.filter_traces(
+                [
+                    tracemalloc.Filter(False, "<frozen importlib._bootstrap>"),
+                    tracemalloc.Filter(False, "<frozen importlib._bootstrap_external>"),
+                    tracemalloc.Filter(False, "<unknown>"),
+                ]
+            )
             for stat in filtered.statistics("lineno")[:20]:
                 frame = stat.traceback[0]
                 code_line = linecache.getline(frame.filename, frame.lineno).strip()
-                top_allocs.append(AllocationRecord(
-                    file=frame.filename, line=frame.lineno,
-                    size_kb=round(stat.size / 1024, 2), count=stat.count,
-                    code_line=code_line,
-                ))
+                top_allocs.append(
+                    AllocationRecord(
+                        file=frame.filename,
+                        line=frame.lineno,
+                        size_kb=round(stat.size / 1024, 2),
+                        count=stat.count,
+                        code_line=code_line,
+                    )
+                )
 
         # Object counts (lightweight — capped scan)
         type_counts: dict[str, int] = defaultdict(int)
@@ -455,35 +480,39 @@ class MemoryAuditor:
         freed_allocs: list[AllocationRecord] = []
 
         if start._raw_snapshot and end._raw_snapshot:
-            filtered_end = end._raw_snapshot.filter_traces([
-                tracemalloc.Filter(False, "<frozen importlib._bootstrap>"),
-                tracemalloc.Filter(False, "<frozen importlib._bootstrap_external>"),
-                tracemalloc.Filter(False, "<unknown>"),
-            ])
+            filtered_end = end._raw_snapshot.filter_traces(
+                [
+                    tracemalloc.Filter(False, "<frozen importlib._bootstrap>"),
+                    tracemalloc.Filter(False, "<frozen importlib._bootstrap_external>"),
+                    tracemalloc.Filter(False, "<unknown>"),
+                ]
+            )
             stats = filtered_end.compare_to(start._raw_snapshot, "lineno")
 
             for stat in stats[:20]:
                 if stat.size_diff > 0:
                     frame = stat.traceback[0]
-                    code_line = linecache.getline(
-                        frame.filename, frame.lineno
-                    ).strip()
-                    new_allocs.append(AllocationRecord(
-                        file=frame.filename,
-                        line=frame.lineno,
-                        size_kb=round(stat.size_diff / 1024, 2),
-                        count=stat.count_diff,
-                        code_line=code_line,
-                    ))
+                    code_line = linecache.getline(frame.filename, frame.lineno).strip()
+                    new_allocs.append(
+                        AllocationRecord(
+                            file=frame.filename,
+                            line=frame.lineno,
+                            size_kb=round(stat.size_diff / 1024, 2),
+                            count=stat.count_diff,
+                            code_line=code_line,
+                        )
+                    )
                 elif stat.size_diff < 0:
                     frame = stat.traceback[0]
-                    freed_allocs.append(AllocationRecord(
-                        file=frame.filename,
-                        line=frame.lineno,
-                        size_kb=round(abs(stat.size_diff) / 1024, 2),
-                        count=abs(stat.count_diff),
-                        code_line="",
-                    ))
+                    freed_allocs.append(
+                        AllocationRecord(
+                            file=frame.filename,
+                            line=frame.lineno,
+                            size_kb=round(abs(stat.size_diff) / 1024, 2),
+                            count=abs(stat.count_diff),
+                            code_line="",
+                        )
+                    )
 
         # Object type growth
         grown_types = []
@@ -491,15 +520,17 @@ class MemoryAuditor:
             start_count = start.object_counts.get(type_name, 0)
             delta = end_count - start_count
             if delta > 0:
-                grown_types.append({
-                    "type": type_name,
-                    "start_count": start_count,
-                    "end_count": end_count,
-                    "delta": delta,
-                    "growth_pct": round(
-                        (delta / start_count * 100) if start_count > 0 else 100, 1
-                    ),
-                })
+                grown_types.append(
+                    {
+                        "type": type_name,
+                        "start_count": start_count,
+                        "end_count": end_count,
+                        "delta": delta,
+                        "growth_pct": round(
+                            (delta / start_count * 100) if start_count > 0 else 100, 1
+                        ),
+                    }
+                )
 
         grown_types.sort(key=lambda x: x["delta"], reverse=True)  # type: ignore[arg-type, return-value]
 
@@ -537,15 +568,17 @@ class MemoryAuditor:
         if self._start_time:
             elapsed = round(time.monotonic() - self._start_time, 2)
 
-        self._timeline.append({
-            "timestamp": datetime.now(UTC).isoformat(),
-            "elapsed_seconds": elapsed,
-            "label": label,
-            "rss_mb": round(mem.rss / (1024 * 1024), 2),
-            "vms_mb": round(mem.vms / (1024 * 1024), 2),
-            "tracemalloc_kb": round(tm_current / 1024, 2),
-            "gc_count": sum(gc.get_count()),
-        })
+        self._timeline.append(
+            {
+                "timestamp": datetime.now(UTC).isoformat(),
+                "elapsed_seconds": elapsed,
+                "label": label,
+                "rss_mb": round(mem.rss / (1024 * 1024), 2),
+                "vms_mb": round(mem.vms / (1024 * 1024), 2),
+                "tracemalloc_kb": round(tm_current / 1024, 2),
+                "gc_count": sum(gc.get_count()),
+            }
+        )
 
     def record_point(self, label: str = "manual") -> None:
         """Manually record a timeline data point."""
@@ -577,27 +610,35 @@ class MemoryAuditor:
         top_files: list[dict[str, Any]] = []
         if self._tracking:
             tm_snapshot = tracemalloc.take_snapshot()
-            tm_snapshot = tm_snapshot.filter_traces([
-                tracemalloc.Filter(False, "<frozen importlib._bootstrap>"),
-                tracemalloc.Filter(False, "<frozen importlib._bootstrap_external>"),
-                tracemalloc.Filter(False, "<unknown>"),
-            ])
+            tm_snapshot = tm_snapshot.filter_traces(
+                [
+                    tracemalloc.Filter(False, "<frozen importlib._bootstrap>"),
+                    tracemalloc.Filter(False, "<frozen importlib._bootstrap_external>"),
+                    tracemalloc.Filter(False, "<unknown>"),
+                ]
+            )
             # Top allocations by line
             for stat in tm_snapshot.statistics("lineno")[:30]:
                 frame = stat.traceback[0]
                 code_line = linecache.getline(frame.filename, frame.lineno).strip()
-                top_allocations.append(AllocationRecord(
-                    file=frame.filename, line=frame.lineno,
-                    size_kb=round(stat.size / 1024, 2), count=stat.count,
-                    code_line=code_line,
-                ))
+                top_allocations.append(
+                    AllocationRecord(
+                        file=frame.filename,
+                        line=frame.lineno,
+                        size_kb=round(stat.size / 1024, 2),
+                        count=stat.count,
+                        code_line=code_line,
+                    )
+                )
             # Top files
             for stat in tm_snapshot.statistics("filename")[:20]:
-                top_files.append({
-                    "file": stat.traceback[0].filename,
-                    "size_kb": round(stat.size / 1024, 2),
-                    "count": stat.count,
-                })
+                top_files.append(
+                    {
+                        "file": stat.traceback[0].filename,
+                        "size_kb": round(stat.size / 1024, 2),
+                        "count": stat.count,
+                    }
+                )
 
         object_stats = self.get_object_stats(limit=30)
         gc_stats = self.get_gc_stats()
@@ -648,14 +689,18 @@ class MemoryAuditor:
             ],
             "gc_stats": gc_stats,
             "reference_cycles": ref_cycles,
-            "snapshot_diff": {
-                "rss_delta_mb": diff.rss_delta_mb,
-                "tracemalloc_delta_kb": diff.tracemalloc_delta_kb,
-                "duration_seconds": diff.duration_seconds,
-                "new_allocations": len(diff.new_allocations),
-                "grown_types_count": len(diff.grown_types),
-                "top_grown_types": diff.grown_types[:5],
-            } if diff else None,
+            "snapshot_diff": (
+                {
+                    "rss_delta_mb": diff.rss_delta_mb,
+                    "tracemalloc_delta_kb": diff.tracemalloc_delta_kb,
+                    "duration_seconds": diff.duration_seconds,
+                    "new_allocations": len(diff.new_allocations),
+                    "grown_types_count": len(diff.grown_types),
+                    "top_grown_types": diff.grown_types[:5],
+                }
+                if diff
+                else None
+            ),
             "timeline": self._timeline,
             "snapshots_count": len(self._snapshots),
         }

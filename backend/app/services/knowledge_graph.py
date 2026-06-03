@@ -17,7 +17,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any, Optional
 from uuid import uuid4
 
-from sqlalchemy import func, select, and_, case, cast, String
+from sqlalchemy import String, and_, case, cast, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
@@ -267,7 +267,7 @@ class KnowledgeGraphService:
             List of dicts with segment_id, segment_name, profile_count,
             total_revenue, and avg_revenue_per_profile.
         """
-        from app.models.cdp import CDPSegment, CDPSegmentMembership, CDPProfile
+        from app.models.cdp import CDPProfile, CDPSegment, CDPSegmentMembership
 
         logger.info(
             "knowledge_graph.segment_revenue",
@@ -405,16 +405,14 @@ class KnowledgeGraphService:
 
             for event in events:
                 event_name = event.event_name or ""
-                event_stage = _EVENT_STAGE_MAP.get(
-                    event_name.lower(), "anonymous"
-                )
+                event_stage = _EVENT_STAGE_MAP.get(event_name.lower(), "anonymous")
 
                 touchpoint: dict[str, Any] = {
                     "event_id": str(event.id),
                     "event_name": event_name,
-                    "event_time": event.event_time.isoformat()
-                    if event.event_time
-                    else None,
+                    "event_time": (
+                        event.event_time.isoformat() if event.event_time else None
+                    ),
                     "stage": event_stage,
                     "properties": event.properties or {},
                     "channel": (event.context or {}).get("utm_source", "direct"),
@@ -426,9 +424,9 @@ class KnowledgeGraphService:
                     seen_stages.add(event_stage)
                     transition: dict[str, Any] = {
                         "stage": event_stage,
-                        "entered_at": event.event_time.isoformat()
-                        if event.event_time
-                        else None,
+                        "entered_at": (
+                            event.event_time.isoformat() if event.event_time else None
+                        ),
                         "trigger_event": event_name,
                     }
                     if previous_stage is not None and previous_stage_time is not None:
@@ -438,9 +436,7 @@ class KnowledgeGraphService:
                             else 0
                         )
                         transition["from_stage"] = previous_stage
-                        transition["time_in_previous_stage_seconds"] = int(
-                            time_in_prev
-                        )
+                        transition["time_in_previous_stage_seconds"] = int(time_in_prev)
                     stage_transitions.append(transition)
                     previous_stage = event_stage
                     previous_stage_time = event.event_time
@@ -454,12 +450,12 @@ class KnowledgeGraphService:
             return {
                 "profile_id": str(profile.id),
                 "lifecycle_stage": profile.lifecycle_stage,
-                "first_seen_at": profile.first_seen_at.isoformat()
-                if profile.first_seen_at
-                else None,
-                "last_seen_at": profile.last_seen_at.isoformat()
-                if profile.last_seen_at
-                else None,
+                "first_seen_at": (
+                    profile.first_seen_at.isoformat() if profile.first_seen_at else None
+                ),
+                "last_seen_at": (
+                    profile.last_seen_at.isoformat() if profile.last_seen_at else None
+                ),
                 "total_events": profile.total_events,
                 "total_revenue": float(profile.total_revenue),
                 "touchpoints": touchpoints,
@@ -539,9 +535,9 @@ class KnowledgeGraphService:
                         "status": action.status,
                         "error": action.error,
                         "action_details": action_payload,
-                        "created_at": action.created_at.isoformat()
-                        if action.created_at
-                        else None,
+                        "created_at": (
+                            action.created_at.isoformat() if action.created_at else None
+                        ),
                     }
                 )
 
@@ -655,27 +651,31 @@ class KnowledgeGraphService:
                 "decision_path": [
                     {
                         "step": "action_created",
-                        "timestamp": action.created_at.isoformat()
-                        if action.created_at
-                        else None,
+                        "timestamp": (
+                            action.created_at.isoformat() if action.created_at else None
+                        ),
                         "actor_user_id": action.created_by_user_id,
                     },
                     {
-                        "step": "action_approved"
-                        if action.approved_at
-                        else "awaiting_approval",
-                        "timestamp": action.approved_at.isoformat()
-                        if action.approved_at
-                        else None,
+                        "step": (
+                            "action_approved"
+                            if action.approved_at
+                            else "awaiting_approval"
+                        ),
+                        "timestamp": (
+                            action.approved_at.isoformat()
+                            if action.approved_at
+                            else None
+                        ),
                         "actor_user_id": action.approved_by_user_id,
                     },
                     {
-                        "step": "action_applied"
-                        if action.applied_at
-                        else "not_applied",
-                        "timestamp": action.applied_at.isoformat()
-                        if action.applied_at
-                        else None,
+                        "step": (
+                            "action_applied" if action.applied_at else "not_applied"
+                        ),
+                        "timestamp": (
+                            action.applied_at.isoformat() if action.applied_at else None
+                        ),
                         "actor_user_id": action.applied_by_user_id,
                     },
                 ],
@@ -727,9 +727,7 @@ class KnowledgeGraphService:
 
             # Count events
             events_result = await self.db.execute(
-                select(func.count(CDPEvent.id)).where(
-                    CDPEvent.tenant_id == tenant_id
-                )
+                select(func.count(CDPEvent.id)).where(CDPEvent.tenant_id == tenant_id)
             )
             events_count = events_result.scalar() or 0
 
@@ -743,9 +741,7 @@ class KnowledgeGraphService:
 
             # Count campaigns
             campaigns_result = await self.db.execute(
-                select(func.count(Campaign.id)).where(
-                    Campaign.tenant_id == tenant_id
-                )
+                select(func.count(Campaign.id)).where(Campaign.tenant_id == tenant_id)
             )
             campaigns_count = campaigns_result.scalar() or 0
 
@@ -1116,7 +1112,12 @@ class KnowledgeGraphInsightsEngine:
                 # --- Detect stale data (no update in > 6 hours)
                 if latest.updated_at:
                     hours_since_update = (
-                        now - (latest.updated_at if latest.updated_at.tzinfo else latest.updated_at.replace(tzinfo=UTC))
+                        now
+                        - (
+                            latest.updated_at
+                            if latest.updated_at.tzinfo
+                            else latest.updated_at.replace(tzinfo=UTC)
+                        )
                     ).total_seconds() / 3600
                     if hours_since_update > 6:
                         problems.append(
@@ -1139,9 +1140,7 @@ class KnowledgeGraphInsightsEngine:
                                     }
                                 ],
                                 metrics={
-                                    "hours_since_update": round(
-                                        hours_since_update, 1
-                                    ),
+                                    "hours_since_update": round(hours_since_update, 1),
                                     "last_updated": latest.updated_at.isoformat(),
                                 },
                                 solutions=[
@@ -1169,10 +1168,7 @@ class KnowledgeGraphInsightsEngine:
                         )
 
                 # --- Detect high event loss (> 10%)
-                if (
-                    latest.event_loss_pct is not None
-                    and latest.event_loss_pct > 10
-                ):
+                if latest.event_loss_pct is not None and latest.event_loss_pct > 10:
                     severity = (
                         ProblemSeverity.CRITICAL
                         if latest.event_loss_pct > 25

@@ -56,7 +56,6 @@ from app.services.oauth.tiktok import (
     TikTokOAuthService,
 )
 
-
 # =============================================================================
 # Helpers
 # =============================================================================
@@ -168,8 +167,11 @@ class TestOAuthState:
 
     def test_default_created_at(self) -> None:
         state = OAuthState(
-            state_token="abc", tenant_id=1, user_id=1,
-            platform="meta", redirect_uri="http://test",
+            state_token="abc",
+            tenant_id=1,
+            user_id=1,
+            platform="meta",
+            redirect_uri="http://test",
         )
         assert state.created_at is not None
 
@@ -204,9 +206,12 @@ class TestOAuthTokens:
 
     def test_full_token(self) -> None:
         tokens = OAuthTokens(
-            access_token="at", refresh_token="rt",
-            token_type="Bearer", expires_in=3600,
-            scopes=["ads_read"], raw_response={"extra": 1},
+            access_token="at",
+            refresh_token="rt",
+            token_type="Bearer",
+            expires_in=3600,
+            scopes=["ads_read"],
+            raw_response={"extra": 1},
         )
         assert tokens.refresh_token == "rt"
         assert tokens.expires_in == 3600
@@ -226,10 +231,14 @@ class TestAdAccountInfo:
 
     def test_full_info(self) -> None:
         info = AdAccountInfo(
-            account_id="act_123", name="Biz Account",
-            business_name="Acme Inc", currency="EUR",
-            timezone="America/New_York", status="disabled",
-            spend_cap=5000.0, amount_spent=1234.56,
+            account_id="act_123",
+            name="Biz Account",
+            business_name="Acme Inc",
+            currency="EUR",
+            timezone="America/New_York",
+            status="disabled",
+            spend_cap=5000.0,
+            amount_spent=1234.56,
             permissions=["MANAGE", "ANALYZE"],
         )
         assert info.business_name == "Acme Inc"
@@ -298,7 +307,9 @@ class TestOAuthStateManagement:
         mock_redis = _mock_redis()
 
         with patch.object(svc, "_get_redis_client", return_value=mock_redis):
-            state = await svc.create_state(tenant_id=1, user_id=42, redirect_uri="http://test")
+            state = await svc.create_state(
+                tenant_id=1, user_id=42, redirect_uri="http://test"
+            )
 
         assert state.tenant_id == 1
         assert state.user_id == 42
@@ -353,7 +364,9 @@ class TestOAuthStateManagement:
 
         with patch.object(svc, "_get_redis_client", return_value=mock_redis):
             with pytest.raises(ConnectionError):
-                await svc.create_state(tenant_id=1, user_id=1, redirect_uri="http://test")
+                await svc.create_state(
+                    tenant_id=1, user_id=1, redirect_uri="http://test"
+                )
 
     @pytest.mark.asyncio
     async def test_validate_state_redis_error_returns_none(self) -> None:
@@ -465,13 +478,22 @@ class TestMetaOAuthService:
     async def test_exchange_code_for_tokens(self) -> None:
         svc = MetaOAuthService()
         _set_test_credentials(svc)
-        short_resp = _mock_response(200, {"access_token": "short_tok", "expires_in": 3600})
-        long_resp = _mock_response(200, {
-            "access_token": "long_tok", "expires_in": 5184000, "token_type": "Bearer",
-        })
+        short_resp = _mock_response(
+            200, {"access_token": "short_tok", "expires_in": 3600}
+        )
+        long_resp = _mock_response(
+            200,
+            {
+                "access_token": "long_tok",
+                "expires_in": 5184000,
+                "token_type": "Bearer",
+            },
+        )
         session = _mock_session(short_resp, long_resp)
 
-        with patch("app.services.oauth.meta.aiohttp.ClientSession", return_value=session):
+        with patch(
+            "app.services.oauth.meta.aiohttp.ClientSession", return_value=session
+        ):
             tokens = await svc.exchange_code_for_tokens("code123", "http://redirect")
 
         assert tokens.access_token == "long_tok"
@@ -481,11 +503,15 @@ class TestMetaOAuthService:
     async def test_exchange_fallback_to_short_lived(self) -> None:
         svc = MetaOAuthService()
         _set_test_credentials(svc)
-        short_resp = _mock_response(200, {"access_token": "short_tok", "expires_in": 3600})
+        short_resp = _mock_response(
+            200, {"access_token": "short_tok", "expires_in": 3600}
+        )
         long_fail = _mock_response(400, {"error": {"message": "Failed"}})
         session = _mock_session(short_resp, long_fail)
 
-        with patch("app.services.oauth.meta.aiohttp.ClientSession", return_value=session):
+        with patch(
+            "app.services.oauth.meta.aiohttp.ClientSession", return_value=session
+        ):
             tokens = await svc.exchange_code_for_tokens("code123", "http://redirect")
 
         assert tokens.access_token == "short_tok"
@@ -497,7 +523,9 @@ class TestMetaOAuthService:
         fail_resp = _mock_response(400, {"error": {"message": "Invalid code"}})
         session = _mock_session(fail_resp)
 
-        with patch("app.services.oauth.meta.aiohttp.ClientSession", return_value=session):
+        with patch(
+            "app.services.oauth.meta.aiohttp.ClientSession", return_value=session
+        ):
             with pytest.raises(Exception, match="Token exchange failed"):
                 await svc.exchange_code_for_tokens("bad_code", "http://redirect")
 
@@ -505,12 +533,19 @@ class TestMetaOAuthService:
     async def test_refresh_access_token(self) -> None:
         svc = MetaOAuthService()
         _set_test_credentials(svc)
-        resp = _mock_response(200, {
-            "access_token": "refreshed_tok", "expires_in": 5184000, "token_type": "Bearer",
-        })
+        resp = _mock_response(
+            200,
+            {
+                "access_token": "refreshed_tok",
+                "expires_in": 5184000,
+                "token_type": "Bearer",
+            },
+        )
         session = _mock_session(resp)
 
-        with patch("app.services.oauth.meta.aiohttp.ClientSession", return_value=session):
+        with patch(
+            "app.services.oauth.meta.aiohttp.ClientSession", return_value=session
+        ):
             tokens = await svc.refresh_access_token("old_token")
 
         assert tokens.access_token == "refreshed_tok"
@@ -518,24 +553,29 @@ class TestMetaOAuthService:
     @pytest.mark.asyncio
     async def test_fetch_ad_accounts(self) -> None:
         svc = MetaOAuthService()
-        resp = _mock_response(200, {
-            "data": [
-                {
-                    "id": "act_123",
-                    "name": "Test Account",
-                    "business_name": "Acme",
-                    "currency": "USD",
-                    "timezone_name": "US/Eastern",
-                    "account_status": 1,
-                    "spend_cap": "500000",  # in cents
-                    "amount_spent": "123456",
-                },
-            ],
-            "paging": {},
-        })
+        resp = _mock_response(
+            200,
+            {
+                "data": [
+                    {
+                        "id": "act_123",
+                        "name": "Test Account",
+                        "business_name": "Acme",
+                        "currency": "USD",
+                        "timezone_name": "US/Eastern",
+                        "account_status": 1,
+                        "spend_cap": "500000",  # in cents
+                        "amount_spent": "123456",
+                    },
+                ],
+                "paging": {},
+            },
+        )
         session = _mock_session(resp)
 
-        with patch("app.services.oauth.meta.aiohttp.ClientSession", return_value=session):
+        with patch(
+            "app.services.oauth.meta.aiohttp.ClientSession", return_value=session
+        ):
             accounts = await svc.fetch_ad_accounts("token123")
 
         assert len(accounts) == 1
@@ -547,18 +587,23 @@ class TestMetaOAuthService:
     @pytest.mark.asyncio
     async def test_meta_account_status_mapping(self) -> None:
         svc = MetaOAuthService()
-        resp = _mock_response(200, {
-            "data": [
-                {"id": "act_1", "name": "Active", "account_status": 1},
-                {"id": "act_2", "name": "Disabled", "account_status": 2},
-                {"id": "act_3", "name": "Unsettled", "account_status": 3},
-                {"id": "act_4", "name": "Unknown", "account_status": 999},
-            ],
-            "paging": {},
-        })
+        resp = _mock_response(
+            200,
+            {
+                "data": [
+                    {"id": "act_1", "name": "Active", "account_status": 1},
+                    {"id": "act_2", "name": "Disabled", "account_status": 2},
+                    {"id": "act_3", "name": "Unsettled", "account_status": 3},
+                    {"id": "act_4", "name": "Unknown", "account_status": 999},
+                ],
+                "paging": {},
+            },
+        )
         session = _mock_session(resp)
 
-        with patch("app.services.oauth.meta.aiohttp.ClientSession", return_value=session):
+        with patch(
+            "app.services.oauth.meta.aiohttp.ClientSession", return_value=session
+        ):
             accounts = await svc.fetch_ad_accounts("tok")
 
         assert accounts[0].status == "active"
@@ -572,7 +617,9 @@ class TestMetaOAuthService:
         resp = _mock_response(200, {"success": True})
         session = _mock_session(resp)
 
-        with patch("app.services.oauth.meta.aiohttp.ClientSession", return_value=session):
+        with patch(
+            "app.services.oauth.meta.aiohttp.ClientSession", return_value=session
+        ):
             result = await svc.revoke_access("token123")
 
         assert result is True
@@ -583,7 +630,9 @@ class TestMetaOAuthService:
         resp = _mock_response(400, {"error": {"message": "Invalid token"}})
         session = _mock_session(resp)
 
-        with patch("app.services.oauth.meta.aiohttp.ClientSession", return_value=session):
+        with patch(
+            "app.services.oauth.meta.aiohttp.ClientSession", return_value=session
+        ):
             result = await svc.revoke_access("bad_token")
 
         assert result is False
@@ -633,16 +682,21 @@ class TestGoogleOAuthService:
     async def test_exchange_code_for_tokens(self) -> None:
         svc = GoogleOAuthService()
         _set_test_credentials(svc)
-        resp = _mock_response(200, {
-            "access_token": "google_tok",
-            "refresh_token": "google_refresh",
-            "expires_in": 3600,
-            "token_type": "Bearer",
-            "scope": "https://www.googleapis.com/auth/adwords",
-        })
+        resp = _mock_response(
+            200,
+            {
+                "access_token": "google_tok",
+                "refresh_token": "google_refresh",
+                "expires_in": 3600,
+                "token_type": "Bearer",
+                "scope": "https://www.googleapis.com/auth/adwords",
+            },
+        )
         session = _mock_session(resp)
 
-        with patch("app.services.oauth.google.aiohttp.ClientSession", return_value=session):
+        with patch(
+            "app.services.oauth.google.aiohttp.ClientSession", return_value=session
+        ):
             tokens = await svc.exchange_code_for_tokens("code123", "http://redirect")
 
         assert tokens.access_token == "google_tok"
@@ -653,13 +707,19 @@ class TestGoogleOAuthService:
     async def test_refresh_access_token(self) -> None:
         svc = GoogleOAuthService()
         _set_test_credentials(svc)
-        resp = _mock_response(200, {
-            "access_token": "new_google_tok", "expires_in": 3600,
-            "token_type": "Bearer",
-        })
+        resp = _mock_response(
+            200,
+            {
+                "access_token": "new_google_tok",
+                "expires_in": 3600,
+                "token_type": "Bearer",
+            },
+        )
         session = _mock_session(resp)
 
-        with patch("app.services.oauth.google.aiohttp.ClientSession", return_value=session):
+        with patch(
+            "app.services.oauth.google.aiohttp.ClientSession", return_value=session
+        ):
             tokens = await svc.refresh_access_token("refresh_tok")
 
         assert tokens.access_token == "new_google_tok"
@@ -670,7 +730,9 @@ class TestGoogleOAuthService:
         resp = _mock_response(200, {})
         session = _mock_session(resp)
 
-        with patch("app.services.oauth.google.aiohttp.ClientSession", return_value=session):
+        with patch(
+            "app.services.oauth.google.aiohttp.ClientSession", return_value=session
+        ):
             result = await svc.revoke_access("token123")
 
         assert result is True
@@ -713,18 +775,23 @@ class TestTikTokOAuthService:
     async def test_exchange_code_for_tokens(self) -> None:
         svc = TikTokOAuthService()
         _set_test_credentials(svc)
-        resp = _mock_response(200, {
-            "code": 0,
-            "data": {
-                "access_token": "tiktok_tok",
-                "refresh_token": "tiktok_refresh",
-                "advertiser_ids": ["adv_123"],
+        resp = _mock_response(
+            200,
+            {
+                "code": 0,
+                "data": {
+                    "access_token": "tiktok_tok",
+                    "refresh_token": "tiktok_refresh",
+                    "advertiser_ids": ["adv_123"],
+                },
+                "message": "OK",
             },
-            "message": "OK",
-        })
+        )
         session = _mock_session(resp)
 
-        with patch("app.services.oauth.tiktok.aiohttp.ClientSession", return_value=session):
+        with patch(
+            "app.services.oauth.tiktok.aiohttp.ClientSession", return_value=session
+        ):
             tokens = await svc.exchange_code_for_tokens("code123", "http://redirect")
 
         assert tokens.access_token == "tiktok_tok"
@@ -733,17 +800,22 @@ class TestTikTokOAuthService:
     async def test_refresh_access_token(self) -> None:
         svc = TikTokOAuthService()
         _set_test_credentials(svc)
-        resp = _mock_response(200, {
-            "code": 0,
-            "data": {
-                "access_token": "new_tiktok_tok",
-                "refresh_token": "new_tiktok_refresh",
+        resp = _mock_response(
+            200,
+            {
+                "code": 0,
+                "data": {
+                    "access_token": "new_tiktok_tok",
+                    "refresh_token": "new_tiktok_refresh",
+                },
+                "message": "OK",
             },
-            "message": "OK",
-        })
+        )
         session = _mock_session(resp)
 
-        with patch("app.services.oauth.tiktok.aiohttp.ClientSession", return_value=session):
+        with patch(
+            "app.services.oauth.tiktok.aiohttp.ClientSession", return_value=session
+        ):
             tokens = await svc.refresh_access_token("old_refresh")
 
         assert tokens.access_token == "new_tiktok_tok"
@@ -792,15 +864,20 @@ class TestSnapchatOAuthService:
     async def test_exchange_code_for_tokens(self) -> None:
         svc = SnapchatOAuthService()
         _set_test_credentials(svc)
-        resp = _mock_response(200, {
-            "access_token": "snap_tok",
-            "refresh_token": "snap_refresh",
-            "expires_in": 1800,
-            "token_type": "Bearer",
-        })
+        resp = _mock_response(
+            200,
+            {
+                "access_token": "snap_tok",
+                "refresh_token": "snap_refresh",
+                "expires_in": 1800,
+                "token_type": "Bearer",
+            },
+        )
         session = _mock_session(resp)
 
-        with patch("app.services.oauth.snapchat.aiohttp.ClientSession", return_value=session):
+        with patch(
+            "app.services.oauth.snapchat.aiohttp.ClientSession", return_value=session
+        ):
             tokens = await svc.exchange_code_for_tokens("code123", "http://redirect")
 
         assert tokens.access_token == "snap_tok"
@@ -811,15 +888,20 @@ class TestSnapchatOAuthService:
     async def test_refresh_access_token(self) -> None:
         svc = SnapchatOAuthService()
         _set_test_credentials(svc)
-        resp = _mock_response(200, {
-            "access_token": "new_snap_tok",
-            "refresh_token": "new_snap_refresh",
-            "expires_in": 1800,
-            "token_type": "Bearer",
-        })
+        resp = _mock_response(
+            200,
+            {
+                "access_token": "new_snap_tok",
+                "refresh_token": "new_snap_refresh",
+                "expires_in": 1800,
+                "token_type": "Bearer",
+            },
+        )
         session = _mock_session(resp)
 
-        with patch("app.services.oauth.snapchat.aiohttp.ClientSession", return_value=session):
+        with patch(
+            "app.services.oauth.snapchat.aiohttp.ClientSession", return_value=session
+        ):
             tokens = await svc.refresh_access_token("old_refresh")
 
         assert tokens.access_token == "new_snap_tok"
@@ -842,36 +924,54 @@ class TestSnapchatOAuthService:
 @pytest.mark.unit
 class TestCrossPlatformConsistency:
 
-    @pytest.mark.parametrize("platform_cls,platform_name", [
-        (MetaOAuthService, "meta"),
-        (GoogleOAuthService, "google"),
-        (TikTokOAuthService, "tiktok"),
-        (SnapchatOAuthService, "snapchat"),
-    ])
+    @pytest.mark.parametrize(
+        "platform_cls,platform_name",
+        [
+            (MetaOAuthService, "meta"),
+            (GoogleOAuthService, "google"),
+            (TikTokOAuthService, "tiktok"),
+            (SnapchatOAuthService, "snapchat"),
+        ],
+    )
     def test_platform_attribute(self, platform_cls, platform_name) -> None:
         svc = platform_cls()
         assert svc.platform == platform_name
 
-    @pytest.mark.parametrize("platform_cls", [
-        MetaOAuthService, GoogleOAuthService, TikTokOAuthService, SnapchatOAuthService,
-    ])
+    @pytest.mark.parametrize(
+        "platform_cls",
+        [
+            MetaOAuthService,
+            GoogleOAuthService,
+            TikTokOAuthService,
+            SnapchatOAuthService,
+        ],
+    )
     def test_inherits_oauth_service(self, platform_cls) -> None:
         assert issubclass(platform_cls, OAuthService)
 
-    @pytest.mark.parametrize("platform_cls,platform_name", [
-        (MetaOAuthService, "meta"),
-        (GoogleOAuthService, "google"),
-        (TikTokOAuthService, "tiktok"),
-        (SnapchatOAuthService, "snapchat"),
-    ])
+    @pytest.mark.parametrize(
+        "platform_cls,platform_name",
+        [
+            (MetaOAuthService, "meta"),
+            (GoogleOAuthService, "google"),
+            (TikTokOAuthService, "tiktok"),
+            (SnapchatOAuthService, "snapchat"),
+        ],
+    )
     def test_redirect_uri_format(self, platform_cls, platform_name) -> None:
         svc = platform_cls()
         uri = svc.get_redirect_uri()
         assert f"/api/v1/oauth/{platform_name}/callback" in uri
 
-    @pytest.mark.parametrize("platform_cls", [
-        MetaOAuthService, GoogleOAuthService, TikTokOAuthService, SnapchatOAuthService,
-    ])
+    @pytest.mark.parametrize(
+        "platform_cls",
+        [
+            MetaOAuthService,
+            GoogleOAuthService,
+            TikTokOAuthService,
+            SnapchatOAuthService,
+        ],
+    )
     def test_encrypt_decrypt_roundtrip(self, platform_cls) -> None:
         svc = platform_cls()
         token = "test_token_12345"
@@ -879,12 +979,15 @@ class TestCrossPlatformConsistency:
         assert enc != token
         assert svc.decrypt_token(enc) == token
 
-    @pytest.mark.parametrize("platform_cls,platform_name", [
-        (MetaOAuthService, "meta"),
-        (GoogleOAuthService, "google"),
-        (TikTokOAuthService, "tiktok"),
-        (SnapchatOAuthService, "snapchat"),
-    ])
+    @pytest.mark.parametrize(
+        "platform_cls,platform_name",
+        [
+            (MetaOAuthService, "meta"),
+            (GoogleOAuthService, "google"),
+            (TikTokOAuthService, "tiktok"),
+            (SnapchatOAuthService, "snapchat"),
+        ],
+    )
     def test_auth_url_generation(self, platform_cls, platform_name) -> None:
         svc = platform_cls()
         _set_test_credentials(svc)

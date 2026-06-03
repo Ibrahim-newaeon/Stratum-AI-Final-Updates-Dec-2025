@@ -7,25 +7,27 @@ Handles authentication, event formatting, and API calls.
 Production-ready with retry logic, circuit breakers, and rate limiting.
 """
 
+import asyncio
 import hashlib
 import hmac
 import json
 import statistics
 import threading
 import time
-import asyncio
 import uuid
 from abc import ABC, abstractmethod
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional, Tuple
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 from functools import wraps
+from typing import Any, Dict, List, Optional, Tuple
+
 import httpx
 
 from app.core.logging import get_logger
-from .pii_hasher import PIIHasher, PIIField
+
 from .event_mapper import AIEventMapper, StandardEvent
+from .pii_hasher import PIIField, PIIHasher
 
 logger = get_logger(__name__)
 
@@ -34,10 +36,12 @@ logger = get_logger(__name__)
 # Circuit Breaker Implementation
 # =============================================================================
 
+
 class CircuitState(str, Enum):
     """Circuit breaker states."""
-    CLOSED = "closed"      # Normal operation
-    OPEN = "open"          # Failing, reject requests
+
+    CLOSED = "closed"  # Normal operation
+    OPEN = "open"  # Failing, reject requests
     HALF_OPEN = "half_open"  # Testing if service recovered
 
 
@@ -47,6 +51,7 @@ class CircuitBreaker:
     Circuit breaker for API resilience.
     Prevents cascading failures by stopping requests to failing services.
     """
+
     failure_threshold: int = 5
     recovery_timeout: int = 60  # seconds
     half_open_max_calls: int = 3
@@ -63,7 +68,10 @@ class CircuitBreaker:
 
         if self.state == CircuitState.OPEN:
             # Check if recovery timeout has passed
-            if self.last_failure_time and (time.time() - self.last_failure_time) > self.recovery_timeout:
+            if (
+                self.last_failure_time
+                and (time.time() - self.last_failure_time) > self.recovery_timeout
+            ):
                 self.state = CircuitState.HALF_OPEN
                 self.half_open_calls = 0
                 return True
@@ -101,11 +109,13 @@ class CircuitBreaker:
 # Rate Limiter Implementation
 # =============================================================================
 
+
 @dataclass
 class RateLimiter:
     """
     Token bucket rate limiter for API calls.
     """
+
     max_tokens: int = 100
     refill_rate: float = 10.0  # tokens per second
 
@@ -137,9 +147,11 @@ class RateLimiter:
 # Event Delivery Log for EMQ Measurement
 # =============================================================================
 
+
 @dataclass
 class EventDeliveryLog:
     """Log entry for CAPI event delivery (used for real EMQ measurement)."""
+
     event_id: str
     platform: str
     event_name: str
@@ -162,12 +174,15 @@ def log_event_delivery(log: EventDeliveryLog):
     # Keep only last 10000 entries in memory
     if len(_event_delivery_logs) > 10000:
         _event_delivery_logs = _event_delivery_logs[-10000:]
-    logger.info(f"CAPI Event Delivery: platform={log.platform}, event={log.event_name}, "
-                f"success={log.success}, latency={log.latency_ms:.2f}ms")
+    logger.info(
+        f"CAPI Event Delivery: platform={log.platform}, event={log.event_name}, "
+        f"success={log.success}, latency={log.latency_ms:.2f}ms"
+    )
 
 
-def get_event_delivery_logs(platform: Optional[str] = None,
-                            since: Optional[datetime] = None) -> List[EventDeliveryLog]:
+def get_event_delivery_logs(
+    platform: Optional[str] = None, since: Optional[datetime] = None
+) -> List[EventDeliveryLog]:
     """Get event delivery logs for EMQ measurement."""
     logs = _event_delivery_logs
     if platform:
@@ -179,6 +194,7 @@ def get_event_delivery_logs(platform: Optional[str] = None,
 
 class ConnectionStatus(str, Enum):
     """Platform connection status."""
+
     CONNECTED = "connected"
     DISCONNECTED = "disconnected"
     ERROR = "error"
@@ -188,6 +204,7 @@ class ConnectionStatus(str, Enum):
 @dataclass
 class CAPIResponse:
     """Response from CAPI request."""
+
     success: bool
     events_received: int
     events_processed: int
@@ -199,6 +216,7 @@ class CAPIResponse:
 @dataclass
 class ConnectionResult:
     """Result of connection test."""
+
     status: ConnectionStatus
     platform: str
     message: str
@@ -257,7 +275,11 @@ class BaseCAPIConnector(ABC):
                 success=False,
                 events_received=len(events),
                 events_processed=0,
-                errors=[{"message": "Circuit breaker open - service temporarily unavailable"}],
+                errors=[
+                    {
+                        "message": "Circuit breaker open - service temporarily unavailable"
+                    }
+                ],
                 platform=self.PLATFORM_NAME,
             )
 
@@ -274,17 +296,23 @@ class BaseCAPIConnector(ABC):
                 # Log delivery for EMQ measurement
                 latency_ms = (time.time() - start_time) * 1000
                 for event in events:
-                    log_event_delivery(EventDeliveryLog(
-                        event_id=event.get("event_id", str(uuid.uuid4())),
-                        platform=self.PLATFORM_NAME,
-                        event_name=event.get("event_name", "unknown"),
-                        timestamp=datetime.now(timezone.utc),
-                        success=response.success,
-                        latency_ms=latency_ms,
-                        error_message=response.errors[0].get("message") if response.errors else None,
-                        request_id=response.request_id,
-                        retry_count=retry,
-                    ))
+                    log_event_delivery(
+                        EventDeliveryLog(
+                            event_id=event.get("event_id", str(uuid.uuid4())),
+                            platform=self.PLATFORM_NAME,
+                            event_name=event.get("event_name", "unknown"),
+                            timestamp=datetime.now(timezone.utc),
+                            success=response.success,
+                            latency_ms=latency_ms,
+                            error_message=(
+                                response.errors[0].get("message")
+                                if response.errors
+                                else None
+                            ),
+                            request_id=response.request_id,
+                            retry_count=retry,
+                        )
+                    )
 
                 if response.success:
                     self._circuit_breaker.record_success()
@@ -292,14 +320,18 @@ class BaseCAPIConnector(ABC):
                 else:
                     last_error = response.errors
                     # Don't retry on client errors (4xx)
-                    if any("invalid" in str(e).lower() or "missing" in str(e).lower()
-                           for e in response.errors):
+                    if any(
+                        "invalid" in str(e).lower() or "missing" in str(e).lower()
+                        for e in response.errors
+                    ):
                         break
 
             except (ConnectionError, TimeoutError, OSError, httpx.HTTPError) as e:
                 last_error = [{"message": str(e)}]
                 latency_ms = (time.time() - start_time) * 1000
-                logger.warning(f"{self.PLATFORM_NAME} CAPI retry {retry + 1}/{self.MAX_RETRIES}: {e}")
+                logger.warning(
+                    f"{self.PLATFORM_NAME} CAPI retry {retry + 1}/{self.MAX_RETRIES}: {e}"
+                )
 
             # Wait before retry (exponential backoff)
             if retry < self.MAX_RETRIES - 1:
@@ -565,7 +597,9 @@ class GoogleCAPIConnector(BaseCAPIConnector):
                 if response.status_code == 200:
                     data = response.json()
                     self._access_token = data.get("access_token")
-                    self._token_expires = time.time() + data.get("expires_in", 3600) - 60
+                    self._token_expires = (
+                        time.time() + data.get("expires_in", 3600) - 60
+                    )
                     return self._access_token
 
         except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
@@ -659,7 +693,9 @@ class GoogleCAPIConnector(BaseCAPIConnector):
                     "partialFailure": True,
                 }
 
-                response = await client.post(url, json=payload, headers=headers, timeout=30.0)
+                response = await client.post(
+                    url, json=payload, headers=headers, timeout=30.0
+                )
                 result = response.json()
 
                 if response.status_code == 200:
@@ -671,7 +707,13 @@ class GoogleCAPIConnector(BaseCAPIConnector):
                             success=True,
                             events_received=len(events),
                             events_processed=len(events) - failed_count,
-                            errors=[{"message": partial_failure_error.get("message", "Partial failure")}],
+                            errors=[
+                                {
+                                    "message": partial_failure_error.get(
+                                        "message", "Partial failure"
+                                    )
+                                }
+                            ],
                             platform=self.PLATFORM_NAME,
                             request_id=result.get("requestId"),
                         )
@@ -690,7 +732,12 @@ class GoogleCAPIConnector(BaseCAPIConnector):
                         success=False,
                         events_received=len(events),
                         events_processed=0,
-                        errors=[{"message": error.get("message", "Unknown error"), "code": error.get("code")}],
+                        errors=[
+                            {
+                                "message": error.get("message", "Unknown error"),
+                                "code": error.get("code"),
+                            }
+                        ],
                         platform=self.PLATFORM_NAME,
                     )
 
@@ -718,21 +765,31 @@ class GoogleCAPIConnector(BaseCAPIConnector):
             user_identifiers.append({"hashedPhoneNumber": hashed_user_data["ph"]})
         if user_data.get("address"):
             address = user_data["address"]
-            user_identifiers.append({
-                "addressInfo": {
-                    "hashedFirstName": self.hasher.hash_value(address.get("first_name", ""), PIIField.FIRST_NAME),
-                    "hashedLastName": self.hasher.hash_value(address.get("last_name", ""), PIIField.LAST_NAME),
-                    "countryCode": address.get("country", "US"),
-                    "postalCode": address.get("postal_code", ""),
+            user_identifiers.append(
+                {
+                    "addressInfo": {
+                        "hashedFirstName": self.hasher.hash_value(
+                            address.get("first_name", ""), PIIField.FIRST_NAME
+                        ),
+                        "hashedLastName": self.hasher.hash_value(
+                            address.get("last_name", ""), PIIField.LAST_NAME
+                        ),
+                        "countryCode": address.get("country", "US"),
+                        "postalCode": address.get("postal_code", ""),
+                    }
                 }
-            })
+            )
 
         # Format conversion timestamp
         event_time = event.get("event_time")
         if isinstance(event_time, int):
-            conversion_datetime = datetime.fromtimestamp(event_time, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S%z")
+            conversion_datetime = datetime.fromtimestamp(
+                event_time, tz=timezone.utc
+            ).strftime("%Y-%m-%d %H:%M:%S%z")
         else:
-            conversion_datetime = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S%z")
+            conversion_datetime = datetime.now(timezone.utc).strftime(
+                "%Y-%m-%d %H:%M:%S%z"
+            )
 
         formatted = {
             "conversionAction": f"customers/{self.customer_id}/conversionActions/{self.conversion_action_id}",
@@ -817,7 +874,9 @@ class TikTokCAPIConnector(BaseCAPIConnector):
                     "event": formatted_events,
                 }
 
-                response = await client.post(url, json=payload, headers=headers, timeout=30.0)
+                response = await client.post(
+                    url, json=payload, headers=headers, timeout=30.0
+                )
                 result = response.json()
 
                 if result.get("code") == 0:
@@ -834,7 +893,12 @@ class TikTokCAPIConnector(BaseCAPIConnector):
                         success=False,
                         events_received=len(events),
                         events_processed=0,
-                        errors=[{"message": result.get("message"), "code": result.get("code")}],
+                        errors=[
+                            {
+                                "message": result.get("message"),
+                                "code": result.get("code"),
+                            }
+                        ],
                         platform=self.PLATFORM_NAME,
                     )
 
@@ -978,7 +1042,9 @@ class SnapchatCAPIConnector(BaseCAPIConnector):
                     "events": formatted_events,
                 }
 
-                response = await client.post(url, json=payload, headers=headers, timeout=30.0)
+                response = await client.post(
+                    url, json=payload, headers=headers, timeout=30.0
+                )
 
                 if response.status_code == 200:
                     result = response.json()
@@ -1005,7 +1071,9 @@ class SnapchatCAPIConnector(BaseCAPIConnector):
                 else:
                     try:
                         error_data = response.json()
-                        error_msg = error_data.get("message", f"HTTP {response.status_code}")
+                        error_msg = error_data.get(
+                            "message", f"HTTP {response.status_code}"
+                        )
                     except (ValueError, KeyError, AttributeError):
                         error_msg = f"HTTP {response.status_code}"
 
@@ -1013,7 +1081,9 @@ class SnapchatCAPIConnector(BaseCAPIConnector):
                         success=False,
                         events_received=len(events),
                         events_processed=0,
-                        errors=[{"message": error_msg, "status_code": response.status_code}],
+                        errors=[
+                            {"message": error_msg, "status_code": response.status_code}
+                        ],
                         platform=self.PLATFORM_NAME,
                     )
 
@@ -1030,8 +1100,7 @@ class SnapchatCAPIConnector(BaseCAPIConnector):
     def _format_event(self, event: Dict[str, Any]) -> Dict[str, Any]:
         """Format event for Snapchat CAPI."""
         mapping = self.mapper.map_event(
-            event.get("event_name", "CUSTOM_EVENT_1"),
-            event.get("parameters", {})
+            event.get("event_name", "CUSTOM_EVENT_1"), event.get("parameters", {})
         )
         user_data = self.format_user_data(event.get("user_data", {}))
 
@@ -1052,7 +1121,6 @@ class SnapchatCAPIConnector(BaseCAPIConnector):
             "price": mapping.parameters.get("value"),
             "currency": mapping.parameters.get("currency", "USD"),
         }
-
 
 
 class WhatsAppCAPIConnector(BaseCAPIConnector):
@@ -1156,7 +1224,9 @@ class WhatsAppCAPIConnector(BaseCAPIConnector):
                 if result:
                     processed += 1
                 else:
-                    errors.append({"message": f"Failed to send event: {event.get('event_name')}"})
+                    errors.append(
+                        {"message": f"Failed to send event: {event.get('event_name')}"}
+                    )
             except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
                 errors.append({"message": str(e)})
 
@@ -1188,7 +1258,9 @@ class WhatsAppCAPIConnector(BaseCAPIConnector):
                 }
 
                 # Build message payload
-                template_name = event.get("parameters", {}).get("template_name", "hello_world")
+                template_name = event.get("parameters", {}).get(
+                    "template_name", "hello_world"
+                )
                 language = event.get("parameters", {}).get("language", "en")
 
                 payload = {
@@ -1206,7 +1278,9 @@ class WhatsAppCAPIConnector(BaseCAPIConnector):
                 if components:
                     payload["template"]["components"] = components
 
-                response = await client.post(url, json=payload, headers=headers, timeout=30.0)
+                response = await client.post(
+                    url, json=payload, headers=headers, timeout=30.0
+                )
 
                 if response.status_code == 200:
                     return True
@@ -1232,9 +1306,11 @@ class WhatsAppCAPIConnector(BaseCAPIConnector):
 # Advanced Platform Connector Features (P0 Enhancement)
 # =============================================================================
 
+
 @dataclass
 class ConnectorHealthStatus:
     """Health status for a platform connector."""
+
     platform: str
     status: str  # healthy, degraded, unhealthy
     last_check: datetime
@@ -1249,6 +1325,7 @@ class ConnectorHealthStatus:
 @dataclass
 class BatchOptimizationResult:
     """Result of batch optimization."""
+
     original_batch_size: int
     optimized_batch_size: int
     estimated_throughput_improvement: float
@@ -1267,7 +1344,9 @@ class ConnectorHealthMonitor:
     """
 
     def __init__(self):
-        self._health_history: Dict[str, List[Tuple[datetime, ConnectorHealthStatus]]] = {}
+        self._health_history: Dict[
+            str, List[Tuple[datetime, ConnectorHealthStatus]]
+        ] = {}
         self._alert_callbacks: List[Any] = []
         self._last_alerts: Dict[str, datetime] = {}
         self._alert_cooldown = timedelta(minutes=15)
@@ -1362,7 +1441,10 @@ class ConnectorHealthMonitor:
         """Check if alerts should be triggered."""
         if health.status == "unhealthy":
             last_alert = self._last_alerts.get(health.platform)
-            if last_alert is None or (datetime.now(timezone.utc) - last_alert) > self._alert_cooldown:
+            if (
+                last_alert is None
+                or (datetime.now(timezone.utc) - last_alert) > self._alert_cooldown
+            ):
                 self._last_alerts[health.platform] = datetime.now(timezone.utc)
                 for callback in self._alert_callbacks:
                     try:
@@ -1419,7 +1501,8 @@ class ConnectorHealthMonitor:
                 "avg_latency_ms": h.avg_latency_ms,
                 "error_count": h.error_count_1h,
             }
-            for t, h in history if t > cutoff
+            for t, h in history
+            if t > cutoff
         ]
 
 
@@ -1464,18 +1547,24 @@ class BatchOptimizer:
         if platform not in self._performance_history:
             self._performance_history[platform] = []
 
-        self._performance_history[platform].append({
-            "timestamp": datetime.now(timezone.utc),
-            "batch_size": batch_size,
-            "success": success,
-            "latency_ms": latency_ms,
-            "events_processed": events_processed,
-            "throughput": events_processed / (latency_ms / 1000) if latency_ms > 0 else 0,
-        })
+        self._performance_history[platform].append(
+            {
+                "timestamp": datetime.now(timezone.utc),
+                "batch_size": batch_size,
+                "success": success,
+                "latency_ms": latency_ms,
+                "events_processed": events_processed,
+                "throughput": (
+                    events_processed / (latency_ms / 1000) if latency_ms > 0 else 0
+                ),
+            }
+        )
 
         # Keep last 1000 records
         if len(self._performance_history[platform]) > 1000:
-            self._performance_history[platform] = self._performance_history[platform][-1000:]
+            self._performance_history[platform] = self._performance_history[platform][
+                -1000:
+            ]
 
     def optimize_batch_size(
         self,
@@ -1534,8 +1623,14 @@ class BatchOptimizer:
 
         # Calculate improvement
         current_bucket = (current_batch_size // 100) * 100
-        current_throughput = avg_throughputs.get(current_bucket, optimal_throughput * 0.8)
-        improvement = ((optimal_throughput - current_throughput) / current_throughput * 100) if current_throughput > 0 else 0
+        current_throughput = avg_throughputs.get(
+            current_bucket, optimal_throughput * 0.8
+        )
+        improvement = (
+            ((optimal_throughput - current_throughput) / current_throughput * 100)
+            if current_throughput > 0
+            else 0
+        )
 
         # Apply rate limit constraints
         rate_limit = self.RATE_LIMITS.get(platform, 500)
@@ -1611,7 +1706,9 @@ class ConnectionPool:
                     limits=httpx.Limits(max_connections=100),
                 )
                 self._clients[platform].append(client)
-                logger.info(f"Scaled up connection pool for {platform} to {len(self._clients[platform])}")
+                logger.info(
+                    f"Scaled up connection pool for {platform} to {len(self._clients[platform])}"
+                )
 
     async def scale_down(self, platform: str):
         """Remove connections from the pool."""
@@ -1619,7 +1716,9 @@ class ConnectionPool:
             if platform in self._clients and len(self._clients[platform]) > 1:
                 client = self._clients[platform].pop()
                 await client.aclose()
-                logger.info(f"Scaled down connection pool for {platform} to {len(self._clients[platform])}")
+                logger.info(
+                    f"Scaled down connection pool for {platform} to {len(self._clients[platform])}"
+                )
 
     async def close_all(self):
         """Close all connections in the pool."""
@@ -1691,7 +1790,8 @@ class EventDeduplicator:
         """Remove expired entries."""
         now = datetime.now(timezone.utc)
         expired = [
-            key for key, timestamp in self._seen_events.items()
+            key
+            for key, timestamp in self._seen_events.items()
             if now - timestamp > self._ttl
         ]
 

@@ -86,8 +86,7 @@ async def list_campaigns(
     # Pagination — defer loading heavy JSONB columns not needed for list view
     offset = (page - 1) * page_size
     query = (
-        query
-        .order_by(Campaign.updated_at.desc())
+        query.order_by(Campaign.updated_at.desc())
         .offset(offset)
         .limit(page_size)
         .options(
@@ -202,7 +201,11 @@ async def get_campaign(
     )
 
 
-@router.post("", response_model=APIResponse[CampaignResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=APIResponse[CampaignResponse],
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_campaign(
     request: Request,
     campaign_data: CampaignCreate,
@@ -312,7 +315,10 @@ async def delete_campaign(
     logger.info("campaign_deleted", campaign_id=campaign_id)
 
 
-@router.get("/{campaign_id}/metrics", response_model=APIResponse[CampaignMetricsTimeSeriesResponse])
+@router.get(
+    "/{campaign_id}/metrics",
+    response_model=APIResponse[CampaignMetricsTimeSeriesResponse],
+)
 async def get_campaign_metrics(
     request: Request,
     campaign_id: int,
@@ -358,7 +364,8 @@ async def get_campaign_metrics(
             CampaignMetric.date >= start_date,
             CampaignMetric.date <= end_date,
         )
-        .order_by(CampaignMetric.date).limit(1000)
+        .order_by(CampaignMetric.date)
+        .limit(1000)
     )
     metrics = result.scalars().all()
 
@@ -438,7 +445,9 @@ async def trigger_platform_sync(
 
     tenant_id = getattr(request.state, "tenant_id", None)
     if tenant_id is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant not identified")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant not identified"
+        )
 
     try:
         ad_platform = AdPlatform(platform.lower())
@@ -460,9 +469,11 @@ async def trigger_platform_sync(
             "duration_seconds": result.duration_seconds,
             "errors": result.errors,
         },
-        message=f"Platform sync completed: {result.campaigns_synced} campaigns synced"
-        if not result.errors
-        else f"Platform sync finished with errors: {', '.join(result.errors)}",
+        message=(
+            f"Platform sync completed: {result.campaigns_synced} campaigns synced"
+            if not result.errors
+            else f"Platform sync finished with errors: {', '.join(result.errors)}"
+        ),
     )
 
 

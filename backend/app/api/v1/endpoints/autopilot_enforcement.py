@@ -11,79 +11,115 @@ API endpoints for Autopilot Enforcement features:
 """
 
 from datetime import date
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Query, Body
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, Field
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.session import get_async_session
 from app.autopilot.enforcer import (
     AutopilotEnforcer,
     EnforcementMode,
-    EnforcementSettings,
     EnforcementRule,
+    EnforcementSettings,
     ViolationType,
 )
+from app.db.session import get_async_session
 from app.schemas.response import APIResponse
 
-
-router = APIRouter(prefix="/tenant/{tenant_id}/autopilot/enforcement", tags=["autopilot-enforcement"])
+router = APIRouter(
+    prefix="/tenant/{tenant_id}/autopilot/enforcement", tags=["autopilot-enforcement"]
+)
 
 
 # =============================================================================
 # Request/Response Models
 # =============================================================================
 
+
 class EnforcementSettingsRequest(BaseModel):
     """Request to update enforcement settings."""
-    enforcement_enabled: Optional[bool] = Field(None, description="Kill switch - enable/disable enforcement")
-    default_mode: Optional[str] = Field(None, description="Default enforcement mode: advisory, soft_block, hard_block")
-    max_daily_budget: Optional[float] = Field(None, description="Maximum daily budget across all campaigns")
-    max_campaign_budget: Optional[float] = Field(None, description="Maximum budget per campaign")
-    budget_increase_limit_pct: Optional[float] = Field(None, description="Maximum budget increase percentage")
-    min_roas_threshold: Optional[float] = Field(None, description="Minimum ROAS threshold")
-    roas_lookback_days: Optional[int] = Field(None, description="Days to look back for ROAS calculation")
-    max_budget_changes_per_day: Optional[int] = Field(None, description="Maximum budget changes per day")
-    min_hours_between_changes: Optional[int] = Field(None, description="Minimum hours between changes")
+
+    enforcement_enabled: Optional[bool] = Field(
+        None, description="Kill switch - enable/disable enforcement"
+    )
+    default_mode: Optional[str] = Field(
+        None, description="Default enforcement mode: advisory, soft_block, hard_block"
+    )
+    max_daily_budget: Optional[float] = Field(
+        None, description="Maximum daily budget across all campaigns"
+    )
+    max_campaign_budget: Optional[float] = Field(
+        None, description="Maximum budget per campaign"
+    )
+    budget_increase_limit_pct: Optional[float] = Field(
+        None, description="Maximum budget increase percentage"
+    )
+    min_roas_threshold: Optional[float] = Field(
+        None, description="Minimum ROAS threshold"
+    )
+    roas_lookback_days: Optional[int] = Field(
+        None, description="Days to look back for ROAS calculation"
+    )
+    max_budget_changes_per_day: Optional[int] = Field(
+        None, description="Maximum budget changes per day"
+    )
+    min_hours_between_changes: Optional[int] = Field(
+        None, description="Minimum hours between changes"
+    )
 
 
 class EnforcementCheckRequest(BaseModel):
     """Request to check enforcement for a proposed action."""
-    action_type: str = Field(..., description="Type of action (budget_increase, budget_decrease, etc.)")
+
+    action_type: str = Field(
+        ..., description="Type of action (budget_increase, budget_decrease, etc.)"
+    )
     entity_type: str = Field(..., description="Entity type (campaign, adset, creative)")
     entity_id: str = Field(..., description="Platform entity ID")
     proposed_value: Dict[str, Any] = Field(..., description="Proposed new value")
     current_value: Optional[Dict[str, Any]] = Field(None, description="Current value")
-    metrics: Optional[Dict[str, Any]] = Field(None, description="Current performance metrics")
+    metrics: Optional[Dict[str, Any]] = Field(
+        None, description="Current performance metrics"
+    )
 
 
 class ConfirmActionRequest(BaseModel):
     """Request to confirm a soft-blocked action."""
+
     confirmation_token: str = Field(..., description="Token from enforcement check")
     override_reason: Optional[str] = Field(None, description="Reason for override")
 
 
 class AddRuleRequest(BaseModel):
     """Request to add a custom enforcement rule."""
+
     rule_id: str = Field(..., description="Unique rule identifier")
-    rule_type: str = Field(..., description="Type of rule (budget_exceeded, roas_below_threshold, etc.)")
+    rule_type: str = Field(
+        ..., description="Type of rule (budget_exceeded, roas_below_threshold, etc.)"
+    )
     threshold_value: float = Field(..., description="Threshold value for the rule")
-    enforcement_mode: str = Field("advisory", description="Enforcement mode for this rule")
+    enforcement_mode: str = Field(
+        "advisory", description="Enforcement mode for this rule"
+    )
     enabled: bool = Field(True, description="Whether the rule is enabled")
     description: Optional[str] = Field(None, description="Human-readable description")
 
 
 class KillSwitchRequest(BaseModel):
     """Request to toggle kill switch."""
-    enabled: bool = Field(..., description="Enable (true) or disable (false) enforcement")
+
+    enabled: bool = Field(
+        ..., description="Enable (true) or disable (false) enforcement"
+    )
     reason: Optional[str] = Field(None, description="Reason for change")
 
 
 # =============================================================================
 # Endpoints
 # =============================================================================
+
 
 @router.get("/settings", response_model=APIResponse[Dict[str, Any]])
 async def get_enforcement_settings(
@@ -113,7 +149,11 @@ async def get_enforcement_settings(
         data={
             "settings": {
                 "enforcement_enabled": settings.enforcement_enabled,
-                "default_mode": settings.default_mode.value if isinstance(settings.default_mode, EnforcementMode) else settings.default_mode,
+                "default_mode": (
+                    settings.default_mode.value
+                    if isinstance(settings.default_mode, EnforcementMode)
+                    else settings.default_mode
+                ),
                 "max_daily_budget": settings.max_daily_budget,
                 "max_campaign_budget": settings.max_campaign_budget,
                 "budget_increase_limit_pct": settings.budget_increase_limit_pct,
@@ -159,7 +199,9 @@ async def update_enforcement_settings(
         try:
             updates["default_mode"] = EnforcementMode(body.default_mode)
         except ValueError:
-            raise HTTPException(status_code=400, detail=f"Invalid mode: {body.default_mode}")
+            raise HTTPException(
+                status_code=400, detail=f"Invalid mode: {body.default_mode}"
+            )
     if body.max_daily_budget is not None:
         updates["max_daily_budget"] = body.max_daily_budget
     if body.max_campaign_budget is not None:
@@ -184,7 +226,11 @@ async def update_enforcement_settings(
             "message": "Settings updated successfully",
             "settings": {
                 "enforcement_enabled": settings.enforcement_enabled,
-                "default_mode": settings.default_mode.value if isinstance(settings.default_mode, EnforcementMode) else settings.default_mode,
+                "default_mode": (
+                    settings.default_mode.value
+                    if isinstance(settings.default_mode, EnforcementMode)
+                    else settings.default_mode
+                ),
                 "max_daily_budget": settings.max_daily_budget,
                 "max_campaign_budget": settings.max_campaign_budget,
                 "budget_increase_limit_pct": settings.budget_increase_limit_pct,
@@ -373,7 +419,9 @@ async def add_custom_rule(
     # frontend UpgradePromptProvider can route the user to checkout.
     from app.services.tenant.limits import LimitType, check_tenant_limit
 
-    await check_tenant_limit(db, tenant_id, LimitType.AUTOMATIONS, raise_on_exceeded=True)
+    await check_tenant_limit(
+        db, tenant_id, LimitType.AUTOMATIONS, raise_on_exceeded=True
+    )
 
     # Validate rule type
     try:

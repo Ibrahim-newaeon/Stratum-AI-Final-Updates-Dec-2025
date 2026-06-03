@@ -42,9 +42,12 @@ class IdentifierInput(BaseModel):
     """Single identifier in an event."""
 
     type: str = Field(
-        ..., description="Identifier type: email, phone, device_id, anonymous_id, external_id"
+        ...,
+        description="Identifier type: email, phone, device_id, anonymous_id, external_id",
     )
-    value: str = Field(..., min_length=1, max_length=512, description="Identifier value")
+    value: str = Field(
+        ..., min_length=1, max_length=512, description="Identifier value"
+    )
 
     @field_validator("type")
     @classmethod
@@ -98,7 +101,10 @@ class EventInput(BaseModel):
     """Single event for ingestion."""
 
     event_name: str = Field(
-        ..., min_length=1, max_length=255, description="Event name (e.g., PageView, Purchase)"
+        ...,
+        min_length=1,
+        max_length=255,
+        description="Event name (e.g., PageView, Purchase)",
     )
     event_time: datetime = Field(..., description="When the event occurred (ISO8601)")
     idempotency_key: Optional[str] = Field(
@@ -212,7 +218,9 @@ class ProfileListResponse(BaseModel):
 class ProfileLookupParams(BaseModel):
     """Parameters for profile lookup by identifier."""
 
-    identifier_type: str = Field(..., description="Type of identifier (email, phone, etc.)")
+    identifier_type: str = Field(
+        ..., description="Type of identifier (email, phone, etc.)"
+    )
     identifier_value: str = Field(..., description="Value to look up")
 
 
@@ -224,8 +232,12 @@ class ProfileLookupParams(BaseModel):
 class SourceCreate(BaseModel):
     """Create a new data source."""
 
-    name: str = Field(..., min_length=1, max_length=255, description="Human-readable source name")
-    source_type: str = Field(..., description="Source type: website, server, sgtm, import, crm")
+    name: str = Field(
+        ..., min_length=1, max_length=255, description="Human-readable source name"
+    )
+    source_type: str = Field(
+        ..., description="Source type: website, server, sgtm, import, crm"
+    )
     config: Optional[dict[str, Any]] = Field(
         default_factory=dict, description="Source-specific configuration"
     )
@@ -269,7 +281,9 @@ class SourceListResponse(BaseModel):
 class ConsentUpdate(BaseModel):
     """Update consent for a profile."""
 
-    consent_type: str = Field(..., description="Consent type: analytics, ads, email, sms, all")
+    consent_type: str = Field(
+        ..., description="Consent type: analytics, ads, email, sms, all"
+    )
     granted: bool = Field(..., description="Whether consent is granted")
     source: Optional[str] = Field(None, description="Where consent was collected")
     consent_text: Optional[str] = Field(None, description="Legal text shown to user")
@@ -307,8 +321,12 @@ class EMQScoreResponse(BaseModel):
     """EMQ score breakdown for an event or batch."""
 
     overall_score: Decimal = Field(..., description="Overall EMQ score (0-100)")
-    identifier_quality: Decimal = Field(..., description="Score for identifier quality (0-40)")
-    data_completeness: Decimal = Field(..., description="Score for data completeness (0-25)")
+    identifier_quality: Decimal = Field(
+        ..., description="Score for identifier quality (0-40)"
+    )
+    data_completeness: Decimal = Field(
+        ..., description="Score for data completeness (0-25)"
+    )
     timeliness: Decimal = Field(..., description="Score for event timeliness (0-20)")
     context_richness: Decimal = Field(..., description="Score for context data (0-15)")
 
@@ -335,23 +353,34 @@ class CDPAPIResponse(BaseModel):
 class WebhookCreate(BaseModel):
     """Create a new webhook destination."""
 
-    name: str = Field(..., min_length=1, max_length=255, description="Human-readable webhook name")
+    name: str = Field(
+        ..., min_length=1, max_length=255, description="Human-readable webhook name"
+    )
     url: str = Field(
-        ..., min_length=1, max_length=2048, description="Webhook destination URL (HTTPS)"
+        ...,
+        min_length=1,
+        max_length=2048,
+        description="Webhook destination URL (HTTPS)",
     )
     event_types: list[str] = Field(
         ...,
         min_length=1,
         description="Event types to trigger on: event.received, profile.created, profile.updated, profile.merged, consent.updated, all",
     )
-    max_retries: int = Field(3, ge=0, le=10, description="Max retry attempts on failure")
-    timeout_seconds: int = Field(30, ge=5, le=120, description="Request timeout in seconds")
+    max_retries: int = Field(
+        3, ge=0, le=10, description="Max retry attempts on failure"
+    )
+    timeout_seconds: int = Field(
+        30, ge=5, le=120, description="Request timeout in seconds"
+    )
 
     @field_validator("url")
     @classmethod
     def validate_url(cls, v: str) -> str:
         if not v.startswith(("https://", "http://localhost")):
-            raise ValueError("Webhook URL must use HTTPS (http://localhost allowed for testing)")
+            raise ValueError(
+                "Webhook URL must use HTTPS (http://localhost allowed for testing)"
+            )
         return v
 
     @field_validator("event_types")
@@ -367,7 +396,9 @@ class WebhookCreate(BaseModel):
         }
         for event_type in v:
             if event_type not in allowed:
-                raise ValueError(f"Invalid event type '{event_type}'. Allowed: {allowed}")
+                raise ValueError(
+                    f"Invalid event type '{event_type}'. Allowed: {allowed}"
+                )
         return v
 
 
@@ -385,7 +416,9 @@ class WebhookUpdate(BaseModel):
     @classmethod
     def validate_url(cls, v: Optional[str]) -> Optional[str]:
         if v and not v.startswith(("https://", "http://localhost")):
-            raise ValueError("Webhook URL must use HTTPS (http://localhost allowed for testing)")
+            raise ValueError(
+                "Webhook URL must use HTTPS (http://localhost allowed for testing)"
+            )
         return v
 
     @field_validator("event_types")
@@ -403,7 +436,9 @@ class WebhookUpdate(BaseModel):
         }
         for event_type in v:
             if event_type not in allowed:
-                raise ValueError(f"Invalid event type '{event_type}'. Allowed: {allowed}")
+                raise ValueError(
+                    f"Invalid event type '{event_type}'. Allowed: {allowed}"
+                )
         return v
 
 
@@ -493,8 +528,12 @@ class IdentityGraphResponse(BaseModel):
 class ProfileMergeRequest(BaseModel):
     """Request to manually merge two profiles."""
 
-    source_profile_id: UUID = Field(..., description="Profile to be merged (will be deleted)")
-    target_profile_id: UUID = Field(..., description="Profile to keep (will receive data)")
+    source_profile_id: UUID = Field(
+        ..., description="Profile to be merged (will be deleted)"
+    )
+    target_profile_id: UUID = Field(
+        ..., description="Profile to keep (will receive data)"
+    )
     reason: Optional[str] = Field("manual_merge", description="Reason for merge")
 
 
@@ -541,7 +580,8 @@ class SegmentCondition(BaseModel):
     """Single condition in segment rules."""
 
     field: str = Field(
-        ..., description="Field path: profile.lifecycle_stage, event.PageView.count, trait.ltv"
+        ...,
+        description="Field path: profile.lifecycle_stage, event.PageView.count, trait.ltv",
     )
     operator: str = Field(
         ..., description="Comparison operator: equals, greater_than, contains, etc."
@@ -554,7 +594,9 @@ class SegmentRules(BaseModel):
 
     logic: str = Field("and", description="Logic operator: and, or")
     conditions: list[SegmentCondition] = Field(default_factory=list)
-    groups: Optional[list["SegmentRules"]] = Field(default=None, description="Nested rule groups")
+    groups: Optional[list["SegmentRules"]] = Field(
+        default=None, description="Nested rule groups"
+    )
 
 
 class SegmentCreate(BaseModel):
@@ -562,11 +604,15 @@ class SegmentCreate(BaseModel):
 
     name: str = Field(..., min_length=1, max_length=255, description="Segment name")
     description: Optional[str] = Field(None, max_length=1000)
-    segment_type: str = Field("dynamic", description="Segment type: static, dynamic, computed")
+    segment_type: str = Field(
+        "dynamic", description="Segment type: static, dynamic, computed"
+    )
     rules: SegmentRules = Field(..., description="Segment rules/conditions")
     tags: Optional[list[str]] = Field(default_factory=list)
     auto_refresh: bool = Field(True, description="Auto-refresh segment membership")
-    refresh_interval_hours: int = Field(24, ge=1, le=168, description="Hours between refreshes")
+    refresh_interval_hours: int = Field(
+        24, ge=1, le=168, description="Hours between refreshes"
+    )
 
     @field_validator("segment_type")
     @classmethod
@@ -665,7 +711,9 @@ class ProfileDeletionRequest(BaseModel):
     profile_id: UUID
     reason: Optional[str] = Field(None, description="Reason for deletion")
     delete_events: bool = Field(True, description="Also delete all events")
-    requester_email: Optional[str] = Field(None, description="Email of person requesting deletion")
+    requester_email: Optional[str] = Field(
+        None, description="Email of person requesting deletion"
+    )
 
 
 class ProfileDeletionResponse(BaseModel):
@@ -690,7 +738,9 @@ class ComputedTraitSourceConfig(BaseModel):
 
     event_name: Optional[str] = Field(None, description="Event name to compute from")
     property: Optional[str] = Field(None, description="Property to aggregate")
-    time_window_days: Optional[int] = Field(None, ge=1, le=3650, description="Time window in days")
+    time_window_days: Optional[int] = Field(
+        None, ge=1, le=3650, description="Time window in days"
+    )
 
 
 class ComputedTraitCreate(BaseModel):
@@ -700,7 +750,8 @@ class ComputedTraitCreate(BaseModel):
     display_name: str = Field(..., min_length=1, max_length=255)
     description: Optional[str] = None
     trait_type: str = Field(
-        ..., description="count, sum, average, min, max, first, last, unique_count, exists"
+        ...,
+        description="count, sum, average, min, max, first, last, unique_count, exists",
     )
     source_config: ComputedTraitSourceConfig
     output_type: str = Field("number", description="number, string, boolean, date")
@@ -767,7 +818,9 @@ class RFMConfig(BaseModel):
 
     purchase_event_name: str = Field("Purchase", description="Event name for purchases")
     revenue_property: str = Field("total", description="Property containing revenue")
-    analysis_window_days: int = Field(365, ge=30, le=1095, description="Analysis window in days")
+    analysis_window_days: int = Field(
+        365, ge=30, le=1095, description="Analysis window in days"
+    )
 
 
 class RFMScores(BaseModel):
@@ -811,7 +864,9 @@ class RFMSummaryResponse(BaseModel):
 class FunnelStepCondition(BaseModel):
     """Condition for funnel step matching."""
 
-    field: str = Field(..., description="Field path: properties.category, context.campaign")
+    field: str = Field(
+        ..., description="Field path: properties.category, context.campaign"
+    )
     operator: str = Field("equals", description="Comparison operator")
     value: Any = Field(..., description="Value to compare against")
 
@@ -822,7 +877,9 @@ class FunnelStep(BaseModel):
     step_name: str = Field(
         ..., min_length=1, max_length=255, description="Display name for the step"
     )
-    event_name: str = Field(..., min_length=1, max_length=255, description="Event name to match")
+    event_name: str = Field(
+        ..., min_length=1, max_length=255, description="Event name to match"
+    )
     conditions: Optional[list[FunnelStepCondition]] = Field(
         default_factory=list, description="Additional conditions for step completion"
     )
@@ -836,12 +893,16 @@ class FunnelCreate(BaseModel):
     steps: list[FunnelStep] = Field(
         ..., min_length=2, max_length=20, description="Funnel steps (2-20 steps)"
     )
-    conversion_window_days: int = Field(30, ge=1, le=365, description="Max days to complete funnel")
+    conversion_window_days: int = Field(
+        30, ge=1, le=365, description="Max days to complete funnel"
+    )
     step_timeout_hours: Optional[int] = Field(
         None, ge=1, le=720, description="Max hours between steps"
     )
     auto_refresh: bool = Field(True, description="Auto-refresh funnel metrics")
-    refresh_interval_hours: int = Field(24, ge=1, le=168, description="Hours between refreshes")
+    refresh_interval_hours: int = Field(
+        24, ge=1, le=168, description="Hours between refreshes"
+    )
     tags: Optional[list[str]] = Field(default_factory=list)
 
 
@@ -865,8 +926,12 @@ class FunnelStepMetrics(BaseModel):
     name: str
     event_name: str
     count: int
-    conversion_rate: float = Field(..., description="Conversion rate from funnel start (%)")
-    drop_off_rate: float = Field(..., description="Drop-off rate from previous step (%)")
+    conversion_rate: float = Field(
+        ..., description="Conversion rate from funnel start (%)"
+    )
+    drop_off_rate: float = Field(
+        ..., description="Drop-off rate from previous step (%)"
+    )
     drop_off_count: int = Field(0, description="Number of profiles that dropped off")
 
 

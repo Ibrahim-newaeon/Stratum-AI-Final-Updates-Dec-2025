@@ -16,11 +16,14 @@ from datetime import date, datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID
 
-from sqlalchemy import select, and_, func, update
+from sqlalchemy import and_, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.models.pacing import (
+    AlertSeverity,
+    AlertStatus,
+    AlertType,
     DailyKPI,
     Forecast,
     PacingAlert,
@@ -28,9 +31,6 @@ from app.models.pacing import (
     Target,
     TargetMetric,
     TargetPeriod,
-    AlertSeverity,
-    AlertType,
-    AlertStatus,
 )
 from app.services.pacing.forecasting import ForecastingService
 
@@ -120,7 +120,7 @@ class PacingService:
         mtd_actual = await self._get_mtd_actual(
             target.metric_type,
             target.platform,
-            getattr(target, 'account_id', None),
+            getattr(target, "account_id", None),
             target.campaign_id,
             target.period_start,
             as_of_date,
@@ -132,7 +132,9 @@ class PacingService:
 
         # Pacing percentage
         pacing_pct = (mtd_actual / mtd_expected * 100) if mtd_expected > 0 else 0
-        completion_pct = (mtd_actual / target.target_value * 100) if target.target_value > 0 else 0
+        completion_pct = (
+            (mtd_actual / target.target_value * 100) if target.target_value > 0 else 0
+        )
 
         # Get forecast for remaining period
         projected_eom = mtd_actual
@@ -172,22 +174,36 @@ class PacingService:
 
         # Gap analysis
         gap_to_target = target.target_value - projected_eom
-        gap_pct = (gap_to_target / target.target_value * 100) if target.target_value > 0 else 0
+        gap_pct = (
+            (gap_to_target / target.target_value * 100)
+            if target.target_value > 0
+            else 0
+        )
 
         # Daily metrics
         daily_average = mtd_actual / days_elapsed if days_elapsed > 0 else 0
-        daily_needed = (target.target_value - mtd_actual) / days_remaining if days_remaining > 0 else 0
+        daily_needed = (
+            (target.target_value - mtd_actual) / days_remaining
+            if days_remaining > 0
+            else 0
+        )
 
         # Status determination
         pacing_ratio = pacing_pct / 100
         on_track = self.ON_TRACK_MIN <= pacing_ratio <= self.ON_TRACK_MAX
-        at_risk = not on_track and (self.AT_RISK_MIN <= pacing_ratio <= self.AT_RISK_MAX)
+        at_risk = not on_track and (
+            self.AT_RISK_MIN <= pacing_ratio <= self.AT_RISK_MAX
+        )
         will_miss = pacing_ratio < self.AT_RISK_MIN or pacing_ratio > self.AT_RISK_MAX
 
         # Determine if projected to miss
         projection_gap_pct = abs(gap_pct)
         will_miss = will_miss or projection_gap_pct > target.critical_threshold_pct
-        at_risk = at_risk or (target.warning_threshold_pct < projection_gap_pct <= target.critical_threshold_pct)
+        at_risk = at_risk or (
+            target.warning_threshold_pct
+            < projection_gap_pct
+            <= target.critical_threshold_pct
+        )
 
         return {
             "status": "success",
@@ -206,7 +222,7 @@ class PacingService:
             },
             "scope": {
                 "platform": target.platform,
-                "account_id": getattr(target, 'account_id', None),
+                "account_id": getattr(target, "account_id", None),
                 "campaign_id": target.campaign_id,
             },
             "target_value": target.target_value,
@@ -285,9 +301,7 @@ class PacingService:
         conditions.append(Target.period_start <= as_of_date)
         conditions.append(Target.period_end >= as_of_date)
 
-        result = await self.db.execute(
-            select(Target).where(and_(*conditions))
-        )
+        result = await self.db.execute(select(Target).where(and_(*conditions)))
         targets = result.scalars().all()
 
         # Calculate pacing for each target
@@ -341,7 +355,9 @@ class PacingService:
         pacing = await self.get_target_pacing(target_id, as_of_date)
 
         if pacing.get("status") != "success":
-            logger.warning(f"Cannot create snapshot for target {target_id}: {pacing.get('message')}")
+            logger.warning(
+                f"Cannot create snapshot for target {target_id}: {pacing.get('message')}"
+            )
             return None
 
         # Check for existing snapshot
@@ -485,13 +501,15 @@ class PacingService:
             start_date = end_date - timedelta(days=30)
 
         result = await self.db.execute(
-            select(PacingSummary).where(
+            select(PacingSummary)
+            .where(
                 and_(
                     PacingSummary.target_id == target_id,
                     PacingSummary.snapshot_date >= start_date,
                     PacingSummary.snapshot_date <= end_date,
                 )
-            ).order_by(PacingSummary.snapshot_date)
+            )
+            .order_by(PacingSummary.snapshot_date)
         )
         snapshots = result.scalars().all()
 
@@ -542,9 +560,7 @@ class PacingService:
         else:
             conditions.append(DailyKPI.campaign_id.is_(None))
 
-        result = await self.db.execute(
-            select(DailyKPI).where(and_(*conditions))
-        )
+        result = await self.db.execute(select(DailyKPI).where(and_(*conditions)))
         records = result.scalars().all()
 
         total = 0.0
@@ -555,7 +571,9 @@ class PacingService:
 
         return total
 
-    def _get_metric_value(self, record: DailyKPI, metric: TargetMetric) -> Optional[float]:
+    def _get_metric_value(
+        self, record: DailyKPI, metric: TargetMetric
+    ) -> Optional[float]:
         """Extract metric value from DailyKPI record."""
         if metric == TargetMetric.SPEND:
             return (record.spend_cents or 0) / 100
@@ -581,6 +599,7 @@ class PacingService:
 # =============================================================================
 # Target CRUD Operations
 # =============================================================================
+
 
 class TargetService:
     """Service for managing targets (CRUD operations)."""
@@ -610,7 +629,12 @@ class TargetService:
         """Create a new target."""
         # Convert monetary values to cents if applicable
         target_value_cents = None
-        if metric_type in [TargetMetric.SPEND, TargetMetric.REVENUE, TargetMetric.PIPELINE_VALUE, TargetMetric.WON_REVENUE]:
+        if metric_type in [
+            TargetMetric.SPEND,
+            TargetMetric.REVENUE,
+            TargetMetric.PIPELINE_VALUE,
+            TargetMetric.WON_REVENUE,
+        ]:
             target_value_cents = int(target_value * 100)
 
         target = Target(
@@ -679,9 +703,7 @@ class TargetService:
             conditions.append(Target.period_type == period_type)
 
         result = await self.db.execute(
-            select(Target)
-            .where(and_(*conditions))
-            .order_by(Target.period_start.desc())
+            select(Target).where(and_(*conditions)).order_by(Target.period_start.desc())
         )
         return list(result.scalars().all())
 
@@ -697,9 +719,18 @@ class TargetService:
 
         # Update allowed fields
         allowed_fields = [
-            "name", "description", "target_value", "min_value", "max_value",
-            "warning_threshold_pct", "critical_threshold_pct", "is_active",
-            "notify_slack", "notify_email", "notify_whatsapp", "notification_recipients",
+            "name",
+            "description",
+            "target_value",
+            "min_value",
+            "max_value",
+            "warning_threshold_pct",
+            "critical_threshold_pct",
+            "is_active",
+            "notify_slack",
+            "notify_email",
+            "notify_whatsapp",
+            "notification_recipients",
         ]
 
         for field, value in kwargs.items():
@@ -708,7 +739,12 @@ class TargetService:
 
         # Update target_value_cents if target_value changed
         if "target_value" in kwargs:
-            if target.metric_type in [TargetMetric.SPEND, TargetMetric.REVENUE, TargetMetric.PIPELINE_VALUE, TargetMetric.WON_REVENUE]:
+            if target.metric_type in [
+                TargetMetric.SPEND,
+                TargetMetric.REVENUE,
+                TargetMetric.PIPELINE_VALUE,
+                TargetMetric.WON_REVENUE,
+            ]:
                 target.target_value_cents = int(target.target_value * 100)
 
         target.updated_at = datetime.now(timezone.utc)
@@ -750,7 +786,5 @@ class TargetService:
         if platform:
             conditions.append(Target.platform == platform)
 
-        result = await self.db.execute(
-            select(Target).where(and_(*conditions))
-        )
+        result = await self.db.execute(select(Target).where(and_(*conditions)))
         return list(result.scalars().all())

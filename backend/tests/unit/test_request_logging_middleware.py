@@ -16,20 +16,20 @@ Covers:
 """
 
 import time
-from unittest.mock import AsyncMock, MagicMock, patch, call
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import pytest
 import structlog
 
 from app.middleware.request_logging import (
-    RequestLoggingMiddleware,
     _SKIP_PATHS,
+    RequestLoggingMiddleware,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_request(
     path: str = "/api/v1/campaigns",
@@ -46,7 +46,9 @@ def _make_request(
     if request_id:
         headers["X-Request-ID"] = request_id
     req.headers = MagicMock()
-    req.headers.get = MagicMock(side_effect=lambda key, default=None: headers.get(key, default))
+    req.headers.get = MagicMock(
+        side_effect=lambda key, default=None: headers.get(key, default)
+    )
 
     req.state = MagicMock()
     return req
@@ -63,6 +65,7 @@ def _make_response(status_code: int = 200) -> MagicMock:
 # Tests: Request ID assignment
 # ---------------------------------------------------------------------------
 
+
 class TestRequestIdAssignment:
     """Middleware should assign a request ID to every request."""
 
@@ -73,8 +76,11 @@ class TestRequestIdAssignment:
         call_next = AsyncMock(return_value=resp)
         req = _make_request()
 
-        with patch("app.middleware.request_logging.structlog.contextvars.bind_contextvars"), \
-             patch("app.middleware.request_logging.structlog.contextvars.unbind_contextvars"):
+        with patch(
+            "app.middleware.request_logging.structlog.contextvars.bind_contextvars"
+        ), patch(
+            "app.middleware.request_logging.structlog.contextvars.unbind_contextvars"
+        ):
             await mw.dispatch(req, call_next)
 
         # request_id should be set on state
@@ -91,8 +97,11 @@ class TestRequestIdAssignment:
         call_next = AsyncMock(return_value=resp)
         req = _make_request(request_id="client-req-42")
 
-        with patch("app.middleware.request_logging.structlog.contextvars.bind_contextvars"), \
-             patch("app.middleware.request_logging.structlog.contextvars.unbind_contextvars"):
+        with patch(
+            "app.middleware.request_logging.structlog.contextvars.bind_contextvars"
+        ), patch(
+            "app.middleware.request_logging.structlog.contextvars.unbind_contextvars"
+        ):
             await mw.dispatch(req, call_next)
 
         assert req.state.request_id == "client-req-42"
@@ -101,6 +110,7 @@ class TestRequestIdAssignment:
 # ---------------------------------------------------------------------------
 # Tests: Response headers
 # ---------------------------------------------------------------------------
+
 
 class TestResponseHeaders:
     """Middleware should inject X-Request-ID and X-Process-Time-Ms headers."""
@@ -112,8 +122,11 @@ class TestResponseHeaders:
         call_next = AsyncMock(return_value=resp)
         req = _make_request(request_id="my-id")
 
-        with patch("app.middleware.request_logging.structlog.contextvars.bind_contextvars"), \
-             patch("app.middleware.request_logging.structlog.contextvars.unbind_contextvars"):
+        with patch(
+            "app.middleware.request_logging.structlog.contextvars.bind_contextvars"
+        ), patch(
+            "app.middleware.request_logging.structlog.contextvars.unbind_contextvars"
+        ):
             result = await mw.dispatch(req, call_next)
 
         assert result.headers["X-Request-ID"] == "my-id"
@@ -125,8 +138,11 @@ class TestResponseHeaders:
         call_next = AsyncMock(return_value=resp)
         req = _make_request()
 
-        with patch("app.middleware.request_logging.structlog.contextvars.bind_contextvars"), \
-             patch("app.middleware.request_logging.structlog.contextvars.unbind_contextvars"):
+        with patch(
+            "app.middleware.request_logging.structlog.contextvars.bind_contextvars"
+        ), patch(
+            "app.middleware.request_logging.structlog.contextvars.unbind_contextvars"
+        ):
             result = await mw.dispatch(req, call_next)
 
         assert "X-Process-Time-Ms" in result.headers
@@ -139,6 +155,7 @@ class TestResponseHeaders:
 # Tests: Noisy path skipping
 # ---------------------------------------------------------------------------
 
+
 class TestNoisyPathSkipping:
     """Health checks, docs, and other noisy paths should not be logged."""
 
@@ -149,9 +166,13 @@ class TestNoisyPathSkipping:
         call_next = AsyncMock(return_value=_make_response())
         req = _make_request(path=path)
 
-        with patch("app.middleware.request_logging.structlog.contextvars.bind_contextvars"), \
-             patch("app.middleware.request_logging.structlog.contextvars.unbind_contextvars"), \
-             patch("app.middleware.request_logging.logger") as mock_logger:
+        with patch(
+            "app.middleware.request_logging.structlog.contextvars.bind_contextvars"
+        ), patch(
+            "app.middleware.request_logging.structlog.contextvars.unbind_contextvars"
+        ), patch(
+            "app.middleware.request_logging.logger"
+        ) as mock_logger:
             await mw.dispatch(req, call_next)
             mock_logger.info.assert_not_called()
 
@@ -161,9 +182,13 @@ class TestNoisyPathSkipping:
         call_next = AsyncMock(return_value=_make_response())
         req = _make_request(path="/api/v1/users")
 
-        with patch("app.middleware.request_logging.structlog.contextvars.bind_contextvars"), \
-             patch("app.middleware.request_logging.structlog.contextvars.unbind_contextvars"), \
-             patch("app.middleware.request_logging.logger") as mock_logger:
+        with patch(
+            "app.middleware.request_logging.structlog.contextvars.bind_contextvars"
+        ), patch(
+            "app.middleware.request_logging.structlog.contextvars.unbind_contextvars"
+        ), patch(
+            "app.middleware.request_logging.logger"
+        ) as mock_logger:
             await mw.dispatch(req, call_next)
             mock_logger.info.assert_called_once()
 
@@ -171,6 +196,7 @@ class TestNoisyPathSkipping:
 # ---------------------------------------------------------------------------
 # Tests: Structured log fields
 # ---------------------------------------------------------------------------
+
 
 class TestStructuredLogFields:
     """Log output should include method, path, status_code, duration_ms."""
@@ -181,9 +207,13 @@ class TestStructuredLogFields:
         call_next = AsyncMock(return_value=_make_response(201))
         req = _make_request(path="/api/v1/campaigns", method="POST")
 
-        with patch("app.middleware.request_logging.structlog.contextvars.bind_contextvars"), \
-             patch("app.middleware.request_logging.structlog.contextvars.unbind_contextvars"), \
-             patch("app.middleware.request_logging.logger") as mock_logger:
+        with patch(
+            "app.middleware.request_logging.structlog.contextvars.bind_contextvars"
+        ), patch(
+            "app.middleware.request_logging.structlog.contextvars.unbind_contextvars"
+        ), patch(
+            "app.middleware.request_logging.logger"
+        ) as mock_logger:
             await mw.dispatch(req, call_next)
 
             mock_logger.info.assert_called_once()
@@ -191,7 +221,11 @@ class TestStructuredLogFields:
             kwargs = call_args.kwargs if call_args.kwargs else {}
             # If called as positional: info("request_completed", method=..., ...)
             if not kwargs:
-                kwargs = {k: v for k, v in call_args[1].items()} if len(call_args) > 1 else {}
+                kwargs = (
+                    {k: v for k, v in call_args[1].items()}
+                    if len(call_args) > 1
+                    else {}
+                )
                 # Try keyword args from call_args
                 kwargs = call_args.kwargs
 
@@ -207,6 +241,7 @@ class TestStructuredLogFields:
 # Tests: structlog context cleanup
 # ---------------------------------------------------------------------------
 
+
 class TestStructlogContextCleanup:
     """request_id should be unbound after each request to prevent leaks."""
 
@@ -216,8 +251,11 @@ class TestStructlogContextCleanup:
         call_next = AsyncMock(return_value=_make_response())
         req = _make_request(request_id="ctx-test")
 
-        with patch("app.middleware.request_logging.structlog.contextvars.bind_contextvars") as mock_bind, \
-             patch("app.middleware.request_logging.structlog.contextvars.unbind_contextvars") as mock_unbind:
+        with patch(
+            "app.middleware.request_logging.structlog.contextvars.bind_contextvars"
+        ) as mock_bind, patch(
+            "app.middleware.request_logging.structlog.contextvars.unbind_contextvars"
+        ) as mock_unbind:
             await mw.dispatch(req, call_next)
 
             mock_bind.assert_called_once_with(request_id="ctx-test")
@@ -228,6 +266,7 @@ class TestStructlogContextCleanup:
 # Tests: Timing accuracy
 # ---------------------------------------------------------------------------
 
+
 class TestTimingAccuracy:
     """Process time should reflect actual request duration."""
 
@@ -237,13 +276,17 @@ class TestTimingAccuracy:
 
         async def slow_next(req: MagicMock) -> MagicMock:
             import asyncio
+
             await asyncio.sleep(0.05)  # 50ms
             return _make_response()
 
         req = _make_request()
 
-        with patch("app.middleware.request_logging.structlog.contextvars.bind_contextvars"), \
-             patch("app.middleware.request_logging.structlog.contextvars.unbind_contextvars"):
+        with patch(
+            "app.middleware.request_logging.structlog.contextvars.bind_contextvars"
+        ), patch(
+            "app.middleware.request_logging.structlog.contextvars.unbind_contextvars"
+        ):
             result = await mw.dispatch(req, slow_next)
 
         duration = float(result.headers["X-Process-Time-Ms"])
@@ -253,6 +296,7 @@ class TestTimingAccuracy:
 # ---------------------------------------------------------------------------
 # Tests: Response passthrough
 # ---------------------------------------------------------------------------
+
 
 class TestResponsePassthrough:
     """The middleware should not modify the response object itself."""
@@ -264,8 +308,11 @@ class TestResponsePassthrough:
         call_next = AsyncMock(return_value=resp)
         req = _make_request()
 
-        with patch("app.middleware.request_logging.structlog.contextvars.bind_contextvars"), \
-             patch("app.middleware.request_logging.structlog.contextvars.unbind_contextvars"):
+        with patch(
+            "app.middleware.request_logging.structlog.contextvars.bind_contextvars"
+        ), patch(
+            "app.middleware.request_logging.structlog.contextvars.unbind_contextvars"
+        ):
             result = await mw.dispatch(req, call_next)
 
         assert result.status_code == 404

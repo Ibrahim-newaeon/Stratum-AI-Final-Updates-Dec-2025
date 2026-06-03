@@ -28,7 +28,6 @@ Indexes:
 from alembic import op
 import sqlalchemy as sa
 
-
 # Revision identifiers
 revision = "049_copilot_doc_chunks"
 down_revision = "048_autopilot_outcome_columns"
@@ -48,9 +47,7 @@ def _extension_exists(name: str) -> bool:
 def _table_exists(table: str) -> bool:
     conn = op.get_bind()
     result = conn.execute(
-        sa.text(
-            "SELECT 1 FROM information_schema.tables WHERE table_name = :table"
-        ),
+        sa.text("SELECT 1 FROM information_schema.tables WHERE table_name = :table"),
         {"table": table},
     )
     return result.first() is not None
@@ -68,8 +65,7 @@ def upgrade() -> None:
     #    first-class vector type without the pgvector dialect plugin,
     #    and we want this migration to run cleanly even when the Python
     #    pgvector package isn't installed (e.g. CI without RAG enabled).
-    op.execute(
-        """
+    op.execute("""
         CREATE TABLE copilot_doc_chunks (
             id           BIGSERIAL PRIMARY KEY,
             source_path  TEXT NOT NULL,
@@ -79,8 +75,7 @@ def upgrade() -> None:
             metadata     JSONB NOT NULL DEFAULT '{}'::jsonb,
             indexed_at   TIMESTAMPTZ NOT NULL DEFAULT now()
         )
-        """
-    )
+        """)
 
     # 3. Lookup indexes. Unique on (source_path, chunk_index) lets the
     #    indexer upsert per chunk without duplicates.

@@ -76,6 +76,7 @@ def with_distributed_lock(
     """
     Decorator to ensure only one instance of a task runs across all workers.
     """
+
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
         def wrapper(*args, **kwargs) -> Any:

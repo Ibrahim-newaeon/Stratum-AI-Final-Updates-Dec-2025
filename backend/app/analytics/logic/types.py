@@ -7,8 +7,9 @@ Based on AI_Logic_Formulas_Pseudocode.md and Data_Schema_Events_and_Tables.md.
 """
 
 from datetime import datetime
-from typing import Dict, List, Optional, Literal
 from enum import Enum
+from typing import Dict, List, Literal, Optional
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -17,6 +18,7 @@ from pydantic import BaseModel, ConfigDict, Field
 # =============================================================================
 class Platform(str, Enum):
     """Supported advertising platforms."""
+
     META = "meta"
     GOOGLE = "google"
     TIKTOK = "tiktok"
@@ -26,6 +28,7 @@ class Platform(str, Enum):
 
 class EntityLevel(str, Enum):
     """Entity hierarchy levels."""
+
     ACCOUNT = "account"
     CAMPAIGN = "campaign"
     ADSET_ADGROUP = "adset_adgroup"
@@ -35,6 +38,7 @@ class EntityLevel(str, Enum):
 
 class SignalHealthStatus(str, Enum):
     """Signal/EMQ health status levels."""
+
     HEALTHY = "healthy"
     RISK = "risk"
     DEGRADED = "degraded"
@@ -43,6 +47,7 @@ class SignalHealthStatus(str, Enum):
 
 class ScalingAction(str, Enum):
     """Scaling action recommendations."""
+
     SCALE = "scale"
     WATCH = "watch"
     FIX = "fix"
@@ -51,6 +56,7 @@ class ScalingAction(str, Enum):
 
 class FatigueState(str, Enum):
     """Creative fatigue states."""
+
     HEALTHY = "healthy"
     WATCH = "watch"
     REFRESH = "refresh"
@@ -58,6 +64,7 @@ class FatigueState(str, Enum):
 
 class AlertSeverity(str, Enum):
     """Alert severity levels."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -70,6 +77,7 @@ class AlertSeverity(str, Enum):
 # =============================================================================
 class EntityMetrics(BaseModel):
     """Core daily metrics for any entity level."""
+
     model_config = ConfigDict(use_enum_values=True)
 
     entity_id: str
@@ -104,6 +112,7 @@ class EntityMetrics(BaseModel):
 
 class BaselineMetrics(BaseModel):
     """Aggregated baseline metrics over a time window."""
+
     spend: float = 0.0
     impressions: int = 0
     clicks: int = 0
@@ -124,6 +133,7 @@ class BaselineMetrics(BaseModel):
 # =============================================================================
 class ScoringParams(BaseModel):
     """Configuration parameters for scoring functions."""
+
     # Scaling score weights
     roas_weight: float = 0.45
     cpa_weight: float = 0.25
@@ -147,6 +157,7 @@ class ScoringParams(BaseModel):
 
 class FatigueParams(BaseModel):
     """Configuration for fatigue scoring."""
+
     ctr_weight: float = 0.35
     roas_weight: float = 0.35
     cpa_weight: float = 0.20
@@ -162,16 +173,23 @@ class FatigueParams(BaseModel):
 
 class AnomalyParams(BaseModel):
     """Configuration for anomaly detection."""
+
     window_days: int = 14
     zscore_threshold: float = 2.5
     metrics_to_check: List[str] = [
-        "spend", "revenue", "roas", "cpa",
-        "conversions", "event_loss_pct", "emq_score"
+        "spend",
+        "revenue",
+        "roas",
+        "cpa",
+        "conversions",
+        "event_loss_pct",
+        "emq_score",
     ]
 
 
 class SignalHealthParams(BaseModel):
     """Configuration for signal health checks."""
+
     emq_healthy: float = 90.0
     emq_risk: float = 80.0
     event_loss_healthy: float = 5.0
@@ -183,6 +201,7 @@ class SignalHealthParams(BaseModel):
 # =============================================================================
 class ScalingScoreResult(BaseModel):
     """Result of scaling score calculation."""
+
     entity_id: str
     entity_name: str
     score: float  # -1 to +1
@@ -205,6 +224,7 @@ class ScalingScoreResult(BaseModel):
 
 class FatigueResult(BaseModel):
     """Result of creative fatigue calculation."""
+
     creative_id: str
     creative_name: str
     fatigue_score: float  # 0 to 1
@@ -224,6 +244,7 @@ class FatigueResult(BaseModel):
 
 class AnomalyResult(BaseModel):
     """Result of anomaly detection."""
+
     metric: str
     zscore: float
     severity: AlertSeverity
@@ -236,6 +257,7 @@ class AnomalyResult(BaseModel):
 
 class SignalHealthResult(BaseModel):
     """Result of signal health check."""
+
     status: SignalHealthStatus
     emq_score: Optional[float]
     event_loss_pct: Optional[float]
@@ -247,6 +269,7 @@ class SignalHealthResult(BaseModel):
 
 class AttributionVarianceResult(BaseModel):
     """Result of attribution variance calculation."""
+
     entity_id: str
     revenue_variance_pct: float
     conversion_variance_pct: float
@@ -262,6 +285,7 @@ class AttributionVarianceResult(BaseModel):
 
 class BudgetAction(BaseModel):
     """Budget reallocation action."""
+
     entity_id: str
     entity_name: str
     action: Literal["increase_budget", "decrease_budget"]
@@ -273,6 +297,7 @@ class BudgetAction(BaseModel):
 
 class RecommendationAction(BaseModel):
     """Generated recommendation action."""
+
     type: str
     priority: AlertSeverity
     title: str

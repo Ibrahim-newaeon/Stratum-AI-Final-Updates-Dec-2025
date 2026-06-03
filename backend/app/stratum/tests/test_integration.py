@@ -133,7 +133,10 @@ def test_signal_health_calculator():
     print("TEST: Signal Health Calculator")
     print("=" * 60)
 
-    from app.stratum.core.signal_health import SignalHealthCalculator, SignalHealthConfig
+    from app.stratum.core.signal_health import (
+        SignalHealthCalculator,
+        SignalHealthConfig,
+    )
 
     calculator = SignalHealthCalculator()
 
@@ -152,7 +155,9 @@ def test_signal_health_calculator():
     print(f"  Anomaly Component: {health.anomaly_score}")
     print(f"  Status: {health.status}")
 
-    assert health.overall_score >= 70, f"Expected score >= 70, got {health.overall_score}"
+    assert (
+        health.overall_score >= 70
+    ), f"Expected score >= 70, got {health.overall_score}"
     assert health.status == "healthy"
     print("[OK] Good signal health calculated correctly")
 
@@ -456,7 +461,9 @@ def test_integration_bridge():
     emq_score = convert_platform_emq_to_score("meta", 8.5)
     # Platform may be enum or string depending on Pydantic config
     platform_val = (
-        emq_score.platform.value if hasattr(emq_score.platform, "value") else emq_score.platform
+        emq_score.platform.value
+        if hasattr(emq_score.platform, "value")
+        else emq_score.platform
     )
     assert platform_val == "meta"
     assert emq_score.score == 8.5

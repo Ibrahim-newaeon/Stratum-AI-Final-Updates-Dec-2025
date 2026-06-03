@@ -12,30 +12,30 @@ Supported channels:
 - S3 (AWS Storage)
 """
 
-from datetime import datetime, timezone
-from typing import List, Dict, Any, Optional, Protocol
-from uuid import UUID
+import json
 import logging
 import os
-import json
+from abc import ABC, abstractmethod
+from datetime import datetime, timezone
+from email import encoders
+from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from email.mime.base import MIMEBase
-from email import encoders
-import aiosmtplib
-import aiohttp
-from abc import ABC, abstractmethod
+from typing import Any, Dict, List, Optional, Protocol
+from uuid import UUID
 
-from sqlalchemy import select, and_
+import aiohttp
+import aiosmtplib
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.reporting import (
-    ReportExecution,
-    ReportDelivery,
-    DeliveryChannelConfig,
     DeliveryChannel,
+    DeliveryChannelConfig,
     DeliveryStatus,
     ExecutionStatus,
+    ReportDelivery,
+    ReportExecution,
 )
 
 logger = logging.getLogger(__name__)
@@ -44,6 +44,7 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 # Delivery Channel Interface
 # =============================================================================
+
 
 class DeliveryChannelHandler(ABC):
     """Abstract base class for delivery channel implementations."""
@@ -71,6 +72,7 @@ class DeliveryChannelHandler(ABC):
 # Email Delivery
 # =============================================================================
 
+
 class EmailDelivery(DeliveryChannelHandler):
     """SMTP-based email delivery."""
 
@@ -84,7 +86,9 @@ class EmailDelivery(DeliveryChannelHandler):
         try:
             # Build email
             msg = MIMEMultipart()
-            msg["From"] = f"{config.get('from_name', 'Stratum Reports')} <{config['from_email']}>"
+            msg["From"] = (
+                f"{config.get('from_name', 'Stratum Reports')} <{config['from_email']}>"
+            )
             msg["To"] = recipient
             msg["Subject"] = self._render_subject(execution, config)
 
@@ -120,13 +124,22 @@ class EmailDelivery(DeliveryChannelHandler):
                 "error": str(e),
             }
 
-    def _render_subject(self, execution: ReportExecution, config: Dict[str, Any]) -> str:
+    def _render_subject(
+        self, execution: ReportExecution, config: Dict[str, Any]
+    ) -> str:
         """Render email subject from template."""
-        template = config.get("subject_template", "{{report_type}} Report - {{date_range}}")
+        template = config.get(
+            "subject_template", "{{report_type}} Report - {{date_range}}"
+        )
 
         # Simple template replacement
-        subject = template.replace("{{report_type}}", execution.report_type.value.replace("_", " ").title())
-        subject = subject.replace("{{date_range}}", f"{execution.date_range_start} to {execution.date_range_end}")
+        subject = template.replace(
+            "{{report_type}}", execution.report_type.value.replace("_", " ").title()
+        )
+        subject = subject.replace(
+            "{{date_range}}",
+            f"{execution.date_range_start} to {execution.date_range_end}",
+        )
 
         return subject
 
@@ -161,9 +174,21 @@ class EmailDelivery(DeliveryChannelHandler):
             </html>
             """
 
-        body = template.replace("{{report_type}}", execution.report_type.value.replace("_", " ").title())
-        body = body.replace("{{date_range}}", f"{execution.date_range_start} to {execution.date_range_end}")
-        body = body.replace("{{generated_at}}", execution.completed_at.strftime("%Y-%m-%d %H:%M UTC") if execution.completed_at else "N/A")
+        body = template.replace(
+            "{{report_type}}", execution.report_type.value.replace("_", " ").title()
+        )
+        body = body.replace(
+            "{{date_range}}",
+            f"{execution.date_range_start} to {execution.date_range_end}",
+        )
+        body = body.replace(
+            "{{generated_at}}",
+            (
+                execution.completed_at.strftime("%Y-%m-%d %H:%M UTC")
+                if execution.completed_at
+                else "N/A"
+            ),
+        )
 
         return body
 
@@ -197,6 +222,7 @@ class EmailDelivery(DeliveryChannelHandler):
 # =============================================================================
 # Slack Delivery
 # =============================================================================
+
 
 class SlackDelivery(DeliveryChannelHandler):
     """Slack webhook-based delivery."""
@@ -241,7 +267,9 @@ class SlackDelivery(DeliveryChannelHandler):
                 "error": str(e),
             }
 
-    def _build_message(self, execution: ReportExecution, config: Dict[str, Any]) -> Dict[str, Any]:
+    def _build_message(
+        self, execution: ReportExecution, config: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Build Slack Block Kit message."""
         report_type = execution.report_type.value.replace("_", " ").title()
         date_range = f"{execution.date_range_start} to {execution.date_range_end}"
@@ -264,7 +292,7 @@ class SlackDelivery(DeliveryChannelHandler):
                     "type": "plain_text",
                     "text": f":chart_with_upwards_trend: {report_type} Report",
                     "emoji": True,
-                }
+                },
             },
             {
                 "type": "section",
@@ -282,33 +310,39 @@ class SlackDelivery(DeliveryChannelHandler):
         ]
 
         if summary_text:
-            blocks.append({
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": f"*Key Metrics:*\n{summary_text}",
-                },
-            })
+            blocks.append(
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": f"*Key Metrics:*\n{summary_text}",
+                    },
+                }
+            )
 
         # Add download link if available
         if execution.file_url:
-            blocks.append({
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": f"<{execution.file_url}|:arrow_down: Download Report>",
-                },
-            })
-
-        blocks.append({
-            "type": "context",
-            "elements": [
+            blocks.append(
                 {
-                    "type": "mrkdwn",
-                    "text": "Sent by Stratum AI Automated Reporting",
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": f"<{execution.file_url}|:arrow_down: Download Report>",
+                    },
                 }
-            ],
-        })
+            )
+
+        blocks.append(
+            {
+                "type": "context",
+                "elements": [
+                    {
+                        "type": "mrkdwn",
+                        "text": "Sent by Stratum AI Automated Reporting",
+                    }
+                ],
+            }
+        )
 
         return {"blocks": blocks}
 
@@ -316,6 +350,7 @@ class SlackDelivery(DeliveryChannelHandler):
 # =============================================================================
 # Microsoft Teams Delivery
 # =============================================================================
+
 
 class TeamsDelivery(DeliveryChannelHandler):
     """Microsoft Teams webhook-based delivery."""
@@ -359,7 +394,9 @@ class TeamsDelivery(DeliveryChannelHandler):
                 "error": str(e),
             }
 
-    def _build_card(self, execution: ReportExecution, config: Dict[str, Any]) -> Dict[str, Any]:
+    def _build_card(
+        self, execution: ReportExecution, config: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Build Microsoft Teams Adaptive Card."""
         report_type = execution.report_type.value.replace("_", " ").title()
         date_range = f"{execution.date_range_start} to {execution.date_range_end}"
@@ -367,18 +404,30 @@ class TeamsDelivery(DeliveryChannelHandler):
         facts = [
             {"title": "Report Type", "value": report_type},
             {"title": "Date Range", "value": date_range},
-            {"title": "Generated", "value": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")},
+            {
+                "title": "Generated",
+                "value": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
+            },
         ]
 
         # Add metrics if available
         if execution.metrics_summary:
             metrics = execution.metrics_summary
             if "total_spend" in metrics:
-                facts.append({"title": "Total Spend", "value": f"${metrics['total_spend']:,.2f}"})
+                facts.append(
+                    {"title": "Total Spend", "value": f"${metrics['total_spend']:,.2f}"}
+                )
             if "total_revenue" in metrics:
-                facts.append({"title": "Total Revenue", "value": f"${metrics['total_revenue']:,.2f}"})
+                facts.append(
+                    {
+                        "title": "Total Revenue",
+                        "value": f"${metrics['total_revenue']:,.2f}",
+                    }
+                )
             if "overall_roas" in metrics:
-                facts.append({"title": "ROAS", "value": f"{metrics['overall_roas']:.2f}x"})
+                facts.append(
+                    {"title": "ROAS", "value": f"{metrics['overall_roas']:.2f}x"}
+                )
 
         card = {
             "@type": "MessageCard",
@@ -401,9 +450,7 @@ class TeamsDelivery(DeliveryChannelHandler):
                 {
                     "@type": "OpenUri",
                     "name": "Download Report",
-                    "targets": [
-                        {"os": "default", "uri": execution.file_url}
-                    ],
+                    "targets": [{"os": "default", "uri": execution.file_url}],
                 }
             ]
 
@@ -413,6 +460,7 @@ class TeamsDelivery(DeliveryChannelHandler):
 # =============================================================================
 # Webhook Delivery (Generic)
 # =============================================================================
+
 
 class WebhookDelivery(DeliveryChannelHandler):
     """Generic HTTP webhook delivery."""
@@ -465,7 +513,9 @@ class WebhookDelivery(DeliveryChannelHandler):
                 "error": str(e),
             }
 
-    def _build_payload(self, execution: ReportExecution, config: Dict[str, Any]) -> Dict[str, Any]:
+    def _build_payload(
+        self, execution: ReportExecution, config: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Build webhook payload."""
         return {
             "event": "report.generated",
@@ -477,7 +527,11 @@ class WebhookDelivery(DeliveryChannelHandler):
                     "start": str(execution.date_range_start),
                     "end": str(execution.date_range_end),
                 },
-                "generated_at": execution.completed_at.isoformat() if execution.completed_at else None,
+                "generated_at": (
+                    execution.completed_at.isoformat()
+                    if execution.completed_at
+                    else None
+                ),
                 "file_url": execution.file_url,
                 "metrics_summary": execution.metrics_summary,
             },
@@ -488,6 +542,7 @@ class WebhookDelivery(DeliveryChannelHandler):
 # =============================================================================
 # S3 Delivery
 # =============================================================================
+
 
 class S3Delivery(DeliveryChannelHandler):
     """AWS S3 storage delivery."""
@@ -566,6 +621,7 @@ class S3Delivery(DeliveryChannelHandler):
 # WhatsApp Delivery
 # =============================================================================
 
+
 class WhatsAppDelivery(DeliveryChannelHandler):
     """WhatsApp Business API delivery for report summaries."""
 
@@ -596,8 +652,24 @@ class WhatsAppDelivery(DeliveryChannelHandler):
                         {
                             "type": "body",
                             "parameters": [
-                                {"type": "text", "text": execution.report_type.value if hasattr(execution.report_type, 'value') else str(execution.report_type)},
-                                {"type": "text", "text": execution.completed_at.strftime("%Y-%m-%d %H:%M") if execution.completed_at else "N/A"},
+                                {
+                                    "type": "text",
+                                    "text": (
+                                        execution.report_type.value
+                                        if hasattr(execution.report_type, "value")
+                                        else str(execution.report_type)
+                                    ),
+                                },
+                                {
+                                    "type": "text",
+                                    "text": (
+                                        execution.completed_at.strftime(
+                                            "%Y-%m-%d %H:%M"
+                                        )
+                                        if execution.completed_at
+                                        else "N/A"
+                                    ),
+                                },
                             ],
                         }
                     ],
@@ -633,7 +705,9 @@ class WhatsAppDelivery(DeliveryChannelHandler):
                         }
                     return {
                         "success": False,
-                        "error": data.get("error", {}).get("message", f"HTTP {resp.status}"),
+                        "error": data.get("error", {}).get(
+                            "message", f"HTTP {resp.status}"
+                        ),
                         "response": data,
                     }
 
@@ -646,9 +720,21 @@ class WhatsAppDelivery(DeliveryChannelHandler):
 
     def _build_summary(self, execution: ReportExecution) -> str:
         """Build a text summary of the report for WhatsApp."""
-        report_type = execution.report_type.value if hasattr(execution.report_type, 'value') else str(execution.report_type)
-        completed = execution.completed_at.strftime("%Y-%m-%d %H:%M UTC") if execution.completed_at else "N/A"
-        period = f"{execution.date_range_start} to {execution.date_range_end}" if hasattr(execution, 'date_range_start') else "N/A"
+        report_type = (
+            execution.report_type.value
+            if hasattr(execution.report_type, "value")
+            else str(execution.report_type)
+        )
+        completed = (
+            execution.completed_at.strftime("%Y-%m-%d %H:%M UTC")
+            if execution.completed_at
+            else "N/A"
+        )
+        period = (
+            f"{execution.date_range_start} to {execution.date_range_end}"
+            if hasattr(execution, "date_range_start")
+            else "N/A"
+        )
 
         lines = [
             f"📊 *Stratum AI Report Ready*",
@@ -669,6 +755,7 @@ class WhatsAppDelivery(DeliveryChannelHandler):
 # =============================================================================
 # Delivery Service (Orchestrator)
 # =============================================================================
+
 
 class DeliveryService:
     """
@@ -770,11 +857,13 @@ class DeliveryService:
                     delivery.delivery_response = result
                     results["failed"] += 1
 
-                channel_results.append({
-                    "recipient": recipient,
-                    "success": result.get("success"),
-                    "error": result.get("error"),
-                })
+                channel_results.append(
+                    {
+                        "recipient": recipient,
+                        "success": result.get("success"),
+                        "error": result.get("error"),
+                    }
+                )
 
             results["channels"][channel_name] = channel_results
 
@@ -834,9 +923,12 @@ class DeliveryService:
         channel_config = {}
         if execution.schedule_id:
             from app.models.reporting import ScheduledReport
+
             schedule = await self.db.get(ScheduledReport, execution.schedule_id)
             if schedule:
-                channel_config = schedule.delivery_config.get(delivery.channel.value, {})
+                channel_config = schedule.delivery_config.get(
+                    delivery.channel.value, {}
+                )
 
         handler_class = self.CHANNEL_HANDLERS.get(delivery.channel)
         if not handler_class:

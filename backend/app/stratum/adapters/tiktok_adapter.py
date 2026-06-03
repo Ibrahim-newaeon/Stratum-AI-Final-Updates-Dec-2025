@@ -300,9 +300,15 @@ class TikTokAdapter(BaseAdapter):
 
             # Add status filter if specified
             if status_filter:
-                tiktok_statuses = [self.STATUS_TO_TIKTOK.get(s, "ENABLE") for s in status_filter]
+                tiktok_statuses = [
+                    self.STATUS_TO_TIKTOK.get(s, "ENABLE") for s in status_filter
+                ]
                 params["filtering"] = json.dumps(
-                    {"primary_status": tiktok_statuses[0] if len(tiktok_statuses) == 1 else None}
+                    {
+                        "primary_status": (
+                            tiktok_statuses[0] if len(tiktok_statuses) == 1 else None
+                        )
+                    }
                 )
 
             response = self._make_request("GET", "/campaign/get/", params=params)
@@ -315,7 +321,9 @@ class TikTokAdapter(BaseAdapter):
                 campaign = self._convert_campaign(raw, account_id)
                 campaigns.append(campaign)
 
-            logger.info(f"Fetched {len(campaigns)} campaigns from TikTok account {account_id}")
+            logger.info(
+                f"Fetched {len(campaigns)} campaigns from TikTok account {account_id}"
+            )
             return campaigns
 
         except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
@@ -359,7 +367,9 @@ class TikTokAdapter(BaseAdapter):
         except (ValueError, KeyError, TypeError) as e:
             raise PlatformError(f"Failed to parse ad group data: {e}")
 
-    async def get_ads(self, account_id: str, adset_id: Optional[str] = None) -> list[UnifiedAd]:
+    async def get_ads(
+        self, account_id: str, adset_id: Optional[str] = None
+    ) -> list[UnifiedAd]:
         """
         Fetch ads for the specified account.
 
@@ -413,7 +423,11 @@ class TikTokAdapter(BaseAdapter):
 
         try:
             # Map entity type to TikTok's dimension
-            dimension_map = {"campaign": "BASIC_DATA", "adset": "BASIC_DATA", "ad": "BASIC_DATA"}
+            dimension_map = {
+                "campaign": "BASIC_DATA",
+                "adset": "BASIC_DATA",
+                "ad": "BASIC_DATA",
+            }
 
             # Build the report request
             # TikTok's reporting API is synchronous for small requests
@@ -430,9 +444,7 @@ class TikTokAdapter(BaseAdapter):
                 "dimensions": json.dumps(
                     ["campaign_id"]
                     if entity_type == "campaign"
-                    else ["adgroup_id"]
-                    if entity_type == "adset"
-                    else ["ad_id"]
+                    else ["adgroup_id"] if entity_type == "adset" else ["ad_id"]
                 ),
                 "metrics": json.dumps(
                     [
@@ -464,7 +476,9 @@ class TikTokAdapter(BaseAdapter):
                 }.get(entity_type, "campaign_ids")
                 params["filtering"] = json.dumps({filter_key: entity_ids})
 
-            response = self._make_request("GET", "/report/integrated/get/", params=params)
+            response = self._make_request(
+                "GET", "/report/integrated/get/", params=params
+            )
 
             if response.get("code") != 0:
                 raise PlatformError(f"TikTok API error: {response.get('message')}")
@@ -487,13 +501,19 @@ class TikTokAdapter(BaseAdapter):
                     ctr=float(m.get("ctr", 0)) if m.get("ctr") else None,
                     cpc=float(m.get("cpc", 0)) if m.get("cpc") else None,
                     cpm=float(m.get("cpm", 0)) if m.get("cpm") else None,
-                    conversions=int(m.get("conversion", 0)) if m.get("conversion") else None,
-                    cpa=float(m.get("cost_per_conversion", 0))
-                    if m.get("cost_per_conversion")
-                    else None,
-                    video_views=int(m.get("video_play_actions", 0))
-                    if m.get("video_play_actions")
-                    else None,
+                    conversions=(
+                        int(m.get("conversion", 0)) if m.get("conversion") else None
+                    ),
+                    cpa=(
+                        float(m.get("cost_per_conversion", 0))
+                        if m.get("cost_per_conversion")
+                        else None
+                    ),
+                    video_views=(
+                        int(m.get("video_play_actions", 0))
+                        if m.get("video_play_actions")
+                        else None
+                    ),
                     date_start=date_start,
                     date_end=date_end,
                 )
@@ -604,7 +624,11 @@ class TikTokAdapter(BaseAdapter):
         """Update campaign or ad group budget."""
         params = action.parameters
 
-        endpoint = "/campaign/update/" if action.entity_type == "campaign" else "/adgroup/update/"
+        endpoint = (
+            "/campaign/update/"
+            if action.entity_type == "campaign"
+            else "/adgroup/update/"
+        )
 
         data = {
             "advertiser_id": action.account_id,
@@ -637,9 +661,11 @@ class TikTokAdapter(BaseAdapter):
         }
 
         endpoint = endpoint_map.get(action.entity_type, "/campaign/update/status/")
-        id_key = {"campaign": "campaign_ids", "adset": "adgroup_ids", "ad": "ad_ids"}.get(
-            action.entity_type, "campaign_ids"
-        )
+        id_key = {
+            "campaign": "campaign_ids",
+            "adset": "adgroup_ids",
+            "ad": "ad_ids",
+        }.get(action.entity_type, "campaign_ids")
 
         data = {
             "advertiser_id": action.account_id,
@@ -681,7 +707,9 @@ class TikTokAdapter(BaseAdapter):
     # CREATIVE OPERATIONS
     # ========================================================================
 
-    async def upload_image(self, account_id: str, image_data: bytes, filename: str) -> str:
+    async def upload_image(
+        self, account_id: str, image_data: bytes, filename: str
+    ) -> str:
         """
         Upload an image to TikTok's creative library.
 
@@ -706,7 +734,9 @@ class TikTokAdapter(BaseAdapter):
 
         return response.get("data", {}).get("image_id", "")
 
-    async def upload_video(self, account_id: str, video_data: bytes, filename: str) -> str:
+    async def upload_video(
+        self, account_id: str, video_data: bytes, filename: str
+    ) -> str:
         """
         Upload a video to TikTok's creative library.
 
@@ -743,7 +773,11 @@ class TikTokAdapter(BaseAdapter):
             raise AdapterError("Adapter not initialized. Call initialize() first.")
 
     def _make_request(
-        self, method: str, endpoint: str, params: Optional[dict] = None, data: Optional[dict] = None
+        self,
+        method: str,
+        endpoint: str,
+        params: Optional[dict] = None,
+        data: Optional[dict] = None,
     ) -> dict[str, Any]:
         """
         Make an HTTP request to TikTok's API.
@@ -766,7 +800,9 @@ class TikTokAdapter(BaseAdapter):
             logger.error(f"Request failed: {e}")
             return {"code": -1, "message": str(e)}
 
-    def _convert_campaign(self, raw: dict[str, Any], account_id: str) -> UnifiedCampaign:
+    def _convert_campaign(
+        self, raw: dict[str, Any], account_id: str
+    ) -> UnifiedCampaign:
         """Convert TikTok campaign data to unified model."""
         return UnifiedCampaign(
             platform=Platform.TIKTOK,

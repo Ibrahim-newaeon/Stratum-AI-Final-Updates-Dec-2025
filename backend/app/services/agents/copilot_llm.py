@@ -140,7 +140,9 @@ def _format_doc_excerpts(docs: List[Dict[str, Any]]) -> str:
         content = (doc.get("content") or "").strip()
         # Trim aggressive whitespace — chunks already preserve paragraph
         # boundaries, but multiple blank lines waste tokens.
-        content = "\n".join(line.rstrip() for line in content.split("\n") if line.strip())
+        content = "\n".join(
+            line.rstrip() for line in content.split("\n") if line.strip()
+        )
         lines.append(f"\n[{i}] {title}\n{content}")
     return "\n".join(lines)
 

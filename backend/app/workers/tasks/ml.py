@@ -114,7 +114,9 @@ def run_all_tenant_predictions():
     logger.info("Starting predictions for all tenants")
 
     with SyncSessionLocal() as db:
-        tenants = db.execute(select(Tenant).where(Tenant.is_deleted == False)).scalars().all()
+        tenants = (
+            db.execute(select(Tenant).where(Tenant.is_deleted == False)).scalars().all()
+        )
 
         task_count = 0
         for tenant in tenants:

@@ -15,13 +15,14 @@ Each driver scores 0-100, weighted to produce final EMQ score.
 """
 
 from dataclasses import dataclass
-from datetime import datetime, date, timedelta, timezone
-from typing import Optional, List, Dict, Tuple
+from datetime import date, datetime, timedelta, timezone
 from enum import Enum
+from typing import Dict, List, Optional, Tuple
 
 
 class DriverStatus(str, Enum):
     """Status classification for EMQ drivers."""
+
     GOOD = "good"
     WARNING = "warning"
     CRITICAL = "critical"
@@ -29,6 +30,7 @@ class DriverStatus(str, Enum):
 
 class DriverTrend(str, Enum):
     """Trend direction for EMQ drivers."""
+
     UP = "up"
     DOWN = "down"
     FLAT = "flat"
@@ -37,6 +39,7 @@ class DriverTrend(str, Enum):
 @dataclass
 class EmqDriverResult:
     """Result for a single EMQ driver calculation."""
+
     name: str
     value: float  # 0-100
     weight: float  # 0-1
@@ -48,6 +51,7 @@ class EmqDriverResult:
 @dataclass
 class EmqCalculationResult:
     """Complete EMQ calculation result."""
+
     score: float  # 0-100
     previous_score: Optional[float]
     confidence_band: str  # reliable, directional, unsafe
@@ -58,6 +62,7 @@ class EmqCalculationResult:
 @dataclass
 class PlatformMetrics:
     """Raw metrics from a platform for EMQ calculation."""
+
     platform: str
 
     # Event matching metrics
@@ -94,6 +99,7 @@ class PlatformMetrics:
 # Driver Calculation Functions
 # =============================================================================
 
+
 def calculate_event_match_rate(metrics: PlatformMetrics) -> EmqDriverResult:
     """
     Calculate Event Match Rate driver (30% weight).
@@ -114,13 +120,15 @@ def calculate_event_match_rate(metrics: PlatformMetrics) -> EmqDriverResult:
             weight=weight,
             status=DriverStatus.CRITICAL,
             trend=DriverTrend.FLAT,
-            details="No events received"
+            details="No events received",
         )
 
     # Calculate match rate
     if metrics.matched_events > 0:
         # If we have explicit matched events data
-        match_rate = (metrics.matched_events / max(metrics.pixel_events, metrics.capi_events)) * 100
+        match_rate = (
+            metrics.matched_events / max(metrics.pixel_events, metrics.capi_events)
+        ) * 100
     else:
         # Estimate from pixel/CAPI overlap
         min_events = min(metrics.pixel_events, metrics.capi_events)
@@ -147,7 +155,7 @@ def calculate_event_match_rate(metrics: PlatformMetrics) -> EmqDriverResult:
         weight=weight,
         status=status,
         trend=DriverTrend.FLAT,  # Trend calculated separately
-        details=f"{metrics.pixel_events} pixel, {metrics.capi_events} CAPI events"
+        details=f"{metrics.pixel_events} pixel, {metrics.capi_events} CAPI events",
     )
 
 
@@ -195,7 +203,7 @@ def calculate_pixel_coverage(metrics: PlatformMetrics) -> EmqDriverResult:
         weight=weight,
         status=status,
         trend=DriverTrend.FLAT,
-        details=details
+        details=details,
     )
 
 
@@ -251,7 +259,7 @@ def calculate_conversion_latency(metrics: PlatformMetrics) -> EmqDriverResult:
         weight=weight,
         status=status,
         trend=DriverTrend.FLAT,
-        details=details
+        details=details,
     )
 
 
@@ -266,7 +274,10 @@ def calculate_attribution_accuracy(metrics: PlatformMetrics) -> EmqDriverResult:
 
     # Calculate conversion variance
     if metrics.ga4_conversions > 0:
-        conv_variance = abs(metrics.platform_conversions - metrics.ga4_conversions) / metrics.ga4_conversions
+        conv_variance = (
+            abs(metrics.platform_conversions - metrics.ga4_conversions)
+            / metrics.ga4_conversions
+        )
     elif metrics.platform_conversions > 0:
         conv_variance = 1.0  # 100% variance if GA4 has 0 but platform has data
     else:
@@ -274,7 +285,9 @@ def calculate_attribution_accuracy(metrics: PlatformMetrics) -> EmqDriverResult:
 
     # Calculate revenue variance
     if metrics.ga4_revenue > 0:
-        rev_variance = abs(metrics.platform_revenue - metrics.ga4_revenue) / metrics.ga4_revenue
+        rev_variance = (
+            abs(metrics.platform_revenue - metrics.ga4_revenue) / metrics.ga4_revenue
+        )
     elif metrics.platform_revenue > 0:
         rev_variance = 1.0
     else:
@@ -302,11 +315,13 @@ def calculate_attribution_accuracy(metrics: PlatformMetrics) -> EmqDriverResult:
         weight=weight,
         status=status,
         trend=DriverTrend.FLAT,
-        details=details
+        details=details,
     )
 
 
-def calculate_data_freshness(metrics: PlatformMetrics, now: Optional[datetime] = None) -> EmqDriverResult:
+def calculate_data_freshness(
+    metrics: PlatformMetrics, now: Optional[datetime] = None
+) -> EmqDriverResult:
     """
     Calculate Data Freshness driver (10% weight).
 
@@ -370,13 +385,14 @@ def calculate_data_freshness(metrics: PlatformMetrics, now: Optional[datetime] =
         weight=weight,
         status=status,
         trend=DriverTrend.FLAT,
-        details=details
+        details=details,
     )
 
 
 # =============================================================================
 # Main Calculation Function
 # =============================================================================
+
 
 def calculate_emq_score(
     metrics: PlatformMetrics,
@@ -469,7 +485,9 @@ def calculate_aggregate_emq(
     # Simple average for now (could weight by spend or volume)
     avg_score = sum(r.score for r in platform_results) / len(platform_results)
 
-    prev_scores = [r.previous_score for r in platform_results if r.previous_score is not None]
+    prev_scores = [
+        r.previous_score for r in platform_results if r.previous_score is not None
+    ]
     avg_previous = sum(prev_scores) / len(prev_scores) if prev_scores else None
 
     # Aggregate drivers by name
@@ -505,14 +523,16 @@ def calculate_aggregate_emq(
         else:
             trend = DriverTrend.FLAT
 
-        aggregated_drivers.append(EmqDriverResult(
-            name=name,
-            value=round(avg_value, 1),
-            weight=weight,
-            status=status,
-            trend=trend,
-            details=f"Aggregated from {len(driver_list)} platforms"
-        ))
+        aggregated_drivers.append(
+            EmqDriverResult(
+                name=name,
+                value=round(avg_value, 1),
+                weight=weight,
+                status=status,
+                trend=trend,
+                details=f"Aggregated from {len(driver_list)} platforms",
+            )
+        )
 
     # Determine confidence band
     if avg_score >= 80:
@@ -534,6 +554,7 @@ def calculate_aggregate_emq(
 # =============================================================================
 # Autopilot Mode Determination
 # =============================================================================
+
 
 def determine_autopilot_mode(emq_score: float) -> Tuple[str, str]:
     """

@@ -25,14 +25,16 @@ logger = logging.getLogger(__name__)
 
 class ProblemSeverity(str, Enum):
     """Severity levels for detected problems."""
+
     CRITICAL = "critical"  # Immediate action required
-    HIGH = "high"          # Action needed soon
-    MEDIUM = "medium"      # Should investigate
-    LOW = "low"            # Informational
+    HIGH = "high"  # Action needed soon
+    MEDIUM = "medium"  # Should investigate
+    LOW = "low"  # Informational
 
 
 class ProblemCategory(str, Enum):
     """Categories of problems the engine can detect."""
+
     REVENUE_DECLINE = "revenue_decline"
     AUTOMATION_BLOCKED = "automation_blocked"
     SIGNAL_DEGRADED = "signal_degraded"
@@ -46,6 +48,7 @@ class ProblemCategory(str, Enum):
 @dataclass
 class Solution:
     """A suggested solution for a detected problem."""
+
     title: str
     description: str
     action_type: str  # "investigate", "adjust", "fix", "monitor"
@@ -59,6 +62,7 @@ class Solution:
 @dataclass
 class Problem:
     """A detected problem with context and solutions."""
+
     id: str
     category: ProblemCategory
     severity: ProblemSeverity
@@ -133,9 +137,7 @@ class KnowledgeGraphInsightsEngine:
         self.kg = KnowledgeGraphService(session)
 
     async def detect_all_problems(
-        self,
-        tenant_id: UUID,
-        days: int = 7
+        self, tenant_id: UUID, days: int = 7
     ) -> list[Problem]:
         """
         Run all problem detection algorithms and return sorted by severity.
@@ -163,7 +165,9 @@ class KnowledgeGraphInsightsEngine:
             try:
                 detected = await detector(tenant_id, days)
                 if detected:
-                    problems.extend(detected if isinstance(detected, list) else [detected])
+                    problems.extend(
+                        detected if isinstance(detected, list) else [detected]
+                    )
             except (ValueError, TypeError, KeyError, ZeroDivisionError, OSError) as e:
                 logger.error(f"Problem detector {detector.__name__} failed: {e}")
 
@@ -179,9 +183,7 @@ class KnowledgeGraphInsightsEngine:
         return problems
 
     async def _detect_revenue_decline(
-        self,
-        tenant_id: UUID,
-        days: int
+        self, tenant_id: UUID, days: int
     ) -> Optional[Problem]:
         """Detect significant revenue decline and trace the cause."""
 
@@ -217,7 +219,11 @@ class KnowledgeGraphInsightsEngine:
                 return Problem(
                     id=f"rev_decline_{tenant_id}_{datetime.now(tz=UTC).strftime('%Y%m%d')}",
                     category=ProblemCategory.REVENUE_DECLINE,
-                    severity=ProblemSeverity.CRITICAL if change_pct < -0.30 else ProblemSeverity.HIGH,
+                    severity=(
+                        ProblemSeverity.CRITICAL
+                        if change_pct < -0.30
+                        else ProblemSeverity.HIGH
+                    ),
                     title=f"Revenue Declined {abs(change_pct)*100:.1f}% This Week",
                     description=f"Revenue dropped from ${data.get('previous_total', 0)/100:,.0f} to ${data.get('recent_total', 0)/100:,.0f} compared to the previous period.",
                     detected_at=datetime.now(tz=UTC),
@@ -236,9 +242,7 @@ class KnowledgeGraphInsightsEngine:
         return None
 
     async def _trace_revenue_decline_cause(
-        self,
-        tenant_id: UUID,
-        days: int
+        self, tenant_id: UUID, days: int
     ) -> dict[str, Any]:
         """Trace through the graph to find why revenue declined."""
 
@@ -278,29 +282,39 @@ class KnowledgeGraphInsightsEngine:
 
         # Build cause chain
         if blocked and blocked[0].get("blocked_count", 0) > 5:
-            causes["path"].append({
-                "node": "TrustGate",
-                "finding": f"{blocked[0]['blocked_count']} automations blocked",
-                "detail": f"Avg signal health: {blocked[0].get('avg_health', 0):.1f}%"
-            })
+            causes["path"].append(
+                {
+                    "node": "TrustGate",
+                    "finding": f"{blocked[0]['blocked_count']} automations blocked",
+                    "detail": f"Avg signal health: {blocked[0].get('avg_health', 0):.1f}%",
+                }
+            )
 
         if signals:
-            degraded = [s for s in signals if s.get("avg_score", 100) < self.SIGNAL_HEALTH_THRESHOLD]
+            degraded = [
+                s
+                for s in signals
+                if s.get("avg_score", 100) < self.SIGNAL_HEALTH_THRESHOLD
+            ]
             if degraded:
-                causes["path"].append({
-                    "node": "Signal",
-                    "finding": f"{len(degraded)} signal sources degraded",
-                    "detail": f"Sources: {', '.join(s.get('source', 'unknown') for s in degraded[:3])}"
-                })
+                causes["path"].append(
+                    {
+                        "node": "Signal",
+                        "finding": f"{len(degraded)} signal sources degraded",
+                        "detail": f"Sources: {', '.join(s.get('source', 'unknown') for s in degraded[:3])}",
+                    }
+                )
 
         if campaigns:
             low_roas = [c for c in campaigns if c.get("roas", 0) < 1.0]
             if low_roas:
-                causes["path"].append({
-                    "node": "Campaign",
-                    "finding": f"{len(low_roas)} campaigns with ROAS < 1.0",
-                    "detail": f"Campaigns: {', '.join(c.get('campaign', 'unknown') for c in low_roas[:3])}"
-                })
+                causes["path"].append(
+                    {
+                        "node": "Campaign",
+                        "finding": f"{len(low_roas)} campaigns with ROAS < 1.0",
+                        "detail": f"Campaigns: {', '.join(c.get('campaign', 'unknown') for c in low_roas[:3])}",
+                    }
+                )
                 causes["affected"].extend(low_roas)
 
         return causes
@@ -314,83 +328,89 @@ class KnowledgeGraphInsightsEngine:
         # Check if trust gate is blocking
         trust_gate_issue = next((p for p in path if p.get("node") == "TrustGate"), None)
         if trust_gate_issue:
-            solutions.append(Solution(
-                title="Investigate Blocked Automations",
-                description="Multiple automations were blocked by Trust Gate due to low signal health.",
-                action_type="investigate",
-                priority=1,
-                steps=[
-                    "Go to Trust Engine > Audit Log",
-                    "Review blocked automations from the past 7 days",
-                    "Check which signals are causing the blocks",
-                    "Verify pixel/API implementations for degraded signals",
-                ],
-                estimated_impact="Unblocking could restore 20-40% of optimization capacity",
-                auto_fixable=False,
-            ))
+            solutions.append(
+                Solution(
+                    title="Investigate Blocked Automations",
+                    description="Multiple automations were blocked by Trust Gate due to low signal health.",
+                    action_type="investigate",
+                    priority=1,
+                    steps=[
+                        "Go to Trust Engine > Audit Log",
+                        "Review blocked automations from the past 7 days",
+                        "Check which signals are causing the blocks",
+                        "Verify pixel/API implementations for degraded signals",
+                    ],
+                    estimated_impact="Unblocking could restore 20-40% of optimization capacity",
+                    auto_fixable=False,
+                )
+            )
 
         # Check if signals are degraded
         signal_issue = next((p for p in path if p.get("node") == "Signal"), None)
         if signal_issue:
-            solutions.append(Solution(
-                title="Fix Degraded Signal Sources",
-                description="One or more data signals are below healthy thresholds.",
-                action_type="fix",
-                priority=1,
-                steps=[
-                    "Go to Trust Engine > Signal Health",
-                    "Identify sources with score below 70",
-                    "For EMQ issues: Check pixel implementation and event parameters",
-                    "For freshness issues: Verify data pipeline is running",
-                    "For variance issues: Audit attribution settings",
-                ],
-                estimated_impact="Healthy signals enable full automation",
-                auto_fixable=False,
-            ))
+            solutions.append(
+                Solution(
+                    title="Fix Degraded Signal Sources",
+                    description="One or more data signals are below healthy thresholds.",
+                    action_type="fix",
+                    priority=1,
+                    steps=[
+                        "Go to Trust Engine > Signal Health",
+                        "Identify sources with score below 70",
+                        "For EMQ issues: Check pixel implementation and event parameters",
+                        "For freshness issues: Verify data pipeline is running",
+                        "For variance issues: Audit attribution settings",
+                    ],
+                    estimated_impact="Healthy signals enable full automation",
+                    auto_fixable=False,
+                )
+            )
 
         # Check campaign performance
         campaign_issue = next((p for p in path if p.get("node") == "Campaign"), None)
         if campaign_issue:
             affected = root_cause.get("affected", [])
-            solutions.append(Solution(
-                title="Optimize Underperforming Campaigns",
-                description=f"{len(affected)} campaigns have ROAS below 1.0.",
-                action_type="adjust",
-                priority=2,
-                steps=[
-                    "Review creative fatigue scores",
-                    "Check audience overlap between campaigns",
-                    "Consider pausing campaigns with ROAS < 0.5 for 48 hours",
-                    "Reallocate budget to top performers",
-                ],
-                affected_entities=affected[:5],
-                estimated_impact="Proper allocation could improve overall ROAS by 15-25%",
-                auto_fixable=True,
-            ))
+            solutions.append(
+                Solution(
+                    title="Optimize Underperforming Campaigns",
+                    description=f"{len(affected)} campaigns have ROAS below 1.0.",
+                    action_type="adjust",
+                    priority=2,
+                    steps=[
+                        "Review creative fatigue scores",
+                        "Check audience overlap between campaigns",
+                        "Consider pausing campaigns with ROAS < 0.5 for 48 hours",
+                        "Reallocate budget to top performers",
+                    ],
+                    affected_entities=affected[:5],
+                    estimated_impact="Proper allocation could improve overall ROAS by 15-25%",
+                    auto_fixable=True,
+                )
+            )
 
         # Default solution if no specific cause found
         if not solutions:
-            solutions.append(Solution(
-                title="Review Customer Journey Paths",
-                description="Analyze the Knowledge Graph to find conversion bottlenecks.",
-                action_type="investigate",
-                priority=2,
-                steps=[
-                    "Go to Knowledge Graph > Customer Journeys",
-                    "Compare converting vs non-converting paths",
-                    "Identify drop-off points in the funnel",
-                    "Check if specific segments are underperforming",
-                ],
-                estimated_impact="Journey optimization can improve conversion by 10-20%",
-                auto_fixable=False,
-            ))
+            solutions.append(
+                Solution(
+                    title="Review Customer Journey Paths",
+                    description="Analyze the Knowledge Graph to find conversion bottlenecks.",
+                    action_type="investigate",
+                    priority=2,
+                    steps=[
+                        "Go to Knowledge Graph > Customer Journeys",
+                        "Compare converting vs non-converting paths",
+                        "Identify drop-off points in the funnel",
+                        "Check if specific segments are underperforming",
+                    ],
+                    estimated_impact="Journey optimization can improve conversion by 10-20%",
+                    auto_fixable=False,
+                )
+            )
 
         return solutions
 
     async def _detect_blocked_automations(
-        self,
-        tenant_id: UUID,
-        days: int
+        self, tenant_id: UUID, days: int
     ) -> Optional[Problem]:
         """Detect high automation block rate."""
 
@@ -428,7 +448,11 @@ class KnowledgeGraphInsightsEngine:
                 return Problem(
                     id=f"block_rate_{tenant_id}_{datetime.now(tz=UTC).strftime('%Y%m%d')}",
                     category=ProblemCategory.AUTOMATION_BLOCKED,
-                    severity=ProblemSeverity.HIGH if block_rate > 0.50 else ProblemSeverity.MEDIUM,
+                    severity=(
+                        ProblemSeverity.HIGH
+                        if block_rate > 0.50
+                        else ProblemSeverity.MEDIUM
+                    ),
                     title=f"{block_rate*100:.0f}% of Automations Being Blocked",
                     description=f"{data.get('blocked', 0)} out of {data.get('total', 0)} automation attempts were blocked by Trust Gate.",
                     detected_at=datetime.now(tz=UTC),
@@ -475,9 +499,7 @@ class KnowledgeGraphInsightsEngine:
         return None
 
     async def _detect_signal_degradation(
-        self,
-        tenant_id: UUID,
-        days: int
+        self, tenant_id: UUID, days: int
     ) -> list[Problem]:
         """Detect degraded signals and identify affected areas."""
 
@@ -497,33 +519,39 @@ class KnowledgeGraphInsightsEngine:
         try:
             results = await self.kg.execute_cypher(cypher)
 
-            for signal in (results or []):
-                severity = ProblemSeverity.CRITICAL if signal.get("avg_score", 0) < 40 else ProblemSeverity.MEDIUM
+            for signal in results or []:
+                severity = (
+                    ProblemSeverity.CRITICAL
+                    if signal.get("avg_score", 0) < 40
+                    else ProblemSeverity.MEDIUM
+                )
 
-                problems.append(Problem(
-                    id=f"signal_{signal.get('source')}_{tenant_id}",
-                    category=ProblemCategory.SIGNAL_DEGRADED,
-                    severity=severity,
-                    title=f"Signal Degraded: {signal.get('source', 'Unknown')}",
-                    description=f"Average health score is {signal.get('avg_score', 0):.1f}%, below the {self.SIGNAL_HEALTH_THRESHOLD}% threshold.",
-                    detected_at=datetime.now(tz=UTC),
-                    metrics={
-                        "source": signal.get("source"),
-                        "platform": signal.get("platform"),
-                        "avg_score": signal.get("avg_score"),
-                        "min_score": signal.get("min_score"),
-                    },
-                    solutions=[
-                        Solution(
-                            title=f"Fix {signal.get('source', 'Signal')} Data Quality",
-                            description="This signal is preventing automations from executing.",
-                            action_type="fix",
-                            priority=1,
-                            steps=self._get_signal_fix_steps(signal.get("source")),
-                            estimated_impact="Restoring this signal enables related automations",
-                        ),
-                    ],
-                ))
+                problems.append(
+                    Problem(
+                        id=f"signal_{signal.get('source')}_{tenant_id}",
+                        category=ProblemCategory.SIGNAL_DEGRADED,
+                        severity=severity,
+                        title=f"Signal Degraded: {signal.get('source', 'Unknown')}",
+                        description=f"Average health score is {signal.get('avg_score', 0):.1f}%, below the {self.SIGNAL_HEALTH_THRESHOLD}% threshold.",
+                        detected_at=datetime.now(tz=UTC),
+                        metrics={
+                            "source": signal.get("source"),
+                            "platform": signal.get("platform"),
+                            "avg_score": signal.get("avg_score"),
+                            "min_score": signal.get("min_score"),
+                        },
+                        solutions=[
+                            Solution(
+                                title=f"Fix {signal.get('source', 'Signal')} Data Quality",
+                                description="This signal is preventing automations from executing.",
+                                action_type="fix",
+                                priority=1,
+                                steps=self._get_signal_fix_steps(signal.get("source")),
+                                estimated_impact="Restoring this signal enables related automations",
+                            ),
+                        ],
+                    )
+                )
         except (ValueError, TypeError, KeyError, ZeroDivisionError, OSError) as e:
             logger.error(f"Signal degradation detection failed: {e}")
 
@@ -562,11 +590,7 @@ class KnowledgeGraphInsightsEngine:
                 "Contact support if issue persists",
             ]
 
-    async def _detect_segment_issues(
-        self,
-        tenant_id: UUID,
-        days: int
-    ) -> list[Problem]:
+    async def _detect_segment_issues(self, tenant_id: UUID, days: int) -> list[Problem]:
         """Detect underperforming segments."""
 
         problems = []
@@ -590,62 +614,70 @@ class KnowledgeGraphInsightsEngine:
 
             if results and len(results) >= 2:
                 # Compare segments - find underperformers
-                avg_conversion = sum(r.get("conversion_rate", 0) for r in results) / len(results)
+                avg_conversion = sum(
+                    r.get("conversion_rate", 0) for r in results
+                ) / len(results)
 
                 for segment in results:
                     conv_rate = segment.get("conversion_rate", 0)
-                    if conv_rate < avg_conversion * 0.5 and segment.get("total_profiles", 0) > 50:
-                        problems.append(Problem(
-                            id=f"segment_{segment.get('segment_id')}_{tenant_id}",
-                            category=ProblemCategory.SEGMENT_UNDERPERFORMING,
-                            severity=ProblemSeverity.MEDIUM,
-                            title=f"Segment Underperforming: {segment.get('segment', 'Unknown')}",
-                            description=f"Conversion rate ({conv_rate*100:.1f}%) is less than half the average ({avg_conversion*100:.1f}%).",
-                            detected_at=datetime.now(tz=UTC),
-                            metrics={
-                                "segment_name": segment.get("segment"),
-                                "total_profiles": segment.get("total_profiles"),
-                                "converting_profiles": segment.get("converting_profiles"),
-                                "revenue_cents": segment.get("revenue"),
-                                "conversion_rate": conv_rate * 100,
-                                "avg_conversion_rate": avg_conversion * 100,
-                            },
-                            solutions=[
-                                Solution(
-                                    title="Review Segment Definition",
-                                    description="The segment criteria may be too broad or misaligned.",
-                                    action_type="investigate",
-                                    priority=2,
-                                    steps=[
-                                        "Go to CDP > Segments > " + segment.get("segment", ""),
-                                        "Review segment conditions",
-                                        "Check if profiles match intended audience",
-                                        "Consider splitting into more specific segments",
-                                    ],
-                                ),
-                                Solution(
-                                    title="Exclude from High-Value Campaigns",
-                                    description="Stop spending on this segment until issues are resolved.",
-                                    action_type="adjust",
-                                    priority=1,
-                                    steps=[
-                                        "Pause audience sync for this segment",
-                                        "Or add as exclusion in ad platforms",
-                                        "Monitor for 7 days after changes",
-                                    ],
-                                    auto_fixable=True,
-                                ),
-                            ],
-                        ))
+                    if (
+                        conv_rate < avg_conversion * 0.5
+                        and segment.get("total_profiles", 0) > 50
+                    ):
+                        problems.append(
+                            Problem(
+                                id=f"segment_{segment.get('segment_id')}_{tenant_id}",
+                                category=ProblemCategory.SEGMENT_UNDERPERFORMING,
+                                severity=ProblemSeverity.MEDIUM,
+                                title=f"Segment Underperforming: {segment.get('segment', 'Unknown')}",
+                                description=f"Conversion rate ({conv_rate*100:.1f}%) is less than half the average ({avg_conversion*100:.1f}%).",
+                                detected_at=datetime.now(tz=UTC),
+                                metrics={
+                                    "segment_name": segment.get("segment"),
+                                    "total_profiles": segment.get("total_profiles"),
+                                    "converting_profiles": segment.get(
+                                        "converting_profiles"
+                                    ),
+                                    "revenue_cents": segment.get("revenue"),
+                                    "conversion_rate": conv_rate * 100,
+                                    "avg_conversion_rate": avg_conversion * 100,
+                                },
+                                solutions=[
+                                    Solution(
+                                        title="Review Segment Definition",
+                                        description="The segment criteria may be too broad or misaligned.",
+                                        action_type="investigate",
+                                        priority=2,
+                                        steps=[
+                                            "Go to CDP > Segments > "
+                                            + segment.get("segment", ""),
+                                            "Review segment conditions",
+                                            "Check if profiles match intended audience",
+                                            "Consider splitting into more specific segments",
+                                        ],
+                                    ),
+                                    Solution(
+                                        title="Exclude from High-Value Campaigns",
+                                        description="Stop spending on this segment until issues are resolved.",
+                                        action_type="adjust",
+                                        priority=1,
+                                        steps=[
+                                            "Pause audience sync for this segment",
+                                            "Or add as exclusion in ad platforms",
+                                            "Monitor for 7 days after changes",
+                                        ],
+                                        auto_fixable=True,
+                                    ),
+                                ],
+                            )
+                        )
         except (ValueError, TypeError, KeyError, ZeroDivisionError, OSError) as e:
             logger.error(f"Segment issue detection failed: {e}")
 
         return problems
 
     async def _detect_trust_gate_bottlenecks(
-        self,
-        tenant_id: UUID,
-        days: int
+        self, tenant_id: UUID, days: int
     ) -> Optional[Problem]:
         """Detect if Trust Gate is consistently blocking specific action types."""
 
@@ -700,9 +732,7 @@ class KnowledgeGraphInsightsEngine:
         return None
 
     async def _detect_channel_inefficiency(
-        self,
-        tenant_id: UUID,
-        days: int
+        self, tenant_id: UUID, days: int
     ) -> Optional[Problem]:
         """Detect channels with poor ROI."""
 
@@ -724,9 +754,15 @@ class KnowledgeGraphInsightsEngine:
 
                 # Find channels with high share but low efficiency
                 for channel in results:
-                    share = channel.get("revenue", 0) / total_revenue if total_revenue > 0 else 0
+                    share = (
+                        channel.get("revenue", 0) / total_revenue
+                        if total_revenue > 0
+                        else 0
+                    )
                     avg_order = channel.get("avg_order", 0)
-                    overall_avg = total_revenue / sum(r.get("conversions", 1) for r in results)
+                    overall_avg = total_revenue / sum(
+                        r.get("conversions", 1) for r in results
+                    )
 
                     if share > 0.2 and avg_order < overall_avg * 0.5:
                         return Problem(
@@ -763,9 +799,7 @@ class KnowledgeGraphInsightsEngine:
         return None
 
     async def get_problem_details(
-        self,
-        tenant_id: UUID,
-        problem_id: str
+        self, tenant_id: UUID, problem_id: str
     ) -> Optional[Problem]:
         """
         Get detailed information about a specific problem.
@@ -801,11 +835,21 @@ class KnowledgeGraphInsightsEngine:
 
         return {
             "health_score": health_score,
-            "status": "healthy" if health_score >= 80 else "degraded" if health_score >= 50 else "critical",
+            "status": (
+                "healthy"
+                if health_score >= 80
+                else "degraded" if health_score >= 50 else "critical"
+            ),
             "problem_counts": {
-                "critical": len([p for p in problems if p.severity == ProblemSeverity.CRITICAL]),
-                "high": len([p for p in problems if p.severity == ProblemSeverity.HIGH]),
-                "medium": len([p for p in problems if p.severity == ProblemSeverity.MEDIUM]),
+                "critical": len(
+                    [p for p in problems if p.severity == ProblemSeverity.CRITICAL]
+                ),
+                "high": len(
+                    [p for p in problems if p.severity == ProblemSeverity.HIGH]
+                ),
+                "medium": len(
+                    [p for p in problems if p.severity == ProblemSeverity.MEDIUM]
+                ),
                 "low": len([p for p in problems if p.severity == ProblemSeverity.LOW]),
             },
             "total_problems": len(problems),

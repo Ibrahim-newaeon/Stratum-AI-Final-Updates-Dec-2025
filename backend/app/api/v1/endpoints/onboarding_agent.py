@@ -45,7 +45,9 @@ class StartConversationRequest(BaseModel):
     email: Optional[str] = Field(None, description="User's email if known")
     company: Optional[str] = Field(None, description="Company name if known")
     language: str = Field(default="en", description="Preferred language (en, ar)")
-    is_new_tenant: bool = Field(default=False, description="Whether this is a new tenant setup")
+    is_new_tenant: bool = Field(
+        default=False, description="Whether this is a new tenant setup"
+    )
 
 
 class StartConversationResponse(BaseModel):
@@ -62,7 +64,9 @@ class SendMessageRequest(BaseModel):
     """Request to send a message to the agent."""
 
     session_id: str = Field(..., description="The conversation session ID")
-    message: str = Field(..., min_length=1, max_length=2000, description="User's message")
+    message: str = Field(
+        ..., min_length=1, max_length=2000, description="User's message"
+    )
 
 
 class SendMessageResponse(BaseModel):

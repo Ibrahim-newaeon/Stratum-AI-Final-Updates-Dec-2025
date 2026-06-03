@@ -52,8 +52,12 @@ def fetch_competitor_data(self, tenant_id: int, competitor_id: int):
             # For now, use mock data
             import random
 
-            competitor.estimated_monthly_spend_cents = random.randint(100000, 10000000)  # noqa: S311 - mock
-            competitor.estimated_impressions = random.randint(100000, 50000000)  # noqa: S311
+            competitor.estimated_monthly_spend_cents = random.randint(
+                100000, 10000000
+            )  # noqa: S311 - mock
+            competitor.estimated_impressions = random.randint(
+                100000, 50000000
+            )  # noqa: S311
             competitor.estimated_ctr = round(random.uniform(0.5, 3.0), 2)  # noqa: S311
             competitor.top_keywords = [
                 "marketing automation",
@@ -91,7 +95,9 @@ def refresh_all_competitors():
 
     with SyncSessionLocal() as db:
         # Get all active tenants
-        tenants = db.execute(select(Tenant).where(Tenant.is_deleted == False)).scalars().all()
+        tenants = (
+            db.execute(select(Tenant).where(Tenant.is_deleted == False)).scalars().all()
+        )
 
         task_count = 0
         for tenant in tenants:

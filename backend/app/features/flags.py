@@ -15,20 +15,23 @@ Feature Flags:
 - superadmin_profitability: Platform owner profitability views
 """
 
-from typing import Dict, Any, Optional, List
 from enum import Enum
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
 class AutopilotLevel(int, Enum):
     """Autopilot automation levels."""
-    SUGGEST_ONLY = 0      # No automatic writes, only suggestions
-    GUARDED_AUTO = 1      # Safe actions within caps, requires signal health OK
+
+    SUGGEST_ONLY = 0  # No automatic writes, only suggestions
+    GUARDED_AUTO = 1  # Safe actions within caps, requires signal health OK
     APPROVAL_REQUIRED = 2  # All actions require approval before execution
 
 
 class PlanTier(str, Enum):
     """Subscription plan tiers."""
+
     FREE = "free"
     STARTER = "starter"
     PROFESSIONAL = "professional"
@@ -114,6 +117,7 @@ DEFAULT_FEATURES_BY_PLAN: Dict[str, Dict[str, Any]] = {
 # Feature Flag Models
 # =============================================================================
 
+
 class FeatureFlags(BaseModel):
     """Complete feature flags configuration for a tenant."""
 
@@ -121,19 +125,29 @@ class FeatureFlags(BaseModel):
 
     # Trust Layer
     signal_health: bool = Field(default=False, description="Signal health monitoring")
-    attribution_variance: bool = Field(default=False, description="Attribution variance tracking")
+    attribution_variance: bool = Field(
+        default=False, description="Attribution variance tracking"
+    )
 
     # Intelligence Layer
-    ai_recommendations: bool = Field(default=False, description="AI-powered recommendations")
+    ai_recommendations: bool = Field(
+        default=False, description="AI-powered recommendations"
+    )
     anomaly_alerts: bool = Field(default=True, description="Anomaly detection alerts")
-    creative_fatigue: bool = Field(default=False, description="Creative fatigue detection")
+    creative_fatigue: bool = Field(
+        default=False, description="Creative fatigue detection"
+    )
 
     # Execution Layer
     campaign_builder: bool = Field(default=False, description="Campaign builder access")
-    autopilot_level: int = Field(default=0, ge=0, le=2, description="Autopilot automation level")
+    autopilot_level: int = Field(
+        default=0, ge=0, le=2, description="Autopilot automation level"
+    )
 
     # Platform
-    superadmin_profitability: bool = Field(default=False, description="Superadmin profitability views")
+    superadmin_profitability: bool = Field(
+        default=False, description="Superadmin profitability views"
+    )
 
     # Limits
     max_campaigns: int = Field(default=20, description="Maximum number of campaigns")
@@ -143,6 +157,7 @@ class FeatureFlags(BaseModel):
 
 class FeatureFlagsUpdate(BaseModel):
     """Request model for updating feature flags."""
+
     signal_health: Optional[bool] = None
     attribution_variance: Optional[bool] = None
     ai_recommendations: Optional[bool] = None
@@ -159,6 +174,7 @@ class FeatureFlagsUpdate(BaseModel):
 # =============================================================================
 # Feature Flag Helpers
 # =============================================================================
+
 
 def get_default_features(plan: str) -> Dict[str, Any]:
     """
@@ -177,7 +193,9 @@ def get_default_features(plan: str) -> Dict[str, Any]:
     return DEFAULT_FEATURES_BY_PLAN[PlanTier.STARTER].copy()
 
 
-def merge_features(defaults: Dict[str, Any], overrides: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+def merge_features(
+    defaults: Dict[str, Any], overrides: Optional[Dict[str, Any]]
+) -> Dict[str, Any]:
     """
     Merge default features with tenant-specific overrides.
 
@@ -231,8 +249,8 @@ def get_autopilot_caps() -> Dict[str, Any]:
     """
     return {
         "max_daily_budget_change": 500.0,  # Max $500 per day
-        "max_budget_pct_change": 30.0,     # Max 30% change per action
-        "max_actions_per_day": 10,         # Max 10 automated actions per day
+        "max_budget_pct_change": 30.0,  # Max 30% change per action
+        "max_actions_per_day": 10,  # Max 10 automated actions per day
     }
 
 

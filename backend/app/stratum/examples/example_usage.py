@@ -235,9 +235,27 @@ async def example_budget_optimization():
 
     # Simulated campaign performance data
     campaigns_performance = [
-        {"id": "campaign_1", "name": "Living Room", "spend": 100, "conversions": 25, "roas": 4.5},
-        {"id": "campaign_2", "name": "Bedroom", "spend": 100, "conversions": 10, "roas": 2.1},
-        {"id": "campaign_3", "name": "Office", "spend": 100, "conversions": 30, "roas": 5.2},
+        {
+            "id": "campaign_1",
+            "name": "Living Room",
+            "spend": 100,
+            "conversions": 25,
+            "roas": 4.5,
+        },
+        {
+            "id": "campaign_2",
+            "name": "Bedroom",
+            "spend": 100,
+            "conversions": 10,
+            "roas": 2.1,
+        },
+        {
+            "id": "campaign_3",
+            "name": "Office",
+            "spend": 100,
+            "conversions": 30,
+            "roas": 5.2,
+        },
     ]
 
     logger.info("\n[PERF] Current Campaign Performance:")
@@ -247,7 +265,9 @@ async def example_budget_optimization():
         )
 
     # Optimization logic: shift budget from worst to best
-    sorted_campaigns = sorted(campaigns_performance, key=lambda x: x["roas"], reverse=True)
+    sorted_campaigns = sorted(
+        campaigns_performance, key=lambda x: x["roas"], reverse=True
+    )
     best = sorted_campaigns[0]
     worst = sorted_campaigns[-1]
 
@@ -298,14 +318,17 @@ async def example_budget_optimization():
         )
 
         campaign_name = next(
-            (c["name"] for c in campaigns_performance if c["id"] == action.entity_id), "Unknown"
+            (c["name"] for c in campaigns_performance if c["id"] == action.entity_id),
+            "Unknown",
         )
         new_budget = action.parameters.get("daily_budget")
 
         if can_proceed:
             logger.info(f"  [OK] {campaign_name} -> ${new_budget}: APPROVED")
         else:
-            logger.info(f"  [X] {campaign_name} -> ${new_budget}: {result.decision.value}")
+            logger.info(
+                f"  [X] {campaign_name} -> ${new_budget}: {result.decision.value}"
+            )
 
 
 async def main():

@@ -15,12 +15,12 @@ Used for:
 - Diagnosing data freshness problems
 """
 
+import statistics
+import threading
+from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple
-from collections import defaultdict
-import statistics
-import threading
 
 from app.core.logging import get_logger
 
@@ -30,6 +30,7 @@ logger = get_logger(__name__)
 @dataclass
 class LatencyMeasurement:
     """A single latency measurement."""
+
     measurement_id: str
     platform: str
     event_type: str  # click_to_conversion, pixel_to_capi, send_to_ack
@@ -42,6 +43,7 @@ class LatencyMeasurement:
 @dataclass
 class LatencyStats:
     """Aggregated latency statistics."""
+
     count: int = 0
     min_ms: float = 0.0
     max_ms: float = 0.0
@@ -57,6 +59,7 @@ class LatencyStats:
 @dataclass
 class PendingConversion:
     """Tracks a pending conversion awaiting completion."""
+
     event_id: str
     platform: str
     event_type: str
@@ -198,8 +201,9 @@ class ConversionLatencyTracker:
 
             # Keep only last 10k latencies per platform/type for stats
             if len(self._stats_cache[platform][event_type]) > 10000:
-                self._stats_cache[platform][event_type] = \
-                    self._stats_cache[platform][event_type][-10000:]
+                self._stats_cache[platform][event_type] = self._stats_cache[platform][
+                    event_type
+                ][-10000:]
 
             return latency_ms
 
@@ -259,7 +263,8 @@ class ConversionLatencyTracker:
 
             # Filter measurements
             measurements = [
-                m for m in self._measurements
+                m
+                for m in self._measurements
                 if m.end_time >= cutoff
                 and (platform is None or m.platform == platform)
                 and (event_type is None or m.event_type == event_type)
@@ -327,10 +332,26 @@ class ConversionLatencyTracker:
             max_ms=round(sorted_latencies[-1], 2),
             avg_ms=round(statistics.mean(latencies), 2),
             median_ms=round(statistics.median(latencies), 2),
-            p75_ms=round(sorted_latencies[int(n * 0.75)], 2) if n > 1 else sorted_latencies[0],
-            p90_ms=round(sorted_latencies[int(n * 0.90)], 2) if n > 1 else sorted_latencies[0],
-            p95_ms=round(sorted_latencies[int(n * 0.95)], 2) if n > 1 else sorted_latencies[0],
-            p99_ms=round(sorted_latencies[int(n * 0.99)], 2) if n > 1 else sorted_latencies[0],
+            p75_ms=(
+                round(sorted_latencies[int(n * 0.75)], 2)
+                if n > 1
+                else sorted_latencies[0]
+            ),
+            p90_ms=(
+                round(sorted_latencies[int(n * 0.90)], 2)
+                if n > 1
+                else sorted_latencies[0]
+            ),
+            p95_ms=(
+                round(sorted_latencies[int(n * 0.95)], 2)
+                if n > 1
+                else sorted_latencies[0]
+            ),
+            p99_ms=(
+                round(sorted_latencies[int(n * 0.99)], 2)
+                if n > 1
+                else sorted_latencies[0]
+            ),
             std_dev_ms=round(statistics.stdev(latencies), 2) if n > 1 else 0.0,
         )
 
@@ -352,7 +373,8 @@ class ConversionLatencyTracker:
 
             # Filter measurements
             measurements = [
-                m for m in self._measurements
+                m
+                for m in self._measurements
                 if m.end_time >= cutoff
                 and m.platform == platform
                 and m.event_type == event_type
@@ -377,13 +399,18 @@ class ConversionLatencyTracker:
             timeline = []
             for bucket_time in sorted(buckets.keys()):
                 latencies = buckets[bucket_time]
-                timeline.append({
-                    "timestamp": bucket_time.isoformat(),
-                    "count": len(latencies),
-                    "avg_ms": round(statistics.mean(latencies), 2),
-                    "p95_ms": round(sorted(latencies)[int(len(latencies) * 0.95)], 2)
-                        if len(latencies) > 1 else latencies[0],
-                })
+                timeline.append(
+                    {
+                        "timestamp": bucket_time.isoformat(),
+                        "count": len(latencies),
+                        "avg_ms": round(statistics.mean(latencies), 2),
+                        "p95_ms": (
+                            round(sorted(latencies)[int(len(latencies) * 0.95)], 2)
+                            if len(latencies) > 1
+                            else latencies[0]
+                        ),
+                    }
+                )
 
             return timeline
 
@@ -454,11 +481,19 @@ class ConversionLatencyTracker:
                 "pending_conversions": len(self._pending),
                 "pending_by_platform": self.get_pending_count(),
                 "platforms_tracked": list(set(m.platform for m in self._measurements)),
-                "event_types_tracked": list(set(m.event_type for m in self._measurements)),
-                "oldest_measurement": self._measurements[0].end_time.isoformat()
-                    if self._measurements else None,
-                "newest_measurement": self._measurements[-1].end_time.isoformat()
-                    if self._measurements else None,
+                "event_types_tracked": list(
+                    set(m.event_type for m in self._measurements)
+                ),
+                "oldest_measurement": (
+                    self._measurements[0].end_time.isoformat()
+                    if self._measurements
+                    else None
+                ),
+                "newest_measurement": (
+                    self._measurements[-1].end_time.isoformat()
+                    if self._measurements
+                    else None
+                ),
             }
 
 
@@ -469,6 +504,7 @@ latency_tracker = ConversionLatencyTracker()
 # =============================================================================
 # Convenience Functions for Integration
 # =============================================================================
+
 
 def track_click(click_id: str, platform: str, metadata: Optional[Dict] = None):
     """Track a click event for conversion latency."""
@@ -561,9 +597,11 @@ def get_conversion_latency_stats(
 # Advanced Conversion Latency Analytics (P0 Enhancement)
 # =============================================================================
 
+
 @dataclass
 class LatencyAnomaly:
     """Detected anomaly in conversion latency."""
+
     anomaly_id: str
     platform: str
     event_type: str
@@ -580,6 +618,7 @@ class LatencyAnomaly:
 @dataclass
 class LatencyForecast:
     """Forecasted conversion latency."""
+
     platform: str
     event_type: str
     forecast_date: datetime
@@ -593,6 +632,7 @@ class LatencyForecast:
 @dataclass
 class AttributionWindowRecommendation:
     """Recommendation for attribution window settings."""
+
     platform: str
     current_window_days: int
     recommended_window_days: int
@@ -649,44 +689,62 @@ class LatencyAnomalyDetector:
 
         # Check P95 latency
         if baseline["std_dev_ms"] > 0:
-            z_score_p95 = (current_stats.p95_ms - baseline["p95_ms"]) / baseline["std_dev_ms"]
+            z_score_p95 = (current_stats.p95_ms - baseline["p95_ms"]) / baseline[
+                "std_dev_ms"
+            ]
 
             if z_score_p95 > self.sensitivity:
                 severity = self._calculate_severity(z_score_p95)
-                deviation = ((current_stats.p95_ms - baseline["p95_ms"]) / baseline["p95_ms"] * 100) if baseline["p95_ms"] > 0 else 0
+                deviation = (
+                    (
+                        (current_stats.p95_ms - baseline["p95_ms"])
+                        / baseline["p95_ms"]
+                        * 100
+                    )
+                    if baseline["p95_ms"] > 0
+                    else 0
+                )
 
-                anomalies.append(LatencyAnomaly(
-                    anomaly_id=f"latency_{platform}_{event_type}_{now.timestamp()}",
-                    platform=platform,
-                    event_type=event_type,
-                    detected_at=now,
-                    severity=severity,
-                    current_latency_ms=current_stats.p95_ms,
-                    expected_latency_ms=baseline["p95_ms"],
-                    deviation_percent=round(deviation, 1),
-                    description=f"P95 latency increased by {deviation:.1f}% from baseline",
-                    impact=self._estimate_impact(event_type, deviation),
-                    recommended_action=self._get_recommendation(event_type, z_score_p95),
-                ))
+                anomalies.append(
+                    LatencyAnomaly(
+                        anomaly_id=f"latency_{platform}_{event_type}_{now.timestamp()}",
+                        platform=platform,
+                        event_type=event_type,
+                        detected_at=now,
+                        severity=severity,
+                        current_latency_ms=current_stats.p95_ms,
+                        expected_latency_ms=baseline["p95_ms"],
+                        deviation_percent=round(deviation, 1),
+                        description=f"P95 latency increased by {deviation:.1f}% from baseline",
+                        impact=self._estimate_impact(event_type, deviation),
+                        recommended_action=self._get_recommendation(
+                            event_type, z_score_p95
+                        ),
+                    )
+                )
 
         # Check average latency drift
         if baseline["avg_ms"] > 0:
-            avg_drift = (current_stats.avg_ms - baseline["avg_ms"]) / baseline["avg_ms"] * 100
+            avg_drift = (
+                (current_stats.avg_ms - baseline["avg_ms"]) / baseline["avg_ms"] * 100
+            )
 
             if avg_drift > 50:  # 50% increase in average
-                anomalies.append(LatencyAnomaly(
-                    anomaly_id=f"drift_{platform}_{event_type}_{now.timestamp()}",
-                    platform=platform,
-                    event_type=event_type,
-                    detected_at=now,
-                    severity="medium",
-                    current_latency_ms=current_stats.avg_ms,
-                    expected_latency_ms=baseline["avg_ms"],
-                    deviation_percent=round(avg_drift, 1),
-                    description=f"Average latency drifting upward (+{avg_drift:.1f}%)",
-                    impact="May affect attribution accuracy over time",
-                    recommended_action="Review event processing pipeline for bottlenecks",
-                ))
+                anomalies.append(
+                    LatencyAnomaly(
+                        anomaly_id=f"drift_{platform}_{event_type}_{now.timestamp()}",
+                        platform=platform,
+                        event_type=event_type,
+                        detected_at=now,
+                        severity="medium",
+                        current_latency_ms=current_stats.avg_ms,
+                        expected_latency_ms=baseline["avg_ms"],
+                        deviation_percent=round(avg_drift, 1),
+                        description=f"Average latency drifting upward (+{avg_drift:.1f}%)",
+                        impact="May affect attribution accuracy over time",
+                        recommended_action="Review event processing pipeline for bottlenecks",
+                    )
+                )
 
         return anomalies
 
@@ -725,7 +783,9 @@ class LatencyAnomalyDetector:
 
         if event_type == "send_to_ack":
             if z_score >= 3:
-                return "Check platform API status; consider implementing request queuing"
+                return (
+                    "Check platform API status; consider implementing request queuing"
+                )
             return "Normal variance; continue monitoring"
 
         return "Review related system components"
@@ -781,7 +841,11 @@ class LatencyForecaster:
 
         # Calculate trend
         recent = p50_series[-7:]
-        older = p50_series[-14:-7] if len(p50_series) >= 14 else p50_series[:len(p50_series)//2]
+        older = (
+            p50_series[-14:-7]
+            if len(p50_series) >= 14
+            else p50_series[: len(p50_series) // 2]
+        )
 
         trend = "stable"
         if older:
@@ -793,24 +857,34 @@ class LatencyForecaster:
                 trend = "decreasing"
 
         # Calculate confidence intervals
-        std_p50 = statistics.stdev(p50_series) if len(p50_series) > 1 else smoothed_p50 * 0.1
-        std_p95 = statistics.stdev(p95_series) if len(p95_series) > 1 else smoothed_p95 * 0.1
+        std_p50 = (
+            statistics.stdev(p50_series) if len(p50_series) > 1 else smoothed_p50 * 0.1
+        )
+        std_p95 = (
+            statistics.stdev(p95_series) if len(p95_series) > 1 else smoothed_p95 * 0.1
+        )
 
         forecasts = []
         for d in range(1, days_ahead + 1):
             # Widen confidence interval with time
             ci_multiplier = 1 + (d * 0.1)
 
-            forecasts.append(LatencyForecast(
-                platform=platform,
-                event_type=event_type,
-                forecast_date=datetime.now(timezone.utc) + timedelta(days=d),
-                predicted_p50_ms=round(smoothed_p50, 1),
-                predicted_p95_ms=round(smoothed_p95, 1),
-                confidence_interval_low=round(max(0, smoothed_p50 - std_p50 * ci_multiplier), 1),
-                confidence_interval_high=round(smoothed_p95 + std_p95 * ci_multiplier, 1),
-                trend=trend,
-            ))
+            forecasts.append(
+                LatencyForecast(
+                    platform=platform,
+                    event_type=event_type,
+                    forecast_date=datetime.now(timezone.utc) + timedelta(days=d),
+                    predicted_p50_ms=round(smoothed_p50, 1),
+                    predicted_p95_ms=round(smoothed_p95, 1),
+                    confidence_interval_low=round(
+                        max(0, smoothed_p50 - std_p50 * ci_multiplier), 1
+                    ),
+                    confidence_interval_high=round(
+                        smoothed_p95 + std_p95 * ci_multiplier, 1
+                    ),
+                    trend=trend,
+                )
+            )
 
         return forecasts
 

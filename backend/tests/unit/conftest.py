@@ -21,10 +21,10 @@ import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 
-
 # ---------------------------------------------------------------------------
 # Test Application
 # ---------------------------------------------------------------------------
+
 
 @pytest_asyncio.fixture
 async def test_app():
@@ -35,6 +35,7 @@ async def test_app():
     but skips heavy I/O middleware (rate limiter, audit, prometheus).
     """
     from fastapi import FastAPI
+
     from app.api.v1 import api_router
     from app.core.config import settings
     from app.middleware.tenant import TenantMiddleware
@@ -53,6 +54,7 @@ async def test_app():
 # ---------------------------------------------------------------------------
 # Mock Database Session
 # ---------------------------------------------------------------------------
+
 
 @pytest_asyncio.fixture
 async def mock_db():
@@ -89,6 +91,7 @@ async def mock_db():
 # httpx Client
 # ---------------------------------------------------------------------------
 
+
 @pytest_asyncio.fixture
 async def api_client(test_app, mock_db) -> AsyncGenerator[AsyncClient, None]:
     """
@@ -117,9 +120,15 @@ async def api_client(test_app, mock_db) -> AsyncGenerator[AsyncClient, None]:
 # JWT / Auth Helpers
 # ---------------------------------------------------------------------------
 
-def _make_token(subject: int = 1, tenant_id: int = 1, role: str = "admin",
-                email: str = "test@example.com", cms_role: str = "admin",
-                **extra_claims) -> str:
+
+def _make_token(
+    subject: int = 1,
+    tenant_id: int = 1,
+    role: str = "admin",
+    email: str = "test@example.com",
+    cms_role: str = "admin",
+    **extra_claims,
+) -> str:
     """Create a real JWT token using the app's security module."""
     from app.core.security import create_access_token
 
@@ -150,8 +159,9 @@ def viewer_headers() -> dict:
 @pytest.fixture
 def superadmin_headers() -> dict:
     """Auth headers for a superadmin (no tenant binding)."""
-    token = _make_token(subject=99, role="superadmin", email="admin@stratum.ai",
-                        tenant_id=0)
+    token = _make_token(
+        subject=99, role="superadmin", email="admin@stratum.ai", tenant_id=0
+    )
     return {"Authorization": f"Bearer {token}"}
 
 
@@ -162,8 +172,9 @@ def tenant2_headers() -> dict:
     return {"Authorization": f"Bearer {token}"}
 
 
-def make_auth_headers(subject: int = 1, tenant_id: int = 1, role: str = "admin",
-                      **kw) -> dict:
+def make_auth_headers(
+    subject: int = 1, tenant_id: int = 1, role: str = "admin", **kw
+) -> dict:
     """Helper to build auth headers with custom claims (usable in test body)."""
     token = _make_token(subject=subject, tenant_id=tenant_id, role=role, **kw)
     return {"Authorization": f"Bearer {token}"}
@@ -172,6 +183,7 @@ def make_auth_headers(subject: int = 1, tenant_id: int = 1, role: str = "admin",
 # ---------------------------------------------------------------------------
 # Mock Result Helpers
 # ---------------------------------------------------------------------------
+
 
 def make_scalar_result(value):
     """Create a mock DB execute result that returns `value` from .scalar()."""

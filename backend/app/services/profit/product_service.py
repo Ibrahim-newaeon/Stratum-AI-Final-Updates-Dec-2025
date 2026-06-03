@@ -11,13 +11,13 @@ Features:
 - External ID mapping
 """
 
+import csv
+import io
 from datetime import date, datetime, timezone
 from typing import Any, Dict, List, Optional
 from uuid import UUID
-import csv
-import io
 
-from sqlalchemy import select, and_, or_, func
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
@@ -167,9 +167,17 @@ class ProductCatalogService:
             return None
 
         allowed_fields = [
-            "name", "description", "category", "subcategory", "brand",
-            "product_type", "base_price_cents", "currency", "status",
-            "external_ids", "attributes",
+            "name",
+            "description",
+            "category",
+            "subcategory",
+            "brand",
+            "product_type",
+            "base_price_cents",
+            "currency",
+            "status",
+            "external_ids",
+            "attributes",
         ]
 
         for field, value in kwargs.items():
@@ -291,7 +299,11 @@ class ProductCatalogService:
                             subcategory=row.get("subcategory"),
                             brand=row.get("brand"),
                             product_type=row.get("product_type"),
-                            base_price_cents=int(float(row["price"]) * 100) if row.get("price") else None,
+                            base_price_cents=(
+                                int(float(row["price"]) * 100)
+                                if row.get("price")
+                                else None
+                            ),
                         )
                         updated += 1
                     else:
@@ -305,7 +317,9 @@ class ProductCatalogService:
                         subcategory=row.get("subcategory"),
                         brand=row.get("brand"),
                         product_type=row.get("product_type"),
-                        base_price_cents=int(float(row["price"]) * 100) if row.get("price") else None,
+                        base_price_cents=(
+                            int(float(row["price"]) * 100) if row.get("price") else None
+                        ),
                     )
                     created += 1
 
@@ -362,17 +376,25 @@ class ProductCatalogService:
             "subcategory": product.subcategory,
             "brand": product.brand,
             "product_type": product.product_type,
-            "base_price": product.base_price_cents / 100 if product.base_price_cents else None,
+            "base_price": (
+                product.base_price_cents / 100 if product.base_price_cents else None
+            ),
             "currency": product.currency,
             "status": product.status.value,
-            "cogs": {
-                "cogs_cents": margin.cogs_cents if margin else None,
-                "cogs_percentage": margin.cogs_percentage if margin else None,
-                "total_cogs_cents": margin.total_cogs_cents if margin else None,
-                "margin_type": margin.margin_type.value if margin else None,
-                "effective_date": margin.effective_date.isoformat() if margin else None,
-                "source": margin.source.value if margin else None,
-            } if margin else None,
+            "cogs": (
+                {
+                    "cogs_cents": margin.cogs_cents if margin else None,
+                    "cogs_percentage": margin.cogs_percentage if margin else None,
+                    "total_cogs_cents": margin.total_cogs_cents if margin else None,
+                    "margin_type": margin.margin_type.value if margin else None,
+                    "effective_date": (
+                        margin.effective_date.isoformat() if margin else None
+                    ),
+                    "source": margin.source.value if margin else None,
+                }
+                if margin
+                else None
+            ),
         }
 
     async def get_products_missing_cogs(
@@ -415,8 +437,7 @@ class ProductCatalogService:
         # Products with COGS
         today = date.today()
         with_cogs_result = await self.db.execute(
-            select(func.count(func.distinct(ProductMargin.product_id)))
-            .where(
+            select(func.count(func.distinct(ProductMargin.product_id))).where(
                 and_(
                     ProductMargin.tenant_id == self.tenant_id,
                     ProductMargin.effective_date <= today,

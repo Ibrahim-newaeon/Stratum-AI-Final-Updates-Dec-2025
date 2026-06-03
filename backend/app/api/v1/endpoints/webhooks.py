@@ -75,7 +75,9 @@ class WebhookCreateRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
     url: str = Field(..., description="Webhook endpoint URL")
     events: list[str] = Field(..., min_length=1, description="Events to subscribe to")
-    headers: Optional[dict] = Field(default=None, description="Custom headers to include")
+    headers: Optional[dict] = Field(
+        default=None, description="Custom headers to include"
+    )
 
     @field_validator("url")
     @classmethod
@@ -213,7 +215,9 @@ async def get_event_types() -> APIResponse[WebhookEventTypesResponse]:
             "description": "When automation is blocked",
         },
     ]
-    return APIResponse(success=True, data=WebhookEventTypesResponse(event_types=event_types))
+    return APIResponse(
+        success=True, data=WebhookEventTypesResponse(event_types=event_types)
+    )
 
 
 @router.get("", response_model=APIResponse[list[WebhookResponse]])
@@ -233,7 +237,11 @@ async def list_webhooks(
         )
 
     result = await db.execute(
-        select(Webhook).where(Webhook.tenant_id == tenant_id).order_by(Webhook.created_at.desc()).limit(1000).limit(1000)
+        select(Webhook)
+        .where(Webhook.tenant_id == tenant_id)
+        .order_by(Webhook.created_at.desc())
+        .limit(1000)
+        .limit(1000)
     )
     webhooks = result.scalars().all()
 
@@ -278,7 +286,9 @@ async def get_webhook(
         )
 
     result = await db.execute(
-        select(Webhook).where(and_(Webhook.id == webhook_id, Webhook.tenant_id == tenant_id))
+        select(Webhook).where(
+            and_(Webhook.id == webhook_id, Webhook.tenant_id == tenant_id)
+        )
     )
     webhook = result.scalar_one_or_none()
 
@@ -308,7 +318,9 @@ async def get_webhook(
     )
 
 
-@router.post("", response_model=APIResponse[WebhookResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "", response_model=APIResponse[WebhookResponse], status_code=status.HTTP_201_CREATED
+)
 async def create_webhook(
     request: Request,
     body: WebhookCreateRequest,
@@ -391,7 +403,9 @@ async def update_webhook(
         )
 
     result = await db.execute(
-        select(Webhook).where(and_(Webhook.id == webhook_id, Webhook.tenant_id == tenant_id))
+        select(Webhook).where(
+            and_(Webhook.id == webhook_id, Webhook.tenant_id == tenant_id)
+        )
     )
     webhook = result.scalar_one_or_none()
 
@@ -456,7 +470,9 @@ async def delete_webhook(
         )
 
     result = await db.execute(
-        select(Webhook).where(and_(Webhook.id == webhook_id, Webhook.tenant_id == tenant_id))
+        select(Webhook).where(
+            and_(Webhook.id == webhook_id, Webhook.tenant_id == tenant_id)
+        )
     )
     webhook = result.scalar_one_or_none()
 
@@ -490,7 +506,9 @@ async def test_webhook(
         )
 
     result = await db.execute(
-        select(Webhook).where(and_(Webhook.id == webhook_id, Webhook.tenant_id == tenant_id))
+        select(Webhook).where(
+            and_(Webhook.id == webhook_id, Webhook.tenant_id == tenant_id)
+        )
     )
     webhook = result.scalar_one_or_none()
 
@@ -529,7 +547,9 @@ async def test_webhook(
             if webhook.headers:
                 headers.update(webhook.headers)
 
-            response = await client.post(webhook.url, json=test_payload, headers=headers)
+            response = await client.post(
+                webhook.url, json=test_payload, headers=headers
+            )
             status_code = response.status_code
             response_body = response.text[:1000] if response.text else None
             success = 200 <= response.status_code < 300
@@ -564,7 +584,10 @@ async def test_webhook(
     )
 
 
-@router.get("/{webhook_id}/deliveries", response_model=APIResponse[list[WebhookDeliveryResponse]])
+@router.get(
+    "/{webhook_id}/deliveries",
+    response_model=APIResponse[list[WebhookDeliveryResponse]],
+)
 async def get_webhook_deliveries(
     request: Request,
     webhook_id: int,
@@ -585,7 +608,9 @@ async def get_webhook_deliveries(
 
     # Verify webhook belongs to tenant
     result = await db.execute(
-        select(Webhook).where(and_(Webhook.id == webhook_id, Webhook.tenant_id == tenant_id))
+        select(Webhook).where(
+            and_(Webhook.id == webhook_id, Webhook.tenant_id == tenant_id)
+        )
     )
     if not result.scalar_one_or_none():
         raise HTTPException(

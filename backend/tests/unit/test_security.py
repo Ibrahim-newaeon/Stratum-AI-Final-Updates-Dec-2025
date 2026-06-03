@@ -235,17 +235,20 @@ class TestJWTSecurity:
     def test_none_algorithm_attack_blocked(self) -> None:
         """Tokens with 'none' algorithm should not decode successfully."""
         # PyJWT rejects alg=none by default (requires explicit allow)
-        import jwt as pyjwt
-
         # Create a token with "none" algorithm (bypassing PyJWT's encode restriction)
         # Manually craft a none-alg JWT: header.alg = "none", empty signature
         import base64
-        header_b64 = base64.urlsafe_b64encode(
-            b'{"alg":"none","typ":"JWT"}'
-        ).decode().rstrip("=")
-        payload_b64 = base64.urlsafe_b64encode(
-            b'{"sub":"hacker","type":"access"}'
-        ).decode().rstrip("=")
+
+        import jwt as pyjwt
+
+        header_b64 = (
+            base64.urlsafe_b64encode(b'{"alg":"none","typ":"JWT"}').decode().rstrip("=")
+        )
+        payload_b64 = (
+            base64.urlsafe_b64encode(b'{"sub":"hacker","type":"access"}')
+            .decode()
+            .rstrip("=")
+        )
         malicious_token = f"{header_b64}.{payload_b64}."
 
         # Attempting to decode should fail since our settings use HS256

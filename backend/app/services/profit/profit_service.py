@@ -14,22 +14,22 @@ Features:
 """
 
 from datetime import date, datetime, timedelta
+from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID
-from decimal import Decimal
 
-from sqlalchemy import select, and_, func, or_
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.models.profit import (
+    COGSSource,
+    DailyProfitMetrics,
+    MarginRule,
+    MarginType,
     ProductCatalog,
     ProductMargin,
-    MarginRule,
-    DailyProfitMetrics,
     ProfitROASReport,
-    MarginType,
-    COGSSource,
 )
 
 logger = get_logger(__name__)
@@ -92,7 +92,9 @@ class ProfitCalculationService:
                 func.sum(DailyProfitMetrics.gross_revenue_cents).label("total_revenue"),
                 func.sum(DailyProfitMetrics.total_cogs_cents).label("total_cogs"),
                 func.sum(DailyProfitMetrics.ad_spend_cents).label("total_ad_spend"),
-                func.sum(DailyProfitMetrics.gross_profit_cents).label("total_gross_profit"),
+                func.sum(DailyProfitMetrics.gross_profit_cents).label(
+                    "total_gross_profit"
+                ),
                 func.sum(DailyProfitMetrics.net_profit_cents).label("total_net_profit"),
                 func.count(func.distinct(DailyProfitMetrics.date)).label("days"),
             ).where(and_(*conditions))
@@ -118,12 +120,18 @@ class ProfitCalculationService:
 
         # Calculate ROAS metrics
         revenue_roas = total_revenue / total_ad_spend if total_ad_spend > 0 else 0
-        gross_profit_roas = total_gross_profit / total_ad_spend if total_ad_spend > 0 else 0
+        gross_profit_roas = (
+            total_gross_profit / total_ad_spend if total_ad_spend > 0 else 0
+        )
         net_profit_roas = total_net_profit / total_ad_spend if total_ad_spend > 0 else 0
 
         # Calculate margins
-        gross_margin_pct = (total_gross_profit / total_revenue * 100) if total_revenue > 0 else 0
-        net_margin_pct = (total_net_profit / total_revenue * 100) if total_revenue > 0 else 0
+        gross_margin_pct = (
+            (total_gross_profit / total_revenue * 100) if total_revenue > 0 else 0
+        )
+        net_margin_pct = (
+            (total_net_profit / total_revenue * 100) if total_revenue > 0 else 0
+        )
 
         # Breakeven analysis
         # Breakeven ROAS = 1 / Gross Margin (as decimal)
@@ -164,7 +172,9 @@ class ProfitCalculationService:
             "breakeven": {
                 "breakeven_roas": round(breakeven_roas, 2) if breakeven_roas else None,
                 "above_breakeven": above_breakeven,
-                "margin_of_safety": round(revenue_roas - breakeven_roas, 2) if breakeven_roas else None,
+                "margin_of_safety": (
+                    round(revenue_roas - breakeven_roas, 2) if breakeven_roas else None
+                ),
             },
         }
 
@@ -221,11 +231,15 @@ class ProfitCalculationService:
 
         # Calculate ROAS
         revenue_roas = revenue_cents / ad_spend_cents if ad_spend_cents > 0 else 0
-        gross_profit_roas = gross_profit_cents / ad_spend_cents if ad_spend_cents > 0 else 0
+        gross_profit_roas = (
+            gross_profit_cents / ad_spend_cents if ad_spend_cents > 0 else 0
+        )
         net_profit_roas = net_profit_cents / ad_spend_cents if ad_spend_cents > 0 else 0
 
         # Calculate margins
-        gross_margin_pct = (gross_profit_cents / revenue_cents * 100) if revenue_cents > 0 else 0
+        gross_margin_pct = (
+            (gross_profit_cents / revenue_cents * 100) if revenue_cents > 0 else 0
+        )
 
         return {
             "revenue_cents": revenue_cents,
@@ -306,17 +320,25 @@ class ProfitCalculationService:
         trend = []
         for date_key, data in sorted(daily_data.items()):
             ad_spend = data["ad_spend"]
-            trend.append({
-                "date": data["date"],
-                "revenue": round(data["revenue"], 2),
-                "gross_profit": round(data["gross_profit"], 2),
-                "net_profit": round(data["net_profit"], 2),
-                "ad_spend": round(ad_spend, 2),
-                "revenue_roas": round(data["revenue"] / ad_spend, 2) if ad_spend > 0 else 0,
-                "gross_profit_roas": round(data["gross_profit"] / ad_spend, 2) if ad_spend > 0 else 0,
-                "net_profit_roas": round(data["net_profit"] / ad_spend, 2) if ad_spend > 0 else 0,
-                "units": data["units"],
-            })
+            trend.append(
+                {
+                    "date": data["date"],
+                    "revenue": round(data["revenue"], 2),
+                    "gross_profit": round(data["gross_profit"], 2),
+                    "net_profit": round(data["net_profit"], 2),
+                    "ad_spend": round(ad_spend, 2),
+                    "revenue_roas": (
+                        round(data["revenue"] / ad_spend, 2) if ad_spend > 0 else 0
+                    ),
+                    "gross_profit_roas": (
+                        round(data["gross_profit"] / ad_spend, 2) if ad_spend > 0 else 0
+                    ),
+                    "net_profit_roas": (
+                        round(data["net_profit"] / ad_spend, 2) if ad_spend > 0 else 0
+                    ),
+                    "units": data["units"],
+                }
+            )
 
         return {
             "status": "success",
@@ -392,24 +414,36 @@ class ProfitCalculationService:
             gross_profit = (r.gross_profit or 0) / 100
             net_profit = (r.net_profit or 0) / 100
 
-            product_data.append({
-                "product_id": str(r.product_id),
-                "sku": product.sku if product else "Unknown",
-                "name": product.name if product else "Unknown Product",
-                "category": product.category if product else None,
-                "units": r.units or 0,
-                "revenue": round(revenue, 2),
-                "cogs": round(cogs, 2),
-                "gross_profit": round(gross_profit, 2),
-                "net_profit": round(net_profit, 2),
-                "ad_spend": round(ad_spend, 2),
-                "gross_margin_pct": round((gross_profit / revenue * 100) if revenue > 0 else 0, 1),
-                "gross_profit_roas": round(gross_profit / ad_spend, 2) if ad_spend > 0 else 0,
-                "net_profit_roas": round(net_profit / ad_spend, 2) if ad_spend > 0 else 0,
-            })
+            product_data.append(
+                {
+                    "product_id": str(r.product_id),
+                    "sku": product.sku if product else "Unknown",
+                    "name": product.name if product else "Unknown Product",
+                    "category": product.category if product else None,
+                    "units": r.units or 0,
+                    "revenue": round(revenue, 2),
+                    "cogs": round(cogs, 2),
+                    "gross_profit": round(gross_profit, 2),
+                    "net_profit": round(net_profit, 2),
+                    "ad_spend": round(ad_spend, 2),
+                    "gross_margin_pct": round(
+                        (gross_profit / revenue * 100) if revenue > 0 else 0, 1
+                    ),
+                    "gross_profit_roas": (
+                        round(gross_profit / ad_spend, 2) if ad_spend > 0 else 0
+                    ),
+                    "net_profit_roas": (
+                        round(net_profit / ad_spend, 2) if ad_spend > 0 else 0
+                    ),
+                }
+            )
 
         # Sort
-        sort_key = sort_by if sort_by in ["gross_profit", "net_profit", "gross_profit_roas"] else "gross_profit"
+        sort_key = (
+            sort_by
+            if sort_by in ["gross_profit", "net_profit", "gross_profit_roas"]
+            else "gross_profit"
+        )
         product_data.sort(key=lambda x: x[sort_key], reverse=True)
 
         return {
@@ -469,25 +503,37 @@ class ProfitCalculationService:
 
             # Breakeven ROAS
             gross_margin_pct = (gross_profit / revenue * 100) if revenue > 0 else 0
-            breakeven_roas = 1 / (gross_margin_pct / 100) if gross_margin_pct > 0 else None
+            breakeven_roas = (
+                1 / (gross_margin_pct / 100) if gross_margin_pct > 0 else None
+            )
             revenue_roas = revenue / ad_spend if ad_spend > 0 else 0
 
-            campaigns.append({
-                "platform": r.platform,
-                "campaign_id": r.campaign_id,
-                "units": r.units or 0,
-                "revenue": round(revenue, 2),
-                "cogs": round((r.cogs or 0) / 100, 2),
-                "gross_profit": round(gross_profit, 2),
-                "net_profit": round(net_profit, 2),
-                "ad_spend": round(ad_spend, 2),
-                "revenue_roas": round(revenue_roas, 2),
-                "gross_profit_roas": round(gross_profit / ad_spend, 2) if ad_spend > 0 else 0,
-                "net_profit_roas": round(net_profit / ad_spend, 2) if ad_spend > 0 else 0,
-                "gross_margin_pct": round(gross_margin_pct, 1),
-                "breakeven_roas": round(breakeven_roas, 2) if breakeven_roas else None,
-                "above_breakeven": revenue_roas > breakeven_roas if breakeven_roas else None,
-            })
+            campaigns.append(
+                {
+                    "platform": r.platform,
+                    "campaign_id": r.campaign_id,
+                    "units": r.units or 0,
+                    "revenue": round(revenue, 2),
+                    "cogs": round((r.cogs or 0) / 100, 2),
+                    "gross_profit": round(gross_profit, 2),
+                    "net_profit": round(net_profit, 2),
+                    "ad_spend": round(ad_spend, 2),
+                    "revenue_roas": round(revenue_roas, 2),
+                    "gross_profit_roas": (
+                        round(gross_profit / ad_spend, 2) if ad_spend > 0 else 0
+                    ),
+                    "net_profit_roas": (
+                        round(net_profit / ad_spend, 2) if ad_spend > 0 else 0
+                    ),
+                    "gross_margin_pct": round(gross_margin_pct, 1),
+                    "breakeven_roas": (
+                        round(breakeven_roas, 2) if breakeven_roas else None
+                    ),
+                    "above_breakeven": (
+                        revenue_roas > breakeven_roas if breakeven_roas else None
+                    ),
+                }
+            )
 
         # Sort by gross profit
         campaigns.sort(key=lambda x: x["gross_profit"], reverse=True)
@@ -581,7 +627,9 @@ class ProfitCalculationService:
         await self.db.commit()
         await self.db.refresh(report)
 
-        logger.info(f"Generated profit report {report.id} for {start_date} to {end_date}")
+        logger.info(
+            f"Generated profit report {report.id} for {start_date} to {end_date}"
+        )
         return report
 
     async def _get_cogs(
@@ -646,7 +694,9 @@ class ProfitCalculationService:
         if rule:
             if rule.default_cogs_percentage:
                 return {
-                    "cogs_cents": int(revenue_cents * rule.default_cogs_percentage / 100),
+                    "cogs_cents": int(
+                        revenue_cents * rule.default_cogs_percentage / 100
+                    ),
                     "is_estimated": True,
                     "source": f"rule:{rule.name}",
                     "margin_rule_id": rule.id,

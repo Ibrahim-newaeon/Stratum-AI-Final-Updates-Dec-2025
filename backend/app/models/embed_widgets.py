@@ -116,7 +116,9 @@ class EmbedWidget(Base, TimestampMixin):
     custom_height = Column(Integer, nullable=True)
 
     # Branding level (determined by tier)
-    branding_level = Column(String(50), nullable=False, default=BrandingLevel.FULL.value)
+    branding_level = Column(
+        String(50), nullable=False, default=BrandingLevel.FULL.value
+    )
 
     # Custom branding (Enterprise only)
     custom_logo_url = Column(String(512), nullable=True)
@@ -130,7 +132,9 @@ class EmbedWidget(Base, TimestampMixin):
     # e.g., {"campaigns": ["camp_123"], "ad_accounts": ["acc_456"]}
 
     # Refresh interval (how often widget refreshes data)
-    refresh_interval_seconds = Column(Integer, nullable=False, default=300)  # 5 min default
+    refresh_interval_seconds = Column(
+        Integer, nullable=False, default=300
+    )  # 5 min default
 
     # Status
     is_active = Column(Boolean, nullable=False, default=True)
@@ -314,7 +318,9 @@ class EmbedDomainWhitelist(Base, TimestampMixin):
     __table_args__ = (
         Index("ix_embed_domain_whitelist_tenant", "tenant_id"),
         UniqueConstraint(
-            "tenant_id", "domain_pattern", name="uq_embed_domain_whitelist_tenant_domain"
+            "tenant_id",
+            "domain_pattern",
+            name="uq_embed_domain_whitelist_tenant_domain",
         ),
     )
 
@@ -341,7 +347,11 @@ class EmbedWidgetView(Base):
     token_id = Column(UUID(as_uuid=True), nullable=False, index=True)
 
     # View details (anonymized)
-    view_date = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    view_date = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
     origin_domain = Column(String(255), nullable=True)
 
     # Geo (country-level only)

@@ -21,7 +21,17 @@ from datetime import UTC, datetime
 from typing import Optional
 from uuid import uuid4
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Index, Integer, String, Table, Text
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Table,
+    Text,
+)
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import relationship
 
@@ -219,7 +229,9 @@ class CMSAuthor(Base, TimestampMixin):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
 
     # Link to user (optional)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
 
     # Author details
     name = Column(String(255), nullable=False)
@@ -294,7 +306,9 @@ class CMSPost(Base, TimestampMixin):
 
     # Status and type
     status = Column(String(20), nullable=False, default=CMSPostStatus.DRAFT.value)
-    content_type = Column(String(20), nullable=False, default=CMSContentType.BLOG_POST.value)
+    content_type = Column(
+        String(20), nullable=False, default=CMSContentType.BLOG_POST.value
+    )
 
     # Publishing
     published_at = Column(DateTime(timezone=True), nullable=True)
@@ -302,7 +316,9 @@ class CMSPost(Base, TimestampMixin):
 
     # SEO fields
     meta_title = Column(String(70), nullable=True)  # Google recommends < 60 chars
-    meta_description = Column(String(160), nullable=True)  # Google recommends < 155 chars
+    meta_description = Column(
+        String(160), nullable=True
+    )  # Google recommends < 155 chars
     canonical_url = Column(String(500), nullable=True)
     og_image_url = Column(String(500), nullable=True)  # Open Graph image
 
@@ -331,25 +347,35 @@ class CMSPost(Base, TimestampMixin):
 
     # Workflow tracking
     submitted_at = Column(DateTime(timezone=True), nullable=True)
-    submitted_by_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    submitted_by_id = Column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
 
     # Review tracking
     reviewed_at = Column(DateTime(timezone=True), nullable=True)
-    reviewed_by_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    reviewed_by_id = Column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     review_notes = Column(Text, nullable=True)
 
     # Approval tracking
     approved_at = Column(DateTime(timezone=True), nullable=True)
-    approved_by_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    approved_by_id = Column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
 
     # Rejection tracking
     rejected_at = Column(DateTime(timezone=True), nullable=True)
-    rejected_by_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    rejected_by_id = Column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     rejection_reason = Column(Text, nullable=True)
 
     # Versioning
     version = Column(Integer, nullable=False, default=1)
-    current_version_id = Column(UUID(as_uuid=True), nullable=True)  # Points to latest version
+    current_version_id = Column(
+        UUID(as_uuid=True), nullable=True
+    )  # Points to latest version
 
     # Assigned reviewer (for workflow)
     assigned_reviewer_id = Column(
@@ -358,7 +384,9 @@ class CMSPost(Base, TimestampMixin):
     review_due_date = Column(DateTime(timezone=True), nullable=True)
 
     # Lock for editing (prevent conflicts)
-    locked_by_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    locked_by_id = Column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     locked_at = Column(DateTime(timezone=True), nullable=True)
 
     # Relationships
@@ -616,7 +644,9 @@ class CMSPostVersion(Base, TimestampMixin):
     featured_image_url = Column(String(500), nullable=True)
 
     # Who created this version
-    created_by_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    created_by_id = Column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
 
     # Change summary
     change_summary = Column(String(500), nullable=True)  # Brief description of changes
@@ -674,8 +704,12 @@ class CMSWorkflowLog(Base, TimestampMixin):
     to_status = Column(String(20), nullable=True)  # New status
 
     # Actor
-    performed_by_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
-    performed_by_role = Column(String(50), nullable=True)  # CMSRole value at time of action
+    performed_by_id = Column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    performed_by_role = Column(
+        String(50), nullable=True
+    )  # CMSRole value at time of action
 
     # Context
     comment = Column(Text, nullable=True)  # Review notes, rejection reason, etc.

@@ -41,7 +41,9 @@ logger = get_logger(__name__)
 class APIKeyCreateRequest(BaseModel):
     """Request to create a new API key."""
 
-    name: str = Field(..., min_length=1, max_length=255, description="Friendly name for the key")
+    name: str = Field(
+        ..., min_length=1, max_length=255, description="Friendly name for the key"
+    )
     scopes: list[str] = Field(default=["read"], description="Permission scopes")
     expires_in_days: Optional[int] = Field(
         default=None, ge=1, le=365, description="Days until expiration"
@@ -140,7 +142,8 @@ async def list_api_keys(
                 APIKey.tenant_id == tenant_id,
             )
         )
-        .order_by(APIKey.created_at.desc()).limit(1000)
+        .order_by(APIKey.created_at.desc())
+        .limit(1000)
     )
     keys = result.scalars().all()
 
@@ -164,7 +167,9 @@ async def list_api_keys(
 
 
 @router.post(
-    "", response_model=APIResponse[APIKeyCreatedResponse], status_code=status.HTTP_201_CREATED
+    "",
+    response_model=APIResponse[APIKeyCreatedResponse],
+    status_code=status.HTTP_201_CREATED,
 )
 async def create_api_key(
     request: Request,
@@ -244,7 +249,9 @@ async def create_api_key(
     )
 
 
-@router.post("/{key_id}/regenerate", response_model=APIResponse[APIKeyRegenerateResponse])
+@router.post(
+    "/{key_id}/regenerate", response_model=APIResponse[APIKeyRegenerateResponse]
+)
 async def regenerate_api_key(
     request: Request,
     key_id: int,

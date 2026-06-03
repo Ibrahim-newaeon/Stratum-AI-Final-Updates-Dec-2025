@@ -35,7 +35,9 @@ async def list_competitors(
     db: AsyncSession = Depends(get_async_session),
     is_primary: Optional[bool] = None,
     skip: int = Query(0, ge=0, description="Number of records to skip"),
-    limit: int = Query(50, ge=1, le=200, description="Maximum number of records to return"),
+    limit: int = Query(
+        50, ge=1, le=200, description="Maximum number of records to return"
+    ),
 ):
     """List tracked competitors."""
     tenant_id = getattr(request.state, "tenant_id", None)
@@ -47,7 +49,9 @@ async def list_competitors(
     if is_primary is not None:
         query = query.where(CompetitorBenchmark.is_primary == is_primary)
 
-    query = query.order_by(CompetitorBenchmark.share_of_voice.desc().nullslast()).limit(1000)
+    query = query.order_by(CompetitorBenchmark.share_of_voice.desc().nullslast()).limit(
+        1000
+    )
     query = query.offset(skip).limit(limit)
 
     result = await db.execute(query)
@@ -59,7 +63,9 @@ async def list_competitors(
     )
 
 
-@router.get("/share-of-voice", response_model=APIResponse[CompetitorShareOfVoiceResponse])
+@router.get(
+    "/share-of-voice", response_model=APIResponse[CompetitorShareOfVoiceResponse]
+)
 async def get_share_of_voice(
     request: Request,
     db: AsyncSession = Depends(get_async_session),
@@ -72,7 +78,8 @@ async def get_share_of_voice(
     result = await db.execute(
         select(CompetitorBenchmark)
         .where(CompetitorBenchmark.tenant_id == tenant_id)
-        .order_by(CompetitorBenchmark.share_of_voice.desc().nullslast()).limit(1000)
+        .order_by(CompetitorBenchmark.share_of_voice.desc().nullslast())
+        .limit(1000)
     )
     competitors = result.scalars().all()
 
@@ -132,7 +139,11 @@ async def get_competitor(
     )
 
 
-@router.post("", response_model=APIResponse[CompetitorResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=APIResponse[CompetitorResponse],
+    status_code=status.HTTP_201_CREATED,
+)
 async def add_competitor(
     request: Request,
     competitor_data: CompetitorCreate,
@@ -170,7 +181,9 @@ async def add_competitor(
 
     fetch_competitor_data.delay(tenant_id, competitor.id)
 
-    logger.info("competitor_added", competitor_id=competitor.id, domain=competitor.domain)
+    logger.info(
+        "competitor_added", competitor_id=competitor.id, domain=competitor.domain
+    )
 
     return APIResponse(
         success=True,

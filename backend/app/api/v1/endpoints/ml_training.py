@@ -31,6 +31,7 @@ router = APIRouter()
 # =============================================================================
 class TrainingResponse(BaseModel):
     """Response for training operations."""
+
     success: bool
     message: str
     models_trained: List[str]
@@ -40,6 +41,7 @@ class TrainingResponse(BaseModel):
 
 class DataUploadResponse(BaseModel):
     """Response for data upload operations."""
+
     success: bool
     message: str
     rows_processed: int
@@ -50,6 +52,7 @@ class DataUploadResponse(BaseModel):
 
 class ModelInfo(BaseModel):
     """Information about a trained model."""
+
     name: str
     version: str
     created_at: str
@@ -59,12 +62,14 @@ class ModelInfo(BaseModel):
 
 class ModelsListResponse(BaseModel):
     """Response listing all available models."""
+
     models: List[ModelInfo]
     models_path: str
 
 
 class GenerateSampleRequest(BaseModel):
     """Request to generate sample training data."""
+
     num_campaigns: int = 50
     days_per_campaign: int = 30
     platforms: Optional[List[str]] = None
@@ -76,9 +81,16 @@ class GenerateSampleRequest(BaseModel):
 @router.post("/upload", response_model=DataUploadResponse)
 async def upload_training_data(
     file: UploadFile = File(...),
-    platform: str = Query("meta", description="Ad platform (meta, google, tiktok, snapchat, linkedin)"),
-    dataset_format: str = Query("generic", description="Dataset format hint (generic, facebook_kaggle, google_kaggle)"),
-    train_after_upload: bool = Query(False, description="Automatically train models after upload"),
+    platform: str = Query(
+        "meta", description="Ad platform (meta, google, tiktok, snapchat, linkedin)"
+    ),
+    dataset_format: str = Query(
+        "generic",
+        description="Dataset format hint (generic, facebook_kaggle, google_kaggle)",
+    ),
+    train_after_upload: bool = Query(
+        False, description="Automatically train models after upload"
+    ),
 ):
     """
     Upload CSV training data.
@@ -119,7 +131,9 @@ async def upload_training_data(
             "message": f"Data uploaded and processed successfully. Saved to {output_path}",
             "rows_processed": len(df),
             "columns_detected": list(df.columns),
-            "campaigns_created": df["external_id"].nunique() if "external_id" in df.columns else 0,
+            "campaigns_created": (
+                df["external_id"].nunique() if "external_id" in df.columns else 0
+            ),
             "metrics_created": len(df),
         }
 
@@ -146,8 +160,12 @@ async def upload_training_data(
 
 @router.post("/train", response_model=TrainingResponse)
 async def train_models(
-    data_file: Optional[str] = Query(None, description="Path to training data CSV (uses latest if not specified)"),
-    use_sample_data: bool = Query(False, description="Use generated sample data instead of uploaded data"),
+    data_file: Optional[str] = Query(
+        None, description="Path to training data CSV (uses latest if not specified)"
+    ),
+    use_sample_data: bool = Query(
+        False, description="Use generated sample data instead of uploaded data"
+    ),
     num_campaigns: int = Query(100, description="Number of campaigns for sample data"),
     days: int = Query(30, description="Days per campaign for sample data"),
 ):
@@ -160,6 +178,7 @@ async def train_models(
     - budget_impact: Predicts revenue changes from budget changes
     """
     import time
+
     start_time = time.time()
 
     try:
@@ -183,7 +202,9 @@ async def train_models(
                     detail="No training data found. Upload data first or use sample data.",
                 )
 
-            csv_files = sorted(data_dir.glob("*.csv"), key=os.path.getmtime, reverse=True)
+            csv_files = sorted(
+                data_dir.glob("*.csv"), key=os.path.getmtime, reverse=True
+            )
             if not csv_files:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
@@ -233,15 +254,23 @@ async def list_models():
             try:
                 with open(metadata_file) as f:
                     metadata = json.load(f)
-                    models.append(ModelInfo(
-                        name=metadata.get("name", metadata_file.stem.replace("_metadata", "")),
-                        version=metadata.get("version", "unknown"),
-                        created_at=metadata.get("created_at", "unknown"),
-                        metrics=metadata.get("metrics", {}),
-                        features=metadata.get("features", []),
-                    ))
+                    models.append(
+                        ModelInfo(
+                            name=metadata.get(
+                                "name", metadata_file.stem.replace("_metadata", "")
+                            ),
+                            version=metadata.get("version", "unknown"),
+                            created_at=metadata.get("created_at", "unknown"),
+                            metrics=metadata.get("metrics", {}),
+                            features=metadata.get("features", []),
+                        )
+                    )
             except (OSError, ValueError, KeyError, TypeError) as e:
-                logger.warning("failed_to_read_model_metadata", file=str(metadata_file), error=str(e))
+                logger.warning(
+                    "failed_to_read_model_metadata",
+                    file=str(metadata_file),
+                    error=str(e),
+                )
 
     return ModelsListResponse(
         models=models,
@@ -322,11 +351,13 @@ async def list_training_data():
     files = []
     for csv_file in sorted(data_dir.glob("*.csv"), key=os.path.getmtime, reverse=True):
         stat = csv_file.stat()
-        files.append({
-            "name": csv_file.name,
-            "path": str(csv_file),
-            "size_bytes": stat.st_size,
-            "modified_at": datetime.fromtimestamp(stat.st_mtime).isoformat(),
-        })
+        files.append(
+            {
+                "name": csv_file.name,
+                "path": str(csv_file),
+                "size_bytes": stat.st_size,
+                "modified_at": datetime.fromtimestamp(stat.st_mtime).isoformat(),
+            }
+        )
 
     return {"files": files, "directory": str(data_dir)}

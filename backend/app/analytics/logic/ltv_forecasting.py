@@ -19,7 +19,6 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
-
 # ── Response models ──────────────────────────────────────────────────────────
 
 
@@ -103,14 +102,14 @@ class LTVForecastResponse(BaseModel):
 
 LTV_HEALTH_THRESHOLDS = {
     "excellent": 5.0,  # LTV:CAC >= 5x
-    "good": 3.0,       # LTV:CAC >= 3x
+    "good": 3.0,  # LTV:CAC >= 3x
     "needs_attention": 1.5,  # LTV:CAC >= 1.5x
 }
 
 RISK_THRESHOLDS = {
-    "low": 3.0,       # LTV:CAC >= 3
-    "medium": 2.0,    # LTV:CAC >= 2
-    "high": 1.0,      # LTV:CAC >= 1
+    "low": 3.0,  # LTV:CAC >= 3
+    "medium": 2.0,  # LTV:CAC >= 2
+    "high": 1.0,  # LTV:CAC >= 1
 }
 
 DISTRIBUTION_BUCKETS = [
@@ -125,8 +124,8 @@ DISTRIBUTION_BUCKETS = [
 
 # Growth multipliers for LTV projection
 PROJECTION_MULTIPLIERS = {
-    3: 1.15,   # 3-month: +15% from current
-    6: 1.35,   # 6-month: +35%
+    3: 1.15,  # 3-month: +15% from current
+    6: 1.35,  # 6-month: +35%
     12: 1.65,  # 12-month: +65%
 }
 
@@ -162,11 +161,25 @@ def _format_currency(value: float) -> str:
     return f"${value:,.0f}"
 
 
-def _build_cohorts(platform_data: dict[str, dict], total_customers: int) -> list[CohortLTV]:
+def _build_cohorts(
+    platform_data: dict[str, dict], total_customers: int
+) -> list[CohortLTV]:
     """Build monthly cohorts from platform data (simulated from campaign metrics)."""
     cohorts: list[CohortLTV] = []
-    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-              "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    months = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+    ]
 
     # Distribute customers across recent months (weighted toward recent)
     total_rev = sum(d["revenue"] for d in platform_data.values())
@@ -217,11 +230,15 @@ def _build_cohorts(platform_data: dict[str, dict], total_customers: int) -> list
     return cohorts
 
 
-def _build_segments(platform_data: dict[str, dict], total_revenue: float) -> list[SegmentForecast]:
+def _build_segments(
+    platform_data: dict[str, dict], total_revenue: float
+) -> list[SegmentForecast]:
     """Build segment forecasts from platform-level data."""
     segments: list[SegmentForecast] = []
 
-    for plat, data in sorted(platform_data.items(), key=lambda x: x[1]["revenue"], reverse=True):
+    for plat, data in sorted(
+        platform_data.items(), key=lambda x: x[1]["revenue"], reverse=True
+    ):
         if data["conversions"] == 0:
             continue
 
@@ -273,7 +290,9 @@ def _build_distribution(
         matching = [s for s in segments if bmin <= s.current_avg_ltv < bmax]
         count = sum(s.customer_count for s in matching)
         rev = sum(s.total_revenue for s in matching)
-        avg = sum(s.current_avg_ltv * s.customer_count for s in matching) / max(count, 1)
+        avg = sum(s.current_avg_ltv * s.customer_count for s in matching) / max(
+            count, 1
+        )
 
         buckets.append(
             LTVDistributionBucket(
@@ -447,7 +466,9 @@ def build_ltv_forecast(
     high_value_pct = (high_value_rev / max(total_revenue, 1)) * 100
 
     # At-risk revenue
-    at_risk_rev = sum(s.total_revenue for s in segments if s.risk_level in ("high", "critical"))
+    at_risk_rev = sum(
+        s.total_revenue for s in segments if s.risk_level in ("high", "critical")
+    )
     at_risk_pct = (at_risk_rev / max(total_revenue, 1)) * 100
 
     # ── Summary ──────────────────────────────────────────────────────

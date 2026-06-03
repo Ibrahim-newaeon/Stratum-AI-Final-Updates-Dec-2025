@@ -101,7 +101,9 @@ class Webhook(Base, TimestampMixin, TenantMixin):
     # Endpoint configuration
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     url: Mapped[str] = mapped_column(String(2048), nullable=False)
-    secret: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)  # For HMAC signing
+    secret: Mapped[Optional[str]] = mapped_column(
+        String(255), nullable=True
+    )  # For HMAC signing
 
     # Event subscriptions (list of WebhookEventType values)
     events: Mapped[list] = mapped_column(JSONB, default=list, nullable=False)
@@ -144,7 +146,10 @@ class WebhookDelivery(Base, TimestampMixin):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     webhook_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("webhooks.id", ondelete="CASCADE"), nullable=False, index=True
+        Integer,
+        ForeignKey("webhooks.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
 
     # Event details
@@ -163,7 +168,9 @@ class WebhookDelivery(Base, TimestampMixin):
     # Relationships
     webhook: Mapped["Webhook"] = relationship("Webhook", back_populates="deliveries")
 
-    __table_args__ = (Index("ix_webhook_deliveries_webhook_created", "webhook_id", "created_at"),)
+    __table_args__ = (
+        Index("ix_webhook_deliveries_webhook_created", "webhook_id", "created_at"),
+    )
 
 
 # =============================================================================
@@ -201,17 +208,23 @@ class Notification(Base, TimestampMixin, TenantMixin):
 
     # Status
     is_read: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    read_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    read_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # Action link (optional)
     action_url: Mapped[Optional[str]] = mapped_column(String(2048), nullable=True)
     action_label: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
 
     # Extra data (renamed from metadata - reserved by SQLAlchemy)
-    extra_data: Mapped[Optional[dict]] = mapped_column(JSONB, default=dict, nullable=True)
+    extra_data: Mapped[Optional[dict]] = mapped_column(
+        JSONB, default=dict, nullable=True
+    )
 
     # Expiration
-    expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    expires_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     __table_args__ = (
         Index("ix_notifications_user_unread", "user_id", "is_read"),
@@ -255,7 +268,9 @@ class ChangelogEntry(Base, TimestampMixin):
 
     # Publishing
     is_published: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    published_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    published_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # Rich content
     image_url: Mapped[Optional[str]] = mapped_column(String(2048), nullable=True)
@@ -280,14 +295,21 @@ class ChangelogReadStatus(Base, TimestampMixin):
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
     changelog_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("changelog_entries.id", ondelete="CASCADE"), nullable=False, index=True
+        Integer,
+        ForeignKey("changelog_entries.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
 
     read_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
     )
 
-    __table_args__ = (Index("ix_changelog_read_user", "user_id", "changelog_id", unique=True),)
+    __table_args__ = (
+        Index("ix_changelog_read_user", "user_id", "changelog_id", unique=True),
+    )
 
 
 # =============================================================================
@@ -311,14 +333,24 @@ class SlackIntegration(Base, TimestampMixin, TenantMixin):
     channel_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
 
     # What to notify
-    notify_trust_gate: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    notify_anomalies: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    notify_signal_health: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    notify_daily_summary: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    notify_trust_gate: Mapped[bool] = mapped_column(
+        Boolean, default=True, nullable=False
+    )
+    notify_anomalies: Mapped[bool] = mapped_column(
+        Boolean, default=True, nullable=False
+    )
+    notify_signal_health: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False
+    )
+    notify_daily_summary: Mapped[bool] = mapped_column(
+        Boolean, default=True, nullable=False
+    )
 
     # Status
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    last_test_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_test_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     last_test_success: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
 
     __table_args__ = (Index("ix_slack_integrations_tenant", "tenant_id", unique=True),)

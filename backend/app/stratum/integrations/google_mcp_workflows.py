@@ -109,7 +109,9 @@ class SheetsReportingIntegration:
 
         for platform in platforms:
             # Get accounts
-            accounts = await self.stratum.handle_tool_call("get_accounts", {"platform": platform})
+            accounts = await self.stratum.handle_tool_call(
+                "get_accounts", {"platform": platform}
+            )
 
             for account in accounts.get("accounts", {}).get(platform, []):
                 account_id = account.get("id")
@@ -117,7 +119,11 @@ class SheetsReportingIntegration:
                 # Get campaigns
                 campaigns = await self.stratum.handle_tool_call(
                     "get_campaigns",
-                    {"platform": platform, "account_id": account_id, "status": "active"},
+                    {
+                        "platform": platform,
+                        "account_id": account_id,
+                        "status": "active",
+                    },
                 )
 
                 campaign_ids = [c["id"] for c in campaigns.get("campaigns", [])]
@@ -342,7 +348,10 @@ class LeadFollowUpIntegration:
                     "content": "lead_welcome",
                     "template_params": {
                         "components": [
-                            {"type": "body", "parameters": [{"type": "text", "text": name}]}
+                            {
+                                "type": "body",
+                                "parameters": [{"type": "text", "text": name}],
+                            }
                         ]
                     },
                 },
@@ -599,11 +608,20 @@ MCP_CAPABILITIES = {
     "google-search": {
         "provider": "Anthropic/Google",
         "capabilities": ["Web search via Google", "Search results with snippets"],
-        "use_cases": ["Competitor research", "Market trends", "Content ideas", "Industry news"],
+        "use_cases": [
+            "Competitor research",
+            "Market trends",
+            "Content ideas",
+            "Industry news",
+        ],
     },
     "google-drive": {
         "provider": "Anthropic/Google",
-        "capabilities": ["Read/write Google Docs", "Read/write Google Sheets", "File management"],
+        "capabilities": [
+            "Read/write Google Docs",
+            "Read/write Google Sheets",
+            "File management",
+        ],
         "use_cases": [
             "Export reports to Sheets",
             "Read strategy documents",
@@ -613,7 +631,11 @@ MCP_CAPABILITIES = {
     "gmail": {
         "provider": "Anthropic/Google",
         "capabilities": ["Send emails", "Read emails", "Search inbox"],
-        "use_cases": ["Send performance alerts", "Email client reports", "Lead follow-up"],
+        "use_cases": [
+            "Send performance alerts",
+            "Email client reports",
+            "Lead follow-up",
+        ],
     },
     "google-calendar": {
         "provider": "Anthropic/Google",

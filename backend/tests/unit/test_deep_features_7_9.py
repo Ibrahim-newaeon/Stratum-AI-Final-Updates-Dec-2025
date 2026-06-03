@@ -24,7 +24,11 @@ import pytest
 from httpx import AsyncClient
 
 # Re-use conftest helpers directly
-from tests.unit.conftest import make_auth_headers, make_scalar_result, make_scalars_result
+from tests.unit.conftest import (
+    make_auth_headers,
+    make_scalar_result,
+    make_scalars_result,
+)
 
 pytestmark = pytest.mark.asyncio
 
@@ -33,10 +37,12 @@ pytestmark = pytest.mark.asyncio
 # Helpers
 # ============================================================================
 
+
 def _mock_kpi_row(**overrides: Any) -> MagicMock:
     """Build a MagicMock that looks like a KPI aggregation row."""
-    defaults = dict(spend=100000, revenue=500000, impressions=50000,
-                    clicks=2000, conversions=100)
+    defaults = dict(
+        spend=100000, revenue=500000, impressions=50000, clicks=2000, conversions=100
+    )
     defaults.update(overrides)
     row = MagicMock()
     for k, v in defaults.items():
@@ -48,8 +54,12 @@ def _mock_platform_row(**overrides: Any) -> MagicMock:
     """Build a MagicMock that looks like a platform-breakdown row."""
     defaults = dict(
         platform=MagicMock(value="meta"),
-        spend=100000, revenue=500000, impressions=50000,
-        clicks=2000, conversions=100, campaign_count=5,
+        spend=100000,
+        revenue=500000,
+        impressions=50000,
+        clicks=2000,
+        conversions=100,
+        campaign_count=5,
     )
     defaults.update(overrides)
     row = MagicMock()
@@ -61,13 +71,22 @@ def _mock_platform_row(**overrides: Any) -> MagicMock:
 def _mock_campaign(**overrides: Any) -> MagicMock:
     """Minimal Campaign-like mock."""
     defaults = dict(
-        id=1, name="Test Campaign", tenant_id=1,
+        id=1,
+        name="Test Campaign",
+        tenant_id=1,
         platform=MagicMock(value="meta"),
-        total_spend_cents=100000, revenue_cents=500000,
-        impressions=50000, clicks=2000, conversions=100,
-        ctr=4.0, roas=5.0, is_deleted=False,
-        demographics_age=None, demographics_gender=None,
-        demographics_location=None, account_id="act_123",
+        total_spend_cents=100000,
+        revenue_cents=500000,
+        impressions=50000,
+        clicks=2000,
+        conversions=100,
+        ctr=4.0,
+        roas=5.0,
+        is_deleted=False,
+        demographics_age=None,
+        demographics_gender=None,
+        demographics_location=None,
+        account_id="act_123",
     )
     defaults.update(overrides)
     obj = MagicMock()
@@ -80,6 +99,7 @@ def _mock_campaign(**overrides: Any) -> MagicMock:
 # FEATURE 7 - Analytics
 # ============================================================================
 
+
 class TestAnalyticsKPIs:
     """GET /api/v1/analytics/kpis"""
 
@@ -89,8 +109,9 @@ class TestAnalyticsKPIs:
 
     async def test_happy_path(self, api_client: AsyncClient, admin_headers, mock_db):
         current_row = _mock_kpi_row()
-        prev_row = _mock_kpi_row(spend=80000, revenue=400000, impressions=40000,
-                                  clicks=1500, conversions=80)
+        prev_row = _mock_kpi_row(
+            spend=80000, revenue=400000, impressions=40000, clicks=1500, conversions=80
+        )
         # execute is called twice: once for current, once for previous
         current_result = MagicMock()
         current_result.one.return_value = current_row
@@ -98,27 +119,36 @@ class TestAnalyticsKPIs:
         prev_result.one.return_value = prev_row
         mock_db.execute = AsyncMock(side_effect=[current_result, prev_result])
 
-        resp = await api_client.get("/api/v1/analytics/kpis?period=30d",
-                                    headers=admin_headers)
+        resp = await api_client.get(
+            "/api/v1/analytics/kpis?period=30d", headers=admin_headers
+        )
         assert resp.status_code == 200
         body = resp.json()
         assert body["success"] is True
         assert isinstance(body["data"], list)
-        assert len(body["data"]) == 7  # spend, revenue, roas, impressions, clicks, conversions, ctr
+        assert (
+            len(body["data"]) == 7
+        )  # spend, revenue, roas, impressions, clicks, conversions, ctr
 
-    async def test_invalid_period_returns_422(self, api_client: AsyncClient, admin_headers):
-        resp = await api_client.get("/api/v1/analytics/kpis?period=999d",
-                                    headers=admin_headers)
+    async def test_invalid_period_returns_422(
+        self, api_client: AsyncClient, admin_headers
+    ):
+        resp = await api_client.get(
+            "/api/v1/analytics/kpis?period=999d", headers=admin_headers
+        )
         assert resp.status_code == 422
 
 
 class TestAnalyticsDemographics:
     """GET /api/v1/analytics/demographics"""
 
-    async def test_no_auth_returns_200_with_empty(self, api_client: AsyncClient, admin_headers, mock_db):
+    async def test_no_auth_returns_200_with_empty(
+        self, api_client: AsyncClient, admin_headers, mock_db
+    ):
         # tenant_id comes from JWT; with no campaigns the result is empty
-        resp = await api_client.get("/api/v1/analytics/demographics",
-                                    headers=admin_headers)
+        resp = await api_client.get(
+            "/api/v1/analytics/demographics", headers=admin_headers
+        )
         assert resp.status_code == 200
         body = resp.json()
         assert body["success"] is True
@@ -127,21 +157,28 @@ class TestAnalyticsDemographics:
 class TestAnalyticsHeatmap:
     """GET /api/v1/analytics/heatmap"""
 
-    async def test_happy_path_empty(self, api_client: AsyncClient, admin_headers, mock_db):
-        resp = await api_client.get("/api/v1/analytics/heatmap",
-                                    headers=admin_headers)
+    async def test_happy_path_empty(
+        self, api_client: AsyncClient, admin_headers, mock_db
+    ):
+        resp = await api_client.get("/api/v1/analytics/heatmap", headers=admin_headers)
         assert resp.status_code == 200
         body = resp.json()
         assert body["success"] is True
 
-    async def test_invalid_aggregation_returns_422(self, api_client: AsyncClient, admin_headers):
-        resp = await api_client.get("/api/v1/analytics/heatmap?aggregation=bad",
-                                    headers=admin_headers)
+    async def test_invalid_aggregation_returns_422(
+        self, api_client: AsyncClient, admin_headers
+    ):
+        resp = await api_client.get(
+            "/api/v1/analytics/heatmap?aggregation=bad", headers=admin_headers
+        )
         assert resp.status_code == 422
 
-    async def test_invalid_metric_returns_422(self, api_client: AsyncClient, admin_headers):
-        resp = await api_client.get("/api/v1/analytics/heatmap?metric=badmetric",
-                                    headers=admin_headers)
+    async def test_invalid_metric_returns_422(
+        self, api_client: AsyncClient, admin_headers
+    ):
+        resp = await api_client.get(
+            "/api/v1/analytics/heatmap?metric=badmetric", headers=admin_headers
+        )
         assert resp.status_code == 422
 
 
@@ -165,8 +202,9 @@ class TestAnalyticsPlatformBreakdown:
         result.all.return_value = [row]
         mock_db.execute = AsyncMock(return_value=result)
 
-        resp = await api_client.get("/api/v1/analytics/platform-breakdown",
-                                    headers=admin_headers)
+        resp = await api_client.get(
+            "/api/v1/analytics/platform-breakdown", headers=admin_headers
+        )
         assert resp.status_code == 200
         body = resp.json()
         assert body["success"] is True
@@ -176,6 +214,7 @@ class TestAnalyticsPlatformBreakdown:
 # FEATURE 7 - Analytics AI
 # ============================================================================
 
+
 class TestAnalyticsAIScalingScore:
     """POST /api/v1/analytics/ai/scoring/scale"""
 
@@ -184,22 +223,31 @@ class TestAnalyticsAIScalingScore:
             "entity_id": "camp_1",
             "entity_name": "Test Campaign",
             "platform": "meta",
-            "spend": 1000, "impressions": 50000, "clicks": 2000,
-            "conversions": 100, "revenue": 5000,
-            "baseline_spend": 900, "baseline_impressions": 45000,
-            "baseline_clicks": 1800, "baseline_conversions": 90,
+            "spend": 1000,
+            "impressions": 50000,
+            "clicks": 2000,
+            "conversions": 100,
+            "revenue": 5000,
+            "baseline_spend": 900,
+            "baseline_impressions": 45000,
+            "baseline_clicks": 1800,
+            "baseline_conversions": 90,
             "baseline_revenue": 4500,
         }
-        resp = await api_client.post("/api/v1/analytics/ai/scoring/scale",
-                                     json=payload, headers=admin_headers)
+        resp = await api_client.post(
+            "/api/v1/analytics/ai/scoring/scale", json=payload, headers=admin_headers
+        )
         assert resp.status_code == 200
         body = resp.json()
         assert body["success"] is True
         assert "data" in body
 
-    async def test_validation_missing_fields(self, api_client: AsyncClient, admin_headers):
-        resp = await api_client.post("/api/v1/analytics/ai/scoring/scale",
-                                     json={}, headers=admin_headers)
+    async def test_validation_missing_fields(
+        self, api_client: AsyncClient, admin_headers
+    ):
+        resp = await api_client.post(
+            "/api/v1/analytics/ai/scoring/scale", json={}, headers=admin_headers
+        )
         assert resp.status_code == 422
 
     async def test_no_auth_blocked_by_middleware(self, api_client: AsyncClient):
@@ -209,14 +257,18 @@ class TestAnalyticsAIScalingScore:
             "entity_id": "camp_1",
             "entity_name": "Test Campaign",
             "platform": "meta",
-            "spend": 1000, "impressions": 50000, "clicks": 2000,
-            "conversions": 100, "revenue": 5000,
-            "baseline_spend": 900, "baseline_impressions": 45000,
-            "baseline_clicks": 1800, "baseline_conversions": 90,
+            "spend": 1000,
+            "impressions": 50000,
+            "clicks": 2000,
+            "conversions": 100,
+            "revenue": 5000,
+            "baseline_spend": 900,
+            "baseline_impressions": 45000,
+            "baseline_clicks": 1800,
+            "baseline_conversions": 90,
             "baseline_revenue": 4500,
         }
-        resp = await api_client.post("/api/v1/analytics/ai/scoring/scale",
-                                     json=payload)
+        resp = await api_client.post("/api/v1/analytics/ai/scoring/scale", json=payload)
         # Middleware returns 401 for unauthenticated non-public paths
         assert resp.status_code == 401
 
@@ -228,18 +280,26 @@ class TestAnalyticsAIFatigueScore:
         payload = {
             "creative_id": "cr_1",
             "creative_name": "Test Creative",
-            "ctr": 2.5, "roas": 4.0, "cpa": 15.0,
-            "baseline_ctr": 3.0, "baseline_roas": 4.5, "baseline_cpa": 12.0,
+            "ctr": 2.5,
+            "roas": 4.0,
+            "cpa": 15.0,
+            "baseline_ctr": 3.0,
+            "baseline_roas": 4.5,
+            "baseline_cpa": 12.0,
         }
-        resp = await api_client.post("/api/v1/analytics/ai/scoring/fatigue",
-                                     json=payload, headers=admin_headers)
+        resp = await api_client.post(
+            "/api/v1/analytics/ai/scoring/fatigue", json=payload, headers=admin_headers
+        )
         assert resp.status_code == 200
         body = resp.json()
         assert body["success"] is True
 
     async def test_validation_error(self, api_client: AsyncClient, admin_headers):
-        resp = await api_client.post("/api/v1/analytics/ai/scoring/fatigue",
-                                     json={"bad": "data"}, headers=admin_headers)
+        resp = await api_client.post(
+            "/api/v1/analytics/ai/scoring/fatigue",
+            json={"bad": "data"},
+            headers=admin_headers,
+        )
         assert resp.status_code == 422
 
 
@@ -254,16 +314,18 @@ class TestAnalyticsAIAnomalies:
             },
             "current_values": {"ctr": 5.0, "roas": 1.0},
         }
-        resp = await api_client.post("/api/v1/analytics/ai/anomalies/detect",
-                                     json=payload, headers=admin_headers)
+        resp = await api_client.post(
+            "/api/v1/analytics/ai/anomalies/detect", json=payload, headers=admin_headers
+        )
         assert resp.status_code == 200
         body = resp.json()
         assert body["success"] is True
         assert "anomaly_count" in body["data"]
 
     async def test_validation_error(self, api_client: AsyncClient, admin_headers):
-        resp = await api_client.post("/api/v1/analytics/ai/anomalies/detect",
-                                     json={}, headers=admin_headers)
+        resp = await api_client.post(
+            "/api/v1/analytics/ai/anomalies/detect", json={}, headers=admin_headers
+        )
         assert resp.status_code == 422
 
 
@@ -276,8 +338,9 @@ class TestAnalyticsAISignalHealth:
             "event_loss_pct": 2.0,
             "api_health": True,
         }
-        resp = await api_client.post("/api/v1/analytics/ai/health/signal",
-                                     json=payload, headers=admin_headers)
+        resp = await api_client.post(
+            "/api/v1/analytics/ai/health/signal", json=payload, headers=admin_headers
+        )
         assert resp.status_code == 200
         body = resp.json()
         assert body["success"] is True
@@ -286,31 +349,37 @@ class TestAnalyticsAISignalHealth:
 
     async def test_defaults(self, api_client: AsyncClient, admin_headers):
         """All fields optional - defaults should work."""
-        resp = await api_client.post("/api/v1/analytics/ai/health/signal",
-                                     json={}, headers=admin_headers)
+        resp = await api_client.post(
+            "/api/v1/analytics/ai/health/signal", json={}, headers=admin_headers
+        )
         assert resp.status_code == 200
 
 
 class TestAnalyticsAIRecommendations:
     """GET /api/v1/analytics/ai/recommendations"""
 
-    async def test_no_campaigns_returns_empty(self, api_client: AsyncClient,
-                                              admin_headers, mock_db):
-        resp = await api_client.get("/api/v1/analytics/ai/recommendations",
-                                    headers=admin_headers)
+    async def test_no_campaigns_returns_empty(
+        self, api_client: AsyncClient, admin_headers, mock_db
+    ):
+        resp = await api_client.get(
+            "/api/v1/analytics/ai/recommendations", headers=admin_headers
+        )
         assert resp.status_code == 200
         body = resp.json()
         assert body["success"] is True
         assert body["data"]["message"] == "No campaigns found"
 
-    async def test_with_campaigns(self, api_client: AsyncClient, admin_headers, mock_db):
+    async def test_with_campaigns(
+        self, api_client: AsyncClient, admin_headers, mock_db
+    ):
         camp = _mock_campaign()
         campaigns_result = MagicMock()
         campaigns_result.scalars.return_value.all.return_value = [camp]
         mock_db.execute = AsyncMock(return_value=campaigns_result)
 
-        resp = await api_client.get("/api/v1/analytics/ai/recommendations",
-                                    headers=admin_headers)
+        resp = await api_client.get(
+            "/api/v1/analytics/ai/recommendations", headers=admin_headers
+        )
         assert resp.status_code == 200
         body = resp.json()
         assert body["success"] is True
@@ -320,22 +389,28 @@ class TestAnalyticsAIRecommendations:
 # FEATURE 8 - OAuth
 # ============================================================================
 
+
 class TestOAuthAuthorize:
     """POST /api/v1/oauth/{platform}/authorize - superadmin only"""
 
     async def test_no_auth_returns_401(self, api_client: AsyncClient):
-        resp = await api_client.post("/api/v1/oauth/meta/authorize",
-                                     json={"scopes": None})
+        resp = await api_client.post(
+            "/api/v1/oauth/meta/authorize", json={"scopes": None}
+        )
         assert resp.status_code in (401, 403)
 
-    async def test_non_superadmin_returns_403(self, api_client: AsyncClient, admin_headers):
+    async def test_non_superadmin_returns_403(
+        self, api_client: AsyncClient, admin_headers
+    ):
         """Regular admin should be blocked by require_super_admin."""
-        resp = await api_client.post("/api/v1/oauth/meta/authorize",
-                                     json={}, headers=admin_headers)
+        resp = await api_client.post(
+            "/api/v1/oauth/meta/authorize", json={}, headers=admin_headers
+        )
         assert resp.status_code == 403
 
-    async def test_superadmin_missing_user_row_returns_401(self, api_client: AsyncClient,
-                                                          superadmin_headers, mock_db):
+    async def test_superadmin_missing_user_row_returns_401(
+        self, api_client: AsyncClient, superadmin_headers, mock_db
+    ):
         """
         Even with superadmin headers, the OAuth authorize endpoint uses
         VerifiedUserDep which queries the DB for a real user.  Without a mock
@@ -344,8 +419,9 @@ class TestOAuthAuthorize:
         it out to avoid ConnectionRefusedError.
         """
         with patch("app.auth.deps.is_token_blacklisted", return_value=False):
-            resp = await api_client.post("/api/v1/oauth/meta/authorize",
-                                         json={}, headers=superadmin_headers)
+            resp = await api_client.post(
+                "/api/v1/oauth/meta/authorize", json={}, headers=superadmin_headers
+            )
         # get_current_user fails because the user query returns None
         assert resp.status_code == 401
 
@@ -366,7 +442,9 @@ class TestOAuthCallback:
         )
         assert resp.status_code == 401
 
-    async def test_error_param_redirects(self, api_client: AsyncClient, admin_headers, mock_db):
+    async def test_error_param_redirects(
+        self, api_client: AsyncClient, admin_headers, mock_db
+    ):
         """When 'error' query param is present, should redirect."""
         resp = await api_client.get(
             "/api/v1/oauth/meta/callback?error=access_denied&error_description=denied",
@@ -376,7 +454,9 @@ class TestOAuthCallback:
         # OAuth callback returns RedirectResponse
         assert resp.status_code in (302, 307)
 
-    async def test_missing_code_redirects(self, api_client: AsyncClient, admin_headers, mock_db):
+    async def test_missing_code_redirects(
+        self, api_client: AsyncClient, admin_headers, mock_db
+    ):
         resp = await api_client.get(
             "/api/v1/oauth/meta/callback?state=abc",
             headers=admin_headers,
@@ -384,7 +464,9 @@ class TestOAuthCallback:
         )
         assert resp.status_code in (302, 307)
 
-    async def test_missing_state_redirects(self, api_client: AsyncClient, admin_headers, mock_db):
+    async def test_missing_state_redirects(
+        self, api_client: AsyncClient, admin_headers, mock_db
+    ):
         resp = await api_client.get(
             "/api/v1/oauth/meta/callback?code=abc",
             headers=admin_headers,
@@ -400,19 +482,23 @@ class TestOAuthStatus:
         resp = await api_client.get("/api/v1/oauth/meta/status")
         assert resp.status_code in (401, 403)
 
-    async def test_non_superadmin_returns_403(self, api_client: AsyncClient, admin_headers):
-        resp = await api_client.get("/api/v1/oauth/meta/status",
-                                    headers=admin_headers)
+    async def test_non_superadmin_returns_403(
+        self, api_client: AsyncClient, admin_headers
+    ):
+        resp = await api_client.get("/api/v1/oauth/meta/status", headers=admin_headers)
         assert resp.status_code == 403
 
-    async def test_invalid_platform_returns_422(self, api_client: AsyncClient, superadmin_headers):
+    async def test_invalid_platform_returns_422(
+        self, api_client: AsyncClient, superadmin_headers
+    ):
         """Invalid platform enum value should fail validation.
         The CurrentUserDep dependency also runs and hits Redis; patch it out.
         FastAPI resolves dependencies and path params concurrently, so
         the actual error depends on execution order; accept 401 or 422."""
         with patch("app.auth.deps.is_token_blacklisted", return_value=False):
-            resp = await api_client.get("/api/v1/oauth/invalid_platform/status",
-                                        headers=superadmin_headers)
+            resp = await api_client.get(
+                "/api/v1/oauth/invalid_platform/status", headers=superadmin_headers
+            )
         # FastAPI validates AdPlatform enum → 422, or CurrentUserDep fails → 401
         assert resp.status_code in (401, 422)
 
@@ -421,6 +507,7 @@ class TestOAuthStatus:
 # FEATURE 8 - Integrations (HubSpot)
 # ============================================================================
 
+
 class TestIntegrationsHubSpotStatus:
     """GET /api/v1/integrations/hubspot/status"""
 
@@ -428,19 +515,25 @@ class TestIntegrationsHubSpotStatus:
         resp = await api_client.get("/api/v1/integrations/hubspot/status?tenant_id=1")
         assert resp.status_code in (401, 403)
 
-    async def test_non_superadmin_returns_403(self, api_client: AsyncClient, admin_headers):
+    async def test_non_superadmin_returns_403(
+        self, api_client: AsyncClient, admin_headers
+    ):
         """require_super_admin dependency should block regular admins."""
-        resp = await api_client.get("/api/v1/integrations/hubspot/status?tenant_id=1",
-                                    headers=admin_headers)
+        resp = await api_client.get(
+            "/api/v1/integrations/hubspot/status?tenant_id=1", headers=admin_headers
+        )
         assert resp.status_code == 403
 
-    async def test_wrong_tenant_returns_401_or_403(self, api_client: AsyncClient,
-                                                    superadmin_headers, mock_db):
+    async def test_wrong_tenant_returns_401_or_403(
+        self, api_client: AsyncClient, superadmin_headers, mock_db
+    ):
         """superadmin has tenant_id=0 in JWT.  Because 0 is falsy, the
         middleware stores tenant_id=None.  _verify_tenant_access then sees
         auth_tenant_id is None and raises 401 ('Not authenticated')."""
-        resp = await api_client.get("/api/v1/integrations/hubspot/status?tenant_id=1",
-                                    headers=superadmin_headers)
+        resp = await api_client.get(
+            "/api/v1/integrations/hubspot/status?tenant_id=1",
+            headers=superadmin_headers,
+        )
         # _verify_tenant_access: auth_tenant_id is None -> 401
         assert resp.status_code in (401, 403)
 
@@ -449,11 +542,15 @@ class TestIntegrationsHubSpotConnect:
     """POST /api/v1/integrations/hubspot/connect"""
 
     async def test_no_auth_returns_401(self, api_client: AsyncClient):
-        resp = await api_client.post("/api/v1/integrations/hubspot/connect?tenant_id=1",
-                                     json={"redirect_uri": "http://localhost/callback"})
+        resp = await api_client.post(
+            "/api/v1/integrations/hubspot/connect?tenant_id=1",
+            json={"redirect_uri": "http://localhost/callback"},
+        )
         assert resp.status_code in (401, 403)
 
-    async def test_non_superadmin_returns_403(self, api_client: AsyncClient, admin_headers):
+    async def test_non_superadmin_returns_403(
+        self, api_client: AsyncClient, admin_headers
+    ):
         resp = await api_client.post(
             "/api/v1/integrations/hubspot/connect?tenant_id=1",
             json={"redirect_uri": "http://localhost/callback"},
@@ -461,8 +558,9 @@ class TestIntegrationsHubSpotConnect:
         )
         assert resp.status_code == 403
 
-    async def test_missing_redirect_uri_returns_422(self, api_client: AsyncClient,
-                                                     admin_headers):
+    async def test_missing_redirect_uri_returns_422(
+        self, api_client: AsyncClient, admin_headers
+    ):
         resp = await api_client.post(
             "/api/v1/integrations/hubspot/connect?tenant_id=1",
             json={},
@@ -478,7 +576,9 @@ class TestIntegrationsPipelineSummary:
         resp = await api_client.get("/api/v1/integrations/pipeline/summary?tenant_id=1")
         assert resp.status_code in (401, 403)
 
-    async def test_non_superadmin_returns_403(self, api_client: AsyncClient, admin_headers):
+    async def test_non_superadmin_returns_403(
+        self, api_client: AsyncClient, admin_headers
+    ):
         resp = await api_client.get(
             "/api/v1/integrations/pipeline/summary?tenant_id=1",
             headers=admin_headers,
@@ -505,6 +605,7 @@ class TestIntegrationsDeals:
 # ============================================================================
 # FEATURE 9 - CMS (Public Endpoints - no auth needed)
 # ============================================================================
+
 
 class TestCMSPublicPosts:
     """GET /api/v1/cms/posts  (PUBLIC - no auth)"""
@@ -589,7 +690,9 @@ class TestCMSPublicPostBySlug:
 class TestCMSPublicCategories:
     """GET /api/v1/cms/categories  (PUBLIC)"""
 
-    async def test_public_list_categories_no_auth(self, api_client: AsyncClient, mock_db):
+    async def test_public_list_categories_no_auth(
+        self, api_client: AsyncClient, mock_db
+    ):
         resp = await api_client.get("/api/v1/cms/categories")
         assert resp.status_code == 200
         body = resp.json()
@@ -685,6 +788,7 @@ class TestCMSPublicContact:
 # FEATURE 9 - CMS (Admin Endpoints - auth required)
 # ============================================================================
 
+
 class TestCMSAdminListPosts:
     """GET /api/v1/cms/admin/posts - requires auth + CMS permission"""
 
@@ -693,11 +797,13 @@ class TestCMSAdminListPosts:
         # /admin/ in path => not public, middleware returns 401
         assert resp.status_code in (401, 403)
 
-    async def test_viewer_without_cms_permission_returns_403(self, api_client: AsyncClient,
-                                                              mock_db):
+    async def test_viewer_without_cms_permission_returns_403(
+        self, api_client: AsyncClient, mock_db
+    ):
         """A viewer with cms_role=viewer should have view_all_posts=True."""
-        headers = make_auth_headers(subject=5, tenant_id=1, role="viewer",
-                                    cms_role="viewer")
+        headers = make_auth_headers(
+            subject=5, tenant_id=1, role="viewer", cms_role="viewer"
+        )
         # check_cms_permission checks "view_all_posts" - viewer has this = True
         # But we need to mock DB for the actual query
         count_result = MagicMock()
@@ -709,17 +815,19 @@ class TestCMSAdminListPosts:
         resp = await api_client.get("/api/v1/cms/admin/posts", headers=headers)
         assert resp.status_code == 200
 
-    async def test_no_cms_role_no_superadmin_returns_403(self, api_client: AsyncClient, mock_db):
+    async def test_no_cms_role_no_superadmin_returns_403(
+        self, api_client: AsyncClient, mock_db
+    ):
         """User with no cms_role and non-superadmin role -> 403."""
-        headers = make_auth_headers(subject=5, tenant_id=1, role="admin",
-                                    cms_role="")
+        headers = make_auth_headers(subject=5, tenant_id=1, role="admin", cms_role="")
         resp = await api_client.get("/api/v1/cms/admin/posts", headers=headers)
         assert resp.status_code == 403
 
     async def test_superadmin_has_access(self, api_client: AsyncClient, mock_db):
         """Superadmin should pass check_cms_permission."""
-        headers = make_auth_headers(subject=99, tenant_id=0, role="superadmin",
-                                    cms_role="")
+        headers = make_auth_headers(
+            subject=99, tenant_id=0, role="superadmin", cms_role=""
+        )
         count_result = MagicMock()
         count_result.scalar.return_value = 0
         posts_result = MagicMock()
@@ -739,11 +847,13 @@ class TestCMSAdminCreatePost:
 
     async def test_viewer_cannot_create(self, api_client: AsyncClient, mock_db):
         """Viewers have create_post=False so POST admin/posts should be 403."""
-        headers = make_auth_headers(subject=5, tenant_id=1, role="admin",
-                                    cms_role="viewer")
+        headers = make_auth_headers(
+            subject=5, tenant_id=1, role="admin", cms_role="viewer"
+        )
         payload = {"title": "Test Post", "content": "Content"}
-        resp = await api_client.post("/api/v1/cms/admin/posts",
-                                     json=payload, headers=headers)
+        resp = await api_client.post(
+            "/api/v1/cms/admin/posts", json=payload, headers=headers
+        )
         assert resp.status_code == 403
 
 
@@ -757,24 +867,28 @@ class TestCMSAdminDeletePost:
 
     async def test_viewer_cannot_delete(self, api_client: AsyncClient, mock_db):
         """Viewer does not have delete_any_post permission."""
-        headers = make_auth_headers(subject=5, tenant_id=1, role="admin",
-                                    cms_role="viewer")
+        headers = make_auth_headers(
+            subject=5, tenant_id=1, role="admin", cms_role="viewer"
+        )
         fake_id = str(uuid4())
-        resp = await api_client.delete(f"/api/v1/cms/admin/posts/{fake_id}",
-                                       headers=headers)
+        resp = await api_client.delete(
+            f"/api/v1/cms/admin/posts/{fake_id}", headers=headers
+        )
         assert resp.status_code == 403
 
     async def test_admin_delete_not_found(self, api_client: AsyncClient, mock_db):
         """Admin can delete but post doesn't exist."""
-        headers = make_auth_headers(subject=5, tenant_id=1, role="admin",
-                                    cms_role="admin")
+        headers = make_auth_headers(
+            subject=5, tenant_id=1, role="admin", cms_role="admin"
+        )
         result = MagicMock()
         result.scalar_one_or_none.return_value = None
         mock_db.execute = AsyncMock(return_value=result)
 
         fake_id = str(uuid4())
-        resp = await api_client.delete(f"/api/v1/cms/admin/posts/{fake_id}",
-                                       headers=headers)
+        resp = await api_client.delete(
+            f"/api/v1/cms/admin/posts/{fake_id}", headers=headers
+        )
         assert resp.status_code == 404
 
 
@@ -785,9 +899,12 @@ class TestCMSAdminCategories:
         resp = await api_client.get("/api/v1/cms/admin/categories")
         assert resp.status_code in (401, 403)
 
-    async def test_viewer_cannot_manage_categories(self, api_client: AsyncClient, mock_db):
+    async def test_viewer_cannot_manage_categories(
+        self, api_client: AsyncClient, mock_db
+    ):
         """Viewer does not have manage_categories permission."""
-        headers = make_auth_headers(subject=5, tenant_id=1, role="admin",
-                                    cms_role="viewer")
+        headers = make_auth_headers(
+            subject=5, tenant_id=1, role="admin", cms_role="viewer"
+        )
         resp = await api_client.get("/api/v1/cms/admin/categories", headers=headers)
         assert resp.status_code == 403

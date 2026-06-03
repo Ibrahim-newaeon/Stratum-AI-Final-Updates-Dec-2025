@@ -15,25 +15,25 @@ from datetime import date, datetime
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.tenancy.deps import get_current_user, get_db
 from app.core.logging import get_logger
 from app.models import User
 from app.models.reporting import (
-    ReportType,
-    ReportFormat,
-    ScheduleFrequency,
     DeliveryChannel,
     ExecutionStatus,
+    ReportFormat,
+    ReportType,
+    ScheduleFrequency,
 )
 from app.services.reporting import (
+    DeliveryService,
     ReportGenerator,
     ReportScheduler,
-    DeliveryService,
 )
+from app.tenancy.deps import get_current_user, get_db
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -47,8 +47,10 @@ router = APIRouter()
 # Template Schemas
 # -------------------------------------------------------------------------
 
+
 class TemplateCreate(BaseModel):
     """Schema for creating a report template."""
+
     name: str = Field(..., min_length=1, max_length=255)
     description: Optional[str] = None
     report_type: ReportType
@@ -61,6 +63,7 @@ class TemplateCreate(BaseModel):
 
 class TemplateUpdate(BaseModel):
     """Schema for updating a report template."""
+
     name: Optional[str] = Field(None, min_length=1, max_length=255)
     description: Optional[str] = None
     config: Optional[Dict[str, Any]] = None
@@ -73,6 +76,7 @@ class TemplateUpdate(BaseModel):
 
 class TemplateResponse(BaseModel):
     """Response schema for a report template."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
@@ -92,8 +96,10 @@ class TemplateResponse(BaseModel):
 # Schedule Schemas
 # -------------------------------------------------------------------------
 
+
 class ScheduleCreate(BaseModel):
     """Schema for creating a scheduled report."""
+
     template_id: UUID
     name: str = Field(..., min_length=1, max_length=255)
     description: Optional[str] = None
@@ -113,6 +119,7 @@ class ScheduleCreate(BaseModel):
 
 class ScheduleUpdate(BaseModel):
     """Schema for updating a scheduled report."""
+
     name: Optional[str] = Field(None, min_length=1, max_length=255)
     description: Optional[str] = None
     frequency: Optional[ScheduleFrequency] = None
@@ -132,6 +139,7 @@ class ScheduleUpdate(BaseModel):
 
 class ScheduleResponse(BaseModel):
     """Response schema for a scheduled report."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
@@ -162,8 +170,10 @@ class ScheduleResponse(BaseModel):
 # Execution Schemas
 # -------------------------------------------------------------------------
 
+
 class GenerateReportRequest(BaseModel):
     """Schema for generating a report on-demand."""
+
     template_id: UUID
     start_date: date
     end_date: date
@@ -175,6 +185,7 @@ class GenerateReportRequest(BaseModel):
 
 class ExecutionResponse(BaseModel):
     """Response schema for a report execution."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
@@ -200,8 +211,10 @@ class ExecutionResponse(BaseModel):
 # Delivery Schemas
 # -------------------------------------------------------------------------
 
+
 class DeliveryChannelConfigCreate(BaseModel):
     """Schema for configuring a delivery channel."""
+
     channel: DeliveryChannel
     name: str = Field(..., min_length=1, max_length=255)
     config: Dict[str, Any]
@@ -209,6 +222,7 @@ class DeliveryChannelConfigCreate(BaseModel):
 
 class DeliveryStatusResponse(BaseModel):
     """Response schema for delivery status."""
+
     id: str
     channel: str
     recipient: str
@@ -221,6 +235,7 @@ class DeliveryStatusResponse(BaseModel):
 # =============================================================================
 # Template Endpoints
 # =============================================================================
+
 
 @router.post("/templates", response_model=TemplateResponse)
 async def create_template(
@@ -261,7 +276,8 @@ async def list_templates(
     current_user: User = Depends(get_current_user),
 ) -> Any:
     """List report templates."""
-    from sqlalchemy import select, and_
+    from sqlalchemy import and_, select
+
     from app.models.reporting import ReportTemplate
 
     conditions = [
@@ -353,6 +369,7 @@ async def delete_template(
 # =============================================================================
 # Schedule Endpoints
 # =============================================================================
+
 
 @router.post("/schedules", response_model=ScheduleResponse)
 async def create_schedule(
@@ -534,6 +551,7 @@ async def get_schedule_history(
 # Report Generation Endpoints
 # =============================================================================
 
+
 @router.post("/generate", response_model=ExecutionResponse)
 async def generate_report(
     data: GenerateReportRequest,
@@ -566,6 +584,7 @@ async def generate_report(
 
         # Get execution record
         from app.models.reporting import ReportExecution
+
         execution = await db.get(ReportExecution, result["execution_id"])
         return execution
 
@@ -588,7 +607,8 @@ async def list_executions(
     current_user: User = Depends(get_current_user),
 ) -> Any:
     """List report executions."""
-    from sqlalchemy import select, and_
+    from sqlalchemy import and_, select
+
     from app.models.reporting import ReportExecution
 
     conditions = [ReportExecution.tenant_id == current_user.tenant_id]
@@ -598,9 +618,15 @@ async def list_executions(
     if report_type:
         conditions.append(ReportExecution.report_type == report_type)
     if start_date:
-        conditions.append(ReportExecution.started_at >= datetime.combine(start_date, datetime.min.time()))
+        conditions.append(
+            ReportExecution.started_at
+            >= datetime.combine(start_date, datetime.min.time())
+        )
     if end_date:
-        conditions.append(ReportExecution.started_at <= datetime.combine(end_date, datetime.max.time()))
+        conditions.append(
+            ReportExecution.started_at
+            <= datetime.combine(end_date, datetime.max.time())
+        )
 
     query = (
         select(ReportExecution)
@@ -651,7 +677,11 @@ async def download_report(
 
     return {
         "download_url": execution.file_url,
-        "expires_at": execution.file_url_expires_at.isoformat() if execution.file_url_expires_at else None,
+        "expires_at": (
+            execution.file_url_expires_at.isoformat()
+            if execution.file_url_expires_at
+            else None
+        ),
         "format": execution.format.value,
         "file_size_bytes": execution.file_size_bytes,
     }
@@ -661,7 +691,10 @@ async def download_report(
 # Delivery Endpoints
 # =============================================================================
 
-@router.get("/executions/{execution_id}/deliveries", response_model=List[DeliveryStatusResponse])
+
+@router.get(
+    "/executions/{execution_id}/deliveries", response_model=List[DeliveryStatusResponse]
+)
 async def get_delivery_status(
     execution_id: UUID,
     db: AsyncSession = Depends(get_db),
@@ -672,6 +705,7 @@ async def get_delivery_status(
 
     # Verify execution exists
     from app.models.reporting import ReportExecution
+
     execution = await db.get(ReportExecution, execution_id)
     if not execution or execution.tenant_id != current_user.tenant_id:
         raise HTTPException(status_code=404, detail="Execution not found")
@@ -703,6 +737,7 @@ async def retry_delivery(
 # Report Type Info Endpoint
 # =============================================================================
 
+
 @router.get("/report-types")
 async def get_report_types(
     current_user: User = Depends(get_current_user),
@@ -714,35 +749,75 @@ async def get_report_types(
                 "type": "campaign_performance",
                 "name": "Campaign Performance",
                 "description": "Detailed campaign metrics including spend, revenue, and ROI",
-                "default_metrics": ["spend", "revenue", "roas", "conversions", "ctr", "cpc"],
-                "available_dimensions": ["campaign", "platform", "date", "ad_set", "ad"],
+                "default_metrics": [
+                    "spend",
+                    "revenue",
+                    "roas",
+                    "conversions",
+                    "ctr",
+                    "cpc",
+                ],
+                "available_dimensions": [
+                    "campaign",
+                    "platform",
+                    "date",
+                    "ad_set",
+                    "ad",
+                ],
             },
             {
                 "type": "attribution_summary",
                 "name": "Attribution Summary",
                 "description": "Multi-touch attribution analysis across channels",
-                "default_metrics": ["attributed_revenue", "touchpoints", "conversion_paths"],
-                "available_models": ["first_touch", "last_touch", "linear", "position_based", "time_decay"],
+                "default_metrics": [
+                    "attributed_revenue",
+                    "touchpoints",
+                    "conversion_paths",
+                ],
+                "available_models": [
+                    "first_touch",
+                    "last_touch",
+                    "linear",
+                    "position_based",
+                    "time_decay",
+                ],
             },
             {
                 "type": "pacing_status",
                 "name": "Pacing Status",
                 "description": "Target pacing and forecasting report",
-                "default_metrics": ["target_value", "actual_value", "pacing_pct", "projected_value"],
+                "default_metrics": [
+                    "target_value",
+                    "actual_value",
+                    "pacing_pct",
+                    "projected_value",
+                ],
                 "available_dimensions": ["target", "metric_type", "platform"],
             },
             {
                 "type": "profit_roas",
                 "name": "Profit & ROAS",
                 "description": "Profitability analysis with COGS deduction",
-                "default_metrics": ["revenue", "cogs", "gross_profit", "net_profit", "profit_margin", "true_roas"],
+                "default_metrics": [
+                    "revenue",
+                    "cogs",
+                    "gross_profit",
+                    "net_profit",
+                    "profit_margin",
+                    "true_roas",
+                ],
                 "available_dimensions": ["campaign", "platform", "product_category"],
             },
             {
                 "type": "pipeline_metrics",
                 "name": "Pipeline Metrics",
                 "description": "CRM pipeline and deal tracking",
-                "default_metrics": ["deals_created", "deals_won", "deal_value", "conversion_rate"],
+                "default_metrics": [
+                    "deals_created",
+                    "deals_won",
+                    "deal_value",
+                    "conversion_rate",
+                ],
                 "available_dimensions": ["stage", "source", "owner"],
             },
             {

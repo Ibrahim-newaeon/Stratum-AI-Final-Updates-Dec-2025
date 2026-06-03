@@ -40,8 +40,12 @@ SUPERADMIN_TENANT_NAME = os.environ.get("SUPERADMIN_TENANT_NAME", "Stratum Platf
 SUPERADMIN_TENANT_SLUG = os.environ.get("SUPERADMIN_TENANT_SLUG", "stratum-platform")
 
 if not SUPERADMIN_EMAIL or not SUPERADMIN_PASSWORD:
-    print("ERROR: SUPERADMIN_EMAIL and SUPERADMIN_PASSWORD environment variables are required.")
-    print("Example: SUPERADMIN_EMAIL=admin@example.com SUPERADMIN_PASSWORD=$(openssl rand -base64 32) python scripts/seed_superadmin.py")
+    print(
+        "ERROR: SUPERADMIN_EMAIL and SUPERADMIN_PASSWORD environment variables are required."
+    )
+    print(
+        "Example: SUPERADMIN_EMAIL=admin@example.com SUPERADMIN_PASSWORD=$(openssl rand -base64 32) python scripts/seed_superadmin.py"
+    )
     sys.exit(1)
 
 # Enforce strong password policy
@@ -64,9 +68,11 @@ async def create_superadmin():
     async with engine.connect() as conn:
         await conn.execution_options(isolation_level="AUTOCOMMIT")
         try:
-            result = await conn.execute(text(
-                "SELECT 1 FROM pg_enum WHERE enumtypid = 'userrole'::regtype AND enumlabel = 'superadmin'"
-            ))
+            result = await conn.execute(
+                text(
+                    "SELECT 1 FROM pg_enum WHERE enumtypid = 'userrole'::regtype AND enumlabel = 'superadmin'"
+                )
+            )
             if not result.fetchone():
                 await conn.execute(text("ALTER TYPE userrole ADD VALUE 'superadmin'"))
                 print("Added 'superadmin' to userrole enum")
@@ -126,7 +132,11 @@ async def create_superadmin():
                         VALUES (:name, :slug, 'enterprise', '{}', '{}', 100, 1000, :now, :now, false)
                         RETURNING id
                     """),
-                    {"name": SUPERADMIN_TENANT_NAME, "slug": SUPERADMIN_TENANT_SLUG, "now": now},
+                    {
+                        "name": SUPERADMIN_TENANT_NAME,
+                        "slug": SUPERADMIN_TENANT_SLUG,
+                        "now": now,
+                    },
                 )
                 tenant_id = result.fetchone()[0]
                 print(f"  Tenant ID: {tenant_id}")

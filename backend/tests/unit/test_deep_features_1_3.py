@@ -24,6 +24,7 @@ pytestmark = [pytest.mark.asyncio, pytest.mark.unit]
 # FEATURE 1 — TRUST ENGINE
 # ============================================================================
 
+
 # ---------------------------------------------------------------------------
 # Trust Layer: Signal Health  GET /api/v1/trust/tenant/{tenant_id}/signal-health
 # ---------------------------------------------------------------------------
@@ -43,9 +44,7 @@ class TestTrustLayerSignalHealth:
             "app.api.v1.endpoints.trust_layer.can_access_feature",
             new_callable=AsyncMock,
             return_value=True,
-        ), patch(
-            "app.api.v1.endpoints.trust_layer.SignalHealthService"
-        ) as MockSvc:
+        ), patch("app.api.v1.endpoints.trust_layer.SignalHealthService") as MockSvc:
             MockSvc.return_value.get_signal_health = AsyncMock(
                 return_value={
                     "status": "ok",
@@ -61,7 +60,9 @@ class TestTrustLayerSignalHealth:
             assert body["success"] is True
             assert body["data"]["status"] == "ok"
 
-    async def test_feature_disabled_returns_403(self, api_client, admin_headers, mock_db):
+    async def test_feature_disabled_returns_403(
+        self, api_client, admin_headers, mock_db
+    ):
         with patch(
             "app.api.v1.endpoints.trust_layer.can_access_feature",
             new_callable=AsyncMock,
@@ -76,9 +77,7 @@ class TestTrustLayerSignalHealth:
             "app.api.v1.endpoints.trust_layer.can_access_feature",
             new_callable=AsyncMock,
             return_value=True,
-        ), patch(
-            "app.api.v1.endpoints.trust_layer.SignalHealthService"
-        ) as MockSvc:
+        ), patch("app.api.v1.endpoints.trust_layer.SignalHealthService") as MockSvc:
             MockSvc.return_value.get_signal_health = AsyncMock(
                 side_effect=Exception("db timeout")
             )
@@ -113,7 +112,9 @@ class TestTrustLayerSignalHealthHistory:
             assert body["success"] is True
             assert "history" in body["data"]
 
-    async def test_feature_disabled_returns_403(self, api_client, admin_headers, mock_db):
+    async def test_feature_disabled_returns_403(
+        self, api_client, admin_headers, mock_db
+    ):
         with patch(
             "app.api.v1.endpoints.trust_layer.can_access_feature",
             new_callable=AsyncMock,
@@ -202,7 +203,9 @@ class TestTrustLayerAttributionVariance:
             assert body["success"] is True
             assert body["data"]["status"] == "healthy"
 
-    async def test_feature_disabled_returns_403(self, api_client, admin_headers, mock_db):
+    async def test_feature_disabled_returns_403(
+        self, api_client, admin_headers, mock_db
+    ):
         with patch(
             "app.api.v1.endpoints.trust_layer.can_access_feature",
             new_callable=AsyncMock,
@@ -664,6 +667,7 @@ class TestEmqPortfolio:
 # dependency at the FastAPI app level so it returns a lightweight mock.
 # ============================================================================
 
+
 def _make_cdp_current_user(tenant_id: int = 1, user_id: int = 1):
     """Build a minimal mock matching the CurrentUser interface used by CDP."""
     user = MagicMock()
@@ -824,9 +828,7 @@ class TestCdpLookupProfile:
         with patch(
             "app.api.v1.endpoints.cdp.check_profile_rate_limit",
             return_value=None,
-        ), patch(
-            "app.api.v1.endpoints.cdp._profile_cache"
-        ) as mock_cache:
+        ), patch("app.api.v1.endpoints.cdp._profile_cache") as mock_cache:
             mock_cache.get_by_lookup.return_value = None
             # mock_db.execute already returns scalar_one_or_none = None
             resp = await cdp_client.get(
@@ -930,6 +932,7 @@ class TestCdpIngestEvents:
 # FEATURE 3 — AUTOPILOT ENFORCEMENT
 # ============================================================================
 
+
 # ---------------------------------------------------------------------------
 # Enforcement: Get Settings
 # GET /api/v1/tenant/{tenant_id}/autopilot/enforcement/settings
@@ -960,9 +963,7 @@ class TestEnforcementGetSettings:
             mock_settings.max_budget_changes_per_day = 5
             mock_settings.min_hours_between_changes = 4
             mock_settings.rules = []
-            MockEnf.return_value.get_settings = AsyncMock(
-                return_value=mock_settings
-            )
+            MockEnf.return_value.get_settings = AsyncMock(return_value=mock_settings)
             resp = await api_client.get(self.URL, headers=admin_headers)
             assert resp.status_code == 200
             body = resp.json()
@@ -989,9 +990,7 @@ class TestEnforcementUpdateSettings:
     URL = "/api/v1/tenant/1/autopilot/enforcement/settings"
 
     async def test_no_auth_returns_401(self, api_client):
-        resp = await api_client.put(
-            self.URL, json={"enforcement_enabled": False}
-        )
+        resp = await api_client.put(self.URL, json={"enforcement_enabled": False})
         assert resp.status_code == 401
 
     async def test_wrong_tenant_returns_403(self, api_client, tenant2_headers):
@@ -1013,9 +1012,7 @@ class TestEnforcementUpdateSettings:
             mock_settings.max_campaign_budget = 5000.0
             mock_settings.budget_increase_limit_pct = 20.0
             mock_settings.min_roas_threshold = 2.0
-            MockEnf.return_value.update_settings = AsyncMock(
-                return_value=mock_settings
-            )
+            MockEnf.return_value.update_settings = AsyncMock(return_value=mock_settings)
             resp = await api_client.put(
                 self.URL,
                 headers=admin_headers,
@@ -1063,9 +1060,7 @@ class TestEnforcementCheckAction:
                 "requires_confirmation": False,
                 "confirmation_token": None,
             }
-            MockEnf.return_value.check_action = AsyncMock(
-                return_value=mock_result
-            )
+            MockEnf.return_value.check_action = AsyncMock(return_value=mock_result)
             resp = await api_client.post(
                 self.URL, headers=admin_headers, json=self.PAYLOAD
             )
@@ -1083,9 +1078,7 @@ class TestEnforcementConfirmAction:
     URL = "/api/v1/tenant/1/autopilot/enforcement/confirm"
 
     async def test_no_auth_returns_401(self, api_client):
-        resp = await api_client.post(
-            self.URL, json={"confirmation_token": "tok_123"}
-        )
+        resp = await api_client.post(self.URL, json={"confirmation_token": "tok_123"})
         assert resp.status_code == 401
 
     async def test_wrong_tenant_returns_403(self, api_client, tenant2_headers):
@@ -1100,9 +1093,7 @@ class TestEnforcementConfirmAction:
         with patch(
             "app.api.v1.endpoints.autopilot_enforcement.AutopilotEnforcer"
         ) as MockEnf:
-            MockEnf.return_value.confirm_action = AsyncMock(
-                return_value=(True, None)
-            )
+            MockEnf.return_value.confirm_action = AsyncMock(return_value=(True, None))
             resp = await api_client.post(
                 self.URL,
                 headers=admin_headers,
@@ -1139,9 +1130,7 @@ class TestEnforcementKillSwitch:
     URL = "/api/v1/tenant/1/autopilot/enforcement/kill-switch"
 
     async def test_no_auth_returns_401(self, api_client):
-        resp = await api_client.post(
-            self.URL, json={"enabled": False}
-        )
+        resp = await api_client.post(self.URL, json={"enabled": False})
         assert resp.status_code == 401
 
     async def test_wrong_tenant_returns_403(self, api_client, tenant2_headers):
@@ -1158,9 +1147,7 @@ class TestEnforcementKillSwitch:
         ) as MockEnf:
             mock_settings = MagicMock()
             mock_settings.enforcement_enabled = False
-            MockEnf.return_value.set_kill_switch = AsyncMock(
-                return_value=mock_settings
-            )
+            MockEnf.return_value.set_kill_switch = AsyncMock(return_value=mock_settings)
             resp = await api_client.post(
                 self.URL,
                 headers=admin_headers,
@@ -1177,9 +1164,7 @@ class TestEnforcementKillSwitch:
         ) as MockEnf:
             mock_settings = MagicMock()
             mock_settings.enforcement_enabled = True
-            MockEnf.return_value.set_kill_switch = AsyncMock(
-                return_value=mock_settings
-            )
+            MockEnf.return_value.set_kill_switch = AsyncMock(return_value=mock_settings)
             resp = await api_client.post(
                 self.URL,
                 headers=admin_headers,
@@ -1281,9 +1266,7 @@ class TestEnforcementAddRule:
 
             mock_settings = MagicMock()
             mock_settings.rules = []
-            MockEnf.return_value.get_settings = AsyncMock(
-                return_value=mock_settings
-            )
+            MockEnf.return_value.get_settings = AsyncMock(return_value=mock_settings)
             MockEnf.return_value.update_settings = AsyncMock()
 
             resp = await api_client.post(
@@ -1322,9 +1305,7 @@ class TestEnforcementDeleteRule:
         ) as MockEnf:
             mock_settings = MagicMock()
             mock_settings.rules = []  # no rules => rule_id won't be found
-            MockEnf.return_value.get_settings = AsyncMock(
-                return_value=mock_settings
-            )
+            MockEnf.return_value.get_settings = AsyncMock(return_value=mock_settings)
             resp = await api_client.delete(self.URL, headers=admin_headers)
             assert resp.status_code == 404
 
@@ -1332,6 +1313,7 @@ class TestEnforcementDeleteRule:
 # ============================================================================
 # FEATURE 3 — AUTOPILOT (action queue / approval)
 # ============================================================================
+
 
 # ---------------------------------------------------------------------------
 # Autopilot: Status
@@ -1353,9 +1335,7 @@ class TestAutopilotStatus:
             "app.api.v1.endpoints.autopilot.get_tenant_features",
             new_callable=AsyncMock,
             return_value={"autopilot_level": 1},
-        ), patch(
-            "app.api.v1.endpoints.autopilot.AutopilotService"
-        ) as MockSvc, patch(
+        ), patch("app.api.v1.endpoints.autopilot.AutopilotService") as MockSvc, patch(
             "app.features.flags.get_autopilot_caps",
             return_value={
                 "max_daily_budget_change": 500,
@@ -1390,9 +1370,7 @@ class TestAutopilotListActions:
         assert resp.status_code == 403
 
     async def test_happy_path(self, api_client, admin_headers, mock_db):
-        with patch(
-            "app.api.v1.endpoints.autopilot.AutopilotService"
-        ) as MockSvc:
+        with patch("app.api.v1.endpoints.autopilot.AutopilotService") as MockSvc:
             MockSvc.return_value.get_queued_actions = AsyncMock(return_value=[])
             resp = await api_client.get(self.URL, headers=admin_headers)
             assert resp.status_code == 200
@@ -1418,9 +1396,7 @@ class TestAutopilotActionsSummary:
         assert resp.status_code == 403
 
     async def test_happy_path(self, api_client, admin_headers, mock_db):
-        with patch(
-            "app.api.v1.endpoints.autopilot.AutopilotService"
-        ) as MockSvc:
+        with patch("app.api.v1.endpoints.autopilot.AutopilotService") as MockSvc:
             MockSvc.return_value.get_action_summary = AsyncMock(
                 return_value={
                     "pending_approval": 2,
@@ -1484,9 +1460,7 @@ class TestAutopilotQueueAction:
             "app.api.v1.endpoints.autopilot.get_tenant_features",
             new_callable=AsyncMock,
             return_value={"autopilot_level": 0},
-        ), patch(
-            "app.api.v1.endpoints.autopilot.AutopilotService"
-        ) as MockSvc:
+        ), patch("app.api.v1.endpoints.autopilot.AutopilotService") as MockSvc:
             svc_instance = MockSvc.return_value
             svc_instance.can_auto_execute.return_value = (False, "suggest-only mode")
             svc_instance.queue_action = AsyncMock(return_value=fake_action)
@@ -1537,12 +1511,8 @@ class TestAutopilotApproveAction:
         fake_action.applied_at = None
         fake_action.error = None
 
-        with patch(
-            "app.api.v1.endpoints.autopilot.AutopilotService"
-        ) as MockSvc:
-            MockSvc.return_value.approve_action = AsyncMock(
-                return_value=fake_action
-            )
+        with patch("app.api.v1.endpoints.autopilot.AutopilotService") as MockSvc:
+            MockSvc.return_value.approve_action = AsyncMock(return_value=fake_action)
             resp = await api_client.post(
                 self.URL_TEMPLATE.format(self.ACTION_ID),
                 headers=admin_headers,
@@ -1555,9 +1525,7 @@ class TestAutopilotApproveAction:
     async def test_action_not_found_returns_404(
         self, api_client, admin_headers, mock_db
     ):
-        with patch(
-            "app.api.v1.endpoints.autopilot.AutopilotService"
-        ) as MockSvc:
+        with patch("app.api.v1.endpoints.autopilot.AutopilotService") as MockSvc:
             MockSvc.return_value.approve_action = AsyncMock(return_value=None)
             resp = await api_client.post(
                 self.URL_TEMPLATE.format(self.ACTION_ID),
@@ -1603,12 +1571,8 @@ class TestAutopilotDismissAction:
         fake_action.applied_at = None
         fake_action.error = None
 
-        with patch(
-            "app.api.v1.endpoints.autopilot.AutopilotService"
-        ) as MockSvc:
-            MockSvc.return_value.dismiss_action = AsyncMock(
-                return_value=fake_action
-            )
+        with patch("app.api.v1.endpoints.autopilot.AutopilotService") as MockSvc:
+            MockSvc.return_value.dismiss_action = AsyncMock(return_value=fake_action)
             resp = await api_client.post(
                 self.URL_TEMPLATE.format(self.ACTION_ID),
                 headers=admin_headers,
@@ -1632,9 +1596,7 @@ class TestAutopilotGetAction:
         assert resp.status_code == 401
 
     async def test_not_found(self, api_client, admin_headers, mock_db):
-        with patch(
-            "app.api.v1.endpoints.autopilot.AutopilotService"
-        ) as MockSvc:
+        with patch("app.api.v1.endpoints.autopilot.AutopilotService") as MockSvc:
             MockSvc.return_value.get_action_by_id = AsyncMock(return_value=None)
             resp = await api_client.get(
                 self.URL_TEMPLATE.format(self.ACTION_ID),
@@ -1660,12 +1622,8 @@ class TestAutopilotGetAction:
         fake_action.applied_at = None
         fake_action.error = None
 
-        with patch(
-            "app.api.v1.endpoints.autopilot.AutopilotService"
-        ) as MockSvc:
-            MockSvc.return_value.get_action_by_id = AsyncMock(
-                return_value=fake_action
-            )
+        with patch("app.api.v1.endpoints.autopilot.AutopilotService") as MockSvc:
+            MockSvc.return_value.get_action_by_id = AsyncMock(return_value=fake_action)
             resp = await api_client.get(
                 self.URL_TEMPLATE.format(self.ACTION_ID),
                 headers=admin_headers,
@@ -1692,9 +1650,7 @@ class TestAutopilotApproveAll:
         assert resp.status_code == 403
 
     async def test_happy_path(self, api_client, admin_headers, mock_db):
-        with patch(
-            "app.api.v1.endpoints.autopilot.AutopilotService"
-        ) as MockSvc:
+        with patch("app.api.v1.endpoints.autopilot.AutopilotService") as MockSvc:
             MockSvc.return_value.approve_all_queued = AsyncMock(return_value=5)
             resp = await api_client.post(self.URL, headers=admin_headers)
             assert resp.status_code == 200

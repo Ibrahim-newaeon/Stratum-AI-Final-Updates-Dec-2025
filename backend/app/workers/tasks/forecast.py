@@ -71,7 +71,9 @@ def generate_daily_forecasts():
     logger.info("Starting daily forecast generation")
 
     with SyncSessionLocal() as db:
-        tenants = db.execute(select(Tenant).where(Tenant.is_deleted == False)).scalars().all()
+        tenants = (
+            db.execute(select(Tenant).where(Tenant.is_deleted == False)).scalars().all()
+        )
 
         task_count = 0
         for tenant in tenants:

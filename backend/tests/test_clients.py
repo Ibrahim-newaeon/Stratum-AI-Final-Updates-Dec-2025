@@ -9,8 +9,9 @@ Note: These are unit tests that test the logic without a real database.
 Integration tests requiring DB fixtures belong in tests/integration/.
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 from app.auth.permissions import (
     RBAC_MATRIX,
@@ -46,7 +47,6 @@ from app.schemas.client import (
     ClientUpdate,
 )
 
-
 # =============================================================================
 # RBAC Matrix Tests
 # =============================================================================
@@ -64,13 +64,15 @@ class TestRBACMatrix:
     def test_superadmin_has_full_on_all_resources(self):
         """SUPERADMIN should have FULL on every resource."""
         for resource, role_map in RBAC_MATRIX.items():
-            assert role_map[UserRole.SUPERADMIN] == PermLevel.FULL, (
-                f"SUPERADMIN should have FULL on {resource}"
-            )
+            assert (
+                role_map[UserRole.SUPERADMIN] == PermLevel.FULL
+            ), f"SUPERADMIN should have FULL on {resource}"
 
     def test_viewer_has_no_write_on_tenants(self):
         """VIEWER should have NONE on tenant settings."""
-        assert get_permission_level(UserRole.VIEWER, "tenants.settings") == PermLevel.NONE
+        assert (
+            get_permission_level(UserRole.VIEWER, "tenants.settings") == PermLevel.NONE
+        )
 
     def test_viewer_can_view_campaigns(self):
         """VIEWER should have VIEW on campaigns."""
@@ -78,7 +80,9 @@ class TestRBACMatrix:
 
     def test_viewer_cannot_delete_campaigns(self):
         """VIEWER should have NONE on campaigns.delete."""
-        assert get_permission_level(UserRole.VIEWER, "campaigns.delete") == PermLevel.NONE
+        assert (
+            get_permission_level(UserRole.VIEWER, "campaigns.delete") == PermLevel.NONE
+        )
 
     def test_admin_has_full_on_clients(self):
         """ADMIN should have FULL on clients."""
@@ -106,15 +110,24 @@ class TestRBACMatrix:
 
     def test_unknown_resource_returns_none(self):
         """Unknown resource should return NONE."""
-        assert get_permission_level(UserRole.ADMIN, "nonexistent.resource") == PermLevel.NONE
+        assert (
+            get_permission_level(UserRole.ADMIN, "nonexistent.resource")
+            == PermLevel.NONE
+        )
 
     def test_viewer_cannot_manage_portal_users(self):
         """VIEWER should not be able to manage portal users."""
-        assert get_permission_level(UserRole.VIEWER, "clients.portal_users") == PermLevel.NONE
+        assert (
+            get_permission_level(UserRole.VIEWER, "clients.portal_users")
+            == PermLevel.NONE
+        )
 
     def test_manager_can_edit_portal_users(self):
         """MANAGER should have EDIT on clients.portal_users."""
-        assert get_permission_level(UserRole.MANAGER, "clients.portal_users") == PermLevel.EDIT
+        assert (
+            get_permission_level(UserRole.MANAGER, "clients.portal_users")
+            == PermLevel.EDIT
+        )
 
 
 # =============================================================================
@@ -510,9 +523,9 @@ class TestPermLevelComparisons:
 def test_permission_check_all_roles(role, resource, expected_min):
     """Parametrized test: check permission levels for various role/resource combos."""
     level = get_permission_level(role, resource)
-    assert level >= expected_min, (
-        f"{role.value} should have at least {expected_min.name} on {resource}, got {level.name}"
-    )
+    assert (
+        level >= expected_min
+    ), f"{role.value} should have at least {expected_min.name} on {resource}, got {level.name}"
 
 
 # =============================================================================
@@ -620,8 +633,7 @@ class TestEnforceClientAccess:
         db = AsyncMock()
         # Should not raise
         await enforce_client_access(
-            user_id=1, user_role=UserRole.ADMIN, client_id=999,
-            tenant_id=1, db=db
+            user_id=1, user_role=UserRole.ADMIN, client_id=999, tenant_id=1, db=db
         )
 
     @pytest.mark.asyncio
@@ -631,21 +643,30 @@ class TestEnforceClientAccess:
 
         db = AsyncMock()
         await enforce_client_access(
-            user_id=1, user_role=UserRole.VIEWER, client_id=42,
-            tenant_id=1, db=db, user_client_id=42
+            user_id=1,
+            user_role=UserRole.VIEWER,
+            client_id=42,
+            tenant_id=1,
+            db=db,
+            user_client_id=42,
         )
 
     @pytest.mark.asyncio
     async def test_viewer_blocked_other_client(self):
         """VIEWER accessing another client should get 403."""
-        from app.auth.permissions import enforce_client_access
         from fastapi import HTTPException
+
+        from app.auth.permissions import enforce_client_access
 
         db = AsyncMock()
         with pytest.raises(HTTPException) as exc_info:
             await enforce_client_access(
-                user_id=1, user_role=UserRole.VIEWER, client_id=999,
-                tenant_id=1, db=db, user_client_id=42
+                user_id=1,
+                user_role=UserRole.VIEWER,
+                client_id=999,
+                tenant_id=1,
+                db=db,
+                user_client_id=42,
             )
         assert exc_info.value.status_code == 403
 
@@ -662,15 +683,15 @@ class TestEnforceClientAccess:
         db.execute.return_value = mock_result
 
         await enforce_client_access(
-            user_id=5, user_role=UserRole.MANAGER, client_id=10,
-            tenant_id=1, db=db
+            user_id=5, user_role=UserRole.MANAGER, client_id=10, tenant_id=1, db=db
         )
 
     @pytest.mark.asyncio
     async def test_manager_blocked_unassigned_client(self):
         """MANAGER accessing an unassigned client should get 403."""
-        from app.auth.permissions import enforce_client_access
         from fastapi import HTTPException
+
+        from app.auth.permissions import enforce_client_access
 
         mock_scalars = MagicMock()
         mock_scalars.all.return_value = [10, 20]
@@ -681,7 +702,6 @@ class TestEnforceClientAccess:
 
         with pytest.raises(HTTPException) as exc_info:
             await enforce_client_access(
-                user_id=5, user_role=UserRole.MANAGER, client_id=999,
-                tenant_id=1, db=db
+                user_id=5, user_role=UserRole.MANAGER, client_id=999, tenant_id=1, db=db
             )
         assert exc_info.value.status_code == 403

@@ -332,7 +332,9 @@ class PerformanceScalingRule(AutopilotRule):
                 if context.max_daily_budget:
                     new_budget = min(new_budget, context.max_daily_budget)
 
-                max_change = campaign.daily_budget * (1 + context.max_budget_change_percent / 100)
+                max_change = campaign.daily_budget * (
+                    1 + context.max_budget_change_percent / 100
+                )
                 new_budget = min(new_budget, max_change)
 
                 if new_budget > campaign.daily_budget:
@@ -375,7 +377,9 @@ class PerformanceScalingRule(AutopilotRule):
         # CPA-based scaling (if no ROAS target)
         elif context.target_cpa and metrics.cpa:
             cpa_ratio = metrics.cpa / context.target_cpa
-            reasoning_parts.append(f"CPA: ${metrics.cpa:.2f} (target: ${context.target_cpa:.2f})")
+            reasoning_parts.append(
+                f"CPA: ${metrics.cpa:.2f} (target: ${context.target_cpa:.2f})"
+            )
 
             if cpa_ratio <= 0.8 and campaign.daily_budget:
                 # CPA 20%+ below target - scale up
@@ -395,7 +399,9 @@ class PerformanceScalingRule(AutopilotRule):
                             parameters={"daily_budget": round(new_budget, 2)},
                         )
                     )
-                    reasoning_parts.append(f"Efficient CPA -> budget increase to ${new_budget:.2f}")
+                    reasoning_parts.append(
+                        f"Efficient CPA -> budget increase to ${new_budget:.2f}"
+                    )
 
             elif cpa_ratio >= 1.3 and campaign.daily_budget:
                 # CPA 30%+ above target - scale down
@@ -415,7 +421,9 @@ class PerformanceScalingRule(AutopilotRule):
                             parameters={"daily_budget": round(new_budget, 2)},
                         )
                     )
-                    reasoning_parts.append(f"High CPA -> budget decrease to ${new_budget:.2f}")
+                    reasoning_parts.append(
+                        f"High CPA -> budget decrease to ${new_budget:.2f}"
+                    )
 
         if not reasoning_parts:
             reasoning_parts.append("No performance targets configured")
@@ -463,20 +471,20 @@ class StatusManagementRule(AutopilotRule):
             and metrics.roas
             and metrics.roas < context.min_roas * self.min_roas_multiplier
         ):
-                triggered = True
-                actions.append(
-                    self._create_action(
-                        context,
-                        entity_type="campaign",
-                        entity_id=context.campaign.campaign_id,
-                        action_type="update_status",
-                        parameters={"status": EntityStatus.PAUSED.value},
-                    )
+            triggered = True
+            actions.append(
+                self._create_action(
+                    context,
+                    entity_type="campaign",
+                    entity_id=context.campaign.campaign_id,
+                    action_type="update_status",
+                    parameters={"status": EntityStatus.PAUSED.value},
                 )
-                reasoning_parts.append(
-                    f"ROAS {metrics.roas:.2f}x is below minimum threshold "
-                    f"({context.min_roas * self.min_roas_multiplier:.2f}x). Suggesting pause."
-                )
+            )
+            reasoning_parts.append(
+                f"ROAS {metrics.roas:.2f}x is below minimum threshold "
+                f"({context.min_roas * self.min_roas_multiplier:.2f}x). Suggesting pause."
+            )
 
         # Check for extremely high CPA
         if (
@@ -484,20 +492,20 @@ class StatusManagementRule(AutopilotRule):
             and metrics.cpa
             and metrics.cpa > context.max_cpa * self.max_cpa_multiplier
         ):
-                triggered = True
-                actions.append(
-                    self._create_action(
-                        context,
-                        entity_type="campaign",
-                        entity_id=context.campaign.campaign_id,
-                        action_type="update_status",
-                        parameters={"status": EntityStatus.PAUSED.value},
-                    )
+            triggered = True
+            actions.append(
+                self._create_action(
+                    context,
+                    entity_type="campaign",
+                    entity_id=context.campaign.campaign_id,
+                    action_type="update_status",
+                    parameters={"status": EntityStatus.PAUSED.value},
                 )
-                reasoning_parts.append(
-                    f"CPA ${metrics.cpa:.2f} exceeds maximum threshold "
-                    f"(${context.max_cpa * self.max_cpa_multiplier:.2f}). Suggesting pause."
-                )
+            )
+            reasoning_parts.append(
+                f"CPA ${metrics.cpa:.2f} exceeds maximum threshold "
+                f"(${context.max_cpa * self.max_cpa_multiplier:.2f}). Suggesting pause."
+            )
 
         # Check for consistent poor performance
         if len(context.historical_metrics) >= self.pause_after_days:
@@ -571,7 +579,9 @@ class AutopilotEngine:
                     await adapter.execute_action(action)
     """
 
-    def __init__(self, trust_gate: Optional[TrustGate] = None, auto_execute: bool = False):
+    def __init__(
+        self, trust_gate: Optional[TrustGate] = None, auto_execute: bool = False
+    ):
         """
         Initialize the autopilot engine.
 
@@ -698,7 +708,10 @@ class AutopilotEngine:
                         gate_results.append(gate_result)
 
                         # Execute if auto_execute is on and approved
-                        if self.auto_execute and gate_result.decision == GateDecision.PASS:
+                        if (
+                            self.auto_execute
+                            and gate_result.decision == GateDecision.PASS
+                        ):
                             # Record execution time for cooldown
                             self._execution_history[entity_key] = datetime.now(UTC)
 
@@ -746,7 +759,8 @@ class AutopilotEngine:
             "total_rules": len(self.rules),
             "enabled_rules": sum(1 for r in self.rules if r.enabled),
             "rules_by_type": {
-                rt.value: sum(1 for r in self.rules if r.rule_type == rt) for rt in RuleType
+                rt.value: sum(1 for r in self.rules if r.rule_type == rt)
+                for rt in RuleType
             },
             "auto_execute": self.auto_execute,
             "execution_history_size": len(self._execution_history),

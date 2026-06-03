@@ -17,7 +17,6 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
-
 # ── Response models ──────────────────────────────────────────────────────────
 
 
@@ -308,7 +307,9 @@ def build_attribution_confidence(
     channels: list[ChannelAttribution] = []
     confidence_scores: list[float] = []
 
-    for plat, data in sorted(platform_data.items(), key=lambda x: x[1]["revenue"], reverse=True):
+    for plat, data in sorted(
+        platform_data.items(), key=lambda x: x[1]["revenue"], reverse=True
+    ):
         conf = _calculate_channel_confidence(
             conversions=data["conversions"],
             revenue=data["revenue"],
@@ -347,27 +348,37 @@ def build_attribution_confidence(
     # ── Overall confidence ───────────────────────────────────────────
     if confidence_scores:
         # Revenue-weighted confidence
-        weighted = sum(
-            ch.confidence_score * ch.attributed_revenue for ch in channels
-        )
+        weighted = sum(ch.confidence_score * ch.attributed_revenue for ch in channels)
         denom = sum(ch.attributed_revenue for ch in channels) or 1
         overall = weighted / denom
     else:
         overall = 0
 
-    high_conf = sum(1 for c in channels if c.confidence_score >= CONFIDENCE_THRESHOLDS["high"])
-    low_conf = sum(1 for c in channels if c.confidence_score < CONFIDENCE_THRESHOLDS["medium"])
+    high_conf = sum(
+        1 for c in channels if c.confidence_score >= CONFIDENCE_THRESHOLDS["high"]
+    )
+    low_conf = sum(
+        1 for c in channels if c.confidence_score < CONFIDENCE_THRESHOLDS["medium"]
+    )
 
     # ── Model comparisons ────────────────────────────────────────────
     model_comparisons: list[ModelComparison] = []
     for model_key, defn in MODEL_DEFINITIONS.items():
         # Simulate total attribution per model
         model_rev = sum(
-            _simulate_model_attribution(d["revenue"], d["conversions"], num_channels)[model_key]
+            _simulate_model_attribution(d["revenue"], d["conversions"], num_channels)[
+                model_key
+            ]
             for d in platform_data.values()
         )
-        model_conv = int(total_conversions * (model_rev / max(total_revenue, 1))) if total_revenue > 0 else 0
-        model_conf = overall * (0.95 if model_key == "data_driven" and total_conversions < 200 else 1.0)
+        model_conv = (
+            int(total_conversions * (model_rev / max(total_revenue, 1)))
+            if total_revenue > 0
+            else 0
+        )
+        model_conf = overall * (
+            0.95 if model_key == "data_driven" and total_conversions < 200 else 1.0
+        )
         if model_key == "data_driven" and total_conversions < 200:
             model_conf *= 0.7  # penalize data-driven with low volume
 

@@ -16,14 +16,15 @@ Features:
 """
 
 import hashlib
-import logging
-from datetime import datetime, timezone, timedelta
-from typing import Any, Dict, Optional
-from dataclasses import dataclass, field
 import json
+import logging
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, Optional
 
 try:
     import redis.asyncio as aioredis
+
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False
@@ -36,6 +37,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class DedupeStats:
     """Statistics for deduplication performance."""
+
     total_checks: int = 0
     duplicates_found: int = 0
     unique_events: int = 0
@@ -139,7 +141,9 @@ class DistributedEventDeduplicator:
         except (ConnectionError, TimeoutError, OSError) as e:
             self._connection_attempts += 1
             self._last_connection_attempt = datetime.now(timezone.utc)
-            logger.warning(f"Failed to connect to Redis (attempt {self._connection_attempts}): {e}")
+            logger.warning(
+                f"Failed to connect to Redis (attempt {self._connection_attempts}): {e}"
+            )
             self._connected = False
             return False
 
@@ -181,7 +185,9 @@ class DistributedEventDeduplicator:
                     # Key already existed - duplicate
                     self._stats.duplicates_found += 1
                     self._stats.redis_hits += 1
-                    logger.debug(f"Duplicate event detected (Redis): {event_key[:20]}...")
+                    logger.debug(
+                        f"Duplicate event detected (Redis): {event_key[:20]}..."
+                    )
                     return True
                 else:
                     # Key was set - unique event
@@ -235,7 +241,8 @@ class DistributedEventDeduplicator:
         ttl = timedelta(seconds=self._ttl_seconds)
 
         expired_keys = [
-            key for key, timestamp in self._memory_cache.items()
+            key
+            for key, timestamp in self._memory_cache.items()
             if now - timestamp > ttl
         ]
 
@@ -399,7 +406,9 @@ class DistributedEventDeduplicator:
 
             if not connected:
                 health["status"] = "degraded"
-                health["warning"] = "Using in-memory fallback - duplicates may occur across processes"
+                health["warning"] = (
+                    "Using in-memory fallback - duplicates may occur across processes"
+                )
 
         return health
 

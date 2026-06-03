@@ -111,7 +111,9 @@ class GoogleAdsChangeHistory:
         self._last_poll_time: Optional[datetime] = None
 
     async def get_changes(
-        self, since: Optional[datetime] = None, resource_types: Optional[list[str]] = None
+        self,
+        since: Optional[datetime] = None,
+        resource_types: Optional[list[str]] = None,
     ) -> list[ChangeEvent]:
         """
         Get account changes since a given time.
@@ -169,7 +171,9 @@ class GoogleAdsChangeHistory:
                     resource_type=resource_type,
                     resource_id=self._extract_id(event.change_resource_name),
                     resource_name=event.change_resource_name,
-                    changed_fields=list(event.changed_fields.paths) if event.changed_fields else [],
+                    changed_fields=(
+                        list(event.changed_fields.paths) if event.changed_fields else []
+                    ),
                     change_time=datetime.fromisoformat(
                         str(event.change_date_time).replace(" ", "T")
                     ),
@@ -201,7 +205,9 @@ class GoogleAdsChangeHistory:
             ("ad", "UPDATE"): ChangeEventType.AD_UPDATED,
             ("ad", "REMOVE"): ChangeEventType.AD_REMOVED,
         }
-        return type_map.get((resource_type, operation), ChangeEventType.CAMPAIGN_UPDATED)
+        return type_map.get(
+            (resource_type, operation), ChangeEventType.CAMPAIGN_UPDATED
+        )
 
     def _extract_id(self, resource_name: str) -> str:
         """Extract ID from resource name like 'customers/123/campaigns/456'."""
@@ -332,7 +338,9 @@ class GoogleOfflineConversions:
         """
         return await self.upload_conversions([conversion])
 
-    async def upload_conversions(self, conversions: list[OfflineConversion]) -> dict[str, Any]:
+    async def upload_conversions(
+        self, conversions: list[OfflineConversion]
+    ) -> dict[str, Any]:
         """
         Upload multiple offline conversions in batch.
 
@@ -347,9 +355,7 @@ class GoogleOfflineConversions:
             click_conversion = self.client.get_type("ClickConversion")
 
             # Conversion action
-            click_conversion.conversion_action = (
-                f"customers/{self.customer_id}/conversionActions/{conv.conversion_action_id}"
-            )
+            click_conversion.conversion_action = f"customers/{self.customer_id}/conversionActions/{conv.conversion_action_id}"
 
             # Conversion time (required format)
             click_conversion.conversion_date_time = conv.conversion_time.strftime(
@@ -387,9 +393,15 @@ class GoogleOfflineConversions:
         request.partial_failure = True
 
         try:
-            response = conversion_upload_service.upload_click_conversions(request=request)
+            response = conversion_upload_service.upload_click_conversions(
+                request=request
+            )
 
-            result = {"uploaded": len(response.results), "errors": [], "partial_failure": None}
+            result = {
+                "uploaded": len(response.results),
+                "errors": [],
+                "partial_failure": None,
+            }
 
             # Check for partial failures
             if response.partial_failure_error:
@@ -438,9 +450,13 @@ class GoogleOfflineConversions:
             address = identifier.address_info
 
             if conv.first_name:
-                address.hashed_first_name = self._hash_value(conv.first_name.lower().strip())
+                address.hashed_first_name = self._hash_value(
+                    conv.first_name.lower().strip()
+                )
             if conv.last_name:
-                address.hashed_last_name = self._hash_value(conv.last_name.lower().strip())
+                address.hashed_last_name = self._hash_value(
+                    conv.last_name.lower().strip()
+                )
             if conv.street_address:
                 address.hashed_street_address = self._hash_value(
                     conv.street_address.lower().strip()
@@ -552,13 +568,18 @@ class GA4MeasurementProtocol:
 
         url = f"{self.endpoint}?measurement_id={self.measurement_id}&api_secret={self.api_secret}"
 
-        payload = {"client_id": client_id, "events": [{"name": event_name, "params": params or {}}]}
+        payload = {
+            "client_id": client_id,
+            "events": [{"name": event_name, "params": params or {}}],
+        }
 
         if user_id:
             payload["user_id"] = user_id
 
         if user_properties:
-            payload["user_properties"] = {k: {"value": v} for k, v in user_properties.items()}
+            payload["user_properties"] = {
+                k: {"value": v} for k, v in user_properties.items()
+            }
 
         if timestamp_micros:
             payload["timestamp_micros"] = timestamp_micros
@@ -620,7 +641,10 @@ class GA4MeasurementProtocol:
             params["value"] = value
 
         return await self.send_event(
-            client_id=client_id, event_name="add_to_cart", params=params, user_id=user_id
+            client_id=client_id,
+            event_name="add_to_cart",
+            params=params,
+            user_id=user_id,
         )
 
     async def send_view_item(
@@ -628,7 +652,10 @@ class GA4MeasurementProtocol:
     ) -> dict[str, Any]:
         """Convenience method for view_item events."""
         return await self.send_event(
-            client_id=client_id, event_name="view_item", params={"items": items}, user_id=user_id
+            client_id=client_id,
+            event_name="view_item",
+            params={"items": items},
+            user_id=user_id,
         )
 
 
@@ -697,7 +724,9 @@ class GoogleAdsIntegration:
 
     async def start_change_watcher(self, callback, poll_interval: int = 300):
         """Start watching for account changes."""
-        await self.change_history.watch_for_changes(callback=callback, poll_interval=poll_interval)
+        await self.change_history.watch_for_changes(
+            callback=callback, poll_interval=poll_interval
+        )
 
     async def get_recent_changes(self, hours: int = 1) -> list[ChangeEvent]:
         """Get recent account changes."""
@@ -833,7 +862,8 @@ class GoogleAdsRecommendations:
                         "potential": {
                             "impressions": rec.impact.potential_metrics.impressions,
                             "clicks": rec.impact.potential_metrics.clicks,
-                            "cost": rec.impact.potential_metrics.cost_micros / 1_000_000,
+                            "cost": rec.impact.potential_metrics.cost_micros
+                            / 1_000_000,
                         },
                     },
                 }
@@ -858,7 +888,9 @@ class GoogleAdsRecommendations:
 
         return recommendations
 
-    async def apply_recommendation(self, recommendation_resource_name: str) -> dict[str, Any]:
+    async def apply_recommendation(
+        self, recommendation_resource_name: str
+    ) -> dict[str, Any]:
         """
         Apply a recommendation (requires Trust Gate approval in Stratum).
 

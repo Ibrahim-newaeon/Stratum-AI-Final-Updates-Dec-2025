@@ -110,7 +110,9 @@ class SlackNotificationService:
                 logger.info("Slack notification sent successfully")
                 return True
             else:
-                logger.error(f"Slack API error: {response.status_code} - {response.text}")
+                logger.error(
+                    f"Slack API error: {response.status_code} - {response.text}"
+                )
                 return False
         except (ConnectionError, TimeoutError, OSError, httpx.HTTPError) as e:
             logger.error(f"Failed to send Slack notification: {e}")
@@ -163,15 +165,24 @@ class SlackNotificationService:
                 "fields": [
                     {"type": "mrkdwn", "text": f"*Tenant:*\n{tenant_name}"},
                     {"type": "mrkdwn", "text": f"*Automation:*\n{automation_name}"},
-                    {"type": "mrkdwn", "text": f"*Signal Health:*\n{signal_health:.1f}/100"},
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Signal Health:*\n{signal_health:.1f}/100",
+                    },
                     {"type": "mrkdwn", "text": f"*Threshold:*\n{threshold:.1f}"},
                 ],
             },
-            {"type": "section", "text": {"type": "mrkdwn", "text": f"*Action:* {action_text}"}},
+            {
+                "type": "section",
+                "text": {"type": "mrkdwn", "text": f"*Action:* {action_text}"},
+            },
             {
                 "type": "context",
                 "elements": [
-                    {"type": "mrkdwn", "text": f"🕐 {timestamp} | Stratum AI Trust Engine"}
+                    {
+                        "type": "mrkdwn",
+                        "text": f"🕐 {timestamp} | Stratum AI Trust Engine",
+                    }
                 ],
             },
         ]
@@ -244,13 +255,18 @@ class SlackNotificationService:
             {
                 "type": "context",
                 "elements": [
-                    {"type": "mrkdwn", "text": f"🕐 {timestamp} | Previous: {previous_health:.1f}"}
+                    {
+                        "type": "mrkdwn",
+                        "text": f"🕐 {timestamp} | Previous: {previous_health:.1f}",
+                    }
                 ],
             },
         ]
 
         color = (
-            "#ef4444" if current_health < 40 else "#eab308" if current_health < 70 else "#22c55e"
+            "#ef4444"
+            if current_health < 40
+            else "#eab308" if current_health < 70 else "#22c55e"
         )
 
         return await self.send_message(
@@ -276,7 +292,9 @@ class SlackNotificationService:
         timestamp = datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
 
         deviation_pct = (
-            ((current_value - expected_value) / expected_value * 100) if expected_value != 0 else 0
+            ((current_value - expected_value) / expected_value * 100)
+            if expected_value != 0
+            else 0
         )
 
         blocks = [
@@ -293,7 +311,10 @@ class SlackNotificationService:
                 "fields": [
                     {"type": "mrkdwn", "text": f"*Tenant:*\n{tenant_name}"},
                     {"type": "mrkdwn", "text": f"*Metric:*\n{metric_name}"},
-                    {"type": "mrkdwn", "text": f"*Current Value:*\n{current_value:,.2f}"},
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Current Value:*\n{current_value:,.2f}",
+                    },
                     {"type": "mrkdwn", "text": f"*Expected:*\n{expected_value:,.2f}"},
                     {"type": "mrkdwn", "text": f"*Z-Score:*\n{z_score:.2f}σ"},
                     {"type": "mrkdwn", "text": f"*Deviation:*\n{deviation_pct:+.1f}%"},
@@ -302,7 +323,10 @@ class SlackNotificationService:
             {
                 "type": "context",
                 "elements": [
-                    {"type": "mrkdwn", "text": f"🕐 {timestamp} | Stratum AI Anomaly Detection"}
+                    {
+                        "type": "mrkdwn",
+                        "text": f"🕐 {timestamp} | Stratum AI Anomaly Detection",
+                    }
                 ],
             },
         ]
@@ -351,11 +375,17 @@ class SlackNotificationService:
                 },
             },
             {"type": "divider"},
-            {"type": "section", "text": {"type": "mrkdwn", "text": f"*Summary for {timestamp}*"}},
+            {
+                "type": "section",
+                "text": {"type": "mrkdwn", "text": f"*Summary for {timestamp}*"},
+            },
             {
                 "type": "section",
                 "fields": [
-                    {"type": "mrkdwn", "text": f"*Total Automations:*\n{total_automations}"},
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Total Automations:*\n{total_automations}",
+                    },
                     {"type": "mrkdwn", "text": f"*Pass Rate:*\n{pass_rate:.1f}%"},
                     {"type": "mrkdwn", "text": f"🟢 *Passed:*\n{passed}"},
                     {"type": "mrkdwn", "text": f"🟡 *Held:*\n{held}"},
@@ -368,19 +398,27 @@ class SlackNotificationService:
             },
             {
                 "type": "section",
-                "text": {"type": "mrkdwn", "text": f"*Anomalies Detected:* {anomalies_detected}"},
+                "text": {
+                    "type": "mrkdwn",
+                    "text": f"*Anomalies Detected:* {anomalies_detected}",
+                },
             },
             {"type": "divider"},
             {
                 "type": "context",
                 "elements": [
-                    {"type": "mrkdwn", "text": "📈 Stratum AI - Trust-Gated Revenue Operations"}
+                    {
+                        "type": "mrkdwn",
+                        "text": "📈 Stratum AI - Trust-Gated Revenue Operations",
+                    }
                 ],
             },
         ]
 
         # Determine overall status color
-        color = "#22c55e" if pass_rate > 90 else "#eab308" if pass_rate > 70 else "#ef4444"
+        color = (
+            "#22c55e" if pass_rate > 90 else "#eab308" if pass_rate > 70 else "#ef4444"
+        )
 
         return await self.send_message(
             text=f"Daily Summary: {pass_rate:.1f}% pass rate",

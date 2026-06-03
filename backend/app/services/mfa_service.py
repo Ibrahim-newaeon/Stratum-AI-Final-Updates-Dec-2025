@@ -191,7 +191,9 @@ def hash_backup_code(code: str) -> str:
     return hashlib.sha256(normalized.encode()).hexdigest()
 
 
-def verify_backup_code(code: str, hashed_codes: list[str]) -> tuple[bool, Optional[int]]:
+def verify_backup_code(
+    code: str, hashed_codes: list[str]
+) -> tuple[bool, Optional[int]]:
     """
     Verify a backup code against stored hashes.
 
@@ -460,7 +462,9 @@ class MFAService:
             lockout_until = None
 
             if new_attempts >= MAX_FAILED_ATTEMPTS:
-                lockout_until = datetime.now(UTC) + timedelta(minutes=LOCKOUT_DURATION_MINUTES)
+                lockout_until = datetime.now(UTC) + timedelta(
+                    minutes=LOCKOUT_DURATION_MINUTES
+                )
                 logger.warning("mfa_account_locked", user_id=user_id)
 
             await self.db.execute(
@@ -482,7 +486,9 @@ class MFAService:
             remaining = MAX_FAILED_ATTEMPTS - new_attempts
             return False, f"Invalid code. {remaining} attempts remaining."
 
-    async def regenerate_backup_codes(self, user_id: int, code: str) -> tuple[bool, list[str]]:
+    async def regenerate_backup_codes(
+        self, user_id: int, code: str
+    ) -> tuple[bool, list[str]]:
         """
         Regenerate backup codes (requires valid TOTP code).
 
@@ -514,7 +520,9 @@ class MFAService:
         hashed_codes = [hash_backup_code(c) for c in backup_codes]
 
         await self.db.execute(
-            update(User).where(User.id == user_id).values(backup_codes={"codes": hashed_codes})
+            update(User)
+            .where(User.id == user_id)
+            .values(backup_codes={"codes": hashed_codes})
         )
         await self.db.commit()
 
@@ -575,7 +583,9 @@ async def check_mfa_required(db: AsyncSession, user_id: int) -> bool:
     return bool(totp_enabled)
 
 
-async def is_user_locked(db: AsyncSession, user_id: int) -> tuple[bool, Optional[datetime]]:
+async def is_user_locked(
+    db: AsyncSession, user_id: int
+) -> tuple[bool, Optional[datetime]]:
     """Check if user is locked out from MFA attempts."""
     from app.base_models import User
 

@@ -18,14 +18,13 @@ from app.services.agents.doc_index import (
     CURATED_GLOBS,
     DocChunk,
     RagDisabledError,
-    chunk_markdown,
-    embed_texts,
-    find_corpus_files,
     _heading_path_for_offset,
     _vector_literal,
     _walk_headings,
+    chunk_markdown,
+    embed_texts,
+    find_corpus_files,
 )
-
 
 # =============================================================================
 # Chunking
@@ -75,9 +74,7 @@ class TestChunkMarkdown:
         )
         chunks = chunk_markdown("docs/x.md", text, target_chars=80)
         # Find the chunk that starts inside Subsection B.
-        b_chunks = [
-            c for c in chunks if "Another paragraph here" in c.content
-        ]
+        b_chunks = [c for c in chunks if "Another paragraph here" in c.content]
         assert b_chunks, "expected to find a chunk for Subsection B"
         assert b_chunks[0].metadata["title"] == "Subsection B"
         assert b_chunks[0].metadata["heading_path"][-1] == "Subsection B"
@@ -100,10 +97,17 @@ class TestChunkMarkdown:
         fence_chunks = [c for c in chunks if "```python" in c.content]
         assert len(fence_chunks) == 1
         assert "```python" in fence_chunks[0].content
-        assert "```" in fence_chunks[0].content[fence_chunks[0].content.rindex("```python") + 1 :]
+        assert (
+            "```"
+            in fence_chunks[0].content[
+                fence_chunks[0].content.rindex("```python") + 1 :
+            ]
+        )
 
     def test_chunk_content_is_stripped(self) -> None:
-        chunks = chunk_markdown("docs/x.md", "\n\n  Hello.  \n\n  World.  \n\n", target_chars=500)
+        chunks = chunk_markdown(
+            "docs/x.md", "\n\n  Hello.  \n\n  World.  \n\n", target_chars=500
+        )
         assert len(chunks) == 1
         assert chunks[0].content.strip() == chunks[0].content
 

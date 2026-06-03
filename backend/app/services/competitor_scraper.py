@@ -124,7 +124,9 @@ TWITTER_PATTERNS = [
 ]
 
 LINKEDIN_PATTERNS = [
-    re.compile(r"https?://(?:www\.)?linkedin\.com/(?:company|in)/[\w.\-]+/?", re.IGNORECASE),
+    re.compile(
+        r"https?://(?:www\.)?linkedin\.com/(?:company|in)/[\w.\-]+/?", re.IGNORECASE
+    ),
 ]
 
 TIKTOK_PATTERNS = [
@@ -132,7 +134,9 @@ TIKTOK_PATTERNS = [
 ]
 
 YOUTUBE_PATTERNS = [
-    re.compile(r"https?://(?:www\.)?youtube\.com/(?:@|channel/|c/)[\w.\-]+/?", re.IGNORECASE),
+    re.compile(
+        r"https?://(?:www\.)?youtube\.com/(?:@|channel/|c/)[\w.\-]+/?", re.IGNORECASE
+    ),
 ]
 
 
@@ -179,7 +183,9 @@ async def fetch_fb_page_display_name(fb_url: str) -> Optional[str]:
         ) as client:
             response = await client.get(fb_url)
             if response.status_code != 200:
-                logger.warning("fb_page_fetch_failed", url=fb_url, status=response.status_code)
+                logger.warning(
+                    "fb_page_fetch_failed", url=fb_url, status=response.status_code
+                )
                 return None
 
             soup = BeautifulSoup(response.text, "lxml")
@@ -197,11 +203,20 @@ async def fetch_fb_page_display_name(fb_url: str) -> Optional[str]:
             if title_tag:
                 raw_title = title_tag.get_text(strip=True)
                 # Remove common Facebook suffixes
-                for suffix in [" | Facebook", " - Facebook", " – Facebook", " — Facebook"]:
+                for suffix in [
+                    " | Facebook",
+                    " - Facebook",
+                    " – Facebook",
+                    " — Facebook",
+                ]:
                     if raw_title.endswith(suffix):
                         raw_title = raw_title[: -len(suffix)].strip()
                         break
-                if raw_title and raw_title.lower() not in ("facebook", "log in", "log into facebook"):
+                if raw_title and raw_title.lower() not in (
+                    "facebook",
+                    "log in",
+                    "log into facebook",
+                ):
                     logger.info("fb_page_name_from_title", url=fb_url, name=raw_title)
                     return raw_title
 
@@ -320,7 +335,9 @@ async def scrape_website(domain: str) -> CompetitorScanResult:
 
     except httpx.HTTPStatusError as e:
         result.scrape_error = f"HTTP {e.response.status_code}"
-        logger.warning("scrape_http_error", domain=domain, status=e.response.status_code)
+        logger.warning(
+            "scrape_http_error", domain=domain, status=e.response.status_code
+        )
     except httpx.TimeoutException:
         result.scrape_error = "Timeout"
         logger.warning("scrape_timeout", domain=domain)
@@ -403,17 +420,23 @@ async def search_meta_ad_library(
 
                 # Extract ad details
                 for ad in ads_data:
-                    result.ads.append({
-                        "id": ad.get("id"),
-                        "page_name": ad.get("page_name"),
-                        "page_id": ad.get("page_id"),
-                        "creative_body": (ad.get("ad_creative_bodies") or [""])[0][:300],
-                        "link_title": (ad.get("ad_creative_link_titles") or [""])[0][:200],
-                        "start_date": ad.get("ad_delivery_start_time"),
-                        "snapshot_url": ad.get("ad_snapshot_url"),
-                        "platforms": ad.get("publisher_platforms", []),
-                        "impressions": ad.get("impressions"),
-                    })
+                    result.ads.append(
+                        {
+                            "id": ad.get("id"),
+                            "page_name": ad.get("page_name"),
+                            "page_id": ad.get("page_id"),
+                            "creative_body": (ad.get("ad_creative_bodies") or [""])[0][
+                                :300
+                            ],
+                            "link_title": (ad.get("ad_creative_link_titles") or [""])[
+                                0
+                            ][:200],
+                            "start_date": ad.get("ad_delivery_start_time"),
+                            "snapshot_url": ad.get("ad_snapshot_url"),
+                            "platforms": ad.get("publisher_platforms", []),
+                            "impressions": ad.get("impressions"),
+                        }
+                    )
 
                     # Capture page info from first ad
                     if not result.page_id and ad.get("page_id"):
@@ -434,8 +457,16 @@ async def search_meta_ad_library(
                     ad_count=result.ad_count,
                 )
             else:
-                error_data = response.json() if response.headers.get("content-type", "").startswith("application/json") else {}
-                error_msg = error_data.get("error", {}).get("message", f"HTTP {response.status_code}")
+                error_data = (
+                    response.json()
+                    if response.headers.get("content-type", "").startswith(
+                        "application/json"
+                    )
+                    else {}
+                )
+                error_msg = error_data.get("error", {}).get(
+                    "message", f"HTTP {response.status_code}"
+                )
                 result.error = error_msg
                 logger.warning(
                     "ad_library_api_error",
@@ -542,7 +573,12 @@ async def scan_competitor(
     )
 
     # If no ads found with FB page name, try IG account as fallback
-    if not ad_result.has_ads and ig_account_name and _fb_page_name and ig_account_name != _fb_page_name:
+    if (
+        not ad_result.has_ads
+        and ig_account_name
+        and _fb_page_name
+        and ig_account_name != _fb_page_name
+    ):
         logger.info("ad_library_fallback_ig", ig_account=ig_account_name)
         ig_result = await search_meta_ad_library(
             query=ig_account_name,

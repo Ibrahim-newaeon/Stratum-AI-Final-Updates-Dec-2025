@@ -82,7 +82,9 @@ class SubscriptionInfo:
             "days_in_grace": self.days_in_grace,
             "is_access_restricted": self.is_access_restricted,
             "restriction_reason": self.restriction_reason,
-            "trial_ends_at": self.trial_ends_at.isoformat() if self.trial_ends_at else None,
+            "trial_ends_at": (
+                self.trial_ends_at.isoformat() if self.trial_ends_at else None
+            ),
             "is_trial": self.is_trial,
         }
 
@@ -237,7 +239,9 @@ async def get_subscription_info(tenant_id: int) -> SubscriptionInfo:
         is_trial = bool(
             trial_ends_at
             and (
-                trial_ends_at.replace(tzinfo=UTC) if trial_ends_at.tzinfo is None else trial_ends_at
+                trial_ends_at.replace(tzinfo=UTC)
+                if trial_ends_at.tzinfo is None
+                else trial_ends_at
             )
             > now
         )
@@ -247,14 +251,10 @@ async def get_subscription_info(tenant_id: int) -> SubscriptionInfo:
         restriction_reason = None
 
         if status == SubscriptionStatus.EXPIRED:
-            restriction_reason = (
-                f"Subscription expired {days_in_grace} days ago. Please renew to restore access."
-            )
+            restriction_reason = f"Subscription expired {days_in_grace} days ago. Please renew to restore access."
         elif status == SubscriptionStatus.GRACE_PERIOD:
             remaining_grace = GRACE_PERIOD_DAYS - (days_in_grace or 0)
-            restriction_reason = (
-                f"Subscription expired. {remaining_grace} days remaining in grace period."
-            )
+            restriction_reason = f"Subscription expired. {remaining_grace} days remaining in grace period."
         elif status == SubscriptionStatus.CANCELLED:
             restriction_reason = "Subscription has been cancelled."
 

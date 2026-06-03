@@ -37,25 +37,37 @@ import numpy as np
 # =============================================================================
 
 COLORS = {
-    "primary": "#6366F1",      # Indigo
-    "secondary": "#8B5CF6",    # Violet
-    "success": "#10B981",      # Emerald
-    "warning": "#F59E0B",      # Amber
-    "danger": "#EF4444",       # Red
-    "info": "#3B82F6",         # Blue
-    "muted": "#6B7280",        # Gray
-    "bg_dark": "#111827",      # Dark background
-    "bg_card": "#1F2937",      # Card background
-    "text": "#F9FAFB",         # Light text
-    "text_muted": "#9CA3AF",   # Muted text
-    "grid": "#374151",         # Grid lines
-    "border": "#4B5563",       # Borders
+    "primary": "#6366F1",  # Indigo
+    "secondary": "#8B5CF6",  # Violet
+    "success": "#10B981",  # Emerald
+    "warning": "#F59E0B",  # Amber
+    "danger": "#EF4444",  # Red
+    "info": "#3B82F6",  # Blue
+    "muted": "#6B7280",  # Gray
+    "bg_dark": "#111827",  # Dark background
+    "bg_card": "#1F2937",  # Card background
+    "text": "#F9FAFB",  # Light text
+    "text_muted": "#9CA3AF",  # Muted text
+    "grid": "#374151",  # Grid lines
+    "border": "#4B5563",  # Borders
 }
 
 CHART_PALETTE = [
-    "#6366F1", "#8B5CF6", "#EC4899", "#F43F5E", "#F59E0B",
-    "#10B981", "#3B82F6", "#14B8A6", "#F97316", "#A855F7",
-    "#06B6D4", "#84CC16", "#E11D48", "#7C3AED", "#0EA5E9",
+    "#6366F1",
+    "#8B5CF6",
+    "#EC4899",
+    "#F43F5E",
+    "#F59E0B",
+    "#10B981",
+    "#3B82F6",
+    "#14B8A6",
+    "#F97316",
+    "#A855F7",
+    "#06B6D4",
+    "#84CC16",
+    "#E11D48",
+    "#7C3AED",
+    "#0EA5E9",
 ]
 
 
@@ -92,6 +104,7 @@ def _setup_chart_style(ax: plt.Axes, title: str) -> None:
 # Chart Generators
 # =============================================================================
 
+
 def chart_memory_timeline(timeline: list[dict[str, Any]]) -> str:
     """Generate RSS memory timeline area chart."""
     if not timeline:
@@ -106,21 +119,41 @@ def chart_memory_timeline(timeline: list[dict[str, Any]]) -> str:
 
     ax.fill_between(elapsed, rss, alpha=0.3, color=COLORS["primary"])
     ax.plot(elapsed, rss, color=COLORS["primary"], linewidth=2, label="RSS (MB)")
-    ax.plot(elapsed, vms, color=COLORS["secondary"], linewidth=1.5, alpha=0.6, label="VMS (MB)", linestyle="--")
+    ax.plot(
+        elapsed,
+        vms,
+        color=COLORS["secondary"],
+        linewidth=1.5,
+        alpha=0.6,
+        label="VMS (MB)",
+        linestyle="--",
+    )
 
     # Mark labeled points
     for p in timeline:
         if p["label"] not in ("manual", "request"):
-            ax.axvline(x=p["elapsed_seconds"], color=COLORS["warning"], alpha=0.3, linestyle=":")
+            ax.axvline(
+                x=p["elapsed_seconds"],
+                color=COLORS["warning"],
+                alpha=0.3,
+                linestyle=":",
+            )
 
     ax.set_xlabel("Elapsed Time (seconds)", color=COLORS["text_muted"], fontsize=10)
     ax.set_ylabel("Memory (MB)", color=COLORS["text_muted"], fontsize=10)
-    ax.legend(facecolor=COLORS["bg_dark"], edgecolor=COLORS["border"], labelcolor=COLORS["text"], fontsize=9)
+    ax.legend(
+        facecolor=COLORS["bg_dark"],
+        edgecolor=COLORS["border"],
+        labelcolor=COLORS["text"],
+        fontsize=9,
+    )
 
     return _fig_to_base64(fig)
 
 
-def chart_top_allocations(allocations: list[dict[str, Any]], title: str = "Top Memory Allocations (by line)") -> str:
+def chart_top_allocations(
+    allocations: list[dict[str, Any]], title: str = "Top Memory Allocations (by line)"
+) -> str:
     """Generate horizontal bar chart of top memory-consuming allocations."""
     if not allocations:
         return ""
@@ -131,13 +164,17 @@ def chart_top_allocations(allocations: list[dict[str, Any]], title: str = "Top M
 
     labels = []
     for a in data:
-        filename = a["file"].split("/")[-1] if "/" in a["file"] else a["file"].split("\\")[-1]
+        filename = (
+            a["file"].split("/")[-1] if "/" in a["file"] else a["file"].split("\\")[-1]
+        )
         labels.append(f"{filename}:{a['line']}")
 
     sizes = [a["size_kb"] for a in data]
     y_pos = np.arange(len(labels))
 
-    bars = ax.barh(y_pos, sizes, color=CHART_PALETTE[:len(data)], height=0.6, edgecolor="none")
+    bars = ax.barh(
+        y_pos, sizes, color=CHART_PALETTE[: len(data)], height=0.6, edgecolor="none"
+    )
     ax.set_yticks(y_pos)
     ax.set_yticklabels(labels, fontsize=8)
     ax.set_xlabel("Size (KB)", color=COLORS["text_muted"], fontsize=10)
@@ -149,7 +186,9 @@ def chart_top_allocations(allocations: list[dict[str, Any]], title: str = "Top M
             bar.get_width() + max(sizes) * 0.01,
             bar.get_y() + bar.get_height() / 2,
             f"{size:,.1f} KB",
-            va="center", color=COLORS["text_muted"], fontsize=8,
+            va="center",
+            color=COLORS["text_muted"],
+            fontsize=8,
         )
 
     return _fig_to_base64(fig)
@@ -193,7 +232,9 @@ def chart_top_files(files: list[dict[str, Any]]) -> str:
             bar.get_width() + max(sizes) * 0.01,
             bar.get_y() + bar.get_height() / 2,
             f"{size:,.1f} KB",
-            va="center", color=COLORS["text_muted"], fontsize=8,
+            va="center",
+            color=COLORS["text_muted"],
+            fontsize=8,
         )
 
     return _fig_to_base64(fig)
@@ -219,7 +260,7 @@ def chart_object_distribution(object_stats: list[dict[str, Any]]) -> str:
         labels.append("Other")
         values.append(other_count)
 
-    colors = CHART_PALETTE[:len(labels)]
+    colors = CHART_PALETTE[: len(labels)]
     wedges, _texts, _autotexts = ax1.pie(
         values,
         labels=None,
@@ -230,15 +271,21 @@ def chart_object_distribution(object_stats: list[dict[str, Any]]) -> str:
         textprops={"color": COLORS["text"], "fontsize": 8},
     )
     ax1.legend(
-        wedges, labels,
-        loc="center left", bbox_to_anchor=(1.0, 0.5),
-        facecolor=COLORS["bg_dark"], edgecolor=COLORS["border"],
-        labelcolor=COLORS["text"], fontsize=8,
+        wedges,
+        labels,
+        loc="center left",
+        bbox_to_anchor=(1.0, 0.5),
+        facecolor=COLORS["bg_dark"],
+        edgecolor=COLORS["border"],
+        labelcolor=COLORS["text"],
+        fontsize=8,
     )
 
     # Bar chart (right) - top types by size
     _setup_chart_style(ax2, "Top Object Types by Size (KB)")
-    size_sorted = sorted(object_stats[:15], key=lambda x: x.get("size_kb", 0), reverse=True)
+    size_sorted = sorted(
+        object_stats[:15], key=lambda x: x.get("size_kb", 0), reverse=True
+    )
     bar_labels = [o["type"] for o in size_sorted[:10]]
     bar_sizes = [o.get("size_kb", 0) for o in size_sorted[:10]]
     y_pos = np.arange(len(bar_labels))
@@ -289,11 +336,17 @@ def chart_endpoint_memory(endpoint_stats: list[dict[str, Any]]) -> str:
 
     for bar, val, count in zip(bars, values, counts, strict=False):
         ax.text(
-            bar.get_width() + abs(max(values)) * 0.02 if val >= 0 else bar.get_width() - abs(max(values)) * 0.02,
+            (
+                bar.get_width() + abs(max(values)) * 0.02
+                if val >= 0
+                else bar.get_width() - abs(max(values)) * 0.02
+            ),
             bar.get_y() + bar.get_height() / 2,
             f"{val:+,.1f} KB ({count} calls)",
-            va="center", ha="left" if val >= 0 else "right",
-            color=COLORS["text_muted"], fontsize=7,
+            va="center",
+            ha="left" if val >= 0 else "right",
+            color=COLORS["text_muted"],
+            fontsize=7,
         )
 
     return _fig_to_base64(fig)
@@ -315,19 +368,33 @@ def chart_task_memory(task_stats: list[dict[str, Any]]) -> str:
     bar_height = 0.35
 
     bars_max = ax.barh(
-        y_pos - bar_height / 2, max_values, bar_height,
-        color=COLORS["danger"], alpha=0.5, label="Peak", edgecolor="none",
+        y_pos - bar_height / 2,
+        max_values,
+        bar_height,
+        color=COLORS["danger"],
+        alpha=0.5,
+        label="Peak",
+        edgecolor="none",
     )
     bars_avg = ax.barh(
-        y_pos + bar_height / 2, avg_values, bar_height,
-        color=COLORS["primary"], label="Average", edgecolor="none",
+        y_pos + bar_height / 2,
+        avg_values,
+        bar_height,
+        color=COLORS["primary"],
+        label="Average",
+        edgecolor="none",
     )
 
     ax.set_yticks(y_pos)
     ax.set_yticklabels(labels, fontsize=8)
     ax.set_xlabel("RSS Delta (KB)", color=COLORS["text_muted"], fontsize=10)
     ax.invert_yaxis()
-    ax.legend(facecolor=COLORS["bg_dark"], edgecolor=COLORS["border"], labelcolor=COLORS["text"], fontsize=9)
+    ax.legend(
+        facecolor=COLORS["bg_dark"],
+        edgecolor=COLORS["border"],
+        labelcolor=COLORS["text"],
+        fontsize=9,
+    )
 
     # Leak risk badges
     for i, d in enumerate(data):
@@ -343,7 +410,10 @@ def chart_task_memory(task_stats: list[dict[str, Any]]) -> str:
                 max(max_values) * 1.05,
                 i,
                 f" {risk.upper()} RISK",
-                va="center", color=risk_color, fontsize=7, fontweight="bold",
+                va="center",
+                color=risk_color,
+                fontsize=7,
+                fontweight="bold",
             )
 
     return _fig_to_base64(fig)
@@ -369,10 +439,17 @@ def chart_gc_stats(gc_stats: list[dict[str, Any]]) -> str:
 
     ax1.bar(x - width, collections, width, color=COLORS["primary"], label="Collections")
     ax1.bar(x, collected, width, color=COLORS["success"], label="Collected")
-    ax1.bar(x + width, uncollectable, width, color=COLORS["danger"], label="Uncollectable")
+    ax1.bar(
+        x + width, uncollectable, width, color=COLORS["danger"], label="Uncollectable"
+    )
     ax1.set_xticks(x)
     ax1.set_xticklabels(gens, color=COLORS["text_muted"])
-    ax1.legend(facecolor=COLORS["bg_dark"], edgecolor=COLORS["border"], labelcolor=COLORS["text"], fontsize=8)
+    ax1.legend(
+        facecolor=COLORS["bg_dark"],
+        edgecolor=COLORS["border"],
+        labelcolor=COLORS["text"],
+        fontsize=8,
+    )
     ax1.yaxis.set_major_formatter(ticker.EngFormatter())
 
     # Right: Thresholds vs Current Counts
@@ -380,11 +457,18 @@ def chart_gc_stats(gc_stats: list[dict[str, Any]]) -> str:
     thresholds = [s.get("threshold", 0) for s in gc_stats]
     current = [s.get("current_count", 0) for s in gc_stats]
 
-    ax2.bar(x - width / 2, thresholds, width, color=COLORS["warning"], label="Threshold")
+    ax2.bar(
+        x - width / 2, thresholds, width, color=COLORS["warning"], label="Threshold"
+    )
     ax2.bar(x + width / 2, current, width, color=COLORS["info"], label="Current Count")
     ax2.set_xticks(x)
     ax2.set_xticklabels(gens, color=COLORS["text_muted"])
-    ax2.legend(facecolor=COLORS["bg_dark"], edgecolor=COLORS["border"], labelcolor=COLORS["text"], fontsize=8)
+    ax2.legend(
+        facecolor=COLORS["bg_dark"],
+        edgecolor=COLORS["border"],
+        labelcolor=COLORS["text"],
+        fontsize=8,
+    )
 
     plt.tight_layout()
     return _fig_to_base64(fig)
@@ -402,9 +486,7 @@ def chart_snapshot_diff(diff_data: Optional[dict[str, Any]]) -> str:
     _setup_chart_style(ax1, "Memory Delta Between Snapshots")
     metrics = ["RSS", "Tracemalloc"]
     values = [diff_data["rss_delta_mb"], diff_data["tracemalloc_delta_kb"] / 1024]
-    colors = [
-        COLORS["danger"] if v > 0 else COLORS["success"] for v in values
-    ]
+    colors = [COLORS["danger"] if v > 0 else COLORS["success"] for v in values]
 
     bars = ax1.barh(metrics, values, color=colors, height=0.5, edgecolor="none")
     ax1.set_xlabel("Delta (MB)", color=COLORS["text_muted"], fontsize=10)
@@ -415,8 +497,11 @@ def chart_snapshot_diff(diff_data: Optional[dict[str, Any]]) -> str:
             bar.get_width() + 0.1 if val >= 0 else bar.get_width() - 0.1,
             bar.get_y() + bar.get_height() / 2,
             f"{val:+.2f} MB",
-            va="center", ha="left" if val >= 0 else "right",
-            color=COLORS["text"], fontsize=10, fontweight="bold",
+            va="center",
+            ha="left" if val >= 0 else "right",
+            color=COLORS["text"],
+            fontsize=10,
+            fontweight="bold",
         )
 
     # Right: Top grown types
@@ -439,11 +524,21 @@ def chart_snapshot_diff(diff_data: Optional[dict[str, Any]]) -> str:
                 bar_val + max(deltas) * 0.02,
                 i,
                 f"+{bar_val:,} ({pct:+.1f}%)",
-                va="center", color=COLORS["text_muted"], fontsize=8,
+                va="center",
+                color=COLORS["text_muted"],
+                fontsize=8,
             )
     else:
-        ax2.text(0.5, 0.5, "No growth detected", transform=ax2.transAxes,
-                 ha="center", va="center", color=COLORS["success"], fontsize=12)
+        ax2.text(
+            0.5,
+            0.5,
+            "No growth detected",
+            transform=ax2.transAxes,
+            ha="center",
+            va="center",
+            color=COLORS["success"],
+            fontsize=12,
+        )
 
     plt.tight_layout()
     return _fig_to_base64(fig)
@@ -465,14 +560,23 @@ def chart_system_memory(system_mem: dict[str, Any], process_mem: dict[str, Any])
         startangle=90,
         wedgeprops={"width": 0.4, "edgecolor": COLORS["bg_card"]},
     )
-    ax1.text(0, 0, f"{system_mem.get('percent', 0)}%",
-             ha="center", va="center", color=COLORS["text"],
-             fontsize=18, fontweight="bold")
+    ax1.text(
+        0,
+        0,
+        f"{system_mem.get('percent', 0)}%",
+        ha="center",
+        va="center",
+        color=COLORS["text"],
+        fontsize=18,
+        fontweight="bold",
+    )
     ax1.legend(
         [f"Used: {used:,.0f} MB", f"Free: {available:,.0f} MB"],
         loc="lower center",
-        facecolor=COLORS["bg_dark"], edgecolor=COLORS["border"],
-        labelcolor=COLORS["text"], fontsize=8,
+        facecolor=COLORS["bg_dark"],
+        edgecolor=COLORS["border"],
+        labelcolor=COLORS["text"],
+        fontsize=8,
     )
 
     # Process memory donut
@@ -488,15 +592,24 @@ def chart_system_memory(system_mem: dict[str, Any], process_mem: dict[str, Any])
         startangle=90,
         wedgeprops={"width": 0.4, "edgecolor": COLORS["bg_card"]},
     )
-    ax2.text(0, 0, f"{rss:,.0f}\nMB",
-             ha="center", va="center", color=COLORS["text"],
-             fontsize=16, fontweight="bold")
+    ax2.text(
+        0,
+        0,
+        f"{rss:,.0f}\nMB",
+        ha="center",
+        va="center",
+        color=COLORS["text"],
+        fontsize=16,
+        fontweight="bold",
+    )
     pct = process_mem.get("memory_percent", 0)
     ax2.legend(
         [f"Process: {rss:,.0f} MB ({pct}%)", f"System rest: {rest:,.0f} MB"],
         loc="lower center",
-        facecolor=COLORS["bg_dark"], edgecolor=COLORS["border"],
-        labelcolor=COLORS["text"], fontsize=8,
+        facecolor=COLORS["bg_dark"],
+        edgecolor=COLORS["border"],
+        labelcolor=COLORS["text"],
+        fontsize=8,
     )
 
     plt.tight_layout()
@@ -515,7 +628,14 @@ def chart_child_processes(children: list[dict[str, Any]]) -> str:
     rss = [c["rss_mb"] for c in children]
     y_pos = np.arange(len(labels))
 
-    colors = [COLORS["danger"] if r > 400 else COLORS["warning"] if r > 200 else COLORS["primary"] for r in rss]
+    colors = [
+        (
+            COLORS["danger"]
+            if r > 400
+            else COLORS["warning"] if r > 200 else COLORS["primary"]
+        )
+        for r in rss
+    ]
 
     bars = ax.barh(y_pos, rss, color=colors, height=0.6, edgecolor="none")
     ax.set_yticks(y_pos)
@@ -524,15 +644,28 @@ def chart_child_processes(children: list[dict[str, Any]]) -> str:
     ax.invert_yaxis()
 
     # 400MB limit line
-    ax.axvline(x=400, color=COLORS["danger"], linestyle="--", alpha=0.7, label="Worker limit (400 MB)")
-    ax.legend(facecolor=COLORS["bg_dark"], edgecolor=COLORS["border"], labelcolor=COLORS["text"], fontsize=8)
+    ax.axvline(
+        x=400,
+        color=COLORS["danger"],
+        linestyle="--",
+        alpha=0.7,
+        label="Worker limit (400 MB)",
+    )
+    ax.legend(
+        facecolor=COLORS["bg_dark"],
+        edgecolor=COLORS["border"],
+        labelcolor=COLORS["text"],
+        fontsize=8,
+    )
 
     for bar, r in zip(bars, rss, strict=False):
         ax.text(
             bar.get_width() + max(rss) * 0.01,
             bar.get_y() + bar.get_height() / 2,
             f"{r:,.1f} MB",
-            va="center", color=COLORS["text_muted"], fontsize=8,
+            va="center",
+            color=COLORS["text_muted"],
+            fontsize=8,
         )
 
     return _fig_to_base64(fig)
@@ -541,6 +674,7 @@ def chart_child_processes(children: list[dict[str, Any]]) -> str:
 # =============================================================================
 # Executive Summary & Recommendations Engine
 # =============================================================================
+
 
 def _analyze_audit(
     audit_data: dict[str, Any],
@@ -598,30 +732,50 @@ def _analyze_audit(
     if rss_mb < 200:
         cat["status"] = "pass"
         cat["score"] = 25
-        cat["findings"].append(f"RSS at {rss_mb:.1f} MB — well within safe operating range (<200 MB).")
+        cat["findings"].append(
+            f"RSS at {rss_mb:.1f} MB — well within safe operating range (<200 MB)."
+        )
     elif rss_mb < 400:
         cat["status"] = "pass"
         cat["score"] = 20
-        cat["findings"].append(f"RSS at {rss_mb:.1f} MB — acceptable for a loaded application.")
-        cat["recommendations"].append("Monitor RSS trend over 24h to confirm it stays stable under sustained traffic.")
+        cat["findings"].append(
+            f"RSS at {rss_mb:.1f} MB — acceptable for a loaded application."
+        )
+        cat["recommendations"].append(
+            "Monitor RSS trend over 24h to confirm it stays stable under sustained traffic."
+        )
     elif rss_mb < 600:
         cat["status"] = "warn"
         cat["score"] = 12
-        cat["findings"].append(f"RSS at {rss_mb:.1f} MB — approaching the Celery worker limit (400 MB per child).")
-        cat["recommendations"].append("Profile the top memory-consuming endpoints and optimize data structures (generators instead of lists, lazy loading).")
-        cat["recommendations"].append("Consider increasing `worker_max_memory_per_child` or splitting heavy tasks into smaller batches.")
+        cat["findings"].append(
+            f"RSS at {rss_mb:.1f} MB — approaching the Celery worker limit (400 MB per child)."
+        )
+        cat["recommendations"].append(
+            "Profile the top memory-consuming endpoints and optimize data structures (generators instead of lists, lazy loading)."
+        )
+        cat["recommendations"].append(
+            "Consider increasing `worker_max_memory_per_child` or splitting heavy tasks into smaller batches."
+        )
     else:
         cat["status"] = "fail"
         cat["score"] = 5
-        cat["findings"].append(f"RSS at {rss_mb:.1f} MB — exceeds recommended thresholds. Workers will be recycled frequently.")
-        cat["recommendations"].append("URGENT: Investigate top allocations for large in-memory caches or data structures that should be streamed/paginated.")
-        cat["recommendations"].append("Consider offloading large datasets to Redis or database-backed pagination instead of holding them in process memory.")
+        cat["findings"].append(
+            f"RSS at {rss_mb:.1f} MB — exceeds recommended thresholds. Workers will be recycled frequently."
+        )
+        cat["recommendations"].append(
+            "URGENT: Investigate top allocations for large in-memory caches or data structures that should be streamed/paginated."
+        )
+        cat["recommendations"].append(
+            "Consider offloading large datasets to Redis or database-backed pagination instead of holding them in process memory."
+        )
 
     # VMS ratio check
     if vms_mb > 0 and rss_mb > 0:
         ratio = vms_mb / rss_mb
         if ratio > 4:
-            cat["findings"].append(f"VMS/RSS ratio is {ratio:.1f}x — high virtual memory reservation. This is typical for Python with numpy/pandas but worth noting.")
+            cat["findings"].append(
+                f"VMS/RSS ratio is {ratio:.1f}x — high virtual memory reservation. This is typical for Python with numpy/pandas but worth noting."
+            )
     total_score += cat["score"]
     categories.append(cat)
 
@@ -631,29 +785,49 @@ def _analyze_audit(
     if sys_pct < 60:
         cat["status"] = "pass"
         cat["score"] = 15
-        cat["findings"].append(f"System RAM at {sys_pct}% — plenty of headroom available.")
+        cat["findings"].append(
+            f"System RAM at {sys_pct}% — plenty of headroom available."
+        )
     elif sys_pct < 80:
         cat["status"] = "warn"
         cat["score"] = 10
-        cat["findings"].append(f"System RAM at {sys_pct}% — moderate usage. Other processes may compete for memory under load.")
-        cat["recommendations"].append("Set up Prometheus alerts for system memory >85% to catch pressure before OOM events.")
+        cat["findings"].append(
+            f"System RAM at {sys_pct}% — moderate usage. Other processes may compete for memory under load."
+        )
+        cat["recommendations"].append(
+            "Set up Prometheus alerts for system memory >85% to catch pressure before OOM events."
+        )
     else:
         cat["status"] = "fail"
         cat["score"] = 4
-        cat["findings"].append(f"System RAM at {sys_pct}% — high pressure. Risk of OOM killer intervention.")
-        cat["recommendations"].append("CRITICAL: Scale vertically (add RAM) or horizontally (distribute workers across nodes).")
-        cat["recommendations"].append("Review swap usage — if swapping is active, performance will degrade severely.")
+        cat["findings"].append(
+            f"System RAM at {sys_pct}% — high pressure. Risk of OOM killer intervention."
+        )
+        cat["recommendations"].append(
+            "CRITICAL: Scale vertically (add RAM) or horizontally (distribute workers across nodes)."
+        )
+        cat["recommendations"].append(
+            "Review swap usage — if swapping is active, performance will degrade severely."
+        )
 
     swap_pct = system_mem.get("swap_percent", 0)
     if swap_pct > 10:
-        cat["findings"].append(f"Swap usage at {swap_pct}% — active swapping detected, causing I/O slowdowns.")
-        cat["recommendations"].append("Reduce process memory footprint or add physical RAM to eliminate swap usage.")
+        cat["findings"].append(
+            f"Swap usage at {swap_pct}% — active swapping detected, causing I/O slowdowns."
+        )
+        cat["recommendations"].append(
+            "Reduce process memory footprint or add physical RAM to eliminate swap usage."
+        )
         cat["score"] = max(cat["score"] - 3, 0)
     total_score += cat["score"]
     categories.append(cat)
 
     # ---- 3. Memory Leak Detection ----
-    cat = {"name": "Leak Detection (Snapshot Diff)", "findings": [], "recommendations": []}
+    cat = {
+        "name": "Leak Detection (Snapshot Diff)",
+        "findings": [],
+        "recommendations": [],
+    }
     max_score += 25
     if diff_info:
         rss_delta = diff_info.get("rss_delta_mb", 0)
@@ -664,34 +838,58 @@ def _analyze_audit(
         if rss_delta <= 0:
             cat["status"] = "pass"
             cat["score"] = 25
-            cat["findings"].append(f"Memory is stable or shrinking ({rss_delta:+.2f} MB). No leak pattern detected.")
+            cat["findings"].append(
+                f"Memory is stable or shrinking ({rss_delta:+.2f} MB). No leak pattern detected."
+            )
         elif rate < 0.5:
             cat["status"] = "pass"
             cat["score"] = 20
-            cat["findings"].append(f"Minor growth of {rss_delta:+.2f} MB ({rate:.2f} MB/min) — likely normal allocation churn, not a leak.")
+            cat["findings"].append(
+                f"Minor growth of {rss_delta:+.2f} MB ({rate:.2f} MB/min) — likely normal allocation churn, not a leak."
+            )
             if grown_count > 5:
-                cat["findings"].append(f"{grown_count} object types growing — review if these stabilize after warm-up.")
+                cat["findings"].append(
+                    f"{grown_count} object types growing — review if these stabilize after warm-up."
+                )
         elif rate < 5:
             cat["status"] = "warn"
             cat["score"] = 12
-            cat["findings"].append(f"Moderate growth of {rss_delta:+.2f} MB ({rate:.2f} MB/min) between snapshots.")
-            cat["recommendations"].append("Take snapshots 15 minutes apart under steady load. If growth is linear, there is a leak.")
-            cat["recommendations"].append("Check the 'Top Growing Object Types' chart to identify which types are accumulating.")
+            cat["findings"].append(
+                f"Moderate growth of {rss_delta:+.2f} MB ({rate:.2f} MB/min) between snapshots."
+            )
+            cat["recommendations"].append(
+                "Take snapshots 15 minutes apart under steady load. If growth is linear, there is a leak."
+            )
+            cat["recommendations"].append(
+                "Check the 'Top Growing Object Types' chart to identify which types are accumulating."
+            )
             if grown_count > 3:
                 top_grown = diff_info.get("top_grown_types", [])
                 for g in top_grown[:3]:
-                    cat["recommendations"].append(f"Investigate growing type `{g['type']}` (+{g['delta']:,} objects, {g.get('growth_pct', 0):+.1f}%).")
+                    cat["recommendations"].append(
+                        f"Investigate growing type `{g['type']}` (+{g['delta']:,} objects, {g.get('growth_pct', 0):+.1f}%)."
+                    )
         else:
             cat["status"] = "fail"
             cat["score"] = 5
-            cat["findings"].append(f"Rapid growth of {rss_delta:+.2f} MB ({rate:.2f} MB/min) — strong leak signal.")
-            cat["recommendations"].append("URGENT: Use `objgraph.show_growth()` and `objgraph.show_backrefs()` to trace which objects are not being freed.")
-            cat["recommendations"].append("Common culprits: unclosed database sessions, growing caches without eviction, accumulating event listeners.")
+            cat["findings"].append(
+                f"Rapid growth of {rss_delta:+.2f} MB ({rate:.2f} MB/min) — strong leak signal."
+            )
+            cat["recommendations"].append(
+                "URGENT: Use `objgraph.show_growth()` and `objgraph.show_backrefs()` to trace which objects are not being freed."
+            )
+            cat["recommendations"].append(
+                "Common culprits: unclosed database sessions, growing caches without eviction, accumulating event listeners."
+            )
     else:
         cat["status"] = "pass"
         cat["score"] = 18
-        cat["findings"].append("Only one snapshot available — diff analysis requires 2+ snapshots.")
-        cat["recommendations"].append("Take snapshots periodically (e.g. every 10 min) and revisit the diff report to detect gradual leaks.")
+        cat["findings"].append(
+            "Only one snapshot available — diff analysis requires 2+ snapshots."
+        )
+        cat["recommendations"].append(
+            "Take snapshots periodically (e.g. every 10 min) and revisit the diff report to detect gradual leaks."
+        )
     total_score += cat["score"]
     categories.append(cat)
 
@@ -705,18 +903,30 @@ def _analyze_audit(
         cat["findings"].append("Zero uncollectable objects — GC is operating cleanly.")
     elif uncollectable_total < 50:
         gc_score = 12
-        cat["findings"].append(f"{uncollectable_total} uncollectable objects detected — minor, but indicates reference cycles with `__del__` methods.")
-        cat["recommendations"].append("Audit classes with `__del__` finalizers and refactor to use `weakref` or context managers.")
+        cat["findings"].append(
+            f"{uncollectable_total} uncollectable objects detected — minor, but indicates reference cycles with `__del__` methods."
+        )
+        cat["recommendations"].append(
+            "Audit classes with `__del__` finalizers and refactor to use `weakref` or context managers."
+        )
     else:
         gc_score = 5
-        cat["findings"].append(f"{uncollectable_total} uncollectable objects — GC cannot free these. This is a memory leak source.")
-        cat["recommendations"].append("URGENT: Remove or refactor `__del__` methods in classes involved in reference cycles.")
+        cat["findings"].append(
+            f"{uncollectable_total} uncollectable objects — GC cannot free these. This is a memory leak source."
+        )
+        cat["recommendations"].append(
+            "URGENT: Remove or refactor `__del__` methods in classes involved in reference cycles."
+        )
 
     if ref_cycles:
         gc_score = max(gc_score - 3, 0)
-        cat["findings"].append(f"{len(ref_cycles)} reference cycles found in `gc.garbage`. These objects will never be freed.")
+        cat["findings"].append(
+            f"{len(ref_cycles)} reference cycles found in `gc.garbage`. These objects will never be freed."
+        )
         cycle_types = {c["type"] for c in ref_cycles}
-        cat["recommendations"].append(f"Reference cycle types: {', '.join(cycle_types)}. Break cycles with `weakref` or redesign ownership.")
+        cat["recommendations"].append(
+            f"Reference cycle types: {', '.join(cycle_types)}. Break cycles with `weakref` or redesign ownership."
+        )
 
     # Check Gen2 pressure (indicates long-lived objects accumulating)
     for g in gc_stats:
@@ -724,7 +934,9 @@ def _analyze_audit(
             gen2_count = g.get("current_count", 0)
             gen2_threshold = g.get("threshold", 10)
             if gen2_count > gen2_threshold * 0.8:
-                cat["findings"].append(f"Gen 2 count ({gen2_count}) is near its threshold ({gen2_threshold}) — frequent full GC sweeps may occur.")
+                cat["findings"].append(
+                    f"Gen 2 count ({gen2_count}) is near its threshold ({gen2_threshold}) — frequent full GC sweeps may occur."
+                )
                 gc_score = max(gc_score - 2, 0)
 
     cat["score"] = gc_score
@@ -741,23 +953,37 @@ def _analyze_audit(
     heavy_alloc_files = [a for a in top_allocs if a.get("count", 0) > 100_000]
 
     if not large_allocs and not heavy_alloc_files:
-        cat["findings"].append("No allocation hotspots exceeding 1 MB or 100K allocations. Distribution looks healthy.")
+        cat["findings"].append(
+            "No allocation hotspots exceeding 1 MB or 100K allocations. Distribution looks healthy."
+        )
     else:
         if large_allocs:
             alloc_score -= min(len(large_allocs) * 2, 5)
             for a in large_allocs[:3]:
                 fname = a["file"].replace("\\", "/").split("/")[-1]
-                cat["findings"].append(f"`{fname}:{a['line']}` holds {a['size_kb']:,.0f} KB ({a['count']:,} allocations).")
-            cat["recommendations"].append("Use generators/iterators instead of building large lists in memory.")
-            cat["recommendations"].append("For API responses with large datasets, implement cursor-based pagination.")
+                cat["findings"].append(
+                    f"`{fname}:{a['line']}` holds {a['size_kb']:,.0f} KB ({a['count']:,} allocations)."
+                )
+            cat["recommendations"].append(
+                "Use generators/iterators instead of building large lists in memory."
+            )
+            cat["recommendations"].append(
+                "For API responses with large datasets, implement cursor-based pagination."
+            )
         if heavy_alloc_files:
             for a in heavy_alloc_files[:2]:
                 fname = a["file"].replace("\\", "/").split("/")[-1]
-                cat["findings"].append(f"`{fname}:{a['line']}` has {a['count']:,} allocations — high churn overhead.")
-            cat["recommendations"].append("Reduce allocation count by pre-allocating arrays (numpy) or using `__slots__` on frequently created objects.")
+                cat["findings"].append(
+                    f"`{fname}:{a['line']}` has {a['count']:,} allocations — high churn overhead."
+                )
+            cat["recommendations"].append(
+                "Reduce allocation count by pre-allocating arrays (numpy) or using `__slots__` on frequently created objects."
+            )
 
     cat["score"] = max(alloc_score, 2)
-    cat["status"] = "pass" if alloc_score >= 8 else "warn" if alloc_score >= 5 else "fail"
+    cat["status"] = (
+        "pass" if alloc_score >= 8 else "warn" if alloc_score >= 5 else "fail"
+    )
     total_score += cat["score"]
     categories.append(cat)
 
@@ -768,26 +994,40 @@ def _analyze_audit(
 
     if num_threads > 100:
         tc_score -= 4
-        cat["findings"].append(f"{num_threads} active threads — high count may indicate thread leaks or unbounded pools.")
-        cat["recommendations"].append("Audit thread pools (DB connection pool, async workers) and set explicit max sizes.")
+        cat["findings"].append(
+            f"{num_threads} active threads — high count may indicate thread leaks or unbounded pools."
+        )
+        cat["recommendations"].append(
+            "Audit thread pools (DB connection pool, async workers) and set explicit max sizes."
+        )
     elif num_threads > 50:
         tc_score -= 2
-        cat["findings"].append(f"{num_threads} active threads — moderate count. Ensure pools have bounded sizes.")
+        cat["findings"].append(
+            f"{num_threads} active threads — moderate count. Ensure pools have bounded sizes."
+        )
     else:
         cat["findings"].append(f"{num_threads} active threads — within normal range.")
 
     if num_connections > 100:
         tc_score -= 3
-        cat["findings"].append(f"{num_connections} network connections — may indicate connection leaks.")
-        cat["recommendations"].append("Ensure all HTTP/DB connections use context managers and are properly closed.")
+        cat["findings"].append(
+            f"{num_connections} network connections — may indicate connection leaks."
+        )
+        cat["recommendations"].append(
+            "Ensure all HTTP/DB connections use context managers and are properly closed."
+        )
     elif num_connections > 0:
         cat["findings"].append(f"{num_connections} active network connections.")
 
     open_files = process.get("open_files", 0)
     if open_files > 100:
         tc_score -= 2
-        cat["findings"].append(f"{open_files} open file descriptors — check for unclosed file handles.")
-        cat["recommendations"].append("Audit file operations for missing `close()` calls or use `with` statements.")
+        cat["findings"].append(
+            f"{open_files} open file descriptors — check for unclosed file handles."
+        )
+        cat["recommendations"].append(
+            "Audit file operations for missing `close()` calls or use `with` statements."
+        )
     elif open_files > 0:
         cat["findings"].append(f"{open_files} open file descriptors — normal range.")
 
@@ -802,21 +1042,33 @@ def _analyze_audit(
         max_score += 10
         ep_score = 10
         growing_eps = [e for e in endpoint_stats if e.get("trend") == "growing"]
-        heavy_eps = [e for e in endpoint_stats if abs(e.get("avg_rss_delta_kb", 0)) > 500]
+        heavy_eps = [
+            e for e in endpoint_stats if abs(e.get("avg_rss_delta_kb", 0)) > 500
+        ]
 
         if not growing_eps and not heavy_eps:
-            cat["findings"].append("All profiled endpoints show stable or minimal memory usage. No concerns.")
+            cat["findings"].append(
+                "All profiled endpoints show stable or minimal memory usage. No concerns."
+            )
         else:
             if growing_eps:
                 ep_score -= min(len(growing_eps) * 2, 5)
-                cat["findings"].append(f"{len(growing_eps)} endpoint(s) showing growing memory trend.")
+                cat["findings"].append(
+                    f"{len(growing_eps)} endpoint(s) showing growing memory trend."
+                )
                 for e in growing_eps[:3]:
-                    cat["recommendations"].append(f"Investigate `{e['method']} {e['path']}` — avg delta {e['avg_rss_delta_kb']:+,.0f} KB/request with growing trend.")
+                    cat["recommendations"].append(
+                        f"Investigate `{e['method']} {e['path']}` — avg delta {e['avg_rss_delta_kb']:+,.0f} KB/request with growing trend."
+                    )
             if heavy_eps:
                 ep_score -= min(len(heavy_eps), 3)
                 for e in heavy_eps[:3]:
-                    cat["findings"].append(f"`{e['method']} {e['path']}` averages {e['avg_rss_delta_kb']:+,.0f} KB per request ({e['call_count']} calls).")
-                cat["recommendations"].append("Endpoints with high memory delta likely load large querysets or build big response objects. Add pagination or streaming.")
+                    cat["findings"].append(
+                        f"`{e['method']} {e['path']}` averages {e['avg_rss_delta_kb']:+,.0f} KB per request ({e['call_count']} calls)."
+                    )
+                cat["recommendations"].append(
+                    "Endpoints with high memory delta likely load large querysets or build big response objects. Add pagination or streaming."
+                )
 
         cat["score"] = max(ep_score, 2)
         cat["status"] = "pass" if ep_score >= 8 else "warn" if ep_score >= 5 else "fail"
@@ -825,25 +1077,43 @@ def _analyze_audit(
 
     # ---- 8. Celery Task Profiling (if available) ----
     if task_stats:
-        cat = {"name": "Celery Task Memory Profile", "findings": [], "recommendations": []}
+        cat = {
+            "name": "Celery Task Memory Profile",
+            "findings": [],
+            "recommendations": [],
+        }
         max_score += 10
         tk_score = 10
-        risky_tasks = [t for t in task_stats if t.get("leak_risk") in ("high", "medium")]
+        risky_tasks = [
+            t for t in task_stats if t.get("leak_risk") in ("high", "medium")
+        ]
         heavy_tasks = [t for t in task_stats if t.get("avg_rss_delta_kb", 0) > 5000]
 
         if not risky_tasks and not heavy_tasks:
-            cat["findings"].append("All profiled tasks show healthy memory patterns. No leak risk detected.")
+            cat["findings"].append(
+                "All profiled tasks show healthy memory patterns. No leak risk detected."
+            )
         else:
             if risky_tasks:
                 tk_score -= min(len(risky_tasks) * 3, 6)
                 for t in risky_tasks[:3]:
-                    cat["findings"].append(f"Task `{t.get('short_name', t['task_name'])}` flagged as {t['leak_risk'].upper()} leak risk.")
-                cat["recommendations"].append("Tasks with leak risk should be profiled individually with `tracemalloc` inside the task body.")
-                cat["recommendations"].append("Ensure tasks release large objects explicitly (`del`, scope exit) and call `gc.collect()` for heavy workloads.")
+                    cat["findings"].append(
+                        f"Task `{t.get('short_name', t['task_name'])}` flagged as {t['leak_risk'].upper()} leak risk."
+                    )
+                cat["recommendations"].append(
+                    "Tasks with leak risk should be profiled individually with `tracemalloc` inside the task body."
+                )
+                cat["recommendations"].append(
+                    "Ensure tasks release large objects explicitly (`del`, scope exit) and call `gc.collect()` for heavy workloads."
+                )
             if heavy_tasks:
                 for t in heavy_tasks[:2]:
-                    cat["findings"].append(f"Task `{t.get('short_name', t['task_name'])}` uses {t['avg_rss_delta_kb']:,.0f} KB per run on average.")
-                cat["recommendations"].append("Break heavy tasks into smaller batches. The current `worker_max_memory_per_child=400MB` limit will trigger frequent worker restarts if tasks are too heavy.")
+                    cat["findings"].append(
+                        f"Task `{t.get('short_name', t['task_name'])}` uses {t['avg_rss_delta_kb']:,.0f} KB per run on average."
+                    )
+                cat["recommendations"].append(
+                    "Break heavy tasks into smaller batches. The current `worker_max_memory_per_child=400MB` limit will trigger frequent worker restarts if tasks are too heavy."
+                )
 
         cat["score"] = max(tk_score, 2)
         cat["status"] = "pass" if tk_score >= 8 else "warn" if tk_score >= 5 else "fail"
@@ -902,6 +1172,7 @@ def _analyze_audit(
 # =============================================================================
 # HTML Report Generator
 # =============================================================================
+
 
 def generate_html_report(
     audit_data: dict[str, Any],
@@ -962,8 +1233,12 @@ def generate_html_report(
     # Allocation table rows
     alloc_rows = ""
     for a in audit_data.get("top_allocations", [])[:20]:
-        filename = a["file"].split("/")[-1] if "/" in a["file"] else a["file"].split("\\")[-1]
-        size_class = "danger" if a["size_kb"] > 500 else "warning" if a["size_kb"] > 100 else ""
+        filename = (
+            a["file"].split("/")[-1] if "/" in a["file"] else a["file"].split("\\")[-1]
+        )
+        size_class = (
+            "danger" if a["size_kb"] > 500 else "warning" if a["size_kb"] > 100 else ""
+        )
         alloc_rows += f"""
         <tr class="{size_class}">
             <td class="mono">{filename}:{a['line']}</td>
@@ -988,8 +1263,16 @@ def generate_html_report(
     endpoint_rows = ""
     if endpoint_stats:
         for e in endpoint_stats[:25]:
-            trend_icon = {"growing": "&#9650;", "shrinking": "&#9660;", "stable": "&#9644;"}.get(e.get("trend", ""), "?")
-            trend_class = {"growing": "danger", "shrinking": "success", "stable": ""}.get(e.get("trend", ""), "")
+            trend_icon = {
+                "growing": "&#9650;",
+                "shrinking": "&#9660;",
+                "stable": "&#9644;",
+            }.get(e.get("trend", ""), "?")
+            trend_class = {
+                "growing": "danger",
+                "shrinking": "success",
+                "stable": "",
+            }.get(e.get("trend", ""), "")
             endpoint_rows += f"""
             <tr>
                 <td class="mono">{e['method']}</td>

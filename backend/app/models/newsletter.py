@@ -9,7 +9,7 @@ Database models for the newsletter email campaign system.
 - NewsletterEvent: Open/click/bounce tracking events
 """
 
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from enum import Enum as PyEnum
 from typing import Optional
 
@@ -86,7 +86,9 @@ class NewsletterTemplate(Base):
     subject: Mapped[str] = mapped_column(String(500), nullable=False, default="")
     preheader_text: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     content_html: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    content_json: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)  # TipTap JSON
+    content_json: Mapped[Optional[dict]] = mapped_column(
+        JSONB, nullable=True
+    )  # TipTap JSON
 
     # Metadata
     thumbnail_url: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
@@ -143,7 +145,10 @@ class NewsletterCampaign(Base):
 
     # Template reference (optional — campaign can be from scratch)
     template_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("newsletter_templates.id", ondelete="SET NULL"), nullable=True, index=True
+        Integer,
+        ForeignKey("newsletter_templates.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
     )
 
     # Status
@@ -152,9 +157,15 @@ class NewsletterCampaign(Base):
     )
 
     # Scheduling
-    scheduled_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    sent_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    scheduled_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    sent_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    completed_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # Sender overrides (falls back to system defaults if null)
     from_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
@@ -192,7 +203,9 @@ class NewsletterCampaign(Base):
 
     # Relationships
     template = relationship("NewsletterTemplate", back_populates="campaigns")
-    events = relationship("NewsletterEvent", back_populates="campaign", cascade="all, delete-orphan")
+    events = relationship(
+        "NewsletterEvent", back_populates="campaign", cascade="all, delete-orphan"
+    )
 
     __table_args__ = (
         Index("ix_nl_campaign_tenant", "tenant_id"),
@@ -212,15 +225,23 @@ class NewsletterEvent(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     campaign_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("newsletter_campaigns.id", ondelete="CASCADE"), nullable=False, index=True
+        Integer,
+        ForeignKey("newsletter_campaigns.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     subscriber_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("landing_page_subscribers.id", ondelete="CASCADE"), nullable=False, index=True
+        Integer,
+        ForeignKey("landing_page_subscribers.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
 
     # Event
     event_type: Mapped[str] = mapped_column(String(20), nullable=False)
-    event_metadata: Mapped[Optional[dict]] = mapped_column("metadata", JSONB, nullable=True)
+    event_metadata: Mapped[Optional[dict]] = mapped_column(
+        "metadata", JSONB, nullable=True
+    )
     # e.g. { "link_url": "https://...", "user_agent": "...", "ip": "..." }
 
     # Timestamp

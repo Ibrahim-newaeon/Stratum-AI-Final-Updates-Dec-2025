@@ -36,10 +36,14 @@ def _require_admin(request: Request) -> int:
     """Verify user has admin or superadmin role. Returns user_id."""
     user_id = getattr(request.state, "user_id", None)
     if not user_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated"
+        )
     user_role = getattr(request.state, "role", None)
     if user_role not in (UserRole.ADMIN.value, UserRole.SUPERADMIN.value):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required"
+        )
     return user_id
 
 
@@ -132,7 +136,10 @@ async def list_changelog_entries(
         pass
     elif tenant_id:
         conditions.append(
-            or_(ChangelogEntry.tenant_id == tenant_id, ChangelogEntry.tenant_id.is_(None))
+            or_(
+                ChangelogEntry.tenant_id == tenant_id,
+                ChangelogEntry.tenant_id.is_(None),
+            )
         )
     else:
         # No tenant context — only show global entries
@@ -157,7 +164,9 @@ async def list_changelog_entries(
     if conditions:
         query = query.where(and_(*conditions))
 
-    query = query.order_by(desc(ChangelogEntry.published_at), desc(ChangelogEntry.created_at))
+    query = query.order_by(
+        desc(ChangelogEntry.published_at), desc(ChangelogEntry.created_at)
+    )
     query = query.limit(limit).offset(offset)
 
     result = await db.execute(query)
@@ -167,7 +176,9 @@ async def list_changelog_entries(
     read_ids = set()
     if user_id:
         read_result = await db.execute(
-            select(ChangelogReadStatus.changelog_id).where(ChangelogReadStatus.user_id == user_id)
+            select(ChangelogReadStatus.changelog_id).where(
+                ChangelogReadStatus.user_id == user_id
+            )
         )
         read_ids = set(read_result.scalars().all())
 
@@ -211,7 +222,10 @@ async def get_changelog_summary(
     if user_role != UserRole.SUPERADMIN.value:
         if tenant_id:
             summary_conditions.append(
-                or_(ChangelogEntry.tenant_id == tenant_id, ChangelogEntry.tenant_id.is_(None))
+                or_(
+                    ChangelogEntry.tenant_id == tenant_id,
+                    ChangelogEntry.tenant_id.is_(None),
+                )
             )
         else:
             summary_conditions.append(ChangelogEntry.tenant_id.is_(None))
@@ -220,7 +234,8 @@ async def get_changelog_summary(
     result = await db.execute(
         select(ChangelogEntry)
         .where(and_(*summary_conditions))
-        .order_by(desc(ChangelogEntry.published_at)).limit(1000)
+        .order_by(desc(ChangelogEntry.published_at))
+        .limit(1000)
     )
     entries = result.scalars().all()
 
@@ -238,7 +253,9 @@ async def get_changelog_summary(
     read_ids = set()
     if user_id:
         read_result = await db.execute(
-            select(ChangelogReadStatus.changelog_id).where(ChangelogReadStatus.user_id == user_id)
+            select(ChangelogReadStatus.changelog_id).where(
+                ChangelogReadStatus.user_id == user_id
+            )
         )
         read_ids = set(read_result.scalars().all())
 
@@ -268,7 +285,9 @@ async def get_changelog_entry(
     tenant_id = getattr(request.state, "tenant_id", None)
     user_role = getattr(request.state, "role", None)
 
-    result = await db.execute(select(ChangelogEntry).where(ChangelogEntry.id == entry_id))
+    result = await db.execute(
+        select(ChangelogEntry).where(ChangelogEntry.id == entry_id)
+    )
     entry = result.scalar_one_or_none()
 
     if not entry:
@@ -338,7 +357,9 @@ async def mark_changelog_read(
         )
 
     # Verify entry exists and is accessible
-    result = await db.execute(select(ChangelogEntry).where(ChangelogEntry.id == entry_id))
+    result = await db.execute(
+        select(ChangelogEntry).where(ChangelogEntry.id == entry_id)
+    )
     entry = result.scalar_one_or_none()
     if not entry:
         raise HTTPException(
@@ -399,7 +420,10 @@ async def mark_all_changelog_read(
     if user_role != UserRole.SUPERADMIN.value:
         if tenant_id:
             mark_conditions.append(
-                or_(ChangelogEntry.tenant_id == tenant_id, ChangelogEntry.tenant_id.is_(None))
+                or_(
+                    ChangelogEntry.tenant_id == tenant_id,
+                    ChangelogEntry.tenant_id.is_(None),
+                )
             )
         else:
             mark_conditions.append(ChangelogEntry.tenant_id.is_(None))
@@ -410,7 +434,9 @@ async def mark_all_changelog_read(
 
     # Get already read entries
     read_result = await db.execute(
-        select(ChangelogReadStatus.changelog_id).where(ChangelogReadStatus.user_id == user_id)
+        select(ChangelogReadStatus.changelog_id).where(
+            ChangelogReadStatus.user_id == user_id
+        )
     )
     already_read_ids = set(read_result.scalars().all())
 
@@ -441,7 +467,9 @@ async def mark_all_changelog_read(
 
 
 @router.post(
-    "", response_model=APIResponse[ChangelogEntryResponse], status_code=status.HTTP_201_CREATED
+    "",
+    response_model=APIResponse[ChangelogEntryResponse],
+    status_code=status.HTTP_201_CREATED,
 )
 async def create_changelog_entry(
     request: Request,
@@ -513,7 +541,9 @@ async def update_changelog_entry(
     tenant_id = getattr(request.state, "tenant_id", None)
     user_role = getattr(request.state, "role", None)
 
-    result = await db.execute(select(ChangelogEntry).where(ChangelogEntry.id == entry_id))
+    result = await db.execute(
+        select(ChangelogEntry).where(ChangelogEntry.id == entry_id)
+    )
     entry = result.scalar_one_or_none()
 
     if not entry:
@@ -590,7 +620,9 @@ async def delete_changelog_entry(
     tenant_id = getattr(request.state, "tenant_id", None)
     user_role = getattr(request.state, "role", None)
 
-    result = await db.execute(select(ChangelogEntry).where(ChangelogEntry.id == entry_id))
+    result = await db.execute(
+        select(ChangelogEntry).where(ChangelogEntry.id == entry_id)
+    )
     entry = result.scalar_one_or_none()
 
     if not entry:

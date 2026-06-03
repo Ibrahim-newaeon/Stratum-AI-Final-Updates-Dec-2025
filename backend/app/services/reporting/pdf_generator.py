@@ -7,10 +7,10 @@ PDF generation service for reports.
 Uses HTML templates rendered to PDF for professional-quality reports.
 """
 
+import os
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional, Tuple
 from uuid import UUID
-import os
 
 from app.core.logging import get_logger
 from app.models.reporting import ReportTemplate, ReportType
@@ -174,6 +174,7 @@ class PDFGenerator:
         # Try to use weasyprint for PDF generation
         try:
             from weasyprint import HTML
+
             HTML(string=html_content).write_pdf(file_path)
         except ImportError:
             # Fallback: save as HTML if weasyprint not available
@@ -192,7 +193,9 @@ class PDFGenerator:
     ) -> str:
         """Generate HTML content based on report type."""
         period = data.get("period", {})
-        date_range = f"{period.get('start_date', 'N/A')} to {period.get('end_date', 'N/A')}"
+        date_range = (
+            f"{period.get('start_date', 'N/A')} to {period.get('end_date', 'N/A')}"
+        )
 
         # Generate content based on report type
         if template.report_type == ReportType.CAMPAIGN_PERFORMANCE:
@@ -274,7 +277,7 @@ class PDFGenerator:
         """
 
         for platform, metrics in by_platform.items():
-            roas = metrics['revenue'] / metrics['spend'] if metrics['spend'] > 0 else 0
+            roas = metrics["revenue"] / metrics["spend"] if metrics["spend"] > 0 else 0
             html += f"""
                     <tr>
                         <td>{platform.upper()}</td>
@@ -306,9 +309,15 @@ class PDFGenerator:
         """
 
         # Sort by revenue and show top 10
-        sorted_campaigns = sorted(campaigns, key=lambda x: x.get('revenue', 0), reverse=True)[:10]
+        sorted_campaigns = sorted(
+            campaigns, key=lambda x: x.get("revenue", 0), reverse=True
+        )[:10]
         for c in sorted_campaigns:
-            roas_class = "metric-good" if c.get('roas', 0) >= 2 else "metric-neutral" if c.get('roas', 0) >= 1 else "metric-bad"
+            roas_class = (
+                "metric-good"
+                if c.get("roas", 0) >= 2
+                else "metric-neutral" if c.get("roas", 0) >= 1 else "metric-bad"
+            )
             html += f"""
                     <tr>
                         <td>{c.get('name', 'N/A')}</td>
@@ -365,9 +374,11 @@ class PDFGenerator:
                 <tbody>
         """
 
-        total_rev = summary.get('total_revenue', 1)
-        for platform, metrics in sorted(by_platform.items(), key=lambda x: x[1]['revenue'], reverse=True):
-            pct = (metrics['revenue'] / total_rev * 100) if total_rev > 0 else 0
+        total_rev = summary.get("total_revenue", 1)
+        for platform, metrics in sorted(
+            by_platform.items(), key=lambda x: x[1]["revenue"], reverse=True
+        ):
+            pct = (metrics["revenue"] / total_rev * 100) if total_rev > 0 else 0
             html += f"""
                     <tr>
                         <td>{platform.upper()}</td>
@@ -430,8 +441,12 @@ class PDFGenerator:
         """
 
         for t in targets:
-            progress = t.get('progress_pct', 0)
-            progress_class = "metric-good" if progress >= 90 else "metric-neutral" if progress >= 70 else "metric-bad"
+            progress = t.get("progress_pct", 0)
+            progress_class = (
+                "metric-good"
+                if progress >= 90
+                else "metric-neutral" if progress >= 70 else "metric-bad"
+            )
             html += f"""
                     <tr>
                         <td>{t.get('name', 'N/A')}</td>
@@ -610,6 +625,7 @@ class PDFGenerator:
     def _render_generic(self, data: Dict[str, Any]) -> str:
         """Render generic JSON data as a table."""
         import json
+
         return f"""
         <div class="section">
             <h2>Report Data</h2>
