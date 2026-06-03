@@ -34,7 +34,9 @@ from app.models.campaign_builder import (
     TenantPlatformConnection,
 )
 from app.schemas.response import APIResponse, PaginatedResponse
+from app.core.logging import get_logger
 
+logger = get_logger(__name__)
 router = APIRouter(prefix="/tenant/{tenant_id}", tags=["campaign-builder"])
 
 

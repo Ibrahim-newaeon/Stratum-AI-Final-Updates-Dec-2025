@@ -11,6 +11,9 @@ Features:
 - Historical COGS tracking
 """
 
+from datetime import date, datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional, BinaryIO
+from uuid import UUID
 import csv
 import io
 from datetime import date, datetime, timezone
@@ -94,7 +97,7 @@ class COGSService:
                     ),
                 )
             )
-            .values(end_date=effective_date - datetime.timedelta(days=1))
+            .values(end_date=effective_date - timedelta(days=1))
         )
 
         # Calculate total COGS

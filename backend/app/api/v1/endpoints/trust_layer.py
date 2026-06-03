@@ -57,8 +57,8 @@ async def get_signal_health(
     if not await can_access_feature(db, tenant_id, "signal_health"):
         raise HTTPException(
             status_code=403,
-            detail="Signal health feature is not enabled for this tenant",
-        ).limit(1000)
+            detail="Signal health feature is not enabled for this tenant"
+        )
 
     service = SignalHealthService(db)
     data = await service.get_signal_health(tenant_id, target_date)

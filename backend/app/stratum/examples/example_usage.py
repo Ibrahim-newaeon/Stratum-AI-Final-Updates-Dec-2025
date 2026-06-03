@@ -131,7 +131,7 @@ async def example_meta_integration():
     # Evaluate through trust gate
     logger.info("\nStep 8: Evaluate through trust gate")
     gate = TrustGate()
-    result = gate.evaluate(action, signal_health)
+    result = gate.evaluate(signal_health, action)
     logger.info(f"  Gate Decision: {result.decision.value.upper()}")
     logger.info(f"  Reason: {result.reason}")
 

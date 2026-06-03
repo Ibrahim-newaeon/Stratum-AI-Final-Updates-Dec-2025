@@ -138,7 +138,12 @@ async def get_live_predictions(
     - Per-campaign health scores and recommendations
     - Active alerts for underperforming campaigns
     """
-    tenant_id = getattr(request.state, "tenant_id", 1)
+    tenant_id = getattr(request.state, "tenant_id", None)
+    if tenant_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Tenant context required",
+        )
 
     # Check for cached predictions (less than 30 mins old)
     if not refresh:
@@ -265,7 +270,12 @@ async def get_campaign_prediction(
     """
     Get detailed predictions and recommendations for a specific campaign.
     """
-    tenant_id = getattr(request.state, "tenant_id", 1)
+    tenant_id = getattr(request.state, "tenant_id", None)
+    if tenant_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Tenant context required",
+        )
 
     # Get campaign
     result = await db.execute(
@@ -321,7 +331,12 @@ async def get_prediction_alerts(
     """
     Get prediction-based alerts for campaigns.
     """
-    tenant_id = getattr(request.state, "tenant_id", 1)
+    tenant_id = getattr(request.state, "tenant_id", None)
+    if tenant_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Tenant context required",
+        )
 
     # Get recent alerts from predictions
     result = await db.execute(
@@ -402,7 +417,12 @@ async def trigger_prediction_refresh(
     Trigger a refresh of live predictions for the tenant.
     Queues a background task.
     """
-    tenant_id = getattr(request.state, "tenant_id", 1)
+    tenant_id = getattr(request.state, "tenant_id", None)
+    if tenant_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Tenant context required",
+        )
 
     # Queue prediction task
     task = run_live_predictions.delay(tenant_id)
@@ -425,7 +445,12 @@ async def get_budget_optimization(
     Get budget optimization recommendations across all campaigns.
     Returns suggested budget reallocation for maximum ROAS.
     """
-    tenant_id = getattr(request.state, "tenant_id", 1)
+    tenant_id = getattr(request.state, "tenant_id", None)
+    if tenant_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Tenant context required",
+        )
 
     # Get campaigns
     result = await db.execute(
@@ -481,7 +506,12 @@ async def get_budget_scenarios(
     Get budget change scenarios for a campaign.
     Shows predicted ROAS and revenue at different budget levels.
     """
-    tenant_id = getattr(request.state, "tenant_id", 1)
+    tenant_id = getattr(request.state, "tenant_id", None)
+    if tenant_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Tenant context required",
+        )
 
     # Get campaign
     result = await db.execute(
