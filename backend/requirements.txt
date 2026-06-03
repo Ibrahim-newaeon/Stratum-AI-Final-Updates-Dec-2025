@@ -89,7 +89,7 @@ ruff==0.15.15
 stripe>=15.1.0
 requests>=2.33.1
 facebook-business>=25.0.1
-google-ads>=24.0.0
+google-ads>=30.1.0
 
 # Analytics & ML (scipy needed by ml/ab_testing.py)
 scipy>=1.17.1
