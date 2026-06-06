@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.deps import require_superadmin
 from app.core.logging import get_logger
 from app.db.session import get_async_session
 from app.models import Campaign, CampaignMetric
@@ -521,7 +522,11 @@ async def analyze_cohorts(
     )
 
 
-@router.post("/sql", response_model=APIResponse[SQLQueryResult])
+@router.post(
+    "/sql",
+    response_model=APIResponse[SQLQueryResult],
+    dependencies=[Depends(require_superadmin())],
+)
 async def execute_sql_query(
     request: SQLQueryRequest,
     req: Request,
