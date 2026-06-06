@@ -8,6 +8,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ErrorBoundary, ChartErrorFallback, WidgetErrorFallback } from './ErrorBoundary';
+import type { ReactElement } from 'react';
 
 // Suppress console.error during error boundary tests
 const originalConsoleError = console.error;
@@ -22,7 +23,7 @@ afterEach(() => {
 // Helper: a component that throws on render
 // ---------------------------------------------------------------------------
 
-function ThrowingComponent({ error }: { error: Error }) {
+function ThrowingComponent({ error }: { error: Error }): ReactElement {
   throw error;
 }
 
@@ -126,7 +127,9 @@ describe('ErrorBoundary', () => {
   it('detects "Failed to fetch dynamically imported module" as chunk error', () => {
     render(
       <ErrorBoundary>
-        <ThrowingComponent error={new Error('Failed to fetch dynamically imported module /chunk.js')} />
+        <ThrowingComponent
+          error={new Error('Failed to fetch dynamically imported module /chunk.js')}
+        />
       </ErrorBoundary>
     );
 
@@ -176,7 +179,9 @@ describe('ErrorBoundary', () => {
 
     render(
       <ErrorBoundary>
-        <ThrowingComponent error={new Error('Failed to fetch dynamically imported module /chunk.js')} />
+        <ThrowingComponent
+          error={new Error('Failed to fetch dynamically imported module /chunk.js')}
+        />
       </ErrorBoundary>
     );
 

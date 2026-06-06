@@ -34,7 +34,7 @@ describe('SlackIntegration', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Reset fetch mock
-    global.fetch = vi.fn();
+    globalThis.fetch = vi.fn();
   });
 
   it('renders the component header', () => {
@@ -56,14 +56,12 @@ describe('SlackIntegration', () => {
 
   it('renders the webhook URL with initial config', () => {
     render(
-      <SlackIntegration
-        initialConfig={{ webhookUrl: 'https://hooks.slack.com/services/abc' }}
-      />
+      <SlackIntegration initialConfig={{ webhookUrl: 'https://hooks.slack.com/services/abc' }} />
     );
 
-    expect(
-      screen.getByPlaceholderText('https://hooks.slack.com/services/...')
-    ).toHaveValue('https://hooks.slack.com/services/abc');
+    expect(screen.getByPlaceholderText('https://hooks.slack.com/services/...')).toHaveValue(
+      'https://hooks.slack.com/services/abc'
+    );
   });
 
   it('renders the enable notifications toggle', () => {
@@ -140,10 +138,9 @@ describe('SlackIntegration', () => {
   it('enables Save Changes button after making changes', () => {
     render(<SlackIntegration />);
 
-    fireEvent.change(
-      screen.getByPlaceholderText('https://hooks.slack.com/services/...'),
-      { target: { value: 'https://hooks.slack.com/test' } }
-    );
+    fireEvent.change(screen.getByPlaceholderText('https://hooks.slack.com/services/...'), {
+      target: { value: 'https://hooks.slack.com/test' },
+    });
 
     expect(screen.getByText('Save Changes')).not.toBeDisabled();
   });
@@ -154,10 +151,9 @@ describe('SlackIntegration', () => {
     render(<SlackIntegration onSave={handleSave} />);
 
     // Change webhook URL to enable Save
-    fireEvent.change(
-      screen.getByPlaceholderText('https://hooks.slack.com/services/...'),
-      { target: { value: 'https://hooks.slack.com/services/test' } }
-    );
+    fireEvent.change(screen.getByPlaceholderText('https://hooks.slack.com/services/...'), {
+      target: { value: 'https://hooks.slack.com/services/test' },
+    });
 
     fireEvent.click(screen.getByText('Save Changes'));
 

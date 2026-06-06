@@ -16,7 +16,7 @@ import {
   UpgradePrompt,
   Features,
 } from './TierContext';
-import type { TierInfo, TierContextValue } from './TierContext';
+import type { TierInfo } from './TierContext';
 import type { ReactNode } from 'react';
 
 // =============================================================================
@@ -561,7 +561,7 @@ describe('TierContext', () => {
       mockGet.mockResolvedValue({ data: starterTierInfo });
       const queryClient = createQueryClient();
 
-      const { container } = render(
+      render(
         <QueryClientProvider client={queryClient}>
           <TierProvider>
             <FeatureGate feature={Features.PREDICTIVE_CHURN}>

@@ -6,8 +6,7 @@
  * response interceptor (401 handling + token refresh mutex).
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import axios from 'axios';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ---------------------------------------------------------------------------
 // Mock sessionStorage (tokens now use sessionStorage to reduce XSS surface)
@@ -68,13 +67,7 @@ Object.defineProperty(window, 'localStorage', { value: mockLocalStorage });
 // ---------------------------------------------------------------------------
 // Import AFTER localStorage mock is in place
 // ---------------------------------------------------------------------------
-import {
-  apiClient,
-  setAccessToken,
-  getAccessToken,
-  setTenantId,
-  getTenantId,
-} from './client';
+import { apiClient, setAccessToken, getAccessToken, setTenantId, getTenantId } from './client';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -87,10 +80,14 @@ function resetClientState() {
   mockSessionStorage._reset();
   mockLocalStorage._reset();
   // Restore the original implementation (mockClear only clears calls, not mockImplementation)
-  mockSessionStorage.getItem.mockImplementation((key: string) => mockSessionStorage._getStore()[key] ?? null);
+  mockSessionStorage.getItem.mockImplementation(
+    (key: string) => mockSessionStorage._getStore()[key] ?? null
+  );
   mockSessionStorage.setItem.mockClear();
   mockSessionStorage.removeItem.mockClear();
-  mockLocalStorage.getItem.mockImplementation((key: string) => mockLocalStorage._getStore()[key] ?? null);
+  mockLocalStorage.getItem.mockImplementation(
+    (key: string) => mockLocalStorage._getStore()[key] ?? null
+  );
   mockLocalStorage.setItem.mockClear();
   mockLocalStorage.removeItem.mockClear();
 }
