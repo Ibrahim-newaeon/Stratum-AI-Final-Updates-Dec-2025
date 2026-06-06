@@ -22,7 +22,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.deps import CurrentUserDep, get_current_user
+from app.auth.deps import CurrentUserDep, get_current_user, require_superadmin
 from app.base_models import LandingPageSubscriber, SubscriberStatus
 from app.db.session import get_async_session
 from app.models.newsletter import (
@@ -554,7 +554,7 @@ async def send_campaign(
     try:
         from app.workers.newsletter_tasks import send_newsletter_campaign
 
-        send_newsletter_campaign.delay(campaign_id)
+        send_newsletter_campaign.delay(campaign_id, current_user.tenant_id)
     except (ImportError, ConnectionError, TimeoutError, OSError) as exc:
         logger.warning(f"Failed to dispatch newsletter campaign {campaign_id}: {exc}")
         # Worker may not be running in dev; campaign status is already set
@@ -728,7 +728,10 @@ async def campaign_analytics(
 # SUBSCRIBER ENDPOINTS (newsletter-specific)
 # ===================================================================
 @router.get(
-    "/subscribers", response_model=list[SubscriberResponse], tags=["Newsletter"]
+    "/subscribers",
+    response_model=list[SubscriberResponse],
+    tags=["Newsletter"],
+    dependencies=[Depends(require_superadmin())],
 )
 async def list_subscribers(
     current_user: CurrentUserDep,
@@ -762,7 +765,10 @@ async def list_subscribers(
 
 
 @router.get(
-    "/subscribers/stats", response_model=SubscriberStatsResponse, tags=["Newsletter"]
+    "/subscribers/stats",
+    response_model=SubscriberStatsResponse,
+    tags=["Newsletter"],
+    dependencies=[Depends(require_superadmin())],
 )
 async def subscriber_stats(
     current_user: CurrentUserDep,
@@ -784,7 +790,11 @@ async def subscriber_stats(
     )
 
 
-@router.put("/subscribers/{subscriber_id}/unsubscribe", tags=["Newsletter"])
+@router.put(
+    "/subscribers/{subscriber_id}/unsubscribe",
+    tags=["Newsletter"],
+    dependencies=[Depends(require_superadmin())],
+)
 async def manual_unsubscribe(
     subscriber_id: int,
     current_user: CurrentUserDep,
@@ -804,7 +814,11 @@ async def manual_unsubscribe(
     return {"success": True, "message": "Subscriber unsubscribed"}
 
 
-@router.put("/subscribers/{subscriber_id}/resubscribe", tags=["Newsletter"])
+@router.put(
+    "/subscribers/{subscriber_id}/resubscribe",
+    tags=["Newsletter"],
+    dependencies=[Depends(require_superadmin())],
+)
 async def resubscribe(
     subscriber_id: int,
     current_user: CurrentUserDep,

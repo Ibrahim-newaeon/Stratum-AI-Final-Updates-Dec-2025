@@ -245,6 +245,30 @@ def require_superadmin():
     return require_role(UserRole.SUPERADMIN)
 
 
+def require_tenant_id(user: CurrentUser) -> int:
+    """
+    Return the authenticated user's tenant_id, failing closed.
+
+    Use this instead of ``getattr(user, "tenant_id", None) or <default>``:
+    a missing tenant context must raise 401, never silently resolve to a
+    default tenant (which would leak that tenant's data across accounts).
+    """
+    tenant_id = getattr(user, "tenant_id", None)
+    if not tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Tenant context required",
+        )
+    return tenant_id
+
+
+async def get_tenant_id(
+    current_user: Annotated[CurrentUser, Depends(get_current_user)],
+) -> int:
+    """FastAPI dependency: the authenticated user's tenant_id, or 401."""
+    return require_tenant_id(current_user)
+
+
 # =============================================================================
 # CMS Auth Dependencies
 # =============================================================================
@@ -472,6 +496,7 @@ CurrentUserDep = Annotated[CurrentUser, Depends(get_current_user)]
 ActiveUserDep = Annotated[CurrentUser, Depends(get_current_active_user)]
 VerifiedUserDep = Annotated[CurrentUser, Depends(get_current_verified_user)]
 OptionalUserDep = Annotated[Optional[CurrentUser], Depends(get_optional_user)]
+TenantIdDep = Annotated[int, Depends(get_tenant_id)]
 AccessibleClientIdsDep = Annotated[
     Optional[list[int]], Depends(get_accessible_client_ids)
 ]

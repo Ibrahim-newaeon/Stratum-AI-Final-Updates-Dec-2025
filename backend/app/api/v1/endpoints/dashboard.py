@@ -30,7 +30,7 @@ from sqlalchemy import and_, desc, func, select, text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.deps import CurrentUserDep, VerifiedUserDep
+from app.auth.deps import CurrentUserDep, VerifiedUserDep, require_tenant_id
 from app.core.logging import get_logger
 from app.db.session import get_async_session
 from app.models import (
@@ -1900,7 +1900,7 @@ async def get_morning_briefing(
     Aggregates overnight changes, signal health, recommendations,
     and top actions into a single glanceable briefing card.
     """
-    tenant_id = getattr(user, "tenant_id", None) or 1
+    tenant_id = require_tenant_id(user)
     today = date.today()
     yesterday = today - timedelta(days=1)
 
@@ -2177,7 +2177,7 @@ async def get_anomaly_narratives(
     with likely causes and recommended actions, identifies cross-metric
     correlations, and provides an executive summary with portfolio risk level.
     """
-    tenant_id = getattr(user, "tenant_id", None) or 1
+    tenant_id = require_tenant_id(user)
     today = date.today()
 
     # --- Build metric histories from campaign data (last 14 days) ---
@@ -2299,7 +2299,7 @@ async def get_signal_recovery(
     Analyzes EMQ score, event loss rate, API connectivity, and data
     freshness to identify degradation and recommend recovery steps.
     """
-    tenant_id = getattr(user, "tenant_id", None) or 1
+    tenant_id = require_tenant_id(user)
 
     try:
         # ── Gather signal health indicators ──────────────────────────
@@ -2477,7 +2477,7 @@ async def get_predictive_budget(
     to recommend which campaigns to scale, reduce, or pause.
     Only auto-executes when signal health passes AND confidence > 85%.
     """
-    tenant_id = getattr(user, "tenant_id", None) or 1
+    tenant_id = require_tenant_id(user)
 
     try:
         # ── Fetch campaign data ──────────────────────────────────
@@ -2600,7 +2600,7 @@ async def get_ai_report(
     with narrative insights, platform breakdowns, campaign highlights,
     trend analysis, and actionable recommendations.
     """
-    tenant_id = getattr(user, "tenant_id", None) or 1
+    tenant_id = require_tenant_id(user)
 
     try:
         # ── Fetch current period campaigns ─────────────────────────
@@ -2697,7 +2697,7 @@ async def get_churn_prevention(
     recommendations. Scores each campaign across performance, spend trend,
     and engagement dimensions.
     """
-    tenant_id = getattr(user, "tenant_id", None) or 1
+    tenant_id = require_tenant_id(user)
 
     try:
         # ── Fetch campaigns with sync status ───────────────────────
@@ -2806,7 +2806,7 @@ async def get_notifications_prioritized(
     is scored by urgency, impact, and actionability to produce a
     priority-ranked feed with suggested actions.
     """
-    tenant_id = getattr(user, "tenant_id", None) or 1
+    tenant_id = require_tenant_id(user)
 
     try:
         # ── Fetch campaigns ─────────────────────────────────────────
@@ -2952,7 +2952,7 @@ async def get_cross_platform_optimizer(
     connected platforms and recommends optimal budget distribution based on
     the selected strategy (roas_max, balanced, volume_max).
     """
-    tenant_id = getattr(user, "tenant_id", None) or 1
+    tenant_id = require_tenant_id(user)
 
     # Validate strategy
     valid_strategies = ("roas_max", "balanced", "volume_max")
@@ -3055,7 +3055,7 @@ async def get_audience_lifecycle(
     distribution and generates automated audience sync recommendations
     based on stage transitions (anonymous → known → customer → churned).
     """
-    tenant_id = getattr(user, "tenant_id", None) or 1
+    tenant_id = require_tenant_id(user)
 
     try:
         # ── Fetch CDP profiles ──────────────────────────────────────
@@ -3239,7 +3239,7 @@ async def get_goal_tracking(
     ROAS, and conversion targets with pacing status, EOM projections,
     milestones, and AI-generated insights.
     """
-    tenant_id = getattr(user, "tenant_id", None) or 1
+    tenant_id = require_tenant_id(user)
 
     try:
         # ── Fetch campaigns ─────────────────────────────────────────

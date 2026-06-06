@@ -5,7 +5,7 @@
 Main API router that aggregates all endpoint routers.
 """
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from app.api.v1.endpoints import (  # Previously unregistered endpoints; Gap endpoints; SendGrid inbound webhook; Drip campaigns and push notifications
     advanced_analytics,
@@ -56,6 +56,7 @@ from app.api.v1.endpoints import (  # Previously unregistered endpoints; Gap end
     payments,
     predictions,
     profit,
+    programmatic,
     push_notifications,
     qa_fixes,
     reporting,
@@ -75,6 +76,8 @@ from app.api.v1.endpoints import (  # Previously unregistered endpoints; Gap end
     webhooks,
     whatsapp,
 )
+from app.core.feature_gate import FeatureGate
+from app.core.tiers import Feature
 
 api_router = APIRouter()
 
@@ -127,11 +130,12 @@ api_router.include_router(
     tags=["Competitor Intelligence"],
 )
 
-# ML Simulator (Module A)
+# ML Simulator (Module A) — What-If Simulator is an Enterprise feature (P0-5)
 api_router.include_router(
     simulator.router,
     prefix="/simulate",
     tags=["ML Simulator"],
+    dependencies=[Depends(FeatureGate(Feature.WHAT_IF_SIMULATOR))],
 )
 
 # Analytics & Dashboard
@@ -141,11 +145,12 @@ api_router.include_router(
     tags=["Analytics"],
 )
 
-# GDPR Compliance (Module F)
+# GDPR Compliance (Module F) — GDPR tools are an Enterprise feature (P0-5)
 api_router.include_router(
     gdpr.router,
     prefix="/gdpr",
     tags=["GDPR Compliance"],
+    dependencies=[Depends(FeatureGate(Feature.GDPR_TOOLS))],
 )
 
 # WhatsApp Integration (Module G)
@@ -370,6 +375,13 @@ api_router.include_router(
 api_router.include_router(
     api_keys.router,
     tags=["API Keys"],
+)
+
+# Programmatic API (authenticated by X-API-Key, not JWT)
+# Note: programmatic.router already has prefix="/programmatic"
+api_router.include_router(
+    programmatic.router,
+    tags=["Programmatic API"],
 )
 
 # CDP (Customer Data Platform)

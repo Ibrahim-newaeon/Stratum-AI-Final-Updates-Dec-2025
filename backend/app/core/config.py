@@ -361,9 +361,9 @@ class Settings(BaseSettings):
     feature_what_if_simulator: bool = Field(default=True)
     feature_automation_rules: bool = Field(default=True)
     feature_gdpr_compliance: bool = Field(default=True)
-    # Knowledge Graph requires Apache AGE (not provisioned in the default
-    # image); shelved off by default until AGE is available.
-    feature_knowledge_graph: bool = Field(default=False)
+    # Campaign-builder connector beat tasks (ad-account sync, token refresh,
+    # health checks) hit live platform APIs — opt-in, default off (P1-2).
+    enable_campaign_builder_beat: bool = Field(default=False)
 
     @property
     def is_development(self) -> bool:

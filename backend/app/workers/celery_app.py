@@ -16,7 +16,7 @@ celery_app = Celery(
     "stratum_ai",
     broker=settings.celery_broker_url,
     backend=settings.celery_result_backend,
-    include=["app.workers.tasks"],
+    include=["app.workers.tasks", "app.workers.campaign_builder_tasks"],
 )
 
 # Celery configuration
@@ -138,6 +138,36 @@ celery_app.conf.beat_schedule = {
         "options": {"queue": "default"},
     },
 }
+
+
+# ---------------------------------------------------------------------------
+# Opt-in periodic tasks
+# ---------------------------------------------------------------------------
+# The campaign-builder connector tasks exist but were never registered on the
+# beat schedule (orphaned). They sync ad accounts, refresh OAuth tokens, and
+# health-check connectors — all of which hit live platform APIs, so they are
+# gated behind a default-off flag. Set ENABLE_CAMPAIGN_BUILDER_BEAT=true once
+# connectors/credentials are configured.
+if settings.enable_campaign_builder_beat:
+    celery_app.conf.beat_schedule.update(
+        {
+            "sync-all-ad-accounts": {
+                "task": "app.workers.campaign_builder_tasks.sync_all_ad_accounts",
+                "schedule": crontab(hour=2, minute=0),
+                "options": {"queue": "sync"},
+            },
+            "refresh-expiring-tokens": {
+                "task": "app.workers.campaign_builder_tasks.refresh_expiring_tokens",
+                "schedule": crontab(hour="*/6"),
+                "options": {"queue": "default"},
+            },
+            "connector-health-check": {
+                "task": "app.workers.campaign_builder_tasks.connector_health_check",
+                "schedule": crontab(minute="*/30"),
+                "options": {"queue": "default"},
+            },
+        }
+    )
 
 
 # ---------------------------------------------------------------------------

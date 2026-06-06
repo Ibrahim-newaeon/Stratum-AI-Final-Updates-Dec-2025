@@ -16,7 +16,7 @@ const MONO_STACK = 'Geist Mono, monospace';
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useAuth();
+  const { login, loginMfa } = useAuth();
 
   const formRef = useRef<HTMLFormElement>(null);
   const [email, setEmail] = useState('');
@@ -29,6 +29,10 @@ export default function Login() {
   );
   const [touched, setTouched] = useState<{ email?: boolean; password?: boolean }>({});
   const [lockoutSeconds, setLockoutSeconds] = useState(0);
+  // MFA second-factor step
+  const [mfaRequired, setMfaRequired] = useState(false);
+  const [mfaToken, setMfaToken] = useState('');
+  const [mfaCode, setMfaCode] = useState('');
 
   useEffect(() => {
     if (lockoutSeconds <= 0) return;
@@ -91,7 +95,10 @@ export default function Login() {
 
     try {
       const result = await login(actualEmail, actualPassword);
-      if (result.success) {
+      if (result.mfaRequired && result.mfaToken) {
+        setMfaToken(result.mfaToken);
+        setMfaRequired(true);
+      } else if (result.success) {
         if (rememberMe) {
           localStorage.setItem('stratum_remember_me', 'true');
         } else {
@@ -110,6 +117,43 @@ export default function Login() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleMfaSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (!mfaCode || mfaCode.length < 6) {
+      setError('Enter the 6-digit code from your authenticator app');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const result = await loginMfa(email, mfaToken, mfaCode);
+      if (result.success) {
+        if (rememberMe) {
+          localStorage.setItem('stratum_remember_me', 'true');
+        } else {
+          localStorage.removeItem('stratum_remember_me');
+          sessionStorage.setItem('stratum_session_only', 'true');
+        }
+        navigate(from, { replace: true });
+      } else {
+        setError(result.error || 'Verification failed');
+      }
+    } catch {
+      setError('An unexpected error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const cancelMfa = () => {
+    setMfaRequired(false);
+    setMfaToken('');
+    setMfaCode('');
+    setError('');
   };
 
   return (
@@ -161,6 +205,55 @@ export default function Login() {
               </p>
             </div>
 
+            {mfaRequired ? (
+              <form onSubmit={handleMfaSubmit} className="space-y-5">
+                <div>
+                  <h2 className="text-lg font-medium text-white">Two-factor authentication</h2>
+                  <p className="text-[13px] text-[#9A9A9A] mt-1">
+                    Enter the 6-digit code from your authenticator app, or a backup code.
+                  </p>
+                </div>
+                {error && (
+                  <div className="flex items-start gap-2 p-3 rounded-[12px] text-sm bg-[rgba(239,68,68,0.08)] border border-red-500/30 text-red-300">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    <span>{error}</span>
+                  </div>
+                )}
+                <div>
+                  <label htmlFor="mfa-code" className="block text-[13px] text-[#9A9A9A] mb-1.5">
+                    Verification code
+                  </label>
+                  <input
+                    id="mfa-code"
+                    name="mfa-code"
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    autoFocus
+                    value={mfaCode}
+                    onChange={(e) => setMfaCode(e.target.value.replace(/\s/g, ''))}
+                    maxLength={8}
+                    placeholder="123456"
+                    className="w-full h-12 px-4 rounded-[12px] bg-[#141414] border border-[#262626] text-white text-center tracking-[0.4em] text-lg placeholder:text-[#5A5A5A] focus:border-[#FF5A1F] focus:outline-none transition-colors"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full h-12 rounded-full bg-[#FF5A1F] text-white font-medium text-[14px] flex items-center justify-center gap-2 transition-all hover:bg-[#FF6E3A] hover:-translate-y-px disabled:opacity-50 disabled:hover:translate-y-0 disabled:cursor-not-allowed"
+                  style={{ boxShadow: '0 4px 14px rgba(255,90,31,0.3)' }}
+                >
+                  {isLoading ? 'Verifying...' : 'Verify'}
+                </button>
+                <button
+                  type="button"
+                  onClick={cancelMfa}
+                  className="w-full text-[13px] text-[#9A9A9A] hover:text-white transition-colors"
+                >
+                  Back to sign in
+                </button>
+              </form>
+            ) : (
             <form ref={formRef} onSubmit={handleSubmit} className="space-y-5">
               {/* Verification banner */}
               {showVerificationBanner && (
@@ -345,6 +438,7 @@ export default function Login() {
                 )}
               </button>
             </form>
+            )}
 
             {/* Footer */}
             <div className="mt-10 pt-6 border-t border-[#1F1F1F]">

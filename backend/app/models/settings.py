@@ -25,6 +25,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base_class import Base, StrEnumType, TenantMixin, TimestampMixin
+from app.db.types import EncryptedString
 
 # =============================================================================
 # Enums
@@ -326,8 +327,8 @@ class SlackIntegration(Base, TimestampMixin, TenantMixin):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
 
-    # Webhook URL (encrypted)
-    webhook_url: Mapped[str] = mapped_column(String(2048), nullable=False)
+    # Webhook URL (encrypted at rest via EncryptedString)
+    webhook_url: Mapped[str] = mapped_column(EncryptedString(2048), nullable=False)
 
     # Channel configuration
     channel_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
