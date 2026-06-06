@@ -29,6 +29,28 @@ from app.core.tiers import SubscriptionTier
 
 logger = get_logger(__name__)
 
+# Dev-only default — must never be used to verify licenses in prod/staging.
+_DEFAULT_DEV_LICENSE_SECRET = "dev-secret-change-me"
+
+
+def _license_signing_secret() -> str:
+    """
+    Resolve the license HMAC signing secret, failing closed in non-dev envs.
+
+    In production/staging, ``LICENSE_SIGNING_SECRET`` must be set to a
+    non-default value; otherwise license verification would trust the public
+    dev secret. In development the dev default is allowed.
+    """
+    secret = os.getenv("LICENSE_SIGNING_SECRET", "")
+    if settings.app_env in ("production", "staging"):
+        if not secret or secret == _DEFAULT_DEV_LICENSE_SECRET:
+            raise RuntimeError(
+                "LICENSE_SIGNING_SECRET must be set to a non-default value in "
+                f"{settings.app_env}"
+            )
+        return secret
+    return secret or _DEFAULT_DEV_LICENSE_SECRET
+
 
 class LicenseStatus(str, Enum):
     """License validation status."""
@@ -262,7 +284,7 @@ class LicenseValidationService:
         """Verify HMAC-signed license data."""
         # Simple HMAC verification for development
         # In production, use RSA/EC signatures
-        secret = os.getenv("LICENSE_SIGNING_SECRET", "dev-secret-change-me")
+        secret = _license_signing_secret()
 
         parts = encoded_data.rsplit(".", 1)
         if len(parts) != 2:
