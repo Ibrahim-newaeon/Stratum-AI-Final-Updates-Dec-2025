@@ -21,6 +21,7 @@ from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.logging import get_logger
 from app.core.security import require_permission
 from app.db.session import get_async_session
 from app.models.campaign_builder import (
@@ -34,7 +35,6 @@ from app.models.campaign_builder import (
     TenantPlatformConnection,
 )
 from app.schemas.response import APIResponse, PaginatedResponse
-from app.core.logging import get_logger
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/tenant/{tenant_id}", tags=["campaign-builder"])
