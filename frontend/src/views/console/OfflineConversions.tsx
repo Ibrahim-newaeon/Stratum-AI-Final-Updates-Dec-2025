@@ -48,7 +48,7 @@ const REQUIRED_HEADERS = ['event_name', 'event_time'];
 function parseCSV(text: string): { rows: OfflineConversionRecord[]; error: string | null } {
   const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
   if (lines.length < 2)
-    return { rows: [], error: 'CSV must have a header row + at least one data row.' };
+    {return { rows: [], error: 'CSV must have a header row + at least one data row.' };}
   const headers = lines[0].split(',').map((h) => h.trim());
   for (const required of REQUIRED_HEADERS) {
     if (!headers.includes(required)) {
