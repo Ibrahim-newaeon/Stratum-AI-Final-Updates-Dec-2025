@@ -5,7 +5,7 @@
  * each integration platform. Opens when user clicks a platform card.
  */
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react';
 import {
   XMarkIcon,
   ClipboardDocumentIcon,
@@ -16,38 +16,38 @@ import {
   ShieldCheckIcon,
   KeyIcon,
   InformationCircleIcon,
-} from '@heroicons/react/24/outline'
-import { cn } from '@/lib/utils'
+} from '@heroicons/react/24/outline';
+import { cn } from '@/lib/utils';
 
 // ─── Platform Credential Definitions ────────────────────────────────────────
 
 export interface CredentialField {
-  key: string
-  label: string
-  type: 'text' | 'password' | 'url' | 'select'
-  placeholder: string
-  helpText: string
-  whereToFind: string
-  required: boolean
-  options?: { value: string; label: string }[] // for select type
+  key: string;
+  label: string;
+  type: 'text' | 'password' | 'url' | 'select';
+  placeholder: string;
+  helpText: string;
+  whereToFind: string;
+  required: boolean;
+  options?: { value: string; label: string }[]; // for select type
 }
 
 export interface PlatformCredentialConfig {
-  id: string
-  name: string
-  category: 'ad-platform' | 'crm' | 'messaging' | 'analytics' | 'payments' | 'commerce'
-  color: string
-  icon: string // first letter or emoji
-  subtitle: string
-  description: string
-  docsUrl: string
-  authMethod: 'oauth' | 'api-key' | 'webhook' | 'oauth+api-key'
-  credentials: CredentialField[]
-  oauthScopes?: string[]
-  apiVersion?: string
-  notes?: string[]
-  capiEvents?: string[]
-  audienceFormat?: string
+  id: string;
+  name: string;
+  category: 'ad-platform' | 'crm' | 'messaging' | 'analytics' | 'payments' | 'commerce';
+  color: string;
+  icon: string; // first letter or emoji
+  subtitle: string;
+  description: string;
+  docsUrl: string;
+  authMethod: 'oauth' | 'api-key' | 'webhook' | 'oauth+api-key';
+  credentials: CredentialField[];
+  oauthScopes?: string[];
+  apiVersion?: string;
+  notes?: string[];
+  capiEvents?: string[];
+  audienceFormat?: string;
 }
 
 export const platformCredentials: PlatformCredentialConfig[] = [
@@ -59,7 +59,8 @@ export const platformCredentials: PlatformCredentialConfig[] = [
     color: 'from-blue-500 to-blue-700',
     icon: 'M',
     subtitle: 'Facebook & Instagram Ads',
-    description: 'Connect Meta Ads for campaign management, Conversions API (CAPI), and Custom Audience sync.',
+    description:
+      'Connect Meta Ads for campaign management, Conversions API (CAPI), and Custom Audience sync.',
     docsUrl: 'https://developers.facebook.com/docs/marketing-apis',
     authMethod: 'oauth+api-key',
     apiVersion: 'v25.0',
@@ -88,7 +89,8 @@ export const platformCredentials: PlatformCredentialConfig[] = [
         type: 'password',
         placeholder: 'EAAxxxxxxx...',
         helpText: 'Long-lived System User token (never expires). Preferred over user tokens.',
-        whereToFind: 'Business Settings → System Users → Generate Token → Select App → Grant permissions',
+        whereToFind:
+          'Business Settings → System Users → Generate Token → Select App → Grant permissions',
         required: true,
       },
       {
@@ -97,7 +99,8 @@ export const platformCredentials: PlatformCredentialConfig[] = [
         type: 'text',
         placeholder: '123456789012345',
         helpText: 'Facebook Pixel ID for Conversions API event tracking.',
-        whereToFind: 'Meta Ads Manager → Events Manager → Data Sources → select Pixel → ID in header',
+        whereToFind:
+          'Meta Ads Manager → Events Manager → Data Sources → select Pixel → ID in header',
         required: true,
       },
       {
@@ -111,7 +114,16 @@ export const platformCredentials: PlatformCredentialConfig[] = [
       },
     ],
     oauthScopes: ['ads_management', 'ads_read', 'business_management', 'pages_read_engagement'],
-    capiEvents: ['Purchase', 'Lead', 'AddToCart', 'InitiateCheckout', 'Subscribe', 'CompleteRegistration', 'Contact', 'ViewContent'],
+    capiEvents: [
+      'Purchase',
+      'Lead',
+      'AddToCart',
+      'InitiateCheckout',
+      'Subscribe',
+      'CompleteRegistration',
+      'Contact',
+      'ViewContent',
+    ],
     audienceFormat: 'Email, Phone, MADID — all SHA-256 hashed automatically',
     notes: [
       'Tokens are exchanged for a 60-day long-lived token and auto-refreshed before expiry.',
@@ -127,7 +139,8 @@ export const platformCredentials: PlatformCredentialConfig[] = [
     color: 'from-green-500 to-blue-500',
     icon: 'G',
     subtitle: 'Google Ads & Enhanced Conversions',
-    description: 'Connect Google Ads for campaign management, Enhanced Conversions, and Customer Match audiences.',
+    description:
+      'Connect Google Ads for campaign management, Enhanced Conversions, and Customer Match audiences.',
     docsUrl: 'https://developers.google.com/google-ads/api/docs/start',
     authMethod: 'oauth+api-key',
     apiVersion: 'v15',
@@ -156,7 +169,8 @@ export const platformCredentials: PlatformCredentialConfig[] = [
         type: 'password',
         placeholder: 'GOCSPX-xxxxxxxxxxxxxxx',
         helpText: 'OAuth 2.0 Client Secret paired with the Client ID.',
-        whereToFind: 'Google Cloud Console → APIs & Services → Credentials → OAuth 2.0 Client IDs → Secret',
+        whereToFind:
+          'Google Cloud Console → APIs & Services → Credentials → OAuth 2.0 Client IDs → Secret',
         required: true,
       },
       {
@@ -165,7 +179,8 @@ export const platformCredentials: PlatformCredentialConfig[] = [
         type: 'password',
         placeholder: '1//xxxxxxxxxxxxxxxxxx',
         helpText: 'Long-lived refresh token for persistent API access.',
-        whereToFind: 'Generated during OAuth consent flow — Stratum handles this automatically after first connection.',
+        whereToFind:
+          'Generated during OAuth consent flow — Stratum handles this automatically after first connection.',
         required: true,
       },
       {
@@ -183,13 +198,15 @@ export const platformCredentials: PlatformCredentialConfig[] = [
         type: 'text',
         placeholder: '123456789',
         helpText: 'ID of the conversion action for Enhanced Conversions.',
-        whereToFind: 'Google Ads → Tools & Settings → Measurement → Conversions → select action → Conversion Action ID',
+        whereToFind:
+          'Google Ads → Tools & Settings → Measurement → Conversions → select action → Conversion Action ID',
         required: false,
       },
     ],
     oauthScopes: ['https://www.googleapis.com/auth/adwords'],
     capiEvents: ['Enhanced Conversions for Web'],
-    audienceFormat: 'Hashed email, phone, first name, last name, country, postal code — retention 1-540 days',
+    audienceFormat:
+      'Hashed email, phone, first name, last name, country, postal code — retention 1-540 days',
     notes: [
       'A persistent refresh token keeps the connection alive — no re-authentication needed.',
       'Developer Token requires Basic or Standard access level for production use.',
@@ -204,7 +221,8 @@ export const platformCredentials: PlatformCredentialConfig[] = [
     color: 'from-pink-500 to-gray-900',
     icon: 'T',
     subtitle: 'TikTok for Business',
-    description: 'Connect TikTok Ads for campaign management, Events API, and DMP Custom Audiences.',
+    description:
+      'Connect TikTok Ads for campaign management, Events API, and DMP Custom Audiences.',
     docsUrl: 'https://business-api.tiktok.com/portal/docs',
     authMethod: 'oauth+api-key',
     apiVersion: 'v1.3',
@@ -260,13 +278,21 @@ export const platformCredentials: PlatformCredentialConfig[] = [
         type: 'password',
         placeholder: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
         helpText: 'Separate access token specifically for Events API.',
-        whereToFind: 'TikTok Ads Manager → Assets → Events → Web Events → Settings → Generate Access Token',
+        whereToFind:
+          'TikTok Ads Manager → Assets → Events → Web Events → Settings → Generate Access Token',
         required: false,
       },
     ],
-    oauthScopes: ['advertiser.read', 'advertiser.write', 'campaign.read', 'campaign.write', 'report.read'],
+    oauthScopes: [
+      'advertiser.read',
+      'advertiser.write',
+      'campaign.read',
+      'campaign.write',
+      'report.read',
+    ],
     capiEvents: ['ViewContent', 'AddToCart', 'PlaceAnOrder', 'CompletePayment', 'Subscribe'],
-    audienceFormat: 'Separate uploads per type: EMAIL_SHA256, PHONE_SHA256, IDFA_SHA256, GAID_SHA256',
+    audienceFormat:
+      'Separate uploads per type: EMAIL_SHA256, PHONE_SHA256, IDFA_SHA256, GAID_SHA256',
     notes: [
       'Access tokens last 24 hours and are auto-refreshed. Refresh tokens valid 365 days.',
       'DMP Custom Audiences support up to 50,000 users per batch.',
@@ -281,7 +307,8 @@ export const platformCredentials: PlatformCredentialConfig[] = [
     color: 'from-yellow-400 to-yellow-600',
     icon: 'S',
     subtitle: 'Snapchat Marketing API',
-    description: 'Connect Snapchat Ads for campaign management, Snap Audience Match (SAM), and Conversion tracking.',
+    description:
+      'Connect Snapchat Ads for campaign management, Snap Audience Match (SAM), and Conversion tracking.',
     docsUrl: 'https://developers.snap.com/api/marketing-api',
     authMethod: 'oauth+api-key',
     apiVersion: 'v1',
@@ -384,10 +411,13 @@ export const platformCredentials: PlatformCredentialConfig[] = [
       },
     ],
     oauthScopes: [
-      'crm.objects.contacts.read', 'crm.objects.contacts.write',
-      'crm.objects.deals.read', 'crm.objects.deals.write',
+      'crm.objects.contacts.read',
+      'crm.objects.contacts.write',
+      'crm.objects.deals.read',
+      'crm.objects.deals.write',
       'crm.objects.owners.read',
-      'crm.schemas.contacts.read', 'crm.schemas.deals.read',
+      'crm.schemas.contacts.read',
+      'crm.schemas.deals.read',
     ],
     notes: [
       'OAuth is the recommended auth method — API keys are deprecated.',
@@ -484,7 +514,8 @@ export const platformCredentials: PlatformCredentialConfig[] = [
         type: 'select',
         placeholder: 'Select your region',
         helpText: 'Must match the region where your Zoho account is hosted.',
-        whereToFind: 'Check your Zoho login URL — zoho.com (US), zoho.eu (EU), zoho.in (India), etc.',
+        whereToFind:
+          'Check your Zoho login URL — zoho.com (US), zoho.eu (EU), zoho.in (India), etc.',
         required: true,
         options: [
           { value: 'com', label: 'United States (zoho.com)' },
@@ -497,10 +528,14 @@ export const platformCredentials: PlatformCredentialConfig[] = [
       },
     ],
     oauthScopes: [
-      'ZohoCRM.modules.contacts.READ', 'ZohoCRM.modules.contacts.WRITE',
-      'ZohoCRM.modules.deals.READ', 'ZohoCRM.modules.deals.WRITE',
-      'ZohoCRM.modules.accounts.READ', 'ZohoCRM.modules.leads.READ',
-      'ZohoCRM.users.READ', 'ZohoCRM.org.READ',
+      'ZohoCRM.modules.contacts.READ',
+      'ZohoCRM.modules.contacts.WRITE',
+      'ZohoCRM.modules.deals.READ',
+      'ZohoCRM.modules.deals.WRITE',
+      'ZohoCRM.modules.accounts.READ',
+      'ZohoCRM.modules.leads.READ',
+      'ZohoCRM.users.READ',
+      'ZohoCRM.org.READ',
     ],
     notes: [
       'API endpoints vary by region — make sure to select the correct data center.',
@@ -553,7 +588,8 @@ export const platformCredentials: PlatformCredentialConfig[] = [
     color: 'from-green-500 to-green-700',
     icon: 'W',
     subtitle: 'WhatsApp Cloud API',
-    description: 'Send customer messages and receive webhook notifications via WhatsApp Business API.',
+    description:
+      'Send customer messages and receive webhook notifications via WhatsApp Business API.',
     docsUrl: 'https://developers.facebook.com/docs/whatsapp/cloud-api',
     authMethod: 'api-key',
     apiVersion: 'v18.0',
@@ -573,7 +609,8 @@ export const platformCredentials: PlatformCredentialConfig[] = [
         type: 'password',
         placeholder: 'EAAxxxxxxx...',
         helpText: 'System User permanent token for WhatsApp Cloud API.',
-        whereToFind: 'Meta Business Settings → System Users → Generate Token → select WhatsApp app → whatsapp_business_messaging permission',
+        whereToFind:
+          'Meta Business Settings → System Users → Generate Token → select WhatsApp app → whatsapp_business_messaging permission',
         required: true,
       },
       {
@@ -590,7 +627,8 @@ export const platformCredentials: PlatformCredentialConfig[] = [
         label: 'Webhook Verify Token',
         type: 'text',
         placeholder: 'my-custom-verify-token',
-        helpText: 'A custom string you set for webhook verification. Must match the token configured in Meta webhook settings.',
+        helpText:
+          'A custom string you set for webhook verification. Must match the token configured in Meta webhook settings.',
         whereToFind: 'You create this value — enter the same string in Meta Webhook Configuration.',
         required: true,
       },
@@ -618,7 +656,8 @@ export const platformCredentials: PlatformCredentialConfig[] = [
     color: 'from-purple-500 to-purple-700',
     icon: 'SL',
     subtitle: 'Team Notifications',
-    description: 'Receive Trust Gate decisions, anomaly alerts, and daily summaries in your Slack channels.',
+    description:
+      'Receive Trust Gate decisions, anomaly alerts, and daily summaries in your Slack channels.',
     docsUrl: 'https://api.slack.com/messaging/webhooks',
     authMethod: 'webhook',
     credentials: [
@@ -628,7 +667,8 @@ export const platformCredentials: PlatformCredentialConfig[] = [
         type: 'url',
         placeholder: 'https://hooks.slack.com/services/T00/B00/xxxx',
         helpText: 'Slack Incoming Webhook URL for posting messages to a channel.',
-        whereToFind: 'Slack → Apps → Incoming Webhooks → Add New Webhook to Workspace → Copy Webhook URL',
+        whereToFind:
+          'Slack → Apps → Incoming Webhooks → Add New Webhook to Workspace → Copy Webhook URL',
         required: true,
       },
       {
@@ -636,7 +676,8 @@ export const platformCredentials: PlatformCredentialConfig[] = [
         label: 'Channel Name',
         type: 'text',
         placeholder: '#stratum-alerts',
-        helpText: 'Target Slack channel for notifications (optional — webhook URL includes default channel).',
+        helpText:
+          'Target Slack channel for notifications (optional — webhook URL includes default channel).',
         whereToFind: 'The channel name you selected when creating the webhook.',
         required: false,
       },
@@ -665,7 +706,7 @@ export const platformCredentials: PlatformCredentialConfig[] = [
         key: 'stripe_secret_key',
         label: 'Secret API Key',
         type: 'password',
-        placeholder: 'sk_live_xxxxxxxxxxxxxxxxxxxxxxxx',
+        placeholder: 'sk_live_<your-secret-key>',
         helpText: 'Stripe Secret API Key for server-side operations.',
         whereToFind: 'Stripe Dashboard → Developers → API Keys → Secret Key',
         required: true,
@@ -674,7 +715,7 @@ export const platformCredentials: PlatformCredentialConfig[] = [
         key: 'stripe_publishable_key',
         label: 'Publishable Key',
         type: 'text',
-        placeholder: 'pk_live_xxxxxxxxxxxxxxxxxxxxxxxx',
+        placeholder: 'pk_live_<your-publishable-key>',
         helpText: 'Stripe Publishable Key for client-side (frontend) use.',
         whereToFind: 'Stripe Dashboard → Developers → API Keys → Publishable Key',
         required: true,
@@ -732,7 +773,8 @@ export const platformCredentials: PlatformCredentialConfig[] = [
     color: 'from-orange-500 to-yellow-600',
     icon: 'GA',
     subtitle: 'GA4 Web Analytics',
-    description: 'Track website traffic, user behavior, and conversion events with Google Analytics 4.',
+    description:
+      'Track website traffic, user behavior, and conversion events with Google Analytics 4.',
     docsUrl: 'https://developers.google.com/analytics/devguides/reporting/data/v1',
     authMethod: 'oauth',
     credentials: [
@@ -760,7 +802,8 @@ export const platformCredentials: PlatformCredentialConfig[] = [
         type: 'password',
         placeholder: 'xxxxxxxxxxxxxxxx',
         helpText: 'Secret for sending events via Measurement Protocol.',
-        whereToFind: 'Google Analytics → Admin → Data Streams → Your Stream → Measurement Protocol → Create API Secret',
+        whereToFind:
+          'Google Analytics → Admin → Data Streams → Your Stream → Measurement Protocol → Create API Secret',
         required: false,
       },
     ],
@@ -832,7 +875,8 @@ export const platformCredentials: PlatformCredentialConfig[] = [
         type: 'password',
         placeholder: 'shpat_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
         helpText: 'Access token from a custom Shopify app.',
-        whereToFind: 'Shopify Admin → Settings → Apps and Sales Channels → Develop Apps → Your App → API Credentials → Admin API Access Token',
+        whereToFind:
+          'Shopify Admin → Settings → Apps and Sales Channels → Develop Apps → Your App → API Credentials → Admin API Access Token',
         required: true,
       },
       {
@@ -841,7 +885,8 @@ export const platformCredentials: PlatformCredentialConfig[] = [
         type: 'text',
         placeholder: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
         helpText: 'API key from your custom Shopify app.',
-        whereToFind: 'Shopify Admin → Settings → Apps and Sales Channels → Develop Apps → Your App → API Credentials → API Key',
+        whereToFind:
+          'Shopify Admin → Settings → Apps and Sales Channels → Develop Apps → Your App → API Credentials → API Key',
         required: false,
       },
       {
@@ -850,7 +895,8 @@ export const platformCredentials: PlatformCredentialConfig[] = [
         type: 'password',
         placeholder: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
         helpText: 'API Secret for webhook signature verification.',
-        whereToFind: 'Shopify Admin → Settings → Apps and Sales Channels → Develop Apps → Your App → API Credentials → API Secret Key',
+        whereToFind:
+          'Shopify Admin → Settings → Apps and Sales Channels → Develop Apps → Your App → API Credentials → API Secret Key',
         required: false,
       },
     ],
@@ -860,7 +906,7 @@ export const platformCredentials: PlatformCredentialConfig[] = [
       'Webhook signature verification uses the API Secret Key.',
     ],
   },
-]
+];
 
 // ─── Category Labels ──────────────────────────────────────────────────────
 
@@ -871,53 +917,56 @@ const categoryLabels: Record<string, string> = {
   analytics: 'Analytics & Tracking',
   payments: 'Payments',
   commerce: 'E-Commerce',
-}
+};
 
-const categoryOrder = ['ad-platform', 'crm', 'messaging', 'payments', 'analytics', 'commerce']
+const categoryOrder = ['ad-platform', 'crm', 'messaging', 'payments', 'analytics', 'commerce'];
 
 // ─── Modal Component ──────────────────────────────────────────────────────
 
 interface PlatformSetupModalProps {
-  platform: PlatformCredentialConfig | null
-  onClose: () => void
-  onConnect?: (platformId: string) => void
+  platform: PlatformCredentialConfig | null;
+  onClose: () => void;
+  onConnect?: (platformId: string) => void;
 }
 
 export function PlatformSetupModal({ platform, onClose, onConnect }: PlatformSetupModalProps) {
-  const [copiedField, setCopiedField] = useState<string | null>(null)
-  const [visibleFields, setVisibleFields] = useState<Set<string>>(new Set())
-  const [activeTab, setActiveTab] = useState<'credentials' | 'info'>('credentials')
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [visibleFields, setVisibleFields] = useState<Set<string>>(new Set());
+  const [activeTab, setActiveTab] = useState<'credentials' | 'info'>('credentials');
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current)
-    }
-  }, [])
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
-  if (!platform) return null
+  if (!platform) return null;
 
   const copyToClipboard = (text: string, field: string) => {
-    navigator.clipboard.writeText(text)
-    setCopiedField(field)
-    if (timeoutRef.current) clearTimeout(timeoutRef.current)
-    timeoutRef.current = setTimeout(() => setCopiedField(null), 2000)
-  }
+    navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => setCopiedField(null), 2000);
+  };
 
   const toggleVisibility = (field: string) => {
     setVisibleFields((prev) => {
-      const next = new Set(prev)
-      if (next.has(field)) next.delete(field)
-      else next.add(field)
-      return next
-    })
-  }
+      const next = new Set(prev);
+      if (next.has(field)) next.delete(field);
+      else next.add(field);
+      return next;
+    });
+  };
 
-  const requiredFields = platform.credentials.filter((c) => c.required)
-  const optionalFields = platform.credentials.filter((c) => !c.required)
+  const requiredFields = platform.credentials.filter((c) => c.required);
+  const optionalFields = platform.credentials.filter((c) => !c.required);
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-start justify-center z-50 p-4 overflow-y-auto" onClick={onClose}>
+    <div
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-start justify-center z-50 p-4 overflow-y-auto"
+      onClick={onClose}
+    >
       <div
         className="w-full max-w-2xl my-8 rounded-2xl border border-foreground/10 bg-background shadow-2xl"
         onClick={(e) => e.stopPropagation()}
@@ -946,7 +995,13 @@ export function PlatformSetupModal({ platform, onClose, onConnect }: PlatformSet
           <div className="flex items-center gap-2 mt-3">
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-foreground/15 text-white text-xs font-medium">
               <ShieldCheckIcon className="h-3.5 w-3.5" />
-              {platform.authMethod === 'oauth' ? 'OAuth 2.0' : platform.authMethod === 'oauth+api-key' ? 'OAuth 2.0 + API Key' : platform.authMethod === 'webhook' ? 'Webhook' : 'API Key'}
+              {platform.authMethod === 'oauth'
+                ? 'OAuth 2.0'
+                : platform.authMethod === 'oauth+api-key'
+                  ? 'OAuth 2.0 + API Key'
+                  : platform.authMethod === 'webhook'
+                    ? 'Webhook'
+                    : 'API Key'}
             </span>
             {platform.apiVersion && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-foreground/15 text-white text-xs font-medium">
@@ -1035,7 +1090,9 @@ export function PlatformSetupModal({ platform, onClose, onConnect }: PlatformSet
               {/* OAuth Scopes */}
               {platform.oauthScopes && platform.oauthScopes.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-foreground/90 uppercase tracking-wider mb-3">OAuth Scopes Required</h3>
+                  <h3 className="text-sm font-semibold text-foreground/90 uppercase tracking-wider mb-3">
+                    OAuth Scopes Required
+                  </h3>
                   <div className="flex flex-wrap gap-1.5">
                     {platform.oauthScopes.map((scope) => (
                       <span
@@ -1052,7 +1109,9 @@ export function PlatformSetupModal({ platform, onClose, onConnect }: PlatformSet
               {/* CAPI Events */}
               {platform.capiEvents && platform.capiEvents.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-foreground/90 uppercase tracking-wider mb-3">Supported Events</h3>
+                  <h3 className="text-sm font-semibold text-foreground/90 uppercase tracking-wider mb-3">
+                    Supported Events
+                  </h3>
                   <div className="flex flex-wrap gap-2">
                     {platform.capiEvents.map((event) => (
                       <span
@@ -1069,7 +1128,9 @@ export function PlatformSetupModal({ platform, onClose, onConnect }: PlatformSet
               {/* Audience Format */}
               {platform.audienceFormat && (
                 <div>
-                  <h3 className="text-sm font-semibold text-foreground/90 uppercase tracking-wider mb-3">Audience Sync Format</h3>
+                  <h3 className="text-sm font-semibold text-foreground/90 uppercase tracking-wider mb-3">
+                    Audience Sync Format
+                  </h3>
                   <p className="text-sm text-foreground/60">{platform.audienceFormat}</p>
                 </div>
               )}
@@ -1077,7 +1138,9 @@ export function PlatformSetupModal({ platform, onClose, onConnect }: PlatformSet
               {/* Notes */}
               {platform.notes && platform.notes.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-foreground/90 uppercase tracking-wider mb-3">Important Notes</h3>
+                  <h3 className="text-sm font-semibold text-foreground/90 uppercase tracking-wider mb-3">
+                    Important Notes
+                  </h3>
                   <ul className="space-y-2">
                     {platform.notes.map((note, i) => (
                       <li key={i} className="flex items-start gap-2 text-sm text-foreground/60">
@@ -1133,7 +1196,7 @@ export function PlatformSetupModal({ platform, onClose, onConnect }: PlatformSet
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 // ─── Credential Field Card ────────────────────────────────────────────────
@@ -1145,13 +1208,13 @@ function CredentialFieldCard({
   onToggleVisibility,
   onCopy,
 }: {
-  field: CredentialField
-  isVisible: boolean
-  isCopied: boolean
-  onToggleVisibility: () => void
-  onCopy: () => void
+  field: CredentialField;
+  isVisible: boolean;
+  isCopied: boolean;
+  onToggleVisibility: () => void;
+  onCopy: () => void;
 }) {
-  const [showWhereToFind, setShowWhereToFind] = useState(false)
+  const [showWhereToFind, setShowWhereToFind] = useState(false);
 
   return (
     <div className="rounded-xl border border-border bg-card p-4">
@@ -1160,7 +1223,9 @@ function CredentialFieldCard({
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-foreground/90">{field.label}</span>
             {field.required && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 font-medium">REQUIRED</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 font-medium">
+                REQUIRED
+              </span>
             )}
           </div>
           <p className="text-xs text-foreground/40 mt-0.5">{field.helpText}</p>
@@ -1180,7 +1245,11 @@ function CredentialFieldCard({
             className="p-1.5 rounded-lg hover:bg-foreground/5 text-foreground/40 hover:text-foreground/70 transition-colors"
             title="Copy placeholder"
           >
-            {isCopied ? <CheckIcon className="h-4 w-4 text-emerald-400" /> : <ClipboardDocumentIcon className="h-4 w-4" />}
+            {isCopied ? (
+              <CheckIcon className="h-4 w-4 text-emerald-400" />
+            ) : (
+              <ClipboardDocumentIcon className="h-4 w-4" />
+            )}
           </button>
         </div>
       </div>
@@ -1221,21 +1290,21 @@ function CredentialFieldCard({
         </div>
       )}
     </div>
-  )
+  );
 }
 
 // ─── Exports ──────────────────────────────────────────────────────────────
 
-export { categoryLabels, categoryOrder }
+export { categoryLabels, categoryOrder };
 
 export function getPlatformsByCategory() {
-  const grouped: Record<string, PlatformCredentialConfig[]> = {}
+  const grouped: Record<string, PlatformCredentialConfig[]> = {};
   for (const cat of categoryOrder) {
-    grouped[cat] = platformCredentials.filter((p) => p.category === cat)
+    grouped[cat] = platformCredentials.filter((p) => p.category === cat);
   }
-  return grouped
+  return grouped;
 }
 
 export function getPlatformById(id: string) {
-  return platformCredentials.find((p) => p.id === id) ?? null
+  return platformCredentials.find((p) => p.id === id) ?? null;
 }
