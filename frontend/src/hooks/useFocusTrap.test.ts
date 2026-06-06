@@ -127,7 +127,7 @@ describe('useFocusTrap', () => {
         shiftKey: false,
         bubbles: true,
       });
-      const preventDefaultSpy = vi.spyOn(event, 'preventDefault');
+      vi.spyOn(event, 'preventDefault');
 
       act(() => {
         document.dispatchEvent(event);
@@ -183,9 +183,7 @@ describe('useFocusTrap', () => {
 
       renderHook(() => useFocusTrap({ enabled: false }));
 
-      const keydownCalls = addEventSpy.mock.calls.filter(
-        (call) => call[0] === 'keydown'
-      );
+      const keydownCalls = addEventSpy.mock.calls.filter((call) => call[0] === 'keydown');
 
       // The hook should not have added a keydown listener
       expect(keydownCalls).toHaveLength(0);
@@ -198,9 +196,7 @@ describe('useFocusTrap', () => {
 
       renderHook(() => useFocusTrap({ enabled: true }));
 
-      const keydownCalls = addEventSpy.mock.calls.filter(
-        (call) => call[0] === 'keydown'
-      );
+      const keydownCalls = addEventSpy.mock.calls.filter((call) => call[0] === 'keydown');
 
       expect(keydownCalls.length).toBeGreaterThan(0);
 
@@ -245,9 +241,7 @@ describe('useFocusTrap', () => {
       const { unmount } = renderHook(() => useFocusTrap({ enabled: true }));
       unmount();
 
-      const keydownCalls = removeEventSpy.mock.calls.filter(
-        (call) => call[0] === 'keydown'
-      );
+      const keydownCalls = removeEventSpy.mock.calls.filter((call) => call[0] === 'keydown');
 
       expect(keydownCalls.length).toBeGreaterThan(0);
 

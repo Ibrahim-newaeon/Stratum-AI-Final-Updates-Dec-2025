@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 
 vi.mock('lucide-react', () => ({
   ArrowUp: (props: any) => <svg data-testid="arrow-up" {...props} />,
@@ -22,6 +22,7 @@ vi.mock('@/lib/utils', () => ({
 }));
 
 import { CampaignTable } from './CampaignTable';
+import type { Campaign } from '@/types/dashboard';
 
 // ---------------------------------------------------------------------------
 // Test data
@@ -40,6 +41,11 @@ const mockCampaigns = [
     cpa: 25,
     conversions: 200,
     ctr: 3.5,
+    impressions: 120000,
+    clicks: 4200,
+    cpm: 41.67,
+    status: 'Active',
+    start_date: '2025-01-01',
   },
   {
     campaign_id: 'c2',
@@ -53,6 +59,11 @@ const mockCampaigns = [
     cpa: 30,
     conversions: 100,
     ctr: 2.1,
+    impressions: 90000,
+    clicks: 1890,
+    cpm: 33.33,
+    status: 'Active',
+    start_date: '2025-01-15',
   },
   {
     campaign_id: 'c3',
@@ -66,8 +77,13 @@ const mockCampaigns = [
     cpa: 80,
     conversions: 50,
     ctr: 1.2,
+    impressions: 200000,
+    clicks: 2400,
+    cpm: 40.0,
+    status: 'Paused',
+    start_date: '2025-02-01',
   },
-];
+] as unknown as Campaign[];
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -81,9 +97,7 @@ describe('CampaignTable', () => {
   it('renders the search input', () => {
     render(<CampaignTable campaigns={mockCampaigns} />);
 
-    expect(
-      screen.getByPlaceholderText('Search campaigns...')
-    ).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Search campaigns...')).toBeInTheDocument();
   });
 
   it('renders campaign names in the table', () => {
@@ -133,9 +147,7 @@ describe('CampaignTable', () => {
 
   it('calls onCampaignClick when a row is clicked', () => {
     const handleClick = vi.fn();
-    render(
-      <CampaignTable campaigns={mockCampaigns} onCampaignClick={handleClick} />
-    );
+    render(<CampaignTable campaigns={mockCampaigns} onCampaignClick={handleClick} />);
 
     fireEvent.click(screen.getByText('Summer Sale'));
     expect(handleClick).toHaveBeenCalledWith('c1');
@@ -159,9 +171,7 @@ describe('CampaignTable', () => {
 
   it('renders sync buttons when onSyncCampaign is provided', () => {
     const handleSync = vi.fn();
-    render(
-      <CampaignTable campaigns={mockCampaigns} onSyncCampaign={handleSync} />
-    );
+    render(<CampaignTable campaigns={mockCampaigns} onSyncCampaign={handleSync} />);
 
     const syncButtons = screen.getAllByTitle(/Sync .+ from/);
     expect(syncButtons).toHaveLength(3);
@@ -169,9 +179,7 @@ describe('CampaignTable', () => {
 
   it('calls onSyncCampaign with campaign ID when sync is clicked', () => {
     const handleSync = vi.fn();
-    render(
-      <CampaignTable campaigns={mockCampaigns} onSyncCampaign={handleSync} />
-    );
+    render(<CampaignTable campaigns={mockCampaigns} onSyncCampaign={handleSync} />);
 
     const syncButton = screen.getByTitle('Sync Summer Sale from Google Ads');
     fireEvent.click(syncButton);

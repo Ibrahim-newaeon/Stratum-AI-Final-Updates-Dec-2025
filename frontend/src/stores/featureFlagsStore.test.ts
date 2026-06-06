@@ -6,7 +6,7 @@
  * convenience hooks, and standalone utility functions.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import {
   useFeatureFlagsStore,
@@ -21,7 +21,7 @@ import {
   getAutopilotLevel,
   isAutopilotBlocked,
 } from './featureFlagsStore';
-import type { FeatureFlags, FeatureFlagsState, FeatureCategory } from './featureFlagsStore';
+import type { FeatureFlags, FeatureCategory } from './featureFlagsStore';
 
 // =============================================================================
 // Test Fixtures
@@ -281,41 +281,31 @@ describe('featureFlagsStore', () => {
     });
 
     it('returns true for enabled boolean features', () => {
-      useFeatureFlagsStore.getState().setFeatures(
-        createMockFeatures({ signal_health: true })
-      );
+      useFeatureFlagsStore.getState().setFeatures(createMockFeatures({ signal_health: true }));
 
       expect(useFeatureFlagsStore.getState().can('signal_health')).toBe(true);
     });
 
     it('returns false for disabled boolean features', () => {
-      useFeatureFlagsStore.getState().setFeatures(
-        createMockFeatures({ signal_health: false })
-      );
+      useFeatureFlagsStore.getState().setFeatures(createMockFeatures({ signal_health: false }));
 
       expect(useFeatureFlagsStore.getState().can('signal_health')).toBe(false);
     });
 
     it('returns true for numeric features greater than 0', () => {
-      useFeatureFlagsStore.getState().setFeatures(
-        createMockFeatures({ autopilot_level: 1 })
-      );
+      useFeatureFlagsStore.getState().setFeatures(createMockFeatures({ autopilot_level: 1 }));
 
       expect(useFeatureFlagsStore.getState().can('autopilot_level')).toBe(true);
     });
 
     it('returns false for numeric features equal to 0', () => {
-      useFeatureFlagsStore.getState().setFeatures(
-        createMockFeatures({ autopilot_level: 0 })
-      );
+      useFeatureFlagsStore.getState().setFeatures(createMockFeatures({ autopilot_level: 0 }));
 
       expect(useFeatureFlagsStore.getState().can('autopilot_level')).toBe(false);
     });
 
     it('returns true for positive max_campaigns', () => {
-      useFeatureFlagsStore.getState().setFeatures(
-        createMockFeatures({ max_campaigns: 50 })
-      );
+      useFeatureFlagsStore.getState().setFeatures(createMockFeatures({ max_campaigns: 50 }));
 
       expect(useFeatureFlagsStore.getState().can('max_campaigns')).toBe(true);
     });
@@ -337,25 +327,19 @@ describe('featureFlagsStore', () => {
     });
 
     it('returns the autopilot_level from features', () => {
-      useFeatureFlagsStore.getState().setFeatures(
-        createMockFeatures({ autopilot_level: 2 })
-      );
+      useFeatureFlagsStore.getState().setFeatures(createMockFeatures({ autopilot_level: 2 }));
 
       expect(useFeatureFlagsStore.getState().getAutopilotLevel()).toBe(2);
     });
 
     it('returns 0 for suggest-only level', () => {
-      useFeatureFlagsStore.getState().setFeatures(
-        createMockFeatures({ autopilot_level: 0 })
-      );
+      useFeatureFlagsStore.getState().setFeatures(createMockFeatures({ autopilot_level: 0 }));
 
       expect(useFeatureFlagsStore.getState().getAutopilotLevel()).toBe(0);
     });
 
     it('returns 1 for guarded auto level', () => {
-      useFeatureFlagsStore.getState().setFeatures(
-        createMockFeatures({ autopilot_level: 1 })
-      );
+      useFeatureFlagsStore.getState().setFeatures(createMockFeatures({ autopilot_level: 1 }));
 
       expect(useFeatureFlagsStore.getState().getAutopilotLevel()).toBe(1);
     });
@@ -371,9 +355,7 @@ describe('featureFlagsStore', () => {
     });
 
     it('returns false for level 0 (suggest only) regardless of health', () => {
-      useFeatureFlagsStore.getState().setFeatures(
-        createMockFeatures({ autopilot_level: 0 })
-      );
+      useFeatureFlagsStore.getState().setFeatures(createMockFeatures({ autopilot_level: 0 }));
 
       expect(useFeatureFlagsStore.getState().isAutopilotBlocked('degraded')).toBe(false);
       expect(useFeatureFlagsStore.getState().isAutopilotBlocked('critical')).toBe(false);
@@ -381,41 +363,31 @@ describe('featureFlagsStore', () => {
     });
 
     it('returns true for level 1 when signal health is degraded', () => {
-      useFeatureFlagsStore.getState().setFeatures(
-        createMockFeatures({ autopilot_level: 1 })
-      );
+      useFeatureFlagsStore.getState().setFeatures(createMockFeatures({ autopilot_level: 1 }));
 
       expect(useFeatureFlagsStore.getState().isAutopilotBlocked('degraded')).toBe(true);
     });
 
     it('returns true for level 1 when signal health is critical', () => {
-      useFeatureFlagsStore.getState().setFeatures(
-        createMockFeatures({ autopilot_level: 1 })
-      );
+      useFeatureFlagsStore.getState().setFeatures(createMockFeatures({ autopilot_level: 1 }));
 
       expect(useFeatureFlagsStore.getState().isAutopilotBlocked('critical')).toBe(true);
     });
 
     it('returns false for level 1 when signal health is healthy', () => {
-      useFeatureFlagsStore.getState().setFeatures(
-        createMockFeatures({ autopilot_level: 1 })
-      );
+      useFeatureFlagsStore.getState().setFeatures(createMockFeatures({ autopilot_level: 1 }));
 
       expect(useFeatureFlagsStore.getState().isAutopilotBlocked('healthy')).toBe(false);
     });
 
     it('returns true for level 2 when signal health is degraded', () => {
-      useFeatureFlagsStore.getState().setFeatures(
-        createMockFeatures({ autopilot_level: 2 })
-      );
+      useFeatureFlagsStore.getState().setFeatures(createMockFeatures({ autopilot_level: 2 }));
 
       expect(useFeatureFlagsStore.getState().isAutopilotBlocked('degraded')).toBe(true);
     });
 
     it('returns false for level 2 when signal health is healthy', () => {
-      useFeatureFlagsStore.getState().setFeatures(
-        createMockFeatures({ autopilot_level: 2 })
-      );
+      useFeatureFlagsStore.getState().setFeatures(createMockFeatures({ autopilot_level: 2 }));
 
       expect(useFeatureFlagsStore.getState().isAutopilotBlocked('healthy')).toBe(false);
     });
@@ -475,27 +447,21 @@ describe('featureFlagsStore', () => {
     });
 
     it('useCanFeature returns true for enabled feature', () => {
-      useFeatureFlagsStore.getState().setFeatures(
-        createMockFeatures({ signal_health: true })
-      );
+      useFeatureFlagsStore.getState().setFeatures(createMockFeatures({ signal_health: true }));
 
       const { result } = renderHook(() => useCanFeature('signal_health'));
       expect(result.current).toBe(true);
     });
 
     it('useCanFeature returns false for disabled feature', () => {
-      useFeatureFlagsStore.getState().setFeatures(
-        createMockFeatures({ signal_health: false })
-      );
+      useFeatureFlagsStore.getState().setFeatures(createMockFeatures({ signal_health: false }));
 
       const { result } = renderHook(() => useCanFeature('signal_health'));
       expect(result.current).toBe(false);
     });
 
     it('useAutopilotLevel returns current autopilot level', () => {
-      useFeatureFlagsStore.getState().setFeatures(
-        createMockFeatures({ autopilot_level: 2 })
-      );
+      useFeatureFlagsStore.getState().setFeatures(createMockFeatures({ autopilot_level: 2 }));
 
       const { result } = renderHook(() => useAutopilotLevel());
       expect(result.current).toBe(2);
@@ -513,9 +479,7 @@ describe('featureFlagsStore', () => {
 
   describe('Standalone utility functions', () => {
     it('can() checks feature directly from store state', () => {
-      useFeatureFlagsStore.getState().setFeatures(
-        createMockFeatures({ ai_recommendations: true })
-      );
+      useFeatureFlagsStore.getState().setFeatures(createMockFeatures({ ai_recommendations: true }));
 
       expect(can('ai_recommendations')).toBe(true);
       expect(can('creative_fatigue')).toBe(false);
@@ -526,9 +490,7 @@ describe('featureFlagsStore', () => {
     });
 
     it('getAutopilotLevel() reads from store state', () => {
-      useFeatureFlagsStore.getState().setFeatures(
-        createMockFeatures({ autopilot_level: 1 })
-      );
+      useFeatureFlagsStore.getState().setFeatures(createMockFeatures({ autopilot_level: 1 }));
 
       expect(getAutopilotLevel()).toBe(1);
     });
@@ -538,9 +500,7 @@ describe('featureFlagsStore', () => {
     });
 
     it('isAutopilotBlocked() reads from store state', () => {
-      useFeatureFlagsStore.getState().setFeatures(
-        createMockFeatures({ autopilot_level: 2 })
-      );
+      useFeatureFlagsStore.getState().setFeatures(createMockFeatures({ autopilot_level: 2 }));
 
       expect(isAutopilotBlocked('degraded')).toBe(true);
       expect(isAutopilotBlocked('healthy')).toBe(false);
@@ -569,34 +529,26 @@ describe('featureFlagsStore', () => {
     });
 
     it('updates useCanFeature when features change', () => {
-      useFeatureFlagsStore.getState().setFeatures(
-        createMockFeatures({ anomaly_alerts: false })
-      );
+      useFeatureFlagsStore.getState().setFeatures(createMockFeatures({ anomaly_alerts: false }));
 
       const { result } = renderHook(() => useCanFeature('anomaly_alerts'));
       expect(result.current).toBe(false);
 
       act(() => {
-        useFeatureFlagsStore.getState().setFeatures(
-          createMockFeatures({ anomaly_alerts: true })
-        );
+        useFeatureFlagsStore.getState().setFeatures(createMockFeatures({ anomaly_alerts: true }));
       });
 
       expect(result.current).toBe(true);
     });
 
     it('updates useAutopilotLevel when features change', () => {
-      useFeatureFlagsStore.getState().setFeatures(
-        createMockFeatures({ autopilot_level: 0 })
-      );
+      useFeatureFlagsStore.getState().setFeatures(createMockFeatures({ autopilot_level: 0 }));
 
       const { result } = renderHook(() => useAutopilotLevel());
       expect(result.current).toBe(0);
 
       act(() => {
-        useFeatureFlagsStore.getState().setFeatures(
-          createMockFeatures({ autopilot_level: 2 })
-        );
+        useFeatureFlagsStore.getState().setFeatures(createMockFeatures({ autopilot_level: 2 }));
       });
 
       expect(result.current).toBe(2);
@@ -631,9 +583,7 @@ describe('featureFlagsStore', () => {
 
     it('handles all autopilot levels (0, 1, 2)', () => {
       for (const level of [0, 1, 2]) {
-        useFeatureFlagsStore.getState().setFeatures(
-          createMockFeatures({ autopilot_level: level })
-        );
+        useFeatureFlagsStore.getState().setFeatures(createMockFeatures({ autopilot_level: level }));
         expect(useFeatureFlagsStore.getState().getAutopilotLevel()).toBe(level);
       }
     });

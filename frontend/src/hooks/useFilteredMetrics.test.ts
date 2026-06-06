@@ -30,7 +30,7 @@ const { mockShowPriceMetrics, mockVisibilityData, MOCK_METRICS } = vi.hoisted(()
     impressions: {
       id: 'impressions',
       label: 'Impressions',
-      category: 'performance',
+      category: 'engagement',
       platforms: ['meta', 'google'],
       isPriceMetric: false,
     },
@@ -51,7 +51,7 @@ const { mockShowPriceMetrics, mockVisibilityData, MOCK_METRICS } = vi.hoisted(()
     clicks: {
       id: 'clicks',
       label: 'Clicks',
-      category: 'performance',
+      category: 'engagement',
       platforms: ['meta', 'google', 'snapchat'],
       isPriceMetric: false,
     },
@@ -115,17 +115,15 @@ describe('useFilteredMetrics', () => {
 
   describe('Category Filter', () => {
     it('should filter metrics by category', () => {
-      const { result } = renderHook(() =>
-        useFilteredMetrics({ categories: ['performance'] })
-      );
+      const { result } = renderHook(() => useFilteredMetrics({ categories: ['engagement'] }));
 
       expect(result.current.metrics).toHaveLength(2);
-      expect(result.current.metrics.every((m: any) => m.category === 'performance')).toBe(true);
+      expect(result.current.metrics.every((m: any) => m.category === 'engagement')).toBe(true);
     });
 
     it('should support multiple categories', () => {
       const { result } = renderHook(() =>
-        useFilteredMetrics({ categories: ['performance', 'conversion'] })
+        useFilteredMetrics({ categories: ['engagement', 'conversion'] })
       );
 
       expect(result.current.metrics).toHaveLength(3);
@@ -146,18 +144,14 @@ describe('useFilteredMetrics', () => {
 
   describe('Platform Filter', () => {
     it('should filter metrics by platform', () => {
-      const { result } = renderHook(() =>
-        useFilteredMetrics({ platform: 'tiktok' as any })
-      );
+      const { result } = renderHook(() => useFilteredMetrics({ platform: 'tiktok' as any }));
 
       // spend (tiktok) + conversions (tiktok)
       expect(result.current.metrics).toHaveLength(2);
     });
 
     it('should filter metrics for snapchat platform', () => {
-      const { result } = renderHook(() =>
-        useFilteredMetrics({ platform: 'snapchat' as any })
-      );
+      const { result } = renderHook(() => useFilteredMetrics({ platform: 'snapchat' as any }));
 
       // Only clicks has snapchat
       expect(result.current.metrics).toHaveLength(1);
@@ -222,9 +216,7 @@ describe('useFilteredMetrics', () => {
     it('should force include price metrics when forceIncludePriceMetrics is true', () => {
       mockShowPriceMetrics.mockReturnValue(false);
 
-      const { result } = renderHook(() =>
-        useFilteredMetrics({ forceIncludePriceMetrics: true })
-      );
+      const { result } = renderHook(() => useFilteredMetrics({ forceIncludePriceMetrics: true }));
 
       expect(result.current.metrics).toHaveLength(5);
     });
@@ -237,7 +229,7 @@ describe('useFilteredMetrics', () => {
   describe('Combined Filters', () => {
     it('should apply category + platform filters together', () => {
       const { result } = renderHook(() =>
-        useFilteredMetrics({ categories: ['performance'], platform: 'meta' as any })
+        useFilteredMetrics({ categories: ['engagement'], platform: 'meta' as any })
       );
 
       // performance + meta: impressions, clicks
@@ -251,9 +243,7 @@ describe('useFilteredMetrics', () => {
         isLoading: false,
       });
 
-      const { result } = renderHook(() =>
-        useFilteredMetrics({ categories: ['performance'] })
-      );
+      const { result } = renderHook(() => useFilteredMetrics({ categories: ['engagement'] }));
 
       // performance = impressions, clicks
       // hidden = clicks removed
@@ -271,7 +261,7 @@ describe('useFilteredMetrics', () => {
   describe('Loading State', () => {
     it('should expose isLoading from visibility query', () => {
       mockVisibilityData.mockReturnValue({
-        data: null,
+        data: { hidden_metrics: [] },
         isLoading: true,
       });
 

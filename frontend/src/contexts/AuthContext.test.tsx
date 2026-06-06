@@ -5,8 +5,8 @@
  * demo login fallback, and the useAuth hook.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, act, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, act, waitFor } from '@testing-library/react';
 import { AuthProvider, useAuth } from './AuthContext';
 
 // ---------------------------------------------------------------------------
@@ -90,7 +90,7 @@ vi.mock('@/components/auth/IdleTimeoutWarning', () => ({
 // Mock fetch
 // ---------------------------------------------------------------------------
 const mockFetch = vi.fn();
-global.fetch = mockFetch;
+globalThis.fetch = mockFetch;
 
 // ---------------------------------------------------------------------------
 // Helper to consume the auth context in tests

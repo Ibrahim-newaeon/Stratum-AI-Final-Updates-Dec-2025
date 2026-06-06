@@ -17,77 +17,66 @@ import { renderHook, act } from '@testing-library/react';
 // factory runs.
 // ---------------------------------------------------------------------------
 
-const {
-  mockSave,
-  mockText,
-  mockRect,
-  mockAddImage,
-  mockAddPage,
-  mockSetFillColor,
-  mockSetTextColor,
-  mockSetFontSize,
-  mockSetFont,
-  mockPdf,
-  mockJsPDF,
-  mockCanvas,
-  mockHtml2canvas,
-} = vi.hoisted(() => {
-  const mockSave = vi.fn();
-  const mockText = vi.fn();
-  const mockRect = vi.fn();
-  const mockAddImage = vi.fn();
-  const mockAddPage = vi.fn();
-  const mockSetFillColor = vi.fn();
-  const mockSetTextColor = vi.fn();
-  const mockSetFontSize = vi.fn();
-  const mockSetFont = vi.fn();
+const { mockSave, mockText, mockAddPage, mockSetTextColor, mockJsPDF, mockHtml2canvas } =
+  vi.hoisted(() => {
+    const mockSave = vi.fn();
+    const mockText = vi.fn();
+    const mockRect = vi.fn();
+    const mockAddImage = vi.fn();
+    const mockAddPage = vi.fn();
+    const mockSetFillColor = vi.fn();
+    const mockSetTextColor = vi.fn();
+    const mockSetFontSize = vi.fn();
+    const mockSetFont = vi.fn();
 
-  const mockPdf = {
-    internal: {
-      pageSize: {
-        getWidth: () => 297, // A4 landscape width in mm
-        getHeight: () => 210,
+    const mockPdf = {
+      internal: {
+        pageSize: {
+          getWidth: () => 297, // A4 landscape width in mm
+          getHeight: () => 210,
+        },
       },
-    },
-    save: mockSave,
-    text: mockText,
-    rect: mockRect,
-    addImage: mockAddImage,
-    addPage: mockAddPage,
-    setFillColor: mockSetFillColor,
-    setTextColor: mockSetTextColor,
-    setFontSize: mockSetFontSize,
-    setFont: mockSetFont,
-  };
+      save: mockSave,
+      text: mockText,
+      rect: mockRect,
+      addImage: mockAddImage,
+      addPage: mockAddPage,
+      setFillColor: mockSetFillColor,
+      setTextColor: mockSetTextColor,
+      setFontSize: mockSetFontSize,
+      setFont: mockSetFont,
+    };
 
-  // Use a regular function (not arrow) so the mock can be called with `new`.
-  // Returning a non-primitive from a constructor makes `new` use that object.
-  const mockJsPDF = vi.fn(function() { return mockPdf; });
+    // Use a regular function (not arrow) so the mock can be called with `new`.
+    // Returning a non-primitive from a constructor makes `new` use that object.
+    const mockJsPDF = vi.fn(function () {
+      return mockPdf;
+    });
 
-  const mockCanvas = {
-    width: 800,
-    height: 600,
-    toDataURL: vi.fn().mockReturnValue('data:image/png;base64,mockdata'),
-  };
+    const mockCanvas = {
+      width: 800,
+      height: 600,
+      toDataURL: vi.fn().mockReturnValue('data:image/png;base64,mockdata'),
+    };
 
-  const mockHtml2canvas = vi.fn().mockResolvedValue(mockCanvas);
+    const mockHtml2canvas = vi.fn().mockResolvedValue(mockCanvas);
 
-  return {
-    mockSave,
-    mockText,
-    mockRect,
-    mockAddImage,
-    mockAddPage,
-    mockSetFillColor,
-    mockSetTextColor,
-    mockSetFontSize,
-    mockSetFont,
-    mockPdf,
-    mockJsPDF,
-    mockCanvas,
-    mockHtml2canvas,
-  };
-});
+    return {
+      mockSave,
+      mockText,
+      mockRect,
+      mockAddImage,
+      mockAddPage,
+      mockSetFillColor,
+      mockSetTextColor,
+      mockSetFontSize,
+      mockSetFont,
+      mockPdf,
+      mockJsPDF,
+      mockCanvas,
+      mockHtml2canvas,
+    };
+  });
 
 // Mock dynamic imports
 vi.mock('jspdf', () => ({ default: mockJsPDF }));
@@ -208,11 +197,14 @@ describe('usePdfExport', () => {
         await result.current.exportToPdf(element);
       });
 
-      expect(mockHtml2canvas).toHaveBeenCalledWith(element, expect.objectContaining({
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#0a0a0a',
-      }));
+      expect(mockHtml2canvas).toHaveBeenCalledWith(
+        element,
+        expect.objectContaining({
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#0a0a0a',
+        })
+      );
     });
 
     it('should use custom quality setting', async () => {
@@ -223,10 +215,7 @@ describe('usePdfExport', () => {
         await result.current.exportToPdf(element, { quality: 4 });
       });
 
-      expect(mockHtml2canvas).toHaveBeenCalledWith(
-        element,
-        expect.objectContaining({ scale: 4 })
-      );
+      expect(mockHtml2canvas).toHaveBeenCalledWith(element, expect.objectContaining({ scale: 4 }));
     });
 
     it('should save the PDF with timestamped filename', async () => {
@@ -237,7 +226,9 @@ describe('usePdfExport', () => {
         await result.current.exportToPdf(element, { filename: 'my-report' });
       });
 
-      expect(mockSave).toHaveBeenCalledWith(expect.stringMatching(/^my-report-\d{4}-\d{2}-\d{2}\.pdf$/));
+      expect(mockSave).toHaveBeenCalledWith(
+        expect.stringMatching(/^my-report-\d{4}-\d{2}-\d{2}\.pdf$/)
+      );
     });
 
     it('should reset isExporting and progress after export', async () => {
@@ -278,10 +269,12 @@ describe('usePdfExport', () => {
       });
 
       expect(exportResult.success).toBe(true);
-      expect(mockJsPDF).toHaveBeenCalledWith(expect.objectContaining({
-        orientation: 'landscape',
-        format: 'a4',
-      }));
+      expect(mockJsPDF).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orientation: 'landscape',
+          format: 'a4',
+        })
+      );
     });
 
     it('should add header with Stratum AI branding', async () => {
@@ -307,7 +300,9 @@ describe('usePdfExport', () => {
 
       // Should have called text with a UTC timestamp
       const textCalls = mockText.mock.calls.map((c: any) => c[0]);
-      const hasTimestamp = textCalls.some((t: string) => typeof t === 'string' && t.includes('UTC'));
+      const hasTimestamp = textCalls.some(
+        (t: string) => typeof t === 'string' && t.includes('UTC')
+      );
       expect(hasTimestamp).toBe(true);
     });
   });
