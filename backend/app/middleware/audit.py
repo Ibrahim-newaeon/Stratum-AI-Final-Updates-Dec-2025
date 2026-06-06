@@ -14,6 +14,7 @@ from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
 
+from app.core.constants import AUDIT_LOG_QUEUE_KEY
 from app.core.logging import get_logger
 from app.models import AuditAction
 
@@ -114,7 +115,7 @@ class AuditMiddleware(BaseHTTPMiddleware):
                 "action": action.value,
                 "resource_type": resource_type,
                 "resource_id": resource_id,
-                "new_value": self._sanitize_for_audit(request_body),
+                "new_values": self._sanitize_for_audit(request_body),
                 "ip_address": ip_address,
                 "user_agent": user_agent,
                 "request_id": request_id,
@@ -255,7 +256,7 @@ class AuditMiddleware(BaseHTTPMiddleware):
 
             client = redis.from_url(settings.redis_url)
             try:
-                await client.lpush("audit_log_queue", json.dumps(audit_entry))  # type: ignore[misc]
+                await client.lpush(AUDIT_LOG_QUEUE_KEY, json.dumps(audit_entry))  # type: ignore[misc]
             finally:
                 await client.close()
         except (ConnectionError, TimeoutError, OSError) as e:

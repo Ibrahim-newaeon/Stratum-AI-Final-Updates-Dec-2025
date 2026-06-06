@@ -12,6 +12,7 @@ from celery import shared_task
 from celery.utils.log import get_task_logger
 
 from app.core.config import settings
+from app.core.constants import AUDIT_LOG_QUEUE_KEY
 from app.db.session import SyncSessionLocal
 from app.models import AuditAction, AuditLog
 
@@ -30,7 +31,7 @@ def process_audit_log_queue():
         import redis
 
         redis_client = redis.from_url(settings.redis_url)
-        queue_key = "audit:log:queue"
+        queue_key = AUDIT_LOG_QUEUE_KEY
 
         # Get batch of entries
         batch_size = 100
@@ -60,8 +61,8 @@ def process_audit_log_queue():
                     ip_address=entry.get("ip_address"),
                     user_agent=entry.get("user_agent"),
                     created_at=(
-                        datetime.fromisoformat(entry.get("timestamp"))
-                        if entry.get("timestamp")
+                        datetime.fromisoformat(entry.get("created_at"))
+                        if entry.get("created_at")
                         else datetime.now(UTC)
                     ),
                 )
