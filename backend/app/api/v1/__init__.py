@@ -56,6 +56,7 @@ from app.api.v1.endpoints import (  # Previously unregistered endpoints; Gap end
     payments,
     predictions,
     profit,
+    programmatic,
     push_notifications,
     qa_fixes,
     reporting,
@@ -370,6 +371,13 @@ api_router.include_router(
 api_router.include_router(
     api_keys.router,
     tags=["API Keys"],
+)
+
+# Programmatic API (authenticated by X-API-Key, not JWT)
+# Note: programmatic.router already has prefix="/programmatic"
+api_router.include_router(
+    programmatic.router,
+    tags=["Programmatic API"],
 )
 
 # CDP (Customer Data Platform)
