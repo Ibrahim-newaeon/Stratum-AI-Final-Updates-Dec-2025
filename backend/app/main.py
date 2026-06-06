@@ -212,6 +212,17 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
             detail="ML predictions will be unavailable",
         )
 
+    # Register platform ad-adapters so the stratum action layer can resolve
+    # them by platform (Meta/Google/TikTok/Snapchat). Previously defined but
+    # never called at startup, leaving the registry empty.
+    try:
+        from app.stratum.adapters.registry import register_default_adapters
+
+        register_default_adapters()
+        logger.info("platform_adapters_registered")
+    except (ImportError, RuntimeError, ValueError) as e:
+        logger.warning("platform_adapter_registration_failed", error=str(e))
+
     # Auto-seed superadmin if not exists or update password
     try:
         from scripts.seed_superadmin import create_superadmin
