@@ -102,6 +102,35 @@ class TokenResponse(BaseSchema):
     expires_in: int
 
 
+class LoginResponse(BaseSchema):
+    """
+    Login response — either issued tokens, or an MFA challenge.
+
+    When the user has MFA enabled, ``mfa_required`` is True and ``mfa_token``
+    carries a short-lived challenge token that must be exchanged (with a TOTP
+    or backup code) at ``POST /auth/login/mfa`` for real tokens.
+    """
+
+    access_token: Optional[str] = None
+    refresh_token: Optional[str] = None
+    token_type: str = "bearer"
+    expires_in: Optional[int] = None
+    available_tenants: Optional[list] = None
+    mfa_required: bool = False
+    mfa_token: Optional[str] = None
+
+
+class MFALoginRequest(BaseSchema):
+    """Second step of MFA login: exchange a challenge token + code for tokens."""
+
+    mfa_token: str = Field(
+        ..., description="Short-lived MFA challenge token from /login"
+    )
+    code: str = Field(
+        ..., min_length=6, max_length=8, description="TOTP code or backup code"
+    )
+
+
 class LoginRequest(BaseSchema):
     """Login request body."""
 

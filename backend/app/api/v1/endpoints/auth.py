@@ -39,12 +39,15 @@ from app.models import AuditAction, AuditLog, User
 from app.schemas import (
     APIResponse,
     LoginRequest,
+    LoginResponse,
+    MFALoginRequest,
     RefreshTokenRequest,
     TokenResponse,
     UserCreate,
     UserResponse,
 )
 from app.services.email_service import get_email_service
+from app.services.mfa_service import MFAService
 from app.services.whatsapp_client import (
     WhatsAppAPIError,
     WhatsAppNotConfiguredError,
@@ -561,7 +564,80 @@ async def verify_email_otp(request: VerifyEmailOTPRequest):
         )
 
 
-@router.post("/login", response_model=APIResponse[TokenResponse])
+async def _issue_login_tokens(request: Request, user: User, db: AsyncSession) -> dict:
+    """
+    Issue access/refresh tokens for a fully-authenticated user.
+
+    Shared by password login and the MFA second-factor exchange. Updates
+    last-login, writes the LOGIN audit event, and returns the response data
+    (including the multi-account tenant list).
+    """
+    user.last_login_at = datetime.now(timezone.utc)
+    await db.commit()
+
+    access_token = create_access_token(
+        subject=user.id,
+        additional_claims={
+            "tenant_id": user.tenant_id,
+            "role": user.role.value,
+            "cms_role": user.cms_role,
+            # NOTE: email intentionally excluded from JWT to prevent PII leakage
+        },
+    )
+    refresh_token = create_refresh_token(subject=user.id)
+
+    audit_log = AuditLog(
+        tenant_id=user.tenant_id,
+        user_id=user.id,
+        action=AuditAction.LOGIN,
+        resource_type="user",
+        resource_id=str(user.id),
+        ip_address=request.client.host if request.client else None,
+        user_agent=request.headers.get("User-Agent", "")[:500],
+    )
+    db.add(audit_log)
+    await db.commit()
+
+    logger.info("user_logged_in", user_id=user.id, tenant_id=user.tenant_id)
+
+    from app.models import Tenant as TenantModel
+    from app.models import UserTenantMembership
+
+    membership_result = await db.execute(
+        select(UserTenantMembership, TenantModel)
+        .join(TenantModel, UserTenantMembership.tenant_id == TenantModel.id)
+        .where(
+            UserTenantMembership.user_id == user.id,
+            UserTenantMembership.is_active == True,
+            TenantModel.is_deleted == False,
+        )
+        .order_by(UserTenantMembership.is_default.desc(), TenantModel.name)
+        .limit(1000)
+    )
+    membership_rows = membership_result.all()
+    available_tenants = [
+        {
+            "tenant_id": t.id,
+            "tenant_name": t.name,
+            "tenant_slug": t.slug,
+            "tenant_plan": t.plan,
+            "role": m.role.value if hasattr(m.role, "value") else str(m.role),
+            "is_default": m.is_default,
+            "is_active": m.is_active,
+        }
+        for m, t in membership_rows
+    ]
+
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer",
+        "expires_in": 30 * 60,  # 30 minutes
+        "available_tenants": available_tenants,
+    }
+
+
+@router.post("/login", response_model=APIResponse[LoginResponse])
 async def login(
     request: Request,
     login_data: LoginRequest,
@@ -636,78 +712,79 @@ async def login(
     except (ConnectionError, TimeoutError, OSError) as exc:
         logger.warning("redis_unavailable_clear_login_attempts", error=str(exc))
 
-    # Update last login
-    user.last_login_at = datetime.now(timezone.utc)
-    await db.commit()
-
-    # Create tokens
-    access_token = create_access_token(
-        subject=user.id,
-        additional_claims={
-            "tenant_id": user.tenant_id,
-            "role": user.role.value,
-            "cms_role": user.cms_role,
-            # NOTE: email intentionally excluded from JWT to prevent PII leakage
-            # JWTs are base64-encoded (not encrypted) and visible in request headers
-        },
-    )
-    refresh_token = create_refresh_token(subject=user.id)
-
-    # Log login event
-    audit_log = AuditLog(
-        tenant_id=user.tenant_id,
-        user_id=user.id,
-        action=AuditAction.LOGIN,
-        resource_type="user",
-        resource_id=str(user.id),
-        ip_address=request.client.host if request.client else None,
-        user_agent=request.headers.get("User-Agent", "")[:500],
-    )
-    db.add(audit_log)
-    await db.commit()
-
-    logger.info("user_logged_in", user_id=user.id, tenant_id=user.tenant_id)
-
-    # Fetch available tenants for multi-account switcher
-    from app.models import Tenant as TenantModel
-    from app.models import UserTenantMembership
-
-    membership_result = await db.execute(
-        select(UserTenantMembership, TenantModel)
-        .join(TenantModel, UserTenantMembership.tenant_id == TenantModel.id)
-        .where(
-            UserTenantMembership.user_id == user.id,
-            UserTenantMembership.is_active == True,
-            TenantModel.is_deleted == False,
+    # MFA gate — when the user has a verified second factor, do NOT issue
+    # tokens yet. Return a short-lived challenge token that must be exchanged
+    # (with a TOTP/backup code) at POST /auth/login/mfa.
+    if user.totp_enabled:
+        mfa_challenge = create_access_token(
+            subject=user.id,
+            expires_delta=timedelta(minutes=5),
+            additional_claims={"type": "mfa_challenge"},
         )
-        .order_by(UserTenantMembership.is_default.desc(), TenantModel.name)
-        .limit(1000)
-    )
-    membership_rows = membership_result.all()
-    available_tenants = [
-        {
-            "tenant_id": t.id,
-            "tenant_name": t.name,
-            "tenant_slug": t.slug,
-            "tenant_plan": t.plan,
-            "role": m.role.value if hasattr(m.role, "value") else str(m.role),
-            "is_default": m.is_default,
-            "is_active": m.is_active,
-        }
-        for m, t in membership_rows
-    ]
+        logger.info("login_mfa_required", user_id=user.id)
+        return APIResponse(
+            success=True,
+            data={
+                "mfa_required": True,
+                "mfa_token": mfa_challenge,
+                "token_type": "mfa_challenge",
+            },
+            message="MFA verification required",
+        )
 
-    return APIResponse(
-        success=True,
-        data={
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-            "token_type": "bearer",
-            "expires_in": 30 * 60,  # 30 minutes
-            "available_tenants": available_tenants,
-        },
-        message="Login successful",
+    data = await _issue_login_tokens(request, user, db)
+    return APIResponse(success=True, data=data, message="Login successful")
+
+
+@router.post("/login/mfa", response_model=APIResponse[LoginResponse])
+async def login_mfa(
+    request: Request,
+    body: MFALoginRequest,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Complete MFA login: exchange a challenge token + TOTP/backup code for tokens.
+
+    The challenge token is issued by ``POST /auth/login`` when the user has MFA
+    enabled. Tokens are only issued here, after the second factor is verified.
+    """
+    invalid_session = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid or expired MFA session. Please log in again.",
     )
+
+    payload = decode_token(body.mfa_token)
+    if not payload or payload.get("type") != "mfa_challenge":
+        raise invalid_session
+
+    try:
+        user_id = int(payload.get("sub"))
+    except (TypeError, ValueError):
+        raise invalid_session
+
+    result = await db.execute(
+        select(User).where(
+            User.id == user_id,
+            User.is_deleted == False,
+            User.is_active == True,
+        )
+    )
+    user = result.scalar_one_or_none()
+    if not user or not user.totp_enabled:
+        raise invalid_session
+
+    service = MFAService(db)
+    valid, message = await service.verify_code(user_id, body.code)
+    if not valid:
+        logger.warning("login_mfa_failed", user_id=user_id)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=message or "Invalid MFA code",
+        )
+
+    data = await _issue_login_tokens(request, user, db)
+    logger.info("login_mfa_succeeded", user_id=user_id)
+    return APIResponse(success=True, data=data, message="Login successful")
 
 
 @router.post("/register", response_model=APIResponse[UserResponse])
