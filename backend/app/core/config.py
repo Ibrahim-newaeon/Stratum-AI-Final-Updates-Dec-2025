@@ -361,6 +361,9 @@ class Settings(BaseSettings):
     feature_what_if_simulator: bool = Field(default=True)
     feature_automation_rules: bool = Field(default=True)
     feature_gdpr_compliance: bool = Field(default=True)
+    # Campaign-builder connector beat tasks (ad-account sync, token refresh,
+    # health checks) hit live platform APIs — opt-in, default off (P1-2).
+    enable_campaign_builder_beat: bool = Field(default=False)
 
     @property
     def is_development(self) -> bool:
