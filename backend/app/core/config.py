@@ -361,6 +361,9 @@ class Settings(BaseSettings):
     feature_what_if_simulator: bool = Field(default=True)
     feature_automation_rules: bool = Field(default=True)
     feature_gdpr_compliance: bool = Field(default=True)
+    # Knowledge Graph requires Apache AGE (not provisioned in the default
+    # image); shelved off by default until AGE is available.
+    feature_knowledge_graph: bool = Field(default=False)
 
     @property
     def is_development(self) -> bool:

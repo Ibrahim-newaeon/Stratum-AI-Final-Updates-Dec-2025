@@ -7,11 +7,12 @@ Provides REST API for Knowledge Graph analytics, insights, and problem detection
 from datetime import UTC, datetime
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.base_models import User
+from app.core.config import settings
 from app.services.knowledge_graph import (
     KnowledgeGraphInsightsEngine,
     KnowledgeGraphService,
@@ -20,7 +21,26 @@ from app.services.knowledge_graph import (
 )
 from app.tenancy.deps import get_current_user, get_db
 
-router = APIRouter()
+
+async def require_knowledge_graph_enabled() -> None:
+    """
+    Gate the Knowledge Graph behind a feature flag.
+
+    The KG depends on the Apache AGE Postgres extension, which is not
+    provisioned in the default image. Until it is, the feature is shelved:
+    every route returns 503 instead of failing deep in a Cypher query.
+    """
+    if not settings.feature_knowledge_graph:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=(
+                "Knowledge Graph is not enabled on this deployment "
+                "(requires the Apache AGE extension)."
+            ),
+        )
+
+
+router = APIRouter(dependencies=[Depends(require_knowledge_graph_enabled)])
 
 
 # =============================================================================
