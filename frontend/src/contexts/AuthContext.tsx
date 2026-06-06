@@ -75,7 +75,8 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   isDemoSession: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string; lockoutSeconds?: number }>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string; lockoutSeconds?: number; mfaRequired?: boolean; mfaToken?: string }>;
+  loginMfa: (email: string, mfaToken: string, code: string) => Promise<{ success: boolean; error?: string }>;
   demoLogin: (role: 'superadmin' | 'admin' | 'manager' | 'analyst' | 'viewer') => Promise<{ success: boolean; error?: string; lockoutSeconds?: number }>;
   logout: () => void;
   updateUser: (userData: Partial<User>) => void;
@@ -121,10 +122,85 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(false);
   }, []);
 
+  // Establish the client session from a successful token response. Shared by
+  // password login and the MFA second-factor exchange.
+  const establishSession = async (data: any, email: string): Promise<void> => {
+    if (data.data?.access_token) {
+      sessionStorage.setItem(ACCESS_TOKEN_KEY, data.data.access_token);
+    }
+    if (data.data?.refresh_token) {
+      sessionStorage.setItem(REFRESH_TOKEN_KEY, data.data.refresh_token);
+    }
+
+    if (data.data?.available_tenants && Array.isArray(data.data.available_tenants)) {
+      localStorage.setItem('stratum_available_tenants', JSON.stringify(data.data.available_tenants));
+    }
+
+    const jwtPayload = data.data?.access_token ? decodeJwtPayload(data.data.access_token) : {};
+    const jwtTenantId = jwtPayload.tenant_id as number | undefined;
+
+    const userResponse = await fetch(`${API_BASE}/users/me`, {
+      headers: { Authorization: `Bearer ${data.data.access_token}` },
+    });
+
+    let userInfo: User;
+    if (userResponse.ok) {
+      const userData = await userResponse.json();
+      const tenantId = userData.data.tenant_id ?? jwtTenantId ?? null;
+      const backendRole = userData.data.role || 'analyst';
+      const validRoles = ['superadmin', 'admin', 'manager', 'analyst', 'viewer'];
+      const mappedRole = validRoles.includes(backendRole) ? backendRole : 'analyst';
+      userInfo = {
+        id: String(userData.data.id),
+        email: userData.data.email,
+        name: userData.data.full_name || userData.data.email,
+        role: mappedRole as User['role'],
+        permissions: ['all'],
+        tenant_id: tenantId,
+        user_type: userData.data.user_type || 'agency',
+        client_id: userData.data.client_id ?? null,
+        cms_role: userData.data.cms_role ?? null,
+      };
+    } else {
+      // Fallback if /me fails - create user from token claims
+      userInfo = {
+        id: String(jwtPayload.sub ?? '1'),
+        email: email,
+        name: email.split('@')[0],
+        role: (jwtPayload.role as User['role']) ?? 'admin',
+        permissions: ['all'],
+        tenant_id: jwtTenantId ?? null,
+        user_type: 'agency',
+        cms_role: (jwtPayload.cms_role as string) ?? null,
+      };
+    }
+
+    setUser(userInfo);
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(userInfo));
+
+    const tenantStore = useTenantStore.getState();
+    if (userInfo.tenant_id) {
+      tenantStore.setTenantId(userInfo.tenant_id);
+    }
+    tenantStore.setUser({
+      id: Number(userInfo.id),
+      email: userInfo.email,
+      full_name: userInfo.name,
+      role: userInfo.role,
+      avatar_url: userInfo.avatar ?? null,
+      locale: 'en',
+      timezone: 'UTC',
+      is_active: true,
+      is_verified: true,
+      last_login_at: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+    });
+  };
+
   const login = async (
     email: string,
     password: string
-  ): Promise<{ success: boolean; error?: string; lockoutSeconds?: number }> => {
+  ): Promise<{ success: boolean; error?: string; lockoutSeconds?: number; mfaRequired?: boolean; mfaToken?: string }> => {
     const MAX_RETRIES = 2;
 
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
@@ -180,89 +256,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return { success: false, error: errorMessage };
         }
 
-        // Store tokens in sessionStorage (reduced XSS persistence vs localStorage)
-        if (data.data?.access_token) {
-          sessionStorage.setItem(ACCESS_TOKEN_KEY, data.data.access_token);
-        }
-        if (data.data?.refresh_token) {
-          sessionStorage.setItem(REFRESH_TOKEN_KEY, data.data.refresh_token);
-        }
-
-        // Store available tenants for the switcher
-        if (data.data?.available_tenants && Array.isArray(data.data.available_tenants)) {
-          localStorage.setItem('stratum_available_tenants', JSON.stringify(data.data.available_tenants));
-        }
-
-        // Extract tenant_id from JWT so we can sync it to the tenant store
-        const jwtPayload = data.data?.access_token
-          ? decodeJwtPayload(data.data.access_token)
-          : {};
-        const jwtTenantId = jwtPayload.tenant_id as number | undefined;
-
-        // Fetch user profile
-        const userResponse = await fetch(`${API_BASE}/users/me`, {
-          headers: {
-            Authorization: `Bearer ${data.data.access_token}`,
-          },
-        });
-
-        let userInfo: User;
-
-        if (userResponse.ok) {
-          const userData = await userResponse.json();
-          const tenantId = userData.data.tenant_id ?? jwtTenantId ?? null;
-          // Map backend role to valid frontend role (fallback to 'analyst')
-          const backendRole = userData.data.role || 'analyst';
-          const validRoles = ['superadmin', 'admin', 'manager', 'analyst', 'viewer'];
-          const mappedRole = validRoles.includes(backendRole) ? backendRole : 'analyst';
-          userInfo = {
-            id: String(userData.data.id),
-            email: userData.data.email,
-            name: userData.data.full_name || userData.data.email,
-            role: mappedRole as User['role'],
-            permissions: ['all'],
-            tenant_id: tenantId,
-            user_type: userData.data.user_type || 'agency',
-            client_id: userData.data.client_id ?? null,
-            cms_role: userData.data.cms_role ?? null,
-          };
-        } else {
-          // Fallback if /me fails - create user from token claims
-          userInfo = {
-            id: String(jwtPayload.sub ?? '1'),
-            email: email,
-            name: email.split('@')[0],
-            role: (jwtPayload.role as User['role']) ?? 'admin',
-            permissions: ['all'],
-            tenant_id: jwtTenantId ?? null,
-            user_type: 'agency',
-            cms_role: (jwtPayload.cms_role as string) ?? null,
+        // MFA gate: the backend withholds tokens until the second factor is
+        // verified. Surface that to the UI instead of completing the session.
+        if (data.data?.mfa_required) {
+          return {
+            success: false,
+            mfaRequired: true,
+            mfaToken: data.data.mfa_token as string,
           };
         }
 
-        setUser(userInfo);
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(userInfo));
-
-        // Sync tenant context to Zustand store so other components pick it up
-        const tenantStore = useTenantStore.getState();
-        if (userInfo.tenant_id) {
-          tenantStore.setTenantId(userInfo.tenant_id);
-        }
-        // Also sync user to tenant store for role-based features
-        tenantStore.setUser({
-          id: Number(userInfo.id),
-          email: userInfo.email,
-          full_name: userInfo.name,
-          role: userInfo.role,
-          avatar_url: userInfo.avatar ?? null,
-          locale: 'en',
-          timezone: 'UTC',
-          is_active: true,
-          is_verified: true,
-          last_login_at: new Date().toISOString(),
-          created_at: new Date().toISOString(),
-        });
-
+        await establishSession(data, email);
         return { success: true };
       } catch (error) {
         // On last attempt, return the actual error details
@@ -282,6 +286,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     return { success: false, error: 'Login failed. Please try again.' };
+  };
+
+  // Second step of MFA login: exchange the challenge token + TOTP/backup code
+  // for real tokens, then establish the session.
+  const loginMfa = async (
+    email: string,
+    mfaToken: string,
+    code: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
+
+      const response = await fetch(`${API_BASE}/auth/login/mfa`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mfa_token: mfaToken, code }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        let errorMessage = 'Verification failed';
+        if (data.detail) {
+          if (typeof data.detail === 'string') {
+            errorMessage = data.detail;
+          } else if (Array.isArray(data.detail) && data.detail.length > 0) {
+            errorMessage = data.detail[0].msg || data.detail[0].message || 'Invalid code';
+          } else if (typeof data.detail === 'object' && data.detail.msg) {
+            errorMessage = data.detail.msg;
+          }
+        }
+        return { success: false, error: errorMessage };
+      }
+
+      await establishSession(data, email);
+      return { success: true };
+    } catch (error) {
+      const msg =
+        error instanceof DOMException && error.name === 'AbortError'
+          ? 'Connection timed out. Please try again.'
+          : `Connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
+      return { success: false, error: msg };
+    }
   };
 
   /** Client-side demo login — creates a mock session without hitting the backend */
@@ -390,11 +440,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isLoading,
       isDemoSession,
       login,
+      loginMfa,
       demoLogin,
       logout,
       updateUser,
     }),
-    [user, isLoading, isDemoSession, login, demoLogin, logout, updateUser]
+    [user, isLoading, isDemoSession, login, loginMfa, demoLogin, logout, updateUser]
   );
 
   return (
