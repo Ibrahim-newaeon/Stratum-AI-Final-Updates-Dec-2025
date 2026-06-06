@@ -2152,7 +2152,7 @@ function BillingSettings() {
         'Are you sure you want to cancel your subscription? You will retain access until the end of the current period.'
       )
     )
-      return;
+      {return;}
     try {
       await cancelSub.mutateAsync(undefined);
       toast({

@@ -70,7 +70,11 @@ export default tseslint.config(
     },
     settings: {
       react: {
-        version: 'detect',
+        // Pin explicitly: eslint-plugin-react@7's "detect" path calls
+        // context.getFilename(), removed in ESLint 10, which crashes the
+        // linter (TypeError: getFilename is not a function). Matches the
+        // pinned react version in package.json.
+        version: '19.2',
       },
     },
     rules: {

@@ -60,7 +60,7 @@ function todayIso(): string {
 function trendIcon(trend: 'up' | 'down' | 'flat') {
   if (trend === 'up') return <ArrowUpRight className="h-3.5 w-3.5 text-success" aria-label="up" />;
   if (trend === 'down')
-    return <ArrowDownRight className="h-3.5 w-3.5 text-danger" aria-label="down" />;
+    {return <ArrowDownRight className="h-3.5 w-3.5 text-danger" aria-label="down" />;}
   return <Minus className="h-3.5 w-3.5 text-muted-foreground" aria-label="flat" />;
 }
 
