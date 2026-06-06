@@ -450,20 +450,6 @@ def connector_health_check(self, tenant_id: Optional[int] = None):
 # =============================================================================
 # Scheduled Tasks Registration
 # =============================================================================
-# These should be added to celery_app.conf.beat_schedule in celery_app.py:
-#
-# "sync-all-ad-accounts": {
-#     "task": "app.workers.campaign_builder_tasks.sync_all_ad_accounts",
-#     "schedule": crontab(hour=2, minute=0),
-#     "options": {"queue": "sync"},
-# },
-# "refresh-expiring-tokens": {
-#     "task": "app.workers.campaign_builder_tasks.refresh_expiring_tokens",
-#     "schedule": crontab(hour="*/6"),
-#     "options": {"queue": "default"},
-# },
-# "connector-health-check": {
-#     "task": "app.workers.campaign_builder_tasks.connector_health_check",
-#     "schedule": crontab(minute="*/30"),
-#     "options": {"queue": "default"},
-# },
+# These tasks are now registered on celery_app.conf.beat_schedule in
+# celery_app.py, gated behind settings.enable_campaign_builder_beat
+# (default off). This module is included in the Celery app's `include` list.
