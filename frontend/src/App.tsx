@@ -245,6 +245,9 @@ const DPAPage = lazyWithRetry(() => import('./views/pages/legal/DPA'));
 
 // Public pages (Resources)
 const DocsPage = lazyWithRetry(() => import('./views/pages/resources/Docs'));
+const DocArticlePage = lazyWithRetry(
+  () => import('./views/pages/resources/docs/DocArticlePage')
+);
 const ChangelogPage = lazyWithRetry(() => import('./views/pages/resources/Changelog'));
 const CaseStudiesPage = lazyWithRetry(() => import('./views/pages/resources/CaseStudies'));
 const ResourcesPage = lazyWithRetry(() => import('./views/pages/resources/Resources'));
@@ -707,6 +710,16 @@ function App() {
                           <ErrorBoundary message="Failed to load the documentation page">
                             <LazyRoute>
                               <DocsPage />
+                            </LazyRoute>
+                          </ErrorBoundary>
+                        }
+                      />
+                      <Route
+                        path="/docs/*"
+                        element={
+                          <ErrorBoundary message="Failed to load the documentation page">
+                            <LazyRoute>
+                              <DocArticlePage />
                             </LazyRoute>
                           </ErrorBoundary>
                         }
