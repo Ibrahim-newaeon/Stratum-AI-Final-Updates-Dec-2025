@@ -24,20 +24,20 @@ import {
 
 // ── Theme ──────────────────────────────────────────────────────────────────
 const theme = {
-  bgBase: '#0b1215',
-  bgCard: 'rgba(255, 255, 255, 0.04)',
-  bgCardHover: 'rgba(255, 255, 255, 0.06)',
-  bgSurface: 'rgba(255, 255, 255, 0.03)',
-  bgInput: 'rgba(255, 255, 255, 0.05)',
-  primary: 'var(--landing-accent-cyan)',
-  primaryLight: 'rgba(0, 199, 190, 0.15)',
-  textPrimary: 'rgba(245, 245, 247, 0.92)',
-  textSecondary: 'rgba(245, 245, 247, 0.6)',
-  textMuted: 'rgba(245, 245, 247, 0.4)',
-  border: 'var(--landing-border-white-dim)',
-  success: 'var(--landing-accent-green)',
-  danger: '#ef4444',
-  warning: '#f59e0b',
+  bgBase: 'hsl(var(--background))',
+  bgCard: 'hsl(var(--foreground) / 0.04)',
+  bgCardHover: 'hsl(var(--foreground) / 0.06)',
+  bgSurface: 'hsl(var(--foreground) / 0.03)',
+  bgInput: 'hsl(var(--foreground) / 0.05)',
+  primary: 'hsl(var(--accent))',
+  primaryLight: 'hsl(var(--accent) / 0.15)',
+  textPrimary: 'hsl(var(--foreground) / 0.92)',
+  textSecondary: 'hsl(var(--foreground) / 0.6)',
+  textMuted: 'hsl(var(--foreground) / 0.4)',
+  border: 'hsl(var(--foreground) / 0.06)',
+  success: 'hsl(var(--success))',
+  danger: 'hsl(var(--destructive))',
+  warning: 'hsl(var(--warning))',
 };
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -78,11 +78,11 @@ const REQUEST_TYPES: { value: ClientRequest['type']; label: string }[] = [
 function statusBadge(status: Campaign['status']): { bg: string; text: string; label: string } {
   switch (status) {
     case 'active':
-      return { bg: 'rgba(52, 199, 89, 0.15)', text: theme.success, label: 'Active' };
+      return { bg: 'hsl(var(--success) / 0.15)', text: theme.success, label: 'Active' };
     case 'paused':
-      return { bg: 'rgba(245, 158, 11, 0.15)', text: theme.warning, label: 'Paused' };
+      return { bg: 'hsl(var(--warning) / 0.15)', text: theme.warning, label: 'Paused' };
     case 'completed':
-      return { bg: 'rgba(245, 245, 247, 0.08)', text: theme.textSecondary, label: 'Completed' };
+      return { bg: 'hsl(var(--foreground) / 0.08)', text: theme.textSecondary, label: 'Completed' };
   }
 }
 
@@ -425,7 +425,7 @@ export default function PortalDashboard() {
             boxShadow: `0 0 20px ${theme.primaryLight}`,
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.boxShadow = `0 0 30px rgba(0, 199, 190, 0.35)`;
+            e.currentTarget.style.boxShadow = `0 0 30px hsl(var(--accent) / 0.35)`;
             e.currentTarget.style.transform = 'translateY(-1px)';
           }}
           onMouseLeave={(e) => {
@@ -444,7 +444,7 @@ export default function PortalDashboard() {
           <div
             className="w-full max-w-lg rounded-2xl p-6"
             style={{
-              background: 'rgba(11, 18, 21, 0.95)',
+              background: 'hsl(var(--card))',
               border: `1px solid ${theme.border}`,
               boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5)',
             }}

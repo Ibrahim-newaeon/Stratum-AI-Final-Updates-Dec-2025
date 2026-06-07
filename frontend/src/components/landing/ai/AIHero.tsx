@@ -69,7 +69,7 @@ export default function AIHero() {
           <defs>
             <linearGradient id="line-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#a855f7" />
-              <stop offset="100%" stopColor="#06b6d4" />
+              <stop offset="100%" stopColor="hsl(var(--accent))" />
             </linearGradient>
           </defs>
         </svg>
@@ -92,11 +92,11 @@ export default function AIHero() {
                 border: '1px solid rgba(0, 199, 190, 0.3)',
               }}
             >
-              <SparklesIcon className="w-4 h-4" style={{ color: 'var(--landing-accent-cyan)' }} />
-              <span className="text-sm font-medium" style={{ color: 'var(--landing-accent-cyan)' }}>
+              <SparklesIcon className="w-4 h-4" style={{ color: 'hsl(var(--accent))' }} />
+              <span className="text-sm font-medium" style={{ color: 'hsl(var(--accent))' }}>
                 6 AI Models Built-In
               </span>
-              <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: 'var(--landing-accent-green)' }} />
+              <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: 'hsl(var(--success))' }} />
             </div>
           </motion.div>
 
@@ -111,13 +111,13 @@ export default function AIHero() {
             <span className="text-white">The Only AI That</span>
             <br />
             <span className="relative inline-block">
-              <span style={{ color: 'var(--landing-accent-cyan)' }}>
+              <span style={{ color: 'hsl(var(--accent))' }}>
                 Thinks Before It Acts
               </span>
               {/* Animated underline */}
               <motion.div
                 className="absolute -bottom-2 left-0 right-0 h-1 rounded-full"
-                style={{ background: 'var(--landing-accent-cyan)' }}
+                style={{ background: 'hsl(var(--accent))' }}
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: 1 }}
                 transition={{ delay: 0.8, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
@@ -152,7 +152,7 @@ export default function AIHero() {
               href="/signup"
               className="group inline-flex items-center gap-2 px-8 py-4 rounded-lg text-base font-semibold text-white transition-transform hover:scale-[1.02] hover:brightness-110"
               style={{
-                background: 'var(--landing-accent-cyan)',
+                background: 'hsl(var(--accent))',
                 boxShadow: '0 0 40px rgba(0, 199, 190, 0.3)',
               }}
             >
@@ -166,7 +166,7 @@ export default function AIHero() {
               style={{
                 background: 'rgba(255, 255, 255, 0.03)',
                 backdropFilter: 'blur(40px)',
-                border: '1px solid var(--landing-border-white-dim)',
+                border: '1px solid hsl(var(--foreground) / 0.06)',
               }}
             >
               <div

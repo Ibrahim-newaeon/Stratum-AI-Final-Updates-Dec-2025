@@ -97,7 +97,7 @@ export default function TrustEngine() {
   const colors = getColorClasses(current.color);
 
   return (
-    <section className="relative py-32 overflow-hidden" style={{ background: 'var(--landing-bg-deep)' }}>
+    <section className="relative py-32 overflow-hidden bg-background">
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-[0.02]">
         <svg className="w-full h-full">
@@ -107,7 +107,7 @@ export default function TrustEngine() {
               stroke="currentColor"
               strokeWidth="0.5"
               fill="none"
-              className="text-white"
+              className="text-foreground"
             />
           </pattern>
           <rect width="100%" height="100%" fill="url(#trust-pattern)" />
@@ -115,7 +115,7 @@ export default function TrustEngine() {
       </div>
 
       {/* Ambient orb */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, rgba(0, 199, 190, 0.06), transparent 60%)' }} />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, hsl(var(--accent) / 0.06), transparent 60%)' }} />
 
       <div className="relative z-10 max-w-7xl mx-auto px-6" ref={ref}>
         {/* Section Header - Centered */}
@@ -130,26 +130,26 @@ export default function TrustEngine() {
             <div
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
               style={{
-                background: 'rgba(52, 199, 89, 0.15)',
-                border: '1px solid rgba(52, 199, 89, 0.3)',
+                background: 'hsl(var(--success) / 0.15)',
+                border: '1px solid hsl(var(--success) / 0.3)',
               }}
             >
-              <ShieldCheckIcon className="w-4 h-4" style={{ color: 'var(--landing-accent-green)' }} />
-              <span className="text-sm font-medium" style={{ color: 'var(--landing-accent-green)' }}>Unique to Stratum AI</span>
+              <ShieldCheckIcon className="w-4 h-4" style={{ color: 'hsl(var(--success))' }} />
+              <span className="text-sm font-medium" style={{ color: 'hsl(var(--success))' }}>Unique to Stratum AI</span>
             </div>
           </div>
 
           <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-center">
-            <span className="text-white">Trust-Gated</span>
+            <span className="text-foreground">Trust-Gated</span>
             <br />
-            <span style={{ color: 'var(--landing-accent-cyan)' }}>
+            <span style={{ color: 'hsl(var(--accent))' }}>
               Autopilot
             </span>
           </h2>
 
-          <p className="text-lg max-w-2xl mx-auto text-center" style={{ color: 'var(--landing-text-white-soft)' }}>
+          <p className="text-lg max-w-2xl mx-auto text-center text-foreground/50">
             The only platform that{' '}
-            <span className="text-white font-medium">refuses to execute bad recommendations</span>.
+            <span className="text-foreground font-medium">refuses to execute bad recommendations</span>.
             Signal health is verified before every automated action.
           </p>
         </motion.div>
@@ -203,7 +203,7 @@ export default function TrustEngine() {
                 <div className="p-2 rounded-xl bg-blue-500/10">
                   <SignalIcon className="w-5 h-5 text-blue-400" />
                 </div>
-                <span className="text-sm font-medium text-white">Signal Sources</span>
+                <span className="text-sm font-medium text-foreground">Signal Sources</span>
               </div>
               <div className="space-y-2 text-xs text-gray-500">
                 <div className="flex items-center gap-2">
@@ -242,7 +242,7 @@ export default function TrustEngine() {
                 <div className={`p-2 rounded-xl bg-gradient-to-br ${colors.gradient}`}>
                   <current.icon className="w-5 h-5 text-white" />
                 </div>
-                <span className="text-sm font-medium text-white">Signal Health</span>
+                <span className="text-sm font-medium text-foreground">Signal Health</span>
               </div>
 
               {/* Score Display */}
@@ -279,7 +279,7 @@ export default function TrustEngine() {
                 <div className="p-2 rounded-xl bg-purple-500/10">
                   <ShieldCheckIcon className="w-5 h-5 text-purple-400" />
                 </div>
-                <span className="text-sm font-medium text-white">Trust Gate</span>
+                <span className="text-sm font-medium text-foreground">Trust Gate</span>
               </div>
 
               <div className="text-center">
@@ -307,7 +307,7 @@ export default function TrustEngine() {
                 className="group relative p-5 rounded-xl bg-foreground/[0.02] border border-foreground/[0.05] hover:border-foreground/10 transition-colors"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-white">{component.name}</span>
+                  <span className="text-sm font-medium text-foreground">{component.name}</span>
                   <span className="text-xs font-bold text-purple-400">{component.weight}</span>
                 </div>
                 <p className="text-xs text-gray-500">{component.description}</p>
@@ -325,14 +325,14 @@ export default function TrustEngine() {
             <div
               className="inline-flex items-start gap-3 px-6 py-4 rounded-2xl max-w-2xl"
               style={{
-                background: 'rgba(0, 199, 190, 0.1)',
-                border: '1px solid rgba(0, 199, 190, 0.2)',
+                background: 'hsl(var(--accent) / 0.1)',
+                border: '1px solid hsl(var(--accent) / 0.2)',
               }}
             >
-              <InformationCircleIcon className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--landing-accent-cyan)' }} />
+              <InformationCircleIcon className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'hsl(var(--accent))' }} />
               <div>
-                <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                  <span className="font-medium text-white">
+                <p className="text-sm text-foreground/70">
+                  <span className="font-medium text-foreground">
                     Never auto-execute when signal_health &lt; 70.
                   </span>{' '}
                   This is the safety guarantee that no other platform provides. Your automation only

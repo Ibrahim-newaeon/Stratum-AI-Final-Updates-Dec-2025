@@ -24,7 +24,7 @@ interface ActivityVolumeChartProps {
 export function ActivityVolumeChart({
   data,
   height = 200,
-  color = 'var(--landing-accent-cyan)',
+  color = 'hsl(var(--accent))',
 }: ActivityVolumeChartProps) {
   const formatDate = (date: string) => {
     const d = new Date(date);
@@ -40,26 +40,26 @@ export function ActivityVolumeChart({
             <stop offset="100%" stopColor={color} stopOpacity={0.3} />
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--foreground) / 0.05)" vertical={false} />
         <XAxis
           dataKey="date"
           tickFormatter={formatDate}
-          tick={{ fontSize: 11, fill: 'rgba(245,245,247,0.4)' }}
+          tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
           axisLine={false}
           tickLine={false}
         />
         <YAxis
-          tick={{ fontSize: 11, fill: 'rgba(245,245,247,0.4)' }}
+          tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
           axisLine={false}
           tickLine={false}
         />
         <Tooltip
           contentStyle={{
-            background: 'rgba(11, 18, 21, 0.95)',
-            border: '1px solid rgba(255,255,255,0.1)',
+            background: 'hsl(var(--card))',
+            border: '1px solid hsl(var(--border))',
             borderRadius: '8px',
             fontSize: 12,
-            color: 'rgba(245,245,247,0.92)',
+            color: 'hsl(var(--foreground))',
           }}
           labelFormatter={(label) => formatDate(String(label))}
           formatter={(value) => [String(value), 'Events']}
