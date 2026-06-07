@@ -97,9 +97,9 @@ export default function AITestimonials() {
   const isInView = useInView(ref, { once: true, margin: '-100px' });
 
   return (
-    <section className="relative py-32 overflow-hidden" style={{ background: 'var(--landing-bg-deep)' }}>
+    <section className="relative py-32 overflow-hidden bg-background">
       {/* Ambient orb */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, rgba(0, 199, 190, 0.05), transparent 60%)' }} />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, hsl(var(--accent) / 0.05), transparent 60%)' }} />
 
       <div className="relative z-10 max-w-7xl mx-auto px-6" ref={ref}>
         {/* Section Header - Centered */}
@@ -111,12 +111,12 @@ export default function AITestimonials() {
         >
           <h2 className="text-4xl sm:text-5xl font-bold tracking-tight mb-6 text-center">
             <span className="text-white">Trusted by</span>{' '}
-            <span style={{ color: 'var(--landing-accent-cyan)' }}>
+            <span style={{ color: 'hsl(var(--accent))' }}>
               Revenue Teams
             </span>
           </h2>
 
-          <p className="text-lg max-w-2xl mx-auto text-center" style={{ color: 'var(--landing-text-white-soft)' }}>
+          <p className="text-lg max-w-2xl mx-auto text-center text-foreground/50">
             See what growth and marketing leaders say about switching to AI-powered revenue
             operations.
           </p>

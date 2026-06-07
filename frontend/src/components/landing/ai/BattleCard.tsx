@@ -257,27 +257,27 @@ const StatusIcon = ({ status }: { status: FeatureStatus }) => {
       return (
         <div
           className="flex items-center justify-center w-6 h-6 rounded-full"
-          style={{ background: 'rgba(52, 199, 89, 0.2)' }}
+          style={{ background: 'hsl(var(--success) / 0.2)' }}
         >
-          <CheckIcon className="w-4 h-4" style={{ color: 'var(--landing-accent-green)' }} />
+          <CheckIcon className="w-4 h-4" style={{ color: 'hsl(var(--success))' }} />
         </div>
       );
     case 'no':
       return (
         <div
           className="flex items-center justify-center w-6 h-6 rounded-full"
-          style={{ background: 'rgba(239, 68, 68, 0.2)' }}
+          style={{ background: 'hsl(var(--destructive) / 0.2)' }}
         >
-          <XMarkIcon className="w-4 h-4" style={{ color: '#ef4444' }} />
+          <XMarkIcon className="w-4 h-4" style={{ color: 'hsl(var(--destructive))' }} />
         </div>
       );
     case 'partial':
       return (
         <div
           className="flex items-center justify-center w-6 h-6 rounded-full"
-          style={{ background: 'rgba(255, 214, 10, 0.2)' }}
+          style={{ background: 'hsl(var(--warning) / 0.2)' }}
         >
-          <MinusIcon className="w-4 h-4" style={{ color: '#FFD60A' }} />
+          <MinusIcon className="w-4 h-4" style={{ color: 'hsl(var(--warning))' }} />
         </div>
       );
     case 'unique':
@@ -285,11 +285,11 @@ const StatusIcon = ({ status }: { status: FeatureStatus }) => {
         <div
           className="flex items-center justify-center w-6 h-6 rounded-full"
           style={{
-            background: 'rgba(0, 199, 190, 0.2)',
-            boxShadow: '0 0 0 2px rgba(0, 199, 190, 0.4)',
+            background: 'hsl(var(--accent) / 0.2)',
+            boxShadow: '0 0 0 2px hsl(var(--accent) / 0.4)',
           }}
         >
-          <SparklesIcon className="w-4 h-4" style={{ color: 'var(--landing-accent-cyan)' }} />
+          <SparklesIcon className="w-4 h-4" style={{ color: 'hsl(var(--accent))' }} />
         </div>
       );
   }
@@ -323,26 +323,26 @@ export default function BattleCard() {
             <div
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
               style={{
-                background: 'rgba(255, 159, 10, 0.15)',
-                border: '1px solid rgba(255, 159, 10, 0.3)',
+                background: 'hsl(var(--primary) / 0.15)',
+                border: '1px solid hsl(var(--primary) / 0.3)',
               }}
             >
-              <TrophyIcon className="w-4 h-4" style={{ color: '#FF9F0A' }} />
-              <span className="text-sm font-medium" style={{ color: '#FF9F0A' }}>
+              <TrophyIcon className="w-4 h-4" style={{ color: 'hsl(var(--primary))' }} />
+              <span className="text-sm font-medium" style={{ color: 'hsl(var(--primary))' }}>
                 Competitive Battle Card
               </span>
             </div>
           </div>
 
           <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-center">
-            <span className="text-white">See How We</span>
+            <span className="text-foreground">See How We</span>
             <br />
-            <span style={{ color: '#FF9F0A' }}>
+            <span style={{ color: 'hsl(var(--primary))' }}>
               Stack Up
             </span>
           </h2>
 
-          <p className="text-lg max-w-2xl mx-auto mb-8 text-center" style={{ color: 'var(--landing-text-white-soft)' }}>
+          <p className="text-lg max-w-2xl mx-auto mb-8 text-center text-foreground/50">
             The only platform with Trust-Gated execution, built-in AI predictions, and visual
             identity resolution.
           </p>
@@ -350,7 +350,7 @@ export default function BattleCard() {
           {/* Download Button */}
           <button
             onClick={handleDownload}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-foreground/[0.05] border border-foreground/10 hover:bg-foreground/10 transition-colors text-sm font-medium text-white"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-foreground/[0.05] border border-foreground/10 hover:bg-foreground/10 transition-colors text-sm font-medium text-foreground"
           >
             <ArrowDownTrayIcon className="w-4 h-4" />
             Download Sales Battle Card (PDF)
@@ -366,19 +366,19 @@ export default function BattleCard() {
         >
           <div className="flex items-center gap-2">
             <StatusIcon status="unique" />
-            <span style={{ color: 'var(--landing-text-white-soft)' }}>Unique to Stratum AI</span>
+            <span className="text-foreground/50">Unique to Stratum AI</span>
           </div>
           <div className="flex items-center gap-2">
             <StatusIcon status="yes" />
-            <span style={{ color: 'var(--landing-text-white-soft)' }}>Full Support</span>
+            <span className="text-foreground/50">Full Support</span>
           </div>
           <div className="flex items-center gap-2">
             <StatusIcon status="partial" />
-            <span style={{ color: 'var(--landing-text-white-soft)' }}>Partial/Limited</span>
+            <span className="text-foreground/50">Partial/Limited</span>
           </div>
           <div className="flex items-center gap-2">
             <StatusIcon status="no" />
-            <span style={{ color: 'var(--landing-text-white-soft)' }}>Not Available</span>
+            <span className="text-foreground/50">Not Available</span>
           </div>
         </motion.div>
 
@@ -429,7 +429,7 @@ export default function BattleCard() {
                       />
                     </svg>
                   </motion.div>
-                  <span className="text-sm font-semibold text-white">{category.name}</span>
+                  <span className="text-sm font-semibold text-foreground">{category.name}</span>
                   <span className="text-xs text-gray-500">
                     ({category.features.length} features)
                   </span>

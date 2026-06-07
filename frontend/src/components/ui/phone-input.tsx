@@ -203,7 +203,7 @@ export function PhoneInput({
             {filteredCountries.length === 0 ? (
               <div
                 className="px-4 py-3 text-sm text-center"
-                style={{ color: 'var(--landing-text-white-soft)' }}
+                style={{ color: 'hsl(var(--foreground) / 0.5)' }}
               >
                 No countries found
               </div>
@@ -224,7 +224,7 @@ export function PhoneInput({
                 >
                   <span className="text-lg">{country.flag}</span>
                   <span className="flex-1 text-sm text-white">{country.name}</span>
-                  <span className="text-sm" style={{ color: 'var(--landing-text-white-soft)' }}>
+                  <span className="text-sm" style={{ color: 'hsl(var(--foreground) / 0.5)' }}>
                     {country.code}
                   </span>
                 </button>

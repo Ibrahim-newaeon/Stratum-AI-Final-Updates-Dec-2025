@@ -78,7 +78,7 @@ function StatCard({
               style={{
                 height: '2rem',
                 width: '6rem',
-                background: 'rgba(255,255,255,0.08)',
+                background: 'hsl(var(--foreground) / 0.08)',
                 borderRadius: '0.375rem',
                 marginTop: '0.5rem',
                 animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
@@ -188,7 +188,7 @@ function SubscriberOverviewChart({
             <div
               style={{
                 height: '0.5rem',
-                background: 'rgba(255,255,255,0.08)',
+                background: 'hsl(var(--foreground) / 0.08)',
                 borderRadius: '9999px',
                 overflow: 'hidden',
               }}
@@ -371,7 +371,7 @@ export default function NewsletterDashboard() {
                   key={i}
                   style={{
                     height: '2.5rem',
-                    background: 'rgba(255,255,255,0.08)',
+                    background: 'hsl(var(--foreground) / 0.08)',
                     borderRadius: '0.375rem',
                     animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                   }}
@@ -557,7 +557,7 @@ export default function NewsletterDashboard() {
                   gap: '0.75rem',
                   padding: '0.75rem',
                   borderRadius: '0.75rem',
-                  background: 'rgba(255,255,255,0.04)',
+                  background: 'hsl(var(--foreground) / 0.04)',
                   color: theme.textPrimary,
                   textDecoration: 'none',
                   fontWeight: 500,
@@ -576,7 +576,7 @@ export default function NewsletterDashboard() {
                   gap: '0.75rem',
                   padding: '0.75rem',
                   borderRadius: '0.75rem',
-                  background: 'rgba(255,255,255,0.04)',
+                  background: 'hsl(var(--foreground) / 0.04)',
                   color: theme.textPrimary,
                   textDecoration: 'none',
                   fontWeight: 500,
@@ -617,7 +617,7 @@ export default function NewsletterDashboard() {
                     key={i}
                     style={{
                       height: '2rem',
-                      background: 'rgba(255,255,255,0.08)',
+                      background: 'hsl(var(--foreground) / 0.08)',
                       borderRadius: '0.375rem',
                       animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                     }}

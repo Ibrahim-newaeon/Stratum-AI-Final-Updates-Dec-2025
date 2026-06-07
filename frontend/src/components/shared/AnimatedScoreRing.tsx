@@ -21,9 +21,9 @@ interface AnimatedScoreRingProps {
 }
 
 const statusColors: Record<RingStatus, { stroke: string; text: string }> = {
-  good: { stroke: 'var(--landing-accent-green)', text: 'text-green-500' },
-  warning: { stroke: '#f59e0b', text: 'text-amber-500' },
-  critical: { stroke: '#ef4444', text: 'text-red-500' },
+  good: { stroke: 'hsl(var(--success))', text: 'text-success' },
+  warning: { stroke: 'hsl(var(--warning))', text: 'text-warning' },
+  critical: { stroke: 'hsl(var(--destructive))', text: 'text-destructive' },
 };
 
 const sizeConfig: Record<RingSize, { width: number; strokeWidth: number; fontSize: string }> = {
@@ -69,7 +69,7 @@ export function AnimatedScoreRing({
             cy={config.width / 2}
             r={radius}
             fill="none"
-            stroke="rgba(255,255,255,0.1)"
+            stroke="hsl(var(--foreground) / 0.1)"
             strokeWidth={config.strokeWidth}
           />
           {/* Animated progress circle */}

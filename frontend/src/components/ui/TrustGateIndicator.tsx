@@ -38,22 +38,22 @@ function getTrustState(score: number): TrustState {
     return {
       score,
       status: 'PASS',
-      color: style.getPropertyValue('--teal').trim() || 'var(--landing-accent-cyan)',
-      bgColor: style.getPropertyValue('--teal-light').trim() || 'rgba(0, 199, 190, 0.15)',
+      color: style.getPropertyValue('--teal').trim() || 'hsl(var(--accent))',
+      bgColor: style.getPropertyValue('--teal-light').trim() || 'hsl(var(--accent) / 0.15)',
     };
   } else if (score >= DEGRADED_THRESHOLD) {
     return {
       score,
       status: 'HOLD',
-      color: style.getPropertyValue('--status-warning').trim() || '#f59e0b',
-      bgColor: style.getPropertyValue('--status-warning-bg').trim() || 'rgba(245, 158, 11, 0.15)',
+      color: style.getPropertyValue('--status-warning').trim() || 'hsl(var(--warning))',
+      bgColor: style.getPropertyValue('--status-warning-bg').trim() || 'hsl(var(--warning) / 0.15)',
     };
   } else {
     return {
       score,
       status: 'BLOCK',
-      color: style.getPropertyValue('--coral').trim() || '#ff6b6b',
-      bgColor: 'rgba(255, 107, 107, 0.15)',
+      color: style.getPropertyValue('--coral').trim() || 'hsl(var(--destructive))',
+      bgColor: 'hsl(var(--destructive) / 0.15)',
     };
   }
 }
@@ -149,7 +149,7 @@ export const TrustGateIndicator = memo(function TrustGateIndicator({
         <div className="px-4 pt-3 pb-2 space-y-2 min-w-56">
           <div
             className="text-xs font-semibold uppercase tracking-wider"
-            style={{ color: 'rgba(255,255,255,0.4)' }}
+            style={{ color: 'hsl(var(--foreground) / 0.4)' }}
           >
             Signal Components
           </div>
@@ -167,13 +167,13 @@ export const TrustGateIndicator = memo(function TrustGateIndicator({
                   style={{
                     backgroundColor:
                       comp.value >= 70
-                        ? 'var(--landing-accent-cyan)'
+                        ? 'hsl(var(--accent))'
                         : comp.value >= 40
-                          ? '#f59e0b'
-                          : '#ff6b6b',
+                          ? 'hsl(var(--warning))'
+                          : 'hsl(var(--destructive))',
                   }}
                 />
-                <span className="text-xs truncate" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                <span className="text-xs truncate" style={{ color: 'hsl(var(--foreground) / 0.6)' }}>
                   {comp.label}
                 </span>
               </div>
@@ -183,15 +183,15 @@ export const TrustGateIndicator = memo(function TrustGateIndicator({
                   style={{
                     color:
                       comp.value >= 70
-                        ? 'var(--landing-accent-cyan)'
+                        ? 'hsl(var(--accent))'
                         : comp.value >= 40
-                          ? '#f59e0b'
-                          : '#ff6b6b',
+                          ? 'hsl(var(--warning))'
+                          : 'hsl(var(--destructive))',
                   }}
                 >
                   {comp.value}
                 </span>
-                <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.25)' }}>
+                <span className="text-[10px]" style={{ color: 'hsl(var(--foreground) / 0.25)' }}>
                   ({comp.weight})
                 </span>
               </div>
@@ -200,8 +200,8 @@ export const TrustGateIndicator = memo(function TrustGateIndicator({
           <div
             className="pt-2 mt-1 text-xs"
             style={{
-              borderTop: '1px solid rgba(255,255,255,0.08)',
-              color: 'rgba(255,255,255,0.35)',
+              borderTop: '1px solid hsl(var(--foreground) / 0.08)',
+              color: 'hsl(var(--foreground) / 0.35)',
             }}
           >
             Autopilot:{' '}
@@ -218,7 +218,7 @@ export const TrustGateIndicator = memo(function TrustGateIndicator({
       <button
         className={cn('flex items-center gap-3 px-4 py-3', expanded && 'border-t')}
         style={{
-          borderColor: expanded ? 'rgba(255,255,255,0.08)' : 'transparent',
+          borderColor: expanded ? 'hsl(var(--foreground) / 0.08)' : 'transparent',
         }}
         onClick={() => setExpanded(!expanded)}
         role="status"
@@ -262,7 +262,7 @@ export const TrustGateIndicator = memo(function TrustGateIndicator({
               {state.status}
             </span>
           </div>
-          <span className="text-xs" style={{ color: 'var(--landing-text-white-soft)' }}>
+          <span className="text-xs" style={{ color: 'hsl(var(--foreground) / 0.5)' }}>
             Signal Health
           </span>
         </div>

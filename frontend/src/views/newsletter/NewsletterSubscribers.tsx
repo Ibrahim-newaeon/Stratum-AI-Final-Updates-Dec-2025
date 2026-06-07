@@ -125,7 +125,7 @@ function StatCard({
         </div>
         <div
           className="w-10 h-10 rounded-xl flex items-center justify-center"
-          style={{ background: `${iconColor}20` }}
+          style={{ background: `color-mix(in srgb, ${iconColor} 12.5%, transparent)` }}
         >
           <Icon className="w-5 h-5" style={{ color: iconColor }} />
         </div>
@@ -143,7 +143,7 @@ function PlatformBadge({ platform }: { platform: string | null }) {
       <span
         className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
         style={{
-          background: 'rgba(255, 255, 255, 0.06)',
+          background: 'hsl(var(--foreground) / 0.06)',
           color: theme.textMuted,
         }}
       >
@@ -154,7 +154,7 @@ function PlatformBadge({ platform }: { platform: string | null }) {
 
   const key = platform.toLowerCase();
   const colors = PLATFORM_COLORS[key] || {
-    bg: 'rgba(255, 255, 255, 0.06)',
+    bg: 'hsl(var(--foreground) / 0.06)',
     text: theme.textSecondary,
   };
 
@@ -599,7 +599,7 @@ export default function NewsletterSubscribers() {
                     <div className="flex flex-col items-center justify-center text-center">
                       <div
                         className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
-                        style={{ background: 'rgba(255, 255, 255, 0.04)' }}
+                        style={{ background: 'hsl(var(--foreground) / 0.04)' }}
                       >
                         <UserGroupIcon
                           className="w-8 h-8"

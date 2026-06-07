@@ -157,20 +157,20 @@ export default function AIFeatures() {
                 border: '1px solid rgba(0, 199, 190, 0.3)',
               }}
             >
-              <SparklesIcon className="w-4 h-4" style={{ color: 'var(--landing-accent-cyan)' }} />
-              <span className="text-sm font-medium" style={{ color: 'var(--landing-accent-cyan)' }}>6 AI Models Built-In</span>
+              <SparklesIcon className="w-4 h-4" style={{ color: 'hsl(var(--accent))' }} />
+              <span className="text-sm font-medium" style={{ color: 'hsl(var(--accent))' }}>6 AI Models Built-In</span>
             </div>
           </div>
 
           <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
             <span className="text-white">Predictive Intelligence</span>
             <br />
-            <span style={{ color: 'var(--landing-accent-cyan)' }}>
+            <span style={{ color: 'hsl(var(--accent))' }}>
               Not Just Analytics
             </span>
           </h2>
 
-          <p className="text-lg max-w-2xl text-left" style={{ color: 'var(--landing-text-white-soft)' }}>
+          <p className="text-lg max-w-2xl text-left text-foreground/50">
             Every model is trained on YOUR data. No generic predictions—tailored insights for your
             unique business patterns.
           </p>
@@ -250,7 +250,7 @@ export default function AIFeatures() {
                 border: '1px solid rgba(255, 255, 255, 0.05)',
               }}
             >
-              <feature.icon className="w-5 h-5 mb-3 transition-colors" style={{ color: 'var(--landing-text-white-soft)' }} />
+              <feature.icon className="w-5 h-5 mb-3 transition-colors text-foreground/50" />
               <h4 className="text-sm font-medium text-white mb-1">{feature.title}</h4>
               <p className="text-xs text-gray-500">{feature.description}</p>
             </div>

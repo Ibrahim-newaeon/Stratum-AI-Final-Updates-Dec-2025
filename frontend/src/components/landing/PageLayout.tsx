@@ -79,9 +79,9 @@ export function PageLayout({ children }: PageLayoutProps) {
         className="fixed inset-0 pointer-events-none z-0"
         style={{
           background: `
-            radial-gradient(ellipse 40% 40% at 20% 30%, rgba(201, 162, 39, 0.03), transparent),
-            radial-gradient(ellipse 30% 30% at 80% 70%, rgba(201, 162, 39, 0.02), transparent),
-            radial-gradient(ellipse 35% 35% at 60% 20%, rgba(39, 195, 157, 0.02), transparent)
+            radial-gradient(ellipse 40% 40% at 20% 30%, hsl(var(--primary) / 0.03), transparent),
+            radial-gradient(ellipse 30% 30% at 80% 70%, hsl(var(--primary) / 0.02), transparent),
+            radial-gradient(ellipse 35% 35% at 60% 20%, hsl(var(--accent) / 0.02), transparent)
           `,
         }}
       />
@@ -234,12 +234,12 @@ export function PageLayout({ children }: PageLayoutProps) {
                       style={{
                         background:
                           currentLanguage === 'en'
-                            ? 'rgba(201, 162, 39, 0.15)'
-                            : 'rgba(255, 255, 255, 0.03)',
+                            ? 'hsl(var(--primary) / 0.15)'
+                            : 'hsl(var(--foreground) / 0.03)',
                         border:
                           currentLanguage === 'en'
-                            ? '1px solid rgba(201, 162, 39, 0.3)'
-                            : '1px solid var(--landing-border)',
+                            ? '1px solid hsl(var(--primary) / 0.3)'
+                            : '1px solid hsl(var(--border))',
                       }}
                     >
                       English
@@ -254,12 +254,12 @@ export function PageLayout({ children }: PageLayoutProps) {
                       style={{
                         background:
                           currentLanguage === 'ar'
-                            ? 'rgba(201, 162, 39, 0.15)'
-                            : 'rgba(255, 255, 255, 0.03)',
+                            ? 'hsl(var(--primary) / 0.15)'
+                            : 'hsl(var(--foreground) / 0.03)',
                         border:
                           currentLanguage === 'ar'
-                            ? '1px solid rgba(201, 162, 39, 0.3)'
-                            : '1px solid var(--landing-border)',
+                            ? '1px solid hsl(var(--primary) / 0.3)'
+                            : '1px solid hsl(var(--border))',
                       }}
                     >
                       العربية

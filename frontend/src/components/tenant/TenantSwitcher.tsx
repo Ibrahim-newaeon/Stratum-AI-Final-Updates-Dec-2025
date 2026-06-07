@@ -171,15 +171,15 @@ export default function TenantSwitcher() {
         <div
           className="absolute top-full right-0 mt-1.5 w-80 rounded-2xl shadow-2xl z-50 overflow-hidden"
           style={{
-            background: 'rgba(11, 18, 21, 0.95)',
+            background: 'hsl(var(--card))',
             backdropFilter: 'blur(40px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
+            border: '1px solid hsl(var(--foreground) / 0.1)',
           }}
         >
           {/* Header */}
           <div
             className="px-4 py-3"
-            style={{ borderBottom: '1px solid var(--landing-border-white-dim)' }}
+            style={{ borderBottom: '1px solid hsl(var(--foreground) / 0.06)' }}
           >
             <p className="text-xs font-medium text-foreground/50 uppercase tracking-wider">
               Switch Workspace
@@ -263,7 +263,7 @@ export default function TenantSwitcher() {
           {/* Footer */}
           <div
             className="px-4 py-2.5"
-            style={{ borderTop: '1px solid var(--landing-border-white-dim)' }}
+            style={{ borderTop: '1px solid hsl(var(--foreground) / 0.06)' }}
           >
             <p className="text-[11px] text-foreground/30">
               {tenants.length} workspace{tenants.length !== 1 ? 's' : ''} available
