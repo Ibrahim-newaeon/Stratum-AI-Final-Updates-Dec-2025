@@ -14,7 +14,12 @@
     }
   }
 
-  :root {
+  /* `.dark` is listed alongside `:root` so the dark tokens can be re-asserted
+     on a scoped subtree (e.g. the public/marketing shell, which is pinned dark
+     to match landing.html) even when an ancestor `<html class="light">` is in
+     light mode. */
+  :root,
+  .dark {
     /* ═══════════════════════════════════════════════════════════════
        STRATUM AI — FIGMA THEME (DARK, default)
        Bloomberg-density · Apple restraint · ember warmth

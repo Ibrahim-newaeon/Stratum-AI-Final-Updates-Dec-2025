@@ -28,7 +28,7 @@ export default function TierLandingPage() {
   const gradientClass = `${content.visuals.gradientFrom} ${content.visuals.gradientTo}`;
 
   return (
-    <div key={tier} className="min-h-screen bg-surface-primary">
+    <div key={tier} className="dark min-h-screen bg-surface-primary">
       {/* Navigation Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-surface-primary/80 backdrop-blur-lg border-b border-foreground/5">
         <div className="max-w-7xl mx-auto px-6 py-4">

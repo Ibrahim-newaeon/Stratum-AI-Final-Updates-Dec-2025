@@ -12,7 +12,7 @@ export default function NotFound() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-6 bg-background"
+      className="dark min-h-screen flex items-center justify-center p-6 bg-background"
     >
       <SEO
         title="Page Not Found"
