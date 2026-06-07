@@ -217,7 +217,7 @@ export default function DocArticlePage() {
 
             {cmsHtml ? (
               <div
-                className="text-body text-muted-foreground leading-relaxed [&_h2]:text-h2 [&_h2]:text-foreground [&_h2]:font-semibold [&_h2]:mt-10 [&_h2]:mb-4 [&_h3]:text-h3 [&_h3]:text-foreground [&_h3]:font-semibold [&_h3]:mt-7 [&_h3]:mb-2 [&_p]:mb-4 [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-4 [&_ul]:space-y-2 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-4 [&_ol]:space-y-2 [&_a]:text-secondary [&_a:hover]:underline [&_code]:font-mono [&_code]:text-foreground [&_pre]:bg-card [&_pre]:border [&_pre]:border-border [&_pre]:rounded-xl [&_pre]:p-4 [&_pre]:overflow-x-auto [&_pre]:mb-5"
+                className="text-body text-muted-foreground leading-relaxed [&_h2]:text-h2 [&_h2]:text-foreground [&_h2]:font-semibold [&_h2]:mt-10 [&_h2]:mb-4 [&_h3]:text-h3 [&_h3]:text-foreground [&_h3]:font-semibold [&_h3]:mt-7 [&_h3]:mb-2 [&_p]:mb-4 [&_strong]:text-foreground [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-4 [&_ul]:space-y-2 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-4 [&_ol]:space-y-2 [&_a]:text-secondary [&_a:hover]:underline [&_code]:font-mono [&_code]:text-foreground [&_pre]:bg-card [&_pre]:border [&_pre]:border-border [&_pre]:rounded-xl [&_pre]:p-4 [&_pre]:overflow-x-auto [&_pre]:mb-5 [&_blockquote]:border-l-2 [&_blockquote]:border-secondary [&_blockquote]:bg-secondary/5 [&_blockquote]:pl-4 [&_blockquote]:py-2 [&_blockquote]:rounded-r-lg [&_blockquote]:my-5"
                 dangerouslySetInnerHTML={{ __html: sanitizeHtml(cmsHtml) }}
               />
             ) : article ? (

@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "allowImportingTsExtensions": true,
+    "noEmit": true
+  },
+  "include": [
+    "**/*.ts",
+    "../gen-marketing-seed.ts",
+    "../../src/vite-env.d.ts",
+    "../../src/types/global.d.ts"
+  ]
+}

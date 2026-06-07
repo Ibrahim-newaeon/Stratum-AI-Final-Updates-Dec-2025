@@ -108,5 +108,16 @@ with engine.connect() as conn:
 " || { echo "CMS role fix failed"; exit 1; }
 fi
 
+# Seed CMS content pages (docs articles + marketing pages) when SEED_CMS_PAGES=true.
+# Runs after migrations so cms_pages exists. Idempotent — existing pages are
+# skipped — so it is safe to leave enabled. Non-fatal: a seed hiccup must never
+# block the app from starting.
+if [ "$SEED_CMS_PAGES" = "true" ]; then
+    echo "Seeding CMS docs pages..."
+    python scripts/seed_docs_pages.py || echo "Docs pages seed skipped/failed (non-fatal)"
+    echo "Seeding CMS marketing pages..."
+    python scripts/seed_marketing_pages.py || echo "Marketing pages seed skipped/failed (non-fatal)"
+fi
+
 echo "Starting uvicorn on port ${PORT:-8000}..."
 exec uvicorn app.main:app --host 0.0.0.0 --port "${PORT:-8000}" --log-level info
