@@ -36,7 +36,7 @@ celery-redbeat==2.3.3
 # Authentication & Security
 PyJWT==2.13.0
 passlib[bcrypt]==1.7.4
-bcrypt==5.0.0  # passlib 1.7.4 requires bcrypt <4.0
+bcrypt==4.0.1  # passlib 1.7.4 requires bcrypt <4.1
 cryptography==46.0.7
 pydantic[email]==2.13.4
 pydantic-settings==2.14.1
