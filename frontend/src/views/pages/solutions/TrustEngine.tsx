@@ -1,12 +1,18 @@
 /**
- * Trust Engine Solution Page
- * Trust-gated automation system
+ * Trust Engine Solution Page — landing-themed (ink + ember).
+ * Trust-gated automation system.
  */
 
 import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { usePageContent, type SolutionPageContent } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
+import { CTA } from '@/components/landing/CTA';
+import {
+  MktHero,
+  MktSectionHeader,
+  MktFeatureCard,
+  MktCard,
+} from '@/components/landing/marketing';
 import { SEO } from '@/components/common/SEO';
 import {
   BoltIcon,
@@ -20,7 +26,7 @@ import {
 const fallbackHero = {
   badge: 'Trust Engine',
   title: 'Automation with',
-  titleHighlight: 'Built-In Safety',
+  titleHighlight: 'built-in safety',
   description:
     'The Trust Engine ensures automations only execute when your data is healthy. No more blind optimization based on bad signals.',
   ctaText: 'Start Free Trial',
@@ -32,25 +38,21 @@ const fallbackFeatures = [
     iconName: 'XCircleIcon',
     title: 'Prevent Bad Decisions',
     description: 'Never optimize on corrupted data',
-    color: 'var(--landing-accent-red)',
   },
   {
     iconName: 'CheckCircleIcon',
     title: 'Reduce Manual Oversight',
     description: 'Automated safety checks 24/7',
-    color: 'var(--landing-accent-green)',
   },
   {
     iconName: 'ShieldCheckIcon',
     title: 'Audit Trail',
     description: 'Full logging of all gate decisions',
-    color: '#a855f7',
   },
   {
     iconName: 'BoltIcon',
     title: 'Customizable Thresholds',
     description: 'Set your own risk tolerance',
-    color: '#06b6d4',
   },
 ];
 
@@ -58,6 +60,41 @@ const fallbackSteps = [
   { step: 1, title: 'Signal Health Check', description: 'Continuous monitoring of data quality' },
   { step: 2, title: 'Trust Gate', description: 'Pass / Hold / Block decision' },
   { step: 3, title: 'Automation Decision', description: 'Execute only when safe' },
+];
+
+const benefitIconMap: Record<string, typeof XCircleIcon> = {
+  XCircleIcon,
+  CheckCircleIcon,
+  ShieldCheckIcon,
+  BoltIcon,
+};
+
+/** Gate behavior cards keep genuine status semantics (success / warning / destructive). */
+const gateBehaviors = [
+  {
+    status: 'HEALTHY',
+    threshold: '≥70',
+    action: 'EXECUTE',
+    description: 'Automations run normally. Full autopilot mode enabled.',
+    wrap: 'bg-success/10 border-success/20',
+    accent: 'text-success',
+  },
+  {
+    status: 'DEGRADED',
+    threshold: '40-69',
+    action: 'HOLD',
+    description: 'Automations paused. Alert sent for review. Manual override available.',
+    wrap: 'bg-warning/10 border-warning/20',
+    accent: 'text-warning',
+  },
+  {
+    status: 'UNHEALTHY',
+    threshold: '<40',
+    action: 'BLOCK',
+    description: 'All automations blocked. Manual intervention required.',
+    wrap: 'bg-destructive/10 border-destructive/20',
+    accent: 'text-destructive',
+  },
 ];
 
 export default function TrustEngineSolution() {
@@ -75,293 +112,134 @@ export default function TrustEngineSolution() {
 
   // CMS data with hardcoded fallback
   const hero = content?.hero ?? fallbackHero;
-  const benefits = content?.features?.length
-    ? content.features.map((f, i) => ({
-        ...f,
-        color: fallbackFeatures[i]?.color ?? '#a855f7',
-      }))
-    : fallbackFeatures;
+  const benefits = content?.features?.length ? content.features : fallbackFeatures;
   const steps = content?.steps?.length ? content.steps : fallbackSteps;
 
   return (
     <PageLayout>
-      <SEO title="Trust Engine" description="Signal health monitoring and trust-gated automation. Ensure your automations only execute when data is reliable." url="https://stratum-ai.com/solutions/trust-engine" />
-      {/* Hero Section */}
-      <section className="py-20 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <div
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm mb-6"
-                style={{
-                  background: 'rgba(52, 199, 89, 0.1)',
-                  border: '1px solid rgba(52, 199, 89, 0.3)',
-                  color: 'var(--landing-accent-green)',
-                }}
-              >
-                <ShieldCheckIcon className="w-4 h-4" />
-                {hero.badge}
-              </div>
-              <h1
-                className="text-4xl md:text-5xl font-bold mb-6"
-                style={{ fontFamily: "Geist, system-ui, sans-serif" }}
-              >
-                <span className="text-white">{hero.title}</span>
-                <br />
-                <span style={{ color: 'var(--landing-accent-coral)' }}>{hero.titleHighlight}</span>
-              </h1>
-              <p className="text-lg mb-8" style={{ color: 'var(--landing-text)' }}>
-                {hero.description}
-              </p>
-              <Link
-                to={hero.ctaLink}
-                className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-opacity hover:opacity-90"
-                style={{
-                  background: 'var(--landing-accent-coral)',
-                  boxShadow: '0 4px 20px rgba(255, 90, 31, 0.3)',
-                }}
-              >
-                {hero.ctaText}
-              </Link>
+      <SEO
+        title="Trust Engine"
+        description="Signal health monitoring and trust-gated automation. Ensure your automations only execute when data is reliable."
+        url="https://stratum-ai.com/solutions/trust-engine"
+      />
+
+      <MktHero
+        badge={hero.badge}
+        badgeIcon={ShieldCheckIcon}
+        title={hero.title}
+        highlight={hero.titleHighlight}
+        subtitle={hero.description}
+        primary={{ label: hero.ctaText, href: hero.ctaLink }}
+        secondary={{ label: 'See Signal Health', href: '/features' }}
+      >
+        <MktCard className="mt-16 max-w-xl mx-auto p-8">
+          <div className="space-y-6">
+            <div className="text-center">
+              <SignalIcon className="w-12 h-12 mx-auto mb-2 text-success" />
+              <div className="text-h3 text-foreground font-semibold">Signal Health</div>
+              <div className="text-display-xs font-semibold mt-2 text-success">87</div>
             </div>
-            <div
-              className="rounded-3xl p-8"
-              style={{
-                background: 'var(--landing-card)',
-                border: '1px solid var(--landing-border)',
-              }}
-            >
-              {/* Trust Gate Visualization */}
-              <div className="space-y-6">
-                <div className="text-center">
-                  <SignalIcon className="w-12 h-12 mx-auto mb-2" style={{ color: 'var(--landing-accent-green)' }} />
-                  <div className="text-3xl font-bold text-white">Signal Health</div>
-                  <div className="text-5xl font-bold mt-2" style={{ color: 'var(--landing-accent-green)' }}>
-                    87
-                  </div>
+            <div className="flex items-center justify-center gap-4">
+              <div className="text-center">
+                <div className="w-16 h-16 rounded-xl bg-success/10 border border-success/20 flex items-center justify-center mx-auto mb-2">
+                  <CheckCircleIcon className="w-8 h-8 text-success" />
                 </div>
-                <div className="flex items-center justify-center gap-4">
-                  <div className="text-center">
-                    <div
-                      className="w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-2"
-                      style={{
-                        background: 'rgba(52, 199, 89, 0.1)',
-                        border: '1px solid rgba(52, 199, 89, 0.3)',
-                      }}
-                    >
-                      <CheckCircleIcon className="w-8 h-8" style={{ color: 'var(--landing-accent-green)' }} />
-                    </div>
-                    <div className="text-xs" style={{ color: 'var(--landing-text-dim)' }}>
-                      HEALTHY
-                    </div>
-                    <div className="text-xs" style={{ color: 'var(--landing-text-dim)' }}>
-                      ≥70
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div
-                      className="w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-2"
-                      style={{
-                        background: 'rgba(234, 179, 8, 0.1)',
-                        border: '1px solid rgba(234, 179, 8, 0.3)',
-                      }}
-                    >
-                      <ExclamationTriangleIcon className="w-8 h-8" style={{ color: 'var(--landing-status-yellow)' }} />
-                    </div>
-                    <div className="text-xs" style={{ color: 'var(--landing-text-dim)' }}>
-                      DEGRADED
-                    </div>
-                    <div className="text-xs" style={{ color: 'var(--landing-text-dim)' }}>
-                      40-69
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div
-                      className="w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-2"
-                      style={{
-                        background: 'rgba(239, 68, 68, 0.1)',
-                        border: '1px solid rgba(239, 68, 68, 0.3)',
-                      }}
-                    >
-                      <XCircleIcon className="w-8 h-8" style={{ color: 'var(--landing-accent-red)' }} />
-                    </div>
-                    <div className="text-xs" style={{ color: 'var(--landing-text-dim)' }}>
-                      UNHEALTHY
-                    </div>
-                    <div className="text-xs" style={{ color: 'var(--landing-text-dim)' }}>
-                      {'<40'}
-                    </div>
-                  </div>
+                <div className="text-micro uppercase text-muted-foreground">HEALTHY</div>
+                <div className="text-micro text-muted-foreground">≥70</div>
+              </div>
+              <div className="text-center">
+                <div className="w-16 h-16 rounded-xl bg-warning/10 border border-warning/20 flex items-center justify-center mx-auto mb-2">
+                  <ExclamationTriangleIcon className="w-8 h-8 text-warning" />
                 </div>
+                <div className="text-micro uppercase text-muted-foreground">DEGRADED</div>
+                <div className="text-micro text-muted-foreground">40-69</div>
+              </div>
+              <div className="text-center">
+                <div className="w-16 h-16 rounded-xl bg-destructive/10 border border-destructive/20 flex items-center justify-center mx-auto mb-2">
+                  <XCircleIcon className="w-8 h-8 text-destructive" />
+                </div>
+                <div className="text-micro uppercase text-muted-foreground">UNHEALTHY</div>
+                <div className="text-micro text-muted-foreground">{'<40'}</div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </MktCard>
+      </MktHero>
 
-      {/* How It Works */}
-      <section className="py-20 px-6">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold text-white text-center mb-16">
-            How the Trust Engine Works
-          </h2>
-          <div
-            className="rounded-3xl p-8"
-            style={{
-              background: 'var(--landing-card)',
-              border: '1px solid var(--landing-border)',
-            }}
-          >
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 items-center">
-              {steps.map((step, idx) => {
-                const stepIcons = [SignalIcon, ShieldCheckIcon, BoltIcon];
-                const stepColors = ['#a855f7', '#06b6d4', '#f97316'];
-                const StepIcon = stepIcons[idx] ?? SignalIcon;
-                return (
-                  <div key={step.step}>
-                    {idx > 0 && (
-                      <div className="hidden md:block text-center mb-8">
-                        <div className="text-4xl" style={{ color: 'rgba(255, 255, 255, 0.3)' }}>
-                          →
-                        </div>
-                      </div>
-                    )}
-                    <div className="text-center">
-                      <StepIcon
-                        className="w-12 h-12 mx-auto mb-3"
-                        style={{ color: stepColors[idx] ?? '#a855f7' }}
-                      />
-                      <h3 className="font-semibold text-white">{step.title}</h3>
-                      <p className="text-sm mt-2" style={{ color: 'var(--landing-text-dim)' }}>
-                        {step.description}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+      {/* How it works */}
+      <section className="pb-12">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <MktSectionHeader
+            eyebrow="How it works"
+            title="How the Trust Engine"
+            highlight="works"
+          />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {steps.map((step, i) => (
+              <MktCard key={step.step} delay={i * 0.06} className="p-8">
+                <div className="w-11 h-11 rounded-full bg-secondary/10 border border-secondary/20 flex items-center justify-center mb-5">
+                  <span className="text-h3 font-semibold text-secondary">{step.step}</span>
+                </div>
+                <h3 className="text-h3 text-foreground font-semibold mb-2">{step.title}</h3>
+                <p className="text-body text-muted-foreground leading-relaxed">
+                  {step.description}
+                </p>
+              </MktCard>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Gate Behaviors */}
-      <section className="py-20 px-6">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold text-white text-center mb-16">Gate Behaviors</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                status: 'HEALTHY',
-                threshold: '≥70',
-                action: 'EXECUTE',
-                description: 'Automations run normally. Full autopilot mode enabled.',
-                color: 'var(--landing-accent-green)',
-                bg: 'rgba(52, 199, 89, 0.1)',
-                border: 'rgba(52, 199, 89, 0.3)',
-              },
-              {
-                status: 'DEGRADED',
-                threshold: '40-69',
-                action: 'HOLD',
-                description:
-                  'Automations paused. Alert sent for review. Manual override available.',
-                color: 'var(--landing-status-yellow)',
-                bg: 'rgba(234, 179, 8, 0.1)',
-                border: 'rgba(234, 179, 8, 0.3)',
-              },
-              {
-                status: 'UNHEALTHY',
-                threshold: '<40',
-                action: 'BLOCK',
-                description: 'All automations blocked. Manual intervention required.',
-                color: 'var(--landing-accent-red)',
-                bg: 'rgba(239, 68, 68, 0.1)',
-                border: 'rgba(239, 68, 68, 0.3)',
-              },
-            ].map((gate) => (
-              <div
-                key={gate.status}
-                className="p-6 rounded-2xl"
-                style={{
-                  background: gate.bg,
-                  border: `1px solid ${gate.border}`,
-                }}
-              >
+      <section className="py-24 lg:py-28">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <MktSectionHeader eyebrow="Gate behaviors" title="What the" highlight="gate does" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {gateBehaviors.map((gate, i) => (
+              <MktCard key={gate.status} delay={i * 0.05} className={`p-6 ${gate.wrap}`}>
                 <div className="flex items-center justify-between mb-4">
-                  <span className="font-bold" style={{ color: gate.color }}>
+                  <span className={`text-meta uppercase font-semibold ${gate.accent}`}>
                     {gate.status}
                   </span>
                   <span
-                    className="text-sm px-2 py-1 rounded"
-                    style={{ background: 'rgba(0,0,0,0.2)', color: gate.color }}
+                    className={`text-meta px-2 py-1 rounded bg-foreground/5 ${gate.accent}`}
                   >
                     {gate.threshold}
                   </span>
                 </div>
-                <div className="text-2xl font-bold text-white mb-2">{gate.action}</div>
-                <p className="text-sm" style={{ color: 'var(--landing-text)' }}>
+                <div className="text-h2 text-foreground font-semibold mb-2">{gate.action}</div>
+                <p className="text-body text-muted-foreground leading-relaxed">
                   {gate.description}
                 </p>
-              </div>
+              </MktCard>
             ))}
           </div>
         </div>
       </section>
 
       {/* Benefits */}
-      <section className="py-20 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-white mb-4">Why Trust-Gated Automation?</h2>
-          </div>
+      <section className="py-24 lg:py-28">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <MktSectionHeader
+            eyebrow="Why it matters"
+            title="Why trust-gated"
+            highlight="automation?"
+          />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {benefits.map((benefit) => (
-              <div
+            {benefits.map((benefit, i) => (
+              <MktFeatureCard
                 key={benefit.title}
-                className="p-6 rounded-2xl text-center transition-transform hover:scale-[1.02]"
-                style={{
-                  background: 'var(--landing-card)',
-                  border: '1px solid var(--landing-border)',
-                  borderLeft: `3px solid ${benefit.color}`,
-                }}
-              >
-                <h3 className="font-semibold text-white mb-2">{benefit.title}</h3>
-                <p className="text-sm" style={{ color: 'var(--landing-text)' }}>
-                  {benefit.description}
-                </p>
-              </div>
+                icon={benefitIconMap[benefit.iconName] ?? ShieldCheckIcon}
+                title={benefit.title}
+                description={benefit.description}
+                delay={(i % 4) * 0.05}
+              />
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-20 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <div
-            className="p-12 rounded-3xl"
-            style={{
-              background: 'var(--landing-card)',
-              border: '1px solid var(--landing-border)',
-            }}
-          >
-            <h2 className="text-3xl font-bold text-white mb-4">Automate with Confidence</h2>
-            <p className="text-lg mb-8" style={{ color: 'var(--landing-text)' }}>
-              Let the Trust Engine handle the safety checks while you focus on growth.
-            </p>
-            <Link
-              to="/signup"
-              className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-opacity hover:opacity-90"
-              style={{
-                background: 'var(--landing-accent-coral)',
-                boxShadow: '0 4px 20px rgba(255, 90, 31, 0.3)',
-              }}
-            >
-              Get Started Free
-            </Link>
-          </div>
-        </div>
-      </section>
+      <CTA />
     </PageLayout>
   );
 }

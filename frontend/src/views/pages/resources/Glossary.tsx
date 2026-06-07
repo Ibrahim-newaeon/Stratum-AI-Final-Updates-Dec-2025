@@ -1,11 +1,13 @@
 /**
- * Glossary Page - Platform Terminology & Values
- * StratumAI Dark Enterprise Theme
+ * Glossary Page — landing-themed (ink + ember).
+ * Platform terminology & values.
  */
 
 import { useState } from 'react';
 import { usePageContent, type GlossaryPageContent } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
+import { CTA } from '@/components/landing/CTA';
+import { MktHero, MktCard } from '@/components/landing/marketing';
 import {
   ArrowPathIcon,
   BeakerIcon,
@@ -32,7 +34,6 @@ interface GlossaryCategory {
   id: string;
   title: string;
   icon: typeof BookOpenIcon;
-  color: string;
   description: string;
   terms: GlossaryTerm[];
 }
@@ -56,7 +57,6 @@ const fallbackGlossaryData: GlossaryCategory[] = [
     id: 'trust-engine',
     title: 'Trust Engine',
     icon: ShieldCheckIcon,
-    color: 'var(--landing-accent-warm)',
     description:
       'Core decision-making component that evaluates signal health before automation execution.',
     terms: [
@@ -124,7 +124,6 @@ const fallbackGlossaryData: GlossaryCategory[] = [
     id: 'cdp',
     title: 'CDP (Customer Data Platform)',
     icon: UserGroupIcon,
-    color: 'var(--landing-accent-sky)',
     description:
       'Unified customer data infrastructure for profiles, segments, and identity resolution.',
     terms: [
@@ -212,7 +211,6 @@ const fallbackGlossaryData: GlossaryCategory[] = [
     id: 'audience-sync',
     title: 'Audience Sync',
     icon: ArrowPathIcon,
-    color: 'var(--landing-accent-teal)',
     description: 'Push CDP segments to ad platforms for targeting and suppression.',
     terms: [
       {
@@ -259,7 +257,6 @@ const fallbackGlossaryData: GlossaryCategory[] = [
     id: 'capi',
     title: 'CAPI (Conversions API)',
     icon: BoltIcon,
-    color: 'var(--landing-accent-amber)',
     description: 'Server-side event delivery to ad platforms for improved attribution.',
     terms: [
       {
@@ -320,7 +317,6 @@ const fallbackGlossaryData: GlossaryCategory[] = [
     id: 'analytics',
     title: 'Analytics & Metrics',
     icon: ChartBarIcon,
-    color: 'var(--landing-accent-red)',
     description: 'Performance metrics, KPIs, and calculated values for campaign optimization.',
     terms: [
       {
@@ -380,7 +376,6 @@ const fallbackGlossaryData: GlossaryCategory[] = [
     id: 'pacing',
     title: 'Pacing & Forecasting',
     icon: SignalIcon,
-    color: 'var(--landing-accent-violet)',
     description: 'Budget tracking, spend pacing, and performance forecasting.',
     terms: [
       {
@@ -426,7 +421,6 @@ const fallbackGlossaryData: GlossaryCategory[] = [
     id: 'crm',
     title: 'CRM Integration',
     icon: CurrencyDollarIcon,
-    color: 'var(--landing-accent-sky)',
     description: 'Customer relationship management sync and pipeline attribution.',
     terms: [
       {
@@ -472,7 +466,6 @@ const fallbackGlossaryData: GlossaryCategory[] = [
     id: 'experiments',
     title: 'A/B Testing & Experiments',
     icon: BeakerIcon,
-    color: 'var(--landing-accent-red)',
     description: 'Controlled experiments for testing campaign variations.',
     terms: [
       {
@@ -502,7 +495,6 @@ const fallbackGlossaryData: GlossaryCategory[] = [
     id: 'system',
     title: 'System & Configuration',
     icon: Cog6ToothIcon,
-    color: '#94A3B8',
     description: 'System status, configuration values, and operational parameters.',
     terms: [
       {
@@ -547,7 +539,6 @@ const fallbackGlossaryData: GlossaryCategory[] = [
     id: 'platforms',
     title: 'Ad Platforms',
     icon: CpuChipIcon,
-    color: 'var(--landing-accent-teal)',
     description: 'Supported advertising platforms and their specific terminology.',
     terms: [
       {
@@ -603,7 +594,6 @@ export default function GlossaryPage() {
         id: cat.id,
         title: cat.name,
         icon: glossaryIconMap[cat.iconName] || BookOpenIcon,
-        color: cat.color,
         description: '',
         terms: cat.terms.map((t) => ({
           term: t.term,
@@ -627,230 +617,138 @@ export default function GlossaryPage() {
 
   return (
     <PageLayout>
-      <div className="min-h-screen">
-        {/* Hero Section */}
-        <section className="relative py-20 overflow-hidden">
-          <div className="max-w-5xl mx-auto px-6 lg:px-8 text-center">
-            <div
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
-              style={{
-                background: 'rgba(255,179,71,0.1)',
-                border: '1px solid rgba(255,179,71,0.3)',
-              }}
-            >
-              <BookOpenIcon className="w-4 h-4 text-[var(--landing-accent-warm)]" />
-              <span className="text-sm font-medium text-[var(--landing-accent-warm)]">Glossary</span>
-            </div>
-
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Platform{' '}
-              <span
-                style={{ color: 'var(--landing-accent-coral)' }}
-              >
-                Terminology
-              </span>
-            </h1>
-
-            <p className="text-lg mb-8" style={{ color: 'var(--landing-text)' }}>
-              Complete reference of {totalTerms}+ terms, metrics, and values used across Stratum AI.
-            </p>
-
-            {/* Search */}
-            <div className="max-w-xl mx-auto">
-              <div
-                className="relative"
-                style={{
-                  background: 'var(--landing-card)',
-                  border: '1px solid var(--landing-border)',
-                  borderRadius: '12px',
-                }}
-              >
-                <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: 'var(--landing-text-dim)' }} />
-                <input
-                  type="text"
-                  placeholder="Search terms..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 bg-transparent text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF5A1F]/50 rounded-xl"
-                />
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Category Navigation */}
-        <section
-          className="py-4 sticky top-16 z-10"
-          style={{ background: 'var(--landing-bg)' }}
+      <MktHero
+        badge="Glossary"
+        badgeIcon={BookOpenIcon}
+        title="Platform"
+        highlight="Terminology"
+        subtitle={`Complete reference of ${totalTerms}+ terms, metrics, and values used across Stratum AI.`}
+      >
+        <div
+          className="mt-10 relative max-w-xl mx-auto animate-enter"
+          style={{ animationDelay: '0.35s' }}
         >
-          <div className="max-w-7xl mx-auto px-6 lg:px-8">
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-              <button
-                onClick={() => setActiveCategory(null)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-                  activeCategory === null
-                    ? 'bg-secondary text-white'
-                    : 'bg-foreground/5 hover:text-white'
-                }`}
-                style={activeCategory !== null ? { color: '#8B8D9E' } : {}}
-              >
-                All Categories
-              </button>
-              {glossaryData.map((category) => (
-                <button
-                  key={category.id}
-                  onClick={() => setActiveCategory(category.id)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-2 ${
-                    activeCategory === category.id
-                      ? 'text-white'
-                      : 'bg-foreground/5 hover:text-white'
-                  }`}
-                  style={activeCategory === category.id ? { background: category.color } : { color: '#8B8D9E' }}
-                >
-                  <category.icon className="w-4 h-4" />
-                  {category.title}
-                </button>
-              ))}
-            </div>
-          </div>
-        </section>
+          <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Search terms..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-12 pr-4 py-4 rounded-xl bg-card border border-border text-foreground placeholder:text-muted-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50"
+          />
+        </div>
+      </MktHero>
 
-        {/* Glossary Content */}
-        <section className="py-12">
-          <div className="max-w-5xl mx-auto px-6 lg:px-8">
-            <div className="space-y-12">
-              {(activeCategory
-                ? filteredCategories.filter((c) => c.id === activeCategory)
-                : filteredCategories
-              ).map((category) => (
-                <div key={category.id} id={category.id}>
-                  {/* Category Header */}
-                  <div className="flex items-center gap-4 mb-6">
-                    <div
-                      className="w-12 h-12 rounded-xl flex items-center justify-center"
-                      style={{
-                        background: `${category.color}15`,
-                        border: `1px solid ${category.color}30`,
-                      }}
-                    >
-                      <category.icon className="w-6 h-6" style={{ color: category.color }} />
-                    </div>
-                    <div>
-                      <h2 className="text-xl font-bold text-white">{category.title}</h2>
-                      <p className="text-sm" style={{ color: 'var(--landing-text)' }}>{category.description}</p>
-                    </div>
-                  </div>
-
-                  {/* Terms */}
-                  <div className="space-y-4">
-                    {category.terms.map((term, index) => (
-                      <div
-                        key={index}
-                        className="p-5 rounded-xl"
-                        style={{
-                          background: 'var(--landing-card)',
-                          border: '1px solid var(--landing-border)',
-                        }}
-                      >
-                        <h3 className="text-lg font-semibold text-white mb-2">{term.term}</h3>
-                        <p className="mb-3" style={{ color: 'var(--landing-text)' }}>{term.definition}</p>
-
-                        {term.values && (
-                          <div className="space-y-2 mt-4">
-                            <span className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--landing-text-dim)' }}>
-                              Values
-                            </span>
-                            <div className="grid gap-2">
-                              {term.values.map((value, vIndex) => (
-                                <div
-                                  key={vIndex}
-                                  className="flex items-start gap-3 p-3 rounded-lg"
-                                  style={{ background: 'rgba(255, 255, 255, 0.03)' }}
-                                >
-                                  <code
-                                    className="px-2 py-1 rounded text-sm font-mono flex-shrink-0"
-                                    style={{
-                                      background: `${category.color}15`,
-                                      color: category.color,
-                                    }}
-                                  >
-                                    {value.value}
-                                  </code>
-                                  <span className="text-sm" style={{ color: 'var(--landing-text)' }}>{value.description}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {term.example && (
-                          <div
-                            className="mt-4 p-3 rounded-lg"
-                            style={{ background: 'rgba(255,179,71,0.1)' }}
-                          >
-                            <span className="text-xs font-medium text-[var(--landing-accent-warm)] uppercase tracking-wide">
-                              Example
-                            </span>
-                            <p className="text-sm mt-1" style={{ color: 'var(--landing-text)' }}>{term.example}</p>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-
-              {filteredCategories.length === 0 && (
-                <div className="text-center py-12">
-                  <p style={{ color: 'var(--landing-text)' }}>No terms found matching "{searchQuery}"</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-
-        {/* CTA */}
-        <section className="py-16">
-          <div className="max-w-3xl mx-auto px-6 lg:px-8 text-center">
-            <div
-              className="p-8 rounded-2xl"
-              style={{
-                background: 'var(--landing-card)',
-                border: '1px solid var(--landing-border)',
-              }}
+      {/* Category Navigation */}
+      <section className="py-4 sticky top-16 z-10 bg-background/80 backdrop-blur">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            <button
+              onClick={() => setActiveCategory(null)}
+              className={`px-4 py-2 rounded-full text-meta uppercase whitespace-nowrap transition-colors ${
+                activeCategory === null
+                  ? 'bg-secondary/10 text-secondary border border-secondary/20'
+                  : 'bg-foreground/5 text-muted-foreground hover:text-secondary'
+              }`}
             >
-              <h3 className="text-xl font-bold text-white mb-2">
-                Can't find what you're looking for?
-              </h3>
-              <p className="mb-6" style={{ color: 'var(--landing-text)' }}>
-                Check our documentation or reach out to our support team.
-              </p>
-              <div className="flex gap-4 justify-center">
-                <a
-                  href="/docs"
-                  className="px-6 py-3 rounded-full font-semibold text-white transition-colors duration-200"
-                  style={{
-                    background: 'var(--landing-accent-coral)',
-                    boxShadow: 'var(--landing-glow-coral)',
-                  }}
-                >
-                  View Docs
-                </a>
-                <a
-                  href="/contact"
-                  className="px-6 py-3 rounded-xl font-semibold text-white transition-colors duration-200"
-                  style={{
-                    background: 'var(--landing-surface-glass)',
-                    border: '1px solid var(--landing-border)',
-                  }}
-                >
-                  Contact Support
-                </a>
-              </div>
-            </div>
+              All Categories
+            </button>
+            {glossaryData.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => setActiveCategory(category.id)}
+                className={`px-4 py-2 rounded-full text-meta uppercase whitespace-nowrap transition-colors flex items-center gap-2 ${
+                  activeCategory === category.id
+                    ? 'bg-secondary/10 text-secondary border border-secondary/20'
+                    : 'bg-foreground/5 text-muted-foreground hover:text-secondary'
+                }`}
+              >
+                <category.icon className="w-4 h-4" />
+                {category.title}
+              </button>
+            ))}
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
+
+      {/* Glossary Content */}
+      <section className="py-12">
+        <div className="max-w-5xl mx-auto px-6 lg:px-8">
+          <div className="space-y-16">
+            {(activeCategory
+              ? filteredCategories.filter((c) => c.id === activeCategory)
+              : filteredCategories
+            ).map((category) => (
+              <div key={category.id} id={category.id}>
+                {/* Category Header */}
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-12 h-12 rounded-xl bg-secondary/10 border border-secondary/20 flex items-center justify-center">
+                    <category.icon className="w-6 h-6 text-secondary" />
+                  </div>
+                  <div>
+                    <h2 className="text-h1 text-foreground font-semibold">{category.title}</h2>
+                    {category.description ? (
+                      <p className="text-body text-muted-foreground">{category.description}</p>
+                    ) : null}
+                  </div>
+                </div>
+
+                {/* Terms */}
+                <div className="space-y-4">
+                  {category.terms.map((term, index) => (
+                    <MktCard key={index} className="p-5">
+                      <h3 className="text-h3 text-foreground font-semibold mb-2">{term.term}</h3>
+                      <p className="text-body text-muted-foreground mb-3">{term.definition}</p>
+
+                      {term.values && (
+                        <div className="space-y-2 mt-4">
+                          <span className="text-micro uppercase tracking-wide text-muted-foreground">
+                            Values
+                          </span>
+                          <div className="grid gap-2">
+                            {term.values.map((value, vIndex) => (
+                              <div
+                                key={vIndex}
+                                className="flex items-start gap-3 p-3 rounded-lg bg-foreground/[0.03]"
+                              >
+                                <code className="px-2 py-1 rounded text-body font-mono flex-shrink-0 bg-secondary/10 text-secondary">
+                                  {value.value}
+                                </code>
+                                <span className="text-body text-muted-foreground">
+                                  {value.description}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {term.example && (
+                        <div className="mt-4 p-3 rounded-lg bg-secondary/10 border border-secondary/20">
+                          <span className="text-micro uppercase tracking-wide text-secondary">
+                            Example
+                          </span>
+                          <p className="text-body text-muted-foreground mt-1">{term.example}</p>
+                        </div>
+                      )}
+                    </MktCard>
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            {filteredCategories.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-body text-muted-foreground">
+                  No terms found matching "{searchQuery}"
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <CTA />
     </PageLayout>
   );
 }

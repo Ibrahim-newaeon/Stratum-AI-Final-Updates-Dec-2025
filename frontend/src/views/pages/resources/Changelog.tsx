@@ -1,10 +1,11 @@
 /**
- * Changelog / Release Notes Page
- * StratumAI Dark Enterprise Theme
+ * Changelog / Release Notes Page — landing-themed (ink + ember).
  */
 
 import { usePageContent, type ChangelogPageContent } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
+import { CTA } from '@/components/landing/CTA';
+import { MktHero, MktCard } from '@/components/landing/marketing';
 import {
   BugAntIcon,
   RocketLaunchIcon,
@@ -91,30 +92,33 @@ const fallbackReleases = [
 const getTypeIcon = (type: string) => {
   switch (type) {
     case 'feature':
-      return <SparklesIcon className="w-4 h-4 text-[var(--landing-accent-teal)]" />;
+      return <SparklesIcon className="w-4 h-4 text-secondary" />;
     case 'improvement':
-      return <RocketLaunchIcon className="w-4 h-4 text-[var(--landing-accent-sky)]" />;
+      return <RocketLaunchIcon className="w-4 h-4 text-accent" />;
     case 'fix':
-      return <BugAntIcon className="w-4 h-4 text-[var(--landing-accent-amber)]" />;
+      return <BugAntIcon className="w-4 h-4 text-warning" />;
     case 'security':
-      return <ShieldCheckIcon className="w-4 h-4 text-[var(--landing-accent-warm)]" />;
+      return <ShieldCheckIcon className="w-4 h-4 text-success" />;
     default:
-      return <WrenchScrewdriverIcon className="w-4 h-4" style={{ color: 'var(--landing-text)' }} />;
+      return <WrenchScrewdriverIcon className="w-4 h-4 text-muted-foreground" />;
   }
 };
 
 const getTypeLabel = (type: string) => {
   switch (type) {
     case 'feature':
-      return { text: 'New', color: 'var(--landing-accent-teal)' };
+      return { text: 'New', classes: 'bg-secondary/10 text-secondary border border-secondary/20' };
     case 'improvement':
-      return { text: 'Improved', color: 'var(--landing-accent-sky)' };
+      return { text: 'Improved', classes: 'bg-accent/10 text-accent border border-accent/20' };
     case 'fix':
-      return { text: 'Fixed', color: 'var(--landing-accent-amber)' };
+      return { text: 'Fixed', classes: 'bg-warning/10 text-warning border border-warning/20' };
     case 'security':
-      return { text: 'Security', color: 'var(--landing-accent-warm)' };
+      return { text: 'Security', classes: 'bg-success/10 text-success border border-success/20' };
     default:
-      return { text: 'Changed', color: '#94A3B8' };
+      return {
+        text: 'Changed',
+        classes: 'bg-foreground/5 text-muted-foreground border border-border',
+      };
   }
 };
 
@@ -126,179 +130,103 @@ export default function ChangelogPage() {
 
   return (
     <PageLayout>
-      <div className="min-h-screen">
-        {/* Hero Section */}
-        <section className="relative py-20 overflow-hidden">
-          <div className="max-w-4xl mx-auto px-6 lg:px-8 text-center">
-            <div
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
-              style={{
-                background: 'rgba(0, 212, 170, 0.1)',
-                border: '1px solid rgba(0, 212, 170, 0.2)',
-              }}
-            >
-              <SparklesIcon className="w-4 h-4 text-[var(--landing-accent-teal)]" />
-              <span className="text-sm font-medium text-[var(--landing-accent-teal)]">Changelog</span>
-            </div>
+      <MktHero
+        badge="Changelog"
+        badgeIcon={SparklesIcon}
+        title="What's New in"
+        highlight="Stratum AI"
+        subtitle="Stay up to date with the latest features, improvements, and fixes."
+      />
 
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              What's New in{' '}
-              <span
-                style={{ color: 'var(--landing-accent-coral)' }}
-              >
-                Stratum AI
-              </span>
-            </h1>
+      {/* Releases Timeline */}
+      <section className="pb-12">
+        <div className="max-w-4xl mx-auto px-6 lg:px-8">
+          <div className="space-y-12">
+            {releases.map((release, index) => (
+              <div key={release.version} className="relative">
+                {/* Timeline line */}
+                {index < releases.length - 1 && (
+                  <div className="absolute left-[15px] top-12 bottom-0 w-px bg-border" />
+                )}
 
-            <p className="text-lg" style={{ color: 'var(--landing-text)' }}>
-              Stay up to date with the latest features, improvements, and fixes.
-            </p>
-          </div>
-        </section>
-
-        {/* Releases Timeline */}
-        <section className="py-16">
-          <div className="max-w-4xl mx-auto px-6 lg:px-8">
-            <div className="space-y-12">
-              {releases.map((release, index) => (
-                <div key={release.version} className="relative">
-                  {/* Timeline line */}
-                  {index < releases.length - 1 && (
-                    <div
-                      className="absolute left-[15px] top-12 bottom-0 w-px"
-                      style={{ background: 'var(--landing-border)' }}
-                    />
-                  )}
-
-                  {/* Version header */}
-                  <div className="flex items-start gap-4 mb-6">
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                      style={{
-                        background:
-                          release.type === 'major'
-                            ? 'var(--landing-accent-coral)'
-                            : 'rgba(255,179,71,0.2)',
-                        border: '2px solid rgba(255,179,71,0.4)',
-                      }}
+                {/* Version header */}
+                <div className="flex items-start gap-4 mb-6">
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 border ${
+                      release.type === 'major'
+                        ? 'bg-stratum-500 border-secondary/40'
+                        : 'bg-secondary/20 border-secondary/40'
+                    }`}
+                  >
+                    <span
+                      className={`text-micro font-bold ${
+                        release.type === 'major' ? 'text-primary-foreground' : 'text-secondary'
+                      }`}
                     >
-                      <span className="text-white text-xs font-bold">
-                        {release.type === 'major' ? 'M' : 'm'}
-                      </span>
-                    </div>
-
-                    <div>
-                      <div className="flex items-center gap-3">
-                        <h2 className="text-2xl font-bold text-white">v{release.version}</h2>
-                        {release.type === 'major' && (
-                          <span
-                            className="px-2 py-0.5 rounded text-xs font-medium"
-                            style={{
-                              background: 'rgba(255,179,71,0.1)',
-                              color: 'var(--landing-accent-warm)',
-                            }}
-                          >
-                            Major Release
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-sm" style={{ color: 'var(--landing-text-dim)' }}>{release.date}</p>
-                    </div>
+                      {release.type === 'major' ? 'M' : 'm'}
+                    </span>
                   </div>
 
-                  {/* Highlights */}
-                  {release.highlights && (
-                    <div
-                      className="ml-12 mb-6 p-4 rounded-xl"
-                      style={{
-                        background: 'var(--landing-card)',
-                        border: '1px solid var(--landing-border)',
-                      }}
-                    >
-                      <h3 className="text-sm font-semibold text-[var(--landing-accent-warm)] mb-3">Highlights</h3>
-                      <ul className="space-y-2">
-                        {release.highlights.map((highlight, i) => (
-                          <li key={i} className="flex items-start gap-2 text-white text-sm">
-                            <span className="text-[var(--landing-accent-sky)] mt-1">•</span>
-                            {highlight}
-                          </li>
-                        ))}
-                      </ul>
+                  <div>
+                    <div className="flex items-center gap-3">
+                      <h2 className="text-h1 text-foreground font-semibold">v{release.version}</h2>
+                      {release.type === 'major' && (
+                        <span className="px-2 py-0.5 rounded-full text-micro font-medium bg-secondary/10 text-secondary border border-secondary/20">
+                          Major Release
+                        </span>
+                      )}
                     </div>
-                  )}
-
-                  {/* Changes list */}
-                  <div className="ml-12 space-y-3">
-                    {release.changes.map((change, i) => {
-                      const label = getTypeLabel(change.type);
-                      return (
-                        <div
-                          key={i}
-                          className="flex items-start gap-3 p-3 rounded-lg transition-colors hover:bg-foreground/5"
-                          style={{
-                            background: 'var(--landing-card)',
-                            border: '1px solid var(--landing-border)',
-                          }}
-                        >
-                          {getTypeIcon(change.type)}
-                          <span
-                            className="text-xs font-medium px-2 py-0.5 rounded"
-                            style={{
-                              background: `${label.color}15`,
-                              color: label.color,
-                            }}
-                          >
-                            {label.text}
-                          </span>
-                          <span className="text-sm flex-1" style={{ color: 'var(--landing-text)' }}>{change.text}</span>
-                        </div>
-                      );
-                    })}
+                    <p className="text-meta uppercase text-muted-foreground">{release.date}</p>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-        </section>
 
-        {/* Subscribe CTA */}
-        <section className="py-16">
-          <div className="max-w-2xl mx-auto px-6 lg:px-8 text-center">
-            <div
-              className="p-8 rounded-2xl"
-              style={{
-                background: 'var(--landing-card)',
-                border: '1px solid var(--landing-border)',
-              }}
-            >
-              <h3 className="text-xl font-bold text-white mb-2">Stay Updated</h3>
-              <p className="mb-6" style={{ color: 'var(--landing-text)' }}>
-                Get notified when we release new features and improvements.
-              </p>
-              <div className="flex gap-3 max-w-md mx-auto">
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="flex-1 px-4 py-3 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF5A1F]/50"
-                  style={{
-                    background: 'var(--landing-bg)',
-                    border: '1px solid var(--landing-border)',
-                  }}
-                />
-                <button
-                  className="px-6 py-3 rounded-full font-semibold text-white transition-colors duration-200"
-                  style={{
-                    background: 'var(--landing-accent-coral)',
-                    boxShadow: 'var(--landing-glow-coral)',
-                  }}
-                >
-                  Subscribe
-                </button>
+                {/* Highlights */}
+                {release.highlights && (
+                  <MktCard className="ml-12 mb-6 p-4">
+                    <h3 className="text-meta uppercase text-secondary mb-3">Highlights</h3>
+                    <ul className="space-y-2">
+                      {release.highlights.map((highlight, i) => (
+                        <li
+                          key={i}
+                          className="flex items-start gap-2 text-body text-foreground"
+                        >
+                          <span className="text-secondary mt-1">•</span>
+                          {highlight}
+                        </li>
+                      ))}
+                    </ul>
+                  </MktCard>
+                )}
+
+                {/* Changes list */}
+                <div className="ml-12 space-y-3">
+                  {release.changes.map((change, i) => {
+                    const label = getTypeLabel(change.type);
+                    return (
+                      <MktCard
+                        key={i}
+                        className="flex items-start gap-3 p-3 hover:bg-foreground/[0.02]"
+                      >
+                        {getTypeIcon(change.type)}
+                        <span
+                          className={`text-micro font-medium px-2 py-0.5 rounded-full ${label.classes}`}
+                        >
+                          {label.text}
+                        </span>
+                        <span className="text-body text-muted-foreground flex-1">
+                          {change.text}
+                        </span>
+                      </MktCard>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            ))}
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
+
+      <CTA />
     </PageLayout>
   );
 }

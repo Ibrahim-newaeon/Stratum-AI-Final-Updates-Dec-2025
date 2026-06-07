@@ -1,11 +1,13 @@
 /**
- * FAQ Page - Battle Card Style
- * Interactive FAQ with category filtering and expandable cards
- * Supports CMS integration with fallback to hardcoded content
+ * FAQ Page — landing-themed (ink + ember).
+ * Interactive FAQ with category filtering and search.
+ * Supports CMS integration with fallback to hardcoded content.
  */
 
 import { useState } from 'react';
 import { PageLayout } from '@/components/landing/PageLayout';
+import { CTA } from '@/components/landing/CTA';
+import { MktHero, MktSectionHeader, MktCard } from '@/components/landing/marketing';
 import {
   BoltIcon,
   ChartBarIcon,
@@ -27,13 +29,13 @@ interface FAQItem {
 }
 
 const categories = [
-  { id: 'all', name: 'All Questions', icon: QuestionMarkCircleIcon, color: 'text-white' },
-  { id: 'pricing', name: 'Pricing & Plans', icon: CurrencyDollarIcon, color: 'text-green-400' },
-  { id: 'features', name: 'Features', icon: BoltIcon, color: 'text-purple-400' },
-  { id: 'trust-engine', name: 'Trust Engine', icon: ShieldCheckIcon, color: 'text-cyan-400' },
-  { id: 'integrations', name: 'Integrations', icon: CogIcon, color: 'text-orange-400' },
-  { id: 'data', name: 'Data & Privacy', icon: ChartBarIcon, color: 'text-blue-400' },
-  { id: 'support', name: 'Support', icon: UserGroupIcon, color: 'text-pink-400' },
+  { id: 'all', name: 'All Questions', icon: QuestionMarkCircleIcon },
+  { id: 'pricing', name: 'Pricing & Plans', icon: CurrencyDollarIcon },
+  { id: 'features', name: 'Features', icon: BoltIcon },
+  { id: 'trust-engine', name: 'Trust Engine', icon: ShieldCheckIcon },
+  { id: 'integrations', name: 'Integrations', icon: CogIcon },
+  { id: 'data', name: 'Data & Privacy', icon: ChartBarIcon },
+  { id: 'support', name: 'Support', icon: UserGroupIcon },
 ];
 
 // Fallback FAQ data when CMS content is not available
@@ -200,83 +202,62 @@ export default function FAQ() {
     return matchesCategory && matchesSearch;
   });
 
-  const getCategoryIcon = (categoryId: string) => {
-    const category = categories.find((c) => c.id === categoryId);
-    return category?.icon || QuestionMarkCircleIcon;
-  };
-
   return (
     <PageLayout>
       <SEO {...pageSEO.faq} url="https://stratum-ai.com/faq" />
-      {/* Hero Section */}
-      <section className="py-20 px-6">
-        <div className="max-w-7xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm mb-6" style={{ background: 'rgba(255, 179, 71, 0.1)', border: '1px solid rgba(255, 179, 71, 0.3)', color: 'var(--landing-accent-warm)' }}>
-            <QuestionMarkCircleIcon className="w-4 h-4" />
-            Help Center
-          </div>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
-            <span className="text-white">Frequently Asked</span>
-            <br />
-            <span className="text-[var(--landing-accent-coral)]">Questions</span>
-          </h1>
-          <p className="text-lg md:text-xl text-[var(--landing-text)] max-w-2xl mx-auto mb-8">
-            Everything you need to know about Stratum AI. Can&apos;t find what you&apos;re looking
-            for?{' '}
-            <a href="/contact" className="text-[var(--landing-accent-coral)] hover:underline">
-              Contact our team
-            </a>
-          </p>
 
-          {/* Search */}
-          <div className="max-w-xl mx-auto relative">
-            <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/40" />
-            <input
-              type="text"
-              placeholder="Search questions..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 rounded-2xl text-white placeholder-foreground/40 outline-none transition-[width] focus:ring-2 focus:ring-[#FF5A1F]/50"
-              style={{ background: 'var(--landing-card)', border: '1px solid var(--landing-border)' }}
-            />
-          </div>
+      <MktHero
+        badge="Help Center"
+        badgeIcon={QuestionMarkCircleIcon}
+        title="Frequently asked"
+        highlight="questions"
+        subtitle="Everything you need to know about Stratum AI."
+      >
+        <p
+          className="mt-4 text-body text-muted-foreground animate-enter"
+          style={{ animationDelay: '0.2s' }}
+        >
+          Can&apos;t find what you&apos;re looking for?{' '}
+          <a href="/contact" className="text-secondary hover:underline">
+            Contact our team
+          </a>
+        </p>
+
+        {/* Search */}
+        <div
+          className="max-w-xl mx-auto relative mt-8 animate-enter"
+          style={{ animationDelay: '0.3s' }}
+        >
+          <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Search questions..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-12 pr-4 py-4 rounded-xl bg-card border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/30 transition-colors"
+          />
         </div>
-      </section>
+      </MktHero>
 
       {/* Category Filter */}
-      <section className="px-6 pb-8">
-        <div className="max-w-7xl mx-auto">
+      <section className="pb-8">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex flex-wrap justify-center gap-3">
             {categories.map((category) => {
               const Icon = category.icon;
               const isSelected = selectedCategory === category.id;
-              const colorMap: Record<string, string> = {
-                'text-green-400': 'var(--landing-accent-green)',
-                'text-purple-400': '#a855f7',
-                'text-cyan-400': '#06b6d4',
-                'text-orange-400': '#f97316',
-                'text-blue-400': 'var(--landing-accent-blue)',
-                'text-pink-400': '#ec4899',
-                'text-white': '#ffffff',
-              };
-              const accentColor = colorMap[category.color] || '#a855f7';
 
               return (
                 <button
                   key={category.id}
                   onClick={() => setSelectedCategory(category.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
-                    isSelected ? 'text-white' : 'text-[var(--landing-text)] hover:text-white'
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-meta uppercase font-medium border transition-colors ${
+                    isSelected
+                      ? 'bg-secondary/10 border-secondary/40 text-secondary'
+                      : 'bg-card border-border text-muted-foreground hover:text-foreground hover:border-secondary/30'
                   }`}
-                  style={{
-                    background: isSelected ? `${accentColor}20` : 'var(--landing-card)',
-                    border: `1px solid ${isSelected ? `${accentColor}40` : 'var(--landing-border)'}`,
-                  }}
                 >
-                  <Icon
-                    className="w-4 h-4"
-                    style={{ color: isSelected ? accentColor : undefined }}
-                  />
+                  <Icon className="w-4 h-4" />
                   {category.name}
                 </button>
               );
@@ -285,73 +266,37 @@ export default function FAQ() {
         </div>
       </section>
 
-      {/* FAQ Cards Grid - Battle Card Style */}
-      <section className="py-12 px-6">
-        <div className="max-w-7xl mx-auto">
+      {/* FAQ Cards Grid */}
+      <section className="pb-24 lg:pb-28">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
           {filteredFaqs.length === 0 ? (
             <div className="text-center py-12">
-              <QuestionMarkCircleIcon className="w-12 h-12 text-foreground/20 mx-auto mb-4" />
-              <p className="text-[var(--landing-text)]">No questions found matching your search.</p>
+              <QuestionMarkCircleIcon className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
+              <p className="text-body text-muted-foreground">
+                No questions found matching your search.
+              </p>
             </div>
           ) : (
             <div
               className={`grid md:grid-cols-2 lg:grid-cols-3 gap-5 ${isLoading ? 'opacity-50' : ''}`}
             >
-              {filteredFaqs.map((faq) => {
-                const Icon = getCategoryIcon(faq.category);
+              {filteredFaqs.map((faq, i) => {
                 const categoryData = categories.find((c) => c.id === faq.category);
-                const colorMap: Record<string, string> = {
-                  'text-green-400': 'var(--landing-accent-green)',
-                  'text-purple-400': '#a855f7',
-                  'text-cyan-400': '#06b6d4',
-                  'text-orange-400': '#f97316',
-                  'text-blue-400': 'var(--landing-accent-blue)',
-                  'text-pink-400': '#ec4899',
-                  'text-white': '#ffffff',
-                };
-                const accentColor = colorMap[categoryData?.color || 'text-purple-400'] || '#a855f7';
 
                 return (
-                  <div
-                    key={faq.id}
-                    className="group p-6 rounded-2xl transition-transform duration-300 hover:scale-[1.02]"
-                    style={{
-                      background: `linear-gradient(135deg, ${accentColor}08 0%, transparent 100%)`,
-                      border: `1px solid ${accentColor}20`,
-                    }}
-                  >
-                    {/* Icon */}
-                    <div
-                      className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110"
-                      style={{
-                        background: `${accentColor}15`,
-                        border: `1px solid ${accentColor}30`,
-                      }}
-                    >
-                      <Icon className="w-6 h-6" style={{ color: accentColor }} />
-                    </div>
-
-                    {/* Category Tag */}
-                    <div className="mb-3">
-                      <span
-                        className="text-xs font-medium px-2 py-1 rounded-full"
-                        style={{
-                          background: `${accentColor}15`,
-                          color: accentColor,
-                        }}
-                      >
-                        {categoryData?.name}
-                      </span>
-                    </div>
-
-                    {/* Question */}
-                    <h3 className="text-lg font-semibold text-white mb-3 leading-snug">
+                  <MktCard key={faq.id} delay={(i % 3) * 0.05} className="p-6">
+                    {categoryData ? (
+                      <div className="mb-3">
+                        <span className="text-meta uppercase text-secondary px-2 py-1 rounded-full bg-secondary/10 border border-secondary/20">
+                          {categoryData.name}
+                        </span>
+                      </div>
+                    ) : null}
+                    <h3 className="text-h3 text-foreground font-semibold mb-2 leading-snug">
                       {faq.question}
                     </h3>
-
-                    {/* Answer */}
-                    <p className="text-sm text-[var(--landing-text)] leading-relaxed">{faq.answer}</p>
-                  </div>
+                    <p className="text-body text-muted-foreground leading-relaxed">{faq.answer}</p>
+                  </MktCard>
                 );
               })}
             </div>
@@ -360,34 +305,33 @@ export default function FAQ() {
       </section>
 
       {/* Contact CTA */}
-      <section className="py-20 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="p-8 rounded-3xl" style={{ background: 'var(--landing-card)', border: '1px solid var(--landing-border)' }}>
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
-              Still have questions?
-            </h2>
-            <p className="text-[var(--landing-text)] mb-6 max-w-xl mx-auto">
+      <section className="py-24 lg:py-28">
+        <div className="max-w-3xl mx-auto px-6 lg:px-8 text-center">
+          <MktCard className="p-12">
+            <MktSectionHeader title="Still have" highlight="questions?" />
+            <p className="text-body text-muted-foreground max-w-xl mx-auto mb-8 -mt-8">
               Our team is here to help. Reach out and we&apos;ll get back to you as soon as
               possible.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
                 href="/contact"
-                className="px-6 py-3 rounded-full font-semibold text-white bg-[var(--landing-accent-coral)] hover:bg-[var(--landing-accent-red)] transition-colors shadow-lg shadow-[rgba(255, 90, 31,0.3)]"
+                className="inline-flex items-center justify-center px-7 py-3.5 rounded-full bg-stratum-500 text-primary-foreground font-semibold text-body hover:brightness-110 hover:shadow-glow transition-all duration-200"
               >
                 Contact Support
               </a>
               <a
                 href="mailto:sales@stratum.ai"
-                className="px-6 py-3 rounded-xl font-semibold text-white hover:bg-foreground/10 transition-colors"
-                style={{ background: 'var(--landing-card)', border: '1px solid var(--landing-border)' }}
+                className="inline-flex items-center justify-center px-7 py-3.5 rounded-full bg-card border border-border text-foreground font-semibold text-body hover:bg-foreground/5 transition-colors duration-200"
               >
                 Email Us
               </a>
             </div>
-          </div>
+          </MktCard>
         </div>
       </section>
+
+      <CTA />
     </PageLayout>
   );
 }

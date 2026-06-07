@@ -1,12 +1,17 @@
 /**
- * Predictions Solution Page
- * ML-powered predictions and forecasting
+ * Predictions Solution Page — landing-themed (ink + ember).
+ * ML-powered predictions and forecasting.
  */
 
 import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { usePageContent, type SolutionPageContent } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
+import { CTA } from '@/components/landing/CTA';
+import {
+  MktHero,
+  MktSectionHeader,
+  MktCard,
+} from '@/components/landing/marketing';
 import { SEO } from '@/components/common/SEO';
 import {
   ArrowTrendingUpIcon,
@@ -18,8 +23,8 @@ import {
 
 const fallbackHero = {
   badge: 'ML Predictions',
-  title: 'Predict the Future',
-  titleHighlight: 'Act Today',
+  title: 'Predict the future,',
+  titleHighlight: 'act today',
   description:
     'Machine learning models trained on your data deliver actionable predictions for churn, LTV, revenue, and optimal customer actions.',
   ctaText: 'Start Free Trial',
@@ -41,7 +46,6 @@ const fallbackFeatures = [
     description:
       'Identify at-risk customers before they leave. Get actionable retention recommendations.',
     accuracy: '94%',
-    color: 'var(--landing-accent-red)',
   },
   {
     icon: CurrencyDollarIcon,
@@ -50,7 +54,6 @@ const fallbackFeatures = [
     description:
       'Predict customer lifetime value at acquisition. Optimize acquisition spend accordingly.',
     accuracy: '91%',
-    color: 'var(--landing-accent-green)',
   },
   {
     icon: ArrowTrendingUpIcon,
@@ -58,7 +61,6 @@ const fallbackFeatures = [
     title: 'Revenue Forecasting',
     description: 'Accurate revenue predictions based on historical patterns and market signals.',
     accuracy: '89%',
-    color: 'var(--landing-accent-blue)',
   },
   {
     icon: LightBulbIcon,
@@ -66,9 +68,51 @@ const fallbackFeatures = [
     title: 'Next-Best-Action',
     description: 'AI-powered recommendations for the optimal next engagement for each customer.',
     accuracy: '87%',
-    color: '#f97316',
   },
 ];
+
+/** Predictions surfaced in the hero diagram, with genuine status semantics preserved. */
+const heroPredictions = [
+  {
+    label: 'High Churn Risk',
+    value: '847 customers',
+    width: '23%',
+    tone: 'destructive' as const,
+  },
+  {
+    label: 'High LTV Potential',
+    value: '2,341 customers',
+    width: '67%',
+    tone: 'success' as const,
+  },
+  {
+    label: 'Next 30-Day Revenue',
+    value: '$847,200',
+    width: '85%',
+    tone: 'accent' as const,
+  },
+];
+
+const toneClasses: Record<
+  'destructive' | 'success' | 'accent',
+  { wrap: string; value: string; bar: string }
+> = {
+  destructive: {
+    wrap: 'bg-destructive/10 border border-destructive/20',
+    value: 'text-destructive',
+    bar: 'bg-destructive',
+  },
+  success: {
+    wrap: 'bg-success/10 border border-success/20',
+    value: 'text-success',
+    bar: 'bg-success',
+  },
+  accent: {
+    wrap: 'bg-accent/10 border border-accent/20',
+    value: 'text-accent',
+    bar: 'bg-accent',
+  },
+};
 
 /** Map icon name strings from CMS to actual icon components */
 const iconMap: Record<string, typeof UserMinusIcon> = {
@@ -99,234 +143,104 @@ export default function PredictionsSolution() {
     ? content.features.map((f, i) => ({
         ...f,
         icon: iconMap[f.iconName] ?? SparklesIcon,
-        color: fallbackFeatures[i]?.color ?? '#a855f7',
         accuracy: fallbackFeatures[i]?.accuracy ?? '',
       }))
     : fallbackFeatures;
 
   return (
     <PageLayout>
-      <SEO title="Predictive Analytics" description="ML-powered predictions for ROAS, churn risk, and budget optimization. Make data-driven decisions with confidence." url="https://stratum-ai.com/solutions/predictions" />
-      {/* Hero Section */}
-      <section className="py-20 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <div
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm mb-6"
-                style={{
-                  background: 'rgba(255, 179, 71, 0.1)',
-                  border: '1px solid rgba(255, 179, 71, 0.3)',
-                  color: 'var(--landing-accent-warm)',
-                }}
-              >
-                <SparklesIcon className="w-4 h-4" />
-                {hero.badge}
-              </div>
-              <h1
-                className="text-4xl md:text-5xl font-bold mb-6"
-                style={{ fontFamily: "Geist, system-ui, sans-serif" }}
-              >
-                <span className="text-white">{hero.title}</span>
-                <br />
-                <span style={{ color: 'var(--landing-accent-coral)' }}>{hero.titleHighlight}</span>
-              </h1>
-              <p className="text-lg mb-8" style={{ color: 'var(--landing-text)' }}>
-                {hero.description}
-              </p>
-              <Link
-                to={hero.ctaLink}
-                className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-opacity hover:opacity-90"
-                style={{
-                  background: 'var(--landing-accent-coral)',
-                  boxShadow: '0 4px 20px rgba(255, 90, 31, 0.3)',
-                }}
-              >
-                {hero.ctaText}
-              </Link>
-            </div>
-            <div
-              className="rounded-3xl p-8"
-              style={{
-                background: 'var(--landing-card)',
-                border: '1px solid var(--landing-border)',
-              }}
-            >
-              {/* Prediction Preview */}
-              <div className="space-y-4">
-                <div
-                  className="p-4 rounded-xl"
-                  style={{
-                    background: 'rgba(239, 68, 68, 0.1)',
-                    border: '1px solid rgba(239, 68, 68, 0.2)',
-                  }}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-white">High Churn Risk</span>
-                    <span className="text-sm font-bold" style={{ color: 'var(--landing-accent-red)' }}>
-                      847 customers
-                    </span>
-                  </div>
-                  <div className="h-2 rounded-full" style={{ background: 'rgba(255,255,255,0.1)' }}>
-                    <div
-                      className="h-full rounded-full"
-                      style={{ width: '23%', background: 'var(--landing-accent-red)' }}
-                    />
-                  </div>
-                </div>
-                <div
-                  className="p-4 rounded-xl"
-                  style={{
-                    background: 'rgba(52, 199, 89, 0.1)',
-                    border: '1px solid rgba(52, 199, 89, 0.2)',
-                  }}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-white">High LTV Potential</span>
-                    <span className="text-sm font-bold" style={{ color: 'var(--landing-accent-green)' }}>
-                      2,341 customers
-                    </span>
-                  </div>
-                  <div className="h-2 rounded-full" style={{ background: 'rgba(255,255,255,0.1)' }}>
-                    <div
-                      className="h-full rounded-full"
-                      style={{ width: '67%', background: 'var(--landing-accent-green)' }}
-                    />
-                  </div>
-                </div>
-                <div
-                  className="p-4 rounded-xl"
-                  style={{
-                    background: 'rgba(59, 130, 246, 0.1)',
-                    border: '1px solid rgba(59, 130, 246, 0.2)',
-                  }}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-white">Next 30-Day Revenue</span>
-                    <span className="text-sm font-bold" style={{ color: 'var(--landing-accent-blue)' }}>
-                      $847,200
-                    </span>
-                  </div>
-                  <div className="h-2 rounded-full" style={{ background: 'rgba(255,255,255,0.1)' }}>
-                    <div
-                      className="h-full rounded-full"
-                      style={{ width: '85%', background: 'var(--landing-accent-blue)' }}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <SEO
+        title="Predictive Analytics"
+        description="ML-powered predictions for ROAS, churn risk, and budget optimization. Make data-driven decisions with confidence."
+        url="https://stratum-ai.com/solutions/predictions"
+      />
 
-      {/* Prediction Types */}
-      <section className="py-20 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Prediction Models</h2>
-            <p className="text-lg" style={{ color: 'var(--landing-text)' }}>
-              Enterprise-grade ML models continuously trained on your data.
-            </p>
+      <MktHero
+        badge={hero.badge}
+        badgeIcon={SparklesIcon}
+        title={hero.title}
+        highlight={hero.titleHighlight}
+        subtitle={hero.description}
+        primary={{ label: hero.ctaText, href: hero.ctaLink }}
+        secondary={{ label: 'Explore the CDP', href: '/solutions/cdp' }}
+      >
+        <MktCard className="mt-16 max-w-xl mx-auto p-6 text-left">
+          <div className="space-y-4">
+            {heroPredictions.map((p) => {
+              const tone = toneClasses[p.tone];
+              return (
+                <div key={p.label} className={`p-4 rounded-xl ${tone.wrap}`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-meta uppercase text-muted-foreground">{p.label}</span>
+                    <span className={`text-body font-semibold ${tone.value}`}>{p.value}</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-foreground/10">
+                    <div className={`h-full rounded-full ${tone.bar}`} style={{ width: p.width }} />
+                  </div>
+                </div>
+              );
+            })}
           </div>
+        </MktCard>
+      </MktHero>
+
+      {/* Prediction Models */}
+      <section className="pb-12">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <MktSectionHeader
+            eyebrow="Prediction models"
+            title="Enterprise-grade"
+            highlight="ML models"
+            subtitle="Enterprise-grade ML models continuously trained on your data."
+          />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {predictions.map((pred) => (
-              <div
-                key={pred.title}
-                className="p-6 rounded-2xl transition-transform hover:scale-[1.02]"
-                style={{
-                  background: 'var(--landing-card)',
-                  border: '1px solid var(--landing-border)',
-                  borderLeft: `3px solid ${pred.color}`,
-                }}
-              >
+            {predictions.map((pred, i) => (
+              <MktCard key={pred.title} delay={(i % 2) * 0.05} className="p-6">
                 <div className="flex items-start gap-4">
-                  <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{
-                      background: `${pred.color}25`,
-                      border: `1px solid ${pred.color}40`,
-                    }}
-                  >
-                    <pred.icon className="w-6 h-6" style={{ color: pred.color }} />
+                  <div className="w-12 h-12 rounded-xl bg-secondary/10 border border-secondary/20 flex items-center justify-center flex-shrink-0">
+                    <pred.icon className="w-6 h-6 text-secondary" />
                   </div>
                   <div className="flex-1">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-lg font-semibold text-white">{pred.title}</h3>
-                      <span
-                        className="text-sm font-bold px-2 py-1 rounded"
-                        style={{
-                          background: 'rgba(52, 199, 89, 0.1)',
-                          color: 'var(--landing-accent-green)',
-                        }}
-                      >
-                        {pred.accuracy} accuracy
-                      </span>
+                    <div className="flex items-center justify-between gap-3 mb-2">
+                      <h3 className="text-h3 text-foreground font-semibold">{pred.title}</h3>
+                      {pred.accuracy ? (
+                        <span className="text-meta font-semibold px-2 py-1 rounded bg-success/10 text-success">
+                          {pred.accuracy} accuracy
+                        </span>
+                      ) : null}
                     </div>
-                    <p className="text-sm" style={{ color: 'var(--landing-text)' }}>
+                    <p className="text-body text-muted-foreground leading-relaxed">
                       {pred.description}
                     </p>
                   </div>
                 </div>
-              </div>
+              </MktCard>
             ))}
           </div>
         </div>
       </section>
 
       {/* How It Works */}
-      <section className="py-20 px-6">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold text-white text-center mb-16">How It Works</h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            {steps.map((item) => (
-              <div key={item.step} className="text-center">
-                <div
-                  className="w-14 h-14 rounded-xl flex items-center justify-center text-xl font-bold mx-auto mb-4"
-                  style={{
-                    background: 'var(--landing-accent-coral)',
-                    color: '#ffffff',
-                  }}
-                >
-                  {item.step}
+      <section className="py-24 lg:py-28">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <MktSectionHeader eyebrow="How it works" title="From data to" highlight="decisions" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {steps.map((item, i) => (
+              <MktCard key={item.step} delay={i * 0.05} className="p-8">
+                <div className="w-11 h-11 rounded-full bg-secondary/10 border border-secondary/20 flex items-center justify-center mb-5">
+                  <span className="text-h3 font-semibold text-secondary">{item.step}</span>
                 </div>
-                <h3 className="text-lg font-semibold text-white mb-2">{item.title}</h3>
-                <p className="text-sm" style={{ color: 'var(--landing-text)' }}>
+                <h3 className="text-h3 text-foreground font-semibold mb-2">{item.title}</h3>
+                <p className="text-body text-muted-foreground leading-relaxed">
                   {item.description}
                 </p>
-              </div>
+              </MktCard>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-20 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <div
-            className="p-12 rounded-3xl"
-            style={{
-              background: 'var(--landing-card)',
-              border: '1px solid var(--landing-border)',
-            }}
-          >
-            <h2 className="text-3xl font-bold text-white mb-4">Start Predicting Today</h2>
-            <p className="text-lg mb-8" style={{ color: 'var(--landing-text)' }}>
-              See predictions for your customers within 48 hours.
-            </p>
-            <Link
-              to="/signup"
-              className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-opacity hover:opacity-90"
-              style={{
-                background: 'var(--landing-accent-coral)',
-                boxShadow: '0 4px 20px rgba(255, 90, 31, 0.3)',
-              }}
-            >
-              Get Started Free
-            </Link>
-          </div>
-        </div>
-      </section>
+      <CTA />
     </PageLayout>
   );
 }

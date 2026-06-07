@@ -1,13 +1,20 @@
 /**
- * Careers Page
- * Job listings and company culture
+ * Careers Page — landing-themed (ink + ember).
+ * Job listings and company culture.
  */
 
 import { Link } from 'react-router-dom';
 import { usePageContent, type CareersPageContent } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
+import { CTA } from '@/components/landing/CTA';
+import { MktHero, MktSectionHeader, MktCard, MktFeatureCard } from '@/components/landing/marketing';
 import { SEO } from '@/components/common/SEO';
-import { BriefcaseIcon, CurrencyDollarIcon, MapPinIcon } from '@heroicons/react/24/outline';
+import {
+  BriefcaseIcon,
+  CurrencyDollarIcon,
+  MapPinIcon,
+  SparklesIcon,
+} from '@heroicons/react/24/outline';
 
 const fallbackPositions = [
   {
@@ -86,150 +93,71 @@ export default function Careers() {
   return (
     <PageLayout>
       <SEO title="Careers" description="Join the Stratum AI team. Help build the future of trust-gated marketing automation." url="https://stratum-ai.com/careers" />
-      {/* Hero Section */}
-      <section className="py-20 px-6">
-        <div className="max-w-7xl mx-auto text-center">
-          <div
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm mb-6"
-            style={{
-              background: 'rgba(255, 179, 71, 0.1)',
-              border: '1px solid rgba(255, 179, 71, 0.3)',
-              color: 'var(--landing-accent-warm)',
-            }}
-          >
-            <BriefcaseIcon className="w-4 h-4" />
-            We&apos;re Hiring
-          </div>
-          <h1
-            className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6"
-            style={{ fontFamily: "Geist, system-ui, sans-serif" }}
-          >
-            <span className="text-white">Build the Future</span>
-            <br />
-            <span
-              style={{ color: 'var(--landing-accent-coral)' }}
-            >
-              With Us
-            </span>
-          </h1>
-          <p
-            className="text-lg md:text-xl max-w-2xl mx-auto"
-            style={{ color: 'var(--landing-text)' }}
-          >
-            Join a team of passionate builders creating the next generation of revenue intelligence.
-          </p>
-        </div>
-      </section>
+
+      <MktHero
+        badge="We're Hiring"
+        badgeIcon={BriefcaseIcon}
+        title="Build the future"
+        highlight="with us"
+        subtitle="Join a team of passionate builders creating the next generation of revenue intelligence."
+      />
 
       {/* Benefits */}
-      <section className="py-12 px-6">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl font-bold text-white text-center mb-8">Why Stratum AI?</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {benefits.map((benefit) => (
-              <div
+      <section className="pb-12">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <MktSectionHeader eyebrow="Perks" title="Why" highlight="Stratum AI?" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {benefits.map((benefit, i) => (
+              <MktFeatureCard
                 key={benefit}
-                className="p-4 rounded-xl text-center"
-                style={{
-                  background: 'var(--landing-card)',
-                  border: '1px solid var(--landing-border)',
-                }}
-              >
-                <span className="text-sm text-white">{benefit}</span>
-              </div>
+                icon={SparklesIcon}
+                title={benefit}
+                description=""
+                delay={(i % 4) * 0.05}
+              />
             ))}
           </div>
         </div>
       </section>
 
       {/* Open Positions */}
-      <section className="py-20 px-6">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold text-white text-center mb-12">Open Positions</h2>
+      <section className="py-24 lg:py-28">
+        <div className="max-w-3xl mx-auto px-6 lg:px-8">
+          <MktSectionHeader eyebrow="Careers" title="Open" highlight="positions" />
           <div className="space-y-4">
-            {jobs.map((job) => (
-              <div
-                key={job.title}
-                className="p-6 rounded-2xl transition-transform hover:scale-[1.01] cursor-pointer"
-                style={{
-                  background: 'var(--landing-card)',
-                  border: '1px solid var(--landing-border)',
-                }}
-              >
+            {jobs.map((job, i) => (
+              <MktCard key={job.title} delay={i * 0.05} className="p-6">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                   <div>
-                    <h3 className="text-lg font-semibold text-white">{job.title}</h3>
-                    <div className="flex flex-wrap items-center gap-4 mt-2">
-                      <span
-                        className="text-sm px-2 py-1 rounded"
-                        style={{
-                          background: 'rgba(255, 179, 71, 0.1)',
-                          color: 'var(--landing-accent-warm)',
-                        }}
-                      >
+                    <h3 className="text-h3 text-foreground font-semibold">{job.title}</h3>
+                    <div className="flex flex-wrap items-center gap-4 mt-3">
+                      <span className="text-meta uppercase text-secondary px-2 py-1 rounded-full bg-secondary/10 border border-secondary/20">
                         {job.department}
                       </span>
-                      <span
-                        className="flex items-center gap-1 text-sm"
-                        style={{ color: 'var(--landing-text-dim)' }}
-                      >
+                      <span className="flex items-center gap-1 text-meta uppercase text-muted-foreground">
                         <MapPinIcon className="w-4 h-4" />
                         {job.location}
                       </span>
-                      <span
-                        className="flex items-center gap-1 text-sm"
-                        style={{ color: 'var(--landing-text-dim)' }}
-                      >
+                      <span className="flex items-center gap-1 text-meta uppercase text-muted-foreground">
                         <CurrencyDollarIcon className="w-4 h-4" />
                         {job.salary}
                       </span>
                     </div>
                   </div>
-                  <button
-                    className="px-6 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-foreground/10"
-                    style={{
-                      background: 'var(--landing-surface-glass)',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
-                      color: '#ffffff',
-                    }}
+                  <Link
+                    to="/contact"
+                    className="inline-flex items-center justify-center px-6 py-2.5 rounded-full text-body font-semibold bg-card border border-border text-foreground hover:bg-foreground/5 transition-colors duration-200 flex-shrink-0"
                   >
                     Apply Now
-                  </button>
+                  </Link>
                 </div>
-              </div>
+              </MktCard>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-20 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <div
-            className="p-12 rounded-3xl"
-            style={{
-              background: 'var(--landing-card)',
-              border: '1px solid var(--landing-border)',
-            }}
-          >
-            <h2 className="text-3xl font-bold text-white mb-4">Don&apos;t See Your Role?</h2>
-            <p className="text-lg mb-8" style={{ color: 'var(--landing-text)' }}>
-              We&apos;re always looking for talented people. Send us your resume and we&apos;ll
-              reach out when a matching role opens up.
-            </p>
-            <Link
-              to="/contact"
-              className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-opacity hover:opacity-90"
-              style={{
-                background: 'var(--landing-accent-coral)',
-                boxShadow: '0 4px 20px rgba(255, 90, 31, 0.3)',
-              }}
-            >
-              Get in Touch
-            </Link>
-          </div>
-        </div>
-      </section>
+      <CTA />
     </PageLayout>
   );
 }
