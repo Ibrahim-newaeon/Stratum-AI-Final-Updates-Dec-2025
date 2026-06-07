@@ -295,7 +295,7 @@ export function PageLayout({ children }: PageLayoutProps) {
       <main className="flex-1 relative z-10">{children}</main>
 
       {/* Footer */}
-      <footer className="bg-[#05080F] border-t border-border">
+      <footer className="bg-background border-t border-border">
         <div className="max-w-7xl mx-auto px-6 py-16">
           <div className="grid grid-cols-2 md:grid-cols-6 gap-8 mb-12">
             {/* Brand */}
