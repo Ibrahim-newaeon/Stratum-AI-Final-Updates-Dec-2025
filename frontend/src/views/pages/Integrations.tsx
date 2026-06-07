@@ -1,22 +1,17 @@
 /**
- * Integrations Page
- * Showcases all platform integrations
+ * Integrations Page — landing-themed (ink + ember).
  */
 
-import { Link } from 'react-router-dom';
 import { usePageContent, type IntegrationsPageContent } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
+import { CTA } from '@/components/landing/CTA';
+import { MktHero, MktCard } from '@/components/landing/marketing';
 import { SEO } from '@/components/common/SEO';
 
-const categoryColors: Record<string, string> = {
-  'Ad Platforms': '#f97316',
-  'Analytics & Attribution': '#06b6d4',
-  'CRM & Sales': '#a855f7',
-  'E-commerce': 'var(--landing-accent-green)',
-  Communication: 'var(--landing-accent-blue)',
-};
-
-const fallbackIntegrations = {
+const fallbackIntegrations: Record<
+  string,
+  { name: string; description: string; logo: string }[]
+> = {
   'Ad Platforms': [
     { name: 'Meta Ads', description: 'Facebook & Instagram advertising', logo: 'M' },
     { name: 'Google Ads', description: 'Search, Display & YouTube', logo: 'G' },
@@ -51,144 +46,74 @@ const fallbackIntegrations = {
 export default function Integrations() {
   const { content } = usePageContent<IntegrationsPageContent>('integrations');
 
-  // Use CMS data if available, otherwise fallback
-  const integrations: Record<string, { name: string; description: string; logo: string }[]> =
-    content?.categories?.length
-      ? content.categories.reduce(
-          (acc, cat) => {
-            acc[cat.name] = cat.platforms.map((p) => ({
-              name: p.name,
-              description: p.description,
-              logo: p.iconName,
-            }));
-            return acc;
-          },
-          {} as Record<string, { name: string; description: string; logo: string }[]>
-        )
-      : fallbackIntegrations;
+  const integrations: Record<
+    string,
+    { name: string; description: string; logo: string }[]
+  > = content?.categories?.length
+    ? content.categories.reduce(
+        (acc, cat) => {
+          acc[cat.name] = cat.platforms.map((p) => ({
+            name: p.name,
+            description: p.description,
+            logo: p.iconName,
+          }));
+          return acc;
+        },
+        {} as Record<string, { name: string; description: string; logo: string }[]>
+      )
+    : fallbackIntegrations;
 
   return (
     <PageLayout>
-      <SEO title="Integrations" description="Connect Stratum AI with Meta, Google, TikTok, Snapchat, and 30+ marketing platforms. Unified data, one dashboard." url="https://stratum-ai.com/integrations" />
-      {/* Hero Section */}
-      <section className="py-20 px-6">
-        <div className="max-w-7xl mx-auto text-center">
-          <h1
-            className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6"
-            style={{ fontFamily: "Geist, system-ui, sans-serif" }}
-          >
-            <span className="text-white">Connect Your</span>
-            <br />
-            <span
-              style={{ color: 'var(--landing-accent-coral)' }}
-            >
-              Entire Stack
-            </span>
-          </h1>
-          <p
-            className="text-lg md:text-xl max-w-2xl mx-auto mb-10"
-            style={{ color: 'var(--landing-text)' }}
-          >
-            Stratum AI integrates with 50+ platforms to unify your marketing data and automate
-            across channels.
-          </p>
-          <Link
-            to="/signup"
-            className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-opacity hover:opacity-90"
-            style={{
-              background: 'var(--landing-accent-coral)',
-              boxShadow: '0 4px 20px rgba(255, 90, 31, 0.3)',
-            }}
-          >
-            Start Free Trial
-          </Link>
-        </div>
-      </section>
+      <SEO
+        title="Integrations"
+        description="Connect Stratum AI with Meta, Google, TikTok, Snapchat, and 30+ marketing platforms. Unified data, one dashboard."
+        url="https://stratumai.app/integrations"
+      />
 
-      {/* Integrations Grid */}
-      <section className="py-12 px-6">
-        <div className="max-w-7xl mx-auto">
-          {Object.entries(integrations).map(([category, items]) => {
-            const color = categoryColors[category] || '#a855f7';
-            return (
-              <div key={category} className="mb-16">
-                <h2 className="text-2xl font-bold text-white mb-8">{category}</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {items.map((integration) => (
-                    <div
-                      key={integration.name}
-                      className="p-6 rounded-2xl transition-transform hover:scale-[1.02] group"
-                      style={{
-                        background: 'var(--landing-card)',
-                        border: '1px solid var(--landing-border)',
-                        borderLeft: `3px solid ${color}`,
-                      }}
-                    >
-                      <div className="flex items-center gap-4">
-                        <div
-                          className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold"
-                          style={{
-                            background: `${color}40`,
-                            border: `1px solid ${color}60`,
-                          }}
-                        >
-                          {integration.logo}
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-white">{integration.name}</h3>
-                          <p className="text-sm" style={{ color: 'var(--landing-text-dim)' }}>
-                            {integration.description}
-                          </p>
-                        </div>
-                      </div>
+      <MktHero
+        badge="Integrations"
+        title="Connect your"
+        highlight="entire stack"
+        subtitle="Stratum AI integrates with 30+ platforms to unify your marketing data and automate across every channel."
+        primary={{ label: 'Start Free Trial', href: '/signup' }}
+        secondary={{ label: 'Read the API docs', href: '/api-docs' }}
+      />
+
+      <section className="pb-24 lg:pb-28">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 space-y-16">
+          {Object.entries(integrations).map(([category, items]) => (
+            <div key={category}>
+              <h2 className="text-h1 text-foreground font-semibold mb-8">{category}</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {items.map((integration, i) => (
+                  <MktCard
+                    key={integration.name}
+                    delay={(i % 3) * 0.05}
+                    className="p-6 flex items-center gap-4"
+                  >
+                    <div className="w-12 h-12 flex-shrink-0 rounded-xl bg-secondary/10 border border-secondary/20 flex items-center justify-center">
+                      <span className="text-body font-semibold text-secondary">
+                        {integration.logo}
+                      </span>
                     </div>
-                  ))}
-                </div>
+                    <div className="min-w-0">
+                      <h3 className="text-h3 text-foreground font-semibold truncate">
+                        {integration.name}
+                      </h3>
+                      <p className="text-body text-muted-foreground truncate">
+                        {integration.description}
+                      </p>
+                    </div>
+                  </MktCard>
+                ))}
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* Custom Integration CTA */}
-      <section className="py-20 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <div
-            className="p-12 rounded-3xl"
-            style={{
-              background: 'var(--landing-card)',
-              border: '1px solid var(--landing-border)',
-            }}
-          >
-            <h2 className="text-3xl font-bold text-white mb-4">Need a Custom Integration?</h2>
-            <p className="text-lg mb-8" style={{ color: 'var(--landing-text)' }}>
-              Our API allows you to connect any data source. Contact us to discuss your needs.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link
-                to="/api-docs"
-                className="px-8 py-4 rounded-xl font-semibold text-white transition-colors hover:bg-foreground/10"
-                style={{
-                  background: 'var(--landing-surface-glass)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                }}
-              >
-                View API Docs
-              </Link>
-              <Link
-                to="/contact"
-                className="px-8 py-4 rounded-full font-semibold text-white transition-opacity hover:opacity-90"
-                style={{
-                  background: 'var(--landing-accent-coral)',
-                  boxShadow: '0 4px 20px rgba(255, 90, 31, 0.3)',
-                }}
-              >
-                Contact Sales
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+      <CTA />
     </PageLayout>
   );
 }

@@ -1,11 +1,17 @@
 /**
- * API Docs Page
- * API documentation overview
+ * API Docs Page — landing-themed (ink + ember).
  */
 
-import { Link } from 'react-router-dom';
 import { usePageContent, type ApiDocsPageContent } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
+import { CTA } from '@/components/landing/CTA';
+import {
+  MktHero,
+  MktSectionHeader,
+  MktFeatureCard,
+  MktCard,
+} from '@/components/landing/marketing';
+import { SEO } from '@/components/common/SEO';
 import {
   BookOpenIcon,
   CodeBracketIcon,
@@ -58,10 +64,22 @@ const fallbackEndpoints = [
   { method: 'POST', path: '/api/v1/audience-sync', description: 'Sync audience to platform' },
 ];
 
+function methodClasses(method: string): string {
+  switch (method.toUpperCase()) {
+    case 'GET':
+      return 'bg-accent/10 text-accent border-accent/20';
+    case 'POST':
+      return 'bg-secondary/10 text-secondary border-secondary/20';
+    case 'DELETE':
+      return 'bg-destructive/10 text-destructive border-destructive/20';
+    default:
+      return 'bg-warning/10 text-warning border-warning/20';
+  }
+}
+
 export default function ApiDocs() {
   const { content } = usePageContent<ApiDocsPageContent>('api-docs');
 
-  // Use CMS data if available, otherwise fallback
   const quickLinks = content?.sections?.length
     ? content.sections.map((s) => ({
         icon: iconMap[s.iconName] || BookOpenIcon,
@@ -81,189 +99,74 @@ export default function ApiDocs() {
 
   return (
     <PageLayout>
-      {/* Hero Section */}
-      <section className="py-20 px-6">
-        <div className="max-w-7xl mx-auto text-center">
-          <div
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm mb-6"
-            style={{
-              background: 'rgba(255, 179, 71, 0.1)',
-              border: '1px solid rgba(255, 179, 71, 0.3)',
-              color: 'var(--landing-accent-warm)',
-            }}
-          >
-            <CodeBracketIcon className="w-4 h-4" />
-            Developer Documentation
-          </div>
-          <h1
-            className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6"
-            style={{ fontFamily: "Geist, system-ui, sans-serif" }}
-          >
-            <span className="text-white">Build with the</span>
-            <br />
-            <span
-              style={{ color: 'var(--landing-accent-coral)' }}
-            >
-              Stratum API
-            </span>
-          </h1>
-          <p
-            className="text-lg md:text-xl max-w-2xl mx-auto"
-            style={{ color: 'var(--landing-text)' }}
-          >
-            Everything you need to integrate Stratum AI into your applications.
-          </p>
-        </div>
-      </section>
+      <SEO
+        title="API Documentation"
+        description="Build on the Stratum API — REST endpoints for signals, automations, the CDP, and audience sync, with SDKs and real-time webhooks."
+        url="https://stratumai.app/api-docs"
+      />
 
-      {/* Quick Links */}
-      <section className="py-12 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {quickLinks.map((link) => (
-              <a
+      <MktHero
+        badge="API Documentation"
+        badgeIcon={CodeBracketIcon}
+        title="Build on the"
+        highlight="Stratum API"
+        subtitle="A clean, predictable REST API for signals, automations, the CDP, and audience sync — with SDKs and real-time webhooks."
+        primary={{ label: 'Start Free Trial', href: '/signup' }}
+        secondary={{ label: 'View integrations', href: '/integrations' }}
+      />
+
+      {/* Quick links */}
+      <section className="pb-12">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {quickLinks.map((link, i) => (
+              <MktFeatureCard
                 key={link.title}
-                href={link.href}
-                className="p-6 rounded-2xl transition-transform hover:scale-[1.02] group"
-                style={{
-                  background: 'var(--landing-card)',
-                  border: '1px solid var(--landing-border)',
-                }}
-              >
-                <link.icon className="w-8 h-8 mb-4" style={{ color: '#06b6d4' }} />
-                <h3 className="text-lg font-semibold text-white mb-2">{link.title}</h3>
-                <p className="text-sm" style={{ color: 'var(--landing-text)' }}>
-                  {link.description}
-                </p>
-              </a>
+                icon={link.icon}
+                title={link.title}
+                description={link.description}
+                delay={(i % 4) * 0.05}
+              />
             ))}
           </div>
         </div>
       </section>
 
-      {/* API Reference Preview */}
-      <section className="py-12 px-6" id="api-reference">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold text-white mb-8">API Reference</h2>
-          <div
-            className="rounded-2xl overflow-hidden"
-            style={{
-              background: 'var(--landing-card)',
-              border: '1px solid var(--landing-border)',
-            }}
-          >
-            <div className="p-4 border-b" style={{ borderColor: 'var(--landing-border)' }}>
-              <h3 className="font-semibold text-white">Popular Endpoints</h3>
-            </div>
-            <div className="divide-y" style={{ borderColor: 'var(--landing-border)' }}>
-              {endpoints.map((endpoint) => (
-                <div
-                  key={`${endpoint.method}-${endpoint.path}`}
-                  className="p-4 flex items-center gap-4 hover:bg-foreground/5 transition-colors"
-                >
-                  <span
-                    className="px-2 py-1 rounded text-xs font-mono font-bold"
-                    style={{
-                      background:
-                        endpoint.method === 'GET'
-                          ? 'rgba(0, 212, 170, 0.2)'
-                          : 'rgba(59, 130, 246, 0.2)',
-                      color: endpoint.method === 'GET' ? 'var(--landing-accent-teal)' : 'var(--landing-accent-blue)',
-                    }}
-                  >
-                    {endpoint.method}
-                  </span>
-                  <code className="text-sm text-white font-mono flex-1">{endpoint.path}</code>
-                  <span className="text-sm" style={{ color: 'var(--landing-text-dim)' }}>
-                    {endpoint.description}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Code Example */}
-      <section className="py-12 px-6" id="getting-started">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold text-white mb-8">Quick Start</h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div>
-              <h3 className="text-xl font-semibold text-white mb-4">1. Get your API key</h3>
-              <p className="mb-6" style={{ color: 'var(--landing-text)' }}>
-                Sign up for Stratum AI and generate an API key from your dashboard settings.
-              </p>
-              <h3 className="text-xl font-semibold text-white mb-4">2. Install the SDK</h3>
+      {/* Endpoints */}
+      <section className="py-24 lg:py-28">
+        <div className="max-w-4xl mx-auto px-6 lg:px-8">
+          <MktSectionHeader
+            eyebrow="API Reference"
+            title="Popular"
+            highlight="endpoints"
+            subtitle="A taste of what you can do. See the full reference for every route, parameter, and response."
+          />
+          <MktCard className="divide-y divide-border overflow-hidden">
+            {endpoints.map((endpoint) => (
               <div
-                className="p-4 rounded-xl font-mono text-sm mb-6"
-                style={{
-                  background: 'var(--landing-bg)',
-                  border: '1px solid var(--landing-border)',
-                  color: 'var(--landing-accent-teal)',
-                }}
+                key={`${endpoint.method}-${endpoint.path}`}
+                className="flex flex-col sm:flex-row sm:items-center gap-3 p-5 hover:bg-foreground/[0.02] transition-colors"
               >
-                npm install @stratum-ai/sdk
+                <span
+                  className={`inline-flex w-fit items-center px-2.5 py-1 rounded-md border text-micro font-semibold uppercase tracking-wide ${methodClasses(
+                    endpoint.method
+                  )}`}
+                >
+                  {endpoint.method}
+                </span>
+                <code className="font-mono text-body text-foreground sm:flex-1 break-all">
+                  {endpoint.path}
+                </code>
+                <span className="text-body text-muted-foreground sm:text-right">
+                  {endpoint.description}
+                </span>
               </div>
-              <h3 className="text-xl font-semibold text-white mb-4">3. Make your first request</h3>
-              <p style={{ color: 'var(--landing-text)' }}>
-                Use the SDK to connect to the API and start tracking signals.
-              </p>
-            </div>
-            <div
-              className="p-6 rounded-2xl font-mono text-sm overflow-x-auto"
-              style={{
-                background: 'var(--landing-bg)',
-                border: '1px solid var(--landing-border)',
-              }}
-            >
-              <pre style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
-                {`import { StratumClient } from '@stratum-ai/sdk';
-
-const stratum = new StratumClient({
-  apiKey: process.env.STRATUM_API_KEY,
-});
-
-// Get signal health
-const health = await stratum.signals.getHealth('sig_123');
-
-// Execute automation if healthy
-if (health.score >= 70) {
-  await stratum.automations.execute('auto_456');
-}`}
-              </pre>
-            </div>
-          </div>
+            ))}
+          </MktCard>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-20 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <div
-            className="p-12 rounded-3xl"
-            style={{
-              background: 'var(--landing-card)',
-              border: '1px solid var(--landing-border)',
-            }}
-          >
-            <h2 className="text-3xl font-bold text-white mb-4">Ready to Start Building?</h2>
-            <p className="text-lg mb-8" style={{ color: 'var(--landing-text)' }}>
-              Get your API key and start integrating in minutes.
-            </p>
-            <Link
-              to="/signup"
-              className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-opacity hover:opacity-90"
-              style={{
-                background: 'var(--landing-accent-coral)',
-                boxShadow: '0 4px 20px rgba(255, 90, 31, 0.3)',
-              }}
-            >
-              Get API Key
-            </Link>
-          </div>
-        </div>
-      </section>
+      <CTA />
     </PageLayout>
   );
 }

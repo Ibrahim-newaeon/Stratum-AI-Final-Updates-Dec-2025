@@ -1,12 +1,17 @@
 /**
- * CDP Solution Page
- * Customer Data Platform landing page
+ * CDP Solution Page — landing-themed (ink + ember).
  */
 
 import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { usePageContent, type SolutionPageContent } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
+import { CTA } from '@/components/landing/CTA';
+import {
+  MktHero,
+  MktSectionHeader,
+  MktFeatureCard,
+  MktStat,
+} from '@/components/landing/marketing';
 import { pageSEO, SEO } from '@/components/common/SEO';
 import {
   ArrowPathIcon,
@@ -19,8 +24,8 @@ import {
 
 const fallbackHero = {
   badge: 'Customer Data Platform',
-  title: 'Turn Customer Data',
-  titleHighlight: 'Into Revenue',
+  title: 'Turn customer data',
+  titleHighlight: 'into revenue',
   description:
     'Unify customer profiles across every touchpoint. Build powerful segments and sync them to all your ad platforms instantly.',
   ctaText: 'Start Free Trial',
@@ -28,64 +33,51 @@ const fallbackHero = {
 };
 
 const fallbackStats = [
-  { value: '2.5M+', label: 'Profiles Unified', description: '' },
-  { value: '47%', label: 'Higher Match Rate', description: '' },
-  { value: '3.2x', label: 'ROAS Improvement', description: '' },
-  { value: '<100ms', label: 'Sync Latency', description: '' },
+  { value: '2.5M+', label: 'Profiles Unified' },
+  { value: '47%', label: 'Higher Match Rate' },
+  { value: '3.2x', label: 'ROAS Improvement' },
+  { value: '<100ms', label: 'Sync Latency' },
 ];
 
 const fallbackFeatures = [
   {
     icon: UserGroupIcon,
-    iconName: 'UserGroupIcon',
     title: '360° Customer Profiles',
     description:
       'Unified view from anonymous visitor to loyal customer. Real-time enrichment from every interaction.',
-    color: '#a855f7',
   },
   {
     icon: CubeTransparentIcon,
-    iconName: 'CubeTransparentIcon',
     title: 'Identity Resolution',
     description:
       'Connect the dots across devices and channels. Visual identity graph shows every connection.',
-    color: '#06b6d4',
   },
   {
     icon: ChartBarIcon,
-    iconName: 'ChartBarIcon',
     title: 'Smart Segmentation',
     description:
       'Build segments with behavioral rules, RFM scores, and lifecycle stages. Preview before you publish.',
-    color: 'var(--landing-accent-green)',
   },
   {
     icon: ArrowPathIcon,
-    iconName: 'ArrowPathIcon',
     title: 'Multi-Platform Sync',
     description:
       'Push segments to Meta, Google, TikTok & Snapchat instantly. Auto-sync keeps your audiences fresh.',
-    color: '#f97316',
   },
   {
     icon: SparklesIcon,
-    iconName: 'SparklesIcon',
     title: 'Predictive Analytics',
     description:
       'Churn prediction, LTV forecasting, and next-best-action recommendations powered by ML.',
-    color: '#ec4899',
   },
   {
     icon: ShieldCheckIcon,
-    iconName: 'ShieldCheckIcon',
     title: 'Privacy-First',
     description:
       'Consent management, GDPR/CCPA compliance, and hashed PII for secure platform sync.',
-    color: 'var(--landing-accent-blue)',
   },
 ];
 
-/** Map icon name strings from CMS to actual icon components */
 const iconMap: Record<string, typeof UserGroupIcon> = {
   UserGroupIcon,
   CubeTransparentIcon,
@@ -98,7 +90,6 @@ const iconMap: Record<string, typeof UserGroupIcon> = {
 export default function CDPSolution() {
   const { page, content } = usePageContent<SolutionPageContent>('solutions-cdp');
 
-  // SEO: override document title / meta description when CMS provides them
   useEffect(() => {
     if (page?.meta_title) document.title = page.meta_title;
     if (page?.meta_description) {
@@ -108,226 +99,59 @@ export default function CDPSolution() {
     }
   }, [page?.meta_title, page?.meta_description]);
 
-  // CMS data with hardcoded fallback
   const hero = content?.hero ?? fallbackHero;
   const stats = content?.stats?.length ? content.stats : fallbackStats;
   const features = content?.features?.length
     ? content.features.map((f) => ({
-        ...f,
         icon: iconMap[f.iconName] ?? UserGroupIcon,
-        color: '#a855f7',
+        title: f.title,
+        description: f.description,
       }))
     : fallbackFeatures;
 
   return (
     <PageLayout>
-      <SEO {...pageSEO.cdp} url="https://stratum-ai.com/solutions/cdp" />
-      {/* Hero Section */}
-      <section className="py-20 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <div
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm mb-6"
-                style={{
-                  background: 'rgba(255, 179, 71, 0.1)',
-                  border: '1px solid rgba(255, 179, 71, 0.3)',
-                  color: 'var(--landing-accent-warm)',
-                }}
-              >
-                <UserGroupIcon className="w-4 h-4" />
-                {hero.badge}
-              </div>
-              <h1
-                className="text-4xl md:text-5xl font-bold mb-6"
-                style={{ fontFamily: "Geist, system-ui, sans-serif" }}
-              >
-                <span className="text-white">{hero.title}</span>
-                <br />
-                <span style={{ color: 'var(--landing-accent-coral)' }}>{hero.titleHighlight}</span>
-              </h1>
-              <p className="text-lg mb-8" style={{ color: 'var(--landing-text)' }}>
-                {hero.description}
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Link
-                  to={hero.ctaLink}
-                  className="px-8 py-4 rounded-full text-lg font-semibold text-white transition-opacity hover:opacity-90 text-center"
-                  style={{
-                    background: 'var(--landing-accent-coral)',
-                    boxShadow: '0 4px 20px rgba(255, 90, 31, 0.3)',
-                  }}
-                >
-                  {hero.ctaText}
-                </Link>
-                <Link
-                  to="/cdp-calculator"
-                  className="px-8 py-4 rounded-xl text-lg font-semibold text-white transition-colors hover:bg-foreground/10 text-center"
-                  style={{
-                    background: 'var(--landing-surface-glass)',
-                    border: '1px solid rgba(255, 255, 255, 0.12)',
-                  }}
-                >
-                  Calculate ROI
-                </Link>
-              </div>
-            </div>
-            <div
-              className="rounded-3xl p-8"
-              style={{
-                background: 'var(--landing-card)',
-                border: '1px solid var(--landing-border)',
-              }}
-            >
-              {/* Stats */}
-              <div className="grid grid-cols-2 gap-6">
-                {stats.map((stat) => (
-                  <div key={stat.label} className="text-center">
-                    <div className="text-3xl font-bold" style={{ color: 'var(--landing-accent-coral)' }}>
-                      {stat.value}
-                    </div>
-                    <div className="text-sm" style={{ color: 'var(--landing-text-dim)' }}>
-                      {stat.label}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <SEO {...pageSEO.cdp} url="https://stratumai.app/solutions/cdp" />
 
-      {/* Features Grid */}
-      <section className="py-20 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Everything You Need in a CDP
-            </h2>
-            <p className="text-lg" style={{ color: 'var(--landing-text)' }}>
-              From identity resolution to audience activation, all in one platform.
-            </p>
-          </div>
+      <MktHero
+        badge={hero.badge}
+        badgeIcon={UserGroupIcon}
+        title={hero.title}
+        highlight={hero.titleHighlight}
+        subtitle={hero.description}
+        primary={{ label: hero.ctaText, href: hero.ctaLink }}
+        secondary={{ label: 'Sync audiences', href: '/solutions/audience-sync' }}
+      >
+        <div className="mt-16 grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {stats.map((stat, i) => (
+            <MktStat key={stat.label} value={stat.value} label={stat.label} delay={i * 0.05} />
+          ))}
+        </div>
+      </MktHero>
+
+      <section className="pb-24 lg:pb-28">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <MktSectionHeader
+            eyebrow="What's inside"
+            title="A complete"
+            highlight="data foundation"
+            subtitle="Everything you need to unify, understand, and activate your first-party data — privacy-first."
+          />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature) => (
-              <div
+            {features.map((feature, i) => (
+              <MktFeatureCard
                 key={feature.title}
-                className="p-6 rounded-2xl transition-transform hover:scale-[1.02]"
-                style={{
-                  background: 'var(--landing-card)',
-                  border: '1px solid var(--landing-border)',
-                  borderLeft: `3px solid ${feature.color}`,
-                }}
-              >
-                <feature.icon className="w-10 h-10 mb-4" style={{ color: feature.color }} />
-                <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
-                <p className="text-sm" style={{ color: 'var(--landing-text)' }}>
-                  {feature.description}
-                </p>
-              </div>
+                icon={feature.icon}
+                title={feature.title}
+                description={feature.description}
+                delay={(i % 3) * 0.05}
+              />
             ))}
           </div>
         </div>
       </section>
 
-      {/* Comparison */}
-      <section className="py-20 px-6">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold text-white text-center mb-12">How We Compare</h2>
-          <div
-            className="rounded-2xl overflow-hidden"
-            style={{
-              background: 'var(--landing-card)',
-              border: '1px solid var(--landing-border)',
-            }}
-          >
-            <table className="w-full">
-              <thead>
-                <tr style={{ borderBottom: '1px solid var(--landing-border)' }}>
-                  <th className="text-left p-4 text-white">Feature</th>
-                  <th className="p-4 text-center" style={{ color: 'var(--landing-accent-coral)' }}>
-                    Stratum CDP
-                  </th>
-                  <th className="p-4 text-center" style={{ color: 'var(--landing-text-dim)' }}>
-                    Segment
-                  </th>
-                  <th className="p-4 text-center" style={{ color: 'var(--landing-text-dim)' }}>
-                    mParticle
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  ['Multi-platform sync', true, true, true],
-                  ['Real-time segments', true, true, true],
-                  ['Identity graph viz', true, false, false],
-                  ['RFM analysis', true, false, false],
-                  ['Trust-gated actions', true, false, false],
-                  ['Anomaly detection', true, false, true],
-                ].map(([feature, stratum, segment, mparticle]) => (
-                  <tr
-                    key={feature as string}
-                    style={{ borderBottom: '1px solid var(--landing-border)' }}
-                  >
-                    <td className="p-4 text-white">{feature}</td>
-                    <td className="p-4 text-center">
-                      {stratum ? (
-                        <span style={{ color: 'var(--landing-accent-teal)' }}>✓</span>
-                      ) : (
-                        <span style={{ color: 'rgba(255, 255, 255, 0.3)' }}>—</span>
-                      )}
-                    </td>
-                    <td className="p-4 text-center">
-                      {segment ? (
-                        <span style={{ color: 'var(--landing-accent-teal)' }}>✓</span>
-                      ) : (
-                        <span style={{ color: 'rgba(255, 255, 255, 0.3)' }}>—</span>
-                      )}
-                    </td>
-                    <td className="p-4 text-center">
-                      {mparticle ? (
-                        <span style={{ color: 'var(--landing-accent-teal)' }}>✓</span>
-                      ) : (
-                        <span style={{ color: 'rgba(255, 255, 255, 0.3)' }}>—</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="py-20 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <div
-            className="p-12 rounded-3xl"
-            style={{
-              background: 'var(--landing-card)',
-              border: '1px solid var(--landing-border)',
-            }}
-          >
-            <h2 className="text-3xl font-bold text-white mb-4">
-              Ready to Unify Your Customer Data?
-            </h2>
-            <p className="text-lg mb-8" style={{ color: 'var(--landing-text)' }}>
-              Start your free trial and see results in days, not months.
-            </p>
-            <Link
-              to="/signup"
-              className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-opacity hover:opacity-90"
-              style={{
-                background: 'var(--landing-accent-coral)',
-                boxShadow: '0 4px 20px rgba(255, 90, 31, 0.3)',
-              }}
-            >
-              Get Started Free
-            </Link>
-          </div>
-        </div>
-      </section>
+      <CTA />
     </PageLayout>
   );
 }

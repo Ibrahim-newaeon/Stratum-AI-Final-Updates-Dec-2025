@@ -1,12 +1,17 @@
 /**
- * Audience Sync Solution Page
- * Multi-platform audience synchronization
+ * Audience Sync Solution Page — landing-themed (ink + ember).
  */
 
 import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { usePageContent, type SolutionPageContent } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
+import { CTA } from '@/components/landing/CTA';
+import {
+  MktHero,
+  MktSectionHeader,
+  MktFeatureCard,
+  MktCard,
+} from '@/components/landing/marketing';
 import { SEO } from '@/components/common/SEO';
 import {
   ArrowPathIcon,
@@ -19,8 +24,8 @@ import {
 
 const fallbackHero = {
   badge: 'Audience Sync',
-  title: 'Sync Audiences to',
-  titleHighlight: 'Every Ad Platform',
+  title: 'Sync audiences to',
+  titleHighlight: 'every ad platform',
   description:
     'Push your CDP segments to Meta, Google, TikTok, and Snapchat with one click. Keep audiences fresh with automatic syncing.',
   ctaText: 'Start Free Trial',
@@ -37,8 +42,7 @@ const fallbackSteps = [
   {
     step: 2,
     title: 'Connect Platforms',
-    description:
-      'Authenticate your ad accounts with a few clicks. No engineering required.',
+    description: 'Authenticate your ad accounts with a few clicks. No engineering required.',
   },
   {
     step: 3,
@@ -58,49 +62,36 @@ const platforms = [
 const fallbackFeatures = [
   {
     icon: BoltIcon,
-    iconName: 'BoltIcon',
     title: 'One-Click Sync',
     description: 'Push segments to any platform instantly. No engineering required.',
-    color: '#f97316',
   },
   {
     icon: ClockIcon,
-    iconName: 'ClockIcon',
     title: 'Auto-Refresh',
     description: 'Configurable sync intervals keep your audiences fresh 24/7.',
-    color: '#06b6d4',
   },
   {
     icon: ChartBarIcon,
-    iconName: 'ChartBarIcon',
     title: 'Match Rate Tracking',
     description: 'Monitor match rates and optimize identifier coverage.',
-    color: 'var(--landing-accent-green)',
   },
   {
     icon: ShieldCheckIcon,
-    iconName: 'ShieldCheckIcon',
     title: 'Privacy-Safe',
     description: 'Hashed identifiers ensure PII never leaves your control.',
-    color: '#a855f7',
   },
   {
     icon: CloudArrowUpIcon,
-    iconName: 'CloudArrowUpIcon',
     title: 'Flexible Export',
     description: 'Export as CSV or JSON with custom attributes anytime.',
-    color: 'var(--landing-accent-blue)',
   },
   {
     icon: ArrowPathIcon,
-    iconName: 'ArrowPathIcon',
     title: 'Sync History',
     description: 'Full audit trail of all sync operations and metrics.',
-    color: '#ec4899',
   },
 ];
 
-/** Map icon name strings from CMS to actual icon components */
 const iconMap: Record<string, typeof BoltIcon> = {
   BoltIcon,
   ClockIcon,
@@ -113,7 +104,6 @@ const iconMap: Record<string, typeof BoltIcon> = {
 export default function AudienceSyncSolution() {
   const { page, content } = usePageContent<SolutionPageContent>('solutions-audience-sync');
 
-  // SEO: override document title / meta description when CMS provides them
   useEffect(() => {
     if (page?.meta_title) document.title = page.meta_title;
     if (page?.meta_description) {
@@ -123,174 +113,88 @@ export default function AudienceSyncSolution() {
     }
   }, [page?.meta_title, page?.meta_description]);
 
-  // CMS data with hardcoded fallback
   const hero = content?.hero ?? fallbackHero;
   const steps = content?.steps?.length ? content.steps : fallbackSteps;
   const features = content?.features?.length
     ? content.features.map((f) => ({
-        ...f,
         icon: iconMap[f.iconName] ?? BoltIcon,
-        color: '#f97316',
+        title: f.title,
+        description: f.description,
       }))
     : fallbackFeatures;
 
   return (
     <PageLayout>
-      <SEO title="Audience Sync" description="Sync CDP segments to Meta, Google, TikTok, and Snapchat in real-time. Unified audience management across all ad platforms." url="https://stratum-ai.com/solutions/audience-sync" />
-      {/* Hero Section */}
-      <section className="py-20 px-6">
-        <div className="max-w-7xl mx-auto text-center">
-          <div
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm mb-6"
-            style={{
-              background: 'rgba(255, 179, 71, 0.1)',
-              border: '1px solid rgba(255, 179, 71, 0.3)',
-              color: 'var(--landing-accent-warm)',
-            }}
-          >
-            <ArrowPathIcon className="w-4 h-4" />
-            {hero.badge}
-          </div>
-          <h1
-            className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6"
-            style={{ fontFamily: "Geist, system-ui, sans-serif" }}
-          >
-            <span className="text-white">{hero.title}</span>
-            <br />
-            <span
-              style={{ color: 'var(--landing-accent-coral)' }}
-            >
-              {hero.titleHighlight}
-            </span>
-          </h1>
-          <p
-            className="text-lg md:text-xl max-w-3xl mx-auto mb-10"
-            style={{ color: 'var(--landing-text)' }}
-          >
-            {hero.description}
-          </p>
-          <Link
-            to={hero.ctaLink}
-            className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-opacity hover:opacity-90"
-            style={{
-              background: 'var(--landing-accent-coral)',
-              boxShadow: '0 4px 20px rgba(255, 90, 31, 0.3)',
-            }}
-          >
-            {hero.ctaText}
-          </Link>
-        </div>
-      </section>
+      <SEO
+        title="Audience Sync"
+        description="Sync CDP segments to Meta, Google, TikTok, and Snapchat in real-time. Unified audience management across all ad platforms."
+        url="https://stratumai.app/solutions/audience-sync"
+      />
 
-      {/* Supported Platforms */}
-      <section className="py-12 px-6">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl font-bold text-white text-center mb-8">Supported Platforms</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {platforms.map((platform) => (
-              <div
-                key={platform.name}
-                className="p-6 rounded-2xl text-center transition-transform hover:scale-[1.02] group"
-                style={{
-                  background: 'var(--landing-card)',
-                  border: '1px solid var(--landing-border)',
-                }}
-              >
-                <div
-                  className="w-14 h-14 rounded-xl flex items-center justify-center font-bold text-xl mx-auto mb-3 transition-colors"
-                  style={{
-                    background: 'linear-gradient(135deg, #FF5A1F 0%, #FF8A4A 100%)',
-                    color: 'var(--landing-text-white-mid)',
-                  }}
-                >
-                  {platform.name[0]}
+      <MktHero
+        badge={hero.badge}
+        badgeIcon={ArrowPathIcon}
+        title={hero.title}
+        highlight={hero.titleHighlight}
+        subtitle={hero.description}
+        primary={{ label: hero.ctaText, href: hero.ctaLink }}
+        secondary={{ label: 'Explore the CDP', href: '/solutions/cdp' }}
+      >
+        <div className="mt-16 grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {platforms.map((platform, i) => (
+            <MktCard key={platform.name} delay={i * 0.05} className="p-5 text-center">
+              <p className="text-h3 text-foreground font-semibold">{platform.name}</p>
+              <p className="mt-1 text-meta uppercase text-muted-foreground">
+                {platform.description}
+              </p>
+            </MktCard>
+          ))}
+        </div>
+      </MktHero>
+
+      {/* How it works */}
+      <section className="pb-12">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <MktSectionHeader eyebrow="How it works" title="Live in" highlight="three steps" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {steps.map((s, i) => (
+              <MktCard key={s.title} delay={i * 0.06} className="p-8">
+                <div className="w-11 h-11 rounded-full bg-secondary/10 border border-secondary/20 flex items-center justify-center mb-5">
+                  <span className="text-h3 font-semibold text-secondary">{s.step}</span>
                 </div>
-                <h3 className="font-semibold text-white">{platform.name}</h3>
-                <p className="text-xs mt-1" style={{ color: 'var(--landing-text-dim)' }}>
-                  {platform.description}
+                <h3 className="text-h3 text-foreground font-semibold mb-2">{s.title}</h3>
+                <p className="text-body text-muted-foreground leading-relaxed">
+                  {s.description}
                 </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works */}
-      <section className="py-20 px-6">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold text-white text-center mb-16">How It Works</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {steps.map((item) => (
-              <div key={item.step} className="text-center">
-                <div
-                  className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-bold mx-auto mb-4"
-                  style={{
-                    background: 'var(--landing-accent-coral)',
-                    color: '#fff',
-                  }}
-                >
-                  {item.step}
-                </div>
-                <h3 className="text-xl font-semibold text-white mb-2">{item.title}</h3>
-                <p style={{ color: 'var(--landing-text)' }}>{item.description}</p>
-              </div>
+              </MktCard>
             ))}
           </div>
         </div>
       </section>
 
       {/* Features */}
-      <section className="py-20 px-6">
-        <div className="max-w-7xl mx-auto">
+      <section className="py-24 lg:py-28">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <MktSectionHeader
+            eyebrow="Capabilities"
+            title="Built for"
+            highlight="confident activation"
+          />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature) => (
-              <div
+            {features.map((feature, i) => (
+              <MktFeatureCard
                 key={feature.title}
-                className="p-6 rounded-2xl transition-transform hover:scale-[1.02]"
-                style={{
-                  background: 'var(--landing-card)',
-                  border: '1px solid var(--landing-border)',
-                  borderLeft: `3px solid ${feature.color}`,
-                }}
-              >
-                <feature.icon className="w-10 h-10 mb-4" style={{ color: feature.color }} />
-                <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
-                <p className="text-sm" style={{ color: 'var(--landing-text)' }}>
-                  {feature.description}
-                </p>
-              </div>
+                icon={feature.icon}
+                title={feature.title}
+                description={feature.description}
+                delay={(i % 3) * 0.05}
+              />
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-20 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <div
-            className="p-12 rounded-3xl"
-            style={{
-              background: 'var(--landing-card)',
-              border: '1px solid var(--landing-border)',
-            }}
-          >
-            <h2 className="text-3xl font-bold text-white mb-4">Start Syncing Audiences Today</h2>
-            <p className="text-lg mb-8" style={{ color: 'var(--landing-text)' }}>
-              Free 14-day trial. No credit card required.
-            </p>
-            <Link
-              to="/signup"
-              className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-opacity hover:opacity-90"
-              style={{
-                background: 'var(--landing-accent-coral)',
-                boxShadow: '0 4px 20px rgba(255, 90, 31, 0.3)',
-              }}
-            >
-              Get Started Free
-            </Link>
-          </div>
-        </div>
-      </section>
+      <CTA />
     </PageLayout>
   );
 }
