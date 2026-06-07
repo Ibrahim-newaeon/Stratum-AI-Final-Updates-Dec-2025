@@ -435,15 +435,14 @@ class TestEmqPlaybookUpdate:
         assert resp.status_code == 403
 
     async def test_happy_path(self, api_client, admin_headers, mock_db):
+        """Playbook-item persistence is an intentional stub (needs a
+        playbook_items table), so an authorized update returns 501."""
         resp = await api_client.patch(
             self.URL,
             headers=admin_headers,
             json={"status": "in_progress", "owner": "user@example.com"},
         )
-        assert resp.status_code == 200
-        body = resp.json()
-        assert body["success"] is True
-        assert body["data"]["status"] == "in_progress"
+        assert resp.status_code == 501
 
 
 # ---------------------------------------------------------------------------
