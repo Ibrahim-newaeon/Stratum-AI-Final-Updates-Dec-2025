@@ -66,7 +66,7 @@ export default function CMSLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-surface-primary flex">
+    <div className="dark min-h-screen bg-surface-primary flex">
       {/* Left side - Branding */}
       <div className="hidden lg:flex lg:w-1/2 bg-muted/50 p-12 flex-col justify-between relative overflow-hidden">
         {/* Background pattern */}

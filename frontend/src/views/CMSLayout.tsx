@@ -240,7 +240,7 @@ export default function CMSLayout() {
   );
 
   return (
-    <div className="min-h-screen bg-surface-primary">
+    <div className="dark min-h-screen bg-surface-primary">
       {/* Mobile sidebar */}
       <div
         className={cn(
