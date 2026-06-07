@@ -8,6 +8,8 @@ import { Link, useParams } from 'react-router-dom';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { CTA } from '@/components/landing/CTA';
 import { SEO } from '@/components/common/SEO';
+import { usePublicPage } from '@/api/cms';
+import { sanitizeHtml } from '@/lib/sanitize';
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
@@ -118,16 +120,29 @@ export default function DocArticlePage() {
   const params = useParams();
   const slug = (params['*'] ?? '').replace(/^\/+|\/+$/g, '');
   const article = getDocArticle(slug);
+  // CMS override: a published page with slug `docs-<slug-with-dashes>` wins over
+  // the built-in article, mirroring the fallback pattern used across the
+  // marketing site. `usePublicPage` returns null when absent, so the code
+  // content remains the default.
+  const cmsSlug = slug ? `docs-${slug.replace(/\//g, '-')}` : '';
+  const { data: cmsPage } = usePublicPage(cmsSlug);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [slug]);
 
-  if (!article) {
+  if (!article && !cmsPage) {
     return <DocNotFound slug={slug} />;
   }
 
-  const idx = docArticleOrder.indexOf(article.slug);
+  const title = article?.title ?? cmsPage?.title ?? 'Documentation';
+  const category = article?.category ?? 'Docs';
+  const description = article?.description ?? cmsPage?.meta_description ?? '';
+  const readTime = article?.readTime;
+  const cmsHtml = cmsPage?.content;
+  const orderSlug = article?.slug ?? slug;
+
+  const idx = docArticleOrder.indexOf(orderSlug);
   const prevSlug = idx > 0 ? docArticleOrder[idx - 1] : undefined;
   const nextSlug = idx >= 0 && idx < docArticleOrder.length - 1 ? docArticleOrder[idx + 1] : undefined;
   const prev = prevSlug ? docArticles[prevSlug] : undefined;
@@ -136,9 +151,9 @@ export default function DocArticlePage() {
   return (
     <PageLayout>
       <SEO
-        title={`${article.title} — Docs`}
-        description={article.description}
-        url={`https://stratumai.app/docs/${article.slug}`}
+        title={`${title} — Docs`}
+        description={description}
+        url={`https://stratumai.app/docs/${orderSlug}`}
       />
 
       <div className="max-w-7xl mx-auto px-6 lg:px-8 pt-12 pb-24">
@@ -148,7 +163,7 @@ export default function DocArticlePage() {
             Docs
           </Link>
           <span aria-hidden="true">/</span>
-          <span className="text-foreground/70">{article.category}</span>
+          <span className="text-foreground/70">{category}</span>
         </nav>
 
         <div className="grid lg:grid-cols-[16rem_1fr] gap-10 lg:gap-14">
@@ -160,7 +175,7 @@ export default function DocArticlePage() {
                   <p className="text-meta uppercase text-muted-foreground mb-2">{cat.title}</p>
                   <ul className="space-y-1.5 border-l border-border">
                     {cat.links.map((link) => {
-                      const active = link.href === `/docs/${article.slug}`;
+                      const active = link.href === `/docs/${orderSlug}`;
                       return (
                         <li key={link.href}>
                           <Link
@@ -184,21 +199,34 @@ export default function DocArticlePage() {
 
           {/* Article */}
           <article className="min-w-0 max-w-3xl">
-            <p className="text-meta uppercase text-secondary mb-3">{article.category}</p>
-            <h1 className="text-display-xs md:text-display-sm text-foreground mb-4">{article.title}</h1>
-            <p className="text-body text-muted-foreground leading-relaxed mb-3">
-              {article.description}
-            </p>
+            <p className="text-meta uppercase text-secondary mb-3">{category}</p>
+            <h1 className="text-display-xs md:text-display-sm text-foreground mb-4">{title}</h1>
+            {description ? (
+              <p className="text-body text-muted-foreground leading-relaxed mb-3">{description}</p>
+            ) : null}
             <div className="flex items-center gap-2 text-meta text-muted-foreground mb-10 pb-8 border-b border-border">
-              <ClockIcon className="w-4 h-4" />
-              <span>{article.readTime} read</span>
+              {readTime ? (
+                <>
+                  <ClockIcon className="w-4 h-4" />
+                  <span>{readTime} read</span>
+                </>
+              ) : (
+                <span>Documentation</span>
+              )}
             </div>
 
-            <div>
-              {article.blocks.map((block, i) => (
-                <Block key={i} block={block} />
-              ))}
-            </div>
+            {cmsHtml ? (
+              <div
+                className="text-body text-muted-foreground leading-relaxed [&_h2]:text-h2 [&_h2]:text-foreground [&_h2]:font-semibold [&_h2]:mt-10 [&_h2]:mb-4 [&_h3]:text-h3 [&_h3]:text-foreground [&_h3]:font-semibold [&_h3]:mt-7 [&_h3]:mb-2 [&_p]:mb-4 [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-4 [&_ul]:space-y-2 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-4 [&_ol]:space-y-2 [&_a]:text-secondary [&_a:hover]:underline [&_code]:font-mono [&_code]:text-foreground [&_pre]:bg-card [&_pre]:border [&_pre]:border-border [&_pre]:rounded-xl [&_pre]:p-4 [&_pre]:overflow-x-auto [&_pre]:mb-5"
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(cmsHtml) }}
+              />
+            ) : article ? (
+              <div>
+                {article.blocks.map((block, i) => (
+                  <Block key={i} block={block} />
+                ))}
+              </div>
+            ) : null}
 
             {/* Prev / next */}
             <div className="mt-14 pt-8 border-t border-border grid sm:grid-cols-2 gap-4">
