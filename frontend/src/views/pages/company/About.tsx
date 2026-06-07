@@ -1,13 +1,28 @@
 /**
- * About Page
- * Company information and mission
+ * About Page — landing-themed (ink + ember).
+ * Company information and mission.
  */
 
-import { Link } from 'react-router-dom';
 import { usePageContent, type AboutPageContent } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
+import { CTA } from '@/components/landing/CTA';
+import {
+  MktHero,
+  MktSectionHeader,
+  MktCard,
+  MktFeatureCard,
+  MktStat,
+} from '@/components/landing/marketing';
 import { pageSEO, SEO } from '@/components/common/SEO';
-import { SparklesIcon } from '@heroicons/react/24/outline';
+import {
+  BoltIcon,
+  ChartBarIcon,
+  ShieldCheckIcon,
+  SparklesIcon,
+  UserGroupIcon,
+} from '@heroicons/react/24/outline';
+
+const valueIcons = [ShieldCheckIcon, UserGroupIcon, ChartBarIcon, BoltIcon];
 
 const fallbackTeam = [
   { name: 'Sarah Chen', role: 'CEO & Co-Founder', image: 'SC' },
@@ -56,54 +71,27 @@ export default function About() {
   return (
     <PageLayout>
       <SEO {...pageSEO.about} url="https://stratum-ai.com/about" />
-      {/* Hero Section */}
-      <section className="py-20 px-6">
-        <div className="max-w-7xl mx-auto text-center">
-          <div
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm mb-6"
-            style={{
-              background: 'rgba(255, 179, 71, 0.1)',
-              border: '1px solid rgba(255, 179, 71, 0.3)',
-              color: 'var(--landing-accent-warm)',
-            }}
-          >
-            <SparklesIcon className="w-4 h-4" />
-            About Us
-          </div>
-          <h1
-            className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6"
-            style={{ fontFamily: "Geist, system-ui, sans-serif" }}
-          >
-            <span className="text-white">Building the Future of</span>
-            <br />
-            <span
-              style={{ color: 'var(--landing-accent-coral)' }}
-            >
-              Revenue Operations
-            </span>
-          </h1>
-          <p
-            className="text-lg md:text-xl max-w-3xl mx-auto"
-            style={{ color: 'var(--landing-text)' }}
-          >
-            We&apos;re on a mission to help growth teams make smarter decisions with AI-powered
-            intelligence and trust-gated automation.
-          </p>
-        </div>
-      </section>
 
-      {/* Story Section */}
-      <section className="py-20 px-6">
-        <div className="max-w-4xl mx-auto">
-          <div
-            className="p-8 md:p-12 rounded-3xl"
-            style={{
-              background: 'var(--landing-card)',
-              border: '1px solid var(--landing-border)',
-            }}
-          >
-            <h2 className="text-3xl font-bold text-white mb-6">Our Story</h2>
-            <div className="space-y-4" style={{ color: 'var(--landing-text)' }}>
+      <MktHero
+        badge="About Us"
+        badgeIcon={SparklesIcon}
+        title="Building the future of"
+        highlight="revenue operations"
+        subtitle="We're on a mission to help growth teams make smarter decisions with AI-powered intelligence and trust-gated automation."
+      >
+        <div className="mt-16 grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {stats.map((stat, i) => (
+            <MktStat key={stat.label} value={stat.value} label={stat.label} delay={i * 0.05} />
+          ))}
+        </div>
+      </MktHero>
+
+      {/* Story */}
+      <section className="pb-12">
+        <div className="max-w-3xl mx-auto px-6 lg:px-8">
+          <MktCard className="p-8 md:p-12">
+            <h2 className="text-h1 text-foreground font-semibold mb-6">Our Story</h2>
+            <div className="space-y-4 text-body text-muted-foreground leading-relaxed">
               <p>
                 Stratum AI was founded in 2024 by a team of marketing technologists who experienced
                 firsthand the chaos of managing campaigns across multiple platforms with unreliable
@@ -121,103 +109,47 @@ export default function About() {
                 modern growth teams need.
               </p>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Stats */}
-      <section className="py-12 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat) => (
-              <div key={stat.label} className="text-center">
-                <div className="text-4xl font-bold" style={{ color: 'var(--landing-accent-coral)' }}>
-                  {stat.value}
-                </div>
-                <div className="text-sm mt-2" style={{ color: 'var(--landing-text-dim)' }}>
-                  {stat.label}
-                </div>
-              </div>
-            ))}
-          </div>
+          </MktCard>
         </div>
       </section>
 
       {/* Values */}
-      <section className="py-20 px-6">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold text-white text-center mb-12">Our Values</h2>
+      <section className="py-24 lg:py-28">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <MktSectionHeader eyebrow="What drives us" title="Our" highlight="values" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {values.map((value) => (
-              <div
+            {values.map((value, i) => (
+              <MktFeatureCard
                 key={value.title}
-                className="p-6 rounded-2xl"
-                style={{
-                  background: 'var(--landing-card)',
-                  border: '1px solid var(--landing-border)',
-                }}
-              >
-                <h3 className="text-xl font-semibold text-white mb-2">{value.title}</h3>
-                <p style={{ color: 'var(--landing-text)' }}>{value.description}</p>
-              </div>
+                icon={valueIcons[i % valueIcons.length]}
+                title={value.title}
+                description={value.description}
+                delay={(i % 2) * 0.05}
+              />
             ))}
           </div>
         </div>
       </section>
 
       {/* Team */}
-      <section className="py-20 px-6">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold text-white text-center mb-12">Leadership Team</h2>
+      <section className="py-24 lg:py-28">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <MktSectionHeader eyebrow="The people" title="Leadership" highlight="team" />
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-            {team.map((member) => (
-              <div key={member.name} className="text-center">
-                <div
-                  className="w-20 h-20 rounded-2xl flex items-center justify-center text-2xl font-bold mx-auto mb-3"
-                  style={{
-                    background: 'linear-gradient(135deg, #FF5A1F 0%, #FF8A4A 100%)',
-                    color: '#ffffff',
-                  }}
-                >
+            {team.map((member, i) => (
+              <MktCard key={member.name} className="p-6 text-center" delay={(i % 6) * 0.05}>
+                <div className="w-20 h-20 rounded-2xl bg-secondary/10 border border-secondary/20 flex items-center justify-center text-display-xs font-semibold text-secondary mx-auto mb-4">
                   {member.image}
                 </div>
-                <h3 className="font-semibold text-white">{member.name}</h3>
-                <p className="text-sm" style={{ color: 'var(--landing-text-dim)' }}>
-                  {member.role}
-                </p>
-              </div>
+                <h3 className="text-h3 text-foreground font-semibold">{member.name}</h3>
+                <p className="mt-1 text-meta uppercase text-muted-foreground">{member.role}</p>
+              </MktCard>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-20 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <div
-            className="p-12 rounded-3xl"
-            style={{
-              background: 'var(--landing-card)',
-              border: '1px solid var(--landing-border)',
-            }}
-          >
-            <h2 className="text-3xl font-bold text-white mb-4">Join Our Mission</h2>
-            <p className="text-lg mb-8" style={{ color: 'var(--landing-text)' }}>
-              We&apos;re always looking for talented people to join our team.
-            </p>
-            <Link
-              to="/careers"
-              className="inline-flex px-8 py-4 rounded-full text-lg font-semibold text-white transition-opacity hover:opacity-90"
-              style={{
-                background: 'var(--landing-accent-coral)',
-                boxShadow: '0 4px 20px rgba(255, 90, 31, 0.3)',
-              }}
-            >
-              View Open Positions
-            </Link>
-          </div>
-        </div>
-      </section>
+      <CTA />
     </PageLayout>
   );
 }

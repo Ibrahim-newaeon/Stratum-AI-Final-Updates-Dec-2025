@@ -1,11 +1,16 @@
 /**
- * Resources Hub Page
- * StratumAI Dark Enterprise Theme
+ * Resources Hub Page — landing-themed (ink + ember).
  */
 
 import { Link } from 'react-router-dom';
 import { usePageContent, type ResourcesPageContent } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
+import { CTA } from '@/components/landing/CTA';
+import {
+  MktHero,
+  MktSectionHeader,
+  MktCard,
+} from '@/components/landing/marketing';
 import {
   AcademicCapIcon,
   ArrowDownTrayIcon,
@@ -13,7 +18,6 @@ import {
   BookOpenIcon,
   CalendarIcon,
   DocumentTextIcon,
-  MicrophoneIcon,
   NewspaperIcon,
   PlayIcon,
   PresentationChartBarIcon,
@@ -24,7 +28,6 @@ const resourceCategories = [
     title: 'Documentation',
     description: 'Technical guides and API references',
     icon: BookOpenIcon,
-    color: 'var(--landing-accent-warm)',
     href: '/docs',
     cta: 'Browse Docs',
   },
@@ -32,7 +35,6 @@ const resourceCategories = [
     title: 'Case Studies',
     description: 'Success stories from our customers',
     icon: PresentationChartBarIcon,
-    color: 'var(--landing-accent-sky)',
     href: '/case-studies',
     cta: 'Read Stories',
   },
@@ -40,7 +42,6 @@ const resourceCategories = [
     title: 'Blog',
     description: 'Latest news and industry insights',
     icon: NewspaperIcon,
-    color: 'var(--landing-accent-teal)',
     href: '/blog',
     cta: 'Read Blog',
   },
@@ -48,7 +49,6 @@ const resourceCategories = [
     title: 'Changelog',
     description: 'Product updates and release notes',
     icon: DocumentTextIcon,
-    color: 'var(--landing-accent-amber)',
     href: '/changelog',
     cta: 'View Updates',
   },
@@ -60,28 +60,24 @@ const fallbackGuides = [
     description: 'Learn how to set up and optimize trust gates for maximum performance.',
     type: 'Guide',
     readTime: '15 min',
-    color: 'var(--landing-accent-warm)',
   },
   {
     title: 'CDP Implementation Playbook',
     description: 'Step-by-step guide to implementing your Customer Data Platform.',
     type: 'Playbook',
     readTime: '25 min',
-    color: 'var(--landing-accent-sky)',
   },
   {
     title: 'Signal Health Optimization',
     description: 'Best practices for maintaining healthy signal scores.',
     type: 'Guide',
     readTime: '12 min',
-    color: 'var(--landing-accent-teal)',
   },
   {
     title: 'Multi-Platform Audience Sync Setup',
     description: 'Configure audience sync across Meta, Google, TikTok, and Snapchat.',
     type: 'Tutorial',
     readTime: '10 min',
-    color: 'var(--landing-accent-red)',
   },
 ];
 
@@ -140,7 +136,6 @@ export default function ResourcesPage() {
         description: g.description,
         type: g.tag,
         readTime: '',
-        color: 'var(--landing-accent-warm)',
       }))
     : fallbackGuides;
 
@@ -165,270 +160,172 @@ export default function ResourcesPage() {
 
   return (
     <PageLayout>
-      <div className="min-h-screen">
-        {/* Hero Section */}
-        <section className="relative py-20 overflow-hidden">
-          <div className="max-w-7xl mx-auto px-6 lg:px-8">
-            <div className="text-center max-w-3xl mx-auto">
-              <div
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
-                style={{
-                  background: 'rgba(255, 107, 107, 0.1)',
-                  border: '1px solid rgba(255, 107, 107, 0.2)',
-                }}
+      <MktHero
+        badge="Resources"
+        badgeIcon={AcademicCapIcon}
+        title="Learn, grow, and"
+        highlight="succeed"
+        subtitle="Everything you need to master trust-gated automation and transform your marketing performance."
+      />
+
+      {/* Category Cards */}
+      <section className="pb-12">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {resourceCategories.map((cat, i) => (
+              <MktCard
+                key={cat.title}
+                delay={(i % 4) * 0.05}
+                className="group p-6 hover:-translate-y-1"
               >
-                <AcademicCapIcon className="w-4 h-4 text-[#FF6B6B]" />
-                <span className="text-sm font-medium text-[#FF6B6B]">Resources</span>
-              </div>
-
-              <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
-                Learn, Grow, and{' '}
-                <span
-                  style={{ color: 'var(--landing-accent-coral)' }}
-                >
-                  Succeed
-                </span>
-              </h1>
-
-              <p className="text-lg" style={{ color: 'var(--landing-text)' }}>
-                Everything you need to master trust-gated automation and transform your marketing
-                performance.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Category Cards */}
-        <section className="py-8">
-          <div className="max-w-7xl mx-auto px-6 lg:px-8">
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {resourceCategories.map((cat) => (
-                <Link
-                  key={cat.title}
-                  to={cat.href}
-                  className="group p-6 rounded-2xl transition-transform duration-300 hover:-translate-y-1"
-                  style={{
-                    background: 'var(--landing-card)',
-                    border: '1px solid var(--landing-border)',
-                  }}
-                >
-                  <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
-                    style={{
-                      background: `${cat.color}15`,
-                      border: `1px solid ${cat.color}30`,
-                    }}
-                  >
-                    <cat.icon className="w-6 h-6" style={{ color: cat.color }} />
+                <Link to={cat.href} className="block">
+                  <div className="w-12 h-12 rounded-xl bg-secondary/10 border border-secondary/20 flex items-center justify-center mb-4">
+                    <cat.icon className="w-6 h-6 text-secondary" />
                   </div>
-                  <h3 className="text-lg font-semibold text-white mb-1">{cat.title}</h3>
-                  <p className="text-sm mb-4" style={{ color: 'var(--landing-text)' }}>{cat.description}</p>
-                  <div
-                    className="flex items-center gap-2 text-sm font-medium group-hover:gap-3 transition-colors"
-                    style={{ color: cat.color }}
-                  >
+                  <h3 className="text-h3 text-foreground font-semibold mb-1">{cat.title}</h3>
+                  <p className="text-body text-muted-foreground mb-4">{cat.description}</p>
+                  <div className="flex items-center gap-2 text-body font-medium text-secondary group-hover:gap-3 transition-all">
                     <span>{cat.cta}</span>
                     <ArrowRightIcon className="w-4 h-4" />
                   </div>
                 </Link>
-              ))}
-            </div>
+              </MktCard>
+            ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Guides & Tutorials */}
-        <section className="py-16">
-          <div className="max-w-7xl mx-auto px-6 lg:px-8">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-2xl font-bold text-white">Guides & Tutorials</h2>
-              <Link to="/docs" className="text-sm text-secondary hover:underline">
-                View All
-              </Link>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-4">
-              {guides.map((guide) => (
-                <Link
-                  key={guide.title}
-                  to="#"
-                  className="group flex items-start gap-4 p-5 rounded-xl transition-colors duration-200 hover:bg-foreground/5"
-                  style={{
-                    background: 'var(--landing-card)',
-                    border: '1px solid var(--landing-border)',
-                  }}
-                >
-                  <div
-                    className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                    style={{
-                      background: `${guide.color}15`,
-                      border: `1px solid ${guide.color}30`,
-                    }}
-                  >
-                    <BookOpenIcon className="w-5 h-5" style={{ color: guide.color }} />
+      {/* Guides & Tutorials */}
+      <section className="py-24 lg:py-28">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <MktSectionHeader
+            eyebrow="Learn"
+            title="Guides &"
+            highlight="tutorials"
+          />
+          <div className="grid md:grid-cols-2 gap-6">
+            {guides.map((guide, i) => (
+              <MktCard key={guide.title} delay={(i % 2) * 0.05} className="group p-6">
+                <Link to="#" className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-secondary/10 border border-secondary/20 flex items-center justify-center flex-shrink-0">
+                    <BookOpenIcon className="w-6 h-6 text-secondary" />
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span
-                        className="text-xs font-medium px-2 py-0.5 rounded"
-                        style={{
-                          background: `${guide.color}20`,
-                          color: guide.color,
-                        }}
-                      >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-micro uppercase font-medium px-2 py-0.5 rounded-full bg-secondary/10 text-secondary">
                         {guide.type}
                       </span>
-                      <span className="text-xs" style={{ color: 'var(--landing-text-dim)' }}>{guide.readTime} read</span>
+                      {guide.readTime ? (
+                        <span className="text-micro uppercase text-muted-foreground">
+                          {guide.readTime} read
+                        </span>
+                      ) : null}
                     </div>
-                    <h4 className="text-white font-medium group-hover:text-[#FF5A1F] transition-colors">
+                    <h3 className="text-h3 text-foreground font-semibold group-hover:text-secondary transition-colors">
                       {guide.title}
-                    </h4>
-                    <p className="text-sm mt-1" style={{ color: 'var(--landing-text)' }}>{guide.description}</p>
+                    </h3>
+                    <p className="mt-1 text-body text-muted-foreground">{guide.description}</p>
                   </div>
                 </Link>
-              ))}
-            </div>
+              </MktCard>
+            ))}
           </div>
-        </section>
+          <div className="mt-8 text-center">
+            <Link
+              to="/docs"
+              className="inline-flex items-center gap-2 text-body font-medium text-secondary hover:gap-3 transition-all"
+            >
+              <span>View All</span>
+              <ArrowRightIcon className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
 
-        {/* Webinars */}
-        <section className="py-16">
-          <div className="max-w-7xl mx-auto px-6 lg:px-8">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-2xl font-bold text-white">Webinars</h2>
-            </div>
-
-            <div className="grid md:grid-cols-3 gap-4">
-              {webinars.map((webinar) => (
-                <div
-                  key={webinar.title}
-                  className="p-5 rounded-xl"
-                  style={{
-                    background: 'var(--landing-card)',
-                    border: webinar.isUpcoming
-                      ? '1px solid var(--landing-border)'
-                      : '1px solid var(--landing-border)',
-                  }}
+      {/* Webinars */}
+      <section className="py-24 lg:py-28">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <MktSectionHeader eyebrow="Watch" title="Webinars" />
+          <div className="grid md:grid-cols-3 gap-6">
+            {webinars.map((webinar, i) => (
+              <MktCard
+                key={webinar.title}
+                delay={(i % 3) * 0.05}
+                className={`p-6 flex flex-col ${
+                  webinar.isUpcoming ? 'border-secondary/40' : ''
+                }`}
+              >
+                {webinar.isUpcoming && (
+                  <span className="inline-flex items-center gap-1 self-start text-micro uppercase font-medium px-2 py-1 rounded-full bg-success/15 text-success mb-3">
+                    <CalendarIcon className="w-3 h-3" />
+                    Upcoming
+                  </span>
+                )}
+                <h3 className="text-h3 text-foreground font-semibold mb-2">{webinar.title}</h3>
+                <p className="text-body text-muted-foreground mb-3">
+                  {webinar.date} • {webinar.time}
+                </p>
+                <p className="text-meta uppercase text-muted-foreground mb-4">
+                  Speakers: {webinar.speakers.join(', ')}
+                </p>
+                <button
+                  className="mt-auto inline-flex items-center gap-2 self-start text-body font-medium text-secondary hover:gap-3 transition-all"
+                  type="button"
                 >
-                  {webinar.isUpcoming && (
-                    <span
-                      className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded mb-3"
-                      style={{ background: 'rgba(0, 255, 136, 0.2)', color: 'var(--landing-status-green)' }}
-                    >
-                      <CalendarIcon className="w-3 h-3" />
-                      Upcoming
-                    </span>
+                  {webinar.isUpcoming ? (
+                    <>
+                      <CalendarIcon className="w-4 h-4" />
+                      Register Now
+                    </>
+                  ) : (
+                    <>
+                      <PlayIcon className="w-4 h-4" />
+                      Watch Recording
+                    </>
                   )}
-                  <h4 className="text-white font-medium mb-2">{webinar.title}</h4>
-                  <p className="text-sm mb-3" style={{ color: 'var(--landing-text-dim)' }}>
-                    {webinar.date} • {webinar.time}
-                  </p>
-                  <p className="text-xs mb-4" style={{ color: 'var(--landing-text)' }}>
-                    Speakers: {webinar.speakers.join(', ')}
-                  </p>
+                </button>
+              </MktCard>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Whitepapers */}
+      <section className="py-24 lg:py-28">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <MktSectionHeader
+            eyebrow="Download"
+            title="Whitepapers &"
+            highlight="reports"
+          />
+          <div className="grid md:grid-cols-3 gap-6">
+            {whitepapers.map((paper, i) => (
+              <MktCard key={paper.title} delay={(i % 3) * 0.05} className="p-6 flex flex-col">
+                <div className="w-12 h-12 rounded-xl bg-secondary/10 border border-secondary/20 flex items-center justify-center mb-4">
+                  <DocumentTextIcon className="w-6 h-6 text-secondary" />
+                </div>
+                <h3 className="text-h3 text-foreground font-semibold mb-2">{paper.title}</h3>
+                <p className="text-body text-muted-foreground mb-4">{paper.description}</p>
+                <div className="mt-auto flex items-center justify-between">
+                  <span className="text-micro uppercase text-muted-foreground">
+                    {paper.pages} pages
+                    {paper.downloads ? ` • ${paper.downloads} downloads` : ''}
+                  </span>
                   <button
-                    className="flex items-center gap-2 text-sm font-medium transition-colors"
-                    style={{ color: webinar.isUpcoming ? 'var(--landing-accent-warm)' : 'var(--landing-accent-sky)' }}
+                    className="inline-flex items-center gap-1 text-body font-medium text-secondary hover:gap-2 transition-all"
+                    type="button"
                   >
-                    {webinar.isUpcoming ? (
-                      <>
-                        <CalendarIcon className="w-4 h-4" />
-                        Register Now
-                      </>
-                    ) : (
-                      <>
-                        <PlayIcon className="w-4 h-4" />
-                        Watch Recording
-                      </>
-                    )}
+                    <ArrowDownTrayIcon className="w-4 h-4" />
+                    Download
                   </button>
                 </div>
-              ))}
-            </div>
+              </MktCard>
+            ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Whitepapers */}
-        <section className="py-16">
-          <div className="max-w-7xl mx-auto px-6 lg:px-8">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-2xl font-bold text-white">Whitepapers & Reports</h2>
-            </div>
-
-            <div className="grid md:grid-cols-3 gap-4">
-              {whitepapers.map((paper) => (
-                <div
-                  key={paper.title}
-                  className="p-5 rounded-xl"
-                  style={{
-                    background: 'var(--landing-card)',
-                    border: '1px solid var(--landing-border)',
-                  }}
-                >
-                  <div
-                    className="w-10 h-10 rounded-lg flex items-center justify-center mb-4"
-                    style={{
-                      background: 'rgba(255, 107, 107, 0.15)',
-                      border: '1px solid rgba(255, 107, 107, 0.3)',
-                    }}
-                  >
-                    <DocumentTextIcon className="w-5 h-5 text-[#FF6B6B]" />
-                  </div>
-                  <h4 className="text-white font-medium mb-2">{paper.title}</h4>
-                  <p className="text-sm mb-3" style={{ color: 'var(--landing-text)' }}>{paper.description}</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs" style={{ color: 'var(--landing-text-dim)' }}>
-                      {paper.pages} pages • {paper.downloads} downloads
-                    </span>
-                    <button className="flex items-center gap-1 text-sm font-medium text-[#FF6B6B]">
-                      <ArrowDownTrayIcon className="w-4 h-4" />
-                      Download
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Newsletter CTA */}
-        <section className="py-16">
-          <div className="max-w-3xl mx-auto px-6 lg:px-8">
-            <div
-              className="p-8 rounded-2xl text-center"
-              style={{
-                background: 'var(--landing-card)',
-                border: '1px solid var(--landing-border)',
-              }}
-            >
-              <MicrophoneIcon className="w-10 h-10 mx-auto mb-4 text-secondary" />
-              <h3 className="text-xl font-bold text-white mb-2">Stay in the Loop</h3>
-              <p className="mb-6" style={{ color: 'var(--landing-text)' }}>
-                Get the latest resources, guides, and product updates delivered to your inbox.
-              </p>
-              <div className="flex gap-3 max-w-md mx-auto">
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="flex-1 px-4 py-3 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF5A1F]/50"
-                  style={{
-                    background: 'var(--landing-bg)',
-                    border: '1px solid var(--landing-border)',
-                  }}
-                />
-                <button
-                  className="px-6 py-3 rounded-full font-semibold text-white transition-colors duration-200"
-                  style={{
-                    background: 'var(--landing-accent-coral)',
-                    boxShadow: 'var(--landing-glow-coral)',
-                  }}
-                >
-                  Subscribe
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-      </div>
+      <CTA />
     </PageLayout>
   );
 }

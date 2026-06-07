@@ -4,6 +4,7 @@
 
 import { usePublicPage } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
+import { MktHero, MktCard } from '@/components/landing/marketing';
 import { pageSEO, SEO } from '@/components/common/SEO';
 import { sanitizeHtml } from '@/lib/sanitize';
 import { ShieldCheckIcon } from '@heroicons/react/24/outline';
@@ -19,43 +20,34 @@ export default function Privacy() {
     <PageLayout>
       <SEO {...pageSEO.privacy} title={seoTitle} description={seoDescription} url="https://stratum-ai.com/privacy" />
       {/* Hero Section */}
-      <section className="py-20 px-6">
-        <div className="max-w-4xl mx-auto">
-          <div
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm mb-6"
-            style={{
-              background: 'rgba(255, 179, 71, 0.1)',
-              border: '1px solid rgba(255, 179, 71, 0.3)',
-              color: 'var(--landing-accent-warm)',
-            }}
-          >
-            <ShieldCheckIcon className="w-4 h-4" />
-            Legal
-          </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Privacy Policy</h1>
-          <p style={{ color: 'var(--landing-text-dim)' }}>Last updated: January 15, 2026</p>
-        </div>
-      </section>
+      <MktHero
+        badge="Legal"
+        badgeIcon={ShieldCheckIcon}
+        title="Privacy"
+        highlight="Policy"
+        subtitle="Last updated: January 15, 2026"
+      />
 
       {/* Content */}
       {hasCMSContent ? (
-        <section className="py-12 px-6">
-          <div className="max-w-4xl mx-auto prose prose-invert" dangerouslySetInnerHTML={{ __html: sanitizeHtml(page!.content!) }} />
+        <section className="pb-24">
+          <div className="max-w-4xl mx-auto px-6">
+            <MktCard className="p-8 md:p-10">
+              <div
+                className="space-y-4 text-body text-muted-foreground [&_h2]:text-h2 [&_h2]:text-foreground [&_h2]:font-semibold [&_h2]:mt-6 [&_h2]:mb-3 [&_h3]:text-h3 [&_h3]:text-foreground [&_h3]:font-semibold [&_ul]:list-disc [&_ul]:pl-6 [&_a]:text-secondary"
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(page!.content!) }}
+              />
+            </MktCard>
+          </div>
         </section>
       ) : (
-        <section className="py-12 px-6">
-          <div className="max-w-4xl mx-auto">
-            <div
-              className="prose prose-invert max-w-none p-8 rounded-3xl"
-              style={{
-                background: 'var(--landing-card)',
-                border: '1px solid var(--landing-border)',
-              }}
-            >
-              <div className="space-y-8" style={{ color: 'var(--landing-text-white-mid)' }}>
+        <section className="pb-24">
+          <div className="max-w-4xl mx-auto px-6">
+            <MktCard className="p-8 md:p-10">
+              <div className="space-y-8">
                 <section>
-                  <h2 className="text-2xl font-bold text-white mb-4">1. Introduction</h2>
-                  <p>
+                  <h2 className="text-h2 text-foreground font-semibold mb-4">1. Introduction</h2>
+                  <p className="text-body text-muted-foreground leading-relaxed">
                     Stratum AI, Inc. (&quot;Stratum AI,&quot; &quot;we,&quot; &quot;us,&quot; or
                     &quot;our&quot;) respects your privacy and is committed to protecting your
                     personal data. This privacy policy explains how we collect, use, disclose, and
@@ -64,20 +56,20 @@ export default function Privacy() {
                 </section>
 
                 <section>
-                  <h2 className="text-2xl font-bold text-white mb-4">2. Information We Collect</h2>
-                  <h3 className="text-lg font-semibold text-white mb-2">
+                  <h2 className="text-h2 text-foreground font-semibold mb-4">2. Information We Collect</h2>
+                  <h3 className="text-h3 text-foreground font-semibold mb-2 mt-4">
                     2.1 Information You Provide
                   </h3>
-                  <ul className="list-disc pl-6 space-y-2">
+                  <ul className="list-disc pl-6 space-y-2 text-body text-muted-foreground">
                     <li>Account registration information (name, email, company)</li>
                     <li>Payment and billing information</li>
                     <li>Communications with our support team</li>
                     <li>Survey responses and feedback</li>
                   </ul>
-                  <h3 className="text-lg font-semibold text-white mb-2 mt-4">
+                  <h3 className="text-h3 text-foreground font-semibold mb-2 mt-4">
                     2.2 Information Collected Automatically
                   </h3>
-                  <ul className="list-disc pl-6 space-y-2">
+                  <ul className="list-disc pl-6 space-y-2 text-body text-muted-foreground">
                     <li>Device and browser information</li>
                     <li>IP address and location data</li>
                     <li>Usage data and analytics</li>
@@ -86,10 +78,10 @@ export default function Privacy() {
                 </section>
 
                 <section>
-                  <h2 className="text-2xl font-bold text-white mb-4">
+                  <h2 className="text-h2 text-foreground font-semibold mb-4">
                     3. How We Use Your Information
                   </h2>
-                  <ul className="list-disc pl-6 space-y-2">
+                  <ul className="list-disc pl-6 space-y-2 text-body text-muted-foreground">
                     <li>Provide and maintain our services</li>
                     <li>Process transactions and send billing information</li>
                     <li>Send technical notices and security alerts</li>
@@ -100,9 +92,9 @@ export default function Privacy() {
                 </section>
 
                 <section>
-                  <h2 className="text-2xl font-bold text-white mb-4">4. Data Sharing</h2>
-                  <p>We may share your information with:</p>
-                  <ul className="list-disc pl-6 space-y-2">
+                  <h2 className="text-h2 text-foreground font-semibold mb-4">4. Data Sharing</h2>
+                  <p className="text-body text-muted-foreground leading-relaxed">We may share your information with:</p>
+                  <ul className="list-disc pl-6 space-y-2 text-body text-muted-foreground">
                     <li>Service providers who assist in our operations</li>
                     <li>Business partners with your consent</li>
                     <li>Legal authorities when required by law</li>
@@ -111,8 +103,8 @@ export default function Privacy() {
                 </section>
 
                 <section>
-                  <h2 className="text-2xl font-bold text-white mb-4">5. Data Security</h2>
-                  <p>
+                  <h2 className="text-h2 text-foreground font-semibold mb-4">5. Data Security</h2>
+                  <p className="text-body text-muted-foreground leading-relaxed">
                     We implement industry-standard security measures to protect your data, including
                     encryption at rest and in transit, access controls, and regular security audits.
                     However, no method of transmission over the internet is 100% secure.
@@ -120,9 +112,9 @@ export default function Privacy() {
                 </section>
 
                 <section>
-                  <h2 className="text-2xl font-bold text-white mb-4">6. Your Rights</h2>
-                  <p>Depending on your location, you may have the right to:</p>
-                  <ul className="list-disc pl-6 space-y-2">
+                  <h2 className="text-h2 text-foreground font-semibold mb-4">6. Your Rights</h2>
+                  <p className="text-body text-muted-foreground leading-relaxed">Depending on your location, you may have the right to:</p>
+                  <ul className="list-disc pl-6 space-y-2 text-body text-muted-foreground">
                     <li>Access your personal data</li>
                     <li>Correct inaccurate data</li>
                     <li>Delete your data</li>
@@ -133,8 +125,8 @@ export default function Privacy() {
                 </section>
 
                 <section>
-                  <h2 className="text-2xl font-bold text-white mb-4">7. International Transfers</h2>
-                  <p>
+                  <h2 className="text-h2 text-foreground font-semibold mb-4">7. International Transfers</h2>
+                  <p className="text-body text-muted-foreground leading-relaxed">
                     Your data may be transferred to and processed in countries other than your own. We
                     ensure appropriate safeguards are in place, including Standard Contractual Clauses
                     approved by the European Commission.
@@ -142,8 +134,8 @@ export default function Privacy() {
                 </section>
 
                 <section>
-                  <h2 className="text-2xl font-bold text-white mb-4">8. Data Retention</h2>
-                  <p>
+                  <h2 className="text-h2 text-foreground font-semibold mb-4">8. Data Retention</h2>
+                  <p className="text-body text-muted-foreground leading-relaxed">
                     We retain your data for as long as your account is active or as needed to provide
                     services. We may retain certain information as required by law or for legitimate
                     business purposes.
@@ -151,20 +143,20 @@ export default function Privacy() {
                 </section>
 
                 <section>
-                  <h2 className="text-2xl font-bold text-white mb-4">9. Contact Us</h2>
-                  <p>
+                  <h2 className="text-h2 text-foreground font-semibold mb-4">9. Contact Us</h2>
+                  <p className="text-body text-muted-foreground leading-relaxed">
                     For questions about this privacy policy or our data practices, please contact our
                     Data Protection Officer at:
                   </p>
-                  <p className="mt-4">
-                    <strong className="text-white">Email:</strong> privacy@stratum.ai
+                  <p className="mt-4 text-body text-muted-foreground leading-relaxed">
+                    <strong className="text-foreground">Email:</strong> privacy@stratum.ai
                     <br />
-                    <strong className="text-white">Address:</strong> 548 Market Street, Suite 35000,
+                    <strong className="text-foreground">Address:</strong> 548 Market Street, Suite 35000,
                     San Francisco, CA 94104
                   </p>
                 </section>
               </div>
-            </div>
+            </MktCard>
           </div>
         </section>
       )}

@@ -1,12 +1,13 @@
 /**
- * Documentation Portal Page
- * StratumAI Dark Enterprise Theme
+ * Documentation Portal Page — landing-themed (ink + ember).
  */
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { usePublicPage } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
+import { CTA } from '@/components/landing/CTA';
+import { MktHero, MktSectionHeader, MktCard } from '@/components/landing/marketing';
 import { pageSEO, SEO } from '@/components/common/SEO';
 import { sanitizeHtml } from '@/lib/sanitize';
 import {
@@ -26,7 +27,6 @@ const docCategories = [
     title: 'Getting Started',
     description: 'Quick start guides to get you up and running',
     icon: PlayIcon,
-    color: 'var(--landing-accent-teal)',
     links: [
       { name: 'Quick Start Guide', href: '/docs/quickstart' },
       { name: 'Installation', href: '/docs/installation' },
@@ -38,7 +38,6 @@ const docCategories = [
     title: 'API Reference',
     description: 'Complete API documentation with examples',
     icon: CodeBracketIcon,
-    color: 'var(--landing-accent-warm)',
     links: [
       { name: 'REST API', href: '/api-docs' },
       { name: 'Webhooks', href: '/docs/webhooks' },
@@ -50,7 +49,6 @@ const docCategories = [
     title: 'Trust Engine',
     description: 'Learn about our trust-gated automation',
     icon: ShieldCheckIcon,
-    color: 'var(--landing-accent-sky)',
     links: [
       { name: 'Signal Health', href: '/docs/signal-health' },
       { name: 'Trust Gates', href: '/docs/trust-gates' },
@@ -62,7 +60,6 @@ const docCategories = [
     title: 'CDP',
     description: 'Customer Data Platform documentation',
     icon: CpuChipIcon,
-    color: 'var(--landing-accent-red)',
     links: [
       { name: 'Profiles', href: '/docs/cdp/profiles' },
       { name: 'Segments', href: '/docs/cdp/segments' },
@@ -74,7 +71,6 @@ const docCategories = [
     title: 'Integrations',
     description: 'Connect with ad platforms and tools',
     icon: CloudIcon,
-    color: 'var(--landing-accent-amber)',
     links: [
       { name: 'Meta Ads', href: '/docs/integrations/meta' },
       { name: 'Google Ads', href: '/docs/integrations/google' },
@@ -86,7 +82,6 @@ const docCategories = [
     title: 'Tutorials',
     description: 'Step-by-step guides and best practices',
     icon: AcademicCapIcon,
-    color: 'var(--landing-accent-violet)',
     links: [
       { name: 'Video Tutorials', href: '/docs/tutorials/videos' },
       { name: 'Use Cases', href: '/docs/tutorials/use-cases' },
@@ -115,186 +110,112 @@ export default function DocsPage() {
   return (
     <PageLayout>
       <SEO {...pageSEO.docs} title={seoTitle} description={seoDescription} url="https://stratum-ai.com/docs" />
-      <div className="min-h-screen">
-        {/* Hero Section */}
-        <section className="relative py-20 overflow-hidden">
-          <div className="max-w-7xl mx-auto px-6 lg:px-8">
-            <div className="text-center max-w-3xl mx-auto">
+
+      <MktHero
+        badge="Documentation"
+        badgeIcon={BookOpenIcon}
+        title="Learn how to build with"
+        highlight="Stratum AI"
+        subtitle="Comprehensive guides, API references, and tutorials to help you integrate and maximize the power of trust-gated automation."
+      >
+        <div
+          className="mt-10 relative max-w-xl mx-auto animate-enter"
+          style={{ animationDelay: '0.35s' }}
+        >
+          <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Search documentation..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-12 pr-4 py-4 rounded-xl bg-card border border-border text-foreground placeholder:text-muted-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50"
+          />
+        </div>
+      </MktHero>
+
+      {/* Content */}
+      {hasCMSContent ? (
+        <section className="pb-24">
+          <div className="max-w-4xl mx-auto px-6">
+            <MktCard className="p-8 md:p-10">
               <div
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
-                style={{
-                  background: 'rgba(255,179,71,0.1)',
-                  border: '1px solid rgba(255,179,71,0.3)',
-                }}
-              >
-                <BookOpenIcon className="w-4 h-4 text-[var(--landing-accent-warm)]" />
-                <span className="text-sm font-medium text-[var(--landing-accent-warm)]">Documentation</span>
-              </div>
-
-              <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
-                Learn how to build with{' '}
-                <span
-                  style={{ color: 'var(--landing-accent-coral)' }}
-                >
-                  Stratum AI
-                </span>
-              </h1>
-
-              <p className="text-lg mb-8" style={{ color: 'var(--landing-text)' }}>
-                Comprehensive guides, API references, and tutorials to help you integrate and
-                maximize the power of trust-gated automation.
-              </p>
-
-              {/* Search Bar */}
-              <div className="relative max-w-xl mx-auto">
-                <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: 'var(--landing-text-dim)' }} />
-                <input
-                  type="text"
-                  placeholder="Search documentation..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 rounded-xl text-white placeholder-gray-500 transition-[width] duration-200 focus:outline-none focus:ring-2 focus:ring-[#FF5A1F]/50"
-                  style={{
-                    background: 'var(--landing-card)',
-                    border: '1px solid var(--landing-border)',
-                  }}
-                />
-              </div>
-            </div>
+                className="space-y-4 text-body text-muted-foreground [&_h2]:text-h2 [&_h2]:text-foreground [&_h2]:font-semibold [&_h2]:mt-6 [&_h2]:mb-3 [&_h3]:text-h3 [&_h3]:text-foreground [&_h3]:font-semibold [&_ul]:list-disc [&_ul]:pl-6 [&_a]:text-secondary"
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(page!.content!) }}
+              />
+            </MktCard>
           </div>
         </section>
-
-        {/* Content */}
-        {hasCMSContent ? (
-          <section className="py-16 px-6">
-            <div className="max-w-4xl mx-auto prose prose-invert" dangerouslySetInnerHTML={{ __html: sanitizeHtml(page!.content!) }} />
-          </section>
-        ) : (
-          <>
-            {/* Documentation Categories */}
-            <section className="py-16">
-              <div className="max-w-7xl mx-auto px-6 lg:px-8">
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {docCategories.map((category) => (
-                    <div
-                      key={category.title}
-                      className="group p-6 rounded-2xl transition-transform duration-300 hover:-translate-y-1"
-                      style={{
-                        background: 'var(--landing-card)',
-                        border: '1px solid var(--landing-border)',
-                      }}
-                    >
-                      <div
-                        className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
-                        style={{
-                          background: `${category.color}15`,
-                          border: `1px solid ${category.color}30`,
-                        }}
-                      >
-                        <category.icon className="w-6 h-6" style={{ color: category.color }} />
-                      </div>
-
-                      <h3 className="text-xl font-semibold text-white mb-2">{category.title}</h3>
-                      <p className="text-sm mb-4" style={{ color: 'var(--landing-text)' }}>{category.description}</p>
-
-                      <ul className="space-y-2">
-                        {category.links.map((link) => (
-                          <li key={link.name}>
-                            <Link
-                              to={link.href}
-                              className="flex items-center gap-2 text-sm hover:text-white transition-colors group/link"
-                              style={{ color: 'var(--landing-text)' }}
-                            >
-                              <ArrowRightIcon className="w-3 h-3 opacity-0 -translate-x-2 group-hover/link:opacity-100 group-hover/link:translate-x-0 transition-transform" />
-                              <span>{link.name}</span>
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
+      ) : (
+        <>
+          {/* Documentation Categories */}
+          <section className="pb-12">
+            <div className="max-w-7xl mx-auto px-6 lg:px-8">
+              <MktSectionHeader
+                eyebrow="Browse the docs"
+                title="Find your"
+                highlight="answers"
+                subtitle="Guides, references, and tutorials organized by topic — from first setup to advanced automation."
+              />
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {docCategories.map((category, i) => (
+                  <MktCard key={category.title} delay={(i % 3) * 0.05} className="p-6">
+                    <div className="w-12 h-12 rounded-xl bg-secondary/10 border border-secondary/20 flex items-center justify-center mb-4">
+                      <category.icon className="w-6 h-6 text-secondary" />
                     </div>
-                  ))}
-                </div>
+
+                    <h3 className="text-h3 text-foreground font-semibold mb-2">{category.title}</h3>
+                    <p className="text-body text-muted-foreground mb-4">{category.description}</p>
+
+                    <ul className="space-y-2">
+                      {category.links.map((link) => (
+                        <li key={link.name}>
+                          <Link
+                            to={link.href}
+                            className="flex items-center gap-2 text-body text-muted-foreground hover:text-secondary transition-colors group/link"
+                          >
+                            <ArrowRightIcon className="w-3 h-3 opacity-0 -translate-x-2 group-hover/link:opacity-100 group-hover/link:translate-x-0 transition-transform" />
+                            <span>{link.name}</span>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </MktCard>
+                ))}
               </div>
-            </section>
+            </div>
+          </section>
 
-            {/* Popular Articles */}
-            <section className="py-16">
-              <div className="max-w-7xl mx-auto px-6 lg:px-8">
-                <h2 className="text-2xl font-bold text-white mb-8">Popular Articles</h2>
+          {/* Popular Articles */}
+          <section className="py-24 lg:py-28">
+            <div className="max-w-7xl mx-auto px-6 lg:px-8">
+              <h2 className="text-h1 text-foreground font-semibold mb-8">Popular Articles</h2>
 
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {popularArticles.map((article, index) => (
-                    <Link
-                      key={article.title}
-                      to="#"
-                      className="flex items-center gap-4 p-4 rounded-xl transition-colors duration-200 hover:bg-foreground/5 group"
-                      style={{
-                        background: 'var(--landing-card)',
-                        border: '1px solid var(--landing-border)',
-                      }}
-                    >
-                      <span className="text-2xl font-bold" style={{ color: 'rgba(139,141,158,0.5)' }}>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {popularArticles.map((article, index) => (
+                  <Link key={article.title} to="#" className="group">
+                    <MktCard className="flex items-center gap-4 p-4">
+                      <span className="text-h2 font-semibold text-muted-foreground/50">
                         {String(index + 1).padStart(2, '0')}
                       </span>
                       <div className="flex-1">
-                        <h4 className="text-white font-medium group-hover:text-[var(--landing-accent-coral)] transition-colors">
+                        <h4 className="text-foreground font-medium group-hover:text-secondary transition-colors">
                           {article.title}
                         </h4>
-                        <div className="flex items-center gap-3 mt-1 text-xs" style={{ color: 'var(--landing-text-dim)' }}>
+                        <div className="flex items-center gap-3 mt-1 text-micro text-muted-foreground">
                           <span>{article.views} views</span>
                           <span>{article.time} read</span>
                         </div>
                       </div>
-                    </Link>
-                  ))}
-                </div>
+                    </MktCard>
+                  </Link>
+                ))}
               </div>
-            </section>
+            </div>
+          </section>
 
-            {/* CTA Section */}
-            <section className="py-16">
-              <div className="max-w-4xl mx-auto px-6 lg:px-8">
-                <div
-                  className="rounded-2xl p-8 md:p-12 text-center"
-                  style={{
-                    background: 'var(--landing-card)',
-                    border: '1px solid var(--landing-border)',
-                  }}
-                >
-                  <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
-                    Can't find what you're looking for?
-                  </h2>
-                  <p className="mb-8" style={{ color: 'var(--landing-text)' }}>
-                    Our support team is here to help you with any questions.
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    <Link
-                      to="/contact"
-                      className="px-6 py-3 rounded-full font-semibold text-white transition-colors duration-200"
-                      style={{
-                        background: 'var(--landing-accent-coral)',
-                        boxShadow: 'var(--landing-glow-coral)',
-                      }}
-                    >
-                      Contact Support
-                    </Link>
-                    <Link
-                      to="/faq"
-                      className="px-6 py-3 rounded-xl font-semibold text-white transition-colors duration-200"
-                      style={{
-                        background: 'var(--landing-surface-glass)',
-                        border: '1px solid var(--landing-border)',
-                      }}
-                    >
-                      View FAQ
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </section>
-          </>
-        )}
-      </div>
+          <CTA />
+        </>
+      )}
     </PageLayout>
   );
 }

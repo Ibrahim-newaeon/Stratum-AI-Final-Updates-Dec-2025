@@ -4,6 +4,7 @@
 
 import { usePublicPage } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
+import { MktHero, MktCard, MktFeatureCard, MktBadge } from '@/components/landing/marketing';
 import { pageSEO, SEO } from '@/components/common/SEO';
 import { sanitizeHtml } from '@/lib/sanitize';
 import {
@@ -59,171 +60,121 @@ export default function Security() {
     <PageLayout>
       <SEO {...pageSEO.security} title={seoTitle} description={seoDescription} url="https://stratum-ai.com/security" />
       {/* Hero Section */}
-      <section className="py-20 px-6">
-        <div className="max-w-7xl mx-auto text-center">
-          <div
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm mb-6"
-            style={{
-              background: 'rgba(0, 212, 170, 0.1)',
-              border: '1px solid rgba(0, 212, 170, 0.3)',
-              color: 'var(--landing-accent-teal)',
-            }}
-          >
-            <ShieldCheckIcon className="w-4 h-4" />
-            Security
-          </div>
-          <h1
-            className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6"
-            style={{ fontFamily: "Geist, system-ui, sans-serif" }}
-          >
-            <span className="text-white">Enterprise-Grade</span>
-            <br />
-            <span
-              style={{ color: 'var(--landing-accent-coral)' }}
-            >
-              Security
-            </span>
-          </h1>
-          <p
-            className="text-lg md:text-xl max-w-2xl mx-auto"
-            style={{ color: 'var(--landing-text)' }}
-          >
-            Your data security is our top priority. We implement industry-leading security measures
-            to protect your information.
-          </p>
-        </div>
-      </section>
+      <MktHero
+        badge="Security"
+        badgeIcon={ShieldCheckIcon}
+        title="Security at"
+        highlight="Stratum"
+        subtitle="Your data security is our top priority. We implement industry-leading security measures to protect your information."
+      />
 
       {/* Content */}
       {hasCMSContent ? (
-        <section className="py-12 px-6">
-          <div className="max-w-4xl mx-auto prose prose-invert" dangerouslySetInnerHTML={{ __html: sanitizeHtml(page!.content!) }} />
+        <section className="pb-24">
+          <div className="max-w-4xl mx-auto px-6">
+            <MktCard className="p-8 md:p-10">
+              <div
+                className="space-y-4 text-body text-muted-foreground [&_h2]:text-h2 [&_h2]:text-foreground [&_h2]:font-semibold [&_h2]:mt-6 [&_h2]:mb-3 [&_h3]:text-h3 [&_h3]:text-foreground [&_h3]:font-semibold [&_ul]:list-disc [&_ul]:pl-6 [&_a]:text-secondary"
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(page!.content!) }}
+              />
+            </MktCard>
+          </div>
         </section>
       ) : (
         <>
           {/* Security Features */}
-          <section className="py-12 px-6">
+          <section className="pb-12 px-6">
             <div className="max-w-7xl mx-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {securityFeatures.map((feature) => (
-                  <div
+                  <MktFeatureCard
                     key={feature.title}
-                    className="p-6 rounded-2xl"
-                    style={{
-                      background: 'var(--landing-card)',
-                      border: '1px solid var(--landing-border)',
-                    }}
-                  >
-                    <feature.icon className="w-10 h-10 mb-4" style={{ color: 'var(--landing-accent-teal)' }} />
-                    <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
-                    <p className="text-sm" style={{ color: 'var(--landing-text)' }}>
-                      {feature.description}
-                    </p>
-                  </div>
+                    icon={feature.icon}
+                    title={feature.title}
+                    description={feature.description}
+                  />
                 ))}
               </div>
             </div>
           </section>
 
           {/* Security Practices */}
-          <section className="py-20 px-6">
+          <section className="py-12 px-6">
             <div className="max-w-4xl mx-auto">
-              <div
-                className="p-8 rounded-3xl"
-                style={{
-                  background: 'var(--landing-card)',
-                  border: '1px solid var(--landing-border)',
-                }}
-              >
-                <h2 className="text-2xl font-bold text-white mb-6">Our Security Practices</h2>
-                <div className="space-y-6" style={{ color: 'var(--landing-text-white-mid)' }}>
+              <MktCard className="p-8 md:p-10">
+                <h2 className="text-h2 text-foreground font-semibold mb-6">Our Security Practices</h2>
+                <div className="space-y-6">
                   <div>
-                    <h3 className="text-lg font-semibold text-white mb-2">Infrastructure Security</h3>
-                    <p>
+                    <h3 className="text-h3 text-foreground font-semibold mb-2">Infrastructure Security</h3>
+                    <p className="text-body text-muted-foreground leading-relaxed">
                       Our infrastructure is hosted on AWS with multiple availability zones for high
                       availability. We use VPCs, security groups, and network ACLs to isolate and
                       protect our systems.
                     </p>
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-white mb-2">Application Security</h3>
-                    <p>
+                    <h3 className="text-h3 text-foreground font-semibold mb-2">Application Security</h3>
+                    <p className="text-body text-muted-foreground leading-relaxed">
                       We follow secure development practices including code reviews, static analysis,
                       and regular penetration testing. All dependencies are continuously monitored for
                       vulnerabilities.
                     </p>
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-white mb-2">Data Protection</h3>
-                    <p>
+                    <h3 className="text-h3 text-foreground font-semibold mb-2">Data Protection</h3>
+                    <p className="text-body text-muted-foreground leading-relaxed">
                       Customer data is isolated using tenant-specific encryption keys. We implement data
                       minimization principles and retain data only as long as necessary.
                     </p>
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-white mb-2">Incident Response</h3>
-                    <p>
+                    <h3 className="text-h3 text-foreground font-semibold mb-2">Incident Response</h3>
+                    <p className="text-body text-muted-foreground leading-relaxed">
                       We maintain a 24/7 security operations team and have a documented incident
                       response plan. Customers are notified within 72 hours of any security incident
                       affecting their data.
                     </p>
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-white mb-2">Employee Security</h3>
-                    <p>
+                    <h3 className="text-h3 text-foreground font-semibold mb-2">Employee Security</h3>
+                    <p className="text-body text-muted-foreground leading-relaxed">
                       All employees undergo background checks and security training. Access to customer
                       data is limited to those who require it for their job function.
                     </p>
                   </div>
                 </div>
-              </div>
+              </MktCard>
             </div>
           </section>
 
           {/* Certifications */}
           <section className="py-12 px-6">
             <div className="max-w-4xl mx-auto text-center">
-              <h2 className="text-2xl font-bold text-white mb-8">Certifications & Compliance</h2>
+              <h2 className="text-h2 text-foreground font-semibold mb-8">Certifications &amp; Compliance</h2>
               <div className="flex flex-wrap justify-center gap-6">
                 {['SOC 2 Type II', 'GDPR', 'CCPA', 'ISO 27001', 'HIPAA Ready'].map((cert) => (
-                  <div
-                    key={cert}
-                    className="px-6 py-3 rounded-xl"
-                    style={{
-                      background: 'rgba(0, 212, 170, 0.1)',
-                      border: '1px solid rgba(0, 212, 170, 0.3)',
-                      color: 'var(--landing-accent-teal)',
-                    }}
-                  >
-                    {cert}
-                  </div>
+                  <MktBadge key={cert}>{cert}</MktBadge>
                 ))}
               </div>
             </div>
           </section>
 
           {/* Contact */}
-          <section className="py-20 px-6">
+          <section className="py-12 pb-24 px-6">
             <div className="max-w-4xl mx-auto text-center">
-              <div
-                className="p-12 rounded-3xl"
-                style={{
-                  background: 'var(--landing-card)',
-                  border: '1px solid var(--landing-border)',
-                }}
-              >
-                <h2 className="text-3xl font-bold text-white mb-4">Security Questions?</h2>
-                <p className="text-lg mb-6" style={{ color: 'var(--landing-text)' }}>
+              <MktCard className="p-8 md:p-12">
+                <h2 className="text-h2 text-foreground font-semibold mb-4">Security Questions?</h2>
+                <p className="text-body text-muted-foreground leading-relaxed mb-6">
                   Contact our security team for questions, vulnerability reports, or to request our SOC
                   2 report.
                 </p>
-                <p style={{ color: 'var(--landing-text)' }}>
-                  <strong className="text-white">Email:</strong>{' '}
-                  <a href="mailto:security@stratum.ai" className="text-orange-500 hover:underline">
+                <p className="text-body text-muted-foreground leading-relaxed">
+                  <strong className="text-foreground">Email:</strong>{' '}
+                  <a href="mailto:security@stratum.ai" className="text-secondary hover:underline">
                     security@stratum.ai
                   </a>
                 </p>
-              </div>
+              </MktCard>
             </div>
           </section>
         </>

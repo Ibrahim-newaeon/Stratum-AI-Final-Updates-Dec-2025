@@ -1,13 +1,18 @@
 /**
- * Audience Sync Launch Announcement Page
- * StratumAI Dark Enterprise Theme
+ * Audience Sync Launch Announcement Page — landing-themed (ink + ember).
  */
 
-import { Link } from 'react-router-dom';
 import { PageLayout } from '@/components/landing/PageLayout';
+import { CTA } from '@/components/landing/CTA';
 import {
-  ArrowLeftIcon,
-  ArrowRightIcon,
+  MktHero,
+  MktSectionHeader,
+  MktFeatureCard,
+  MktCard,
+} from '@/components/landing/marketing';
+import { SEO } from '@/components/common/SEO';
+import {
+  ArrowPathIcon,
   ChartBarIcon,
   ClockIcon,
   CloudArrowUpIcon,
@@ -63,283 +68,136 @@ const features = [
     title: 'One-Click Sync',
     description:
       'Push your CDP segments to all ad platforms with a single click. No manual exports or uploads required.',
-    color: 'var(--landing-accent-coral)',
   },
   {
     icon: ClockIcon,
     title: 'Auto-Refresh',
     description:
       'Keep audiences fresh with configurable sync intervals from 1 hour to 1 week. Set it and forget it.',
-    color: '#06b6d4',
   },
   {
     icon: UserGroupIcon,
     title: 'Smart Matching',
     description:
       'Hashed identifier matching for emails, phones, and MAIDs ensures privacy while maximizing match rates.',
-    color: 'var(--landing-accent-green)',
   },
   {
     icon: ChartBarIcon,
     title: 'Match Rate Analytics',
     description:
       'Track match rates, profiles synced, and audience health across all platforms in one dashboard.',
-    color: 'var(--landing-accent-warm)',
   },
   {
     icon: ShieldCheckIcon,
     title: 'Privacy-First',
     description: 'All PII is hashed before transmission. GDPR and CCPA compliant by design.',
-    color: 'var(--landing-accent-blue)',
+  },
+];
+
+const steps = [
+  {
+    step: '1',
+    title: 'Connect Your Ad Accounts',
+    description:
+      'Authorize Stratum to access your Meta, Google, TikTok, and Snapchat ad accounts with secure OAuth.',
+  },
+  {
+    step: '2',
+    title: 'Select a CDP Segment',
+    description:
+      'Choose from your existing segments or create a new one with our powerful segment builder.',
+  },
+  {
+    step: '3',
+    title: 'Configure Sync Settings',
+    description:
+      'Set your sync frequency, choose identifier types (email, phone, MAID), and enable auto-refresh.',
+  },
+  {
+    step: '4',
+    title: 'Launch & Monitor',
+    description:
+      'Hit sync and watch your audiences populate across platforms. Track match rates and audience health in real-time.',
   },
 ];
 
 export default function AudienceSyncLaunch() {
   return (
     <PageLayout>
-      {/* Back Link */}
-      <div className="py-6 px-6">
-        <div className="max-w-4xl mx-auto">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 text-sm transition-colors"
-            style={{ color: 'var(--landing-text)' }}
-          >
-            <ArrowLeftIcon className="w-4 h-4" />
-            Back to Home
-          </Link>
-        </div>
-      </div>
+      <SEO
+        title="Audience Sync Launch"
+        description="Push your CDP segments to Meta, Google, TikTok, and Snapchat with one click. Keep your audiences fresh with automated syncing and maximize ad targeting precision."
+        url="https://stratumai.app/announcements/audience-sync-launch"
+      />
 
-      {/* Hero */}
-      <section className="py-12 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <div
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm mb-6"
-            style={{
-              background: 'rgba(255,179,71,0.1)',
-              border: '1px solid rgba(255,179,71,0.3)',
-            }}
-          >
-            <span
-              className="w-2 h-2 rounded-full animate-pulse"
-              style={{ background: 'var(--landing-accent-green)' }}
-            />
-            <span style={{ color: 'var(--landing-accent-warm)' }}>New Feature</span>
-          </div>
-
-          <h1
-            className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6"
-            style={{ fontFamily: "Geist, system-ui, sans-serif" }}
-          >
-            <span className="text-white">Multi-Platform</span>
-            <br />
-            <span
-              style={{ color: 'var(--landing-accent-coral)' }}
-            >
-              Audience Sync
-            </span>
-          </h1>
-
-          <p
-            className="text-lg md:text-xl max-w-2xl mx-auto mb-8"
-            style={{ color: 'var(--landing-text)' }}
-          >
-            Push your CDP segments to Meta, Google, TikTok, and Snapchat with one click. Keep your
-            audiences fresh with automated syncing and maximize your ad targeting precision.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              to="/signup"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full font-semibold text-white transition-transform hover:scale-105"
-              style={{
-                background: 'var(--landing-accent-coral)',
-                boxShadow: 'var(--landing-glow-coral)',
-              }}
-            >
-              Start Free Trial
-              <ArrowRightIcon className="w-5 h-5" />
-            </Link>
-            <Link
-              to="/solutions/audience-sync"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-semibold transition-colors"
-              style={{
-                background: 'var(--landing-surface-glass)',
-                border: '1px solid var(--landing-border)',
-                color: '#ffffff',
-              }}
-            >
-              Learn More
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Supported Platforms */}
-      <section className="py-16 px-6">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl font-bold text-white text-center mb-12">
-            Sync to All Major Ad Platforms
-          </h2>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {platforms.map((platform) => (
-              <div
-                key={platform.name}
-                className="p-6 rounded-2xl text-center transition-transform hover:scale-105 group"
-                style={{
-                  background: 'var(--landing-card)',
-                  border: '1px solid var(--landing-border)',
-                }}
-              >
-                <div
-                  className="w-16 h-16 rounded-xl mx-auto mb-4 flex items-center justify-center transition-colors"
-                  style={{
-                    background: 'var(--landing-border-white-dim)',
-                    color: '#8B8D9E',
-                  }}
-                >
-                  {platform.logo}
-                </div>
-                <h3 className="text-lg font-semibold text-white mb-1">{platform.name}</h3>
-                <p className="text-sm" style={{ color: 'var(--landing-text-dim)' }}>
-                  {platform.description}
-                </p>
+      <MktHero
+        badge="New Feature"
+        badgeIcon={ArrowPathIcon}
+        title="Multi-Platform"
+        highlight="Audience Sync"
+        subtitle="Push your CDP segments to Meta, Google, TikTok, and Snapchat with one click. Keep your audiences fresh with automated syncing and maximize your ad targeting precision."
+        primary={{ label: 'Start Free Trial', href: '/signup' }}
+        secondary={{ label: 'Learn More', href: '/solutions/audience-sync' }}
+      >
+        <div className="mt-16 grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {platforms.map((platform, i) => (
+            <MktCard key={platform.name} delay={i * 0.05} className="p-5 text-center">
+              <div className="w-12 h-12 rounded-xl bg-secondary/10 border border-secondary/20 flex items-center justify-center mx-auto mb-3 text-secondary">
+                {platform.logo}
               </div>
-            ))}
-          </div>
+              <p className="text-h3 text-foreground font-semibold">{platform.name}</p>
+              <p className="mt-1 text-meta uppercase text-muted-foreground">
+                {platform.description}
+              </p>
+            </MktCard>
+          ))}
         </div>
-      </section>
+      </MktHero>
 
       {/* Features */}
-      <section className="py-16 px-6">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl font-bold text-white text-center mb-4">Why Audience Sync?</h2>
-          <p
-            className="text-center max-w-2xl mx-auto mb-12"
-            style={{ color: 'var(--landing-text-dim)' }}
-          >
-            Stop wasting time with manual exports and CSV uploads. Stratum's Audience Sync keeps
-            your targeting fresh and your campaigns optimized.
-          </p>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature) => (
-              <div
+      <section className="pb-12">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <MktSectionHeader
+            eyebrow="Why Audience Sync"
+            title="Targeting that stays"
+            highlight="fresh"
+            subtitle="Stop wasting time with manual exports and CSV uploads. Stratum's Audience Sync keeps your targeting fresh and your campaigns optimized."
+          />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {features.map((feature, i) => (
+              <MktFeatureCard
                 key={feature.title}
-                className="p-6 rounded-2xl transition-transform hover:scale-[1.02]"
-                style={{
-                  background: 'var(--landing-card)',
-                  border: '1px solid var(--landing-border)',
-                  borderLeft: `3px solid ${feature.color}`,
-                }}
-              >
-                <feature.icon className="w-10 h-10 mb-4" style={{ color: feature.color }} />
-                <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
-                <p className="text-sm" style={{ color: 'var(--landing-text-dim)' }}>
-                  {feature.description}
+                icon={feature.icon}
+                title={feature.title}
+                description={feature.description}
+                delay={(i % 3) * 0.05}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section className="py-24 lg:py-28">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <MktSectionHeader eyebrow="How it works" title="Live in" highlight="four steps" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {steps.map((item, i) => (
+              <MktCard key={item.step} delay={i * 0.05} className="p-8">
+                <div className="w-11 h-11 rounded-full bg-secondary/10 border border-secondary/20 flex items-center justify-center mb-5">
+                  <span className="text-h3 font-semibold text-secondary">{item.step}</span>
+                </div>
+                <h3 className="text-h3 text-foreground font-semibold mb-2">{item.title}</h3>
+                <p className="text-body text-muted-foreground leading-relaxed">
+                  {item.description}
                 </p>
-              </div>
+              </MktCard>
             ))}
           </div>
         </div>
       </section>
 
-      {/* How It Works */}
-      <section className="py-16 px-6">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl font-bold text-white text-center mb-12">How It Works</h2>
-
-          <div className="space-y-8">
-            {[
-              {
-                step: '1',
-                title: 'Connect Your Ad Accounts',
-                description:
-                  'Authorize Stratum to access your Meta, Google, TikTok, and Snapchat ad accounts with secure OAuth.',
-              },
-              {
-                step: '2',
-                title: 'Select a CDP Segment',
-                description:
-                  'Choose from your existing segments or create a new one with our powerful segment builder.',
-              },
-              {
-                step: '3',
-                title: 'Configure Sync Settings',
-                description:
-                  'Set your sync frequency, choose identifier types (email, phone, MAID), and enable auto-refresh.',
-              },
-              {
-                step: '4',
-                title: 'Launch & Monitor',
-                description:
-                  'Hit sync and watch your audiences populate across platforms. Track match rates and audience health in real-time.',
-              },
-            ].map((item) => (
-              <div key={item.step} className="flex gap-6 items-start">
-                <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{
-                    background: 'var(--landing-accent-coral)',
-                  }}
-                >
-                  <span className="text-white font-bold text-lg">{item.step}</span>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-white mb-2">{item.title}</h3>
-                  <p style={{ color: 'var(--landing-text-dim)' }}>{item.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="py-20 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <div
-            className="p-12 rounded-3xl"
-            style={{
-              background: 'var(--landing-card)',
-              border: '1px solid var(--landing-border)',
-            }}
-          >
-            <h2 className="text-3xl font-bold text-white mb-4">
-              Ready to Supercharge Your Targeting?
-            </h2>
-            <p className="text-lg mb-8" style={{ color: 'var(--landing-text)' }}>
-              Start your 14-day free trial and sync your first audience in minutes.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                to="/signup"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full font-semibold text-white transition-transform hover:scale-105"
-                style={{
-                  background: 'var(--landing-accent-coral)',
-                  boxShadow: 'var(--landing-glow-coral)',
-                }}
-              >
-                Start Free Trial
-                <ArrowRightIcon className="w-5 h-5" />
-              </Link>
-              <Link
-                to="/contact"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-semibold transition-colors"
-                style={{
-                  background: 'var(--landing-surface-glass)',
-                  border: '1px solid var(--landing-border)',
-                  color: '#ffffff',
-                }}
-              >
-                Talk to Sales
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+      <CTA />
     </PageLayout>
   );
 }

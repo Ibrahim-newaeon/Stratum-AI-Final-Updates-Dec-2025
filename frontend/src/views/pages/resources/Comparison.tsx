@@ -1,14 +1,18 @@
 /**
- * Comparison / Battle Cards Page
- * StratumAI Dark Enterprise Theme
+ * Comparison / Battle Cards Page — landing-themed (ink + ember).
  */
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { usePageContent, type ComparisonPageContent } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
+import { CTA } from '@/components/landing/CTA';
 import {
-  ArrowRightIcon,
+  MktHero,
+  MktSectionHeader,
+  MktCard,
+  MktFeatureCard,
+} from '@/components/landing/marketing';
+import {
   BoltIcon,
   ChartBarIcon,
   CheckIcon,
@@ -190,18 +194,12 @@ const fallbackFeatures: FeatureRow[] = [
 
 // categories is computed inside the component after CMS resolution
 
-const renderValue = (value: ComparisonValue, isStratum = false) => {
+const renderValue = (value: ComparisonValue) => {
   if (value === 'yes') {
     return (
       <div className="flex items-center justify-center">
-        <div
-          className="w-6 h-6 rounded-full flex items-center justify-center"
-          style={{
-            background: isStratum ? 'rgba(0, 255, 136, 0.2)' : 'rgba(0, 255, 136, 0.15)',
-            border: `1px solid ${isStratum ? 'var(--landing-status-green)' : 'rgba(0, 255, 136, 0.3)'}`,
-          }}
-        >
-          <CheckIcon className="w-4 h-4 text-[var(--landing-status-green)]" />
+        <div className="w-6 h-6 rounded-full flex items-center justify-center bg-success/15 border border-success/30">
+          <CheckIcon className="w-4 h-4 text-success" />
         </div>
       </div>
     );
@@ -209,14 +207,8 @@ const renderValue = (value: ComparisonValue, isStratum = false) => {
   if (value === 'no') {
     return (
       <div className="flex items-center justify-center">
-        <div
-          className="w-6 h-6 rounded-full flex items-center justify-center"
-          style={{
-            background: 'rgba(255, 71, 87, 0.15)',
-            border: '1px solid rgba(255, 71, 87, 0.3)',
-          }}
-        >
-          <XMarkIcon className="w-4 h-4 text-[var(--landing-status-red)]" />
+        <div className="w-6 h-6 rounded-full flex items-center justify-center bg-muted border border-border">
+          <XMarkIcon className="w-4 h-4 text-muted-foreground" />
         </div>
       </div>
     );
@@ -224,19 +216,13 @@ const renderValue = (value: ComparisonValue, isStratum = false) => {
   if (value === 'partial') {
     return (
       <div className="flex items-center justify-center">
-        <div
-          className="w-6 h-6 rounded-full flex items-center justify-center"
-          style={{
-            background: 'rgba(255, 183, 0, 0.15)',
-            border: '1px solid rgba(255, 183, 0, 0.3)',
-          }}
-        >
-          <MinusIcon className="w-4 h-4 text-[var(--landing-accent-amber)]" />
+        <div className="w-6 h-6 rounded-full flex items-center justify-center bg-warning/15 border border-warning/30">
+          <MinusIcon className="w-4 h-4 text-warning" />
         </div>
       </div>
     );
   }
-  return <span className="text-sm" style={{ color: 'var(--landing-text)' }}>{value}</span>;
+  return <span className="text-body text-muted-foreground">{value}</span>;
 };
 
 const fallbackDifferentiators = [
@@ -245,28 +231,24 @@ const fallbackDifferentiators = [
     description:
       'Only execute when signal health passes safety thresholds. No other platform offers this level of automation confidence.',
     icon: ShieldCheckIcon,
-    color: 'var(--landing-accent-warm)',
   },
   {
     title: 'Identity Graph Visualization',
     description:
       'See exactly how customer identities are connected across devices and channels with interactive visualizations.',
     icon: CpuChipIcon,
-    color: 'var(--landing-accent-sky)',
   },
   {
     title: 'RFM Analysis Built-in',
     description:
       'Native Recency, Frequency, Monetary analysis without additional tools or integrations.',
     icon: ChartBarIcon,
-    color: 'var(--landing-accent-teal)',
   },
   {
     title: 'Signal Health Monitoring',
     description:
       'Real-time monitoring of data quality and signal reliability across all your integrations.',
     icon: BoltIcon,
-    color: 'var(--landing-accent-red)',
   },
 ];
 
@@ -295,224 +277,130 @@ export default function ComparisonPage() {
         title: d.title,
         description: d.description,
         icon: diffIconMap[d.iconName] || ShieldCheckIcon,
-        color: 'var(--landing-accent-warm)',
       }))
     : fallbackDifferentiators;
 
   const categories = [...new Set(features.map((f) => f.category))];
 
+  const selectedCompetitorName =
+    competitors.find((c) => c.id === selectedCompetitor)?.name ?? '';
+
   return (
     <PageLayout>
-      <div className="min-h-screen">
-        {/* Hero Section */}
-        <section className="relative py-20 overflow-hidden">
-          <div className="max-w-7xl mx-auto px-6 lg:px-8">
-            <div className="text-center max-w-3xl mx-auto">
-              <div
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
-                style={{
-                  background: 'rgba(255,179,71,0.1)',
-                  border: '1px solid rgba(255,179,71,0.3)',
-                }}
-              >
-                <ChartBarIcon className="w-4 h-4 text-[var(--landing-accent-warm)]" />
-                <span className="text-sm font-medium text-[var(--landing-accent-warm)]">Compare</span>
-              </div>
+      <MktHero
+        badge="Compare"
+        badgeIcon={ChartBarIcon}
+        title="How Stratum AI"
+        highlight="compares"
+        subtitle="See how Stratum AI stacks up against other marketing platforms. Trust-gated automation is our unique differentiator."
+      />
 
-              <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
-                How Stratum AI{' '}
-                <span
-                  style={{ color: 'var(--landing-accent-coral)' }}
-                >
-                  Compares
+      {/* Key Differentiators */}
+      <section className="pb-12">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <MktSectionHeader eyebrow="Why Stratum" title="What makes us" highlight="different" />
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {differentiators.map((diff, i) => (
+              <MktFeatureCard
+                key={diff.title}
+                icon={diff.icon}
+                title={diff.title}
+                description={diff.description}
+                delay={(i % 4) * 0.05}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Comparison Table */}
+      <section className="py-24 lg:py-28">
+        <div className="max-w-5xl mx-auto px-6 lg:px-8">
+          <MktSectionHeader
+            eyebrow="Feature Matrix"
+            title="Stratum AI vs."
+            highlight="the field"
+          />
+
+          {/* Competitor Selector */}
+          <div className="flex items-center justify-center gap-3 mb-8 flex-wrap">
+            <span className="text-meta uppercase text-muted-foreground">Compare with:</span>
+            {competitors.map((comp) => (
+              <button
+                key={comp.id}
+                onClick={() => setSelectedCompetitor(comp.id)}
+                className={`px-4 py-2 rounded-full text-body font-medium transition-colors duration-200 border ${
+                  selectedCompetitor === comp.id
+                    ? 'bg-secondary/10 border-secondary/40 text-secondary'
+                    : 'bg-card border-border text-muted-foreground hover:bg-foreground/5'
+                }`}
+              >
+                {comp.name}
+              </button>
+            ))}
+          </div>
+
+          {/* Comparison Table */}
+          <MktCard className="overflow-hidden">
+            {/* Header */}
+            <div className="grid grid-cols-3 gap-4 p-4 border-b border-border">
+              <div className="text-meta uppercase text-muted-foreground">Feature</div>
+              <div className="text-center">
+                <span className="text-meta uppercase text-secondary font-semibold">
+                  Stratum AI
                 </span>
-              </h1>
-
-              <p className="text-lg" style={{ color: 'var(--landing-text)' }}>
-                See how Stratum AI stacks up against other marketing platforms. Trust-gated
-                automation is our unique differentiator.
-              </p>
+              </div>
+              <div className="text-center">
+                <span className="text-meta uppercase text-muted-foreground">
+                  {selectedCompetitorName}
+                </span>
+              </div>
             </div>
-          </div>
-        </section>
 
-        {/* Key Differentiators */}
-        <section className="py-8">
-          <div className="max-w-7xl mx-auto px-6 lg:px-8">
-            <h2 className="text-xl font-bold text-white mb-6 text-center">
-              What Makes Us Different
-            </h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {differentiators.map((diff) => (
-                <div
-                  key={diff.title}
-                  className="p-5 rounded-xl"
-                  style={{
-                    background: `linear-gradient(135deg, ${diff.color}08 0%, transparent 100%)`,
-                    border: `1px solid ${diff.color}20`,
-                  }}
-                >
-                  <diff.icon className="w-8 h-8 mb-3" style={{ color: diff.color }} />
-                  <h3 className="text-white font-semibold mb-2">{diff.title}</h3>
-                  <p className="text-sm" style={{ color: 'var(--landing-text)' }}>{diff.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Competitor Selector */}
-        <section className="py-8">
-          <div className="max-w-5xl mx-auto px-6 lg:px-8">
-            <div className="flex items-center justify-center gap-3 mb-8 flex-wrap">
-              <span className="text-sm" style={{ color: 'var(--landing-text)' }}>Compare with:</span>
-              {competitors.map((comp) => (
+            {/* Categories & Features */}
+            {categories.map((category) => (
+              <div key={category}>
+                {/* Category Header */}
                 <button
-                  key={comp.id}
-                  onClick={() => setSelectedCompetitor(comp.id)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
-                    selectedCompetitor === comp.id ? 'text-white' : ''
-                  }`}
-                  style={{
-                    background:
-                      selectedCompetitor === comp.id
-                        ? `${comp.color}20`
-                        : 'var(--landing-card)',
-                    border: `1px solid ${selectedCompetitor === comp.id ? `${comp.color}40` : 'var(--landing-border)'}`,
-                    color: selectedCompetitor === comp.id ? undefined : 'var(--landing-text)',
-                  }}
+                  className="w-full flex items-center justify-between p-4 border-b border-border transition-colors hover:bg-foreground/5"
+                  onClick={() =>
+                    setExpandedCategory(expandedCategory === category ? null : category)
+                  }
                 >
-                  {comp.name}
+                  <span className="text-foreground font-medium">{category}</span>
+                  <span className="text-micro uppercase text-muted-foreground">
+                    {features.filter((f) => f.category === category).length} features
+                  </span>
                 </button>
-              ))}
-            </div>
 
-            {/* Comparison Table */}
-            <div
-              className="rounded-2xl overflow-hidden"
-              style={{
-                background: 'var(--landing-card)',
-                border: '1px solid var(--landing-border)',
-              }}
-            >
-              {/* Header */}
-              <div
-                className="grid grid-cols-3 gap-4 p-4 border-b"
-                style={{ borderColor: 'var(--landing-border)' }}
-              >
-                <div className="text-sm font-medium" style={{ color: 'var(--landing-text)' }}>Feature</div>
-                <div className="text-center">
-                  <span
-                    className="text-sm font-bold"
-                    style={{ color: 'var(--landing-accent-coral)' }}
-                  >
-                    Stratum AI
-                  </span>
-                </div>
-                <div className="text-center">
-                  <span
-                    className="text-sm font-medium"
-                    style={{ color: competitors.find((c) => c.id === selectedCompetitor)?.color }}
-                  >
-                    {competitors.find((c) => c.id === selectedCompetitor)?.name}
-                  </span>
-                </div>
-              </div>
-
-              {/* Categories & Features */}
-              {categories.map((category) => (
-                <div key={category}>
-                  {/* Category Header */}
-                  <button
-                    className="w-full flex items-center justify-between p-4 border-b transition-colors hover:bg-foreground/5"
-                    style={{ borderColor: 'var(--landing-border)' }}
-                    onClick={() =>
-                      setExpandedCategory(expandedCategory === category ? null : category)
-                    }
-                  >
-                    <span className="text-white font-medium">{category}</span>
-                    <span className="text-xs" style={{ color: 'var(--landing-text-dim)' }}>
-                      {features.filter((f) => f.category === category).length} features
-                    </span>
-                  </button>
-
-                  {/* Features */}
-                  {(expandedCategory === category || expandedCategory === null) &&
-                    features
-                      .filter((f) => f.category === category)
-                      .map((feature, i) => (
-                        <div
-                          key={feature.feature}
-                          className="grid grid-cols-3 gap-4 p-4 border-b items-center"
-                          style={{
-                            borderColor: 'rgba(30, 31, 48, 0.5)',
-                            background: i % 2 === 0 ? 'transparent' : 'rgba(255, 255, 255, 0.02)',
-                          }}
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm" style={{ color: 'var(--landing-text)' }}>{feature.feature}</span>
-                            {feature.tooltip && (
-                              <span
-                                className="text-[10px] font-medium px-1.5 py-0.5 rounded"
-                                style={{ background: 'rgba(255,179,71,0.1)', color: 'var(--landing-accent-warm)' }}
-                              >
-                                Unique
-                              </span>
-                            )}
-                          </div>
-                          <div>{renderValue(feature.stratum, true)}</div>
-                          <div>{renderValue(feature.competitors[selectedCompetitor])}</div>
+                {/* Features */}
+                {(expandedCategory === category || expandedCategory === null) &&
+                  features
+                    .filter((f) => f.category === category)
+                    .map((feature) => (
+                      <div
+                        key={feature.feature}
+                        className="grid grid-cols-3 gap-4 p-4 border-b border-border items-center"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-body text-muted-foreground">{feature.feature}</span>
+                          {feature.tooltip && (
+                            <span className="text-micro uppercase font-medium px-1.5 py-0.5 rounded-full bg-secondary/10 text-secondary">
+                              Unique
+                            </span>
+                          )}
                         </div>
-                      ))}
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* CTA Section */}
-        <section className="py-16">
-          <div className="max-w-4xl mx-auto px-6 lg:px-8">
-            <div
-              className="rounded-2xl p-8 md:p-12 text-center"
-              style={{
-                background: 'var(--landing-card)',
-                border: '1px solid var(--landing-border)',
-              }}
-            >
-              <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
-                Ready to experience the difference?
-              </h2>
-              <p className="mb-8" style={{ color: 'var(--landing-text)' }}>
-                Start with a free trial and see why trust-gated automation changes everything.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link
-                  to="/signup"
-                  className="px-8 py-4 rounded-full font-semibold text-white transition-colors duration-200 flex items-center justify-center gap-2"
-                  style={{
-                    background: 'var(--landing-accent-coral)',
-                    boxShadow: 'var(--landing-glow-coral)',
-                  }}
-                >
-                  Start Free Trial
-                  <ArrowRightIcon className="w-4 h-4" />
-                </Link>
-                <Link
-                  to="/contact"
-                  className="px-8 py-4 rounded-xl font-semibold text-white transition-colors duration-200"
-                  style={{
-                    background: 'var(--landing-surface-glass)',
-                    border: '1px solid var(--landing-border)',
-                  }}
-                >
-                  Request Demo
-                </Link>
+                        <div>{renderValue(feature.stratum)}</div>
+                        <div>{renderValue(feature.competitors[selectedCompetitor])}</div>
+                      </div>
+                    ))}
               </div>
-            </div>
-          </div>
-        </section>
-      </div>
+            ))}
+          </MktCard>
+        </div>
+      </section>
+
+      <CTA />
     </PageLayout>
   );
 }
