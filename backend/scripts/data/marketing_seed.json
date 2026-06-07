@@ -1,0 +1,1965 @@
+[
+  {
+    "slug": "features",
+    "title": "Features",
+    "template": "features",
+    "meta_title": "Features",
+    "meta_description": "Explore Stratum AI features: Trust Engine, Signal Health monitoring, CDP with audience sync, predictive analytics, and more.",
+    "content_json": {
+      "features": [
+        {
+          "iconName": "ShieldCheckIcon",
+          "title": "Trust-Gated Autopilot",
+          "description": "Automations only execute when signal health passes safety thresholds. No more blind optimization.",
+          "color": "primary"
+        },
+        {
+          "iconName": "SignalIcon",
+          "title": "Signal Health Monitoring",
+          "description": "Real-time monitoring of data quality across all connected platforms with instant anomaly detection.",
+          "color": "primary"
+        },
+        {
+          "iconName": "UserGroupIcon",
+          "title": "Customer Data Platform",
+          "description": "Unified customer profiles with identity resolution, behavioral segmentation, and lifecycle tracking.",
+          "color": "primary"
+        },
+        {
+          "iconName": "ArrowPathIcon",
+          "title": "Multi-Platform Audience Sync",
+          "description": "Push segments to Meta, Google, TikTok & Snapchat with one click. Auto-sync keeps audiences fresh.",
+          "color": "primary"
+        },
+        {
+          "iconName": "ChartBarIcon",
+          "title": "Advanced Attribution",
+          "description": "Multi-touch attribution models with conversion path analysis and incrementality testing.",
+          "color": "primary"
+        },
+        {
+          "iconName": "CpuChipIcon",
+          "title": "ML-Powered Predictions",
+          "description": "Churn prediction, LTV forecasting, and next-best-action recommendations powered by machine learning.",
+          "color": "primary"
+        },
+        {
+          "iconName": "BoltIcon",
+          "title": "Real-Time Event Processing",
+          "description": "Process millions of events per second with sub-second latency for instant personalization.",
+          "color": "primary"
+        },
+        {
+          "iconName": "ChartPieIcon",
+          "title": "RFM Analysis",
+          "description": "Built-in Recency, Frequency, Monetary analysis for customer value segmentation.",
+          "color": "primary"
+        },
+        {
+          "iconName": "CloudArrowUpIcon",
+          "title": "Flexible Data Export",
+          "description": "Export audiences as CSV or JSON with custom traits, events, and computed attributes.",
+          "color": "primary"
+        },
+        {
+          "iconName": "DocumentChartBarIcon",
+          "title": "Custom Reporting",
+          "description": "Build custom reports and dashboards with drag-and-drop widgets and scheduled exports.",
+          "color": "primary"
+        },
+        {
+          "iconName": "CubeTransparentIcon",
+          "title": "Identity Graph",
+          "description": "Visual identity resolution showing cross-device connections and merge history.",
+          "color": "primary"
+        },
+        {
+          "iconName": "SparklesIcon",
+          "title": "AI Campaign Optimization",
+          "description": "Automatic bid adjustments, budget allocation, and creative rotation based on performance.",
+          "color": "primary"
+        }
+      ]
+    },
+    "content": null
+  },
+  {
+    "slug": "pricing",
+    "title": "Pricing",
+    "template": "pricing",
+    "meta_title": "Pricing",
+    "meta_description": "Simple, transparent pricing for Stratum AI. Start with a 14-day free trial. Plans from $499/month for growing teams.",
+    "content_json": {
+      "tiers": [
+        {
+          "name": "Starter",
+          "price": "$499",
+          "period": "/month",
+          "description": "Perfect for growing teams getting started with revenue intelligence.",
+          "features": [
+            "Up to 100K monthly events",
+            "5 team members",
+            "3 ad platform connections",
+            "Basic signal health monitoring",
+            "Standard attribution models",
+            "Email support"
+          ],
+          "cta": "Start Free Trial",
+          "highlighted": false
+        },
+        {
+          "name": "Professional",
+          "price": "$1,499",
+          "period": "/month",
+          "description": "For scaling teams that need advanced automation and insights.",
+          "features": [
+            "Up to 1M monthly events",
+            "15 team members",
+            "Unlimited platform connections",
+            "Advanced signal health + alerts",
+            "Trust-Gated Autopilot",
+            "CDP with audience sync",
+            "Custom attribution models",
+            "ML predictions & forecasting",
+            "Priority support"
+          ],
+          "cta": "Start Free Trial",
+          "highlighted": true,
+          "badge": "Most popular"
+        },
+        {
+          "name": "Enterprise",
+          "price": "Custom",
+          "period": "",
+          "description": "For large organizations with complex requirements.",
+          "features": [
+            "Unlimited events",
+            "Unlimited team members",
+            "All Professional features",
+            "Custom integrations",
+            "Dedicated account manager",
+            "SLA guarantee",
+            "On-premise deployment option",
+            "Advanced security & compliance",
+            "Custom training & onboarding"
+          ],
+          "cta": "Contact Sales",
+          "highlighted": false
+        }
+      ],
+      "faqs": [
+        {
+          "question": "What counts as a monthly event?",
+          "answer": "Events include any data point tracked through our platform: page views, purchases, form submissions, API calls, and more."
+        },
+        {
+          "question": "Can I change plans later?",
+          "answer": "Yes, you can upgrade or downgrade your plan at any time. Changes take effect on your next billing cycle."
+        },
+        {
+          "question": "Is there a free trial?",
+          "answer": "Yes, all plans include a 14-day free trial with full access to all features. No credit card required."
+        },
+        {
+          "question": "What payment methods do you accept?",
+          "answer": "We accept all major credit cards, ACH transfers, and wire transfers for annual Enterprise plans."
+        }
+      ]
+    },
+    "content": null
+  },
+  {
+    "slug": "integrations",
+    "title": "Integrations",
+    "template": "integrations",
+    "meta_title": "Integrations",
+    "meta_description": "Connect Stratum AI with Meta, Google, TikTok, Snapchat, and 30+ marketing platforms. Unified data, one dashboard.",
+    "content_json": {
+      "categories": [
+        {
+          "name": "Ad Platforms",
+          "description": "Connect your advertising accounts across every major channel.",
+          "platforms": [
+            {
+              "name": "Meta Ads",
+              "description": "Facebook & Instagram advertising",
+              "iconName": "M",
+              "color": "primary"
+            },
+            {
+              "name": "Google Ads",
+              "description": "Search, Display & YouTube",
+              "iconName": "G",
+              "color": "primary"
+            },
+            {
+              "name": "TikTok Ads",
+              "description": "TikTok advertising platform",
+              "iconName": "T",
+              "color": "primary"
+            },
+            {
+              "name": "Snapchat Ads",
+              "description": "Snapchat marketing API",
+              "iconName": "S",
+              "color": "primary"
+            },
+            {
+              "name": "LinkedIn Ads",
+              "description": "B2B advertising",
+              "iconName": "L",
+              "color": "primary"
+            },
+            {
+              "name": "Twitter/X Ads",
+              "description": "Twitter advertising",
+              "iconName": "X",
+              "color": "primary"
+            }
+          ]
+        },
+        {
+          "name": "Analytics & Attribution",
+          "description": "Unify analytics and attribution data from your stack.",
+          "platforms": [
+            {
+              "name": "Google Analytics",
+              "description": "Web analytics",
+              "iconName": "GA",
+              "color": "primary"
+            },
+            {
+              "name": "Mixpanel",
+              "description": "Product analytics",
+              "iconName": "MP",
+              "color": "primary"
+            },
+            {
+              "name": "Amplitude",
+              "description": "Digital analytics",
+              "iconName": "A",
+              "color": "primary"
+            },
+            {
+              "name": "Segment",
+              "description": "Customer data platform",
+              "iconName": "SG",
+              "color": "primary"
+            }
+          ]
+        },
+        {
+          "name": "CRM & Sales",
+          "description": "Sync contacts and pipeline data with your CRM.",
+          "platforms": [
+            {
+              "name": "Salesforce",
+              "description": "CRM platform",
+              "iconName": "SF",
+              "color": "primary"
+            },
+            {
+              "name": "HubSpot",
+              "description": "Marketing & sales",
+              "iconName": "HS",
+              "color": "primary"
+            },
+            {
+              "name": "Pipedrive",
+              "description": "Sales CRM",
+              "iconName": "PD",
+              "color": "primary"
+            }
+          ]
+        },
+        {
+          "name": "E-commerce",
+          "description": "Pull orders and revenue from your storefront.",
+          "platforms": [
+            {
+              "name": "Shopify",
+              "description": "E-commerce platform",
+              "iconName": "SH",
+              "color": "primary"
+            },
+            {
+              "name": "WooCommerce",
+              "description": "WordPress commerce",
+              "iconName": "WC",
+              "color": "primary"
+            },
+            {
+              "name": "Magento",
+              "description": "Adobe Commerce",
+              "iconName": "MG",
+              "color": "primary"
+            }
+          ]
+        },
+        {
+          "name": "Communication",
+          "description": "Route alerts and customer messages where your team works.",
+          "platforms": [
+            {
+              "name": "Slack",
+              "description": "Team messaging",
+              "iconName": "SL",
+              "color": "primary"
+            },
+            {
+              "name": "WhatsApp Business",
+              "description": "Customer messaging",
+              "iconName": "WA",
+              "color": "primary"
+            },
+            {
+              "name": "Intercom",
+              "description": "Customer messaging",
+              "iconName": "IC",
+              "color": "primary"
+            }
+          ]
+        }
+      ]
+    },
+    "content": null
+  },
+  {
+    "slug": "api-docs",
+    "title": "API Reference",
+    "template": "api-docs",
+    "meta_title": "API Documentation",
+    "meta_description": "Build on the Stratum API — REST endpoints for signals, automations, the CDP, and audience sync, with SDKs and real-time webhooks.",
+    "content_json": {
+      "sections": [
+        {
+          "title": "Getting Started",
+          "description": "Learn the basics and set up your first integration.",
+          "iconName": "BookOpenIcon",
+          "href": "#getting-started"
+        },
+        {
+          "title": "API Reference",
+          "description": "Complete reference for all API endpoints.",
+          "iconName": "CodeBracketIcon",
+          "href": "#api-reference"
+        },
+        {
+          "title": "SDKs & Libraries",
+          "description": "Official SDKs for JavaScript, Python, and more.",
+          "iconName": "CommandLineIcon",
+          "href": "#sdks"
+        },
+        {
+          "title": "Webhooks",
+          "description": "Real-time event notifications for your app.",
+          "iconName": "CubeIcon",
+          "href": "#webhooks"
+        }
+      ],
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/api/v1/signals",
+          "description": "List all signals",
+          "category": "Signals"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/signals",
+          "description": "Create a new signal",
+          "category": "Signals"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/signals/:id/health",
+          "description": "Get signal health score",
+          "category": "Signals"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/automations",
+          "description": "List all automations",
+          "category": "Automations"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/automations/execute",
+          "description": "Execute automation",
+          "category": "Automations"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/cdp/profiles",
+          "description": "Search customer profiles",
+          "category": "CDP"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/cdp/segments",
+          "description": "Create a segment",
+          "category": "CDP"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/audience-sync",
+          "description": "Sync audience to platform",
+          "category": "Audience Sync"
+        }
+      ]
+    },
+    "content": null
+  },
+  {
+    "slug": "about",
+    "title": "About Us",
+    "template": "about",
+    "meta_title": "About Us",
+    "meta_description": "We're on a mission to help growth teams make smarter decisions with AI-powered intelligence and trust-gated automation.",
+    "content_json": {
+      "mission": "We're on a mission to help growth teams make smarter decisions with AI-powered intelligence and trust-gated automation.",
+      "team": [
+        {
+          "name": "Sarah Chen",
+          "role": "CEO & Co-Founder",
+          "image": "SC"
+        },
+        {
+          "name": "Marcus Rodriguez",
+          "role": "CTO & Co-Founder",
+          "image": "MR"
+        },
+        {
+          "name": "Emily Watson",
+          "role": "VP of Product",
+          "image": "EW"
+        },
+        {
+          "name": "David Kim",
+          "role": "VP of Engineering",
+          "image": "DK"
+        },
+        {
+          "name": "Lisa Thompson",
+          "role": "VP of Sales",
+          "image": "LT"
+        },
+        {
+          "name": "James Park",
+          "role": "VP of Customer Success",
+          "image": "JP"
+        }
+      ],
+      "values": [
+        {
+          "title": "Trust First",
+          "description": "We build systems that earn and maintain trust through transparency and reliability."
+        },
+        {
+          "title": "Customer Obsessed",
+          "description": "Every decision starts with how it impacts our customers success."
+        },
+        {
+          "title": "Data Driven",
+          "description": "We practice what we preach - decisions backed by evidence, not assumptions."
+        },
+        {
+          "title": "Move Fast, Stay Safe",
+          "description": "Speed matters, but not at the cost of quality or security."
+        }
+      ],
+      "stats": [
+        {
+          "value": "150+",
+          "label": "Growth Teams"
+        },
+        {
+          "value": "$2B+",
+          "label": "Ad Spend Managed"
+        },
+        {
+          "value": "50+",
+          "label": "Integrations"
+        },
+        {
+          "value": "99.9%",
+          "label": "Uptime"
+        }
+      ]
+    },
+    "content": null
+  },
+  {
+    "slug": "careers",
+    "title": "Careers",
+    "template": "careers",
+    "meta_title": "Careers",
+    "meta_description": "Join the Stratum AI team. Help build the future of trust-gated marketing automation.",
+    "content_json": {
+      "positions": [
+        {
+          "title": "Senior Backend Engineer",
+          "department": "Engineering",
+          "location": "Remote (US/EU)",
+          "type": "Full-time",
+          "salary": "$180K - $220K",
+          "description": "Build and scale the core trust-gated automation platform and APIs."
+        },
+        {
+          "title": "Senior Frontend Engineer",
+          "department": "Engineering",
+          "location": "Remote (US/EU)",
+          "type": "Full-time",
+          "salary": "$170K - $210K",
+          "description": "Craft the data-dense dashboard and marketing experiences in React and TypeScript."
+        },
+        {
+          "title": "ML Engineer",
+          "department": "Engineering",
+          "location": "Remote (US/EU)",
+          "type": "Full-time",
+          "salary": "$190K - $240K",
+          "description": "Develop the models behind signal health scoring and predictive analytics."
+        },
+        {
+          "title": "Product Manager",
+          "department": "Product",
+          "location": "San Francisco, CA",
+          "type": "Full-time",
+          "salary": "$160K - $200K",
+          "description": "Own the roadmap for revenue intelligence and trust-gated automation features."
+        },
+        {
+          "title": "Account Executive",
+          "department": "Sales",
+          "location": "New York, NY",
+          "type": "Full-time",
+          "salary": "$120K - $150K + Commission",
+          "description": "Drive new business with growth teams and marketing agencies."
+        },
+        {
+          "title": "Customer Success Manager",
+          "department": "Customer Success",
+          "location": "Remote (US)",
+          "type": "Full-time",
+          "salary": "$100K - $130K",
+          "description": "Partner with customers to ensure adoption and long-term success on Stratum AI."
+        }
+      ],
+      "benefits": [
+        {
+          "title": "Competitive salary + equity",
+          "description": "",
+          "iconName": "SparklesIcon"
+        },
+        {
+          "title": "Unlimited PTO",
+          "description": "",
+          "iconName": "SparklesIcon"
+        },
+        {
+          "title": "Remote-first culture",
+          "description": "",
+          "iconName": "SparklesIcon"
+        },
+        {
+          "title": "Health, dental & vision",
+          "description": "",
+          "iconName": "SparklesIcon"
+        },
+        {
+          "title": "401(k) matching",
+          "description": "",
+          "iconName": "SparklesIcon"
+        },
+        {
+          "title": "Learning & development budget",
+          "description": "",
+          "iconName": "SparklesIcon"
+        },
+        {
+          "title": "Home office stipend",
+          "description": "",
+          "iconName": "SparklesIcon"
+        },
+        {
+          "title": "Annual team retreats",
+          "description": "",
+          "iconName": "SparklesIcon"
+        }
+      ]
+    },
+    "content": null
+  },
+  {
+    "slug": "case-studies",
+    "title": "Case Studies",
+    "template": "case-studies",
+    "meta_title": "Case Studies — Success Stories from Industry Leaders",
+    "meta_description": "Discover how companies across industries use Stratum AI to transform their marketing performance with trust-gated automation.",
+    "content_json": {
+      "stats": [
+        {
+          "value": "$50M+",
+          "label": "Ad Spend Optimized"
+        },
+        {
+          "value": "340%",
+          "label": "Avg. ROAS Improvement"
+        },
+        {
+          "value": "10M+",
+          "label": "Profiles Unified"
+        },
+        {
+          "value": "500+",
+          "label": "Companies Trust Us"
+        }
+      ],
+      "studies": [
+        {
+          "company": "Luxe Commerce",
+          "industry": "E-Commerce",
+          "logo": "L",
+          "challenge": "340% increase in ROAS with Trust-Gated Automation",
+          "solution": "How a luxury fashion retailer transformed their ad performance by only executing when signal health was optimal.",
+          "results": [
+            {
+              "metric": "ROAS Increase",
+              "value": "340%"
+            },
+            {
+              "metric": "CAC Reduction",
+              "value": "45%"
+            },
+            {
+              "metric": "Time Saved",
+              "value": "20hrs/week"
+            }
+          ],
+          "quote": "Stratum AI changed how we think about automation. The trust gates give us confidence to scale aggressively.",
+          "quotee": "Sarah Chen"
+        },
+        {
+          "company": "FinServe Global",
+          "industry": "Financial Services",
+          "logo": "F",
+          "challenge": "67% reduction in wasted ad spend",
+          "solution": "A fintech unicorn used signal health monitoring to pause campaigns before they burned budget.",
+          "results": [
+            {
+              "metric": "Spend Saved",
+              "value": "$2.3M"
+            },
+            {
+              "metric": "Lead Quality",
+              "value": "+89%"
+            },
+            {
+              "metric": "Compliance Score",
+              "value": "100%"
+            }
+          ],
+          "quote": "The visibility into signal health helped us maintain compliance while scaling our acquisition campaigns.",
+          "quotee": "Marcus Webb"
+        },
+        {
+          "company": "HealthDirect",
+          "industry": "Healthcare",
+          "logo": "H",
+          "challenge": "Unified 2M+ patient profiles across channels",
+          "solution": "How a healthcare network used CDP to create personalized patient journeys while maintaining HIPAA compliance.",
+          "results": [
+            {
+              "metric": "Profiles Unified",
+              "value": "2.3M"
+            },
+            {
+              "metric": "Engagement Rate",
+              "value": "+156%"
+            },
+            {
+              "metric": "Match Rate",
+              "value": "94%"
+            }
+          ],
+          "quote": "The identity resolution capabilities let us personalize without compromising patient privacy.",
+          "quotee": "Dr. Lisa Park"
+        },
+        {
+          "company": "LearnPath Academy",
+          "industry": "Education",
+          "logo": "L",
+          "challenge": "5x improvement in student acquisition efficiency",
+          "solution": "An online education platform used predictive churn analysis to optimize their enrollment funnels.",
+          "results": [
+            {
+              "metric": "Enrollment Rate",
+              "value": "+212%"
+            },
+            {
+              "metric": "Churn Reduction",
+              "value": "38%"
+            },
+            {
+              "metric": "LTV Increase",
+              "value": "+67%"
+            }
+          ],
+          "quote": "Predictive churn scoring helped us intervene early and keep students engaged throughout their journey.",
+          "quotee": "James Liu"
+        },
+        {
+          "company": "Metro Retail Group",
+          "industry": "Retail",
+          "logo": "M",
+          "challenge": "Synced 500K customer segments to 4 ad platforms",
+          "solution": "A national retail chain used Audience Sync to maintain consistent targeting across all digital channels.",
+          "results": [
+            {
+              "metric": "Segments Synced",
+              "value": "127"
+            },
+            {
+              "metric": "Audience Size",
+              "value": "500K+"
+            },
+            {
+              "metric": "Attribution Accuracy",
+              "value": "+73%"
+            }
+          ],
+          "quote": "One-click audience sync eliminated hours of manual work and kept our targeting fresh across platforms.",
+          "quotee": "Amanda Torres"
+        },
+        {
+          "company": "CloudStack Pro",
+          "industry": "B2B SaaS",
+          "logo": "C",
+          "challenge": "Reduced sales cycle by 40% with predictive scoring",
+          "solution": "An enterprise SaaS company used ML-powered lead scoring to prioritize high-intent accounts.",
+          "results": [
+            {
+              "metric": "Sales Cycle",
+              "value": "-40%"
+            },
+            {
+              "metric": "Win Rate",
+              "value": "+52%"
+            },
+            {
+              "metric": "Pipeline Value",
+              "value": "+$4.2M"
+            }
+          ],
+          "quote": "The predictive models surfaced accounts we would have missed. It changed how our sales team prioritizes.",
+          "quotee": "Robert Chang"
+        }
+      ]
+    },
+    "content": null
+  },
+  {
+    "slug": "changelog",
+    "title": "Changelog",
+    "template": "changelog",
+    "meta_title": "Changelog — What's New in Stratum AI",
+    "meta_description": "Stay up to date with the latest features, improvements, and fixes.",
+    "content_json": {
+      "releases": [
+        {
+          "version": "3.2.0",
+          "date": "January 15, 2026",
+          "type": "major",
+          "highlights": [
+            "New 2026 Dashboard Theme with OLED-optimized dark mode",
+            "Enhanced Trust Engine with predictive signal analysis",
+            "Multi-platform Audience Sync now supports 4 ad platforms"
+          ],
+          "changes": [
+            {
+              "type": "feature",
+              "text": "Added electric neon color palette for 2026 theme"
+            },
+            {
+              "type": "feature",
+              "text": "New glassmorphism effects with enhanced blur"
+            },
+            {
+              "type": "feature",
+              "text": "Animation harmony system with 3 timing layers"
+            },
+            {
+              "type": "improvement",
+              "text": "Improved CDP profile loading performance by 40%"
+            },
+            {
+              "type": "improvement",
+              "text": "Enhanced Trust Gate evaluation speed"
+            },
+            {
+              "type": "fix",
+              "text": "Fixed segment preview count accuracy"
+            },
+            {
+              "type": "fix",
+              "text": "Resolved timezone issues in event tracking"
+            }
+          ]
+        },
+        {
+          "version": "3.1.0",
+          "date": "December 20, 2025",
+          "type": "minor",
+          "highlights": [
+            "Predictive Churn Analysis in CDP",
+            "Computed Traits for advanced segmentation",
+            "RFM Analysis dashboard"
+          ],
+          "changes": [
+            {
+              "type": "feature",
+              "text": "Predictive churn scoring with ML models"
+            },
+            {
+              "type": "feature",
+              "text": "Custom computed traits with formula builder"
+            },
+            {
+              "type": "feature",
+              "text": "RFM (Recency, Frequency, Monetary) analysis"
+            },
+            {
+              "type": "feature",
+              "text": "Funnel analysis with conversion tracking"
+            },
+            {
+              "type": "improvement",
+              "text": "Segment builder now supports nested conditions"
+            },
+            {
+              "type": "fix",
+              "text": "Fixed identity merge conflicts"
+            }
+          ]
+        },
+        {
+          "version": "3.0.0",
+          "date": "November 1, 2025",
+          "type": "major",
+          "highlights": [
+            "Complete CDP (Customer Data Platform) launch",
+            "Audience Sync to Meta, Google, TikTok, Snapchat",
+            "Identity Graph visualization"
+          ],
+          "changes": [
+            {
+              "type": "feature",
+              "text": "Full CDP with unified customer profiles"
+            },
+            {
+              "type": "feature",
+              "text": "Real-time event ingestion and processing"
+            },
+            {
+              "type": "feature",
+              "text": "Cross-device identity resolution"
+            },
+            {
+              "type": "feature",
+              "text": "One-click audience sync to ad platforms"
+            },
+            {
+              "type": "security",
+              "text": "Enhanced encryption for PII data"
+            },
+            {
+              "type": "improvement",
+              "text": "New onboarding flow for faster setup"
+            }
+          ]
+        },
+        {
+          "version": "2.5.0",
+          "date": "September 15, 2025",
+          "type": "minor",
+          "highlights": [
+            "Custom Autopilot Rules builder",
+            "A/B Testing framework",
+            "Enhanced reporting exports"
+          ],
+          "changes": [
+            {
+              "type": "feature",
+              "text": "Visual rule builder for custom automations"
+            },
+            {
+              "type": "feature",
+              "text": "Built-in A/B testing with statistical analysis"
+            },
+            {
+              "type": "feature",
+              "text": "Scheduled report exports in PDF/CSV"
+            },
+            {
+              "type": "improvement",
+              "text": "Campaign performance insights"
+            },
+            {
+              "type": "fix",
+              "text": "Fixed duplicate webhook deliveries"
+            }
+          ]
+        }
+      ]
+    },
+    "content": null
+  },
+  {
+    "slug": "compare",
+    "title": "Compare",
+    "template": "comparison",
+    "meta_title": "Compare — How Stratum AI Compares",
+    "meta_description": "See how Stratum AI stacks up against other marketing platforms. Trust-gated automation is our unique differentiator.",
+    "content_json": {
+      "differentiators": [
+        {
+          "title": "Trust-Gated Automation",
+          "description": "Only execute when signal health passes safety thresholds. No other platform offers this level of automation confidence.",
+          "iconName": "ShieldCheckIcon"
+        },
+        {
+          "title": "Identity Graph Visualization",
+          "description": "See exactly how customer identities are connected across devices and channels with interactive visualizations.",
+          "iconName": "CpuChipIcon"
+        },
+        {
+          "title": "RFM Analysis Built-in",
+          "description": "Native Recency, Frequency, Monetary analysis without additional tools or integrations.",
+          "iconName": "ChartBarIcon"
+        },
+        {
+          "title": "Signal Health Monitoring",
+          "description": "Real-time monitoring of data quality and signal reliability across all your integrations.",
+          "iconName": "BoltIcon"
+        }
+      ],
+      "competitors": [
+        {
+          "id": "segment",
+          "name": "Segment",
+          "tagline": "CDP",
+          "color": "#52BD95"
+        },
+        {
+          "id": "braze",
+          "name": "Braze",
+          "tagline": "Marketing Automation",
+          "color": "#F6C94A"
+        },
+        {
+          "id": "mparticle",
+          "name": "mParticle",
+          "tagline": "CDP",
+          "color": "#E54D42"
+        },
+        {
+          "id": "amplitude",
+          "name": "Amplitude",
+          "tagline": "Analytics",
+          "color": "#1E61CD"
+        }
+      ],
+      "features": [
+        {
+          "feature": "Trust-Gated Automation",
+          "category": "Trust Engine",
+          "stratum": "yes",
+          "competitors": {
+            "segment": "no",
+            "braze": "no",
+            "mparticle": "no",
+            "amplitude": "no"
+          },
+          "tooltip": "Unique to Stratum AI"
+        },
+        {
+          "feature": "Signal Health Monitoring",
+          "category": "Trust Engine",
+          "stratum": "yes",
+          "competitors": {
+            "segment": "no",
+            "braze": "no",
+            "mparticle": "no",
+            "amplitude": "no"
+          }
+        },
+        {
+          "feature": "Predictive Signal Analysis",
+          "category": "Trust Engine",
+          "stratum": "yes",
+          "competitors": {
+            "segment": "no",
+            "braze": "partial",
+            "mparticle": "no",
+            "amplitude": "partial"
+          }
+        },
+        {
+          "feature": "Auto-pause on Degradation",
+          "category": "Trust Engine",
+          "stratum": "yes",
+          "competitors": {
+            "segment": "no",
+            "braze": "no",
+            "mparticle": "no",
+            "amplitude": "no"
+          }
+        },
+        {
+          "feature": "Unified Customer Profiles",
+          "category": "CDP",
+          "stratum": "yes",
+          "competitors": {
+            "segment": "yes",
+            "braze": "yes",
+            "mparticle": "yes",
+            "amplitude": "partial"
+          }
+        },
+        {
+          "feature": "Identity Resolution",
+          "category": "CDP",
+          "stratum": "yes",
+          "competitors": {
+            "segment": "yes",
+            "braze": "partial",
+            "mparticle": "yes",
+            "amplitude": "no"
+          }
+        },
+        {
+          "feature": "Identity Graph Visualization",
+          "category": "CDP",
+          "stratum": "yes",
+          "competitors": {
+            "segment": "no",
+            "braze": "no",
+            "mparticle": "no",
+            "amplitude": "no"
+          }
+        },
+        {
+          "feature": "Real-time Event Ingestion",
+          "category": "CDP",
+          "stratum": "yes",
+          "competitors": {
+            "segment": "yes",
+            "braze": "yes",
+            "mparticle": "yes",
+            "amplitude": "yes"
+          }
+        },
+        {
+          "feature": "Computed Traits",
+          "category": "CDP",
+          "stratum": "yes",
+          "competitors": {
+            "segment": "yes",
+            "braze": "partial",
+            "mparticle": "yes",
+            "amplitude": "partial"
+          }
+        },
+        {
+          "feature": "RFM Analysis Built-in",
+          "category": "CDP",
+          "stratum": "yes",
+          "competitors": {
+            "segment": "no",
+            "braze": "no",
+            "mparticle": "no",
+            "amplitude": "no"
+          }
+        },
+        {
+          "feature": "Meta Custom Audiences",
+          "category": "Audience Sync",
+          "stratum": "yes",
+          "competitors": {
+            "segment": "yes",
+            "braze": "yes",
+            "mparticle": "yes",
+            "amplitude": "partial"
+          }
+        },
+        {
+          "feature": "Google Customer Match",
+          "category": "Audience Sync",
+          "stratum": "yes",
+          "competitors": {
+            "segment": "yes",
+            "braze": "yes",
+            "mparticle": "yes",
+            "amplitude": "partial"
+          }
+        },
+        {
+          "feature": "TikTok Audiences",
+          "category": "Audience Sync",
+          "stratum": "yes",
+          "competitors": {
+            "segment": "partial",
+            "braze": "yes",
+            "mparticle": "partial",
+            "amplitude": "no"
+          }
+        },
+        {
+          "feature": "Snapchat Audiences",
+          "category": "Audience Sync",
+          "stratum": "yes",
+          "competitors": {
+            "segment": "partial",
+            "braze": "partial",
+            "mparticle": "partial",
+            "amplitude": "no"
+          }
+        },
+        {
+          "feature": "Auto-sync Scheduling",
+          "category": "Audience Sync",
+          "stratum": "yes",
+          "competitors": {
+            "segment": "yes",
+            "braze": "yes",
+            "mparticle": "yes",
+            "amplitude": "no"
+          }
+        },
+        {
+          "feature": "Custom Autopilot Rules",
+          "category": "Automation",
+          "stratum": "yes",
+          "competitors": {
+            "segment": "no",
+            "braze": "yes",
+            "mparticle": "no",
+            "amplitude": "no"
+          }
+        },
+        {
+          "feature": "A/B Testing",
+          "category": "Automation",
+          "stratum": "yes",
+          "competitors": {
+            "segment": "partial",
+            "braze": "yes",
+            "mparticle": "partial",
+            "amplitude": "yes"
+          }
+        },
+        {
+          "feature": "Predictive Churn Scoring",
+          "category": "Automation",
+          "stratum": "yes",
+          "competitors": {
+            "segment": "no",
+            "braze": "yes",
+            "mparticle": "partial",
+            "amplitude": "yes"
+          }
+        },
+        {
+          "feature": "Funnel Analysis",
+          "category": "Analytics",
+          "stratum": "yes",
+          "competitors": {
+            "segment": "no",
+            "braze": "partial",
+            "mparticle": "no",
+            "amplitude": "yes"
+          }
+        },
+        {
+          "feature": "Anomaly Detection",
+          "category": "Analytics",
+          "stratum": "yes",
+          "competitors": {
+            "segment": "no",
+            "braze": "no",
+            "mparticle": "partial",
+            "amplitude": "yes"
+          }
+        },
+        {
+          "feature": "EMQ Scoring",
+          "category": "Analytics",
+          "stratum": "yes",
+          "competitors": {
+            "segment": "no",
+            "braze": "no",
+            "mparticle": "no",
+            "amplitude": "no"
+          }
+        }
+      ]
+    },
+    "content": null
+  },
+  {
+    "slug": "glossary",
+    "title": "Glossary",
+    "template": "glossary",
+    "meta_title": "Platform Terminology",
+    "meta_description": "Complete reference of terms, metrics, and values used across Stratum AI.",
+    "content_json": {
+      "categories": [
+        {
+          "id": "trust-engine",
+          "name": "Trust Engine",
+          "iconName": "ShieldCheckIcon",
+          "color": "#FF5A1F",
+          "terms": [
+            {
+              "term": "Signal Health",
+              "definition": "Composite score (0-100) measuring the reliability and quality of incoming data signals."
+            },
+            {
+              "term": "Trust Gate",
+              "definition": "Decision checkpoint that evaluates whether automation should execute based on signal health thresholds."
+            },
+            {
+              "term": "Autopilot",
+              "definition": "Automated actions that execute when trust gates pass. Includes budget adjustments, campaign pausing, and optimization."
+            },
+            {
+              "term": "HEALTHY_THRESHOLD",
+              "definition": "Minimum signal health score (70.0) required for autopilot to execute automatically."
+            },
+            {
+              "term": "EMQ (Event Match Quality)",
+              "definition": "Score measuring how well conversion events match platform requirements for attribution."
+            }
+          ]
+        },
+        {
+          "id": "cdp",
+          "name": "CDP (Customer Data Platform)",
+          "iconName": "UserGroupIcon",
+          "color": "#FF5A1F",
+          "terms": [
+            {
+              "term": "Profile",
+              "definition": "Unified customer record combining all known identifiers, traits, and event history."
+            },
+            {
+              "term": "Lifecycle Stage",
+              "definition": "Customer journey stage based on behavior and purchase history."
+            },
+            {
+              "term": "Identity Resolution",
+              "definition": "Process of merging multiple identifiers into a single customer profile across devices and channels."
+            },
+            {
+              "term": "Segment",
+              "definition": "Dynamic or static group of profiles based on traits, behaviors, or computed attributes."
+            },
+            {
+              "term": "Computed Trait",
+              "definition": "Derived attribute calculated from profile events and properties."
+            },
+            {
+              "term": "RFM Analysis",
+              "definition": "Recency, Frequency, Monetary scoring model for customer value segmentation."
+            },
+            {
+              "term": "Consent Type",
+              "definition": "User permission categories for data processing compliance."
+            }
+          ]
+        },
+        {
+          "id": "audience-sync",
+          "name": "Audience Sync",
+          "iconName": "ArrowPathIcon",
+          "color": "#FF5A1F",
+          "terms": [
+            {
+              "term": "Platform Audience",
+              "definition": "Audience created on ad platform (Meta, Google, TikTok, Snapchat) from CDP segment."
+            },
+            {
+              "term": "Sync Status",
+              "definition": "Current state of audience synchronization job."
+            },
+            {
+              "term": "Match Rate",
+              "definition": "Percentage of hashed identifiers that the ad platform successfully matched to users (0-100%)."
+            },
+            {
+              "term": "Sync Operation",
+              "definition": "Type of sync action being performed."
+            },
+            {
+              "term": "Auto-Sync Interval",
+              "definition": "Frequency of automatic audience updates. Range: 1 hour to 1 week. Default: 24 hours."
+            }
+          ]
+        },
+        {
+          "id": "capi",
+          "name": "CAPI (Conversions API)",
+          "iconName": "BoltIcon",
+          "color": "#FF5A1F",
+          "terms": [
+            {
+              "term": "Conversions API",
+              "definition": "Server-to-server connection sending conversion events directly to ad platforms, bypassing browser limitations."
+            },
+            {
+              "term": "PII Hashing",
+              "definition": "SHA256 one-way hashing of personally identifiable information (email, phone) before sending to platforms."
+            },
+            {
+              "term": "Delivery Status",
+              "definition": "Result of sending event to platform."
+            },
+            {
+              "term": "Dead Letter Queue (DLQ)",
+              "definition": "Storage for failed events awaiting retry. Events are retained for 7 days by default."
+            },
+            {
+              "term": "Event Deduplication",
+              "definition": "Prevention of duplicate event processing using event IDs. Default TTL: 24 hours."
+            },
+            {
+              "term": "EMQ Score Components",
+              "definition": "Breakdown of Event Match Quality scoring (total 100 points)."
+            }
+          ]
+        },
+        {
+          "id": "analytics",
+          "name": "Analytics & Metrics",
+          "iconName": "ChartBarIcon",
+          "color": "#FF5A1F",
+          "terms": [
+            {
+              "term": "ROAS",
+              "definition": "Return on Ad Spend. Revenue divided by ad spend. A ROAS of 3.0 means $3 revenue per $1 spent."
+            },
+            {
+              "term": "CPA",
+              "definition": "Cost Per Acquisition. Total spend divided by number of conversions."
+            },
+            {
+              "term": "CAC",
+              "definition": "Customer Acquisition Cost. Total marketing spend divided by new customers acquired."
+            },
+            {
+              "term": "LTV",
+              "definition": "Lifetime Value. Predicted total revenue a customer will generate over their relationship."
+            },
+            {
+              "term": "CVR",
+              "definition": "Conversion Rate. Percentage of clicks that result in conversions."
+            },
+            {
+              "term": "CTR",
+              "definition": "Click-Through Rate. Percentage of impressions that result in clicks."
+            },
+            {
+              "term": "CPM",
+              "definition": "Cost Per Mille (thousand impressions). Spend divided by impressions, multiplied by 1000."
+            },
+            {
+              "term": "Frequency",
+              "definition": "Average number of times each user sees your ad. High frequency can indicate ad fatigue."
+            },
+            {
+              "term": "Creative Fatigue",
+              "definition": "Decline in performance as audiences see the same creative repeatedly."
+            }
+          ]
+        },
+        {
+          "id": "pacing",
+          "name": "Pacing & Forecasting",
+          "iconName": "SignalIcon",
+          "color": "#FF5A1F",
+          "terms": [
+            {
+              "term": "Pacing",
+              "definition": "Comparison of actual spend/performance vs. target for the period. Expressed as percentage."
+            },
+            {
+              "term": "Target Period",
+              "definition": "Time frame for pacing targets."
+            },
+            {
+              "term": "Pacing Alerts",
+              "definition": "Notifications when spend or performance deviates from targets."
+            },
+            {
+              "term": "Scaling Actions",
+              "definition": "Recommended actions based on campaign performance score."
+            }
+          ]
+        },
+        {
+          "id": "crm",
+          "name": "CRM Integration",
+          "iconName": "CurrencyDollarIcon",
+          "color": "#FF5A1F",
+          "terms": [
+            {
+              "term": "Writeback",
+              "definition": "Syncing Stratum AI data (ad performance, attribution) back to CRM records."
+            },
+            {
+              "term": "Identity Matching",
+              "definition": "Linking CRM contacts to ad platform audiences using email/phone matching."
+            },
+            {
+              "term": "Pipeline ROAS",
+              "definition": "Return on ad spend calculated using CRM pipeline value instead of just revenue."
+            },
+            {
+              "term": "Deal Stages",
+              "definition": "CRM pipeline stages for tracking sales progression."
+            },
+            {
+              "term": "Attribution Model",
+              "definition": "Method for assigning conversion credit to marketing touchpoints."
+            }
+          ]
+        },
+        {
+          "id": "experiments",
+          "name": "A/B Testing & Experiments",
+          "iconName": "BeakerIcon",
+          "color": "#FF5A1F",
+          "terms": [
+            {
+              "term": "Experiment Status",
+              "definition": "Current state of an A/B test or experiment."
+            },
+            {
+              "term": "Statistical Significance",
+              "definition": "Confidence level that results are not due to random chance. Typically 95% threshold."
+            },
+            {
+              "term": "Control/Variant",
+              "definition": "Control is the baseline (original), Variant is the test version being compared."
+            }
+          ]
+        },
+        {
+          "id": "system",
+          "name": "System & Configuration",
+          "iconName": "Cog6ToothIcon",
+          "color": "#FF5A1F",
+          "terms": [
+            {
+              "term": "Service Status",
+              "definition": "Operational state of platform services."
+            },
+            {
+              "term": "Alert Severity",
+              "definition": "Priority level for system and performance alerts."
+            },
+            {
+              "term": "Data Freshness",
+              "definition": "How recently data was last updated. Stale data (>48 hours) may impact accuracy."
+            },
+            {
+              "term": "Webhook",
+              "definition": "HTTP callback that sends real-time notifications when events occur."
+            }
+          ]
+        },
+        {
+          "id": "platforms",
+          "name": "Ad Platforms",
+          "iconName": "CpuChipIcon",
+          "color": "#FF5A1F",
+          "terms": [
+            {
+              "term": "Supported Platforms",
+              "definition": "Ad networks integrated with Stratum AI."
+            },
+            {
+              "term": "Entity Hierarchy",
+              "definition": "Structural levels within ad platforms."
+            },
+            {
+              "term": "Conversion Window",
+              "definition": "Time period after click/view during which conversions are attributed."
+            },
+            {
+              "term": "Custom Audience",
+              "definition": "Platform audience created from your customer data (email, phone lists)."
+            },
+            {
+              "term": "Lookalike/Similar Audience",
+              "definition": "Platform-generated audience of users similar to your custom audience."
+            }
+          ]
+        }
+      ]
+    },
+    "content": null
+  },
+  {
+    "slug": "resources",
+    "title": "Resource Hub",
+    "template": "resources",
+    "meta_title": "Learn, grow, and succeed",
+    "meta_description": "Everything you need to master trust-gated automation and transform your marketing performance.",
+    "content_json": {
+      "guides": [
+        {
+          "title": "Complete Guide to Trust-Gated Automation",
+          "description": "Learn how to set up and optimize trust gates for maximum performance.",
+          "iconName": "BookOpenIcon",
+          "href": "#",
+          "tag": "Guide"
+        },
+        {
+          "title": "CDP Implementation Playbook",
+          "description": "Step-by-step guide to implementing your Customer Data Platform.",
+          "iconName": "BookOpenIcon",
+          "href": "#",
+          "tag": "Playbook"
+        },
+        {
+          "title": "Signal Health Optimization",
+          "description": "Best practices for maintaining healthy signal scores.",
+          "iconName": "BookOpenIcon",
+          "href": "#",
+          "tag": "Guide"
+        },
+        {
+          "title": "Multi-Platform Audience Sync Setup",
+          "description": "Configure audience sync across Meta, Google, TikTok, and Snapchat.",
+          "iconName": "BookOpenIcon",
+          "href": "#",
+          "tag": "Tutorial"
+        }
+      ],
+      "webinars": [
+        {
+          "title": "Mastering Trust-Gated Automation in 2026",
+          "description": "Sarah Chen, VP of Growth; Mike Rodriguez, Product Lead.",
+          "date": "February 15, 2026",
+          "status": "upcoming",
+          "href": "#"
+        },
+        {
+          "title": "CDP Best Practices for E-Commerce",
+          "description": "Lisa Park, CDO; James Liu, Head of Growth.",
+          "date": "January 28, 2026",
+          "status": "on-demand",
+          "href": "#"
+        },
+        {
+          "title": "Predictive Analytics for Marketing Teams",
+          "description": "Dr. Alex Kim, ML Engineer.",
+          "date": "January 10, 2026",
+          "status": "on-demand",
+          "href": "#"
+        }
+      ],
+      "whitepapers": [
+        {
+          "title": "The State of Marketing Automation 2026",
+          "description": "Industry report on automation trends and best practices.",
+          "pages": 42,
+          "href": "#"
+        },
+        {
+          "title": "Signal Health: A New Framework for Ad Optimization",
+          "description": "Technical whitepaper on our signal health methodology.",
+          "pages": 28,
+          "href": "#"
+        },
+        {
+          "title": "Privacy-First Customer Data Strategies",
+          "description": "How to build effective CDP strategies in a privacy-focused world.",
+          "pages": 35,
+          "href": "#"
+        }
+      ]
+    },
+    "content": null
+  },
+  {
+    "slug": "status",
+    "title": "System Status",
+    "template": "status",
+    "meta_title": "Stratum AI System Status",
+    "meta_description": "Real-time status and uptime monitoring for all Stratum AI services.",
+    "content_json": {
+      "services": [
+        {
+          "name": "API Gateway",
+          "status": "operational",
+          "uptime": "99.99%",
+          "latency": "45ms"
+        },
+        {
+          "name": "Dashboard",
+          "status": "operational",
+          "uptime": "99.98%",
+          "latency": "120ms"
+        },
+        {
+          "name": "Trust Engine",
+          "status": "operational",
+          "uptime": "99.99%",
+          "latency": "85ms"
+        },
+        {
+          "name": "CDP Pipeline",
+          "status": "operational",
+          "uptime": "99.97%",
+          "latency": "150ms"
+        },
+        {
+          "name": "Audience Sync",
+          "status": "operational",
+          "uptime": "99.95%",
+          "latency": "200ms"
+        },
+        {
+          "name": "Webhooks",
+          "status": "operational",
+          "uptime": "99.98%",
+          "latency": "65ms"
+        }
+      ],
+      "incidents": [
+        {
+          "title": "Elevated API Latency",
+          "date": "January 18, 2026 - 14:23 UTC",
+          "severity": "minor",
+          "status": "resolved",
+          "updates": [
+            {
+              "time": "15:45",
+              "message": "Issue resolved. All systems operating normally."
+            },
+            {
+              "time": "15:10",
+              "message": "Fix deployed. Monitoring for stability."
+            },
+            {
+              "time": "14:35",
+              "message": "Root cause identified as database connection pool saturation."
+            },
+            {
+              "time": "14:23",
+              "message": "Investigating elevated API response times."
+            }
+          ]
+        }
+      ]
+    },
+    "content": null
+  },
+  {
+    "slug": "solutions-cdp",
+    "title": "Customer Data Platform",
+    "template": "solution",
+    "meta_title": "Customer Data Platform — Stratum AI",
+    "meta_description": "Unify customer profiles across every touchpoint. Build powerful segments and sync them to all your ad platforms instantly.",
+    "content_json": {
+      "hero": {
+        "badge": "Customer Data Platform",
+        "title": "Turn customer data",
+        "titleHighlight": "into revenue",
+        "description": "Unify customer profiles across every touchpoint. Build powerful segments and sync them to all your ad platforms instantly.",
+        "ctaText": "Start Free Trial",
+        "ctaLink": "/signup"
+      },
+      "stats": [
+        {
+          "value": "2.5M+",
+          "label": "Profiles Unified",
+          "description": "Customer profiles unified across sources."
+        },
+        {
+          "value": "47%",
+          "label": "Higher Match Rate",
+          "description": "Improvement in audience match rate."
+        },
+        {
+          "value": "3.2x",
+          "label": "ROAS Improvement",
+          "description": "Average return on ad spend lift."
+        },
+        {
+          "value": "<100ms",
+          "label": "Sync Latency",
+          "description": "Time to push segments to platforms."
+        }
+      ],
+      "features": [
+        {
+          "iconName": "UserGroupIcon",
+          "title": "360° Customer Profiles",
+          "description": "Unified view from anonymous visitor to loyal customer. Real-time enrichment from every interaction."
+        },
+        {
+          "iconName": "CubeTransparentIcon",
+          "title": "Identity Resolution",
+          "description": "Connect the dots across devices and channels. Visual identity graph shows every connection."
+        },
+        {
+          "iconName": "ChartBarIcon",
+          "title": "Smart Segmentation",
+          "description": "Build segments with behavioral rules, RFM scores, and lifecycle stages. Preview before you publish."
+        },
+        {
+          "iconName": "ArrowPathIcon",
+          "title": "Multi-Platform Sync",
+          "description": "Push segments to Meta, Google, TikTok & Snapchat instantly. Auto-sync keeps your audiences fresh."
+        },
+        {
+          "iconName": "SparklesIcon",
+          "title": "Predictive Analytics",
+          "description": "Churn prediction, LTV forecasting, and next-best-action recommendations powered by ML."
+        },
+        {
+          "iconName": "ShieldCheckIcon",
+          "title": "Privacy-First",
+          "description": "Consent management, GDPR/CCPA compliance, and hashed PII for secure platform sync."
+        }
+      ]
+    },
+    "content": null
+  },
+  {
+    "slug": "solutions-audience-sync",
+    "title": "Audience Sync",
+    "template": "solution",
+    "meta_title": "Audience Sync — Stratum AI",
+    "meta_description": "Sync CDP segments to Meta, Google, TikTok, and Snapchat in real-time. Unified audience management across all ad platforms.",
+    "content_json": {
+      "hero": {
+        "badge": "Audience Sync",
+        "title": "Sync audiences to",
+        "titleHighlight": "every ad platform",
+        "description": "Push your CDP segments to Meta, Google, TikTok, and Snapchat with one click. Keep audiences fresh with automatic syncing.",
+        "ctaText": "Start Free Trial",
+        "ctaLink": "/signup"
+      },
+      "features": [
+        {
+          "iconName": "BoltIcon",
+          "title": "One-Click Sync",
+          "description": "Push segments to any platform instantly. No engineering required."
+        },
+        {
+          "iconName": "ClockIcon",
+          "title": "Auto-Refresh",
+          "description": "Configurable sync intervals keep your audiences fresh 24/7."
+        },
+        {
+          "iconName": "ChartBarIcon",
+          "title": "Match Rate Tracking",
+          "description": "Monitor match rates and optimize identifier coverage."
+        },
+        {
+          "iconName": "ShieldCheckIcon",
+          "title": "Privacy-Safe",
+          "description": "Hashed identifiers ensure PII never leaves your control."
+        },
+        {
+          "iconName": "CloudArrowUpIcon",
+          "title": "Flexible Export",
+          "description": "Export as CSV or JSON with custom attributes anytime."
+        },
+        {
+          "iconName": "ArrowPathIcon",
+          "title": "Sync History",
+          "description": "Full audit trail of all sync operations and metrics."
+        }
+      ],
+      "steps": [
+        {
+          "step": 1,
+          "title": "Build Your Segment",
+          "description": "Create segments in the CDP using behavioral rules, RFM scores, or lifecycle stages."
+        },
+        {
+          "step": 2,
+          "title": "Connect Platforms",
+          "description": "Authenticate your ad accounts with a few clicks. No engineering required."
+        },
+        {
+          "step": 3,
+          "title": "Sync & Optimize",
+          "description": "Push to platforms instantly. Set auto-refresh intervals to keep audiences fresh."
+        }
+      ]
+    },
+    "content": null
+  },
+  {
+    "slug": "solutions-trust-engine",
+    "title": "Trust Engine",
+    "template": "solution",
+    "meta_title": "Trust Engine — Stratum AI",
+    "meta_description": "Signal health monitoring and trust-gated automation. Ensure your automations only execute when data is reliable.",
+    "content_json": {
+      "hero": {
+        "badge": "Trust Engine",
+        "title": "Automation with",
+        "titleHighlight": "built-in safety",
+        "description": "The Trust Engine ensures automations only execute when your data is healthy. No more blind optimization based on bad signals.",
+        "ctaText": "Start Free Trial",
+        "ctaLink": "/signup"
+      },
+      "features": [
+        {
+          "iconName": "XCircleIcon",
+          "title": "Prevent Bad Decisions",
+          "description": "Never optimize on corrupted data"
+        },
+        {
+          "iconName": "CheckCircleIcon",
+          "title": "Reduce Manual Oversight",
+          "description": "Automated safety checks 24/7"
+        },
+        {
+          "iconName": "ShieldCheckIcon",
+          "title": "Audit Trail",
+          "description": "Full logging of all gate decisions"
+        },
+        {
+          "iconName": "BoltIcon",
+          "title": "Customizable Thresholds",
+          "description": "Set your own risk tolerance"
+        }
+      ],
+      "steps": [
+        {
+          "step": 1,
+          "title": "Signal Health Check",
+          "description": "Continuous monitoring of data quality"
+        },
+        {
+          "step": 2,
+          "title": "Trust Gate",
+          "description": "Pass / Hold / Block decision"
+        },
+        {
+          "step": 3,
+          "title": "Automation Decision",
+          "description": "Execute only when safe"
+        }
+      ]
+    },
+    "content": null
+  },
+  {
+    "slug": "solutions-predictions",
+    "title": "Predictive Analytics",
+    "template": "solution",
+    "meta_title": "Predictive Analytics — Stratum AI",
+    "meta_description": "ML-powered predictions for ROAS, churn risk, and budget optimization. Make data-driven decisions with confidence.",
+    "content_json": {
+      "hero": {
+        "badge": "ML Predictions",
+        "title": "Predict the future,",
+        "titleHighlight": "act today",
+        "description": "Machine learning models trained on your data deliver actionable predictions for churn, LTV, revenue, and optimal customer actions.",
+        "ctaText": "Start Free Trial",
+        "ctaLink": "/signup"
+      },
+      "features": [
+        {
+          "iconName": "UserMinusIcon",
+          "title": "Churn Prediction",
+          "description": "Identify at-risk customers before they leave. Get actionable retention recommendations."
+        },
+        {
+          "iconName": "CurrencyDollarIcon",
+          "title": "LTV Forecasting",
+          "description": "Predict customer lifetime value at acquisition. Optimize acquisition spend accordingly."
+        },
+        {
+          "iconName": "ArrowTrendingUpIcon",
+          "title": "Revenue Forecasting",
+          "description": "Accurate revenue predictions based on historical patterns and market signals."
+        },
+        {
+          "iconName": "LightBulbIcon",
+          "title": "Next-Best-Action",
+          "description": "AI-powered recommendations for the optimal next engagement for each customer."
+        }
+      ],
+      "steps": [
+        {
+          "step": 1,
+          "title": "Connect Data",
+          "description": "Link your customer and event data"
+        },
+        {
+          "step": 2,
+          "title": "Train Models",
+          "description": "ML models learn from your patterns"
+        },
+        {
+          "step": 3,
+          "title": "Get Predictions",
+          "description": "Real-time scores for every customer"
+        },
+        {
+          "step": 4,
+          "title": "Take Action",
+          "description": "Automated workflows based on predictions"
+        }
+      ]
+    },
+    "content": null
+  },
+  {
+    "slug": "privacy",
+    "title": "Privacy Policy",
+    "template": "default",
+    "meta_title": "Privacy Policy",
+    "meta_description": "Stratum AI Privacy Policy. Learn how we collect, use, and protect your personal data.",
+    "content_json": null,
+    "content": "<p>Last updated: January 15, 2026</p>\n<h2>1. Introduction</h2>\n<p>Stratum AI, Inc. (\"Stratum AI,\" \"we,\" \"us,\" or \"our\") respects your privacy and is committed to protecting your personal data. This privacy policy explains how we collect, use, disclose, and safeguard your information when you use our services.</p>\n<h2>2. Information We Collect</h2>\n<h3>2.1 Information You Provide</h3>\n<ul>\n<li>Account registration information (name, email, company)</li>\n<li>Payment and billing information</li>\n<li>Communications with our support team</li>\n<li>Survey responses and feedback</li>\n</ul>\n<h3>2.2 Information Collected Automatically</h3>\n<ul>\n<li>Device and browser information</li>\n<li>IP address and location data</li>\n<li>Usage data and analytics</li>\n<li>Cookies and similar technologies</li>\n</ul>\n<h2>3. How We Use Your Information</h2>\n<ul>\n<li>Provide and maintain our services</li>\n<li>Process transactions and send billing information</li>\n<li>Send technical notices and security alerts</li>\n<li>Respond to your comments and questions</li>\n<li>Analyze usage patterns to improve our services</li>\n<li>Detect and prevent fraud and abuse</li>\n</ul>\n<h2>4. Data Sharing</h2>\n<p>We may share your information with:</p>\n<ul>\n<li>Service providers who assist in our operations</li>\n<li>Business partners with your consent</li>\n<li>Legal authorities when required by law</li>\n<li>Parties involved in a business transaction (merger, acquisition)</li>\n</ul>\n<h2>5. Data Security</h2>\n<p>We implement industry-standard security measures to protect your data, including encryption at rest and in transit, access controls, and regular security audits. However, no method of transmission over the internet is 100% secure.</p>\n<h2>6. Your Rights</h2>\n<p>Depending on your location, you may have the right to:</p>\n<ul>\n<li>Access your personal data</li>\n<li>Correct inaccurate data</li>\n<li>Delete your data</li>\n<li>Object to or restrict processing</li>\n<li>Data portability</li>\n<li>Withdraw consent</li>\n</ul>\n<h2>7. International Transfers</h2>\n<p>Your data may be transferred to and processed in countries other than your own. We ensure appropriate safeguards are in place, including Standard Contractual Clauses approved by the European Commission.</p>\n<h2>8. Data Retention</h2>\n<p>We retain your data for as long as your account is active or as needed to provide services. We may retain certain information as required by law or for legitimate business purposes.</p>\n<h2>9. Contact Us</h2>\n<p>For questions about this privacy policy or our data practices, please contact our Data Protection Officer at:</p>\n<p><strong>Email:</strong> privacy@stratum.ai<br /><strong>Address:</strong> 548 Market Street, Suite 35000, San Francisco, CA 94104</p>"
+  },
+  {
+    "slug": "terms",
+    "title": "Terms of Service",
+    "template": "default",
+    "meta_title": "Terms of Service",
+    "meta_description": "Stratum AI Terms of Service. Review the terms governing your use of our revenue operating system.",
+    "content_json": null,
+    "content": "<p>Last updated: January 15, 2026</p>\n<h2>1. Acceptance of Terms</h2>\n<p>By accessing or using Stratum AI's services, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our services.</p>\n<h2>2. Description of Services</h2>\n<p>Stratum AI provides a revenue operating system with trust-gated automation, customer data platform, and marketing intelligence capabilities. Our services include but are not limited to signal health monitoring, audience synchronization, predictive analytics, and automated campaign optimization.</p>\n<h2>3. Account Registration</h2>\n<ul>\n<li>You must provide accurate and complete registration information</li>\n<li>You are responsible for maintaining the security of your account</li>\n<li>You must notify us immediately of any unauthorized access</li>\n<li>You may not share your account credentials with others</li>\n</ul>\n<h2>4. Acceptable Use</h2>\n<p>You agree not to:</p>\n<ul>\n<li>Violate any applicable laws or regulations</li>\n<li>Infringe on the rights of others</li>\n<li>Transmit harmful code or interfere with our services</li>\n<li>Attempt to gain unauthorized access to our systems</li>\n<li>Use our services for spam or unsolicited communications</li>\n<li>Reverse engineer or decompile our software</li>\n</ul>\n<h2>5. Payment Terms</h2>\n<ul>\n<li>Fees are billed in advance on a monthly or annual basis</li>\n<li>All fees are non-refundable unless otherwise stated</li>\n<li>We may change pricing with 30 days notice</li>\n<li>You are responsible for all applicable taxes</li>\n</ul>\n<h2>6. Intellectual Property</h2>\n<p>All intellectual property rights in our services remain with Stratum AI. You are granted a limited, non-exclusive license to use our services for your internal business purposes. You retain ownership of your data.</p>\n<h2>7. Data Processing</h2>\n<p>Our processing of personal data is governed by our Privacy Policy and Data Processing Agreement. You represent that you have the right to provide us with any data you submit and that such data complies with applicable laws.</p>\n<h2>8. Limitation of Liability</h2>\n<p>TO THE MAXIMUM EXTENT PERMITTED BY LAW, STRATUM AI SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES. OUR TOTAL LIABILITY SHALL NOT EXCEED THE AMOUNTS PAID BY YOU IN THE TWELVE MONTHS PRECEDING THE CLAIM.</p>\n<h2>9. Indemnification</h2>\n<p>You agree to indemnify and hold harmless Stratum AI from any claims, damages, or expenses arising from your use of our services or violation of these terms.</p>\n<h2>10. Termination</h2>\n<p>Either party may terminate this agreement with 30 days written notice. We may suspend or terminate your access immediately for violation of these terms. Upon termination, you may request export of your data within 30 days.</p>\n<h2>11. Governing Law</h2>\n<p>These terms are governed by the laws of the State of California. Any disputes shall be resolved in the courts of San Francisco County, California.</p>\n<h2>12. Contact</h2>\n<p>For questions about these terms, please contact us at:<br /><strong>Email:</strong> legal@stratum.ai</p>"
+  },
+  {
+    "slug": "security",
+    "title": "Security",
+    "template": "default",
+    "meta_title": "Security",
+    "meta_description": "Enterprise-grade security at Stratum AI. SOC 2 Type II certified, GDPR compliant, with encryption at rest and in transit.",
+    "content_json": null,
+    "content": "<h2>Security Features</h2>\n<h3>Encryption at Rest</h3>\n<p>All data is encrypted using AES-256 encryption when stored.</p>\n<h3>Encryption in Transit</h3>\n<p>TLS 1.3 encryption for all data transmission.</p>\n<h3>Access Controls</h3>\n<p>Role-based access control with multi-factor authentication.</p>\n<h3>Audit Logging</h3>\n<p>Comprehensive audit logs for all system activities.</p>\n<h3>SOC 2 Type II</h3>\n<p>Annual SOC 2 Type II certification for security controls.</p>\n<h3>GDPR Compliant</h3>\n<p>Full compliance with GDPR, CCPA, and other privacy regulations.</p>\n<h2>Our Security Practices</h2>\n<h3>Infrastructure Security</h3>\n<p>Our infrastructure is hosted on AWS with multiple availability zones for high availability. We use VPCs, security groups, and network ACLs to isolate and protect our systems.</p>\n<h3>Application Security</h3>\n<p>We follow secure development practices including code reviews, static analysis, and regular penetration testing. All dependencies are continuously monitored for vulnerabilities.</p>\n<h3>Data Protection</h3>\n<p>Customer data is isolated using tenant-specific encryption keys. We implement data minimization principles and retain data only as long as necessary.</p>\n<h3>Incident Response</h3>\n<p>We maintain a 24/7 security operations team and have a documented incident response plan. Customers are notified within 72 hours of any security incident affecting their data.</p>\n<h3>Employee Security</h3>\n<p>All employees undergo background checks and security training. Access to customer data is limited to those who require it for their job function.</p>\n<h2>Certifications &amp; Compliance</h2>\n<ul>\n<li>SOC 2 Type II</li>\n<li>GDPR</li>\n<li>CCPA</li>\n<li>ISO 27001</li>\n<li>HIPAA Ready</li>\n</ul>\n<h2>Security Questions?</h2>\n<p>Contact our security team for questions, vulnerability reports, or to request our SOC 2 report.</p>\n<p><strong>Email:</strong> <a href=\"mailto:security@stratum.ai\">security@stratum.ai</a></p>"
+  },
+  {
+    "slug": "dpa",
+    "title": "Data Processing Agreement",
+    "template": "default",
+    "meta_title": "Data Processing Agreement",
+    "meta_description": "Stratum AI Data Processing Agreement. Details on how we process personal data on behalf of our customers.",
+    "content_json": null,
+    "content": "<p>Last updated: January 15, 2026</p>\n<h2>1. Introduction</h2>\n<p>This Data Processing Agreement (\"DPA\") forms part of the Terms of Service between Stratum AI, Inc. (\"Processor\") and the Customer (\"Controller\") and governs the processing of personal data by Processor on behalf of Controller.</p>\n<h2>2. Definitions</h2>\n<ul>\n<li><strong>\"Personal Data\"</strong> means any information relating to an identified or identifiable natural person.</li>\n<li><strong>\"Processing\"</strong> means any operation performed on Personal Data.</li>\n<li><strong>\"Data Subject\"</strong> means the individual to whom Personal Data relates.</li>\n<li><strong>\"Sub-processor\"</strong> means any third party engaged by Processor to process Personal Data.</li>\n</ul>\n<h2>3. Scope of Processing</h2>\n<h3>3.1 Subject Matter</h3>\n<p>Processor processes Personal Data to provide the services described in the Terms of Service, including customer data platform, audience synchronization, and marketing automation.</p>\n<h3>3.2 Categories of Data</h3>\n<ul>\n<li>Contact information (name, email, phone)</li>\n<li>Identifiers (customer IDs, device IDs)</li>\n<li>Behavioral data (events, page views, purchases)</li>\n<li>Marketing data (campaign interactions, conversions)</li>\n</ul>\n<h3>3.3 Categories of Data Subjects</h3>\n<ul>\n<li>Controller's customers and prospects</li>\n<li>Controller's website visitors</li>\n<li>Controller's employees (if applicable)</li>\n</ul>\n<h2>4. Processor Obligations</h2>\n<ul>\n<li>Process Personal Data only on documented instructions from Controller</li>\n<li>Ensure personnel are bound by confidentiality obligations</li>\n<li>Implement appropriate technical and organizational security measures</li>\n<li>Assist Controller with Data Subject requests</li>\n<li>Assist Controller with security incident notifications</li>\n<li>Delete or return Personal Data upon termination</li>\n<li>Make available information necessary for compliance audits</li>\n</ul>\n<h2>5. Sub-processors</h2>\n<p>Controller provides general authorization for Processor to engage Sub-processors. Processor maintains a list of current Sub-processors at stratum.ai/legal/subprocessors. Processor will notify Controller of any new Sub-processors 30 days in advance.</p>\n<h2>6. International Transfers</h2>\n<p>For transfers of Personal Data outside the EEA, Processor ensures appropriate safeguards through:</p>\n<ul>\n<li>Standard Contractual Clauses (SCCs)</li>\n<li>Data Privacy Framework certification (where applicable)</li>\n<li>Other lawful transfer mechanisms</li>\n</ul>\n<h2>7. Security Measures</h2>\n<p>Processor implements the following security measures:</p>\n<ul>\n<li>Encryption of data at rest and in transit</li>\n<li>Access controls and authentication</li>\n<li>Regular security testing and audits</li>\n<li>Incident response procedures</li>\n<li>Employee security training</li>\n<li>Physical security of data centers</li>\n</ul>\n<h2>8. Data Subject Rights</h2>\n<p>Processor will assist Controller in responding to Data Subject requests for access, rectification, erasure, restriction, portability, and objection, taking into account the nature of the processing.</p>\n<h2>9. Data Breach Notification</h2>\n<p>Processor will notify Controller without undue delay, and in any event within 48 hours, after becoming aware of a Personal Data breach. Notification will include the nature of the breach, categories of data affected, and recommended mitigation measures.</p>\n<h2>10. Audit Rights</h2>\n<p>Controller may audit Processor's compliance with this DPA once per year with reasonable notice. Processor will provide SOC 2 Type II reports and other compliance documentation upon request.</p>\n<h2>11. Term and Termination</h2>\n<p>This DPA remains in effect for the duration of the Terms of Service. Upon termination, Processor will delete all Personal Data within 90 days unless retention is required by law.</p>\n<h2>12. Contact</h2>\n<p>For questions about this DPA, please contact our Data Protection Officer at:</p>\n<p><strong>Email:</strong> dpo@stratum.ai<br /><strong>Address:</strong> 548 Market Street, Suite 35000, San Francisco, CA 94104</p>"
+  }
+]
