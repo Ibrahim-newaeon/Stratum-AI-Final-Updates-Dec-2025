@@ -1,12 +1,13 @@
 /**
- * Pricing Page
- * Displays pricing tiers for Stratum AI
+ * Pricing Page — landing-themed (ink + ember).
  */
 
 import { Link } from 'react-router-dom';
+import { Check } from 'lucide-react';
 import { usePageContent, type PricingPageContent } from '@/api/cms';
 import { PageLayout } from '@/components/landing/PageLayout';
-import { CheckIcon } from '@heroicons/react/24/outline';
+import { CTA } from '@/components/landing/CTA';
+import { MktHero, MktSectionHeader, MktCard } from '@/components/landing/marketing';
 import { pageSEO, SEO } from '@/components/common/SEO';
 
 const fallbackTiers = [
@@ -91,7 +92,6 @@ const fallbackFaqs = [
 export default function Pricing() {
   const { page, content } = usePageContent<PricingPageContent>('pricing');
 
-  // Use CMS data if available, otherwise fallback
   const tiers = content?.tiers?.length
     ? content.tiers.map((t) => ({
         name: t.name,
@@ -100,7 +100,11 @@ export default function Pricing() {
         description: t.description,
         features: t.features,
         cta: t.cta,
-        href: t.highlighted ? '/signup?plan=professional' : t.name === 'Enterprise' ? '/contact' : `/signup?plan=${t.name.toLowerCase()}`,
+        href: t.highlighted
+          ? '/signup?plan=professional'
+          : t.name === 'Enterprise'
+            ? '/contact'
+            : `/signup?plan=${t.name.toLowerCase()}`,
         highlighted: t.highlighted,
       }))
     : fallbackTiers;
@@ -114,129 +118,91 @@ export default function Pricing() {
 
   return (
     <PageLayout>
-      <SEO {...pageSEO.pricing} title={seoTitle} description={seoDescription} url="https://stratum-ai.com/pricing" />
-      {/* Hero Section */}
-      <section className="py-20 px-6">
-        <div className="max-w-7xl mx-auto text-center">
-          <h1
-            className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6"
-            style={{ fontFamily: "Geist, system-ui, sans-serif" }}
-          >
-            <span className="text-white">Simple, Transparent</span>
-            <br />
-            <span
-              style={{ color: 'var(--landing-accent-coral)' }}
-            >
-              Pricing
-            </span>
-          </h1>
-          <p
-            className="text-lg md:text-xl max-w-2xl mx-auto"
-            style={{ color: 'var(--landing-text)' }}
-          >
-            Choose the plan that fits your team. All plans include a 14-day free trial.
-          </p>
-        </div>
-      </section>
+      <SEO
+        {...pageSEO.pricing}
+        title={seoTitle}
+        description={seoDescription}
+        url="https://stratumai.app/pricing"
+      />
 
-      {/* Pricing Cards */}
-      <section className="py-12 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {tiers.map((tier) => (
-              <div
+      <MktHero
+        badge="Pricing"
+        title="Simple, transparent"
+        highlight="pricing"
+        subtitle="Start with a 14-day free trial — no credit card required. Scale up as your revenue operations grow."
+      />
+
+      {/* Tiers */}
+      <section className="pb-12">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            {tiers.map((tier, i) => (
+              <MktCard
                 key={tier.name}
-                className={`relative p-8 rounded-3xl transition-transform hover:scale-[1.02] ${
-                  tier.highlighted ? 'ring-2' : ''
+                delay={i * 0.06}
+                className={`relative p-8 ${
+                  tier.highlighted
+                    ? 'border-secondary/40 shadow-glow lg:-mt-4 lg:mb-4'
+                    : ''
                 }`}
-                style={{
-                  background: 'var(--landing-card)',
-                  border: '1px solid var(--landing-border)',
-                  borderTop: tier.highlighted ? '3px solid #FF5A1F' : undefined,
-                }}
               >
-                {tier.highlighted && (
-                  <div
-                    className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-xs font-semibold"
-                    style={{
-                      background: 'var(--landing-accent-coral)',
-                      color: '#ffffff',
-                    }}
-                  >
-                    Most Popular
-                  </div>
-                )}
-
-                <div className="mb-6">
-                  <h3 className="text-xl font-semibold text-white mb-2">{tier.name}</h3>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-bold text-white">{tier.price}</span>
-                    <span style={{ color: 'var(--landing-text-dim)' }}>{tier.period}</span>
-                  </div>
-                  <p className="mt-3 text-sm" style={{ color: 'var(--landing-text)' }}>
-                    {tier.description}
-                  </p>
+                {tier.highlighted ? (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center px-3 py-1 rounded-full bg-stratum-500 text-primary-foreground text-meta uppercase font-semibold">
+                    Most popular
+                  </span>
+                ) : null}
+                <h3 className="text-h2 text-foreground font-semibold">{tier.name}</h3>
+                <p className="mt-2 text-body text-muted-foreground min-h-[2.75rem]">
+                  {tier.description}
+                </p>
+                <div className="mt-6 flex items-baseline gap-1">
+                  <span className="text-display-sm text-foreground font-medium">
+                    {tier.price}
+                  </span>
+                  {tier.period ? (
+                    <span className="text-body text-muted-foreground">{tier.period}</span>
+                  ) : null}
                 </div>
-
-                <ul className="space-y-3 mb-8">
-                  {tier.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-3">
-                      <CheckIcon
-                        className="w-5 h-5 flex-shrink-0 mt-0.5"
-                        style={{ color: 'var(--landing-accent-teal)' }}
-                      />
-                      <span className="text-sm" style={{ color: 'var(--landing-text-white-mid)' }}>
-                        {feature}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-
                 <Link
                   to={tier.href}
-                  className={`block w-full py-3 px-6 text-center font-semibold transition-[width] ${
-                    tier.highlighted ? 'rounded-full' : 'rounded-xl'
+                  className={`mt-6 inline-flex w-full items-center justify-center px-6 py-3 rounded-full text-body font-semibold transition-all duration-200 ${
+                    tier.highlighted
+                      ? 'bg-stratum-500 text-primary-foreground hover:brightness-110 hover:shadow-glow'
+                      : 'bg-card border border-border text-foreground hover:bg-foreground/5'
                   }`}
-                  style={{
-                    background: tier.highlighted ? 'var(--landing-accent-coral)' : 'var(--landing-surface-glass)',
-                    color: '#ffffff',
-                    border: tier.highlighted ? 'none' : '1px solid rgba(255, 255, 255, 0.2)',
-                    boxShadow: tier.highlighted ? '0 4px 20px rgba(255, 90, 31, 0.3)' : 'none',
-                  }}
                 >
                   {tier.cta}
                 </Link>
-              </div>
+                <ul className="mt-8 space-y-3">
+                  {tier.features.map((feature) => (
+                    <li key={feature} className="flex items-start gap-3">
+                      <Check className="w-4 h-4 mt-0.5 flex-shrink-0 text-secondary" />
+                      <span className="text-body text-muted-foreground">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </MktCard>
             ))}
           </div>
         </div>
       </section>
 
-      {/* FAQ Section */}
-      <section className="py-20 px-6">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-3xl font-bold text-white text-center mb-12">
-            Frequently Asked Questions
-          </h2>
-          <div className="space-y-6">
-            {faqs.map((faq) => (
-              <div
-                key={faq.q}
-                className="p-6 rounded-2xl"
-                style={{
-                  background: 'var(--landing-card)',
-                  border: '1px solid var(--landing-border)',
-                }}
-              >
-                <h3 className="text-lg font-semibold text-white mb-2">{faq.q}</h3>
-                <p className="text-sm" style={{ color: 'var(--landing-text)' }}>
-                  {faq.a}
-                </p>
-              </div>
+      {/* FAQ */}
+      <section className="py-24 lg:py-28">
+        <div className="max-w-3xl mx-auto px-6 lg:px-8">
+          <MktSectionHeader eyebrow="FAQ" title="Questions," highlight="answered" />
+          <div className="space-y-4">
+            {faqs.map((faq, i) => (
+              <MktCard key={faq.q} delay={i * 0.05} className="p-6">
+                <h3 className="text-h3 text-foreground font-semibold mb-2">{faq.q}</h3>
+                <p className="text-body text-muted-foreground leading-relaxed">{faq.a}</p>
+              </MktCard>
             ))}
           </div>
         </div>
       </section>
+
+      <CTA />
     </PageLayout>
   );
 }
