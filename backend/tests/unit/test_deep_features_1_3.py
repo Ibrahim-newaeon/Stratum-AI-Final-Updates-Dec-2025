@@ -1242,6 +1242,9 @@ class TestEnforcementAddRule:
 
     async def test_happy_path(self, api_client, admin_headers, mock_db):
         with patch(
+            "app.services.tenant.limits.check_tenant_limit",
+            new_callable=AsyncMock,
+        ), patch(
             "app.api.v1.endpoints.autopilot_enforcement.AutopilotEnforcer"
         ) as MockEnf, patch(
             "app.api.v1.endpoints.autopilot_enforcement.ViolationType"
