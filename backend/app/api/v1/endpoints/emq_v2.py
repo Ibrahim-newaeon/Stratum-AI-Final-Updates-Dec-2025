@@ -543,7 +543,7 @@ async def update_autopilot_mode(
         raise HTTPException(status_code=400, detail=f"Invalid mode: {update.mode}")
 
     # Query actual tenant spend for budget-at-risk calculation
-    from sqlalchemy import func
+    from sqlalchemy import func, select
 
     from app.models import Campaign
 
