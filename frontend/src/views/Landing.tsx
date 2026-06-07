@@ -39,7 +39,7 @@ export default function Landing() {
   }, [pagesData]);
 
   return (
-    <div className="min-h-screen bg-background font-sans">
+    <div className="dark min-h-screen bg-background font-sans">
       {/* Navigation */}
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-200 ${

@@ -73,7 +73,7 @@ export function PageLayout({ children }: PageLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="dark min-h-screen flex flex-col bg-background">
       {/* Ambient background */}
       <div
         className="fixed inset-0 pointer-events-none z-0"
