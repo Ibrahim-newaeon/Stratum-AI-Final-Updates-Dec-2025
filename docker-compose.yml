@@ -268,7 +268,8 @@ services:
     volumes:
       - ./backend:/app
     depends_on:
-      - worker
+      worker:
+        condition: service_started
       api:
         condition: service_healthy
     healthcheck:
