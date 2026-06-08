@@ -141,6 +141,11 @@ jobs:
           REDIS_PASSWORD=test_redis_password
           WHATSAPP_VERIFY_TOKEN=test_whatsapp_verify_token
           FLOWER_PASSWORD=test_flower_password
+          # Skip the startup ML auto-train: the image bakes models at build time
+          # (build_ml_models.py), but the api service bind-mounts ./backend over
+          # /app, shadowing them — runtime training would block /health and OOM
+          # the 1G limit. The health check doesn't need ML models.
+          ML_AUTO_TRAIN=false
           EOF
 
       - name: Start services

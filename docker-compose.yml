@@ -90,6 +90,7 @@ services:
       - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:?REDIS_PASSWORD must be set}@redis:6379/1
       - ML_PROVIDER=${ML_PROVIDER:-local}
       - ML_MODELS_PATH=/app/ml_service/models
+      - ML_AUTO_TRAIN=${ML_AUTO_TRAIN:-true}
       - USE_MOCK_AD_DATA=${USE_MOCK_AD_DATA:-true}
       - MARKET_INTEL_PROVIDER=${MARKET_INTEL_PROVIDER:-mock}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:?JWT_SECRET_KEY must be set}
@@ -147,7 +148,11 @@ services:
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5173}
     volumes:
       - ./backend:/app
-      - ./backend/app/ml:/app/ml_service/models:ro
+      # NOTE: do NOT mount ./backend/app/ml over /app/ml_service/models — that
+      # path holds the models pre-trained at image build time
+      # (scripts/build_ml_models.py), and ./backend/app/ml is ML *source code*,
+      # not models. Shadowing it makes the app find no models and fall back to
+      # ~9.5 GB runtime training that blocks /health (and OOMs the 1G limit).
     ports:
       - "8000:8000"
     depends_on:
@@ -197,6 +202,7 @@ services:
       - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:?}@redis:6379/2
       - ML_PROVIDER=${ML_PROVIDER:-local}
       - ML_MODELS_PATH=/app/ml_service/models
+      - ML_AUTO_TRAIN=${ML_AUTO_TRAIN:-true}
       - USE_MOCK_AD_DATA=${USE_MOCK_AD_DATA:-true}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       # Ad Platform Credentials (needed for sync tasks)
@@ -230,7 +236,7 @@ services:
       - ENABLE_WHATSAPP=${ENABLE_WHATSAPP:-false}
     volumes:
       - ./backend:/app
-      - ./backend/app/ml:/app/ml_service/models:ro
+      # See the api service: models are baked into the image; don't shadow them.
     depends_on:
       db:
         condition: service_healthy

@@ -187,7 +187,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
         from pathlib import Path
 
         models_path = Path(settings.ml_models_path)
-        if not models_path.exists() or not list(models_path.glob("*.pkl")):
+        if settings.ml_auto_train and (
+            not models_path.exists() or not list(models_path.glob("*.pkl"))
+        ):
             logger.info(
                 "ml_models_not_found",
                 path=str(models_path),
