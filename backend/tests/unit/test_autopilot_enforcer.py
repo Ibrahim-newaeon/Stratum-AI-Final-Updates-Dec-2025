@@ -46,6 +46,21 @@ def enforcer():
     return instance
 
 
+@pytest.fixture(autouse=True)
+def _no_db_subscription(monkeypatch):
+    """check_action() calls get_subscription_info(), which opens its own DB
+    session. These enforcer tests run without a database (db=None), so stub it
+    to a non-restricted subscription — the subscription gate becomes a no-op
+    and no real connection is attempted."""
+    from types import SimpleNamespace
+
+    info = SimpleNamespace(is_access_restricted=False)
+    monkeypatch.setattr(
+        "app.core.subscription.get_subscription_info",
+        AsyncMock(return_value=info),
+    )
+
+
 @pytest.fixture
 def default_settings():
     """Create default enforcement settings."""

@@ -361,12 +361,27 @@ class TestReportingTemplatesCRUD:
     ):
         tpl = _fake_template()
 
-        async def _refresh(obj, *a, **kw):
-            for attr, val in tpl.__dict__.items():
-                if not attr.startswith("_"):
-                    setattr(obj, attr, val)
+        def _populate(obj):
+            # The endpoint adds + commits but never refreshes; a real DB would
+            # populate id / timestamps / column defaults on flush. Mirror that
+            # on add() so the response model validates.
+            for attr in (
+                "id",
+                "tenant_id",
+                "name",
+                "description",
+                "report_type",
+                "config",
+                "default_format",
+                "available_formats",
+                "is_active",
+                "is_system",
+                "created_at",
+                "updated_at",
+            ):
+                setattr(obj, attr, getattr(tpl, attr))
 
-        mock_db.refresh = AsyncMock(side_effect=_refresh)
+        mock_db.add = MagicMock(side_effect=_populate)
 
         r = await reporting_client.post(
             "/api/v1/reporting/templates",
@@ -1009,8 +1024,12 @@ class TestSuperAdminTenantPortfolio:
 
     async def test_portfolio_happy(self, api_client, mock_db, superadmin_headers):
         tenant = _fake_tenant()
-        user_count_result = make_scalar_result(3)
-        campaign_count_result = make_scalar_result(5)
+        # The endpoint batches counts in grouped queries and reads .all() ->
+        # rows of (tenant_id, count), not a single scalar.
+        user_count_result = MagicMock()
+        user_count_result.all.return_value = [(tenant.id, 3)]
+        campaign_count_result = MagicMock()
+        campaign_count_result.all.return_value = [(tenant.id, 5)]
         mock_db.execute = AsyncMock(
             side_effect=[
                 make_scalars_result([tenant]),
