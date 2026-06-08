@@ -350,7 +350,9 @@ jobs:
 
     services:
       postgres:
-        image: postgres:16-alpine
+        # pgvector image: load-tests runs `alembic upgrade head`, which includes
+        # migration 049 (CREATE EXTENSION vector). Plain postgres:16 lacks it.
+        image: pgvector/pgvector:pg16
         env:
           POSTGRES_USER: test
           POSTGRES_PASSWORD: test

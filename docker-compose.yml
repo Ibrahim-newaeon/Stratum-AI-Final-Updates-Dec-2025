@@ -3,7 +3,12 @@ services:
   # PostgreSQL 16 Database
   # ===========================================================================
   db:
-    image: postgres:16-alpine
+    # pgvector/pgvector:pg16 is the official PostgreSQL 16 image with the
+    # pgvector extension preinstalled — required by migration 049
+    # (copilot_doc_chunks uses a vector(1536) column / CREATE EXTENSION vector).
+    # Railway's managed Postgres ships pgvector; this keeps the compose stack
+    # at parity so `alembic upgrade head` runs the full migration set.
+    image: pgvector/pgvector:pg16
     container_name: stratum_db
     restart: unless-stopped
     environment:
