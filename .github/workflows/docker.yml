@@ -138,6 +138,9 @@ jobs:
           JWT_SECRET_KEY=test-jwt-secret
           PII_ENCRYPTION_KEY=dGVzdC1lbmNyeXB0aW9uLWtleS0zMmJ5dGVz
           APP_ENV=test
+          REDIS_PASSWORD=test_redis_password
+          WHATSAPP_VERIFY_TOKEN=test_whatsapp_verify_token
+          FLOWER_PASSWORD=test_flower_password
           EOF
 
       - name: Start services
