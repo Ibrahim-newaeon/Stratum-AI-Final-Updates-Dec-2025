@@ -70,7 +70,6 @@ class TestPlatforms:
         assert nlf._extract_platforms("show x performance")[0].value == "twitter"
         assert nlf._extract_platforms("roas above 3x") == []
 
-
 # =============================================================================
 # Metric threshold extraction
 # =============================================================================
