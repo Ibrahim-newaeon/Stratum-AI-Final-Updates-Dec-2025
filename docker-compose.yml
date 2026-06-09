@@ -3,7 +3,12 @@ services:
   # PostgreSQL 16 Database
   # ===========================================================================
   db:
-    image: postgres:16-alpine
+    # pgvector/pgvector:pg16 is the official PostgreSQL 16 image with the
+    # pgvector extension preinstalled — required by migration 049
+    # (copilot_doc_chunks uses a vector(1536) column / CREATE EXTENSION vector).
+    # Railway's managed Postgres ships pgvector; this keeps the compose stack
+    # at parity so `alembic upgrade head` runs the full migration set.
+    image: pgvector/pgvector:pg16
     container_name: stratum_db
     restart: unless-stopped
     environment:
@@ -85,13 +90,24 @@ services:
       - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:?REDIS_PASSWORD must be set}@redis:6379/1
       - ML_PROVIDER=${ML_PROVIDER:-local}
       - ML_MODELS_PATH=/app/ml_service/models
+      - ML_AUTO_TRAIN=${ML_AUTO_TRAIN:-true}
       - USE_MOCK_AD_DATA=${USE_MOCK_AD_DATA:-true}
       - MARKET_INTEL_PROVIDER=${MARKET_INTEL_PROVIDER:-mock}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:?JWT_SECRET_KEY must be set}
       - PII_ENCRYPTION_KEY=${PII_ENCRYPTION_KEY:?PII_ENCRYPTION_KEY must be set}
+      # Passed through so the lifespan superadmin seeder (scripts/seed_superadmin,
+      # which sys.exit(1)s at import when unset) can start. Optional locally.
+      - SUPERADMIN_EMAIL=${SUPERADMIN_EMAIL:-}
+      - SUPERADMIN_PASSWORD=${SUPERADMIN_PASSWORD:-}
       - CORS_ORIGINS=http://localhost:3000,http://localhost:5173
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - LOG_FORMAT=${LOG_FORMAT:-json}
+      # Asset uploads: the ./backend:/app bind mount below shadows the image's
+      # appuser-owned /app/uploads with host-owned source, so the default
+      # relative "uploads/assets" path isn't writable by uid 1000. Point it at
+      # appuser's home, which the image owns and no mount shadows. On Railway
+      # (no bind mount) the in-image /app/uploads default works unchanged.
+      - ASSET_UPLOAD_DIR=${ASSET_UPLOAD_DIR:-/home/appuser/uploads/assets}
       # Ad Platform Credentials
       - META_APP_ID=${META_APP_ID:-}
       - META_APP_SECRET=${META_APP_SECRET:-}
@@ -136,7 +152,11 @@ services:
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5173}
     volumes:
       - ./backend:/app
-      - ./backend/app/ml:/app/ml_service/models:ro
+      # NOTE: do NOT mount ./backend/app/ml over /app/ml_service/models — that
+      # path holds the models pre-trained at image build time
+      # (scripts/build_ml_models.py), and ./backend/app/ml is ML *source code*,
+      # not models. Shadowing it makes the app find no models and fall back to
+      # ~9.5 GB runtime training that blocks /health (and OOMs the 1G limit).
     ports:
       - "8000:8000"
     depends_on:
@@ -186,6 +206,7 @@ services:
       - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:?}@redis:6379/2
       - ML_PROVIDER=${ML_PROVIDER:-local}
       - ML_MODELS_PATH=/app/ml_service/models
+      - ML_AUTO_TRAIN=${ML_AUTO_TRAIN:-true}
       - USE_MOCK_AD_DATA=${USE_MOCK_AD_DATA:-true}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       # Ad Platform Credentials (needed for sync tasks)
@@ -219,7 +240,7 @@ services:
       - ENABLE_WHATSAPP=${ENABLE_WHATSAPP:-false}
     volumes:
       - ./backend:/app
-      - ./backend/app/ml:/app/ml_service/models:ro
+      # See the api service: models are baked into the image; don't shadow them.
     depends_on:
       db:
         condition: service_healthy
@@ -268,7 +289,8 @@ services:
     volumes:
       - ./backend:/app
     depends_on:
-      - worker
+      worker:
+        condition: service_started
       api:
         condition: service_healthy
     healthcheck:
