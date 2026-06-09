@@ -256,7 +256,7 @@ class AuditMiddleware(BaseHTTPMiddleware):
 
             client = redis.from_url(settings.redis_url)
             try:
-                await client.lpush(AUDIT_LOG_QUEUE_KEY, json.dumps(audit_entry))  # type: ignore[misc]
+                await client.lpush(AUDIT_LOG_QUEUE_KEY, json.dumps(audit_entry))
             finally:
                 await client.close()
         except (ConnectionError, TimeoutError, OSError) as e:

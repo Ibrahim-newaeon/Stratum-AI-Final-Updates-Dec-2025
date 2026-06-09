@@ -30,40 +30,66 @@ export default defineConfig({
     chunkSizeWarningLimit: 700,
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-charts': ['recharts'],
-          'vendor-ui': [
-            '@radix-ui/react-dialog',
-            '@radix-ui/react-dropdown-menu',
-            '@radix-ui/react-popover',
-            '@radix-ui/react-select',
-            '@radix-ui/react-tabs',
-            '@radix-ui/react-tooltip',
-            '@radix-ui/react-toast',
-          ],
-          'vendor-query': ['@tanstack/react-query'],
-          'vendor-motion': ['framer-motion'],
-          'vendor-editor': [
-            '@tiptap/react',
-            '@tiptap/starter-kit',
-            '@tiptap/extension-image',
-            '@tiptap/extension-link',
-            '@tiptap/extension-placeholder',
-          ],
-          'vendor-i18n': ['i18next', 'react-i18next', 'i18next-browser-languagedetector'],
-          'vendor-forms': ['react-hook-form', '@hookform/resolvers', 'zod'],
+        // Function form (not the legacy object map): Vite 8's Rolldown
+        // engine only accepts a callback here. Rollup (Vite ≤7) accepts
+        // it too, so this is forward- and backward-compatible. The
+        // grouping below is unchanged from the previous object map.
+        manualChunks(id: string): string | undefined {
+          if (!id.includes('node_modules')) return undefined;
+          const p = id.replace(/\\/g, '/');
+          const group = (pkg: string) => p.includes(`/node_modules/${pkg}/`);
           // PDF stack is route-loaded only by Reporting + Export views;
-          // the manualChunk pulls it out of the entry bundle so other
-          // routes don't pay the ~600kB hit on first paint.
-          'vendor-pdf': ['jspdf', 'html2canvas'],
-          'vendor-utils': [
-            'date-fns',
-            'clsx',
-            'tailwind-merge',
-            'class-variance-authority',
-            'dompurify',
-          ],
+          // pulling it out of the entry bundle keeps other routes off the
+          // ~600kB first-paint hit.
+          if (['jspdf', 'html2canvas'].some(group)) return 'vendor-pdf';
+          if (['react', 'react-dom', 'react-router-dom'].some(group)) {
+            return 'vendor-react';
+          }
+          if (group('recharts')) return 'vendor-charts';
+          if (
+            [
+              '@radix-ui/react-dialog',
+              '@radix-ui/react-dropdown-menu',
+              '@radix-ui/react-popover',
+              '@radix-ui/react-select',
+              '@radix-ui/react-tabs',
+              '@radix-ui/react-tooltip',
+              '@radix-ui/react-toast',
+            ].some(group)
+          ) {
+            return 'vendor-ui';
+          }
+          if (group('@tanstack/react-query')) return 'vendor-query';
+          if (group('framer-motion')) return 'vendor-motion';
+          if (
+            [
+              '@tiptap/react',
+              '@tiptap/starter-kit',
+              '@tiptap/extension-image',
+              '@tiptap/extension-link',
+              '@tiptap/extension-placeholder',
+            ].some(group)
+          ) {
+            return 'vendor-editor';
+          }
+          if (
+            ['i18next', 'react-i18next', 'i18next-browser-languagedetector'].some(
+              group,
+            )
+          ) {
+            return 'vendor-i18n';
+          }
+          if (['react-hook-form', '@hookform/resolvers', 'zod'].some(group)) {
+            return 'vendor-forms';
+          }
+          if (
+            ['date-fns', 'clsx', 'tailwind-merge', 'class-variance-authority', 'dompurify'].some(
+              group,
+            )
+          ) {
+            return 'vendor-utils';
+          }
+          return undefined;
         },
       },
     },
