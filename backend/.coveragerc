@@ -29,8 +29,8 @@ omit =
 # -> 35.4 (audience_lifecycle + predictive_budget) -> 36.0 (cross_platform_optimizer
 # + unified_notifications) -> 36.2 (emq_calculation + ltv_forecasting) -> 36.7
 # (signal_recovery + goal_tracking) -> 36.9 (attribution_confidence) -> 37.0
-# (nl_filters 89%; measured 37.09%). See #342.
-fail_under = 37.0
+# (nl_filters) -> 37.2 (anomaly_narratives 94%; measured 37.27%). See #342.
+fail_under = 37.2
 
 # Show missing line numbers
 show_missing = True
