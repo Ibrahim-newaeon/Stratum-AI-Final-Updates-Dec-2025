@@ -110,7 +110,14 @@ jobs:
           APP_ENV: test
           PYTHONPATH: .
         run: |
-          pytest tests/integration -v --tb=short -m "integration"
+          # Integration tests run on a single session-scoped event loop: the
+          # FastAPI test app uses Starlette BaseHTTPMiddleware (TenantMiddleware),
+          # which under pytest-asyncio's default per-test loop yields
+          # "Future attached to a different loop" / "Event loop is closed".
+          # Scoped here (not in pytest.ini) so the unit suite keeps its loops.
+          pytest tests/integration -v --tb=short -m "integration" \
+            -o asyncio_default_test_loop_scope=session \
+            -o asyncio_default_fixture_loop_scope=session
 
       - name: Generate coverage report
         env:
