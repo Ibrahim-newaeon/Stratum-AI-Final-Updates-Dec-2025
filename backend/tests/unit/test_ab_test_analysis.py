@@ -58,7 +58,7 @@ class TestZTest:
         assert conf >= 95
 
     def test_small_difference_low_confidence(self):
-        z, conf = ab._z_test_proportions(50, 100, 52, 100)
+        _z, conf = ab._z_test_proportions(50, 100, 52, 100)
         assert conf < 80
 
 
