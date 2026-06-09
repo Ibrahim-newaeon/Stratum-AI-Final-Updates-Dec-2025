@@ -158,6 +158,27 @@ class TestBuild:
         assert budget.suggested_action is not None
         assert budget.suggested_action.url == "/campaigns/7"
 
+    def test_critical_type_does_not_crash(self):
+        # Regression: a stored notification with type "critical" (outside the
+        # notification_type literal) must be coerced, not raise ValidationError.
+        existing = [
+            {
+                "id": 9,
+                "type": "critical",
+                "title": "Pixel down",
+                "message": "tracking offline",
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "is_read": False,
+            }
+        ]
+        resp = build_unified_notifications(
+            [], signal_health_score=80, existing_notifications=existing
+        )
+        crit = next((n for n in resp.notifications if n.title == "Pixel down"), None)
+        assert crit is not None
+        # critical -> coerced to the closest valid type
+        assert crit.notification_type == "error"
+
     def test_counts_are_consistent(self):
         campaigns = [
             _campaign(1, "Bad", "meta", 5000, 200, 1),

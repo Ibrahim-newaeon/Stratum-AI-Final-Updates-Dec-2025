@@ -58,10 +58,17 @@ class TestPlatforms:
         assert filters[0].value == "google"
 
     def test_no_platform(self):
-        # NB: short aliases (ig/li/tt/fb/x) match as substrings in the source,
-        # so the query must avoid those letter sequences (e.g. "campaigns"
-        # contains "ig" -> instagram). Documented as a latent bug.
         assert nlf._extract_platforms("show data last week") == []
+
+    def test_short_alias_not_matched_as_substring(self):
+        # Regression: "campaigns" contains "ig" but must NOT be read as
+        # instagram/meta — alias matching is whole-word only.
+        assert nlf._extract_platforms("show campaigns last week") == []
+
+    def test_standalone_alias_still_matches(self):
+        # whole-word "x" -> twitter, but "3x" must not trigger it
+        assert nlf._extract_platforms("show x performance")[0].value == "twitter"
+        assert nlf._extract_platforms("roas above 3x") == []
 
 
 # =============================================================================
