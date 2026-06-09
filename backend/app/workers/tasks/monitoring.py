@@ -166,7 +166,9 @@ def check_pipeline_health():
                     headers={"Content-Type": "application/json"},
                     method="POST",
                 )
-                urllib.request.urlopen(req, timeout=5)
+                # nosec B310 — alert_webhook is an operator-configured https URL,
+                # not user input; the scheme is fixed by our own config.
+                urllib.request.urlopen(req, timeout=5)  # nosec B310
             except Exception as e:
                 logger.warning("Webhook escalation failed: %s", e)
 

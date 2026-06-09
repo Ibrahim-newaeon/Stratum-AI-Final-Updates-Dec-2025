@@ -138,6 +138,20 @@ jobs:
           JWT_SECRET_KEY=test-jwt-secret
           PII_ENCRYPTION_KEY=dGVzdC1lbmNyeXB0aW9uLWtleS0zMmJ5dGVz
           APP_ENV=test
+          REDIS_PASSWORD=test_redis_password
+          WHATSAPP_VERIFY_TOKEN=test_whatsapp_verify_token
+          FLOWER_PASSWORD=test_flower_password
+          # Skip the startup ML auto-train: the image bakes models at build time
+          # (build_ml_models.py), but the api service bind-mounts ./backend over
+          # /app, shadowing them — runtime training would block /health and OOM
+          # the 1G limit. The health check doesn't need ML models.
+          ML_AUTO_TRAIN=false
+          # The lifespan superadmin seeder imports scripts/seed_superadmin, which
+          # sys.exit(1)s at import when these are unset (SystemExit isn't caught
+          # by the lifespan's except Exception). Railway sets them; provide test
+          # values here so startup completes and /health responds.
+          SUPERADMIN_EMAIL=admin@stratum.test
+          SUPERADMIN_PASSWORD=test_superadmin_password_change_me
           EOF
 
       - name: Start services

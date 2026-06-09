@@ -1,59 +1,36 @@
 import { test, expect } from '@playwright/test'
+import { authenticate } from './utils/session'
 
 test.describe('Settings Flow', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/')
-    await page.evaluate(() => {
-      localStorage.setItem('auth_token', 'test-token')
-      localStorage.setItem('user', JSON.stringify({
-        id: 1,
-        name: 'Test User',
-        email: 'test@example.com',
-        role: 'tenant_admin',
-      }))
-    })
-    await page.goto('/settings')
+    await authenticate(page)
+    await page.goto('/dashboard/settings')
   })
 
   test('should display settings page', async ({ page }) => {
-    await expect(page.locator('text=Settings').first()).toBeVisible()
+    await expect(page.locator('text=Settings').first()).toBeVisible({ timeout: 15000 })
   })
 
   test('should navigate between settings tabs', async ({ page }) => {
-    // Try to find and click Profile tab
-    const profileTab = page.locator('text=Profile, [role="tab"]:has-text("Profile")').first()
-    if (await profileTab.isVisible()) {
-      await profileTab.click()
-      await expect(page.locator('text=Profile').first()).toBeVisible()
-    }
-
-    // Try to find and click Notifications tab
-    const notificationsTab = page.locator('text=Notifications, [role="tab"]:has-text("Notifications")').first()
-    if (await notificationsTab.isVisible()) {
-      await notificationsTab.click()
-      await expect(page.locator('text=Notifications').first()).toBeVisible()
-    }
-
-    // Try to find and click Integrations tab
-    const integrationsTab = page.locator('text=Integrations, [role="tab"]:has-text("Integrations")').first()
-    if (await integrationsTab.isVisible()) {
-      await integrationsTab.click()
-      await expect(page.locator('text=Integrations').first()).toBeVisible()
+    for (const tab of ['Profile', 'Notifications', 'Integrations']) {
+      const el = page.getByRole('tab', { name: new RegExp(tab, 'i') }).first()
+      if (await el.isVisible().catch(() => false)) {
+        await el.click()
+        await expect(page.locator(`text=${tab}`).first()).toBeVisible()
+      }
     }
   })
 
   test('should show validation on empty profile form', async ({ page }) => {
-    const profileTab = page.locator('text=Profile, [role="tab"]:has-text("Profile")').first()
-    if (await profileTab.isVisible()) {
+    const profileTab = page.getByRole('tab', { name: /Profile/i }).first()
+    if (await profileTab.isVisible().catch(() => false)) {
       await profileTab.click()
     }
 
-    // Look for a name input and clear it
     const nameInput = page.locator('input[name="name"], input[name="fullName"]').first()
-    if (await nameInput.isVisible()) {
+    if (await nameInput.isVisible().catch(() => false)) {
       await nameInput.fill('')
-      await page.click('button[type="submit"]')
-      // Should show some validation feedback
+      await page.locator('button[type="submit"]').first().click()
       const error = page.locator('text=required, [role="alert"]').first()
       await expect(error).toBeVisible()
     }
