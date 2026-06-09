@@ -94,6 +94,17 @@ export default tseslint.config(
     rules: {
       ...reactHooksPlugin.configs.recommended.rules,
       'react-hooks/exhaustive-deps': 'off', // Relaxed - intentional missing deps to prevent re-render loops
+      // eslint-plugin-react-hooks v7 promotes the React Compiler lint rules
+      // into "recommended". They flag compiler-readiness patterns (not runtime
+      // bugs) that this pre-compiler codebase was never written against, so we
+      // relax them for legacy parity — same posture as exhaustive-deps above.
+      // Revisit if/when the app adopts the React Compiler. See #336.
+      'react-hooks/purity': 'off', // 108 hits - effects/render reading mutable refs
+      'react-hooks/set-state-in-effect': 'off', // 37 hits - intentional effect-driven state
+      'react-hooks/static-components': 'off', // 19 hits - nested component definitions
+      'react-hooks/immutability': 'off', // 13 hits - in-place mutation of local state
+      'react-hooks/preserve-manual-memoization': 'off', // 5 hits - manual memo deps
+      'react-hooks/refs': 'off', // 1 hit - ref access during render
     },
   },
 
