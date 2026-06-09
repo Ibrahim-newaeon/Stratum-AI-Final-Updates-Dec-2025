@@ -399,9 +399,7 @@ class TestOAuthAuthorize:
         )
         assert resp.status_code in (401, 403)
 
-    async def test_non_admin_returns_403(
-        self, api_client: AsyncClient, viewer_headers
-    ):
+    async def test_non_admin_returns_403(self, api_client: AsyncClient, viewer_headers):
         """The OAuth endpoints now use require_admin (agency admins are allowed
         by design); a non-admin (viewer) is still blocked."""
         resp = await api_client.post(
@@ -488,9 +486,7 @@ class TestOAuthStatus:
         resp = await api_client.get("/api/v1/oauth/meta/status")
         assert resp.status_code in (401, 403)
 
-    async def test_non_admin_returns_403(
-        self, api_client: AsyncClient, viewer_headers
-    ):
+    async def test_non_admin_returns_403(self, api_client: AsyncClient, viewer_headers):
         """OAuth status uses require_admin; a non-admin (viewer) is blocked."""
         resp = await api_client.get("/api/v1/oauth/meta/status", headers=viewer_headers)
         assert resp.status_code == 403
