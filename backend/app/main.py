@@ -187,7 +187,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
         from pathlib import Path
 
         models_path = Path(settings.ml_models_path)
-        if not models_path.exists() or not list(models_path.glob("*.pkl")):
+        if settings.ml_auto_train and (
+            not models_path.exists() or not list(models_path.glob("*.pkl"))
+        ):
             logger.info(
                 "ml_models_not_found",
                 path=str(models_path),
@@ -269,9 +271,12 @@ def create_application() -> FastAPI:
     # OpenAPI docs are enabled in all environments but protected in production
     # with a simple API key gate to prevent unauthorized scanning.
     if settings.is_production:
-        from fastapi import HTTPException
-        from fastapi import status as http_status
-
+        # NOTE: do not re-import HTTPException/status here. A local import binds
+        # the name as a function-local for all of create_application(), so when
+        # this production-only block is skipped (test/dev/load-test), every
+        # route/middleware closure that references HTTPException hits
+        # "NameError: free variable not associated with a value" and 500s
+        # (notably /health). Use the module-level imports instead.
         DOCS_API_KEY = os.environ.get("DOCS_API_KEY", "")
 
         async def verify_docs_access(request: Request) -> None:
@@ -290,7 +295,7 @@ def create_application() -> FastAPI:
             provided = request.query_params.get("api_key", "")
             if not provided or not secrets.compare_digest(provided, DOCS_API_KEY):
                 raise HTTPException(
-                    status_code=http_status.HTTP_403_FORBIDDEN,
+                    status_code=status.HTTP_403_FORBIDDEN,
                     detail="Documentation access requires a valid api_key query parameter",
                 )
 
