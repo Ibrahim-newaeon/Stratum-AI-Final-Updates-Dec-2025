@@ -95,6 +95,10 @@ services:
       - MARKET_INTEL_PROVIDER=${MARKET_INTEL_PROVIDER:-mock}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:?JWT_SECRET_KEY must be set}
       - PII_ENCRYPTION_KEY=${PII_ENCRYPTION_KEY:?PII_ENCRYPTION_KEY must be set}
+      # Passed through so the lifespan superadmin seeder (scripts/seed_superadmin,
+      # which sys.exit(1)s at import when unset) can start. Optional locally.
+      - SUPERADMIN_EMAIL=${SUPERADMIN_EMAIL:-}
+      - SUPERADMIN_PASSWORD=${SUPERADMIN_PASSWORD:-}
       - CORS_ORIGINS=http://localhost:3000,http://localhost:5173
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - LOG_FORMAT=${LOG_FORMAT:-json}
