@@ -26,8 +26,9 @@ omit =
 # ratchet it up as unit coverage grows, rather than block CI on an unmet target.
 # Ratchet history: 30 -> 33 (pii_hasher + rfm_segmenter) -> 34 (ab_power_analysis
 # + distributed_dedupe) -> 34.8 (ai_reports + creative_scoring + churn_prevention)
-# -> 35.4 (audience_lifecycle 94% + predictive_budget 97%; measured 35.49%). See #342.
-fail_under = 35.4
+# -> 35.4 (audience_lifecycle + predictive_budget) -> 36.0 (cross_platform_optimizer
+# 91% + unified_notifications 90%; measured 36.03%). See #342.
+fail_under = 36.0
 
 # Show missing line numbers
 show_missing = True
