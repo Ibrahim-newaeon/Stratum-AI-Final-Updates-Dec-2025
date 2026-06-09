@@ -191,6 +191,23 @@ def _priority_label(score: float) -> str:
     return "low"
 
 
+# Valid values for PrioritizedNotification.notification_type. Stored
+# notifications may carry severities outside this set (e.g. "critical"), so we
+# coerce rather than raise a ValidationError when re-scoring them.
+_VALID_NOTIFICATION_TYPES = {"info", "warning", "error", "success", "alert"}
+_SEVERITY_TO_TYPE = {"critical": "error"}
+
+
+def _normalize_notification_type(severity: Optional[str]) -> str:
+    """Map an arbitrary stored severity to a valid notification_type."""
+    if not severity:
+        return "info"
+    s = severity.lower()
+    if s in _VALID_NOTIFICATION_TYPES:
+        return s
+    return _SEVERITY_TO_TYPE.get(s, "info")
+
+
 # ── Notification Builders ────────────────────────────────────────────────────
 
 
@@ -501,7 +518,7 @@ def build_unified_notifications(
                     title=notif.get("title", "Notification"),
                     message=notif.get("message", ""),
                     source="system",
-                    notification_type=severity.lower() if severity else "info",
+                    notification_type=_normalize_notification_type(severity),
                     category=notif.get("category", "System"),
                     priority_score=priority,
                     urgency=urgency,

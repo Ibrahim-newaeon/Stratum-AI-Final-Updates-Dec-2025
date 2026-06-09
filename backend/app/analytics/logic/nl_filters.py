@@ -205,7 +205,9 @@ def _extract_platforms(query: str) -> list[ParsedFilter]:
     q = query.lower()
 
     for alias, canonical in PLATFORM_ALIASES.items():
-        if alias in q.split() or alias in q:
+        # Whole-word match only: short aliases (ig/li/tt/fb/x) must not match as
+        # substrings (e.g. "campaigns" contains "ig" -> instagram).
+        if re.search(rf"\b{re.escape(alias)}\b", q):
             filters.append(
                 ParsedFilter(
                     filter_type="platform",
