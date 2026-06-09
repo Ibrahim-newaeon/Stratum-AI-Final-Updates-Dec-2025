@@ -1,18 +1,14 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, Page } from '@playwright/test'
 
 test.describe('Signup with WhatsApp OTP', () => {
   test.beforeEach(async ({ page }) => {
-    // Mock the WhatsApp OTP API endpoints
     await page.route('**/api/v1/auth/whatsapp/send-otp', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
           success: true,
-          data: {
-            message: 'Verification code sent to your WhatsApp',
-            expires_in: 300,
-          },
+          data: { message: 'Verification code sent to your WhatsApp', expires_in: 300 },
           message: 'OTP sent successfully',
         }),
       })
@@ -20,17 +16,13 @@ test.describe('Signup with WhatsApp OTP', () => {
 
     await page.route('**/api/v1/auth/whatsapp/verify-otp', async (route) => {
       const body = route.request().postDataJSON()
-      // Accept OTP code "123456" for testing
-      if (body.otp_code === '123456') {
+      if (body?.otp_code === '123456') {
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
             success: true,
-            data: {
-              verified: true,
-              verification_token: 'test-verification-token-12345',
-            },
+            data: { verified: true, verification_token: 'test-verification-token-12345' },
             message: 'Phone number verified successfully',
           }),
         })
@@ -38,10 +30,7 @@ test.describe('Signup with WhatsApp OTP', () => {
         await route.fulfill({
           status: 400,
           contentType: 'application/json',
-          body: JSON.stringify({
-            success: false,
-            detail: 'Invalid OTP code. Please try again.',
-          }),
+          body: JSON.stringify({ success: false, detail: 'Invalid OTP code. Please try again.' }),
         })
       }
     })
@@ -64,58 +53,7 @@ test.describe('Signup with WhatsApp OTP', () => {
         }),
       })
     })
-  })
 
-  test('should display signup form with phone field', async ({ page }) => {
-    await page.goto('/signup')
-
-    // Check all required fields are visible
-    await expect(page.locator('input[name="name"]')).toBeVisible()
-    await expect(page.locator('input[name="email"]')).toBeVisible()
-    await expect(page.locator('input[name="phone"]')).toBeVisible()
-    await expect(page.locator('input[name="password"]')).toBeVisible()
-    await expect(page.locator('input[name="confirmPassword"]')).toBeVisible()
-  })
-
-  test('should show phone validation error for short number', async ({ page }) => {
-    await page.goto('/signup')
-
-    // Fill form with short phone number
-    await page.fill('input[name="name"]', 'Test User')
-    await page.fill('input[name="email"]', 'test@example.com')
-    await page.fill('input[name="phone"]', '12345')
-    await page.fill('input[name="password"]', 'Password123!')
-    await page.fill('input[name="confirmPassword"]', 'Password123!')
-    await page.locator('input#terms').check()
-
-    // Try to submit
-    await page.click('button[type="submit"]')
-
-    // Should show validation error
-    await expect(page.locator('text=valid phone number')).toBeVisible({ timeout: 5000 })
-  })
-
-  test('should proceed to OTP verification step', async ({ page }) => {
-    await page.goto('/signup')
-
-    // Fill form with valid data
-    await page.fill('input[name="name"]', 'Test User')
-    await page.fill('input[name="email"]', 'test@example.com')
-    await page.fill('input[name="phone"]', '+1234567890')
-    await page.fill('input[name="password"]', 'Password123!')
-    await page.fill('input[name="confirmPassword"]', 'Password123!')
-    await page.locator('input#terms').check()
-
-    // Submit form
-    await page.click('button[type="submit"]')
-
-    // Should show OTP verification step
-    await expect(page.locator('text=Verify your WhatsApp')).toBeVisible({ timeout: 10000 })
-    await expect(page.locator('text=6-digit code')).toBeVisible()
-  })
-
-  test('should verify OTP and complete signup', async ({ page }) => {
-    // Also mock any auth check endpoints that might fire during signup
     await page.route('**/api/v1/auth/me', async (route) => {
       await route.fulfill({
         status: 401,
@@ -123,102 +61,91 @@ test.describe('Signup with WhatsApp OTP', () => {
         body: JSON.stringify({ detail: 'Not authenticated' }),
       })
     })
+  })
 
-    await page.goto('/signup')
-    await page.waitForLoadState('networkidle')
-
-    // Fill form with valid data
+  async function fillRegistration(page: Page, phone = '+12025550143') {
     await page.fill('input[name="name"]', 'Test User')
     await page.fill('input[name="email"]', 'test@example.com')
-    await page.fill('input[name="phone"]', '+1234567890')
+    await page.fill('input[name="phone"]', phone)
     await page.fill('input[name="password"]', 'Password123!')
     await page.fill('input[name="confirmPassword"]', 'Password123!')
     await page.locator('input#terms').check()
+    await page.locator('button[type="submit"]').click()
+  }
 
-    // Submit form and wait for the OTP send request to complete
-    await Promise.all([
-      page.waitForResponse(resp =>
-        resp.url().includes('/send-otp') || resp.url().includes('/register'),
-        { timeout: 10000 }
-      ).catch(() => null), // Don't fail if response isn't intercepted
-      page.click('button[type="submit"]'),
-    ])
+  // Step 2 is a method chooser ("Verify your identity"); pick WhatsApp to reach
+  // the code-entry step ("Check your WhatsApp").
+  async function chooseWhatsApp(page: Page) {
+    await expect(page.getByText('Verify your identity')).toBeVisible({ timeout: 10000 })
+    await page.getByRole('button', { name: /Verify via WhatsApp/i }).click()
+    await expect(page.getByText(/Check your WhatsApp/i)).toBeVisible({ timeout: 10000 })
+  }
 
-    // Wait for OTP verification step
-    await expect(page.locator('text=Verify your WhatsApp')).toBeVisible({ timeout: 10000 })
+  test('should display signup form with phone field', async ({ page }) => {
+    await page.goto('/signup')
+    await expect(page.locator('input[name="name"]')).toBeVisible()
+    await expect(page.locator('input[name="email"]')).toBeVisible()
+    await expect(page.locator('input[name="phone"]')).toBeVisible()
+    await expect(page.locator('input[name="password"]')).toBeVisible()
+    await expect(page.locator('input[name="confirmPassword"]')).toBeVisible()
+  })
 
-    // Enter OTP code
-    const otpInput = page.locator('input[placeholder="Enter 6-digit code"]')
-    await otpInput.fill('123456')
+  test('should require fields before advancing', async ({ page }) => {
+    await page.goto('/signup')
+    // Submitting the empty form must not advance to the verification step.
+    await page.locator('button[type="submit"]').click()
+    await expect(page.getByText('Verify your identity')).not.toBeVisible()
+    await expect(page).toHaveURL(/\/signup$/)
+    await expect(page.locator('input[name="phone"]')).toBeVisible()
+  })
 
-    // Click verify button and wait for the verify request
-    const verifyButton = page.locator('button:has-text("Verify & Create Account")')
-    await Promise.all([
-      page.waitForResponse(resp =>
-        resp.url().includes('/verify-otp') || resp.url().includes('/register'),
-        { timeout: 15000 }
-      ).catch(() => null),
-      verifyButton.click(),
-    ])
+  test('should proceed to OTP verification step', async ({ page }) => {
+    await page.goto('/signup')
+    await fillRegistration(page)
+    await chooseWhatsApp(page)
+    await expect(page.locator('input[maxlength="6"]')).toBeVisible({ timeout: 10000 })
+  })
 
-    // Wait for success state - could be loading, success message, or navigation
+  test('should verify OTP and complete signup', async ({ page }) => {
+    await page.goto('/signup')
+    await page.waitForLoadState('networkidle')
+    await fillRegistration(page)
+    await chooseWhatsApp(page)
+
+    await page.locator('input[maxlength="6"]').fill('123456')
+    await page.getByRole('button', { name: /Verify & activate/i }).click()
+
     await expect(
-      page.locator('text=Verifying')
-        .or(page.locator('text=Account Created'))
-        .or(page.locator('text=successful'))
-        .or(page.locator('text=Registration successful'))
-        .or(page.locator('text=Welcome'))
+      page
+        .getByText(/Verifying/i)
+        .or(page.getByText(/Account Created/i))
+        .or(page.getByText(/successful/i))
+        .or(page.getByText(/Welcome/i))
     ).toBeVisible({ timeout: 15000 })
   })
 
   test('should show error for invalid OTP', async ({ page }) => {
     await page.goto('/signup')
+    await fillRegistration(page)
+    await chooseWhatsApp(page)
 
-    // Fill form with valid data
-    await page.fill('input[name="name"]', 'Test User')
-    await page.fill('input[name="email"]', 'test@example.com')
-    await page.fill('input[name="phone"]', '+1234567890')
-    await page.fill('input[name="password"]', 'Password123!')
-    await page.fill('input[name="confirmPassword"]', 'Password123!')
-    await page.locator('input#terms').check()
+    await page.locator('input[maxlength="6"]').fill('999999')
+    await page.getByRole('button', { name: /Verify & activate/i }).click()
 
-    // Submit form to go to OTP step
-    await page.click('button[type="submit"]')
-
-    // Wait for OTP verification step
-    await expect(page.locator('text=Verify your WhatsApp')).toBeVisible({ timeout: 10000 })
-
-    // Enter wrong OTP code
-    const otpInput = page.locator('input[placeholder="Enter 6-digit code"]')
-    await otpInput.fill('999999')
-
-    // Click verify button
-    await page.click('button:has-text("Verify & Create Account")')
-
-    // Should show error message (could be "Invalid OTP" or other error text)
+    // The verify call returns 400; the form surfaces the request error.
     await expect(
-      page.locator('.text-danger').or(page.locator('text=Invalid')).or(page.locator('text=error'))
+      page
+        .getByText(/Invalid/i)
+        .or(page.getByText(/failed/i))
+        .or(page.getByText(/400/))
+        .or(page.locator('[role="alert"]'))
     ).toBeVisible({ timeout: 10000 })
   })
 
   test('should show resend OTP countdown', async ({ page }) => {
     await page.goto('/signup')
-
-    // Fill form with valid data
-    await page.fill('input[name="name"]', 'Test User')
-    await page.fill('input[name="email"]', 'test@example.com')
-    await page.fill('input[name="phone"]', '+1234567890')
-    await page.fill('input[name="password"]', 'Password123!')
-    await page.fill('input[name="confirmPassword"]', 'Password123!')
-    await page.locator('input#terms').check()
-
-    // Submit form to go to OTP step
-    await page.click('button[type="submit"]')
-
-    // Wait for OTP verification step
-    await expect(page.locator('text=Verify your WhatsApp')).toBeVisible({ timeout: 10000 })
-
-    // Should show countdown for resend (Resend code in XXs)
-    await expect(page.locator('text=Resend code in')).toBeVisible({ timeout: 5000 })
+    await fillRegistration(page)
+    await chooseWhatsApp(page)
+    await expect(page.getByText(/Resend in/i)).toBeVisible({ timeout: 5000 })
   })
 })

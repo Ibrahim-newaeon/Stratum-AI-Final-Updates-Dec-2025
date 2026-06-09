@@ -434,15 +434,16 @@ class TestEmqPlaybookUpdate:
         )
         assert resp.status_code == 403
 
-    async def test_happy_path(self, api_client, admin_headers, mock_db):
-        """Playbook-item persistence is an intentional stub (needs a
-        playbook_items table), so an authorized update returns 501."""
+    async def test_unknown_item_returns_404(self, api_client, admin_headers, mock_db):
+        """An unknown playbook item_key is rejected with 404. Persisting a real
+        item's status/owner (now backed by emq_playbook_item_state) is covered
+        by the integration suite, which has a live table."""
         resp = await api_client.patch(
-            self.URL,
+            self.URL,  # "some-item-id" is not a catalog key
             headers=admin_headers,
             json={"status": "in_progress", "owner": "user@example.com"},
         )
-        assert resp.status_code == 501
+        assert resp.status_code == 404
 
 
 # ---------------------------------------------------------------------------
