@@ -533,6 +533,7 @@ def setup_test_database(sync_engine):
     import app.models.cms  # noqa: F401
     import app.models.crm  # noqa: F401
     import app.models.embed_widgets  # noqa: F401
+    import app.models.emq_playbook  # noqa: F401
     import app.models.launch_readiness  # noqa: F401
     import app.models.newsletter  # noqa: F401
     import app.models.onboarding  # noqa: F401
