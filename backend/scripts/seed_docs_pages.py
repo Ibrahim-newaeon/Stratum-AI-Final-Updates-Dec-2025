@@ -113,7 +113,9 @@ async def seed_docs_pages(overwrite: bool) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Seed documentation articles as CMS pages")
+    parser = argparse.ArgumentParser(
+        description="Seed documentation articles as CMS pages"
+    )
     parser.add_argument(
         "--overwrite",
         action="store_true",
