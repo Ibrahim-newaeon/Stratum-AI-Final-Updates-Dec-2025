@@ -8,15 +8,24 @@ Revises: 039_add_client_entity_and_portal
 Create Date: 2026-02-15 00:00:00.000000
 """
 
-from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 # revision identifiers
 revision = "040_add_newsletter_system"
 down_revision = "039_add_client_entity_and_portal"
 branch_labels = None
-depends_on = None
+# This migration lives on the "newsletter" branch (026 → … → 045) but creates
+# newsletter_events with a FK to landing_page_subscribers and adds columns to
+# that table. landing_page_subscribers is created on the parallel "landing"
+# branch by revision 021, and the two branches only re-merge later at
+# 25b2d4ee6525. Without an explicit cross-branch dependency, Alembic may order
+# 040 before 021 on a fresh database (the branches are otherwise independent),
+# raising UndefinedTable. depends_on forces 021 to run first. It is a no-op on
+# databases where both revisions are already applied.
+depends_on = "021_landing_subscribers"
 
 
 def upgrade() -> None:
