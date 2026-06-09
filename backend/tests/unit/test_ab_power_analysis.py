@@ -17,8 +17,12 @@ from app.ml.ab_power_analysis import (
     BayesianABTester,
     CUPEDAnalyzer,
     MetricType,
-    ThompsonSamplingBandit,
+)
+from app.ml.ab_power_analysis import (
     TestType as TType,  # aliased: avoids pytest trying to collect the enum
+)
+from app.ml.ab_power_analysis import (
+    ThompsonSamplingBandit,
     calculate_ab_sample_size,
     check_test_power,
 )
@@ -140,9 +144,7 @@ class TestPower:
         pc = analyzer.calculate_power(
             5000, 100.0, 0.1, metric_type=MetricType.CONTINUOUS, baseline_std=20.0
         )
-        pk = analyzer.calculate_power(
-            5000, 10.0, 0.1, metric_type=MetricType.COUNT
-        )
+        pk = analyzer.calculate_power(5000, 10.0, 0.1, metric_type=MetricType.COUNT)
         assert 0.0 <= pc <= 1.0
         assert 0.0 <= pk <= 1.0
 
@@ -187,8 +189,10 @@ class TestMDE:
 class TestSequential:
     def test_continue_when_inconclusive(self, analyzer: ABPowerAnalyzer):
         r = analyzer.sequential_test(
-            successes_a=150, trials_a=3000,
-            successes_b=180, trials_b=3000,
+            successes_a=150,
+            trials_a=3000,
+            successes_b=180,
+            trials_b=3000,
             planned_samples=10000,
         )
         assert r.conclusion == "continue"
@@ -197,8 +201,10 @@ class TestSequential:
 
     def test_variant_b_wins(self, analyzer: ABPowerAnalyzer):
         r = analyzer.sequential_test(
-            successes_a=100, trials_a=2000,
-            successes_b=250, trials_b=2000,
+            successes_a=100,
+            trials_a=2000,
+            successes_b=250,
+            trials_b=2000,
             planned_samples=4000,
         )
         assert r.should_stop is True
@@ -206,8 +212,10 @@ class TestSequential:
 
     def test_variant_a_wins(self, analyzer: ABPowerAnalyzer):
         r = analyzer.sequential_test(
-            successes_a=250, trials_a=2000,
-            successes_b=100, trials_b=2000,
+            successes_a=250,
+            trials_a=2000,
+            successes_b=100,
+            trials_b=2000,
             planned_samples=4000,
         )
         assert r.should_stop is True
@@ -215,8 +223,10 @@ class TestSequential:
 
     def test_no_difference_at_planned(self, analyzer: ABPowerAnalyzer):
         r = analyzer.sequential_test(
-            successes_a=100, trials_a=2000,
-            successes_b=103, trials_b=2000,
+            successes_a=100,
+            trials_a=2000,
+            successes_b=103,
+            trials_b=2000,
             planned_samples=4000,
         )
         assert r.should_stop is True
@@ -224,8 +234,10 @@ class TestSequential:
 
     def test_explicit_current_look(self, analyzer: ABPowerAnalyzer):
         r = analyzer.sequential_test(
-            successes_a=150, trials_a=3000,
-            successes_b=180, trials_b=3000,
+            successes_a=150,
+            trials_a=3000,
+            successes_b=180,
+            trials_b=3000,
             planned_samples=10000,
             spending_function="uniform",
             current_look=3,
@@ -238,8 +250,11 @@ class TestSpendingFunctions:
     @pytest.mark.parametrize("fn", ["obrien_fleming", "pocock", "uniform"])
     def test_spent_never_exceeds_alpha(self, analyzer: ABPowerAnalyzer, fn: str):
         spent = analyzer._calculate_spending(
-            alpha=0.05, information_fraction=0.5,
-            spending_function=fn, num_looks=5, current_look=3,
+            alpha=0.05,
+            information_fraction=0.5,
+            spending_function=fn,
+            num_looks=5,
+            current_look=3,
         )
         assert 0.0 < spent <= 0.05
 
@@ -247,15 +262,21 @@ class TestSpendingFunctions:
         self, analyzer: ABPowerAnalyzer
     ):
         spent = analyzer._calculate_spending(
-            alpha=0.05, information_fraction=1.0,
-            spending_function="obrien_fleming", num_looks=5, current_look=5,
+            alpha=0.05,
+            information_fraction=1.0,
+            spending_function="obrien_fleming",
+            num_looks=5,
+            current_look=5,
         )
         assert spent == pytest.approx(0.05, abs=1e-3)
 
     def test_pocock_full_information_equals_alpha(self, analyzer: ABPowerAnalyzer):
         spent = analyzer._calculate_spending(
-            alpha=0.05, information_fraction=1.0,
-            spending_function="pocock", num_looks=5, current_look=5,
+            alpha=0.05,
+            information_fraction=1.0,
+            spending_function="pocock",
+            num_looks=5,
+            current_look=5,
         )
         # alpha * log(1 + (e-1)*1) = alpha * log(e) = alpha
         assert spent == pytest.approx(0.05, abs=1e-9)
@@ -326,8 +347,10 @@ class TestBayesian:
     def test_b_clearly_better(self):
         tester = BayesianABTester()
         res = tester.analyze(
-            successes_a=100, trials_a=1000,
-            successes_b=160, trials_b=1000,
+            successes_a=100,
+            trials_a=1000,
+            successes_b=160,
+            trials_b=1000,
             num_samples=20000,
         )
         assert res.probability_b_beats_a > 0.9
@@ -394,7 +417,9 @@ class TestCUPED:
 
     def test_power_boost_from_correlation(self):
         out = CUPEDAnalyzer().estimate_power_boost(0.7)
-        assert out["expected_variance_reduction_percent"] == pytest.approx(49.0, abs=0.1)
+        assert out["expected_variance_reduction_percent"] == pytest.approx(
+            49.0, abs=0.1
+        )
         assert out["effective_sample_multiplier"] == pytest.approx(1.96, abs=0.05)
 
     def test_zero_correlation_no_boost(self):

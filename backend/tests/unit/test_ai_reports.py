@@ -78,9 +78,16 @@ class TestGrade:
 class TestExecutiveSummary:
     def test_full_summary_includes_all_parts(self):
         s = air._build_executive_summary(
-            total_spend=1000, total_revenue=4000, roas=4.0,
-            total_conversions=100, n_campaigns=5, n_platforms=2,
-            prev_spend=800, prev_revenue=3000, grade="A", grade_label="Excellent",
+            total_spend=1000,
+            total_revenue=4000,
+            roas=4.0,
+            total_conversions=100,
+            n_campaigns=5,
+            n_platforms=2,
+            prev_spend=800,
+            prev_revenue=3000,
+            grade="A",
+            grade_label="Excellent",
         )
         assert "4.00x ROAS" in s
         assert "Spend increased" in s
@@ -129,10 +136,10 @@ class TestAnalyzePlatforms:
     @pytest.mark.parametrize(
         "revenue,fragment",
         [
-            (500, "Exceptional"),     # 5x
+            (500, "Exceptional"),  # 5x
             (350, "Strong returns"),  # 3.5x
-            (250, "Moderate"),        # 2.5x
-            (120, "Marginal"),        # 1.2x
+            (250, "Moderate"),  # 2.5x
+            (120, "Marginal"),  # 1.2x
             (50, "Below breakeven"),  # 0.5x
         ],
     )
@@ -153,7 +160,7 @@ class TestAnalyzePlatforms:
 class TestHighlights:
     def test_top_and_bottom_ordering(self):
         campaigns = [
-            _campaign(1, "Best", "Meta", 100, 600, 50),   # 6x
+            _campaign(1, "Best", "Meta", 100, 600, 50),  # 6x
             _campaign(2, "Mid", "Google", 100, 250, 20),  # 2.5x
             _campaign(3, "Worst", "TikTok", 100, 50, 1),  # 0.5x
         ]
@@ -231,8 +238,8 @@ class TestInsights:
 class TestRecommendations:
     def test_scale_and_cut_recommendations(self):
         campaigns = [
-            _campaign(1, "Star", "Meta", 100, 500, 50),   # 5x
-            _campaign(2, "Dud", "Google", 200, 50, 1),    # 0.25x
+            _campaign(1, "Star", "Meta", 100, 500, 50),  # 5x
+            _campaign(2, "Dud", "Google", 200, 50, 1),  # 0.25x
         ]
         platforms = air._analyze_platforms(campaigns, 300)
         top, bottom = air._find_highlights(campaigns)
@@ -248,8 +255,10 @@ class TestRecommendations:
         platforms = air._analyze_platforms(campaigns, 100)
         top, bottom = air._find_highlights(campaigns)
         recs = air._generate_recommendations(2.5, platforms, top, bottom, [])
-        assert recs == ["Portfolio is performing well. Continue monitoring and "
-                        "consider incremental budget increases on top performers."]
+        assert recs == [
+            "Portfolio is performing well. Continue monitoring and "
+            "consider incremental budget increases on top performers."
+        ]
 
 
 # =============================================================================
@@ -275,8 +284,12 @@ class TestBuildReport:
         assert report.platforms_count == 3
         assert report.overall_roas == pytest.approx(3.88, abs=0.05)
         section_types = {s.section_type for s in report.sections}
-        assert {"executive_summary", "kpi_grid", "platform_breakdown",
-                "recommendations"} <= section_types
+        assert {
+            "executive_summary",
+            "kpi_grid",
+            "platform_breakdown",
+            "recommendations",
+        } <= section_types
         # KPI grid always has 6 KPIs
         kpi_section = next(s for s in report.sections if s.section_type == "kpi_grid")
         assert len(kpi_section.kpis) == 6
@@ -296,7 +309,5 @@ class TestBuildReport:
             [_campaign(1, "A", "Meta", 1000, 5000, 150)]  # 5x, 150 conv -> A
         )
         assert strong.health_grade == "A"
-        weak = build_ai_report(
-            [_campaign(1, "A", "Meta", 1000, 400, 5)]  # 0.4x -> F
-        )
+        weak = build_ai_report([_campaign(1, "A", "Meta", 1000, 400, 5)])  # 0.4x -> F
         assert weak.health_grade == "F"

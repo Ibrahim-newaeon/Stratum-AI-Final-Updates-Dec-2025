@@ -42,7 +42,12 @@ class TestDedupeStats:
     def test_to_dict_shape(self):
         d = DedupeStats(total_checks=4, duplicates_found=1).to_dict()
         assert d["duplicate_rate_pct"] == 25.0
-        assert {"total_checks", "redis_hits", "fallback_to_memory", "last_reset"} <= set(d)
+        assert {
+            "total_checks",
+            "redis_hits",
+            "fallback_to_memory",
+            "last_reset",
+        } <= set(d)
         # last_reset serialized as ISO string
         assert isinstance(d["last_reset"], str)
 
@@ -58,8 +63,12 @@ class TestGenerateKey:
     def test_content_hash_is_md5_hex(self):
         d = _mem_dedup()
         key = d._generate_key(
-            {"event_name": "Purchase", "event_time": 123,
-             "user_data": {"em": "h"}, "parameters": {"value": 10}},
+            {
+                "event_name": "Purchase",
+                "event_time": 123,
+                "user_data": {"em": "h"},
+                "parameters": {"value": 10},
+            },
             "meta",
         )
         assert len(key) == 32
