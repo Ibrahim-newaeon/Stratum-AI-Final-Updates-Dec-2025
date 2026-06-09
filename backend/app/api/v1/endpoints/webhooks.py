@@ -57,7 +57,9 @@ def _is_safe_webhook_url(url: str) -> bool:
     if not hostname:
         return False
     hostname_lower = hostname.lower()
-    if hostname_lower in ("localhost", "127.0.0.1", "::1", "0.0.0.0"):
+    # nosec B104 — "0.0.0.0" here is an SSRF *blocklist* entry (we reject it),
+    # not a service bind address.
+    if hostname_lower in ("localhost", "127.0.0.1", "::1", "0.0.0.0"):  # nosec B104
         return False
     try:
         ip = ipaddress.ip_address(hostname)
