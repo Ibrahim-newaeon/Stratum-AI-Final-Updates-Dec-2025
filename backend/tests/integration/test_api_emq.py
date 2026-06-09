@@ -151,28 +151,45 @@ class TestPlaybookEndpoint:
     async def test_update_playbook_item(
         self, authenticated_client: AsyncClient, test_tenant: dict
     ):
-        """Test playbook item update."""
-        # First get the playbook
-        response = await authenticated_client.get(
-            f"/api/v1/tenants/{test_tenant['id']}/emq/playbook"
-        )
+        """Updating a playbook item persists its status/owner across requests."""
+        base = f"/api/v1/tenants/{test_tenant['id']}/emq/playbook"
+
+        # The playbook is generated from EMQ driver scores; with no signal data
+        # the tenant's score is below the perfect threshold, so at least the
+        # "Add TikTok Events API" item is present.
+        response = await authenticated_client.get(base)
+        assert response.status_code == 200
         playbook = response.json()["data"]
+        assert len(playbook) > 0
+        item_id = playbook[0]["id"]
 
-        if len(playbook) > 0:
-            item_id = playbook[0]["id"]
+        # Update the item.
+        response = await authenticated_client.patch(
+            f"{base}/{item_id}",
+            json={"status": "in_progress", "owner": "test@example.com"},
+        )
+        assert response.status_code == 200
+        updated = response.json()["data"]
+        assert updated["id"] == item_id
+        assert updated["status"] == "in_progress"
+        assert updated["owner"] == "test@example.com"
 
-            # Update the item
-            response = await authenticated_client.patch(
-                f"/api/v1/tenants/{test_tenant['id']}/emq/playbook/{item_id}",
-                json={
-                    "status": "in_progress",
-                    "owner": "test@example.com",
-                },
-            )
+        # The change persists: a fresh GET reflects the stored status/owner.
+        response = await authenticated_client.get(base)
+        item = next(i for i in response.json()["data"] if i["id"] == item_id)
+        assert item["status"] == "in_progress"
+        assert item["owner"] == "test@example.com"
 
-            assert response.status_code == 200
-            data = response.json()
-            assert data["data"]["status"] == "in_progress"
+    @pytest.mark.asyncio
+    async def test_update_unknown_playbook_item_returns_404(
+        self, authenticated_client: AsyncClient, test_tenant: dict
+    ):
+        """Updating a non-existent playbook item key returns 404."""
+        response = await authenticated_client.patch(
+            f"/api/v1/tenants/{test_tenant['id']}/emq/playbook/not_a_real_key",
+            json={"status": "completed"},
+        )
+        assert response.status_code == 404
 
 
 class TestIncidentsEndpoint:

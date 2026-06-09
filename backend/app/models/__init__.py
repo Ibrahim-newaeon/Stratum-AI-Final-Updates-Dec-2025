@@ -99,6 +99,9 @@ from app.models.crm import (
     WritebackStatus,
 )
 
+# EMQ fix-playbook progress
+from app.models.emq_playbook import EmqPlaybookItemState
+
 # Launch Readiness (Go-Live wizard)
 from app.models.launch_readiness import (
     LaunchReadinessEvent,
@@ -211,6 +214,7 @@ __all__ = [
     "DeliveryChannelConfig",
     "DeliveryStatus",
     "DraftStatus",
+    "EmqPlaybookItemState",
     "EnforcementAuditLog",
     "ExecutionStatus",
     "FactActionsQueue",

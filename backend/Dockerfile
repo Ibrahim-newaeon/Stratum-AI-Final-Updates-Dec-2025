@@ -13,8 +13,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# Install build deps + runtime libs in one layer
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Install build deps + runtime libs in one layer.
+# `apt-get upgrade` patches OS packages with available security fixes so the
+# image clears Trivy's CRITICAL/HIGH scan (combined with ignore-unfixed in CI
+# for Debian "won't-fix" advisories).
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
     libpq5 \
@@ -31,7 +34,11 @@ RUN chown appuser:appgroup /app
 
 # Install Python dependencies (this layer rebuilds when requirements change)
 COPY requirements-prod.txt .
-RUN pip install --no-cache-dir -r requirements-prod.txt
+# Upgrade pip/setuptools/wheel first: the base image ships older versions that
+# Trivy flags with fixable HIGH CVEs (e.g. setuptools CVE-2025-47273 /
+# CVE-2024-6345) — pip-audit misses these since they aren't in requirements.
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
+    && pip install --no-cache-dir -r requirements-prod.txt
 
 # Remove build dependencies to reduce image size (~200MB savings)
 RUN apt-get purge -y --auto-remove build-essential libpq-dev \
