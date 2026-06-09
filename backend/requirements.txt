@@ -4,15 +4,15 @@
 
 # FastAPI Framework
 fastapi==0.136.3
-uvicorn[standard]==0.48.0
-python-multipart==0.0.30
+uvicorn[standard]==0.49.0
+python-multipart==0.0.32
 starlette==1.2.1
 
 # Async Support
 anyio==4.13.0
 httpx==0.28.1
 aiofiles==25.1.0
-aiohttp==3.14.0
+aiohttp==3.14.1
 aiosmtplib==5.1.1
 sendgrid==6.12.5
 sse-starlette==3.4.4
@@ -50,16 +50,16 @@ joblib==1.5.3
 xgboost==2.0.3
 
 # Google Cloud (for Vertex AI)
-google-cloud-aiplatform==1.154.0
+google-cloud-aiplatform==1.156.0
 google-auth==2.53.0
 
 # LLM Integrations (Copilot)
-anthropic==0.105.2
+anthropic==0.107.1
 openai==1.54.0
 pgvector==0.4.2
 
 # Web Scraping (Module D)
-beautifulsoup4==4.14.3
+beautifulsoup4==4.15.0
 lxml==6.1.1
 
 # Validation & Serialization
@@ -70,7 +70,7 @@ email-validator==2.3.0
 # Logging & Monitoring
 structlog==25.5.0
 python-json-logger==4.1.0
-sentry-sdk[fastapi]==2.61.1
+sentry-sdk[fastapi]==2.62.0
 prometheus-client==0.25.0
 
 # Testing
@@ -83,7 +83,7 @@ faker==40.21.0
 black==26.5.1
 isort==8.0.1
 mypy==1.20.2
-ruff==0.15.15
+ruff==0.15.16
 
 # Ad Platform SDKs
 stripe>=15.1.0
