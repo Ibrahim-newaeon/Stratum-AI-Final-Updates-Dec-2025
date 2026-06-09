@@ -28,8 +28,9 @@ omit =
 # + distributed_dedupe) -> 34.8 (ai_reports + creative_scoring + churn_prevention)
 # -> 35.4 (audience_lifecycle + predictive_budget) -> 36.0 (cross_platform_optimizer
 # + unified_notifications) -> 36.2 (emq_calculation + ltv_forecasting) -> 36.7
-# (signal_recovery 94% + goal_tracking 95%; measured 36.71%). See #342.
-fail_under = 36.7
+# (signal_recovery + goal_tracking) -> 36.9 (attribution_confidence 89%;
+# measured 36.94%). See #342.
+fail_under = 36.9
 
 # Show missing line numbers
 show_missing = True
