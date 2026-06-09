@@ -98,6 +98,11 @@ jobs:
         env:
           DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/stratum_test
           DATABASE_URL_SYNC: postgresql://test:test@localhost:5432/stratum_test
+          # The integration conftest reads TEST_DATABASE_URL[_SYNC] (falling back
+          # to a local "stratum" default) — point it at the CI Postgres service
+          # so it doesn't try to auth as a non-existent "stratum" role.
+          TEST_DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/stratum_test
+          TEST_DATABASE_URL_SYNC: postgresql://test:test@localhost:5432/stratum_test
           REDIS_URL: redis://localhost:6379/0
           SECRET_KEY: test-secret-key-that-is-at-least-32-chars-long
           JWT_SECRET_KEY: test-jwt-secret-that-is-at-least-32-chars
@@ -105,7 +110,14 @@ jobs:
           APP_ENV: test
           PYTHONPATH: .
         run: |
-          pytest tests/integration -v --tb=short -m "integration"
+          # Integration tests run on a single session-scoped event loop: the
+          # FastAPI test app uses Starlette BaseHTTPMiddleware (TenantMiddleware),
+          # which under pytest-asyncio's default per-test loop yields
+          # "Future attached to a different loop" / "Event loop is closed".
+          # Scoped here (not in pytest.ini) so the unit suite keeps its loops.
+          pytest tests/integration -v --tb=short -m "integration" \
+            -o asyncio_default_test_loop_scope=session \
+            -o asyncio_default_fixture_loop_scope=session
 
       - name: Generate coverage report
         env:
@@ -347,7 +359,9 @@ jobs:
 
     services:
       postgres:
-        image: postgres:16-alpine
+        # pgvector image: load-tests runs `alembic upgrade head`, which includes
+        # migration 049 (CREATE EXTENSION vector). Plain postgres:16 lacks it.
+        image: pgvector/pgvector:pg16
         env:
           POSTGRES_USER: test
           POSTGRES_PASSWORD: test

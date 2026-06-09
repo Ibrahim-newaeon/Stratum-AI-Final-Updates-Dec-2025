@@ -59,8 +59,13 @@ router = APIRouter(
 # =============================================================================
 def validate_tenant_access(request: Request, tenant_id: int) -> None:
     """Validate that the request has access to the specified tenant."""
+    # Superadmins operate across all tenants (TenantMiddleware flags them).
+    # They may still carry their own tenant_id, so check the role explicitly
+    # rather than relying on an absent tenant context.
+    if getattr(request.state, "is_superadmin", False):
+        return
     request_tenant_id = getattr(request.state, "tenant_id", None)
-    # Allow access if no tenant context (e.g., super admin) or matching tenant
+    # Allow access if no tenant context or matching tenant
     if request_tenant_id is not None and request_tenant_id != tenant_id:
         raise HTTPException(status_code=403, detail="Access denied to this tenant")
 

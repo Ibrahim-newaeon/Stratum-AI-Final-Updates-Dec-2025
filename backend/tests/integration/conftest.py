@@ -11,6 +11,14 @@ Provides:
 
 NOTE: These tests require a running PostgreSQL database.
 Set TEST_DATABASE_URL environment variable or use default test database.
+
+NOTE: Run this suite on a single session-scoped event loop (the FastAPI test
+app uses Starlette BaseHTTPMiddleware, which breaks across pytest-asyncio's
+default per-test loops). CI passes these flags; locally run with:
+
+    pytest tests/integration -m integration \\
+        -o asyncio_default_test_loop_scope=session \\
+        -o asyncio_default_fixture_loop_scope=session
 """
 
 import asyncio
@@ -41,12 +49,12 @@ os.environ["DATABASE_URL_SYNC"] = os.environ.get(
 # =============================================================================
 
 
-@pytest.fixture(scope="session")
-def event_loop():
-    """Create an event loop for the entire test session."""
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
+# NOTE: We intentionally do NOT define a custom ``event_loop`` fixture. Under
+# pytest-asyncio 1.x that fixture is deprecated and ignored for tests (which run
+# on a per-test function loop), while async *fixtures* would still bind to it —
+# the split produced "Future attached to a different loop" / "Event loop is
+# closed" errors through Starlette's BaseHTTPMiddleware. Letting pytest-asyncio
+# own a single consistent loop per test keeps engine, app, and client aligned.
 
 
 # =============================================================================
@@ -124,6 +132,39 @@ async def db_session(async_engine) -> AsyncGenerator[AsyncSession, None]:
     await session.close()
     await transaction.rollback()
     await connection.close()
+
+
+@pytest_asyncio.fixture(scope="function", autouse=True)
+async def _active_subscription(monkeypatch):
+    """Treat every test tenant as having an active subscription.
+
+    ``core.subscription.get_subscription_info`` opens its *own* session
+    (``async for db in get_async_session()``), so it can't see the tenant a test
+    just created inside its savepoint transaction — it reads "tenant not found"
+    and reports the subscription as expired, which silently flips autopilot
+    enforcement into a subscription-restricted advisory block. In production the
+    tenant row is committed and visible, so this only bites the test harness.
+    Patch the lookup to report an active subscription (no integration test
+    exercises the expiry/grace paths).
+    """
+    from app.core import subscription as sub_mod
+    from app.core.tiers import SubscriptionTier
+
+    async def _active(tenant_id: int) -> "sub_mod.SubscriptionInfo":
+        return sub_mod.SubscriptionInfo(
+            tenant_id=tenant_id,
+            plan="professional",
+            tier=SubscriptionTier.PROFESSIONAL,
+            status=sub_mod.SubscriptionStatus.ACTIVE,
+            expires_at=None,
+            days_until_expiry=None,
+            days_in_grace=None,
+            is_access_restricted=False,
+            restriction_reason=None,
+        )
+
+    monkeypatch.setattr(sub_mod, "get_subscription_info", _active)
+    yield
 
 
 @pytest.fixture(scope="function")
@@ -403,16 +444,59 @@ def auth_headers(test_user, test_tenant):
     }
 
 
-@pytest.fixture
-def superadmin_headers():
-    """Generate superadmin authentication headers."""
+@pytest_asyncio.fixture(scope="function")
+async def superadmin_user(db_session) -> dict:
+    """Create the superadmin user backing ``superadmin_headers``.
+
+    Superadmin endpoints resolve the caller via ``get_current_user``
+    (``SELECT User WHERE id = <jwt subject>``) and audit tables FK
+    ``user_id -> users.id``. The token must therefore be signed for a real
+    superadmin row, otherwise requests 401 and event inserts violate the FK.
+    """
+    from app.base_models import Tenant, User, UserRole
+    from app.core.security import get_password_hash
+
+    tenant = Tenant(
+        name="Superadmin Tenant",
+        slug="superadmin-tenant",
+        plan="enterprise",
+        max_users=100,
+        max_campaigns=1000,
+    )
+    db_session.add(tenant)
+    await db_session.flush()
+
+    user = User(
+        tenant_id=tenant.id,
+        email="admin@stratum.ai",
+        email_hash="admin@stratum.ai",
+        password_hash=get_password_hash("adminpassword123"),
+        full_name="Super Admin",
+        role=UserRole.SUPERADMIN,
+        is_active=True,
+        is_verified=True,
+    )
+    db_session.add(user)
+    await db_session.flush()
+
+    return {
+        "id": user.id,
+        "email": user.email,
+        "role": user.role.value,
+        "tenant_id": tenant.id,
+    }
+
+
+@pytest_asyncio.fixture(scope="function")
+async def superadmin_headers(superadmin_user) -> dict:
+    """Generate superadmin authentication headers for a real superadmin row."""
     from app.core.security import create_access_token
 
     token = create_access_token(
-        subject=1,
+        subject=superadmin_user["id"],
         additional_claims={
-            "email": "admin@stratum.ai",
-            "role": "superadmin",
+            "email": superadmin_user["email"],
+            "role": superadmin_user["role"],
         },
     )
 
@@ -434,6 +518,8 @@ def setup_test_database(sync_engine):
     Creates all tables and runs migrations if needed.
     """
     # Import ALL models so they register with Base.metadata
+    from sqlalchemy import text
+
     import app.base_models  # noqa: F401
     import app.models.attribution  # noqa: F401
     import app.models.audience_sync  # noqa: F401
@@ -455,11 +541,49 @@ def setup_test_database(sync_engine):
     import app.models.reporting  # noqa: F401
     import app.models.settings  # noqa: F401
     import app.models.trust_layer  # noqa: F401
+    from app.db.base import StrEnumType
     from app.db.base_class import Base
+
+    # Native PostgreSQL ENUM types are normally created by Alembic migrations,
+    # and the production columns are that native enum type. These tests build
+    # the schema with create_all instead, which stores StrEnumType columns as
+    # VARCHAR (its impl). But StrEnumType.bind_expression emits
+    # CAST(value AS <pg_enum>), so queries become "varchar_col <> enum_value" —
+    # which Postgres rejects ("operator does not exist"). To match production we
+    # (1) create each enum type and (2) alter the StrEnumType columns to it.
+    enum_types: dict[str, list[str]] = {}
+    enum_columns: list[tuple[str, str, str]] = []  # (table, column, pg_enum)
+    for table in Base.metadata.tables.values():
+        for column in table.columns:
+            if isinstance(column.type, StrEnumType):
+                pg_enum = column.type._pg_enum_name
+                enum_types[pg_enum] = [m.value for m in column.type.enum_class]
+                enum_columns.append((table.name, column.name, pg_enum))
 
     # Drop and recreate all tables for a clean state
     Base.metadata.drop_all(bind=sync_engine)
+    with sync_engine.begin() as conn:
+        for name, values in enum_types.items():
+            labels = ", ".join(f"'{value}'" for value in values)
+            conn.execute(text(f"DROP TYPE IF EXISTS {name} CASCADE"))
+            conn.execute(text(f"CREATE TYPE {name} AS ENUM ({labels})"))
     Base.metadata.create_all(bind=sync_engine)
+    with sync_engine.begin() as conn:
+        for table_name, column_name, pg_enum in enum_columns:
+            # Drop any server default first so the type change doesn't fail on a
+            # default that can't be auto-cast; tests supply values explicitly.
+            conn.execute(
+                text(
+                    f"ALTER TABLE {table_name} "
+                    f"ALTER COLUMN {column_name} DROP DEFAULT"
+                )
+            )
+            conn.execute(
+                text(
+                    f"ALTER TABLE {table_name} ALTER COLUMN {column_name} "
+                    f"TYPE {pg_enum} USING {column_name}::text::{pg_enum}"
+                )
+            )
 
     yield
 

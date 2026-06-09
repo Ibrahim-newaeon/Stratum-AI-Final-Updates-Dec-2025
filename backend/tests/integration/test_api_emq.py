@@ -161,7 +161,11 @@ class TestPlaybookEndpoint:
         if len(playbook) > 0:
             item_id = playbook[0]["id"]
 
-            # Update the item
+            # Update the item. Playbook items are generated dynamically from EMQ
+            # driver scores and not yet persisted, so the endpoint deliberately
+            # returns 501 Not Implemented (it documents "requires playbook_items
+            # table"). Assert that documented contract rather than a feature
+            # that does not exist yet.
             response = await authenticated_client.patch(
                 f"/api/v1/tenants/{test_tenant['id']}/emq/playbook/{item_id}",
                 json={
@@ -170,9 +174,7 @@ class TestPlaybookEndpoint:
                 },
             )
 
-            assert response.status_code == 200
-            data = response.json()
-            assert data["data"]["status"] == "in_progress"
+            assert response.status_code == 501
 
 
 class TestIncidentsEndpoint:
