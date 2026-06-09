@@ -165,15 +165,15 @@ class TestZeroMetrics:
         assert result is not None
         assert not math.isnan(result.score)
 
-    def test_fatigue_zero_frequency(self, zero_metrics):
-        """Creative with zero frequency should not be flagged as fatigued."""
-        result = creative_fatigue(zero_metrics)
+    def test_fatigue_zero_frequency(self, zero_metrics, zero_baseline):
+        """Zero activity vs a zero baseline is not a decline → not fatigued."""
+        result = creative_fatigue(zero_metrics, zero_baseline)
         assert result is not None
-        assert result.state != FatigueState.CRITICAL
+        assert result.state != FatigueState.REFRESH
 
     def test_anomaly_zero_values(self):
-        """Z-score of zero against zero mean should not crash."""
-        result = anomaly_zscore(0.0, 0.0, 0.0)
+        """Z-score of a flat zero series should not crash or produce NaN."""
+        result = anomaly_zscore([0.0, 0.0, 0.0, 0.0], 0.0)
         assert result is not None
         assert not math.isnan(result)
 
@@ -225,9 +225,10 @@ class TestExtremeMetrics:
         self, zero_metrics, negative_metrics, extreme_metrics, normal_baseline
     ):
         """Batch scoring with mixed edge cases should complete without errors."""
+        entities = [zero_metrics, negative_metrics, extreme_metrics]
         results = batch_scaling_scores(
-            [zero_metrics, negative_metrics, extreme_metrics],
-            normal_baseline,
+            entities,
+            {e.entity_id: normal_baseline for e in entities},
         )
         assert len(results) == 3
         for r in results:
@@ -244,22 +245,23 @@ class TestSignalHealthEdgeCases:
 
     def test_signal_health_zero_emq(self):
         """Zero EMQ should produce low signal health, not crash."""
-        result = signal_health(emq_score=0.0, api_health=100.0, event_loss=0.0)
+        result = signal_health(emq_score=0.0, event_loss_pct=0.0, api_health=True)
         assert result is not None
-        assert result.score >= 0
+        assert result.status != SignalHealthStatus.HEALTHY
 
     def test_signal_health_all_zero(self):
-        """All-zero inputs should produce a valid status."""
-        result = signal_health(emq_score=0.0, api_health=0.0, event_loss=100.0)
+        """Worst-case inputs should produce a valid status."""
+        result = signal_health(emq_score=0.0, event_loss_pct=100.0, api_health=False)
         assert result is not None
         assert result.status in (
             SignalHealthStatus.HEALTHY,
+            SignalHealthStatus.RISK,
             SignalHealthStatus.DEGRADED,
-            SignalHealthStatus.UNHEALTHY,
+            SignalHealthStatus.CRITICAL,
         )
 
     def test_signal_health_perfect_scores(self):
         """Perfect inputs should produce HEALTHY status."""
-        result = signal_health(emq_score=100.0, api_health=100.0, event_loss=0.0)
+        result = signal_health(emq_score=100.0, event_loss_pct=0.0, api_health=True)
         assert result is not None
         assert result.status == SignalHealthStatus.HEALTHY

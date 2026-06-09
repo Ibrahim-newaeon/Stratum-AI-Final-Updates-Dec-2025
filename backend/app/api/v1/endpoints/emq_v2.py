@@ -16,7 +16,6 @@ Provides endpoints for:
 - Portfolio overview (super admin)
 """
 
-import uuid
 from datetime import date, datetime, timedelta
 from typing import List, Optional
 
@@ -59,8 +58,13 @@ router = APIRouter(
 # =============================================================================
 def validate_tenant_access(request: Request, tenant_id: int) -> None:
     """Validate that the request has access to the specified tenant."""
+    # Superadmins operate across all tenants (TenantMiddleware flags them).
+    # They may still carry their own tenant_id, so check the role explicitly
+    # rather than relying on an absent tenant context.
+    if getattr(request.state, "is_superadmin", False):
+        return
     request_tenant_id = getattr(request.state, "tenant_id", None)
-    # Allow access if no tenant context (e.g., super admin) or matching tenant
+    # Allow access if no tenant context or matching tenant
     if request_tenant_id is not None and request_tenant_id != tenant_id:
         raise HTTPException(status_code=403, detail="Access denied to this tenant")
 
@@ -171,6 +175,79 @@ async def get_confidence(
     return APIResponse(success=True, data=response_data)
 
 
+# Static catalog of every possible EMQ fix, keyed by a stable item_key. The
+# generated playbook selects a subset based on driver scores; persisted progress
+# (status/owner) is keyed off the same item_key so updates survive across
+# requests (the old implementation used a fresh uuid4 per request, which made
+# items un-updatable).
+PLAYBOOK_CATALOG: dict[str, dict] = {
+    "enhanced_conversions": {
+        "title": "Enable Enhanced Conversions",
+        "description": "Implement Google Enhanced Conversions to improve match rates by 15-25%",
+        "priority": "critical",
+        "estimatedImpact": 8.5,
+        "estimatedTime": "2-4 hours",
+        "platform": "Google Ads",
+        "actionUrl": "https://ads.google.com/settings/conversions",
+    },
+    "meta_capi_dedup": {
+        "title": "Fix Meta CAPI Event Deduplication",
+        "description": "Configure event_id parameter to prevent duplicate conversions",
+        "priority": "high",
+        "estimatedImpact": 5.2,
+        "estimatedTime": "1-2 hours",
+        "platform": "Meta",
+        "actionUrl": None,
+    },
+    "consent_mode_v2": {
+        "title": "Update Consent Mode v2",
+        "description": "Migrate to Consent Mode v2 for improved EU data quality",
+        "priority": "high",
+        "estimatedImpact": 4.8,
+        "estimatedTime": "4-6 hours",
+        "platform": None,
+        "actionUrl": None,
+    },
+    "reduce_conversion_latency": {
+        "title": "Reduce Conversion Latency",
+        "description": "Optimize server-side event processing to reduce latency below 1 hour",
+        "priority": "medium",
+        "estimatedImpact": 3.1,
+        "estimatedTime": "1-2 days",
+        "platform": None,
+        "actionUrl": None,
+    },
+    "tiktok_events_api": {
+        "title": "Add TikTok Events API",
+        "description": "Implement server-side tracking for TikTok campaigns",
+        "priority": "low",
+        "estimatedImpact": 2.0,
+        "estimatedTime": "3-4 hours",
+        "platform": "TikTok",
+        "actionUrl": None,
+    },
+}
+
+
+def _build_playbook_item(
+    item_key: str, status: str = "pending", owner: Optional[str] = None
+) -> PlaybookItemResponse:
+    """Build a playbook item response from the static catalog + persisted state."""
+    meta = PLAYBOOK_CATALOG[item_key]
+    return PlaybookItemResponse(
+        id=item_key,
+        title=meta["title"],
+        description=meta["description"],
+        priority=meta["priority"],
+        owner=owner,
+        estimatedImpact=meta["estimatedImpact"],
+        estimatedTime=meta["estimatedTime"],
+        platform=meta["platform"],
+        status=status,
+        actionUrl=meta["actionUrl"],
+    )
+
+
 @router.get(
     "/tenants/{tenant_id}/emq/playbook",
     response_model=APIResponse[List[PlaybookItemResponse]],
@@ -194,92 +271,37 @@ async def get_playbook(
     service = EmqService(db)
     emq_data = await service.get_emq_score(tenant_id)
 
-    # Generate playbook based on driver scores
-    playbook_items = []
+    # Select which fixes apply based on driver scores (stable item_keys).
     drivers = {d["name"]: d for d in emq_data["drivers"]}
-
-    # Check Event Match Rate
+    active_keys: List[str] = []
     if drivers.get("Event Match Rate", {}).get("value", 100) < 85:
-        playbook_items.append(
-            PlaybookItemResponse(
-                id=str(uuid.uuid4()),
-                title="Enable Enhanced Conversions",
-                description="Implement Google Enhanced Conversions to improve match rates by 15-25%",
-                priority="critical",
-                owner=None,
-                estimatedImpact=8.5,
-                estimatedTime="2-4 hours",
-                platform="Google Ads",
-                status="pending",
-                actionUrl="https://ads.google.com/settings/conversions",
-            )
-        )
-
-        playbook_items.append(
-            PlaybookItemResponse(
-                id=str(uuid.uuid4()),
-                title="Fix Meta CAPI Event Deduplication",
-                description="Configure event_id parameter to prevent duplicate conversions",
-                priority="high",
-                owner=None,
-                estimatedImpact=5.2,
-                estimatedTime="1-2 hours",
-                platform="Meta",
-                status="pending",
-                actionUrl=None,
-            )
-        )
-
-    # Check Pixel Coverage
+        active_keys.append("enhanced_conversions")
+        active_keys.append("meta_capi_dedup")
     if drivers.get("Pixel Coverage", {}).get("value", 100) < 90:
-        playbook_items.append(
-            PlaybookItemResponse(
-                id=str(uuid.uuid4()),
-                title="Update Consent Mode v2",
-                description="Migrate to Consent Mode v2 for improved EU data quality",
-                priority="high",
-                owner=None,
-                estimatedImpact=4.8,
-                estimatedTime="4-6 hours",
-                platform=None,
-                status="pending",
-                actionUrl=None,
-            )
-        )
-
-    # Check Conversion Latency
+        active_keys.append("consent_mode_v2")
     if drivers.get("Conversion Latency", {}).get("value", 100) < 70:
-        playbook_items.append(
-            PlaybookItemResponse(
-                id=str(uuid.uuid4()),
-                title="Reduce Conversion Latency",
-                description="Optimize server-side event processing to reduce latency below 1 hour",
-                priority="medium",
-                owner=None,
-                estimatedImpact=3.1,
-                estimatedTime="1-2 days",
-                platform=None,
-                status="pending",
-                actionUrl=None,
-            )
-        )
-
-    # Always suggest TikTok if not at perfect score
+        active_keys.append("reduce_conversion_latency")
     if emq_data["score"] < 95:
-        playbook_items.append(
-            PlaybookItemResponse(
-                id=str(uuid.uuid4()),
-                title="Add TikTok Events API",
-                description="Implement server-side tracking for TikTok campaigns",
-                priority="low",
-                owner=None,
-                estimatedImpact=2.0,
-                estimatedTime="3-4 hours",
-                platform="TikTok",
-                status="pending",
-                actionUrl=None,
-            )
+        active_keys.append("tiktok_events_api")
+
+    # Merge persisted user state (status/owner) onto the generated items.
+    from sqlalchemy import select
+
+    from app.models.emq_playbook import EmqPlaybookItemState
+
+    state_rows = await db.execute(
+        select(EmqPlaybookItemState).where(EmqPlaybookItemState.tenant_id == tenant_id)
+    )
+    state_by_key = {s.item_key: s for s in state_rows.scalars().all()}
+
+    playbook_items = [
+        _build_playbook_item(
+            key,
+            status=state_by_key[key].status if key in state_by_key else "pending",
+            owner=state_by_key[key].owner if key in state_by_key else None,
         )
+        for key in active_keys
+    ]
 
     # Sort by priority
     priority_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
@@ -308,10 +330,41 @@ async def update_playbook_item(
     """
     validate_tenant_access(request, tenant_id)
 
-    # Playbook item persistence not yet implemented — requires playbook_items table
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Playbook item update persistence is not yet implemented.",
+    if item_id not in PLAYBOOK_CATALOG:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Unknown playbook item: {item_id}",
+        )
+
+    from sqlalchemy import select
+
+    from app.models.emq_playbook import EmqPlaybookItemState
+
+    result = await db.execute(
+        select(EmqPlaybookItemState).where(
+            EmqPlaybookItemState.tenant_id == tenant_id,
+            EmqPlaybookItemState.item_key == item_id,
+        )
+    )
+    state = result.scalar_one_or_none()
+    if state is None:
+        state = EmqPlaybookItemState(
+            tenant_id=tenant_id, item_key=item_id, status="pending"
+        )
+        db.add(state)
+
+    if updates.status is not None:
+        state.status = updates.status
+    if updates.owner is not None:
+        state.owner = updates.owner
+
+    await db.commit()
+    await db.refresh(state)
+
+    return APIResponse(
+        success=True,
+        data=_build_playbook_item(item_id, status=state.status, owner=state.owner),
+        message="Playbook item updated",
     )
 
 
@@ -543,7 +596,7 @@ async def update_autopilot_mode(
         raise HTTPException(status_code=400, detail=f"Invalid mode: {update.mode}")
 
     # Query actual tenant spend for budget-at-risk calculation
-    from sqlalchemy import func
+    from sqlalchemy import func, select
 
     from app.models import Campaign
 

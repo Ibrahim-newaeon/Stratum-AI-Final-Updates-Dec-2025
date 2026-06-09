@@ -149,6 +149,7 @@ class TestSecurityHeadersMiddleware:
 
         with patch("app.middleware.security.settings") as mock_settings:
             mock_settings.is_production = False
+            mock_settings.is_staging = False  # MagicMock attrs are truthy unless set
             response = await middleware.dispatch(request, _ok_call_next)
 
         csp = response.headers["Content-Security-Policy"]

@@ -836,19 +836,30 @@ class TestAuthRegister:
         assert r.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_register_invalid_tenant(self, api_client, mock_db):
-        """POST /register with non-existent tenant returns 400."""
-        # mock_db.execute returns None for scalar_one_or_none by default
-        r = await api_client.post(
-            f"{AUTH_PREFIX}/register",
-            json={
-                "email": "new@example.com",
-                "password": "ValidPass1",
-                "tenant_id": 9999,
-            },
-        )
+    async def test_register_invalid_verification(self, api_client, mock_db):
+        """POST /register without a valid verification token returns 400.
+
+        Registration now requires an email/WhatsApp OTP verification token and
+        auto-creates a free-tier tenant, so there is no tenant_id to validate;
+        an unrecognized token is rejected with 400."""
+        fake_redis = AsyncMock()
+        fake_redis.get = AsyncMock(return_value=None)  # token not found
+        fake_redis.delete = AsyncMock()
+        fake_redis.close = AsyncMock()
+        with patch(
+            "app.api.v1.endpoints.auth.get_redis_client",
+            new=AsyncMock(return_value=fake_redis),
+        ):
+            r = await api_client.post(
+                f"{AUTH_PREFIX}/register",
+                json={
+                    "email": "new@example.com",
+                    "password": "ValidPass1",
+                    "verification_token": "does-not-exist",
+                },
+            )
         assert r.status_code == 400
-        assert "Invalid tenant" in r.json()["detail"]
+        assert "verification" in r.json()["detail"].lower()
 
 
 class TestAuthRefresh:

@@ -434,16 +434,16 @@ class TestEmqPlaybookUpdate:
         )
         assert resp.status_code == 403
 
-    async def test_happy_path(self, api_client, admin_headers, mock_db):
+    async def test_unknown_item_returns_404(self, api_client, admin_headers, mock_db):
+        """An unknown playbook item_key is rejected with 404. Persisting a real
+        item's status/owner (now backed by emq_playbook_item_state) is covered
+        by the integration suite, which has a live table."""
         resp = await api_client.patch(
-            self.URL,
+            self.URL,  # "some-item-id" is not a catalog key
             headers=admin_headers,
             json={"status": "in_progress", "owner": "user@example.com"},
         )
-        assert resp.status_code == 200
-        body = resp.json()
-        assert body["success"] is True
-        assert body["data"]["status"] == "in_progress"
+        assert resp.status_code == 404
 
 
 # ---------------------------------------------------------------------------
@@ -1243,6 +1243,9 @@ class TestEnforcementAddRule:
 
     async def test_happy_path(self, api_client, admin_headers, mock_db):
         with patch(
+            "app.services.tenant.limits.check_tenant_limit",
+            new_callable=AsyncMock,
+        ), patch(
             "app.api.v1.endpoints.autopilot_enforcement.AutopilotEnforcer"
         ) as MockEnf, patch(
             "app.api.v1.endpoints.autopilot_enforcement.ViolationType"

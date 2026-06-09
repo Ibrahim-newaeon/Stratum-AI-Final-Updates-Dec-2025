@@ -945,13 +945,16 @@ class TestTenantsCRUD:
 
     # ── Get specific tenant: admin can access other tenants ────────────
     @pytest.mark.asyncio
-    async def test_get_tenant_admin_access(self, api_client, mock_db, admin_headers):
-        """GET /tenants/2 as admin → succeeds."""
+    async def test_get_tenant_superadmin_cross_tenant(
+        self, api_client, mock_db, superadmin_headers
+    ):
+        """Cross-tenant read (GET /tenants/2) is allowed for a superadmin; a
+        regular admin is restricted to their own tenant."""
         tenant = _mock_tenant(id=2, slug="other-co")
         tenant_result = make_scalar_result(tenant)
         mock_db.execute = AsyncMock(return_value=tenant_result)
 
-        resp = await api_client.get("/api/v1/tenants/2", headers=admin_headers)
+        resp = await api_client.get("/api/v1/tenants/2", headers=superadmin_headers)
         assert resp.status_code == 200
         body = resp.json()
         assert body["data"]["id"] == 2
@@ -971,10 +974,10 @@ class TestTenantsCRUD:
         )
         assert resp.status_code == 403
 
-    # ── Create tenant: admin happy path ────────────────────────────────
+    # ── Create tenant: superadmin happy path ───────────────────────────
     @pytest.mark.asyncio
-    async def test_create_tenant_happy(self, api_client, mock_db, admin_headers):
-        """POST /tenants creates a new tenant."""
+    async def test_create_tenant_happy(self, api_client, mock_db, superadmin_headers):
+        """POST /tenants creates a new tenant (superadmin-only)."""
         # Duplicate check: no existing tenant with slug
         dup_result = MagicMock()
         dup_result.scalar_one_or_none.return_value = None
@@ -1007,7 +1010,7 @@ class TestTenantsCRUD:
             "plan": "free",
         }
         resp = await api_client.post(
-            "/api/v1/tenants", json=payload, headers=admin_headers
+            "/api/v1/tenants", json=payload, headers=superadmin_headers
         )
         assert resp.status_code == 201
         body = resp.json()
@@ -1016,9 +1019,9 @@ class TestTenantsCRUD:
     # ── Create tenant: duplicate slug → 409 ────────────────────────────
     @pytest.mark.asyncio
     async def test_create_tenant_duplicate_slug(
-        self, api_client, mock_db, admin_headers
+        self, api_client, mock_db, superadmin_headers
     ):
-        """POST /tenants with existing slug → 409."""
+        """POST /tenants with existing slug → 409 (superadmin-only)."""
         existing = _mock_tenant(slug="acme-inc")
         dup_result = MagicMock()
         dup_result.scalar_one_or_none.return_value = existing
@@ -1029,7 +1032,7 @@ class TestTenantsCRUD:
             "slug": "acme-inc",
         }
         resp = await api_client.post(
-            "/api/v1/tenants", json=payload, headers=admin_headers
+            "/api/v1/tenants", json=payload, headers=superadmin_headers
         )
         assert resp.status_code == 409
 
