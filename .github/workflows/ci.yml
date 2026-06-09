@@ -416,6 +416,12 @@ jobs:
           # lifespan startup and /health is refused while the k6 smoke check
           # runs (the autopilot endpoints under test don't need ML models).
           ML_AUTO_TRAIN: "false"
+          # The lifespan superadmin seeder imports scripts/seed_superadmin, which
+          # sys.exit(1)s at import when these are unset (SystemExit isn't caught
+          # by the lifespan's except Exception) — that aborts startup once ML
+          # training no longer blocks it first. Provide test values.
+          SUPERADMIN_EMAIL: admin@stratum.test
+          SUPERADMIN_PASSWORD: test_superadmin_password_change_me
         run: |
           # Widen alembic_version.version_num to VARCHAR(128) first: some
           # revision ids (e.g. 041_add_superadmin_to_userrole_enum, 35 chars)
