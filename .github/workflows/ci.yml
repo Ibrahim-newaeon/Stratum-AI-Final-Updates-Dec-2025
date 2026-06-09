@@ -412,6 +412,12 @@ jobs:
           PII_ENCRYPTION_KEY: dGVzdC1lbmNyeXB0aW9uLWtleS0zMmJ5dGVz
           APP_ENV: test
         run: |
+          # Widen alembic_version.version_num to VARCHAR(128) first: some
+          # revision ids (e.g. 041_add_superadmin_to_userrole_enum, 35 chars)
+          # exceed Alembic's default VARCHAR(32), which otherwise fails
+          # `alembic upgrade head`. start.sh does this in the app image; the
+          # load-test job runs alembic directly, so do it here too.
+          python fix_alembic_version.py
           # Run migrations
           alembic upgrade head
           # Seed load test user
