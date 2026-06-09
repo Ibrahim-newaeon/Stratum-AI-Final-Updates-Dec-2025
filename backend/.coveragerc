@@ -27,9 +27,9 @@ omit =
 # Ratchet history: 30 -> 33 (pii_hasher + rfm_segmenter) -> 34 (ab_power_analysis
 # + distributed_dedupe) -> 34.8 (ai_reports + creative_scoring + churn_prevention)
 # -> 35.4 (audience_lifecycle + predictive_budget) -> 36.0 (cross_platform_optimizer
-# + unified_notifications) -> 36.2 (emq_calculation 94% + ltv_forecasting 95%;
-# measured 36.29%). See #342.
-fail_under = 36.2
+# + unified_notifications) -> 36.2 (emq_calculation + ltv_forecasting) -> 36.7
+# (signal_recovery 94% + goal_tracking 95%; measured 36.71%). See #342.
+fail_under = 36.7
 
 # Show missing line numbers
 show_missing = True
