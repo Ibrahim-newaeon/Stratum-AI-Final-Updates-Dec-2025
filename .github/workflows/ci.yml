@@ -411,6 +411,11 @@ jobs:
           JWT_SECRET_KEY: test-jwt-secret-for-load-tests
           PII_ENCRYPTION_KEY: dGVzdC1lbmNyeXB0aW9uLWtleS0zMmJ5dGVz
           APP_ENV: test
+          # Skip startup ML auto-training so uvicorn starts accepting
+          # connections immediately; otherwise it trains from sample data during
+          # lifespan startup and /health is refused while the k6 smoke check
+          # runs (the autopilot endpoints under test don't need ML models).
+          ML_AUTO_TRAIN: "false"
         run: |
           # Widen alembic_version.version_num to VARCHAR(128) first: some
           # revision ids (e.g. 041_add_superadmin_to_userrole_enum, 35 chars)
