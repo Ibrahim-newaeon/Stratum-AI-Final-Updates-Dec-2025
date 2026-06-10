@@ -381,15 +381,15 @@ class CompetitorBenchmarkingService:
             benchmark_metrics, industry, platform
         )
 
-        # Get sample size
-        sample_size = (
-            min(
+        # Get sample size (0 when no benchmark data exists for this
+        # industry/platform combination — e.g. fallback-only industries)
+        sample_size = min(
+            (
                 bd.sample_size
                 for bd in self._benchmark_data.values()
                 if bd.industry == industry and bd.platform == platform
-            )
-            if self._benchmark_data
-            else 0
+            ),
+            default=0,
         )
 
         return CompetitorBenchmark(
