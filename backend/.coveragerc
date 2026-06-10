@@ -34,8 +34,10 @@ omit =
 # 15-19 subset, higher with trust_gate) -> 38.0 (recommend engine + feature
 # flags; full unit suite measured 38.11%) -> 38.7 (conversion latency +
 # creative performance batches measured 38.70%; audience insights, budget
-# reallocation, and EMQ measurement batches land on top). See #342.
-fail_under = 38.7
+# reallocation, and EMQ measurement batches land on top) -> 40.8 (competitor
+# benchmarking, offline conversions, mock client, market proxy batches; full
+# unit suite measured 40.81%, plus 2 latent crash fixes). See #342.
+fail_under = 40.8
 
 # Show missing line numbers
 show_missing = True
