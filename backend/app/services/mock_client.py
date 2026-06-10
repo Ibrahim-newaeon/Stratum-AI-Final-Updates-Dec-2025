@@ -111,6 +111,22 @@ CAMPAIGN_TEMPLATES = {
         "objectives": ["Story Ads", "Collection Ads", "Commercials", "App Install"],
         "audiences": ["18-24 Interest", "Lifestyle", "Lookalike", "Web Visitors"],
     },
+    AdPlatform.LINKEDIN: {
+        "prefixes": ["LI", "LinkedIn"],
+        "objectives": [
+            "Lead Gen",
+            "Sponsored Content",
+            "Message Ads",
+            "Brand Awareness",
+        ],
+        "audiences": [
+            "Job Title - Decision Makers",
+            "Industry - Tech",
+            "Company Size 50+",
+            "Matched Audience",
+            "Retargeting",
+        ],
+    },
 }
 
 AGE_RANGES = ["18-24", "25-34", "35-44", "45-54", "55-64", "65+"]
@@ -219,7 +235,10 @@ class MockAdNetwork:
     ) -> MockCampaignData:
         """Generate a single campaign with all its data."""
 
-        templates = CAMPAIGN_TEMPLATES[platform]
+        # Unknown platforms (future enum additions) fall back to Meta templates
+        templates = CAMPAIGN_TEMPLATES.get(
+            platform, CAMPAIGN_TEMPLATES[AdPlatform.META]
+        )
         prefix = rng.choice(templates["prefixes"])
         objective = rng.choice(templates["objectives"])
         audience = rng.choice(templates["audiences"])
@@ -245,9 +264,10 @@ class MockAdNetwork:
             AdPlatform.GOOGLE: 1.5,
             AdPlatform.TIKTOK: 0.8,
             AdPlatform.SNAPCHAT: 0.6,
+            AdPlatform.LINKEDIN: 1.8,  # B2B budgets run higher
         }
 
-        daily_budget = int(rng.gauss(5000, 2000) * budget_multiplier[platform])
+        daily_budget = int(rng.gauss(5000, 2000) * budget_multiplier.get(platform, 1.0))
         daily_budget = max(1000, min(50000, daily_budget))  # $10-$500/day
 
         # Date range
@@ -344,9 +364,17 @@ class MockAdNetwork:
                 "cpm_var": 100,
                 "performance_var": 0.35,
             },
+            AdPlatform.LINKEDIN: {
+                "cpm_base": 3000,
+                "ctr_base": 0.5,
+                "cvr_base": 6.0,
+                "cpm_var": 800,
+                "performance_var": 0.25,
+            },
         }
 
-        params = platform_params[platform]
+        # Unknown platforms fall back to Meta-like performance
+        params = platform_params.get(platform, platform_params[AdPlatform.META])
 
         # Campaign-specific performance modifier
         campaign_modifier = rng.gauss(1.0, params["performance_var"])
