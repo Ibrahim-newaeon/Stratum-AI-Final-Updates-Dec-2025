@@ -32,8 +32,10 @@ omit =
 # (nl_filters) -> 37.2 (anomaly_narratives) -> 37.9 (signal_health + trust_gate
 # core, competitor_intel, event_mapper, ab_testing; measured 37.90% for the
 # 15-19 subset, higher with trust_gate) -> 38.0 (recommend engine + feature
-# flags; full unit suite measured 38.11%). See #342.
-fail_under = 38.0
+# flags; full unit suite measured 38.11%) -> 38.7 (conversion latency +
+# creative performance batches measured 38.70%; audience insights, budget
+# reallocation, and EMQ measurement batches land on top). See #342.
+fail_under = 38.7
 
 # Show missing line numbers
 show_missing = True
