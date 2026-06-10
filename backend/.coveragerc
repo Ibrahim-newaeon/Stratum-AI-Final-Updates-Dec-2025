@@ -31,8 +31,9 @@ omit =
 # (signal_recovery + goal_tracking) -> 36.9 (attribution_confidence) -> 37.0
 # (nl_filters) -> 37.2 (anomaly_narratives) -> 37.9 (signal_health + trust_gate
 # core, competitor_intel, event_mapper, ab_testing; measured 37.90% for the
-# 15-19 subset, higher with trust_gate). See #342.
-fail_under = 37.9
+# 15-19 subset, higher with trust_gate) -> 38.0 (recommend engine + feature
+# flags; full unit suite measured 38.11%). See #342.
+fail_under = 38.0
 
 # Show missing line numbers
 show_missing = True
