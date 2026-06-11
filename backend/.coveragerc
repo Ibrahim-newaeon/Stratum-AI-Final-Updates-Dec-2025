@@ -40,8 +40,10 @@ omit =
 # ltv_predictor + creative_lifecycle + explainability; measured 41.71% with
 # ltv_predictor in, explainability lands on top, plus 3 missing-import
 # fixes) -> 42.3 (core analytics: anomalies + fatigue + collaborative
-# annotations; full unit suite measured 42.30%). See #342.
-fail_under = 42.3
+# annotations; full unit suite measured 42.30%) -> 42.5 (CAPI data quality
+# analyzer + knowledge graph auto-insights; measured 42.50% with data
+# quality in, knowledge graph lands on top). See #342.
+fail_under = 42.5
 
 # Show missing line numbers
 show_missing = True
