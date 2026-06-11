@@ -39,8 +39,9 @@ omit =
 # unit suite measured 40.81%, plus 2 latent crash fixes) -> 41.7 (ML modules:
 # ltv_predictor + creative_lifecycle + explainability; measured 41.71% with
 # ltv_predictor in, explainability lands on top, plus 3 missing-import
-# fixes). See #342.
-fail_under = 41.7
+# fixes) -> 42.3 (core analytics: anomalies + fatigue + collaborative
+# annotations; full unit suite measured 42.30%). See #342.
+fail_under = 42.3
 
 # Show missing line numbers
 show_missing = True
