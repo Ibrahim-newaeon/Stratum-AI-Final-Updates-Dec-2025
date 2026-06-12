@@ -240,6 +240,17 @@ async def client(app, db_session) -> AsyncGenerator[AsyncClient, None]:
 
     app.dependency_overrides[get_async_session] = get_test_session
 
+    # app.tenancy.deps.get_db is a *separate* wrapper around get_async_session,
+    # so overriding get_async_session alone doesn't reach endpoints that depend
+    # on get_db (e.g. pacing). Override it too so those endpoints share the test
+    # savepoint session and can see fixture-created rows.
+    try:
+        from app.tenancy.deps import get_db as tenancy_get_db
+
+        app.dependency_overrides[tenancy_get_db] = get_test_session
+    except ImportError:  # pragma: no cover - defensive
+        pass
+
     async with AsyncClient(
         transport=ASGITransport(app=app),
         base_url="http://testserver",
