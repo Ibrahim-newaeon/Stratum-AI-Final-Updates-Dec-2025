@@ -47,8 +47,9 @@ omit =
 # 43.05%) -> 43.1 (schema validators: client + embed widgets, CSRF
 # middleware; full unit suite measured 43.19%) -> 43.4 (stratum autopilot
 # rule engine; full unit suite measured 43.47%, plus 2 latent Trust Engine
-# crash fixes). See #342.
-fail_under = 43.4
+# crash fixes) -> 43.5 (stratum integration bridge; full unit suite
+# measured 43.57%). See #342.
+fail_under = 43.5
 
 # Show missing line numbers
 show_missing = True
