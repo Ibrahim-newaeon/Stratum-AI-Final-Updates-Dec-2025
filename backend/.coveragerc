@@ -44,8 +44,9 @@ omit =
 # analyzer + knowledge graph auto-insights; measured 42.50% with data
 # quality in, knowledge graph lands on top) -> 43.0 (embed security service
 # + exception hierarchy + tenant context RBAC; full unit suite measured
-# 43.05%). See #342.
-fail_under = 43.0
+# 43.05%) -> 43.1 (schema validators: client + embed widgets, CSRF
+# middleware; full unit suite measured 43.19%). See #342.
+fail_under = 43.1
 
 # Show missing line numbers
 show_missing = True
