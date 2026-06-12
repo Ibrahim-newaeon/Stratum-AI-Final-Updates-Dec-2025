@@ -159,16 +159,23 @@ class AutopilotRule(ABC):
         action_type: str,
         parameters: dict[str, Any],
     ) -> AutomationAction:
-        """Helper to create a properly formatted action."""
+        """Helper to create a properly formatted action.
+
+        Stamps the current signal health onto the action and records the
+        originating rule in parameters. (The previous implementation read a
+        nonexistent ``signal_health.score`` attribute — raising AttributeError
+        whenever a rule produced an action — and passed ``created_by`` /
+        ``signal_health_at_creation`` kwargs that AutomationAction silently
+        dropped, so the stamp was lost.)
+        """
         return AutomationAction(
             platform=context.platform,
             account_id=context.account_id,
             entity_type=entity_type,
             entity_id=entity_id,
             action_type=action_type,
-            parameters=parameters,
-            signal_health_at_creation=context.signal_health.score,
-            created_by=f"autopilot:{self.name}",
+            parameters={**parameters, "created_by": f"autopilot:{self.name}"},
+            signal_health_at_execution=context.signal_health.overall_score,
         )
 
 
