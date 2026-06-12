@@ -48,8 +48,9 @@ omit =
 # middleware; full unit suite measured 43.19%) -> 43.4 (stratum autopilot
 # rule engine; full unit suite measured 43.47%, plus 2 latent Trust Engine
 # crash fixes) -> 43.5 (stratum integration bridge; full unit suite
-# measured 43.57%). See #342.
-fail_under = 43.5
+# measured 43.57%) -> 43.6 (db base mixins: StrEnumType asyncpg casing
+# bridge, tablename, to_dict, soft delete; measured 43.61%). See #342.
+fail_under = 43.6
 
 # Show missing line numbers
 show_missing = True
