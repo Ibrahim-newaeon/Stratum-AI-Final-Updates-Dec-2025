@@ -158,6 +158,18 @@ class TrustGate:
         """Initialize with optional custom configuration."""
         self.config = config or TrustGateConfig()
 
+    def get_stats(self) -> dict:
+        """Return the configured thresholds for diagnostics/reporting."""
+        return {
+            "pass_threshold": self.config.pass_threshold,
+            "hold_threshold": self.config.hold_threshold,
+            "high_risk_threshold": self.config.high_risk_threshold,
+            "conservative_threshold": self.config.conservative_threshold,
+            "high_risk_actions": list(self.config.high_risk_actions),
+            "conservative_actions": list(self.config.conservative_actions),
+            "always_allowed_actions": list(self.config.always_allowed_actions),
+        }
+
     def evaluate(
         self,
         signal_health: SignalHealth,
