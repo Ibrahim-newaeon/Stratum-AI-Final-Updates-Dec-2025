@@ -4,19 +4,24 @@
 """
 Automated email sequences triggered by user behavior, time delays, or events.
 Visual flow builder backend supporting drag-and-drop node graphs.
+
+Sequences and their execution logs are persisted to PostgreSQL (see
+``app.models.drip``) so they survive restarts and are shared across API
+workers — replacing the former per-process in-memory store.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
-from sqlalchemy import and_, func, select, text
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.db.session import get_async_session
+from app.models.drip import DripExecutionRecord, DripSequence
 from app.schemas.response import APIResponse
 
 logger = get_logger(__name__)
@@ -146,17 +151,67 @@ class DripAnalytics(BaseModel):
 
 
 # =============================================================================
-# In-Memory Store (replace with DB table in production)
+# Helpers
 # =============================================================================
 
-_drip_store: dict[str, dict] = {}
-_execution_logs: list[dict] = []
+
+def _serialize_sequence(seq: DripSequence) -> DripSequenceResponse:
+    """Map a persisted drip sequence to its API response shape."""
+    return DripSequenceResponse(
+        id=seq.id,
+        name=seq.name,
+        description=seq.description or "",
+        trigger_type=seq.trigger_type,
+        trigger_config=seq.trigger_config or {},
+        status=seq.status,
+        nodes=[FlowNode(**n) for n in (seq.nodes or [])],
+        edges=[FlowEdge(**e) for e in (seq.edges or [])],
+        entry_count=seq.entry_count,
+        active_recipient_count=seq.active_recipient_count,
+        completion_rate=seq.completion_rate,
+        revenue_attributed_cents=seq.revenue_attributed_cents,
+        created_at=seq.created_at.isoformat(),
+        updated_at=seq.updated_at.isoformat(),
+    )
 
 
-def _generate_id() -> str:
-    import secrets
+def _serialize_log(log: DripExecutionRecord) -> DripExecutionLog:
+    """Map a persisted execution record to its API response shape."""
+    return DripExecutionLog(
+        id=log.id,
+        sequence_id=log.sequence_id,
+        recipient_email=log.recipient_email,
+        step_number=log.step_number,
+        node_type=log.node_type,
+        status=log.status,
+        sent_at=log.sent_at.isoformat() if log.sent_at else None,
+        opened_at=log.opened_at.isoformat() if log.opened_at else None,
+        clicked_at=log.clicked_at.isoformat() if log.clicked_at else None,
+        metadata=log.extra or {},
+    )
 
-    return f"drip_{secrets.token_hex(8)}"
+
+def _require_tenant(req: Request) -> int:
+    """Return the request tenant_id or raise 401 if absent."""
+    tenant_id = getattr(req.state, "tenant_id", None)
+    if not tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
+        )
+    return tenant_id
+
+
+async def _get_sequence(
+    db: AsyncSession, tenant_id: int, sequence_id: str
+) -> Optional[DripSequence]:
+    """Fetch a tenant-scoped sequence by id (None if not found)."""
+    result = await db.execute(
+        select(DripSequence).where(
+            DripSequence.id == sequence_id,
+            DripSequence.tenant_id == tenant_id,
+        )
+    )
+    return result.scalar_one_or_none()
 
 
 # =============================================================================
@@ -171,18 +226,15 @@ async def list_drip_sequences(
     status_filter: Optional[str] = Query(None),
 ):
     """List all drip sequences for the tenant."""
-    tenant_id = getattr(req.state, "tenant_id", None)
-    if not tenant_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
-        )
+    tenant_id = _require_tenant(req)
 
-    sequences = [
-        _serialize_sequence(s)
-        for s in _drip_store.values()
-        if s.get("tenant_id") == tenant_id
-        and (not status_filter or s.get("status") == status_filter)
-    ]
+    stmt = select(DripSequence).where(DripSequence.tenant_id == tenant_id)
+    if status_filter:
+        stmt = stmt.where(DripSequence.status == status_filter)
+    stmt = stmt.order_by(DripSequence.created_at.desc())
+
+    rows = (await db.execute(stmt)).scalars().all()
+    sequences = [_serialize_sequence(s) for s in rows]
     return APIResponse(
         success=True, data=sequences, message=f"Found {len(sequences)} sequences"
     )
@@ -201,40 +253,29 @@ async def create_drip_sequence(
     (connections with labels like 'yes'/'no'). We store the graph and
     compile it to an execution plan.
     """
-    tenant_id = getattr(req.state, "tenant_id", None)
-    if not tenant_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
-        )
+    tenant_id = _require_tenant(req)
+    user_id = getattr(req.state, "user_id", None)
 
-    sequence_id = _generate_id()
-    now = datetime.now(UTC).isoformat()
-
-    sequence = {
-        "id": sequence_id,
-        "tenant_id": tenant_id,
-        "name": request.name,
-        "description": request.description or "",
-        "trigger_type": request.trigger_type.value,
-        "trigger_config": request.trigger_config,
-        "status": request.status.value,
-        "nodes": [n.model_dump() for n in request.nodes],
-        "edges": [e.model_dump() for e in request.edges],
-        "entry_count": 0,
-        "active_recipient_count": 0,
-        "completion_rate": 0.0,
-        "revenue_attributed_cents": 0,
-        "created_at": now,
-        "updated_at": now,
-    }
-
-    _drip_store[sequence_id] = sequence
+    sequence = DripSequence(
+        tenant_id=tenant_id,
+        name=request.name,
+        description=request.description or "",
+        trigger_type=request.trigger_type.value,
+        trigger_config=request.trigger_config,
+        status=request.status.value,
+        nodes=[n.model_dump() for n in request.nodes],
+        edges=[e.model_dump() for e in request.edges],
+        created_by_user_id=user_id,
+    )
+    db.add(sequence)
+    await db.commit()
+    await db.refresh(sequence)
 
     logger.info(
         "drip_sequence_created",
         tenant_id=tenant_id,
-        sequence_id=sequence_id,
-        name=request.name,
+        sequence_id=sequence.id,
+        name=sequence.name,
     )
 
     return APIResponse(
@@ -249,14 +290,10 @@ async def get_drip_sequence(
     db: AsyncSession = Depends(get_async_session),
 ):
     """Get a single drip sequence with its full flow graph."""
-    tenant_id = getattr(req.state, "tenant_id", None)
-    if not tenant_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
-        )
+    tenant_id = _require_tenant(req)
 
-    sequence = _drip_store.get(sequence_id)
-    if not sequence or sequence.get("tenant_id") != tenant_id:
+    sequence = await _get_sequence(db, tenant_id, sequence_id)
+    if not sequence:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Sequence not found"
         )
@@ -274,27 +311,24 @@ async def update_drip_sequence(
     db: AsyncSession = Depends(get_async_session),
 ):
     """Update a drip sequence — save changes from the flow builder."""
-    tenant_id = getattr(req.state, "tenant_id", None)
-    if not tenant_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
-        )
+    tenant_id = _require_tenant(req)
 
-    sequence = _drip_store.get(sequence_id)
-    if not sequence or sequence.get("tenant_id") != tenant_id:
+    sequence = await _get_sequence(db, tenant_id, sequence_id)
+    if not sequence:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Sequence not found"
         )
 
-    sequence["name"] = request.name
-    sequence["description"] = request.description or ""
-    sequence["trigger_type"] = request.trigger_type.value
-    sequence["trigger_config"] = request.trigger_config
-    sequence["nodes"] = [n.model_dump() for n in request.nodes]
-    sequence["edges"] = [e.model_dump() for e in request.edges]
-    sequence["updated_at"] = datetime.now(UTC).isoformat()
+    sequence.name = request.name
+    sequence.description = request.description or ""
+    sequence.trigger_type = request.trigger_type.value
+    sequence.trigger_config = request.trigger_config
+    sequence.status = request.status.value
+    sequence.nodes = [n.model_dump() for n in request.nodes]
+    sequence.edges = [e.model_dump() for e in request.edges]
 
-    logger.info("drip_sequence_updated", tenant_id=tenant_id, sequence_id=sequence_id)
+    await db.commit()
+    await db.refresh(sequence)
 
     return APIResponse(
         success=True, data=_serialize_sequence(sequence), message="Sequence updated"
@@ -308,20 +342,16 @@ async def activate_sequence(
     db: AsyncSession = Depends(get_async_session),
 ):
     """Activate a sequence — start watching for triggers."""
-    tenant_id = getattr(req.state, "tenant_id", None)
-    if not tenant_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
-        )
+    tenant_id = _require_tenant(req)
 
-    sequence = _drip_store.get(sequence_id)
-    if not sequence or sequence.get("tenant_id") != tenant_id:
+    sequence = await _get_sequence(db, tenant_id, sequence_id)
+    if not sequence:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Sequence not found"
         )
 
-    sequence["status"] = DripStatus.ACTIVE.value
-    sequence["updated_at"] = datetime.now(UTC).isoformat()
+    sequence.status = DripStatus.ACTIVE.value
+    await db.commit()
 
     return APIResponse(
         success=True,
@@ -337,20 +367,16 @@ async def pause_sequence(
     db: AsyncSession = Depends(get_async_session),
 ):
     """Pause a sequence — no new entries, existing continue."""
-    tenant_id = getattr(req.state, "tenant_id", None)
-    if not tenant_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
-        )
+    tenant_id = _require_tenant(req)
 
-    sequence = _drip_store.get(sequence_id)
-    if not sequence or sequence.get("tenant_id") != tenant_id:
+    sequence = await _get_sequence(db, tenant_id, sequence_id)
+    if not sequence:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Sequence not found"
         )
 
-    sequence["status"] = DripStatus.PAUSED.value
-    sequence["updated_at"] = datetime.now(UTC).isoformat()
+    sequence.status = DripStatus.PAUSED.value
+    await db.commit()
 
     return APIResponse(
         success=True,
@@ -366,20 +392,16 @@ async def delete_sequence(
     db: AsyncSession = Depends(get_async_session),
 ):
     """Archive a sequence (soft delete)."""
-    tenant_id = getattr(req.state, "tenant_id", None)
-    if not tenant_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
-        )
+    tenant_id = _require_tenant(req)
 
-    sequence = _drip_store.get(sequence_id)
-    if not sequence or sequence.get("tenant_id") != tenant_id:
+    sequence = await _get_sequence(db, tenant_id, sequence_id)
+    if not sequence:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Sequence not found"
         )
 
-    sequence["status"] = DripStatus.ARCHIVED.value
-    sequence["updated_at"] = datetime.now(UTC).isoformat()
+    sequence.status = DripStatus.ARCHIVED.value
+    await db.commit()
 
     return APIResponse(
         success=True,
@@ -396,33 +418,28 @@ async def manual_trigger(
     db: AsyncSession = Depends(get_async_session),
 ):
     """Manually trigger a sequence for a specific recipient (testing)."""
-    tenant_id = getattr(req.state, "tenant_id", None)
-    if not tenant_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
-        )
+    tenant_id = _require_tenant(req)
 
-    sequence = _drip_store.get(sequence_id)
-    if not sequence or sequence.get("tenant_id") != tenant_id:
+    sequence = await _get_sequence(db, tenant_id, sequence_id)
+    if not sequence:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Sequence not found"
         )
 
-    # Simulate execution
-    log_entry = {
-        "id": f"exec_{len(_execution_logs) + 1:04d}",
-        "sequence_id": sequence_id,
-        "recipient_email": recipient_email,
-        "step_number": 0,
-        "node_type": "trigger",
-        "status": "sent",
-        "sent_at": datetime.now(UTC).isoformat(),
-        "opened_at": None,
-        "clicked_at": None,
-        "metadata": {"trigger_type": "manual"},
-    }
-    _execution_logs.append(log_entry)
-    sequence["entry_count"] = sequence.get("entry_count", 0) + 1
+    # Record a simulated trigger send.
+    log_entry = DripExecutionRecord(
+        tenant_id=tenant_id,
+        sequence_id=sequence_id,
+        recipient_email=recipient_email,
+        step_number=0,
+        node_type="trigger",
+        status="sent",
+        sent_at=datetime.now(UTC),
+        extra={"trigger_type": "manual"},
+    )
+    db.add(log_entry)
+    sequence.entry_count = (sequence.entry_count or 0) + 1
+    await db.commit()
 
     return APIResponse(
         success=True,
@@ -444,24 +461,23 @@ async def get_execution_logs(
     page_size: int = Query(50, ge=1, le=200),
 ):
     """Get execution logs for a sequence."""
-    tenant_id = getattr(req.state, "tenant_id", None)
-    if not tenant_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
-        )
+    tenant_id = _require_tenant(req)
 
-    logs = [
-        DripExecutionLog(**log)
-        for log in _execution_logs
-        if log["sequence_id"] == sequence_id
-    ]
-    logs.sort(key=lambda x: x.sent_at or "", reverse=True)
+    result = await db.execute(
+        select(DripExecutionRecord)
+        .where(
+            DripExecutionRecord.sequence_id == sequence_id,
+            DripExecutionRecord.tenant_id == tenant_id,
+        )
+        .order_by(DripExecutionRecord.sent_at.desc().nullslast())
+    )
+    rows = result.scalars().all()
 
     start = (page - 1) * page_size
-    paginated = logs[start : start + page_size]
+    paginated = [_serialize_log(log) for log in rows[start : start + page_size]]
 
     return APIResponse(
-        success=True, data=paginated, message=f"Found {len(logs)} log entries"
+        success=True, data=paginated, message=f"Found {len(rows)} log entries"
     )
 
 
@@ -472,37 +488,41 @@ async def get_drip_analytics(
     db: AsyncSession = Depends(get_async_session),
 ):
     """Get aggregated analytics for a drip sequence."""
-    tenant_id = getattr(req.state, "tenant_id", None)
-    if not tenant_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
-        )
+    tenant_id = _require_tenant(req)
 
-    sequence = _drip_store.get(sequence_id)
-    if not sequence or sequence.get("tenant_id") != tenant_id:
+    sequence = await _get_sequence(db, tenant_id, sequence_id)
+    if not sequence:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Sequence not found"
         )
 
-    logs = [log for log in _execution_logs if log["sequence_id"] == sequence_id]
+    result = await db.execute(
+        select(DripExecutionRecord).where(
+            DripExecutionRecord.sequence_id == sequence_id,
+            DripExecutionRecord.tenant_id == tenant_id,
+        )
+    )
+    logs = result.scalars().all()
 
-    total_sent = len([l for l in logs if l["status"] in ("sent", "opened", "clicked")])
-    total_opened = len([l for l in logs if l["opened_at"]])
-    total_clicked = len([l for l in logs if l["clicked_at"]])
+    total_sent = len(
+        [log for log in logs if log.status in ("sent", "opened", "clicked")]
+    )
+    total_opened = len([log for log in logs if log.opened_at])
+    total_clicked = len([log for log in logs if log.clicked_at])
 
     open_rate = (total_opened / total_sent * 100) if total_sent > 0 else 0
     click_rate = (total_clicked / total_sent * 100) if total_sent > 0 else 0
 
     # Step performance
-    step_stats = {}
+    step_stats: dict[int, dict[str, int]] = {}
     for log in logs:
-        sn = log["step_number"]
+        sn = log.step_number
         if sn not in step_stats:
             step_stats[sn] = {"sent": 0, "opened": 0, "clicked": 0}
         step_stats[sn]["sent"] += 1
-        if log["opened_at"]:
+        if log.opened_at:
             step_stats[sn]["opened"] += 1
-        if log["clicked_at"]:
+        if log.clicked_at:
             step_stats[sn]["clicked"] += 1
 
     step_performance = [
@@ -522,14 +542,14 @@ async def get_drip_analytics(
 
     analytics = DripAnalytics(
         sequence_id=sequence_id,
-        total_entries=sequence.get("entry_count", 0),
+        total_entries=sequence.entry_count,
         emails_sent=total_sent,
         emails_opened=total_opened,
         emails_clicked=total_clicked,
         open_rate=round(open_rate, 2),
         click_rate=round(click_rate, 2),
         conversion_rate=round(click_rate * 0.3, 2),  # estimated
-        revenue_cents=sequence.get("revenue_attributed_cents", 0),
+        revenue_cents=sequence.revenue_attributed_cents,
         step_performance=step_performance,
     )
 
@@ -542,11 +562,7 @@ async def get_prebuilt_templates(
     db: AsyncSession = Depends(get_async_session),
 ):
     """Get pre-built drip sequence templates users can clone."""
-    tenant_id = getattr(req.state, "tenant_id", None)
-    if not tenant_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
-        )
+    _require_tenant(req)
 
     templates = [
         {
@@ -597,27 +613,3 @@ async def get_prebuilt_templates(
     ]
 
     return APIResponse(success=True, data=templates, message="Templates retrieved")
-
-
-# =============================================================================
-# Helpers
-# =============================================================================
-
-
-def _serialize_sequence(sequence: dict) -> DripSequenceResponse:
-    return DripSequenceResponse(
-        id=sequence["id"],
-        name=sequence["name"],
-        description=sequence.get("description", ""),
-        trigger_type=sequence["trigger_type"],
-        trigger_config=sequence.get("trigger_config", {}),
-        status=sequence["status"],
-        nodes=[FlowNode(**n) for n in sequence.get("nodes", [])],
-        edges=[FlowEdge(**e) for e in sequence.get("edges", [])],
-        entry_count=sequence.get("entry_count", 0),
-        active_recipient_count=sequence.get("active_recipient_count", 0),
-        completion_rate=sequence.get("completion_rate", 0.0),
-        revenue_attributed_cents=sequence.get("revenue_attributed_cents", 0),
-        created_at=sequence["created_at"],
-        updated_at=sequence["updated_at"],
-    )

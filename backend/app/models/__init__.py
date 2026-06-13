@@ -83,6 +83,9 @@ from app.models.client import (
 )
 from app.models.copilot_doc import CopilotDocChunk
 
+# Drip campaign models
+from app.models.drip import DripExecutionRecord, DripSequence
+
 # CRM Integration models
 from app.models.crm import (
     AttributionModel,
@@ -214,6 +217,8 @@ __all__ = [
     "DeliveryChannelConfig",
     "DeliveryStatus",
     "DraftStatus",
+    "DripExecutionRecord",
+    "DripSequence",
     "EmqPlaybookItemState",
     "EnforcementAuditLog",
     "ExecutionStatus",
