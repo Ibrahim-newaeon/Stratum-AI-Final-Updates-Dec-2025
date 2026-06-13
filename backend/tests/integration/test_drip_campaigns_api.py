@@ -7,11 +7,10 @@ Exercises the real ASGI app: sequence creation from a flow graph,
 listing, detail (200/404), update, activate/pause lifecycle, archive
 (soft delete), prebuilt templates, and auth enforcement.
 
-Note: this endpoint keeps sequences in an in-memory store keyed by
-tenant_id rather than the database, so assertions are tenant-scoped
-subset checks (each test runs under a fresh tenant_id) rather than exact
-counts. The manual /trigger path enqueues real sends, so it is left to
-service-level tests.
+Sequences are persisted to PostgreSQL, so list assertions use
+tenant-scoped subset checks (each test runs under a fresh tenant_id).
+The trigger -> execution-log -> analytics flow is covered separately in
+``test_drip_persistence_api.py``.
 """
 
 import pytest
