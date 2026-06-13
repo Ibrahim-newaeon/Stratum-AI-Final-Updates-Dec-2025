@@ -551,6 +551,7 @@ def setup_test_database(sync_engine):
     import app.models.onboarding  # noqa: F401
     import app.models.pacing  # noqa: F401
     import app.models.profit  # noqa: F401
+    import app.models.push  # noqa: F401
     import app.models.reporting  # noqa: F401
     import app.models.settings  # noqa: F401
     import app.models.trust_layer  # noqa: F401

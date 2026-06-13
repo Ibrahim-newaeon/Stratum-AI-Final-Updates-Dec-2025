@@ -138,6 +138,9 @@ from app.models.profit import (
     ProfitROASReport,
 )
 
+# Push notification models
+from app.models.push import PushNotificationLog, PushSubscription
+
 # Automated Reporting models
 from app.models.reporting import (
     DeliveryChannel,
@@ -244,6 +247,8 @@ __all__ = [
     "ProductStatus",
     "ProfitROASReport",
     "PublishResult",
+    "PushNotificationLog",
+    "PushSubscription",
     "ReportDelivery",
     "ReportExecution",
     "ReportFormat",

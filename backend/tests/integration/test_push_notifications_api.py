@@ -6,11 +6,11 @@
 Exercises the real ASGI app: VAPID key retrieval, device subscribe /
 unsubscribe, subscriber listing, history, and analytics, plus auth.
 
-Note: subscriptions live in an in-memory tenant-keyed store (the same
-pattern drip campaigns used before being moved to PostgreSQL), so list
-assertions are tenant-scoped subset checks — each test runs under a fresh
-tenant_id. The /send path dispatches real web-push, so it is left to
-service-level tests.
+Subscriptions are persisted to PostgreSQL, so list assertions use
+tenant-scoped subset checks (each test runs under a fresh tenant_id). The
+send -> history -> analytics flow is covered in
+``test_push_persistence_api.py``; the /send path's actual web-push
+dispatch is left to service-level tests.
 """
 
 import pytest
