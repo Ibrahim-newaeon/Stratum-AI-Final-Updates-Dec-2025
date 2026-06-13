@@ -83,9 +83,6 @@ from app.models.client import (
 )
 from app.models.copilot_doc import CopilotDocChunk
 
-# Drip campaign models
-from app.models.drip import DripExecutionRecord, DripSequence
-
 # CRM Integration models
 from app.models.crm import (
     AttributionModel,
@@ -101,6 +98,9 @@ from app.models.crm import (
     Touchpoint,
     WritebackStatus,
 )
+
+# Drip campaign models
+from app.models.drip import DripExecutionRecord, DripSequence
 
 # EMQ fix-playbook progress
 from app.models.emq_playbook import EmqPlaybookItemState
