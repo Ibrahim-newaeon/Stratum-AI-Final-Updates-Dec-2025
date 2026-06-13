@@ -26,6 +26,8 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    func,
+    text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
@@ -57,20 +59,30 @@ class DripSequence(Base):
     )
 
     name = Column(String(200), nullable=False)
-    description = Column(Text, nullable=False, default="")
+    description = Column(Text, nullable=False, default="", server_default="")
     trigger_type = Column(String(50), nullable=False)
-    trigger_config = Column(JSONB, nullable=False, default=dict)
-    status = Column(String(20), nullable=False, default="draft")
+    trigger_config = Column(
+        JSONB, nullable=False, default=dict, server_default=text("'{}'::jsonb")
+    )
+    status = Column(String(20), nullable=False, default="draft", server_default="draft")
 
     # Flow graph
-    nodes = Column(JSONB, nullable=False, default=list)
-    edges = Column(JSONB, nullable=False, default=list)
+    nodes = Column(
+        JSONB, nullable=False, default=list, server_default=text("'[]'::jsonb")
+    )
+    edges = Column(
+        JSONB, nullable=False, default=list, server_default=text("'[]'::jsonb")
+    )
 
     # Aggregate counters
-    entry_count = Column(Integer, nullable=False, default=0)
-    active_recipient_count = Column(Integer, nullable=False, default=0)
-    completion_rate = Column(Float, nullable=False, default=0.0)
-    revenue_attributed_cents = Column(BigInteger, nullable=False, default=0)
+    entry_count = Column(Integer, nullable=False, default=0, server_default="0")
+    active_recipient_count = Column(
+        Integer, nullable=False, default=0, server_default="0"
+    )
+    completion_rate = Column(Float, nullable=False, default=0.0, server_default="0")
+    revenue_attributed_cents = Column(
+        BigInteger, nullable=False, default=0, server_default="0"
+    )
 
     created_by_user_id = Column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
@@ -79,12 +91,14 @@ class DripSequence(Base):
     created_at = Column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
+        server_default=func.now(),
         nullable=False,
     )
     updated_at = Column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
+        server_default=func.now(),
         nullable=False,
     )
 
@@ -113,18 +127,21 @@ class DripExecutionRecord(Base):
     )
 
     recipient_email = Column(String(320), nullable=False)
-    step_number = Column(Integer, nullable=False, default=0)
+    step_number = Column(Integer, nullable=False, default=0, server_default="0")
     node_type = Column(String(30), nullable=False)
     status = Column(String(20), nullable=False)
 
     sent_at = Column(DateTime(timezone=True), nullable=True)
     opened_at = Column(DateTime(timezone=True), nullable=True)
     clicked_at = Column(DateTime(timezone=True), nullable=True)
-    extra = Column(JSONB, nullable=False, default=dict)
+    extra = Column(
+        JSONB, nullable=False, default=dict, server_default=text("'{}'::jsonb")
+    )
 
     created_at = Column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
+        server_default=func.now(),
         nullable=False,
     )
 
