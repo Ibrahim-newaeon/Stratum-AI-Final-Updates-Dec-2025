@@ -54,8 +54,10 @@ omit =
 # targets; full unit suite measured 43.77%) -> 43.8 (CDP funnel step
 # evaluator: all condition operators + field extraction; feature_gate
 # pure helpers: required-tier, limit/feature checks; full unit suite
-# measured 43.84%). See #342.
-fail_under = 43.8
+# measured 43.84%) -> 43.9 (subscription pure logic: status bands,
+# validity/access, billing-date math; websocket message serialization;
+# full unit suite measured 43.91%). See #342.
+fail_under = 43.9
 
 # Show missing line numbers
 show_missing = True
