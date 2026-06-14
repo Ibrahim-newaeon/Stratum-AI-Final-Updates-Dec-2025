@@ -84,8 +84,13 @@ omit =
 # comparison engine [string/numeric/membership/null/datetime] + profile/
 # trait/data field extraction + slug generation; Zoho CRM normalization:
 # email/phone hashing + contact/deal field mapping with nested flatten;
-# full unit suite measured 45.53%). See #342.
-fail_under = 45.5
+# full unit suite measured 45.53%) -> 45.7 (webhook signature
+# verification: Meta/TikTok/internal HMAC verify with constant-time
+# compare + fail-open-when-unconfigured contract; competitor scraper pure
+# helpers: SocialLinks/AdLibraryResult/CompetitorScanResult serialization
+# with 10-ad cap, social-link regex extraction, ad-library URL building;
+# full unit suite measured 45.77%). See #342.
+fail_under = 45.7
 
 # Show missing line numbers
 show_missing = True
