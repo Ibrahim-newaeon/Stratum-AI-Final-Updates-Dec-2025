@@ -56,8 +56,11 @@ omit =
 # pure helpers: required-tier, limit/feature checks; full unit suite
 # measured 43.84%) -> 43.9 (subscription pure logic: status bands,
 # validity/access, billing-date math; websocket message serialization;
-# full unit suite measured 43.91%). See #342.
-fail_under = 43.9
+# full unit suite measured 43.91%) -> 44.1 (rules engine pure logic:
+# RuleBuilder fluent build/validate, value parsing, operator comparison,
+# field extraction [was 0%]; Shapley attribution value math; full unit
+# suite measured 44.17%). See #342.
+fail_under = 44.1
 
 # Show missing line numbers
 show_missing = True
