@@ -89,8 +89,12 @@ omit =
 # compare + fail-open-when-unconfigured contract; competitor scraper pure
 # helpers: SocialLinks/AdLibraryResult/CompetitorScanResult serialization
 # with 10-ad cap, social-link regex extraction, ad-library URL building;
-# full unit suite measured 45.77%). See #342.
-fail_under = 45.7
+# full unit suite measured 45.77%) -> 45.9 (reporting cron parser:
+# field parsing [wildcard/list/range/step/clamp] + 5-field expression
+# parse + next-run calculation; Salesforce client pure helpers: email/
+# phone hashing + sandbox-aware OAuth auth/token URLs; full unit suite
+# measured 45.93%). See #342.
+fail_under = 45.9
 
 # Show missing line numbers
 show_missing = True
