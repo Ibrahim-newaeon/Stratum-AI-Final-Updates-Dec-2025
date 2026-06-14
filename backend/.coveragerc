@@ -73,8 +73,12 @@ omit =
 # RateLimiter token-bucket acquire/refill, BatchOptimizer history-driven
 # sizing; dead-letter-queue pure logic: DLQEntry serialization round-trip,
 # _categorize_failure error classification, DLQStats defaults; full unit
-# suite measured 44.99%). See #342.
-fail_under = 44.9
+# suite measured 44.99%) -> 45.1 (CAPI connector health monitor:
+# delivery-log + circuit-state health scoring, alert cooldown, summary
+# worst-status aggregation, history windowing; report date-range parser:
+# rolling windows + calendar ranges + quarter/year-to-date + rollovers;
+# full unit suite measured 45.17%). See #342.
+fail_under = 45.1
 
 # Show missing line numbers
 show_missing = True
