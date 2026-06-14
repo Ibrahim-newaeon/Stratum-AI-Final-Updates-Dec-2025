@@ -101,8 +101,11 @@ omit =
 # 46.16%) -> 46.2 (attribution models: Shapley value computation
 # [subset generation, conversion caching, fair/dominant/symmetric splits]
 # + Markov unfitted equal-weights; Zoho lead->contact conversion
-# transform; full unit suite measured 46.25%). See #342.
-fail_under = 46.2
+# transform; full unit suite measured 46.25%) -> 46.25 (report delivery
+# rendering: Email subject/body template substitution + format->MIME
+# content-type mapping + WhatsApp text-summary building; full unit suite
+# measured 46.28%). See #342.
+fail_under = 46.25
 
 # Show missing line numbers
 show_missing = True
