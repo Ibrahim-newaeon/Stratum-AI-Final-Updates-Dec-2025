@@ -68,8 +68,13 @@ omit =
 # verify, domain match exact/wildcard, STRAT-tier offline parse,
 # server-response parse, cache TTL; ROAS forecaster helpers: baseline
 # aggregation, linear ROAS trend, weekday/weekend seasonality, mock
-# forecast; full unit suite measured 44.73%). See #342.
-fail_under = 44.7
+# forecast; full unit suite measured 44.73%) -> 44.9 (CAPI resilience
+# primitives: CircuitBreaker closed/open/half-open state machine,
+# RateLimiter token-bucket acquire/refill, BatchOptimizer history-driven
+# sizing; dead-letter-queue pure logic: DLQEntry serialization round-trip,
+# _categorize_failure error classification, DLQStats defaults; full unit
+# suite measured 44.99%). See #342.
+fail_under = 44.9
 
 # Show missing line numbers
 show_missing = True
