@@ -181,6 +181,16 @@ class Settings(BaseSettings):
     )
 
     # -------------------------------------------------------------------------
+    # Pipedrive CRM Configuration
+    # -------------------------------------------------------------------------
+    pipedrive_client_id: Optional[str] = Field(
+        default=None, description="Pipedrive OAuth App Client ID"
+    )
+    pipedrive_client_secret: Optional[str] = Field(
+        default=None, description="Pipedrive OAuth App Client Secret"
+    )
+
+    # -------------------------------------------------------------------------
     # Market Intelligence Configuration
     # -------------------------------------------------------------------------
     market_intel_provider: Literal["mock", "serpapi", "dataforseo"] = Field(
