@@ -61,8 +61,11 @@ omit =
 # field extraction [was 0%]; Shapley attribution value math; full unit
 # suite measured 44.17%) -> 44.3 (Markov attribution removal-effect math;
 # pacing forecasting helpers: EWMA + end-of-month; full unit suite
-# measured 44.32%). See #342.
-fail_under = 44.3
+# measured 44.32%) -> 44.5 (server-side conversions: UserData PII
+# normalization + SHA-256 hashing, Meta CAPI formatting, EMQ
+# match_quality_score, ContentItem/ServerEvent helpers; full unit suite
+# measured 44.51%). See #342.
+fail_under = 44.5
 
 # Show missing line numbers
 show_missing = True
