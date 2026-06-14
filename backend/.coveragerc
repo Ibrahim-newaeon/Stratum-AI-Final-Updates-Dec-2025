@@ -98,8 +98,11 @@ omit =
 # helpers: email/phone hashing + OAuth authorization-URL building with
 # auto CSRF state, plus a latent-bug fix adding the missing
 # pipedrive_client_id/secret Settings fields; full unit suite measured
-# 46.16%). See #342.
-fail_under = 46.1
+# 46.16%) -> 46.2 (attribution models: Shapley value computation
+# [subset generation, conversion caching, fair/dominant/symmetric splits]
+# + Markov unfitted equal-weights; Zoho lead->contact conversion
+# transform; full unit suite measured 46.25%). See #342.
+fail_under = 46.2
 
 # Show missing line numbers
 show_missing = True
