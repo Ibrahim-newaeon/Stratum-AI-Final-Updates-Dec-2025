@@ -64,8 +64,12 @@ omit =
 # measured 44.32%) -> 44.5 (server-side conversions: UserData PII
 # normalization + SHA-256 hashing, Meta CAPI formatting, EMQ
 # match_quality_score, ContentItem/ServerEvent helpers; full unit suite
-# measured 44.51%). See #342.
-fail_under = 44.5
+# measured 44.51%) -> 44.7 (license validation pure logic: offline HMAC
+# verify, domain match exact/wildcard, STRAT-tier offline parse,
+# server-response parse, cache TTL; ROAS forecaster helpers: baseline
+# aggregation, linear ROAS trend, weekday/weekend seasonality, mock
+# forecast; full unit suite measured 44.73%). See #342.
+fail_under = 44.7
 
 # Show missing line numbers
 show_missing = True
