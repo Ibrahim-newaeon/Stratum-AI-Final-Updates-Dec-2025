@@ -77,8 +77,11 @@ omit =
 # delivery-log + circuit-state health scoring, alert cooldown, summary
 # worst-status aggregation, history windowing; report date-range parser:
 # rolling windows + calendar ranges + quarter/year-to-date + rollovers;
-# full unit suite measured 45.17%). See #342.
-fail_under = 45.1
+# full unit suite measured 45.17%) -> 45.3 (multi-touch attribution
+# calculator: first/last/linear/position/time-decay/w-shaped/custom
+# weight models + get_weights dispatcher + platform window config; full
+# unit suite measured 45.33%). See #342.
+fail_under = 45.3
 
 # Show missing line numbers
 show_missing = True
