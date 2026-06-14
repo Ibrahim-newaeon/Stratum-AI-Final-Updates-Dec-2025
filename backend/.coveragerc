@@ -59,8 +59,10 @@ omit =
 # full unit suite measured 43.91%) -> 44.1 (rules engine pure logic:
 # RuleBuilder fluent build/validate, value parsing, operator comparison,
 # field extraction [was 0%]; Shapley attribution value math; full unit
-# suite measured 44.17%). See #342.
-fail_under = 44.1
+# suite measured 44.17%) -> 44.3 (Markov attribution removal-effect math;
+# pacing forecasting helpers: EWMA + end-of-month; full unit suite
+# measured 44.32%). See #342.
+fail_under = 44.3
 
 # Show missing line numbers
 show_missing = True
