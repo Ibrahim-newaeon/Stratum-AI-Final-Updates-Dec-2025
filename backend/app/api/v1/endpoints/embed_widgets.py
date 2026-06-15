@@ -119,7 +119,7 @@ async def create_widget(
             detail="Embed widgets not available in your plan",
         )
 
-    widget = service.create_widget(tenant_id, data, tier)
+    widget = await service.create_widget(tenant_id, data, tier)
     return widget
 
 
@@ -131,7 +131,7 @@ async def list_widgets(
     service: EmbedWidgetService = Depends(get_widget_service),
 ):
     """List all widgets for the current tenant."""
-    widgets = service.list_widgets(tenant_id, widget_type, is_active)
+    widgets = await service.list_widgets(tenant_id, widget_type, is_active)
     return widgets
 
 
@@ -142,7 +142,7 @@ async def get_widget(
     service: EmbedWidgetService = Depends(get_widget_service),
 ):
     """Get a specific widget by ID."""
-    widget = service.get_widget(tenant_id, widget_id)
+    widget = await service.get_widget(tenant_id, widget_id)
     if not widget:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Widget not found"
@@ -159,7 +159,7 @@ async def update_widget(
 ):
     """Update an existing widget."""
     tier = get_current_tier()
-    widget = service.update_widget(tenant_id, widget_id, data, tier)
+    widget = await service.update_widget(tenant_id, widget_id, data, tier)
     return widget
 
 
@@ -170,7 +170,7 @@ async def delete_widget(
     service: EmbedWidgetService = Depends(get_widget_service),
 ):
     """Delete a widget and all associated tokens."""
-    service.delete_widget(tenant_id, widget_id)
+    await service.delete_widget(tenant_id, widget_id)
 
 
 # =============================================================================
@@ -196,7 +196,7 @@ async def create_token(
     Store it securely - it cannot be retrieved again.
     """
     tier = get_current_tier()
-    token, plaintext_token, refresh_token = service.create_token(
+    token, plaintext_token, refresh_token = await service.create_token(
         tenant_id=tenant_id,
         widget_id=widget_id,
         allowed_domains=data.allowed_domains,
@@ -247,7 +247,7 @@ async def refresh_token(
 
     This rotates both the main token and refresh token for security.
     """
-    new_token, new_refresh, expires_at = service.refresh_token(
+    new_token, new_refresh, expires_at = await service.refresh_token(
         token_id, data.refresh_token
     )
 
@@ -265,7 +265,7 @@ async def revoke_token(
     service: EmbedTokenService = Depends(get_token_service),
 ):
     """Revoke an embed token."""
-    service.revoke_token(tenant_id, token_id)
+    await service.revoke_token(tenant_id, token_id)
 
 
 # =============================================================================
@@ -290,7 +290,7 @@ async def add_domain(
     Supports wildcards like *.example.com
     """
     tier = get_current_tier()
-    domain = service.add_domain_to_whitelist(
+    domain = await service.add_domain_to_whitelist(
         tenant_id=tenant_id,
         domain_pattern=data.domain_pattern,
         description=data.description,
@@ -305,7 +305,7 @@ async def list_domains(
     service: EmbedWidgetService = Depends(get_widget_service),
 ):
     """List all whitelisted domains."""
-    domains = service.list_whitelisted_domains(tenant_id)
+    domains = await service.list_whitelisted_domains(tenant_id)
     return domains
 
 
@@ -316,7 +316,7 @@ async def remove_domain(
     service: EmbedWidgetService = Depends(get_widget_service),
 ):
     """Remove a domain from the whitelist."""
-    service.remove_domain_from_whitelist(tenant_id, domain_id)
+    await service.remove_domain_from_whitelist(tenant_id, domain_id)
 
 
 # =============================================================================
@@ -337,7 +337,7 @@ async def get_embed_code(
 
     Returns both iframe and script embed options.
     """
-    widget = service.get_widget(tenant_id, widget_id)
+    widget = await service.get_widget(tenant_id, widget_id)
     if not widget:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Widget not found"
@@ -446,7 +446,7 @@ async def get_widget_data(
 
     # Validate token and get widget
     try:
-        db_token, widget = token_service.validate_token(
+        db_token, widget = await token_service.validate_token(
             token=request_info["token"],
             origin=request_info["origin"],
         )

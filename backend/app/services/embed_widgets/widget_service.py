@@ -8,13 +8,18 @@ Tier Alignment:
 - Starter: Full Stratum branding, 3 widgets, 2 domains
 - Professional: Minimal branding, 10 widgets, 10 domains
 - Enterprise: White-label (no branding), unlimited
+
+NOTE: This service is async — the API layer injects an ``AsyncSession``
+(``Depends(get_db)``), so every DB access must be awaited. Pure helpers
+(branding level, embed-code generation) stay synchronous.
 """
 
 from typing import Optional
 from uuid import UUID
 
 from fastapi import HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.tiers import (
     Feature,
@@ -46,7 +51,7 @@ WIDGET_DIMENSIONS = {
 class EmbedWidgetService:
     """Service for managing embed widgets."""
 
-    def __init__(self, db: Session):
+    def __init__(self, db: AsyncSession):
         self.db = db
 
     # =========================================================================
@@ -66,7 +71,7 @@ class EmbedWidgetService:
     # Widget CRUD
     # =========================================================================
 
-    def create_widget(
+    async def create_widget(
         self,
         tenant_id: int,
         data: WidgetCreate,
@@ -88,13 +93,13 @@ class EmbedWidgetService:
         """
         # Check widget limit
         max_widgets = get_tier_limit(tier, "max_embed_widgets")
-        current_count = (
-            self.db.query(EmbedWidget)
-            .filter(
+        current_count = await self.db.scalar(
+            select(func.count())
+            .select_from(EmbedWidget)
+            .where(
                 EmbedWidget.tenant_id == tenant_id,
                 EmbedWidget.is_active == True,
             )
-            .count()
         )
 
         if current_count >= max_widgets:
@@ -148,42 +153,45 @@ class EmbedWidgetService:
             widget.custom_text_color = data.custom_branding.custom_text_color
 
         self.db.add(widget)
-        self.db.commit()
-        self.db.refresh(widget)
+        await self.db.commit()
+        await self.db.refresh(widget)
 
         return widget
 
-    def get_widget(self, tenant_id: int, widget_id: UUID) -> Optional[EmbedWidget]:
+    async def get_widget(
+        self, tenant_id: int, widget_id: UUID
+    ) -> Optional[EmbedWidget]:
         """Get a widget by ID."""
-        return (
-            self.db.query(EmbedWidget)
-            .filter(
+        result = await self.db.execute(
+            select(EmbedWidget).where(
                 EmbedWidget.id == widget_id,
                 EmbedWidget.tenant_id == tenant_id,
             )
-            .first()
         )
+        return result.scalar_one_or_none()
 
-    def list_widgets(
+    async def list_widgets(
         self,
         tenant_id: int,
         widget_type: Optional[WidgetType] = None,
         is_active: Optional[bool] = None,
     ) -> list[EmbedWidget]:
         """List widgets for a tenant."""
-        query = self.db.query(EmbedWidget).filter(
+        query = select(EmbedWidget).where(
             EmbedWidget.tenant_id == tenant_id,
         )
 
         if widget_type:
-            query = query.filter(EmbedWidget.widget_type == widget_type.value)
+            query = query.where(EmbedWidget.widget_type == widget_type.value)
 
         if is_active is not None:
-            query = query.filter(EmbedWidget.is_active == is_active)
+            query = query.where(EmbedWidget.is_active == is_active)
 
-        return query.order_by(EmbedWidget.created_at.desc()).all()
+        query = query.order_by(EmbedWidget.created_at.desc())
+        result = await self.db.execute(query)
+        return list(result.scalars().all())
 
-    def update_widget(
+    async def update_widget(
         self,
         tenant_id: int,
         widget_id: UUID,
@@ -191,7 +199,7 @@ class EmbedWidgetService:
         tier: SubscriptionTier,
     ) -> EmbedWidget:
         """Update an existing widget."""
-        widget = self.get_widget(tenant_id, widget_id)
+        widget = await self.get_widget(tenant_id, widget_id)
 
         if not widget:
             raise HTTPException(
@@ -235,28 +243,28 @@ class EmbedWidgetService:
             )
             widget.custom_text_color = data.custom_branding.custom_text_color
 
-        self.db.commit()
-        self.db.refresh(widget)
+        await self.db.commit()
+        await self.db.refresh(widget)
 
         return widget
 
-    def delete_widget(self, tenant_id: int, widget_id: UUID) -> None:
+    async def delete_widget(self, tenant_id: int, widget_id: UUID) -> None:
         """Delete a widget and its tokens."""
-        widget = self.get_widget(tenant_id, widget_id)
+        widget = await self.get_widget(tenant_id, widget_id)
 
         if not widget:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Widget not found"
             )
 
-        self.db.delete(widget)
-        self.db.commit()
+        await self.db.delete(widget)
+        await self.db.commit()
 
     # =========================================================================
     # Domain Whitelist Management
     # =========================================================================
 
-    def add_domain_to_whitelist(
+    async def add_domain_to_whitelist(
         self,
         tenant_id: int,
         domain_pattern: str,
@@ -266,13 +274,13 @@ class EmbedWidgetService:
         """Add a domain to the whitelist."""
         # Check domain limit
         max_domains = get_tier_limit(tier, "max_embed_domains")
-        current_count = (
-            self.db.query(EmbedDomainWhitelist)
-            .filter(
+        current_count = await self.db.scalar(
+            select(func.count())
+            .select_from(EmbedDomainWhitelist)
+            .where(
                 EmbedDomainWhitelist.tenant_id == tenant_id,
                 EmbedDomainWhitelist.is_active == True,
             )
-            .count()
         )
 
         if current_count >= max_domains:
@@ -282,14 +290,13 @@ class EmbedWidgetService:
             )
 
         # Check if already exists
-        existing = (
-            self.db.query(EmbedDomainWhitelist)
-            .filter(
+        result = await self.db.execute(
+            select(EmbedDomainWhitelist).where(
                 EmbedDomainWhitelist.tenant_id == tenant_id,
                 EmbedDomainWhitelist.domain_pattern == domain_pattern.lower(),
             )
-            .first()
         )
+        existing = result.scalar_one_or_none()
 
         if existing:
             if existing.is_active:
@@ -301,8 +308,8 @@ class EmbedWidgetService:
                 # Reactivate
                 existing.is_active = True
                 existing.description = description
-                self.db.commit()
-                self.db.refresh(existing)
+                await self.db.commit()
+                await self.db.refresh(existing)
                 return existing
 
         # Create new whitelist entry
@@ -313,37 +320,38 @@ class EmbedWidgetService:
         )
 
         self.db.add(whitelist)
-        self.db.commit()
-        self.db.refresh(whitelist)
+        await self.db.commit()
+        await self.db.refresh(whitelist)
 
         return whitelist
 
-    def list_whitelisted_domains(self, tenant_id: int) -> list[EmbedDomainWhitelist]:
+    async def list_whitelisted_domains(
+        self, tenant_id: int
+    ) -> list[EmbedDomainWhitelist]:
         """List all whitelisted domains for a tenant."""
-        return (
-            self.db.query(EmbedDomainWhitelist)
-            .filter(
+        result = await self.db.execute(
+            select(EmbedDomainWhitelist)
+            .where(
                 EmbedDomainWhitelist.tenant_id == tenant_id,
                 EmbedDomainWhitelist.is_active == True,
             )
             .order_by(EmbedDomainWhitelist.domain_pattern)
-            .all()
         )
+        return list(result.scalars().all())
 
-    def remove_domain_from_whitelist(
+    async def remove_domain_from_whitelist(
         self,
         tenant_id: int,
         domain_id: UUID,
     ) -> None:
         """Remove a domain from the whitelist."""
-        domain = (
-            self.db.query(EmbedDomainWhitelist)
-            .filter(
+        result = await self.db.execute(
+            select(EmbedDomainWhitelist).where(
                 EmbedDomainWhitelist.id == domain_id,
                 EmbedDomainWhitelist.tenant_id == tenant_id,
             )
-            .first()
         )
+        domain = result.scalar_one_or_none()
 
         if not domain:
             raise HTTPException(
@@ -352,7 +360,7 @@ class EmbedWidgetService:
 
         # Soft delete
         domain.is_active = False
-        self.db.commit()
+        await self.db.commit()
 
     # =========================================================================
     # Embed Code Generation
