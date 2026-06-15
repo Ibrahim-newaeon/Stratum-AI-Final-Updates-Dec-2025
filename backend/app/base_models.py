@@ -1125,8 +1125,8 @@ class APIKey(Base, TimestampMixin, TenantMixin):
         String(64), nullable=False, unique=True
     )  # SHA256 hash
     key_prefix: Mapped[str] = mapped_column(
-        String(10), nullable=False
-    )  # For identification
+        String(32), nullable=False
+    )  # e.g. "strat_live_" (identification prefix)
 
     # Permissions
     scopes: Mapped[list] = mapped_column(JSONB, default=list, nullable=False)
