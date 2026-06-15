@@ -111,8 +111,12 @@ omit =
 # round-trip mapping + configure_stripe secret gating; Google Ads
 # integration helpers: change-type mapping, resource-id extraction,
 # SHA-256 hashing, E.164 phone normalization; full unit suite measured
-# 46.38%). See #342.
-fail_under = 46.35
+# 46.38%) -> 46.7 (server-events formatters: Meta CAPI event/user-data
+# payload shaping + PII hashing, EcommerceTracker dict->dataclass
+# builders; sync orchestrator env-credential resolution with Meta act_
+# prefixing + SyncResult defaults; full unit suite measured 46.74%).
+# See #342.
+fail_under = 46.7
 
 # Show missing line numbers
 show_missing = True
