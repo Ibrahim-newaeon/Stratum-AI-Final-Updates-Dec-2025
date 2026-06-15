@@ -104,8 +104,11 @@ omit =
 # transform; full unit suite measured 46.25%) -> 46.25 (report delivery
 # rendering: Email subject/body template substitution + format->MIME
 # content-type mapping + WhatsApp text-summary building; full unit suite
-# measured 46.28%). See #342.
-fail_under = 46.25
+# measured 46.28%) -> 46.3 (knowledge graph Problem/Solution
+# serialization + severity/category enums; pacing alert helpers: metric->
+# alert-type mapping + DailyKPI metric extraction with cents->dollars;
+# full unit suite measured 46.33%). See #342.
+fail_under = 46.3
 
 # Show missing line numbers
 show_missing = True
