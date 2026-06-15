@@ -114,9 +114,12 @@ omit =
 # 46.38%) -> 46.7 (server-events formatters: Meta CAPI event/user-data
 # payload shaping + PII hashing, EcommerceTracker dict->dataclass
 # builders; sync orchestrator env-credential resolution with Meta act_
-# prefixing + SyncResult defaults; full unit suite measured 46.74%).
-# See #342.
-fail_under = 46.7
+# prefixing + SyncResult defaults; full unit suite measured 46.74%)
+# -> 46.85 (multi-platform events formatters: Google GA4 Measurement
+# Protocol, TikTok Events API, Snapchat CAPI _format_event payload
+# shaping + PII hashing + purchase-specific fields; full unit suite
+# measured 46.89%). See #342.
+fail_under = 46.85
 
 # Show missing line numbers
 show_missing = True
