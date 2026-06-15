@@ -19,7 +19,8 @@ from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 from fastapi import HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.tiers import (
@@ -42,7 +43,7 @@ class EmbedTokenService:
     DEFAULT_REFRESH_EXPIRY_DAYS = 90
     MAX_TOKENS_PER_WIDGET = 5
 
-    def __init__(self, db: Session):
+    def __init__(self, db: AsyncSession):
         self.db = db
         if not settings.embed_signing_key or len(settings.embed_signing_key) < 32:
             raise ValueError(
@@ -55,7 +56,7 @@ class EmbedTokenService:
     # Token Generation
     # =========================================================================
 
-    def create_token(
+    async def create_token(
         self,
         tenant_id: int,
         widget_id: UUID,
@@ -82,13 +83,13 @@ class EmbedTokenService:
         """
         # Validate widget exists and belongs to tenant
         widget = (
-            self.db.query(EmbedWidget)
-            .filter(
-                EmbedWidget.id == widget_id,
-                EmbedWidget.tenant_id == tenant_id,
+            await self.db.execute(
+                select(EmbedWidget).where(
+                    EmbedWidget.id == widget_id,
+                    EmbedWidget.tenant_id == tenant_id,
+                )
             )
-            .first()
-        )
+        ).scalar_one_or_none()
 
         if not widget:
             raise HTTPException(
@@ -96,13 +97,13 @@ class EmbedTokenService:
             )
 
         # Check token limit per widget
-        existing_tokens = (
-            self.db.query(EmbedToken)
-            .filter(
+        existing_tokens = await self.db.scalar(
+            select(func.count())
+            .select_from(EmbedToken)
+            .where(
                 EmbedToken.widget_id == widget_id,
                 EmbedToken.status == TokenStatus.ACTIVE.value,
             )
-            .count()
         )
 
         if existing_tokens >= self.MAX_TOKENS_PER_WIDGET:
@@ -112,7 +113,7 @@ class EmbedTokenService:
             )
 
         # Validate domains against whitelist
-        self._validate_domains(tenant_id, allowed_domains, tier)
+        await self._validate_domains(tenant_id, allowed_domains, tier)
 
         # Generate tokens
         full_token, token_prefix, token_hash = EmbedToken.generate_token()
@@ -141,13 +142,13 @@ class EmbedTokenService:
         )
 
         self.db.add(token)
-        self.db.commit()
-        self.db.refresh(token)
+        await self.db.commit()
+        await self.db.refresh(token)
 
         # Return token with plaintext (only time it's available!)
         return token, full_token, refresh_token
 
-    def refresh_token(
+    async def refresh_token(
         self,
         token_id: UUID,
         refresh_token: str,
@@ -166,12 +167,12 @@ class EmbedTokenService:
             HTTPException: If refresh fails
         """
         token = (
-            self.db.query(EmbedToken)
-            .filter(
-                EmbedToken.id == token_id,
+            await self.db.execute(
+                select(EmbedToken).where(
+                    EmbedToken.id == token_id,
+                )
             )
-            .first()
-        )
+        ).scalar_one_or_none()
 
         if not token:
             raise HTTPException(
@@ -183,7 +184,7 @@ class EmbedTokenService:
         if token.refresh_token_hash != refresh_hash:
             # Potential token theft - mark as suspicious
             token.suspicious_activity = True
-            self.db.commit()
+            await self.db.commit()
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
             )
@@ -209,7 +210,7 @@ class EmbedTokenService:
             days=self.DEFAULT_REFRESH_EXPIRY_DAYS
         )
 
-        self.db.commit()
+        await self.db.commit()
 
         return new_full_token, new_refresh, token.expires_at
 
@@ -217,7 +218,7 @@ class EmbedTokenService:
     # Token Validation
     # =========================================================================
 
-    def validate_token(
+    async def validate_token(
         self,
         token: str,
         origin: str,
@@ -240,12 +241,12 @@ class EmbedTokenService:
 
         # Look up token by hash
         db_token = (
-            self.db.query(EmbedToken)
-            .filter(
-                EmbedToken.token_hash == token_hash,
+            await self.db.execute(
+                select(EmbedToken).where(
+                    EmbedToken.token_hash == token_hash,
+                )
             )
-            .first()
-        )
+        ).scalar_one_or_none()
 
         if not db_token:
             raise HTTPException(
@@ -262,7 +263,7 @@ class EmbedTokenService:
         # Check expiration
         if db_token.expires_at < datetime.now(UTC):
             db_token.status = TokenStatus.EXPIRED.value
-            self.db.commit()
+            await self.db.commit()
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired"
             )
@@ -271,7 +272,7 @@ class EmbedTokenService:
         if not self._validate_origin(origin, db_token.allowed_domains):
             db_token.suspicious_activity = True
             db_token.total_errors += 1
-            self.db.commit()
+            await self.db.commit()
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Origin not allowed for this token",
@@ -291,13 +292,13 @@ class EmbedTokenService:
 
         # Get associated widget
         widget = (
-            self.db.query(EmbedWidget)
-            .filter(
-                EmbedWidget.id == db_token.widget_id,
-                EmbedWidget.is_active == True,
+            await self.db.execute(
+                select(EmbedWidget).where(
+                    EmbedWidget.id == db_token.widget_id,
+                    EmbedWidget.is_active == True,
+                )
             )
-            .first()
-        )
+        ).scalar_one_or_none()
 
         if not widget:
             raise HTTPException(
@@ -309,20 +310,20 @@ class EmbedTokenService:
         widget.total_views += 1
         widget.last_viewed_at = datetime.now(UTC)
 
-        self.db.commit()
+        await self.db.commit()
 
         return db_token, widget
 
-    def revoke_token(self, tenant_id: int, token_id: UUID) -> None:
+    async def revoke_token(self, tenant_id: int, token_id: UUID) -> None:
         """Revoke an embed token."""
         token = (
-            self.db.query(EmbedToken)
-            .filter(
-                EmbedToken.id == token_id,
-                EmbedToken.tenant_id == tenant_id,
+            await self.db.execute(
+                select(EmbedToken).where(
+                    EmbedToken.id == token_id,
+                    EmbedToken.tenant_id == tenant_id,
+                )
             )
-            .first()
-        )
+        ).scalar_one_or_none()
 
         if not token:
             raise HTTPException(
@@ -330,13 +331,13 @@ class EmbedTokenService:
             )
 
         token.status = TokenStatus.REVOKED.value
-        self.db.commit()
+        await self.db.commit()
 
     # =========================================================================
     # Domain Validation
     # =========================================================================
 
-    def _validate_domains(
+    async def _validate_domains(
         self,
         tenant_id: int,
         domains: list[str],
@@ -352,14 +353,13 @@ class EmbedTokenService:
             )
 
         # Get whitelisted domains for tenant
-        whitelist = (
-            self.db.query(EmbedDomainWhitelist)
-            .filter(
+        result = await self.db.execute(
+            select(EmbedDomainWhitelist).where(
                 EmbedDomainWhitelist.tenant_id == tenant_id,
                 EmbedDomainWhitelist.is_active == True,
             )
-            .all()
         )
+        whitelist = result.scalars().all()
 
         whitelist_patterns = [w.domain_pattern for w in whitelist]
 
