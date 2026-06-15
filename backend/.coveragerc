@@ -118,8 +118,11 @@ omit =
 # -> 46.85 (multi-platform events formatters: Google GA4 Measurement
 # Protocol, TikTok Events API, Snapchat CAPI _format_event payload
 # shaping + PII hashing + purchase-specific fields; full unit suite
-# measured 46.89%). See #342.
-fail_under = 46.85
+# measured 46.89%) -> 46.9 (copilot intent classification: keyword-scored
+# classify_intent + greeting/help/unknown response builders; autopilot
+# action-cap validation: budget amount/percentage caps + non-budget
+# passthrough; full unit suite measured 46.94%). See #342.
+fail_under = 46.9
 
 # Show missing line numbers
 show_missing = True
