@@ -32,6 +32,7 @@ redis[asyncio]==8.0.0
 celery==5.6.3
 flower==2.0.1
 celery-redbeat==2.3.3
+tzlocal==5.3.1  # required by celery.utils.time; pin explicitly so fresh installs don't drop it
 
 # Authentication & Security
 PyJWT==2.13.0
