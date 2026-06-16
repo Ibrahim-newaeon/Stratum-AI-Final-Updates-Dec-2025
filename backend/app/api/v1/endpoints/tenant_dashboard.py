@@ -797,9 +797,9 @@ async def get_command_center(
         score_result = scaling_score(entity, baseline)
 
         # Determine action
-        if score_result.final_score >= 0.25:
+        if score_result.score >= 0.25:
             action = "scale"
-        elif score_result.final_score <= -0.25:
+        elif score_result.score <= -0.25:
             action = "fix"
         else:
             action = "watch"
@@ -821,14 +821,15 @@ async def get_command_center(
                 ),
                 "ctr": round(c.ctr or 0, 2),
                 "conversions": conversions,
-                "scaling_score": round(score_result.final_score, 2),
+                "scaling_score": round(score_result.score, 2),
                 "action": action,
                 "signals": {
-                    "roas_momentum": score_result.signals.get("roas_momentum", 0),
-                    "spend_efficiency": score_result.signals.get("spend_efficiency", 0),
-                    "conversion_trend": score_result.signals.get("conversion_trend", 0),
+                    "roas_momentum": round(score_result.roas_delta, 4),
+                    "cpa_delta": round(score_result.cpa_delta, 4),
+                    "cvr_delta": round(score_result.cvr_delta, 4),
+                    "ctr_delta": round(score_result.ctr_delta, 4),
                 },
-                "recommendation": score_result.recommendation,
+                "recommendations": score_result.recommendations,
             }
         )
 
