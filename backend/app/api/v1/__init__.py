@@ -500,9 +500,10 @@ api_router.include_router(
 )
 
 # Advanced Analytics (Gap #4)
+# NOTE: the router already declares prefix="/analytics/advanced"; do NOT add it
+# again here or the routes mount at /analytics/advanced/analytics/advanced/*.
 api_router.include_router(
     advanced_analytics.router,
-    prefix="/analytics/advanced",
     tags=["Advanced Analytics"],
 )
 
