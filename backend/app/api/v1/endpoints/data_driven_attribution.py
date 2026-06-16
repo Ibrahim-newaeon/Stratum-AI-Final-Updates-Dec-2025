@@ -292,7 +292,7 @@ async def batch_attribute_with_model(
     return {
         "total": len(request.deal_ids),
         "successful": successful,
-        "failed": len(deal_ids) - successful,
+        "failed": len(request.deal_ids) - successful,
         "results": results,
     }
 
@@ -395,7 +395,7 @@ async def get_training_requirements(
 
     Returns data availability and recommendations.
     """
-    from sqlalchemy import func
+    from sqlalchemy import and_, func, select
 
     from app.models.crm import CRMContact, CRMDeal, Touchpoint
 
