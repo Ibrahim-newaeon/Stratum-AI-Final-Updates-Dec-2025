@@ -151,6 +151,9 @@ class TenantMiddleware(BaseHTTPMiddleware):
         # CMS public endpoints — content is global, not tenant-scoped
         if path.startswith("/api/v1/cms/") and "/admin/" not in path:
             return True
+        # Landing CMS — public, read-only published marketing content
+        if path.startswith("/api/v1/landing-cms"):
+            return True
         return False
 
     async def _extract_tenant_id(self, request: Request) -> Optional[int]:
