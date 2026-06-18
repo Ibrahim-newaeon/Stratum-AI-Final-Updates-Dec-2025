@@ -524,9 +524,10 @@ api_router.include_router(
 )
 
 # Developer Portal (Gap #8)
+# NOTE: the router already declares prefix="/developer"; do NOT add it again
+# here or the routes mount at /developer/developer/*.
 api_router.include_router(
     developer.router,
-    prefix="/developer",
     tags=["Developer Portal"],
 )
 
