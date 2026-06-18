@@ -515,9 +515,11 @@ api_router.include_router(
 )
 
 # Outbound Integrations (Gap #6)
+# NOTE: the router already declares prefix="/integrations/outbound"; do NOT add
+# it again here or the routes mount at
+# /integrations/outbound/integrations/outbound/*.
 api_router.include_router(
     outbound_integrations.router,
-    prefix="/integrations/outbound",
     tags=["Outbound Integrations"],
 )
 
