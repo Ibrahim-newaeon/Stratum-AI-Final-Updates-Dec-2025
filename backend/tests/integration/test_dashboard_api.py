@@ -25,6 +25,17 @@ _GETS = [
     "/activity",
     "/quick-actions",
     "/signal-health",
+    # Intelligence / briefing surfaces (all DB-backed, no LLM/external calls).
+    "/morning-briefing",
+    "/signal-recovery",
+    "/predictive-budget",
+    "/ai-report",
+    "/churn-prevention",
+    "/settings/metric-visibility",
+    "/anomaly-narratives",
+    "/notifications-prioritized",
+    "/cross-platform-optimizer",
+    "/audience-lifecycle",
 ]
 
 

@@ -2722,7 +2722,7 @@ async def get_churn_prevention(
 
         from datetime import timedelta
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         sync_cutoff = now - timedelta(days=7)
 
         campaigns = []
