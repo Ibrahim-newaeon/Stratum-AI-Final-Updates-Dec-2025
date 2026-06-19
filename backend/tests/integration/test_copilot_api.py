@@ -39,3 +39,18 @@ class TestCopilotChat:
         # No LLM key in the test env -> RAG/citations bridge yields nothing.
         assert data["citations"] == []
         assert data["session_id"]
+
+    async def test_session_id_is_echoed(self, authenticated_client: AsyncClient):
+        resp = await authenticated_client.post(
+            _CHAT,
+            json={
+                "message": "Show me underperforming campaigns",
+                "session_id": "sess-1",
+            },
+        )
+        assert resp.status_code == 200, resp.text
+        assert resp.json()["data"]["session_id"] == "sess-1"
+
+    async def test_blank_message_rejected(self, authenticated_client: AsyncClient):
+        resp = await authenticated_client.post(_CHAT, json={"message": ""})
+        assert resp.status_code == 422
