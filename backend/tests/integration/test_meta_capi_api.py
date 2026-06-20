@@ -78,3 +78,10 @@ class TestQuality:
         # No events sent yet -> graceful fallback envelope.
         assert "overall_score" in data
         assert isinstance(data["platform_scores"], dict)
+
+    async def test_quality_report(self, authenticated_client: AsyncClient, test_tenant):
+        resp = await authenticated_client.get(
+            f"{_BASE}/quality/{test_tenant['id']}/report"
+        )
+        assert resp.status_code == 200, resp.text
+        assert "data" in resp.json()
