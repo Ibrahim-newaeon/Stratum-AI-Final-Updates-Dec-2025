@@ -92,7 +92,9 @@ jobs:
           APP_ENV: test
           PYTHONPATH: .
         run: |
-          pytest tests/unit -v --tb=short -m "unit or not integration"
+          coverage erase
+          pytest tests/unit -v --tb=short -m "unit or not integration" \
+            --cov=app --cov-config=.coveragerc --cov-append --cov-fail-under=0
 
       - name: Run integration tests
         env:
@@ -117,7 +119,8 @@ jobs:
           # Scoped here (not in pytest.ini) so the unit suite keeps its loops.
           pytest tests/integration -v --tb=short -m "integration" \
             -o asyncio_default_test_loop_scope=session \
-            -o asyncio_default_fixture_loop_scope=session
+            -o asyncio_default_fixture_loop_scope=session \
+            --cov=app --cov-config=.coveragerc --cov-append --cov-fail-under=0
 
       - name: Generate coverage report
         env:
@@ -130,7 +133,13 @@ jobs:
           APP_ENV: test
           PYTHONPATH: .
         run: |
-          pytest tests/unit --cov=app --cov-config=.coveragerc --cov-report=xml --cov-report=term-missing -m "unit or not integration"
+          # Combined unit + integration coverage: both test steps above ran with
+          # --cov-append into a single .coverage file (unit and integration each
+          # exercise different layers — endpoints/services are driven by the
+          # integration suite). Emit the combined report + xml and enforce the
+          # .coveragerc fail_under on the COMBINED total.
+          coverage xml
+          coverage report --show-missing
 
       - name: Security scan with Bandit
         run: |
