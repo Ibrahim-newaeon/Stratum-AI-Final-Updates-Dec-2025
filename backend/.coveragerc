@@ -122,7 +122,15 @@ omit =
 # classify_intent + greeting/help/unknown response builders; autopilot
 # action-cap validation: budget amount/percentage caps + non-budget
 # passthrough; full unit suite measured 46.94%). See #342.
-fail_under = 46.9
+#
+# -> 50.0: Backend CI now accumulates coverage across BOTH the unit and
+# integration suites (--cov-append) and enforces fail_under on the COMBINED
+# total (see #474). The integration suite drives the API endpoint/service
+# layer the unit suite never touched, so the measured combined total jumped
+# to ~50.9% locally (higher in CI, where unit modules needing optional deps —
+# bcrypt/PIL/boto3 — also load). Floor set to 50.0 with margin below the
+# measured number to avoid run-to-run flakiness.
+fail_under = 50.0
 
 # Show missing line numbers
 show_missing = True
