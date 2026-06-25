@@ -28,7 +28,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.permissions import require_super_admin
 from app.core.config import settings
 from app.core.logging import get_logger
-from app.db.session import get_async_session
+from app.db.session import async_session_maker
 from app.models.newsletter import (
     NewsletterCampaign,
     NewsletterEvent,
@@ -158,7 +158,7 @@ async def receive_sendgrid_events(request: Request) -> dict:
     skipped = 0
     errors = 0
 
-    async with get_async_session() as db:
+    async with async_session_maker() as db:
         for raw_event in body:
             try:
                 event = SendGridEvent.model_validate(raw_event)
@@ -307,7 +307,7 @@ async def sendgrid_test_webhook(request: Request) -> dict:
     ]
 
     # Re-use processing logic directly
-    async with get_async_session() as db:
+    async with async_session_maker() as db:
         for raw_event in test_payload:
             event = SendGridEvent.model_validate(raw_event)
             await _process_single_event(db, event)
