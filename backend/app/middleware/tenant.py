@@ -148,6 +148,14 @@ class TenantMiddleware(BaseHTTPMiddleware):
             return True
         if path.startswith("/api/v1/stripe/webhooks/"):
             return True
+        # Programmatic API — authenticates via the X-API-Key header, not a JWT.
+        # The api-key dependency (get_api_key_principal) validates the key and
+        # sets request.state.tenant_id from the key's tenant, so JWT-based tenant
+        # extraction here would only ever 401 a legitimate key before auth runs.
+        # Every /programmatic/* route MUST depend on APIKeyPrincipalDep /
+        # require_api_key_scope so tenant context is always established downstream.
+        if path.startswith("/api/v1/programmatic/"):
+            return True
         # CMS public endpoints — content is global, not tenant-scoped
         if path.startswith("/api/v1/cms/") and "/admin/" not in path:
             return True

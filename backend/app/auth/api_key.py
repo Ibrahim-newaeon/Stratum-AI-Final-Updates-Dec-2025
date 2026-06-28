@@ -88,9 +88,24 @@ async def get_api_key_principal(
         await db.rollback()
         logger.warning("api_key_last_used_update_failed", error=str(exc))
 
-    # Populate tenant context for tenant middleware / audit logging.
+    # Populate request state for downstream middleware / audit logging.
+    # /programmatic/* bypasses TenantMiddleware (it authenticates by API key, not
+    # JWT), so this dependency is the single place tenant/role context is set for
+    # those requests — mirror the fields TenantMiddleware would otherwise set so
+    # shared services reading request.state.role / is_superadmin don't trip.
     request.state.tenant_id = record.tenant_id
     request.state.user_id = record.user_id
+    request.state.role = "api_key"
+    request.state.is_superadmin = False
+
+    # Bind structured-logging context for parity with JWT-authenticated requests.
+    import structlog
+
+    structlog.contextvars.bind_contextvars(
+        tenant_id=record.tenant_id,
+        user_id=record.user_id,
+        role="api_key",
+    )
 
     return APIKeyPrincipal(record)
 
