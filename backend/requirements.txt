@@ -55,6 +55,8 @@ google-cloud-aiplatform==1.158.0
 google-auth==2.55.0
 
 # LLM Integrations (Copilot)
+anthropic==0.107.1
+openai==2.41.1
 anthropic==0.111.0
 openai==1.54.0
 pgvector==0.4.2
