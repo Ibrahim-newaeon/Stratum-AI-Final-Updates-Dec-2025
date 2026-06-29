@@ -387,7 +387,7 @@ export default function BattleCard() {
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ delay: 0.3, duration: 0.6 }}
-          className="rounded-3xl border border-foreground/[0.05] bg-foreground/[0.02] backdrop-blur-sm overflow-hidden"
+          className="rounded-3xl border border-border bg-card overflow-hidden"
         >
           {/* Table Header */}
           <div className="grid grid-cols-6 gap-4 p-6 border-b border-foreground/[0.05] bg-foreground/[0.02]">

@@ -116,7 +116,7 @@ export default function DashboardLayout() {
   );
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background font-sans">
+    <div className="flex h-screen flex-col overflow-hidden bg-background font-sans">
       <DemoBanner variant="top" />
 
       <div className="flex flex-1 overflow-hidden relative z-10">

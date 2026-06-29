@@ -981,7 +981,7 @@ export function PlatformSetupModal({ platform, onClose, onConnect }: PlatformSet
             <XMarkIcon className="h-5 w-5" />
           </button>
           <div className="flex items-center gap-4">
-            <div className="h-14 w-14 rounded-xl bg-foreground/20 backdrop-blur-sm flex items-center justify-center">
+            <div className="h-14 w-14 rounded-xl bg-foreground/15 flex items-center justify-center">
               <span className="text-xl font-bold text-white">{platform.icon}</span>
             </div>
             <div>

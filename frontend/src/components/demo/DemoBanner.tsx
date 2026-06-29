@@ -90,7 +90,7 @@ export function DemoBanner({ variant = 'top' }: DemoBannerProps) {
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/signup')}
-            className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-white text-purple-600 text-sm font-semibold hover:bg-foreground/90 transition-colors"
+            className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white text-primary text-sm font-semibold hover:bg-white/90 transition-colors"
           >
             Start Free Trial
             <ArrowRight className="h-4 w-4" />
@@ -126,30 +126,30 @@ export function DemoCtaCard() {
       <div className="relative">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
-            <Play className="h-6 w-6 text-white" />
+            <Play className="h-6 w-6 text-primary-foreground" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-white">Try Interactive Demo</h3>
-            <p className="text-sm text-gray-400">No signup required</p>
+            <h3 className="text-xl font-bold text-foreground">Try Interactive Demo</h3>
+            <p className="text-sm text-muted-foreground">No signup required</p>
           </div>
         </div>
 
-        <p className="text-gray-300 mb-6">
+        <p className="text-muted-foreground mb-6">
           Experience Stratum AI with real sample data. Explore trust gates, CDP profiles, audience
           sync, and AI predictions - all in your browser.
         </p>
 
         <div className="flex flex-wrap gap-3 mb-6">
-          <span className="px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 text-xs font-medium">
+          <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
             Trust Engine
           </span>
-          <span className="px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-300 text-xs font-medium">
+          <span className="px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-medium">
             CDP Profiles
           </span>
-          <span className="px-3 py-1 rounded-full bg-green-500/20 text-green-300 text-xs font-medium">
+          <span className="px-3 py-1 rounded-full bg-success/10 text-success text-xs font-medium">
             AI Predictions
           </span>
-          <span className="px-3 py-1 rounded-full bg-orange-500/20 text-orange-300 text-xs font-medium">
+          <span className="px-3 py-1 rounded-full bg-secondary/10 text-secondary text-xs font-medium">
             Audience Sync
           </span>
         </div>

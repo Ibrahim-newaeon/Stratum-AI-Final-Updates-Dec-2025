@@ -427,7 +427,7 @@ export default function AIPricing() {
           transition={{ duration: 0.4 }}
           className="overflow-hidden"
         >
-          <div className="rounded-3xl border border-foreground/[0.05] bg-foreground/[0.02] backdrop-blur-sm overflow-hidden">
+          <div className="rounded-3xl border border-border bg-card overflow-hidden">
             {/* Header */}
             <div className="grid grid-cols-4 gap-4 p-6 border-b border-foreground/[0.05] bg-foreground/[0.02]">
               <div className="text-sm font-medium text-gray-400">Feature</div>

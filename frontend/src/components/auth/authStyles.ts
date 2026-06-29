@@ -42,11 +42,9 @@ export const authStyles = `
 
   /* Glass card */
   .auth-glass-card {
-    background: rgba(10, 22, 40, 0.8);
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
   }
 
   /* Input focus glow — cyan accent for inputs */

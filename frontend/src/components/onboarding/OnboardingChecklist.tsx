@@ -262,7 +262,7 @@ export function OnboardingChecklist({
   // Horizontal variant - shows as a bar at the top
   if (variant === 'horizontal') {
     return (
-      <div className="bg-card/50 backdrop-blur-sm border-b px-6 py-3">
+      <div className="bg-card border-b border-border px-6 py-3">
         <div className="flex items-center gap-6">
           {/* Progress indicator */}
           <div className="flex items-center gap-3">
