@@ -108,6 +108,8 @@ const CDPFunnels = lazyWithRetry(() => import('./views/cdp/CDPFunnels'));
 const CDPComputedTraits = lazyWithRetry(() => import('./views/cdp/CDPComputedTraits'));
 const CDPConsent = lazyWithRetry(() => import('./views/cdp/CDPConsent'));
 const CDPPredictiveChurn = lazyWithRetry(() => import('./views/cdp/CDPPredictiveChurn'));
+// Tenant-scoped anomaly detection dashboard (rendered at /dashboard/anomalies)
+const AnomalyDashboard = lazyWithRetry(() => import('./components/cdp/AnomalyDashboard'));
 
 // Newsletter / Email Campaigns views
 const NewsletterDashboard = lazyWithRetry(() => import('./views/newsletter/NewsletterDashboard'));
@@ -255,6 +257,7 @@ const StatusPage = lazyWithRetry(() => import('./views/pages/resources/Status'))
 const ComparisonPage = lazyWithRetry(() => import('./views/pages/resources/Comparison'));
 const GlossaryPage = lazyWithRetry(() => import('./views/pages/resources/Glossary'));
 const NotFound = lazyWithRetry(() => import('./views/NotFound'));
+const Unauthorized = lazyWithRetry(() => import('./views/Unauthorized'));
 
 // Checkout flow
 const CheckoutPage = lazyWithRetry(() => import('./views/checkout/CheckoutPage'));
@@ -1420,6 +1423,116 @@ function App() {
                           }
                         />
 
+                        {/* Operator-dashboard surfaces for tenant-scoped
+                            features. These views resolve their tenant from
+                            context (not the URL), so the sidebar's static
+                            /dashboard/* hrefs render them directly here —
+                            mirroring the /app/:tenantId/* twins below. Without
+                            these, the sidebar links fell through to the `*`
+                            catch-all and 404'd. */}
+                        <Route
+                          path="trust"
+                          element={
+                            <LazyRoute>
+                              <TenantAdminOverview />
+                            </LazyRoute>
+                          }
+                        />
+                        <Route
+                          path="trust/emq"
+                          element={
+                            <LazyRoute>
+                              <EMQDiagnostics />
+                            </LazyRoute>
+                          }
+                        />
+                        <Route
+                          path="pacing"
+                          element={
+                            <LazyRoute>
+                              <Pacing />
+                            </LazyRoute>
+                          }
+                        />
+                        <Route
+                          path="profit"
+                          element={
+                            <LazyRoute>
+                              <ProfitROAS />
+                            </LazyRoute>
+                          }
+                        />
+                        <Route
+                          path="attribution"
+                          element={
+                            <LazyRoute>
+                              <Attribution />
+                            </LazyRoute>
+                          }
+                        />
+                        <Route
+                          path="reporting"
+                          element={
+                            <ProtectedRoute requiredRole="manager">
+                              <LazyRoute>
+                                <Reporting />
+                              </LazyRoute>
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="ab-testing"
+                          element={
+                            <LazyRoute>
+                              <ABTesting />
+                            </LazyRoute>
+                          }
+                        />
+                        <Route
+                          path="anomalies"
+                          element={
+                            <LazyRoute>
+                              <AnomalyDashboard />
+                            </LazyRoute>
+                          }
+                        />
+                        <Route
+                          path="explainability"
+                          element={
+                            <LazyRoute>
+                              <ModelExplainability />
+                            </LazyRoute>
+                          }
+                        />
+                        <Route
+                          path="embed-widgets"
+                          element={
+                            <LazyRoute>
+                              <EmbedWidgets />
+                            </LazyRoute>
+                          }
+                        />
+                        <Route
+                          path="audit-log"
+                          element={
+                            <ProtectedRoute requiredRole="admin">
+                              <LazyRoute>
+                                <TenantAuditLog />
+                              </LazyRoute>
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="team"
+                          element={
+                            <ProtectedRoute requiredRole="admin">
+                              <LazyRoute>
+                                <TeamManagement />
+                              </LazyRoute>
+                            </ProtectedRoute>
+                          }
+                        />
+
                         {/* Superadmin routes moved to /console/* shell.
                             Sibling-level redirects from /dashboard/superadmin/*
                             preserve old links. See route block below the
@@ -2008,6 +2121,17 @@ function App() {
                       <Route
                         path="/dashboard/superadmin/system"
                         element={<Navigate to="/console/system" replace />}
+                      />
+
+                      {/* 403 - Access Denied (ProtectedRoute redirect target;
+                          must stay un-gated to avoid a redirect loop) */}
+                      <Route
+                        path="/unauthorized"
+                        element={
+                          <LazyRoute>
+                            <Unauthorized />
+                          </LazyRoute>
+                        }
                       />
 
                       {/* 404 - Page Not Found */}

@@ -523,7 +523,7 @@ const navConfig: NavGroup[] = [
       },
       { label: 'Settings', href: '/dashboard/settings', icon: Settings, section: 'settings' },
       { label: 'Team', href: '/dashboard/team', icon: Users, section: 'team' },
-      { label: 'Billing', href: '/dashboard/billing', icon: CreditCard, section: 'billing' },
+      { label: 'Billing', href: '/dashboard/settings/billing', icon: CreditCard, section: 'billing' },
     ],
   },
 ];
