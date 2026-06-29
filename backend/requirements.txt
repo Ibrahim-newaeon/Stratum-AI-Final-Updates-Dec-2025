@@ -90,7 +90,7 @@ ruff==0.15.18
 
 # Ad Platform SDKs
 stripe>=15.3.0
-requests>=2.33.1
+requests>=2.34.2
 facebook-business>=25.0.1
 google-ads>=31.0.0
 
