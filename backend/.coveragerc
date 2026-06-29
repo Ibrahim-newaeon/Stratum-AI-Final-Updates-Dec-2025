@@ -24,6 +24,8 @@ omit =
 # it was masked because Backend CI failed earlier (formatting) and never
 # reached this step. Set a realistic floor at the current baseline (~32.8%) and
 # ratchet it up as unit coverage grows, rather than block CI on an unmet target.
+# Ratchet history: 30 -> 33 (added pii_hasher + rfm_segmenter unit tests). See #342.
+fail_under = 33
 # Ratchet history: 30 -> 33 (pii_hasher + rfm_segmenter) -> 34 (ab_power_analysis
 # + distributed_dedupe) -> 34.8 (ai_reports + creative_scoring + churn_prevention)
 # -> 35.4 (audience_lifecycle + predictive_budget) -> 36.0 (cross_platform_optimizer
