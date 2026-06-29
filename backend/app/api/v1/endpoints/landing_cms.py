@@ -54,7 +54,7 @@ async def list_published_pages(
     navigation_only: bool = Query(False, description="Only return pages in navigation"),
 ):
     """List all published landing pages."""
-    query = select(CMSPage).where(CMSPage.status == CMSPageStatus.published)
+    query = select(CMSPage).where(CMSPage.status == CMSPageStatus.PUBLISHED)
 
     if navigation_only:
         query = query.where(CMSPage.show_in_navigation == True)
@@ -111,7 +111,7 @@ async def get_page_by_slug(
         select(CMSPage).where(
             and_(
                 CMSPage.slug == slug,
-                CMSPage.status == CMSPageStatus.published,
+                CMSPage.status == CMSPageStatus.PUBLISHED,
             )
         )
     )
@@ -157,7 +157,7 @@ async def list_published_posts(
     featured: Optional[bool] = Query(None, description="Filter featured posts only"),
 ):
     """List published blog posts and resources."""
-    query = select(CMSPost).where(CMSPost.status == CMSPostStatus.published)
+    query = select(CMSPost).where(CMSPost.status == CMSPostStatus.PUBLISHED)
 
     if category:
         query = query.join(CMSPost.category).where(CMSCategory.slug == category)
@@ -196,7 +196,7 @@ async def list_published_posts(
                 "title": post.title,
                 "slug": post.slug,
                 "excerpt": post.excerpt,
-                "content_type": post.content_type.value if post.content_type else None,
+                "content_type": post.content_type,
                 "featured_image_url": getattr(post, "featured_image_url", None),
                 "is_featured": post.is_featured,
                 "author": (
@@ -249,7 +249,7 @@ async def get_post_by_slug(
         .where(
             and_(
                 CMSPost.slug == slug,
-                CMSPost.status == CMSPostStatus.published,
+                CMSPost.status == CMSPostStatus.PUBLISHED,
             )
         )
         .options(
@@ -275,7 +275,7 @@ async def get_post_by_slug(
             "excerpt": post.excerpt,
             "content": post.content,
             "content_json": post.content_json,
-            "content_type": post.content_type.value if post.content_type else None,
+            "content_type": post.content_type,
             "featured_image_url": getattr(post, "featured_image_url", None),
             "og_image_url": getattr(post, "og_image_url", None),
             "is_featured": post.is_featured,

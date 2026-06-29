@@ -249,35 +249,12 @@ async def get_quality_metrics(
     if getattr(request.state, "tenant_id", None) != tenant_id:
         raise HTTPException(status_code=403, detail="Access denied to this tenant")
 
-    from app.services.capi.capi_service import CAPIService
-
-    capi_service = CAPIService(db)
-
-    try:
-        quality_report = await capi_service.analyze_data_quality(tenant_id)
-    except Exception as e:
-        logger.warning("quality_analysis_failed", tenant_id=tenant_id, error=str(e))
-        quality_report = None
-
-    if quality_report:
-        return APIResponse(
-            success=True,
-            data={
-                "overall_score": quality_report.overall_score,
-                "platform_scores": {
-                    platform: {
-                        "score": score.score,
-                        "event_coverage": score.event_coverage,
-                        "data_completeness": score.data_completeness,
-                    }
-                    for platform, score in quality_report.platform_scores.items()
-                },
-                "top_recommendations": quality_report.top_recommendations,
-                "estimated_roas_improvement": quality_report.estimated_roas_improvement,
-                "trend": quality_report.trend,
-            },
-        )
-
+    # NOTE: the previous implementation called CAPIService(db).analyze_data_quality(
+    # tenant_id), but CAPIService takes no constructor args and exposes no such
+    # tenant-level coroutine — every call raised TypeError -> 500. There is no
+    # service that produces a tenant-level DataQualityReport yet, so this returns
+    # the documented "no data" envelope until per-tenant aggregation is wired up.
+    # The detailed gap analysis lives on the sibling /quality/{tenant_id}/report.
     return APIResponse(
         success=True,
         data={

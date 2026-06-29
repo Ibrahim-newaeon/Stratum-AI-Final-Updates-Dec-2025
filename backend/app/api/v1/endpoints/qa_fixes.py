@@ -216,13 +216,16 @@ async def get_fix_playbook(
         raise HTTPException(status_code=403, detail="Access denied to this tenant")
 
     # Get issues first
-    from app.models.campaign_builder import TenantPlatformConnection
+    from app.models.campaign_builder import (
+        ConnectionStatus,
+        TenantPlatformConnection,
+    )
 
     result = await db.execute(
         select(TenantPlatformConnection).where(
             and_(
                 TenantPlatformConnection.tenant_id == tenant_id,
-                TenantPlatformConnection.is_connected == True,
+                TenantPlatformConnection.status == ConnectionStatus.CONNECTED,
             )
         )
     )

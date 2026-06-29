@@ -24,6 +24,8 @@ omit =
 # it was masked because Backend CI failed earlier (formatting) and never
 # reached this step. Set a realistic floor at the current baseline (~32.8%) and
 # ratchet it up as unit coverage grows, rather than block CI on an unmet target.
+# Ratchet history: 30 -> 33 (added pii_hasher + rfm_segmenter unit tests). See #342.
+fail_under = 33
 # Ratchet history: 30 -> 33 (pii_hasher + rfm_segmenter) -> 34 (ab_power_analysis
 # + distributed_dedupe) -> 34.8 (ai_reports + creative_scoring + churn_prevention)
 # -> 35.4 (audience_lifecycle + predictive_budget) -> 36.0 (cross_platform_optimizer
@@ -122,7 +124,15 @@ omit =
 # classify_intent + greeting/help/unknown response builders; autopilot
 # action-cap validation: budget amount/percentage caps + non-budget
 # passthrough; full unit suite measured 46.94%). See #342.
-fail_under = 46.9
+#
+# -> 50.0: Backend CI now accumulates coverage across BOTH the unit and
+# integration suites (--cov-append) and enforces fail_under on the COMBINED
+# total (see #474). The integration suite drives the API endpoint/service
+# layer the unit suite never touched, so the measured combined total jumped
+# to ~50.9% locally (higher in CI, where unit modules needing optional deps —
+# bcrypt/PIL/boto3 — also load). Floor set to 50.0 with margin below the
+# measured number to avoid run-to-run flakiness.
+fail_under = 50.0
 
 # Show missing line numbers
 show_missing = True
