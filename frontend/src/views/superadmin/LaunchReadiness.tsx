@@ -470,7 +470,7 @@ function AuditTrail() {
           {events.map((event) => (
             <li
               key={event.id}
-              className="flex items-start gap-3 text-sm border-l-2 border-foreground/10 pl-3 py-1"
+              className="flex items-start gap-3 text-sm py-1"
             >
               <ActionBadge action={event.action} />
               <div className="flex-1 min-w-0">

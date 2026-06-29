@@ -159,7 +159,7 @@ export default function BlogPost() {
 
           {/* Content */}
           <div
-            className="mt-8 max-w-none text-body text-muted-foreground leading-relaxed space-y-4 [&_h2]:text-h2 [&_h2]:text-foreground [&_h2]:font-semibold [&_h2]:mt-8 [&_h2]:mb-3 [&_h3]:text-h3 [&_h3]:text-foreground [&_h3]:font-semibold [&_h3]:mt-6 [&_h3]:mb-2 [&_p]:text-body [&_p]:text-muted-foreground [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:space-y-2 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:space-y-2 [&_a]:text-secondary [&_a:hover]:underline [&_strong]:text-foreground [&_strong]:font-semibold [&_blockquote]:border-l-2 [&_blockquote]:border-secondary [&_blockquote]:pl-4 [&_blockquote]:text-muted-foreground [&_blockquote]:italic [&_code]:font-mono [&_code]:text-foreground [&_img]:rounded-xl"
+            className="mt-8 max-w-none text-body text-muted-foreground leading-relaxed space-y-4 [&_h2]:text-h2 [&_h2]:text-foreground [&_h2]:font-semibold [&_h2]:mt-8 [&_h2]:mb-3 [&_h3]:text-h3 [&_h3]:text-foreground [&_h3]:font-semibold [&_h3]:mt-6 [&_h3]:mb-2 [&_p]:text-body [&_p]:text-muted-foreground [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:space-y-2 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:space-y-2 [&_a]:text-secondary [&_a:hover]:underline [&_strong]:text-foreground [&_strong]:font-semibold [&_blockquote]:bg-secondary/5 [&_blockquote]:rounded-lg [&_blockquote]:px-4 [&_blockquote]:py-2 [&_blockquote]:text-muted-foreground [&_blockquote]:italic [&_code]:font-mono [&_code]:text-foreground [&_img]:rounded-xl"
             dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content || '') }}
           />
 

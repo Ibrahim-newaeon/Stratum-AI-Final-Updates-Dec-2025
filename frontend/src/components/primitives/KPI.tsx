@@ -138,11 +138,11 @@ export function KPI({
 
   return (
     <Card variant={cardVariant} className={cn('p-6', className)}>
-      <div className="flex items-start justify-between mb-6">
-        <span className="text-meta uppercase tracking-[0.06em] text-muted-foreground font-mono">
+      <div className="flex items-start justify-between gap-3 mb-6">
+        <span className="min-w-0 text-meta uppercase tracking-[0.06em] text-muted-foreground font-mono">
           {label}
         </span>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-shrink-0 items-center gap-2">
           {status ? (
             <StatusPill variant={status.variant ?? 'healthy'} size="sm" pulse={status.pulse}>
               {status.label}

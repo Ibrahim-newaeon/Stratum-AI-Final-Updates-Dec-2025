@@ -238,7 +238,7 @@ export default function CaseStudiesPage() {
                 </div>
 
                 {/* Quote */}
-                <div className="p-3 rounded-xl bg-secondary/5 border-l-2 border-secondary mb-5">
+                <div className="rounded-xl bg-secondary/5 p-4 mb-5">
                   <p className="text-body text-muted-foreground italic">"{study.quote}"</p>
                   <p className="mt-2 text-meta uppercase text-muted-foreground">
                     {study.author}

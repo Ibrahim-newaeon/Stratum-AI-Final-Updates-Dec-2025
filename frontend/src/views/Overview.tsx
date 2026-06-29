@@ -205,7 +205,7 @@ function AIRecommendationCard({
   action: string
 }) {
   return (
-    <div className="surface-card p-4 border-l-2 border-l-[#FF5A1F] hover:shadow-lg transition-shadow duration-200">
+    <div className="rounded-xl border border-border bg-card p-4 transition-colors duration-200 hover:border-primary/40">
       <div className="flex items-start gap-3 mb-3">
         <div className="p-1.5 rounded-md bg-secondary/10 flex-shrink-0">
           <Brain className="h-4 w-4 text-secondary" />

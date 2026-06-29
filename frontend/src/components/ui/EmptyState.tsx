@@ -62,6 +62,15 @@ const defaultContent: Record<EmptyStateVariant, { icon: React.ReactNode; title: 
   },
 }
 
+/** Mono status micro-label per variant — teaches the state at a glance. */
+const statusLabels: Record<EmptyStateVariant, string> = {
+  'no-data': 'No data',
+  'no-results': 'No results',
+  'no-filters': 'No filters',
+  error: 'Error',
+  empty: 'Empty',
+}
+
 export function EmptyState({
   variant = 'no-data',
   title,
@@ -78,15 +87,19 @@ export function EmptyState({
       'flex flex-col items-center justify-center py-12 px-6 text-center',
       className
     )}>
-      <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mb-4 text-muted-foreground">
+      <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground">
         {icon || defaults.icon}
       </div>
 
-      <h3 className="text-lg font-semibold text-foreground mb-2">
+      <span className="mb-2 font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-muted-foreground">
+        {statusLabels[variant]}
+      </span>
+
+      <h3 className="text-lg font-semibold text-foreground mb-1.5">
         {title || defaults.title}
       </h3>
 
-      <p className="text-sm text-muted-foreground max-w-sm mb-6">
+      <p className="text-sm text-muted-foreground max-w-sm mb-6 leading-relaxed">
         {description || defaults.description}
       </p>
 
@@ -95,12 +108,12 @@ export function EmptyState({
           <button
             onClick={action.onClick}
             className={cn(
-              'inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200',
-              'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+              'inline-flex items-center px-5 py-2 rounded-full text-sm font-medium transition-colors duration-200',
+              'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
               'active:scale-[0.98]',
               action.variant === 'secondary'
-                ? 'border bg-background hover:bg-muted'
-                : 'bg-primary text-primary-foreground hover:bg-primary/90'
+                ? 'border border-border bg-background hover:bg-muted'
+                : 'bg-primary text-primary-foreground hover:bg-secondary'
             )}
           >
             {variant === 'error' && <RefreshCw className="w-4 h-4 mr-2" aria-hidden="true" />}
