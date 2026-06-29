@@ -4,18 +4,25 @@
 """
 Web Push notification system using VAPID keys.
 Supports browser subscription, broadcast, targeted sends, and campaign alerts.
+
+Subscriptions and sent-notification records are persisted to PostgreSQL
+(see ``app.models.push``) so they survive restarts and are shared across API
+workers — replacing the former per-process in-memory store.
 """
 
 from datetime import UTC, datetime, timedelta
-from typing import Any, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.db.session import get_async_session
+from app.models.push import PushNotificationLog
+from app.models.push import PushSubscription as PushSubscriptionModel
 from app.schemas.response import APIResponse
 
 logger = get_logger(__name__)
@@ -79,17 +86,18 @@ class PushAnalytics(BaseModel):
 
 
 # =============================================================================
-# In-Memory Store
+# Helpers
 # =============================================================================
 
-_subscriptions: dict[str, dict] = {}
-_notifications: list[dict] = []
 
-
-def _generate_id(prefix: str = "push") -> str:
-    import secrets
-
-    return f"{prefix}_{secrets.token_hex(8)}"
+def _require_tenant(req: Request) -> int:
+    """Return the request tenant_id or raise 401 if absent."""
+    tenant_id = getattr(req.state, "tenant_id", None)
+    if not tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
+        )
+    return tenant_id
 
 
 # =============================================================================
@@ -139,34 +147,27 @@ async def subscribe_device(
     Called by the frontend after PushManager.subscribe() returns
     a subscription object.
     """
-    tenant_id = getattr(req.state, "tenant_id", None)
-    if not tenant_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
-        )
+    tenant_id = _require_tenant(req)
 
-    sub_id = _generate_id("sub")
-    now = datetime.now(UTC).isoformat()
-
-    _subscriptions[sub_id] = {
-        "id": sub_id,
-        "tenant_id": tenant_id,
-        "endpoint": subscription.endpoint,
-        "keys": subscription.keys,
-        "user_agent": subscription.user_agent,
-        "platform": subscription.platform,
-        "is_active": True,
-        "created_at": now,
-        "last_active_at": now,
-    }
+    record = PushSubscriptionModel(
+        tenant_id=tenant_id,
+        endpoint=subscription.endpoint,
+        keys=subscription.keys,
+        user_agent=subscription.user_agent,
+        platform=subscription.platform,
+        is_active=True,
+    )
+    db.add(record)
+    await db.commit()
+    await db.refresh(record)
 
     logger.info(
-        "push_subscription_created", tenant_id=tenant_id, subscription_id=sub_id
+        "push_subscription_created", tenant_id=tenant_id, subscription_id=record.id
     )
 
     return APIResponse(
         success=True,
-        data={"subscription_id": sub_id, "status": "subscribed"},
+        data={"subscription_id": record.id, "status": "subscribed"},
         message="Device subscribed for push notifications",
     )
 
@@ -178,17 +179,19 @@ async def unsubscribe_device(
     db: AsyncSession = Depends(get_async_session),
 ):
     """Remove a push subscription."""
-    tenant_id = getattr(req.state, "tenant_id", None)
-    if not tenant_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
-        )
+    tenant_id = _require_tenant(req)
 
-    removed = False
-    for sub_id, sub in list(_subscriptions.items()):
-        if sub.get("endpoint") == endpoint and sub.get("tenant_id") == tenant_id:
-            sub["is_active"] = False
-            removed = True
+    result = await db.execute(
+        select(PushSubscriptionModel).where(
+            PushSubscriptionModel.endpoint == endpoint,
+            PushSubscriptionModel.tenant_id == tenant_id,
+        )
+    )
+    subs = result.scalars().all()
+    for sub in subs:
+        sub.is_active = False
+    removed = bool(subs)
+    await db.commit()
 
     return APIResponse(
         success=True,
@@ -209,27 +212,22 @@ async def send_push_notification(
     Can target specific subscription_ids or broadcast to all
     active subscribers of the tenant.
     """
-    tenant_id = getattr(req.state, "tenant_id", None)
-    if not tenant_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
-        )
+    tenant_id = _require_tenant(req)
 
     # Get target subscriptions
-    targets = []
-    if notification.send_to_all:
-        targets = [
-            sub
-            for sub in _subscriptions.values()
-            if sub.get("tenant_id") == tenant_id and sub.get("is_active")
-        ]
-    elif notification.subscription_ids:
-        targets = [
-            _subscriptions.get(sid)
-            for sid in notification.subscription_ids
-            if _subscriptions.get(sid)
-            and _subscriptions[sid].get("tenant_id") == tenant_id
-        ]
+    stmt = select(PushSubscriptionModel).where(
+        PushSubscriptionModel.tenant_id == tenant_id,
+        PushSubscriptionModel.is_active.is_(True),
+    )
+    if not notification.send_to_all:
+        if notification.subscription_ids:
+            stmt = stmt.where(
+                PushSubscriptionModel.id.in_(notification.subscription_ids)
+            )
+        else:
+            stmt = stmt.where(False)
+    result = await db.execute(stmt)
+    targets = result.scalars().all()
 
     if not targets:
         raise HTTPException(
@@ -242,28 +240,25 @@ async def send_push_notification(
     delivered = int(sent * 0.95)  # 95% delivery rate estimate
     failed = sent - delivered
 
-    notif_id = _generate_id("notif")
-    now = datetime.now(UTC).isoformat()
-
-    record = {
-        "id": notif_id,
-        "tenant_id": tenant_id,
-        "title": notification.title,
-        "body": notification.body,
-        "url": notification.url,
-        "tag": notification.tag,
-        "sent_count": sent,
-        "delivered_count": delivered,
-        "failed_count": failed,
-        "target_type": "all" if notification.send_to_all else "selected",
-        "created_at": now,
-    }
-    _notifications.append(record)
+    record = PushNotificationLog(
+        tenant_id=tenant_id,
+        title=notification.title,
+        body=notification.body,
+        url=notification.url,
+        tag=notification.tag,
+        sent_count=sent,
+        delivered_count=delivered,
+        failed_count=failed,
+        target_type="all" if notification.send_to_all else "selected",
+    )
+    db.add(record)
+    await db.commit()
+    await db.refresh(record)
 
     logger.info(
         "push_notification_sent",
         tenant_id=tenant_id,
-        notification_id=notif_id,
+        notification_id=record.id,
         sent=sent,
         title=notification.title,
     )
@@ -271,13 +266,13 @@ async def send_push_notification(
     return APIResponse(
         success=True,
         data=PushNotificationResponse(
-            id=notif_id,
-            title=notification.title,
-            body=notification.body,
-            sent_count=sent,
-            delivered_count=delivered,
-            failed_count=failed,
-            created_at=now,
+            id=record.id,
+            title=record.title,
+            body=record.body,
+            sent_count=record.sent_count,
+            delivered_count=record.delivered_count,
+            failed_count=record.failed_count,
+            created_at=record.created_at.isoformat(),
         ),
         message=f"Notification sent to {sent} subscribers",
     )
@@ -291,24 +286,30 @@ async def list_subscribers(
     active_only: bool = True,
 ):
     """List push notification subscribers."""
-    tenant_id = getattr(req.state, "tenant_id", None)
-    if not tenant_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
-        )
+    tenant_id = _require_tenant(req)
+
+    stmt = select(PushSubscriptionModel).where(
+        PushSubscriptionModel.tenant_id == tenant_id
+    )
+    if platform:
+        stmt = stmt.where(PushSubscriptionModel.platform == platform)
+    if active_only:
+        stmt = stmt.where(PushSubscriptionModel.is_active.is_(True))
+
+    result = await db.execute(stmt)
+    rows = result.scalars().all()
 
     subs = [
         {
-            "id": sub["id"],
-            "platform": sub.get("platform", "web"),
-            "is_active": sub.get("is_active", True),
-            "created_at": sub["created_at"],
-            "last_active_at": sub.get("last_active_at"),
+            "id": sub.id,
+            "platform": sub.platform,
+            "is_active": sub.is_active,
+            "created_at": sub.created_at.isoformat(),
+            "last_active_at": (
+                sub.last_active_at.isoformat() if sub.last_active_at else None
+            ),
         }
-        for sub in _subscriptions.values()
-        if sub.get("tenant_id") == tenant_id
-        and (not platform or sub.get("platform") == platform)
-        and (not active_only or sub.get("is_active"))
+        for sub in rows
     ]
 
     return APIResponse(
@@ -324,23 +325,34 @@ async def get_notification_history(
     page_size: int = 20,
 ):
     """Get sent notification history."""
-    tenant_id = getattr(req.state, "tenant_id", None)
-    if not tenant_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
-        )
+    tenant_id = _require_tenant(req)
 
-    notifs = [
-        n
-        for n in sorted(_notifications, key=lambda x: x["created_at"], reverse=True)
-        if n.get("tenant_id") == tenant_id
-    ]
+    result = await db.execute(
+        select(PushNotificationLog)
+        .where(PushNotificationLog.tenant_id == tenant_id)
+        .order_by(PushNotificationLog.created_at.desc())
+    )
+    rows = result.scalars().all()
 
     start = (page - 1) * page_size
-    paginated = notifs[start : start + page_size]
+    paginated = [
+        {
+            "id": n.id,
+            "title": n.title,
+            "body": n.body,
+            "url": n.url,
+            "tag": n.tag,
+            "sent_count": n.sent_count,
+            "delivered_count": n.delivered_count,
+            "failed_count": n.failed_count,
+            "target_type": n.target_type,
+            "created_at": n.created_at.isoformat(),
+        }
+        for n in rows[start : start + page_size]
+    ]
 
     return APIResponse(
-        success=True, data=paginated, message=f"Found {len(notifs)} notifications"
+        success=True, data=paginated, message=f"Found {len(rows)} notifications"
     )
 
 
@@ -350,34 +362,32 @@ async def get_push_analytics(
     db: AsyncSession = Depends(get_async_session),
 ):
     """Get push notification analytics."""
-    tenant_id = getattr(req.state, "tenant_id", None)
-    if not tenant_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
-        )
+    tenant_id = _require_tenant(req)
 
-    tenant_subs = [
-        s for s in _subscriptions.values() if s.get("tenant_id") == tenant_id
-    ]
-    tenant_notifs = [n for n in _notifications if n.get("tenant_id") == tenant_id]
+    subs_result = await db.execute(
+        select(PushSubscriptionModel).where(
+            PushSubscriptionModel.tenant_id == tenant_id
+        )
+    )
+    tenant_subs = subs_result.scalars().all()
+
+    notifs_result = await db.execute(
+        select(PushNotificationLog).where(PushNotificationLog.tenant_id == tenant_id)
+    )
+    tenant_notifs = notifs_result.scalars().all()
 
     total = len(tenant_subs)
-    active = len([s for s in tenant_subs if s.get("is_active")])
+    active = len([s for s in tenant_subs if s.is_active])
 
     # Platform breakdown
-    platforms = {}
+    platforms: dict[str, int] = {}
     for s in tenant_subs:
-        p = s.get("platform", "web")
+        p = s.platform or "web"
         platforms[p] = platforms.get(p, 0) + 1
 
     # Recent notifications
-    recent_24h = len(
-        [
-            n
-            for n in tenant_notifs
-            if n["created_at"] > (datetime.now(UTC) - timedelta(hours=24)).isoformat()
-        ]
-    )
+    cutoff_24h = datetime.now(UTC) - timedelta(hours=24)
+    recent_24h = len([n for n in tenant_notifs if n.created_at > cutoff_24h])
     recent_30d = len(tenant_notifs)
 
     return APIResponse(

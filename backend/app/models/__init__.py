@@ -99,6 +99,9 @@ from app.models.crm import (
     WritebackStatus,
 )
 
+# Drip campaign models
+from app.models.drip import DripExecutionRecord, DripSequence
+
 # EMQ fix-playbook progress
 from app.models.emq_playbook import EmqPlaybookItemState
 
@@ -134,6 +137,9 @@ from app.models.profit import (
     ProductStatus,
     ProfitROASReport,
 )
+
+# Push notification models
+from app.models.push import PushNotificationLog, PushSubscription
 
 # Automated Reporting models
 from app.models.reporting import (
@@ -214,6 +220,8 @@ __all__ = [
     "DeliveryChannelConfig",
     "DeliveryStatus",
     "DraftStatus",
+    "DripExecutionRecord",
+    "DripSequence",
     "EmqPlaybookItemState",
     "EnforcementAuditLog",
     "ExecutionStatus",
@@ -239,6 +247,8 @@ __all__ = [
     "ProductStatus",
     "ProfitROASReport",
     "PublishResult",
+    "PushNotificationLog",
+    "PushSubscription",
     "ReportDelivery",
     "ReportExecution",
     "ReportFormat",

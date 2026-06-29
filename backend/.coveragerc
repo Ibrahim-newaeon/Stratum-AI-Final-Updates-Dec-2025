@@ -26,6 +26,113 @@ omit =
 # ratchet it up as unit coverage grows, rather than block CI on an unmet target.
 # Ratchet history: 30 -> 33 (added pii_hasher + rfm_segmenter unit tests). See #342.
 fail_under = 33
+# Ratchet history: 30 -> 33 (pii_hasher + rfm_segmenter) -> 34 (ab_power_analysis
+# + distributed_dedupe) -> 34.8 (ai_reports + creative_scoring + churn_prevention)
+# -> 35.4 (audience_lifecycle + predictive_budget) -> 36.0 (cross_platform_optimizer
+# + unified_notifications) -> 36.2 (emq_calculation + ltv_forecasting) -> 36.7
+# (signal_recovery + goal_tracking) -> 36.9 (attribution_confidence) -> 37.0
+# (nl_filters) -> 37.2 (anomaly_narratives) -> 37.9 (signal_health + trust_gate
+# core, competitor_intel, event_mapper, ab_testing; measured 37.90% for the
+# 15-19 subset, higher with trust_gate) -> 38.0 (recommend engine + feature
+# flags; full unit suite measured 38.11%) -> 38.7 (conversion latency +
+# creative performance batches measured 38.70%; audience insights, budget
+# reallocation, and EMQ measurement batches land on top) -> 40.8 (competitor
+# benchmarking, offline conversions, mock client, market proxy batches; full
+# unit suite measured 40.81%, plus 2 latent crash fixes) -> 41.7 (ML modules:
+# ltv_predictor + creative_lifecycle + explainability; measured 41.71% with
+# ltv_predictor in, explainability lands on top, plus 3 missing-import
+# fixes) -> 42.3 (core analytics: anomalies + fatigue + collaborative
+# annotations; full unit suite measured 42.30%) -> 42.5 (CAPI data quality
+# analyzer + knowledge graph auto-insights; measured 42.50% with data
+# quality in, knowledge graph lands on top) -> 43.0 (embed security service
+# + exception hierarchy + tenant context RBAC; full unit suite measured
+# 43.05%) -> 43.1 (schema validators: client + embed widgets, CSRF
+# middleware; full unit suite measured 43.19%) -> 43.4 (stratum autopilot
+# rule engine; full unit suite measured 43.47%, plus 2 latent Trust Engine
+# crash fixes) -> 43.5 (stratum integration bridge; full unit suite
+# measured 43.57%) -> 43.6 (db base mixins: StrEnumType asyncpg casing
+# bridge, tablename, to_dict, soft delete; measured 43.61%) -> 43.7 (ROAS
+# optimizer pure scoring: campaign health score, status bands, platform
+# targets; full unit suite measured 43.77%) -> 43.8 (CDP funnel step
+# evaluator: all condition operators + field extraction; feature_gate
+# pure helpers: required-tier, limit/feature checks; full unit suite
+# measured 43.84%) -> 43.9 (subscription pure logic: status bands,
+# validity/access, billing-date math; websocket message serialization;
+# full unit suite measured 43.91%) -> 44.1 (rules engine pure logic:
+# RuleBuilder fluent build/validate, value parsing, operator comparison,
+# field extraction [was 0%]; Shapley attribution value math; full unit
+# suite measured 44.17%) -> 44.3 (Markov attribution removal-effect math;
+# pacing forecasting helpers: EWMA + end-of-month; full unit suite
+# measured 44.32%) -> 44.5 (server-side conversions: UserData PII
+# normalization + SHA-256 hashing, Meta CAPI formatting, EMQ
+# match_quality_score, ContentItem/ServerEvent helpers; full unit suite
+# measured 44.51%) -> 44.7 (license validation pure logic: offline HMAC
+# verify, domain match exact/wildcard, STRAT-tier offline parse,
+# server-response parse, cache TTL; ROAS forecaster helpers: baseline
+# aggregation, linear ROAS trend, weekday/weekend seasonality, mock
+# forecast; full unit suite measured 44.73%) -> 44.9 (CAPI resilience
+# primitives: CircuitBreaker closed/open/half-open state machine,
+# RateLimiter token-bucket acquire/refill, BatchOptimizer history-driven
+# sizing; dead-letter-queue pure logic: DLQEntry serialization round-trip,
+# _categorize_failure error classification, DLQStats defaults; full unit
+# suite measured 44.99%) -> 45.1 (CAPI connector health monitor:
+# delivery-log + circuit-state health scoring, alert cooldown, summary
+# worst-status aggregation, history windowing; report date-range parser:
+# rolling windows + calendar ranges + quarter/year-to-date + rollovers;
+# full unit suite measured 45.17%) -> 45.3 (multi-touch attribution
+# calculator: first/last/linear/position/time-decay/w-shaped/custom
+# weight models + get_weights dispatcher + platform window config; full
+# unit suite measured 45.33%) -> 45.5 (CDP segment evaluator: 17-operator
+# comparison engine [string/numeric/membership/null/datetime] + profile/
+# trait/data field extraction + slug generation; Zoho CRM normalization:
+# email/phone hashing + contact/deal field mapping with nested flatten;
+# full unit suite measured 45.53%) -> 45.7 (webhook signature
+# verification: Meta/TikTok/internal HMAC verify with constant-time
+# compare + fail-open-when-unconfigured contract; competitor scraper pure
+# helpers: SocialLinks/AdLibraryResult/CompetitorScanResult serialization
+# with 10-ad cap, social-link regex extraction, ad-library URL building;
+# full unit suite measured 45.77%) -> 45.9 (reporting cron parser:
+# field parsing [wildcard/list/range/step/clamp] + 5-field expression
+# parse + next-run calculation; Salesforce client pure helpers: email/
+# phone hashing + sandbox-aware OAuth auth/token URLs; full unit suite
+# measured 45.93%) -> 46.1 (RFM analysis scoring: recency/frequency/
+# monetary band math + RFM-score->segment mapping; Pipedrive client pure
+# helpers: email/phone hashing + OAuth authorization-URL building with
+# auto CSRF state, plus a latent-bug fix adding the missing
+# pipedrive_client_id/secret Settings fields; full unit suite measured
+# 46.16%) -> 46.2 (attribution models: Shapley value computation
+# [subset generation, conversion caching, fair/dominant/symmetric splits]
+# + Markov unfitted equal-weights; Zoho lead->contact conversion
+# transform; full unit suite measured 46.25%) -> 46.25 (report delivery
+# rendering: Email subject/body template substitution + format->MIME
+# content-type mapping + WhatsApp text-summary building; full unit suite
+# measured 46.28%) -> 46.3 (knowledge graph Problem/Solution
+# serialization + severity/category enums; pacing alert helpers: metric->
+# alert-type mapping + DailyKPI metric extraction with cents->dollars;
+# full unit suite measured 46.33%) -> 46.35 (Stripe tier<->price-id
+# round-trip mapping + configure_stripe secret gating; Google Ads
+# integration helpers: change-type mapping, resource-id extraction,
+# SHA-256 hashing, E.164 phone normalization; full unit suite measured
+# 46.38%) -> 46.7 (server-events formatters: Meta CAPI event/user-data
+# payload shaping + PII hashing, EcommerceTracker dict->dataclass
+# builders; sync orchestrator env-credential resolution with Meta act_
+# prefixing + SyncResult defaults; full unit suite measured 46.74%)
+# -> 46.85 (multi-platform events formatters: Google GA4 Measurement
+# Protocol, TikTok Events API, Snapchat CAPI _format_event payload
+# shaping + PII hashing + purchase-specific fields; full unit suite
+# measured 46.89%) -> 46.9 (copilot intent classification: keyword-scored
+# classify_intent + greeting/help/unknown response builders; autopilot
+# action-cap validation: budget amount/percentage caps + non-budget
+# passthrough; full unit suite measured 46.94%). See #342.
+#
+# -> 50.0: Backend CI now accumulates coverage across BOTH the unit and
+# integration suites (--cov-append) and enforces fail_under on the COMBINED
+# total (see #474). The integration suite drives the API endpoint/service
+# layer the unit suite never touched, so the measured combined total jumped
+# to ~50.9% locally (higher in CI, where unit modules needing optional deps —
+# bcrypt/PIL/boto3 — also load). Floor set to 50.0 with margin below the
+# measured number to avoid run-to-run flakiness.
+fail_under = 50.0
 
 # Show missing line numbers
 show_missing = True

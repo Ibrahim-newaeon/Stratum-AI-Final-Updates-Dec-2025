@@ -137,7 +137,7 @@ class WebSocketManager:
                 socket_connect_timeout=5,
                 socket_timeout=5,
             )
-            await asyncio.wait_for(self._redis.ping(), timeout=5.0)  # type: ignore[arg-type]
+            await asyncio.wait_for(self._redis.ping(), timeout=5.0)
             self._pubsub_task = asyncio.create_task(self._redis_listener())
             logger.info("websocket_redis_connected")
         except (ConnectionError, TimeoutError, OSError) as e:

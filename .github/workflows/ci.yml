@@ -92,7 +92,9 @@ jobs:
           APP_ENV: test
           PYTHONPATH: .
         run: |
-          pytest tests/unit -v --tb=short -m "unit or not integration"
+          coverage erase
+          pytest tests/unit -v --tb=short -m "unit or not integration" \
+            --cov=app --cov-config=.coveragerc --cov-append --cov-fail-under=0
 
       - name: Run integration tests
         env:
@@ -117,7 +119,8 @@ jobs:
           # Scoped here (not in pytest.ini) so the unit suite keeps its loops.
           pytest tests/integration -v --tb=short -m "integration" \
             -o asyncio_default_test_loop_scope=session \
-            -o asyncio_default_fixture_loop_scope=session
+            -o asyncio_default_fixture_loop_scope=session \
+            --cov=app --cov-config=.coveragerc --cov-append --cov-fail-under=0
 
       - name: Generate coverage report
         env:
@@ -130,7 +133,13 @@ jobs:
           APP_ENV: test
           PYTHONPATH: .
         run: |
-          pytest tests/unit --cov=app --cov-config=.coveragerc --cov-report=xml --cov-report=term-missing -m "unit or not integration"
+          # Combined unit + integration coverage: both test steps above ran with
+          # --cov-append into a single .coverage file (unit and integration each
+          # exercise different layers — endpoints/services are driven by the
+          # integration suite). Emit the combined report + xml and enforce the
+          # .coveragerc fail_under on the COMBINED total.
+          coverage xml
+          coverage report --show-missing
 
       - name: Security scan with Bandit
         run: |
@@ -143,7 +152,7 @@ jobs:
           pip-audit --strict --desc on
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         with:
           file: backend/coverage.xml
           flags: backend
@@ -194,7 +203,7 @@ jobs:
         run: npm run test:coverage -- --reporter=verbose
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         with:
           file: frontend/coverage/lcov.info
           flags: frontend
@@ -411,7 +420,24 @@ jobs:
           JWT_SECRET_KEY: test-jwt-secret-for-load-tests
           PII_ENCRYPTION_KEY: dGVzdC1lbmNyeXB0aW9uLWtleS0zMmJ5dGVz
           APP_ENV: test
+          # Skip startup ML auto-training so uvicorn starts accepting
+          # connections immediately; otherwise it trains from sample data during
+          # lifespan startup and /health is refused while the k6 smoke check
+          # runs (the autopilot endpoints under test don't need ML models).
+          ML_AUTO_TRAIN: "false"
+          # The lifespan superadmin seeder imports scripts/seed_superadmin, which
+          # sys.exit(1)s at import when these are unset (SystemExit isn't caught
+          # by the lifespan's except Exception) — that aborts startup once ML
+          # training no longer blocks it first. Provide test values.
+          SUPERADMIN_EMAIL: admin@stratum.test
+          SUPERADMIN_PASSWORD: test_superadmin_password_change_me
         run: |
+          # Widen alembic_version.version_num to VARCHAR(128) first: some
+          # revision ids (e.g. 041_add_superadmin_to_userrole_enum, 35 chars)
+          # exceed Alembic's default VARCHAR(32), which otherwise fails
+          # `alembic upgrade head`. start.sh does this in the app image; the
+          # load-test job runs alembic directly, so do it here too.
+          python fix_alembic_version.py
           # Run migrations
           alembic upgrade head
           # Seed load test user

@@ -500,9 +500,10 @@ api_router.include_router(
 )
 
 # Advanced Analytics (Gap #4)
+# NOTE: the router already declares prefix="/analytics/advanced"; do NOT add it
+# again here or the routes mount at /analytics/advanced/analytics/advanced/*.
 api_router.include_router(
     advanced_analytics.router,
-    prefix="/analytics/advanced",
     tags=["Advanced Analytics"],
 )
 
@@ -514,16 +515,19 @@ api_router.include_router(
 )
 
 # Outbound Integrations (Gap #6)
+# NOTE: the router already declares prefix="/integrations/outbound"; do NOT add
+# it again here or the routes mount at
+# /integrations/outbound/integrations/outbound/*.
 api_router.include_router(
     outbound_integrations.router,
-    prefix="/integrations/outbound",
     tags=["Outbound Integrations"],
 )
 
 # Developer Portal (Gap #8)
+# NOTE: the router already declares prefix="/developer"; do NOT add it again
+# here or the routes mount at /developer/developer/*.
 api_router.include_router(
     developer.router,
-    prefix="/developer",
     tags=["Developer Portal"],
 )
 

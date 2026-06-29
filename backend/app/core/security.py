@@ -224,8 +224,10 @@ def decrypt_pii(ciphertext: str, tenant_id: int | None = None) -> str:
     """
     Decrypt PII data.
 
-    Falls back to returning the raw value if decryption fails (e.g. the data
-    was stored in plaintext or encrypted with a different key).
+    Raises ``ValueError`` if decryption fails (e.g. the data is corrupted or
+    was encrypted with a different key). It deliberately never returns the
+    ciphertext as-is, so encrypted data cannot leak into contexts that expect
+    decrypted values (logs, API responses). Empty input returns "".
 
     Args:
         ciphertext: The encrypted data to decrypt
@@ -233,6 +235,9 @@ def decrypt_pii(ciphertext: str, tenant_id: int | None = None) -> str:
 
     Returns:
         Decrypted plaintext string
+
+    Raises:
+        ValueError: If the ciphertext cannot be decrypted.
     """
     if not ciphertext:
         return ""

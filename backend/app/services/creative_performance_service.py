@@ -985,7 +985,7 @@ class CreativeElementAnalyzer:
             {
                 "creative_id": creative_id,
                 "ctr": metrics.ctr,
-                "conversion_rate": metrics.conversion_rate,
+                "conversion_rate": metrics.cvr,
                 "roas": metrics.roas,
                 "impressions": metrics.impressions,
             }
@@ -1016,9 +1016,8 @@ class CreativeElementAnalyzer:
 
             avg_ctr = statistics.mean([p["ctr"] for p in performances])
             avg_cvr = statistics.mean([p["conversion_rate"] for p in performances])
-            avg_roas = statistics.mean(
-                [p["roas"] for p in performances if p["roas"] > 0]
-            )
+            roas_values = [p["roas"] for p in performances if p["roas"] > 0]
+            avg_roas = statistics.mean(roas_values) if roas_values else 0.0
 
             # Composite score
             score = avg_ctr * 0.3 + avg_cvr * 0.4 + min(avg_roas / 10, 3) * 0.3
@@ -1306,18 +1305,20 @@ class CrossPlatformCreativeAnalyzer:
         # Get performance data for this creative across platforms
         platform_performance = {}
 
-        for creative_id, record in self.service._creative_data.items():
+        for creative_id, record in self.service._creatives.items():
             if record.tenant_id != tenant_id:
                 continue
 
             # Simple name matching (in production, use creative asset matching)
             if creative_id.startswith(creative_name) or creative_name in creative_id:
-                latest = record.metrics_history[-1] if record.metrics_history else None
+                latest = (
+                    record.daily_metrics[-1].metrics if record.daily_metrics else None
+                )
                 if latest:
                     platform_performance[record.platform] = {
                         "creative_id": creative_id,
                         "ctr": latest.ctr,
-                        "conversion_rate": latest.conversion_rate,
+                        "conversion_rate": latest.cvr,
                         "roas": latest.roas,
                         "spend": latest.spend,
                     }
@@ -1353,7 +1354,8 @@ class CrossPlatformCreativeAnalyzer:
             )
 
         # Check for universal performers
-        avg_roas = statistics.mean([p["roas"] for p in performances if p["roas"] > 0])
+        roas_values = [p["roas"] for p in performances if p["roas"] > 0]
+        avg_roas = statistics.mean(roas_values) if roas_values else 0.0
         if all(p["roas"] >= avg_roas * 0.8 for p in performances if p["roas"] > 0):
             insights.append(
                 CrossPlatformCreativeInsight(
@@ -1401,15 +1403,15 @@ class CrossPlatformCreativeAnalyzer:
         # Analyze each platform
         platforms_data: Dict[str, List[CreativeMetrics]] = {}
 
-        for creative_id, record in self.service._creative_data.items():
+        for _creative_id, record in self.service._creatives.items():
             if record.tenant_id != tenant_id:
                 continue
 
             if record.platform not in platforms_data:
                 platforms_data[record.platform] = []
 
-            if record.metrics_history:
-                platforms_data[record.platform].append(record.metrics_history[-1])
+            if record.daily_metrics:
+                platforms_data[record.platform].append(record.daily_metrics[-1].metrics)
 
         for platform, metrics_list in platforms_data.items():
             platform_recs = []
@@ -1418,7 +1420,8 @@ class CrossPlatformCreativeAnalyzer:
                 platform_recs.append("No active creatives - launch test campaigns")
             else:
                 avg_ctr = statistics.mean([m.ctr for m in metrics_list])
-                avg_roas = statistics.mean([m.roas for m in metrics_list if m.roas > 0])
+                platform_roas = [m.roas for m in metrics_list if m.roas > 0]
+                avg_roas = statistics.mean(platform_roas) if platform_roas else 0.0
 
                 # Platform-specific recommendations
                 if platform == "meta":

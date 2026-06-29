@@ -164,7 +164,7 @@ async def start_conversation(
     user_context = UserContext(
         user_id=str(current_user.id) if current_user else None,
         tenant_id=str(current_user.tenant_id) if current_user else None,
-        name=request.name or (current_user.name if current_user else None),
+        name=request.name or (current_user.full_name if current_user else None),
         email=request.email or (current_user.email if current_user else None),
         company=request.company,
         language=request.language,

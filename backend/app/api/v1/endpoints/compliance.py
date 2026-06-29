@@ -14,14 +14,50 @@ from typing import Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
 from sqlalchemy import and_, func, select, text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.base_models import AuditAction
 from app.core.logging import get_logger
 from app.db.session import get_async_session
 from app.schemas.response import APIResponse
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/admin/compliance", tags=["Enterprise Compliance"])
+
+
+# The audit_logs table does not store a severity column; severity is derived
+# from the action so the audit-log UI can still bucket events. Destructive or
+# privacy-sensitive actions rank highest.
+_SEVERITY_BY_ACTION: dict[str, str] = {
+    AuditAction.DELETE.value: "critical",
+    AuditAction.ANONYMIZE.value: "critical",
+    AuditAction.UPDATE.value: "warning",
+    AuditAction.EXPORT.value: "warning",
+}
+
+
+def _derive_severity(action: Optional[str]) -> str:
+    """Map an audit action to a display severity (info / warning / critical)."""
+    return _SEVERITY_BY_ACTION.get(action or "", "info")
+
+
+def _actions_for_severities(severities: list[str]) -> list[str]:
+    """Reverse-map requested severities to the audit actions that yield them."""
+    wanted = set(severities)
+    return [a.value for a in AuditAction if _derive_severity(a.value) in wanted]
+
+
+def _audit_details(row: Any) -> dict[str, Any]:
+    """Compose a details payload from the audit_logs change columns."""
+    details: dict[str, Any] = {}
+    if row.get("old_value") is not None:
+        details["old_value"] = row["old_value"]
+    if row.get("new_value") is not None:
+        details["new_value"] = row["new_value"]
+    if row.get("changed_fields") is not None:
+        details["changed_fields"] = row["changed_fields"]
+    return details
 
 
 # =============================================================================
@@ -180,13 +216,19 @@ async def search_audit_log(
         conditions.append("resource_type = ANY(:resource_types)")
         params["resource_types"] = request.resource_types
     if request.severity:
-        conditions.append("severity = ANY(:severity)")
-        params["severity"] = request.severity
+        # Severity is not a stored column; honour the filter by mapping the
+        # requested severities back to the actions that produce them.
+        conditions.append("action = ANY(:severity_actions)")
+        params["severity_actions"] = _actions_for_severities(request.severity)
     if request.user_id:
         conditions.append("user_id = :user_id")
         params["user_id"] = request.user_id
     if request.search_term:
-        conditions.append("(details::text ILIKE :search OR user_email ILIKE :search)")
+        conditions.append(
+            "(action::text ILIKE :search OR resource_type ILIKE :search "
+            "OR resource_id ILIKE :search OR new_value::text ILIKE :search "
+            "OR old_value::text ILIKE :search)"
+        )
         params["search"] = f"%{request.search_term}%"
 
     where_clause = " AND ".join(conditions)
@@ -196,10 +238,13 @@ async def search_audit_log(
     count_result = await db.execute(text(count_sql), params)
     total = count_result.mappings().first()["total"]
 
-    # Data query
+    # Data query — select the columns that actually exist on audit_logs.
+    # user_email is not stored on the table; details is composed from the
+    # old/new/changed change columns and severity is derived from the action.
     data_sql = f"""
-    SELECT id, created_at, tenant_id, user_id, user_email, action,
-           resource_type, resource_id, details, ip_address, user_agent, severity
+    SELECT id, created_at, tenant_id, user_id, action,
+           resource_type, resource_id, old_value, new_value, changed_fields,
+           ip_address, user_agent
     FROM audit_logs
     WHERE {where_clause}
     ORDER BY created_at DESC
@@ -215,14 +260,14 @@ async def search_audit_log(
             timestamp=r["created_at"].isoformat() if r["created_at"] else "",
             tenant_id=r["tenant_id"],
             user_id=r["user_id"],
-            user_email=r["user_email"],
+            user_email=None,
             action=r["action"],
             resource_type=r["resource_type"],
             resource_id=str(r["resource_id"]) if r["resource_id"] else None,
-            details=r["details"] or {},
+            details=_audit_details(r),
             ip_address=r["ip_address"],
             user_agent=r["user_agent"],
-            severity=r["severity"] or "info",
+            severity=_derive_severity(r["action"]),
         )
         for r in rows
     ]
@@ -271,20 +316,24 @@ async def audit_log_summary(
 
     date_from = (datetime.now(UTC) - timedelta(days=days)).date()
 
-    # Severity breakdown
-    severity_sql = """
-    SELECT severity, COUNT(*) as count
+    # Severity breakdown — audit_logs has no severity column, so aggregate by
+    # action and fold each action's count into its derived severity bucket.
+    action_sql = """
+    SELECT action, COUNT(*) as count
     FROM audit_logs
     WHERE tenant_id = :tenant_id AND created_at >= :date_from
-    GROUP BY severity
+    GROUP BY action
     ORDER BY count DESC
     """
-    severity_result = await db.execute(
-        text(severity_sql), {"tenant_id": tenant_id, "date_from": date_from}
+    action_result = await db.execute(
+        text(action_sql), {"tenant_id": tenant_id, "date_from": date_from}
     )
-    severity_breakdown = {
-        r["severity"]: r["count"] for r in severity_result.mappings().all()
-    }
+    action_breakdown: dict[str, int] = {}
+    severity_breakdown: dict[str, int] = {}
+    for r in action_result.mappings().all():
+        action_breakdown[r["action"]] = r["count"]
+        bucket = _derive_severity(r["action"])
+        severity_breakdown[bucket] = severity_breakdown.get(bucket, 0) + r["count"]
 
     # Daily activity
     daily_sql = """
@@ -308,6 +357,7 @@ async def audit_log_summary(
             "period_days": days,
             "total_events": sum(severity_breakdown.values()),
             "severity_breakdown": severity_breakdown,
+            "action_breakdown": action_breakdown,
             "daily_activity": daily_activity,
             "critical_events": severity_breakdown.get("critical", 0),
         },
@@ -588,12 +638,23 @@ async def preview_data_purge(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant required"
         )
 
-    # Get policy
-    policy_result = await db.execute(
-        text("SELECT * FROM tenant_settings WHERE tenant_id = :tenant_id LIMIT 1"),
-        {"tenant_id": tenant_id},
-    )
-    policy_row = policy_result.mappings().first()
+    # Get policy. The tenant_settings table is optional (retention overrides
+    # live there when configured); fall back to defaults if it's absent. The
+    # lookup runs in a SAVEPOINT so a missing table doesn't poison the outer
+    # transaction and break the count queries below.
+    policy_row = None
+    try:
+        async with db.begin_nested():
+            policy_result = await db.execute(
+                text(
+                    "SELECT * FROM tenant_settings "
+                    "WHERE tenant_id = :tenant_id LIMIT 1"
+                ),
+                {"tenant_id": tenant_id},
+            )
+            policy_row = policy_result.mappings().first()
+    except SQLAlchemyError:
+        policy_row = None
 
     # Default retention periods
     profile_retention = 365

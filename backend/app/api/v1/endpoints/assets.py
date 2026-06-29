@@ -378,9 +378,11 @@ async def create_asset(
     """Create a new creative asset."""
     tenant_id = getattr(request.state, "tenant_id", None)
 
+    # mode="json" coerces HttpUrl fields (file_url / thumbnail_url) to plain
+    # strings; the raw HttpUrl objects can't be encoded by the asyncpg driver.
     asset = CreativeAsset(
         tenant_id=tenant_id,
-        **asset_data.model_dump(),
+        **asset_data.model_dump(mode="json"),
     )
 
     db.add(asset)

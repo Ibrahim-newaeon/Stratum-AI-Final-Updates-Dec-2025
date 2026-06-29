@@ -147,6 +147,11 @@ async def _build_funnel(
 ) -> list[FunnelStep]:
     """Build multi-step funnel from campaign metrics."""
 
+    # The campaign_metrics.date column is a DATE; asyncpg needs real date
+    # objects, not the YYYY-MM-DD strings the request carries.
+    date_from_d = datetime.strptime(date_from, "%Y-%m-%d").date()
+    date_to_d = datetime.strptime(date_to, "%Y-%m-%d").date()
+
     funnel_steps = []
 
     # Map event types to metric columns
@@ -181,8 +186,8 @@ async def _build_funnel(
             text(sql),
             {
                 "tenant_id": tenant_id,
-                "date_from": date_from,
-                "date_to": date_to,
+                "date_from": date_from_d,
+                "date_to": date_to_d,
             },
         )
         row = result.mappings().first()
