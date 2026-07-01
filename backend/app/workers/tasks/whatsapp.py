@@ -131,7 +131,10 @@ def send_whatsapp_message(
             raise
 
 
-@shared_task
+# Explicit name: this module was split out of the old app/workers/tasks.py;
+# without it the auto-generated name gains the submodule segment and the
+# beat schedule's task reference silently dispatches to nothing.
+@shared_task(name="app.workers.tasks.process_scheduled_whatsapp_messages")
 def process_scheduled_whatsapp_messages():
     """
     Process scheduled WhatsApp messages.

@@ -85,7 +85,10 @@ def fetch_competitor_data(self, tenant_id: int, competitor_id: int):
             raise
 
 
-@shared_task
+# Explicit name: this module was split out of the old app/workers/tasks.py;
+# without it the auto-generated name gains the submodule segment and the
+# beat schedule's task reference silently dispatches to nothing.
+@shared_task(name="app.workers.tasks.refresh_all_competitors")
 def refresh_all_competitors():
     """
     Refresh data for all competitor benchmarks.

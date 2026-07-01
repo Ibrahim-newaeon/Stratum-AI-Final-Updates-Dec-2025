@@ -88,6 +88,10 @@ services:
       - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER:?}:${POSTGRES_PASSWORD:?}@db:5432/${POSTGRES_DB:-stratum_ai}
       - REDIS_URL=redis://:${REDIS_PASSWORD:?REDIS_PASSWORD must be set}@redis:6379/0
       - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:?REDIS_PASSWORD must be set}@redis:6379/1
+      # Without this the API-side Celery producer falls back to the
+      # localhost default for the result backend, exhausts its reconnect
+      # budget, and permanently fails every subsequent task dispatch.
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:?REDIS_PASSWORD must be set}@redis:6379/2
       - ML_PROVIDER=${ML_PROVIDER:-local}
       - ML_MODELS_PATH=/app/ml_service/models
       - ML_AUTO_TRAIN=${ML_AUTO_TRAIN:-true}
@@ -182,8 +186,11 @@ services:
         max-file: "3"
     networks:
       - stratum_network
-    command: >
-      sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers ${UVICORN_WORKERS:-2}"
+    # No command override: the image entrypoint (start.sh) owns the API boot
+    # path — DB wait, alembic_version column widening, migrations, seeds,
+    # uvicorn. Overriding it with a bare "alembic upgrade head && uvicorn"
+    # skips the version-fix step and breaks migration 041+ on a fresh
+    # database (version ids longer than the default VARCHAR(32)).
 
   # ===========================================================================
   # Celery Worker (Background Tasks)

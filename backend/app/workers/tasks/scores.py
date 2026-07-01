@@ -18,7 +18,10 @@ from app.workers.tasks.helpers import publish_event
 logger = get_task_logger(__name__)
 
 
-@shared_task
+# Explicit name: this module was split out of the old app/workers/tasks.py;
+# without it the auto-generated name gains the submodule segment and the
+# beat schedule's task reference silently dispatches to nothing.
+@shared_task(name="app.workers.tasks.calculate_daily_scores")
 def calculate_daily_scores():
     """
     Calculate daily performance scores for all campaigns.

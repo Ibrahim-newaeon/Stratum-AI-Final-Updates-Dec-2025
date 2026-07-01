@@ -104,7 +104,10 @@ def run_live_predictions(self, tenant_id: int):
     return {"predictions": len(predictions), "confidence": confidence}
 
 
-@shared_task
+# Explicit name: this module was split out of the old app/workers/tasks.py;
+# without it the auto-generated name gains the submodule segment and the
+# beat schedule's task reference silently dispatches to nothing.
+@shared_task(name="app.workers.tasks.run_all_tenant_predictions")
 @with_distributed_lock(timeout=1800)
 def run_all_tenant_predictions():
     """

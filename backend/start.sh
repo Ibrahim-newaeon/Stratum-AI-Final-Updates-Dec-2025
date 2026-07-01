@@ -6,6 +6,15 @@ echo "PORT=${PORT:-not set}"
 echo "PWD=$(pwd)"
 echo "Python: $(python --version 2>&1)"
 
+# When a command is passed (docker-compose worker/scheduler/flower services,
+# or a Railway service with a custom start command), run it instead of the
+# API server. DB wait, migrations, casts, and seeds are the api service's
+# job — worker containers must not race it on schema changes.
+if [ "$#" -gt 0 ]; then
+    echo "Command override: $*"
+    exec "$@"
+fi
+
 # Derive DATABASE_URL_SYNC from DATABASE_URL if not set (Railway only injects DATABASE_URL)
 if [ -z "$DATABASE_URL_SYNC" ] && [ -n "$DATABASE_URL" ]; then
     DATABASE_URL_SYNC=$(echo "$DATABASE_URL" | sed 's/postgresql+asyncpg/postgresql/g')
@@ -120,4 +129,5 @@ if [ "$SEED_CMS_PAGES" = "true" ]; then
 fi
 
 echo "Starting uvicorn on port ${PORT:-8000}..."
-exec uvicorn app.main:app --host 0.0.0.0 --port "${PORT:-8000}" --log-level info
+exec uvicorn app.main:app --host 0.0.0.0 --port "${PORT:-8000}" \
+    --workers "${UVICORN_WORKERS:-1}" --log-level info
