@@ -233,12 +233,20 @@ class AutopilotService:
         tenant_id: int,
         user_id: int,
     ) -> Optional[FactActionsQueue]:
-        """Dismiss an action (won't be executed)."""
+        """Dismiss an action (won't be executed).
+
+        Allowed from QUEUED (operator declines the recommendation) and
+        from PENDING_APPROVAL (operator declines a soft-blocked action's
+        override instead of confirming it).
+        """
         action = await self.get_action_by_id(action_id, tenant_id)
         if not action:
             return None
 
-        if action.status != ActionStatus.QUEUED.value:
+        if action.status not in (
+            ActionStatus.QUEUED.value,
+            ActionStatus.PENDING_APPROVAL.value,
+        ):
             return None
 
         action.status = ActionStatus.DISMISSED.value

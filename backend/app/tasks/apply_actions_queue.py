@@ -1241,6 +1241,18 @@ def _enforcement_block_status(result: "EnforcementResult") -> str:
     return ActionStatus.FAILED.value
 
 
+def _confirmed_soft_block_override(action, enforcement) -> bool:
+    """True when a disallowed result may proceed on operator confirmation.
+
+    Only soft-blocks (requires_confirmation) can be overridden, and only
+    when an operator has confirmed this specific action via
+    POST /actions/{id}/confirm (which stamps enforcement_confirmed_at).
+    Hard-blocks and subscription gates are absolute — a stale confirmation
+    never bypasses them.
+    """
+    return bool(enforcement.requires_confirmation and action.enforcement_confirmed_at)
+
+
 # =============================================================================
 # Main Task
 # =============================================================================
@@ -1329,7 +1341,16 @@ def apply_actions_queue(self, tenant_id: Optional[int] = None):
                         enforcement = await enforce_before_execute(
                             db, action, action_details
                         )
-                        if not enforcement.allowed:
+                        if not enforcement.allowed and _confirmed_soft_block_override(
+                            action, enforcement
+                        ):
+                            logger.info(
+                                f"Action {action.id} proceeding on operator "
+                                f"confirmation despite soft-block "
+                                f"(confirmed_by="
+                                f"{action.enforcement_confirmed_by_user_id})"
+                            )
+                        elif not enforcement.allowed:
                             mode = (
                                 enforcement.mode.value
                                 if hasattr(enforcement.mode, "value")
@@ -1341,6 +1362,12 @@ def apply_actions_queue(self, tenant_id: Optional[int] = None):
                             )
                             action.status = _enforcement_block_status(enforcement)
                             action.error = f"Enforcement ({mode}): {reason}"
+                            if enforcement.requires_confirmation:
+                                # Surface the token on the action so the API
+                                # can offer the confirm-and-execute flow.
+                                action.confirmation_token = (
+                                    enforcement.confirmation_token
+                                )
                             failed += 1
                             logger.info(
                                 f"Action {action.id} blocked by enforcement "
@@ -1558,7 +1585,15 @@ def apply_single_action(self, action_id: str, user_id: Optional[int] = None):
                 # Enforcement gate — the enforcer has the final say before
                 # execution, even for an already-approved action.
                 enforcement = await enforce_before_execute(db, action, action_details)
-                if not enforcement.allowed:
+                if not enforcement.allowed and _confirmed_soft_block_override(
+                    action, enforcement
+                ):
+                    logger.info(
+                        f"Action {action_id} proceeding on operator confirmation "
+                        f"despite soft-block (confirmed_by="
+                        f"{action.enforcement_confirmed_by_user_id})"
+                    )
+                elif not enforcement.allowed:
                     mode = (
                         enforcement.mode.value
                         if hasattr(enforcement.mode, "value")
@@ -1570,6 +1605,10 @@ def apply_single_action(self, action_id: str, user_id: Optional[int] = None):
                     )
                     action.status = _enforcement_block_status(enforcement)
                     action.error = f"Enforcement ({mode}): {reason}"
+                    if enforcement.requires_confirmation:
+                        # Surface the token on the action so the API can
+                        # offer the confirm-and-execute flow.
+                        action.confirmation_token = enforcement.confirmation_token
                     await db.commit()
                     await publish_action_status_update(
                         tenant_id=action.tenant_id,

@@ -1458,6 +1458,9 @@ class TestAutopilotQueueAction:
         fake_action.approved_at = None
         fake_action.applied_at = None
         fake_action.error = None
+        fake_action.confirmation_token = None
+        fake_action.enforcement_confirmed_at = None
+        fake_action.enforcement_confirmed_by_user_id = None
 
         with patch(
             "app.api.v1.endpoints.autopilot.get_tenant_features",
@@ -1513,6 +1516,9 @@ class TestAutopilotApproveAction:
         fake_action.approved_at = datetime.now(timezone.utc)
         fake_action.applied_at = None
         fake_action.error = None
+        fake_action.confirmation_token = None
+        fake_action.enforcement_confirmed_at = None
+        fake_action.enforcement_confirmed_by_user_id = None
 
         with patch("app.api.v1.endpoints.autopilot.AutopilotService") as MockSvc:
             MockSvc.return_value.approve_action = AsyncMock(return_value=fake_action)
@@ -1573,6 +1579,9 @@ class TestAutopilotDismissAction:
         fake_action.approved_at = None
         fake_action.applied_at = None
         fake_action.error = None
+        fake_action.confirmation_token = None
+        fake_action.enforcement_confirmed_at = None
+        fake_action.enforcement_confirmed_by_user_id = None
 
         with patch("app.api.v1.endpoints.autopilot.AutopilotService") as MockSvc:
             MockSvc.return_value.dismiss_action = AsyncMock(return_value=fake_action)
@@ -1624,6 +1633,9 @@ class TestAutopilotGetAction:
         fake_action.approved_at = None
         fake_action.applied_at = None
         fake_action.error = None
+        fake_action.confirmation_token = None
+        fake_action.enforcement_confirmed_at = None
+        fake_action.enforcement_confirmed_by_user_id = None
 
         with patch("app.api.v1.endpoints.autopilot.AutopilotService") as MockSvc:
             MockSvc.return_value.get_action_by_id = AsyncMock(return_value=fake_action)
