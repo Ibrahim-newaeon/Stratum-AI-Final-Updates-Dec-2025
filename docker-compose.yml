@@ -186,8 +186,11 @@ services:
         max-file: "3"
     networks:
       - stratum_network
-    command: >
-      sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers ${UVICORN_WORKERS:-2}"
+    # No command override: the image entrypoint (start.sh) owns the API boot
+    # path — DB wait, alembic_version column widening, migrations, seeds,
+    # uvicorn. Overriding it with a bare "alembic upgrade head && uvicorn"
+    # skips the version-fix step and breaks migration 041+ on a fresh
+    # database (version ids longer than the default VARCHAR(32)).
 
   # ===========================================================================
   # Celery Worker (Background Tasks)

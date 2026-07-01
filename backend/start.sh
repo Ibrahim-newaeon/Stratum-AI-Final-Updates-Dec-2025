@@ -129,4 +129,5 @@ if [ "$SEED_CMS_PAGES" = "true" ]; then
 fi
 
 echo "Starting uvicorn on port ${PORT:-8000}..."
-exec uvicorn app.main:app --host 0.0.0.0 --port "${PORT:-8000}" --log-level info
+exec uvicorn app.main:app --host 0.0.0.0 --port "${PORT:-8000}" \
+    --workers "${UVICORN_WORKERS:-1}" --log-level info
