@@ -1168,6 +1168,64 @@ def validate_action_caps(
 
 
 # =============================================================================
+# Enforcement Gate
+# =============================================================================
+
+
+async def enforce_before_execute(
+    db: AsyncSession,
+    action: "FactActionsQueue",
+    action_details: Dict[str, Any],
+) -> "EnforcementResult":
+    """Consult the AutopilotEnforcer before an approved action is executed.
+
+    This is the trust-gate/enforcement seam in the execution path: even
+    though a user (or auto-approval) approved the action, the enforcer has
+    the final say based on the tenant's enforcement mode, budget/ROAS/
+    frequency rules, custom rules, and subscription status.
+
+    Returns the EnforcementResult; callers must NOT execute when
+    ``result.allowed`` is False.
+    """
+    from app.autopilot.enforcer import AutopilotEnforcer
+
+    current_value = None
+    if action.before_value:
+        try:
+            current_value = json.loads(action.before_value)
+        except (json.JSONDecodeError, TypeError):
+            current_value = None
+
+    metrics = (
+        action_details.get("metrics") if isinstance(action_details, dict) else None
+    )
+
+    enforcer = AutopilotEnforcer(db)
+    return await enforcer.check_action(
+        tenant_id=action.tenant_id,
+        action_type=action.action_type,
+        entity_type=action.entity_type,
+        entity_id=action.entity_id,
+        proposed_value=action_details or {},
+        current_value=current_value,
+        metrics=metrics,
+    )
+
+
+def _enforcement_block_status(result: "EnforcementResult") -> str:
+    """Map a disallowed EnforcementResult onto an ActionStatus value.
+
+    Follows the existing signal-health convention in AutopilotService:
+    soft-blocks (need confirmation) return to PENDING_APPROVAL so the
+    operator can review the violations and confirm; hard-blocks and
+    subscription-restricted advisories are terminal FAILED.
+    """
+    if result.requires_confirmation:
+        return ActionStatus.PENDING_APPROVAL.value
+    return ActionStatus.FAILED.value
+
+
+# =============================================================================
 # Main Task
 # =============================================================================
 
@@ -1248,6 +1306,34 @@ def apply_actions_queue(self, tenant_id: Optional[int] = None):
                             action.status = ActionStatus.FAILED.value
                             action.error = cap_error
                             failed += 1
+                            continue
+
+                        # Enforcement gate — final say before execution.
+                        enforcement = await enforce_before_execute(
+                            db, action, action_details
+                        )
+                        if not enforcement.allowed:
+                            mode = (
+                                enforcement.mode.value
+                                if hasattr(enforcement.mode, "value")
+                                else enforcement.mode
+                            )
+                            reason = (
+                                "; ".join(enforcement.warnings)
+                                or "Blocked by enforcement policy"
+                            )
+                            action.status = _enforcement_block_status(enforcement)
+                            action.error = f"Enforcement ({mode}): {reason}"
+                            failed += 1
+                            logger.info(
+                                f"Action {action.id} blocked by enforcement "
+                                f"(mode={mode})"
+                            )
+                            await publish_action_status_update(
+                                tenant_id=action.tenant_id,
+                                action_id=str(action.id),
+                                status=action.status,
+                            )
                             continue
 
                         # Get platform executor
@@ -1450,6 +1536,41 @@ def apply_single_action(self, action_id: str, user_id: Optional[int] = None):
                     action.error = cap_error
                     await db.commit()
                     return {"status": "error", "error": cap_error}
+
+                # Enforcement gate — the enforcer has the final say before
+                # execution, even for an already-approved action.
+                enforcement = await enforce_before_execute(db, action, action_details)
+                if not enforcement.allowed:
+                    mode = (
+                        enforcement.mode.value
+                        if hasattr(enforcement.mode, "value")
+                        else enforcement.mode
+                    )
+                    reason = (
+                        "; ".join(enforcement.warnings)
+                        or "Blocked by enforcement policy"
+                    )
+                    action.status = _enforcement_block_status(enforcement)
+                    action.error = f"Enforcement ({mode}): {reason}"
+                    await db.commit()
+                    await publish_action_status_update(
+                        tenant_id=action.tenant_id,
+                        action_id=action_id,
+                        status=action.status,
+                    )
+                    logger.info(
+                        f"Action {action_id} blocked by enforcement "
+                        f"(mode={mode}, requires_confirmation="
+                        f"{enforcement.requires_confirmation})"
+                    )
+                    return {
+                        "status": "blocked",
+                        "action_id": action_id,
+                        "mode": mode,
+                        "requires_confirmation": enforcement.requires_confirmation,
+                        "confirmation_token": enforcement.confirmation_token,
+                        "violations": enforcement.violations,
+                    }
 
                 # Execute
                 executor = PLATFORM_EXECUTORS.get(action.platform)
