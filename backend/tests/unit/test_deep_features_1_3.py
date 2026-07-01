@@ -1323,7 +1323,7 @@ class TestEnforcementDeleteRule:
 # GET /api/v1/autopilot/tenant/{tenant_id}/autopilot/status
 # ---------------------------------------------------------------------------
 class TestAutopilotStatus:
-    URL = "/api/v1/autopilot/tenant/1/autopilot/status"
+    URL = "/api/v1/tenant/1/autopilot/status"
 
     async def test_no_auth_returns_401(self, api_client):
         resp = await api_client.get(self.URL)
@@ -1362,7 +1362,7 @@ class TestAutopilotStatus:
 # GET /api/v1/autopilot/tenant/{tenant_id}/autopilot/actions
 # ---------------------------------------------------------------------------
 class TestAutopilotListActions:
-    URL = "/api/v1/autopilot/tenant/1/autopilot/actions"
+    URL = "/api/v1/tenant/1/autopilot/actions"
 
     async def test_no_auth_returns_401(self, api_client):
         resp = await api_client.get(self.URL)
@@ -1388,7 +1388,7 @@ class TestAutopilotListActions:
 # GET /api/v1/autopilot/tenant/{tenant_id}/autopilot/actions/summary
 # ---------------------------------------------------------------------------
 class TestAutopilotActionsSummary:
-    URL = "/api/v1/autopilot/tenant/1/autopilot/actions/summary"
+    URL = "/api/v1/tenant/1/autopilot/actions/summary"
 
     async def test_no_auth_returns_401(self, api_client):
         resp = await api_client.get(self.URL)
@@ -1421,7 +1421,7 @@ class TestAutopilotActionsSummary:
 # POST /api/v1/autopilot/tenant/{tenant_id}/autopilot/actions
 # ---------------------------------------------------------------------------
 class TestAutopilotQueueAction:
-    URL = "/api/v1/autopilot/tenant/1/autopilot/actions"
+    URL = "/api/v1/tenant/1/autopilot/actions"
     PAYLOAD = {
         "action_type": "budget_decrease",
         "entity_type": "campaign",
@@ -1484,7 +1484,7 @@ class TestAutopilotQueueAction:
 # ---------------------------------------------------------------------------
 class TestAutopilotApproveAction:
     ACTION_ID = str(uuid.uuid4())
-    URL_TEMPLATE = "/api/v1/autopilot/tenant/1/autopilot/actions/{}/approve"
+    URL_TEMPLATE = "/api/v1/tenant/1/autopilot/actions/{}/approve"
 
     async def test_no_auth_returns_401(self, api_client):
         resp = await api_client.post(self.URL_TEMPLATE.format(self.ACTION_ID))
@@ -1550,7 +1550,7 @@ class TestAutopilotApproveAction:
 # ---------------------------------------------------------------------------
 class TestAutopilotDismissAction:
     ACTION_ID = str(uuid.uuid4())
-    URL_TEMPLATE = "/api/v1/autopilot/tenant/1/autopilot/actions/{}/dismiss"
+    URL_TEMPLATE = "/api/v1/tenant/1/autopilot/actions/{}/dismiss"
 
     async def test_no_auth_returns_401(self, api_client):
         resp = await api_client.post(self.URL_TEMPLATE.format(self.ACTION_ID))
@@ -1592,7 +1592,7 @@ class TestAutopilotDismissAction:
 # ---------------------------------------------------------------------------
 class TestAutopilotGetAction:
     ACTION_ID = str(uuid.uuid4())
-    URL_TEMPLATE = "/api/v1/autopilot/tenant/1/autopilot/actions/{}"
+    URL_TEMPLATE = "/api/v1/tenant/1/autopilot/actions/{}"
 
     async def test_no_auth_returns_401(self, api_client):
         resp = await api_client.get(self.URL_TEMPLATE.format(self.ACTION_ID))
@@ -1642,7 +1642,7 @@ class TestAutopilotGetAction:
 # POST /api/v1/autopilot/tenant/{tenant_id}/autopilot/actions/approve-all
 # ---------------------------------------------------------------------------
 class TestAutopilotApproveAll:
-    URL = "/api/v1/autopilot/tenant/1/autopilot/actions/approve-all"
+    URL = "/api/v1/tenant/1/autopilot/actions/approve-all"
 
     async def test_no_auth_returns_401(self, api_client):
         resp = await api_client.post(self.URL)
