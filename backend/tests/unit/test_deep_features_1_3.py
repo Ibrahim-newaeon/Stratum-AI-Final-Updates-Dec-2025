@@ -1320,7 +1320,7 @@ class TestEnforcementDeleteRule:
 
 # ---------------------------------------------------------------------------
 # Autopilot: Status
-# GET /api/v1/autopilot/tenant/{tenant_id}/autopilot/status
+# GET /api/v1/tenant/{tenant_id}/autopilot/status
 # ---------------------------------------------------------------------------
 class TestAutopilotStatus:
     URL = "/api/v1/tenant/1/autopilot/status"
@@ -1359,7 +1359,7 @@ class TestAutopilotStatus:
 
 # ---------------------------------------------------------------------------
 # Autopilot: List Actions
-# GET /api/v1/autopilot/tenant/{tenant_id}/autopilot/actions
+# GET /api/v1/tenant/{tenant_id}/autopilot/actions
 # ---------------------------------------------------------------------------
 class TestAutopilotListActions:
     URL = "/api/v1/tenant/1/autopilot/actions"
@@ -1385,7 +1385,7 @@ class TestAutopilotListActions:
 
 # ---------------------------------------------------------------------------
 # Autopilot: Actions Summary
-# GET /api/v1/autopilot/tenant/{tenant_id}/autopilot/actions/summary
+# GET /api/v1/tenant/{tenant_id}/autopilot/actions/summary
 # ---------------------------------------------------------------------------
 class TestAutopilotActionsSummary:
     URL = "/api/v1/tenant/1/autopilot/actions/summary"
@@ -1418,7 +1418,7 @@ class TestAutopilotActionsSummary:
 
 # ---------------------------------------------------------------------------
 # Autopilot: Queue Action
-# POST /api/v1/autopilot/tenant/{tenant_id}/autopilot/actions
+# POST /api/v1/tenant/{tenant_id}/autopilot/actions
 # ---------------------------------------------------------------------------
 class TestAutopilotQueueAction:
     URL = "/api/v1/tenant/1/autopilot/actions"
@@ -1480,7 +1480,7 @@ class TestAutopilotQueueAction:
 
 # ---------------------------------------------------------------------------
 # Autopilot: Approve Action
-# POST /api/v1/autopilot/tenant/{tenant_id}/autopilot/actions/{id}/approve
+# POST /api/v1/tenant/{tenant_id}/autopilot/actions/{id}/approve
 # ---------------------------------------------------------------------------
 class TestAutopilotApproveAction:
     ACTION_ID = str(uuid.uuid4())
@@ -1546,7 +1546,7 @@ class TestAutopilotApproveAction:
 
 # ---------------------------------------------------------------------------
 # Autopilot: Dismiss Action
-# POST /api/v1/autopilot/tenant/{tenant_id}/autopilot/actions/{id}/dismiss
+# POST /api/v1/tenant/{tenant_id}/autopilot/actions/{id}/dismiss
 # ---------------------------------------------------------------------------
 class TestAutopilotDismissAction:
     ACTION_ID = str(uuid.uuid4())
@@ -1588,7 +1588,7 @@ class TestAutopilotDismissAction:
 
 # ---------------------------------------------------------------------------
 # Autopilot: Get Single Action
-# GET /api/v1/autopilot/tenant/{tenant_id}/autopilot/actions/{id}
+# GET /api/v1/tenant/{tenant_id}/autopilot/actions/{id}
 # ---------------------------------------------------------------------------
 class TestAutopilotGetAction:
     ACTION_ID = str(uuid.uuid4())
@@ -1639,7 +1639,7 @@ class TestAutopilotGetAction:
 
 # ---------------------------------------------------------------------------
 # Autopilot: Approve All Actions
-# POST /api/v1/autopilot/tenant/{tenant_id}/autopilot/actions/approve-all
+# POST /api/v1/tenant/{tenant_id}/autopilot/actions/approve-all
 # ---------------------------------------------------------------------------
 class TestAutopilotApproveAll:
     URL = "/api/v1/tenant/1/autopilot/actions/approve-all"
