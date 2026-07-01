@@ -376,6 +376,12 @@ class AutopilotEnforcer:
                     self.db.add(db_rule)
                 await self.db.flush()
 
+            # get_async_session does NOT auto-commit despite its docstring;
+            # without an explicit commit these settings evaporate when the
+            # request's session closes and enforcement silently stays on
+            # the previous mode.
+            await self.db.commit()
+
         return settings
 
     async def check_action(
