@@ -83,7 +83,7 @@ faker==40.23.0
 # Development
 black==26.5.1
 isort==8.0.1
-mypy==1.20.2
+mypy==2.1.0
 ruff==0.15.18
 
 # Ad Platform SDKs
