@@ -8,6 +8,7 @@ API endpoints for Autopilot features:
 - Action execution
 """
 
+import logging
 from datetime import date
 from typing import Any, Dict, List, Optional
 from uuid import UUID
@@ -21,7 +22,44 @@ from app.db.session import get_async_session
 from app.features.service import can_access_feature, get_tenant_features
 from app.schemas.response import APIResponse
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/tenant/{tenant_id}/autopilot", tags=["autopilot"])
+
+
+def _dispatch_single_action(action_id: str, user_id: Optional[int]) -> None:
+    """Dispatch execution of a single approved action to the Celery worker.
+
+    Import is local to avoid a circular import at module load (the task module
+    imports app.autopilot.service). Broker failures are swallowed so a transient
+    dispatch problem never rolls back an already-committed approval — the
+    every-5-min ``apply_actions_queue`` sweep is the backstop that catches it.
+    """
+    try:
+        from app.tasks.apply_actions_queue import apply_single_action
+
+        apply_single_action.delay(action_id, user_id)
+    except Exception:  # pragma: no cover - defensive, backstop sweep recovers
+        logger.exception(
+            "Failed to dispatch apply_single_action for action %s; "
+            "the scheduled sweep will retry",
+            action_id,
+        )
+
+
+def _dispatch_tenant_queue(tenant_id: int) -> None:
+    """Dispatch execution of all approved actions for a tenant (used by
+    approve-all). Same defensive contract as ``_dispatch_single_action``."""
+    try:
+        from app.tasks.apply_actions_queue import apply_actions_queue
+
+        apply_actions_queue.delay(tenant_id=tenant_id)
+    except Exception:  # pragma: no cover - defensive, backstop sweep recovers
+        logger.exception(
+            "Failed to dispatch apply_actions_queue for tenant %s; "
+            "the scheduled sweep will retry",
+            tenant_id,
+        )
 
 
 # =============================================================================
@@ -281,6 +319,9 @@ async def queue_action(
     # Auto-approve if allowed
     if can_auto:
         action = await service.approve_action(action.id, tenant_id, user_id or 0)
+        # Auto-approved actions execute immediately (trust gate already passed).
+        if action:
+            _dispatch_single_action(str(action.id), user_id)
 
     return APIResponse(
         success=True,
@@ -321,6 +362,9 @@ async def approve_action(
             status_code=404, detail="Action not found or already processed"
         )
 
+    # Dispatch execution now that the action is approved and committed.
+    _dispatch_single_action(str(action.id), user_id)
+
     return APIResponse(
         success=True,
         data={
@@ -355,6 +399,10 @@ async def approve_all_actions(
             raise HTTPException(status_code=400, detail="Invalid action ID format")
 
     count = await service.approve_all_queued(tenant_id, user_id, action_ids)
+
+    # Dispatch the tenant-wide apply sweep so the just-approved actions execute.
+    if count:
+        _dispatch_tenant_queue(tenant_id)
 
     return APIResponse(
         success=True,
