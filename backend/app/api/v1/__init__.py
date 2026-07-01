@@ -242,9 +242,12 @@ api_router.include_router(
 )
 
 # Autopilot (Automated campaign optimization)
+# Note: autopilot.router already declares prefix="/tenant/{tenant_id}/autopilot",
+# so it must be mounted WITHOUT an extra prefix (matching autopilot_enforcement
+# below). Adding "/autopilot" here double-prefixed every route and 404'd the
+# frontend, which calls /tenant/{id}/autopilot/*.
 api_router.include_router(
     autopilot.router,
-    prefix="/autopilot",
     tags=["Autopilot"],
 )
 

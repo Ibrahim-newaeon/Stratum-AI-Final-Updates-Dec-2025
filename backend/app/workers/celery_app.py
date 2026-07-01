@@ -16,7 +16,14 @@ celery_app = Celery(
     "stratum_ai",
     broker=settings.celery_broker_url,
     backend=settings.celery_result_backend,
-    include=["app.workers.tasks", "app.workers.campaign_builder_tasks"],
+    include=[
+        "app.workers.tasks",
+        "app.workers.campaign_builder_tasks",
+        # Autopilot execution pipeline — applies approved actions to platforms.
+        # Without this the @shared_task defs are never registered, so approved
+        # actions are never dispatched or executed.
+        "app.tasks.apply_actions_queue",
+    ],
 )
 
 # Celery configuration
@@ -135,6 +142,15 @@ celery_app.conf.beat_schedule = {
     "process-scheduled-whatsapp": {
         "task": "app.workers.tasks.process_scheduled_whatsapp_messages",
         "schedule": crontab(minute="*"),
+        "options": {"queue": "default"},
+    },
+    # Apply approved autopilot actions every 5 minutes. This is a backstop:
+    # the approve endpoint dispatches apply_single_action directly, but this
+    # sweep guarantees any approved action still gets executed even if a
+    # direct dispatch was missed (e.g. broker hiccup at approval time).
+    "apply-approved-autopilot-actions": {
+        "task": "tasks.schedule_apply_actions_queue",
+        "schedule": crontab(minute="*/5"),
         "options": {"queue": "default"},
     },
 }
