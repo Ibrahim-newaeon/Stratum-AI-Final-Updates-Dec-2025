@@ -25,7 +25,10 @@ omit =
 # reached this step. Set a realistic floor at the current baseline (~32.8%) and
 # ratchet it up as unit coverage grows, rather than block CI on an unmet target.
 # Ratchet history: 30 -> 33 (added pii_hasher + rfm_segmenter unit tests). See #342.
-fail_under = 33
+# NOTE: the active fail_under for this [report] section is defined once, at the
+# end of the section (the combined unit+integration floor from #474). A second
+# fail_under here made the whole .coveragerc unparseable ("option 'fail_under'
+# ... already exists"), which broke Backend CI at the coverage step.
 # Ratchet history: 30 -> 33 (pii_hasher + rfm_segmenter) -> 34 (ab_power_analysis
 # + distributed_dedupe) -> 34.8 (ai_reports + creative_scoring + churn_prevention)
 # -> 35.4 (audience_lifecycle + predictive_budget) -> 36.0 (cross_platform_optimizer

@@ -1,8 +1,10 @@
 /**
  * NotFound (404) Page Tests
  *
- * Tests for the 404 page rendering, navigation links,
- * and go-back functionality.
+ * The 404 page was redesigned as a trust-engine "instrument readout" via the
+ * shared ErrorScreen (commit c82640a5). These tests assert the shipped UI:
+ * the readout numeral, headline, go-back / back-to-home actions, and the
+ * helpful-links nav.
  */
 
 import { describe, it, expect, vi } from 'vitest';
@@ -16,6 +18,8 @@ const mockNavigate = vi.fn();
 
 vi.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
+  // The redesigned page reads the requested path from useLocation().
+  useLocation: () => ({ pathname: '/does-not-exist' }),
   Link: ({ children, to, ...props }: any) => (
     <a href={to} {...props}>
       {children}
@@ -27,11 +31,6 @@ vi.mock('@/components/common/SEO', () => ({
   SEO: () => null,
 }));
 
-vi.mock('@heroicons/react/24/outline', () => ({
-  ArrowLeftIcon: (props: any) => <svg data-testid="arrow-left-icon" {...props} />,
-  HomeIcon: (props: any) => <svg data-testid="home-icon" {...props} />,
-}));
-
 import NotFound from './NotFound';
 
 // ---------------------------------------------------------------------------
@@ -39,16 +38,24 @@ import NotFound from './NotFound';
 // ---------------------------------------------------------------------------
 
 describe('NotFound', () => {
-  it('renders the 404 text', () => {
+  it('renders the 404 readout numeral', () => {
     render(<NotFound />);
 
     expect(screen.getByText('404')).toBeInTheDocument();
   });
 
-  it('renders the "Page Not Found" heading', () => {
+  it('marks the decorative 404 numeral as aria-hidden', () => {
     render(<NotFound />);
 
-    expect(screen.getByRole('heading', { name: /page not found/i })).toBeInTheDocument();
+    expect(screen.getByText('404')).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  it('renders the "No signal at this address" heading', () => {
+    render(<NotFound />);
+
+    expect(
+      screen.getByRole('heading', { name: /no signal at this address/i })
+    ).toBeInTheDocument();
   });
 
   it('renders a descriptive message', () => {
@@ -59,52 +66,47 @@ describe('NotFound', () => {
     ).toBeInTheDocument();
   });
 
-  it('renders a "Go Back" button', () => {
+  it('surfaces the requested path in the diagnostics', () => {
     render(<NotFound />);
 
-    expect(screen.getByText('Go Back')).toBeInTheDocument();
+    expect(screen.getByText('/does-not-exist')).toBeInTheDocument();
   });
 
-  it('calls navigate(-1) when "Go Back" is clicked', () => {
+  it('renders a "Go back" button that calls navigate(-1)', () => {
     render(<NotFound />);
 
-    fireEvent.click(screen.getByText('Go Back'));
+    const goBack = screen.getByRole('button', { name: /go back/i });
+    expect(goBack).toBeInTheDocument();
+
+    fireEvent.click(goBack);
     expect(mockNavigate).toHaveBeenCalledWith(-1);
   });
 
-  it('renders a "Back to Home" link pointing to "/"', () => {
+  it('renders a "Back to home" link pointing to "/"', () => {
     render(<NotFound />);
 
-    const homeLink = screen.getByText('Back to Home');
-    expect(homeLink.closest('a')).toHaveAttribute('href', '/');
+    const homeLink = screen.getByRole('link', { name: /back to home/i });
+    expect(homeLink).toHaveAttribute('href', '/');
   });
 
-  it('renders helpful quick links section', () => {
+  it('renders the helpful-links nav', () => {
     render(<NotFound />);
 
-    expect(screen.getByText('Looking for something specific?')).toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: /helpful links/i })).toBeInTheDocument();
   });
 
   it('renders links to Dashboard, Features, Pricing, and Contact', () => {
     render(<NotFound />);
 
-    const dashboardLink = screen.getByText('Dashboard');
-    expect(dashboardLink.closest('a')).toHaveAttribute('href', '/dashboard');
-
-    const featuresLink = screen.getByText('Features');
-    expect(featuresLink.closest('a')).toHaveAttribute('href', '/features');
-
-    const pricingLink = screen.getByText('Pricing');
-    expect(pricingLink.closest('a')).toHaveAttribute('href', '/pricing');
-
-    const contactLink = screen.getByText('Contact');
-    expect(contactLink.closest('a')).toHaveAttribute('href', '/contact');
-  });
-
-  it('marks 404 text as aria-hidden for accessibility', () => {
-    render(<NotFound />);
-
-    const decorative404 = screen.getByText('404');
-    expect(decorative404).toHaveAttribute('aria-hidden', 'true');
+    expect(screen.getByRole('link', { name: 'Dashboard' })).toHaveAttribute(
+      'href',
+      '/dashboard'
+    );
+    expect(screen.getByRole('link', { name: 'Features' })).toHaveAttribute(
+      'href',
+      '/features'
+    );
+    expect(screen.getByRole('link', { name: 'Pricing' })).toHaveAttribute('href', '/pricing');
+    expect(screen.getByRole('link', { name: 'Contact' })).toHaveAttribute('href', '/contact');
   });
 });
