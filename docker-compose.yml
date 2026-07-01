@@ -88,6 +88,10 @@ services:
       - DATABASE_URL_SYNC=postgresql://${POSTGRES_USER:?}:${POSTGRES_PASSWORD:?}@db:5432/${POSTGRES_DB:-stratum_ai}
       - REDIS_URL=redis://:${REDIS_PASSWORD:?REDIS_PASSWORD must be set}@redis:6379/0
       - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:?REDIS_PASSWORD must be set}@redis:6379/1
+      # Without this the API-side Celery producer falls back to the
+      # localhost default for the result backend, exhausts its reconnect
+      # budget, and permanently fails every subsequent task dispatch.
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:?REDIS_PASSWORD must be set}@redis:6379/2
       - ML_PROVIDER=${ML_PROVIDER:-local}
       - ML_MODELS_PATH=/app/ml_service/models
       - ML_AUTO_TRAIN=${ML_AUTO_TRAIN:-true}
