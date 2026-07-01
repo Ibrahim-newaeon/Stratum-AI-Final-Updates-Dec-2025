@@ -71,10 +71,7 @@ class TestBlockStatusMapping:
             mode=EnforcementMode.SOFT_BLOCK,
             requires_confirmation=True,
         )
-        assert (
-            mod._enforcement_block_status(res)
-            == ActionStatus.PENDING_APPROVAL.value
-        )
+        assert mod._enforcement_block_status(res) == ActionStatus.PENDING_APPROVAL.value
 
 
 class TestEnforceBeforeExecute:
@@ -86,9 +83,7 @@ class TestEnforceBeforeExecute:
         )
 
         action_details = {"amount": 50, "metrics": {"roas": 0.4}}
-        out = await mod.enforce_before_execute(
-            "SESSION", _FakeAction(), action_details
-        )
+        out = await mod.enforce_before_execute("SESSION", _FakeAction(), action_details)
 
         assert out.allowed is True
         assert captured["tenant_id"] == 7

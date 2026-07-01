@@ -2,7 +2,7 @@
 # Stratum AI - Autopilot Endpoint Integration Tests
 # =============================================================================
 """Integration tests for the tenant-scoped autopilot API under
-``/api/v1/autopilot/tenant/{tenant_id}/autopilot/...``: status, action queue
+``/api/v1/tenant/{tenant_id}/autopilot/...``: status, action queue
 listing, and the action/outcome summaries. All routes enforce a path-tenant /
 token match.
 """
@@ -14,7 +14,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
 
 def _base(tenant_id: int) -> str:
-    return f"/api/v1/autopilot/tenant/{tenant_id}/autopilot"
+    return f"/api/v1/tenant/{tenant_id}/autopilot"
 
 
 class TestStatus:
