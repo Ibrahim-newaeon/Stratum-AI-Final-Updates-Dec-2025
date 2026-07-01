@@ -19,7 +19,10 @@ from app.models import AuditAction, AuditLog
 logger = get_task_logger(__name__)
 
 
-@shared_task
+# Explicit name: this module was split out of the old app/workers/tasks.py;
+# without it the auto-generated name gains the submodule segment and the
+# beat schedule's task reference silently dispatches to nothing.
+@shared_task(name="app.workers.tasks.process_audit_log_queue")
 def process_audit_log_queue():
     """
     Process queued audit log entries from Redis.

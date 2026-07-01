@@ -110,7 +110,10 @@ def evaluate_rules(self, tenant_id: int, rule_id: int):
         return {"matches": matches, "executions": executions}
 
 
-@shared_task
+# Explicit name: this module was split out of the old app/workers/tasks.py;
+# without it the auto-generated name gains the submodule segment and the
+# beat schedule's task reference silently dispatches to nothing.
+@shared_task(name="app.workers.tasks.evaluate_all_rules")
 @with_distributed_lock(timeout=900)  # 15 minute lock timeout
 def evaluate_all_rules():
     """

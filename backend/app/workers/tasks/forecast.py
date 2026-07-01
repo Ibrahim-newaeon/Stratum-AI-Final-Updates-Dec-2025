@@ -61,7 +61,10 @@ def generate_forecast(tenant_id: int, campaign_ids: Optional[list[int]] = None):
     return {"forecasts_generated": len(forecasts)}
 
 
-@shared_task
+# Explicit name: this module was split out of the old app/workers/tasks.py;
+# without it the auto-generated name gains the submodule segment and the
+# beat schedule's task reference silently dispatches to nothing.
+@shared_task(name="app.workers.tasks.generate_daily_forecasts")
 @with_distributed_lock(timeout=1800)
 def generate_daily_forecasts():
     """

@@ -19,7 +19,10 @@ from app.workers.locks import with_distributed_lock
 logger = get_task_logger(__name__)
 
 
-@shared_task
+# Explicit name: this module was split out of the old app/workers/tasks.py;
+# without it the auto-generated name gains the submodule segment and the
+# beat schedule's task reference silently dispatches to nothing.
+@shared_task(name="app.workers.tasks.check_pipeline_health")
 @with_distributed_lock(timeout=600)
 def check_pipeline_health():
     """

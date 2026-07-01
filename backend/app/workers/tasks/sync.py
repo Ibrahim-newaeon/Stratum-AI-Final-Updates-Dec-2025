@@ -187,7 +187,10 @@ def sync_platform_campaigns(self, tenant_id: int, platform: str):
     }
 
 
-@shared_task
+# Explicit name: this module was split out of the old app/workers/tasks.py;
+# without it the auto-generated name gains the submodule segment and the
+# beat schedule's task reference silently dispatches to nothing.
+@shared_task(name="app.workers.tasks.sync_all_campaigns")
 @with_distributed_lock(timeout=3600)  # 1 hour lock timeout
 def sync_all_campaigns():
     """
