@@ -5,6 +5,7 @@ import { AutopilotPanel } from './AutopilotPanel';
 // Mock autopilot API
 const mockRefetch = vi.fn();
 const mockApproveMutate = vi.fn();
+const mockConfirmMutate = vi.fn();
 const mockDismissMutate = vi.fn();
 const mockApproveAllMutate = vi.fn();
 
@@ -12,6 +13,7 @@ vi.mock('@/api/autopilot', () => ({
   useAutopilotStatus: vi.fn(),
   useAutopilotActions: vi.fn(),
   useApproveAction: vi.fn(),
+  useConfirmAction: vi.fn(),
   useDismissAction: vi.fn(),
   useApproveAllActions: vi.fn(),
   getActionTypeLabel: (type: string) => {
@@ -25,6 +27,7 @@ vi.mock('@/api/autopilot', () => ({
   getActionStatusLabel: (status: string) => {
     const labels: Record<string, string> = {
       queued: 'Queued',
+      pending_approval: 'Needs Confirmation',
       approved: 'Approved',
       applied: 'Applied',
       failed: 'Failed',
@@ -46,6 +49,7 @@ import {
   useAutopilotStatus,
   useAutopilotActions,
   useApproveAction,
+  useConfirmAction,
   useDismissAction,
   useApproveAllActions,
 } from '@/api/autopilot';
@@ -54,6 +58,7 @@ import { useAutopilotLevel } from '@/stores/featureFlagsStore';
 const mockUseAutopilotStatus = useAutopilotStatus as ReturnType<typeof vi.fn>;
 const mockUseAutopilotActions = useAutopilotActions as ReturnType<typeof vi.fn>;
 const mockUseApproveAction = useApproveAction as ReturnType<typeof vi.fn>;
+const mockUseConfirmAction = useConfirmAction as ReturnType<typeof vi.fn>;
 const mockUseDismissAction = useDismissAction as ReturnType<typeof vi.fn>;
 const mockUseApproveAllActions = useApproveAllActions as ReturnType<typeof vi.fn>;
 const mockUseAutopilotLevel = useAutopilotLevel as ReturnType<typeof vi.fn>;
@@ -72,6 +77,8 @@ const sampleActions = [
     approved_at: null,
     applied_at: null,
     error: null,
+    requires_confirmation: false,
+    confirmation_token: null,
   },
   {
     id: 'act-2',
@@ -86,6 +93,8 @@ const sampleActions = [
     approved_at: '2025-12-14T09:00:00Z',
     applied_at: '2025-12-14T09:05:00Z',
     error: null,
+    requires_confirmation: false,
+    confirmation_token: null,
   },
 ];
 
@@ -120,6 +129,7 @@ function setupMocks(overrides: {
     refetch: mockRefetch,
   });
   mockUseApproveAction.mockReturnValue({ mutate: mockApproveMutate, isPending: false });
+  mockUseConfirmAction.mockReturnValue({ mutate: mockConfirmMutate, isPending: false });
   mockUseDismissAction.mockReturnValue({ mutate: mockDismissMutate, isPending: false });
   mockUseApproveAllActions.mockReturnValue({ mutate: mockApproveAllMutate, isPending: false });
 }
@@ -185,6 +195,32 @@ describe('AutopilotPanel', () => {
     render(<AutopilotPanel tenantId={1} />);
     fireEvent.click(screen.getByText('Dismiss'));
     expect(mockDismissMutate).toHaveBeenCalledWith('act-1');
+  });
+
+  it('renders Confirm & Execute for soft-blocked actions and calls confirm mutation', () => {
+    const softBlocked = {
+      id: 'act-3',
+      action_type: 'increase_budget',
+      entity_type: 'campaign',
+      entity_id: 'camp-3',
+      entity_name: 'Blocked Campaign',
+      platform: 'meta',
+      status: 'pending_approval' as const,
+      action_json: { amount: 50, budget: 500 },
+      created_at: '2025-12-15T10:00:00Z',
+      approved_at: '2025-12-15T10:05:00Z',
+      applied_at: null,
+      error: 'Enforcement (soft_block): Budget $500.00 exceeds max $100.00',
+      requires_confirmation: true,
+      confirmation_token: 'tok-123',
+    };
+    setupMocks({ actions: [softBlocked] });
+    render(<AutopilotPanel tenantId={1} />);
+
+    const confirmButton = screen.getByText('Confirm & Execute');
+    expect(confirmButton).toBeInTheDocument();
+    fireEvent.click(confirmButton);
+    expect(mockConfirmMutate).toHaveBeenCalledWith({ actionId: 'act-3' });
   });
 
   it('shows Approve All button with correct count', () => {

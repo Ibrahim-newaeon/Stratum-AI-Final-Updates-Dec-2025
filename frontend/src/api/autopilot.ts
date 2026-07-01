@@ -14,7 +14,13 @@ import { apiClient } from './client';
 // Types
 // =============================================================================
 
-export type ActionStatus = 'queued' | 'approved' | 'applied' | 'failed' | 'dismissed';
+export type ActionStatus =
+  | 'queued'
+  | 'pending_approval'
+  | 'approved'
+  | 'applied'
+  | 'failed'
+  | 'dismissed';
 
 export type ActionType =
   | 'budget_increase'
@@ -44,6 +50,10 @@ export interface AutopilotAction {
   approved_at: string | null;
   applied_at: string | null;
   error: string | null;
+  /** True when the enforcement gate soft-blocked this action and an
+   *  operator confirmation is required to execute it. */
+  requires_confirmation: boolean;
+  confirmation_token: string | null;
 }
 
 export interface AutopilotStatus {
@@ -258,6 +268,40 @@ export function useApproveAction(tenantId: number) {
 }
 
 /**
+ * Confirm a soft-blocked action (enforcement override) and execute it.
+ *
+ * The backend consumes the action's stored confirmation token, audit-logs
+ * the override, and dispatches execution. Hard-blocked actions cannot be
+ * confirmed.
+ */
+export function useConfirmAction(tenantId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      actionId,
+      overrideReason,
+    }: {
+      actionId: string;
+      overrideReason?: string;
+    }) => {
+      const response = await apiClient.post<{
+        data: { action: AutopilotAction; message: string };
+      }>(
+        `/tenant/${tenantId}/autopilot/actions/${actionId}/confirm`,
+        overrideReason ? { override_reason: overrideReason } : undefined
+      );
+      return response.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['autopilot-actions', tenantId] });
+      queryClient.invalidateQueries({ queryKey: ['autopilot-status', tenantId] });
+      queryClient.invalidateQueries({ queryKey: ['autopilot-summary', tenantId] });
+    },
+  });
+}
+
+/**
  * Approve multiple actions at once.
  */
 export function useApproveAllActions(tenantId: number) {
@@ -328,6 +372,7 @@ export function getActionTypeLabel(type: ActionType): string {
 export function getActionStatusColor(status: ActionStatus): string {
   const colors: Record<ActionStatus, string> = {
     queued: 'yellow',
+    pending_approval: 'orange',
     approved: 'blue',
     applied: 'green',
     failed: 'red',
@@ -342,6 +387,7 @@ export function getActionStatusColor(status: ActionStatus): string {
 export function getActionStatusLabel(status: ActionStatus): string {
   const labels: Record<ActionStatus, string> = {
     queued: 'Pending Approval',
+    pending_approval: 'Needs Confirmation',
     approved: 'Approved',
     applied: 'Applied',
     failed: 'Failed',

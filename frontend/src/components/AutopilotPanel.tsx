@@ -12,6 +12,7 @@ import {
   useAutopilotStatus,
   useAutopilotActions,
   useApproveAction,
+  useConfirmAction,
   useDismissAction,
   useApproveAllActions,
   AutopilotAction,
@@ -34,6 +35,7 @@ interface AutopilotPanelProps {
 interface ActionRowProps {
   action: AutopilotAction
   onApprove: (id: string) => void
+  onConfirm: (id: string) => void
   onDismiss: (id: string) => void
   isProcessing: boolean
 }
@@ -45,6 +47,7 @@ interface ActionRowProps {
 const StatusBadge: React.FC<{ status: ActionStatus }> = ({ status }) => {
   const colorClasses: Record<ActionStatus, string> = {
     queued: 'bg-amber-500/15 text-amber-700 dark:text-amber-400',
+    pending_approval: 'bg-orange-500/15 text-orange-700 dark:text-orange-400',
     approved: 'bg-blue-500/15 text-blue-700 dark:text-blue-400',
     applied: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400',
     failed: 'bg-red-500/15 text-red-700 dark:text-red-400',
@@ -64,6 +67,7 @@ const StatusBadge: React.FC<{ status: ActionStatus }> = ({ status }) => {
 const ActionRow: React.FC<ActionRowProps> = ({
   action,
   onApprove,
+  onConfirm,
   onDismiss,
   isProcessing,
 }) => {
@@ -108,6 +112,27 @@ const ActionRow: React.FC<ActionRowProps> = ({
                 disabled={isProcessing}
                 className="px-3 py-1 text-sm font-medium text-foreground bg-muted rounded hover:bg-muted/80 disabled:opacity-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 aria-label={`Dismiss action: ${getActionTypeLabel(action.action_type)}`}
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
+
+          {action.status === 'pending_approval' && action.requires_confirmation && (
+            <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
+              <button
+                onClick={() => onConfirm(action.id)}
+                disabled={isProcessing}
+                className="px-3 py-1 text-sm font-medium text-white bg-orange-600 rounded hover:bg-orange-700 disabled:opacity-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
+                aria-label={`Confirm and execute soft-blocked action: ${getActionTypeLabel(action.action_type)}`}
+              >
+                Confirm &amp; Execute
+              </button>
+              <button
+                onClick={() => onDismiss(action.id)}
+                disabled={isProcessing}
+                className="px-3 py-1 text-sm font-medium text-foreground bg-muted rounded hover:bg-muted/80 disabled:opacity-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                aria-label={`Dismiss soft-blocked action: ${getActionTypeLabel(action.action_type)}`}
               >
                 Dismiss
               </button>
@@ -226,10 +251,15 @@ export const AutopilotPanel: React.FC<AutopilotPanelProps> = ({
   )
 
   const approveAction = useApproveAction(tenantId)
+  const confirmAction = useConfirmAction(tenantId)
   const dismissAction = useDismissAction(tenantId)
   const approveAll = useApproveAllActions(tenantId)
 
-  const isProcessing = approveAction.isPending || dismissAction.isPending || approveAll.isPending
+  const isProcessing =
+    approveAction.isPending ||
+    confirmAction.isPending ||
+    dismissAction.isPending ||
+    approveAll.isPending
 
   if (autopilotLevel === 0) {
     return (
@@ -302,7 +332,7 @@ export const AutopilotPanel: React.FC<AutopilotPanelProps> = ({
         {/* Filters */}
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <span className="text-sm text-muted-foreground">Filter:</span>
-          {(['', 'queued', 'approved', 'applied', 'failed', 'dismissed'] as const).map((filter) => (
+          {(['', 'queued', 'pending_approval', 'approved', 'applied', 'failed', 'dismissed'] as const).map((filter) => (
             <button
               key={filter}
               onClick={() => setStatusFilter(filter)}
@@ -349,6 +379,7 @@ export const AutopilotPanel: React.FC<AutopilotPanelProps> = ({
               key={action.id}
               action={action}
               onApprove={(id) => approveAction.mutate(id)}
+              onConfirm={(id) => confirmAction.mutate({ actionId: id })}
               onDismiss={(id) => dismissAction.mutate(id)}
               isProcessing={isProcessing}
             />
