@@ -258,6 +258,16 @@ class FactActionsQueue(Base):
     error = Column(Text, nullable=True)
     platform_response = Column(Text, nullable=True)  # JSON
 
+    # Soft-block confirmation (execution-path enforcement gate).
+    # Token minted by the enforcer when it soft-blocks; the operator
+    # confirms via POST /actions/{id}/confirm, which stamps the override
+    # so the gate lets the action through exactly once.
+    confirmation_token = Column(String(64), nullable=True)
+    enforcement_confirmed_at = Column(DateTime(timezone=True), nullable=True)
+    enforcement_confirmed_by_user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+
     # Relationships - use foreign_keys to resolve ambiguity
     tenant = relationship(
         "Tenant", foreign_keys=[tenant_id], back_populates="actions_queue"

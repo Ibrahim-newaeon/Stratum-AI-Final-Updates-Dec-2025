@@ -309,6 +309,11 @@ async def confirm_soft_blocked_action(
     if not success:
         raise HTTPException(status_code=400, detail=error)
 
+    # get_async_session does not auto-commit; without this the token
+    # deletion and override audit log evaporate when the session closes,
+    # letting the same token be "confirmed" repeatedly.
+    await db.commit()
+
     return APIResponse(
         success=True,
         data={

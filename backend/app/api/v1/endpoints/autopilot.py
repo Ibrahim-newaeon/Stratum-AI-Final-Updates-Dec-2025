@@ -9,7 +9,7 @@ API endpoints for Autopilot features:
 """
 
 import logging
-from datetime import date
+from datetime import date, datetime, timezone
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
@@ -109,6 +109,8 @@ class ActionResponse(BaseModel):
     approved_at: Optional[str]
     applied_at: Optional[str]
     error: Optional[str]
+    requires_confirmation: bool = False
+    confirmation_token: Optional[str] = None
 
 
 # =============================================================================
@@ -136,6 +138,11 @@ def action_to_response(action) -> ActionResponse:
         approved_at=action.approved_at.isoformat() if action.approved_at else None,
         applied_at=action.applied_at.isoformat() if action.applied_at else None,
         error=action.error,
+        requires_confirmation=bool(
+            action.status == ActionStatus.PENDING_APPROVAL.value
+            and getattr(action, "confirmation_token", None)
+        ),
+        confirmation_token=getattr(action, "confirmation_token", None),
     )
 
 
@@ -370,6 +377,119 @@ async def approve_action(
         data={
             "action": action_to_response(action).dict(),
             "message": "Action approved for execution",
+        },
+    )
+
+
+class ConfirmActionRequest(BaseModel):
+    """Request to confirm a soft-blocked action."""
+
+    override_reason: Optional[str] = Field(
+        None, description="Why the operator is overriding the soft-block"
+    )
+
+
+@router.post("/actions/{action_id}/confirm", response_model=APIResponse[Dict[str, Any]])
+async def confirm_soft_blocked_action(
+    request: Request,
+    tenant_id: int,
+    action_id: str,
+    body: Optional[ConfirmActionRequest] = None,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Confirm a soft-blocked action and execute it.
+
+    When the execution-path enforcement gate soft-blocks an approved
+    action, it returns the action to PENDING_APPROVAL with a one-time
+    confirmation token. This endpoint consumes that token (audit-logging
+    the override), stamps the action as operator-confirmed, re-approves
+    it, and dispatches execution. The gate lets the confirmed action
+    through; hard-blocks remain absolute.
+
+    If the stored token has expired, the action is re-dispatched so the
+    gate re-evaluates and mints a fresh token.
+    """
+    if getattr(request.state, "tenant_id", None) != tenant_id:
+        raise HTTPException(status_code=403, detail="Access denied to this tenant")
+
+    user_id = getattr(request.state, "user_id", None)
+    if not user_id:
+        raise HTTPException(status_code=401, detail="User authentication required")
+
+    try:
+        uuid_id = UUID(action_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid action ID format")
+
+    service = AutopilotService(db)
+    action = await service.get_action_by_id(uuid_id, tenant_id)
+    if not action:
+        raise HTTPException(status_code=404, detail="Action not found")
+
+    if action.status != ActionStatus.PENDING_APPROVAL.value:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Action status is {action.status}; only soft-blocked "
+            "(pending_approval) actions can be confirmed",
+        )
+
+    if not action.confirmation_token:
+        raise HTTPException(
+            status_code=409,
+            detail="Action has no pending confirmation token",
+        )
+
+    from app.autopilot.enforcer import AutopilotEnforcer
+
+    enforcer = AutopilotEnforcer(db)
+    success, error = await enforcer.confirm_action(
+        tenant_id=tenant_id,
+        confirmation_token=action.confirmation_token,
+        user_id=user_id,
+        override_reason=body.override_reason if body else None,
+    )
+
+    now = datetime.now(timezone.utc)
+
+    if not success:
+        # Expired/invalid token: clear it and re-dispatch so the gate
+        # re-evaluates and mints a fresh token for the operator.
+        action.confirmation_token = None
+        action.status = ActionStatus.APPROVED.value
+        action.error = None
+        await db.commit()
+        _dispatch_single_action(str(action.id), user_id)
+        return APIResponse(
+            success=False,
+            data={
+                "action": action_to_response(action).dict(),
+                "message": (
+                    f"Confirmation failed ({error}). The action was "
+                    "re-submitted for enforcement evaluation; a fresh "
+                    "confirmation token will be issued if it is "
+                    "soft-blocked again."
+                ),
+            },
+        )
+
+    action.enforcement_confirmed_at = now
+    action.enforcement_confirmed_by_user_id = user_id
+    action.confirmation_token = None
+    action.status = ActionStatus.APPROVED.value
+    action.approved_by_user_id = action.approved_by_user_id or user_id
+    action.approved_at = action.approved_at or now
+    action.error = None
+    await db.commit()
+    await db.refresh(action)
+
+    # Dispatch execution now that the override is committed.
+    _dispatch_single_action(str(action.id), user_id)
+
+    return APIResponse(
+        success=True,
+        data={
+            "action": action_to_response(action).dict(),
+            "message": "Override confirmed - action dispatched for execution",
         },
     )
 

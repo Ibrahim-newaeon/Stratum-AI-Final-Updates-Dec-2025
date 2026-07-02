@@ -32,6 +32,8 @@ class _FakeAction:
     entity_type = "campaign"
     entity_id = "camp-123"
     before_value = json.dumps({"daily_budget": 100})
+    enforcement_confirmed_at = None
+    enforcement_confirmed_by_user_id = None
 
 
 @pytest.fixture
@@ -72,6 +74,44 @@ class TestBlockStatusMapping:
             requires_confirmation=True,
         )
         assert mod._enforcement_block_status(res) == ActionStatus.PENDING_APPROVAL.value
+
+
+class TestConfirmedSoftBlockOverride:
+    """The operator-confirmation escape hatch for soft-blocked actions."""
+
+    def _soft_block(self):
+        return EnforcementResult(
+            allowed=False,
+            mode=EnforcementMode.SOFT_BLOCK,
+            requires_confirmation=True,
+            confirmation_token="tok-abc",
+        )
+
+    def _hard_block(self):
+        return EnforcementResult(
+            allowed=False,
+            mode=EnforcementMode.HARD_BLOCK,
+            requires_confirmation=False,
+        )
+
+    def test_unconfirmed_soft_block_stays_blocked(self):
+        action = _FakeAction()
+        assert not mod._confirmed_soft_block_override(action, self._soft_block())
+
+    def test_confirmed_soft_block_may_proceed(self):
+        from datetime import datetime, timezone
+
+        action = _FakeAction()
+        action.enforcement_confirmed_at = datetime.now(timezone.utc)
+        action.enforcement_confirmed_by_user_id = 42
+        assert mod._confirmed_soft_block_override(action, self._soft_block())
+
+    def test_confirmation_never_bypasses_hard_block(self):
+        from datetime import datetime, timezone
+
+        action = _FakeAction()
+        action.enforcement_confirmed_at = datetime.now(timezone.utc)
+        assert not mod._confirmed_soft_block_override(action, self._hard_block())
 
 
 class TestEnforceBeforeExecute:
