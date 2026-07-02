@@ -28,6 +28,8 @@ import {
 } from '@/api/hooks'
 import { useTenantOverview, useTenantRecommendations } from '@/api/hooks'
 import { useApproveAction, useDismissAction, useQueueAction } from '@/api/autopilot'
+import { TrustGatePanel } from '@/components/trust/TrustGatePanel'
+import { useTenantId } from '@/stores/tenantStore'
 import { useToast } from '@/components/ui/use-toast'
 import { exportDashboardPDF } from '@/utils/pdfExport'
 import { DocumentArrowDownIcon, CalendarIcon } from '@heroicons/react/24/outline'
@@ -37,7 +39,11 @@ export default function TenantOverview() {
   const { tenantId } = useParams<{ tenantId: string }>()
   const navigate = useNavigate()
   const { toast } = useToast()
-  const tid = parseInt(tenantId || '1', 10)
+  const sessionTenantId = useTenantId()
+  // /dashboard/trust mounts this view with no :tenantId URL segment —
+  // fall back to the session tenant so tenant-scoped calls hit the right
+  // tenant instead of the hardcoded 1.
+  const tid = tenantId ? parseInt(tenantId, 10) : (sessionTenantId ?? 1)
 
   // Date range state
   const [dateRange, setDateRange] = useState({
@@ -414,6 +420,11 @@ export default function TenantOverview() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left column - EMQ Details */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Trust Gate — live engine posture + "would this run?" preview */}
+          <div data-tour="trust-gate">
+            <TrustGatePanel tenantId={tid} />
+          </div>
+
           {/* EMQ Score Card */}
           <EmqScoreCard
             score={emqScore}
