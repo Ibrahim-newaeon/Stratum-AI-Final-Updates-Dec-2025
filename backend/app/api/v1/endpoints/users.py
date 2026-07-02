@@ -253,14 +253,6 @@ async def invite_user(
             detail="Only admins can invite users",
         )
 
-    # Tier-limit gate — raises 402 with structured upgrade payload
-    # when the tenant's max_users ceiling is hit (see services/
-    # tenant/limits.py + frontend UpgradePromptProvider listener).
-    from app.services.tenant.limits import LimitType, check_tenant_limit
-
-    if tenant_id:
-        await check_tenant_limit(db, tenant_id, LimitType.USERS, raise_on_exceeded=True)
-
     # Check if email already exists
     email_hash = hash_pii_for_lookup(invite_data.email.lower())
     result = await db.execute(
@@ -269,11 +261,22 @@ async def invite_user(
             User.email_hash == email_hash,
         )
     )
-    if result.scalar_one_or_none():
+    existing_user = result.scalar_one_or_none()
+    if existing_user and existing_user.is_verified:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User with this email already exists",
         )
+
+    # Tier-limit gate — raises 402 with structured upgrade payload
+    # when the tenant's max_users ceiling is hit (see services/
+    # tenant/limits.py + frontend UpgradePromptProvider listener).
+    # Skipped when refreshing a pending invite: that user already
+    # counts against the ceiling, and a lost email must be resendable.
+    from app.services.tenant.limits import LimitType, check_tenant_limit
+
+    if tenant_id and existing_user is None:
+        await check_tenant_limit(db, tenant_id, LimitType.USERS, raise_on_exceeded=True)
 
     # Map role string to enum
     role_map = {
@@ -288,22 +291,61 @@ async def invite_user(
     # Create user with temporary password (will need to set password on first login)
     temp_password = secrets.token_urlsafe(16)
 
-    user = User(
-        tenant_id=tenant_id,
-        email=encrypt_pii(invite_data.email.lower()),
-        email_hash=email_hash,
-        password_hash=get_password_hash(temp_password),
-        full_name=encrypt_pii(invite_data.full_name) if invite_data.full_name else None,
-        role=user_role,
-        is_active=True,
-        is_verified=False,  # Needs to verify email
-    )
+    if existing_user:
+        # Invited before but never accepted — refresh the pending invite
+        # (new token + email) instead of dead-ending on "already exists".
+        user = existing_user
+        user.role = user_role
+        if invite_data.full_name:
+            user.full_name = encrypt_pii(invite_data.full_name)
+    else:
+        user = User(
+            tenant_id=tenant_id,
+            email=encrypt_pii(invite_data.email.lower()),
+            email_hash=email_hash,
+            password_hash=get_password_hash(temp_password),
+            full_name=(
+                encrypt_pii(invite_data.full_name) if invite_data.full_name else None
+            ),
+            role=user_role,
+            is_active=True,
+            is_verified=False,  # Verified when the invite is accepted
+        )
+        db.add(user)
 
-    db.add(user)
-    await db.commit()
+    await db.flush()  # assign user.id; commit only after the token is stored
 
-    # Generate invite token for the invitation link
+    # Generate the invite token and persist it (hashed) in Redis so
+    # POST /auth/accept-invite can redeem it. Stored BEFORE the commit:
+    # if Redis is down we roll the user back rather than creating an
+    # account whose invitation link can never work.
     invite_token = secrets.token_urlsafe(32)
+
+    try:
+        import hashlib
+
+        from app.api.v1.endpoints.auth import (
+            INVITE_TOKEN_EXPIRY_SECONDS,
+            INVITE_TOKEN_PREFIX,
+            get_redis_client,
+        )
+
+        token_hash = hashlib.sha256(invite_token.encode()).hexdigest()
+        redis_client = await get_redis_client()
+        await redis_client.setex(
+            f"{INVITE_TOKEN_PREFIX}{token_hash}",
+            INVITE_TOKEN_EXPIRY_SECONDS,
+            str(user.id),
+        )
+        await redis_client.close()
+    except (ConnectionError, TimeoutError, OSError) as e:
+        logger.error("redis_store_invite_token_failed", error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to generate invitation link. Please try again.",
+        )
+
+    await db.commit()
 
     # Get inviter name and tenant name for the email
     inviter_name = "An administrator"

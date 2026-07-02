@@ -33,6 +33,7 @@ PUBLIC_ENDPOINTS = {
     "/api/v1/auth/refresh",
     "/api/v1/auth/forgot-password",
     "/api/v1/auth/reset-password",
+    "/api/v1/auth/accept-invite",
     "/api/v1/auth/verify-email",
     "/api/v1/auth/resend-verification",
     "/api/v1/auth/email/send-otp",
