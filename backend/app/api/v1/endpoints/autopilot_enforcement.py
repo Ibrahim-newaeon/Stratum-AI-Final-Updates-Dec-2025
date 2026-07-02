@@ -144,6 +144,11 @@ async def get_enforcement_settings(
     enforcer = AutopilotEnforcer(db)
     settings = await enforcer.get_settings(tenant_id)
 
+    # get_async_session does not auto-commit; get_settings lazily inserts
+    # the tenant's default settings row on first touch, which is otherwise
+    # rolled back on every GET until some other write path commits it.
+    await db.commit()
+
     return APIResponse(
         success=True,
         data={
@@ -272,6 +277,11 @@ async def check_enforcement(
         metrics=body.metrics,
     )
 
+    # get_async_session does not auto-commit; without this the soft-block
+    # confirmation token row evaporates (making /confirm always 400) and
+    # hard-block audit rows are lost, undercounting frequency rules.
+    await db.commit()
+
     return APIResponse(
         success=True,
         data=result.to_dict(),
@@ -352,6 +362,11 @@ async def toggle_kill_switch(
     )
 
     status = "enabled" if settings.enforcement_enabled else "disabled"
+
+    # get_async_session does not auto-commit; set_kill_switch commits the
+    # toggle itself (via update_settings) but its audit-log entry is only
+    # flushed afterwards and would be lost without this.
+    await db.commit()
 
     return APIResponse(
         success=True,

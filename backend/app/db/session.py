@@ -78,9 +78,10 @@ async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
     """
     FastAPI dependency for async database sessions.
 
-    Auto-commits on successful handler completion, rolls back on exception.
-    For multi-step operations requiring explicit transaction control, use
-    ``await session.begin()`` or ``await session.begin_nested()``.
+    Does NOT auto-commit. Rolls back on exception, closes on completion.
+    Any handler (or service it calls) that mutates the database MUST call
+    ``await session.commit()`` before returning, or the writes are silently
+    discarded when the session closes. ``flush()`` alone is not durable.
 
     Usage:
         @router.get("/items")

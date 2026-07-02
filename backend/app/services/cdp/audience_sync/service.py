@@ -157,7 +157,10 @@ class AudienceSyncService:
             sync_job.error_message = str(e)
             platform_audience.last_sync_status = SyncStatus.FAILED.value
             platform_audience.last_sync_error = str(e)
-            await self.db.flush()
+            # Commit (not just flush): the re-raise aborts the request and
+            # get_async_session rolls back, which would erase this failure
+            # record — sync history would show no trace of the attempt.
+            await self.db.commit()
             raise
 
         return platform_audience, sync_job
@@ -228,7 +231,10 @@ class AudienceSyncService:
             sync_job.error_message = str(e)
             platform_audience.last_sync_status = SyncStatus.FAILED.value
             platform_audience.last_sync_error = str(e)
-            await self.db.flush()
+            # Commit (not just flush): the re-raise aborts the request and
+            # get_async_session rolls back, which would erase this failure
+            # record — sync history would show no trace of the attempt.
+            await self.db.commit()
             raise
 
         return sync_job
