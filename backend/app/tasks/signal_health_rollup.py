@@ -195,6 +195,11 @@ def signal_health_rollup(
     import asyncio
 
     async def run_rollup():
+        from app.db.session import dispose_stale_async_pool
+
+        # Celery tasks run asyncio.run() per invocation; drop pool
+        # connections bound to a previous task's event loop first.
+        await dispose_stale_async_pool()
         async with async_session_factory() as db:
             try:
                 rollup_date = (
@@ -211,11 +216,16 @@ def signal_health_rollup(
                 if tenant_id:
                     tenant_ids = [tenant_id]
                 else:
-                    # Get all active tenants with platform connections
-                    from app.models.tenant import Tenant
+                    # All live tenants. (This previously imported the
+                    # nonexistent app.models.tenant module and filtered on
+                    # a nonexistent Tenant.is_active column — the
+                    # all-tenants path could never have run.)
+                    from app.models import Tenant
 
                     result = await db.execute(
-                        select(Tenant.id).where(Tenant.is_active == True)
+                        select(Tenant.id).where(
+                            Tenant.is_deleted == False  # noqa: E712
+                        )
                     )
                     tenant_ids = [row[0] for row in result.all()]
 
@@ -344,56 +354,52 @@ async def fetch_platform_metrics(
 
     For now, returns placeholder data if platform connection exists.
     """
-    # Check if tenant has this platform connected
-    from app.models.campaign_builder import TenantPlatformConnection
+    # Check if tenant has this platform connected. (This previously
+    # filtered on TenantPlatformConnection.is_connected and read
+    # last_sync_at / is_healthy — none of which exist on the model, so
+    # every rollup attempt died with AttributeError.)
+    from app.models.campaign_builder import ConnectionStatus, TenantPlatformConnection
 
     result = await db.execute(
         select(TenantPlatformConnection).where(
             and_(
                 TenantPlatformConnection.tenant_id == tenant_id,
                 TenantPlatformConnection.platform == platform,
-                TenantPlatformConnection.is_connected == True,
+                TenantPlatformConnection.status == ConnectionStatus.CONNECTED,
             )
         )
     )
-    connection = result.scalar_one_or_none()
+    connection = result.scalars().first()
 
     if not connection:
         return None
 
-    # Calculate freshness from last sync
+    is_healthy = connection.status == ConnectionStatus.CONNECTED and (
+        connection.token_expires_at is None
+        or connection.token_expires_at.replace(tzinfo=timezone.utc)
+        > datetime.now(timezone.utc)
+    )
+
+    # Freshness from the last token refresh (best available sync signal)
     freshness_minutes = None
-    if connection.last_sync_at:
-        delta = datetime.now(timezone.utc) - connection.last_sync_at.replace(
-            tzinfo=timezone.utc
-        )
+    last_activity = connection.last_refreshed_at or connection.connected_at
+    if last_activity:
+        delta = datetime.now(timezone.utc) - last_activity.replace(tzinfo=timezone.utc)
         freshness_minutes = int(delta.total_seconds() / 60)
 
     # Calculate EMQ score from connection data
     emq_score = 85.0  # Default healthy
-    if connection.is_healthy:
+    if is_healthy:
         # Adjust based on available connection metadata
         if freshness_minutes and freshness_minutes > 120:
             emq_score -= min(20, (freshness_minutes - 120) / 60 * 5)
-        if getattr(connection, "last_error", None):
-            emq_score -= 10
     else:
         emq_score = max(40, 65.0 - (freshness_minutes or 0) / 60 * 2)
 
-    # Calculate event loss from connection sync stats
-    event_loss_pct = 3.5  # Default low loss
-    total_events = getattr(connection, "total_events_sent", 0) or 0
-    matched_events = getattr(connection, "matched_events", 0) or 0
-    if total_events > 0:
-        event_loss_pct = round((1 - matched_events / total_events) * 100, 2)
-    elif not connection.is_healthy:
-        event_loss_pct = 15.0
-
-    # API error rate from connection status
-    api_error_rate = 0.5 if connection.is_healthy else 8.0
-    if getattr(connection, "error_count_24h", None) is not None:
-        total_requests = getattr(connection, "request_count_24h", 1) or 1
-        api_error_rate = round(connection.error_count_24h / total_requests * 100, 2)
+    # Event loss and API error rate: no per-connection counters exist on
+    # the model yet, so derive conservative defaults from token health.
+    event_loss_pct = 3.5 if is_healthy else 15.0
+    api_error_rate = 0.5 if is_healthy else 8.0
 
     return {
         "emq_score": round(emq_score, 1),

@@ -23,6 +23,11 @@ celery_app = Celery(
         # Without this the @shared_task defs are never registered, so approved
         # actions are never dispatched or executed.
         "app.tasks.apply_actions_queue",
+        # Trust Engine signal-health rollup — populates FactSignalHealthDaily,
+        # which feeds the trust gate, the dashboard trust layer, and the
+        # execution-path signal-health check. Same registration gap as the
+        # autopilot pipeline: without this the tasks were never registered.
+        "app.tasks.signal_health_rollup",
     ],
 )
 
@@ -151,6 +156,16 @@ celery_app.conf.beat_schedule = {
     "apply-approved-autopilot-actions": {
         "task": "tasks.schedule_apply_actions_queue",
         "schedule": crontab(minute="*/5"),
+        "options": {"queue": "default"},
+    },
+    # Daily signal-health rollup at 02:00 UTC — aggregates yesterday's
+    # platform metrics into FactSignalHealthDaily for every live tenant.
+    # This table is what the trust gate, the dashboard trust layer, and
+    # the autopilot execution-path health check all read; without the
+    # rollup they see permanent no_data.
+    "signal-health-daily-rollup": {
+        "task": "tasks.schedule_signal_health_rollup",
+        "schedule": crontab(hour=2, minute=0),
         "options": {"queue": "default"},
     },
 }

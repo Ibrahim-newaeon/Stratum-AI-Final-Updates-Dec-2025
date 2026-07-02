@@ -12,6 +12,7 @@ from datetime import date
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -312,3 +313,190 @@ async def get_trust_status(
         result["banners"].extend(attr_data["banners"])
 
     return APIResponse(success=True, data=result)
+
+
+# =============================================================================
+# Trust Gate — the real stratum/core decision engine
+# =============================================================================
+# The TrustGate/SignalHealthCalculator pair in app/stratum/core is the
+# documented Trust Engine (CLAUDE.md "Trust Engine Rules") but was never
+# reachable from the API. These endpoints adapt the tenant's rolled-up
+# FactSignalHealthDaily rows into the engine's SignalHealth model and expose
+# gate decisions, thresholds, and the derived autopilot mode.
+
+
+class TrustGateEvaluateRequest(BaseModel):
+    """Request to evaluate one automation action against the trust gate."""
+
+    action_type: str = Field(..., description="e.g. increase_budget, pause_campaign")
+    entity_type: str = Field("campaign", description="campaign, adset, or ad")
+    entity_id: str = Field(..., description="Platform entity ID")
+    platform: str = Field("meta", description="meta, google, tiktok, snapchat")
+    account_id: str = Field("", description="Platform ad account ID")
+    parameters: Dict[str, Any] = Field(default_factory=dict)
+
+
+async def _latest_health_rows(
+    db: AsyncSession, tenant_id: int, target_date: Optional[date]
+) -> List[FactSignalHealthDaily]:
+    """Fetch the tenant's platform health rows for the most recent rollup
+    date at or before ``target_date`` (default today)."""
+    upper = target_date or date.today()
+    latest = await db.execute(
+        select(func.max(FactSignalHealthDaily.date)).where(
+            FactSignalHealthDaily.tenant_id == tenant_id,
+            FactSignalHealthDaily.date <= upper,
+        )
+    )
+    as_of = latest.scalar_one_or_none()
+    if as_of is None:
+        return []
+
+    result = await db.execute(
+        select(FactSignalHealthDaily).where(
+            FactSignalHealthDaily.tenant_id == tenant_id,
+            FactSignalHealthDaily.date == as_of,
+        )
+    )
+    return list(result.scalars().all())
+
+
+def _signal_health_from_rows(rows: List[FactSignalHealthDaily]):
+    """Adapt rolled-up daily rows into the engine's SignalHealth model.
+
+    Uses the stratum SignalHealthCalculator so component weighting and
+    status thresholds live in ONE place. With no rows, returns a zeroed
+    critical SignalHealth — the safety default is to block automation on
+    unknown data quality, never to wave it through.
+    """
+    from datetime import datetime, timedelta, timezone
+
+    from app.stratum.core.signal_health import SignalHealthCalculator
+    from app.stratum.models import SignalHealth
+
+    if not rows:
+        return SignalHealth(
+            overall_score=0.0,
+            emq_score=0.0,
+            freshness_score=0.0,
+            variance_score=0.0,
+            anomaly_score=0.0,
+            status="critical",
+            issues=["No signal health data for this tenant — run the rollup"],
+        )
+
+    emq_scores = [
+        row.emq_score / 10.0 for row in rows if row.emq_score is not None
+    ]  # calculator expects the platform 0-10 EMQ scale
+
+    freshness_values = [
+        row.freshness_minutes for row in rows if row.freshness_minutes is not None
+    ]
+    last_data_received = (
+        datetime.now(timezone.utc) - timedelta(minutes=max(freshness_values))
+        if freshness_values
+        else None
+    )
+
+    calculator = SignalHealthCalculator()
+    return calculator.calculate(
+        emq_scores=emq_scores or None,
+        last_data_received=last_data_received,
+    )
+
+
+@router.get("/trust-gate", response_model=APIResponse[Dict[str, Any]])
+async def get_trust_gate_status(
+    request: Request,
+    tenant_id: int,
+    target_date: Optional[date] = Query(default=None, alias="date"),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Get the trust gate's current posture for this tenant.
+
+    Returns the composite signal health (engine-weighted), the configured
+    gate thresholds, the derived autopilot mode, and which automation
+    action types are currently allowed vs restricted.
+    """
+    if getattr(request.state, "tenant_id", None) != tenant_id:
+        raise HTTPException(status_code=403, detail="Access denied to this tenant")
+
+    from app.stratum.core.trust_gate import TrustGate, get_autopilot_mode
+
+    rows = await _latest_health_rows(db, tenant_id, target_date)
+    health = _signal_health_from_rows(rows)
+
+    gate = TrustGate()
+    allowed, restricted = gate.get_allowed_actions(health)
+    mode, mode_reason = get_autopilot_mode(health)
+
+    return APIResponse(
+        success=True,
+        data={
+            "data_available": bool(rows),
+            "as_of_date": rows[0].date.isoformat() if rows else None,
+            "signal_health": {
+                "score": health.overall_score,
+                "status": health.status,
+                "components": {
+                    "emq": health.emq_score,
+                    "freshness": health.freshness_score,
+                    "variance": health.variance_score,
+                    "anomaly": health.anomaly_score,
+                },
+                "issues": health.issues,
+            },
+            "autopilot_mode": mode,
+            "mode_reason": mode_reason,
+            "allowed_actions": sorted(allowed),
+            "restricted_actions": sorted(restricted),
+            "thresholds": gate.get_stats(),
+        },
+    )
+
+
+@router.post("/trust-gate/evaluate", response_model=APIResponse[Dict[str, Any]])
+async def evaluate_trust_gate(
+    request: Request,
+    tenant_id: int,
+    body: TrustGateEvaluateRequest,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Evaluate a proposed automation action against the trust gate.
+
+    Returns PASS / HOLD / BLOCK with the engine's reasoning — the same
+    decision contract the autopilot uses, exposed for the dashboard's
+    "would this run right now?" preview.
+    """
+    if getattr(request.state, "tenant_id", None) != tenant_id:
+        raise HTTPException(status_code=403, detail="Access denied to this tenant")
+
+    from app.stratum.core.trust_gate import TrustGate
+    from app.stratum.models import AutomationAction, Platform
+
+    try:
+        platform = Platform(body.platform)
+    except ValueError:
+        raise HTTPException(
+            status_code=400, detail=f"Unknown platform: {body.platform}"
+        )
+
+    rows = await _latest_health_rows(db, tenant_id, None)
+    health = _signal_health_from_rows(rows)
+
+    action = AutomationAction(
+        platform=platform,
+        account_id=body.account_id,
+        entity_type=body.entity_type,
+        entity_id=body.entity_id,
+        action_type=body.action_type,
+        parameters=body.parameters,
+    )
+
+    result = TrustGate().evaluate(health, action)
+    payload = result.to_dict()
+    payload["data_available"] = bool(rows)
+
+    return APIResponse(success=True, data=payload)

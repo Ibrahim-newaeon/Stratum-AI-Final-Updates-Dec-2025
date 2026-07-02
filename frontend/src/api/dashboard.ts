@@ -426,7 +426,7 @@ export const dashboardApi = {
     if (platform) params.platform = platform;
     if (date) params.date = date;
     const response = await apiClient.get<ApiResponse<AccountSignalHealthResponse>>(
-      `/trust-layer/tenant/${tenantId}/signal-health/by-account`,
+      `/trust/tenant/${tenantId}/signal-health/by-account`,
       { params }
     );
     return response.data.data;

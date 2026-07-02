@@ -200,6 +200,23 @@ async def get_tenant_session(
 
 
 # =============================================================================
+# Event-Loop Hygiene for Celery Tasks
+# =============================================================================
+async def dispose_stale_async_pool() -> None:
+    """Discard DB connections pooled under a previous task's event loop.
+
+    Celery tasks enter a fresh event loop via ``asyncio.run()``, but the
+    module-level async engine keeps pooled asyncpg connections bound to
+    the loop that created them. The second task to run in the same worker
+    process then fails with ``RuntimeError: ... got Future attached to a
+    different loop``. Call this at the START of every task coroutine that
+    uses the async engine. ``close=False`` discards the stale connections
+    without awaiting their close across loops.
+    """
+    await async_engine.dispose(close=False)
+
+
+# =============================================================================
 # Health Check
 # =============================================================================
 async def check_database_health() -> dict:
