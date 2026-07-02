@@ -7,7 +7,7 @@
  * - Combined trust status
  */
 
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { apiClient } from './client'
 
 // =============================================================================
@@ -81,6 +81,60 @@ export interface TrustStatusData {
   signal_health: SignalHealthData | null
   attribution_variance: AttributionVarianceData | null
   banners: TrustBanner[]
+}
+
+// --- Trust gate (the real engine, exposed via /trust-gate) ---
+
+export type GateDecision = 'pass' | 'hold' | 'block'
+export type AutopilotGateMode = 'normal' | 'limited' | 'cuts_only' | 'frozen'
+
+export interface GateSignalHealth {
+  score: number
+  status: string
+  components: Record<string, number>
+  issues: string[]
+}
+
+export interface TrustGateThresholds {
+  pass_threshold: number
+  hold_threshold: number
+  high_risk_threshold: number
+  conservative_threshold: number
+  high_risk_actions: string[]
+  conservative_actions: string[]
+  always_allowed_actions: string[]
+}
+
+export interface TrustGateStatusData {
+  data_available: boolean
+  as_of_date: string | null
+  signal_health: GateSignalHealth
+  autopilot_mode: AutopilotGateMode
+  mode_reason: string
+  allowed_actions: string[]
+  restricted_actions: string[]
+  thresholds: TrustGateThresholds
+}
+
+export interface TrustGateEvaluateInput {
+  action_type: string
+  entity_type?: string
+  entity_id: string
+  platform?: string
+  account_id?: string
+  parameters?: Record<string, unknown>
+}
+
+export interface TrustGateEvaluation {
+  decision: GateDecision
+  signalHealth: GateSignalHealth & { hasCdpData: boolean | null }
+  action: { type: string; entity: string; platform: string }
+  reason: string
+  allowedActions: string[]
+  restrictedActions: string[]
+  recommendations: string[]
+  evaluatedAt: string
+  data_available: boolean
 }
 
 // =============================================================================
@@ -166,6 +220,43 @@ export function useTrustStatus(tenantId: number, date?: string) {
     enabled: !!tenantId,
     staleTime: 60 * 1000, // 1 minute
     refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
+  })
+}
+
+/**
+ * Fetch the trust gate's current posture: engine-weighted signal health,
+ * derived autopilot mode, and which action types are allowed vs restricted.
+ */
+export function useTrustGateStatus(tenantId: number, date?: string) {
+  return useQuery({
+    queryKey: ['trust-gate', tenantId, date],
+    queryFn: async () => {
+      const params = date ? `?date=${date}` : ''
+      const response = await apiClient.get<{ data: TrustGateStatusData }>(
+        `/trust/tenant/${tenantId}/trust-gate${params}`
+      )
+      return response.data.data
+    },
+    enabled: !!tenantId,
+    staleTime: 60 * 1000, // 1 minute
+    refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
+  })
+}
+
+/**
+ * Evaluate a proposed automation action against the trust gate —
+ * the dashboard's "would this run right now?" preview. Read-only on the
+ * backend: it renders a PASS / HOLD / BLOCK decision, nothing executes.
+ */
+export function useEvaluateTrustGate(tenantId: number) {
+  return useMutation({
+    mutationFn: async (input: TrustGateEvaluateInput) => {
+      const response = await apiClient.post<{ data: TrustGateEvaluation }>(
+        `/trust/tenant/${tenantId}/trust-gate/evaluate`,
+        input
+      )
+      return response.data.data
+    },
   })
 }
 
