@@ -295,20 +295,34 @@ export {
 // =============================================================================
 
 /**
- * Get tenant overview data (wraps insights for common use case)
+ * Get tenant overview KPIs for the dashboard.
+ *
+ * Adapts the flat `/tenant/{id}/dashboard/overview` payload into the
+ * `{ kpis }` shape this hook's consumers expect. (The previous
+ * `/analytics/tenant-overview` endpoint returns a LIST of tenants, which
+ * crashed every consumer that read `data.kpis` off it.)
  */
 export function useTenantOverview(tenantId: number) {
   return useQuery({
     queryKey: ['tenant', 'overview', tenantId],
     queryFn: async () => {
       const response = await apiClient.get<ApiResponse<{
-        kpis: { total_spend: number; total_revenue: number; roas: number; cpa: number }
-        signal_health_status: string
-        autopilot_status: string
-        recent_actions: number
-      }>>(`/analytics/tenant-overview`)
-      return response.data.data
+        total_spend: number
+        total_revenue: number
+        portfolio_roas: number
+        avg_cpa: number
+      }>>(`/tenant/${tenantId}/dashboard/overview`)
+      const overview = response.data.data
+      return {
+        kpis: {
+          total_spend: overview.total_spend,
+          total_revenue: overview.total_revenue,
+          roas: overview.portfolio_roas,
+          cpa: overview.avg_cpa,
+        },
+      }
     },
+    enabled: !!tenantId,
     staleTime: 60 * 1000,
     refetchInterval: 5 * 60 * 1000,
   })
