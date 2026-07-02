@@ -54,3 +54,20 @@ def test_autopilot_execution_tasks_are_registered(finalized_celery_app):
         "tasks.schedule_apply_actions_queue",
     ):
         assert name in registered, f"{name} is not registered with the Celery app"
+
+
+def test_signal_health_rollup_tasks_are_registered(finalized_celery_app):
+    """The Trust Engine signal-health rollup tasks must stay registered.
+
+    These populate FactSignalHealthDaily — the table the trust gate, the
+    dashboard trust layer, and the autopilot execution-path health check
+    all read. They sat unregistered (module missing from the Celery
+    include list) from their creation until 2026-07-02.
+    """
+    registered = set(finalized_celery_app.tasks.keys())
+
+    for name in (
+        "tasks.signal_health_rollup",
+        "tasks.schedule_signal_health_rollup",
+    ):
+        assert name in registered, f"{name} is not registered with the Celery app"

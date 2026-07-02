@@ -1102,17 +1102,12 @@ PLATFORM_EXECUTORS: Dict[str, PlatformExecutor] = {
 async def _reset_async_engine() -> None:
     """Discard DB connections pooled under a previous task's event loop.
 
-    Each Celery task invocation enters a fresh event loop via
-    ``asyncio.run()``, but the module-level async engine keeps pooled
-    asyncpg connections bound to the loop that created them. The second
-    task to run in the same worker process then fails with
-    ``RuntimeError: ... got Future attached to a different loop``.
-    ``close=False`` discards the stale connections without awaiting their
-    close across loops.
+    See ``app.db.session.dispose_stale_async_pool`` — shared by every
+    Celery task that enters a fresh event loop via ``asyncio.run()``.
     """
-    from app.db.session import async_engine
+    from app.db.session import dispose_stale_async_pool
 
-    await async_engine.dispose(close=False)
+    await dispose_stale_async_pool()
 
 
 async def check_signal_health(db: AsyncSession, tenant_id: int) -> bool:
