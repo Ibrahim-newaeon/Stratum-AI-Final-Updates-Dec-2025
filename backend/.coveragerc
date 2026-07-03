@@ -153,7 +153,16 @@ omit =
 # start/stop/pubsub lifecycle half is integration territory); logging 18.52 ->
 # ~72.8 (log_execution_time sync+async, log_context; setup_logging skipped —
 # global state). CI combined measured 51.76% before; ~52.4% expected). See #342.
-fail_under = 52.2
+#
+# -> 53.4 (stragglers batch: rfm_segmenter 48.83 -> ~98.7 (segment-fallback
+# ladder, SegmentTransitionTracker, CLVPredictor — both classes previously
+# untested); segment_service 40.97 -> ~99.0 (evaluate_profile recursion,
+# condition dispatch, compute_segment add/reactivate/remove/STALE-on-error,
+# membership paths); attribution_service 34.68 -> ~94.7 (attribute_deal
+# family incl. platform windows, batch, summaries, cross-platform
+# reconciliation; Markov kept to invariants — sampler is hash-seed-dependent).
+# CI combined measured 52.47% before; ~53.7% expected). See #342.
+fail_under = 53.4
 
 # Show missing line numbers
 show_missing = True
