@@ -311,7 +311,7 @@ async def check_tenant_limit(
         #   starter  → professional (unlimited campaigns/accounts)
         #   professional → enterprise (custom contract / SSO)
         #   enterprise → enterprise (already top tier)
-        current_tier = await get_tenant_tier(tenant_id)
+        current_tier = await get_tenant_tier(tenant_id, db=db)
         suggested_tier = {
             SubscriptionTier.STARTER: SubscriptionTier.PROFESSIONAL,
             SubscriptionTier.PROFESSIONAL: SubscriptionTier.ENTERPRISE,

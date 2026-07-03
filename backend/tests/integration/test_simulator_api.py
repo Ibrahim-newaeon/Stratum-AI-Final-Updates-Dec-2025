@@ -29,15 +29,15 @@ def _enterprise_tier(monkeypatch):
     """Elevate the test tenant to ENTERPRISE for the simulator router.
 
     The What-If Simulator is gated behind ``Feature.WHAT_IF_SIMULATOR`` (enterprise
-    tier). The autouse ``_active_subscription`` fixture reports PROFESSIONAL, which
-    the ``FeatureGate`` dependency rejects with 403. This fixture is requested
-    after that autouse one, so its patch of ``get_subscription_info`` wins and the
-    gate sees enterprise — letting requests reach the endpoint bodies under test.
+    tier). The shared ``test_tenant`` fixture creates a PROFESSIONAL-plan tenant,
+    which the ``FeatureGate`` dependency rejects with 403. Patch
+    ``get_subscription_info`` so the gate sees enterprise — letting requests reach
+    the endpoint bodies under test.
     """
     from app.core import subscription as sub_mod
     from app.core.tiers import SubscriptionTier
 
-    async def _enterprise(tenant_id: int) -> "sub_mod.SubscriptionInfo":
+    async def _enterprise(tenant_id: int, db=None) -> "sub_mod.SubscriptionInfo":
         return sub_mod.SubscriptionInfo(
             tenant_id=tenant_id,
             plan="enterprise",

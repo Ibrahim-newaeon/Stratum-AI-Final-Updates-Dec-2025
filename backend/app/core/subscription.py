@@ -16,10 +16,12 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Optional
 
-from fastapi import HTTPException, Request, status
+from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.tiers import SubscriptionTier
+from app.db.session import get_async_session
 
 # =============================================================================
 # Configuration
@@ -185,92 +187,125 @@ def is_access_allowed(status: SubscriptionStatus, allow_grace: bool = True) -> b
 # =============================================================================
 
 
-async def get_subscription_info(tenant_id: int) -> SubscriptionInfo:
+def _resolve_db(db: object) -> Optional[AsyncSession]:
+    """Coerce a dependency-injected value to a real session (or ``None``).
+
+    The dependency classes below declare ``db: AsyncSession =
+    Depends(get_async_session)``. Under FastAPI that resolves to a live
+    session (honouring ``app.dependency_overrides``), but unit tests invoke
+    the dependencies directly, in which case ``db`` is the unresolved
+    ``Depends`` sentinel. Treat anything that is not an actual
+    ``AsyncSession`` as "no session provided" so lookups fall back to
+    opening their own.
+    """
+    return db if isinstance(db, AsyncSession) else None
+
+
+async def _load_subscription_info(db: AsyncSession, tenant_id: int) -> SubscriptionInfo:
+    """Build a tenant's SubscriptionInfo using the provided session."""
+    from app.base_models import Tenant
+    from app.core.feature_gate import get_tenant_tier
+
+    result = await db.execute(
+        select(Tenant.plan, Tenant.plan_expires_at, Tenant.trial_ends_at).where(
+            Tenant.id == tenant_id, Tenant.is_deleted == False
+        )
+    )
+    row = result.one_or_none()
+
+    if not row:
+        # Tenant not found - return expired status
+        return SubscriptionInfo(
+            tenant_id=tenant_id,
+            plan="unknown",
+            tier=SubscriptionTier.STARTER,
+            status=SubscriptionStatus.EXPIRED,
+            expires_at=None,
+            days_until_expiry=None,
+            days_in_grace=None,
+            is_access_restricted=True,
+            restriction_reason="Tenant not found",
+        )
+
+    plan, plan_expires_at, trial_ends_at = row
+
+    # Get tier (reuse the same session so uncommitted rows stay visible)
+    tier = await get_tenant_tier(tenant_id, db=db)
+
+    # Calculate status
+    status, days_until_expiry, days_in_grace = calculate_subscription_status(
+        plan, plan_expires_at
+    )
+
+    # Trial detection: trial_ends_at is set AND in the future AND
+    # the tenant has no Stripe customer yet (i.e., never paid).
+    # The frontend reads is_trial to render a "Trial — N days left"
+    # pill instead of the standard "renew" warning.
+    now = datetime.now(UTC)
+    is_trial = bool(
+        trial_ends_at
+        and (
+            trial_ends_at.replace(tzinfo=UTC)
+            if trial_ends_at.tzinfo is None
+            else trial_ends_at
+        )
+        > now
+    )
+
+    # Determine access restriction
+    is_restricted = not is_access_allowed(status, allow_grace=True)
+    restriction_reason = None
+
+    if status == SubscriptionStatus.EXPIRED:
+        restriction_reason = f"Subscription expired {days_in_grace} days ago. Please renew to restore access."
+    elif status == SubscriptionStatus.GRACE_PERIOD:
+        remaining_grace = GRACE_PERIOD_DAYS - (days_in_grace or 0)
+        restriction_reason = (
+            f"Subscription expired. {remaining_grace} days remaining in grace period."
+        )
+    elif status == SubscriptionStatus.CANCELLED:
+        restriction_reason = "Subscription has been cancelled."
+
+    return SubscriptionInfo(
+        tenant_id=tenant_id,
+        plan=plan,
+        tier=tier,
+        status=status,
+        expires_at=plan_expires_at,
+        days_until_expiry=days_until_expiry,
+        days_in_grace=days_in_grace,
+        is_access_restricted=is_restricted,
+        restriction_reason=restriction_reason,
+        trial_ends_at=trial_ends_at,
+        is_trial=is_trial,
+    )
+
+
+async def get_subscription_info(
+    tenant_id: int, db: Optional[AsyncSession] = None
+) -> SubscriptionInfo:
     """
     Get complete subscription information for a tenant.
 
     Args:
         tenant_id: The tenant ID
+        db: Optional existing session to run the lookup on. When omitted,
+            a fresh session is opened internally. Passing the caller's
+            session keeps the lookup inside the caller's transaction
+            (e.g. the savepoint-based integration-test harness).
 
     Returns:
         SubscriptionInfo with all subscription details
     """
-    from app.base_models import Tenant
-    from app.core.feature_gate import get_tenant_tier
-    from app.db.session import get_async_session
+    if db is not None:
+        return await _load_subscription_info(db, tenant_id)
 
-    async for db in get_async_session():
-        result = await db.execute(
-            select(Tenant.plan, Tenant.plan_expires_at, Tenant.trial_ends_at).where(
-                Tenant.id == tenant_id, Tenant.is_deleted == False
-            )
-        )
-        row = result.one_or_none()
+    # Lazy re-import so tests can monkeypatch
+    # ``app.db.session.get_async_session``.
+    from app.db.session import get_async_session as _get_async_session
 
-        if not row:
-            # Tenant not found - return expired status
-            return SubscriptionInfo(
-                tenant_id=tenant_id,
-                plan="unknown",
-                tier=SubscriptionTier.STARTER,
-                status=SubscriptionStatus.EXPIRED,
-                expires_at=None,
-                days_until_expiry=None,
-                days_in_grace=None,
-                is_access_restricted=True,
-                restriction_reason="Tenant not found",
-            )
-
-        plan, plan_expires_at, trial_ends_at = row
-
-        # Get tier
-        tier = await get_tenant_tier(tenant_id)
-
-        # Calculate status
-        status, days_until_expiry, days_in_grace = calculate_subscription_status(
-            plan, plan_expires_at
-        )
-
-        # Trial detection: trial_ends_at is set AND in the future AND
-        # the tenant has no Stripe customer yet (i.e., never paid).
-        # The frontend reads is_trial to render a "Trial — N days left"
-        # pill instead of the standard "renew" warning.
-        now = datetime.now(UTC)
-        is_trial = bool(
-            trial_ends_at
-            and (
-                trial_ends_at.replace(tzinfo=UTC)
-                if trial_ends_at.tzinfo is None
-                else trial_ends_at
-            )
-            > now
-        )
-
-        # Determine access restriction
-        is_restricted = not is_access_allowed(status, allow_grace=True)
-        restriction_reason = None
-
-        if status == SubscriptionStatus.EXPIRED:
-            restriction_reason = f"Subscription expired {days_in_grace} days ago. Please renew to restore access."
-        elif status == SubscriptionStatus.GRACE_PERIOD:
-            remaining_grace = GRACE_PERIOD_DAYS - (days_in_grace or 0)
-            restriction_reason = f"Subscription expired. {remaining_grace} days remaining in grace period."
-        elif status == SubscriptionStatus.CANCELLED:
-            restriction_reason = "Subscription has been cancelled."
-
-        return SubscriptionInfo(
-            tenant_id=tenant_id,
-            plan=plan,
-            tier=tier,
-            status=status,
-            expires_at=plan_expires_at,
-            days_until_expiry=days_until_expiry,
-            days_in_grace=days_in_grace,
-            is_access_restricted=is_restricted,
-            restriction_reason=restriction_reason,
-            trial_ends_at=trial_ends_at,
-            is_trial=is_trial,
-        )
+    async for session in _get_async_session():
+        return await _load_subscription_info(session, tenant_id)
 
     # Fallback if session yields nothing
     return SubscriptionInfo(
@@ -287,7 +322,9 @@ async def get_subscription_info(tenant_id: int) -> SubscriptionInfo:
 
 
 async def check_subscription_valid(
-    tenant_id: int, raise_on_invalid: bool = True
+    tenant_id: int,
+    raise_on_invalid: bool = True,
+    db: Optional[AsyncSession] = None,
 ) -> SubscriptionInfo:
     """
     Check if a tenant's subscription is valid for access.
@@ -295,6 +332,7 @@ async def check_subscription_valid(
     Args:
         tenant_id: The tenant ID
         raise_on_invalid: If True, raises HTTPException when invalid
+        db: Optional existing session to run the lookup on
 
     Returns:
         SubscriptionInfo
@@ -302,7 +340,7 @@ async def check_subscription_valid(
     Raises:
         HTTPException: If subscription is invalid and raise_on_invalid is True
     """
-    info = await get_subscription_info(tenant_id)
+    info = await get_subscription_info(tenant_id, db=db)
 
     if info.is_access_restricted and raise_on_invalid:
         raise HTTPException(
@@ -343,7 +381,11 @@ class SubscriptionRequired:
         """
         self.allow_grace = allow_grace
 
-    async def __call__(self, request: Request) -> SubscriptionInfo:
+    async def __call__(
+        self,
+        request: Request,
+        db: AsyncSession = Depends(get_async_session),
+    ) -> SubscriptionInfo:
         tenant_id = getattr(request.state, "tenant_id", None)
 
         if not tenant_id:
@@ -352,7 +394,7 @@ class SubscriptionRequired:
                 detail="Authentication required",
             )
 
-        info = await get_subscription_info(tenant_id)
+        info = await get_subscription_info(tenant_id, db=_resolve_db(db))
 
         # Check if access should be allowed
         if not is_access_allowed(info.status, self.allow_grace):
@@ -387,13 +429,17 @@ class SubscriptionWarning:
             ...
     """
 
-    async def __call__(self, request: Request) -> Optional[SubscriptionInfo]:
+    async def __call__(
+        self,
+        request: Request,
+        db: AsyncSession = Depends(get_async_session),
+    ) -> Optional[SubscriptionInfo]:
         tenant_id = getattr(request.state, "tenant_id", None)
 
         if not tenant_id:
             return None
 
-        info = await get_subscription_info(tenant_id)
+        info = await get_subscription_info(tenant_id, db=_resolve_db(db))
 
         # Store in request state
         request.state.subscription_info = info
@@ -401,7 +447,10 @@ class SubscriptionWarning:
         return info
 
 
-async def get_subscription_dependency(request: Request) -> Optional[SubscriptionInfo]:
+async def get_subscription_dependency(
+    request: Request,
+    db: AsyncSession = Depends(get_async_session),
+) -> Optional[SubscriptionInfo]:
     """
     Simple dependency to get subscription info without blocking.
 
@@ -417,7 +466,7 @@ async def get_subscription_dependency(request: Request) -> Optional[Subscription
     if not tenant_id:
         return None
 
-    return await get_subscription_info(tenant_id)
+    return await get_subscription_info(tenant_id, db=_resolve_db(db))
 
 
 # =============================================================================

@@ -22,8 +22,9 @@ from collections.abc import Callable
 from functools import wraps
 from typing import Optional
 
-from fastapi import HTTPException, Request, status
+from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.tiers import (
@@ -34,6 +35,7 @@ from app.core.tiers import (
     has_feature,
     tier_at_least,
 )
+from app.db.session import get_async_session
 
 
 class FeatureNotAvailableError(HTTPException):
@@ -103,39 +105,67 @@ def get_current_tier() -> SubscriptionTier:
         return SubscriptionTier.STARTER  # Safe default instead of ENTERPRISE
 
 
-async def get_tenant_tier(tenant_id: int) -> SubscriptionTier:
+def _resolve_db(db: object) -> Optional[AsyncSession]:
+    """Coerce a dependency-injected value to a real session (or ``None``).
+
+    The gate dependencies below declare ``db: AsyncSession =
+    Depends(get_async_session)``. Under FastAPI that resolves to a live
+    session (honouring ``app.dependency_overrides``), but unit tests invoke
+    the gates directly, in which case ``db`` is the unresolved ``Depends``
+    sentinel. Treat anything that is not an actual ``AsyncSession`` as
+    "no session provided" so lookups fall back to opening their own.
+    """
+    return db if isinstance(db, AsyncSession) else None
+
+
+async def _load_tenant_tier(db: AsyncSession, tenant_id: int) -> SubscriptionTier:
+    """Look up a tenant's tier using the provided session."""
+    from app.base_models import Tenant
+
+    result = await db.execute(
+        select(Tenant.plan).where(Tenant.id == tenant_id, Tenant.is_deleted == False)
+    )
+    plan = result.scalar_one_or_none()
+
+    if plan:
+        # Map plan names to subscription tiers
+        plan_lower = plan.lower()
+        tier_mapping = {
+            "free": SubscriptionTier.STARTER,
+            "starter": SubscriptionTier.STARTER,
+            "professional": SubscriptionTier.PROFESSIONAL,
+            "enterprise": SubscriptionTier.ENTERPRISE,
+        }
+        return tier_mapping.get(plan_lower, SubscriptionTier.STARTER)
+
+    return SubscriptionTier.STARTER
+
+
+async def get_tenant_tier(
+    tenant_id: int, db: Optional[AsyncSession] = None
+) -> SubscriptionTier:
     """
     Get the subscription tier for a specific tenant from the database.
 
     Args:
         tenant_id: The tenant ID to look up
+        db: Optional existing session to run the lookup on. When omitted,
+            a fresh session is opened internally. Passing the caller's
+            session keeps the lookup inside the caller's transaction
+            (e.g. the savepoint-based integration-test harness).
 
     Returns:
         SubscriptionTier for the tenant, defaults to STARTER if not found
     """
-    from app.base_models import Tenant
-    from app.db.session import get_async_session
+    if db is not None:
+        return await _load_tenant_tier(db, tenant_id)
 
-    async for db in get_async_session():
-        result = await db.execute(
-            select(Tenant.plan).where(
-                Tenant.id == tenant_id, Tenant.is_deleted == False
-            )
-        )
-        plan = result.scalar_one_or_none()
+    # Lazy re-import so tests can monkeypatch
+    # ``app.db.session.get_async_session``.
+    from app.db.session import get_async_session as _get_async_session
 
-        if plan:
-            # Map plan names to subscription tiers
-            plan_lower = plan.lower()
-            tier_mapping = {
-                "free": SubscriptionTier.STARTER,
-                "starter": SubscriptionTier.STARTER,
-                "professional": SubscriptionTier.PROFESSIONAL,
-                "enterprise": SubscriptionTier.ENTERPRISE,
-            }
-            return tier_mapping.get(plan_lower, SubscriptionTier.STARTER)
-
-        return SubscriptionTier.STARTER
+    async for session in _get_async_session():
+        return await _load_tenant_tier(session, tenant_id)
 
     return SubscriptionTier.STARTER  # fallback if session yields nothing
 
@@ -194,9 +224,12 @@ class FeatureGate:
         self.feature = feature
         self.check_subscription = check_subscription
 
-    async def __call__(self, request: Request) -> None:
+    async def __call__(
+        self, request: Request, db: AsyncSession = Depends(get_async_session)
+    ) -> None:
         # Get tenant_id from request state (set by middleware)
         tenant_id = getattr(request.state, "tenant_id", None)
+        session = _resolve_db(db)
 
         if tenant_id:
             # Check subscription status first (if enabled)
@@ -206,7 +239,7 @@ class FeatureGate:
                     is_access_allowed,
                 )
 
-                sub_info = await get_subscription_info(tenant_id)
+                sub_info = await get_subscription_info(tenant_id, db=session)
                 request.state.subscription_info = sub_info
 
                 if not is_access_allowed(sub_info.status, allow_grace=True):
@@ -224,7 +257,7 @@ class FeatureGate:
 
                 current_tier = sub_info.tier
             else:
-                current_tier = await get_tenant_tier(tenant_id)
+                current_tier = await get_tenant_tier(tenant_id, db=session)
 
             # Cache for subsequent calls
             request.state.subscription_tier = current_tier.value
@@ -258,9 +291,12 @@ class TierGate:
         self.minimum_tier = minimum_tier
         self.check_subscription = check_subscription
 
-    async def __call__(self, request: Request) -> None:
+    async def __call__(
+        self, request: Request, db: AsyncSession = Depends(get_async_session)
+    ) -> None:
         # Get tenant_id from request state
         tenant_id = getattr(request.state, "tenant_id", None)
+        session = _resolve_db(db)
 
         if tenant_id:
             # Check subscription status first (if enabled)
@@ -270,7 +306,7 @@ class TierGate:
                     is_access_allowed,
                 )
 
-                sub_info = await get_subscription_info(tenant_id)
+                sub_info = await get_subscription_info(tenant_id, db=session)
                 request.state.subscription_info = sub_info
 
                 if not is_access_allowed(sub_info.status, allow_grace=True):
@@ -287,7 +323,7 @@ class TierGate:
 
                 current_tier = sub_info.tier
             else:
-                current_tier = await get_tenant_tier(tenant_id)
+                current_tier = await get_tenant_tier(tenant_id, db=session)
 
             request.state.subscription_tier = current_tier.value
         else:
@@ -322,12 +358,14 @@ class LimitChecker:
         self.limit_name = limit_name
         self.get_current_count = get_current_count
 
-    async def __call__(self, request: Request) -> dict:
+    async def __call__(
+        self, request: Request, db: AsyncSession = Depends(get_async_session)
+    ) -> dict:
         # Get tenant_id from request state
         tenant_id = getattr(request.state, "tenant_id", None)
 
         if tenant_id:
-            current_tier = await get_tenant_tier(tenant_id)
+            current_tier = await get_tenant_tier(tenant_id, db=_resolve_db(db))
             request.state.subscription_tier = current_tier.value
         else:
             current_tier = get_current_tier()
@@ -383,6 +421,8 @@ def require_feature(feature: Feature) -> Callable:
             if request:
                 tenant_id = getattr(request.state, "tenant_id", None)
                 if tenant_id:
+                    # Legacy decorator: no session is in scope here, so the
+                    # tier lookup keeps its self-opening fallback.
                     current_tier = await get_tenant_tier(tenant_id)
                 else:
                     current_tier = get_current_tier()
@@ -434,6 +474,8 @@ def require_tier(minimum_tier: SubscriptionTier) -> Callable:
             if request:
                 tenant_id = getattr(request.state, "tenant_id", None)
                 if tenant_id:
+                    # Legacy decorator: no session is in scope here, so the
+                    # tier lookup keeps its self-opening fallback.
                     current_tier = await get_tenant_tier(tenant_id)
                 else:
                     current_tier = get_current_tier()
@@ -468,9 +510,11 @@ def check_feature(feature: Feature) -> bool:
     return has_feature(get_current_tier(), feature)
 
 
-async def check_feature_for_tenant(tenant_id: int, feature: Feature) -> bool:
+async def check_feature_for_tenant(
+    tenant_id: int, feature: Feature, db: Optional[AsyncSession] = None
+) -> bool:
     """Check if a tenant's tier has access to a feature."""
-    tier = await get_tenant_tier(tenant_id)
+    tier = await get_tenant_tier(tenant_id, db=db)
     return has_feature(tier, feature)
 
 
@@ -481,10 +525,13 @@ def check_limit(limit_name: str, current_count: int) -> bool:
 
 
 async def check_limit_for_tenant(
-    tenant_id: int, limit_name: str, current_count: int
+    tenant_id: int,
+    limit_name: str,
+    current_count: int,
+    db: Optional[AsyncSession] = None,
 ) -> bool:
     """Check if current count is within limit for a specific tenant."""
-    tier = await get_tenant_tier(tenant_id)
+    tier = await get_tenant_tier(tenant_id, db=db)
     max_value = get_tier_limit(tier, limit_name)
     return current_count < max_value
 
@@ -503,11 +550,13 @@ def get_tier_features_response() -> dict:
     }
 
 
-async def get_tier_features_for_tenant(tenant_id: int) -> dict:
+async def get_tier_features_for_tenant(
+    tenant_id: int, db: Optional[AsyncSession] = None
+) -> dict:
     """Get tier info for a specific tenant from database."""
     from app.core.tiers import TIER_PRICING, get_tier_info
 
-    tier = await get_tenant_tier(tenant_id)
+    tier = await get_tenant_tier(tenant_id, db=db)
     info = get_tier_info(tier)
     pricing = TIER_PRICING.get(tier, {})
 
@@ -522,7 +571,9 @@ async def get_tier_features_for_tenant(tenant_id: int) -> dict:
 # =============================================================================
 
 
-async def get_current_tier_dependency(request: Request) -> SubscriptionTier:
+async def get_current_tier_dependency(
+    request: Request, db: AsyncSession = Depends(get_async_session)
+) -> SubscriptionTier:
     """
     FastAPI dependency to get the current tenant's subscription tier.
 
@@ -536,7 +587,7 @@ async def get_current_tier_dependency(request: Request) -> SubscriptionTier:
     tenant_id = getattr(request.state, "tenant_id", None)
 
     if tenant_id:
-        tier = await get_tenant_tier(tenant_id)
+        tier = await get_tenant_tier(tenant_id, db=_resolve_db(db))
         request.state.subscription_tier = tier.value
         return tier
 

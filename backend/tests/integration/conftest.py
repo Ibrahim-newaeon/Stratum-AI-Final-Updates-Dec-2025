@@ -134,39 +134,6 @@ async def db_session(async_engine) -> AsyncGenerator[AsyncSession, None]:
     await connection.close()
 
 
-@pytest_asyncio.fixture(scope="function", autouse=True)
-async def _active_subscription(monkeypatch):
-    """Treat every test tenant as having an active subscription.
-
-    ``core.subscription.get_subscription_info`` opens its *own* session
-    (``async for db in get_async_session()``), so it can't see the tenant a test
-    just created inside its savepoint transaction — it reads "tenant not found"
-    and reports the subscription as expired, which silently flips autopilot
-    enforcement into a subscription-restricted advisory block. In production the
-    tenant row is committed and visible, so this only bites the test harness.
-    Patch the lookup to report an active subscription (no integration test
-    exercises the expiry/grace paths).
-    """
-    from app.core import subscription as sub_mod
-    from app.core.tiers import SubscriptionTier
-
-    async def _active(tenant_id: int) -> "sub_mod.SubscriptionInfo":
-        return sub_mod.SubscriptionInfo(
-            tenant_id=tenant_id,
-            plan="professional",
-            tier=SubscriptionTier.PROFESSIONAL,
-            status=sub_mod.SubscriptionStatus.ACTIVE,
-            expires_at=None,
-            days_until_expiry=None,
-            days_in_grace=None,
-            is_access_restricted=False,
-            restriction_reason=None,
-        )
-
-    monkeypatch.setattr(sub_mod, "get_subscription_info", _active)
-    yield
-
-
 @pytest.fixture(autouse=True)
 def _reset_security_redis_pool():
     """Reset app.core.security's cached Redis pool between tests.

@@ -22,14 +22,14 @@ def enterprise_plan(monkeypatch):
     """Elevate the test tenant to Enterprise so the GDPR FeatureGate passes.
 
     GDPR tools are gated behind ``FeatureGate(Feature.GDPR_TOOLS)`` (Enterprise
-    only). The conftest autouse fixture reports a Professional subscription;
-    requesting this fixture explicitly re-patches the lookup afterwards so the
-    gate sees Enterprise. Subscription status stays ACTIVE.
+    only). The shared ``test_tenant`` fixture creates a Professional-plan
+    tenant; patch the lookup so the gate sees Enterprise. Subscription status
+    stays ACTIVE.
     """
     from app.core import subscription as sub_mod
     from app.core.tiers import SubscriptionTier
 
-    async def _enterprise(tenant_id: int) -> "sub_mod.SubscriptionInfo":
+    async def _enterprise(tenant_id: int, db=None) -> "sub_mod.SubscriptionInfo":
         return sub_mod.SubscriptionInfo(
             tenant_id=tenant_id,
             plan="enterprise",
