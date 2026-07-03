@@ -92,6 +92,8 @@ services:
       # localhost default for the result backend, exhausts its reconnect
       # budget, and permanently fails every subsequent task dispatch.
       - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:?REDIS_PASSWORD must be set}@redis:6379/2
+      # Attach HTTP latency/size/per-tenant collectors to /metrics (#508)
+      - ENABLE_METRICS=${ENABLE_METRICS:-true}
       - ML_PROVIDER=${ML_PROVIDER:-local}
       - ML_MODELS_PATH=/app/ml_service/models
       - ML_AUTO_TRAIN=${ML_AUTO_TRAIN:-true}
