@@ -29,6 +29,7 @@ from app.core.security import (
     create_refresh_token,
     decode_token,
     decrypt_pii,
+    encrypt_pii,
     get_password_hash,
     hash_pii_for_lookup,
     record_failed_login,
@@ -65,6 +66,8 @@ OTP_EXPIRY_SECONDS = (
 OTP_PREFIX = "whatsapp_otp:"
 PASSWORD_RESET_PREFIX = "password_reset:"
 PASSWORD_RESET_EXPIRY_SECONDS = 3600  # 1 hour
+INVITE_TOKEN_PREFIX = "invite_token:"
+INVITE_TOKEN_EXPIRY_SECONDS = 7 * 86400  # 7 days — invites outlive password resets
 EMAIL_VERIFICATION_PREFIX = "email_verify:"
 EMAIL_VERIFICATION_EXPIRY_SECONDS = 86400  # 24 hours
 EMAIL_OTP_PREFIX = "email_otp:"
@@ -105,6 +108,33 @@ class ResetPasswordRequest(BaseModel):
 
 class ResetPasswordResponse(BaseModel):
     """Response after resetting password."""
+
+    success: bool
+    message: str
+
+
+class AcceptInviteRequest(BaseModel):
+    """Request to activate an invited user's account."""
+
+    token: str = Field(..., min_length=1, description="Invitation token")
+    full_name: str = Field(..., min_length=1, max_length=255)
+    password: str = Field(..., min_length=8, max_length=128)
+
+    @field_validator("password")
+    @classmethod
+    def validate_password_strength(cls, v: str) -> str:
+        """Same complexity rules as public registration."""
+        if not any(c.isupper() for c in v):
+            raise ValueError("Password must contain at least one uppercase letter")
+        if not any(c.islower() for c in v):
+            raise ValueError("Password must contain at least one lowercase letter")
+        if not any(c.isdigit() for c in v):
+            raise ValueError("Password must contain at least one digit")
+        return v
+
+
+class AcceptInviteResponse(BaseModel):
+    """Response after accepting an invitation."""
 
     success: bool
     message: str
@@ -1458,6 +1488,93 @@ async def reset_password(
             message="Password has been reset successfully. You can now log in with your new password.",
         ),
         message="Password reset successful",
+    )
+
+
+# =============================================================================
+# Accept Invite
+# =============================================================================
+
+
+@router.post("/accept-invite", response_model=APIResponse[AcceptInviteResponse])
+async def accept_invite(
+    request_data: AcceptInviteRequest,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Activate an invited user's account.
+
+    Validates the invitation token (stored hashed in Redis by
+    ``POST /users/invite``), sets the user's chosen password and full
+    name, marks the account verified, and consumes the token.
+    """
+    token = request_data.token.strip()
+
+    # Look up hashed token in Redis (same one-time-use pattern as reset)
+    try:
+        import hashlib
+
+        token_hash = hashlib.sha256(token.encode()).hexdigest()
+        redis_client = await get_redis_client()
+        token_key = f"{INVITE_TOKEN_PREFIX}{token_hash}"
+        user_id_str = await redis_client.get(token_key)
+
+        if not user_id_str:
+            await redis_client.close()
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=(
+                    "Invalid or expired invitation link. "
+                    "Please ask your administrator to send a new invitation."
+                ),
+            )
+
+        # Invalidate the token immediately (one-time use)
+        await redis_client.delete(token_key)
+        await redis_client.close()
+
+    except HTTPException:
+        raise
+    except (ConnectionError, TimeoutError, OSError) as e:
+        logger.error("redis_validate_invite_token_failed", error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to validate invitation. Please try again.",
+        )
+
+    # Find the invited user
+    user_id = int(user_id_str)
+    result = await db.execute(
+        select(User).where(
+            User.id == user_id,
+            User.is_deleted == False,
+        )
+    )
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User account not found.",
+        )
+
+    # Activate: set the chosen password + name, mark verified
+    user.password_hash = get_password_hash(request_data.password)
+    user.full_name = encrypt_pii(request_data.full_name.strip())
+    user.is_active = True
+    user.is_verified = True
+    user.updated_at = datetime.now(timezone.utc)
+    await db.commit()
+
+    logger.info("invite_accepted", user_id=user.id, tenant_id=user.tenant_id)
+
+    return APIResponse(
+        success=True,
+        data=AcceptInviteResponse(
+            success=True,
+            message="Account activated successfully. You can now sign in.",
+        ),
+        message="Invitation accepted",
     )
 
 
