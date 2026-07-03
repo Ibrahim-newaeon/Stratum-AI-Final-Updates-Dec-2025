@@ -617,6 +617,58 @@ class TestMarkovAttributionModelInService:
         assert sum(weights.values()) == pytest.approx(1.0)
         assert all(w >= 0 for w in weights.values())
 
+    def test_single_outgoing_state_does_not_crash(self) -> None:
+        """Regression for #507: a node with exactly one outgoing edge made
+        the old hash-based sampler index past the end of the state list.
+        This deterministic chain ((start)->a->b->(conversion)) is exactly
+        that shape at every node."""
+        journeys = [["a", "b"], ["a", "b"]]
+        converted = [True, True]
+
+        model = MarkovAttributionModel().fit(journeys, converted)
+
+        assert model.conversion_probs["baseline"] == pytest.approx(1.0)
+        # Removing either channel severs the only path to conversion.
+        assert model.removal_effects["a"] == pytest.approx(1.0)
+        assert model.removal_effects["b"] == pytest.approx(1.0)
+
+    def test_seeded_runs_are_reproducible(self) -> None:
+        """Regression for #507: results must be stable across fresh fits
+        with the same seed (the old sampler depended on PYTHONHASHSEED)."""
+        journeys = [["a"], ["a"], ["a"], ["b"], ["b"], ["b"]]
+        converted = [True, True, False, True, False, False]
+
+        first = MarkovAttributionModel(seed=42).fit(journeys, converted)
+        second = MarkovAttributionModel(seed=42).fit(journeys, converted)
+
+        assert first.conversion_probs == second.conversion_probs
+        assert first.removal_effects == second.removal_effects
+
+    def test_sampler_tracks_transition_probabilities(self) -> None:
+        """Regression for #507: the old sampler collapsed all 10k
+        simulations onto one hash-derived path, so estimates bore no
+        relation to the fitted probabilities. With 70% of journeys
+        converting, the simulated baseline must land near 0.7."""
+        journeys = [["a"]] * 10
+        converted = [True] * 7 + [False] * 3
+
+        model = MarkovAttributionModel().fit(journeys, converted)
+
+        # Binomial std at p=0.7, n=10000 is ~0.005; 0.03 is very generous.
+        assert model.conversion_probs["baseline"] == pytest.approx(0.7, abs=0.03)
+
+    def test_useless_channel_gets_no_weight(self) -> None:
+        """A channel that never converts must not outweigh one that
+        always does."""
+        journeys = [["a"], ["a"], ["b"], ["b"]]
+        converted = [True, True, False, False]
+
+        model = MarkovAttributionModel().fit(journeys, converted)
+        weights = model.get_attribution_weights(["a", "b"])
+
+        assert weights["a"] == pytest.approx(1.0)
+        assert weights["b"] == pytest.approx(0.0)
+
 
 # =============================================================================
 # _get_contact_touchpoints (no before_time branch)
