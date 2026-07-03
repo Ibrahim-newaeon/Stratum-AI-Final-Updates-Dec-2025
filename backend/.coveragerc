@@ -143,7 +143,17 @@ omit =
 # summary aggregation, can_auto_execute caps, recommendations mapping.
 # enforcer 71.88% -> ~98.8, service 27.31% -> 100 on the combined run; CI
 # combined measured 51.37% before this batch, ~51.75% expected after). See #342.
-fail_under = 51.5
+#
+# -> 52.2 (core/ batch: metrics 0 -> 100 (record helpers via registry samples,
+# instrumentator closure, setup_metrics); feature_gate 36.36 -> ~96.5 (dep-class
+# __call__ branches, decorators, *_for_tenant DB paths); security 82.97 -> ~95.6
+# (Redis blacklist/rate-limit funcs, require_permission, decode_token failures);
+# subscription 56.25 -> ~89.8 (deps, get_subscription_info, to_dict, warnings);
+# websocket 25.08 -> ~65.4 (in-memory registry/broadcast/publish half — the
+# start/stop/pubsub lifecycle half is integration territory); logging 18.52 ->
+# ~72.8 (log_execution_time sync+async, log_context; setup_logging skipped —
+# global state). CI combined measured 51.76% before; ~52.4% expected). See #342.
+fail_under = 52.2
 
 # Show missing line numbers
 show_missing = True
