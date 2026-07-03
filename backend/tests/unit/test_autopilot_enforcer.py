@@ -14,8 +14,12 @@ Tests cover:
 - Intervention logging
 """
 
-from datetime import UTC, datetime
-from unittest.mock import AsyncMock, patch
+import smtplib
+from datetime import UTC, datetime, timedelta
+from types import SimpleNamespace
+from typing import Any, List, Optional
+from unittest.mock import AsyncMock, MagicMock, patch
+from uuid import uuid4
 
 import pytest
 
@@ -30,6 +34,15 @@ from app.autopilot.enforcer import (
     ViolationType,
     send_enforcement_notification,
 )
+from app.models.autopilot import EnforcementAuditLog as EnforcementAuditLogDB
+from app.models.autopilot import EnforcementMode as DBEnforcementMode
+from app.models.autopilot import InterventionAction as DBInterventionAction
+from app.models.autopilot import PendingConfirmationToken as PendingConfirmationTokenDB
+from app.models.autopilot import TenantEnforcementRule as TenantEnforcementRuleDB
+from app.models.autopilot import (
+    TenantEnforcementSettings as TenantEnforcementSettingsDB,
+)
+from app.models.autopilot import ViolationType as DBViolationType
 
 # =============================================================================
 # Fixtures
@@ -913,3 +926,819 @@ class TestEdgeCases:
         # Should use hard_block (strictest) mode
         assert result.mode == EnforcementMode.HARD_BLOCK
         assert result.allowed is False
+
+
+# =============================================================================
+# Database-Path Tests
+# =============================================================================
+#
+# Everything below exercises the `if self.db is not None:` branches with a
+# mocked AsyncSession. No real database connection is made: `db.execute` is
+# stubbed to return crafted result objects, and persistence is asserted via
+# `db.add` / `db.flush` / `db.commit` / `db.delete` call records.
+
+
+def _make_db(execute_results: Optional[List[Any]] = None) -> MagicMock:
+    """Build a mock AsyncSession.
+
+    ``add`` is synchronous on AsyncSession, so it is a plain MagicMock;
+    ``execute``/``flush``/``commit``/``delete``/``refresh`` are AsyncMocks.
+    """
+    db = MagicMock()
+    db.add = MagicMock()
+    db.delete = AsyncMock()
+    db.flush = AsyncMock()
+    db.commit = AsyncMock()
+    db.refresh = AsyncMock()
+    if execute_results is None:
+        db.execute = AsyncMock(return_value=MagicMock())
+    else:
+        db.execute = AsyncMock(side_effect=list(execute_results))
+    return db
+
+
+def _scalars_first(value: Any) -> MagicMock:
+    """Result stub for ``result.scalars().first()``."""
+    result = MagicMock()
+    result.scalars.return_value.first.return_value = value
+    return result
+
+
+def _scalars_all(values: List[Any]) -> MagicMock:
+    """Result stub for ``result.scalars().all()``."""
+    result = MagicMock()
+    result.scalars.return_value.all.return_value = values
+    return result
+
+
+def _scalar_one(value: Any) -> MagicMock:
+    """Result stub for ``result.scalar_one()``."""
+    result = MagicMock()
+    result.scalar_one.return_value = value
+    return result
+
+
+def _scalar_one_or_none(value: Any) -> MagicMock:
+    """Result stub for ``result.scalar_one_or_none()``."""
+    result = MagicMock()
+    result.scalar_one_or_none.return_value = value
+    return result
+
+
+def _rows_all(rows: List[Any]) -> MagicMock:
+    """Result stub for ``result.all()``."""
+    result = MagicMock()
+    result.all.return_value = rows
+    return result
+
+
+def _added_of_type(db: MagicMock, model_cls: type) -> List[Any]:
+    """Return all objects passed to ``db.add`` that are instances of model_cls."""
+    return [
+        call.args[0]
+        for call in db.add.call_args_list
+        if isinstance(call.args[0], model_cls)
+    ]
+
+
+def _db_settings_row(**overrides: Any) -> TenantEnforcementSettingsDB:
+    """Construct an in-memory TenantEnforcementSettings row (no DB needed)."""
+    row = TenantEnforcementSettingsDB(
+        tenant_id=1,
+        enforcement_enabled=True,
+        default_mode=DBEnforcementMode.SOFT_BLOCK,
+        max_daily_budget=250.0,
+        max_campaign_budget=5000.0,
+        budget_increase_limit_pct=25.0,
+        min_roas_threshold=1.5,
+        roas_lookback_days=14,
+        max_budget_changes_per_day=3,
+        min_hours_between_changes=6,
+    )
+    row.id = uuid4()
+    for key, value in overrides.items():
+        setattr(row, key, value)
+    return row
+
+
+class TestGetSettingsDbPaths:
+    """Tests for get_settings() database load/persist branches."""
+
+    @pytest.mark.asyncio
+    async def test_loads_existing_row_with_rules(self):
+        """An existing DB row (with custom rules) maps to the Pydantic model."""
+        rule_row = TenantEnforcementRuleDB(
+            tenant_id=1,
+            rule_id="min_roas_rule",
+            rule_type=DBViolationType.ROAS_BELOW_THRESHOLD,
+            threshold_value=2.0,
+            enforcement_mode=DBEnforcementMode.HARD_BLOCK,
+            enabled=True,
+            description="Minimum ROAS",
+        )
+        row = _db_settings_row(rules=[rule_row])
+        db = _make_db([_scalars_first(row)])
+        enforcer = AutopilotEnforcer(db=db)
+
+        settings = await enforcer.get_settings(tenant_id=1)
+
+        assert settings.tenant_id == 1
+        assert settings.default_mode == EnforcementMode.SOFT_BLOCK
+        assert settings.max_daily_budget == 250.0
+        assert settings.max_campaign_budget == 5000.0
+        assert settings.budget_increase_limit_pct == 25.0
+        assert settings.min_roas_threshold == 1.5
+        assert settings.roas_lookback_days == 14
+        assert settings.max_budget_changes_per_day == 3
+        assert settings.min_hours_between_changes == 6
+        assert len(settings.rules) == 1
+        mapped = settings.rules[0]
+        assert mapped.rule_id == "min_roas_rule"
+        assert mapped.rule_type == ViolationType.ROAS_BELOW_THRESHOLD
+        assert mapped.enforcement_mode == EnforcementMode.HARD_BLOCK
+        assert mapped.threshold_value == 2.0
+        assert mapped.description == "Minimum ROAS"
+
+        # Nothing was created; result is cached (no second query)
+        db.add.assert_not_called()
+        await enforcer.get_settings(tenant_id=1)
+        assert db.execute.await_count == 1
+
+    @pytest.mark.asyncio
+    async def test_creates_default_row_when_missing(self):
+        """A cache+DB miss persists a defaults row and returns defaults."""
+        db = _make_db([_scalars_first(None)])
+        enforcer = AutopilotEnforcer(db=db)
+
+        settings = await enforcer.get_settings(tenant_id=7)
+
+        created = _added_of_type(db, TenantEnforcementSettingsDB)
+        assert len(created) == 1
+        assert created[0].tenant_id == 7
+        assert created[0].enforcement_enabled is True
+        assert created[0].default_mode == DBEnforcementMode.ADVISORY
+        db.flush.assert_awaited_once()
+
+        assert settings.tenant_id == 7
+        assert settings.default_mode == EnforcementMode.ADVISORY
+        # Cached for subsequent calls
+        assert enforcer._settings_cache[7] is settings
+
+
+class TestUpdateSettingsDbPaths:
+    """Tests for update_settings() database persist branches."""
+
+    @pytest.mark.asyncio
+    async def test_scalar_updates_persist_to_row_and_commit(self):
+        """Scalar field updates land on the DB row and are explicitly committed."""
+        row = _db_settings_row(rules=[])
+        db = _make_db([_scalars_first(row)])
+        enforcer = AutopilotEnforcer(db=db)
+        # Pre-seed the cache so get_settings() does not consume db.execute
+        enforcer._settings_cache[1] = EnforcementSettings(tenant_id=1)
+
+        settings = await enforcer.update_settings(
+            tenant_id=1,
+            updates={
+                "default_mode": "hard_block",
+                "max_campaign_budget": 9000.0,
+                "not_a_real_field": "ignored",
+            },
+        )
+
+        assert settings.default_mode == EnforcementMode.HARD_BLOCK
+        assert settings.max_campaign_budget == 9000.0
+        # DB row received mapped values (string mode -> DB enum)
+        assert row.default_mode == DBEnforcementMode.HARD_BLOCK
+        assert row.max_campaign_budget == 9000.0
+        db.flush.assert_awaited()
+        # Explicit commit is load-bearing: get_async_session never commits
+        db.commit.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_creates_row_when_missing_then_commits(self):
+        """If no settings row exists yet, update_settings creates one."""
+        db = _make_db([_scalars_first(None)])
+        enforcer = AutopilotEnforcer(db=db)
+        enforcer._settings_cache[1] = EnforcementSettings(tenant_id=1)
+
+        await enforcer.update_settings(
+            tenant_id=1,
+            updates={"max_daily_budget": 100.0},
+        )
+
+        created = _added_of_type(db, TenantEnforcementSettingsDB)
+        assert len(created) == 1
+        assert created[0].tenant_id == 1
+        assert created[0].max_daily_budget == 100.0
+        db.commit.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_rules_update_replaces_db_rules(self):
+        """A rules update deletes existing DB rules and inserts the new set."""
+        existing_rule = TenantEnforcementRuleDB(
+            tenant_id=1,
+            rule_id="old_rule",
+            rule_type=DBViolationType.BUDGET_EXCEEDED,
+            threshold_value=100.0,
+            enforcement_mode=DBEnforcementMode.ADVISORY,
+            enabled=True,
+        )
+        row = _db_settings_row(rules=[existing_rule])
+        db = _make_db([_scalars_first(row)])
+        enforcer = AutopilotEnforcer(db=db)
+        enforcer._settings_cache[1] = EnforcementSettings(tenant_id=1)
+
+        new_rule = EnforcementRule(
+            rule_id="new_rule",
+            rule_type=ViolationType.BUDGET_EXCEEDED,
+            threshold_value=2500.0,
+            enforcement_mode=EnforcementMode.SOFT_BLOCK,
+            enabled=True,
+            description="New budget cap",
+        )
+        await enforcer.update_settings(tenant_id=1, updates={"rules": [new_rule]})
+
+        db.delete.assert_awaited_once_with(existing_rule)
+        inserted = _added_of_type(db, TenantEnforcementRuleDB)
+        assert len(inserted) == 1
+        assert inserted[0].rule_id == "new_rule"
+        assert inserted[0].rule_type == DBViolationType.BUDGET_EXCEEDED
+        assert inserted[0].enforcement_mode == DBEnforcementMode.SOFT_BLOCK
+        assert inserted[0].threshold_value == 2500.0
+        assert inserted[0].tenant_id == 1
+        db.commit.assert_awaited_once()
+
+
+class TestSubscriptionGate:
+    """Tests for the subscription gate in check_action()."""
+
+    @pytest.mark.asyncio
+    async def test_restricted_subscription_forces_advisory(self, monkeypatch):
+        """A lapsed subscription blocks execution with an advisory violation."""
+        info = SimpleNamespace(
+            is_access_restricted=True,
+            restriction_reason="Trial expired",
+            plan="starter",
+            status=SimpleNamespace(value="expired"),
+            days_in_grace=3,
+        )
+        monkeypatch.setattr(
+            "app.core.subscription.get_subscription_info",
+            AsyncMock(return_value=info),
+        )
+        enforcer = AutopilotEnforcer(db=None)
+
+        result = await enforcer.check_action(
+            tenant_id=1,
+            action_type="set_budget",
+            entity_type="campaign",
+            entity_id="camp_123",
+            proposed_value={"budget": 100.0},
+        )
+
+        assert result.allowed is False
+        assert result.mode == EnforcementMode.ADVISORY
+        assert len(result.violations) == 1
+        violation = result.violations[0]
+        assert violation["type"] == ViolationType.SUBSCRIPTION_EXPIRED.value
+        assert violation["message"] == "Trial expired"
+        assert violation["plan"] == "starter"
+        assert violation["status"] == "expired"
+        assert violation["days_in_grace"] == 3
+        assert result.warnings
+
+
+class TestCheckActionDbPaths:
+    """Tests for check_action() persistence branches."""
+
+    @pytest.mark.asyncio
+    async def test_soft_block_persists_confirmation_token(self):
+        """A soft-blocked action persists its confirmation token to the DB."""
+        # Two DB round-trips come from _check_frequency_rules
+        db = _make_db([_scalar_one(0), _scalars_first(None)])
+        enforcer = AutopilotEnforcer(db=db)
+        enforcer._settings_cache[1] = EnforcementSettings(
+            tenant_id=1,
+            default_mode=EnforcementMode.SOFT_BLOCK,
+            max_campaign_budget=1000.0,
+        )
+
+        result = await enforcer.check_action(
+            tenant_id=1,
+            action_type="set_budget",
+            entity_type="campaign",
+            entity_id="camp_123",
+            proposed_value={"budget": 5000.0},
+        )
+
+        assert result.allowed is False
+        assert result.requires_confirmation is True
+        tokens = _added_of_type(db, PendingConfirmationTokenDB)
+        assert len(tokens) == 1
+        assert tokens[0].token == result.confirmation_token
+        assert tokens[0].tenant_id == 1
+        assert tokens[0].action_type == "set_budget"
+        assert tokens[0].entity_id == "camp_123"
+        assert tokens[0].expires_at > tokens[0].created_at
+        db.flush.assert_awaited()
+
+    @pytest.mark.asyncio
+    async def test_hard_block_logs_audit_row_and_notifies(self):
+        """A hard-blocked action writes an audit row and sends a notification."""
+        db = _make_db([_scalar_one(0), _scalars_first(None)])
+        enforcer = AutopilotEnforcer(db=db)
+        enforcer._settings_cache[1] = EnforcementSettings(
+            tenant_id=1,
+            default_mode=EnforcementMode.HARD_BLOCK,
+            max_campaign_budget=1000.0,
+        )
+
+        notify = AsyncMock(return_value=True)
+        with patch("app.autopilot.enforcer.send_enforcement_notification", notify):
+            result = await enforcer.check_action(
+                tenant_id=1,
+                action_type="set_budget",
+                entity_type="campaign",
+                entity_id="camp_123",
+                proposed_value={"budget": 5000.0},
+            )
+
+        assert result.allowed is False
+        audit_rows = _added_of_type(db, EnforcementAuditLogDB)
+        assert len(audit_rows) == 1
+        assert audit_rows[0].intervention_action == DBInterventionAction.BLOCKED
+        assert audit_rows[0].enforcement_mode == DBEnforcementMode.HARD_BLOCK
+        assert audit_rows[0].violation_type == DBViolationType.BUDGET_EXCEEDED
+        notify.assert_awaited_once()
+
+
+class TestFrequencyRulesDbPaths:
+    """Tests for _check_frequency_rules() DB-backed checks."""
+
+    @pytest.mark.asyncio
+    async def test_daily_cap_and_min_gap_violations(self):
+        """Hitting the daily cap and a too-recent change yields two violations."""
+        last_change = datetime.now(UTC) - timedelta(hours=1)
+        db = _make_db([_scalar_one(5), _scalars_first(last_change)])
+        enforcer = AutopilotEnforcer(db=db)
+        settings = EnforcementSettings(tenant_id=1)  # 5/day cap, 4h min gap
+
+        violations = await enforcer._check_frequency_rules(settings, 1, "camp_123")
+
+        assert len(violations) == 2
+        assert all(
+            v["type"] == ViolationType.FREQUENCY_CAP_EXCEEDED.value for v in violations
+        )
+        assert violations[0]["actual"] == 5
+        assert violations[0]["threshold"] == 5
+        assert violations[1]["actual"] == pytest.approx(1.0, abs=0.1)
+        assert violations[1]["threshold"] == 4
+
+    @pytest.mark.asyncio
+    async def test_quiet_history_yields_no_violations(self):
+        """No recent budget changes means no frequency violations."""
+        db = _make_db([_scalar_one(0), _scalars_first(None)])
+        enforcer = AutopilotEnforcer(db=db)
+        settings = EnforcementSettings(tenant_id=1)
+
+        violations = await enforcer._check_frequency_rules(settings, 1, "camp_123")
+
+        assert violations == []
+
+
+class TestConfirmActionDbPaths:
+    """Tests for confirm_action() DB token fallback."""
+
+    def _token_row(self, tenant_id: int = 1) -> PendingConfirmationTokenDB:
+        """Construct an in-memory pending confirmation token row."""
+        now = datetime.now(UTC)
+        return PendingConfirmationTokenDB(
+            tenant_id=tenant_id,
+            token="a" * 64,
+            action_type="set_budget",
+            entity_id="camp_123",
+            violations=[{"type": "budget_exceeded"}],
+            created_at=now,
+            expires_at=now + timedelta(hours=1),
+        )
+
+    @pytest.mark.asyncio
+    async def test_falls_back_to_db_token_and_cleans_up(self):
+        """A token missing from memory is loaded from DB, used, and deleted."""
+        token_row = self._token_row()
+        db = _make_db([_scalars_first(token_row)])
+        enforcer = AutopilotEnforcer(db=db)
+
+        success, error = await enforcer.confirm_action(
+            tenant_id=1,
+            confirmation_token="a" * 64,
+            user_id=7,
+            override_reason="Manager approved",
+        )
+
+        assert success is True
+        assert error is None
+        db.delete.assert_awaited_once_with(token_row)
+        audit_rows = _added_of_type(db, EnforcementAuditLogDB)
+        assert len(audit_rows) == 1
+        assert audit_rows[0].user_id == 7
+        assert audit_rows[0].override_reason == "Manager approved"
+        assert audit_rows[0].intervention_action == DBInterventionAction.OVERRIDE_LOGGED
+
+    @pytest.mark.asyncio
+    async def test_db_miss_returns_error(self):
+        """A token absent from memory and DB is rejected."""
+        db = _make_db([_scalars_first(None)])
+        enforcer = AutopilotEnforcer(db=db)
+
+        success, error = await enforcer.confirm_action(
+            tenant_id=1,
+            confirmation_token="missing-token",
+            user_id=7,
+        )
+
+        assert success is False
+        assert "Invalid" in error or "expired" in error
+
+    @pytest.mark.asyncio
+    async def test_db_token_wrong_tenant_rejected(self):
+        """A DB token belonging to another tenant is rejected (but consumed)."""
+        token_row = self._token_row(tenant_id=2)
+        db = _make_db([_scalars_first(token_row)])
+        enforcer = AutopilotEnforcer(db=db)
+
+        success, error = await enforcer.confirm_action(
+            tenant_id=1,
+            confirmation_token="a" * 64,
+            user_id=7,
+        )
+
+        assert success is False
+        assert "tenant" in error.lower()
+        db.delete.assert_awaited_once_with(token_row)
+
+
+class TestInterventionLogDbPaths:
+    """Tests for _log_intervention() persistence and notification handling."""
+
+    @pytest.mark.asyncio
+    async def test_persists_audit_row_with_outcome_estimate(self):
+        """The audit row is persisted with an outcome estimate attached."""
+        db = _make_db()
+        enforcer = AutopilotEnforcer(db=db)
+
+        await enforcer._log_intervention(
+            tenant_id=1,
+            action_type="budget_decrease",
+            entity_type="campaign",
+            entity_id="camp_123",
+            violation_type=ViolationType.BUDGET_EXCEEDED,
+            intervention_action=InterventionAction.WARNED,
+            enforcement_mode=EnforcementMode.ADVISORY,
+            details={
+                "proposed_value": {"daily_budget_cents": 5_000},
+                "current_value": {"daily_budget_cents": 10_000},
+                "metrics": {"roas": 2.5},
+            },
+            user_id=3,
+        )
+
+        audit_rows = _added_of_type(db, EnforcementAuditLogDB)
+        assert len(audit_rows) == 1
+        row = audit_rows[0]
+        assert row.tenant_id == 1
+        assert row.violation_type == DBViolationType.BUDGET_EXCEEDED
+        assert row.intervention_action == DBInterventionAction.WARNED
+        assert row.enforcement_mode == DBEnforcementMode.ADVISORY
+        assert row.user_id == 3
+        # budget_decrease with a clean before/after pair -> "saved" outcome
+        assert row.outcome_type == "saved"
+        assert row.value_delivered_cents > 0
+        db.flush.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_outcome_estimation_failure_is_nonfatal(self, monkeypatch):
+        """An estimator crash degrades to null outcome fields, never raises."""
+
+        def _boom(**_kwargs: Any) -> None:
+            raise RuntimeError("estimator exploded")
+
+        monkeypatch.setattr("app.services.autopilot.outcomes.estimate_outcome", _boom)
+        db = _make_db()
+        enforcer = AutopilotEnforcer(db=db)
+
+        await enforcer._log_intervention(
+            tenant_id=1,
+            action_type="set_budget",
+            entity_type="campaign",
+            entity_id="camp_123",
+            violation_type=ViolationType.BUDGET_EXCEEDED,
+            intervention_action=InterventionAction.WARNED,
+            enforcement_mode=EnforcementMode.ADVISORY,
+            details={"proposed_value": {"budget": 100.0}},
+        )
+
+        audit_rows = _added_of_type(db, EnforcementAuditLogDB)
+        assert len(audit_rows) == 1
+        assert audit_rows[0].value_delivered_cents is None
+        assert audit_rows[0].outcome_type is None
+        assert audit_rows[0].outcome_confidence is None
+
+    @pytest.mark.asyncio
+    async def test_notification_failure_is_swallowed(self):
+        """A notification transport error never breaks intervention logging."""
+        db = _make_db()
+        enforcer = AutopilotEnforcer(db=db)
+
+        notify = AsyncMock(side_effect=ConnectionError("smtp down"))
+        with patch("app.autopilot.enforcer.send_enforcement_notification", notify):
+            await enforcer._log_intervention(
+                tenant_id=1,
+                action_type="set_budget",
+                entity_type="campaign",
+                entity_id="camp_123",
+                violation_type=ViolationType.BUDGET_EXCEEDED,
+                intervention_action=InterventionAction.BLOCKED,
+                enforcement_mode=EnforcementMode.HARD_BLOCK,
+                details={"violations": []},
+            )
+
+        notify.assert_awaited_once()
+        # The audit row was still persisted before the notification failed
+        assert len(_added_of_type(db, EnforcementAuditLogDB)) == 1
+
+
+class TestGetInterventionLogDbPaths:
+    """Tests for get_intervention_log()."""
+
+    @pytest.mark.asyncio
+    async def test_no_db_returns_empty_list(self):
+        """Without a DB session the log is empty."""
+        enforcer = AutopilotEnforcer(db=None)
+        assert await enforcer.get_intervention_log(tenant_id=1) == []
+
+    @pytest.mark.asyncio
+    async def test_returns_serialized_rows(self):
+        """Audit rows come back serialized via to_dict()."""
+        log_row = EnforcementAuditLogDB(
+            tenant_id=1,
+            timestamp=datetime.now(UTC),
+            action_type="set_budget",
+            entity_type="campaign",
+            entity_id="camp_123",
+            violation_type=DBViolationType.BUDGET_EXCEEDED,
+            intervention_action=DBInterventionAction.BLOCKED,
+            enforcement_mode=DBEnforcementMode.HARD_BLOCK,
+            details={"reason": "over budget"},
+        )
+        log_row.id = uuid4()
+        db = _make_db([_scalars_all([log_row])])
+        enforcer = AutopilotEnforcer(db=db)
+
+        entries = await enforcer.get_intervention_log(tenant_id=1, days=7, limit=10)
+
+        assert len(entries) == 1
+        assert entries[0]["action_type"] == "set_budget"
+        assert entries[0]["violation_type"] == "budget_exceeded"
+        assert entries[0]["intervention_action"] == "blocked"
+        assert entries[0]["enforcement_mode"] == "hard_block"
+        db.execute.assert_awaited_once()
+
+
+class TestAutoPauseExecutorPaths:
+    """Tests for auto_pause_campaign() platform executor delegation."""
+
+    async def _arm_hard_block(self, enforcer: AutopilotEnforcer) -> None:
+        """Put the tenant in hard-block mode so auto-pause can run."""
+        await enforcer.update_settings(
+            tenant_id=1,
+            updates={
+                "default_mode": EnforcementMode.HARD_BLOCK,
+                "enforcement_enabled": True,
+            },
+        )
+
+    @pytest.mark.asyncio
+    async def test_uses_platform_specific_executor(self, enforcer):
+        """The executor matching metrics['platform'] is used."""
+        await self._arm_hard_block(enforcer)
+        executor = AsyncMock()
+        executor.execute_action = AsyncMock(return_value={"success": True})
+
+        with patch(
+            "app.tasks.apply_actions_queue.PLATFORM_EXECUTORS",
+            {"google": executor},
+        ):
+            paused = await enforcer.auto_pause_campaign(
+                tenant_id=1,
+                campaign_id="camp_9",
+                reason="ROAS collapse",
+                metrics={"platform": "google", "roas": 0.2},
+            )
+
+        assert paused is True
+        executor.execute_action.assert_awaited_once()
+        assert executor.execute_action.await_args.kwargs["entity_id"] == "camp_9"
+        assert (
+            executor.execute_action.await_args.kwargs["action_type"] == "pause_campaign"
+        )
+
+    @pytest.mark.asyncio
+    async def test_returns_false_when_no_executor_available(self, enforcer):
+        """Unknown platform with no meta fallback returns False."""
+        await self._arm_hard_block(enforcer)
+
+        with patch("app.tasks.apply_actions_queue.PLATFORM_EXECUTORS", {}):
+            paused = await enforcer.auto_pause_campaign(
+                tenant_id=1,
+                campaign_id="camp_9",
+                reason="ROAS collapse",
+                metrics={"platform": "unknown"},
+            )
+
+        assert paused is False
+
+    @pytest.mark.asyncio
+    async def test_returns_false_when_executor_reports_failure(self, enforcer):
+        """A non-success executor result returns False."""
+        await self._arm_hard_block(enforcer)
+        executor = AsyncMock()
+        executor.execute_action = AsyncMock(
+            return_value={"success": False, "error": "api down"}
+        )
+
+        with patch(
+            "app.tasks.apply_actions_queue.PLATFORM_EXECUTORS",
+            {"meta": executor},
+        ):
+            paused = await enforcer.auto_pause_campaign(
+                tenant_id=1,
+                campaign_id="camp_9",
+                reason="ROAS collapse",
+                metrics={"roas": 0.2},
+            )
+
+        assert paused is False
+
+    @pytest.mark.asyncio
+    async def test_returns_false_on_network_error(self, enforcer):
+        """Network errors from the executor are caught, returning False."""
+        await self._arm_hard_block(enforcer)
+        executor = AsyncMock()
+        executor.execute_action = AsyncMock(side_effect=ConnectionError("timeout"))
+
+        with patch(
+            "app.tasks.apply_actions_queue.PLATFORM_EXECUTORS",
+            {"meta": executor},
+        ):
+            paused = await enforcer.auto_pause_campaign(
+                tenant_id=1,
+                campaign_id="camp_9",
+                reason="ROAS collapse",
+                metrics={"roas": 0.2},
+            )
+
+        assert paused is False
+
+    @pytest.mark.asyncio
+    async def test_returns_false_on_unexpected_error(self, enforcer):
+        """Unexpected executor errors are caught, returning False."""
+        await self._arm_hard_block(enforcer)
+        executor = AsyncMock()
+        executor.execute_action = AsyncMock(side_effect=RuntimeError("boom"))
+
+        with patch(
+            "app.tasks.apply_actions_queue.PLATFORM_EXECUTORS",
+            {"meta": executor},
+        ):
+            paused = await enforcer.auto_pause_campaign(
+                tenant_id=1,
+                campaign_id="camp_9",
+                reason="ROAS collapse",
+                metrics={"roas": 0.2},
+            )
+
+        assert paused is False
+
+
+class TestNotificationDbPaths:
+    """Tests for send_enforcement_notification() email/Slack channels."""
+
+    def _intervention(self) -> InterventionLog:
+        """Build a representative blocked-action intervention."""
+        return InterventionLog(
+            tenant_id=1,
+            timestamp=datetime.now(UTC),
+            action_type="set_budget",
+            entity_type="campaign",
+            entity_id="camp_123",
+            violation_type=ViolationType.BUDGET_EXCEEDED,
+            intervention_action=InterventionAction.BLOCKED,
+            enforcement_mode=EnforcementMode.HARD_BLOCK,
+            details={"reason": "over budget"},
+        )
+
+    @pytest.mark.asyncio
+    @patch("app.autopilot.enforcer.get_email_service")
+    async def test_email_sent_to_all_admin_users(self, mock_get_email):
+        """Emails go to every active admin/manager for the tenant."""
+        email_svc = MagicMock()
+        email_svc._create_message.return_value = MagicMock()
+        email_svc._send_email.return_value = True
+        mock_get_email.return_value = email_svc
+
+        db = _make_db(
+            [
+                _scalar_one_or_none("Acme Corp"),
+                _rows_all([("admin@acme.test", "Admin"), ("mgr@acme.test", "Mgr")]),
+            ]
+        )
+
+        sent = await send_enforcement_notification(
+            tenant_id=1,
+            intervention=self._intervention(),
+            notification_channels=["email"],
+            db=db,
+        )
+
+        assert sent is True
+        assert email_svc._send_email.call_count == 2
+        recipients = [c.args[0] for c in email_svc._send_email.call_args_list]
+        assert recipients == ["admin@acme.test", "mgr@acme.test"]
+        assert email_svc._create_message.call_args.kwargs["to_email"] == "mgr@acme.test"
+
+    @pytest.mark.asyncio
+    @patch("app.autopilot.enforcer.get_email_service")
+    async def test_email_smtp_failure_returns_false(self, mock_get_email):
+        """Per-recipient SMTP failures are logged and produce a False result."""
+        email_svc = MagicMock()
+        email_svc._create_message.return_value = MagicMock()
+        email_svc._send_email.side_effect = smtplib.SMTPException("relay refused")
+        mock_get_email.return_value = email_svc
+
+        db = _make_db(
+            [
+                _scalar_one_or_none("Acme Corp"),
+                _rows_all([("admin@acme.test", "Admin")]),
+            ]
+        )
+
+        sent = await send_enforcement_notification(
+            tenant_id=1,
+            intervention=self._intervention(),
+            notification_channels=["email"],
+            db=db,
+        )
+
+        assert sent is False
+
+    @pytest.mark.asyncio
+    @patch("app.autopilot.enforcer.get_email_service")
+    async def test_no_admin_users_sends_nothing(self, mock_get_email):
+        """No admin users (and no tenant name) means no email is attempted."""
+        db = _make_db([_scalar_one_or_none(None), _rows_all([])])
+
+        sent = await send_enforcement_notification(
+            tenant_id=1,
+            intervention=self._intervention(),
+            notification_channels=["email"],
+            db=db,
+        )
+
+        assert sent is False
+        mock_get_email.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_email_db_error_is_swallowed(self):
+        """A DB connection error during email lookup is caught."""
+        db = MagicMock()
+        db.execute = AsyncMock(side_effect=ConnectionError("db unreachable"))
+
+        sent = await send_enforcement_notification(
+            tenant_id=1,
+            intervention=self._intervention(),
+            notification_channels=["email"],
+            db=db,
+        )
+
+        assert sent is False
+
+    @pytest.mark.asyncio
+    @patch("app.autopilot.enforcer.SlackNotificationService")
+    async def test_slack_failure_is_swallowed(self, mock_slack_cls):
+        """A Slack transport error is caught and reported as not sent."""
+        slack_instance = MagicMock()
+        slack_instance.send_message = AsyncMock(
+            side_effect=ConnectionError("webhook down")
+        )
+        slack_instance.close = AsyncMock()
+        mock_slack_cls.return_value = slack_instance
+
+        sent = await send_enforcement_notification(
+            tenant_id=1,
+            intervention=self._intervention(),
+            notification_channels=["slack"],
+        )
+
+        assert sent is False
