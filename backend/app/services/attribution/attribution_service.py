@@ -15,6 +15,7 @@ Supported models:
 """
 
 import math
+import random
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
@@ -1008,11 +1009,14 @@ class MarkovAttributionModel:
     rule-based models.
     """
 
-    def __init__(self):
+    def __init__(self, seed: Optional[int] = 0):
         self.transition_matrix: Dict[str, Dict[str, float]] = {}
         self.conversion_probs: Dict[str, float] = {}
         self.removal_effects: Dict[str, float] = {}
         self._is_fitted = False
+        # Statistical sampling only (not security) — seeded for reproducible
+        # attribution results across runs. Pass seed=None for OS entropy.
+        self._rng = random.Random(seed)
 
     def fit(
         self, journeys: List[List[str]], converted: List[bool]
@@ -1106,17 +1110,10 @@ class MarkovAttributionModel:
                 if not next_states:
                     break
 
-                # Sample next state
+                # Sample next state from the transition distribution
                 states = list(next_states.keys())
                 probs = list(next_states.values())
-                state = states[
-                    int(
-                        sum(
-                            p < sum(probs[: i + 1])
-                            for i, p in enumerate([hash(str(_)) % 1000 / 1000])
-                        )
-                    )
-                ]
+                state = self._rng.choices(states, weights=probs, k=1)[0]
 
         return conversions / num_simulations
 
