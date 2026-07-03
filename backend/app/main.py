@@ -266,6 +266,24 @@ def create_application() -> FastAPI:
     )
 
     # -------------------------------------------------------------------------
+    # Prometheus HTTP Instrumentation (#508)
+    # -------------------------------------------------------------------------
+    # Importing app.core.metrics registers the domain metrics (EMQ, trust
+    # gate, autopilot, signal health, CAPI, ...) in the global registry so
+    # the always-on /metrics endpoint below serves them. instrument()
+    # attaches the HTTP latency/size/in-progress collectors plus the
+    # per-tenant request counter; it is a no-op unless ENABLE_METRICS=true
+    # (should_respect_env_var). Deliberately NOT setup_metrics(): its
+    # expose() would register a second, env-gated /metrics route alongside
+    # the unconditional one below.
+    from app.core.metrics import (
+        create_instrumentator,
+        request_by_tenant_instrumentation,
+    )
+
+    create_instrumentator().add(request_by_tenant_instrumentation()).instrument(app)
+
+    # -------------------------------------------------------------------------
     # Documentation Access Control (Production)
     # -------------------------------------------------------------------------
     # OpenAPI docs are enabled in all environments but protected in production
@@ -744,6 +762,8 @@ def create_application() -> FastAPI:
     # -------------------------------------------------------------------------
     # Prometheus Metrics Endpoint
     # -------------------------------------------------------------------------
+    # Always-on exposition of the full global registry (domain metrics +
+    # HTTP collectors when ENABLE_METRICS=true — see instrumentation above).
     @app.get("/metrics", include_in_schema=False)
     async def metrics():
         """Prometheus metrics endpoint."""
