@@ -87,7 +87,7 @@ def _sub_info(
 def _patch_tier(monkeypatch: pytest.MonkeyPatch, tier: SubscriptionTier) -> None:
     """Patch the module-level get_tenant_tier used by gates and helpers."""
 
-    async def fake_tier(_tenant_id: int) -> SubscriptionTier:
+    async def fake_tier(_tenant_id: int, db=None) -> SubscriptionTier:
         return tier
 
     monkeypatch.setattr(fg, "get_tenant_tier", fake_tier)

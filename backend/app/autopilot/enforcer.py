@@ -421,7 +421,11 @@ class AutopilotEnforcer:
         # budget without consent.
         from app.core.subscription import get_subscription_info
 
-        sub_info = await get_subscription_info(tenant_id)
+        # Thread the enforcer's session through so the lookup sees rows
+        # created in the caller's (possibly uncommitted) transaction.
+        # self.db may be None (e.g. unit tests) — the lookup then falls
+        # back to opening its own session.
+        sub_info = await get_subscription_info(tenant_id, db=self.db)
         if sub_info.is_access_restricted:
             return EnforcementResult(
                 allowed=False,

@@ -23,7 +23,7 @@ def _request(tenant_id=5):
 
 
 async def test_starter_blocked_from_enterprise_feature(monkeypatch):
-    async def fake_tier(_tenant_id):
+    async def fake_tier(_tenant_id, db=None):
         return SubscriptionTier.STARTER
 
     monkeypatch.setattr(fg, "get_tenant_tier", fake_tier)
@@ -35,7 +35,7 @@ async def test_starter_blocked_from_enterprise_feature(monkeypatch):
 
 
 async def test_enterprise_allowed(monkeypatch):
-    async def fake_tier(_tenant_id):
+    async def fake_tier(_tenant_id, db=None):
         return SubscriptionTier.ENTERPRISE
 
     monkeypatch.setattr(fg, "get_tenant_tier", fake_tier)
@@ -46,7 +46,7 @@ async def test_enterprise_allowed(monkeypatch):
 
 
 async def test_gdpr_tools_gated_to_enterprise(monkeypatch):
-    async def fake_tier(_tenant_id):
+    async def fake_tier(_tenant_id, db=None):
         return SubscriptionTier.PROFESSIONAL
 
     monkeypatch.setattr(fg, "get_tenant_tier", fake_tier)

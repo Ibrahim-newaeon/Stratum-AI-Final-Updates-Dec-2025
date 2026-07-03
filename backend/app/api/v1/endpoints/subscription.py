@@ -11,7 +11,8 @@ view expiry warnings, and access billing information.
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 from pydantic import BaseModel, ConfigDict
@@ -24,6 +25,7 @@ from app.core.subscription import (
     get_subscription_info,
 )
 from app.core.tiers import TIER_PRICING, SubscriptionTier
+from app.db.session import get_async_session
 
 router = APIRouter(prefix="/subscription", tags=["subscription"])
 
@@ -86,7 +88,9 @@ class SubscriptionConfigResponse(BaseModel):
 
 
 @router.get("/status", response_model=SubscriptionStatusResponse)
-async def get_subscription_status(request: Request):
+async def get_subscription_status(
+    request: Request, db: AsyncSession = Depends(get_async_session)
+):
     """
     Get current subscription status for the authenticated tenant.
 
@@ -108,7 +112,7 @@ async def get_subscription_status(request: Request):
             detail="Authentication required",
         )
 
-    info = await get_subscription_info(tenant_id)
+    info = await get_subscription_info(tenant_id, db=db)
     warning_message = get_expiry_warning_message(info)
 
     # Get pricing info for current tier
@@ -163,7 +167,9 @@ async def get_subscription_config():
 
 
 @router.get("/check")
-async def check_subscription_valid(request: Request):
+async def check_subscription_valid(
+    request: Request, db: AsyncSession = Depends(get_async_session)
+):
     """
     Quick check if subscription is valid for access.
 
@@ -183,7 +189,7 @@ async def check_subscription_valid(request: Request):
             detail="Authentication required",
         )
 
-    info = await get_subscription_info(tenant_id)
+    info = await get_subscription_info(tenant_id, db=db)
 
     return {
         "valid": not info.is_access_restricted,
@@ -198,7 +204,9 @@ async def check_subscription_valid(request: Request):
 
 
 @router.get("/warnings")
-async def get_subscription_warnings(request: Request):
+async def get_subscription_warnings(
+    request: Request, db: AsyncSession = Depends(get_async_session)
+):
     """
     Get any active warnings about the subscription.
 
@@ -213,7 +221,7 @@ async def get_subscription_warnings(request: Request):
             detail="Authentication required",
         )
 
-    info = await get_subscription_info(tenant_id)
+    info = await get_subscription_info(tenant_id, db=db)
     warnings = []
 
     if info.status == SubscriptionStatus.EXPIRING_SOON:
@@ -266,7 +274,9 @@ async def get_subscription_warnings(request: Request):
 
 
 @router.get("/usage-summary")
-async def get_subscription_usage_summary(request: Request):
+async def get_subscription_usage_summary(
+    request: Request, db: AsyncSession = Depends(get_async_session)
+):
     """
     Get a summary of subscription usage vs limits.
 
@@ -281,22 +291,17 @@ async def get_subscription_usage_summary(request: Request):
         )
 
     # Get subscription info
-    info = await get_subscription_info(tenant_id)
+    info = await get_subscription_info(tenant_id, db=db)
 
-    # Get usage from tenant limits service
-    from app.db.session import get_async_session
+    # Get usage from tenant limits service (reuse the request session)
     from app.services.tenant.limits import TenantLimitService
 
-    async for db in get_async_session():
-        limit_service = TenantLimitService(db)
-        try:
-            usage = await limit_service.get_usage_summary(tenant_id)
-        except (ConnectionError, TimeoutError, OSError, ValueError) as exc:
-            logger.warning(
-                f"Failed to fetch usage summary for tenant {tenant_id}: {exc}"
-            )
-            usage = {}
-        break
+    limit_service = TenantLimitService(db)
+    try:
+        usage = await limit_service.get_usage_summary(tenant_id)
+    except (ConnectionError, TimeoutError, OSError, ValueError) as exc:
+        logger.warning(f"Failed to fetch usage summary for tenant {tenant_id}: {exc}")
+        usage = {}
 
     return {
         "subscription": info.to_dict(),
