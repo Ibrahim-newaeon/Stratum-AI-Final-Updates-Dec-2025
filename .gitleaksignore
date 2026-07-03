@@ -5,3 +5,10 @@
 7cc6b8d:.claude/settings.local.json:jwt:178
 7cc6b8d:.claude/settings.local.json:jwt:179
 7cc6b8d:.claude/settings.local.json:jwt:182
+
+# Throwaway CI test env values in ci.yml (SECRET_KEY / PII_ENCRYPTION_KEY for the
+# ephemeral CI Postgres/Redis services — not real credentials; values predate this
+# commit, but hoisting them to job-level env moved them to new lines, minting new
+# fingerprints).
+5776823e8b9dc23c8e2e1a0e379c4fb225f44048:.github/workflows/ci.yml:generic-api-key:110
+5776823e8b9dc23c8e2e1a0e379c4fb225f44048:.github/workflows/ci.yml:generic-api-key:112
