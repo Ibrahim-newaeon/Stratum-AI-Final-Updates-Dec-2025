@@ -135,7 +135,15 @@ omit =
 # to ~50.9% locally (higher in CI, where unit modules needing optional deps —
 # bcrypt/PIL/boto3 — also load). Floor set to 50.0 with margin below the
 # measured number to avoid run-to-run flakiness.
-fail_under = 50.0
+#
+# -> 51.5 (autopilot batch: enforcer.py DB paths — settings load/persist/rules
+# sync, soft-block token persistence, hard-block audit + notification,
+# frequency rules, intervention log, auto_pause executors; service.py in
+# full — trust-gate branches in queue_action, action lifecycle transitions,
+# summary aggregation, can_auto_execute caps, recommendations mapping.
+# enforcer 71.88% -> ~98.8, service 27.31% -> 100 on the combined run; CI
+# combined measured 51.37% before this batch, ~51.75% expected after). See #342.
+fail_under = 51.5
 
 # Show missing line numbers
 show_missing = True
