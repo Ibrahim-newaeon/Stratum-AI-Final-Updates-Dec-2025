@@ -167,6 +167,22 @@ async def _active_subscription(monkeypatch):
     yield
 
 
+@pytest.fixture(autouse=True)
+def _reset_security_redis_pool():
+    """Reset app.core.security's cached Redis pool between tests.
+
+    The module caches its Redis pool on the first event loop that touches it
+    (fine in prod — one long-lived loop per worker). Tests may run on fresh
+    loops, so a pool cached by an earlier test (e.g. via a login call) would
+    raise 'Event loop is closed' in later ones. Drop the cache after each test.
+    """
+    yield
+    import app.core.security as security
+
+    security._redis_pool = None
+    security._redis_pool_lock = None
+
+
 @pytest.fixture(scope="function")
 def sync_db_session(sync_engine) -> Generator[Session, None, None]:
     """Create a sync database session for tests that require it."""

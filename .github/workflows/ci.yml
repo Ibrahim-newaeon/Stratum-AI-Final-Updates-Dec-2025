@@ -19,14 +19,99 @@ env:
 
 jobs:
   # ===========================================================================
-  # Backend Tests & Linting
+  # Backend Quality Gates (lint / format / imports / types)
   # ===========================================================================
-  backend:
-    name: Backend CI
+  # Every gate in the backend jobs runs with continue-on-error and a final
+  # aggregator step, so an early failure can't mask the later gates. This is
+  # the #343 hardening: the old sequential job died at the first failing step
+  # (Black), which hid never-running integration tests, a coverage gate that
+  # had never passed, and Bandit findings for months.
+  backend-quality:
+    name: Backend Quality
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: backend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Lint with Ruff
+        id: ruff
+        continue-on-error: true
+        run: ruff check . --output-format=github
+
+      - name: Check formatting with Black
+        id: black
+        continue-on-error: true
+        run: black --check --diff .
+
+      - name: Check import sorting with isort
+        id: isort
+        continue-on-error: true
+        run: isort --check-only --diff .
+
+      - name: Type check with mypy
+        id: mypy
+        continue-on-error: true
+        run: mypy app --ignore-missing-imports --no-error-summary
+
+      - name: Aggregate quality gates
+        env:
+          GATE_RUFF: ${{ steps.ruff.outcome }}
+          GATE_BLACK: ${{ steps.black.outcome }}
+          GATE_ISORT: ${{ steps.isort.outcome }}
+          GATE_MYPY: ${{ steps.mypy.outcome }}
+        run: |
+          failed=0
+          for gate in "Ruff:$GATE_RUFF" "Black:$GATE_BLACK" \
+                      "isort:$GATE_ISORT" "mypy:$GATE_MYPY"; do
+            name="${gate%%:*}"; outcome="${gate##*:}"
+            echo "$name: $outcome"
+            if [ "$outcome" != "success" ]; then
+              echo "::error::Quality gate failed: $name"
+              failed=1
+            fi
+          done
+          exit $failed
+
+  # ===========================================================================
+  # Backend Tests & Coverage
+  # ===========================================================================
+  backend-tests:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    env:
+      DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/stratum_test
+      DATABASE_URL_SYNC: postgresql://test:test@localhost:5432/stratum_test
+      # The integration conftest reads TEST_DATABASE_URL[_SYNC] (falling back
+      # to a local "stratum" default) — point it at the CI Postgres service
+      # so it doesn't try to auth as a non-existent "stratum" role.
+      TEST_DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/stratum_test
+      TEST_DATABASE_URL_SYNC: postgresql://test:test@localhost:5432/stratum_test
+      REDIS_URL: redis://localhost:6379/0
+      SECRET_KEY: test-secret-key-that-is-at-least-32-chars-long
+      JWT_SECRET_KEY: test-jwt-secret-that-is-at-least-32-chars
+      PII_ENCRYPTION_KEY: dGVzdC1lbmNyeXB0aW9uLWtleS0zMmJ5dGVz
+      APP_ENV: test
+      PYTHONPATH: .
 
     services:
       postgres:
@@ -69,48 +154,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Lint with Ruff
-        run: ruff check . --output-format=github
-
-      - name: Check formatting with Black
-        run: black --check --diff .
-
-      - name: Check import sorting with isort
-        run: isort --check-only --diff .
-
-      - name: Type check with mypy
-        run: mypy app --ignore-missing-imports --no-error-summary
-
       - name: Run unit tests
-        env:
-          DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/stratum_test
-          DATABASE_URL_SYNC: postgresql://test:test@localhost:5432/stratum_test
-          REDIS_URL: redis://localhost:6379/0
-          SECRET_KEY: test-secret-key-that-is-at-least-32-chars-long
-          JWT_SECRET_KEY: test-jwt-secret-that-is-at-least-32-chars
-          PII_ENCRYPTION_KEY: dGVzdC1lbmNyeXB0aW9uLWtleS0zMmJ5dGVz
-          APP_ENV: test
-          PYTHONPATH: .
+        id: unit
+        continue-on-error: true
         run: |
           coverage erase
           pytest tests/unit -v --tb=short -m "unit or not integration" \
+            --junitxml=unit-junit.xml \
             --cov=app --cov-config=.coveragerc --cov-append --cov-fail-under=0
 
       - name: Run integration tests
-        env:
-          DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/stratum_test
-          DATABASE_URL_SYNC: postgresql://test:test@localhost:5432/stratum_test
-          # The integration conftest reads TEST_DATABASE_URL[_SYNC] (falling back
-          # to a local "stratum" default) — point it at the CI Postgres service
-          # so it doesn't try to auth as a non-existent "stratum" role.
-          TEST_DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/stratum_test
-          TEST_DATABASE_URL_SYNC: postgresql://test:test@localhost:5432/stratum_test
-          REDIS_URL: redis://localhost:6379/0
-          SECRET_KEY: test-secret-key-that-is-at-least-32-chars-long
-          JWT_SECRET_KEY: test-jwt-secret-that-is-at-least-32-chars
-          PII_ENCRYPTION_KEY: dGVzdC1lbmNyeXB0aW9uLWtleS0zMmJ5dGVz
-          APP_ENV: test
-          PYTHONPATH: .
+        id: integration
+        continue-on-error: true
         run: |
           # Integration tests run on a single session-scoped event loop: the
           # FastAPI test app uses Starlette BaseHTTPMiddleware (TenantMiddleware),
@@ -120,36 +175,54 @@ jobs:
           pytest tests/integration -v --tb=short -m "integration" \
             -o asyncio_default_test_loop_scope=session \
             -o asyncio_default_fixture_loop_scope=session \
+            --junitxml=integration-junit.xml \
             --cov=app --cov-config=.coveragerc --cov-append --cov-fail-under=0
 
-      - name: Generate coverage report
-        env:
-          DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/stratum_test
-          DATABASE_URL_SYNC: postgresql://test:test@localhost:5432/stratum_test
-          REDIS_URL: redis://localhost:6379/0
-          SECRET_KEY: test-secret-key-that-is-at-least-32-chars-long
-          JWT_SECRET_KEY: test-jwt-secret-that-is-at-least-32-chars
-          PII_ENCRYPTION_KEY: dGVzdC1lbmNyeXB0aW9uLWtleS0zMmJ5dGVz
-          APP_ENV: test
-          PYTHONPATH: .
+      - name: Assert suites actually ran (vacuous-pass guard)
+        id: rancount
+        continue-on-error: true
+        run: |
+          # A suite that collects 0 tests or skips nearly everything (e.g. a
+          # broken DB connection turning into skips) must fail loudly, not
+          # pass vacuously. Floors sit well under the current counts
+          # (3561 unit / 706 integration at time of writing) but far above
+          # any plausible "the harness silently broke" number.
+          python - <<'EOF'
+          import sys
+          import xml.etree.ElementTree as ET
+
+          FLOORS = {"unit-junit.xml": 3000, "integration-junit.xml": 600}
+          failed = False
+          for path, floor in FLOORS.items():
+              try:
+                  root = ET.parse(path).getroot()
+              except (OSError, ET.ParseError) as exc:
+                  print(f"::error::{path}: unreadable junit report ({exc})")
+                  failed = True
+                  continue
+              suites = [root] if root.tag == "testsuite" else list(root)
+              tests = sum(int(s.get("tests", 0)) for s in suites)
+              skipped = sum(int(s.get("skipped", 0)) for s in suites)
+              ran = tests - skipped
+              print(f"{path}: collected={tests} skipped={skipped} ran={ran} floor={floor}")
+              if ran < floor:
+                  print(f"::error::{path}: only {ran} tests ran, floor is {floor}")
+                  failed = True
+          sys.exit(1 if failed else 0)
+          EOF
+
+      - name: Coverage report (ratchet gate)
+        id: coverage
+        continue-on-error: true
         run: |
           # Combined unit + integration coverage: both test steps above ran with
           # --cov-append into a single .coverage file (unit and integration each
           # exercise different layers — endpoints/services are driven by the
           # integration suite). Emit the combined report + xml and enforce the
-          # .coveragerc fail_under on the COMBINED total.
+          # .coveragerc fail_under (the #342 ratchet — only ever raise it) on
+          # the COMBINED total.
           coverage xml
           coverage report --show-missing
-
-      - name: Security scan with Bandit
-        run: |
-          pip install bandit
-          bandit -r app/ -ll -ii
-
-      - name: Dependency audit (pip-audit)
-        run: |
-          pip install pip-audit
-          pip-audit --strict --desc on
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v7
@@ -165,6 +238,83 @@ jobs:
           name: backend-coverage
           path: backend/htmlcov
           retention-days: 7
+
+      - name: Aggregate test gates
+        env:
+          GATE_UNIT: ${{ steps.unit.outcome }}
+          GATE_INTEGRATION: ${{ steps.integration.outcome }}
+          GATE_RANCOUNT: ${{ steps.rancount.outcome }}
+          GATE_COVERAGE: ${{ steps.coverage.outcome }}
+        run: |
+          failed=0
+          for gate in "Unit tests:$GATE_UNIT" \
+                      "Integration tests:$GATE_INTEGRATION" \
+                      "Ran-count guard:$GATE_RANCOUNT" \
+                      "Coverage ratchet:$GATE_COVERAGE"; do
+            name="${gate%%:*}"; outcome="${gate##*:}"
+            echo "$name: $outcome"
+            if [ "$outcome" != "success" ]; then
+              echo "::error::Test gate failed: $name"
+              failed=1
+            fi
+          done
+          exit $failed
+
+  # ===========================================================================
+  # Backend Security Gates (Bandit / pip-audit)
+  # ===========================================================================
+  backend-security:
+    name: Backend Security
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Security scan with Bandit
+        id: bandit
+        continue-on-error: true
+        run: |
+          pip install bandit
+          bandit -r app/ -ll -ii
+
+      - name: Dependency audit (pip-audit)
+        id: pipaudit
+        continue-on-error: true
+        run: |
+          pip install pip-audit
+          pip-audit --strict --desc on
+
+      - name: Aggregate security gates
+        env:
+          GATE_BANDIT: ${{ steps.bandit.outcome }}
+          GATE_PIPAUDIT: ${{ steps.pipaudit.outcome }}
+        run: |
+          failed=0
+          for gate in "Bandit:$GATE_BANDIT" "pip-audit:$GATE_PIPAUDIT"; do
+            name="${gate%%:*}"; outcome="${gate##*:}"
+            echo "$name: $outcome"
+            if [ "$outcome" != "success" ]; then
+              echo "::error::Security gate failed: $name"
+              failed=1
+            fi
+          done
+          exit $failed
 
   # ===========================================================================
   # Frontend Tests & Build
@@ -338,17 +488,21 @@ jobs:
   gate:
     name: Release Gate
     runs-on: ubuntu-latest
-    needs: [backend, frontend, security, secrets]
+    needs: [backend-quality, backend-tests, backend-security, frontend, security, secrets]
     if: always()
 
     steps:
       - name: Check all required jobs passed
         run: |
-          echo "Backend: ${{ needs.backend.result }}"
+          echo "Backend Quality: ${{ needs.backend-quality.result }}"
+          echo "Backend Tests: ${{ needs.backend-tests.result }}"
+          echo "Backend Security: ${{ needs.backend-security.result }}"
           echo "Frontend: ${{ needs.frontend.result }}"
           echo "Security: ${{ needs.security.result }}"
           echo "Secrets: ${{ needs.secrets.result }}"
-          if [[ "${{ needs.backend.result }}" != "success" ]] || \
+          if [[ "${{ needs.backend-quality.result }}" != "success" ]] || \
+             [[ "${{ needs.backend-tests.result }}" != "success" ]] || \
+             [[ "${{ needs.backend-security.result }}" != "success" ]] || \
              [[ "${{ needs.frontend.result }}" != "success" ]] || \
              [[ "${{ needs.security.result }}" != "success" ]] || \
              [[ "${{ needs.secrets.result }}" != "success" ]]; then
@@ -363,7 +517,7 @@ jobs:
   load-tests:
     name: Load Tests
     runs-on: ubuntu-latest
-    needs: [backend, frontend]
+    needs: [backend-tests, frontend]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
     services:

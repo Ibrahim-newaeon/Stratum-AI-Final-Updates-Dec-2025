@@ -17,19 +17,8 @@ import pytest_asyncio
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
-
-@pytest.fixture(autouse=True)
-def _reset_security_redis_pool():
-    """app.core.security caches its Redis pool on the first event loop that
-    touches it (fine in prod — one long-lived loop per worker). Each test
-    here runs on a fresh loop, so a pool cached by an earlier test's login
-    would raise 'Event loop is closed'. Drop the cache between tests."""
-    yield
-    import app.core.security as security
-
-    security._redis_pool = None
-    security._redis_pool_lock = None
-
+# NOTE: the security-module Redis pool is reset between tests by the autouse
+# _reset_security_redis_pool fixture in tests/integration/conftest.py.
 
 _INVITE = "/api/v1/users/invite"
 _ACCEPT = "/api/v1/auth/accept-invite"
