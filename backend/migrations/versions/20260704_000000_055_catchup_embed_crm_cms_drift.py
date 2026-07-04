@@ -88,8 +88,7 @@ CHANGELOG_INDEX_NAME = "ix_changelog_entries_tenant_id"
 
 def _apply_rls(table: str) -> None:
     """Apply the tenant-isolation RLS policies (same pattern as 034)."""
-    op.execute(
-        f"""
+    op.execute(f"""
         DO $$
         BEGIN
             -- Check if table exists AND has tenant_id column
@@ -122,14 +121,12 @@ def _apply_rls(table: str) -> None:
                 RAISE NOTICE 'Table {table} missing tenant_id, skipping RLS';
             END IF;
         END $$;
-        """
-    )
+        """)
 
 
 def _remove_rls(table: str) -> None:
     """Remove the RLS policies added by this migration (034 pattern)."""
-    op.execute(
-        f"""
+    op.execute(f"""
         DO $$
         BEGIN
             IF EXISTS (
@@ -142,8 +139,7 @@ def _remove_rls(table: str) -> None:
                 ALTER TABLE {table} NO FORCE ROW LEVEL SECURITY;
             END IF;
         END $$;
-        """
-    )
+        """)
 
 
 def _ensure_crm_provider_enum() -> None:
@@ -152,8 +148,7 @@ def _ensure_crm_provider_enum() -> None:
     Uses a DO-block instead of inspector/checkfirst so it also works in
     offline (--sql) mode, where catalog queries are impossible.
     """
-    op.execute(
-        """
+    op.execute("""
         DO $$
         BEGIN
             CREATE TYPE crm_provider AS ENUM (
@@ -162,8 +157,7 @@ def _ensure_crm_provider_enum() -> None:
         EXCEPTION
             WHEN duplicate_object THEN NULL;
         END $$;
-        """
-    )
+        """)
 
 
 def _create_embed_widgets() -> None:

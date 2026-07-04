@@ -50,7 +50,9 @@ from app.models.attribution import (
 )
 
 # Autopilot Enforcement models
-from app.models.autopilot import EnforcementAuditLog
+from app.models.autopilot import (
+    EnforcementAuditLog,
+)
 from app.models.autopilot import EnforcementMode as AutopilotEnforcementMode
 from app.models.autopilot import InterventionAction as AutopilotInterventionAction
 from app.models.autopilot import (
