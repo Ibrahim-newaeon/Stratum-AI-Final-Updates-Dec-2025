@@ -6,7 +6,7 @@ product-catalog CRUD, COGS coverage, and profit-ROAS reads.
 
 These endpoints depend on ``app.tenancy.deps.get_db`` (overridden by the harness
 alongside ``get_async_session``), so they share the test's savepoint-scoped
-session and tenant. The profit tables are created via ``create_all``.
+session and tenant. The profit tables are created by the migration chain (see conftest).
 
 With no orders/spend seeded, the profit-ROAS math runs against an empty series
 and returns a graceful envelope — that's the contract these reads pin.

@@ -506,86 +506,53 @@ async def superadmin_headers(superadmin_user) -> dict:
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_database(sync_engine):
-    """
-    Set up the test database before running tests.
+    """Build the test schema with the real Alembic migration chain (#343).
 
-    Creates all tables and runs migrations if needed.
+    Previously this fixture built schema via ``Base.metadata.create_all``
+    plus manual ``CREATE TYPE`` / ``ALTER COLUMN`` DDL to fake the native
+    enums migrations create — which let model<->migration drift pass
+    unnoticed (see migration 055). Running the actual chain keeps the test
+    schema identical to production (native enum columns included, so
+    ``StrEnumType.bind_expression``'s CAST just works) at a cost of ~10s
+    once per session.
+
+    Requires a pgvector-enabled PostgreSQL image (migration 049 runs
+    ``CREATE EXTENSION vector``) — CI uses ``pgvector/pgvector:pg16``,
+    same as the local compose db.
     """
-    # Import ALL models so they register with Base.metadata
+    from pathlib import Path
+
+    from alembic.config import Config
     from sqlalchemy import text
 
-    import app.base_models  # noqa: F401
-    import app.models.attribution  # noqa: F401
-    import app.models.audience_sync  # noqa: F401
-    import app.models.autopilot  # noqa: F401
-    import app.models.campaign_builder  # noqa: F401
+    from alembic import command
 
-    # import app.models.audit_services  # noqa: F401 — excluded: 'metadata' column name conflicts with SQLAlchemy
-    import app.models.capi_delivery  # noqa: F401
-    import app.models.cdp  # noqa: F401
-    import app.models.client  # noqa: F401
-    import app.models.cms  # noqa: F401
-    import app.models.crm  # noqa: F401
-    import app.models.drip  # noqa: F401
-    import app.models.embed_widgets  # noqa: F401
-    import app.models.emq_playbook  # noqa: F401
-    import app.models.launch_readiness  # noqa: F401
-    import app.models.newsletter  # noqa: F401
-    import app.models.onboarding  # noqa: F401
-    import app.models.pacing  # noqa: F401
-    import app.models.profit  # noqa: F401
-    import app.models.push  # noqa: F401
-    import app.models.reporting  # noqa: F401
-    import app.models.settings  # noqa: F401
-    import app.models.trust_layer  # noqa: F401
-    from app.db.base import StrEnumType
-    from app.db.base_class import Base
-
-    # Native PostgreSQL ENUM types are normally created by Alembic migrations,
-    # and the production columns are that native enum type. These tests build
-    # the schema with create_all instead, which stores StrEnumType columns as
-    # VARCHAR (its impl). But StrEnumType.bind_expression emits
-    # CAST(value AS <pg_enum>), so queries become "varchar_col <> enum_value" —
-    # which Postgres rejects ("operator does not exist"). To match production we
-    # (1) create each enum type and (2) alter the StrEnumType columns to it.
-    enum_types: dict[str, list[str]] = {}
-    enum_columns: list[tuple[str, str, str]] = []  # (table, column, pg_enum)
-    for table in Base.metadata.tables.values():
-        for column in table.columns:
-            if isinstance(column.type, StrEnumType):
-                pg_enum = column.type._pg_enum_name
-                enum_types[pg_enum] = [m.value for m in column.type.enum_class]
-                enum_columns.append((table.name, column.name, pg_enum))
-
-    # Drop and recreate all tables for a clean state
-    Base.metadata.drop_all(bind=sync_engine)
     with sync_engine.begin() as conn:
-        for name, values in enum_types.items():
-            labels = ", ".join(f"'{value}'" for value in values)
-            conn.execute(text(f"DROP TYPE IF EXISTS {name} CASCADE"))
-            conn.execute(text(f"CREATE TYPE {name} AS ENUM ({labels})"))
-    Base.metadata.create_all(bind=sync_engine)
-    with sync_engine.begin() as conn:
-        for table_name, column_name, pg_enum in enum_columns:
-            # Drop any server default first so the type change doesn't fail on a
-            # default that can't be auto-cast; tests supply values explicitly.
-            conn.execute(
-                text(
-                    f"ALTER TABLE {table_name} "
-                    f"ALTER COLUMN {column_name} DROP DEFAULT"
-                )
+        # Clean slate: nukes tables, enum types, and the vector extension
+        # in one shot (migration 049 recreates the extension).
+        conn.execute(text("DROP SCHEMA public CASCADE"))
+        conn.execute(text("CREATE SCHEMA public"))
+        # Revision ids reach 38 chars; Alembic's default version table is
+        # VARCHAR(32). Pre-create it wide (same as fix_alembic_version.py —
+        # the version_num_width kwarg in env.py is not a real Alembic
+        # option and is silently ignored).
+        conn.execute(
+            text(
+                "CREATE TABLE alembic_version ("
+                "version_num VARCHAR(128) NOT NULL, "
+                "CONSTRAINT alembic_version_pkc PRIMARY KEY (version_num))"
             )
-            conn.execute(
-                text(
-                    f"ALTER TABLE {table_name} ALTER COLUMN {column_name} "
-                    f"TYPE {pg_enum} USING {column_name}::text::{pg_enum}"
-                )
-            )
+        )
+
+    backend_dir = Path(__file__).resolve().parents[2]
+    cfg = Config(str(backend_dir / "alembic.ini"))
+    cfg.set_main_option("script_location", str(backend_dir / "migrations"))
+    # migrations/env.py reads settings.database_url_sync, which the
+    # os.environ lines at the top of this module already point at
+    # TEST_DATABASE_URL_SYNC before any app import.
+    command.upgrade(cfg, "head")
 
     yield
-
-    # Optionally drop tables after tests (comment out to preserve data for debugging)
-    # Base.metadata.drop_all(bind=sync_engine)
 
 
 # =============================================================================
