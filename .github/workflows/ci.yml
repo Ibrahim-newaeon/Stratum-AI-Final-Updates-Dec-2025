@@ -115,7 +115,10 @@ jobs:
 
     services:
       postgres:
-        image: postgres:16-alpine
+        # pgvector image: the integration harness runs the real Alembic
+        # chain, which includes migration 049 (CREATE EXTENSION vector).
+        # Plain postgres:16 lacks it. Same as the load-tests job.
+        image: pgvector/pgvector:pg16
         env:
           POSTGRES_USER: test
           POSTGRES_PASSWORD: test

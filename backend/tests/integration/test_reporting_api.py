@@ -7,7 +7,7 @@ report-template CRUD and scheduled-report CRUD + lifecycle (pause/resume).
 These endpoints depend on ``app.tenancy.deps.get_db`` (overridden by the harness
 alongside ``get_async_session``) and ``get_current_user``, so they share the
 test's savepoint-scoped session and tenant. The reporting tables are created via
-``create_all``.
+the migration chain (see conftest).
 
 NOTE: run with the session-scoped event loop CI uses
 (``-o asyncio_default_test_loop_scope=session``).

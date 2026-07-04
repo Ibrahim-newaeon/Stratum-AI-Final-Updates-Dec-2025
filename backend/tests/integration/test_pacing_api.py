@@ -7,7 +7,7 @@
 These endpoints depend on ``app.tenancy.deps.get_db`` (a separate wrapper over
 ``get_async_session``); the harness overrides both, so the endpoints share the
 test's savepoint-scoped session and tenant. The pacing tables (``targets``,
-``daily_kpis``, ``pacing_alerts``, ``forecasts``) are created via ``create_all``.
+``daily_kpis``, ``pacing_alerts``, ``forecasts``) are created by the migration chain (see conftest).
 
 With no ``daily_kpis`` seeded, the pacing/forecast math runs against an empty
 series and returns a graceful envelope rather than crashing — that's the
