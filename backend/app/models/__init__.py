@@ -106,10 +106,7 @@ from app.models.drip import DripExecutionRecord, DripSequence
 from app.models.emq_playbook import EmqPlaybookItemState
 
 # Launch Readiness (Go-Live wizard)
-from app.models.launch_readiness import (
-    LaunchReadinessEvent,
-    LaunchReadinessItemState,
-)
+from app.models.launch_readiness import LaunchReadinessEvent, LaunchReadinessItemState
 
 # Pacing & Forecasting models
 from app.models.pacing import (
@@ -163,6 +160,24 @@ from app.models.trust_layer import (
     FactAttributionVarianceDaily,
     FactSignalHealthDaily,
     SignalHealthStatus,
+)
+
+# -----------------------------------------------------------------------------
+# Module registrations (no re-exports).
+# These imports exist so every model module is registered with Base.metadata
+# when `app.models` is imported — migrations/env.py relies on this for
+# Alembic autogenerate to see the full schema (issue #343 drift catch-up).
+# audit_services deliberately excluded until its catch-up migration lands — see issue #512.
+# -----------------------------------------------------------------------------
+from app.models import (  # noqa: F401  isort: skip
+    audience_sync,
+    capi_delivery,
+    cdp,
+    cms,
+    embed_widgets,
+    newsletter,
+    onboarding,
+    settings,
 )
 
 __all__ = [
