@@ -101,6 +101,17 @@ class TestApproverInfo:
         action = make_action(approved_by_user_id=42, approved_by=None)
         assert _approver_info(action) is None
 
+    def test_cross_tenant_approver_pii_is_not_exposed(self):
+        # A superadmin from another tenant can approve via the X-Tenant-ID
+        # override; their name/department must never be served to this
+        # tenant. (Tenancy audit finding on PR #519.)
+        approver = make_approver(tenant_id=999)
+        action = make_action(approved_by_user_id=42, approved_by=approver)
+
+        info = _approver_info(action)
+
+        assert info == ApproverInfo(id=42, name="Platform staff", department=None)
+
 
 class TestActionResponseApprover:
     def test_response_includes_approver(self):
