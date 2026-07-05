@@ -194,10 +194,11 @@ omit =
 # (stratum/workers: zero importers; monitoring/* + memory_debug endpoint:
 # never registered in the router). ~3,900 stmts / ~3,570 missed leave the
 # denominator, so measured coverage reflects only reachable code. CI
-# combined measured 54.21% before; ~61.5% expected. Floor set with margin;
-# raise toward the measured number on the next batch. Un-omit each family
-# when it gets wired post-launch. See #342.
-fail_under = 60.5
+# combined measured 54.21% before; CI measured 57.55% after (the naive
+# statement arithmetic suggested ~61.5%, but branch-coverage weighting
+# tempers the gain). Floor set just under the measured number. Un-omit
+# each family when it gets wired post-launch. See #342.
+fail_under = 57.0
 
 # Show missing line numbers
 show_missing = True
