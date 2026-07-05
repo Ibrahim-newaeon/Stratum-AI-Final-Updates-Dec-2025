@@ -71,3 +71,19 @@ def test_signal_health_rollup_tasks_are_registered(finalized_celery_app):
         "tasks.schedule_signal_health_rollup",
     ):
         assert name in registered, f"{name} is not registered with the Celery app"
+
+
+def test_audience_auto_sync_tasks_are_registered(finalized_celery_app):
+    """The audience auto-sync sweep tasks must stay registered.
+
+    These execute PlatformAudience schedules (auto_sync/next_sync_at).
+    Until 2026-07-05 no task executed the schedule at all —
+    triggered_by="schedule" was unreachable.
+    """
+    registered = set(finalized_celery_app.tasks.keys())
+
+    for name in (
+        "tasks.audience_auto_sync",
+        "tasks.schedule_audience_auto_sync",
+    ):
+        assert name in registered, f"{name} is not registered with the Celery app"

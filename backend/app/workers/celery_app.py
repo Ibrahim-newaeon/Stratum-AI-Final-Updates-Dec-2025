@@ -28,6 +28,10 @@ celery_app = Celery(
         # execution-path signal-health check. Same registration gap as the
         # autopilot pipeline: without this the tasks were never registered.
         "app.tasks.signal_health_rollup",
+        # Audience auto-sync sweep — executes PlatformAudience schedules
+        # (auto_sync/next_sync_at). Without this, audiences only sync when
+        # a user clicks the button and triggered_by="schedule" is dead code.
+        "app.tasks.audience_auto_sync",
     ],
 )
 
@@ -167,6 +171,15 @@ celery_app.conf.beat_schedule = {
         "task": "tasks.schedule_signal_health_rollup",
         "schedule": crontab(hour=2, minute=0),
         "options": {"queue": "default"},
+    },
+    # Audience auto-sync sweep every 15 minutes — executes due
+    # PlatformAudience schedules (auto_sync + next_sync_at <= now) with
+    # triggered_by="schedule". next_sync_at granularity is hours, so a
+    # 15-minute sweep keeps syncs within ~15 min of their due time.
+    "audience-auto-sync-sweep": {
+        "task": "tasks.schedule_audience_auto_sync",
+        "schedule": crontab(minute="*/15"),
+        "options": {"queue": "sync"},
     },
 }
 

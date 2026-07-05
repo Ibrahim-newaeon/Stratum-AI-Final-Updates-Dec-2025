@@ -571,7 +571,11 @@ class SalesforceSyncService:
         )
 
         self.db.add(log)
-        await self.db.flush()
+        # Commit (not flush): _log_sync runs AFTER the sync's own commit and
+        # get_async_session never commits on close, so a flushed-only row is
+        # rolled back and sync history stays forever empty. This also covers
+        # the failure path, where no later commit exists at all.
+        await self.db.commit()
 
     async def get_pipeline_summary(self) -> dict[str, Any]:
         """Get pipeline summary from Salesforce opportunities."""
