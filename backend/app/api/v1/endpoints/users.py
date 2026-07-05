@@ -301,7 +301,7 @@ async def invite_user(
         # (new token + email) instead of dead-ending on "already exists".
         user = existing_user
         user.role = user_role
-        if invite_data.department is not None:
+        if "department" in invite_data.model_fields_set:
             user.department = invite_data.department
         if invite_data.full_name:
             user.full_name = encrypt_pii(invite_data.full_name)

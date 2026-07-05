@@ -256,7 +256,9 @@ class UserUpdate(BaseSchema):
     locale: Optional[str] = Field(None, max_length=10)
     timezone: Optional[str] = Field(None, max_length=50)
     preferences: Optional[dict] = None
-    department: Optional[str] = Field(None, max_length=100)
+    # NOTE: department is deliberately NOT self-editable (it feeds the
+    # autopilot accountability display) — admins set it via the
+    # /users/{user_id} UpdateUserRequest instead.
 
 
 class UserResponse(UserBase, TimestampMixin):
