@@ -94,6 +94,9 @@ services:
       - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:?REDIS_PASSWORD must be set}@redis:6379/2
       # Attach HTTP latency/size/per-tenant collectors to /metrics (#508)
       - ENABLE_METRICS=${ENABLE_METRICS:-true}
+      # Bearer key gating /metrics (tenant_id-labeled series). Empty = open,
+      # acceptable for local dev only; REQUIRED in production.
+      - METRICS_API_KEY=${METRICS_API_KEY:-}
       - ML_PROVIDER=${ML_PROVIDER:-local}
       - ML_MODELS_PATH=/app/ml_service/models
       - ML_AUTO_TRAIN=${ML_AUTO_TRAIN:-true}

@@ -50,6 +50,15 @@ from app.middleware.tenant import TenantMiddleware
 # app.core.metrics. Do not add hand-rolled per-request collectors here: raw
 # request.url.path labels create unbounded series cardinality.
 
+
+def metrics_access_allowed(authorization_header: str, api_key: str) -> bool:
+    """Gate for /metrics: open when no key is configured, else require
+    a constant-time-compared "Bearer <key>" Authorization header."""
+    if not api_key:
+        return True
+    return secrets.compare_digest(authorization_header, f"Bearer {api_key}")
+
+
 # Setup logging
 setup_logging()
 logger = get_logger(__name__)
@@ -707,9 +716,24 @@ def create_application() -> FastAPI:
     # -------------------------------------------------------------------------
     # Always-on exposition of the full global registry (domain metrics +
     # HTTP collectors when ENABLE_METRICS=true — see instrumentation above).
+    # The registry carries tenant_id-labeled series (EMQ, autopilot, trust
+    # gate), so exposition is gated: when METRICS_API_KEY is set, scrapers
+    # must send "Authorization: Bearer <key>" (see the commented authorization
+    # block in infrastructure/prometheus/prometheus.yml). Unset = open, for
+    # local/dev scraping only — production MUST set it because /metrics is
+    # tenant-exempt (middleware/tenant.py PUBLIC_ENDPOINTS) and served on the
+    # same port as the public API.
+    METRICS_API_KEY = os.environ.get("METRICS_API_KEY", "")
+
     @app.get("/metrics", include_in_schema=False)
-    async def metrics():
+    async def metrics(request: Request):
         """Prometheus metrics endpoint."""
+        auth_header = request.headers.get("authorization", "")
+        if not metrics_access_allowed(auth_header, METRICS_API_KEY):
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content={"detail": "Metrics access requires a valid bearer token"},
+            )
         return Response(
             content=generate_latest(),
             media_type=CONTENT_TYPE_LATEST,
