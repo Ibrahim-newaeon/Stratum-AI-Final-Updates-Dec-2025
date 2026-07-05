@@ -25,6 +25,9 @@ PUBLIC_ENDPOINTS = {
     "/health",
     "/health/ready",
     "/health/live",
+    # Prometheus scrapes without auth (see infrastructure/prometheus). Keep
+    # /metrics blocked from the public internet at the ingress/ALB layer.
+    "/metrics",
     "/docs",
     "/redoc",
     "/openapi.json",

@@ -13,6 +13,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./infrastructure/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./infrastructure/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
       - prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -65,6 +66,11 @@ volumes:
   prometheus_data:
   grafana_data:
 
+# stratum_network is defined by docker-compose.yml; this file is an overlay
+# (see usage line above) and must not redeclare it as external — that would
+# override the base definition in the merged config and fail the lookup,
+# because the base file creates the network project-scoped
+# (<project>_stratum_network), not under the literal name.
 networks:
   stratum_network:
-    external: true
+    driver: bridge
