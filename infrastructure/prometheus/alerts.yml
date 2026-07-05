@@ -6,10 +6,13 @@ groups:
     interval: 30s
     rules:
       # High Error Rate
+      # stratum_http_request_duration_seconds is emitted by the
+      # prometheus-fastapi-instrumentator (app/core/metrics.py); status is
+      # grouped ("2xx", "5xx", ...) and handler is the templated route path.
       - alert: HighErrorRate
         expr: |
-          sum(rate(http_requests_total{status=~"5.."}[5m]))
-          / sum(rate(http_requests_total[5m])) > 0.05
+          sum(rate(stratum_http_request_duration_seconds_count{status="5xx"}[5m]))
+          / sum(rate(stratum_http_request_duration_seconds_count[5m])) > 0.05
         for: 5m
         labels:
           severity: critical
@@ -20,7 +23,7 @@ groups:
       # High Latency
       - alert: HighLatency
         expr: |
-          histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) > 0.5
+          histogram_quantile(0.95, sum(rate(stratum_http_request_duration_seconds_bucket[5m])) by (le)) > 0.5
         for: 5m
         labels:
           severity: warning
@@ -106,7 +109,7 @@ groups:
       # Signal Health Degraded
       - alert: SignalHealthDegraded
         expr: |
-          avg(signal_health_score{job="stratum-api"}) < 70
+          avg(stratum_signal_health_score{job="stratum-api"}) < 70
         for: 10m
         labels:
           severity: warning
@@ -117,7 +120,7 @@ groups:
       # Autopilot Frozen
       - alert: AutopilotFrozen
         expr: |
-          autopilot_mode{job="stratum-api"} == 0
+          stratum_autopilot_mode{job="stratum-api"} == 0
         for: 30m
         labels:
           severity: warning

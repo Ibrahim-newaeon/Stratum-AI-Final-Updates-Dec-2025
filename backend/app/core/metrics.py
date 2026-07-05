@@ -462,9 +462,15 @@ def create_instrumentator() -> Instrumentator:
         inprogress_labels=True,
     )
 
-    # Add default metrics (latency histogram)
+    # Add default metrics (latency histogram).
+    # metric_name overrides the library default ("http_request_duration_seconds")
+    # because namespace+subsystem already contribute the "stratum_http_" prefix —
+    # otherwise the emitted name doubles up as stratum_http_http_request_...
+    # The resulting names must stay in sync with infrastructure/prometheus/alerts.yml
+    # and infrastructure/grafana/dashboards/.
     instrumentator.add(
         metrics.latency(
+            metric_name="request_duration_seconds",
             metric_namespace="stratum",
             metric_subsystem="http",
             buckets=(
@@ -496,6 +502,7 @@ def create_instrumentator() -> Instrumentator:
     # Add request size metrics
     instrumentator.add(
         metrics.request_size(
+            metric_name="request_size_bytes",
             metric_namespace="stratum",
             metric_subsystem="http",
         )
@@ -504,6 +511,7 @@ def create_instrumentator() -> Instrumentator:
     # Add response size metrics
     instrumentator.add(
         metrics.response_size(
+            metric_name="response_size_bytes",
             metric_namespace="stratum",
             metric_subsystem="http",
         )

@@ -28,13 +28,7 @@ from fastapi import (
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
-from prometheus_client import (
-    CONTENT_TYPE_LATEST,
-    Counter,
-    Gauge,
-    Histogram,
-    generate_latest,
-)
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from sse_starlette.sse import EventSourceResponse
 from starlette.responses import Response
 
@@ -50,42 +44,11 @@ from app.middleware.rate_limit import RateLimitMiddleware
 from app.middleware.security import SecurityHeadersMiddleware
 from app.middleware.tenant import TenantMiddleware
 
-# Prometheus Metrics
-REQUEST_COUNT = Counter(
-    "http_requests_total",
-    "Total HTTP requests",
-    ["method", "endpoint", "status_code"],
-)
-REQUEST_LATENCY = Histogram(
-    "http_request_duration_seconds",
-    "HTTP request latency in seconds",
-    ["method", "endpoint"],
-)
-ACTIVE_CONNECTIONS = Gauge(
-    "active_connections",
-    "Number of active connections",
-)
-ACTIVE_WEBSOCKETS = Gauge(
-    "active_websocket_connections",
-    "Number of active WebSocket connections",
-)
-
-# Integration-specific metrics
-CAPI_REQUESTS = Counter(
-    "capi_requests_total",
-    "Total CAPI requests to external platforms",
-    ["platform", "status"],
-)
-CAPI_LATENCY = Histogram(
-    "capi_request_duration_seconds",
-    "CAPI request latency in seconds",
-    ["platform"],
-)
-CELERY_TASK_DURATION = Histogram(
-    "celery_task_duration_seconds",
-    "Celery task execution time in seconds",
-    ["task_name", "status"],
-)
+# HTTP request metrics come from the prometheus-fastapi-instrumentator wired
+# in create_application() (stratum_http_* series, templated-path labels).
+# Domain metrics (EMQ, trust gate, autopilot, CAPI, Celery, ...) live in
+# app.core.metrics. Do not add hand-rolled per-request collectors here: raw
+# request.url.path labels create unbounded series cardinality.
 
 # Setup logging
 setup_logging()
@@ -350,7 +313,9 @@ def create_application() -> FastAPI:
     # Starlette's add_middleware uses insert(0, ...) so the LAST call
     # becomes the OUTERMOST middleware.  Order below is innermost → outermost.
     # Execution: CORS → timing → Security → Audit → Tenant → RateLimit
-    #            → Gzip → prometheus → ExceptionMiddleware → Router
+    #            → Gzip → ExceptionMiddleware → Router
+    # (HTTP Prometheus metrics are handled by the instrumentator above,
+    #  not a hand-rolled middleware.)
     # -------------------------------------------------------------------------
 
     # Log allowed CORS origins at startup for easier debugging
@@ -359,28 +324,6 @@ def create_application() -> FastAPI:
         origins=settings.cors_origins_list,
         frontend_url=settings.frontend_url,
     )
-
-    # Prometheus request metrics (innermost — closest to the route handlers)
-    @app.middleware("http")
-    async def prometheus_middleware(request: Request, call_next):
-        """Track request count and latency for Prometheus."""
-        start_time = time.time()
-        ACTIVE_CONNECTIONS.inc()
-        try:
-            response = await call_next(request)
-            duration = time.time() - start_time
-            REQUEST_COUNT.labels(
-                method=request.method,
-                endpoint=request.url.path,
-                status_code=response.status_code,
-            ).inc()
-            REQUEST_LATENCY.labels(
-                method=request.method,
-                endpoint=request.url.path,
-            ).observe(duration)
-            return response
-        finally:
-            ACTIVE_CONNECTIONS.dec()
 
     # Gzip compression
     app.add_middleware(GZipMiddleware, minimum_size=1000)
