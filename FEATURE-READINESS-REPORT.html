@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Stratum AI — Feature Launch-Readiness Report</title>
+<style>
+  :root {
+    --bg:#0B0B0B; --surface:#141414; --surface-2:#1A1A1A; --line:#1F1F1F; --line-2:#262626;
+    --fg:#FFFFFF; --muted:#9A9A9A; --ember:#FF5A1F; --ember-2:#FF8A4A; --cyan:#06B6D4;
+    --success:#10B981; --warning:#F59E0B; --danger:#EF4444;
+    --mono:"Geist Mono",ui-monospace,"SF Mono",Menlo,monospace;
+    --sans:"Geist",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { background:var(--bg); color:var(--fg); font-family:var(--sans);
+    -webkit-font-smoothing:antialiased; line-height:1.5; }
+  body { max-width:1180px; margin:0 auto; padding:48px 28px 96px; }
+  a { color:var(--ember-2); text-decoration:none; }
+
+  .kicker { font-family:var(--mono); font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--ember); margin-bottom:14px; }
+  h1 { font-size:34px; font-weight:650; letter-spacing:-.02em; line-height:1.1; }
+  .sub { color:var(--muted); margin-top:12px; font-size:15px; max-width:70ch; }
+  .meta-row { display:flex; gap:22px; flex-wrap:wrap; margin-top:18px; font-family:var(--mono);
+    font-size:11.5px; color:var(--muted); letter-spacing:.03em; }
+  .meta-row b { color:var(--fg); font-weight:500; }
+
+  .radial-bleed { position:relative; }
+  .radial-bleed::before { content:""; position:absolute; top:-120px; left:-160px; width:520px; height:340px;
+    background:radial-gradient(closest-side, rgba(255,90,31,.13), transparent 70%); pointer-events:none; z-index:-1; }
+
+  section { margin-top:56px; }
+  h2 { font-size:13px; font-family:var(--mono); letter-spacing:.14em; text-transform:uppercase;
+    color:var(--muted); margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid var(--line);
+    display:flex; align-items:baseline; gap:12px; }
+  h2 .n { color:var(--ember); }
+
+  /* KPI strip */
+  .kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-top:34px; }
+  .kpi { background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:22px; }
+  .kpi.glow { border-color:rgba(255,90,31,.35); box-shadow:0 0 0 1px rgba(255,90,31,.12), 0 20px 60px -30px rgba(255,90,31,.5);
+    background:linear-gradient(180deg, rgba(255,90,31,.06), transparent 60%), var(--surface); }
+  .kpi .lbl { font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+  .kpi .val { font-size:38px; font-weight:650; letter-spacing:-.03em; margin-top:10px; font-variant-numeric:tabular-nums; }
+  .kpi .val small { font-size:16px; color:var(--muted); font-weight:400; }
+  .kpi .note { font-size:12px; color:var(--muted); margin-top:6px; }
+  .kpi .val.ember { color:var(--ember); }
+
+  /* callout */
+  .callout { margin-top:30px; border:1px solid rgba(239,68,68,.4); border-radius:16px; padding:24px 26px;
+    background:linear-gradient(180deg, rgba(239,68,68,.07), transparent 70%), var(--surface); }
+  .callout h3 { font-size:17px; font-weight:600; letter-spacing:-.01em; display:flex; align-items:center; gap:10px; }
+  .callout h3 .dot { width:9px; height:9px; border-radius:50%; background:var(--danger); box-shadow:0 0 12px var(--danger); }
+  .callout p { color:#d8d8d8; font-size:14px; margin-top:12px; max-width:88ch; }
+  .callout p + p { margin-top:9px; }
+  .callout code { font-family:var(--mono); font-size:12.5px; background:var(--line-2); padding:1px 6px; border-radius:5px; color:var(--ember-2); }
+
+  /* status distribution bar */
+  .dist { display:flex; height:12px; border-radius:99px; overflow:hidden; margin-top:8px; border:1px solid var(--line); }
+  .dist span { display:block; }
+  .legend { display:flex; gap:20px; margin-top:14px; flex-wrap:wrap; font-size:12.5px; color:var(--muted); }
+  .legend i { display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:7px; vertical-align:middle; }
+
+  /* feature table */
+  .grp { margin-top:38px; }
+  .grp-h { display:flex; align-items:baseline; gap:12px; margin-bottom:14px; }
+  .grp-h .t { font-size:15px; font-weight:600; letter-spacing:-.01em; }
+  .grp-h .d { font-size:12px; color:var(--muted); font-family:var(--mono); }
+
+  .feat { background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:18px 20px;
+    margin-bottom:10px; display:grid; grid-template-columns:230px 1fr; gap:20px; align-items:start; }
+  .feat.core { border-color:rgba(255,90,31,.3); }
+  .feat .left { }
+  .feat .name { font-size:15px; font-weight:600; letter-spacing:-.01em; display:flex; align-items:center; gap:9px; }
+  .feat .track { height:7px; background:var(--line-2); border-radius:99px; margin-top:14px; overflow:hidden; }
+  .feat .fill { height:100%; border-radius:99px; }
+  .feat .pctrow { display:flex; align-items:center; justify-content:space-between; margin-top:9px; }
+  .feat .pct { font-family:var(--mono); font-size:19px; font-weight:600; font-variant-numeric:tabular-nums; }
+
+  .pill { font-family:var(--mono); font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; font-weight:600;
+    padding:4px 9px; border-radius:99px; white-space:nowrap; }
+  .pill.launch { color:var(--success); background:rgba(16,185,129,.12); border:1px solid rgba(16,185,129,.3); }
+  .pill.beta { color:var(--warning); background:rgba(245,158,11,.12); border:1px solid rgba(245,158,11,.3); }
+  .pill.partial { color:var(--danger); background:rgba(239,68,68,.12); border:1px solid rgba(239,68,68,.3); }
+  .badge-core { font-family:var(--mono); font-size:8.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--ember);
+    border:1px solid rgba(255,90,31,.4); border-radius:99px; padding:2px 7px; }
+
+  .feat .right .blk { font-size:13.5px; color:#cfcfcf; }
+  .feat .right .blk b { color:var(--fg); font-weight:600; }
+  .feat .right .ev { font-family:var(--mono); font-size:11px; color:#6f6f6f; margin-top:9px; word-break:break-word; }
+
+  /* recommendation */
+  .rec { background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:28px; }
+  .rec .verdict { font-size:19px; font-weight:600; letter-spacing:-.01em; line-height:1.4; }
+  .rec .verdict .hl { color:var(--ember); }
+  .phase { display:grid; grid-template-columns:130px 1fr; gap:20px; padding:18px 0; border-top:1px solid var(--line); }
+  .phase:first-of-type { margin-top:22px; }
+  .phase .pl { font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ember); padding-top:2px; }
+  .phase .pl small { display:block; color:var(--muted); margin-top:4px; letter-spacing:0; text-transform:none; font-size:11px; }
+  .phase ul { list-style:none; font-size:13.5px; color:#cfcfcf; }
+  .phase li { padding-left:18px; position:relative; margin-bottom:6px; }
+  .phase li::before { content:"→"; position:absolute; left:0; color:var(--ember); }
+  .phase li b { color:var(--fg); }
+
+  .twocol { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:22px; }
+  .panel { background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:20px 22px; }
+  .panel h4 { font-size:13px; font-family:var(--mono); letter-spacing:.06em; text-transform:uppercase; margin-bottom:12px; }
+  .panel.good h4 { color:var(--success); }
+  .panel.bad h4 { color:var(--danger); }
+  .panel ul { list-style:none; font-size:13px; color:#cfcfcf; }
+  .panel li { padding-left:16px; position:relative; margin-bottom:8px; }
+  .panel.good li::before { content:"✓"; position:absolute; left:0; color:var(--success); }
+  .panel.bad li::before { content:"✕"; position:absolute; left:0; color:var(--danger); }
+  .panel li b { color:var(--fg); }
+
+  footer { margin-top:64px; padding-top:20px; border-top:1px solid var(--line); font-family:var(--mono);
+    font-size:11px; color:#6f6f6f; letter-spacing:.03em; line-height:1.8; }
+
+  @media (max-width:820px){
+    .kpis{grid-template-columns:repeat(2,1fr);} .feat{grid-template-columns:1fr;}
+    .twocol{grid-template-columns:1fr;} .phase{grid-template-columns:1fr;gap:8px;}
+  }
+  @media print { body{max-width:none;} .kpi.glow{box-shadow:none;} .radial-bleed::before{display:none;} }
+</style>
+</head>
+<body>
+
+<header class="radial-bleed">
+  <div class="kicker">Stratum AI · Revenue Operating System</div>
+  <h1>Feature Launch-Readiness Report</h1>
+  <p class="sub">An honest, code-verified assessment of all 24 feature areas — separating what is genuinely
+  built and tested from what is stubbed, mock-backed, unwired, or broken at the integration seams. Percentages
+  reflect end-to-end functionality, not lines of code written.</p>
+  <div class="meta-row">
+    <span>Generated <b>2026-07-01</b></span>
+    <span>Branch <b>main</b> @ <b>0ebbc5cd</b></span>
+    <span>Method <b>code audit, 24 areas</b></span>
+    <span>Basis <b>backend + frontend + tests</b></span>
+  </div>
+</header>
+
+<!-- KPI STRIP -->
+<div class="kpis">
+  <div class="kpi glow">
+    <div class="lbl">Overall Readiness</div>
+    <div class="val ember">71<small>%</small></div>
+    <div class="note">Weighted across 24 areas</div>
+  </div>
+  <div class="kpi">
+    <div class="lbl">Launchable</div>
+    <div class="val">3<small>/24</small></div>
+    <div class="note">CDP · MFA · Payments</div>
+  </div>
+  <div class="kpi">
+    <div class="lbl">Beta (fixable)</div>
+    <div class="val">10<small>/24</small></div>
+    <div class="note">Real, with gaps or bugs</div>
+  </div>
+  <div class="kpi">
+    <div class="lbl">Partial / Prototype</div>
+    <div class="val">11<small>/24</small></div>
+    <div class="note">Core logic real, edges faked</div>
+  </div>
+</div>
+
+<!-- STATUS DISTRIBUTION -->
+<div style="margin-top:26px;">
+  <div class="dist">
+    <span style="width:12.5%;background:var(--success);"></span>
+    <span style="width:41.7%;background:var(--warning);"></span>
+    <span style="width:45.8%;background:var(--danger);"></span>
+  </div>
+  <div class="legend">
+    <span><i style="background:var(--success)"></i>Launchable (90%+) — 3</span>
+    <span><i style="background:var(--warning)"></i>Beta (68–88%) — 10</span>
+    <span><i style="background:var(--danger)"></i>Partial (50–65%) — 11</span>
+  </div>
+</div>
+
+<!-- CRITICAL CALLOUT -->
+<div class="callout">
+  <h3><span class="dot"></span>The differentiator — the "Trust-Gated Autopilot" — is the weakest part of the product</h3>
+  <p>The platform's entire pitch is <b>automation that executes only when signal health passes a trust gate.</b>
+  The audit found that this exact spine exists as <b>two divergent implementations</b>, and the good one is not
+  connected to anything users touch.</p>
+  <p>A genuinely well-built, weighted <code>stratum/core</code> engine (real Signal Health calculation + a real
+  PASS/HOLD/BLOCK Trust Gate with configurable thresholds, 38 passing unit tests) is <b>never exposed by any HTTP
+  endpoint.</b> The engine that <i>is</i> wired to the product reads a fact table fed by a <code>placeholder</code>
+  rollup that isn't even registered in Celery Beat — so it returns <code>no_data</code>, and the frontend's trust
+  routes 404 and silently fall back to <b>demo mock data</b>.</p>
+  <p>Likewise, Autopilot's enforcer, trust-gate check, and platform executors are all real and tested — but the
+  <b>execution pipeline is orphaned:</b> the apply-actions Celery task is never registered or dispatched on
+  approval, so <b>approved autopilot actions never actually run.</b> The block/soft-block enforcer sits behind an
+  endpoint nothing calls, and a router double-prefix 404s the frontend.
+  <b>Net: the core value proposition is demonstrable in pieces but not yet real end-to-end.</b> This is the single
+  most important thing to fix before any launch that markets "trust-gated autopilot."</p>
+</div>
+
+<!-- ================= CORE ================= -->
+<section>
+  <h2><span class="n">01</span> Core — Trust-Gated Autopilot &amp; Analytics</h2>
+
+  <div class="grp">
+    <div class="feat core">
+      <div class="left">
+        <div class="name"><span class="badge-core">Core</span> Trust Engine</div>
+        <div class="track"><div class="fill" style="width:55%;background:var(--danger)"></div></div>
+        <div class="pctrow"><span class="pct" style="color:var(--danger)">55%</span><span class="pill partial">Partial</span></div>
+      </div>
+      <div class="right">
+        <div class="blk"><b>Real but unwired.</b> The weighted <code>SignalHealthCalculator</code> (EMQ 40 / freshness 25 / variance 20 / anomaly 15) and threshold-driven <code>TrustGate</code> are genuine and tested — but no endpoint exposes them. The product-facing path reads a fact table fed by a placeholder rollup that isn't scheduled, so it returns <b>no_data</b>; the frontend calls the wrong routes (missing tenant segment) → 404 → mock fallback.</div>
+        <div class="ev">stratum/core/signal_health.py:169 · stratum/core/trust_gate.py:278 · tasks/signal_health_rollup.py:345,373 · api/trustLayer.ts:99,161 · useOverviewData.ts:117</div>
+      </div>
+    </div>
+
+    <div class="feat core">
+      <div class="left">
+        <div class="name"><span class="badge-core">Core</span> Autopilot Enforcement</div>
+        <div class="track"><div class="fill" style="width:55%;background:var(--danger)"></div></div>
+        <div class="pctrow"><span class="pct" style="color:var(--danger)">55%</span><span class="pill partial">Partial</span></div>
+      </div>
+      <div class="right">
+        <div class="blk"><b>Real logic, orphaned execution.</b> The enforcer (real budget/ROAS/frequency checks, advisory/soft/hard modes, kill-switch, audit log) and the trust-gate check (<code>queue_action</code> raises on critical signal health, holds on degraded) are genuinely built and tested (52 tests); executors make real platform calls in prod. <b>But the execution pipeline is orphaned:</b> <code>apply_actions_queue</code> is not registered with Celery, not in beat, and <b>never dispatched on approval — approved actions never execute.</b> The block-mode enforcer is only reachable via a standalone <code>/enforcement/check</code> nothing calls, and a router double-prefix bug 404s the frontend.</div>
+        <div class="ev">tasks/apply_actions_queue.py:1175,1383 (unregistered) · workers/celery_app.py:19,67 · endpoints/autopilot.py:296 (approve never dispatches) · api/v1/__init__.py:245 (double prefix) · autopilot/service.py:92 (real trust gate) · tests: 52</div>
+      </div>
+    </div>
+
+    <div class="feat core">
+      <div class="left">
+        <div class="name"><span class="badge-core">Core</span> Analytics &amp; Anomalies</div>
+        <div class="track"><div class="fill" style="width:60%;background:var(--danger)"></div></div>
+        <div class="pctrow"><span class="pct" style="color:var(--danger)">60%</span><span class="pill partial">Partial</span></div>
+      </div>
+      <div class="right">
+        <div class="blk"><b>Real math, unused.</b> The 8 <code>analytics/logic</code> formula modules are real (genuine z-score detection, tested). But the primary <code>/insights/anomalies</code> endpoint ignores them and uses hardcoded threshold rules + canned cause/action text; the one path that calls z-score feeds it a cumulative non-timeseries (meaningless). The <b>FocusPane triage</b> — the "action-first home" — renders 100% hardcoded mock with no honest demo indicator. Alert worker throws on a bad signature (emits 0 alerts).</div>
+        <div class="ev">analytics/logic/anomalies.py:21 · endpoints/insights.py:178 · dashboard.py:2197 · workers/tasks/ml.py:166 · FocusPane.tsx:35,337</div>
+      </div>
+    </div>
+
+    <div class="feat core">
+      <div class="left">
+        <div class="name"><span class="badge-core">Core</span> EMQ Pipeline</div>
+        <div class="track"><div class="fill" style="width:60%;background:var(--danger)"></div></div>
+        <div class="pctrow"><span class="pct" style="color:var(--danger)">60%</span><span class="pill partial">Partial</span></div>
+      </div>
+      <div class="right">
+        <div class="blk"><b>Two divergent pipelines.</b> Real 5-driver scoring math exists and is tested, but the serving API (<code>EmqService</code>) never calls it — it back-computes fake per-driver values from a single stored scalar. The "real" measurement service's recorders are never called (drivers always 0). Hardcoded demo fallbacks (score 75, "156 tenants", "$24,350") mask the no-data state.</div>
+        <div class="ev">analytics/logic/emq_calculation.py (real) · services/emq_service.py:142 · services/emq_measurement_service.py:134,427</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= IDENTITY / PLATFORM ================= -->
+<section>
+  <h2><span class="n">02</span> Identity, Payments &amp; Platform</h2>
+  <div class="grp">
+
+    <div class="feat">
+      <div class="left"><div class="name">MFA (TOTP)</div>
+        <div class="track"><div class="fill" style="width:95%;background:var(--success)"></div></div>
+        <div class="pctrow"><span class="pct" style="color:var(--success)">95%</span><span class="pill launch">Launchable</span></div></div>
+      <div class="right"><div class="blk"><b>Strongest feature in the codebase.</b> Real pyotp, Fernet-encrypted secrets, hashed backup codes with constant-time compare, login genuinely gated by a short-lived challenge token. Fully wired FE. No blockers (minor: legacy unauthenticated validate endpoints add enumeration surface).</div>
+        <div class="ev">services/mfa_service.py · endpoints/auth.py:715 · Settings.tsx:730 · integration/test_mfa_api.py</div></div>
+    </div>
+
+    <div class="feat">
+      <div class="left"><div class="name">Payments / Stripe</div>
+        <div class="track"><div class="fill" style="width:90%;background:var(--success)"></div></div>
+        <div class="pctrow"><span class="pct" style="color:var(--success)">90%</span><span class="pill launch">Launchable</span></div></div>
+      <div class="right"><div class="blk">Real Stripe SDK end-to-end (checkout/portal/subscription/invoice), webhook signature verification + idempotency + tenant sync, DB-backed grace/trial. <b>Blockers:</b> webhook idempotency is in-memory only (needs Redis for multi-worker); no e2e webhook tests; checkout tier prices hardcoded rather than read from config. Requires Stripe env keys (503s gracefully when unset).</div>
+        <div class="ev">services/stripe_service.py:285 · endpoints/stripe_webhook.py:99 · CheckoutPage.tsx:61</div></div>
+    </div>
+
+    <div class="feat">
+      <div class="left"><div class="name">Authentication</div>
+        <div class="track"><div class="fill" style="width:88%;background:var(--warning)"></div></div>
+        <div class="pctrow"><span class="pct" style="color:var(--warning)">88%</span><span class="pill beta">Beta</span></div></div>
+      <div class="right"><div class="blk">Production-grade — bcrypt, JWT rotation + Redis blacklist, lockout, OTP register, enumeration-safe reset, full OAuth, RBAC. <b>One hard launch blocker:</b> the invite-accept flow is broken end-to-end — <code>/users/invite</code> mints an unpersisted token and there is <b>no</b> backend <code>/auth/accept-invite</code> route, so invited users can never activate (AcceptInvite.tsx 404s).</div>
+        <div class="ev">endpoints/auth.py · endpoints/users.py:288 · AcceptInvite.tsx</div></div>
+    </div>
+
+    <div class="feat">
+      <div class="left"><div class="name">Multi-tenancy</div>
+        <div class="track"><div class="fill" style="width:82%;background:var(--warning)"></div></div>
+        <div class="pctrow"><span class="pct" style="color:var(--warning)">82%</span><span class="pill beta">Beta</span></div></div>
+      <div class="right"><div class="blk">Row-level isolation, provisioning, tier limits, licensing are real and well-tested. <b>Blockers:</b> alert-acknowledge endpoint hardcoded to HTTP 501 (no persistence); Tenants.tsx update/delete use a double-prefixed URL → 404; dashboard deltas/EMQ/open-alerts are placeholder estimates; subdomain resolution is a documented stub.</div>
+        <div class="ev">tenancy/deps.py · endpoints/tenant_dashboard.py:557,465 · test_tenant_isolation.py</div></div>
+    </div>
+
+    <div class="feat">
+      <div class="left"><div class="name">SuperAdmin</div>
+        <div class="track"><div class="fill" style="width:68%;background:var(--warning)"></div></div>
+        <div class="pctrow"><span class="pct" style="color:var(--warning)">68%</span><span class="pill beta">Beta</span></div></div>
+      <div class="right"><div class="blk">Cross-tenant read paths (revenue/portfolio/churn/audit) are real DB+Redis queries with honestly-zeroed metrics. <b>Blockers:</b> no write-side admin ops — New Tenant / Suspend / Edit buttons all inert; no impersonation or feature-flag CRUD; System/Billing tabs fabricate infra metrics (CPU/mem, 100% success, 0 latency); calls a non-existent billing retry route.</div>
+        <div class="ev">endpoints/superadmin.py:157,367 · SuperadminDashboard.tsx:869,940</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CDP ================= -->
+<section>
+  <h2><span class="n">03</span> Customer Data Platform</h2>
+  <div class="grp">
+
+    <div class="feat">
+      <div class="left"><div class="name">CDP</div>
+        <div class="track"><div class="fill" style="width:90%;background:var(--success)"></div></div>
+        <div class="pctrow"><span class="pct" style="color:var(--success)">90%</span><span class="pill launch">Launchable</span></div></div>
+      <div class="right"><div class="blk">Fully DB-backed — real identity resolution (BFS graph + merge), rule-engine segments, computed traits + RFM, funnels; 58-route endpoint with rate limiting, caching, tenant isolation, EMQ-on-ingest, export. Zero stubs. FE is real (89 React Query hooks, no mock fallback). <b>Only gap:</b> Predictive Churn is an honest "Model Not Yet Trained" empty state.</div>
+        <div class="ev">services/cdp/identity_resolution.py · endpoints/cdp.py · api/cdp.ts</div></div>
+    </div>
+
+    <div class="feat">
+      <div class="left"><div class="name">Audience Sync</div>
+        <div class="track"><div class="fill" style="width:82%;background:var(--warning)"></div></div>
+        <div class="pctrow"><span class="pct" style="color:var(--warning)">82%</span><span class="pill beta">Beta</span></div></div>
+      <div class="right"><div class="blk">All four connectors (Meta/Google/TikTok/Snapchat) genuinely implemented — real httpx, SHA-256 PII hashing, batching, Fernet tokens. <b>Blockers:</b> no scheduled worker fires auto-sync (only manual); sync runs inline in the request (no Celery) so large segments block/time out; Google offline-job never polled; stale API versions (Meta v18, Google v15).</div>
+        <div class="ev">services/cdp/audience_sync/meta_connector.py · service.py · test_audience_sync.py (1481 lines)</div></div>
+    </div>
+
+    <div class="feat">
+      <div class="left"><div class="name">Attribution</div>
+        <div class="track"><div class="fill" style="width:70%;background:var(--warning)"></div></div>
+        <div class="pctrow"><span class="pct" style="color:var(--warning)">70%</span><span class="pill beta">Beta</span></div></div>
+      <div class="right"><div class="blk">Algorithms real and complete — Markov (absorption solve + removal effects), Shapley (exact + Monte Carlo fallback), holdout validation. Genuine math. <b>Blockers:</b> FE↔BE model-registry contract mismatch (FE calls <code>/markov/train</code>, <code>/models/{id}/activate</code> etc. that don't exist → 404); trained models never persisted; confidence card uses heuristic fixed multipliers.</div>
+        <div class="ev">services/attribution/markov_attribution.py · endpoints/data_driven_attribution.py · api/attribution.ts</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= INTEGRATIONS / MESSAGING ================= -->
+<section>
+  <h2><span class="n">04</span> Integrations, Delivery &amp; Messaging</h2>
+  <div class="grp">
+
+    <div class="feat">
+      <div class="left"><div class="name">CRM (HubSpot / Zoho) + Slack</div>
+        <div class="track"><div class="fill" style="width:80%;background:var(--warning)"></div></div>
+        <div class="pctrow"><span class="pct" style="color:var(--warning)">80%</span><span class="pill beta">Beta</span></div></div>
+      <div class="right"><div class="blk">HubSpot fully wired end-to-end (OAuth2, refresh, real api.hubapi.com, Celery sync + hourly beat); Slack fully real (webhook POST, rich blocks, alerts). <b>Blockers:</b> Zoho client/sync are real but expose <b>no</b> connect endpoint (DB-seed only); Salesforce + Pipedrive service files exist (~800 lines) but are dormant/unwired.</div>
+        <div class="ev">endpoints/integrations.py · workers/crm_sync_tasks.py · test_zoho_integration.py (578 lines)</div></div>
+    </div>
+
+    <div class="feat">
+      <div class="left"><div class="name">Integrations / OAuth</div>
+        <div class="track"><div class="fill" style="width:78%;background:var(--warning)"></div></div>
+        <div class="pctrow"><span class="pct" style="color:var(--warning)">78%</span><span class="pill beta">Beta</span></div></div>
+      <div class="right"><div class="blk">Ad-platform OAuth (Meta/Google/TikTok/Snapchat) + HubSpot are real — genuine authorize/token/refresh/revoke, Redis CSRF state, Fernet token storage, auto-refresh, plan gating. <b>Blockers:</b> the outbound hub (Zapier/Warehouse/Teams) is stubbed — hardcoded sample configs, non-persisted create, simulated warehouse "sync"; stale Nebula-Aurora hex in Teams card.</div>
+        <div class="ev">services/oauth/google.py:96 · endpoints/outbound_integrations.py:143 · test_oauth_integrations.py (998 lines)</div></div>
+    </div>
+
+    <div class="feat">
+      <div class="left"><div class="name">Reporting</div>
+        <div class="track"><div class="fill" style="width:78%;background:var(--warning)"></div></div>
+        <div class="pctrow"><span class="pct" style="color:var(--warning)">78%</span><span class="pill beta">Beta</span></div></div>
+      <div class="right"><div class="blk">Real end-to-end — PDF via weasyprint, genuine delivery I/O (aiosmtplib email, Slack/Teams/webhook/WhatsApp, S3 + presigned URL), working cron scheduler, real data collectors. <b>Blockers:</b> <code>execution.file_url</code> never populated (writes local /tmp only) so download 404s and delivery links omitted; CustomReportBuilder is local-state only (reports vanish on reload); Excel silently falls back to JSON.</div>
+        <div class="ev">services/reporting/report_generator.py:542 · delivery.py:574 · CustomReportBuilder.tsx:1011</div></div>
+    </div>
+
+    <div class="feat">
+      <div class="left"><div class="name">CAPI (Conversions API)</div>
+        <div class="track"><div class="fill" style="width:70%;background:var(--warning)"></div></div>
+        <div class="pctrow"><span class="pct" style="color:var(--warning)">70%</span><span class="pill beta">Beta</span></div></div>
+      <div class="right"><div class="blk">Real delivery — actual httpx POSTs to live Meta/Google/TikTok/Snapchat, real SHA-256 hashing, circuit breaker, rate limiter, retry. <b>Blockers:</b> DLQ + distributed dedupe + delivery logger built but unwired (no crash durability); no credential/log persistence (in-memory 30-min TTL); <code>meta_capi.py</code> /events always TypeErrors (ctor mismatch); /quality is a stub.</div>
+        <div class="ev">services/capi/platform_connectors.py:448 · endpoints/meta_capi.py:108,252 · pii_hasher.py:253</div></div>
+    </div>
+
+    <div class="feat">
+      <div class="left"><div class="name">WhatsApp</div>
+        <div class="track"><div class="fill" style="width:65%;background:var(--danger)"></div></div>
+        <div class="pctrow"><span class="pct" style="color:var(--danger)">65%</span><span class="pill partial">Partial</span></div></div>
+      <div class="right"><div class="blk">Real Meta Graph client (template/text/media/interactive sends, HMAC webhook) and solid CRUD. <b>Blockers:</b> the async pipeline is broken end-to-end — <code>/messages/send</code> calls the task with mismatched kwargs (runtime failure); broadcast imports a non-existent function (ImportError/500); the Celery task uses wrong model fields (AttributeError); no send/broadcast tests.</div>
+        <div class="ev">endpoints/whatsapp.py:869,957 · workers/tasks/whatsapp.py:32,89 · base_models.py:1361</div></div>
+    </div>
+
+    <div class="feat">
+      <div class="left"><div class="name">Drip Campaigns / Newsletter</div>
+        <div class="track"><div class="fill" style="width:50%;background:var(--danger)"></div></div>
+        <div class="pctrow"><span class="pct" style="color:var(--danger)">50%</span><span class="pill partial">Partial</span></div></div>
+      <div class="right"><div class="blk">Newsletter is real (models, CRUD, batch-sender w/ personalization + tracking, SendGrid/SMTP). Drip is persistence-only — <b>no execution engine</b> (activate flips a flag, manual_trigger writes a "simulated" record, no email ever sent). <b>Blockers:</b> drip step-execution entirely missing; newsletter Celery tasks not registered on the worker (never fire); builder falls back to localStorage demo mode.</div>
+        <div class="ev">endpoints/drip_campaigns.py:429 · workers/celery_app.py:19,67 · DripCampaignBuilder.tsx:256</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CONTENT / GROWTH ================= -->
+<section>
+  <h2><span class="n">05</span> Content, Campaigns &amp; Growth</h2>
+  <div class="grp">
+
+    <div class="feat">
+      <div class="left"><div class="name">CMS</div>
+        <div class="track"><div class="fill" style="width:85%;background:var(--warning)"></div></div>
+        <div class="pctrow"><span class="pct" style="color:var(--warning)">85%</span><span class="pill beta">Beta</span></div></div>
+      <div class="right"><div class="blk">Fully real — 3,275-line endpoint with async CRUD (posts/pages/categories/tags/authors/contacts), 8-role RBAC, workflow state machine, content versioning + rollback, audit logs, ~195 tests. Core FE views wired to live hooks. <b>Blockers:</b> CMSSettings is a non-persisting no-op; the three Landing editors write JSON into a 70-char meta_title column while the reader reads a non-existent field (saved content never renders back).</div>
+        <div class="ev">endpoints/cms.py:2200 · api/cms.ts:1769 · cms/CMSSettings.tsx:47</div></div>
+    </div>
+
+    <div class="feat">
+      <div class="left"><div class="name">Profit / COGS</div>
+        <div class="track"><div class="fill" style="width:65%;background:var(--danger)"></div></div>
+        <div class="pctrow"><span class="pct" style="color:var(--danger)">65%</span><span class="pill partial">Partial</span></div></div>
+      <div class="right"><div class="blk">Real, complete calculations (Profit ROAS, gross/net margin, breakeven, COGS priority resolution, CSV ingestion); substantive passing integration tests. <b>Blockers:</b> FE calls endpoints the backend doesn't expose (<code>/profit/metrics/summary</code>, <code>/true-roas</code>, etc.) + envelope/case mismatch → renders only loading/empty states; Add Product/Rule buttons static; no daily-metrics population pipeline.</div>
+        <div class="ev">services/profit/profit_service.py:635 · api/profit.ts:295 · endpoints/profit.py:610</div></div>
+    </div>
+
+    <div class="feat">
+      <div class="left"><div class="name">Rules Engine</div>
+        <div class="track"><div class="fill" style="width:62%;background:var(--danger)"></div></div>
+        <div class="pctrow"><span class="pct" style="color:var(--danger)">62%</span><span class="pill partial">Partial</span></div></div>
+      <div class="right"><div class="blk">Service-layer engine has real condition eval + actions (label/pause/budget/WhatsApp). <b>Blockers:</b> the only live path — Celery <code>evaluate_rules</code> — is schema-diverged from the model (reads/writes fields that don't exist → AttributeError, so automation never runs); send_alert/notify_slack are success-returning stubs; the Create modal only updates on edit (new rules persist nothing); triggersToday hardcoded to 23.</div>
+        <div class="ev">workers/tasks/rules.py:146 · services/rules_engine.py:290 · Rules.tsx:234,400</div></div>
+    </div>
+
+    <div class="feat">
+      <div class="left"><div class="name">Campaign Builder</div>
+        <div class="track"><div class="fill" style="width:60%;background:var(--danger)"></div></div>
+        <div class="pctrow"><span class="pct" style="color:var(--danger)">60%</span><span class="pill partial">Partial</span></div></div>
+      <div class="right"><div class="blk">Draft CRUD + approval state machine (draft→submit→approve→publish) and OAuth connect/ad-account sync are real and DB-backed. <b>Blockers:</b> the actual "publish to platform" is faked — <code>publish_campaign_draft</code> writes hardcoded SUCCESS with no API call and no platform_campaign_id; publish/sync/retry tasks (mock I/O) are commented out; creative assets not persisted.</div>
+        <div class="ev">endpoints/campaign_builder.py:849 · workers/campaign_builder_tasks.py:71 · test (1871 lines)</div></div>
+    </div>
+
+    <div class="feat">
+      <div class="left"><div class="name">Pacing (Budget Forecasting)</div>
+        <div class="track"><div class="fill" style="width:60%;background:var(--danger)"></div></div>
+        <div class="pctrow"><span class="pct" style="color:var(--danger)">60%</span><span class="pill partial">Partial</span></div></div>
+      <div class="right"><div class="blk">Real, complete EWMA + day-of-week seasonality forecasting with confidence intervals over live DailyKPI queries; substantive tests. <b>Blockers:</b> FE↔BE route contract mismatch (<code>/pacing/status</code>, <code>/summary</code>, <code>/alerts/stats</code> all diverge) + snake vs camelCase shape mismatch → Overview/Alerts data dead; New Target modal never rendered; Forecasts tab buttons have no onClick.</div>
+        <div class="ev">services/pacing/forecasting.py · endpoints/pacing.py · api/pacing.ts</div></div>
+    </div>
+
+    <div class="feat">
+      <div class="left"><div class="name">Insights / Predictions / Competitors</div>
+        <div class="track"><div class="fill" style="width:60%;background:var(--danger)"></div></div>
+        <div class="pctrow"><span class="pct" style="color:var(--danger)">60%</span><span class="pill partial">Partial</span></div></div>
+      <div class="right"><div class="blk">Insights/recommendations are real rule-based analytics; ROAS "predictions" are genuine heuristic math (diminishing-returns, confidence weighting). <b>Blockers:</b> no trained ML ships (ModelRegistry falls back to hardcoded 0.8 elasticity); competitor benchmarks are <code>random.randint</code>, profiles hardcoded fictional, and the one real scraper is wired to nothing; Predictions Scenario Simulator is fully static with no-op buttons.</div>
+        <div class="ev">workers/tasks/competitors.py:49 · analytics/logic/competitor_intel.py:189 · Predictions.tsx:90</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= RECOMMENDATION ================= -->
+<section>
+  <h2><span class="n">06</span> Recommendation</h2>
+  <div class="rec">
+    <div class="verdict">Don't shelve it, and don't wait to "fix everything." <span class="hl">Ship a phased private beta around the spine — but fix the trust-gated-autopilot core first, because that is the one thing you can't launch without.</span></div>
+
+    <p style="color:#cfcfcf; font-size:14px; margin-top:18px; max-width:90ch;">The audit's dominant pattern is encouraging: <b>the expensive work is done.</b> Real algorithms, real platform integrations, encrypted token storage, tenant isolation, and substantive test suites exist almost everywhere. What's broken is the cheap "last mile" — and it repeats in just three shapes, which means it's fixable in weeks, not months.</p>
+
+    <div class="phase">
+      <div class="pl">Phase 0<small>1–2 weeks · unblock</small></div>
+      <ul>
+        <li><b>Wire the real Trust Engine</b> to an endpoint, schedule the rollup task, fix the frontend trust routes. This is the product's whole thesis — it cannot ship on mock data.</li>
+        <li><b>Connect Autopilot to the signal-health gate</b> (not just budget/ROAS thresholds) and add the autonomous evaluation loop to Celery Beat.</li>
+        <li><b>Fix Auth invite-accept</b> (no backend route today) — blocks all team onboarding.</li>
+        <li><b>Fix the FE↔BE contract drifts</b> (Pacing, Profit, Attribution, Multi-tenancy URL prefix) — mechanical, high-leverage.</li>
+      </ul>
+    </div>
+
+    <div class="phase">
+      <div class="pl">Phase 1<small>launch · flag off the rest</small></div>
+      <ul>
+        <li>Go live with the spine: <b>Auth + MFA + Payments + CDP + Audience Sync + Reporting + Trust Engine + Autopilot</b>.</li>
+        <li>Feature-flag <b>off</b> everything below ~65%: Drip, WhatsApp, Competitor Intel, Campaign publish, Profit/Pacing UI. Nobody buys a trust-gated-autopilot product <i>for</i> the drip builder.</li>
+        <li>Register the unregistered Celery tasks (Newsletter, alerts) or hide the features that depend on them — never ship a button that silently does nothing.</li>
+      </ul>
+    </div>
+
+    <div class="phase">
+      <div class="pl">Phase 2<small>fast-follow</small></div>
+      <ul>
+        <li>Backfill Partial features: Rules worker schema fix, Campaign real publish, EMQ serving-layer unification, WhatsApp async pipeline, CAPI persistence + DLQ wiring.</li>
+        <li>Replace fabricated serving data (SuperAdmin infra metrics, Competitor random data) with real sources or honest empty states.</li>
+      </ul>
+    </div>
+
+    <div class="twocol">
+      <div class="panel good">
+        <h4>What's genuinely real (protect it)</h4>
+        <ul>
+          <li><b>Algorithms &amp; math</b> — signal health, EMQ, Markov/Shapley, EWMA pacing, z-score, profit calc are all real and tested</li>
+          <li><b>Platform integrations</b> — OAuth for all 4 ad platforms, HubSpot, Stripe, Slack, real API executors</li>
+          <li><b>Security</b> — MFA, JWT rotation, Fernet token encryption, RBAC, tenant isolation</li>
+          <li><b>CDP</b> — the most complete surface, launchable today</li>
+        </ul>
+      </div>
+      <div class="panel bad">
+        <h4>The 3 recurring failure shapes</h4>
+        <ul>
+          <li><b>Contract drift</b> — frontend calls routes/shapes the backend never exposed (Pacing, Profit, Attribution, Trust)</li>
+          <li><b>Unwired execution</b> — Celery tasks commented out, unregistered, or schema-diverged (Drip, Newsletter, WhatsApp, Rules, Campaign publish)</li>
+          <li><b>Mock leaking into serving</b> — real logic bypassed by fabricated/demo data (EMQ, Anomalies, FocusPane, Competitors, SuperAdmin)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  Stratum AI — internal launch-readiness assessment · Generated 2026-07-01 on branch main @ 0ebbc5cd<br />
+  Method: direct code audit of backend services, API endpoints, Celery workers, frontend views/hooks, and test suites across 24 feature areas.
+  Percentages estimate end-to-end functional completeness (real, wired, tested) — not code volume. Figures are an engineering judgment, not a guarantee; validate the Phase 0 blockers against live code before committing to a launch date.
+</footer>
+
+</body>
+</html>
