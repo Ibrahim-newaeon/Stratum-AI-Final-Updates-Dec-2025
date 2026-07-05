@@ -176,6 +176,20 @@ const ActionRow: React.FC<ActionRowProps> = ({
                   </span>
                 </div>
               )}
+              {action.approved_by && (
+                <div>
+                  <span className="text-muted-foreground">Accepted by:</span>
+                  <span className="ml-2 text-foreground">
+                    {action.approved_by.name ?? 'Unknown user'}
+                    {action.approved_by.department && (
+                      <span className="text-muted-foreground">
+                        {' '}
+                        · {action.approved_by.department}
+                      </span>
+                    )}
+                  </span>
+                </div>
+              )}
               {action.applied_at && (
                 <div>
                   <span className="text-muted-foreground">Applied:</span>

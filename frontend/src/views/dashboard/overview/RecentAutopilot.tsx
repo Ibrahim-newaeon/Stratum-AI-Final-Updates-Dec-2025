@@ -75,6 +75,24 @@ export function RecentAutopilot({ rows, loading, error, onRowClick }: RecentAuto
         className: 'w-32',
       },
       {
+        id: 'acceptedBy',
+        header: 'Accepted by',
+        cell: (r) =>
+          r.acceptedBy ? (
+            <span className="flex flex-col leading-tight">
+              <span className="text-foreground">{r.acceptedBy.name ?? 'Unknown user'}</span>
+              {r.acceptedBy.department && (
+                <span className="text-meta text-muted-foreground font-mono uppercase tracking-[0.06em]">
+                  {r.acceptedBy.department}
+                </span>
+              )}
+            </span>
+          ) : (
+            <span className="text-meta text-muted-foreground font-mono">—</span>
+          ),
+        hideOnMobile: true,
+      },
+      {
         id: 'trust',
         header: 'Trust',
         cell: (r) => (

@@ -34,6 +34,12 @@ export type ActionType =
   | 'bid_increase'
   | 'bid_decrease';
 
+export interface ActionApprover {
+  id: number;
+  name: string | null;
+  department: string | null;
+}
+
 export interface AutopilotAction {
   id: string;
   date: string;
@@ -54,6 +60,8 @@ export interface AutopilotAction {
    *  operator confirmation is required to execute it. */
   requires_confirmation: boolean;
   confirmation_token: string | null;
+  /** Who accepted this action (accountability surface); null until approved. */
+  approved_by: ActionApprover | null;
 }
 
 export interface AutopilotStatus {

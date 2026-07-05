@@ -14,6 +14,7 @@ from uuid import UUID
 
 from sqlalchemy import and_, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.features.flags import AutopilotLevel, get_autopilot_caps
 from app.models.trust_layer import FactActionsQueue
@@ -145,7 +146,13 @@ class AutopilotService:
         limit: int = 100,
     ) -> List[FactActionsQueue]:
         """Get queued actions for a tenant."""
-        query = select(FactActionsQueue).where(FactActionsQueue.tenant_id == tenant_id)
+        # Eager-load the approver so action_to_response can serialize
+        # "accepted by" without a lazy load (which raises in async).
+        query = (
+            select(FactActionsQueue)
+            .options(selectinload(FactActionsQueue.approved_by))
+            .where(FactActionsQueue.tenant_id == tenant_id)
+        )
 
         if target_date:
             query = query.where(FactActionsQueue.date == target_date)
@@ -168,7 +175,9 @@ class AutopilotService:
     ) -> Optional[FactActionsQueue]:
         """Get a specific action by ID."""
         result = await self.db.execute(
-            select(FactActionsQueue).where(
+            select(FactActionsQueue)
+            .options(selectinload(FactActionsQueue.approved_by))
+            .where(
                 and_(
                     FactActionsQueue.id == action_id,
                     FactActionsQueue.tenant_id == tenant_id,

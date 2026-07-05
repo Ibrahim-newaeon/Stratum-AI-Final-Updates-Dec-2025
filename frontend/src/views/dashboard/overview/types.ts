@@ -54,6 +54,8 @@ export interface AutopilotDecisionRow {
   action: 'budget_increase' | 'budget_decrease' | 'pause' | 'enable' | 'bid_adjust';
   result: 'executed' | 'held' | 'blocked' | 'pending';
   trust: number;
+  /** Who accepted the action; null when unapproved or auto-executed. */
+  acceptedBy: { name: string | null; department: string | null } | null;
 }
 
 export interface SignalDropDetail {

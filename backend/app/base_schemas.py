@@ -256,6 +256,7 @@ class UserUpdate(BaseSchema):
     locale: Optional[str] = Field(None, max_length=10)
     timezone: Optional[str] = Field(None, max_length=50)
     preferences: Optional[dict] = None
+    department: Optional[str] = Field(None, max_length=100)
 
 
 class UserResponse(UserBase, TimestampMixin):
@@ -270,6 +271,7 @@ class UserResponse(UserBase, TimestampMixin):
     last_login_at: Optional[datetime]
     avatar_url: Optional[str]
     cms_role: Optional[str] = None
+    department: Optional[str] = None
 
 
 class UserProfileResponse(UserResponse):

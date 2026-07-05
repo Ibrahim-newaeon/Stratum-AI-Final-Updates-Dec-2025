@@ -6,7 +6,13 @@
 
 import { useState, useCallback, memo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useTenantUsers, useCreateUser, useUpdateUser, useDeleteUser, type UserRole } from '@/api/admin'
+import {
+  useTeamMembers,
+  useInviteTeamMember,
+  useUpdateTeamMember,
+  useRemoveTeamMember,
+  type TeamMember,
+} from '@/api/team'
 import { useToast } from '@/components/ui/use-toast'
 import {
   UserPlusIcon,
@@ -20,16 +26,6 @@ import {
   XCircleIcon,
 } from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
-
-interface TeamMember {
-  id: number
-  email: string
-  full_name: string
-  role: string
-  is_active: boolean
-  last_login_at: string | null
-  created_at: string
-}
 
 const ROLES = [
   { value: 'admin', label: 'Admin', description: 'Full access to all features' },
@@ -79,7 +75,14 @@ const UserRow = memo(function UserRow({ user, onUpdateRole, onEdit, onRemove }: 
           </div>
           <div>
             <p className="font-medium">{user.full_name || 'No name'}</p>
-            <p className="text-sm text-muted-foreground">{user.email}</p>
+            <p className="text-sm text-muted-foreground">
+              {user.email}
+              {user.department && (
+                <span className="ml-2 px-2 py-0.5 rounded-full bg-muted text-xs font-medium">
+                  {user.department}
+                </span>
+              )}
+            </p>
           </div>
         </div>
       </td>
@@ -146,12 +149,10 @@ export default function TeamManagement() {
   const navigate = useNavigate()
   const { toast } = useToast()
 
-  const tenantIdNum = tenantId ? parseInt(tenantId, 10) : 0
-
-  const { data: usersData, isLoading, refetch } = useTenantUsers(tenantIdNum)
-  const createUserMutation = useCreateUser()
-  const updateUserMutation = useUpdateUser()
-  const deleteUserMutation = useDeleteUser()
+  const { data: usersData, isLoading, refetch } = useTeamMembers()
+  const inviteMutation = useInviteTeamMember()
+  const updateMutation = useUpdateTeamMember()
+  const removeMutation = useRemoveTeamMember()
 
   const [searchQuery, setSearchQuery] = useState('')
   const [showInviteModal, setShowInviteModal] = useState(false)
@@ -161,9 +162,10 @@ export default function TeamManagement() {
     email: '',
     full_name: '',
     role: 'viewer',
+    department: '',
   })
 
-  const users: TeamMember[] = (usersData as TeamMember[] | undefined) || []
+  const users: TeamMember[] = usersData ?? []
 
   const filteredUsers = users.filter(
     (user) =>
@@ -182,19 +184,18 @@ export default function TeamManagement() {
     }
 
     try {
-      await createUserMutation.mutateAsync({
-        tenantId: tenantIdNum,
+      await inviteMutation.mutateAsync({
         email: newUser.email,
-        name: newUser.full_name,
-        password: crypto.randomUUID(),
-        role: newUser.role as UserRole,
+        full_name: newUser.full_name || undefined,
+        role: newUser.role,
+        department: newUser.department || undefined,
       })
       toast({
         title: 'Success',
         description: 'Team member invited successfully',
       })
       setShowInviteModal(false)
-      setNewUser({ email: '', full_name: '', role: 'viewer' })
+      setNewUser({ email: '', full_name: '', role: 'viewer', department: '' })
       refetch()
     } catch (error) {
       toast({
@@ -207,9 +208,9 @@ export default function TeamManagement() {
 
   const handleUpdateRole = useCallback(async (userId: number, newRole: string) => {
     try {
-      await updateUserMutation.mutateAsync({
-        id: userId,
-        data: { role: newRole as UserRole },
+      await updateMutation.mutateAsync({
+        userId,
+        data: { role: newRole },
       })
       toast({
         title: 'Success',
@@ -223,7 +224,31 @@ export default function TeamManagement() {
         variant: 'destructive',
       })
     }
-  }, [updateUserMutation, toast, refetch])
+  }, [updateMutation, toast, refetch])
+
+  const handleSaveEdit = useCallback(async (member: TeamMember) => {
+    try {
+      await updateMutation.mutateAsync({
+        userId: member.id,
+        data: {
+          full_name: member.full_name ?? undefined,
+          role: member.role,
+          department: member.department,
+        },
+      })
+      toast({
+        title: 'Success',
+        description: 'Team member updated successfully',
+      })
+      refetch()
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to update team member',
+        variant: 'destructive',
+      })
+    }
+  }, [updateMutation, toast, refetch])
 
   const handleRemoveUser = useCallback(async (userId: number, userName: string) => {
     if (!confirm(`Are you sure you want to remove ${userName} from the team?`)) {
@@ -231,7 +256,7 @@ export default function TeamManagement() {
     }
 
     try {
-      await deleteUserMutation.mutateAsync(userId)
+      await removeMutation.mutateAsync(userId)
       toast({
         title: 'Success',
         description: 'Team member removed successfully',
@@ -244,7 +269,7 @@ export default function TeamManagement() {
         variant: 'destructive',
       })
     }
-  }, [deleteUserMutation, toast, refetch])
+  }, [removeMutation, toast, refetch])
 
   const handleEditUser = useCallback((user: TeamMember) => {
     setSelectedUser(user)
@@ -409,6 +434,17 @@ export default function TeamManagement() {
                   ))}
                 </select>
               </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Department</label>
+                <input
+                  type="text"
+                  value={newUser.department}
+                  onChange={(e) => setNewUser({ ...newUser, department: e.target.value })}
+                  placeholder="e.g. Media Buying"
+                  maxLength={100}
+                  className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+                />
+              </div>
             </div>
             <div className="flex justify-end gap-3 mt-6">
               <button
@@ -419,10 +455,10 @@ export default function TeamManagement() {
               </button>
               <button
                 onClick={handleInvite}
-                disabled={createUserMutation.isPending}
+                disabled={inviteMutation.isPending}
                 className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
               >
-                {createUserMutation.isPending ? 'Inviting...' : 'Send Invite'}
+                {inviteMutation.isPending ? 'Inviting...' : 'Send Invite'}
               </button>
             </div>
           </div>
@@ -475,6 +511,19 @@ export default function TeamManagement() {
                   ))}
                 </select>
               </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Department</label>
+                <input
+                  type="text"
+                  value={selectedUser.department || ''}
+                  onChange={(e) =>
+                    setSelectedUser({ ...selectedUser, department: e.target.value || null })
+                  }
+                  placeholder="e.g. Media Buying"
+                  maxLength={100}
+                  className="w-full px-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+                />
+              </div>
             </div>
             <div className="flex justify-end gap-3 mt-6">
               <button
@@ -485,13 +534,13 @@ export default function TeamManagement() {
               </button>
               <button
                 onClick={async () => {
-                  await handleUpdateRole(selectedUser.id, selectedUser.role)
+                  await handleSaveEdit(selectedUser)
                   setShowEditModal(false)
                 }}
-                disabled={updateUserMutation.isPending}
+                disabled={updateMutation.isPending}
                 className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
               >
-                {updateUserMutation.isPending ? 'Saving...' : 'Save Changes'}
+                {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           </div>

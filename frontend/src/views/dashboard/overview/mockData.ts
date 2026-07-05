@@ -92,6 +92,7 @@ export const mockAutopilotDecisions: AutopilotDecisionRow[] = [
     action: 'pause',
     result: 'held',
     trust: 62,
+    acceptedBy: null,
   },
   {
     id: 'ap-2',
@@ -100,6 +101,7 @@ export const mockAutopilotDecisions: AutopilotDecisionRow[] = [
     action: 'budget_increase',
     result: 'executed',
     trust: 91,
+    acceptedBy: { name: 'Sara Kim', department: 'Media Buying' },
   },
   {
     id: 'ap-3',
@@ -108,6 +110,7 @@ export const mockAutopilotDecisions: AutopilotDecisionRow[] = [
     action: 'bid_adjust',
     result: 'executed',
     trust: 87,
+    acceptedBy: { name: 'Omar Haddad', department: 'Performance' },
   },
   {
     id: 'ap-4',
@@ -116,6 +119,7 @@ export const mockAutopilotDecisions: AutopilotDecisionRow[] = [
     action: 'budget_decrease',
     result: 'pending',
     trust: 74,
+    acceptedBy: null,
   },
   {
     id: 'ap-5',
@@ -124,6 +128,7 @@ export const mockAutopilotDecisions: AutopilotDecisionRow[] = [
     action: 'pause',
     result: 'blocked',
     trust: 38,
+    acceptedBy: null,
   },
 ];
 

@@ -199,6 +199,9 @@ export function useOverviewData(): OverviewData {
         typeof (a as { trust_score?: number }).trust_score === 'number'
           ? (a as { trust_score: number }).trust_score
           : 75,
+      acceptedBy: a.approved_by
+        ? { name: a.approved_by.name, department: a.approved_by.department }
+        : null,
     }));
 
     const realDecisions = decisions.length > 0 ? decisions : mockAutopilotDecisions;

@@ -33,6 +33,7 @@ class InviteUserRequest(BaseModel):
     email: EmailStr
     full_name: Optional[str] = None
     role: str = Field(default="user", description="User role: admin, manager, user")
+    department: Optional[str] = Field(None, max_length=100)
 
 
 def _safe_decrypt(value: Optional[str]) -> Optional[str]:
@@ -52,6 +53,7 @@ class UpdateUserRequest(BaseModel):
     full_name: Optional[str] = None
     role: Optional[str] = None
     is_active: Optional[bool] = None
+    department: Optional[str] = Field(None, max_length=100)
 
 
 logger = get_logger(__name__)
@@ -98,6 +100,7 @@ async def get_current_user(
             last_login_at=user.last_login_at,
             avatar_url=user.avatar_url,
             cms_role=user.cms_role,
+            department=user.department,
             preferences=user.preferences,
             consent_marketing=user.consent_marketing,
             consent_analytics=user.consent_analytics,
@@ -168,6 +171,7 @@ async def update_current_user(
             last_login_at=user.last_login_at,
             avatar_url=user.avatar_url,
             cms_role=user.cms_role,
+            department=user.department,
             preferences=user.preferences,
             consent_marketing=user.consent_marketing,
             consent_analytics=user.consent_analytics,
@@ -222,6 +226,7 @@ async def list_users(
                 is_verified=u.is_verified,
                 last_login_at=u.last_login_at,
                 avatar_url=u.avatar_url,
+                department=u.department,
                 created_at=u.created_at,
                 updated_at=u.updated_at,
             )
@@ -296,6 +301,8 @@ async def invite_user(
         # (new token + email) instead of dead-ending on "already exists".
         user = existing_user
         user.role = user_role
+        if invite_data.department is not None:
+            user.department = invite_data.department
         if invite_data.full_name:
             user.full_name = encrypt_pii(invite_data.full_name)
     else:
@@ -308,6 +315,7 @@ async def invite_user(
                 encrypt_pii(invite_data.full_name) if invite_data.full_name else None
             ),
             role=user_role,
+            department=invite_data.department,
             is_active=True,
             is_verified=False,  # Verified when the invite is accepted
         )
@@ -407,6 +415,7 @@ async def invite_user(
             is_verified=user.is_verified,
             last_login_at=user.last_login_at,
             avatar_url=user.avatar_url,
+            department=user.department,
             created_at=user.created_at,
             updated_at=user.updated_at,
         ),
@@ -469,6 +478,10 @@ async def update_user(
     if update_data.is_active is not None:
         user.is_active = update_data.is_active
 
+    # model_fields_set so an explicit null clears the department
+    if "department" in update_data.model_fields_set:
+        user.department = update_data.department
+
     await db.commit()
 
     logger.info(f"Updated user {user_id} in tenant {tenant_id}")
@@ -487,6 +500,7 @@ async def update_user(
             is_verified=user.is_verified,
             last_login_at=user.last_login_at,
             avatar_url=user.avatar_url,
+            department=user.department,
             created_at=user.created_at,
             updated_at=user.updated_at,
         ),
