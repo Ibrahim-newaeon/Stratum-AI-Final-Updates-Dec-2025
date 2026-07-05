@@ -406,6 +406,10 @@ class User(Base, TimestampMixin, SoftDeleteMixin, TenantMixin):
     phone: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     avatar_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
 
+    # Org unit shown on accountability surfaces (autopilot "accepted by",
+    # team settings). Free text, admin-managed; not PII, not encrypted.
+    department: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+
     # Role & Permissions
     role: Mapped[UserRole] = mapped_column(
         Enum(UserRole, values_callable=lambda x: [e.value for e in x]),

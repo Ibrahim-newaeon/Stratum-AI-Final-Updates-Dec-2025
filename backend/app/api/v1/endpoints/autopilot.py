@@ -91,6 +91,14 @@ class ApproveActionsRequest(BaseModel):
     action_ids: List[str] = Field(..., description="List of action UUIDs to approve")
 
 
+class ApproverInfo(BaseModel):
+    """User who accepted an action, for accountability display."""
+
+    id: int
+    name: Optional[str] = None
+    department: Optional[str] = None
+
+
 class ActionResponse(BaseModel):
     """Serialized action for API response."""
 
@@ -111,11 +119,52 @@ class ActionResponse(BaseModel):
     error: Optional[str]
     requires_confirmation: bool = False
     confirmation_token: Optional[str] = None
+    approved_by: Optional[ApproverInfo] = None
 
 
 # =============================================================================
 # Helper Functions
 # =============================================================================
+
+
+def _approver_info(action) -> Optional[ApproverInfo]:
+    """Serialize the eager-loaded approver, if any.
+
+    Only touches the relationship when the query eager-loaded it
+    (selectinload in AutopilotService); a lazy load here would raise
+    MissingGreenlet under the async session. full_name is PII-encrypted
+    at rest, so decrypt for display.
+    """
+    from sqlalchemy import inspect as sa_inspect
+
+    from app.core.security import decrypt_pii
+
+    if action.approved_by_user_id is None:
+        return None
+    if "approved_by" in sa_inspect(action).unloaded:
+        return None
+    approver = action.approved_by
+    if approver is None:  # user row deleted (FK is SET NULL on hard delete)
+        return None
+
+    # Cross-tenant approver (only reachable via the superadmin X-Tenant-ID
+    # override): never serialize another tenant's user PII to this tenant.
+    # Label it as platform staff instead of exposing name/department.
+    if approver.tenant_id != action.tenant_id:
+        return ApproverInfo(id=approver.id, name="Platform staff", department=None)
+
+    name: Optional[str] = None
+    if approver.full_name:
+        try:
+            name = decrypt_pii(approver.full_name)
+        except (ValueError, TypeError):
+            name = None
+
+    return ApproverInfo(
+        id=approver.id,
+        name=name,
+        department=approver.department,
+    )
 
 
 def action_to_response(action) -> ActionResponse:
@@ -143,6 +192,7 @@ def action_to_response(action) -> ActionResponse:
             and getattr(action, "confirmation_token", None)
         ),
         confirmation_token=getattr(action, "confirmation_token", None),
+        approved_by=_approver_info(action),
     )
 
 
