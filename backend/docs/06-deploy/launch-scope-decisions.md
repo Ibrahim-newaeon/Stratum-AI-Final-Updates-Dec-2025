@@ -22,6 +22,11 @@ before launch or explicitly cut to the post-launch backlog.
 Do not present these three in the product UI as available integrations
 until wired.
 
+The cut modules (and verified-dead code: `stratum/workers/`,
+`monitoring/`, the unregistered `memory_debug` endpoint) are omitted from
+the coverage denominator in `backend/.coveragerc` so the CI gate measures
+only reachable code — **un-omit each family when wiring it post-launch**.
+
 ## Production deploy prerequisites (from PR #517)
 
 - Set `METRICS_API_KEY` in the production environment — `/metrics` is

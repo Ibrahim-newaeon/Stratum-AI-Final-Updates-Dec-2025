@@ -13,6 +13,30 @@ omit =
     */alembic/*
     app/main.py
     app/workers/celery_app.py
+    # ---------------------------------------------------------------------
+    # Cut from launch (backend/docs/06-deploy/launch-scope-decisions.md,
+    # 2026-07-05): Salesforce/Pipedrive/Zoho CRM integrations are explicitly
+    # post-launch. Their only entry point outside services/crm is
+    # app/workers/crm_sync_tasks.py, which is absent from the Celery include
+    # list so none of its @shared_task defs ever register. Un-omit each
+    # family when it gets wired. hubspot_* and identity_matching stay IN
+    # coverage — both are imported by the live integrations endpoints.
+    app/services/crm/salesforce_client.py
+    app/services/crm/salesforce_sync.py
+    app/services/crm/salesforce_writeback.py
+    app/services/crm/pipedrive_client.py
+    app/services/crm/pipedrive_sync.py
+    app/services/crm/pipedrive_writeback.py
+    app/services/crm/zoho_client.py
+    app/services/crm/zoho_sync.py
+    app/services/crm/zoho_writeback.py
+    app/workers/crm_sync_tasks.py
+    # Dead code (2026-07-02 audit, re-verified 2026-07-05): app/stratum/
+    # workers has zero importers; app/monitoring is imported only by the
+    # memory_debug endpoint, which is never registered in the API router.
+    app/stratum/workers/*
+    app/monitoring/*
+    app/api/v1/endpoints/memory_debug.py
 
 [report]
 # Minimum coverage percentage required.
@@ -162,7 +186,19 @@ omit =
 # family incl. platform windows, batch, summaries, cross-platform
 # reconciliation; Markov kept to invariants — sampler is hash-seed-dependent).
 # CI combined measured 52.47% before; ~53.7% expected). See #342.
-fail_under = 53.4
+#
+# -> 60.5 (integration-phase Batch 0 — denominator honesty, no new tests:
+# omit code that is either explicitly cut from launch (Salesforce/Pipedrive/
+# Zoho CRM families + their sole unregistered entry point crm_sync_tasks;
+# see backend/docs/06-deploy/launch-scope-decisions.md) or verified dead
+# (stratum/workers: zero importers; monitoring/* + memory_debug endpoint:
+# never registered in the router). ~3,900 stmts / ~3,570 missed leave the
+# denominator, so measured coverage reflects only reachable code. CI
+# combined measured 54.21% before; CI measured 57.55% after (the naive
+# statement arithmetic suggested ~61.5%, but branch-coverage weighting
+# tempers the gain). Floor set just under the measured number. Un-omit
+# each family when it gets wired post-launch. See #342.
+fail_under = 57.0
 
 # Show missing line numbers
 show_missing = True
