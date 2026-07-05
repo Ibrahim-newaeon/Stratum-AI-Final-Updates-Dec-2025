@@ -46,8 +46,12 @@ htmlcov/
 
 # ML models and training data (generated)
 backend/models/
+backend/ml_service/
 *.pkl
 sample_training_data.csv
+
+# Local session notes
+SESSION-MEMO-*.md
 
 # Celery
 celerybeat-schedule
