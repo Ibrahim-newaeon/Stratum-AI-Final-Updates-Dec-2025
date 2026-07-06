@@ -16,7 +16,6 @@ from app.core.feature_gate import (
     get_current_tier_dependency,
     get_tier_features_for_tenant,
 )
-from app.db.session import get_async_session
 from app.core.tiers import (
     TIER_FEATURES,
     TIER_LIMITS,
@@ -28,6 +27,7 @@ from app.core.tiers import (
     get_tier_limit,
     has_feature,
 )
+from app.db.session import get_async_session
 
 router = APIRouter(prefix="/tier", tags=["tier"])
 
