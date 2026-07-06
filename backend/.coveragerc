@@ -6,6 +6,12 @@
 [run]
 source = app
 branch = True
+# Without greenlet tracing, coverage.py stops recording inside an async
+# handler at the first SQLAlchemy-asyncio greenlet switch (every awaited
+# db call), silently marking all post-await lines as missed. Verified on
+# endpoints/dashboard.py (measured 34.5% -> real 74.6%) and cdp.py
+# (56.0% -> 88.9%) with identical test runs. thread covers executor pools.
+concurrency = greenlet,thread
 omit =
     */tests/*
     */__pycache__/*
@@ -198,7 +204,20 @@ omit =
 # statement arithmetic suggested ~61.5%, but branch-coverage weighting
 # tempers the gain). Floor set just under the measured number. Un-omit
 # each family when it gets wired post-launch. See #342.
-fail_under = 57.0
+# -> 63.5 (integration-phase Batch 2 — dashboard + CDP endpoints, plus meter
+# honesty: [run] concurrency = greenlet,thread so coverage keeps recording
+# across SQLAlchemy-asyncio greenlet switches instead of marking every
+# post-await line missed (dashboard.py real coverage 74.6% vs 34.5% under the
+# old meter; cdp.py 88.9% vs 56.0% — verified on identical runs). 171 new
+# integration test cases across test_dashboard_api / test_cdp* (overview,
+# campaigns, recommendations approve/reject, activity, signal-health, export,
+# widgets, briefing/recovery/predictive/ai-report/churn intel endpoints;
+# CDP ingestion auth, consent, profile search/merge/GDPR, exports, anomalies,
+# identity graph, computed traits, RFM, funnels, segments membership,
+# webhooks incl. rotate + /test delivery). Six endpoint paths that 500 on
+# every request were found and filed as #525 (not tested — a 500 is not a
+# contract). CI combined measured 57.55% before; 63.97% after. See #342.
+fail_under = 63.5
 
 # Show missing line numbers
 show_missing = True
