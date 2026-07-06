@@ -37,6 +37,26 @@ from app.tasks import apply_actions_queue as mod
 pytestmark = pytest.mark.integration
 
 
+@pytest.fixture(autouse=True)
+def _dispose_task_loop_connections():
+    """Discard global-engine connections pooled under the task's event loop.
+
+    Each Celery task body here runs via ``asyncio.run()`` and uses the
+    app's module-level async engine, leaving pooled asyncpg connections
+    bound to a loop that closes when the task returns. The tasks defend
+    themselves at entry (``_reset_async_engine``), but later tests on the
+    session-scoped loop that reach the global engine (any code path that
+    opens its own session instead of the DI override) would pick up a
+    dead-loop connection and fail with "Future attached to a different
+    loop". Dispose via the sync facade — ``close=False`` swaps the pool
+    without awaiting closes across loops, so no event loop is needed.
+    """
+    yield
+    from app.db.session import async_engine
+
+    async_engine.sync_engine.dispose(close=False)
+
+
 # =============================================================================
 # Seed helpers (committed rows — the task reads via its own session)
 # =============================================================================
