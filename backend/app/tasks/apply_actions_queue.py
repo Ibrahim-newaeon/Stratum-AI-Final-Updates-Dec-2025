@@ -272,11 +272,18 @@ class MetaExecutor(PlatformExecutor):
                         "access_token": access_token,
                     },
                 )
-                after_value = (
-                    after_resp.json()
-                    if after_resp.status_code == 200
-                    else update_payload
-                )
+                if after_resp.status_code == 200:
+                    after_value = after_resp.json()
+                else:
+                    # Fall back to the update payload, but never persist
+                    # credentials: the payload carries the access_token used
+                    # for the POST, and after_value is stored in the DB and
+                    # served by the actions API.
+                    after_value = {
+                        key: value
+                        for key, value in update_payload.items()
+                        if key != "access_token"
+                    }
 
                 return {
                     "success": True,
@@ -293,6 +300,7 @@ class MetaExecutor(PlatformExecutor):
             ValueError,
             KeyError,
             RuntimeError,
+            httpx.HTTPError,
         ) as exc:
             logger.error(f"[META] Live execution error: {exc}", exc_info=True)
             return {
@@ -399,6 +407,7 @@ class GoogleExecutor(PlatformExecutor):
             OSError,
             ValueError,
             RuntimeError,
+            httpx.HTTPError,
         ) as exc:
             logger.error(f"[GOOGLE] Token refresh error: {exc}", exc_info=True)
             return None
@@ -627,6 +636,7 @@ class GoogleExecutor(PlatformExecutor):
             ValueError,
             KeyError,
             RuntimeError,
+            httpx.HTTPError,
         ) as exc:
             logger.error(f"[GOOGLE] Live execution error: {exc}", exc_info=True)
             return {
@@ -846,6 +856,7 @@ class TikTokExecutor(PlatformExecutor):
             ValueError,
             KeyError,
             RuntimeError,
+            httpx.HTTPError,
         ) as exc:
             logger.error(f"[TIKTOK] Live execution error: {exc}", exc_info=True)
             return {
@@ -1025,6 +1036,15 @@ class SnapchatExecutor(PlatformExecutor):
                 ]:
                     update_payload["status"] = "ACTIVE"
 
+                else:
+                    return {
+                        "success": False,
+                        "before_value": before_value,
+                        "after_value": None,
+                        "platform_response": None,
+                        "error": f"Unsupported action type for Snapchat: {action_type}",
+                    }
+
                 # Step 3: PUT update
                 put_body = {resource: [{resource[:-1]: update_payload}]}
                 put_resp = await client.put(
@@ -1074,6 +1094,7 @@ class SnapchatExecutor(PlatformExecutor):
             ValueError,
             KeyError,
             RuntimeError,
+            httpx.HTTPError,
         ) as exc:
             logger.error(f"[SNAP] Live execution error: {exc}", exc_info=True)
             return {
