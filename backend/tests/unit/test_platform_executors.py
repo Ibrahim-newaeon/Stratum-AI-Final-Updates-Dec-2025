@@ -844,13 +844,12 @@ class TestMetaExecutorLive:
     async def test_after_get_failure_falls_back_to_payload(
         self, meta_creds: None
     ) -> None:
-        """When the post-update GET fails, after_value falls back to the raw
-        update payload.
+        """When the post-update GET fails, after_value falls back to the
+        update payload with the ``access_token`` stripped.
 
-        NOTE (documented current behavior, potential bug): the fallback
-        payload still contains the ``access_token`` that was injected before
-        the POST, so the token would be persisted into the action's
-        after_value JSON downstream.
+        The token must never appear in after_value: it is persisted to
+        ``fact_actions_queue.after_value`` and served by the actions API
+        (#522).
         """
         with respx.mock:
             respx.get(f"{META_BASE}/c1").mock(
@@ -866,9 +865,8 @@ class TestMetaExecutorLive:
                 "pause_campaign", "campaign", "c1", {}
             )
         assert result["success"] is True
-        assert result["after_value"]["status"] == "PAUSED"
-        # Current behavior leaks the token into after_value on this path.
-        assert result["after_value"]["access_token"] == "meta-token"
+        assert result["after_value"] == {"status": "PAUSED"}
+        assert "access_token" not in result["after_value"]
 
     async def test_builtin_connection_error_returns_error_dict(
         self, meta_creds: None
@@ -885,22 +883,26 @@ class TestMetaExecutorLive:
         assert result["success"] is False
         assert result["error"] == "connection refused"
 
-    async def test_httpx_transport_error_propagates(self, meta_creds: None) -> None:
-        """httpx transport errors are NOT swallowed by the executor.
+    async def test_httpx_transport_error_returns_error_dict(
+        self, meta_creds: None
+    ) -> None:
+        """httpx transport errors are caught and reported as an error dict.
 
-        NOTE (documented current behavior, potential bug): the except clause
-        catches builtin ConnectionError/TimeoutError/OSError but not
-        ``httpx.HTTPError`` subclasses (which inherit from Exception), so a
-        real network failure propagates out of ``_live_execute``.
+        ``httpx.HTTPError`` inherits from Exception (not OSError), so it
+        must be listed explicitly in the executor's except clause — a real
+        network failure fails the one action instead of crashing the whole
+        sweep iteration (#522).
         """
         with respx.mock:
             respx.get(f"{META_BASE}/c1").mock(
                 side_effect=httpx.ConnectError("dns failure")
             )
-            with pytest.raises(httpx.ConnectError):
-                await MetaExecutor()._live_execute(
-                    "pause_campaign", "campaign", "c1", {}
-                )
+            result = await MetaExecutor()._live_execute(
+                "pause_campaign", "campaign", "c1", {}
+            )
+        assert_result_contract(result)
+        assert result["success"] is False
+        assert result["error"] == "dns failure"
 
 
 class TestGoogleAccessToken:
@@ -1591,12 +1593,11 @@ class TestSnapchatExecutorLive:
         assert result["before_value"] == {"status": None, "daily_budget_micro": 0}
         assert result["after_value"]["status"] == "PAUSED"
 
-    async def test_unsupported_action_still_puts_unchanged_payload(
+    async def test_unsupported_action_returns_error_without_put(
         self, snap_creds: None
     ) -> None:
-        """NOTE (documented current behavior, potential bug): Snapchat has no
-        unsupported-action guard — an unknown action type PUTs the entity
-        back unchanged and reports success instead of returning an error.
+        """Unknown action types return the standard error dict before any
+        PUT is made, matching the Meta/Google/TikTok guard (#522).
         """
         with respx.mock:
             respx.get(f"{SNAP_BASE}/campaigns/c1").mock(
@@ -1613,9 +1614,15 @@ class TestSnapchatExecutorLive:
             result = await SnapchatExecutor()._live_execute(
                 "bid_increase", "campaign", "c1", {"amount": 1}
             )
-        assert result["success"] is True
-        assert result["after_value"] == result["before_value"]
-        assert put_route.called
+        assert_result_contract(result)
+        assert result["success"] is False
+        assert result["error"] == "Unsupported action type for Snapchat: bid_increase"
+        assert result["before_value"] == {
+            "status": "ACTIVE",
+            "daily_budget_micro": 1_000_000,
+        }
+        assert result["after_value"] is None
+        assert not put_route.called
 
     async def test_network_error_returns_error_dict(self, snap_creds: None) -> None:
         """Builtin connection errors inside the client are caught."""
