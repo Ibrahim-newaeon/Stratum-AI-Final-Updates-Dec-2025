@@ -1023,3 +1023,95 @@ class TestNLFilter:
         assert data["interpretation"]["original_query"] == query
         assert data["interpretation"]["intent"]
         assert isinstance(data["interpretation"]["parsed_filters"], list)
+
+
+# =============================================================================
+# Intel endpoints previously broken by non-existent attributes (#525)
+# =============================================================================
+
+
+class TestAttributionConfidence:
+    """Regression for #525: 500ed on user.current_tenant_id +
+    CampaignStatus.DELETED."""
+
+    async def test_empty(self, authenticated_client: AsyncClient):
+        resp = await authenticated_client.get(f"{_BASE}/attribution-confidence")
+        assert resp.status_code == 200, resp.text
+        data = resp.json()["data"]
+        assert data["confidence_label"]
+        assert isinstance(data["channels"], list)
+
+    async def test_with_campaigns(
+        self, authenticated_client: AsyncClient, seeded_campaigns
+    ):
+        resp = await authenticated_client.get(f"{_BASE}/attribution-confidence")
+        assert resp.status_code == 200, resp.text
+        data = resp.json()["data"]
+        assert 0 <= data["overall_confidence"] <= 100
+        assert isinstance(data["model_comparisons"], list)
+        assert isinstance(data["data_quality_metrics"], list)
+
+
+class TestLTVForecast:
+    """Regression for #525 (same broken attributes)."""
+
+    async def test_with_campaigns(
+        self, authenticated_client: AsyncClient, seeded_campaigns
+    ):
+        resp = await authenticated_client.get(f"{_BASE}/ltv-forecast")
+        assert resp.status_code == 200, resp.text
+        data = resp.json()["data"]
+        assert data["ltv_health"]
+        assert isinstance(data["total_customers"], int)
+        assert isinstance(data["cohorts"], list)
+        assert isinstance(data["segments"], list)
+
+
+class TestCreativeScoring:
+    """Regression for #525 (same broken attributes)."""
+
+    async def test_with_campaigns(
+        self, authenticated_client: AsyncClient, seeded_campaigns
+    ):
+        resp = await authenticated_client.get(f"{_BASE}/creative-scoring")
+        assert resp.status_code == 200, resp.text
+        data = resp.json()["data"]
+        assert data["overall_grade"]
+        assert isinstance(data["creatives"], list)
+        assert isinstance(data["total_creatives"], int)
+
+
+class TestCompetitorIntel:
+    """Regression for #525 (same broken attributes)."""
+
+    async def test_with_campaigns(
+        self, authenticated_client: AsyncClient, seeded_campaigns
+    ):
+        resp = await authenticated_client.get(f"{_BASE}/competitor-intel")
+        assert resp.status_code == 200, resp.text
+        data = resp.json()["data"]
+        assert data["market_position"]
+        assert 0 <= data["competitive_pressure"] <= 100
+        assert isinstance(data["competitors"], list)
+
+
+class TestCollaborativeAnnotations:
+    """Regression for #525: 500ed on current_user.first_name/last_name
+    (CurrentUser only exposes full_name)."""
+
+    async def test_with_campaigns(
+        self, authenticated_client: AsyncClient, seeded_campaigns
+    ):
+        resp = await authenticated_client.get(f"{_BASE}/collaborative-annotations")
+        assert resp.status_code == 200, resp.text
+        data = resp.json()["data"]
+        assert isinstance(data["annotations"], list)
+        assert isinstance(data["active_discussions"], int)
+        # Author names derive from CurrentUser.full_name with an
+        # email-prefix fallback (the harness hits the fallback: the fixture
+        # stores full_name unencrypted so decrypt_pii yields None). Either
+        # way every author must have a non-empty name — the #525 bug made
+        # this endpoint unreachable entirely.
+        assert data["annotations"], "expected seeded campaigns to yield annotations"
+        for annotation in data["annotations"]:
+            assert annotation["author"]["name"]

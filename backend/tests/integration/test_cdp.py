@@ -804,6 +804,30 @@ async def _make_customer_profile(client: AsyncClient) -> str:
     return data["results"][0]["profile_id"]
 
 
+async def _make_static_segment_with_member(client: AsyncClient) -> tuple[str, str]:
+    """Create a static segment containing one freshly-ingested profile.
+
+    Returns (segment_id, profile_id).
+    """
+    seg_resp = await client.post(
+        "/api/v1/cdp/segments",
+        json={
+            "name": f"Static filter seg {uuid4().hex[:6]}",
+            "segment_type": "static",
+            "rules": {"logic": "and", "conditions": []},
+        },
+    )
+    assert seg_resp.status_code in (200, 201)
+    segment_id = seg_resp.json()["id"]
+
+    profile_id = await _make_profile(client)
+    add_resp = await client.post(
+        f"/api/v1/cdp/segments/{segment_id}/profiles/{profile_id}"
+    )
+    assert add_resp.status_code == 201
+    return segment_id, profile_id
+
+
 # =============================================================================
 # Unauthenticated Access
 # =============================================================================
@@ -1196,10 +1220,44 @@ class TestProfileSearch:
         # RFM filter excludes freshly-ingested profiles with no traits
         assert resp.json()["total"] == 0
 
-    # NOTE: the segment_ids / exclude_segment_ids filters are intentionally
-    # untested: cdp.py queries CDPSegmentMembership.is_member, a column that
-    # does not exist on the model (it is named is_active), so any request
-    # using those filters raises AttributeError -> 500. Product bug.
+    @pytest.mark.asyncio
+    async def test_search_segment_ids_filter(self, authenticated_client: AsyncClient):
+        """Regression for #525: this filter 500ed on a non-existent column."""
+        segment_id, profile_id = await _make_static_segment_with_member(
+            authenticated_client
+        )
+        # A second profile outside the segment must be filtered out.
+        await _make_profile(authenticated_client)
+
+        resp = await authenticated_client.post(
+            "/api/v1/cdp/profiles/search", params={"segment_ids": [segment_id]}
+        )
+
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["total"] == 1
+        assert body["profiles"][0]["id"] == profile_id
+
+    @pytest.mark.asyncio
+    async def test_search_exclude_segment_ids_filter(
+        self, authenticated_client: AsyncClient
+    ):
+        """Regression for #525 (exclusion direction)."""
+        segment_id, member_profile_id = await _make_static_segment_with_member(
+            authenticated_client
+        )
+        outsider_profile_id = await _make_profile(authenticated_client)
+
+        resp = await authenticated_client.post(
+            "/api/v1/cdp/profiles/search",
+            params={"exclude_segment_ids": [segment_id]},
+        )
+
+        assert resp.status_code == 200
+        body = resp.json()
+        returned_ids = {p["id"] for p in body["profiles"]}
+        assert member_profile_id not in returned_ids
+        assert outsider_profile_id in returned_ids
 
 
 # =============================================================================
@@ -1260,9 +1318,24 @@ class TestAudienceExport:
         assert "rfm_segment" in header
         assert "identifier_types" in header
 
-    # NOTE: the segment_id filter is intentionally untested: cdp.py queries
-    # CDPSegmentMembership.is_member, which does not exist on the model
-    # (the column is named is_active), so the filter 500s. Product bug.
+    @pytest.mark.asyncio
+    async def test_audience_export_segment_id_filter(
+        self, authenticated_client: AsyncClient
+    ):
+        """Regression for #525: this filter 500ed on a non-existent column."""
+        segment_id, _profile_id = await _make_static_segment_with_member(
+            authenticated_client
+        )
+        await _make_profile(authenticated_client)  # outside the segment
+
+        resp = await authenticated_client.post(
+            "/api/v1/cdp/audiences/export", params={"segment_id": segment_id}
+        )
+
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["count"] == 1
+        assert body["filters_applied"]["segment_id"] == segment_id
 
     @pytest.mark.asyncio
     async def test_audience_export_rfm_segment_filter(

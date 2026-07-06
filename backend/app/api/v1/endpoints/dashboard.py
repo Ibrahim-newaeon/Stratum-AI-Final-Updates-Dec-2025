@@ -3364,7 +3364,7 @@ async def get_attribution_confidence(
     Returns attribution confidence analysis across channels and models.
     Evaluates data quality, model agreement, and channel-level confidence.
     """
-    tenant_id = user.current_tenant_id
+    tenant_id = user.tenant_id
     if not tenant_id:
         raise HTTPException(status_code=400, detail="No active tenant")
 
@@ -3375,7 +3375,7 @@ async def get_attribution_confidence(
             select(Campaign).where(
                 and_(
                     Campaign.tenant_id == tenant_id,
-                    Campaign.status != CampaignStatus.DELETED,
+                    Campaign.is_deleted == False,
                 )
             )
         )
@@ -3444,7 +3444,7 @@ async def get_ltv_forecast(
     Returns customer LTV forecasting by cohort and segment.
     Projects lifetime value, analyzes unit economics, and identifies risk.
     """
-    tenant_id = user.current_tenant_id
+    tenant_id = user.tenant_id
     if not tenant_id:
         raise HTTPException(status_code=400, detail="No active tenant")
 
@@ -3455,7 +3455,7 @@ async def get_ltv_forecast(
             select(Campaign).where(
                 and_(
                     Campaign.tenant_id == tenant_id,
-                    Campaign.status != CampaignStatus.DELETED,
+                    Campaign.is_deleted == False,
                 )
             )
         )
@@ -3525,7 +3525,7 @@ async def get_creative_scoring(
     Returns creative performance scoring across campaigns.
     Grades creatives A-F, detects fatigue, identifies winners.
     """
-    tenant_id = user.current_tenant_id
+    tenant_id = user.tenant_id
     if not tenant_id:
         raise HTTPException(status_code=400, detail="No active tenant")
 
@@ -3536,7 +3536,7 @@ async def get_creative_scoring(
             select(Campaign).where(
                 and_(
                     Campaign.tenant_id == tenant_id,
-                    Campaign.status != CampaignStatus.DELETED,
+                    Campaign.is_deleted == False,
                 )
             )
         )
@@ -3612,7 +3612,7 @@ async def get_competitor_intel(
     Returns competitive intelligence from market signals.
     Estimates SOV, competitor profiles, platform competition, opportunities.
     """
-    tenant_id = user.current_tenant_id
+    tenant_id = user.tenant_id
     if not tenant_id:
         raise HTTPException(status_code=400, detail="No active tenant")
 
@@ -3623,7 +3623,7 @@ async def get_competitor_intel(
             select(Campaign).where(
                 and_(
                     Campaign.tenant_id == tenant_id,
-                    Campaign.status != CampaignStatus.DELETED,
+                    Campaign.is_deleted == False,
                 )
             )
         )
@@ -3777,9 +3777,7 @@ async def get_collaborative_annotations(
     user_id = current_user.id
 
     try:
-        user_name = (
-            f"{current_user.first_name or ''} {current_user.last_name or ''}".strip()
-        )
+        user_name = (current_user.full_name or "").strip()
         if not user_name:
             user_name = (
                 current_user.email.split("@")[0]
