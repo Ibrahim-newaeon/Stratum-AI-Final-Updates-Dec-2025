@@ -6,6 +6,12 @@
 [run]
 source = app
 branch = True
+# Without greenlet tracing, coverage.py stops recording inside an async
+# handler at the first SQLAlchemy-asyncio greenlet switch (every awaited
+# db call), silently marking all post-await lines as missed. Verified on
+# endpoints/dashboard.py (measured 34.5% -> real 74.6%) and cdp.py
+# (56.0% -> 88.9%) with identical test runs. thread covers executor pools.
+concurrency = greenlet,thread
 omit =
     */tests/*
     */__pycache__/*
