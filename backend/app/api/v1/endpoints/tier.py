@@ -10,11 +10,13 @@ on the authenticated user's tenant.
 """
 
 from fastapi import APIRouter, Depends, Request
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.feature_gate import (
     get_current_tier_dependency,
     get_tier_features_for_tenant,
 )
+from app.db.session import get_async_session
 from app.core.tiers import (
     TIER_FEATURES,
     TIER_LIMITS,
@@ -34,6 +36,7 @@ router = APIRouter(prefix="/tier", tags=["tier"])
 async def get_current_tier_info(
     request: Request,
     tier: SubscriptionTier = Depends(get_current_tier_dependency),
+    db: AsyncSession = Depends(get_async_session),
 ):
     """
     Get current subscription tier and available features.
@@ -43,7 +46,10 @@ async def get_current_tier_info(
     """
     tenant_id = getattr(request.state, "tenant_id", None)
     if tenant_id:
-        return await get_tier_features_for_tenant(tenant_id)
+        # Pass the request-scoped session: the fallback path inside
+        # get_tenant_tier opens its own session on the global engine,
+        # escaping the caller's transaction (and any test override).
+        return await get_tier_features_for_tenant(tenant_id, db=db)
 
     # Fallback for unauthenticated requests
     info = get_tier_info(tier)
