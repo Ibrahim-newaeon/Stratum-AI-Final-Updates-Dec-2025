@@ -1668,7 +1668,10 @@ async def verify_email(
                 to_email=original_email,
                 user_name=user_name,
             )
-    except (ConnectionError, TimeoutError, OSError) as e:
+    except (ConnectionError, TimeoutError, OSError, ValueError, TypeError) as e:
+        # ValueError/TypeError: decrypt_pii raises on corrupted/legacy email
+        # data — the welcome email is best-effort and verification has already
+        # committed, so never let it 500 the request (#534).
         logger.warning("welcome_email_send_failed", error=str(e))
 
     logger.info("email_verified", user_id=user.id)

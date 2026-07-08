@@ -27,6 +27,13 @@ OAUTH_STATE_PREFIX = "oauth_state:"
 OAUTH_STATE_EXPIRY = 600  # 10 minutes
 
 
+class OAuthProviderError(Exception):
+    """A platform OAuth API call failed (token exchange/refresh, account
+    fetch, revoke). Raised instead of bare Exception so endpoint handlers
+    can catch provider failures without swallowing programming errors (#534).
+    """
+
+
 @dataclass
 class OAuthState:
     """OAuth state for CSRF protection and session tracking."""

@@ -6,6 +6,7 @@ Middleware that extracts and validates tenant context from requests.
 Implements Row-Level Security at the application level.
 """
 
+import re
 from typing import Callable, Optional
 
 import jwt
@@ -32,6 +33,10 @@ PUBLIC_ENDPOINTS = {
     "/redoc",
     "/openapi.json",
     "/api/v1/auth/login",
+    # MFA second step: the client only holds the challenge mfa_token from the
+    # login response body (no tenant-scoped bearer yet) — the endpoint
+    # self-authenticates by decoding that token.
+    "/api/v1/auth/login/mfa",
     "/api/v1/auth/register",
     "/api/v1/auth/refresh",
     "/api/v1/auth/forgot-password",
@@ -141,6 +146,11 @@ class TenantMiddleware(BaseHTTPMiddleware):
         if path in PUBLIC_ENDPOINTS:
             return True
         if path.startswith("/docs") or path.startswith("/redoc"):
+            return True
+        # OAuth provider callbacks arrive as browser redirects from the ad
+        # platform with no JWT/X-Tenant-ID header; tenant context comes from
+        # the Redis-stored state token the endpoint validates (CSRF check).
+        if re.fullmatch(r"/api/v1/oauth/[^/]+/callback", path):
             return True
         # Allow webhook endpoints (they authenticate via signature/verify-token, not JWT)
         # Platform webhooks live under /api/v1/<platform>/webhooks/, generic ones under

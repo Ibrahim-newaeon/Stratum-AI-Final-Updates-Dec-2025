@@ -872,6 +872,10 @@ async def admin_create_post(
     if body.tag_ids:
         tag_result = await db.execute(select(CMSTag).where(CMSTag.id.in_(body.tag_ids)))
         tags = tag_result.scalars().all()
+        # Load the (empty) tags collection before assigning — plain attribute
+        # assignment on an unloaded lazy="selectin" relationship triggers a
+        # sync lazy load with no greenlet context (MissingGreenlet -> 500, #534).
+        await db.refresh(post, ["tags"])
         post.tags = list(tags)
 
         # Update tag usage counts

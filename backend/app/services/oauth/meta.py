@@ -29,6 +29,7 @@ from app.core.config import settings
 from app.core.logging import get_logger
 from app.services.oauth.base import (
     AdAccountInfo,
+    OAuthProviderError,
     OAuthService,
     OAuthState,
     OAuthTokens,
@@ -142,7 +143,7 @@ class MetaOAuthService(OAuthService):
                 if resp.status != 200:
                     error_data = await resp.json()
                     self.logger.error("Meta token exchange failed", error=error_data)
-                    raise Exception(
+                    raise OAuthProviderError(
                         f"Token exchange failed: {error_data.get('error', {}).get('message', 'Unknown error')}"
                     )
 
@@ -150,7 +151,7 @@ class MetaOAuthService(OAuthService):
 
             short_lived_token = token_data.get("access_token")
             if not short_lived_token:
-                raise Exception("No access token in response")
+                raise OAuthProviderError("No access token in response")
 
             # Step 2: Exchange short-lived for long-lived token
             long_lived_params = {
@@ -184,7 +185,7 @@ class MetaOAuthService(OAuthService):
 
             long_lived_token = long_lived_data.get("access_token")
             if not long_lived_token:
-                raise Exception("No access token in long-lived token response")
+                raise OAuthProviderError("No access token in long-lived token response")
 
             return OAuthTokens(
                 access_token=long_lived_token,
@@ -229,7 +230,7 @@ class MetaOAuthService(OAuthService):
                 if resp.status != 200:
                     error_data = await resp.json()
                     self.logger.error("Meta token refresh failed", error=error_data)
-                    raise Exception(
+                    raise OAuthProviderError(
                         f"Token refresh failed: {error_data.get('error', {}).get('message', 'Unknown error')}"
                     )
 
@@ -278,7 +279,7 @@ class MetaOAuthService(OAuthService):
                         self.logger.error(
                             "Failed to fetch ad accounts", error=error_data
                         )
-                        raise Exception(
+                        raise OAuthProviderError(
                             f"Failed to fetch ad accounts: {error_data.get('error', {}).get('message', 'Unknown error')}"
                         )
 

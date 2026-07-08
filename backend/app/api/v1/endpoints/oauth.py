@@ -37,11 +37,23 @@ from app.models.campaign_builder import (
 )
 from app.schemas import APIResponse
 from app.services.oauth import (
+    OAuthProviderError,
     get_oauth_service,
 )
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/oauth", tags=["oauth"])
+
+
+def _column_str(raw: object) -> str:
+    """Normalize TenantPlatformConnection.platform/.status to str.
+
+    Both are plain String(50) columns: rows loaded fresh from Postgres hold
+    str, while objects still in the creating session hold the enum that was
+    assigned — `.value` on the str crashed every status read (#534).
+    """
+    return raw.value if hasattr(raw, "value") else str(raw)
+
 
 # Auth gate for tenant-scoped OAuth endpoints. Agency admins manage
 # their own platform connections — Connect Platform / Refresh Token /
@@ -178,7 +190,13 @@ async def start_oauth(
             user_id=current_user.id,
             redirect_uri=request_data.frontend_callback_url or settings.frontend_url,
         )
-    except (ConnectionError, TimeoutError, OSError, ValueError) as e:
+    except (
+        ConnectionError,
+        TimeoutError,
+        OSError,
+        ValueError,
+        OAuthProviderError,
+    ) as e:
         logger.error("Failed to create OAuth state", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -274,7 +292,13 @@ async def oauth_callback(
     try:
         redirect_uri = oauth_service.get_redirect_uri()
         tokens = await oauth_service.exchange_code_for_tokens(code, redirect_uri)
-    except (ConnectionError, TimeoutError, OSError, ValueError) as e:
+    except (
+        ConnectionError,
+        TimeoutError,
+        OSError,
+        ValueError,
+        OAuthProviderError,
+    ) as e:
         logger.error(
             "oauth_token_exchange_failed",
             platform=platform.value,
@@ -428,8 +452,8 @@ async def get_connection_status(
     return APIResponse(
         success=True,
         data=ConnectionStatusResponse(
-            platform=connection.platform.value,
-            status=connection.status.value,
+            platform=_column_str(connection.platform),
+            status=_column_str(connection.status),
             connected_at=connection.connected_at,
             token_expires_at=connection.token_expires_at,
             last_refreshed_at=connection.last_refreshed_at,
@@ -474,8 +498,8 @@ async def get_all_connection_statuses(
 
         statuses.append(
             ConnectionStatusResponse(
-                platform=connection.platform.value,
-                status=connection.status.value,
+                platform=_column_str(connection.platform),
+                status=_column_str(connection.status),
                 connected_at=connection.connected_at,
                 token_expires_at=connection.token_expires_at,
                 last_refreshed_at=connection.last_refreshed_at,
@@ -573,7 +597,13 @@ async def list_ad_accounts(
                 await db.commit()
 
                 access_token = new_tokens.access_token
-            except (ConnectionError, TimeoutError, OSError, ValueError) as e:
+            except (
+                ConnectionError,
+                TimeoutError,
+                OSError,
+                ValueError,
+                OAuthProviderError,
+            ) as e:
                 logger.error("Token refresh failed", error=str(e))
                 connection.status = ConnectionStatus.EXPIRED
                 connection.last_error = str(e)
@@ -593,7 +623,13 @@ async def list_ad_accounts(
     # Fetch accounts from platform
     try:
         platform_accounts = await oauth_service.fetch_ad_accounts(access_token)
-    except (ConnectionError, TimeoutError, OSError, ValueError) as e:
+    except (
+        ConnectionError,
+        TimeoutError,
+        OSError,
+        ValueError,
+        OAuthProviderError,
+    ) as e:
         logger.error("Failed to fetch ad accounts", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
@@ -669,7 +705,13 @@ async def connect_ad_accounts(
         oauth_service = get_oauth_service(platform.value)
         access_token = oauth_service.decrypt_token(connection.access_token_encrypted)
         platform_accounts = await oauth_service.fetch_ad_accounts(access_token)
-    except (ConnectionError, TimeoutError, OSError, ValueError) as e:
+    except (
+        ConnectionError,
+        TimeoutError,
+        OSError,
+        ValueError,
+        OAuthProviderError,
+    ) as e:
         logger.error("Failed to fetch ad accounts for validation", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
@@ -855,7 +897,13 @@ async def refresh_token(
             ),
         )
 
-    except (ConnectionError, TimeoutError, OSError, ValueError) as e:
+    except (
+        ConnectionError,
+        TimeoutError,
+        OSError,
+        ValueError,
+        OAuthProviderError,
+    ) as e:
         logger.error("Token refresh failed", error=str(e))
         connection.status = ConnectionStatus.ERROR
         connection.last_error = str(e)
@@ -909,7 +957,13 @@ async def disconnect_platform(
                 connection.access_token_encrypted
             )
             await oauth_service.revoke_access(access_token)
-        except (ConnectionError, TimeoutError, OSError, ValueError) as e:
+        except (
+            ConnectionError,
+            TimeoutError,
+            OSError,
+            ValueError,
+            OAuthProviderError,
+        ) as e:
             logger.warning("Failed to revoke access with platform", error=str(e))
             # Continue with local disconnect anyway
 

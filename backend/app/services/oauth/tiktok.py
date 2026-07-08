@@ -31,6 +31,7 @@ from app.core.config import settings
 from app.core.logging import get_logger
 from app.services.oauth.base import (
     AdAccountInfo,
+    OAuthProviderError,
     OAuthService,
     OAuthState,
     OAuthTokens,
@@ -133,14 +134,14 @@ class TikTokOAuthService(OAuthService):
                     self.logger.error(
                         "TikTok token exchange failed", error=response_data
                     )
-                    raise Exception(f"Token exchange failed: {error_msg}")
+                    raise OAuthProviderError(f"Token exchange failed: {error_msg}")
 
                 token_data = response_data.get("data", {})
 
         # TikTok access tokens expire in 24 hours (86400 seconds)
         access_token = token_data.get("access_token")
         if not access_token:
-            raise Exception("No access token in response")
+            raise OAuthProviderError("No access token in response")
 
         expires_in = token_data.get("expires_in", 86400)
 
@@ -187,7 +188,7 @@ class TikTokOAuthService(OAuthService):
                     self.logger.error(
                         "TikTok token refresh failed", error=response_data
                     )
-                    raise Exception(f"Token refresh failed: {error_msg}")
+                    raise OAuthProviderError(f"Token refresh failed: {error_msg}")
 
                 token_data = response_data.get("data", {})
 
@@ -242,7 +243,7 @@ class TikTokOAuthService(OAuthService):
                     error_msg = response_data.get("message", "Unknown error")
                     self.logger.error("Failed to get advertisers", error=response_data)
 
-                    raise Exception(f"Failed to get advertisers: {error_msg}")
+                    raise OAuthProviderError(f"Failed to get advertisers: {error_msg}")
 
                 advertisers = response_data.get("data", {}).get("list", [])
 

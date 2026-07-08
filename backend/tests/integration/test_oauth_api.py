@@ -307,20 +307,15 @@ class TestAuthorize:
 class TestCallback:
     """Callback behavior.
 
-    KNOWN BUG (reported, not asserted here): ``/api/v1/oauth/{platform}/callback``
-    is missing from ``TenantMiddleware``'s public-endpoint exemptions
-    (``backend/app/middleware/tenant.py`` ``_is_public_endpoint`` /
-    ``PUBLIC_ENDPOINTS``). Real platform redirects arrive without a JWT or
-    X-Tenant-ID header, so the middleware 401s every production OAuth
-    callback before the endpoint runs. These tests send authenticated
-    headers to get past the middleware and exercise the endpoint logic,
-    which is this module's coverage target.
+    ``/api/v1/oauth/{platform}/callback`` is exempt from TenantMiddleware
+    (#534): real platform redirects arrive as browser navigations with no
+    JWT or X-Tenant-ID header, and tenant context comes from the
+    Redis-stored state token the endpoint validates. All callback requests
+    here are therefore sent UNAUTHENTICATED — the production contract.
     """
 
-    async def test_callback_platform_error_redirects(
-        self, authenticated_client: AsyncClient
-    ):
-        resp = await authenticated_client.get(
+    async def test_callback_platform_error_redirects(self, client: AsyncClient):
+        resp = await client.get(
             f"{_BASE}/meta/callback",
             params={"error": "access_denied", "error_description": "User said no"},
         )
@@ -329,18 +324,14 @@ class TestCallback:
         assert "error=access_denied" in location
         assert "platform=meta" in location
 
-    async def test_callback_missing_params_redirects(
-        self, authenticated_client: AsyncClient
-    ):
-        resp = await authenticated_client.get(f"{_BASE}/meta/callback")
+    async def test_callback_missing_params_redirects(self, client: AsyncClient):
+        resp = await client.get(f"{_BASE}/meta/callback")
         assert resp.status_code in _REDIRECT_CODES
         assert "error=invalid_request" in resp.headers["location"]
 
-    async def test_callback_invalid_state_redirects(
-        self, authenticated_client: AsyncClient
-    ):
+    async def test_callback_invalid_state_redirects(self, client: AsyncClient):
         # State token that was never stored in Redis -> CSRF check fails.
-        resp = await authenticated_client.get(
+        resp = await client.get(
             f"{_BASE}/meta/callback",
             params={"code": "authcode", "state": "bogus-state-token"},
         )
@@ -348,7 +339,7 @@ class TestCallback:
         assert "error=invalid_state" in resp.headers["location"]
 
     async def test_callback_state_platform_mismatch(
-        self, authenticated_client: AsyncClient, test_tenant, test_user
+        self, client: AsyncClient, test_tenant, test_user
     ):
         # State created for meta but presented on the google callback.
         meta = get_oauth_service("meta")
@@ -357,7 +348,7 @@ class TestCallback:
             user_id=test_user["id"],
             redirect_uri="http://localhost:5173",
         )
-        resp = await authenticated_client.get(
+        resp = await client.get(
             f"{_BASE}/google/callback",
             params={"code": "authcode", "state": state.state_token},
         )
@@ -366,7 +357,7 @@ class TestCallback:
 
     async def test_callback_token_exchange_failure_redirects(
         self,
-        authenticated_client: AsyncClient,
+        client: AsyncClient,
         test_tenant,
         test_user,
         oauth_creds,
@@ -384,7 +375,7 @@ class TestCallback:
             "exchange_code_for_tokens",
             AsyncMock(side_effect=ConnectionError("provider unreachable")),
         )
-        resp = await authenticated_client.get(
+        resp = await client.get(
             f"{_BASE}/meta/callback",
             params={"code": "authcode", "state": state.state_token},
         )
@@ -417,6 +408,11 @@ class TestCallback:
             AsyncMock(return_value=_tokens(access="meta-long-lived")),
         )
 
+        # The callback is a browser redirect from the platform: no JWT, no
+        # X-Tenant-ID (authenticated_client and client share one instance,
+        # so strip its headers for the unauthenticated leg).
+        authenticated_client.headers.pop("Authorization", None)
+        authenticated_client.headers.pop("X-Tenant-ID", None)
         resp = await authenticated_client.get(
             f"{_BASE}/meta/callback",
             params={"code": "authcode", "state": state_token},
@@ -444,7 +440,7 @@ class TestCallback:
 
     async def test_callback_state_single_use(
         self,
-        authenticated_client: AsyncClient,
+        client: AsyncClient,
         test_tenant,
         test_user,
         oauth_creds,
@@ -462,13 +458,13 @@ class TestCallback:
             meta, "exchange_code_for_tokens", AsyncMock(return_value=_tokens())
         )
 
-        first = await authenticated_client.get(
+        first = await client.get(
             f"{_BASE}/meta/callback",
             params={"code": "authcode", "state": state.state_token},
         )
         assert "status=success" in first.headers["location"]
 
-        replay = await authenticated_client.get(
+        replay = await client.get(
             f"{_BASE}/meta/callback",
             params={"code": "authcode", "state": state.state_token},
         )
@@ -476,7 +472,7 @@ class TestCallback:
 
     async def test_callback_updates_existing_connection(
         self,
-        authenticated_client: AsyncClient,
+        client: AsyncClient,
         db_session,
         test_tenant,
         test_user,
@@ -505,7 +501,7 @@ class TestCallback:
             AsyncMock(return_value=_tokens(access="reconnected-token")),
         )
 
-        resp = await authenticated_client.get(
+        resp = await client.get(
             f"{_BASE}/meta/callback",
             params={"code": "authcode", "state": state.state_token},
         )
@@ -519,7 +515,7 @@ class TestCallback:
 
     async def test_callback_storage_failure_redirects(
         self,
-        authenticated_client: AsyncClient,
+        client: AsyncClient,
         test_tenant,
         test_user,
         oauth_creds,
@@ -540,7 +536,7 @@ class TestCallback:
             "encrypt_token",
             lambda token: (_ for _ in ()).throw(ValueError("bad key")),
         )
-        resp = await authenticated_client.get(
+        resp = await client.get(
             f"{_BASE}/meta/callback",
             params={"code": "authcode", "state": state.state_token},
         )
@@ -600,6 +596,34 @@ class TestConnectionStatus:
         for platform in ("google", "tiktok", "snapchat"):
             assert statuses[platform] == "disconnected"
         assert len(statuses) == 4
+
+    async def test_status_survives_fresh_load_from_db(
+        self, authenticated_client: AsyncClient, db_session, test_tenant
+    ):
+        """Regression (#534): platform/status are plain String(50) columns.
+
+        Rows loaded fresh from Postgres hold str, and the old ``.value``
+        access raised AttributeError -> 500 on every status read. The other
+        status tests never caught this because the session identity map
+        returned the fixture-created instance still holding the assigned
+        enums — so commit and expunge to force a fresh load in the endpoint.
+        """
+        await _make_connection(db_session, test_tenant["id"])
+        await db_session.commit()
+        db_session.expunge_all()
+
+        single = await authenticated_client.get(f"{_BASE}/meta/status")
+        assert single.status_code == 200, single.text
+        data = single.json()["data"]
+        assert data["platform"] == "meta"
+        assert data["status"] == "connected"
+
+        combined = await authenticated_client.get(f"{_BASE}/status")
+        assert combined.status_code == 200, combined.text
+        statuses = {s["platform"]: s["status"] for s in combined.json()["data"]}
+        assert statuses["meta"] == "connected"
+        for platform in ("google", "tiktok", "snapchat"):
+            assert statuses[platform] == "disconnected"
 
 
 # =============================================================================

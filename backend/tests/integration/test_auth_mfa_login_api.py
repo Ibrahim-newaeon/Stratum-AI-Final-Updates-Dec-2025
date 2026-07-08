@@ -11,12 +11,10 @@
 The user is seeded with a fixed (encrypted) TOTP secret and driven with real
 pyotp codes, mirroring test_mfa_api.py.
 
-NOTE: ``/api/v1/auth/login/mfa`` is missing from TenantMiddleware's
-PUBLIC_ENDPOINTS, so an unauthenticated exchange (the real-world flow —
-the user has no bearer token yet) is rejected by the middleware before the
-endpoint runs. Tests here attach a tenant-scoped bearer purely to get past
-the middleware; the endpoint itself authenticates via ``body.mfa_token``.
-This is reported as a production bug, not asserted as correct behavior.
+``/api/v1/auth/login/mfa`` is in TenantMiddleware's PUBLIC_ENDPOINTS (#534):
+the client's only credential at this point is the ``mfa_token`` challenge
+from the login response body, so the exchange requests here are deliberately
+sent with NO Authorization header — the production shape.
 """
 
 import pyotp
@@ -30,17 +28,6 @@ _MFA = "/api/v1/auth/login/mfa"
 _SECRET = "JBSWY3DPEHPK3PXP"  # fixed base32 secret for deterministic codes
 _EMAIL = "mfa-login@example.com"
 _PASSWORD = "Testpassword123"
-
-
-def _bearer(user: dict) -> dict:
-    """Tenant-scoped access token to satisfy TenantMiddleware (see NOTE above)."""
-    from app.core.security import create_access_token
-
-    token = create_access_token(
-        subject=user["id"],
-        additional_claims={"tenant_id": user["tenant_id"], "role": "admin"},
-    )
-    return {"Authorization": f"Bearer {token}"}
 
 
 @pytest_asyncio.fixture
@@ -121,11 +108,7 @@ class TestLoginMfaExchange:
         mfa_token = login.json()["data"]["mfa_token"]
 
         code = pyotp.TOTP(_SECRET).now()
-        resp = await client.post(
-            _MFA,
-            json={"mfa_token": mfa_token, "code": code},
-            headers=_bearer(mfa_user),
-        )
+        resp = await client.post(_MFA, json={"mfa_token": mfa_token, "code": code})
         assert resp.status_code == 200, resp.text
         data = resp.json()["data"]
         assert data["access_token"]
@@ -136,19 +119,13 @@ class TestLoginMfaExchange:
         login = await client.post(_LOGIN, json={"email": _EMAIL, "password": _PASSWORD})
         mfa_token = login.json()["data"]["mfa_token"]
 
-        resp = await client.post(
-            _MFA,
-            json={"mfa_token": mfa_token, "code": "000000"},
-            headers=_bearer(mfa_user),
-        )
+        resp = await client.post(_MFA, json={"mfa_token": mfa_token, "code": "000000"})
         assert resp.status_code == 401
         assert "attempts remaining" in resp.json()["detail"].lower()
 
     async def test_garbage_challenge_token_401(self, client, mfa_user):
         resp = await client.post(
-            _MFA,
-            json={"mfa_token": "not.a.jwt", "code": "000000"},
-            headers=_bearer(mfa_user),
+            _MFA, json={"mfa_token": "not.a.jwt", "code": "000000"}
         )
         assert resp.status_code == 401
 
@@ -157,28 +134,37 @@ class TestLoginMfaExchange:
         from app.core.security import create_access_token
 
         access = create_access_token(subject=mfa_user["id"])
-        resp = await client.post(
-            _MFA,
-            json={"mfa_token": access, "code": "000000"},
-            headers=_bearer(mfa_user),
-        )
+        resp = await client.post(_MFA, json={"mfa_token": access, "code": "000000"})
         assert resp.status_code == 401
 
     async def test_challenge_for_non_mfa_user_401(self, client, plain_user):
         # A challenge minted for a user without MFA enabled is invalid.
         challenge = _challenge_for(plain_user["id"])
-        resp = await client.post(
-            _MFA,
-            json={"mfa_token": challenge, "code": "000000"},
-            headers=_bearer(plain_user),
-        )
+        resp = await client.post(_MFA, json={"mfa_token": challenge, "code": "000000"})
         assert resp.status_code == 401
 
     async def test_challenge_for_unknown_user_401(self, client, mfa_user):
         challenge = _challenge_for(99999999)
-        resp = await client.post(
-            _MFA,
-            json={"mfa_token": challenge, "code": "000000"},
-            headers=_bearer(mfa_user),
-        )
+        resp = await client.post(_MFA, json={"mfa_token": challenge, "code": "000000"})
         assert resp.status_code == 401
+
+
+class TestMfaEndpointIsPublic:
+    """Regression (#534): /auth/login/mfa must be reachable without a bearer.
+
+    Before the fix the path was missing from TenantMiddleware's
+    PUBLIC_ENDPOINTS, so every unauthenticated exchange (the real-world flow)
+    was rejected by the middleware with its "Tenant context required" body
+    before the endpoint ran.
+    """
+
+    async def test_unauthenticated_request_reaches_endpoint(self, client):
+        resp = await client.post(
+            _MFA, json={"mfa_token": "garbage-token", "code": "000000"}
+        )
+        # 401 must come from the endpoint (invalid MFA session), not from
+        # TenantMiddleware (which returns an "error" body, no "detail" key).
+        assert resp.status_code == 401
+        body = resp.json()
+        assert body.get("error") != "Tenant context required"
+        assert "mfa session" in body["detail"].lower()
