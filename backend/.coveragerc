@@ -224,7 +224,17 @@ omit =
 # (MFA login + OAuth callbacks middleware-blocked, 6 always-500 paths) —
 # worked around with documented patches, not asserted as contract. CI
 # combined measured 63.97% before; 66.40% after. See #342.
-fail_under = 66.0
+# -> 68.5 (integration-phase Batch 4 — pacing + reporting services: 288 new
+# service-layer cases against real Postgres, transports mocked at the client
+# boundary; alert_service 19.56 -> 100.00, pacing_service 38.36 -> 99.73,
+# forecasting 42.54 -> 100.00, report_generator 22.74 -> 100.00,
+# pdf_generator 14.50 -> 100.00, delivery 18.86 -> 97.93, scheduler
+# 51.45 -> 99.13. Eight production bugs found during writing filed as #537
+# (report collectors crash on model drift, PDF export dead in the prod
+# image, executions stuck RUNNING, WhatsApp recipients never resolve) —
+# pinned by tests documenting current behavior, not asserted as contract.
+# CI combined measured 66.40% before; 68.70% after. See #342.
+fail_under = 68.5
 
 # Show missing line numbers
 show_missing = True
