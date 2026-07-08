@@ -433,18 +433,22 @@ class TestOAuthAuthorize:
 class TestOAuthCallback:
     """GET /api/v1/oauth/{platform}/callback
 
-    The callback path is NOT in PUBLIC_ENDPOINTS, so TenantMiddleware
-    intercepts unauthenticated requests with 401.  We test with admin
-    headers to get past middleware and verify endpoint-level behaviour.
+    The callback is exempted from TenantMiddleware (#534): the ad platform
+    redirects the user's browser here with no JWT, and tenant context comes
+    from the Redis-stored state token the endpoint validates itself.
     """
 
-    async def test_no_auth_returns_401(self, api_client: AsyncClient):
-        """Callback without JWT is blocked by TenantMiddleware."""
+    async def test_no_auth_reaches_endpoint_and_redirects(self, api_client: AsyncClient):
+        """Unauthenticated callback (the real browser flow) reaches the endpoint.
+
+        Regression for #534: this used to 401 in TenantMiddleware before the
+        endpoint ran, which made every production OAuth connect flow dead.
+        """
         resp = await api_client.get(
             "/api/v1/oauth/meta/callback?error=access_denied",
             follow_redirects=False,
         )
-        assert resp.status_code == 401
+        assert resp.status_code in (302, 307)
 
     async def test_error_param_redirects(
         self, api_client: AsyncClient, admin_headers, mock_db

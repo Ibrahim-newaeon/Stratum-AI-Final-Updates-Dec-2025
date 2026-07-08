@@ -10,8 +10,6 @@ KPI summaries, assignments, portal invitations, portal requests, and
 auth/permission enforcement.
 """
 
-from unittest.mock import AsyncMock, patch
-
 import pytest
 from httpx import AsyncClient
 
@@ -148,41 +146,6 @@ async def _make_request_row(
     db_session.add(row)
     await db_session.flush()
     return row
-
-
-def _provide_hash_email():
-    """Work around the missing ``hash_email`` import in invite_portal_user.
-
-    ``clients.py:837`` does ``from app.core.security import encrypt_pii,
-    hash_email`` inside the endpoint, but ``app.core.security`` has no
-    ``hash_email`` (the real helper is ``hash_pii_for_lookup``) — every
-    request that reaches the endpoint body raises ImportError -> 500.
-    Inject the attribute so the rest of the endpoint can be exercised;
-    remove once the import is fixed.
-    """
-    from app.core.security import hash_pii_for_lookup
-
-    return patch(
-        "app.core.security.hash_email",
-        new=hash_pii_for_lookup,
-        create=True,
-    )
-
-
-def _bypass_enforce_client_access():
-    """Work around the positional-call bug in the portal-request endpoints.
-
-    ``clients.py`` lines 1016 and 1082 call ``enforce_client_access(db,
-    current_user, client_id)`` positionally, but the helper is keyword-only
-    (``async def enforce_client_access(*, user_id, ...)``) — every request
-    raises TypeError -> 500.  Patch it with an async no-op so the rest of
-    the endpoint logic can be exercised.  Remove once the call sites are
-    fixed; an AsyncMock keeps working with the corrected keyword call too.
-    """
-    return patch(
-        "app.api.v1.endpoints.clients.enforce_client_access",
-        new=AsyncMock(return_value=None),
-    )
 
 
 # =============================================================================
@@ -797,25 +760,23 @@ class TestAssignments:
 # =============================================================================
 # Portal invitations
 #
-# NOTE: invite_portal_user currently 500s on any request reaching its body
-# because clients.py:837 imports the nonexistent app.core.security.hash_email
-# (real helper: hash_pii_for_lookup).  ``_provide_hash_email`` injects the
-# missing attribute so the rest of the flow stays covered; drop the patch
-# once the import is fixed.
+# Regression context (#534): invite_portal_user used to import the
+# nonexistent ``app.core.security.hash_email`` (real helper:
+# ``hash_pii_for_lookup``), 500ing every request that reached the endpoint
+# body. These tests now exercise the real import path.
 # =============================================================================
 class TestPortalInvite:
     @pytest.mark.asyncio
     async def test_invite_success(self, authenticated_client: AsyncClient):
         created = await _create_client_api(authenticated_client, "portal", "Portal Co")
-        with _provide_hash_email():
-            resp = await authenticated_client.post(
-                f"/api/v1/clients/{created['id']}/invite-portal",
-                json={
-                    "email": "portal.user@example.com",
-                    "full_name": "Portal User",
-                    "client_id": created["id"],
-                },
-            )
+        resp = await authenticated_client.post(
+            f"/api/v1/clients/{created['id']}/invite-portal",
+            json={
+                "email": "portal.user@example.com",
+                "full_name": "Portal User",
+                "client_id": created["id"],
+            },
+        )
         assert resp.status_code == 201, resp.text
         assert "Portal user created" in resp.json()["message"]
 
@@ -827,14 +788,13 @@ class TestPortalInvite:
             "full_name": "Dup User",
             "client_id": created["id"],
         }
-        with _provide_hash_email():
-            first = await authenticated_client.post(
-                f"/api/v1/clients/{created['id']}/invite-portal", json=payload
-            )
-            assert first.status_code == 201
-            second = await authenticated_client.post(
-                f"/api/v1/clients/{created['id']}/invite-portal", json=payload
-            )
+        first = await authenticated_client.post(
+            f"/api/v1/clients/{created['id']}/invite-portal", json=payload
+        )
+        assert first.status_code == 201
+        second = await authenticated_client.post(
+            f"/api/v1/clients/{created['id']}/invite-portal", json=payload
+        )
         assert second.status_code == 409
 
     @pytest.mark.asyncio
@@ -926,11 +886,11 @@ class TestCreatePortalRequest:
 # =============================================================================
 # Portal requests (agency review workflow)
 #
-# NOTE: both endpoints below currently 500 on every real request because
-# clients.py:1016 / clients.py:1082 call enforce_client_access positionally
-# while the helper is keyword-only.  ``_bypass_enforce_client_access``
-# patches the helper so the remaining endpoint logic stays covered; drop the
-# patch once the call sites are fixed.
+# Regression context (#534): both endpoints below used to call
+# ``enforce_client_access`` positionally while the helper is keyword-only,
+# so every real request raised TypeError -> 500.  The call sites now pass
+# keywords, so these tests run against the real access check (the admin
+# ``authenticated_client`` has unrestricted access).
 # =============================================================================
 class TestClientRequestWorkflow:
     @pytest.mark.asyncio
@@ -951,10 +911,9 @@ class TestClientRequestWorkflow:
             status=ClientRequestStatus.APPROVED,
         )
 
-        with _bypass_enforce_client_access():
-            resp = await authenticated_client.get(
-                f"/api/v1/clients/{created['id']}/requests"
-            )
+        resp = await authenticated_client.get(
+            f"/api/v1/clients/{created['id']}/requests"
+        )
         assert resp.status_code == 200, resp.text
         data = resp.json()["data"]
         assert data["total"] == 2
@@ -983,11 +942,10 @@ class TestClientRequestWorkflow:
             status=ClientRequestStatus.REJECTED,
         )
 
-        with _bypass_enforce_client_access():
-            resp = await authenticated_client.get(
-                f"/api/v1/clients/{created['id']}/requests",
-                params={"status_filter": "pending", "skip": 1, "limit": 1},
-            )
+        resp = await authenticated_client.get(
+            f"/api/v1/clients/{created['id']}/requests",
+            params={"status_filter": "pending", "skip": 1, "limit": 1},
+        )
         assert resp.status_code == 200
         data = resp.json()["data"]
         assert data["total"] == 2  # only pending counted
@@ -1005,11 +963,10 @@ class TestClientRequestWorkflow:
             db_session, test_tenant["id"], created["id"], test_user["id"]
         )
 
-        with _bypass_enforce_client_access():
-            resp = await authenticated_client.post(
-                f"/api/v1/clients/{created['id']}/requests/{row.id}/review",
-                json={"action": "approve", "notes": "looks good"},
-            )
+        resp = await authenticated_client.post(
+            f"/api/v1/clients/{created['id']}/requests/{row.id}/review",
+            json={"action": "approve", "notes": "looks good"},
+        )
         assert resp.status_code == 200, resp.text
         body = resp.json()
         assert body["data"]["status"] == "approved"
@@ -1029,11 +986,10 @@ class TestClientRequestWorkflow:
             db_session, test_tenant["id"], created["id"], test_user["id"]
         )
 
-        with _bypass_enforce_client_access():
-            resp = await authenticated_client.post(
-                f"/api/v1/clients/{created['id']}/requests/{row.id}/review",
-                json={"action": "reject"},
-            )
+        resp = await authenticated_client.post(
+            f"/api/v1/clients/{created['id']}/requests/{row.id}/review",
+            json={"action": "reject"},
+        )
         assert resp.status_code == 200
         assert resp.json()["data"]["status"] == "rejected"
 
@@ -1052,11 +1008,10 @@ class TestClientRequestWorkflow:
             status=ClientRequestStatus.APPROVED,
         )
 
-        with _bypass_enforce_client_access():
-            resp = await authenticated_client.post(
-                f"/api/v1/clients/{created['id']}/requests/{row.id}/review",
-                json={"action": "approve"},
-            )
+        resp = await authenticated_client.post(
+            f"/api/v1/clients/{created['id']}/requests/{row.id}/review",
+            json={"action": "approve"},
+        )
         assert resp.status_code == 400
         assert "already approved" in resp.json()["detail"]
 
@@ -1069,19 +1024,45 @@ class TestClientRequestWorkflow:
             db_session, test_tenant["id"], created["id"], test_user["id"]
         )
 
-        with _bypass_enforce_client_access():
-            resp = await authenticated_client.post(
-                f"/api/v1/clients/{created['id']}/requests/{row.id}/review",
-                json={"action": "maybe"},
-            )
+        resp = await authenticated_client.post(
+            f"/api/v1/clients/{created['id']}/requests/{row.id}/review",
+            json={"action": "maybe"},
+        )
         assert resp.status_code == 400
 
     @pytest.mark.asyncio
     async def test_review_request_not_found(self, authenticated_client: AsyncClient):
         created = await _create_client_api(authenticated_client, "nreq", "NReq Co")
-        with _bypass_enforce_client_access():
-            resp = await authenticated_client.post(
-                f"/api/v1/clients/{created['id']}/requests/999999/review",
-                json={"action": "approve"},
-            )
+        resp = await authenticated_client.post(
+            f"/api/v1/clients/{created['id']}/requests/999999/review",
+            json={"action": "approve"},
+        )
         assert resp.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_list_requests_forbidden_without_client_access(
+        self, authenticated_client: AsyncClient, db_session, test_tenant, test_user
+    ):
+        """Regression (#534): a role without access to the client gets 403.
+
+        Before the fix, ``enforce_client_access`` was called positionally and
+        raised TypeError, so even unauthorized users got an unconditional 500
+        instead of the intended 403.
+        """
+        from app.base_models import UserRole
+
+        created = await _create_client_api(authenticated_client, "noacc", "NoAcc Co")
+        await _make_request_row(
+            db_session, test_tenant["id"], created["id"], test_user["id"]
+        )
+        # Analyst with no ClientAssignment and no user.client_id -> no access.
+        analyst = await _make_user(
+            db_session, test_tenant["id"], UserRole.ANALYST, "outsider@example.com"
+        )
+
+        resp = await authenticated_client.get(
+            f"/api/v1/clients/{created['id']}/requests",
+            headers=_headers_for(analyst, test_tenant["id"], "outsider@example.com"),
+        )
+        assert resp.status_code == 403, resp.text
+        assert "access" in resp.json()["detail"].lower()

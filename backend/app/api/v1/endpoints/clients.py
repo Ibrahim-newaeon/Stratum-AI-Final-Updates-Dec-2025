@@ -834,9 +834,9 @@ async def invite_portal_user(
             )
 
         # Check if email already exists in tenant
-        from app.core.security import encrypt_pii, hash_email
+        from app.core.security import encrypt_pii, hash_pii_for_lookup
 
-        email_h = hash_email(payload.email)
+        email_h = hash_pii_for_lookup(payload.email)
         existing = await db.execute(
             select(User.id).where(
                 User.tenant_id == tenant_id,
@@ -1013,7 +1013,14 @@ async def list_client_requests(
     limit: int = Query(20, ge=1, le=100),
 ):
     """List requests for a specific client."""
-    await enforce_client_access(db, current_user, client_id)
+    await enforce_client_access(
+        user_id=current_user.user.id,
+        user_role=current_user.user.role,
+        client_id=client_id,
+        tenant_id=current_user.tenant_id,
+        db=db,
+        user_client_id=getattr(current_user.user, "client_id", None),
+    )
 
     query = select(ClientRequest).where(
         ClientRequest.client_id == client_id,
@@ -1079,7 +1086,14 @@ async def review_client_request(
 
     Agency users review requests submitted by portal users.
     """
-    await enforce_client_access(db, current_user, client_id)
+    await enforce_client_access(
+        user_id=current_user.user.id,
+        user_role=current_user.user.role,
+        client_id=client_id,
+        tenant_id=current_user.tenant_id,
+        db=db,
+        user_client_id=getattr(current_user.user, "client_id", None),
+    )
 
     result = await db.execute(
         select(ClientRequest).where(

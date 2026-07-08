@@ -95,12 +95,12 @@ async def _create_author(client: AsyncClient, name="Jane Author", **extra) -> di
 
 
 async def _set_tags(client: AsyncClient, post_id: str, tag_ids: list) -> dict:
-    """Attach tags via PATCH.
+    """Attach tags to an existing post via PATCH.
 
-    NOTE: creating a post with ``tag_ids`` is intentionally avoided here —
-    ``admin_create_post`` 500s (sqlalchemy MissingGreenlet) whenever
-    ``tag_ids`` is non-empty (see cms.py:875, reported as a bug). The update
-    endpoint eager-loads the tags collection, so it works.
+    Creating a post with ``tag_ids`` also works since #534 (previously
+    ``admin_create_post`` 500ed with sqlalchemy MissingGreenlet whenever
+    ``tag_ids`` was non-empty); see
+    ``test_create_post_with_tags_attaches_and_counts_usage``.
     """
     resp = await client.patch(
         f"/api/v1/cms/admin/posts/{post_id}", json={"tag_ids": tag_ids}
@@ -241,7 +241,6 @@ class TestPublicPosts:
             category_id=category["id"],
             author_id=author["id"],
         )
-        # Tags attached via PATCH — create-with-tags 500s (known bug, cms.py:875)
         post = await _set_tags(cms_client, post["id"], [tag["id"]])
         return {"post": post, "category": category, "author": author, "tag": tag}
 
@@ -530,6 +529,43 @@ class TestAdminPostCreateEdgeCases:
         assert counts["tag-b"] == 1
 
     @pytest.mark.asyncio
+    async def test_create_post_with_tags_attaches_and_counts_usage(
+        self, cms_client: AsyncClient
+    ):
+        """Regression (#534): POST create with non-empty ``tag_ids`` -> 201.
+
+        Assigning ``post.tags`` on a freshly-added post used to trigger a
+        sync lazy load of the unloaded tags collection with no greenlet
+        context (sqlalchemy MissingGreenlet -> 500).
+        """
+        tag_a = await _create_tag(cms_client, name="create-tag-a")
+        tag_b = await _create_tag(cms_client, name="create-tag-b")
+
+        resp = await cms_client.post(
+            "/api/v1/cms/admin/posts",
+            json=_post(title="Born tagged", tag_ids=[tag_a["id"], tag_b["id"]]),
+        )
+        assert resp.status_code == 201, resp.text
+        data = resp.json()["data"]
+        assert sorted(t["name"] for t in data["tags"]) == [
+            "create-tag-a",
+            "create-tag-b",
+        ]
+
+        # Tags are persisted, not just echoed back on the create response.
+        detail = await cms_client.get(f"/api/v1/cms/admin/posts/{data['id']}")
+        assert detail.status_code == 200, detail.text
+        assert sorted(t["name"] for t in detail.json()["data"]["tags"]) == [
+            "create-tag-a",
+            "create-tag-b",
+        ]
+
+        tags = await cms_client.get("/api/v1/cms/admin/tags")
+        counts = {t["name"]: t["usage_count"] for t in tags.json()["data"]["tags"]}
+        assert counts["create-tag-a"] == 1
+        assert counts["create-tag-b"] == 1
+
+    @pytest.mark.asyncio
     async def test_create_invalid_status_rejected(self, cms_client: AsyncClient):
         resp = await cms_client.post(
             "/api/v1/cms/admin/posts",
@@ -561,7 +597,7 @@ class TestAdminPostUpdate:
         tag_new = await _create_tag(cms_client, name="new-tag")
         post = await _create_post(cms_client, title="Before update")
         # Attach the old tag first so the update below exercises the
-        # decrement-then-swap branch (create-with-tags 500s — known bug).
+        # decrement-then-swap branch.
         await _set_tags(cms_client, post["id"], [tag_old["id"]])
 
         resp = await cms_client.patch(

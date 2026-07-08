@@ -6,7 +6,13 @@ OAuth service implementations for ad platform integrations.
 Supports Meta, Google, TikTok, and Snapchat.
 """
 
-from app.services.oauth.base import AdAccountInfo, OAuthService, OAuthState, OAuthTokens
+from app.services.oauth.base import (
+    AdAccountInfo,
+    OAuthProviderError,
+    OAuthService,
+    OAuthState,
+    OAuthTokens,
+)
 from app.services.oauth.factory import get_oauth_service
 from app.services.oauth.google import GoogleOAuthService
 from app.services.oauth.meta import MetaOAuthService
@@ -17,6 +23,7 @@ __all__ = [
     "AdAccountInfo",
     "GoogleOAuthService",
     "MetaOAuthService",
+    "OAuthProviderError",
     "OAuthService",
     "OAuthState",
     "OAuthTokens",

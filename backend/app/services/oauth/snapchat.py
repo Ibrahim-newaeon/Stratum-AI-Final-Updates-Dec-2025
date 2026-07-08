@@ -28,6 +28,7 @@ from app.core.config import settings
 from app.core.logging import get_logger
 from app.services.oauth.base import (
     AdAccountInfo,
+    OAuthProviderError,
     OAuthService,
     OAuthState,
     OAuthTokens,
@@ -136,7 +137,7 @@ class SnapchatOAuthService(OAuthService):
                     self.logger.error(
                         "Snapchat token exchange failed", error=error_data
                     )
-                    raise Exception(
+                    raise OAuthProviderError(
                         f"Token exchange failed: {error_data.get('error_description', error_data.get('error', 'Unknown error'))}"
                     )
 
@@ -145,7 +146,7 @@ class SnapchatOAuthService(OAuthService):
         # Snapchat access tokens expire in 30 minutes (1800 seconds)
         access_token = token_data.get("access_token")
         if not access_token:
-            raise Exception("No access token in response")
+            raise OAuthProviderError("No access token in response")
 
         expires_in = token_data.get("expires_in", 1800)
 
@@ -200,7 +201,7 @@ class SnapchatOAuthService(OAuthService):
                 if resp.status != 200:
                     error_data = await resp.json()
                     self.logger.error("Snapchat token refresh failed", error=error_data)
-                    raise Exception(
+                    raise OAuthProviderError(
                         f"Token refresh failed: {error_data.get('error_description', error_data.get('error', 'Unknown error'))}"
                     )
 
@@ -252,7 +253,9 @@ class SnapchatOAuthService(OAuthService):
                     error_data = await resp.text()
                     self.logger.error("Failed to get organizations", error=error_data)
 
-                    raise Exception(f"Failed to get organizations: {error_data}")
+                    raise OAuthProviderError(
+                        f"Failed to get organizations: {error_data}"
+                    )
 
                 org_data = await resp.json()
 
