@@ -217,7 +217,14 @@ omit =
 # webhooks incl. rotate + /test delivery). Six endpoint paths that 500 on
 # every request were found and filed as #525 (not tested — a 500 is not a
 # contract). CI combined measured 57.55% before; 63.97% after. See #342.
-fail_under = 63.5
+# -> 66.0 (integration-phase Batch 3 — cms/auth/clients/oauth endpoints:
+# 289 new cases; cms.py 18.17 -> 91.50, auth.py 50.96 -> 97.94, oauth.py
+# 21.59 -> 96.31 (first integration tests for the module), clients.py
+# 30.23 -> 90.93. Eight endpoint bugs found during writing filed as #534
+# (MFA login + OAuth callbacks middleware-blocked, 6 always-500 paths) —
+# worked around with documented patches, not asserted as contract. CI
+# combined measured 63.97% before; 66.40% after. See #342.
+fail_under = 66.0
 
 # Show missing line numbers
 show_missing = True
