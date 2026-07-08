@@ -1799,7 +1799,7 @@ async def search_profiles(
             select(CDPSegmentMembership.profile_id)
             .where(
                 CDPSegmentMembership.segment_id.in_(segment_ids),
-                CDPSegmentMembership.is_member.is_(True),
+                CDPSegmentMembership.is_active.is_(True),
             )
             .distinct()
         )
@@ -1811,7 +1811,7 @@ async def search_profiles(
             select(CDPSegmentMembership.profile_id)
             .where(
                 CDPSegmentMembership.segment_id.in_(exclude_segment_ids),
-                CDPSegmentMembership.is_member.is_(True),
+                CDPSegmentMembership.is_active.is_(True),
             )
             .distinct()
         )
@@ -2058,7 +2058,7 @@ async def export_audience(
             CDPSegmentMembership.profile_id == CDPProfile.id,
         ).where(
             CDPSegmentMembership.segment_id == segment_id,
-            CDPSegmentMembership.is_member.is_(True),
+            CDPSegmentMembership.is_active.is_(True),
         )
 
     # Apply lifecycle stage filter
