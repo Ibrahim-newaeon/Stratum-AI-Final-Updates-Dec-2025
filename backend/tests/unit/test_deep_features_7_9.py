@@ -438,7 +438,9 @@ class TestOAuthCallback:
     from the Redis-stored state token the endpoint validates itself.
     """
 
-    async def test_no_auth_reaches_endpoint_and_redirects(self, api_client: AsyncClient):
+    async def test_no_auth_reaches_endpoint_and_redirects(
+        self, api_client: AsyncClient
+    ):
         """Unauthenticated callback (the real browser flow) reaches the endpoint.
 
         Regression for #534: this used to 401 in TenantMiddleware before the
