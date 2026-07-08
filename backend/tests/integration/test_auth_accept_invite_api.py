@@ -136,6 +136,42 @@ class TestAcceptInvite:
         )
         assert resp.status_code == 422
 
+    @pytest.mark.parametrize(
+        "weak",
+        [
+            "ALLUPPERCASE1",  # no lowercase
+            "NoDigitsHere",  # no digit
+        ],
+    )
+    async def test_other_weak_password_shapes_rejected(self, client, weak):
+        # Validator short-circuits before the token is even looked up.
+        resp = await client.post(
+            _ACCEPT,
+            json={"token": "irrelevant", "full_name": "Invited User", "password": weak},
+        )
+        assert resp.status_code == 422
+
+    async def test_token_for_unknown_user_404(self, client):
+        token = await _seed_invite_token(99999999)
+        resp = await client.post(
+            _ACCEPT,
+            json={"token": token, "full_name": "Ghost", "password": _PASSWORD},
+        )
+        assert resp.status_code == 404
+
+    async def test_redis_down_500(self, client, monkeypatch):
+        import app.api.v1.endpoints.auth as auth_module
+
+        async def _boom():
+            raise ConnectionError("redis down (test)")
+
+        monkeypatch.setattr(auth_module, "get_redis_client", _boom)
+        resp = await client.post(
+            _ACCEPT,
+            json={"token": "whatever", "full_name": "Nobody", "password": _PASSWORD},
+        )
+        assert resp.status_code == 500
+
 
 class TestInviteRoundTrip:
     @pytest.fixture

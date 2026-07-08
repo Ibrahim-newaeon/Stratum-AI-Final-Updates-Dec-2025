@@ -87,3 +87,47 @@ class TestRegister:
         second = await client.post(_URL, json=payload)
         assert second.status_code == 400
         assert "already registered" in second.json()["detail"].lower()
+
+
+class TestRegisterPasswordPolicy:
+    @pytest.mark.parametrize(
+        "weak",
+        [
+            "alllowercase1",  # no uppercase
+            "ALLUPPERCASE1",  # no lowercase
+            "NoDigitsHere",  # no digit
+        ],
+    )
+    async def test_weak_password_rejected(self, client, weak):
+        # Pydantic validator rejects before any token/DB work happens.
+        resp = await client.post(_URL, json=_payload("junk-token", password=weak))
+        assert resp.status_code == 422
+
+
+class TestRegisterFailureModes:
+    async def test_redis_down_500(self, client, monkeypatch):
+        import app.api.v1.endpoints.auth as auth_module
+
+        async def _boom():
+            raise ConnectionError("redis down (test)")
+
+        monkeypatch.setattr(auth_module, "get_redis_client", _boom)
+
+        resp = await client.post(_URL, json=_payload("any-token"))
+        assert resp.status_code == 500
+
+    async def test_welcome_email_failure_does_not_block(
+        self, client, verification_token, monkeypatch
+    ):
+        import app.api.v1.endpoints.auth as auth_module
+
+        class _BoomEmailService:
+            def send_welcome_email(self, **kwargs):
+                raise ConnectionError("smtp down (test)")
+
+        monkeypatch.setattr(
+            auth_module, "get_email_service", lambda: _BoomEmailService()
+        )
+
+        resp = await client.post(_URL, json=_payload(verification_token))
+        assert resp.status_code == 200, resp.text

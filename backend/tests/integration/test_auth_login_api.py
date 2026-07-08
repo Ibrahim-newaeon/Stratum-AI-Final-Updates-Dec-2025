@@ -62,3 +62,66 @@ class TestLogin:
             _URL, json={"email": "nobody@example.com", "password": _PASSWORD}
         )
         assert resp.status_code == 401
+
+
+class TestLoginRateLimit:
+    async def test_locked_out_returns_429_with_retry_after(
+        self, client, login_user, monkeypatch
+    ):
+        import app.api.v1.endpoints.auth as auth_module
+
+        async def _locked(email_hash):
+            return False, 42
+
+        monkeypatch.setattr(auth_module, "check_login_rate_limit", _locked)
+
+        resp = await client.post(_URL, json={"email": _EMAIL, "password": _PASSWORD})
+        assert resp.status_code == 429
+        assert resp.headers["Retry-After"] == "42"
+
+
+class TestLoginRedisDegradation:
+    """Redis is best-effort for login: rate limiting degrades gracefully,
+    password verification remains the real gate."""
+
+    async def test_rate_check_redis_down_still_allows_login(
+        self, client, login_user, monkeypatch
+    ):
+        import app.api.v1.endpoints.auth as auth_module
+
+        async def _boom(email_hash):
+            raise ConnectionError("redis down (test)")
+
+        monkeypatch.setattr(auth_module, "check_login_rate_limit", _boom)
+
+        resp = await client.post(_URL, json={"email": _EMAIL, "password": _PASSWORD})
+        assert resp.status_code == 200, resp.text
+
+    async def test_record_failed_redis_down_still_401(
+        self, client, login_user, monkeypatch
+    ):
+        import app.api.v1.endpoints.auth as auth_module
+
+        async def _boom(email_hash):
+            raise ConnectionError("redis down (test)")
+
+        monkeypatch.setattr(auth_module, "record_failed_login", _boom)
+
+        resp = await client.post(
+            _URL, json={"email": _EMAIL, "password": "WrongPassword9"}
+        )
+        assert resp.status_code == 401
+
+    async def test_clear_attempts_redis_down_still_logs_in(
+        self, client, login_user, monkeypatch
+    ):
+        import app.api.v1.endpoints.auth as auth_module
+
+        async def _boom(email_hash):
+            raise ConnectionError("redis down (test)")
+
+        monkeypatch.setattr(auth_module, "clear_login_attempts", _boom)
+
+        resp = await client.post(_URL, json={"email": _EMAIL, "password": _PASSWORD})
+        assert resp.status_code == 200, resp.text
+        assert resp.json()["data"]["access_token"]
