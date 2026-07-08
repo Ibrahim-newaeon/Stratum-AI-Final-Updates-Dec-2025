@@ -82,3 +82,37 @@ class TestSwitchTenant:
     ):
         resp = await authenticated_client.post(_SWITCH, json={"tenant_id": 99999999})
         assert resp.status_code == 403
+
+    async def test_switch_to_tenant_zero_400(self, authenticated_client, memberships):
+        # tenant_id=0 passes schema validation but is not a valid target.
+        resp = await authenticated_client.post(_SWITCH, json={"tenant_id": 0})
+        assert resp.status_code == 400
+
+
+class TestMissingUserContext:
+    """A valid JWT whose ``sub`` is not an int passes TenantMiddleware (tenant
+    claim intact) but yields no user_id — the endpoints must 401, not 500."""
+
+    @staticmethod
+    def _headers_without_user(tenant_id: int) -> dict:
+        from app.core.security import create_access_token
+
+        token = create_access_token(
+            subject="not-an-int",
+            additional_claims={"tenant_id": tenant_id, "role": "admin"},
+        )
+        return {"Authorization": f"Bearer {token}"}
+
+    async def test_list_tenants_401(self, client, test_tenant):
+        resp = await client.get(
+            _LIST, headers=self._headers_without_user(test_tenant["id"])
+        )
+        assert resp.status_code == 401
+
+    async def test_switch_tenant_401(self, client, test_tenant):
+        resp = await client.post(
+            _SWITCH,
+            json={"tenant_id": test_tenant["id"]},
+            headers=self._headers_without_user(test_tenant["id"]),
+        )
+        assert resp.status_code == 401

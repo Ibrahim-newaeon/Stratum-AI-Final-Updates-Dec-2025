@@ -65,3 +65,16 @@ class TestRefresh:
         token = create_refresh_token(subject=99999999)
         resp = await client.post(_URL, json={"refresh_token": token})
         assert resp.status_code == 401
+
+    async def test_rotated_token_cannot_be_reused(self, client, active_user):
+        # Rotation blacklists the old refresh token (Redis) — replaying it
+        # after a successful refresh must be rejected as revoked.
+        from app.core.security import create_refresh_token
+
+        token = create_refresh_token(subject=active_user["id"])
+        first = await client.post(_URL, json={"refresh_token": token})
+        assert first.status_code == 200, first.text
+
+        second = await client.post(_URL, json={"refresh_token": token})
+        assert second.status_code == 401
+        assert "revoked" in second.json()["detail"].lower()
