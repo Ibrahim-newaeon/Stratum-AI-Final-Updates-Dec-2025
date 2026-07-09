@@ -658,7 +658,17 @@ class SnapchatAdapter(BaseAdapter):
 
             return emq_scores
 
-        except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
+        except (
+            requests.RequestException,
+            ConnectionError,
+            TimeoutError,
+            OSError,
+            PlatformError,
+            RateLimitError,
+        ) as e:
+            # get_emq_scores is designed to degrade gracefully: _make_request
+            # wraps HTTP failures into PlatformError (429 -> RateLimitError), so
+            # those must be caught here too, not left to propagate.
             logger.warning(f"Failed to fetch Snapchat EMQ data: {e}")
             return []
         except (ValueError, KeyError, TypeError) as e:
@@ -699,6 +709,20 @@ class SnapchatAdapter(BaseAdapter):
             action.error_message = str(e)
             logger.error(f"Action failed due to network error: {e}")
             return action
+        except RateLimitError as e:
+            # HTTP 429: mark failed with the rate-limit message rather than
+            # leaving the action stuck in status="executing".
+            action.status = "failed"
+            action.error_message = str(e)
+            logger.error(f"Action failed due to rate limit: {e}")
+            return action
+        except PlatformError as e:
+            # An API rejection (wrapped by _make_request) must mark the action
+            # failed rather than propagate and leave it stuck in "executing".
+            action.status = "failed"
+            action.error_message = str(e)
+            logger.error(f"Action failed due to platform error: {e}")
+            return action
         except (ValueError, KeyError, TypeError) as e:
             action.status = "failed"
             action.error_message = str(e)
@@ -718,7 +742,9 @@ class SnapchatAdapter(BaseAdapter):
             action.entity_type, f"/campaigns/{action.entity_id}"
         )
 
-        data = {}
+        # Snapchat's PUT update requires the entity id in the body to identify
+        # which entity to update (consistent with _update_status).
+        data: dict[str, Any] = {"id": action.entity_id}
         if "daily_budget" in params:
             data["daily_budget_micro"] = int(params["daily_budget"] * 1_000_000)
         if "lifetime_budget" in params:

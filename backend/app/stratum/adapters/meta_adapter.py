@@ -794,6 +794,14 @@ class MetaAdapter(BaseAdapter):
         params = action.parameters
         new_status = EntityStatus(params["status"])
         meta_status = self.STATUS_TO_META.get(new_status)
+        if meta_status is None:
+            # No Meta equivalent for this unified status. Fail loudly instead of
+            # pushing {"status": None} to the API (which Meta would reject or
+            # misinterpret) while reporting the action as completed.
+            raise ValueError(
+                f"Status '{new_status.value}' has no Meta mapping; "
+                "cannot update entity status"
+            )
 
         if action.entity_type == "campaign":
             entity = Campaign(action.entity_id)

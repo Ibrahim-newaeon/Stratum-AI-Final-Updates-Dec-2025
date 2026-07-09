@@ -281,20 +281,21 @@ class TestMetaSendEvents:
         assert "Circuit breaker open" in response.errors[0]["message"]
         assert route.call_count == 0
 
-    async def test_meta_malformed_json_response_escapes(self):
-        """PINNED BUG (do not fix here): a non-JSON body (e.g. an HTML 502
-        page from a proxy) raises json.JSONDecodeError out of send_events —
-        it is not caught by the retry loop, so there is no retry and the
-        circuit breaker never records the failure."""
+    async def test_meta_malformed_json_response_retries_and_records_failure(self):
+        """FIXED: a non-JSON body (e.g. an HTML 502 page from a proxy)
+        surfaces as a retryable delivery failure — the retry loop now catches
+        json.JSONDecodeError, retries MAX_RETRIES times, and records one
+        circuit-breaker failure instead of escaping send_events entirely."""
         connector = make_meta(connected=True)
         with respx.mock:
-            respx.post(META_EVENTS_URL).mock(
+            route = respx.post(META_EVENTS_URL).mock(
                 return_value=httpx.Response(200, content=b"<html>Bad Gateway</html>")
             )
-            with pytest.raises(json.JSONDecodeError):
-                await connector.send_events([{"event_name": "purchase"}])
+            response = await connector.send_events([{"event_name": "purchase"}])
 
-        assert connector._circuit_breaker.failure_count == 0
+        assert response.success is False
+        assert route.call_count == connector.MAX_RETRIES
+        assert connector._circuit_breaker.failure_count == 1
 
     async def test_send_events_impl_exception_caught_by_outer_retry_loop(self):
         """If _send_events_impl itself raises a transport error (rather than
@@ -478,19 +479,22 @@ class TestGoogleConnect:
         assert "Authentication failed" in result.message
         assert connector._connected is False
 
-    async def test_test_connection_other_error_still_connects(self):
-        """Pinned behavior: any non-401 error is treated as validated."""
+    async def test_test_connection_other_error_is_error(self):
+        """FIXED: a non-401 API error is no longer reported as CONNECTED —
+        the credentials were never actually verified, so it surfaces as
+        ERROR."""
         connector = make_google(oauth=False)
         with respx.mock:
             respx.get(GOOGLE_CUSTOMER_URL).mock(return_value=httpx.Response(403))
             result = await connector.test_connection()
 
-        assert result.status == ConnectionStatus.CONNECTED
-        assert result.message == "Credentials validated"
-        assert connector._connected is True
+        assert result.status == ConnectionStatus.ERROR
+        assert "HTTP 403" in result.message
+        assert connector._connected is False
 
-    async def test_test_connection_network_error_connects_offline(self):
-        """Pinned behavior: network failure with creds -> CONNECTED offline."""
+    async def test_test_connection_network_error_is_error(self):
+        """FIXED: a network failure returns ERROR with the message preserved
+        instead of a false 'validated offline' success."""
         connector = make_google(oauth=False)
         with respx.mock:
             respx.get(GOOGLE_CUSTOMER_URL).mock(
@@ -498,9 +502,9 @@ class TestGoogleConnect:
             )
             result = await connector.test_connection()
 
-        assert result.status == ConnectionStatus.CONNECTED
-        assert result.message == "Credentials validated (offline)"
-        assert connector._connected is True
+        assert result.status == ConnectionStatus.ERROR
+        assert "refused" in result.message
+        assert connector._connected is False
 
 
 class TestGoogleSendEvents:
@@ -794,21 +798,25 @@ class TestSnapchatConnect:
         assert result.status == ConnectionStatus.ERROR
         assert "Authentication failed" in result.message
 
-    async def test_test_connection_other_error_still_connects(self):
+    async def test_test_connection_other_error_is_error(self):
+        """FIXED: a non-401 API error surfaces as ERROR rather than a false
+        'validated' success."""
         connector = make_snapchat()
         with respx.mock:
             respx.get(SNAP_PIXEL_URL).mock(return_value=httpx.Response(500))
             result = await connector.test_connection()
-        assert result.status == ConnectionStatus.CONNECTED
-        assert result.message == "Credentials validated"
+        assert result.status == ConnectionStatus.ERROR
+        assert "HTTP 500" in result.message
 
-    async def test_test_connection_network_error_connects_offline(self):
+    async def test_test_connection_network_error_is_error(self):
+        """FIXED: a network failure returns ERROR with the message preserved
+        instead of 'validated offline'."""
         connector = make_snapchat()
         with respx.mock:
             respx.get(SNAP_PIXEL_URL).mock(side_effect=httpx.ConnectError("refused"))
             result = await connector.test_connection()
-        assert result.status == ConnectionStatus.CONNECTED
-        assert result.message == "Credentials validated (offline)"
+        assert result.status == ConnectionStatus.ERROR
+        assert "refused" in result.message
 
     async def test_test_connection_unconfigured_is_disconnected(self):
         result = await SnapchatCAPIConnector().test_connection()
@@ -1049,12 +1057,11 @@ class TestWhatsAppConnector:
         assert response.events_processed == 0
         assert "Failed to send event: no_phone" in response.errors[0]["message"]
 
-    async def test_send_events_partial_batch_retries_and_zeroes_processed(self):
-        """PINNED BEHAVIOR: a partially-failing WhatsApp batch is retried
-        wholesale (the already-delivered message is re-sent on every retry)
-        and the final synthesized response reports events_processed=0 even
-        though one message was delivered — the retry-exhausted branch of
-        ``send_events`` hardcodes processed=0 and keeps only last_error."""
+    async def test_send_events_partial_batch_only_retries_failures(self):
+        """FIXED: WhatsApp sends are non-idempotent, so a partially-failing
+        batch reports the true processed count and never re-delivers the
+        message that already succeeded — only the still-failed subset is
+        retried."""
         connector = make_whatsapp(connected=True)
         with respx.mock:
             route = respx.post(WA_MESSAGES_URL).mock(
@@ -1069,10 +1076,11 @@ class TestWhatsAppConnector:
 
         assert response.success is False
         assert response.events_received == 2
-        assert response.events_processed == 0  # delivered message not counted
+        assert response.events_processed == 1  # delivered message IS counted
         assert response.errors == [{"message": "Failed to send event: bad"}]
-        # The deliverable message was sent MAX_RETRIES times (duplicates!)
-        assert route.call_count == connector.MAX_RETRIES
+        # The delivered "ok" message was sent exactly once (no duplicate re-sends);
+        # the phone-less "bad" event never reaches HTTP.
+        assert route.call_count == 1
 
     async def test_send_message_api_error_returns_false(self):
         connector = make_whatsapp(connected=True)
@@ -1118,6 +1126,51 @@ class TestWhatsAppConnector:
         assert response.success is False
         assert response.events_processed == 0
         assert response.errors == [{"message": "wa timeout"}]
+
+    async def test_send_events_not_connected_short_circuits(self):
+        connector = make_whatsapp(connected=False)
+        with respx.mock(assert_all_called=False) as router:
+            route = router.post(WA_MESSAGES_URL)
+            response = await connector.send_events(
+                [{"event_name": "evt", "user_data": {"phone": "15550008888"}}]
+            )
+
+        assert response.success is False
+        assert response.errors == [{"message": "Not connected"}]
+        assert route.call_count == 0
+
+    async def test_send_events_circuit_open_rejects_without_http(self):
+        connector = make_whatsapp(connected=True)
+        connector._circuit_breaker.state = CircuitState.OPEN
+        connector._circuit_breaker.last_failure_time = time.time()
+
+        with respx.mock(assert_all_called=False) as router:
+            route = router.post(WA_MESSAGES_URL)
+            response = await connector.send_events(
+                [{"event_name": "evt", "user_data": {"phone": "15550009999"}}]
+            )
+
+        assert response.success is False
+        assert "Circuit breaker open" in response.errors[0]["message"]
+        assert route.call_count == 0
+
+    async def test_send_events_send_message_transport_error_recorded_per_event(self):
+        """A transport error raised by _send_message (rather than returned as
+        False) is caught by the override, recorded as the event's error, and
+        the still-failed event is retried."""
+        connector = make_whatsapp(connected=True)
+
+        async def boom(event):
+            raise TimeoutError("wa socket timeout")
+
+        connector._send_message = boom
+        response = await connector.send_events(
+            [{"event_name": "evt", "user_data": {"phone": "15550001010"}}]
+        )
+
+        assert response.success is False
+        assert response.events_processed == 0
+        assert response.errors == [{"message": "wa socket timeout"}]
 
     def test_format_event_passthrough(self):
         connector = make_whatsapp()
@@ -1238,16 +1291,17 @@ class TestConnectionPool:
         assert pool.get_pool_stats() == {}
         assert pool._client_index == {}
 
-    async def test_scale_up_before_get_client_breaks_pool(self):
-        """PINNED BUG (do not fix here): scale_up on an unseen platform
-        creates the client list but never seeds _client_index, so the next
-        get_client raises KeyError instead of returning a client."""
+    async def test_scale_up_before_get_client_seeds_index(self):
+        """FIXED: scale_up on an unseen platform now seeds _client_index, so
+        a subsequent get_client returns the existing client instead of
+        raising KeyError."""
         pool = ConnectionPool(max_connections=4)
         try:
             await pool.scale_up("snapchat")
             assert len(pool._clients["snapchat"]) == 1
-            with pytest.raises(KeyError):
-                await pool.get_client("snapchat")
+            assert pool._client_index["snapchat"] == 0
+            client = await pool.get_client("snapchat")
+            assert client is pool._clients["snapchat"][0]
         finally:
             await pool.close_all()
 

@@ -291,6 +291,11 @@ class TikTokAdapter(BaseAdapter):
 
         TikTok's campaign endpoint supports filtering by various criteria including
         status. The response includes budget information and objective settings.
+
+        Note: TikTok's ``primary_status`` filter accepts only a single status
+        value, so when ``status_filter`` contains more than one status we apply
+        the first mapped status server-side (rather than the previous behavior of
+        collapsing to ``null``, which silently disabled server-side filtering).
         """
         self._ensure_initialized()
         await self.rate_limiter.acquire()
@@ -303,13 +308,10 @@ class TikTokAdapter(BaseAdapter):
                 tiktok_statuses = [
                     self.STATUS_TO_TIKTOK.get(s, "ENABLE") for s in status_filter
                 ]
-                params["filtering"] = json.dumps(
-                    {
-                        "primary_status": (
-                            tiktok_statuses[0] if len(tiktok_statuses) == 1 else None
-                        )
-                    }
-                )
+                # primary_status is single-valued on TikTok's API; apply the
+                # first mapped status so server-side filtering stays active even
+                # for multi-status requests.
+                params["filtering"] = json.dumps({"primary_status": tiktok_statuses[0]})
 
             response = self._make_request("GET", "/campaign/get/", params=params)
 
@@ -614,6 +616,13 @@ class TikTokAdapter(BaseAdapter):
             action.error_message = str(e)
             logger.error(f"Action failed due to network error: {e}")
             return action
+        except PlatformError as e:
+            # An API rejection (code != 0) must mark the action failed rather
+            # than propagate and leave it stuck in status="executing".
+            action.status = "failed"
+            action.error_message = str(e)
+            logger.error(f"Action failed due to platform error: {e}")
+            return action
         except (ValueError, KeyError, TypeError) as e:
             action.status = "failed"
             action.error_message = str(e)
@@ -630,9 +639,15 @@ class TikTokAdapter(BaseAdapter):
             else "/adgroup/update/"
         )
 
+        # TikTok's native id key differs from Stratum's entity type: an "adset"
+        # maps to TikTok's "adgroup". Deriving the key from the entity type
+        # (``f"{entity_type}_id"``) would send ``adset_id`` where the
+        # ``/adgroup/update/`` endpoint expects ``adgroup_id``.
+        id_key = "campaign_id" if action.entity_type == "campaign" else "adgroup_id"
+
         data = {
             "advertiser_id": action.account_id,
-            f"{action.entity_type}_id": action.entity_id,
+            id_key: action.entity_id,
         }
 
         if "daily_budget" in params:

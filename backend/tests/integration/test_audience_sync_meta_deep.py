@@ -18,11 +18,11 @@ leave untouched:
 - ``delete_audience`` / ``get_audience_info``: success + error branches.
 - ``create_audience``: full create-then-add flow with hashed payloads.
 
-Behavior quirks pinned here (NOT fixed — source untouched):
-- ``replace_audience`` fallback returns a result labeled operation="add".
+Behaviors corrected in #540 and asserted here:
+- ``replace_audience`` fallback relabels the delegated result operation="replace".
 - ``delete_audience`` with platform response ``{"success": false}`` yields
-  ``success=False`` with ``error_message=None``.
-- ``add_users`` reports ``success=True`` even if every entry is invalid.
+  ``success=False`` with an explanatory ``error_message``.
+- ``add_users`` reports ``success=False`` when every entry is invalid.
 """
 
 import hashlib
@@ -155,11 +155,12 @@ class TestAddUsers:
         assert len(_payload(users_route.calls[0])["payload"]["data"]) == 2
         assert len(_payload(users_route.calls[2])["payload"]["data"]) == 1
 
-    async def test_all_entries_invalid_still_reports_success(self):
-        """Pins behavior: HTTP 200 with every entry invalid => success=True.
+    async def test_all_entries_invalid_reports_failure(self):
+        """HTTP 200 with every entry invalid => success=False.
 
-        The connector treats transport success as operation success even when
-        num_invalid_entries == num_received (users_added == 0).
+        When num_invalid_entries == num_received (users_added == 0) the upload
+        accomplished nothing, so the connector reports failure with a message
+        rather than treating transport success as operation success.
         """
         conn = _conn()
 
@@ -173,9 +174,10 @@ class TestAddUsers:
 
             result = await conn.add_users("aud3", [_user("p1", email="a@b.com")])
 
-        assert result.success is True
+        assert result.success is False
         assert result.users_added == 0
         assert result.users_failed == 1
+        assert result.error_message == "All entries were invalid"
         assert result.audience_size is None
 
     async def test_mid_batch_http_error_keeps_partial_totals(self):
@@ -379,11 +381,9 @@ class TestReplaceAudience:
         assert second["payload"]["data"] == [[_sha("r2@x.com"), "", ""]]
 
     async def test_replace_without_session_falls_back_to_add(self):
-        """Pins behavior: fallback result is labeled operation="add".
-
-        When Meta returns no session_id, replace_audience delegates to
-        add_users and returns its result unchanged — callers asking for a
-        replace get back operation="add".
+        """When Meta returns no session_id, replace_audience delegates to
+        add_users but relabels the result operation="replace" so callers get
+        back the operation they requested.
         """
         conn = _conn()
 
@@ -403,7 +403,7 @@ class TestReplaceAudience:
             )
 
         assert result.success is True
-        assert result.operation == "add"  # quirk pinned; see docstring
+        assert result.operation == "replace"  # relabelled from add
         assert result.users_sent == 1
 
     async def test_replace_session_http_error(self):
@@ -458,8 +458,9 @@ class TestDeleteAndInfo:
         assert result.platform_response == {"success": True}
         assert "access_token=tok-secret" in str(del_route.calls[0].request.url)
 
-    async def test_delete_platform_reports_failure_without_message(self):
-        """Pins behavior: {"success": false} => success=False, error_message=None."""
+    async def test_delete_platform_reports_failure_with_message(self):
+        """{"success": false} => success=False with an explanatory
+        error_message, not a null one."""
         conn = _conn()
 
         with respx.mock:
@@ -470,7 +471,7 @@ class TestDeleteAndInfo:
             result = await conn.delete_audience("aud17")
 
         assert result.success is False
-        assert result.error_message is None
+        assert result.error_message == "Platform reported delete failure"
 
     async def test_delete_network_error(self):
         conn = _conn()

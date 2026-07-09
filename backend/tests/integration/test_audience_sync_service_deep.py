@@ -18,11 +18,10 @@ file covers the orchestration bodies those mocks skip:
   tolerance and the no-credentials/no-platform-id skips.
 - Query surfaces and the batched ``_get_segment_profiles`` helper.
 
-Production bug pinned here (NOT fixed — source untouched):
-- ``list_platform_audiences``: the count query re-applies only the
-  ``segment_id`` filter, never the ``platform`` filter
-  (service.py:400-406), so ``total`` is tenant-wide when filtering by
-  platform. See ``test_list_by_platform_total_ignores_platform_filter``.
+Behavior corrected in #540 and asserted here:
+- ``list_platform_audiences``: the count query now applies the ``platform``
+  filter as well as ``segment_id``, so ``total`` matches the filtered rows.
+  See ``test_list_by_platform_total_respects_platform_filter``.
 """
 
 import hashlib
@@ -739,16 +738,12 @@ class TestQuerySurfaces:
         assert total == 3
         assert len(page) == 1
 
-    async def test_list_by_platform_total_ignores_platform_filter(
+    async def test_list_by_platform_total_respects_platform_filter(
         self, db_session, test_tenant, svc
     ):
-        """BUG (pinned, not fixed): platform filter missing from count query.
-
-        ``list_platform_audiences(platform=...)`` filters the returned rows
-        but the count query (service.py:400-406) only re-applies the
-        segment_id filter, so ``total`` is the tenant-wide audience count.
-        Severity: low (pagination totals overstate when filtering by
-        platform). Repro: seed 2 meta + 1 google, filter platform="meta".
+        """The platform filter is now applied to the count query too, so
+        ``total`` matches the filtered row set (service.py list_platform_audiences).
+        Repro: seed 2 meta + 1 google, filter platform="meta" -> total 2.
         """
         tenant_id = test_tenant["id"]
         await self._seed_three_audiences(db_session, tenant_id)
@@ -756,7 +751,7 @@ class TestQuerySurfaces:
         audiences, total = await svc.list_platform_audiences(platform="meta")
         assert len(audiences) == 2
         assert {a.platform for a in audiences} == {"meta"}
-        assert total == 3  # should be 2 — pinned bug
+        assert total == 2  # count query now respects the platform filter
 
     async def test_list_excludes_other_tenants(self, db_session, test_tenant, svc):
         other = await _seed_second_tenant(db_session)

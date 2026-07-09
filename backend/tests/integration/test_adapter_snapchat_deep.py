@@ -12,18 +12,16 @@ fetch + unified model mapping, stats aggregation, EMQ estimation,
 budget/status/create mutations via ``execute_action``, media uploads,
 ``_make_request`` error mapping (429 -> RateLimitError), and helpers.
 
-Known production behaviors pinned here (do NOT "fix" in tests):
+Behaviors pinned here (fixed under #540):
 
-* ``execute_action`` only catches network errors and
-  ``(ValueError, KeyError, TypeError)`` — the ``PlatformError`` /
-  ``RateLimitError`` raised by ``_make_request`` propagates and leaves the
-  action stuck in ``status="executing"``.
-* ``get_emq_scores`` documents graceful degradation to ``[]``, but HTTP
-  failures surface as ``PlatformError`` from ``_make_request`` which its
-  except clauses do NOT catch — so it raises instead of returning ``[]``.
-* ``_update_budget`` bodies contain no ``id`` field for the updated entity
-  (only the budget fields), and ``get_ads(adset_id=...)`` yields ads with an
-  empty ``campaign_id``.
+* ``execute_action`` catches ``PlatformError`` / ``RateLimitError`` raised by
+  ``_make_request`` and marks the action ``status="failed"`` with the error
+  message, instead of letting it propagate and stick in ``"executing"``.
+* ``get_emq_scores`` degrades gracefully to ``[]`` when ``_make_request`` wraps
+  an HTTP failure into ``PlatformError`` (or ``RateLimitError`` on 429).
+* ``_update_budget`` bodies carry the entity ``id`` field (consistent with
+  ``_update_status``). Note ``get_ads(adset_id=...)`` still yields ads with an
+  empty ``campaign_id`` (the direct-adset path has no campaign context).
 """
 
 from datetime import UTC, datetime, timedelta
@@ -735,13 +733,19 @@ class TestGetEmqScores:
         adapter = make_adapter([TimeoutError()])
         assert await adapter.get_emq_scores("acct-1") == []
 
-    async def test_http_error_raises_instead_of_degrading(self):
-        """PINNED BUG: docstring promises graceful degradation, but an HTTP
-        failure is wrapped into PlatformError by _make_request, which the
-        except clauses in get_emq_scores do not catch — so it raises."""
+    async def test_http_error_degrades_to_empty_list(self):
+        """FIXED (#540): get_emq_scores degrades gracefully — an HTTP failure
+        wrapped into PlatformError by _make_request is now caught and yields
+        ``[]`` instead of propagating."""
         adapter = make_adapter([FakeResponse({}, status_code=500)])
-        with pytest.raises(PlatformError, match="Snapchat API request failed"):
-            await adapter.get_emq_scores("acct-1")
+        assert await adapter.get_emq_scores("acct-1") == []
+
+    async def test_rate_limit_degrades_to_empty_list(self):
+        """FIXED (#540): a 429 -> RateLimitError is also caught and degrades."""
+        adapter = make_adapter(
+            [FakeResponse({}, status_code=429, headers={"X-RateLimit-Reset": "5"})]
+        )
+        assert await adapter.get_emq_scores("acct-1") == []
 
 
 # =============================================================================
@@ -777,8 +781,8 @@ class TestExecuteAction:
         body = call["json"]["campaigns"][0]
         assert body["daily_budget_micro"] == 20_000_000
         assert body["lifetime_spend_cap_micro"] == 100_000_000
-        # Pinned: update body carries no entity id field
-        assert "id" not in body
+        # FIXED (#540): update body carries the entity id (as _update_status does)
+        assert body["id"] == "e-1"
 
     async def test_update_budget_adset_uses_lifetime_budget_micro(self):
         adapter = make_adapter([FakeResponse({})])
@@ -870,26 +874,26 @@ class TestExecuteAction:
         result = await adapter.execute_action(action)
         assert result.status == "failed"
 
-    async def test_platform_error_escapes_and_leaves_action_executing(self):
-        """PINNED BUG: an HTTP failure raises PlatformError from
-        _make_request; execute_action does NOT catch it, so the exception
-        propagates and the action is left stuck in status='executing'."""
+    async def test_platform_error_marks_action_failed(self):
+        """FIXED (#540): an HTTP failure raises PlatformError from
+        _make_request; execute_action now catches it and marks the action
+        failed with the error message instead of leaving it in 'executing'."""
         adapter = make_adapter([FakeResponse({}, status_code=500)])
         action = make_action("update_budget", parameters={"daily_budget": 5})
-        with pytest.raises(PlatformError, match="Snapchat API request failed"):
-            await adapter.execute_action(action)
-        assert action.status == "executing"
-        assert action.error_message is None
+        result = await adapter.execute_action(action)
+        assert result.status == "failed"
+        assert "Snapchat API request failed" in result.error_message
 
-    async def test_rate_limit_escapes_and_leaves_action_executing(self):
-        """PINNED BUG: same escape path for RateLimitError on HTTP 429."""
+    async def test_rate_limit_marks_action_failed(self):
+        """FIXED (#540): a RateLimitError on HTTP 429 is caught and marks the
+        action failed with the rate-limit message."""
         adapter = make_adapter(
             [FakeResponse({}, status_code=429, headers={"X-RateLimit-Reset": "9"})]
         )
         action = make_action("update_status", parameters={"status": "paused"})
-        with pytest.raises(RateLimitError):
-            await adapter.execute_action(action)
-        assert action.status == "executing"
+        result = await adapter.execute_action(action)
+        assert result.status == "failed"
+        assert "Rate limited" in result.error_message
 
     async def test_network_error_marks_failed(self, monkeypatch):
         adapter = make_adapter([])

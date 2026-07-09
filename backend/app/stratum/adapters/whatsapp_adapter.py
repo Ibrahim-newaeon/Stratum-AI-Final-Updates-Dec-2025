@@ -55,6 +55,7 @@ import hashlib
 import hmac
 import json
 import logging
+import mimetypes
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta, timezone
@@ -320,7 +321,18 @@ class WhatsAppAdapter(BaseAdapter):
 
             self._initialized = True
 
-        except (requests.RequestException, ConnectionError, TimeoutError, OSError) as e:
+        except AuthenticationError:
+            raise
+        except (
+            PlatformError,
+            requests.RequestException,
+            ConnectionError,
+            TimeoutError,
+            OSError,
+        ) as e:
+            # _make_request wraps API/transport failures into PlatformError;
+            # during credential verification these are auth failures per the
+            # initialize() contract.
             raise AuthenticationError(f"Failed to initialize WhatsApp: {e}")
         except (ValueError, KeyError, TypeError) as e:
             raise AuthenticationError(f"Failed to parse WhatsApp init response: {e}")
@@ -572,7 +584,7 @@ class WhatsAppAdapter(BaseAdapter):
         return Message(
             message_id=message_id,
             wa_id=to,
-            message_type=MessageType(media_type.upper()),
+            message_type=MessageType(media_type.lower()),
             timestamp=datetime.now(UTC),
             media_id=media_id,
             media_url=media_url,
@@ -791,7 +803,7 @@ class WhatsAppAdapter(BaseAdapter):
             message_id=msg_data.get("id", ""),
             wa_id=msg_data.get("from", ""),
             message_type=(
-                MessageType(msg_type.upper())
+                MessageType(msg_type.lower())
                 if msg_type in [m.value for m in MessageType]
                 else MessageType.TEXT
             ),
@@ -1116,3 +1128,51 @@ class WhatsAppAdapter(BaseAdapter):
     async def execute_action(self, action):
         """Not applicable for WhatsApp."""
         raise NotImplementedError("WhatsApp doesn't support ad automation actions")
+
+    # ========================================================================
+    # CREATIVE OPERATIONS (BaseAdapter interface)
+    # ========================================================================
+
+    async def upload_image(
+        self, account_id: str, image_data: bytes, filename: str
+    ) -> str:
+        """Upload image bytes and return the WhatsApp media ID.
+
+        WhatsApp hosts media on the phone number (not an ad account), so
+        ``account_id`` is accepted for ``BaseAdapter`` parity but unused.
+        """
+        return await self._upload_media_bytes(image_data, filename, "image/jpeg")
+
+    async def upload_video(
+        self, account_id: str, video_data: bytes, filename: str
+    ) -> str:
+        """Upload video bytes and return the WhatsApp media ID.
+
+        As with :meth:`upload_image`, ``account_id`` is unused for WhatsApp.
+        """
+        return await self._upload_media_bytes(video_data, filename, "video/mp4")
+
+    async def _upload_media_bytes(
+        self, media_data: bytes, filename: str, default_mime: str
+    ) -> str:
+        """Upload in-memory media bytes to the Cloud API ``/media`` endpoint.
+
+        Mirrors :meth:`upload_media` but accepts raw bytes instead of a file
+        path, inferring the MIME type from ``filename`` and falling back to
+        ``default_mime`` when it cannot be guessed.
+        """
+        self._ensure_initialized()
+
+        mime_type = mimetypes.guess_type(filename)[0] or default_mime
+
+        files = {"file": (filename, media_data, mime_type)}
+        data = {"messaging_product": "whatsapp", "type": mime_type}
+        url = f"{self.BASE_URL}/{self.phone_number_id}/media"
+        headers = {"Authorization": f"Bearer {self.access_token}"}
+
+        response = requests.post(
+            url, data=data, files=files, headers=headers, timeout=60
+        )
+        response.raise_for_status()
+
+        return response.json().get("id", "")

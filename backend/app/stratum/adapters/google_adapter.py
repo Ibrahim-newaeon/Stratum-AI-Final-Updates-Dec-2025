@@ -194,6 +194,9 @@ class GoogleAdsAdapter(BaseAdapter):
 
         self.developer_token = credentials["developer_token"]
         self.login_customer_id = credentials.get("login_customer_id")
+        # Customer ID for a single (non-manager) account. When no MCC
+        # login_customer_id is configured, this identifies the account to query.
+        self.customer_id = credentials.get("customer_id")
 
         # Store authentication details for client initialization
         self.client_id = credentials.get("client_id")
@@ -258,6 +261,12 @@ class GoogleAdsAdapter(BaseAdapter):
             # Create the client
             self.client = GoogleAdsClient.load_from_dict(config)
 
+            # Mark the adapter initialized *before* the verification call so
+            # the internal get_accounts() -> _ensure_initialized() guard passes.
+            # Any failure below resets the flag so a broken adapter never looks
+            # ready.
+            self._initialized = True
+
             # Verify authentication by listing accessible accounts
             await self.rate_limiter.acquire()
             accounts = await self.get_accounts()
@@ -269,9 +278,8 @@ class GoogleAdsAdapter(BaseAdapter):
                     f"Successfully authenticated, found {len(accounts)} accounts"
                 )
 
-            self._initialized = True
-
         except GoogleAdsException as e:
+            self._initialized = False
             error_msg = self._parse_google_error(e)
             if "AUTHENTICATION_ERROR" in error_msg:
                 raise AuthenticationError(
@@ -364,11 +372,10 @@ class GoogleAdsAdapter(BaseAdapter):
 
     async def _get_single_account(self) -> list[UnifiedAccount]:
         """Get info about a single directly-authenticated account."""
-        customer_service = self.client.get_service("CustomerService")
-
-        # When no MCC, we need to know which customer ID to use
-        # This is typically passed as login_customer_id even for single accounts
-        if not self.login_customer_id:
+        # A single (non-MCC) account is identified by ``customer_id``; fall back
+        # to ``login_customer_id`` if that is the only id available.
+        customer_id = self.customer_id or self.login_customer_id
+        if not customer_id:
             logger.warning("No customer_id specified, cannot fetch account info")
             return []
 
@@ -385,9 +392,7 @@ class GoogleAdsAdapter(BaseAdapter):
             LIMIT 1
         """
 
-        response = ga_service.search(
-            customer_id=str(self.login_customer_id), query=query
-        )
+        response = ga_service.search(customer_id=str(customer_id), query=query)
 
         accounts = []
         for row in response:
@@ -441,13 +446,18 @@ class GoogleAdsAdapter(BaseAdapter):
                 FROM campaign
             """
 
-            # Add status filter if specified
+            # Add status filter if specified. Statuses with no Google mapping are
+            # skipped rather than defaulted to ENABLED, which would silently widen
+            # the filter to include active campaigns the caller did not request.
             if status_filter:
                 google_statuses = [
-                    self.STATUS_TO_GOOGLE.get(s, "ENABLED") for s in status_filter
+                    self.STATUS_TO_GOOGLE[s]
+                    for s in status_filter
+                    if s in self.STATUS_TO_GOOGLE
                 ]
-                status_str = ", ".join(f"'{s}'" for s in google_statuses)
-                query += f" WHERE campaign.status IN ({status_str})"
+                if google_statuses:
+                    status_str = ", ".join(f"'{s}'" for s in google_statuses)
+                    query += f" WHERE campaign.status IN ({status_str})"
 
             response = ga_service.search(
                 customer_id=str(account_id).replace("-", ""), query=query

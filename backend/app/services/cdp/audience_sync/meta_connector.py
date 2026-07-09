@@ -196,13 +196,18 @@ class MetaAudienceConnector(BaseAudienceConnector):
             # Get updated audience info
             audience_info = await self.get_audience_info(audience_id)
 
+            # If we sent entries but every one was rejected as invalid, the
+            # upload accomplished nothing — report failure, not success.
+            all_invalid = total_sent > 0 and total_added == 0
+
             return AudienceSyncResult(
-                success=True,
+                success=not all_invalid,
                 operation="add",
                 platform_audience_id=audience_id,
                 users_sent=total_sent,
                 users_added=total_added,
                 users_failed=total_failed,
+                error_message=("All entries were invalid" if all_invalid else None),
                 audience_size=audience_info.get("approximate_count"),
                 duration_ms=duration_ms,
             )
@@ -317,9 +322,13 @@ class MetaAudienceConnector(BaseAudienceConnector):
                 session_id = session_result.get("session_id")
 
                 if not session_id:
-                    # Fallback: Delete all and re-add
+                    # Fallback: Delete all and re-add. Relabel the delegated
+                    # add_users result as a replace so callers see the
+                    # operation they actually requested.
                     self.logger.warning("meta_replace_session_failed_fallback")
-                    return await self.add_users(audience_id, users)
+                    fallback = await self.add_users(audience_id, users)
+                    fallback.operation = "replace"
+                    return fallback
 
                 # Step 2: Upload all users with session
                 schema = ["EMAIL", "PHONE", "MADID"]
@@ -386,10 +395,13 @@ class MetaAudienceConnector(BaseAudienceConnector):
 
             duration_ms = int((time.time() - start_time) * 1000)
 
+            success = result.get("success", True)
+
             return AudienceSyncResult(
-                success=result.get("success", True),
+                success=success,
                 operation="delete",
                 platform_audience_id=audience_id,
+                error_message=(None if success else "Platform reported delete failure"),
                 duration_ms=duration_ms,
                 platform_response=result,
             )

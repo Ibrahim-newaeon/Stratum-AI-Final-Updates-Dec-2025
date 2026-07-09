@@ -503,7 +503,15 @@ class GoogleAudienceConnector(BaseAudienceConnector):
 
             return {}
 
-        except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
+        except (
+            httpx.HTTPError,
+            ConnectionError,
+            TimeoutError,
+            OSError,
+            ValueError,
+        ) as e:
+            # ValueError covers int(audience_id) rejecting a malformed stored
+            # id — fail soft with an error dict rather than crashing the job.
             self.logger.error("google_audience_info_error", error=str(e))
             return {"error": str(e)}
 

@@ -402,6 +402,8 @@ class AudienceSyncService:
         )
         if segment_id:
             count_query = count_query.where(PlatformAudience.segment_id == segment_id)
+        if platform:
+            count_query = count_query.where(PlatformAudience.platform == platform)
         count_result = await self.db.execute(count_query)
         total = count_result.scalar() or 0
 

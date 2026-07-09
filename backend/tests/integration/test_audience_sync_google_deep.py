@@ -504,16 +504,14 @@ class TestGetAudienceInfo:
 
         assert info == {"error": "down"}
 
-    async def test_info_non_numeric_id_raises_value_error(self):
-        """BUG (pinned, not fixed): google_connector.py:467 validates the
-        audience id with ``int(audience_id)`` to prevent GAQL injection, but
-        the resulting ValueError is NOT in the except clause (line 506), so a
-        non-numeric id propagates as an unhandled exception instead of an
-        ``{"error": ...}`` dict like every other failure mode. Severity: low
-        (callers pass platform-issued numeric ids), but a malformed stored id
-        would crash the sync job rather than fail soft."""
-        with pytest.raises(ValueError):
-            await _connector().get_audience_info("not-a-number")
+    async def test_info_non_numeric_id_returns_error_dict(self):
+        """A non-numeric audience id fails the ``int(audience_id)`` GAQL-
+        injection guard, and the resulting ValueError is now caught alongside
+        the transport errors — the sync job fails soft with an ``{"error": ...}``
+        dict rather than crashing (google_connector.py get_audience_info)."""
+        info = await _connector().get_audience_info("not-a-number")
+
+        assert "error" in info
 
 
 # =============================================================================

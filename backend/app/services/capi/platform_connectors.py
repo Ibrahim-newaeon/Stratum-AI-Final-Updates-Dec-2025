@@ -326,7 +326,17 @@ class BaseCAPIConnector(ABC):
                     ):
                         break
 
-            except (ConnectionError, TimeoutError, OSError, httpx.HTTPError) as e:
+            except (
+                ConnectionError,
+                TimeoutError,
+                OSError,
+                httpx.HTTPError,
+                json.JSONDecodeError,
+            ) as e:
+                # A malformed (non-JSON) platform body — e.g. an HTML 502 page
+                # from a proxy — raises json.JSONDecodeError out of
+                # ``_send_events_impl``. Treat it as a retryable delivery
+                # failure so it is retried and recorded by the circuit breaker.
                 last_error = [{"message": str(e)}]
                 latency_ms = (time.time() - start_time) * 1000
                 logger.warning(
@@ -643,26 +653,17 @@ class GoogleCAPIConnector(BaseCAPIConnector):
                         message="Authentication failed - check credentials",
                     )
                 else:
-                    # Still mark as connected if we have valid credentials format
-                    self._connected = True
+                    # A non-200/401 response means the credentials were not
+                    # actually verified — surface it as an error rather than
+                    # a false "validated" success.
                     return ConnectionResult(
-                        status=ConnectionStatus.CONNECTED,
+                        status=ConnectionStatus.ERROR,
                         platform=self.PLATFORM_NAME,
-                        message="Credentials validated",
-                        details={"customer_id": self.customer_id},
+                        message=f"Connection failed (HTTP {response.status_code})",
                     )
 
         except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             logger.error(f"Google Ads connection error: {e}")
-            # Still allow connection with valid credentials
-            if self.customer_id and self.developer_token:
-                self._connected = True
-                return ConnectionResult(
-                    status=ConnectionStatus.CONNECTED,
-                    platform=self.PLATFORM_NAME,
-                    message="Credentials validated (offline)",
-                    details={"customer_id": self.customer_id},
-                )
             return ConnectionResult(
                 status=ConnectionStatus.ERROR,
                 platform=self.PLATFORM_NAME,
@@ -997,26 +998,17 @@ class SnapchatCAPIConnector(BaseCAPIConnector):
                         message="Authentication failed - check access token",
                     )
                 else:
-                    # Still mark as connected if credentials format is valid
-                    self._connected = True
+                    # A non-200/401 response means the credentials were not
+                    # actually verified — surface it as an error rather than
+                    # a false "validated" success.
                     return ConnectionResult(
-                        status=ConnectionStatus.CONNECTED,
+                        status=ConnectionStatus.ERROR,
                         platform=self.PLATFORM_NAME,
-                        message="Credentials validated",
-                        details={"pixel_id": self.pixel_id},
+                        message=f"Connection failed (HTTP {response.status_code})",
                     )
 
         except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
             logger.error(f"Snapchat connection error: {e}")
-            # Allow connection with valid credentials format
-            if self.pixel_id and self.access_token:
-                self._connected = True
-                return ConnectionResult(
-                    status=ConnectionStatus.CONNECTED,
-                    platform=self.PLATFORM_NAME,
-                    message="Credentials validated (offline)",
-                    details={"pixel_id": self.pixel_id},
-                )
             return ConnectionResult(
                 status=ConnectionStatus.ERROR,
                 platform=self.PLATFORM_NAME,
@@ -1207,6 +1199,105 @@ class WhatsAppCAPIConnector(BaseCAPIConnector):
                 platform=self.PLATFORM_NAME,
                 message=str(e),
             )
+
+    async def send_events(self, events: List[Dict[str, Any]]) -> CAPIResponse:
+        """Send WhatsApp messages with per-message (subset) retry.
+
+        WhatsApp message sends are NOT idempotent, so — unlike the batch CAPI
+        platforms — the base wholesale-retry loop would re-deliver messages
+        that already succeeded (duplicate customer messages) and, on retry
+        exhaustion, report ``events_processed=0`` even when some were
+        delivered. Here only the still-undelivered subset is retried and the
+        true processed count is reported.
+        """
+        if not self._connected:
+            return CAPIResponse(
+                success=False,
+                events_received=len(events),
+                events_processed=0,
+                errors=[{"message": "Not connected"}],
+                platform=self.PLATFORM_NAME,
+            )
+
+        if not self._circuit_breaker.can_execute():
+            return CAPIResponse(
+                success=False,
+                events_received=len(events),
+                events_processed=0,
+                errors=[
+                    {
+                        "message": "Circuit breaker open - service temporarily unavailable"
+                    }
+                ],
+                platform=self.PLATFORM_NAME,
+            )
+
+        pending = list(events)
+        processed = 0
+        errors: List[Dict[str, Any]] = []
+
+        for retry in range(self.MAX_RETRIES):
+            await self._rate_limiter.wait_for_token(len(pending))
+            start_time = time.time()
+            errors = []
+            still_failed: List[Dict[str, Any]] = []
+
+            for event in pending:
+                error_message: Optional[str] = None
+                try:
+                    delivered = await self._send_message(event)
+                    if not delivered:
+                        error_message = (
+                            f"Failed to send event: {event.get('event_name')}"
+                        )
+                except (httpx.HTTPError, ConnectionError, TimeoutError, OSError) as e:
+                    delivered = False
+                    error_message = str(e)
+
+                if delivered:
+                    processed += 1
+                else:
+                    errors.append({"message": error_message})
+                    still_failed.append(event)
+
+                # Log delivery for EMQ measurement (per-event outcome)
+                latency_ms = (time.time() - start_time) * 1000
+                log_event_delivery(
+                    EventDeliveryLog(
+                        event_id=event.get("event_id", str(uuid.uuid4())),
+                        platform=self.PLATFORM_NAME,
+                        event_name=event.get("event_name", "unknown"),
+                        timestamp=datetime.now(timezone.utc),
+                        success=delivered,
+                        latency_ms=latency_ms,
+                        error_message=error_message,
+                        retry_count=retry,
+                    )
+                )
+
+            if not still_failed:
+                self._circuit_breaker.record_success()
+                return CAPIResponse(
+                    success=True,
+                    events_received=len(events),
+                    events_processed=processed,
+                    errors=[],
+                    platform=self.PLATFORM_NAME,
+                )
+
+            pending = still_failed
+            if retry < self.MAX_RETRIES - 1:
+                await asyncio.sleep(self.RETRY_DELAYS[retry])
+
+        # Retries exhausted with some still-failed messages.
+        self._circuit_breaker.record_failure()
+        return CAPIResponse(
+            success=False,
+            events_received=len(events),
+            events_processed=processed,
+            errors=errors,
+            platform=self.PLATFORM_NAME,
+        )
 
     async def _send_events_impl(self, events: List[Dict[str, Any]]) -> CAPIResponse:
         """
@@ -1699,6 +1790,9 @@ class ConnectionPool:
         async with self._lock:
             if platform not in self._clients:
                 self._clients[platform] = []
+                # Seed the round-robin index too, so a subsequent get_client()
+                # for a platform first seen via scale_up() does not KeyError.
+                self._client_index[platform] = 0
 
             if len(self._clients[platform]) < self.max_connections:
                 client = httpx.AsyncClient(

@@ -155,7 +155,7 @@ class EmqService:
         score = sum(platform_scores) / len(platform_scores)
 
         # Calculate previous score
-        prev_scores = [r.emq_score for r in previous_records if r.emq_score]
+        prev_scores = [r.emq_score for r in previous_records if r.emq_score is not None]
         previous_score = (
             sum(prev_scores) / len(prev_scores) if prev_scores else score - 2.0
         )
@@ -219,7 +219,7 @@ class EmqService:
             "previousScore": round(previous_score, 1) if previous_score else None,
             "confidenceBand": confidence_band,
             "drivers": drivers,
-            "lastUpdated": last_updated.isoformat() + "Z",
+            "lastUpdated": last_updated.isoformat().replace("+00:00", "Z"),
         }
 
     async def _calculate_emq_from_variance(
@@ -274,7 +274,9 @@ class EmqService:
                 else "directional" if estimated_emq >= 60 else "unsafe"
             ),
             "drivers": self._get_estimated_drivers(estimated_emq),
-            "lastUpdated": datetime.now(timezone.utc).isoformat() + "Z",
+            "lastUpdated": datetime.now(timezone.utc)
+            .isoformat()
+            .replace("+00:00", "Z"),
         }
 
     def _get_default_emq_response(self) -> Dict[str, Any]:
@@ -284,7 +286,9 @@ class EmqService:
             "previousScore": 73.0,
             "confidenceBand": "directional",
             "drivers": self._get_estimated_drivers(75.0),
-            "lastUpdated": datetime.now(timezone.utc).isoformat() + "Z",
+            "lastUpdated": datetime.now(timezone.utc)
+            .isoformat()
+            .replace("+00:00", "Z"),
         }
 
     def _get_estimated_drivers(self, base_score: float) -> List[Dict[str, Any]]:
@@ -410,7 +414,9 @@ class EmqService:
             description = "; ".join(issues[1:]) if len(issues) > 1 else None
 
             # Calculate EMQ impact (difference from baseline 80)
-            emq_impact = (record.emq_score - 80) if record.emq_score else -10
+            emq_impact = (
+                (record.emq_score - 80) if record.emq_score is not None else -10
+            )
 
             incidents.append(
                 {
@@ -418,7 +424,7 @@ class EmqService:
                     "type": incident_type,
                     "title": title,
                     "description": description,
-                    "timestamp": record.created_at.isoformat() + "Z",
+                    "timestamp": record.created_at.isoformat().replace("+00:00", "Z"),
                     "platform": record.platform,
                     "severity": severity,
                     "recoveryHours": None,
@@ -756,9 +762,14 @@ class EmqAdminService:
         if not rows:
             return self._get_default_benchmarks(platform)
 
+        # Percentile rank of each platform's average among all platform
+        # averages on this date: the share of averages at or below it.
+        all_avgs = [(row.avg_score or 75.0) for row in rows]
+
         benchmarks = []
         for row in rows:
             avg = row.avg_score or 75.0
+            percentile = 100.0 * sum(1 for a in all_avgs if a <= avg) / len(all_avgs)
             benchmarks.append(
                 {
                     "platform": row.platform.title(),
@@ -766,7 +777,7 @@ class EmqAdminService:
                     "p50": round(row.p50 or 74.8, 1),
                     "p75": round(row.p75 or 86.2, 1),
                     "tenantScore": round(avg, 1),
-                    "percentile": round((avg / 100) * 100, 1),
+                    "percentile": round(percentile, 1),
                 }
             )
 

@@ -11,17 +11,17 @@ model mapping, reporting metrics parsing, EMQ estimation, budget/status/create
 mutations via ``execute_action``, creative uploads, ``_make_request`` error
 mapping, and datetime/status helpers.
 
-Known production behaviors pinned here (do NOT "fix" in tests):
+Behaviors pinned here (fixed under #540):
 
-* ``execute_action`` only catches network errors and
-  ``(ValueError, KeyError, TypeError)`` — a ``PlatformError`` raised by the
-  API returning ``code != 0`` propagates out and leaves the action stuck in
-  ``status="executing"`` (see ``TestExecuteAction.test_platform_error_*``).
-* ``_update_budget`` builds the payload id key from Stratum's entity type
-  (``adset_id``) instead of TikTok's native ``adgroup_id`` (see
-  ``test_update_budget_adset_uses_wrong_id_key``).
-* Passing more than one status in ``status_filter`` produces
-  ``{"primary_status": null}`` in the filtering param.
+* ``execute_action`` catches ``PlatformError`` (an API rejection where
+  ``code != 0``) and marks the action ``status="failed"`` with the error
+  message, instead of letting it propagate and stick in ``"executing"`` (see
+  ``TestExecuteAction.test_platform_error_*``).
+* ``_update_budget`` maps an ``adset`` entity to TikTok's native ``adgroup_id``
+  payload key (see ``test_update_budget_adset_uses_adgroup_id_key``).
+* Passing more than one status in ``status_filter`` applies the first mapped
+  status server-side (TikTok's ``primary_status`` is single-valued) rather than
+  collapsing to ``null`` and disabling filtering.
 """
 
 from datetime import UTC, datetime
@@ -312,15 +312,16 @@ class TestGetCampaigns:
         params = adapter.session.calls[0]["params"]
         assert '"primary_status": "DISABLE"' in params["filtering"]
 
-    async def test_multi_status_filter_sends_null_primary_status(self):
-        # Pinned behavior: >1 status collapses to null, i.e. no server-side
-        # filtering actually happens for multi-status requests.
+    async def test_multi_status_filter_applies_first_status(self):
+        # FIXED (#540): TikTok's primary_status is single-valued, so a
+        # multi-status filter applies the first mapped status server-side
+        # (ACTIVE -> "ENABLE") instead of collapsing to null and disabling it.
         adapter = make_adapter([ok({"list": []})])
         await adapter.get_campaigns(
             "adv-1", status_filter=[EntityStatus.ACTIVE, EntityStatus.PAUSED]
         )
         params = adapter.session.calls[0]["params"]
-        assert '"primary_status": null' in params["filtering"]
+        assert '"primary_status": "ENABLE"' in params["filtering"]
 
     async def test_api_error_raises_platform_error(self):
         adapter = make_adapter([err(message="no access")])
@@ -625,10 +626,10 @@ class TestExecuteAction:
         assert call["json"]["budget"] == 7550  # dollars -> cents
         assert call["json"]["budget_mode"] == "BUDGET_MODE_DAY"
 
-    async def test_update_budget_adset_uses_wrong_id_key(self):
-        """PINNED BUG: the ad-group budget payload uses Stratum's entity type
-        for the id key, sending ``adset_id`` where TikTok's API expects
-        ``adgroup_id``. Real ad-group budget updates would be rejected."""
+    async def test_update_budget_adset_uses_adgroup_id_key(self):
+        """FIXED (#540): the ad-group budget payload maps Stratum's ``adset``
+        entity to TikTok's native ``adgroup_id`` key, so real ad-group budget
+        updates are accepted by the API."""
         adapter = make_adapter([ok()])
         action = make_action(
             "update_budget", entity_type="adset", parameters={"daily_budget": 10}
@@ -637,8 +638,8 @@ class TestExecuteAction:
         assert result.status == "completed"
         call = adapter.session.calls[0]
         assert call["url"].endswith("/adgroup/update/")
-        assert "adset_id" in call["json"]  # <- should be adgroup_id
-        assert "adgroup_id" not in call["json"]
+        assert call["json"]["adgroup_id"] == "111"
+        assert "adset_id" not in call["json"]
 
     async def test_update_budget_without_budget_param_sends_bare_payload(self):
         adapter = make_adapter([ok()])
@@ -738,30 +739,29 @@ class TestExecuteAction:
         result = await adapter.execute_action(action)
         assert result.status == "failed"
 
-    async def test_platform_error_escapes_and_leaves_action_executing(self):
-        """PINNED BUG: a code!=0 platform rejection raises PlatformError which
-        execute_action does NOT catch — the exception propagates and the
-        action is left stuck in status='executing' (never marked failed)."""
+    async def test_platform_error_marks_action_failed(self):
+        """FIXED (#540): a code!=0 platform rejection raises PlatformError which
+        execute_action now catches — the action is marked failed with the error
+        message instead of being left stuck in status='executing'."""
         adapter = make_adapter([err(message="budget too low")])
         action = make_action("update_budget", parameters={"daily_budget": 1})
-        with pytest.raises(PlatformError, match="budget too low"):
-            await adapter.execute_action(action)
-        assert action.status == "executing"
-        assert action.error_message is None
+        result = await adapter.execute_action(action)
+        assert result.status == "failed"
+        assert "budget too low" in result.error_message
 
-    async def test_update_status_platform_error_escapes(self):
+    async def test_update_status_platform_error_marks_failed(self):
         adapter = make_adapter([err(message="status locked")])
         action = make_action("update_status", parameters={"status": "paused"})
-        with pytest.raises(PlatformError, match="status locked"):
-            await adapter.execute_action(action)
-        assert action.status == "executing"
+        result = await adapter.execute_action(action)
+        assert result.status == "failed"
+        assert "status locked" in result.error_message
 
-    async def test_create_campaign_platform_error_escapes(self):
+    async def test_create_campaign_platform_error_marks_failed(self):
         adapter = make_adapter([err(message="quota exceeded")])
         action = make_action("create_campaign", parameters={"name": "X"})
-        with pytest.raises(PlatformError, match="quota exceeded"):
-            await adapter.execute_action(action)
-        assert action.status == "executing"
+        result = await adapter.execute_action(action)
+        assert result.status == "failed"
+        assert "quota exceeded" in result.error_message
 
     async def test_network_error_marks_failed(self, monkeypatch):
         adapter = make_adapter([])
