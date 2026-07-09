@@ -21,20 +21,21 @@ Covered surface:
   create_campaign / unsupported action + failure paths
 - upload_image / upload_video, cleanup, status mapping helpers
 
-KNOWN PRODUCTION BUGS PINNED HERE (do not "fix" the tests):
+PREVIOUSLY-PINNED BUGS NOW FIXED (#540):
 
-BUG-1 (high): ``GoogleAdsAdapter.initialize()`` calls ``get_accounts()`` to
-    verify credentials BEFORE setting ``self._initialized = True``
-    (google_adapter.py:263 vs :272). ``get_accounts`` calls
-    ``_ensure_initialized`` (:304), which raises
-    ``AdapterError("Adapter not initialized...")`` because the flag is still
-    False. Result: initialize() can NEVER succeed. See
-    ``test_initialize_order_bug_always_raises``.
+BUG-1 (high, FIXED): ``GoogleAdsAdapter.initialize()`` used to call
+    ``get_accounts()`` to verify credentials BEFORE setting
+    ``self._initialized = True``; ``_ensure_initialized`` therefore always
+    raised and initialize() could never succeed. The flag is now set before
+    the verification call (and reset on failure). See
+    ``test_initialize_sets_flag_before_verification``.
 
-BUG-2 (medium): ``_get_single_account`` (google_adapter.py:365-405) is only
-    reachable from ``get_accounts`` when ``login_customer_id`` is falsy, but
-    it immediately returns ``[]`` in that case (:371-373), so its GAQL query
-    path (:375-405) is dead code in production. Covered here by direct call.
+BUG-2 (medium, FIXED): ``_get_single_account`` was only reachable from
+    ``get_accounts`` when ``login_customer_id`` was falsy, but it immediately
+    returned ``[]`` in that case, so its GAQL query path was dead. A single
+    (non-MCC) account is now identified by a ``customer_id`` credential, which
+    routes through ``get_accounts`` and actually fetches the account. See
+    ``test_single_account_reachable_via_get_accounts``.
 """
 
 from datetime import UTC, datetime
@@ -252,10 +253,10 @@ class TestConstructor:
 
 
 class TestInitialize:
-    async def test_initialize_order_bug_always_raises(self):
-        """BUG-1: initialize() verifies auth via get_accounts() before setting
-        _initialized=True, so _ensure_initialized always raises AdapterError
-        and initialize() can never complete successfully."""
+    async def test_initialize_sets_flag_before_verification(self):
+        """FIXED (was BUG-1): initialize() sets _initialized=True *before* the
+        get_accounts() verification call, so the internal _ensure_initialized
+        guard passes and initialize() completes successfully."""
         client, _services = make_client()
         ga = client.get_service("GoogleAdsService")
         ga.search.return_value = []
@@ -263,14 +264,12 @@ class TestInitialize:
 
         with patch(f"{GOOGLE_ADAPTER_NS}.GoogleAdsClient") as mock_cls:
             mock_cls.load_from_dict.return_value = client
-            with pytest.raises(AdapterError, match="not initialized"):
-                await adapter.initialize()
+            await adapter.initialize()
 
-        assert adapter._initialized is False
+        assert adapter._initialized is True
 
     async def test_initialize_oauth_config_and_mcc_verification(self):
-        """Pre-setting _initialized (BUG-1 workaround) lets initialize()
-        complete; it must build an OAuth config and verify via MCC query."""
+        """initialize() builds an OAuth config and verifies via an MCC query."""
         client, _services = make_client()
         ga = client.get_service("GoogleAdsService")
         ga.search.return_value = [
@@ -286,7 +285,6 @@ class TestInitialize:
             )
         ]
         adapter = GoogleAdsAdapter(dict(OAUTH_CREDS))
-        adapter._initialized = True  # BUG-1 workaround
 
         with patch(f"{GOOGLE_ADAPTER_NS}.GoogleAdsClient") as mock_cls:
             mock_cls.load_from_dict.return_value = client
@@ -312,7 +310,6 @@ class TestInitialize:
         }
         client, _services = make_client()
         adapter = GoogleAdsAdapter(creds)
-        adapter._initialized = True  # BUG-1 workaround
 
         with patch(f"{GOOGLE_ADAPTER_NS}.GoogleAdsClient") as mock_cls:
             mock_cls.load_from_dict.return_value = client
@@ -323,7 +320,8 @@ class TestInitialize:
         assert config["impersonated_email"] == "robot@example.com"
         assert "login_customer_id" not in config
         assert "client_id" not in config
-        # No login_customer_id -> _get_single_account early-return [] (BUG-2)
+        # No login_customer_id and no customer_id -> _get_single_account
+        # legitimately returns [] (nothing to query), hitting the warning branch.
         assert adapter._initialized is True
 
     async def test_initialize_authentication_error_mapped(self):
@@ -414,13 +412,14 @@ class TestGetAccounts:
         assert accounts == []
         client.get_service("GoogleAdsService").search.assert_not_called()
 
-    async def test_single_account_query_direct_call(self):
-        """BUG-2: _get_single_account's GAQL path is dead in production
-        (only invoked when login_customer_id is falsy, where it early-returns
-        []). Exercise it directly to pin the mapping."""
+    async def test_single_account_reachable_via_get_accounts(self):
+        """FIXED (was BUG-2): a single-account credential (customer_id, no MCC
+        login_customer_id) is routed through get_accounts() to
+        _get_single_account, whose GAQL path now actually fetches the account
+        instead of dead-ending on an early return."""
         creds = {k: v for k, v in OAUTH_CREDS.items() if k != "login_customer_id"}
+        creds["customer_id"] = "1234567890"
         adapter, client, _ = make_adapter(credentials=creds)
-        adapter.login_customer_id = "1234567890"  # simulate the intended path
         ga = client.get_service("GoogleAdsService")
         ga.search.return_value = [
             SimpleNamespace(
@@ -433,13 +432,15 @@ class TestGetAccounts:
             )
         ]
 
-        accounts = await adapter._get_single_account()
+        accounts = await adapter.get_accounts()
 
         assert len(accounts) == 1
         assert accounts[0].account_id == "1234567890"
         assert accounts[0].account_name == "Account 1234567890"
         assert accounts[0].currency == "GBP"
-        assert "FROM customer" in ga.search.call_args.kwargs["query"]
+        kwargs = ga.search.call_args.kwargs
+        assert kwargs["customer_id"] == "1234567890"
+        assert "FROM customer" in kwargs["query"]
 
     async def test_google_error_maps_to_platform_error(self):
         adapter, client, _ = make_adapter()
@@ -492,8 +493,23 @@ class TestGetCampaigns:
         )
 
         query = ga.search.call_args.kwargs["query"]
-        # PAUSED maps directly; ARCHIVED has no Google mapping -> ENABLED
-        assert "WHERE campaign.status IN ('PAUSED', 'ENABLED')" in query
+        # PAUSED maps directly; ARCHIVED has no Google mapping and is skipped
+        # rather than silently widened to ENABLED.
+        assert "WHERE campaign.status IN ('PAUSED')" in query
+
+    async def test_status_filter_all_unmapped_omits_where_clause(self):
+        adapter, client, _ = make_adapter()
+        ga = client.get_service("GoogleAdsService")
+        ga.search.return_value = []
+
+        await adapter.get_campaigns(
+            "1234567890",
+            status_filter=[EntityStatus.ARCHIVED],
+        )
+
+        # Every requested status is unmapped -> no WHERE clause at all rather
+        # than a filter silently widened to ENABLED.
+        assert "WHERE" not in ga.search.call_args.kwargs["query"]
 
     async def test_bidding_strategy_variants(self):
         adapter, client, _ = make_adapter()

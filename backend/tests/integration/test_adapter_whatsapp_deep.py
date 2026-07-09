@@ -5,31 +5,28 @@ The adapter talks to Meta's WhatsApp Cloud API through the synchronous
 ``requests`` library, so tests mock at the ``requests.get/post/delete/request``
 boundary inside the adapter module namespace (respx would not intercept it).
 
-PRODUCTION BUGS FOUND (pinned, NOT fixed — see test docstrings):
+PRODUCTION BUGS FIXED under #540 (assertions below pin the corrected
+behavior — do not revert):
 
-1. CRITICAL — ``WhatsAppAdapter`` cannot be instantiated at all.
+1. CRITICAL — ``WhatsAppAdapter`` was abstract and uninstantiable.
    ``BaseAdapter`` declares abstract ``upload_image``/``upload_video`` which
-   the subclass never implements, so ``WhatsAppAdapter(creds)`` raises
-   ``TypeError: Can't instantiate abstract class``.  All tests below use a
-   minimal concrete subclass to exercise the (otherwise dead) adapter logic.
-   Repro: ``WhatsAppAdapter({...})`` -> TypeError.
-   Location: whatsapp_adapter.py:206 / base.py:230-242.
+   the subclass never implemented, so ``WhatsAppAdapter(creds)`` raised
+   ``TypeError: Can't instantiate abstract class``.  Both methods are now
+   implemented against the Cloud API ``/media`` upload endpoint, so the class
+   constructs directly (``TestConstruction::test_can_instantiate_directly``).
 
 2. HIGH — ``MessageType(media_type.upper())`` in ``send_media_message``
-   (whatsapp_adapter.py:575) raises ``ValueError`` for every media type
-   because enum values are lowercase ("image" not "IMAGE").  The API call
-   succeeds but the method then crashes before returning the Message.
+   raised ``ValueError`` for every media type because enum values are
+   lowercase.  Now uses ``.lower()`` so the method returns the ``Message``.
 
 3. HIGH — the same uppercase-lookup pattern in ``_parse_incoming_message``
-   (whatsapp_adapter.py:793-794) makes ``process_webhook`` raise
-   ``ValueError`` for every *valid* incoming message type (text, image, ...).
-   Only unknown types survive via the ``MessageType.TEXT`` fallback, which
-   also leaves the content-extraction branches (lines 804-816) unreachable.
+   made ``process_webhook`` raise for every *valid* incoming message type.
+   Now uses ``.lower()`` so text/media/interactive messages parse and the
+   content-extraction branches are reachable.
 
-4. LOW — ``initialize()`` intends to wrap failures in ``AuthenticationError``
-   but ``_make_request`` converts every ``requests.RequestException`` into
-   ``PlatformError`` first, which ``initialize`` does not catch; API/auth
-   failures therefore leak as ``PlatformError`` (whatsapp_adapter.py:323).
+4. LOW — ``initialize()`` now catches the ``PlatformError`` that
+   ``_make_request`` raises and re-wraps it as the documented
+   ``AuthenticationError`` (an explicit ``AuthenticationError`` re-raises).
 """
 
 import hashlib
@@ -68,20 +65,6 @@ BASE_CREDS = {
 }
 
 
-class ConcreteWhatsAppAdapter(WhatsAppAdapter):
-    """Minimal concrete subclass working around production bug #1.
-
-    ``WhatsAppAdapter`` is abstract because it never implements the
-    ``upload_image``/``upload_video`` methods required by ``BaseAdapter``.
-    """
-
-    async def upload_image(self, account_id, image_data, filename):
-        return ""
-
-    async def upload_video(self, account_id, video_data, filename):
-        return ""
-
-
 def _resp(json_data, status_code=200):
     """Build a mock successful requests.Response."""
     m = MagicMock()
@@ -107,7 +90,7 @@ def _err_resp(error_json=None):
 @pytest.fixture
 def adapter():
     """An initialized adapter (initialize() itself is tested separately)."""
-    a = ConcreteWhatsAppAdapter(dict(BASE_CREDS))
+    a = WhatsAppAdapter(dict(BASE_CREDS))
     a._initialized = True
     return a
 
@@ -117,7 +100,7 @@ def capi_adapter():
     """Adapter with a pixel_id so mark_conversion hits the CAPI path."""
     creds = dict(BASE_CREDS)
     creds["pixel_id"] = "px-123"
-    a = ConcreteWhatsAppAdapter(creds)
+    a = WhatsAppAdapter(creds)
     a._initialized = True
     return a
 
@@ -128,15 +111,19 @@ def capi_adapter():
 
 
 class TestConstruction:
-    def test_cannot_instantiate_directly(self):
-        """PRODUCTION BUG #1 (critical): the adapter class is abstract.
+    def test_can_instantiate_directly(self):
+        """BUG #1 (critical) FIXED: the adapter is now concrete.
 
-        BaseAdapter's abstract upload_image/upload_video are never
-        implemented, so the real class cannot be constructed anywhere in
-        production code.
+        ``BaseAdapter``'s abstract ``upload_image``/``upload_video`` are
+        implemented, so the real class constructs directly with no
+        subclass workaround.
         """
-        with pytest.raises(TypeError, match="abstract"):
-            WhatsAppAdapter(dict(BASE_CREDS))
+        a = WhatsAppAdapter(dict(BASE_CREDS))
+        assert isinstance(a, WhatsAppAdapter)
+        assert a.phone_number_id == BASE_CREDS["phone_number_id"]
+        # The previously-missing abstract methods are now bound coroutines.
+        assert callable(a.upload_image)
+        assert callable(a.upload_video)
 
     @pytest.mark.parametrize(
         "missing", ["phone_number_id", "access_token", "business_account_id"]
@@ -145,7 +132,7 @@ class TestConstruction:
         creds = dict(BASE_CREDS)
         del creds[missing]
         with pytest.raises(ValueError, match=missing):
-            ConcreteWhatsAppAdapter(creds)
+            WhatsAppAdapter(creds)
 
     def test_optional_credentials_default_to_none(self):
         creds = {
@@ -153,7 +140,7 @@ class TestConstruction:
             "access_token": "t",
             "business_account_id": "2",
         }
-        a = ConcreteWhatsAppAdapter(creds)
+        a = WhatsAppAdapter(creds)
         assert a.app_secret is None
         assert a.verify_token is None
         assert a._conversations == {}
@@ -163,7 +150,7 @@ class TestConstruction:
         assert adapter.platform == Platform.META
 
     def test_ensure_initialized_guard(self):
-        a = ConcreteWhatsAppAdapter(dict(BASE_CREDS))
+        a = WhatsAppAdapter(dict(BASE_CREDS))
         with pytest.raises(AdapterError, match="not initialized"):
             a._ensure_initialized()
 
@@ -175,7 +162,7 @@ class TestConstruction:
 
 class TestLifecycle:
     async def test_initialize_success(self):
-        a = ConcreteWhatsAppAdapter(dict(BASE_CREDS))
+        a = WhatsAppAdapter(dict(BASE_CREDS))
         info = {
             "display_phone_number": "+1 555-0100",
             "verified_name": "Stratum Test",
@@ -195,36 +182,40 @@ class TestLifecycle:
 
     async def test_initialize_success_with_missing_fields(self):
         """Defaults to 'Unknown' when the API omits phone info fields."""
-        a = ConcreteWhatsAppAdapter(dict(BASE_CREDS))
+        a = WhatsAppAdapter(dict(BASE_CREDS))
         with patch(f"{MOD}.requests.get", return_value=_resp({})):
             await a.initialize()
         assert a._initialized is True
 
-    async def test_initialize_requests_error_leaks_platform_error(self):
-        """PRODUCTION BUG #4 (low): auth failures leak as PlatformError.
+    async def test_initialize_requests_error_wrapped_as_authentication_error(self):
+        """BUG #4 (P2) FIXED: API failures surface as AuthenticationError.
 
-        _make_request converts requests.ConnectionError into PlatformError,
-        which initialize() does not catch, so callers never see the
-        documented AuthenticationError for real API failures.
+        ``_make_request`` converts ``requests.ConnectionError`` into
+        ``PlatformError``; ``initialize()`` now catches that and re-wraps it
+        as the documented ``AuthenticationError``, keeping the original
+        message.
         """
-        a = ConcreteWhatsAppAdapter(dict(BASE_CREDS))
+        a = WhatsAppAdapter(dict(BASE_CREDS))
         with patch(
             f"{MOD}.requests.get",
             side_effect=requests.ConnectionError("connection refused"),
         ):
-            with pytest.raises(PlatformError, match="connection refused"):
+            with pytest.raises(
+                AuthenticationError, match="connection refused"
+            ) as exc_info:
                 await a.initialize()
+        assert "Failed to initialize" in str(exc_info.value)
         assert a._initialized is False
 
     async def test_initialize_oserror_wrapped_as_authentication_error(self):
         """Non-requests transport errors do hit the AuthenticationError wrap."""
-        a = ConcreteWhatsAppAdapter(dict(BASE_CREDS))
+        a = WhatsAppAdapter(dict(BASE_CREDS))
         with patch(f"{MOD}.requests.get", side_effect=TimeoutError("slow")):
             with pytest.raises(AuthenticationError, match="Failed to initialize"):
                 await a.initialize()
 
     async def test_initialize_parse_error_wrapped_as_authentication_error(self):
-        a = ConcreteWhatsAppAdapter(dict(BASE_CREDS))
+        a = WhatsAppAdapter(dict(BASE_CREDS))
         with patch(f"{MOD}.requests.get", side_effect=ValueError("bad payload")):
             with pytest.raises(AuthenticationError, match="Failed to parse"):
                 await a.initialize()
@@ -243,7 +234,7 @@ class TestLifecycle:
 
 class TestSendTextMessage:
     async def test_requires_initialization(self):
-        a = ConcreteWhatsAppAdapter(dict(BASE_CREDS))
+        a = WhatsAppAdapter(dict(BASE_CREDS))
         with pytest.raises(AdapterError, match="not initialized"):
             await a.send_text_message("+15550001111", "hi")
 
@@ -330,7 +321,7 @@ class TestSendTemplateMessage:
         assert msg.message_id == "wamid.tpl2"
 
     async def test_send_template_requires_initialization(self):
-        a = ConcreteWhatsAppAdapter(dict(BASE_CREDS))
+        a = WhatsAppAdapter(dict(BASE_CREDS))
         with pytest.raises(AdapterError, match="not initialized"):
             await a.send_template_message("15550001111", "hello_world")
 
@@ -389,44 +380,47 @@ class TestSendMediaMessage:
         with pytest.raises(ValueError, match="media_id or media_url"):
             await adapter.send_media_message("15550001111", "image")
 
-    async def test_send_media_crashes_after_successful_post(self, adapter):
-        """PRODUCTION BUG #2 (high): send_media_message can never return.
+    async def test_send_media_returns_message(self, adapter):
+        """BUG #2 (high) FIXED: send_media_message returns the Message.
 
-        ``MessageType(media_type.upper())`` performs an enum *value* lookup
-        with "IMAGE" while all enum values are lowercase, so a ValueError is
-        raised AFTER the message was already sent to the API.
-        Repro: send_media_message(to, "image", media_id="X").
-        Location: whatsapp_adapter.py:575.
+        ``MessageType(media_type.lower())`` now matches the lowercase enum
+        values, so after the API POST the method returns a populated
+        ``Message`` instead of raising ``ValueError``.
         """
         resp = _resp({"messages": [{"id": "wamid.media"}]})
         with patch(f"{MOD}.requests.post", return_value=resp) as mock_post:
-            with pytest.raises(ValueError, match="not a valid MessageType"):
-                await adapter.send_media_message(
-                    "15550001111", "image", media_id="MEDIA-1", caption="pic"
-                )
-        # The API call DID go out before the crash — message sent but lost.
-        assert mock_post.called
+            msg = await adapter.send_media_message(
+                "15550001111", "image", media_id="MEDIA-1", caption="pic"
+            )
         payload = mock_post.call_args.kwargs["json"]
         assert payload["type"] == "image"
         assert payload["image"] == {"id": "MEDIA-1", "caption": "pic"}
+
+        assert msg.message_id == "wamid.media"
+        assert msg.message_type == MessageType.IMAGE
+        assert msg.media_id == "MEDIA-1"
+        assert msg.text == "pic"
+        assert msg.status == MessageStatus.SENT
+        assert msg.is_outbound is True
 
     async def test_send_media_by_url_document_filename(self, adapter):
         """Document payload uses link + filename; caption ignored for docs."""
         resp = _resp({"messages": [{"id": "wamid.doc"}]})
         with patch(f"{MOD}.requests.post", return_value=resp) as mock_post:
-            with pytest.raises(ValueError, match="not a valid MessageType"):
-                await adapter.send_media_message(
-                    "15550001111",
-                    "document",
-                    media_url="https://cdn.example.com/inv.pdf",
-                    caption="ignored",
-                    filename="invoice.pdf",
-                )
+            msg = await adapter.send_media_message(
+                "15550001111",
+                "document",
+                media_url="https://cdn.example.com/inv.pdf",
+                caption="ignored",
+                filename="invoice.pdf",
+            )
         payload = mock_post.call_args.kwargs["json"]
         assert payload["document"] == {
             "link": "https://cdn.example.com/inv.pdf",
             "filename": "invoice.pdf",
         }
+        assert msg.message_type == MessageType.DOCUMENT
+        assert msg.media_url == "https://cdn.example.com/inv.pdf"
 
 
 # ============================================================================
@@ -465,9 +459,67 @@ class TestUploadMedia:
         assert kwargs["data"]["type"] is None  # unknown type -> None mime
 
     async def test_upload_media_requires_initialization(self, tmp_path):
-        a = ConcreteWhatsAppAdapter(dict(BASE_CREDS))
+        a = WhatsAppAdapter(dict(BASE_CREDS))
         with pytest.raises(AdapterError, match="not initialized"):
             await a.upload_media(str(tmp_path / "x.jpg"), "image")
+
+
+# ============================================================================
+# Creative uploads (BaseAdapter.upload_image / upload_video) — BUG #1 fix
+# ============================================================================
+
+
+class TestUploadCreative:
+    async def test_upload_image_posts_bytes_and_returns_id(self, adapter):
+        """BUG #1 FIXED: upload_image hits the Cloud API /media endpoint."""
+        with patch(
+            f"{MOD}.requests.post", return_value=_resp({"id": "IMG-1"})
+        ) as mock_post:
+            media_id = await adapter.upload_image("acct", b"\xff\xd8jpeg", "logo.png")
+
+        assert media_id == "IMG-1"
+        args, kwargs = mock_post.call_args
+        assert args[0].endswith(f"/{BASE_CREDS['phone_number_id']}/media")
+        assert kwargs["data"]["messaging_product"] == "whatsapp"
+        # MIME inferred from filename
+        assert kwargs["data"]["type"] == "image/png"
+        assert kwargs["files"]["file"] == ("logo.png", b"\xff\xd8jpeg", "image/png")
+        assert (
+            kwargs["headers"]["Authorization"] == f"Bearer {BASE_CREDS['access_token']}"
+        )
+
+    async def test_upload_image_unknown_extension_uses_default_mime(self, adapter):
+        """Unguessable extension falls back to the image/jpeg default."""
+        with patch(
+            f"{MOD}.requests.post", return_value=_resp({"id": "IMG-2"})
+        ) as mock_post:
+            media_id = await adapter.upload_image("acct", b"data", "blob")
+        assert media_id == "IMG-2"
+        assert mock_post.call_args.kwargs["data"]["type"] == "image/jpeg"
+
+    async def test_upload_video_posts_bytes_and_returns_id(self, adapter):
+        with patch(
+            f"{MOD}.requests.post", return_value=_resp({"id": "VID-1"})
+        ) as mock_post:
+            media_id = await adapter.upload_video("acct", b"movie", "promo.mp4")
+        assert media_id == "VID-1"
+        assert mock_post.call_args.kwargs["data"]["type"] == "video/mp4"
+        assert mock_post.call_args.kwargs["files"]["file"][2] == "video/mp4"
+
+    async def test_upload_video_missing_id_returns_empty(self, adapter):
+        """A malformed success response yields an empty media id."""
+        with patch(f"{MOD}.requests.post", return_value=_resp({})):
+            assert await adapter.upload_video("acct", b"x", "clip.mp4") == ""
+
+    async def test_upload_image_requires_initialization(self):
+        a = WhatsAppAdapter(dict(BASE_CREDS))
+        with pytest.raises(AdapterError, match="not initialized"):
+            await a.upload_image("acct", b"x", "logo.png")
+
+    async def test_upload_video_requires_initialization(self):
+        a = WhatsAppAdapter(dict(BASE_CREDS))
+        with pytest.raises(AdapterError, match="not initialized"):
+            await a.upload_video("acct", b"x", "clip.mp4")
 
 
 # ============================================================================
@@ -580,7 +632,7 @@ class TestWebhookVerification:
             "access_token": "t",
             "business_account_id": "2",
         }
-        a = ConcreteWhatsAppAdapter(creds)
+        a = WhatsAppAdapter(creds)
         assert a.verify_signature(b"anything", "sha256=whatever") is True
 
 
@@ -594,14 +646,21 @@ def _webhook(value):
 
 
 class TestProcessWebhook:
-    async def test_incoming_text_message_crashes(self, adapter):
-        """PRODUCTION BUG #3 (high): webhook parsing broken for valid types.
+    async def test_incoming_text_message_parses_and_dispatches(self, adapter):
+        """BUG #3 (high) FIXED: valid incoming types now parse.
 
-        ``MessageType(msg_type.upper())`` raises ValueError for every type
-        that IS a valid enum value ("text" -> MessageType("TEXT") -> boom),
-        so process_webhook cannot handle any standard incoming message.
-        Location: whatsapp_adapter.py:793-794.
+        ``MessageType(msg_type.lower())`` matches the lowercase enum values,
+        so a "text" webhook parses into a ``MessageType.TEXT`` message and the
+        text content-extraction branch runs.
+        Location: whatsapp_adapter.py:806 / 816-817.
         """
+        received = []
+
+        async def handler(message):
+            received.append(message)
+
+        adapter.on_message(handler)
+
         payload = _webhook(
             {
                 "messages": [
@@ -615,8 +674,71 @@ class TestProcessWebhook:
                 ]
             }
         )
-        with pytest.raises(ValueError, match="not a valid MessageType"):
-            await adapter.process_webhook(payload)
+        await adapter.process_webhook(payload)
+
+        assert len(received) == 1
+        msg = received[0]
+        assert msg.message_type == MessageType.TEXT
+        assert msg.text == "hi there"
+        assert msg.is_outbound is False
+        assert msg.status == MessageStatus.DELIVERED
+        assert adapter.get_conversation("15550002222") is not None
+
+    @pytest.mark.parametrize("media_type", ["image", "video", "audio", "document"])
+    async def test_incoming_media_message_extracts_media(self, adapter, media_type):
+        """BUG #3 FIXED: media webhooks reach the media-extraction branch.
+
+        The media id and caption are pulled off the type-keyed sub-object
+        (whatsapp_adapter.py:818-821).
+        """
+        payload = _webhook(
+            {
+                "messages": [
+                    {
+                        "id": "wamid.med",
+                        "from": "15550002222",
+                        "type": media_type,
+                        "timestamp": "1720000000",
+                        media_type: {"id": "MED-9", "caption": "look"},
+                    }
+                ]
+            }
+        )
+        await adapter.process_webhook(payload)
+        msg = adapter.get_conversation("15550002222").messages[-1]
+        assert msg.message_type == MessageType(media_type)
+        assert msg.media_id == "MED-9"
+        assert msg.text == "look"
+
+    @pytest.mark.parametrize(
+        ("int_type", "reply_key"),
+        [("button_reply", "button_reply"), ("list_reply", "list_reply")],
+    )
+    async def test_incoming_interactive_message_extracts_reply(
+        self, adapter, int_type, reply_key
+    ):
+        """BUG #3 FIXED: interactive webhooks reach the reply-extraction branch.
+
+        (whatsapp_adapter.py:822-828).
+        """
+        reply = {"id": "opt-1", "title": "Yes"}
+        payload = _webhook(
+            {
+                "messages": [
+                    {
+                        "id": "wamid.int",
+                        "from": "15550002222",
+                        "type": "interactive",
+                        "timestamp": "1720000000",
+                        "interactive": {"type": int_type, reply_key: reply},
+                    }
+                ]
+            }
+        )
+        await adapter.process_webhook(payload)
+        msg = adapter.get_conversation("15550002222").messages[-1]
+        assert msg.message_type == MessageType.INTERACTIVE
+        assert msg.interactive_data == reply
 
     async def test_unknown_type_falls_back_to_text_and_dispatches(self, adapter):
         """Unknown types survive parsing via the MessageType.TEXT fallback."""

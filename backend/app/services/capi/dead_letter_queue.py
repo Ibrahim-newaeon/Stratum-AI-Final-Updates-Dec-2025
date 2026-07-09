@@ -26,10 +26,19 @@ from uuid import uuid4
 
 try:
     import redis.asyncio as aioredis
+    from redis.exceptions import RedisError
 
     REDIS_AVAILABLE = True
-except ImportError:
+except ImportError:  # pragma: no cover - redis is a hard dependency in prod
     REDIS_AVAILABLE = False
+
+    class RedisError(Exception):
+        """Fallback stand-in when redis-py is not installed.
+
+        Lets the ``except`` tuples below reference ``RedisError`` without a
+        conditional import; when redis is absent this class is never raised.
+        """
+
 
 from sqlalchemy import and_, delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -184,7 +193,7 @@ class DeadLetterQueue:
             self._connected = True
             logger.info("Dead Letter Queue connected to Redis")
             return True
-        except (ConnectionError, TimeoutError, OSError) as e:
+        except (ConnectionError, TimeoutError, OSError, RedisError) as e:
             logger.warning(f"Failed to connect DLQ to Redis: {e}")
             self._connected = False
             return False
@@ -324,7 +333,7 @@ class DeadLetterQueue:
                 )
 
                 return
-            except (ConnectionError, TimeoutError, OSError) as e:
+            except (ConnectionError, TimeoutError, OSError, RedisError) as e:
                 logger.warning(f"Failed to store DLQ entry in Redis: {e}")
 
         # Fallback to memory
@@ -350,7 +359,13 @@ class DeadLetterQueue:
                 data = await self._redis.get(entry_key)
                 if data:
                     return DLQEntry.from_dict(json.loads(data))
-            except (ConnectionError, TimeoutError, OSError, ValueError) as e:
+            except (
+                ConnectionError,
+                TimeoutError,
+                OSError,
+                ValueError,
+                RedisError,
+            ) as e:
                 logger.warning(f"Failed to get DLQ entry from Redis: {e}")
 
         # Check memory
@@ -400,7 +415,7 @@ class DeadLetterQueue:
                         entries.append(entry)
 
                 return entries
-            except (ConnectionError, TimeoutError, OSError) as e:
+            except (ConnectionError, TimeoutError, OSError, RedisError) as e:
                 logger.warning(f"Failed to get pending DLQ entries from Redis: {e}")
 
         # Fallback to memory
@@ -499,7 +514,7 @@ class DeadLetterQueue:
                     entry = await self.get_entry(entry_id)
                     if entry:
                         entries.append(entry)
-            except (ConnectionError, TimeoutError, OSError) as e:
+            except (ConnectionError, TimeoutError, OSError, RedisError) as e:
                 logger.warning(f"Failed to get DLQ stats from Redis: {e}")
                 entries = self._memory_queue
         else:
@@ -574,7 +589,7 @@ class DeadLetterQueue:
                     removed += 1
 
                 return removed
-            except (ConnectionError, TimeoutError, OSError) as e:
+            except (ConnectionError, TimeoutError, OSError, RedisError) as e:
                 logger.warning(f"Failed to cleanup expired DLQ entries: {e}")
 
         # Fallback to memory cleanup

@@ -277,6 +277,8 @@ class TikTokAudienceConnector(BaseAudienceConnector):
         start_time = time.time()
         total_sent = 0
         total_removed = 0
+        error_message = None
+        error_code = None
 
         try:
             # Prepare user data by identifier type
@@ -332,15 +334,28 @@ class TikTokAudienceConnector(BaseAudienceConnector):
                     if result.get("code") == 0:
                         total_sent += len(hashes)
                         total_removed += len(hashes)
+                    else:
+                        # A non-zero platform code means the removal was
+                        # rejected (e.g. GDPR-driven delete failed) — surface
+                        # it as a failure rather than a silent success.
+                        error_message = result.get("message")
+                        error_code = str(result.get("code"))
+                        self.logger.warning(
+                            "tiktok_remove_error",
+                            code=result.get("code"),
+                            message=result.get("message"),
+                        )
 
             duration_ms = int((time.time() - start_time) * 1000)
 
             return AudienceSyncResult(
-                success=True,
+                success=error_message is None,
                 operation="remove",
                 platform_audience_id=audience_id,
                 users_sent=total_sent,
                 users_removed=total_removed,
+                error_message=error_message,
+                error_code=error_code,
                 duration_ms=duration_ms,
             )
 
@@ -363,11 +378,14 @@ class TikTokAudienceConnector(BaseAudienceConnector):
         """
         start_time = time.time()
         total_sent = 0
+        error_message = None
+        error_code = None
 
         try:
             # Prepare user data by identifier type
             email_hashes = []
             phone_hashes = []
+            device_ids = []
 
             for user in users:
                 for identifier in user.identifiers:
@@ -379,6 +397,11 @@ class TikTokAudienceConnector(BaseAudienceConnector):
                         email_hashes.append(hashed)
                     elif identifier.identifier_type == IdentifierType.PHONE:
                         phone_hashes.append(hashed)
+                    elif (
+                        identifier.identifier_type
+                        == IdentifierType.MOBILE_ADVERTISER_ID
+                    ):
+                        device_ids.append(hashed)
 
             async with httpx.AsyncClient(timeout=300) as client:
                 uploads = []
@@ -387,6 +410,8 @@ class TikTokAudienceConnector(BaseAudienceConnector):
                     uploads.append(("EMAIL_SHA256", email_hashes))
                 if phone_hashes:
                     uploads.append(("PHONE_SHA256", phone_hashes))
+                if device_ids:
+                    uploads.append(("IDFA_SHA256", device_ids))
 
                 for id_type, hashes in uploads:
                     upload_url = f"{self.BASE_URL}/{self.API_VERSION}/dmp/custom_audience/update/"
@@ -409,15 +434,27 @@ class TikTokAudienceConnector(BaseAudienceConnector):
 
                     if result.get("code") == 0:
                         total_sent += len(hashes)
+                    else:
+                        # Non-zero platform code means the override upload was
+                        # rejected — report failure instead of silent success.
+                        error_message = result.get("message")
+                        error_code = str(result.get("code"))
+                        self.logger.warning(
+                            "tiktok_replace_error",
+                            code=result.get("code"),
+                            message=result.get("message"),
+                        )
 
             duration_ms = int((time.time() - start_time) * 1000)
 
             return AudienceSyncResult(
-                success=True,
+                success=error_message is None,
                 operation="replace",
                 platform_audience_id=audience_id,
                 users_sent=total_sent,
                 users_added=total_sent,
+                error_message=error_message,
+                error_code=error_code,
                 duration_ms=duration_ms,
             )
 

@@ -325,21 +325,23 @@ class TestRemoveUsers:
             assert _req_json(update, i)["action"] == "DELETE"
 
     @respx.mock
-    async def test_remove_body_code_error_still_reports_success(self):
-        """QUIRK (pinned, not fixed): remove_users checks ``code == 0`` only
-        to increment counters — a non-zero body code is silently ignored and
-        the result still reports success=True with users_removed=0
-        (tiktok_connector.py:332-345). Severity: medium — a failed removal
-        (e.g. GDPR-driven) looks successful to the sync service."""
+    async def test_remove_body_code_error_reports_failure(self):
+        """A non-zero body code means the removal was rejected: the result now
+        reports success=False and surfaces the platform message, instead of
+        silently claiming success with users_removed=0
+        (tiktok_connector.py remove_users). A failed GDPR-driven removal must
+        not look successful to the sync service."""
         respx.post(UPDATE_URL).mock(
             return_value=httpx.Response(200, json={"code": 40100, "message": "quota"})
         )
 
         result = await _connector().remove_users(AUDIENCE_ID, [_email_user()])
 
-        assert result.success is True
+        assert result.success is False
         assert result.users_sent == 0
         assert result.users_removed == 0
+        assert result.error_message == "quota"
+        assert result.error_code == "40100"
 
     @respx.mock
     async def test_remove_network_error(self):
@@ -356,38 +358,68 @@ class TestRemoveUsers:
 # =============================================================================
 class TestReplaceAudience:
     @respx.mock
-    async def test_replace_uses_override_action_and_drops_mobile_ids(self):
-        """QUIRK (pinned, not fixed): replace_audience only collects EMAIL
-        and PHONE identifiers (tiktok_connector.py:369-381) — mobile
-        advertiser IDs present in the user list are silently dropped from
-        OVERRIDE uploads, unlike add/remove which upload IDFA_SHA256 too.
-        Severity: low-medium — replace syncs lose device-id matching."""
+    async def test_replace_uses_override_action_includes_mobile_ids(self):
+        """replace_audience now collects EMAIL, PHONE and MOBILE_ADVERTISER_ID
+        identifiers — mobile advertiser IDs are uploaded as IDFA_SHA256 in the
+        OVERRIDE payload, matching add/remove so replace syncs keep device-id
+        matching (tiktok_connector.py replace_audience)."""
         update = respx.post(UPDATE_URL).mock(return_value=_ok())
 
         result = await _connector().replace_audience(AUDIENCE_ID, [_full_user()])
 
         assert result.success is True
         assert result.operation == "replace"
-        assert result.users_sent == 2  # email + phone only
+        assert result.users_sent == 3  # email + phone + mobile advertiser id
 
-        assert update.call_count == 2
-        payloads = [_req_json(update, i) for i in range(2)]
-        assert {p["id_type"] for p in payloads} == {"EMAIL_SHA256", "PHONE_SHA256"}
+        assert update.call_count == 3
+        payloads = [_req_json(update, i) for i in range(3)]
+        assert {p["id_type"] for p in payloads} == {
+            "EMAIL_SHA256",
+            "PHONE_SHA256",
+            "IDFA_SHA256",
+        }
+        by_type = {p["id_type"]: p for p in payloads}
+        assert by_type["IDFA_SHA256"]["id_list"] == [MOBILE_SHA]
         for p in payloads:
             assert p["action"] == "OVERRIDE"
 
     @respx.mock
-    async def test_replace_body_code_error_still_reports_success(self):
-        """Same silent-failure quirk as remove_users: non-zero body code just
-        skips the counter, success stays True."""
+    async def test_replace_body_code_error_reports_failure(self):
+        """Same fix as remove_users: a non-zero body code now surfaces as a
+        failure with the platform message instead of a silent success."""
         respx.post(UPDATE_URL).mock(
             return_value=httpx.Response(200, json={"code": 40100, "message": "quota"})
         )
 
         result = await _connector().replace_audience(AUDIENCE_ID, [_email_user()])
 
-        assert result.success is True
+        assert result.success is False
         assert result.users_sent == 0
+        assert result.error_message == "quota"
+        assert result.error_code == "40100"
+
+    @respx.mock
+    async def test_replace_skips_unmapped_identifier_types(self):
+        """A replace user carrying only a phone plus an unmapped identifier
+        type (EXTERNAL_ID) uploads just the phone list — email/mobile stay
+        empty, so only PHONE_SHA256 is sent and the unmapped id is dropped."""
+        update = respx.post(UPDATE_URL).mock(return_value=_ok())
+
+        user = AudienceUser(
+            profile_id="p1",
+            identifiers=[
+                UserIdentifier(IdentifierType.PHONE, raw_value=PHONE_RAW),
+                UserIdentifier(IdentifierType.EXTERNAL_ID, raw_value="crm-1"),
+            ],
+        )
+        result = await _connector().replace_audience(AUDIENCE_ID, [user])
+
+        assert result.success is True
+        assert result.users_sent == 1
+        assert update.call_count == 1
+        payload = _req_json(update)
+        assert payload["id_type"] == "PHONE_SHA256"
+        assert payload["id_list"] == [PHONE_SHA]
 
     @respx.mock
     async def test_replace_network_error(self):

@@ -752,12 +752,11 @@ class TestExecuteAction:
         assert result.status == "completed"
         assert result.result == {"new_status": "PAUSED"}
 
-    async def test_update_status_unmapped_status_sends_none(self, adapter):
-        """PINNED BUG (low severity): _update_status with a unified status that
-        has no Meta mapping (e.g. ``pending_review``) does not fail validation —
-        ``STATUS_TO_META.get()`` returns None and the adapter calls
-        ``api_update(params={"status": None})``, pushing a null status to Meta
-        instead of raising. See meta_adapter.py:795-805.
+    async def test_update_status_unmapped_status_fails_without_api_call(self, adapter):
+        """FIXED (#540): _update_status with a unified status that has no Meta
+        mapping (e.g. ``pending_review``) now fails the action with a clear
+        error_message and makes no API call, instead of pushing
+        ``api_update(params={"status": None})`` and reporting success.
         """
         action = _action(
             action_type="update_status",
@@ -766,12 +765,11 @@ class TestExecuteAction:
         )
         with patch(f"{MODULE}.Campaign") as mock_cls:
             result = await adapter.execute_action(action)
-        mock_cls.return_value.api_update.assert_called_once_with(
-            params={"status": None}
-        )
-        # Current (buggy) contract: reported as success with a null status
-        assert result.status == "completed"
-        assert result.result == {"new_status": None}
+        mock_cls.return_value.api_update.assert_not_called()
+        assert result.status == "failed"
+        assert result.result is None
+        assert "no Meta mapping" in result.error_message
+        assert "pending_review" in result.error_message
 
     async def test_create_campaign_daily_budget_and_bidding(self, adapter):
         action = _action(

@@ -140,22 +140,16 @@ class TestConnection:
             assert await dlq.connect() is False
         assert dlq._connected is False
 
-    async def test_connect_unreachable_redis_raises_redis_error(self):
-        """PRODUCTION BUG (pinned): ``connect()`` catches builtin
-        ConnectionError/TimeoutError/OSError (dead_letter_queue.py:187),
-        but redis-py raises ``redis.exceptions.ConnectionError`` (a plain
-        ``Exception`` subclass). An unreachable Redis therefore propagates
-        instead of returning False and enabling the memory fallback.
+    async def test_connect_unreachable_redis_returns_false(self):
+        """FIXED: ``connect()`` now also catches
+        ``redis.exceptions.RedisError`` (dead_letter_queue.py:187), so an
+        unreachable Redis degrades to the in-memory fallback (returns False,
+        does not propagate) instead of hard-failing at startup.
 
         Repro: DeadLetterQueue(redis_url=<closed port>).connect().
-        Severity: medium — DLQ hard-fails at startup when Redis is down,
-        defeating its own degradation design. Fix: also catch
-        ``redis.exceptions.RedisError`` (here and in every method-level
-        except clause in this module).
         """
         dlq = DeadLetterQueue(redis_url="redis://127.0.0.1:6399/0")
-        with pytest.raises(redis_exceptions.ConnectionError):
-            await dlq.connect()
+        assert await dlq.connect() is False
         assert dlq._connected is False
 
     async def test_connect_handles_builtin_connection_error(self):
@@ -714,15 +708,20 @@ class TestDegradedRedisFallback:
         assert removed == 1
         assert broken_dlq._memory_queue == []
 
-    async def test_real_redis_error_propagates_from_get_entry(self):
-        """PRODUCTION BUG (pinned): method-level except clauses miss
-        redis.exceptions errors, so a live-but-failing Redis crashes
-        get_entry() instead of falling back to memory
-        (dead_letter_queue.py:353)."""
+    async def test_real_redis_error_falls_back_to_memory_from_get_entry(self):
+        """FIXED: method-level except clauses now include
+        ``redis.exceptions.RedisError`` (dead_letter_queue.py:353), so a
+        live-but-failing Redis falls back to the memory scan instead of
+        crashing get_entry()."""
         dlq = DeadLetterQueue()
         dlq._connected = True
         dlq._redis = mock.AsyncMock()
         dlq._redis.get.side_effect = redis_exceptions.ConnectionError("gone")
 
-        with pytest.raises(redis_exceptions.ConnectionError):
-            await dlq.get_entry("any-id")
+        # No in-memory entry with this id -> graceful None (no raise).
+        assert await dlq.get_entry("any-id") is None
+
+        # A memory-resident entry is still found despite the Redis failure.
+        mem_entry = _make_entry()
+        dlq._memory_queue.append(mem_entry)
+        assert await dlq.get_entry(mem_entry.id) is mem_entry

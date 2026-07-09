@@ -21,12 +21,11 @@ never reaches with seeded rows:
 - ``EmqAdminService.get_benchmarks`` percentile path + platform filter, and
   ``get_portfolio`` band bucketing across tenants.
 
-Known behaviors pinned (NOT fixed here — service is not this batch's source):
-- Timestamps are emitted as ``<iso>+00:00Z`` (tz-aware isoformat already ends
-  with an offset, then the service appends a literal "Z").
-- Falsy-zero handling: an ``emq_score`` of exactly 0.0 is treated as missing
-  in previous-score averaging and incident impact math.
-- Benchmarks ``percentile`` is computed as ``avg/100*100`` == avg (identity).
+Behaviors corrected in #540 and asserted here:
+- Timestamps are valid ISO-8601 with a ``Z`` suffix (no ``+00:00Z``).
+- An ``emq_score`` of exactly 0.0 is a real score (worst case), counted in
+  previous-score averaging and yielding the full -80 incident impact.
+- Benchmarks ``percentile`` is a real percentile rank across platform averages.
 """
 
 import json
@@ -262,22 +261,21 @@ class TestGetEmqScoreFromRecords:
         assert data["previousScore"] == 73.0
         assert data["confidenceBand"] == "directional"
 
-    async def test_last_updated_has_double_utc_suffix(
+    async def test_last_updated_is_valid_iso8601_utc(
         self, emq_service, db_session, test_tenant
     ):
-        """Pins current (buggy) timestamp format: tz-aware isoformat + literal Z.
-
-        ``updated_at`` is timezone-aware, so ``isoformat()`` already ends in
-        ``+00:00``; the service appends another literal ``Z`` producing
-        ``...+00:00Z``. Documented, not asserted as desirable.
-        """
+        """Timestamp is valid ISO-8601: tz-aware isoformat with the +00:00
+        offset rendered as a ``Z`` suffix, never the invalid ``+00:00Z``."""
         tid = test_tenant["id"]
         db_session.add(_shd(tid, TARGET, platform="meta", emq=88.0))
         await db_session.flush()
 
         data = await emq_service.get_emq_score(tid, TARGET)
 
-        assert data["lastUpdated"].endswith("+00:00Z")
+        assert data["lastUpdated"].endswith("Z")
+        assert "+00:00" not in data["lastUpdated"]
+        # Parseable as ISO-8601 (Python accepts the Z suffix from 3.11+).
+        datetime.fromisoformat(data["lastUpdated"].replace("Z", "+00:00"))
 
 
 # =============================================================================
@@ -478,11 +476,11 @@ class TestGetIncidents:
         assert risk["title"] == "Latency spike"
         assert risk["description"] is None  # single issue -> no description
 
-    async def test_zero_emq_score_treated_as_missing(
+    async def test_zero_emq_score_gives_full_impact(
         self, emq_service, db_session, test_tenant
     ):
-        """Pins falsy-zero behavior: emq_score 0.0 yields the -10 fallback,
-        not the true -80 impact. Documented, not asserted as desirable."""
+        """An emq_score of exactly 0.0 is a real (worst) score, not missing:
+        impact is 0 - 80 = -80, not the -10 null fallback."""
         tid = test_tenant["id"]
         db_session.add(
             _shd(
@@ -498,7 +496,7 @@ class TestGetIncidents:
         incidents = await emq_service.get_incidents(tid, TARGET, TARGET)
 
         assert len(incidents) == 1
-        assert incidents[0]["emqImpact"] == -10.0
+        assert incidents[0]["emqImpact"] == -80.0
 
     async def test_out_of_range_dates_excluded(
         self, emq_service, db_session, test_tenant
@@ -840,11 +838,14 @@ class TestAdminBenchmarks:
         assert meta["p50"] == 75.0
         assert meta["p75"] == 82.5
         assert meta["tenantScore"] == 75.0
-        # Pins current behavior: percentile == avg/100*100 == avg (identity).
-        assert meta["percentile"] == 75.0
+        # Real percentile rank: share of platform averages at or below this
+        # platform's average. Meta avg 75 vs Google avg 50 -> both <= 75 -> 100.
+        assert meta["percentile"] == 100.0
 
         google = by_platform["Google"]
         assert google["p25"] == google["p50"] == google["p75"] == 50.0
+        # Google avg 50 -> only itself is <= 50 of the two -> 50th percentile.
+        assert google["percentile"] == 50.0
 
     async def test_platform_filter_is_case_insensitive(self, admin_service, db_session):
         t1 = await _mk_tenant(db_session, "emq-bm-filter")
