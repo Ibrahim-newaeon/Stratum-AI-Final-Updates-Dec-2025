@@ -351,6 +351,8 @@ class TestGetEmqScoreFromVariance:
         assert data["score"] == 75.0
         assert data["previousScore"] == 73.0
         assert data["confidenceBand"] == "directional"
+        # The placeholder score must be flagged so safety consumers fail closed.
+        assert data["noData"] is True
 
     async def test_records_helper_defensive_empty_guard(self, emq_service):
         """The private record calculator has its own empty-input guard
@@ -648,15 +650,21 @@ class TestGetAutopilotState:
         assert "increase_budget" in data["allowedActions"]
         assert data["budgetAtRisk"] == 0.0
 
-    async def test_limited_mode_with_default_score(
+    async def test_no_data_freezes_autopilot_fail_closed(
         self, emq_service, db_session, test_tenant
     ):
-        """No data -> default score 75 -> limited mode."""
+        """No data -> fail closed -> frozen mode.
+
+        The no-data EMQ response carries a display-only placeholder score, but
+        autopilot must never execute on absent signals: it freezes instead of
+        dropping to the (execute-capable) limited mode.
+        """
         data = await emq_service.get_autopilot_state(test_tenant["id"])
 
-        assert data["mode"] == "limited"
+        assert data["mode"] == "frozen"
+        assert data["allowedActions"] == []
         assert "increase_budget" in data["restrictedActions"]
-        assert "pause_underperforming" in data["allowedActions"]
+        assert "pause_underperforming" in data["restrictedActions"]
 
     async def test_cuts_only_mode(self, emq_service, db_session, test_tenant):
         tid = test_tenant["id"]

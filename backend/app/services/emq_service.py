@@ -280,7 +280,13 @@ class EmqService:
         }
 
     def _get_default_emq_response(self) -> Dict[str, Any]:
-        """Return default EMQ response when no data is available."""
+        """Return default EMQ response when no data is available.
+
+        ``noData`` is the authoritative "no real signal" marker. The numeric
+        ``score`` here is a display-only placeholder and MUST NOT be treated as
+        a measurement for any safety decision — consumers that gate automation
+        (e.g. ``get_autopilot_state``) must key off ``noData`` and fail closed.
+        """
         return {
             "score": 75.0,
             "previousScore": 73.0,
@@ -289,6 +295,7 @@ class EmqService:
             "lastUpdated": datetime.now(timezone.utc)
             .isoformat()
             .replace("+00:00", "Z"),
+            "noData": True,
         }
 
     def _get_estimated_drivers(self, base_score: float) -> List[Dict[str, Any]]:
@@ -533,7 +540,17 @@ class EmqService:
         emq_data = await self.get_emq_score(tenant_id)
         score = emq_data["score"]
 
-        mode, reason = determine_autopilot_mode(score)
+        # Fail closed: when there is no real EMQ/signal data the numeric
+        # ``score`` is only a display placeholder. A tenant with no signals
+        # must never reach an execute-capable mode — freeze autopilot so
+        # missing data can't be mistaken for a passing gate.
+        if emq_data.get("noData"):
+            mode, reason = (
+                "frozen",
+                "No EMQ/signal data available - autopilot frozen (fail-closed)",
+            )
+        else:
+            mode, reason = determine_autopilot_mode(score)
 
         # Calculate budget at risk from pending actions
         query = select(func.count()).where(
