@@ -1129,6 +1129,18 @@ class TestNotifyAlert:
         alert = await _make_alert(db_session, test_tenant["id"], target_id=None)
         assert await notifier.notify_alert(alert) == {}
 
+    async def test_foreign_tenant_target_is_not_resolved(
+        self, notifier, db_session, test_tenant
+    ):
+        # Regression: notify_alert filters the Target lookup by the alert's
+        # tenant_id, so a target owned by another tenant is never resolved
+        # (previously it was looked up by id alone, crossing tenants).
+        target = await _make_target(db_session, test_tenant["id"], notify_slack=True)
+        foreign_alert = _detached_alert(
+            tenant_id=test_tenant["id"] + 999, target_id=target.id
+        )
+        assert await notifier.notify_alert(foreign_alert) == {}
+
     async def test_all_channels_dispatched(self, notifier, db_session, test_tenant):
         tenant_id = test_tenant["id"]
         target = await _make_target(

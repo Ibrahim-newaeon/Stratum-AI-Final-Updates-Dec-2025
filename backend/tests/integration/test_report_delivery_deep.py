@@ -684,21 +684,41 @@ class TestDeliverReport:
         assert results["total_recipients"] == 0
         assert results["channels"] == {}
 
-    async def test_whatsapp_channel_yields_no_recipients(self, db_session, test_tenant):
-        # BUG (documented): _get_recipients has no WHATSAPP branch, so a
-        # whatsapp channel configured on a schedule can never deliver through
-        # deliver_report — it always resolves zero recipients.
+    async def test_whatsapp_channel_delivers_to_phone_numbers(
+        self, db_session, test_tenant
+    ):
+        # Regression for the fixed bug: _get_recipients now has a WHATSAPP
+        # branch that reads phone numbers from ``phone_numbers``, so a
+        # whatsapp-channel schedule resolves recipients and delivers.
         execution = await _seed_execution(db_session, test_tenant["id"])
         service = DeliveryService(db_session, test_tenant["id"])
 
-        results = await service.deliver_report(
-            execution.id,
-            ["whatsapp"],
-            {"whatsapp": {"phone_number_id": "1", "access_token": "t"}},
-        )
+        with patch.object(
+            WhatsAppDelivery,
+            "deliver",
+            AsyncMock(return_value={"success": True, "message_id": "wamid.1"}),
+        ) as wa_mock:
+            results = await service.deliver_report(
+                execution.id,
+                ["whatsapp"],
+                {
+                    "whatsapp": {
+                        "phone_number_id": "1",
+                        "access_token": "t",
+                        "phone_numbers": ["+15551234567", "+15559876543"],
+                    }
+                },
+            )
 
-        assert results["total_recipients"] == 0
-        assert results["channels"]["whatsapp"] == []
+        assert results["total_recipients"] == 2
+        assert results["successful"] == 2
+        assert wa_mock.await_count == 2
+        wa_channel = results["channels"]["whatsapp"]
+        assert {c["recipient"] for c in wa_channel} == {
+            "+15551234567",
+            "+15559876543",
+        }
+        assert all(c["success"] for c in wa_channel)
 
     async def test_get_recipients_branches(self, db_session, test_tenant):
         service = DeliveryService(db_session, test_tenant["id"])
@@ -723,6 +743,9 @@ class TestDeliverReport:
         assert get(DeliveryChannel.S3, {}) == ["reports/"]
         assert get(DeliveryChannel.S3, {"prefix": "custom/"}) == ["custom/"]
         assert get(DeliveryChannel.WHATSAPP, {}) == []
+        assert get(DeliveryChannel.WHATSAPP, {"phone_numbers": ["+15551234567"]}) == [
+            "+15551234567"
+        ]
 
 
 # =============================================================================

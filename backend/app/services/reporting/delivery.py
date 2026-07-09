@@ -900,10 +900,14 @@ class DeliveryService:
                 return [config["webhook_url"]]
             return []
 
+        elif channel == DeliveryChannel.WHATSAPP:
+            # Recipients are phone numbers (with country code).
+            return config.get("phone_numbers", [])
+
         elif channel == DeliveryChannel.S3:
             return [config.get("prefix", "reports/")]
 
-        return []
+        return []  # pragma: no cover - defensive; all channels handled above
 
     async def retry_delivery(
         self,

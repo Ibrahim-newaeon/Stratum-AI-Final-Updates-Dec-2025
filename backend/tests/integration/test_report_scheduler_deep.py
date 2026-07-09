@@ -503,9 +503,9 @@ class TestProcessDueSchedules:
     async def test_failure_accounting_with_logger_patched(
         self, db_session, test_tenant, scheduler
     ):
-        # The failure branch calls logging's stdlib logger with structlog-style
-        # kwargs (see test below); patch the module logger to reach the
-        # accounting lines.
+        # Patch the module logger so the failure-branch accounting lines are
+        # exercised in isolation from real logging (see the logger-enabled
+        # regression test below for the previously-crashing path).
         template = await _seed_template(db_session, test_tenant["id"], "Batch Tmpl F")
         schedule = await _seed_schedule(db_session, test_tenant["id"], template)
 
@@ -525,22 +525,20 @@ class TestProcessDueSchedules:
             }
         ]
 
-    async def test_bug_failure_branch_crashes_when_logger_enabled(
+    async def test_failure_branch_records_failure_when_logger_enabled(
         self, db_session, test_tenant, scheduler
     ):
-        # PRODUCTION BUG (documented, not fixed here): scheduler.py:539-543
-        # calls ``logger.error("schedule_execution_failed", schedule_id=...,
-        # error=...)`` on a *stdlib* logger (``logging.getLogger(__name__)``),
-        # whose kwargs validation rejects unknown keywords. Whenever the
-        # module logger is enabled (it is disabled by setup_logging's
-        # dictConfig in this test session, which is why the previous test
-        # passes), a schedule failure raises TypeError instead of being
-        # recorded, aborting the whole batch. When the logger is disabled,
-        # the failure log line is silently dropped instead.
+        # Regression for the fixed logging bug: the failure branch used to
+        # call ``logger.error("schedule_execution_failed", schedule_id=...,
+        # error=...)`` on a *stdlib* logger, which raised TypeError on the
+        # structlog-style kwargs whenever the module logger was enabled,
+        # aborting the whole batch. The module now uses structlog's
+        # ``get_logger``, so a schedule failure is recorded (not re-raised)
+        # even with logging fully enabled.
         import logging
 
         template = await _seed_template(db_session, test_tenant["id"], "Bug Tmpl")
-        await _seed_schedule(db_session, test_tenant["id"], template)
+        schedule = await _seed_schedule(db_session, test_tenant["id"], template)
 
         scheduler.execute_schedule = AsyncMock(side_effect=ValueError("kaboom"))
 
@@ -550,11 +548,21 @@ class TestProcessDueSchedules:
         sched_logger.disabled = False
         logging.disable(logging.NOTSET)
         try:
-            with pytest.raises(TypeError, match="unexpected keyword"):
-                await scheduler.process_due_schedules()
+            results = await scheduler.process_due_schedules()
         finally:
             sched_logger.disabled = prev_disabled
             logging.disable(prev_manager_disable)
+
+        assert results["processed"] == 1
+        assert results["succeeded"] == 0
+        assert results["failed"] == 1
+        assert results["errors"] == [
+            {
+                "schedule_id": str(schedule.id),
+                "name": schedule.name,
+                "error": "kaboom",
+            }
+        ]
 
 
 # =============================================================================

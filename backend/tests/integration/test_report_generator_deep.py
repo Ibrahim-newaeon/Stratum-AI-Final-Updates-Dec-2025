@@ -5,38 +5,28 @@
 
 Strategy
 --------
-* Collectors whose queries/attribute access match the real models
-  (attribution, pipeline, pacing-with-no-targets, profit-with-no-rows) are
-  exercised against the real scratch database with seeded rows.
-* Three collectors reference attributes that do NOT exist on the current
-  models (documented as production bugs below). For those we:
-    1. assert the current (broken) behavior against the real DB, and
-    2. cover the full aggregation logic by mocking at the DB-session
-       boundary (``AsyncMock`` execute) so every line still runs.
+* Collectors are exercised against the real scratch database with seeded
+  rows, and their aggregation/serialization logic is additionally covered
+  by mocking at the DB-session boundary (``AsyncMock`` execute) so every
+  line runs deterministically.
 * ``ReportGenerator.generate_report`` is run end-to-end against the real DB
   for JSON / CSV / PDF / fallback formats, the failure path, and the
   template-not-found path.
 
-Known production bugs exercised here (do NOT "fix" the tests when the
-source is repaired — update the assertions instead):
+Regression coverage for the #537 fixes (previously pinned as bugs, now
+asserting the corrected behavior):
 
-* BUG-1 report_generator.py:53-95 — ``collect_campaign_performance`` uses
-  ``Campaign.is_active`` / ``total_spend`` / ``total_revenue`` /
-  ``total_conversions`` which do not exist on ``app.base_models.Campaign``
-  (it has ``is_deleted``, ``total_spend_cents``, ``revenue_cents``,
-  ``conversions``). Raises AttributeError at query-build time — the
-  campaign_performance AND executive_summary report types always crash.
-* BUG-2 report_generator.py:244-250 — ``collect_pacing_status`` reads
-  ``target.metric`` / ``target.current_value``; the ``Target`` model has
-  ``metric_type`` and no ``current_value``. Crashes when >=1 active target.
-* BUG-3 report_generator.py:312-325 — ``collect_profit_roas`` reads
-  ``m.revenue_cents`` / ``m.cogs_cents`` / ``m.spend_cents`` /
-  ``m.profit_roas``; ``DailyProfitMetrics`` has ``gross_revenue_cents``,
-  ``total_cogs_cents``, ``ad_spend_cents``, ``gross_profit_roas``.
-  Crashes when >=1 row exists.
-* BUG-4 report_generator.py:584 — the except tuple does not include
-  ``AttributeError``, so bugs 1-3 propagate and leave the ReportExecution
-  row stuck in RUNNING (never committed).
+* BUG-1 ``collect_campaign_performance`` reads the real
+  ``app.base_models.Campaign`` columns (``is_deleted``,
+  ``total_spend_cents``, ``revenue_cents``, ``conversions``) and converts
+  cents to dollars — campaign_performance and executive_summary no longer
+  crash.
+* BUG-2 ``collect_pacing_status`` reads ``Target.metric_type`` and reports
+  only the columns that exist (no phantom ``current_value``).
+* BUG-3 ``collect_profit_roas`` reads ``gross_revenue_cents`` /
+  ``total_cogs_cents`` / ``ad_spend_cents`` / ``gross_profit_roas``.
+* BUG-4 ``generate_report`` catches ``Exception`` so ANY collector failure
+  moves the ReportExecution to a committed FAILED state.
 
 NOTE: ``ReportGenerator.parse_date_range`` already has a dedicated unit
 suite (tests/unit/test_report_date_range.py); only a compact smoke test is
@@ -245,8 +235,9 @@ async def _seed_pipeline_metrics(db_session, tenant_id) -> None:
 
 
 # =============================================================================
-# Fake Campaign entity used to cover collect_campaign_performance's logic
-# (the real Campaign model lacks the attributes the collector expects; BUG-1)
+# Fake Campaign entity used to cover collect_campaign_performance's logic at
+# the DB-session boundary. Mirrors the real Campaign schema the collector now
+# queries (``is_deleted`` + cents columns) so select() builds cleanly.
 # =============================================================================
 
 
@@ -259,11 +250,11 @@ class _FakeCampaign(_FakeBase):
 
     id = sa.Column(sa.Integer, primary_key=True)
     tenant_id = sa.Column(sa.Integer)
-    is_active = sa.Column(sa.Boolean)
+    is_deleted = sa.Column(sa.Boolean)
     platform = sa.Column(sa.String(50))
-    total_spend = sa.Column(sa.Float)
-    total_revenue = sa.Column(sa.Float)
-    total_conversions = sa.Column(sa.Integer)
+    total_spend_cents = sa.Column(sa.Integer)
+    revenue_cents = sa.Column(sa.Integer)
+    conversions = sa.Column(sa.Integer)
 
 
 def _fake_campaign_row(
@@ -274,6 +265,8 @@ def _fake_campaign_row(
     revenue,
     conversions,
 ):
+    """Build a campaign row. ``spend``/``revenue`` are given in dollars and
+    stored as cents to mirror the real model."""
     return types.SimpleNamespace(
         id=uuid4(),
         name=name,
@@ -281,9 +274,9 @@ def _fake_campaign_row(
             types.SimpleNamespace(value=platform_value) if platform_value else None
         ),
         status=types.SimpleNamespace(value=status_value) if status_value else None,
-        total_spend=spend,
-        total_revenue=revenue,
-        total_conversions=conversions,
+        total_spend_cents=round(spend * 100),
+        revenue_cents=round(revenue * 100),
+        conversions=conversions,
     )
 
 
@@ -413,10 +406,11 @@ class TestCollectPacingStatus:
         assert alert["message"] == "Spend is 30% over plan"
         assert alert["created_at"]  # iso string
 
-    async def test_bug2_active_target_raises_attribute_error(
+    async def test_active_target_serialized_from_real_columns(
         self, db_session, test_tenant
     ):
-        """BUG-2: Target has metric_type, not .metric / .current_value."""
+        """An active Target is reported via its real ``metric_type`` column;
+        the phantom ``current_value`` field is not emitted."""
         db_session.add(
             Target(
                 tenant_id=test_tenant["id"],
@@ -432,25 +426,30 @@ class TestCollectPacingStatus:
         await db_session.flush()
 
         collector = ReportDataCollector(db_session, test_tenant["id"])
-        with pytest.raises(AttributeError):
-            await collector.collect_pacing_status(START, END, {})
+        data = await collector.collect_pacing_status(START, END, {})
+
+        assert data["summary"]["total_targets"] == 1
+        (target,) = data["targets"]
+        assert target["name"] == "July spend"
+        assert target["metric"] == "spend"
+        assert target["target_value"] == pytest.approx(10_000.0)
+        assert "current_value" not in target
+        assert "progress_pct" not in target
 
     async def test_target_loop_logic_with_service_boundary_mock(self, test_tenant):
-        """Covers the target/alert serialization loop the model bug blocks."""
+        """Covers the target/alert serialization loop against mocked rows."""
         targets = [
             types.SimpleNamespace(
                 id=uuid4(),
                 name="Spend target",
-                metric=TargetMetric.SPEND,
+                metric_type=TargetMetric.SPEND,
                 target_value=1000.0,
-                current_value=900.0,
             ),
             types.SimpleNamespace(
                 id=uuid4(),
                 name="No metric target",
-                metric=None,
-                target_value=None,  # -> progress_pct 0 branch
-                current_value=None,
+                metric_type=None,  # -> "unknown" branch
+                target_value=None,
             ),
         ]
         alerts = [
@@ -474,9 +473,10 @@ class TestCollectPacingStatus:
         assert data["summary"]["total_targets"] == 2
         t0, t1 = data["targets"]
         assert t0["metric"] == "spend"
-        assert t0["progress_pct"] == pytest.approx(90.0)
+        assert t0["target_value"] == 1000.0
         assert t1["metric"] == "unknown"
-        assert t1["progress_pct"] == 0
+        assert "current_value" not in t0
+        assert "progress_pct" not in t0
 
         a0, a1 = data["recent_alerts"]
         assert a0["type"] == "roas_below_target"
@@ -505,10 +505,12 @@ class TestCollectProfitRoas:
         }
         assert data["daily"] == []
 
-    async def test_bug3_seeded_row_raises_attribute_error(
+    async def test_seeded_row_aggregates_from_real_columns(
         self, db_session, test_tenant
     ):
-        """BUG-3: DailyProfitMetrics has no revenue_cents/cogs_cents/..."""
+        """A seeded DailyProfitMetrics row is aggregated via its real
+        ``gross_revenue_cents`` / ``total_cogs_cents`` / ``ad_spend_cents`` /
+        ``gross_profit_roas`` columns."""
         db_session.add(
             DailyProfitMetrics(
                 tenant_id=test_tenant["id"],
@@ -522,27 +524,40 @@ class TestCollectProfitRoas:
         await db_session.flush()
 
         collector = ReportDataCollector(db_session, test_tenant["id"])
-        with pytest.raises(AttributeError):
-            await collector.collect_profit_roas(START, END, {})
+        data = await collector.collect_profit_roas(START, END, {})
+
+        s = data["summary"]
+        assert s["total_revenue"] == 1000.0
+        assert s["total_cogs"] == 400.0
+        assert s["total_gross_profit"] == 600.0
+        assert s["total_spend"] == 500.0
+        assert s["profit_roas"] == 1.2  # 60000 / 50000
+        assert s["gross_margin_pct"] == 60.0
+
+        assert len(data["daily"]) == 1
+        day = data["daily"][0]
+        assert day["revenue"] == 1000.0
+        assert day["gross_profit"] == 600.0
+        assert day["profit_roas"] is None  # gross_profit_roas not set on the row
 
     async def test_aggregation_logic_with_service_boundary_mock(self, test_tenant):
-        """Covers the cents accumulation/rounding the model bug blocks."""
+        """Covers the cents accumulation/rounding over mocked rows."""
         rows = [
             types.SimpleNamespace(
                 date=START,
-                revenue_cents=100_000,
-                cogs_cents=40_000,
-                spend_cents=50_000,
+                gross_revenue_cents=100_000,
+                total_cogs_cents=40_000,
+                ad_spend_cents=50_000,
                 gross_profit_cents=60_000,
-                profit_roas=1.2,
+                gross_profit_roas=1.2,
             ),
             types.SimpleNamespace(  # all-None row -> `or 0` branches
                 date=START + timedelta(days=1),
-                revenue_cents=None,
-                cogs_cents=None,
-                spend_cents=None,
+                gross_revenue_cents=None,
+                total_cogs_cents=None,
+                ad_spend_cents=None,
                 gross_profit_cents=None,
-                profit_roas=None,
+                gross_profit_roas=None,
             ),
         ]
         collector = ReportDataCollector(_mock_db(rows), test_tenant["id"])
@@ -574,16 +589,26 @@ class TestCollectProfitRoas:
 
 
 class TestCollectCampaignPerformance:
-    async def test_bug1_always_raises_attribute_error(self, db_session, test_tenant):
-        """BUG-1: Campaign.is_active does not exist -> crash at query build."""
+    async def test_empty_period_returns_zero_summary(self, db_session, test_tenant):
+        """With no campaigns the collector returns an empty, zeroed report."""
         collector = ReportDataCollector(db_session, test_tenant["id"])
-        with pytest.raises(AttributeError):
-            await collector.collect_campaign_performance(START, END, {})
+        data = await collector.collect_campaign_performance(START, END, {})
 
-    async def test_bug1_breaks_executive_summary_too(self, db_session, test_tenant):
+        assert data["summary"]["total_campaigns"] == 0
+        assert data["summary"]["total_spend"] == 0
+        assert data["summary"]["overall_roas"] == 0
+        assert data["campaigns"] == []
+        assert data["by_platform"] == {}
+
+    async def test_executive_summary_runs_with_empty_data(
+        self, db_session, test_tenant
+    ):
         collector = ReportDataCollector(db_session, test_tenant["id"])
-        with pytest.raises(AttributeError):
-            await collector.collect_executive_summary(START, END, {})
+        data = await collector.collect_executive_summary(START, END, {})
+
+        assert data["highlights"]["total_spend"] == 0
+        assert data["highlights"]["overall_roas"] == 0
+        assert data["highlights"]["deals_won"] == 0
 
     async def test_aggregation_logic_with_service_boundary_mock(
         self, test_tenant, monkeypatch
@@ -807,8 +832,8 @@ class TestGenerateReport:
         assert result["file_size_bytes"] == 0
 
     async def test_csv_campaigns_table_direct(self, db_session, test_tenant):
-        """The campaigns CSV branch is unreachable end-to-end (BUG-1);
-        cover _generate_csv directly with a campaign-shaped payload."""
+        """Cover the campaigns CSV branch of _generate_csv directly with a
+        campaign-shaped payload (no seeded campaigns needed)."""
         tenant_id = test_tenant["id"]
         template = await _make_template(
             db_session, tenant_id, ReportType.CAMPAIGN_PERFORMANCE, "camp-csv"
@@ -927,13 +952,16 @@ class TestGenerateReport:
     async def test_collector_error_marks_execution_failed(
         self, db_session, test_tenant, monkeypatch
     ):
+        """BUG-4 durability: an exception outside the old hard-coded tuple
+        (here AttributeError) must still move the execution to a committed
+        FAILED state rather than leaving it stuck in RUNNING."""
         tenant_id = test_tenant["id"]
         template = await _make_template(
             db_session, tenant_id, ReportType.PIPELINE_METRICS, "pipe-fail"
         )
 
         async def boom(*args, **kwargs):
-            raise RuntimeError("collector exploded")
+            raise AttributeError("collector exploded")
 
         monkeypatch.setattr(
             ReportDataCollector, "collect_pipeline_metrics", boom, raising=True

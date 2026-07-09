@@ -512,9 +512,13 @@ class PacingAlertService:
                 and_(
                     PacingAlert.tenant_id == self.tenant_id,
                     PacingAlert.created_at
-                    >= datetime.combine(start_date, datetime.min.time()),
+                    >= datetime.combine(
+                        start_date, datetime.min.time(), tzinfo=timezone.utc
+                    ),
                     PacingAlert.created_at
-                    <= datetime.combine(end_date, datetime.max.time()),
+                    <= datetime.combine(
+                        end_date, datetime.max.time(), tzinfo=timezone.utc
+                    ),
                 )
             )
         )
@@ -1131,7 +1135,10 @@ class AlertNotificationService:
         """
         # Get target to check notification settings
         result = await self.db.execute(
-            select(Target).where(Target.id == alert.target_id)
+            select(Target).where(
+                Target.id == alert.target_id,
+                Target.tenant_id == alert.tenant_id,
+            )
         )
         target = result.scalar_one_or_none()
 

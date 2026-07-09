@@ -299,6 +299,52 @@ class TestForecastEom:
         assert result["projected_eom"] == 0.0
         assert result["daily_needed"] == 0
 
+    async def test_past_month_caps_actuals_window_at_eom(
+        self, db_session, test_tenant, forecasting
+    ):
+        # forecast_eom must cap the actuals window at min(today, eom): for a
+        # fully elapsed past month, spend logged *after* that month ends must
+        # not leak into mtd_actual, and days_elapsed must not exceed the
+        # number of days in the month.
+        month_start = date.today().replace(day=1) - timedelta(days=45)
+        month_start = month_start.replace(day=1)
+        eom = forecasting._get_end_of_month(month_start)
+        days_in_month = (eom - month_start).days + 1
+
+        # One row inside the target month, one after it ends (still <= today).
+        in_month_day = month_start + timedelta(days=10)
+        after_month_day = eom + timedelta(days=5)
+        db_session.add(
+            _kpi(
+                test_tenant["id"],
+                in_month_day,
+                spend=50.0,
+                platform=None,
+                campaign_id="past-eom-cap",
+            )
+        )
+        db_session.add(
+            _kpi(
+                test_tenant["id"],
+                after_month_day,
+                spend=999.0,
+                platform=None,
+                campaign_id="past-eom-cap",
+            )
+        )
+        await db_session.flush()
+
+        result = await forecasting.forecast_eom(
+            TargetMetric.SPEND, campaign_id="past-eom-cap", month=month_start
+        )
+
+        assert result["status"] == "success"
+        assert result["period"]["days_remaining"] == 0
+        # Only the in-month row counts; the post-month row is excluded.
+        assert result["mtd_actual"] == pytest.approx(50.0)
+        # Window capped at eom, so days_elapsed equals the month length.
+        assert result["period"]["days_elapsed"] == days_in_month
+
 
 # =============================================================================
 # _load_historical_data
