@@ -43,6 +43,10 @@ omit =
     app/stratum/workers/*
     app/monitoring/*
     app/api/v1/endpoints/memory_debug.py
+    # Dead code (2026-07-09, Batch 5 scoping): delivery_logger has zero
+    # importers anywhere in app/ (CAPI logging went through delivery
+    # status fields + structlog instead). Un-omit if it gets wired.
+    app/services/capi/delivery_logger.py
 
 [report]
 # Minimum coverage percentage required.
