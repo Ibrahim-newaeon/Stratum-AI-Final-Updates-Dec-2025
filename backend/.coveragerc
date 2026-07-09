@@ -238,7 +238,22 @@ omit =
 # image, executions stuck RUNNING, WhatsApp recipients never resolve) —
 # pinned by tests documenting current behavior, not asserted as contract.
 # CI combined measured 66.40% before; 68.70% after. See #342.
-fail_under = 68.5
+# -> 74.0 (integration-phase Batches 5+6 — CAPI + EMQ + audience sync +
+# platform adapters: 727 new service-layer/contract cases. capi_service
+# 36.36 -> 100.00, dead_letter_queue 37.33 -> 99.20 (real Redis),
+# platform_connectors 44.71 -> 96.72 (respx); emq_service 62.19 -> 99.69,
+# cdp_emq_aggregator 0 -> 100.00 (first tests for the signal-health
+# input); audience_sync service/meta/google/snapchat/tiktok all 96%+;
+# stratum/adapters meta/google/tiktok/snapchat/whatsapp/base/registry
+# 96-100% via SDK-boundary mocks (adapters wrap facebook_business /
+# google-ads / sync requests, not httpx — respx not applicable there).
+# delivery_logger.py omitted (zero importers, verified dead). 20+
+# production bugs found during writing filed as #540 (WhatsApp adapter
+# uninstantiable, Google adapter initialize() can never succeed, TikTok
+# ad-group budget updates send the wrong id key, DLQ Redis fallback dead
+# code) — pinned by tests documenting current behavior, not asserted as
+# contract. CI combined measured 68.70% before; 74.06% after. See #342.
+fail_under = 74.0
 
 # Show missing line numbers
 show_missing = True
