@@ -85,9 +85,7 @@ def campaign_env(sync_engine):
 
     # Teardown: metrics cascade on campaign delete (FK ondelete=CASCADE).
     for cid in created_campaign_ids:
-        session.query(CampaignMetric).filter(
-            CampaignMetric.campaign_id == cid
-        ).delete()
+        session.query(CampaignMetric).filter(CampaignMetric.campaign_id == cid).delete()
         camp = session.get(Campaign, cid)
         if camp is not None:
             session.delete(camp)

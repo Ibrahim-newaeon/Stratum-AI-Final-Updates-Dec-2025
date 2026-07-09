@@ -216,14 +216,10 @@ def generate_roas_alerts(self, tenant_id: int):
                     "spend": _spend(today),
                 }
 
-                for anomaly in detect_anomalies(
-                    metrics_series, current_values, params
-                ):
+                for anomaly in detect_anomalies(metrics_series, current_values, params):
                     if not anomaly.is_anomaly:
                         continue
-                    severity = getattr(
-                        anomaly.severity, "value", anomaly.severity
-                    )
+                    severity = getattr(anomaly.severity, "value", anomaly.severity)
                     if severity not in ("high", "critical"):
                         continue
 
