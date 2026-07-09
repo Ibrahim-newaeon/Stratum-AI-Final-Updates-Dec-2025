@@ -53,7 +53,7 @@ class ReportDataCollector:
         query = select(Campaign).where(
             and_(
                 Campaign.tenant_id == self.tenant_id,
-                Campaign.is_active == True,
+                Campaign.is_deleted == False,
             )
         )
         if platforms:
@@ -80,19 +80,18 @@ class ReportDataCollector:
         }
 
         for campaign in campaigns:
+            # Monetary columns are stored in cents; convert to dollars.
+            spend = round((campaign.total_spend_cents or 0) / 100, 2)
+            revenue = round((campaign.revenue_cents or 0) / 100, 2)
             campaign_data = {
                 "id": str(campaign.id),
                 "name": campaign.name,
                 "platform": campaign.platform.value if campaign.platform else "unknown",
                 "status": campaign.status.value if campaign.status else "unknown",
-                "spend": float(campaign.total_spend or 0),
-                "revenue": float(campaign.total_revenue or 0),
-                "conversions": campaign.total_conversions or 0,
-                "roas": (
-                    float(campaign.total_revenue or 0) / float(campaign.total_spend)
-                    if campaign.total_spend and campaign.total_spend > 0
-                    else 0
-                ),
+                "spend": spend,
+                "revenue": revenue,
+                "conversions": campaign.conversions or 0,
+                "roas": round(revenue / spend, 2) if spend > 0 else 0,
             }
             data["campaigns"].append(campaign_data)
 
@@ -238,17 +237,16 @@ class ReportDataCollector:
         }
 
         for target in targets:
+            # The Target model exposes ``metric_type``; there is no stored
+            # ``current_value`` (actuals live in PacingSummary snapshots), so
+            # only the columns that exist are reported here.
             target_data = {
                 "id": str(target.id),
                 "name": target.name,
-                "metric": target.metric.value if target.metric else "unknown",
-                "target_value": target.target_value,
-                "current_value": target.current_value,
-                "progress_pct": (
-                    (target.current_value / target.target_value * 100)
-                    if target.target_value
-                    else 0
+                "metric": (
+                    target.metric_type.value if target.metric_type else "unknown"
                 ),
+                "target_value": target.target_value,
             }
             data["targets"].append(target_data)
 
@@ -310,9 +308,9 @@ class ReportDataCollector:
         total_spend_cents = 0
 
         for m in metrics:
-            revenue_cents = m.revenue_cents or 0
-            cogs_cents = m.cogs_cents or 0
-            spend_cents = m.spend_cents or 0
+            revenue_cents = m.gross_revenue_cents or 0
+            cogs_cents = m.total_cogs_cents or 0
+            spend_cents = m.ad_spend_cents or 0
             gross_profit_cents = m.gross_profit_cents or 0
 
             data["daily"].append(
@@ -322,7 +320,7 @@ class ReportDataCollector:
                     "cogs": round(cogs_cents / 100, 2),
                     "gross_profit": round(gross_profit_cents / 100, 2),
                     "spend": round(spend_cents / 100, 2),
-                    "profit_roas": m.profit_roas,
+                    "profit_roas": m.gross_profit_roas,
                 }
             )
 
@@ -581,7 +579,11 @@ class ReportGenerator:
                 "duration_seconds": execution.duration_seconds,
             }
 
-        except (OSError, ValueError, TypeError, KeyError, RuntimeError) as e:
+        except Exception as e:
+            # Any collector/generator failure must move the execution to a
+            # terminal FAILED state and commit — otherwise the row is left
+            # stuck in RUNNING. CancelledError/KeyboardInterrupt derive from
+            # BaseException and still propagate.
             logger.error(
                 "report_generation_failed", error=str(e), execution_id=str(execution.id)
             )

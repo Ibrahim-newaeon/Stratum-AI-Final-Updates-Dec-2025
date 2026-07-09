@@ -197,12 +197,16 @@ class ForecastingService:
 
         # Get MTD actual
         eom = self._get_end_of_month(month)
+        # Cap the actuals window at the end of the target month so a fully
+        # elapsed past month never counts data beyond its end (which would
+        # also push days_elapsed past days_in_month).
+        as_of = min(today, eom)
         mtd_actual = await self._get_mtd_actual(
-            metric, platform, campaign_id, month, today
+            metric, platform, campaign_id, month, as_of
         )
 
         # Calculate days
-        days_elapsed = (today - month).days + 1
+        days_elapsed = (as_of - month).days + 1
         days_in_month = (eom - month).days + 1
         days_remaining = max(0, (eom - today).days)
 

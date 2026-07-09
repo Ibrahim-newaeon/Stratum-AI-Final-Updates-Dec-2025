@@ -13,7 +13,6 @@ Features:
 """
 
 import asyncio
-import logging
 from datetime import date, datetime, time, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID
@@ -23,6 +22,7 @@ from sqlalchemy import and_, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.logging import get_logger
 from app.models.reporting import (
     ExecutionStatus,
     ReportExecution,
@@ -34,7 +34,7 @@ from app.models.reporting import (
 from app.services.reporting.delivery import DeliveryService
 from app.services.reporting.report_generator import ReportGenerator
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 # =============================================================================
@@ -330,8 +330,6 @@ class ReportScheduler:
             days_ahead = target_day - local_now.weekday()
             if days_ahead < 0 or (days_ahead == 0 and local_now >= today_run):
                 days_ahead += 14
-            elif days_ahead >= 7:
-                days_ahead -= 7
             return datetime.combine(
                 local_now.date() + timedelta(days=days_ahead), target_time
             ).replace(tzinfo=tz)

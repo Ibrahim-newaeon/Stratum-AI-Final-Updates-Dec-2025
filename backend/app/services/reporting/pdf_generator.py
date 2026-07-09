@@ -176,8 +176,11 @@ class PDFGenerator:
             from weasyprint import HTML
 
             HTML(string=html_content).write_pdf(file_path)
-        except ImportError:
-            # Fallback: save as HTML if weasyprint not available
+        except (ImportError, OSError):
+            # Fallback: save as HTML when weasyprint is unavailable. In the
+            # shipped image ``import weasyprint`` raises OSError (missing
+            # native pango/gobject libs), not ImportError — both must engage
+            # the documented HTML fallback.
             file_path = file_path.replace(".pdf", ".html")
             with open(file_path, "w", encoding="utf-8") as f:
                 f.write(html_content)

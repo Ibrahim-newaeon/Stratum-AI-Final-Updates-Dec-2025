@@ -9,16 +9,14 @@ libraries are present) into PDF bytes under ``/tmp/reports/{tenant}/``.
 reads ``name`` / ``description`` / ``report_type`` / ``config`` — so no DB
 rows are needed here (the shared conftest still migrates the scratch DB).
 
-Known production bug exercised here:
+Regression coverage for the #537 fix:
 
-* BUG-5 pdf_generator.py:175-184 — the weasyprint fallback only catches
-  ``ImportError``, but in the shipped Docker image ``import weasyprint``
-  raises ``OSError`` ("cannot load library 'libgobject-2.0-0'") because the
-  native pango/gobject libraries are not installed. PDF generation therefore
-  never falls back to HTML and every ReportFormat.PDF execution fails with
-  status FAILED (the OSError is swallowed into the execution's
-  error_message by report_generator's except tuple). Severity: high for any
-  deployment of the current image.
+* BUG-5 pdf_generator.py:175-184 — the weasyprint fallback now catches
+  ``(ImportError, OSError)``. In the shipped Docker image ``import
+  weasyprint`` raises ``OSError`` ("cannot load library 'libgobject-2.0-0'")
+  because the native pango/gobject libraries are not installed; the widened
+  except means PDF generation degrades gracefully to the documented HTML
+  fallback instead of failing every ReportFormat.PDF execution.
 
 For deterministic branch coverage the real-PDF path uses a stub weasyprint
 module injected into ``sys.modules`` (the real library cannot load in this
@@ -219,19 +217,25 @@ class TestGenerateFileOutput:
 
     @pytest.mark.skipif(
         _WEASYPRINT_ERROR is None or isinstance(_WEASYPRINT_ERROR, ImportError),
-        reason="weasyprint imports cleanly (or is absent); OSError bug "
-        "not reproducible in this environment",
+        reason="weasyprint imports cleanly (or is absent); the OSError "
+        "fallback path is not reproducible in this environment",
     )
-    async def test_bug5_native_lib_oserror_is_not_caught(self):
-        """BUG-5: in the shipped image `from weasyprint import HTML` raises
-        OSError (missing libgobject/pango), which the ImportError-only
-        fallback does not catch — generate() blows up instead of writing
-        the HTML fallback."""
+    async def test_native_lib_oserror_falls_back_to_html(self):
+        """BUG-5 fixed: in the shipped image `from weasyprint import HTML`
+        raises OSError (missing libgobject/pango); the widened
+        ``(ImportError, OSError)`` except now engages the HTML fallback
+        instead of crashing generate()."""
         template = _template(ReportType.CUSTOM, name="OSError Repro")
         generator = PDFGenerator(TENANT_ID)
 
-        with pytest.raises(OSError):
-            await generator.generate(template, {"period": _period()}, uuid4())
+        file_path, file_size = await generator.generate(
+            template, {"period": _period()}, uuid4()
+        )
+
+        assert file_path.endswith(".html")
+        assert os.path.getsize(file_path) == file_size > 0
+        with open(file_path, encoding="utf-8") as f:
+            assert "OSError Repro" in f.read()
 
 
 # =============================================================================
