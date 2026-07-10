@@ -21,6 +21,7 @@ from app.models import (
     Campaign,
     Rule,
     RuleExecution,
+    RuleOperator,
     RuleStatus,
 )
 from app.workers.locks import with_distributed_lock
@@ -78,14 +79,15 @@ def evaluate_rules(self, tenant_id: int, rule_id: int):
                 # Execute rule action
                 action_result = _execute_action(rule, campaign, db)
 
-                # Log execution
+                # Log execution (columns per RuleExecution model:
+                # triggered/condition_result/action_result, not the old
+                # triggered_at/condition_values/action_taken kwargs).
                 execution = RuleExecution(
                     tenant_id=tenant_id,
                     rule_id=rule.id,
                     campaign_id=campaign.id,
-                    triggered_at=datetime.now(UTC),
-                    condition_values=result["values"],
-                    action_taken=action_result["action"],
+                    triggered=True,
+                    condition_result=result["values"],
                     action_result=action_result,
                 )
                 db.add(execution)
@@ -148,58 +150,106 @@ def evaluate_all_rules():
 
 def _evaluate_condition(rule: Rule, campaign: Campaign) -> dict[str, Any]:
     """
-    Evaluate rule conditions against a campaign.
+    Evaluate a rule's condition against a campaign.
+
+    The Rule model stores a single flat condition
+    (``condition_field`` / ``condition_operator`` / ``condition_value``), not a
+    ``conditions`` list — reading the latter raised AttributeError and killed
+    the beat task. This mirrors the canonical async ``RulesEngine`` so the
+    scheduled evaluator and the API dry-run agree.
 
     Returns:
-        Dict with 'matched' bool and 'values' dict of evaluated metrics
+        Dict with 'matched' bool and 'values' dict describing the evaluation.
     """
-    conditions = rule.conditions or []
-    values = {}
-    all_match = True
+    field = rule.condition_field
+    operator = rule.condition_operator
+    expected_raw = rule.condition_value
 
-    for condition in conditions:
-        metric = condition.get("metric")
-        operator = condition.get("operator")
-        threshold = condition.get("value")
+    actual = _get_field_value(campaign, field)
+    if actual is None:
+        return {
+            "matched": False,
+            "values": {"field": field, "reason": "field not found or null"},
+        }
 
-        # Get metric value from campaign
-        actual = getattr(campaign, metric, None)
-        if actual is None:
-            all_match = False
-            continue
+    try:
+        expected = _parse_value(expected_raw, type(actual))
+    except (ValueError, TypeError) as e:
+        return {
+            "matched": False,
+            "values": {"field": field, "reason": f"invalid condition value: {e}"},
+        }
 
-        values[metric] = actual
-
-        # Evaluate condition
-        target = _parse_condition_value(threshold, type(actual))
-
-        if operator == "greater_than":
-            if not (actual > target):
-                all_match = False
-        elif operator == "less_than":
-            if not (actual < target):
-                all_match = False
-        elif operator == "equals":
-            if actual != target:
-                all_match = False
-        elif operator == "gte":
-            if not (actual >= target):
-                all_match = False
-        elif operator == "lte" and not (actual <= target):
-            all_match = False
-
-    return {"matched": all_match, "values": values}
+    matched = _compare_values(actual, operator, expected)
+    return {
+        "matched": matched,
+        "values": {
+            "field": field,
+            "operator": getattr(operator, "value", operator),
+            "expected": expected,
+            "actual": actual,
+        },
+    }
 
 
-def _parse_condition_value(value: str, target_type: type) -> Any:
-    """Parse condition value to match target type."""
+def _get_field_value(campaign: Campaign, field: str) -> Any:
+    """Resolve a metric value from a campaign, including computed metrics."""
+    if hasattr(campaign, field):
+        return getattr(campaign, field)
+
+    computed = {
+        "spend": lambda c: c.total_spend_cents / 100,
+        "revenue": lambda c: c.revenue_cents / 100,
+        "cpc": lambda c: (
+            (c.total_spend_cents / c.clicks / 100) if c.clicks > 0 else None
+        ),
+        "cpm": lambda c: (
+            (c.total_spend_cents / c.impressions * 1000 / 100)
+            if c.impressions > 0
+            else None
+        ),
+        "cpa": lambda c: (
+            (c.total_spend_cents / c.conversions / 100) if c.conversions > 0 else None
+        ),
+        "conversion_rate": lambda c: (
+            (c.conversions / c.clicks * 100) if c.clicks > 0 else None
+        ),
+    }
+    if field in computed:
+        return computed[field](campaign)
+    return None
+
+
+def _parse_value(value: str, target_type: type) -> Any:
+    """Parse a string condition value to match the actual value's type."""
     if target_type == float:
         return float(value)
     elif target_type == int:
-        return int(value)
+        return int(float(value))
     elif target_type == bool:
         return value.lower() in ("true", "1", "yes")
     return value
+
+
+def _compare_values(actual: Any, operator: RuleOperator, expected: Any) -> bool:
+    """Compare actual vs expected using the rule operator."""
+    if operator == RuleOperator.EQUALS:
+        return actual == expected
+    elif operator == RuleOperator.NOT_EQUALS:
+        return actual != expected
+    elif operator == RuleOperator.GREATER_THAN:
+        return actual > expected
+    elif operator == RuleOperator.LESS_THAN:
+        return actual < expected
+    elif operator == RuleOperator.GREATER_THAN_OR_EQUAL:
+        return actual >= expected
+    elif operator == RuleOperator.LESS_THAN_OR_EQUAL:
+        return actual <= expected
+    elif operator == RuleOperator.CONTAINS:
+        return str(expected) in str(actual)
+    elif operator == RuleOperator.IN:
+        return actual in expected
+    return False
 
 
 def _execute_action(rule: Rule, campaign: Campaign, db: Session) -> dict[str, Any]:
