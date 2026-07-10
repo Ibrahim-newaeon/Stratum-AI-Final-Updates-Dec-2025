@@ -83,7 +83,9 @@ def fetch_competitor_data(self, tenant_id: int, competitor_id: int):
             },
         )
 
-        logger.info(f"Competitor {competitor_id} data updated (source={competitor.data_source})")
+        logger.info(
+            f"Competitor {competitor_id} data updated (source={competitor.data_source})"
+        )
         return {"status": "success", "competitor_id": competitor_id}
 
 
