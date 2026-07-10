@@ -86,8 +86,16 @@ class TenantEnforcementSettings(Base, TimestampMixin):
         # index=True removed: unique constraint already creates an index
     )
 
-    # Kill switch
+    # Enforcement guardrails toggle. When False, check_action() short-circuits
+    # to allow-with-warning — i.e. this DISABLES safety checks. It is NOT an
+    # emergency stop; see autopilot_frozen below for the true kill switch.
     enforcement_enabled = Column(Boolean, nullable=False, default=True)
+
+    # Emergency stop (kill switch). When True, autopilot execution is frozen:
+    # apply_actions_queue skips approved actions and the approve/confirm paths
+    # refuse, so NO automation reaches a platform. Distinct from the
+    # health-derived "frozen" trust-gate mode — this is an operator-set halt.
+    autopilot_frozen = Column(Boolean, nullable=False, default=False)
 
     # Default mode
     default_mode = Column(
@@ -126,6 +134,7 @@ class TenantEnforcementSettings(Base, TimestampMixin):
             "id": str(self.id),
             "tenant_id": self.tenant_id,
             "enforcement_enabled": self.enforcement_enabled,
+            "autopilot_frozen": self.autopilot_frozen,
             "default_mode": (
                 self.default_mode.value
                 if isinstance(self.default_mode, EnforcementMode)

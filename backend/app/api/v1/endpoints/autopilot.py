@@ -62,6 +62,27 @@ def _dispatch_tenant_queue(tenant_id: int) -> None:
         )
 
 
+async def _require_not_frozen(db: AsyncSession, tenant_id: int) -> None:
+    """Raise 409 when autopilot is frozen (emergency stop) for the tenant.
+
+    Guards the execution-triggering endpoints (approve / confirm /
+    approve-all) so an operator gets an explicit error instead of an action
+    that is silently deferred. The apply worker enforces the same freeze
+    authoritatively; this is the UX-layer echo so nothing looks "approved
+    but stuck".
+    """
+    from app.autopilot.enforcer import AutopilotEnforcer
+
+    if await AutopilotEnforcer(db).is_frozen(tenant_id):
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "Autopilot is frozen (emergency stop). "
+                "Resume autopilot before executing actions."
+            ),
+        )
+
+
 # =============================================================================
 # Request/Response Models
 # =============================================================================
@@ -411,6 +432,9 @@ async def approve_action(
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid action ID format")
 
+    # Emergency stop — refuse to approve-for-execution while frozen.
+    await _require_not_frozen(db, tenant_id)
+
     service = AutopilotService(db)
     action = await service.approve_action(uuid_id, tenant_id, user_id)
 
@@ -470,6 +494,9 @@ async def confirm_soft_blocked_action(
         uuid_id = UUID(action_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid action ID format")
+
+    # Emergency stop — a frozen tenant cannot override soft-blocks either.
+    await _require_not_frozen(db, tenant_id)
 
     service = AutopilotService(db)
     action = await service.get_action_by_id(uuid_id, tenant_id)
@@ -558,6 +585,9 @@ async def approve_all_actions(
     user_id = getattr(request.state, "user_id", None)
     if not user_id:
         raise HTTPException(status_code=401, detail="User authentication required")
+
+    # Emergency stop — refuse bulk approve-for-execution while frozen.
+    await _require_not_frozen(db, tenant_id)
 
     service = AutopilotService(db)
 

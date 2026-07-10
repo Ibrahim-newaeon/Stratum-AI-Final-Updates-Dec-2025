@@ -152,13 +152,44 @@ def seeded(sync_engine):
         session.commit()
         created_health_ids.append(row.id)
 
+    def set_frozen(frozen: bool = True) -> None:
+        """Upsert the tenant's enforcement settings with the freeze flag so the
+        worker's own session reads the operator emergency-stop state."""
+        from app.models.autopilot import TenantEnforcementSettings
+
+        row = (
+            session.query(TenantEnforcementSettings)
+            .filter_by(tenant_id=tenant.id)
+            .one_or_none()
+        )
+        if row is None:
+            row = TenantEnforcementSettings(
+                tenant_id=tenant.id, autopilot_frozen=frozen
+            )
+            session.add(row)
+        else:
+            row.autopilot_frozen = frozen
+        session.commit()
+
     yield {
         "tenant_id": tenant.id,
         "user_id": operator.id,
         "add_action": add_action,
         "add_health_row": add_health_row,
+        "set_frozen": set_frozen,
         "session": session,
     }
+
+    from app.models.autopilot import TenantEnforcementSettings
+
+    settings_row = (
+        session.query(TenantEnforcementSettings)
+        .filter_by(tenant_id=tenant.id)
+        .one_or_none()
+    )
+    if settings_row is not None:
+        session.delete(settings_row)
+        session.commit()
 
     for aid in created_action_ids:
         row = session.get(FactActionsQueue, aid)
@@ -298,6 +329,18 @@ class TestApplySingleAction:
         row = reload_action(seeded["session"], action_id)
         assert row.status == "failed"
 
+    def test_frozen_tenant_defers_without_applying(self, seeded):
+        """Emergency stop: a frozen tenant's approved action is refused and
+        left APPROVED (not failed), so it resumes once unfrozen."""
+        seeded["set_frozen"](True)
+        action_id = seeded["add_action"](status="approved")
+
+        result = run_single(action_id, _allowed())
+
+        assert result == {"status": "error", "error": "Autopilot frozen"}
+        row = reload_action(seeded["session"], action_id)
+        assert row.status == "approved"  # untouched, awaiting resume
+
 
 # =============================================================================
 # apply_actions_queue (sweep)
@@ -363,6 +406,29 @@ class TestApplyActionsQueueSweep:
                 kwargs={"tenant_id": seeded["tenant_id"]}
             ).get()
         assert result == {"status": "success", "processed": 0, "failed": 0}
+
+    def test_sweep_skips_every_action_when_frozen(self, seeded):
+        """Emergency stop halts the whole sweep before any enforcement/health
+        check — nothing is processed or failed, and rows stay APPROVED."""
+        seeded["set_frozen"](True)
+        first = seeded["add_action"](status="approved", amount=10)
+        second = seeded["add_action"](status="approved", amount=20)
+
+        with (
+            patch.object(mod, "publish_action_status_update", AsyncMock()),
+            patch.object(
+                mod, "enforce_before_execute", AsyncMock(return_value=_allowed())
+            ),
+            patch.object(mod.settings, "use_mock_ad_data", True),
+        ):
+            result = mod.apply_actions_queue.apply(
+                kwargs={"tenant_id": seeded["tenant_id"]}
+            ).get()
+
+        assert result == {"status": "success", "processed": 0, "failed": 0}
+        session = seeded["session"]
+        assert reload_action(session, first).status == "approved"
+        assert reload_action(session, second).status == "approved"
 
 
 if __name__ == "__main__":
