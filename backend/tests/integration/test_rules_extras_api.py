@@ -10,9 +10,17 @@ real create endpoint, then driven through both.
 import pytest
 from httpx import AsyncClient
 
+from app.core.config import settings
+
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
 _BASE = "/api/v1/rules"
+
+
+@pytest.fixture(autouse=True)
+def _enable_automation_rules(monkeypatch):
+    """Automation Rules ship gated off; enable the flag so the API is reachable."""
+    monkeypatch.setattr(settings, "feature_automation_rules", True)
 
 
 def _rule(name="Dry-run rule", **extra):

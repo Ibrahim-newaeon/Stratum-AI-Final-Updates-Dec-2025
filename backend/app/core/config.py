@@ -374,9 +374,15 @@ class Settings(BaseSettings):
     # -------------------------------------------------------------------------
     # Feature Flags
     # -------------------------------------------------------------------------
-    feature_competitor_intel: bool = Field(default=True)
+    # Competitor Intelligence and Automation Rules are shelved off for launch:
+    # the competitor refresh worker fabricates benchmarks with random.randint
+    # and the rules beat crashes on a schema mismatch (rule.conditions). Both
+    # the beat entries and the API routers are gated on these flags, so
+    # flipping either True re-enables the whole surface. Turn back on only once
+    # the worker uses a real data source / the rules schema is reconciled.
+    feature_competitor_intel: bool = Field(default=False)
     feature_what_if_simulator: bool = Field(default=True)
-    feature_automation_rules: bool = Field(default=True)
+    feature_automation_rules: bool = Field(default=False)
     feature_gdpr_compliance: bool = Field(default=True)
     # Knowledge Graph requires the Apache AGE Postgres extension (not
     # provisioned in the default image); shelved off by default until AGE is

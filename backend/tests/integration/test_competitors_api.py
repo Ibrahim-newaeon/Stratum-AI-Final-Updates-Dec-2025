@@ -11,9 +11,17 @@ share-of-voice, keywords, manual refresh enqueue, validation, and auth.
 import pytest
 from httpx import AsyncClient
 
+from app.core.config import settings
+
 pytestmark = pytest.mark.integration
 
 _MISSING = 99999999
+
+
+@pytest.fixture(autouse=True)
+def _enable_competitor_intel(monkeypatch):
+    """Competitor Intel ships gated off; enable the flag so the API is reachable."""
+    monkeypatch.setattr(settings, "feature_competitor_intel", True)
 
 
 def _competitor(domain="rival.com", name="Rival Co", **extra):

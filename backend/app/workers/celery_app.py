@@ -85,23 +85,15 @@ celery_app.conf.update(
 
 # Beat schedule for periodic tasks
 celery_app.conf.beat_schedule = {
-    # Evaluate rules every 15 minutes
-    "evaluate-active-rules": {
-        "task": "app.workers.tasks.evaluate_all_rules",
-        "schedule": crontab(minute="*/15"),
-        "options": {"queue": "rules"},
-    },
+    # NOTE: "evaluate-active-rules" and "refresh-competitor-data" are NOT in
+    # this static schedule — they are gated behind feature flags below (the
+    # rules task crashes on a schema mismatch and the competitor task
+    # fabricates benchmarks, so both are shelved off for launch).
     # Sync campaign data every hour
     "sync-all-campaigns": {
         "task": "app.workers.tasks.sync_all_campaigns",
         "schedule": crontab(minute=0),
         "options": {"queue": "sync"},
-    },
-    # Refresh competitor data every 6 hours
-    "refresh-competitor-data": {
-        "task": "app.workers.tasks.refresh_all_competitors",
-        "schedule": crontab(minute=0, hour="*/6"),
-        "options": {"queue": "intel"},
     },
     # Generate daily forecasts at 6 AM UTC
     "generate-daily-forecasts": {
@@ -226,6 +218,28 @@ if settings.enable_newsletter_beat:
         "task": "app.workers.newsletter_tasks.process_scheduled_campaigns",
         "schedule": crontab(minute="*"),
         "options": {"queue": "default"},
+    }
+
+# The automation-rules evaluator reads ``rule.conditions`` but the model stores
+# flat ``condition_field/operator/value`` columns, so the task raises
+# AttributeError and dies on every 15-minute tick. Gated off until the rules
+# schema is reconciled (Tier 3). Set FEATURE_AUTOMATION_RULES=true to re-enable.
+if settings.feature_automation_rules:
+    celery_app.conf.beat_schedule["evaluate-active-rules"] = {
+        "task": "app.workers.tasks.evaluate_all_rules",
+        "schedule": crontab(minute="*/15"),
+        "options": {"queue": "rules"},
+    }
+
+# The competitor refresh worker fabricates estimated spend/impressions/CTR with
+# random.randint (no real ad-intelligence source is wired), so it would write
+# fake benchmarks that surface on /competitors. Gated off until a real source
+# lands. Set FEATURE_COMPETITOR_INTEL=true to re-enable.
+if settings.feature_competitor_intel:
+    celery_app.conf.beat_schedule["refresh-competitor-data"] = {
+        "task": "app.workers.tasks.refresh_all_competitors",
+        "schedule": crontab(minute=0, hour="*/6"),
+        "options": {"queue": "intel"},
     }
 
 
