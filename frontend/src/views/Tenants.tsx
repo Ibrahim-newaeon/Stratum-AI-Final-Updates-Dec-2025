@@ -172,7 +172,7 @@ export function Tenants() {
   const handleUpdateTenant = async (data: TenantFormData) => {
     if (!selectedTenant) return
     try {
-      await apiClient.patch(`/api/v1/tenants/${selectedTenant.id}`, {
+      await apiClient.patch(`/tenants/${selectedTenant.id}`, {
         name: data.name,
         slug: data.slug,
         domain: data.domain || null,
@@ -191,7 +191,7 @@ export function Tenants() {
   const handleDeleteTenant = async () => {
     if (!selectedTenant) return
     try {
-      await apiClient.delete(`/api/v1/tenants/${selectedTenant.id}`)
+      await apiClient.delete(`/tenants/${selectedTenant.id}`)
       setShowDeleteModal(false)
       setSelectedTenant(null)
       fetchTenants()
