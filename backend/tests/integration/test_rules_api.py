@@ -11,7 +11,15 @@ listing (paginated), detail (200/404), update, lifecycle transitions
 import pytest
 from httpx import AsyncClient
 
+from app.core.config import settings
+
 pytestmark = pytest.mark.integration
+
+
+@pytest.fixture(autouse=True)
+def _enable_automation_rules(monkeypatch):
+    """Automation Rules ship gated off; enable the flag so the API is reachable."""
+    monkeypatch.setattr(settings, "feature_automation_rules", True)
 
 
 def _rule(name="Pause on high CPA", **extra):
