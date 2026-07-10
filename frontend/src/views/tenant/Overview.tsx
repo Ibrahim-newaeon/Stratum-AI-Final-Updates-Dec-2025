@@ -29,6 +29,7 @@ import {
 import { useTenantOverview, useTenantRecommendations } from '@/api/hooks'
 import { useApproveAction, useDismissAction, useQueueAction } from '@/api/autopilot'
 import { TrustGatePanel } from '@/components/trust/TrustGatePanel'
+import { EmergencyStop } from '@/components/autopilot/EmergencyStop'
 import { useTenantId } from '@/stores/tenantStore'
 import { useToast } from '@/components/ui/use-toast'
 import { exportDashboardPDF } from '@/utils/pdfExport'
@@ -410,6 +411,9 @@ export default function TenantOverview() {
           onViewDetails={handleViewDetails}
         />
       </div>
+
+      {/* Emergency stop — operator kill switch for autopilot execution */}
+      <EmergencyStop tenantId={tid} />
 
       {/* KPI Strip with confidence stamp */}
       <div data-tour="kpi-strip">

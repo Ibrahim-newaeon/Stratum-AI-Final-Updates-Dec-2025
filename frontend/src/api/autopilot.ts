@@ -352,6 +352,62 @@ export function useDismissAction(tenantId: number) {
 }
 
 // =============================================================================
+// Enforcement settings + emergency stop (freeze)
+// =============================================================================
+
+export interface EnforcementSettings {
+  /** Guardrails toggle. False DISABLES enforcement checks (loosens control). */
+  enforcement_enabled: boolean;
+  /** Emergency stop. True halts ALL autopilot execution regardless of mode. */
+  autopilot_frozen: boolean;
+  default_mode: 'advisory' | 'soft_block' | 'hard_block';
+}
+
+/**
+ * Read the tenant's enforcement settings, including the emergency-stop
+ * (`autopilot_frozen`) state that powers the kill switch UI.
+ */
+export function useEnforcementSettings(tenantId: number) {
+  return useQuery({
+    queryKey: ['enforcement-settings', tenantId],
+    queryFn: async () => {
+      const response = await apiClient.get<{
+        data: { settings: EnforcementSettings };
+      }>(`/tenant/${tenantId}/autopilot/enforcement/settings`);
+      return response.data.data.settings;
+    },
+    enabled: !!tenantId,
+    staleTime: 30 * 1000,
+    refetchInterval: 30 * 1000,
+  });
+}
+
+/**
+ * Toggle the autopilot emergency stop. Freezing (`frozen: true`) halts all
+ * execution — the apply worker skips approved actions and the
+ * approve/confirm endpoints refuse — so nothing reaches a platform until
+ * autopilot is resumed. Invalidates settings + action/status queries so the
+ * whole autopilot surface reflects the new state immediately.
+ */
+export function useSetFreeze(tenantId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ frozen, reason }: { frozen: boolean; reason?: string }) => {
+      const response = await apiClient.post<{
+        data: { autopilot_frozen: boolean; message: string };
+      }>(`/tenant/${tenantId}/autopilot/enforcement/freeze`, { frozen, reason });
+      return response.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['enforcement-settings', tenantId] });
+      queryClient.invalidateQueries({ queryKey: ['autopilot-status', tenantId] });
+      queryClient.invalidateQueries({ queryKey: ['autopilot-actions', tenantId] });
+    },
+  });
+}
+
+// =============================================================================
 // Utility Functions
 // =============================================================================
 

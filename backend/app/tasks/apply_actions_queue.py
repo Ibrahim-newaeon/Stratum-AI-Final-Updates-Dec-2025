@@ -1166,6 +1166,23 @@ async def get_tenant_autopilot_level(db: AsyncSession, tenant_id: int) -> int:
     return features.get("autopilot_level", 0)
 
 
+async def is_tenant_frozen(db: AsyncSession, tenant_id: int) -> bool:
+    """Return True when an operator has frozen autopilot for this tenant.
+
+    The emergency-stop gate. Read straight off the settings row so a fresh
+    worker session always sees the current state (no in-process cache).
+    When True, execution paths defer the action rather than applying it.
+    """
+    from app.models.autopilot import TenantEnforcementSettings
+
+    result = await db.execute(
+        select(TenantEnforcementSettings.autopilot_frozen).where(
+            TenantEnforcementSettings.tenant_id == tenant_id
+        )
+    )
+    return bool(result.scalar_one_or_none())
+
+
 def validate_action_caps(
     action_type: str, action_details: Dict[str, Any]
 ) -> tuple[bool, Optional[str]]:
@@ -1326,6 +1343,17 @@ def apply_actions_queue(self, tenant_id: Optional[int] = None):
 
                 for action in actions:
                     try:
+                        # Emergency stop — an operator freeze halts execution
+                        # before any other check. The action stays APPROVED
+                        # and resumes automatically once unfrozen.
+                        if await is_tenant_frozen(db, action.tenant_id):
+                            logger.warning(
+                                f"Skipping action {action.id}: autopilot frozen "
+                                f"for tenant {action.tenant_id}"
+                            )
+                            action.error = "Autopilot frozen - action deferred"
+                            continue
+
                         # Check signal health for this tenant
                         health_ok = await check_signal_health(db, action.tenant_id)
                         if not health_ok:
@@ -1578,6 +1606,11 @@ def apply_single_action(self, action_id: str, user_id: Optional[int] = None):
                         "status": "error",
                         "error": f"Action status is {action.status}, expected approved",
                     }
+
+                # Emergency stop — refuse execution while autopilot is frozen.
+                # The action remains APPROVED and will resume once unfrozen.
+                if await is_tenant_frozen(db, action.tenant_id):
+                    return {"status": "error", "error": "Autopilot frozen"}
 
                 # Check signal health
                 health_ok = await check_signal_health(db, action.tenant_id)

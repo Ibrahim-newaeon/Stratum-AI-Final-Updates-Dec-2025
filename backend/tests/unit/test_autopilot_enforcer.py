@@ -586,6 +586,65 @@ class TestKillSwitch:
         assert settings.enforcement_enabled is True
 
 
+class TestEmergencyStop:
+    """Tests for the autopilot emergency stop (freeze)."""
+
+    @pytest.mark.asyncio
+    async def test_default_not_frozen(self, enforcer):
+        """A new tenant is not frozen by default."""
+        settings = await enforcer.get_settings(tenant_id=1)
+        assert settings.autopilot_frozen is False
+        assert await enforcer.is_frozen(tenant_id=1) is False
+
+    @pytest.mark.asyncio
+    async def test_set_freeze_halts(self, enforcer):
+        """Freezing sets the flag and is_frozen reports True."""
+        settings = await enforcer.set_freeze(
+            tenant_id=1,
+            frozen=True,
+            user_id=42,
+            reason="Meta reporting outage",
+        )
+        assert settings.autopilot_frozen is True
+        assert await enforcer.is_frozen(tenant_id=1) is True
+
+    @pytest.mark.asyncio
+    async def test_set_freeze_resume(self, enforcer):
+        """Resuming clears the freeze."""
+        await enforcer.set_freeze(tenant_id=1, frozen=True, user_id=42)
+        settings = await enforcer.set_freeze(
+            tenant_id=1,
+            frozen=False,
+            user_id=42,
+            reason="Incident resolved",
+        )
+        assert settings.autopilot_frozen is False
+        assert await enforcer.is_frozen(tenant_id=1) is False
+
+    @pytest.mark.asyncio
+    async def test_freeze_independent_of_enforcement_toggle(self, enforcer):
+        """Freeze and enforcement_enabled are orthogonal switches.
+
+        Freezing must not silently flip the guardrails toggle, and toggling
+        the kill switch must not freeze — they are distinct controls.
+        """
+        await enforcer.set_freeze(tenant_id=1, frozen=True, user_id=1)
+        settings = await enforcer.get_settings(tenant_id=1)
+        assert settings.autopilot_frozen is True
+        assert settings.enforcement_enabled is True
+
+        await enforcer.set_kill_switch(tenant_id=1, enabled=False, user_id=1)
+        settings = await enforcer.get_settings(tenant_id=1)
+        assert settings.enforcement_enabled is False
+        # Freeze survives an enforcement-toggle change.
+        assert settings.autopilot_frozen is True
+
+    @pytest.mark.asyncio
+    async def test_is_frozen_defaults_false_for_unknown_tenant(self, enforcer):
+        """is_frozen returns False (not an error) for a tenant with no row."""
+        assert await enforcer.is_frozen(tenant_id=9999) is False
+
+
 # =============================================================================
 # Test Custom Rules
 # =============================================================================
@@ -1006,6 +1065,7 @@ def _db_settings_row(**overrides: Any) -> TenantEnforcementSettingsDB:
     row = TenantEnforcementSettingsDB(
         tenant_id=1,
         enforcement_enabled=True,
+        autopilot_frozen=False,
         default_mode=DBEnforcementMode.SOFT_BLOCK,
         max_daily_budget=250.0,
         max_campaign_budget=5000.0,

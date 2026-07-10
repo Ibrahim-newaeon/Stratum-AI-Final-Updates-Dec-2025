@@ -101,7 +101,8 @@ class EnforcementSettings(BaseModel):
     model_config = ConfigDict(use_enum_values=True)
 
     tenant_id: int
-    enforcement_enabled: bool = True  # Kill switch
+    enforcement_enabled: bool = True  # Guardrails toggle (False = checks off)
+    autopilot_frozen: bool = False  # Emergency stop — True halts all execution
     default_mode: EnforcementMode = EnforcementMode.ADVISORY
 
     # Budget thresholds
@@ -239,6 +240,7 @@ class AutopilotEnforcer:
                 settings = EnforcementSettings(
                     tenant_id=tenant_id,
                     enforcement_enabled=db_settings.enforcement_enabled,
+                    autopilot_frozen=db_settings.autopilot_frozen,
                     default_mode=EnforcementMode(db_settings.default_mode),
                     max_daily_budget=db_settings.max_daily_budget,
                     max_campaign_budget=db_settings.max_campaign_budget,
@@ -303,6 +305,7 @@ class AutopilotEnforcer:
             # Map Pydantic field names to DB column updates
             db_field_map = {
                 "enforcement_enabled",
+                "autopilot_frozen",
                 "default_mode",
                 "max_daily_budget",
                 "max_campaign_budget",
@@ -764,6 +767,60 @@ class AutopilotEnforcer:
         )
 
         return settings
+
+    async def set_freeze(
+        self,
+        tenant_id: int,
+        frozen: bool,
+        user_id: int,
+        reason: Optional[str] = None,
+    ) -> EnforcementSettings:
+        """Freeze or unfreeze all autopilot execution for a tenant.
+
+        This is the true emergency stop. When ``frozen`` is True the
+        execution paths (apply_actions_queue worker + approve/confirm
+        endpoints) refuse to apply any action, so nothing reaches a
+        platform regardless of enforcement mode or signal health. Unlike
+        ``enforcement_enabled`` (a guardrails toggle whose OFF state
+        *loosens* control), the frozen state is strictly restrictive.
+
+        Args:
+            tenant_id: Tenant ID.
+            frozen: True to halt execution, False to resume.
+            user_id: User making the change (audited).
+            reason: Optional reason for the change.
+        """
+        settings = await self.update_settings(
+            tenant_id,
+            {"autopilot_frozen": frozen},
+        )
+
+        # violation_type is not meaningful for an operator toggle (there is no
+        # rule violation); BUDGET_EXCEEDED is the shared placeholder the sibling
+        # set_kill_switch uses. The intervention_action, however, has an exact
+        # fit — KILL_SWITCH_CHANGED — so the audit log reads correctly.
+        await self._log_intervention(
+            tenant_id=tenant_id,
+            action_type="autopilot_freeze",
+            entity_type="tenant",
+            entity_id=str(tenant_id),
+            violation_type=ViolationType.BUDGET_EXCEEDED,
+            intervention_action=DBInterventionAction.KILL_SWITCH_CHANGED,
+            enforcement_mode=settings.default_mode,
+            details={"frozen": frozen, "reason": reason},
+            user_id=user_id,
+        )
+
+        return settings
+
+    async def is_frozen(self, tenant_id: int) -> bool:
+        """Return True when autopilot execution is frozen for the tenant.
+
+        Cheap read used by the execution paths (worker + approve/confirm
+        endpoints) to gate every action behind the emergency stop.
+        """
+        settings = await self.get_settings(tenant_id)
+        return bool(settings.autopilot_frozen)
 
     async def get_intervention_log(
         self,

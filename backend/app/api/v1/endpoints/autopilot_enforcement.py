@@ -116,6 +116,15 @@ class KillSwitchRequest(BaseModel):
     reason: Optional[str] = Field(None, description="Reason for change")
 
 
+class FreezeRequest(BaseModel):
+    """Request to toggle the autopilot emergency stop (freeze)."""
+
+    frozen: bool = Field(
+        ..., description="Freeze (true) halts all execution; false resumes"
+    )
+    reason: Optional[str] = Field(None, description="Reason for change")
+
+
 # =============================================================================
 # Endpoints
 # =============================================================================
@@ -154,6 +163,7 @@ async def get_enforcement_settings(
         data={
             "settings": {
                 "enforcement_enabled": settings.enforcement_enabled,
+                "autopilot_frozen": settings.autopilot_frozen,
                 "default_mode": (
                     settings.default_mode.value
                     if isinstance(settings.default_mode, EnforcementMode)
@@ -231,6 +241,7 @@ async def update_enforcement_settings(
             "message": "Settings updated successfully",
             "settings": {
                 "enforcement_enabled": settings.enforcement_enabled,
+                "autopilot_frozen": settings.autopilot_frozen,
                 "default_mode": (
                     settings.default_mode.value
                     if isinstance(settings.default_mode, EnforcementMode)
@@ -373,6 +384,56 @@ async def toggle_kill_switch(
         data={
             "message": f"Enforcement {status} for tenant",
             "enforcement_enabled": settings.enforcement_enabled,
+            "changed_by_user_id": user_id,
+        },
+    )
+
+
+@router.post("/freeze", response_model=APIResponse[Dict[str, Any]])
+async def toggle_freeze(
+    request: Request,
+    tenant_id: int,
+    body: FreezeRequest,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Emergency stop: freeze or resume all autopilot execution for the tenant.
+
+    When frozen, the apply queue worker skips approved actions and the
+    approve/confirm endpoints refuse — no automation reaches any platform,
+    regardless of enforcement mode or signal health. This is the true kill
+    switch; it is strictly restrictive (unlike ``/kill-switch``, which
+    toggles the guardrails and whose OFF state loosens control).
+
+    All changes are logged for audit purposes.
+    """
+    if getattr(request.state, "tenant_id", None) != tenant_id:
+        raise HTTPException(status_code=403, detail="Access denied to this tenant")
+
+    user_id = getattr(request.state, "user_id", None)
+    if not user_id:
+        raise HTTPException(status_code=401, detail="User authentication required")
+
+    enforcer = AutopilotEnforcer(db)
+    settings = await enforcer.set_freeze(
+        tenant_id=tenant_id,
+        frozen=body.frozen,
+        user_id=user_id,
+        reason=body.reason,
+    )
+
+    # get_async_session does not auto-commit; set_freeze commits the toggle
+    # itself (via update_settings) but its audit-log entry is only flushed
+    # afterwards and would be lost without this.
+    await db.commit()
+
+    state = "frozen" if settings.autopilot_frozen else "active"
+
+    return APIResponse(
+        success=True,
+        data={
+            "message": f"Autopilot {state} for tenant",
+            "autopilot_frozen": settings.autopilot_frozen,
             "changed_by_user_id": user_id,
         },
     )
