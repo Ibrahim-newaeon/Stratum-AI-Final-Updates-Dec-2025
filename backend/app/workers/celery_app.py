@@ -32,6 +32,10 @@ celery_app = Celery(
         # (auto_sync/next_sync_at). Without this, audiences only sync when
         # a user clicks the button and triggered_by="schedule" is dead code.
         "app.tasks.audience_auto_sync",
+        # Newsletter send/schedule tasks. Without this the worker never
+        # registers send_newsletter_campaign, so the send endpoint's .delay()
+        # dispatched to an unregistered task and silently did nothing.
+        "app.workers.newsletter_tasks",
     ],
 )
 
@@ -212,6 +216,17 @@ if settings.enable_campaign_builder_beat:
             },
         }
     )
+
+# Newsletter scheduled-send sweep — every minute, dispatches campaigns whose
+# scheduled_at has arrived. Sends live email, so gated off by default; the
+# manual send endpoint works regardless (the task module is always in the
+# include above). Set ENABLE_NEWSLETTER_BEAT=true to enable scheduled sends.
+if settings.enable_newsletter_beat:
+    celery_app.conf.beat_schedule["process-scheduled-newsletters"] = {
+        "task": "app.workers.newsletter_tasks.process_scheduled_campaigns",
+        "schedule": crontab(minute="*"),
+        "options": {"queue": "default"},
+    }
 
 
 # ---------------------------------------------------------------------------
