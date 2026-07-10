@@ -13,6 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.logging import get_logger
 from app.db.session import get_async_session
 from app.models import CompetitorBenchmark
@@ -26,7 +27,25 @@ from app.schemas import (
 )
 
 logger = get_logger(__name__)
-router = APIRouter()
+
+
+async def require_competitor_intel_enabled() -> None:
+    """
+    Gate Competitor Intelligence behind a feature flag.
+
+    The refresh worker fabricates estimated spend/impressions/CTR with
+    random.randint (no real ad-intelligence source is wired), so the numbers
+    served here are invented. Until a real source lands the surface is shelved:
+    every route returns 503 instead of presenting fabricated benchmarks.
+    """
+    if not settings.feature_competitor_intel:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Competitor Intelligence is not enabled on this deployment.",
+        )
+
+
+router = APIRouter(dependencies=[Depends(require_competitor_intel_enabled)])
 
 
 @router.get("", response_model=APIResponse[List[CompetitorResponse]])

@@ -13,6 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.logging import get_logger
 from app.db.session import get_async_session
 from app.models import Rule, RuleExecution, RuleStatus
@@ -26,7 +27,25 @@ from app.schemas import (
 )
 
 logger = get_logger(__name__)
-router = APIRouter()
+
+
+async def require_automation_rules_enabled() -> None:
+    """
+    Gate the Automation Rules engine behind a feature flag.
+
+    The autonomous evaluator reads ``rule.conditions`` while the model stores
+    flat ``condition_field/operator/value`` columns, so the beat task dies with
+    an AttributeError. Until the schema is reconciled the surface is shelved:
+    every route returns 503 instead of shipping a control that fails silently.
+    """
+    if not settings.feature_automation_rules:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Automation Rules are not enabled on this deployment.",
+        )
+
+
+router = APIRouter(dependencies=[Depends(require_automation_rules_enabled)])
 
 
 @router.get("", response_model=APIResponse[PaginatedResponse[RuleResponse]])
