@@ -105,25 +105,46 @@ class LocalInferenceStrategy(InferenceStrategy):
         self.models_path = Path(models_path or settings.ml_models_path)
         self._models: Dict[str, Any] = {}
         self._model_metadata: Dict[str, Dict] = {}
+        # File mtime the cached model was loaded from (ML-005). Used to detect a
+        # retrain/promotion on disk and reload, instead of serving a stale model
+        # for the life of the (singleton, long-lived) process.
+        self._model_mtimes: Dict[str, float] = {}
 
     def _load_model(self, model_name: str) -> Any:
-        """Load a model from disk if not already cached."""
-        if model_name in self._models:
-            return self._models[model_name]
-
+        """Load a model from disk, reloading if the file changed since caching."""
         model_file = self.models_path / f"{model_name}.pkl"
 
         if not model_file.exists():
+            # Keep serving a previously loaded copy if the file vanished mid-run;
+            # otherwise report not found.
+            if model_name in self._models:
+                return self._models[model_name]
             logger.warning(
                 "model_not_found", model_name=model_name, path=str(model_file)
             )
             return None
 
         try:
+            current_mtime = model_file.stat().st_mtime
+        except OSError:
+            current_mtime = None
+
+        # Serve the cache only if the on-disk file is unchanged since we loaded
+        # it. A newer mtime (retrain promoted a new .pkl) forces a reload.
+        if (
+            model_name in self._models
+            and current_mtime is not None
+            and self._model_mtimes.get(model_name) == current_mtime
+        ):
+            return self._models[model_name]
+
+        try:
             import joblib
 
             model = joblib.load(model_file)
             self._models[model_name] = model
+            if current_mtime is not None:
+                self._model_mtimes[model_name] = current_mtime
 
             # Load metadata if exists
             metadata_file = self.models_path / f"{model_name}_metadata.json"
