@@ -79,6 +79,24 @@ class TenantMiddleware(BaseHTTPMiddleware):
 
         # Decode JWT once and cache the payload on request.state
         jwt_payload = self._decode_jwt_once(request)
+
+        # SECURITY (AUTH-001): a decoded token is not enough — it must be an
+        # *access* token and must not have been revoked (logout / password
+        # reset / forced sign-out add the token's jti to the Redis blacklist).
+        # Without this, a revoked or refresh token sails through until it
+        # naturally expires. Reject before any tenant context is established.
+        if jwt_payload is not None:
+            if jwt_payload.get("type") != "access":
+                return self._reject(
+                    "Invalid token type",
+                    "This endpoint requires an access token",
+                )
+            if await self._is_revoked(jwt_payload, request):
+                return self._reject(
+                    "Token revoked",
+                    "Your session has ended. Please sign in again.",
+                )
+
         request.state._jwt_payload = jwt_payload
 
         # Try to extract tenant context
@@ -140,6 +158,35 @@ class TenantMiddleware(BaseHTTPMiddleware):
             )
         except JWTError:
             return None
+
+    @staticmethod
+    def _reject(error: str, message: str) -> JSONResponse:
+        """Build a 401 for a token that decoded but is not usable."""
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"success": False, "error": error, "message": message},
+        )
+
+    async def _is_revoked(self, payload: dict, request: Request) -> bool:
+        """Return True if this token has been blacklisted (AUTH-001).
+
+        Fails OPEN on Redis unavailability: a blacklist outage must not turn
+        into a total auth outage, and tokens still expire on their own. The
+        gap is logged so the degradation is visible rather than silent.
+        """
+        from app.core.security import is_token_blacklisted
+
+        auth_header = request.headers.get("Authorization", "")
+        token = auth_header.split(" ", 1)[1] if " " in auth_header else ""
+        try:
+            return await is_token_blacklisted(payload, token)
+        except (ConnectionError, TimeoutError, OSError) as exc:
+            logger.warning(
+                "token_blacklist_check_unavailable",
+                error=str(exc),
+                detail="Allowing request; revocation not enforced this hop",
+            )
+            return False
 
     def _is_public_endpoint(self, path: str) -> bool:
         """Check if the endpoint is public (no tenant context needed)."""
