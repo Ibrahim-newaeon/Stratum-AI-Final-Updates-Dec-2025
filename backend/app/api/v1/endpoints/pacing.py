@@ -337,7 +337,9 @@ async def delete_target(
 # =============================================================================
 
 
+# /targets/{id}/pacing is the frontend-compatibility alias for /target/{id}.
 @router.get("/target/{target_id}", response_model=Dict[str, Any])
+@router.get("/targets/{target_id}/pacing", response_model=Dict[str, Any])
 async def get_target_pacing(
     target_id: UUID,
     as_of_date: Optional[date] = Query(
@@ -361,7 +363,11 @@ async def get_target_pacing(
     return pacing
 
 
+# /status and /summary are frontend-compatibility aliases for /all (pacing.ts
+# calls those names). Stacked route decorators register all three to one handler.
 @router.get("/all", response_model=Dict[str, Any])
+@router.get("/status", response_model=Dict[str, Any])
+@router.get("/summary", response_model=Dict[str, Any])
 async def get_all_pacing(
     as_of_date: Optional[date] = Query(
         None, description="Date to calculate pacing for"
@@ -546,7 +552,9 @@ async def get_alerts(
     }
 
 
+# /alerts/stats is the frontend-compatibility alias for /alerts/summary.
 @router.get("/alerts/summary", response_model=Dict[str, Any])
+@router.get("/alerts/stats", response_model=Dict[str, Any])
 async def get_alert_summary(
     start_date: Optional[date] = Query(None, description="Start of period"),
     end_date: Optional[date] = Query(None, description="End of period"),

@@ -607,7 +607,11 @@ async def delete_margin_rule(
 # =============================================================================
 
 
+# /true-roas and /metrics/summary are frontend-compatibility aliases for /roas
+# (profit.ts calls those names). Stacked decorators register all three.
 @router.get("/roas", response_model=Dict[str, Any])
+@router.get("/true-roas", response_model=Dict[str, Any])
+@router.get("/metrics/summary", response_model=Dict[str, Any])
 async def get_profit_roas(
     start_date: date = Query(..., description="Start date"),
     end_date: date = Query(..., description="End date"),
@@ -637,7 +641,9 @@ async def get_profit_roas(
     )
 
 
+# /metrics/daily is the frontend-compatibility alias for /trend.
 @router.get("/trend", response_model=Dict[str, Any])
+@router.get("/metrics/daily", response_model=Dict[str, Any])
 async def get_profit_trend(
     start_date: date = Query(..., description="Start date"),
     end_date: date = Query(..., description="End date"),
