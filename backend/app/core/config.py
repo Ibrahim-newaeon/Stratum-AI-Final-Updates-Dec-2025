@@ -366,6 +366,39 @@ class Settings(BaseSettings):
     )
 
     # -------------------------------------------------------------------------
+    # Asset / object storage (INF-001)
+    # -------------------------------------------------------------------------
+    # Where uploaded creative assets are persisted. "local" writes to
+    # asset_upload_dir (only durable if that path is a mounted volume);
+    # "s3" streams to an S3-compatible bucket (AWS S3 or Cloudflare R2) so
+    # assets survive container restarts/redeploys on Railway.
+    asset_storage_backend: str = Field(
+        default="local",
+        description='Object storage backend for uploads: "local" or "s3"',
+    )
+    asset_upload_dir: str = Field(
+        default="uploads/assets",
+        description="Local filesystem dir for the 'local' backend (mount a volume here on Railway)",
+    )
+    asset_s3_bucket: Optional[str] = Field(
+        default=None, description="Bucket name for the 's3' backend"
+    )
+    asset_s3_endpoint_url: Optional[str] = Field(
+        default=None,
+        description="Custom S3 endpoint (set for Cloudflare R2; leave unset for AWS S3)",
+    )
+    asset_s3_region: str = Field(
+        default="auto", description="S3 region ('auto' for R2)"
+    )
+    asset_s3_access_key: Optional[str] = Field(default=None)
+    asset_s3_secret_key: Optional[str] = Field(default=None)
+    asset_s3_public_base_url: Optional[str] = Field(
+        default=None,
+        description="Public base URL for stored objects (CDN/R2 public domain). "
+        "When set, a stable public URL is returned instead of a presigned one.",
+    )
+
+    # -------------------------------------------------------------------------
     # Rate Limiting
     # -------------------------------------------------------------------------
     rate_limit_per_minute: int = Field(default=100)
