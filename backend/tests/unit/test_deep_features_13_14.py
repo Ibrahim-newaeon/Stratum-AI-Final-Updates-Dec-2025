@@ -1111,6 +1111,14 @@ class TestSuperAdminSystemHealth:
         assert "services" in data
         assert "queue" in data
         assert data["services"]["redis"] == "healthy"
+        # Honest empty state: uninstrumented infra metrics are null (not a
+        # fabricated 100%/0.0), and flagged as not-instrumented.
+        assert data["pipeline"]["success_rate_24h"] is None
+        assert data["api"]["latency_p50_ms"] is None
+        assert data["resources"]["cpu_percent"] is None
+        assert data["platforms"]["meta"]["success_rate"] is None
+        assert data["instrumented"]["pipeline"] is False
+        assert data["instrumented"]["service_health"] is True
 
 
 class TestSuperAdminChurnRisks:
