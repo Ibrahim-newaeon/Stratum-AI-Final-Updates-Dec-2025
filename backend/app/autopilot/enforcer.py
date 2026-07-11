@@ -69,6 +69,30 @@ class ViolationType(str, Enum):
     SUBSCRIPTION_EXPIRED = "subscription_expired"
 
 
+# High-risk action types (TRUST-004): they increase spend or exposure, so they
+# require human confirmation even when no threshold is violated. Covers both the
+# autopilot ActionType naming ("budget_increase") and the trust-gate domain
+# naming ("increase_budget") so the classifier is robust to either caller.
+HIGH_RISK_ACTIONS: frozenset[str] = frozenset(
+    {
+        "budget_increase",
+        "increase_budget",
+        "bid_increase",
+        "increase_bid",
+        "enable_campaign",
+        "enable_adset",
+        "enable_creative",
+        "launch_new_campaigns",
+        "expand_targeting",
+    }
+)
+
+
+def is_high_risk_action(action_type: str) -> bool:
+    """True if the action type is spend/exposure-increasing (TRUST-004)."""
+    return action_type in HIGH_RISK_ACTIONS
+
+
 class InterventionAction(str, Enum):
     """Actions taken by enforcer."""
 
@@ -492,6 +516,29 @@ class AutopilotEnforcer:
 
         # Determine result based on violations and mode
         if not violations:
+            # TRUST-004: a high-risk action type (spend/exposure-increasing)
+            # requires confirmation even with no threshold violation, unless the
+            # tenant explicitly opted into advisory mode. This complements the
+            # violation-based gating below.
+            if (
+                is_high_risk_action(action_type)
+                and settings.default_mode != EnforcementMode.ADVISORY
+            ):
+                return await self._soft_block_result(
+                    tenant_id=tenant_id,
+                    action_type=action_type,
+                    entity_id=entity_id,
+                    violations=[
+                        {
+                            "type": "high_risk_action",
+                            "message": (
+                                f"{action_type} is a high-risk action and "
+                                "requires confirmation"
+                            ),
+                        }
+                    ],
+                    warnings=[f"{action_type} is a high-risk action"],
+                )
             return EnforcementResult(
                 allowed=True,
                 mode=settings.default_mode,
@@ -512,44 +559,12 @@ class AutopilotEnforcer:
             )
 
         elif strictest_mode == EnforcementMode.SOFT_BLOCK:
-            # Generate confirmation token
-            import secrets as _secrets
-
-            token = _secrets.token_hex(32)
-            now = datetime.now(timezone.utc)
-            expires = now + timedelta(seconds=3600)
-
-            confirmation_data = {
-                "tenant_id": tenant_id,
-                "action_type": action_type,
-                "entity_id": entity_id,
-                "violations": violations,
-                "created_at": now.isoformat(),
-                "expires_at": expires.isoformat(),
-            }
-            self._pending_confirmations[token] = confirmation_data
-
-            # Persist to database so it survives across requests
-            if self.db is not None:
-                db_token = PendingConfirmationTokenDB(
-                    tenant_id=tenant_id,
-                    token=token,
-                    action_type=action_type,
-                    entity_id=entity_id,
-                    violations=json.loads(json.dumps(violations, default=str)),
-                    created_at=now,
-                    expires_at=expires,
-                )
-                self.db.add(db_token)
-                await self.db.flush()
-
-            return EnforcementResult(
-                allowed=False,
-                mode=strictest_mode,
+            return await self._soft_block_result(
+                tenant_id=tenant_id,
+                action_type=action_type,
+                entity_id=entity_id,
                 violations=violations,
                 warnings=warnings,
-                requires_confirmation=True,
-                confirmation_token=token,
             )
 
         else:  # HARD_BLOCK
@@ -1078,6 +1093,56 @@ class AutopilotEnforcer:
                 )
 
         return violations
+
+    async def _soft_block_result(
+        self,
+        tenant_id: int,
+        action_type: str,
+        entity_id: str,
+        violations: List[Dict[str, Any]],
+        warnings: List[str],
+    ) -> EnforcementResult:
+        """Build a SOFT_BLOCK result: mint + persist a confirmation token.
+
+        Shared by the violation path and the TRUST-004 high-risk-action gate so
+        both produce a single-use, DB-persisted confirmation token.
+        """
+        import secrets as _secrets
+
+        token = _secrets.token_hex(32)
+        now = datetime.now(timezone.utc)
+        expires = now + timedelta(seconds=3600)
+
+        self._pending_confirmations[token] = {
+            "tenant_id": tenant_id,
+            "action_type": action_type,
+            "entity_id": entity_id,
+            "violations": violations,
+            "created_at": now.isoformat(),
+            "expires_at": expires.isoformat(),
+        }
+
+        if self.db is not None:
+            db_token = PendingConfirmationTokenDB(
+                tenant_id=tenant_id,
+                token=token,
+                action_type=action_type,
+                entity_id=entity_id,
+                violations=json.loads(json.dumps(violations, default=str)),
+                created_at=now,
+                expires_at=expires,
+            )
+            self.db.add(db_token)
+            await self.db.flush()
+
+        return EnforcementResult(
+            allowed=False,
+            mode=EnforcementMode.SOFT_BLOCK,
+            violations=violations,
+            warnings=warnings,
+            requires_confirmation=True,
+            confirmation_token=token,
+        )
 
     def _get_strictest_mode(
         self,
