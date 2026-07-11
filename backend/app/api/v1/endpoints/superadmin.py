@@ -364,35 +364,47 @@ async def get_system_health(
     except (ConnectionError, TimeoutError, OSError) as exc:
         logger.warning(f"DB health check failed: {exc}")
 
+    # Honest metrics: only queue depth and DB/Redis service health are actually
+    # measured here. Pipeline success, API latency/error, per-platform success
+    # and host resource usage are NOT instrumented yet — return null instead of
+    # fabricated 100%/0.0 so the UI shows "not available", never fake green.
     return APIResponse(
         success=True,
         data={
+            "instrumented": {
+                "queue_depth": True,
+                "service_health": True,
+                "pipeline": False,
+                "api": False,
+                "platforms": False,
+                "resources": False,
+            },
             "pipeline": {
-                "success_rate_24h": 100.0,
-                "success_rate_7d": 100.0,
-                "jobs_total_24h": 0,
-                "jobs_failed_24h": 0,
+                "success_rate_24h": None,
+                "success_rate_7d": None,
+                "jobs_total_24h": None,
+                "jobs_failed_24h": None,
             },
             "api": {
-                "requests_24h": 0,
-                "error_rate": 0.0,
-                "latency_p50_ms": 0.0,
-                "latency_p99_ms": 0.0,
+                "requests_24h": None,
+                "error_rate": None,
+                "latency_p50_ms": None,
+                "latency_p99_ms": None,
             },
             "queue": {
                 "depth": queue_depth,
-                "latency_ms": 0.0,
+                "latency_ms": None,
             },
             "platforms": {
-                "meta": {"status": "unknown", "success_rate": 100.0},
-                "google": {"status": "unknown", "success_rate": 100.0},
-                "tiktok": {"status": "unknown", "success_rate": 100.0},
-                "snap": {"status": "unknown", "success_rate": 100.0},
+                "meta": {"status": "unknown", "success_rate": None},
+                "google": {"status": "unknown", "success_rate": None},
+                "tiktok": {"status": "unknown", "success_rate": None},
+                "snap": {"status": "unknown", "success_rate": None},
             },
             "resources": {
-                "cpu_percent": 0.0,
-                "memory_percent": 0.0,
-                "disk_percent": 0.0,
+                "cpu_percent": None,
+                "memory_percent": None,
+                "disk_percent": None,
             },
             "services": {
                 "database": "healthy" if db_healthy else "unhealthy",
@@ -1394,9 +1406,11 @@ async def _get_system_health(db: AsyncSession) -> dict:
             health["pipeline_success_rate"] = round(health_rate * 100, 1)
         else:
             health["platform_status"] = "no_connections"
-            health["pipeline_success_rate"] = 0
+            health["pipeline_success_rate"] = None
 
-        health["api_uptime"] = 99.9  # From health check endpoint availability
+        # api_uptime is not instrumented (no real uptime tracker) — leave null
+        # rather than reporting a fabricated 99.9.
+        health["api_uptime"] = None
     except Exception as e:
         logger.warning("system_health_check_failed", error=str(e))
         health["platform_status"] = "unknown"
