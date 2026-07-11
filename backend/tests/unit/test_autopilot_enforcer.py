@@ -115,7 +115,8 @@ class TestEnforcementSettings:
 
         assert settings.tenant_id == 1
         assert settings.enforcement_enabled is True
-        assert settings.default_mode == EnforcementMode.ADVISORY
+        # TRUST-003: an unconfigured tenant fails safe to SOFT_BLOCK.
+        assert settings.default_mode == EnforcementMode.SOFT_BLOCK
         assert settings.budget_increase_limit_pct == 30.0
         assert settings.min_roas_threshold == 1.0
 
@@ -1136,11 +1137,12 @@ class TestGetSettingsDbPaths:
         assert len(created) == 1
         assert created[0].tenant_id == 7
         assert created[0].enforcement_enabled is True
-        assert created[0].default_mode == DBEnforcementMode.ADVISORY
+        # TRUST-003: the persisted first-use default fails safe to SOFT_BLOCK.
+        assert created[0].default_mode == DBEnforcementMode.SOFT_BLOCK
         db.flush.assert_awaited_once()
 
         assert settings.tenant_id == 7
-        assert settings.default_mode == EnforcementMode.ADVISORY
+        assert settings.default_mode == EnforcementMode.SOFT_BLOCK
         # Cached for subsequent calls
         assert enforcer._settings_cache[7] is settings
 

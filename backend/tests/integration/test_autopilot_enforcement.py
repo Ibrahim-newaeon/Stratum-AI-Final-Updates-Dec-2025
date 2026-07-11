@@ -119,13 +119,17 @@ class TestEnforcementCheckEndpoint:
         test_tenant: dict,
     ):
         """Test checking action with performance metrics."""
+        # A compliant increase (20%, under the default 30% limit) with healthy
+        # metrics has no violations and is allowed. NB: an unconfigured tenant
+        # now defaults to SOFT_BLOCK (TRUST-003), so an over-limit increase would
+        # require confirmation rather than being advisory-allowed.
         response = await authenticated_client.post(
             f"/api/v1/tenant/{test_tenant['id']}/autopilot/enforcement/check",
             json={
                 "action_type": "budget_increase",
                 "entity_type": "campaign",
                 "entity_id": "camp_123",
-                "proposed_value": {"budget": 2000.0},
+                "proposed_value": {"budget": 1200.0},
                 "current_value": {"budget": 1000.0},
                 "metrics": {"roas": 2.5, "spend": 500.0},
             },
