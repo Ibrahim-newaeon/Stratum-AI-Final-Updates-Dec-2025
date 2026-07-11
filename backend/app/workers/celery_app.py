@@ -28,6 +28,11 @@ celery_app = Celery(
         # execution-path signal-health check. Same registration gap as the
         # autopilot pipeline: without this the tasks were never registered.
         "app.tasks.signal_health_rollup",
+        # Attribution-variance rollup — populates FactAttributionVarianceDaily.
+        # Same registration gap as its sibling rollups: the task + its scheduler
+        # existed but were in neither `include` nor the beat schedule, so the
+        # variance table was never populated (CRM/ATTR orphaned-task fix).
+        "app.tasks.attribution_variance_rollup",
         # Audience auto-sync sweep — executes PlatformAudience schedules
         # (auto_sync/next_sync_at). Without this, audiences only sync when
         # a user clicks the button and triggered_by="schedule" is dead code.
@@ -173,6 +178,15 @@ celery_app.conf.beat_schedule = {
     "signal-health-daily-rollup": {
         "task": "tasks.schedule_signal_health_rollup",
         "schedule": crontab(hour=2, minute=0),
+        "options": {"queue": "default"},
+    },
+    # Daily attribution-variance rollup at 02:15 UTC — aggregates yesterday's
+    # platform-vs-GA attribution variance into FactAttributionVarianceDaily.
+    # Offset from the signal-health rollup so they don't contend. Was orphaned
+    # (defined but never scheduled), so the table stayed empty (CRM/ATTR).
+    "attribution-variance-daily-rollup": {
+        "task": "tasks.schedule_attribution_variance_rollup",
+        "schedule": crontab(hour=2, minute=15),
         "options": {"queue": "default"},
     },
     # Audience auto-sync sweep every 15 minutes — executes due
