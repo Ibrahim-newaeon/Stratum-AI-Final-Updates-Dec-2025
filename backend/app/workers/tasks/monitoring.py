@@ -50,6 +50,54 @@ def post_alert_webhook(url: str | None, payload: dict) -> bool:
         return False
 
 
+# Celery has no HTTP endpoint, so Railway can't health-probe the worker/beat
+# directly. Instead the worker writes a heartbeat to Redis every minute and the
+# API reports liveness from it (INF-003).
+WORKER_HEARTBEAT_KEY = "stratum:worker:heartbeat"
+WORKER_HEARTBEAT_TTL = 300  # seconds; key self-expires if the worker dies
+WORKER_ALIVE_MAX_AGE = 180  # consider the worker alive if seen in the last 3 min
+
+
+@shared_task(name="app.workers.tasks.worker_heartbeat")
+def worker_heartbeat() -> dict:
+    """Write a liveness heartbeat (current epoch seconds) to Redis.
+
+    Beat-scheduled every minute. If the worker/beat process dies, the key stops
+    refreshing and expires, so worker_is_alive() flips to False.
+    """
+    import redis
+
+    ts = datetime.now(UTC).timestamp()
+    try:
+        client = redis.from_url(settings.redis_url)
+        client.set(WORKER_HEARTBEAT_KEY, str(ts), ex=WORKER_HEARTBEAT_TTL)
+    except (ConnectionError, TimeoutError, OSError) as e:
+        logger.warning("worker_heartbeat_write_failed: %s", e)
+    return {"heartbeat": ts}
+
+
+def worker_last_heartbeat() -> "float | None":
+    """Return the epoch-seconds of the last worker heartbeat, or None."""
+    import redis
+
+    try:
+        client = redis.from_url(settings.redis_url)
+        raw = client.get(WORKER_HEARTBEAT_KEY)
+        if raw is None:
+            return None
+        return float(raw)
+    except (ConnectionError, TimeoutError, OSError, ValueError):
+        return None
+
+
+def worker_is_alive(max_age_seconds: int = WORKER_ALIVE_MAX_AGE) -> bool:
+    """True if the worker wrote a heartbeat within max_age_seconds."""
+    last = worker_last_heartbeat()
+    if last is None:
+        return False
+    return (datetime.now(UTC).timestamp() - last) <= max_age_seconds
+
+
 # Explicit name: this module was split out of the old app/workers/tasks.py;
 # without it the auto-generated name gains the submodule segment and the
 # beat schedule's task reference silently dispatches to nothing.
