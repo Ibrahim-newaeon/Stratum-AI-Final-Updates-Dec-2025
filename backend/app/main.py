@@ -59,6 +59,38 @@ def metrics_access_allowed(authorization_header: str, api_key: str) -> bool:
     return secrets.compare_digest(authorization_header, f"Bearer {api_key}")
 
 
+async def check_readiness() -> dict:
+    """Readiness signal for the Railway healthcheck (INF-002).
+
+    Ready only when BOTH hard dependencies respond: Postgres (queries) and
+    Redis (Celery broker + cache + rate limiting). A third-party outage
+    (e.g. SendGrid) must NOT fail readiness, so it is deliberately excluded —
+    the readiness probe gates traffic routing, and email is not on the request
+    hot path.
+    """
+    import redis.asyncio as redis
+
+    db_health = await check_database_health()
+    db_ok = db_health.get("status") == "healthy"
+
+    redis_ok = False
+    redis_detail = "unhealthy"
+    try:
+        client = redis.from_url(settings.redis_url)
+        await client.ping()
+        await client.close()
+        redis_ok = True
+        redis_detail = "healthy"
+    except (ConnectionError, TimeoutError, OSError) as exc:
+        redis_detail = f"unhealthy: {exc}"
+
+    return {
+        "ready": db_ok and redis_ok,
+        "database": db_health.get("status", "unknown"),
+        "redis": redis_detail,
+    }
+
+
 # Setup logging
 setup_logging()
 logger = get_logger(__name__)
@@ -548,58 +580,39 @@ def create_application() -> FastAPI:
     async def health_check():
         """
         Health check endpoint for load balancers and orchestrators.
-        Returns service status and dependencies health.
+        Returns service status and hard-dependency health (DB + Redis).
+
+        Does NOT make a live third-party API call (e.g. SendGrid): a health
+        probe must not depend on an external provider's availability. Email
+        provider configuration is reported as configured/not_configured only.
         """
-        import redis.asyncio as redis
-
-        db_health = await check_database_health()
-
-        # Check Redis
-        try:
-            redis_client = redis.from_url(settings.redis_url)
-            await redis_client.ping()
-            redis_status = "healthy"
-            await redis_client.close()
-        except (ConnectionError, TimeoutError, OSError) as e:
-            redis_status = f"unhealthy: {str(e)}"
-
-        # Check SendGrid
-        sendgrid_status = "not_configured"
-        if settings.sendgrid_api_key:
-            try:
-                from sendgrid import SendGridAPIClient
-
-                sg = SendGridAPIClient(api_key=settings.sendgrid_api_key)
-                # Lightweight API call to validate key
-                response = sg.client.user.profile.get()
-                sendgrid_status = (
-                    "healthy"
-                    if response.status_code == 200
-                    else f"unhealthy: status {response.status_code}"
-                )
-            except Exception as e:
-                sendgrid_status = f"unhealthy: {str(e)}"
-
-        deps_healthy = db_health["status"] == "healthy" and redis_status == "healthy"
-        overall_status = "healthy" if deps_healthy else "unhealthy"
-
+        readiness = await check_readiness()
         return {
-            "status": overall_status,
+            "status": "healthy" if readiness["ready"] else "unhealthy",
             "version": "1.0.0",
             "environment": settings.app_env,
-            "database": db_health["status"],
-            "redis": redis_status,
-            "sendgrid": sendgrid_status,
+            "database": readiness["database"],
+            "redis": readiness["redis"],
+            "email_provider": (
+                "configured" if settings.sendgrid_api_key else "not_configured"
+            ),
         }
 
     @app.get("/health/ready", tags=["Health"])
     async def readiness_check():
-        """Readiness probe - returns 200 when ready to serve traffic."""
-        db_health = await check_database_health()
-        if db_health["status"] != "healthy":
+        """Readiness probe — 200 when ready, 503 until DB AND Redis are up.
+
+        This is the endpoint Railway's healthcheck targets (INF-002).
+        """
+        readiness = await check_readiness()
+        if not readiness["ready"]:
             return JSONResponse(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                content={"status": "not_ready", "reason": "database_unavailable"},
+                content={
+                    "status": "not_ready",
+                    "database": readiness["database"],
+                    "redis": readiness["redis"],
+                },
             )
         return {"status": "ready"}
 
