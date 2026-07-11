@@ -607,7 +607,7 @@ async def delete_margin_rule(
 # =============================================================================
 
 
-@router.get("/profit/roas", response_model=Dict[str, Any])
+@router.get("/roas", response_model=Dict[str, Any])
 async def get_profit_roas(
     start_date: date = Query(..., description="Start date"),
     end_date: date = Query(..., description="End date"),
@@ -637,7 +637,7 @@ async def get_profit_roas(
     )
 
 
-@router.get("/profit/trend", response_model=Dict[str, Any])
+@router.get("/trend", response_model=Dict[str, Any])
 async def get_profit_trend(
     start_date: date = Query(..., description="Start date"),
     end_date: date = Query(..., description="End date"),
@@ -659,7 +659,7 @@ async def get_profit_trend(
     )
 
 
-@router.get("/profit/by-product", response_model=Dict[str, Any])
+@router.get("/by-product", response_model=Dict[str, Any])
 async def get_product_profitability(
     start_date: date = Query(..., description="Start date"),
     end_date: date = Query(..., description="End date"),
@@ -683,7 +683,7 @@ async def get_product_profitability(
     )
 
 
-@router.get("/profit/by-campaign", response_model=Dict[str, Any])
+@router.get("/by-campaign", response_model=Dict[str, Any])
 async def get_campaign_profitability(
     start_date: date = Query(..., description="Start date"),
     end_date: date = Query(..., description="End date"),
@@ -701,7 +701,7 @@ async def get_campaign_profitability(
     )
 
 
-@router.post("/profit/report", response_model=Dict[str, Any])
+@router.post("/report", response_model=Dict[str, Any])
 async def generate_profit_report(
     start_date: date = Query(..., description="Report start date"),
     end_date: date = Query(..., description="Report end date"),

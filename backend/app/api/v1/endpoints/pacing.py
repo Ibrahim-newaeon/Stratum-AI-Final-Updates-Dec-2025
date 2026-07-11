@@ -337,7 +337,7 @@ async def delete_target(
 # =============================================================================
 
 
-@router.get("/pacing/target/{target_id}", response_model=Dict[str, Any])
+@router.get("/target/{target_id}", response_model=Dict[str, Any])
 async def get_target_pacing(
     target_id: UUID,
     as_of_date: Optional[date] = Query(
@@ -361,7 +361,7 @@ async def get_target_pacing(
     return pacing
 
 
-@router.get("/pacing/all", response_model=Dict[str, Any])
+@router.get("/all", response_model=Dict[str, Any])
 async def get_all_pacing(
     as_of_date: Optional[date] = Query(
         None, description="Date to calculate pacing for"
@@ -389,7 +389,7 @@ async def get_all_pacing(
     )
 
 
-@router.get("/pacing/history/{target_id}", response_model=Dict[str, Any])
+@router.get("/history/{target_id}", response_model=Dict[str, Any])
 async def get_pacing_history(
     target_id: UUID,
     start_date: Optional[date] = Query(None, description="Start of date range"),
@@ -413,7 +413,7 @@ async def get_pacing_history(
     }
 
 
-@router.post("/pacing/snapshot", response_model=Dict[str, Any])
+@router.post("/snapshot", response_model=Dict[str, Any])
 async def create_pacing_snapshots(
     as_of_date: Optional[date] = Query(None, description="Date for snapshots"),
     db: AsyncSession = Depends(get_db),
