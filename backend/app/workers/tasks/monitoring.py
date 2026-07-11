@@ -22,15 +22,17 @@ logger = get_task_logger(__name__)
 def post_alert_webhook(url: str | None, payload: dict) -> bool:
     """POST a P0 operational alert to the configured on-call webhook (MON-002).
 
-    No-op (returns False) when no URL is configured. Only http(s) URLs are
-    honored — the scheme guard keeps this from being turned into an SSRF vector
-    via a misconfigured non-http scheme. Best-effort: never raises, so alerting
-    can't take down the monitoring task itself.
+    No-op (returns False) when no URL is configured or the URL fails SSRF
+    validation (non-http scheme, or resolves to a private/link-local/loopback
+    address — e.g. the cloud metadata endpoint). Best-effort: never raises, so
+    alerting can't take down the monitoring task itself.
     """
+    from app.core.ssrf import is_safe_outbound_url
+
     if not url:
         return False
-    if not url.lower().startswith(("http://", "https://")):
-        logger.warning("Ignoring alert_webhook_url with non-http scheme")
+    if not is_safe_outbound_url(url):
+        logger.warning("Ignoring alert_webhook_url: failed SSRF validation")
         return False
     try:
         import json
