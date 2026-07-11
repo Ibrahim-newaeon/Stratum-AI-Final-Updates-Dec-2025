@@ -47,6 +47,16 @@ class EmqDriverResult:
     trend: DriverTrend
     details: Optional[str] = None
 
+    @property
+    def contribution(self) -> float:
+        """Points this driver adds to the overall EMQ score (value * weight).
+
+        Surfaced so callers can see *what drives the number* — which drivers
+        cost the most points — without re-deriving value*weight (TRUST-005).
+        The drivers' contributions sum to the overall EMQ score.
+        """
+        return round(self.value * self.weight, 2)
+
 
 @dataclass
 class EmqCalculationResult:

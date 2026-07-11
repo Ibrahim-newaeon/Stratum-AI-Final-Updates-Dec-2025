@@ -121,6 +121,7 @@ async def get_emq_score(
             name=d["name"],
             value=d["value"],
             weight=d["weight"],
+            contribution=d.get("contribution", round(d["value"] * d["weight"], 2)),
             status=d["status"],
             trend=d["trend"],
         )
