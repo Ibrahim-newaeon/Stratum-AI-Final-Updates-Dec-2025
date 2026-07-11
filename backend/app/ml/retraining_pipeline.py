@@ -32,6 +32,21 @@ from app.ml.train import ModelTrainer
 logger = structlog.get_logger(__name__)
 
 
+def _atomic_copy(src: Path, dst: Path) -> None:
+    """Copy ``src`` to ``dst`` atomically (ML-004).
+
+    A model promotion/rollback copies a new .pkl over the path that inference
+    workers ``joblib.load`` from. A plain ``shutil.copy2`` writes in place, so a
+    concurrent reader can observe a half-written file (corrupt-load / crash).
+    Copy to a temp file in the SAME directory, then ``os.replace`` — an atomic
+    rename on the same filesystem — so a reader sees either the old file or the
+    complete new one, never a partial.
+    """
+    tmp = dst.parent / (dst.name + ".tmp")
+    shutil.copy2(src, tmp)
+    os.replace(tmp, dst)
+
+
 class RetrainingTrigger(str, Enum):
     """Reasons for triggering model retraining."""
 
@@ -379,7 +394,7 @@ class RetrainingPipeline:
             staged_path = self.staging_path / filename
             prod_path = self.models_path / filename
             if staged_path.exists():
-                shutil.copy2(staged_path, prod_path)
+                _atomic_copy(staged_path, prod_path)
 
         # Update model history
         if model_name not in self._model_history:
@@ -492,7 +507,7 @@ class RetrainingPipeline:
                 if abs((archived_time - target.created_at).total_seconds()) < 60:
                     # Restore this version
                     for f in archive_dir.iterdir():
-                        shutil.copy2(f, self.models_path / f.name)
+                        _atomic_copy(f, self.models_path / f.name)
 
                     logger.info(
                         "model_rolled_back",
