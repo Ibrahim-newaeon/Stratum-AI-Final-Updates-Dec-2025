@@ -127,6 +127,21 @@ class TikTokOAuthService(OAuthService):
             }
 
             async with session.post(TIKTOK_TOKEN_URL, json=data) as resp:
+                # Check the HTTP status before trusting the JSON envelope
+                # (OAUTH-002). On a 5xx/gateway error the body may be missing
+                # or non-JSON, or lack the "code" field — so a body-only check
+                # would either raise a confusing ContentTypeError or, worse,
+                # slip through as success. Match the other providers.
+                if resp.status != 200:
+                    body = await resp.text()
+                    self.logger.error(
+                        "TikTok token exchange HTTP error",
+                        status=resp.status,
+                        body=body[:500],
+                    )
+                    raise OAuthProviderError(
+                        f"Token exchange failed: HTTP {resp.status}"
+                    )
                 response_data = await resp.json()
 
                 if response_data.get("code") != 0:
@@ -181,6 +196,17 @@ class TikTokOAuthService(OAuthService):
             }
 
             async with session.post(TIKTOK_REFRESH_URL, json=data) as resp:
+                # HTTP status first — do not trust the body on a 5xx (OAUTH-002).
+                if resp.status != 200:
+                    body = await resp.text()
+                    self.logger.error(
+                        "TikTok token refresh HTTP error",
+                        status=resp.status,
+                        body=body[:500],
+                    )
+                    raise OAuthProviderError(
+                        f"Token refresh failed: HTTP {resp.status}"
+                    )
                 response_data = await resp.json()
 
                 if response_data.get("code") != 0:
@@ -237,6 +263,17 @@ class TikTokOAuthService(OAuthService):
             }
 
             async with session.post(url, headers=headers, json=post_data) as resp:
+                # HTTP status first — do not trust the body on a 5xx (OAUTH-002).
+                if resp.status != 200:
+                    body = await resp.text()
+                    self.logger.error(
+                        "TikTok advertiser fetch HTTP error",
+                        status=resp.status,
+                        body=body[:500],
+                    )
+                    raise OAuthProviderError(
+                        f"Failed to get advertisers: HTTP {resp.status}"
+                    )
                 response_data = await resp.json()
 
                 if response_data.get("code") != 0:
