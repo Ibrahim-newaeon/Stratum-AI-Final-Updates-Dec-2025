@@ -1582,11 +1582,56 @@ class TestRefreshTokensTask:
         assert result["status"] == "skipped"
 
     def test_refresh_success(self):
+        # OAUTH-001: the task now performs a real refresh via the provider
+        # service (decrypt refresh token -> refresh_access_token -> persist).
         from app.workers.campaign_builder_tasks import refresh_tokens
 
         conn = MagicMock()
         conn.status = ConnectionStatus.CONNECTED
         conn.error_count = 0
+        conn.refresh_token_encrypted = "enc_refresh"
+
+        new_tokens = MagicMock(
+            access_token="new_access",
+            refresh_token="new_refresh",
+            expires_at=None,
+            expires_in=3600,
+        )
+        service = MagicMock()
+        service.decrypt_token.return_value = "plain_refresh"
+        service.encrypt_token.side_effect = lambda t: f"enc:{t}"
+        service.refresh_access_token = AsyncMock(return_value=new_tokens)
+
+        mock_db = MagicMock()
+        mock_db.execute.return_value.scalar_one_or_none.return_value = conn
+
+        with patch(
+            "app.workers.campaign_builder_tasks.SessionLocal"
+        ) as mock_session, patch(
+            "app.workers.campaign_builder_tasks.get_oauth_service",
+            return_value=service,
+        ):
+            mock_session.return_value.__enter__ = MagicMock(return_value=mock_db)
+            mock_session.return_value.__exit__ = MagicMock(return_value=False)
+            result = refresh_tokens(tenant_id=1, platform="meta")
+
+        assert result["status"] == "success"
+        assert conn.status == ConnectionStatus.CONNECTED
+        assert conn.last_error is None
+        # Real tokens were persisted (encrypted), not a faked expiry.
+        service.refresh_access_token.assert_awaited_once_with("plain_refresh")
+        assert conn.access_token_encrypted == "enc:new_access"
+        assert conn.refresh_token_encrypted == "enc:new_refresh"
+        mock_db.commit.assert_called()
+
+    def test_refresh_no_refresh_token_marks_expired(self):
+        # OAUTH-001: without a stored refresh token, the task cannot refresh —
+        # mark expired (needs re-auth) rather than faking success.
+        from app.workers.campaign_builder_tasks import refresh_tokens
+
+        conn = MagicMock()
+        conn.status = ConnectionStatus.CONNECTED
+        conn.refresh_token_encrypted = None
 
         mock_db = MagicMock()
         mock_db.execute.return_value.scalar_one_or_none.return_value = conn
@@ -1596,10 +1641,8 @@ class TestRefreshTokensTask:
             mock_session.return_value.__exit__ = MagicMock(return_value=False)
             result = refresh_tokens(tenant_id=1, platform="meta")
 
-        assert result["status"] == "success"
-        assert conn.status == ConnectionStatus.CONNECTED
-        assert conn.last_error is None
-        mock_db.commit.assert_called()
+        assert result["status"] == "error"
+        assert conn.status == ConnectionStatus.EXPIRED
 
 
 class TestPublishCampaignTask:

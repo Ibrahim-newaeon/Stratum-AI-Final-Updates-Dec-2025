@@ -10,6 +10,7 @@ Background tasks for the Campaign Builder feature:
 - connector_health_check: Check platform API connectivity
 """
 
+import asyncio
 import logging
 from datetime import datetime, timedelta, timezone
 from typing import Optional
@@ -30,6 +31,7 @@ from app.models.campaign_builder import (
     TenantAdAccount,
     TenantPlatformConnection,
 )
+from app.services.oauth.factory import get_oauth_service
 
 logger = logging.getLogger(__name__)
 
@@ -191,15 +193,40 @@ def refresh_tokens(self, tenant_id: int, platform: str):
         if not connection:
             return {"status": "skipped", "reason": "connection not found"}
 
-        try:
-            # Refresh token via platform API
-            # In production: new_tokens = refresh_oauth_token(platform, connection.refresh_token_encrypted)
-
-            # Update connection
-            connection.last_refreshed_at = datetime.now(timezone.utc)
-            connection.token_expires_at = datetime.now(timezone.utc) + timedelta(
-                hours=1
+        # A refresh token is required to refresh; without one the tenant must
+        # re-authorize. Mark expired and stop (not a retryable error).
+        if not connection.refresh_token_encrypted:
+            connection.status = ConnectionStatus.EXPIRED
+            connection.last_error = "No refresh token stored; re-authorization required"
+            db.commit()
+            logger.warning(
+                f"No refresh token for tenant {tenant_id}, platform {platform}"
             )
+            return {"status": "error", "reason": "no refresh token"}
+
+        try:
+            # Real refresh (OAUTH-001): decrypt the stored refresh token, call
+            # the platform token endpoint via the provider service, and persist
+            # the returned tokens + real expiry. refresh_access_token uses its
+            # own aiohttp session (no app DB engine), so asyncio.run here carries
+            # no event-loop-pool hazard.
+            service = get_oauth_service(platform)
+            refresh_token = service.decrypt_token(connection.refresh_token_encrypted)
+            new_tokens = asyncio.run(service.refresh_access_token(refresh_token))
+
+            connection.access_token_encrypted = service.encrypt_token(
+                new_tokens.access_token
+            )
+            # Providers may rotate the refresh token; keep the old one if not.
+            if new_tokens.refresh_token:
+                connection.refresh_token_encrypted = service.encrypt_token(
+                    new_tokens.refresh_token
+                )
+            connection.token_expires_at = new_tokens.expires_at or (
+                datetime.now(timezone.utc)
+                + timedelta(seconds=new_tokens.expires_in or 3600)
+            )
+            connection.last_refreshed_at = datetime.now(timezone.utc)
             connection.status = ConnectionStatus.CONNECTED
             connection.last_error = None
             connection.error_count = 0
