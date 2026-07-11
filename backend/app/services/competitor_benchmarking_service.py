@@ -11,7 +11,6 @@ Provides:
 - Recommendations based on competitive position
 """
 
-import random
 import statistics
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
@@ -274,9 +273,12 @@ class CompetitorBenchmarkingService:
                     p75=p75,
                     p90=p90,
                     mean=mean,
-                    sample_size=random.randint(500, 2000),
-                    last_updated=datetime.now(timezone.utc)
-                    - timedelta(days=random.randint(1, 7)),
+                    # These are STATIC reference benchmark tables, not sampled
+                    # data (MON-04): sample_size 0 marks "no live sample" and
+                    # last_updated is the serve time — do NOT fabricate a random
+                    # sample size or a random recency jitter.
+                    sample_size=0,
+                    last_updated=datetime.now(timezone.utc),
                 )
 
         return benchmarks
