@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 
 from app.core.logging import get_logger
-from app.ml.inference import ModelRegistry
+from app.ml.inference import ModelRegistry, ModelUnavailableError
 
 logger = get_logger(__name__)
 
@@ -57,10 +57,24 @@ class ConversionPredictor:
         # Prepare features for model
         model_features = self._prepare_features(features)
 
-        # Try to get prediction from ML model
-        prediction = await self.registry.predict("conversion_predictor", model_features)
+        # Try to get a prediction from the ML model. When the model is
+        # unavailable — e.g. a fresh deploy before models are trained, or a
+        # missing/corrupt .pkl — ModelRegistry.predict raises
+        # ModelUnavailableError. Fall back to the deterministic heuristic rather
+        # than 500-ing the request (ML-001).
+        try:
+            prediction = await self.registry.predict(
+                "conversion_predictor", model_features
+            )
+        except ModelUnavailableError:
+            logger.info(
+                "conversion_model_unavailable_using_heuristic",
+                platform=features.get("platform"),
+            )
+            return self._heuristic_prediction(features)
 
-        # If model prediction failed, use heuristic
+        # Legacy guard: some inference strategies signal unavailability with a
+        # "*-mock" strategy tag instead of raising.
         if prediction.get("inference_strategy", "").endswith("-mock"):
             return self._heuristic_prediction(features)
 
