@@ -76,6 +76,35 @@ class TrustGateConfig:
         ]
     )
 
+    @classmethod
+    def from_tenant_settings(cls, settings: Optional[dict] = None) -> "TrustGateConfig":
+        """Build a config from a tenant's settings JSONB (TRUST-007).
+
+        Onboarding collects per-tenant trust thresholds
+        (``trust_threshold_autopilot`` = the signal-health score required to
+        auto-execute, ``trust_threshold_alert`` = the hold/alert floor) and
+        stores them on ``tenant.settings`` — but the trust gate ignored them and
+        always used the global defaults. This maps them onto the config,
+        clamping to [0, 100] and guaranteeing hold <= pass; missing/invalid
+        values fall back to the class defaults.
+        """
+        config = cls()
+        if not settings:
+            return config
+
+        def _num(key: str, current: float) -> float:
+            val = settings.get(key)
+            if isinstance(val, (int, float)) and not isinstance(val, bool):
+                return max(0.0, min(100.0, float(val)))
+            return current
+
+        config.pass_threshold = _num("trust_threshold_autopilot", config.pass_threshold)
+        config.hold_threshold = _num("trust_threshold_alert", config.hold_threshold)
+        # Keep the invariant hold <= pass so the mode bands stay coherent.
+        if config.hold_threshold > config.pass_threshold:
+            config.hold_threshold = config.pass_threshold
+        return config
+
 
 @dataclass
 class TrustGateResult:
