@@ -25,6 +25,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
+from app.core.uploads import enforce_content_length, read_upload_capped
 from app.db.session import get_async_session
 from app.models import AssetType, CreativeAsset
 from app.schemas import (
@@ -135,13 +136,10 @@ async def upload_asset(
             detail=f"Unsupported file type: {content_type}. Allowed: {', '.join(sorted(ALLOWED_MIME_TYPES))}",
         )
 
-    # Read file and check size
-    contents = await file.read()
-    if len(contents) > MAX_FILE_SIZE:
-        raise HTTPException(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail=f"File too large. Maximum size is {MAX_FILE_SIZE // (1024 * 1024)}MB.",
-        )
+    # Read the body with a streaming cap (API-001) — reject oversized uploads
+    # before they load fully into memory. Content-Length gives an early 413.
+    enforce_content_length(request.headers.get("content-length"), MAX_FILE_SIZE)
+    contents = await read_upload_capped(file, MAX_FILE_SIZE)
 
     # Generate unique filename
     ext = Path(file.filename or "file").suffix or ".bin"

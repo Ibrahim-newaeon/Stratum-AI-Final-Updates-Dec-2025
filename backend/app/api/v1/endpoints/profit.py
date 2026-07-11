@@ -20,6 +20,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
+from app.core.uploads import MAX_CSV_UPLOAD_BYTES, read_upload_capped
 from app.models import User
 from app.models.profit import (
     COGSSource,
@@ -329,7 +330,7 @@ async def import_products(
     if not file.filename.endswith(".csv"):
         raise HTTPException(status_code=400, detail="File must be a CSV")
 
-    content = await file.read()
+    content = await read_upload_capped(file, MAX_CSV_UPLOAD_BYTES)  # API-001
     service = ProductCatalogService(db, current_user.tenant_id)
 
     result = await service.import_from_csv(
@@ -435,7 +436,7 @@ async def upload_cogs(
     if not file.filename.endswith(".csv"):
         raise HTTPException(status_code=400, detail="File must be a CSV")
 
-    content = await file.read()
+    content = await read_upload_capped(file, MAX_CSV_UPLOAD_BYTES)  # API-001
     service = COGSIngestionService(db, current_user.tenant_id)
 
     upload = await service.ingest_csv(
