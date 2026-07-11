@@ -57,9 +57,16 @@ class Settings(BaseSettings):
     database_url_sync: str = Field(
         default="postgresql://stratum:password@localhost:5432/stratum_ai"
     )
+    # Pool sizing (DB-001). Each process (API worker, Celery worker, beat) opens
+    # up to pool_size + max_overflow connections. On Railway, budget the total
+    # across ALL processes against the Postgres plan's connection limit and set
+    # these via env per service (DB_POOL_SIZE / DB_MAX_OVERFLOW).
     db_pool_size: int = Field(default=10)
     db_max_overflow: int = Field(default=20)
     db_pool_recycle: int = Field(default=3600)
+    # Seconds to wait for a free connection before raising instead of blocking
+    # forever. Without this, pool exhaustion hangs the request/task indefinitely.
+    db_pool_timeout: int = Field(default=30)
 
     @field_validator("database_url", mode="before")
     @classmethod

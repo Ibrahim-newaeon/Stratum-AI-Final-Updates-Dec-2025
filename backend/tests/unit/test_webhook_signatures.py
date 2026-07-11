@@ -8,9 +8,11 @@
 - ``verify_tiktok_signature`` (bare hmac hex)
 - ``verify_internal_signature`` (uses ``config.WEBHOOK_SECRET``)
 
-All three use ``hmac.compare_digest`` for constant-time comparison and
-fail *open* (return True) when no secret is configured — that contract is
-covered here. The FastAPI webhook routes are out of scope.
+All three use ``hmac.compare_digest`` for constant-time comparison.
+``verify_meta_signature`` fails *closed* (rejects) when no secret or no
+signature is present (CAPI-003); ``verify_tiktok_signature`` and
+``verify_internal_signature`` still fail *open* when unconfigured. Those
+contracts are covered here. The FastAPI webhook routes are out of scope.
 """
 
 import hashlib
@@ -55,8 +57,14 @@ class TestMetaSignature:
         sig = f"sha256={_hexsig(SECRET, PAYLOAD)}"
         assert verify_meta_signature(b"tampered", sig, SECRET) is False
 
-    def test_missing_secret_fails_open(self):
-        assert verify_meta_signature(PAYLOAD, "anything", "") is True
+    def test_missing_secret_fails_closed(self):
+        # CAPI-003: an unverifiable payload (no configured secret) is rejected,
+        # not trusted.
+        assert verify_meta_signature(PAYLOAD, "anything", "") is False
+
+    def test_missing_signature_fails_closed(self):
+        # CAPI-003: an absent/empty signature header cannot be trusted.
+        assert verify_meta_signature(PAYLOAD, "", SECRET) is False
 
 
 # =============================================================================
