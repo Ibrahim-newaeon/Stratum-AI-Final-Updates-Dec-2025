@@ -49,7 +49,7 @@ def get_capi_service(tenant_id: int) -> CAPIService:
         logger.warning("capi_service_max_size_evicted", tenant_id=oldest_tid)
 
     if tenant_id not in _capi_services:
-        _capi_services[tenant_id] = (CAPIService(), now)
+        _capi_services[tenant_id] = (CAPIService(tenant_id), now)
     else:
         # Refresh timestamp on access
         svc, _ = _capi_services[tenant_id]
