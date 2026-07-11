@@ -222,6 +222,21 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
 # =============================================================================
 # Application Factory
 # =============================================================================
+def _resolve_ws_tenant(payload: dict, requested_tenant: Optional[int]) -> Optional[int]:
+    """
+    Resolve the tenant for a WebSocket connection from the VERIFIED token (TEN-001).
+
+    The client-supplied ``?tenant_id=`` query param is not trusted: a
+    non-superadmin is always pinned to their token's ``tenant_id``, so it is
+    impossible to subscribe to another tenant's real-time stream by spoofing
+    the param. Only a superadmin may explicitly target a different tenant.
+    """
+    token_tenant = payload.get("tenant_id")
+    if payload.get("role") == "superadmin" and requested_tenant is not None:
+        return requested_tenant
+    return token_tenant
+
+
 def create_application() -> FastAPI:
     """
     Create and configure the FastAPI application.
@@ -829,9 +844,14 @@ def create_application() -> FastAPI:
                     settings.jwt_secret_key,
                     algorithms=[settings.jwt_algorithm],
                 )
+                # Reject refresh/other token types used as a WS credential.
+                if payload.get("type") != "access":
+                    await websocket.close(code=4001, reason="Invalid token type")
+                    return
                 user_id = payload.get("sub")
-                if not tenant_id:
-                    tenant_id = payload.get("tenant_id")
+                # SECURITY (TEN-001): tenant comes from the VERIFIED token claim,
+                # never the client-supplied query param (see _resolve_ws_tenant).
+                tenant_id = _resolve_ws_tenant(payload, tenant_id)
             except (
                 pyjwt.InvalidTokenError,
                 ValueError,
