@@ -251,6 +251,15 @@ class Settings(BaseSettings):
     sentry_release: Optional[str] = Field(
         default=None, description="Sentry release tag (e.g. git SHA or version)"
     )
+    # P0 on-call alerting (MON-002). An incoming-webhook URL (Slack / PagerDuty
+    # Events v2 / Opsgenie / generic) that the monitoring task POSTs critical
+    # pipeline-health failures to. The escalation code already exists; this
+    # declares the setting so it is actually wired (was read via getattr and
+    # therefore always None/off).
+    alert_webhook_url: Optional[str] = Field(
+        default=None,
+        description="Incoming webhook for critical (P0) operational alerts",
+    )
 
     # -------------------------------------------------------------------------
     # SMTP / Email Configuration
