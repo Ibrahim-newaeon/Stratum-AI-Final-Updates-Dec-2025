@@ -65,6 +65,7 @@ from app.workers.tasks import (  # noqa: F401 – re-exports
     refresh_all_competitors,
     run_all_tenant_predictions,
     run_live_predictions,
+    send_whatsapp_broadcast,
     send_whatsapp_message,
     sync_all_campaigns,
     sync_campaign_data,
@@ -111,6 +112,7 @@ __all__ = [
     # ML
     "run_live_predictions",
     # WhatsApp
+    "send_whatsapp_broadcast",
     "send_whatsapp_message",
     "sync_all_campaigns",
     # Sync
