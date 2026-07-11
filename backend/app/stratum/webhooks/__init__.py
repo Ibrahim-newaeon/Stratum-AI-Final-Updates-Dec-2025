@@ -167,10 +167,20 @@ def verify_meta_signature(payload: bytes, signature: str, secret: str) -> bool:
     Verify Meta/WhatsApp webhook signature.
 
     Meta signs payloads with: sha256=HMAC(app_secret, payload)
+
+    Fails CLOSED (CAPI-003): with no configured secret the payload cannot be
+    verified, so it is rejected rather than trusted. A missing/empty signature
+    likewise cannot match. Set META_APP_SECRET / WHATSAPP_APP_SECRET to receive
+    webhooks.
     """
     if not secret:
-        logger.warning("No app secret configured, skipping signature verification")
-        return True
+        logger.error(
+            "No app secret configured; rejecting unverifiable webhook signature"
+        )
+        return False
+
+    if not signature:
+        return False
 
     expected = hmac.new(secret.encode("utf-8"), payload, hashlib.sha256).hexdigest()
 
@@ -265,11 +275,12 @@ async def meta_webhook_receive(
     """
     body = await request.body()
 
-    # Verify signature
-    if x_hub_signature_256 and not verify_meta_signature(
-        body, x_hub_signature_256, config.META_APP_SECRET
+    # Verify signature — fail CLOSED (CAPI-003): reject when the signature
+    # header is absent or invalid, instead of processing unsigned payloads.
+    if not verify_meta_signature(
+        body, x_hub_signature_256 or "", config.META_APP_SECRET
     ):
-        logger.warning("Invalid Meta webhook signature")
+        logger.warning("Invalid or missing Meta webhook signature")
         raise HTTPException(status_code=403, detail="Invalid signature")
 
     try:
@@ -430,11 +441,12 @@ async def whatsapp_webhook_receive(
     """
     body = await request.body()
 
-    # Verify signature
-    if x_hub_signature_256 and not verify_meta_signature(
-        body, x_hub_signature_256, config.WHATSAPP_APP_SECRET
+    # Verify signature — fail CLOSED (CAPI-003): reject when the signature
+    # header is absent or invalid, instead of processing unsigned payloads.
+    if not verify_meta_signature(
+        body, x_hub_signature_256 or "", config.WHATSAPP_APP_SECRET
     ):
-        logger.warning("Invalid WhatsApp webhook signature")
+        logger.warning("Invalid or missing WhatsApp webhook signature")
         raise HTTPException(status_code=403, detail="Invalid signature")
 
     try:
