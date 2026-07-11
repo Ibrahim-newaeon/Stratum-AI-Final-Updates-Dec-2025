@@ -1802,3 +1802,57 @@ class TestNotificationDbPaths:
         )
 
         assert sent is False
+
+
+class TestHighRiskActionGate:
+    """TRUST-004: high-risk action types require confirmation even with no
+    threshold violation, unless the tenant opted into advisory mode."""
+
+    @pytest.mark.asyncio
+    async def test_high_risk_requires_confirmation_when_not_advisory(self, enforcer):
+        await enforcer.update_settings(
+            tenant_id=1, updates={"default_mode": EnforcementMode.SOFT_BLOCK}
+        )
+        # 10% increase — no threshold violation; risk comes purely from the type.
+        result = await enforcer.check_action(
+            tenant_id=1,
+            action_type="budget_increase",
+            entity_type="campaign",
+            entity_id="c1",
+            proposed_value={"budget": 1100.0},
+            current_value={"budget": 1000.0},
+        )
+        assert result.allowed is False
+        assert result.requires_confirmation is True
+        assert result.confirmation_token
+
+    @pytest.mark.asyncio
+    async def test_safe_action_allowed_under_soft_block_default(self, enforcer):
+        await enforcer.update_settings(
+            tenant_id=1, updates={"default_mode": EnforcementMode.SOFT_BLOCK}
+        )
+        result = await enforcer.check_action(
+            tenant_id=1,
+            action_type="budget_decrease",
+            entity_type="campaign",
+            entity_id="c1",
+            proposed_value={"budget": 900.0},
+            current_value={"budget": 1000.0},
+        )
+        assert result.allowed is True
+        assert result.requires_confirmation is False
+
+    @pytest.mark.asyncio
+    async def test_high_risk_allowed_when_advisory_opt_out(self, enforcer):
+        await enforcer.update_settings(
+            tenant_id=1, updates={"default_mode": EnforcementMode.ADVISORY}
+        )
+        result = await enforcer.check_action(
+            tenant_id=1,
+            action_type="budget_increase",
+            entity_type="campaign",
+            entity_id="c1",
+            proposed_value={"budget": 1100.0},
+            current_value={"budget": 1000.0},
+        )
+        assert result.allowed is True
