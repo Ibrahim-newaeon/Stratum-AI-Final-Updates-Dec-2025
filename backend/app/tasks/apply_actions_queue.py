@@ -1766,3 +1766,117 @@ def apply_single_action(self, action_id: str, user_id: Optional[int] = None):
     import asyncio
 
     return asyncio.run(run_single())
+
+
+# Inverse action for rollback (TRUST-006): the compensating action that undoes
+# each applied action and restores the entity to its before_value.
+_INVERSE_ACTION: Dict[str, str] = {
+    ActionType.BUDGET_INCREASE.value: ActionType.BUDGET_DECREASE.value,
+    ActionType.BUDGET_DECREASE.value: ActionType.BUDGET_INCREASE.value,
+    ActionType.BID_INCREASE.value: ActionType.BID_DECREASE.value,
+    ActionType.BID_DECREASE.value: ActionType.BID_INCREASE.value,
+    ActionType.PAUSE_CAMPAIGN.value: ActionType.ENABLE_CAMPAIGN.value,
+    ActionType.PAUSE_ADSET.value: ActionType.ENABLE_ADSET.value,
+    ActionType.PAUSE_CREATIVE.value: ActionType.ENABLE_CREATIVE.value,
+    ActionType.ENABLE_CAMPAIGN.value: ActionType.PAUSE_CAMPAIGN.value,
+    ActionType.ENABLE_ADSET.value: ActionType.PAUSE_ADSET.value,
+    ActionType.ENABLE_CREATIVE.value: ActionType.PAUSE_CREATIVE.value,
+}
+
+
+@shared_task(bind=True, max_retries=3, default_retry_delay=60)
+def rollback_action(self, action_id: str, user_id: Optional[int] = None):
+    """Revert a previously APPLIED autopilot action (TRUST-006).
+
+    Executes the inverse action (budget_increase<->decrease, pause<->enable, ...)
+    to restore the entity to its before_value — in live mode the executors
+    read the current value and apply the compensating delta — then marks the
+    original action ROLLED_BACK. Only APPLIED, reversible actions can be rolled
+    back.
+
+    Args:
+        action_id: UUID of the applied action to revert.
+        user_id: ID of the user requesting the rollback.
+    """
+    import asyncio
+    from uuid import UUID
+
+    async def run_rollback():
+        await _reset_async_engine()
+        async with async_session_factory() as db:
+            try:
+                uuid_id = UUID(action_id)
+                result = await db.execute(
+                    select(FactActionsQueue).where(FactActionsQueue.id == uuid_id)
+                )
+                action = result.scalar_one_or_none()
+
+                if not action:
+                    return {"status": "error", "error": "Action not found"}
+                if action.status != ActionStatus.APPLIED.value:
+                    return {
+                        "status": "error",
+                        "error": (
+                            "Only applied actions can be rolled back "
+                            f"(status={action.status})"
+                        ),
+                    }
+
+                inverse_type = _INVERSE_ACTION.get(action.action_type)
+                if inverse_type is None:
+                    return {
+                        "status": "error",
+                        "error": f"Action type {action.action_type} is not reversible",
+                    }
+
+                executor = PLATFORM_EXECUTORS.get(action.platform)
+                if not executor:
+                    return {
+                        "status": "error",
+                        "error": f"Unsupported platform: {action.platform}",
+                    }
+
+                details = json.loads(action.action_json) if action.action_json else {}
+                exec_result = await executor.execute_action(
+                    action_type=inverse_type,
+                    entity_type=action.entity_type,
+                    entity_id=action.entity_id,
+                    action_details=details,
+                )
+
+                if not exec_result["success"]:
+                    return {
+                        "status": "error",
+                        "error": exec_result.get("error", "Rollback execution failed"),
+                    }
+
+                action.status = ActionStatus.ROLLED_BACK.value
+                action.error = None
+                action.platform_response = json.dumps(
+                    {
+                        "rolled_back": True,
+                        "rolled_back_by_user_id": user_id,
+                        "rolled_back_at": datetime.now(timezone.utc).isoformat(),
+                        "inverse_action": inverse_type,
+                        "rollback_response": exec_result.get("platform_response"),
+                    }
+                )
+                await db.commit()
+
+                await publish_action_status_update(
+                    tenant_id=action.tenant_id,
+                    action_id=action_id,
+                    status="rolled_back",
+                )
+                return {
+                    "status": "success",
+                    "action_id": action_id,
+                    "restored_value": exec_result.get("after_value"),
+                }
+
+            except Exception as e:
+                logger.error(f"Rollback execution failed: {str(e)}")
+                await db.rollback()
+                raise self.retry(exc=e)
+
+    return asyncio.run(run_rollback())

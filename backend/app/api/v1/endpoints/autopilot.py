@@ -47,6 +47,21 @@ def _dispatch_single_action(action_id: str, user_id: Optional[int]) -> None:
         )
 
 
+def _dispatch_rollback(action_id: str, user_id: Optional[int]) -> None:
+    """Dispatch a rollback of an applied action to the Celery worker (TRUST-006).
+
+    Local import to avoid a circular import at module load; broker failures are
+    swallowed so a transient dispatch problem doesn't 500 an already-validated
+    rollback request.
+    """
+    try:
+        from app.tasks.apply_actions_queue import rollback_action
+
+        rollback_action.delay(action_id, user_id)
+    except Exception:  # pragma: no cover - defensive
+        logger.exception("Failed to dispatch rollback_action for action %s", action_id)
+
+
 def _dispatch_tenant_queue(tenant_id: int) -> None:
     """Dispatch execution of all approved actions for a tenant (used by
     approve-all). Same defensive contract as ``_dispatch_single_action``."""
@@ -452,6 +467,51 @@ async def approve_action(
             "action": action_to_response(action).dict(),
             "message": "Action approved for execution",
         },
+    )
+
+
+@router.post(
+    "/actions/{action_id}/rollback", response_model=APIResponse[Dict[str, Any]]
+)
+async def rollback_applied_action(
+    request: Request,
+    tenant_id: int,
+    action_id: str,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Roll back a previously applied autopilot action (TRUST-006).
+
+    Dispatches the inverse action (restoring the entity's before_value). Only an
+    applied, reversible action owned by the tenant can be rolled back.
+    """
+    if getattr(request.state, "tenant_id", None) != tenant_id:
+        raise HTTPException(status_code=403, detail="Access denied to this tenant")
+
+    user_id = getattr(request.state, "user_id", None)
+    if not user_id:
+        raise HTTPException(status_code=401, detail="User authentication required")
+
+    try:
+        uuid_id = UUID(action_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid action ID format")
+
+    await _require_not_frozen(db, tenant_id)
+
+    service = AutopilotService(db)
+    action = await service.get_action_by_id(uuid_id, tenant_id)
+    if not action:
+        raise HTTPException(status_code=404, detail="Action not found")
+    if action.status != ActionStatus.APPLIED.value:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Only applied actions can be rolled back (status={action.status})",
+        )
+
+    _dispatch_rollback(str(action.id), user_id)
+    return APIResponse(
+        success=True,
+        data={"action_id": str(action.id), "message": "Rollback initiated"},
     )
 
 

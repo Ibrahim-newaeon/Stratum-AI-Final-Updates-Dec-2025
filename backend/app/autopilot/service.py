@@ -27,6 +27,7 @@ class ActionStatus(str, Enum):
     PENDING_APPROVAL = "pending_approval"
     APPROVED = "approved"
     APPLIED = "applied"
+    ROLLED_BACK = "rolled_back"  # an applied action was reverted (TRUST-006)
     FAILED = "failed"
     DISMISSED = "dismissed"
 
