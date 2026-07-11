@@ -236,6 +236,17 @@ def run_single(action_id: uuid.UUID, enforcement: EnforcementResult, user_id: in
         ).get()
 
 
+def run_rollback(action_id: uuid.UUID, user_id: int = 7):
+    """Run rollback_action with WS publishing mocked and executor mock mode."""
+    with (
+        patch.object(mod, "publish_action_status_update", AsyncMock()),
+        patch.object(mod.settings, "use_mock_ad_data", True),
+    ):
+        return mod.rollback_action.apply(
+            kwargs={"action_id": str(action_id), "user_id": user_id}
+        ).get()
+
+
 # =============================================================================
 # apply_single_action
 # =============================================================================
@@ -468,6 +479,39 @@ class TestApplyActionsQueueSweep:
         session = seeded["session"]
         assert reload_action(session, first).status == "approved"
         assert reload_action(session, second).status == "approved"
+
+
+class TestRollbackAction:
+    """TRUST-006: revert an applied action via its inverse."""
+
+    def test_rollback_applied_action_marks_rolled_back(self, seeded):
+        action_id = seeded["add_action"](
+            status="applied", action_type="budget_increase"
+        )
+        result = run_rollback(action_id, user_id=seeded["user_id"])
+
+        assert result["status"] == "success"
+        row = reload_action(seeded["session"], action_id)
+        assert row.status == "rolled_back"
+        assert json.loads(row.platform_response)["inverse_action"] == "budget_decrease"
+
+    def test_rollback_rejects_non_applied(self, seeded):
+        action_id = seeded["add_action"](status="approved")
+        result = run_rollback(action_id)
+        assert result["status"] == "error"
+        assert "applied" in result["error"].lower()
+
+    def test_rollback_rejects_non_reversible(self, seeded):
+        action_id = seeded["add_action"](
+            status="applied", action_type="generate_report"
+        )
+        result = run_rollback(action_id)
+        assert result["status"] == "error"
+        assert "reversible" in result["error"].lower()
+
+    def test_rollback_unknown_action_errors(self):
+        result = run_rollback(uuid.uuid4())
+        assert result["status"] == "error"
 
 
 if __name__ == "__main__":

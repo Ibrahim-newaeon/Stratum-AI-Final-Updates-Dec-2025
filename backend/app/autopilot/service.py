@@ -28,6 +28,7 @@ class ActionStatus(str, Enum):
     APPROVED = "approved"
     APPLYING = "applying"  # claimed by a worker for execution (CEL-001)
     APPLIED = "applied"
+    ROLLED_BACK = "rolled_back"  # an applied action was reverted (TRUST-006)
     FAILED = "failed"
     DISMISSED = "dismissed"
 
