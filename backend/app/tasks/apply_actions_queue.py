@@ -1138,6 +1138,28 @@ async def _reset_async_engine() -> None:
 SIGNAL_HEALTH_FRESHNESS_DAYS = 2
 
 
+async def claim_action_for_execution(db: AsyncSession, action_id) -> bool:
+    """Atomically claim an APPROVED action for execution (CEL-001).
+
+    Flips ``approved -> applying`` in a single conditional UPDATE and commits,
+    so only one worker can own the action. Returns True when THIS caller won
+    the claim, False when the action was already claimed/applied — i.e. a
+    concurrent dispatch (the every-5-min sweep racing the direct dispatch) or a
+    retry after a partial apply. A False return means the caller MUST NOT
+    execute, so a budget mutation is never applied twice.
+    """
+    result = await db.execute(
+        update(FactActionsQueue)
+        .where(
+            FactActionsQueue.id == action_id,
+            FactActionsQueue.status == ActionStatus.APPROVED.value,
+        )
+        .values(status=ActionStatus.APPLYING.value)
+    )
+    await db.commit()
+    return result.rowcount == 1
+
+
 async def check_signal_health(db: AsyncSession, tenant_id: int) -> bool:
     """
     Check whether signal health allows autopilot execution.
@@ -1459,6 +1481,14 @@ def apply_actions_queue(self, tenant_id: Optional[int] = None):
                             failed += 1
                             continue
 
+                        # Atomic claim (CEL-001): only execute if we win the
+                        # approved->applying transition. A lost claim means the
+                        # direct dispatch already owns this action — skip so the
+                        # budget mutation isn't applied twice.
+                        if not await claim_action_for_execution(db, action.id):
+                            logger.info(f"Action {action.id} already claimed; skipping")
+                            continue
+
                         # Execute the action
                         exec_result = await executor.execute_action(
                             action_type=action.action_type,
@@ -1711,6 +1741,12 @@ def apply_single_action(self, action_id: str, user_id: Optional[int] = None):
                     action.error = f"Unsupported platform: {action.platform}"
                     await db.commit()
                     return {"status": "error", "error": action.error}
+
+                # Atomic claim (CEL-001): abort if the action is no longer
+                # approved (already claimed by the sweep, or a retry after a
+                # partial apply) so the mutation can't run twice.
+                if not await claim_action_for_execution(db, action.id):
+                    return {"status": "skipped", "reason": "already claimed"}
 
                 exec_result = await executor.execute_action(
                     action_type=action.action_type,

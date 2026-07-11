@@ -17,6 +17,7 @@ them up in teardown. WebSocket publishing (Redis pub/sub) is mocked;
 platform execution uses the executors' mock mode.
 """
 
+import asyncio
 import json
 import uuid
 from datetime import date, datetime, timezone
@@ -335,6 +336,37 @@ class TestApplySingleAction:
         assert "Unsupported platform" in result["error"]
         row = reload_action(seeded["session"], action_id)
         assert row.status == "failed"
+
+    def test_claim_is_atomic_and_one_shot(self, seeded):
+        """CEL-001: the approved->applying claim can only be won once."""
+        action_id = seeded["add_action"](status="approved")
+
+        async def _claim_twice():
+            from app.db.session import async_session_factory
+
+            async with async_session_factory() as db:
+                first = await mod.claim_action_for_execution(db, action_id)
+            async with async_session_factory() as db:
+                second = await mod.claim_action_for_execution(db, action_id)
+            return first, second
+
+        first, second = asyncio.run(_claim_twice())
+        assert first is True
+        assert second is False
+        assert reload_action(seeded["session"], action_id).status == "applying"
+
+    def test_second_dispatch_does_not_reapply_budget(self, seeded):
+        """CEL-001: re-dispatching an applied action must NOT mutate again."""
+        action_id = seeded["add_action"](status="approved", amount=50)
+
+        first = run_single(action_id, _allowed(), user_id=seeded["user_id"])
+        second = run_single(action_id, _allowed(), user_id=seeded["user_id"])
+
+        assert first == {"status": "success", "action_id": str(action_id)}
+        assert second["status"] == "error"  # not re-executed
+        row = reload_action(seeded["session"], action_id)
+        # Budget applied exactly once (10000 + 50), not compounded to 10100.
+        assert json.loads(row.after_value)["daily_budget"] == 10050
 
     def test_frozen_tenant_defers_without_applying(self, seeded):
         """Emergency stop: a frozen tenant's approved action is refused and
