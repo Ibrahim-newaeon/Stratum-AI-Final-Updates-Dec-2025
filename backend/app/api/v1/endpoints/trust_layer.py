@@ -405,6 +405,20 @@ def _signal_health_from_rows(rows: List[FactSignalHealthDaily]):
     )
 
 
+async def _trust_gate_for_tenant(db: AsyncSession, tenant_id: int):
+    """Build a TrustGate using the tenant's configured thresholds (TRUST-007).
+
+    Reads the per-tenant thresholds onboarding stored on ``tenant.settings``
+    (falling back to the global defaults) instead of always using the defaults.
+    """
+    from app.base_models import Tenant
+    from app.stratum.core.trust_gate import TrustGate, TrustGateConfig
+
+    row = await db.execute(select(Tenant.settings).where(Tenant.id == tenant_id))
+    tenant_settings = row.scalar_one_or_none()
+    return TrustGate(TrustGateConfig.from_tenant_settings(tenant_settings))
+
+
 @router.get("/trust-gate", response_model=APIResponse[Dict[str, Any]])
 async def get_trust_gate_status(
     request: Request,
@@ -427,7 +441,7 @@ async def get_trust_gate_status(
     rows = await _latest_health_rows(db, tenant_id, target_date)
     health = _signal_health_from_rows(rows)
 
-    gate = TrustGate()
+    gate = await _trust_gate_for_tenant(db, tenant_id)
     allowed, restricted = gate.get_allowed_actions(health)
     mode, mode_reason = get_autopilot_mode(health)
 
@@ -495,7 +509,8 @@ async def evaluate_trust_gate(
         parameters=body.parameters,
     )
 
-    result = TrustGate().evaluate(health, action)
+    gate = await _trust_gate_for_tenant(db, tenant_id)
+    result = gate.evaluate(health, action)
     payload = result.to_dict()
     payload["data_available"] = bool(rows)
 
