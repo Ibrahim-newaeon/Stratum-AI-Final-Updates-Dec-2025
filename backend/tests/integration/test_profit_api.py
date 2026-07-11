@@ -50,7 +50,7 @@ class TestAuth:
 
     async def test_roas_requires_auth(self, client: AsyncClient):
         resp = await client.get(
-            _BASE + "/profit/roas",
+            _BASE + "/roas",
             params={
                 "start_date": date(2026, 1, 1).isoformat(),
                 "end_date": date(2026, 1, 31).isoformat(),
@@ -132,35 +132,31 @@ class TestProfitReads:
     }
 
     async def test_roas_empty(self, authenticated_client: AsyncClient):
-        resp = await authenticated_client.get(
-            _BASE + "/profit/roas", params=self._range
-        )
+        resp = await authenticated_client.get(_BASE + "/roas", params=self._range)
         assert resp.status_code == 200, resp.text
         assert isinstance(resp.json(), dict)
 
     async def test_trend_empty(self, authenticated_client: AsyncClient):
         resp = await authenticated_client.get(
-            _BASE + "/profit/trend",
+            _BASE + "/trend",
             params={**self._range, "granularity": "weekly"},
         )
         assert resp.status_code == 200, resp.text
         assert isinstance(resp.json(), dict)
 
     async def test_by_product_empty(self, authenticated_client: AsyncClient):
-        resp = await authenticated_client.get(
-            _BASE + "/profit/by-product", params=self._range
-        )
+        resp = await authenticated_client.get(_BASE + "/by-product", params=self._range)
         assert resp.status_code == 200, resp.text
         assert isinstance(resp.json(), dict)
 
     async def test_by_campaign_empty(self, authenticated_client: AsyncClient):
         resp = await authenticated_client.get(
-            _BASE + "/profit/by-campaign", params=self._range
+            _BASE + "/by-campaign", params=self._range
         )
         assert resp.status_code == 200, resp.text
         assert isinstance(resp.json(), dict)
 
     async def test_roas_validation_error(self, authenticated_client: AsyncClient):
         # Missing required start_date/end_date.
-        resp = await authenticated_client.get(_BASE + "/profit/roas")
+        resp = await authenticated_client.get(_BASE + "/roas")
         assert resp.status_code == 422
