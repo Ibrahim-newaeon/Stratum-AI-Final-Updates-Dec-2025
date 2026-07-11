@@ -26,6 +26,7 @@ class ActionStatus(str, Enum):
     QUEUED = "queued"
     PENDING_APPROVAL = "pending_approval"
     APPROVED = "approved"
+    APPLYING = "applying"  # claimed by a worker for execution (CEL-001)
     APPLIED = "applied"
     FAILED = "failed"
     DISMISSED = "dismissed"
